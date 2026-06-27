@@ -42,9 +42,7 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 agent_store = InMemoryAgentStore()
-try:
-    
-except:
+
     print("[WARN] Could not open agents.json, using memory store")
     class InMemoryAgentStore:
         def __init__(self):
