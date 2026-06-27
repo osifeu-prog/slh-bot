@@ -32,29 +32,3 @@ class AgentStore:
 
     def list(self):
         return [{"id": k, **v} for k, v in self._load().items()]
-
-    def get(self, aid):
-        return self._load().get(aid)
-
-    def update_state(self, aid, state):
-        data = self._load()
-        if aid in data:
-            data[aid]["state"] = state
-            data[aid]["history"].append({
-                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "action": f"state_changed_to_{state}"
-            })
-            self._save(data)
-            return True
-        return False
-
-    def send_message(self, aid, message):
-        data = self._load()
-        if aid in data:
-            data[aid]["inbox"].append({
-                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "message": message
-            })
-            self._save(data)
-            return True
-        return False
