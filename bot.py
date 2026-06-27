@@ -41,14 +41,15 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 bot = telebot.TeleBot(TOKEN)
 
 # ---- Safe Kernel Import (degraded mode if missing) ----
-import os as _os
+import os as _os, sys as _sys
 _KERNEL_ERROR = ""
 try:
     from core.event_bus import EventBus
     from plugins.task import TaskPlugin
     _KERNEL_READY = True
+    print("✅ Kernel imports OK")
 except Exception as e:
-    _KERNEL_ERROR = f"{e}. Current dir: {_os.getcwd()}. Files: {_os.listdir('.')}"
+    _KERNEL_ERROR = f"{e}. cwd: {_os.getcwd()}. sys.path[0]: {_sys.path[0]}. files: {_os.listdir('.')}"
     print("Kernel modules missing:", _KERNEL_ERROR)
     EventBus = None
     TaskPlugin = None
@@ -150,6 +151,8 @@ def admin(m):
 📈 ANALYTICS:
 /audit — Audit log
 /memory — Memory status
+/debug — Container debug info
+/termux — Show Termux status
 /disk — Disk usage""")
 
 @bot.message_handler(commands=['status'])
@@ -279,6 +282,14 @@ def task(m):
         bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
         bus.emit("task_list", {"chat": m.chat.id})
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        bus.emit("task_list", {"chat": m.chat.id})
 
 
 @bot.message_handler(commands=['debug'])
@@ -295,6 +306,17 @@ def debug(m):
         lines.append(f"core import: {e}")
     bot.reply_to(m, "\n".join(lines))
 
+
+@bot.message_handler(commands=['termux'])
+def termux(m):
+    import os, subprocess
+    try:
+        ver = subprocess.run("python3 --version", shell=True, capture_output=True, text=True).stdout.strip()
+        branch = subprocess.run("git branch --show-current", shell=True, capture_output=True, text=True, cwd="/app").stdout.strip()
+        msg = f"Python: {ver}\nBranch: {branch}\ncwd: /app\ncore OK"
+    except:
+        msg = "Termux status unavailable"
+    bot.reply_to(m, msg)
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
