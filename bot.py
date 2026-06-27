@@ -1,6 +1,10 @@
 import os, sys, json, time
 import telebot
-import psutil
+try:
+    import psutil
+    _PSUTIL_OK = True
+except ImportError:
+    _PSUTIL_OK = False
 from audit_logger import audit, get_audit
 from datetime import datetime
 
@@ -121,16 +125,23 @@ def status(m):
 
 @bot.message_handler(commands=['health'])
 def health(m):
-    import os, time, psutil
-    uptime = time.time() - psutil.boot_time()
-    mem = psutil.virtual_memory()
-    disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
+    import os, time
+    if _PSUTIL_OK:
+        uptime = time.time() - psutil.boot_time()
+        mem = psutil.virtual_memory()
+        disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
+        ram_str = f"RAM: {mem.percent}% used"
+        disk_str = f"Disk: {disk.percent}% used"
+    else:
+        uptime = 0
+        ram_str = "RAM: N/A"
+        disk_str = "Disk: N/A"
     db_size = os.path.getsize(DB_FILE) if os.path.exists(DB_FILE) else 0
     msg = (
         "🩺 SYSTEM HEALTH\n"
         f"Uptime: {uptime/3600:.1f}h\n"
-        f"RAM: {mem.percent}% used\n"
-        f"Disk: {disk.percent}% used\n"
+        f"{ram_str}\n"
+        f"{disk_str}\n"
         f"DB: {db_size} bytes\n"
         f"Users: {len(load_db()['users'])}\n"
         f"Audit: {len(get_audit(1000))} entries\n"
