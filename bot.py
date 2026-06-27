@@ -128,7 +128,7 @@ def admin(m):
 /errors — Show recent errors
 /plugin list — List plugins
 /goal add/list — Manage goals
-/disk — Disk usage
+/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/disk — Disk usage
 /sysinfo — System resources""")
 
 @bot.message_handler(commands=['status'])
