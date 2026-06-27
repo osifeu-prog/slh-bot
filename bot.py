@@ -167,6 +167,10 @@ def admin(m):
 /memory — Memory status
 /debug — Container debug info
 /termux — Show Termux status
+/deploy — Trigger Railway deploy
+/errors — Show recent errors
+/plugin list — List plugins
+/goal add/list — Manage goals
 /disk — Disk usage""")
 
 @bot.message_handler(commands=['status'])
