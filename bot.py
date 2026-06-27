@@ -1,7 +1,5 @@
 import os, sys, json, time
 import telebot
-from core.event_bus import EventBus
-from plugins.task import TaskPlugin
 import psutil
 from audit_logger import audit, get_audit
 from datetime import datetime
@@ -60,9 +58,6 @@ except Exception as e:
     EventBus = None
     TaskPlugin = None
     _KERNEL_READY = False
-
-bus = EventBus(workers=2)
-TaskPlugin().on_start(bus)
 
 # ---------------- DB ----------------
 BASE_DB = {
