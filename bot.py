@@ -8,6 +8,26 @@ except ImportError:
 from audit_logger import audit, get_audit
 from datetime import datetime
 
+import logging
+import os
+
+# Configure logging to both console and file
+log_file = "/app/bot.log"
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Log bot startup
+logger.info("Bot starting...")
+
+
+
 # ---------------- LOAD TOKEN ----------------
 def load_token():
     env_token = os.getenv("BOT_TOKEN")
