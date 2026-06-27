@@ -1,5 +1,7 @@
 import os, sys, json, time
 import telebot
+from core.event_bus import EventBus
+from plugins.task import TaskPlugin
 import psutil
 from audit_logger import audit, get_audit
 from datetime import datetime
@@ -35,6 +37,8 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+bus = EventBus(workers=2)
+TaskPlugin().on_start(bus)
 
 # ---------------- DB ----------------
 BASE_DB = {
@@ -223,6 +227,17 @@ while True:
         audit("crash", "system", str(e)[:100])
         time.sleep(5)
 
+def task(m):
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        bus.emit("task_list", {"chat": m.chat.id})
+
+@bot.message_handler(commands=['task'])
 def task(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
