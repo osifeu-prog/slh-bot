@@ -61,8 +61,15 @@ except Exception as e:
 _KERNEL_INIT_ERROR = ""
 if _KERNEL_READY:
     try:
+        # Minimal kernel-like object for plugins
+        class KernelStub:
+            def __init__(self, bus):
+                self.bus = bus
+                self.state = {}
+                self.telegram = None   # will be set later if needed
         bus = EventBus(workers=2)
-        TaskPlugin().on_start(bus)
+        kernel = KernelStub(bus)
+        TaskPlugin().on_start(kernel)
         print("✅ Kernel modules loaded")
     except Exception as e:
         _KERNEL_INIT_ERROR = str(e) + "\n" + _traceback.format_exc()
@@ -286,17 +293,17 @@ def task(m):
         bot.reply_to(m, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
-        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
-        bus.emit("task_list", {"chat": m.chat.id})
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
-        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
-        bus.emit("task_list", {"chat": m.chat.id})
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 
 
@@ -360,9 +367,9 @@ def task(m):
         bot.reply_to(m, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
-        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
-        bus.emit("task_list", {"chat": m.chat.id})
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 @bot.message_handler(commands=['kernellog'])
 def kernellog(m):
@@ -387,6 +394,6 @@ def task(m):
         bot.reply_to(m, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
-        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
-        bus.emit("task_list", {"chat": m.chat.id})
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
