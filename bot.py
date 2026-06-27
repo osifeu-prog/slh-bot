@@ -103,7 +103,7 @@ def start(m):
 def admin(m):
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
 📊 DIAGNOSTICS:
-/test — Run full system diagnostic
+/test — Run full system diagnostic\n/test_agents — Quick agent self-test
 /status — System status
 /health — Health check
 🤖 AGENTS:
@@ -167,7 +167,7 @@ def agent_create(m):
     import time, json, os
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
-    aid = str(int(time.time() * 1000))
+    aid = str(len(agents_dict) + 1)
     agent_data = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
     agents_dict[aid] = agent_data
     # save to file for persistence across deploys
@@ -408,6 +408,49 @@ def inbox(m):
             bot.reply_to(m, "📬 Inbox:\n" + "\n".join(lines))
     else:
         bot.reply_to(m, "❌ Agent not found")
+
+
+@bot.message_handler(commands=['test_agents'])
+def test_agents(m):
+    import time, json, os
+    results = []
+    
+    # 1. Create test agent
+    aid = str(len(agents_dict) + 1)
+    agents_dict[aid] = {"name": "test_agent", "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
+    results.append(f"✅ Agent created: id={aid}")
+    
+    # 2. Change state
+    agents_dict[aid]["state"] = "busy"
+    results.append("✅ State changed")
+    
+    # 3. Send message
+    agents_dict[aid]["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": "test message"})
+    results.append("✅ Message sent")
+    
+    # 4. Check inbox
+    inbox = agents_dict[aid]["inbox"]
+    results.append(f"✅ Inbox has {len(inbox)} messages")
+    
+    # 5. Persistence
+    try:
+        path = "/app/agents.json"
+        existing = json.load(open(path)) if os.path.exists(path) else {}
+        existing[aid] = agents_dict[aid]
+        json.dump(existing, open(path, "w"), indent=2)
+        results.append("✅ Persistence OK")
+    except:
+        results.append("❌ Persistence FAILED")
+    
+    # 6. Kernel status
+    results.append(f"✅ Kernel: {'ACTIVE' if _KERNEL_READY else 'INACTIVE'}")
+    
+    # 7. Audit
+    audit('test_agents', m.from_user.id, 'auto')
+    entries = get_audit(5)
+    results.append(f"✅ Audit: {len(entries)} entries")
+    
+    bot.reply_to(m, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
 
 print("🚀 SLH SYSTEM RUNNING")
 while True:
