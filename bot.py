@@ -382,6 +382,30 @@ def kernellog(m):
             bot.reply_to(m, f.read()[:1000])
     except:
         bot.reply_to(m, "No kernel error log found")
+
+@bot.message_handler(commands=['sysinfo'])
+def sysinfo(m):
+    import subprocess
+    try:
+        df = subprocess.run("df -h | grep -E 'Use%|/$'", shell=True, capture_output=True, text=True).stdout
+        free = subprocess.run("free -h | grep Mem", shell=True, capture_output=True, text=True).stdout
+        uptime = subprocess.run("uptime", shell=True, capture_output=True, text=True).stdout
+        msg = f"Disk:\n{df}\nMemory:\n{free}\nUptime:\n{uptime}"
+        bot.reply_to(m, msg)
+    except:
+        bot.reply_to(m, "sysinfo unavailable")
+
+
+@bot.message_handler(commands=['rollback'])
+def rollback(m):
+    import subprocess
+    try:
+        result = subprocess.run("cd /app && git log --oneline -3", shell=True, capture_output=True, text=True)
+        msg = f"Last 3 commits:\n{result.stdout}\nUse: git reset --hard <commit>"
+        bot.reply_to(m, msg)
+    except:
+        bot.reply_to(m, "Git unavailable")
+
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
