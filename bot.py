@@ -128,7 +128,8 @@ def admin(m):
 /errors — Show recent errors
 /plugin list — List plugins
 /goal add/list — Manage goals
-/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/disk — Disk usage
+/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
+/disk — Disk usage
 /sysinfo — System resources""")
 
 @bot.message_handler(commands=['status'])
@@ -470,7 +471,41 @@ def user(m):
 /debug — Container debug info
 /plugin list — List plugins
 /goal add/list — Manage goals
+/rlogs — Railway logs (admin)
 /disk — Disk usage""")
+
+@bot.message_handler(commands=['rlogs'])
+def rlogs(m):
+    # Admin only
+    if str(m.from_user.id) != str(SUPER_ADMIN):
+        bot.reply_to(m, "❌ Admin only")
+        return
+    import urllib.request, json, os
+    token = os.getenv("RAILWAY_API_TOKEN", "")
+    if not token:
+        bot.reply_to(m, "❌ RAILWAY_API_TOKEN not set")
+        return
+    query = '{"query":"{ service(id: \\\"13d97581-0199-4f6a-80d1-885c9304ffc5\\\") { deployments(first: 1) { edges { node { id buildLogs } } } } }"}'
+    req = urllib.request.Request(
+        "https://backboard.railway.app/graphql/v2",
+        data=query.encode(),
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read())
+            logs = data.get("data", {}).get("service", {}).get("deployments", {}).get("edges", [])
+            if logs:
+                build_logs = logs[0].get("node", {}).get("buildLogs", "No logs found")
+                bot.reply_to(m, f"📋 Railway logs:\n{build_logs[:2000]}")
+            else:
+                bot.reply_to(m, "No deployment found")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error fetching logs: {e}")
+
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
