@@ -1,6 +1,5 @@
 import os, sys, json, time
 import telebot
-from core.agent_store import AgentStore
 try:
     import psutil
     _PSUTIL_OK = True
@@ -8,26 +7,6 @@ except ImportError:
     _PSUTIL_OK = False
 from audit_logger import audit, get_audit
 from datetime import datetime
-
-import logging
-import os
-
-# Configure logging to both console and file
-log_file = "/app/bot.log"
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
-
-# Log bot startup
-logger.info("Bot starting...")
-
-
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -60,7 +39,6 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-agent_store = AgentStore('/app/agents.json')
 # ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
@@ -273,25 +251,12 @@ def restart(m):
 
 @bot.message_handler(commands=['logs'])
 def logs(m):
-    import os, glob
-    parts = m.text.split()
-    n = int(parts[1]) if len(parts) > 1 else 50
-    
-    # Find any log file
-    log_files = glob.glob("/app/*.log") + glob.glob("/app/*.jsonl")
-    
-    if not log_files:
-        bot.reply_to(m, "No log files found")
-        return
-    
     try:
-        with open(log_files[0], "r") as f:
-            lines = f.readlines()[-n:]
-        output = "".join(lines)[:2000]
-        bot.reply_to(m, output if output else "Log file is empty")
-    except Exception as e:
-        bot.reply_to(m, f"Error: {e}")
-
+        with open("system.log") as f:
+            lines = f.readlines()[-50:]
+        bot.reply_to(m, "".join(lines) or "No logs")
+    except:
+        bot.reply_to(m, "No log file found")
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
@@ -495,16 +460,23 @@ def goal(m):
     elif parts[1] == "list":
         goals = json.load(open(path)) if os.path.exists(path) else []
         bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
-@bot.message_handler(commands=['agent_create'])
-def agent_create(m):
-    parts = m.text.split(" ", 1)
-    name = parts[1] if len(parts) > 1 else "agent"
-    try:
-        aid = agent_store.create(name)
-        audit('agent_create', m.from_user.id, name)
-        bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+@bot.message_handler(commands=['agent_debug'])
+def agent_debug(m):
+    import os, json
+    path = "/app/agents.json"
+    info = []
+    info.append(f"Path exists: {os.path.exists(path)}")
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+            info.append(f"File size: {os.path.getsize(path)}")
+            info.append(f"Agents count: {len(data)}")
+        except Exception as e:
+            info.append(f"Error reading: {e}")
+    else:
+        info.append("File missing")
+    bot.reply_to(m, "\n".join(info))
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
