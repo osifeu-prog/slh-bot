@@ -38,8 +38,6 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 agents_dict = {}
-inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
-master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 
 # ---- Load agents from persistent storage ----
 try:
@@ -575,6 +573,10 @@ def watchdog(m):
     else:
         result = "Usage: /watchdog start [interval_min] | stop"
     bot.reply_to(m, result)
+
+inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
