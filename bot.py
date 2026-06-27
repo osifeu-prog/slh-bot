@@ -423,6 +423,45 @@ if not os.path.exists("/app/bot.log"):
     with open("/app/bot.log", "w") as f:
         f.write("Bot started\n")
 
+@bot.message_handler(commands=['deploy'])
+def deploy(m):
+    import subprocess
+    result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
+    bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
+@bot.message_handler(commands=['errors'])
+def errors(m):
+    try:
+        with open("/app/bot.log") as f:
+            lines = f.readlines()
+        errors = [line for line in lines if "ERROR" in line or "Traceback" in line][-10:]
+        bot.reply_to(m, "".join(errors) or "No recent errors")
+    except:
+        bot.reply_to(m, "No log file")
+@bot.message_handler(commands=['plugin'])
+def plugin(m):
+    import os
+    parts = m.text.split()
+    if len(parts) > 1 and parts[1] == "list":
+        plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
+        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
+    else:
+        bot.reply_to(m, "Usage: /plugin list")
+@bot.message_handler(commands=['goal'])
+def goal(m):
+    import json, os
+    parts = m.text.split(None, 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /goal add <text> | /goal list")
+        return
+    path = "/app/goals.json"
+    if parts[1] == "add" and len(parts) > 2:
+        goals = json.load(open(path)) if os.path.exists(path) else []
+        goals.append({"text": parts[2], "status": "active"})
+        json.dump(goals, open(path, "w"))
+        bot.reply_to(m, f"Goal added: {parts[2]}")
+    elif parts[1] == "list":
+        goals = json.load(open(path)) if os.path.exists(path) else []
+        bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
