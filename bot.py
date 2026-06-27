@@ -382,7 +382,36 @@ def kernellog(m):
             bot.reply_to(m, f.read()[:1000])
     except:
         bot.reply_to(m, "No kernel error log found")
-print("🚀 SLH SYSTEM RUNNING")
+
+@bot.message_handler(commands=['logs'])
+def logs(m):
+    import subprocess
+    parts = m.text.split()
+    n = int(parts[1]) if len(parts) > 1 else 50
+    try:
+        result = subprocess.run(f"tail -{n} /app/bot.log", shell=True, capture_output=True, text=True)
+        bot.reply_to(m, f"Last {n} log lines:\n" + (result.stdout[:2000] or "No logs"))
+    except:
+        bot.reply_to(m, "No log file")\n
+@bot.message_handler(commands=['sysinfo'])
+def sysinfo(m):
+    import subprocess, os
+    try:
+        df = subprocess.run("df -h | grep -E 'Use%|/$'", shell=True, capture_output=True, text=True).stdout
+        free = subprocess.run("free -h | grep Mem", shell=True, capture_output=True, text=True).stdout
+        uptime = subprocess.run("uptime", shell=True, capture_output=True, text=True).stdout
+        msg = f"Disk:\n{df}\nMemory:\n{free}\nUptime:\n{uptime}"
+        bot.reply_to(m, msg)
+    except:
+        bot.reply_to(m, "sysinfo unavailable")\n
+@bot.message_handler(commands=['rollback'])
+def rollback(m):
+    import subprocess
+    try:
+        result = subprocess.run("cd /app && git log --oneline -3", shell=True, capture_output=True, text=True)
+        bot.reply_to(m, f"Last 3 commits:\n{result.stdout}\nUse git reset --hard <commit>")
+    except:
+        bot.reply_to(m, "Git unavailable")\nprint("🚀 SLH SYSTEM RUNNING")
 
 while True:
     try:
