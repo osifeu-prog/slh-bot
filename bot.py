@@ -220,6 +220,7 @@ while True:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
     except Exception as e:
         print("Polling error:", e)
+        audit("crash", "system", str(e)[:100])
         time.sleep(5)
 
 def task(m):
