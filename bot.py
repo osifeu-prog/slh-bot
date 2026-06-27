@@ -1,5 +1,6 @@
 import os, sys, json, time
 import telebot
+from core.agent_store import AgentStore
 try:
     import psutil
     _PSUTIL_OK = True
@@ -59,6 +60,7 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+agent_store = AgentStore('/app/agents.json')
 # ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
@@ -495,6 +497,16 @@ def goal(m):
     elif parts[1] == "list":
         goals = json.load(open(path)) if os.path.exists(path) else []
         bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
+@bot.message_handler(commands=['agent_create'])
+def agent_create(m):
+    parts = m.text.split(" ", 1)
+    name = parts[1] if len(parts) > 1 else "agent"
+    try:
+        aid = agent_store.create(name)
+        audit('agent_create', m.from_user.id, name)
+        bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
