@@ -522,3 +522,32 @@ def agent_create(m):
         bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
+
+@bot.message_handler(commands=['agent_test'])
+def agent_test(m):
+    import json, os
+    path = "/app/agents.json"
+    result = []
+    # 1. Read
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        result.append(f"Read OK, keys: {list(data.keys())}")
+    except Exception as e:
+        result.append(f"Read error: {e}")
+    # 2. Write
+    try:
+        data["test_key"] = {"name": "test", "role": "agent"}
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+        result.append("Write OK")
+    except Exception as e:
+        result.append(f"Write error: {e}")
+    # 3. Verify
+    try:
+        with open(path, "r") as f:
+            data2 = json.load(f)
+        result.append(f"Verify OK, keys: {list(data2.keys())}")
+    except Exception as e:
+        result.append(f"Verify error: {e}")
+    bot.reply_to(m, "\n".join(result))
