@@ -41,12 +41,14 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 bot = telebot.TeleBot(TOKEN)
 
 # ---- Safe Kernel Import (degraded mode if missing) ----
+_KERNEL_ERROR = ""
 try:
     from core.event_bus import EventBus
     from plugins.task import TaskPlugin
     _KERNEL_READY = True
 except Exception as e:
-    print("Kernel modules missing:", e)
+    _KERNEL_ERROR = str(e)
+    print("Kernel modules missing:", _KERNEL_ERROR)
     EventBus = None
     TaskPlugin = None
     _KERNEL_READY = False
@@ -266,7 +268,7 @@ def disk(m):
 @bot.message_handler(commands=['task'])
 def task(m):
     if not _KERNEL_READY:
-        bot.reply_to(m, "Kernel not loaded – running in basic mode.")
+        bot.reply_to(m, f"Kernel not loaded: {_KERNEL_ERROR}")
         return
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
