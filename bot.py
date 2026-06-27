@@ -42,16 +42,20 @@ bot = telebot.TeleBot(TOKEN)
 # ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
+import traceback as _traceback
 try:
     from core.event_bus import EventBus
     from plugins.task import TaskPlugin
     _KERNEL_READY = True
     print("✅ Kernel imports OK")
 except Exception as e:
-    _KERNEL_ERROR = str(e)
+    _KERNEL_ERROR = str(e) + "\n" + _traceback.format_exc()
     _KERNEL_READY = False
     EventBus = TaskPlugin = None
     print("Kernel modules missing:", _KERNEL_ERROR)
+    # Write to a log file for debugging
+    with open("/app/kernel_import_error.log", "w") as f:
+        f.write(_KERNEL_ERROR)
 
 # ---- Kernel initialization ----
 if _KERNEL_READY:
@@ -352,6 +356,14 @@ def task(m):
         bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
         bus.emit("task_list", {"chat": m.chat.id})
+
+@bot.message_handler(commands=['kernellog'])
+def kernellog(m):
+    try:
+        with open("/app/kernel_import_error.log") as f:
+            bot.reply_to(m, f.read()[:1000])
+    except:
+        bot.reply_to(m, "No kernel error log found")
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
