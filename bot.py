@@ -37,9 +37,9 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
-master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)(bot, agents_dict, _KERNEL_READY, get_audit)
 agents_dict = {}
+inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 
 # ---- Load agents from persistent storage ----
 try:
