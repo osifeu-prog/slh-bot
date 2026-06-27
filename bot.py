@@ -37,6 +37,30 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+# ---- Kernel initialization ----
+if _KERNEL_READY:
+    try:
+        bus = EventBus(workers=2)
+        TaskPlugin().on_start(bus)
+        print("✅ Kernel modules loaded")
+    except Exception as e:
+        print("Kernel init failed:", e)
+        _KERNEL_READY = False
+else:
+    print("⚠️ Running in degraded mode (no kernel)")
+
+
+# ---- Safe Kernel Import (degraded mode if missing) ----
+try:
+    from core.event_bus import EventBus
+    from plugins.task import TaskPlugin
+    _KERNEL_READY = True
+except Exception as e:
+    print("Kernel modules missing:", e)
+    EventBus = None
+    TaskPlugin = None
+    _KERNEL_READY = False
+
 bus = EventBus(workers=2)
 TaskPlugin().on_start(bus)
 
