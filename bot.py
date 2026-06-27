@@ -1,5 +1,6 @@
 import os, sys, json, time, subprocess
 import telebot
+from master_agent import MasterAgent
 from inspector import InspectorAgent
 from datetime import datetime
 from audit_logger import audit, get_audit
@@ -37,6 +38,7 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)(bot, agents_dict, _KERNEL_READY, get_audit)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
@@ -105,7 +107,7 @@ def start(m):
 def admin(m):
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
 📊 DIAGNOSTICS:
-/test — Run full system diagnostic\n/inspect — Inspector Agent report\n/test_agents — Quick agent self-test
+/test — Run full system diagnostic\n/inspect — Full diagnostic\n/q — Quick check (5 tests)\n/watchdog start/stop — Periodic reports\n/test_agents — Quick agent self-test
 /status — System status
 /health — Health check
 🤖 AGENTS:
@@ -554,6 +556,25 @@ def inspect(m):
     report = inspector.run_all(m.chat.id)
     bot.reply_to(m, report)
 
+@bot.message_handler(commands=['q'])
+def q(m):
+    report = master.quick_check()
+    bot.reply_to(m, report)
+@bot.message_handler(commands=['watchdog'])
+def watchdog(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /watchdog start [interval_min] | stop")
+        return
+    action = parts[1]
+    if action == "start":
+        interval = int(parts[2]) if len(parts) > 2 else 60
+        result = master.watchdog_start(m.chat.id, interval)
+    elif action == "stop":
+        result = master.watchdog_stop()
+    else:
+        result = "Usage: /watchdog start [interval_min] | stop"
+    bot.reply_to(m, result)
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
