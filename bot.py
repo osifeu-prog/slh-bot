@@ -1,5 +1,6 @@
 import os, sys, json, time
 import telebot
+from core.agent_store import InMemoryAgentStore
 from core.agent_store import AgentStore
 try:
     import psutil
@@ -40,8 +41,9 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+agent_store = InMemoryAgentStore()
 try:
-    agent_store = AgentStore('/app/agents.json')
+    
 except:
     print("[WARN] Could not open agents.json, using memory store")
     class InMemoryAgentStore:
@@ -53,8 +55,7 @@ except:
             return aid
         def list(self):
             return [{"id": k, **v} for k, v in self._data.items()]
-    agent_store = InMemoryAgentStore()
-
+    
 # ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
