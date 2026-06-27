@@ -40,6 +40,31 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
+# ---- Safe Kernel Import (degraded mode if missing) ----
+try:
+    from core.event_bus import EventBus
+    from plugins.task import TaskPlugin
+    _KERNEL_READY = True
+except Exception as e:
+    print("Kernel modules missing:", e)
+    EventBus = None
+    TaskPlugin = None
+    _KERNEL_READY = False
+
+
+# ---- Kernel initialization ----
+if _KERNEL_READY:
+    try:
+        bus = EventBus(workers=2)
+        TaskPlugin().on_start(bus)
+        print("✅ Kernel modules loaded")
+    except Exception as e:
+        print("Kernel init failed:", e)
+        _KERNEL_READY = False
+else:
+    print("⚠️ Running in degraded mode (no kernel)")
+
+
 # ---------------- DB ----------------
 BASE_DB = {
     "users": {},
@@ -236,6 +261,21 @@ def memory(m):
 @bot.message_handler(commands=['disk'])
 def disk(m):
     bot.reply_to(m, "Disk: OK")
+
+
+@bot.message_handler(commands=['task'])
+def task(m):
+    if not _KERNEL_READY:
+        bot.reply_to(m, "Kernel not loaded – running in basic mode.")
+        return
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        bus.emit("task_list", {"chat": m.chat.id})
 
 print("🚀 SLH SYSTEM RUNNING")
 
