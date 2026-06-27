@@ -1,7 +1,5 @@
 import os, sys, json, time
 import telebot
-from core.event_bus import EventBus
-from plugins.task import TaskPlugin
 from datetime import datetime
 
 # ---------------- LOAD TOKEN ----------------
@@ -35,8 +33,6 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-bus = EventBus(workers=2)
-TaskPlugin().on_start(bus)
 
 # ---------------- DB ----------------
 BASE_DB = {
@@ -205,7 +201,6 @@ while True:
         print("Polling error:", e)
         time.sleep(5)
 
-@bot.message_handler(commands=['task'])
 def task(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
