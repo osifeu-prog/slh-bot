@@ -476,35 +476,74 @@ def user(m):
 
 @bot.message_handler(commands=['rlogs'])
 def rlogs(m):
+    import urllib.request, json, os, ssl
     # Admin only
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
         return
-    import urllib.request, json, os
+    # Load token
     token = os.getenv("RAILWAY_API_TOKEN", "")
+    if not token:
+        try:
+            with open(os.path.expanduser("~/.railway_token")) as f:
+                token = f.read().strip()
+        except:
+            pass
     if not token:
         bot.reply_to(m, "❌ RAILWAY_API_TOKEN not set")
         return
-    query = '{"query":"{ service(id: \\\"13d97581-0199-4f6a-80d1-885c9304ffc5\\\") { deployments(first: 1) { edges { node { id buildLogs } } } } }"}'
+    # SSL bypass
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    query_str = '{"query":"{ service(id: \\"13d97581-0199-4f6a-80d1-885c9304ffc5\\") { deployments(first: 1) { edges { node { id status } } } } }"}'
     req = urllib.request.Request(
         "https://backboard.railway.app/graphql/v2",
-        data=query.encode(),
+        data=query_str.encode(),
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
             data = json.loads(resp.read())
-            logs = data.get("data", {}).get("service", {}).get("deployments", {}).get("edges", [])
-            if logs:
-                build_logs = logs[0].get("node", {}).get("buildLogs", "No logs found")
-                bot.reply_to(m, f"📋 Railway logs:\n{build_logs[:2000]}")
-            else:
-                bot.reply_to(m, "No deployment found")
+            bot.reply_to(m, f"📋 Railway response:\n{str(data)[:2000]}")
     except Exception as e:
-        bot.reply_to(m, f"❌ Error fetching logs: {e}")
+        bot.reply_to(m, f"❌ Error: {e}")
+
+@bot.message_handler(commands=['exec'])
+def exec_cmd(m):
+    if str(m.from_user.id) != str(SUPER_ADMIN):
+        bot.reply_to(m, "❌ Admin only")
+        return
+    cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
+    if not cmd:
+        bot.reply_to(m, "Usage: /exec <shell command>")
+        return
+    import subprocess
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        output = result.stdout[:2000] or result.stderr[:500] or "No output"
+        bot.reply_to(m, f"💻 {cmd}\n{output}")
+    except subprocess.TimeoutExpired:
+        bot.reply_to(m, "⏰ Command timed out")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
+
+
+@bot.message_handler(commands=['termlog'])
+def termlog(m):
+    if str(m.from_user.id) != str(SUPER_ADMIN):
+        bot.reply_to(m, "❌ Admin only")
+        return
+    import subprocess
+    try:
+        result = subprocess.run("tail -n 30 ~/slh_clean/bot.log", shell=True, capture_output=True, text=True, timeout=5)
+        output = result.stdout[:2000] or "No logs"
+        bot.reply_to(m, f"📋 Termux log:\n{output}")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
 
 print("🚀 SLH SYSTEM RUNNING")
 while True:

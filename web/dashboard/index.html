@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SLH OS Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .nav { display: flex; gap: 20px; }
+        .nav a { text-decoration: none; color: #94a3b8; cursor: pointer; }
+        .nav a.active { color: #00ff88; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; }
+        .card h3 { margin-bottom: 10px; color: #00ff88; }
+        .stat { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .btn { background: #00ff88; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #00dd77; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀 SLH OS Dashboard</div>
+            <div class="nav">
+                <a class="active" onclick="showSection('dashboard')">Dashboard</a>
+                <a onclick="showSection('agents')">Agents</a>
+                <a onclick="showSection('tasks')">Tasks</a>
+            </div>
+        </div>
+        <div id="dashboard" class="section">
+            <div class="grid">
+                <div class="card">
+                    <h3>🤖 Agents</h3>
+                    <div class="stat" id="agent-count">0</div>
+                    <button class="btn" onclick="loadAgents()">Refresh</button>
+                </div>
+                <div class="card">
+                    <h3>📋 Tasks</h3>
+                    <div class="stat" id="task-count">0</div>
+                    <button class="btn" onclick="loadTasks()">Refresh</button>
+                </div>
+                <div class="card">
+                    <h3>⚡ Health</h3>
+                    <div class="stat" id="health-status">OK</div>
+                    <button class="btn" onclick="checkHealth()">Check</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API = 'http://localhost:5000/api';
+        async function loadAgents() {
+            const res = await fetch(API + '/agents');
+            const data = await res.json();
+            document.getElementById('agent-count').textContent = Object.keys(data).length;
+        }
+        async function loadTasks() {
+            const res = await fetch(API + '/tasks');
+            const data = await res.json();
+            document.getElementById('task-count').textContent = data.length;
+        }
+        async function checkHealth() {
+            const res = await fetch(API + '/health');
+            const data = await res.json();
+            document.getElementById('health-status').textContent = data.status.toUpperCase();
+        }
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.getElementById(section).style.display = 'block';
+        }
+        loadAgents();
+        loadTasks();
+        checkHealth();
+    </script>
+</body>
+</html>

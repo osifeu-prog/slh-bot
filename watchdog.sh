@@ -1,13 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
-
-while true
-do
-  if ! pgrep -f bot_fix.py > /dev/null
-  then
-    echo "🧯 BOT NOT RUNNING - restarting..."
-    cd ~/slh_clean
-    nohup ./run_bot.sh > bot.log 2>&1 &
-  fi
-
-  sleep 5
+cd ~/slh_clean
+while true; do
+    python3 -B bot.py >> bot.log 2>&1
+    echo "$(date): Bot crashed, restarting in 5s..." >> bot.log
+    sleep 5
 done
