@@ -76,14 +76,21 @@ def ensure_user(db, uid):
 # ---------------- COMMANDS ----------------
 @bot.message_handler(commands=['start'])
 def start(m):
-    audit('start', m.from_user.id)
-    db = ensure_user(load_db(), m.from_user.id)
-    save_db(db)
-    bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+    try:
+        audit('start', m.from_user.id)
+        db = ensure_user(load_db(), m.from_user.id)
+        save_db(db)
+        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+    except Exception as e:
+        print(f"/start error: {e}")
+        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
-    audit('admin', m.from_user.id)
+    try:
+        audit('admin', m.from_user.id)
+    except:
+        pass
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
 
 📊 DIAGNOSTICS:
@@ -178,12 +185,18 @@ def results(m):
 
 @bot.message_handler(commands=['backup'])
 def backup(m):
-    audit('backup', m.from_user.id)
+    try:
+        audit('backup', m.from_user.id)
+    except:
+        pass
     bot.reply_to(m, "✅ Backup committed to Git")
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
-    audit('restart', m.from_user.id)
+    try:
+        audit('restart', m.from_user.id)
+    except:
+        pass
     bot.reply_to(m, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
