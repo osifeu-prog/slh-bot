@@ -452,6 +452,25 @@ def test_agents(m):
     
     bot.reply_to(m, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
 
+
+@bot.message_handler(commands=['user'])
+def user(m):
+    bot.reply_to(m, """👤 USER COMMANDS
+/start — Start
+/status — System status
+/health — Health check
+/vote — Create vote
+/results — See results
+/agents — List agents
+/agent_create [name] — Create new agent
+/task create/list — Manage tasks
+/logs <n> — Last N log lines
+/audit — Audit log
+/sysinfo — System resources
+/debug — Container debug info
+/plugin list — List plugins
+/goal add/list — Manage goals
+/disk — Disk usage""")
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
