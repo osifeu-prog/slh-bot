@@ -23,9 +23,12 @@ if not TOKEN:
     sys.exit(1)
 
 # ---------------- CONFIG ----------------
-with open("config.json") as f:
-    cfg = json.load(f)
-
+# Load config safely (may not exist if token from env)
+try:
+    with open("config.json") as f:
+        cfg = json.load(f)
+except:
+    cfg = {}
 SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
