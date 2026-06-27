@@ -41,13 +41,14 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 bot = telebot.TeleBot(TOKEN)
 
 # ---- Safe Kernel Import (degraded mode if missing) ----
+import os as _os
 _KERNEL_ERROR = ""
 try:
     from core.event_bus import EventBus
     from plugins.task import TaskPlugin
     _KERNEL_READY = True
 except Exception as e:
-    _KERNEL_ERROR = str(e)
+    _KERNEL_ERROR = f"{e}. Current dir: {_os.getcwd()}. Files: {_os.listdir('.')}"
     print("Kernel modules missing:", _KERNEL_ERROR)
     EventBus = None
     TaskPlugin = None
