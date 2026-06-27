@@ -58,14 +58,18 @@ except Exception as e:
         f.write(_KERNEL_ERROR)
 
 # ---- Kernel initialization ----
+_KERNEL_INIT_ERROR = ""
 if _KERNEL_READY:
     try:
         bus = EventBus(workers=2)
         TaskPlugin().on_start(bus)
         print("✅ Kernel modules loaded")
     except Exception as e:
-        print("Kernel init failed:", e)
+        _KERNEL_INIT_ERROR = str(e) + "\n" + _traceback.format_exc()
+        print("Kernel init failed:", _KERNEL_INIT_ERROR)
         _KERNEL_READY = False
+        with open("/app/kernel_import_error.log", "a") as f:
+            f.write("\nINIT ERROR:\n" + _KERNEL_INIT_ERROR)
 else:
     print("⚠️ Running in degraded mode")
 
@@ -332,7 +336,10 @@ def termux(m):
     bot.reply_to(m, msg)
 @bot.message_handler(commands=['kernelstatus'])
 def kernelstatus(m):
-    bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}\nKERNEL_ERROR: {_KERNEL_ERROR}")
+    msg = f"KERNEL_READY: {_KERNEL_READY}\nKERNEL_ERROR: {_KERNEL_ERROR}"
+    if _KERNEL_READY == False and not _KERNEL_ERROR:
+        msg += "\n(Init error, use /kernellog)"
+    bot.reply_to(m, msg)
 @bot.message_handler(commands=['debug'])
 def debug(m):
     import os, sys
