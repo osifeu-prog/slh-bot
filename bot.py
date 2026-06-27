@@ -406,6 +406,17 @@ def rollback(m):
     except:
         bot.reply_to(m, "Git unavailable")
 
+
+@bot.message_handler(commands=['update'])
+def update(m):
+    import subprocess
+    try:
+        result = subprocess.run("cd /app && git pull origin main && git push origin main", shell=True, capture_output=True, text=True)
+        msg = "✅ Update triggered\n" + (result.stdout[:500] or result.stderr[:500] or "OK")
+        bot.reply_to(m, msg)
+    except Exception as e:
+        bot.reply_to(m, f"❌ Update failed: {e}")
+
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
