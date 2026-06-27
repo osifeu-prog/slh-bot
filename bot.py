@@ -35,29 +35,6 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-# ---- Kernel initialization ----
-if _KERNEL_READY:
-    try:
-        bus = EventBus(workers=2)
-        TaskPlugin().on_start(bus)
-        print("✅ Kernel modules loaded")
-    except Exception as e:
-        print("Kernel init failed:", e)
-        _KERNEL_READY = False
-else:
-    print("⚠️ Running in degraded mode (no kernel)")
-
-
-# ---- Safe Kernel Import (degraded mode if missing) ----
-try:
-    from core.event_bus import EventBus
-    from plugins.task import TaskPlugin
-    _KERNEL_READY = True
-except Exception as e:
-    print("Kernel modules missing:", e)
-    EventBus = None
-    TaskPlugin = None
-    _KERNEL_READY = False
 
 # ---------------- DB ----------------
 BASE_DB = {
@@ -246,17 +223,6 @@ while True:
         audit("crash", "system", str(e)[:100])
         time.sleep(5)
 
-def task(m):
-    parts = m.text.split(" ", 2)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /task create <text> | /task list")
-        return
-    if parts[1] == "create":
-        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
-    elif parts[1] == "list":
-        bus.emit("task_list", {"chat": m.chat.id})
-
-@bot.message_handler(commands=['task'])
 def task(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
