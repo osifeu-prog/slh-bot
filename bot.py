@@ -310,8 +310,6 @@ def agents(m):
     bot.reply_to(m, "No agents yet")
 
 @bot.message_handler(commands=['audit'])
-def audit(m):
-    bot.reply_to(m, "Audit log empty")
 
 @bot.message_handler(commands=['memory'])
 def memory(m):
