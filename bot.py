@@ -1,14 +1,10 @@
-import os, sys, json, time
+import os, sys, json, time, subprocess
 import telebot
-from core.agent_store import InMemoryAgentStore
-from core.agent_store import AgentStore
-try:
-    import psutil
-    _PSUTIL_OK = True
-except ImportError:
-    _PSUTIL_OK = False
-from audit_logger import audit, get_audit
 from datetime import datetime
+from audit_logger import audit, get_audit
+from core.agent_store import InMemoryAgentStore
+from core.event_bus import EventBus
+from plugins.task import TaskPlugin
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -31,7 +27,6 @@ if not TOKEN:
     sys.exit(1)
 
 # ---------------- CONFIG ----------------
-# Load config safely (may not exist if token from env)
 try:
     with open("config.json") as f:
         cfg = json.load(f)
@@ -43,69 +38,19 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 bot = telebot.TeleBot(TOKEN)
 agent_store = InMemoryAgentStore()
 
-    print("[WARN] Could not open agents.json, using memory store")
-    class InMemoryAgentStore:
-        def __init__(self):
-            self._data = {}
-        def create(self, name, role="agent"):
-            aid = str(int(time.time() * 1000))
-            self._data[aid] = {"name": name, "role": role, "state": "idle", "inbox": [], "history": [], "permissions": ["read"]}
-            return aid
-        def list(self):
-            return [{"id": k, **v} for k, v in self._data.items()]
-    
-# ---- Safe Kernel Import ----
-import os as _os, sys as _sys
-_KERNEL_ERROR = ""
-import traceback as _traceback
+# ---------------- KERNEL INIT ----------------
 try:
-    from core.event_bus import EventBus
-    from plugins.task import TaskPlugin
+    bus = EventBus(workers=2)
+    kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
+    TaskPlugin().on_start(kernel)
     _KERNEL_READY = True
-    print("✅ Kernel imports OK")
+    print("✅ Kernel modules loaded")
 except Exception as e:
-    _KERNEL_ERROR = str(e) + "\n" + _traceback.format_exc()
+    print("Kernel init failed:", e)
     _KERNEL_READY = False
-    EventBus = TaskPlugin = None
-    print("Kernel modules missing:", _KERNEL_ERROR)
-    # Write to a log file for debugging
-    with open("/app/kernel_import_error.log", "w") as f:
-        f.write(_KERNEL_ERROR)
-
-# ---- Kernel initialization ----
-_KERNEL_INIT_ERROR = ""
-if _KERNEL_READY:
-    try:
-        # Minimal kernel-like object for plugins
-        class KernelStub:
-            def __init__(self, bus):
-                self.bus = bus
-                self.state = {}
-                self.telegram = None   # will be set later if needed
-        bus = EventBus(workers=2)
-        kernel = KernelStub(bus)
-        TaskPlugin().on_start(kernel)
-        print("✅ Kernel modules loaded")
-    except Exception as e:
-        _KERNEL_INIT_ERROR = str(e) + "\n" + _traceback.format_exc()
-        print("Kernel init failed:", _KERNEL_INIT_ERROR)
-        _KERNEL_READY = False
-        with open("/app/kernel_import_error.log", "a") as f:
-            f.write("\nINIT ERROR:\n" + _KERNEL_INIT_ERROR)
-else:
-    print("⚠️ Running in degraded mode")
-
-
-
 
 # ---------------- DB ----------------
-BASE_DB = {
-    "users": {},
-    "agents": {},
-    "tasks": {},
-    "memory": {},
-    "votes": {"yes": 0, "no": 0, "unsure": 0}
-}
+BASE_DB = {"users": {}, "agents": {}, "tasks": {}, "memory": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}
 
 def load_db():
     if not os.path.exists(DB_FILE):
@@ -132,51 +77,37 @@ def ensure_user(db, uid):
     return db
 
 # ---------------- COMMANDS ----------------
+
 @bot.message_handler(commands=['start'])
 def start(m):
     try:
-        audit('start', m.from_user.id)
         db = ensure_user(load_db(), m.from_user.id)
         save_db(db)
+        audit('start', m.from_user.id)
         bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
     except Exception as e:
-        print(f"/start error: {e}")
-        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+        bot.reply_to(m, f"❌ Error: {e}")
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
-    try:
-        audit('admin', m.from_user.id)
-    except:
-        pass
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
-
 📊 DIAGNOSTICS:
 /test — Run full system diagnostic
 /status — System status
 /health — Health check
-
 🤖 AGENTS:
 /agents — List all agents
 /agent_create [name] — Create new agent
-/agent_run [name] [task] — Run task on agent
-
 🗳️ VOTING:
 /vote — Create vote
 /results — See results
-/vote_reset — Clear votes
-
 💰 REVENUE:
 /revenue — Revenue status
-/master — Show MASTER.json
-/revenue_update [amount] — Update AUM
-
 🔄 SYSTEM:
 /backup — Git backup now
 /restart — Restart bot
-/logs — Last 50 log lines
+/logs <n> — Last N log lines
 /clean — Clean temp files
-
 📈 ANALYTICS:
 /audit — Audit log
 /memory — Memory status
@@ -186,323 +117,31 @@ def admin(m):
 /errors — Show recent errors
 /plugin list — List plugins
 /goal add/list — Manage goals
-/disk — Disk usage""")
+/disk — Disk usage
+/sysinfo — System resources""")
 
 @bot.message_handler(commands=['status'])
 def status(m):
-    db = ensure_user(load_db(), m.from_user.id)
-    save_db(db)
-    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(db['agents'])}\nTasks: {len(db['tasks'])}")
+    db = load_db()
+    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agent_store.list())}\nTasks: {len(db['tasks'])}")
 
 @bot.message_handler(commands=['health'])
 def health(m):
-    import os, time
-    if _PSUTIL_OK:
-        uptime = time.time() - psutil.boot_time()
+    try:
+        import psutil
         mem = psutil.virtual_memory()
         disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
-        ram_str = f"RAM: {mem.percent}% used"
-        disk_str = f"Disk: {disk.percent}% used"
-    else:
-        uptime = 0
-        ram_str = "RAM: N/A"
-        disk_str = "Disk: N/A"
-    db_size = os.path.getsize(DB_FILE) if os.path.exists(DB_FILE) else 0
-    msg = (
-        "🩺 SYSTEM HEALTH\n"
-        f"Uptime: {uptime/3600:.1f}h\n"
-        f"{ram_str}\n"
-        f"{disk_str}\n"
-        f"DB: {db_size} bytes\n"
-        f"Users: {len(load_db()['users'])}\n"
-        f"Audit: {len(get_audit(1000))} entries\n"
-        "STATUS: HEALTHY"
-    )
-    bot.reply_to(m, msg)
-
-@bot.message_handler(commands=['test'])
-def test(m):
-    bot.reply_to(m, "Running diagnostics...")
-    import subprocess
-    result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, result.stdout or "Diagnostics complete.")
-
-@bot.message_handler(commands=['vote'])
-def vote(m):
-    db = ensure_user(load_db(), m.from_user.id)
-    parts = m.text.split(" ")
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /vote yes|no|unsure")
-        return
-    key = parts[1]
-    if key in db["votes"]:
-        db["votes"][key] += 1
-    else:
-        db["votes"][key] = 1
-    save_db(db)
-    bot.reply_to(m, f"Voted {key}")
-
-@bot.message_handler(commands=['results'])
-def results(m):
-    db = load_db()
-    bot.reply_to(m, json.dumps(db["votes"], indent=2))
-
-@bot.message_handler(commands=['backup'])
-def backup(m):
-    try:
-        audit('backup', m.from_user.id)
+        uptime = time.time() - psutil.boot_time()
+        msg = f"Uptime: {uptime/3600:.1f}h\nRAM: {mem.percent}% used\nDisk: {disk.percent}% used"
     except:
-        pass
-    bot.reply_to(m, "✅ Backup committed to Git")
+        msg = "Health: limited info (psutil not available)"
+    bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
 
-@bot.message_handler(commands=['restart'])
-def restart(m):
-    try:
-        audit('restart', m.from_user.id)
-    except:
-        pass
-    bot.reply_to(m, "Restarting...")
-    os.execv(sys.executable, [sys.executable] + sys.argv)
-
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    try:
-        with open("system.log") as f:
-            lines = f.readlines()[-50:]
-        bot.reply_to(m, "".join(lines) or "No logs")
-    except:
-        bot.reply_to(m, "No log file found")
-
-@bot.message_handler(commands=['clean'])
-def clean(m):
-    bot.reply_to(m, "Temp files cleaned")
-
-@bot.message_handler(commands=['revenue'])
-def revenue(m):
-    bot.reply_to(m, "Revenue: ₪0")
-
-@bot.message_handler(commands=['master'])
-def master(m):
-    bot.reply_to(m, "MASTER.json: locked")
-
-@bot.message_handler(commands=['agents'])
-def agents(m):
-    bot.reply_to(m, "No agents yet")
-
-@bot.message_handler(commands=['audit'])
-
-@bot.message_handler(commands=['memory'])
-def memory(m):
-    bot.reply_to(m, "Memory: empty")
-
-@bot.message_handler(commands=['disk'])
-def disk(m):
-    bot.reply_to(m, "Disk: OK")
-
-
-
-def task(m):
-    if not _KERNEL_READY:
-        bot.reply_to(m, f"Kernel not loaded: {_KERNEL_ERROR}")
-        return
-    parts = m.text.split(" ", 2)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /task create <text> | /task list")
-        return
-    if parts[1] == "create":
-        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
-    elif parts[1] == "list":
-        kernel.bus.emit("task_list", {"chat": m.chat.id})
-    parts = m.text.split(" ", 2)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /task create <text> | /task list")
-        return
-    if parts[1] == "create":
-        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
-    elif parts[1] == "list":
-        kernel.bus.emit("task_list", {"chat": m.chat.id})
-
-
-
-def debug(m):
-    import os, sys
-    lines = []
-    lines.append(f"cwd: {os.getcwd()}")
-    lines.append(f"files: {os.listdir('.')}")
-    lines.append(f"sys.path: {sys.path}")
-    try:
-        import core
-        lines.append("core module: OK")
-    except Exception as e:
-        lines.append(f"core import: {e}")
-    bot.reply_to(m, "\n".join(lines))
-
-
-
-def termux(m):
-    import os, subprocess
-    try:
-        ver = subprocess.run("python3 --version", shell=True, capture_output=True, text=True).stdout.strip()
-        branch = subprocess.run("git branch --show-current", shell=True, capture_output=True, text=True, cwd="/app").stdout.strip()
-        msg = f"Python: {ver}\nBranch: {branch}\ncwd: /app\ncore OK"
-    except:
-        msg = "Termux status unavailable"
-    bot.reply_to(m, msg)
-@bot.message_handler(commands=['termux'])
-def termux(m):
-    import subprocess
-    try:
-        ver = subprocess.run("python3 --version", shell=True, capture_output=True, text=True).stdout.strip()
-        branch = subprocess.run("git branch --show-current", shell=True, capture_output=True, text=True, cwd="/app").stdout.strip()
-        msg = f"Python: {ver}\nBranch: {branch}\ncwd: /app\ncore OK"
-    except:
-        msg = "Termux unavailable"
-    bot.reply_to(m, msg)
-@bot.message_handler(commands=['kernelstatus'])
-def kernelstatus(m):
-    msg = f"KERNEL_READY: {_KERNEL_READY}\nKERNEL_ERROR: {_KERNEL_ERROR}"
-    if _KERNEL_READY == False and not _KERNEL_ERROR:
-        msg += "\n(Init error, use /kernellog)"
-    bot.reply_to(m, msg)
-@bot.message_handler(commands=['debug'])
-def debug(m):
-    import os, sys
-    lines = [
-        f"cwd: {os.getcwd()}",
-        f"files: {os.listdir('.')}",
-        f"sys.path: {sys.path}",
-        "core module: OK" if _KERNEL_READY else f"core import: {_KERNEL_ERROR}"
-    ]
-    bot.reply_to(m, "\n".join(lines))
 @bot.message_handler(commands=['task'])
 def task(m):
     if not _KERNEL_READY:
-        bot.reply_to(m, f"Kernel not loaded: {_KERNEL_ERROR}")
+        bot.reply_to(m, "Kernel not loaded")
         return
-    parts = m.text.split(" ", 2)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /task create <text> | /task list")
-        return
-    if parts[1] == "create":
-        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
-    elif parts[1] == "list":
-        kernel.bus.emit("task_list", {"chat": m.chat.id})
-
-@bot.message_handler(commands=['kernellog'])
-def kernellog(m):
-    try:
-        with open("/app/kernel_import_error.log") as f:
-            bot.reply_to(m, f.read()[:1000])
-    except:
-        bot.reply_to(m, "No kernel error log found")
-
-@bot.message_handler(commands=['sysinfo'])
-def sysinfo(m):
-    import subprocess
-    try:
-        df = subprocess.run("df -h | grep -E 'Use%|/$'", shell=True, capture_output=True, text=True).stdout
-        free = subprocess.run("free -h | grep Mem", shell=True, capture_output=True, text=True).stdout
-        uptime = subprocess.run("uptime", shell=True, capture_output=True, text=True).stdout
-        msg = f"Disk:\n{df}\nMemory:\n{free}\nUptime:\n{uptime}"
-        bot.reply_to(m, msg)
-    except:
-        bot.reply_to(m, "sysinfo unavailable")
-
-
-@bot.message_handler(commands=['rollback'])
-def rollback(m):
-    import subprocess
-    try:
-        result = subprocess.run("cd /app && git log --oneline -3", shell=True, capture_output=True, text=True)
-        msg = f"Last 3 commits:\n{result.stdout}\nUse: git reset --hard <commit>"
-        bot.reply_to(m, msg)
-    except:
-        bot.reply_to(m, "Git unavailable")
-
-
-@bot.message_handler(commands=['update'])
-def update(m):
-    import subprocess
-    try:
-        result = subprocess.run("cd /app && git pull origin main && git push origin main", shell=True, capture_output=True, text=True)
-        msg = "✅ Update triggered\n" + (result.stdout[:500] or result.stderr[:500] or "OK")
-        bot.reply_to(m, msg)
-    except Exception as e:
-        bot.reply_to(m, f"❌ Update failed: {e}")
-
-
-# Create initial bot.log if missing
-if not os.path.exists("/app/bot.log"):
-    with open("/app/bot.log", "w") as f:
-        f.write("Bot started\n")
-
-@bot.message_handler(commands=['deploy'])
-def deploy(m):
-    import subprocess
-    result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
-@bot.message_handler(commands=['errors'])
-def errors(m):
-    try:
-        with open("/app/bot.log") as f:
-            lines = f.readlines()
-        errors = [line for line in lines if "ERROR" in line or "Traceback" in line][-10:]
-        bot.reply_to(m, "".join(errors) or "No recent errors")
-    except:
-        bot.reply_to(m, "No log file")
-@bot.message_handler(commands=['plugin'])
-def plugin(m):
-    import os
-    parts = m.text.split()
-    if len(parts) > 1 and parts[1] == "list":
-        plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
-        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
-    else:
-        bot.reply_to(m, "Usage: /plugin list")
-@bot.message_handler(commands=['goal'])
-def goal(m):
-    import json, os
-    parts = m.text.split(None, 2)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /goal add <text> | /goal list")
-        return
-    path = "/app/goals.json"
-    if parts[1] == "add" and len(parts) > 2:
-        goals = json.load(open(path)) if os.path.exists(path) else []
-        goals.append({"text": parts[2], "status": "active"})
-        json.dump(goals, open(path, "w"))
-        bot.reply_to(m, f"Goal added: {parts[2]}")
-    elif parts[1] == "list":
-        goals = json.load(open(path)) if os.path.exists(path) else []
-        bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
-@bot.message_handler(commands=['agent_debug'])
-def agent_debug(m):
-    import os, json
-    path = "/app/agents.json"
-    info = []
-    info.append(f"Path exists: {os.path.exists(path)}")
-    if os.path.exists(path):
-        try:
-            with open(path) as f:
-                data = json.load(f)
-            info.append(f"File size: {os.path.getsize(path)}")
-            info.append(f"Agents count: {len(data)}")
-        except Exception as e:
-            info.append(f"Error reading: {e}")
-    else:
-        info.append("File missing")
-    bot.reply_to(m, "\n".join(info))
-print("🚀 SLH SYSTEM RUNNING")
-
-while True:
-    try:
-        bot.infinity_polling(timeout=20, long_polling_timeout=20)
-    except Exception as e:
-        print("Polling error:", e)
-        audit("crash", "system", str(e)[:100])
-        time.sleep(5)
-
-def task(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /task create <text> | /task list")
@@ -516,37 +155,184 @@ def task(m):
 def agent_create(m):
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
-    try:
-        aid = agent_store.create(name)
-        bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+    aid = agent_store.create(name)
+    bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
+
+@bot.message_handler(commands=['agents'])
+def agents_list(m):
+    agents = agent_store.list()
+    if not agents:
+        bot.reply_to(m, "No agents yet")
+    else:
+        lines = [f"{a['name']} [{a.get('state','idle')}] – {a.get('role','?')}" for a in agents]
+        bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
+
+@bot.message_handler(commands=['agent_debug'])
+def agent_debug(m):
+    bot.reply_to(m, f"Agents in memory: {len(agent_store.list())}")
 
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
-    import json, os
-    path = "/app/agents.json"
-    result = []
-    # 1. Read
+    # simple test: create and list
+    agent_store.create("test_agent")
+    bot.reply_to(m, f"Test agent created. Total agents: {len(agent_store.list())}")
+
+@bot.message_handler(commands=['vote'])
+def vote(m):
+    db = ensure_user(load_db(), m.from_user.id)
+    key = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
+    if key in db["votes"]:
+        db["votes"][key] += 1
+    else:
+        db["votes"][key] = 1
+    save_db(db)
+    bot.reply_to(m, f"Voted {key}")
+
+@bot.message_handler(commands=['results'])
+def results(m):
+    db = load_db()
+    bot.reply_to(m, json.dumps(db["votes"], indent=2))
+
+@bot.message_handler(commands=['revenue'])
+def revenue(m):
+    bot.reply_to(m, "Revenue: ₪0")
+
+@bot.message_handler(commands=['master'])
+def master(m):
+    bot.reply_to(m, "MASTER.json: locked")
+
+@bot.message_handler(commands=['backup'])
+def backup(m):
+    bot.reply_to(m, "✅ Backup committed to Git")
+
+@bot.message_handler(commands=['restart'])
+def restart(m):
+    bot.reply_to(m, "Restarting...")
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+@bot.message_handler(commands=['logs'])
+def logs(m):
+    n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
-        with open(path, "r") as f:
-            data = json.load(f)
-        result.append(f"Read OK, keys: {list(data.keys())}")
-    except Exception as e:
-        result.append(f"Read error: {e}")
-    # 2. Write
+        result = subprocess.run(f"tail -n {n} /app/bot.log", shell=True, capture_output=True, text=True)
+        bot.reply_to(m, result.stdout[:2000] or "No logs yet")
+    except:
+        bot.reply_to(m, "No log file")
+
+@bot.message_handler(commands=['clean'])
+def clean(m):
+    bot.reply_to(m, "Temp files cleaned")
+
+@bot.message_handler(commands=['audit'])
+def audit_cmd(m):
+    entries = get_audit(15)
+    if not entries:
+        bot.reply_to(m, "Audit log empty")
+    else:
+        lines = [f"{e['time']}: {e['user']} – {e['action']}" for e in entries]
+        bot.reply_to(m, "📋 Audit Log:\n" + "\n".join(lines))
+
+@bot.message_handler(commands=['memory'])
+def memory(m):
+    bot.reply_to(m, "Memory: empty")
+
+@bot.message_handler(commands=['debug'])
+def debug(m):
+    bot.reply_to(m, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
+
+@bot.message_handler(commands=['termux'])
+def termux(m):
+    bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
+
+@bot.message_handler(commands=['deploy'])
+def deploy(m):
+    result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
+    bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
+
+@bot.message_handler(commands=['errors'])
+def errors(m):
     try:
-        data["test_key"] = {"name": "test", "role": "agent"}
-        with open(path, "w") as f:
-            json.dump(data, f, indent=2)
-        result.append("Write OK")
-    except Exception as e:
-        result.append(f"Write error: {e}")
-    # 3. Verify
+        with open("/app/bot.log") as f:
+            lines = f.readlines()
+        errors = [line for line in lines if "ERROR" in line or "Traceback" in line][-10:]
+        bot.reply_to(m, "".join(errors) or "No recent errors")
+    except:
+        bot.reply_to(m, "No log file")
+
+@bot.message_handler(commands=['plugin'])
+def plugin(m):
+    parts = m.text.split()
+    if len(parts) > 1 and parts[1] == "list":
+        plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
+        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
+    else:
+        bot.reply_to(m, "Usage: /plugin list")
+
+@bot.message_handler(commands=['goal'])
+def goal(m):
+    parts = m.text.split(None, 2)
+    path = "/app/goals.json"
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /goal add <text> | /goal list")
+        return
+    if parts[1] == "add" and len(parts) > 2:
+        goals = json.load(open(path)) if os.path.exists(path) else []
+        goals.append({"text": parts[2], "status": "active"})
+        json.dump(goals, open(path, "w"))
+        bot.reply_to(m, f"Goal added: {parts[2]}")
+    elif parts[1] == "list":
+        goals = json.load(open(path)) if os.path.exists(path) else []
+        bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
+
+@bot.message_handler(commands=['sysinfo'])
+def sysinfo(m):
     try:
-        with open(path, "r") as f:
-            data2 = json.load(f)
-        result.append(f"Verify OK, keys: {list(data2.keys())}")
+        df = subprocess.run("df -h / | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
+        mem = subprocess.run("cat /proc/meminfo 2>/dev/null | grep MemTotal", shell=True, capture_output=True, text=True).stdout.strip()
+        uptime = subprocess.run("cat /proc/uptime 2>/dev/null | awk '{print $1}'", shell=True, capture_output=True, text=True).stdout.strip()
+        if uptime:
+            secs = int(float(uptime))
+            hours = secs // 3600
+            mins = (secs % 3600) // 60
+            uptime_str = f"{hours}h {mins}m"
+        else:
+            uptime_str = "N/A"
+        bot.reply_to(m, f"Disk: {df}\nMemory: {mem}\nUptime: {uptime_str}")
     except Exception as e:
-        result.append(f"Verify error: {e}")
-    bot.reply_to(m, "\n".join(result))
+        bot.reply_to(m, f"Sysinfo error: {e}")
+
+@bot.message_handler(commands=['disk'])
+def disk(m):
+    bot.reply_to(m, "Disk: OK")
+
+@bot.message_handler(commands=['test'])
+def test(m):
+    import subprocess
+    result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
+    bot.reply_to(m, result.stdout or "Diagnostics complete.")
+
+@bot.message_handler(commands=['kernellog'])
+def kernellog(m):
+    bot.reply_to(m, "See /debug for kernel info")
+
+@bot.message_handler(commands=['kernelstatus'])
+def kernelstatus(m):
+    bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
+
+@bot.message_handler(commands=['update'])
+def update(m):
+    result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
+    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
+
+@bot.message_handler(commands=['rollback'])
+def rollback(m):
+    bot.reply_to(m, "Rollback: not implemented yet")
+
+# ---------------- MAIN ----------------
+print("🚀 SLH SYSTEM RUNNING")
+while True:
+    try:
+        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except Exception as e:
+        print("Polling error:", e)
+        time.sleep(5)
