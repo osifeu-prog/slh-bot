@@ -39,8 +39,7 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-
-# ---- Safe Kernel Import (degraded mode if missing) ----
+# ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
 try:
@@ -49,12 +48,10 @@ try:
     _KERNEL_READY = True
     print("✅ Kernel imports OK")
 except Exception as e:
-    _KERNEL_ERROR = f"{e}. cwd: {_os.getcwd()}. sys.path[0]: {_sys.path[0]}. files: {_os.listdir('.')}"
-    print("Kernel modules missing:", _KERNEL_ERROR)
-    EventBus = None
-    TaskPlugin = None
+    _KERNEL_ERROR = str(e)
     _KERNEL_READY = False
-
+    EventBus = TaskPlugin = None
+    print("Kernel modules missing:", _KERNEL_ERROR)
 
 # ---- Kernel initialization ----
 if _KERNEL_READY:
@@ -66,7 +63,9 @@ if _KERNEL_READY:
         print("Kernel init failed:", e)
         _KERNEL_READY = False
 else:
-    print("⚠️ Running in degraded mode (no kernel)")
+    print("⚠️ Running in degraded mode")
+
+
 
 
 # ---------------- DB ----------------
@@ -269,7 +268,7 @@ def disk(m):
     bot.reply_to(m, "Disk: OK")
 
 
-@bot.message_handler(commands=['task'])
+
 def task(m):
     if not _KERNEL_READY:
         bot.reply_to(m, f"Kernel not loaded: {_KERNEL_ERROR}")
@@ -292,7 +291,7 @@ def task(m):
         bus.emit("task_list", {"chat": m.chat.id})
 
 
-@bot.message_handler(commands=['debug'])
+
 def debug(m):
     import os, sys
     lines = []
@@ -307,7 +306,7 @@ def debug(m):
     bot.reply_to(m, "\n".join(lines))
 
 
-@bot.message_handler(commands=['termux'])
+
 def termux(m):
     import os, subprocess
     try:
@@ -317,6 +316,42 @@ def termux(m):
     except:
         msg = "Termux status unavailable"
     bot.reply_to(m, msg)
+@bot.message_handler(commands=['termux'])
+def termux(m):
+    import subprocess
+    try:
+        ver = subprocess.run("python3 --version", shell=True, capture_output=True, text=True).stdout.strip()
+        branch = subprocess.run("git branch --show-current", shell=True, capture_output=True, text=True, cwd="/app").stdout.strip()
+        msg = f"Python: {ver}\nBranch: {branch}\ncwd: /app\ncore OK"
+    except:
+        msg = "Termux unavailable"
+    bot.reply_to(m, msg)
+@bot.message_handler(commands=['kernelstatus'])
+def kernelstatus(m):
+    bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}\nKERNEL_ERROR: {_KERNEL_ERROR}")
+@bot.message_handler(commands=['debug'])
+def debug(m):
+    import os, sys
+    lines = [
+        f"cwd: {os.getcwd()}",
+        f"files: {os.listdir('.')}",
+        f"sys.path: {sys.path}",
+        "core module: OK" if _KERNEL_READY else f"core import: {_KERNEL_ERROR}"
+    ]
+    bot.reply_to(m, "\n".join(lines))
+@bot.message_handler(commands=['task'])
+def task(m):
+    if not _KERNEL_READY:
+        bot.reply_to(m, f"Kernel not loaded: {_KERNEL_ERROR}")
+        return
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        bus.emit("task_list", {"chat": m.chat.id})
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
