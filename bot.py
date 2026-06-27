@@ -330,6 +330,65 @@ def rollback(m):
     bot.reply_to(m, "Rollback: not implemented yet")
 
 # ---------------- MAIN ----------------
+
+@bot.message_handler(commands=['agentstate'])
+def agentstate(m):
+    parts = m.text.split(" ", 2)
+    if len(parts) < 3:
+        bot.reply_to(m, "Usage: /agentstate <id_prefix> <state>")
+        return
+    prefix, new_state = parts[1], parts[2]
+    found = None
+    for aid, agent in agents_dict.items():
+        if aid.startswith(prefix):
+            found = aid
+            agent["state"] = new_state
+            agent["history"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "action": f"state→{new_state}"})
+            break
+    if found:
+        bot.reply_to(m, f"✅ Agent {agents_dict[found]['name']} state changed to {new_state}")
+    else:
+        bot.reply_to(m, "❌ Agent not found")
+
+@bot.message_handler(commands=['sendagent'])
+def sendagent(m):
+    parts = m.text.split(" ", 2)
+    if len(parts) < 3:
+        bot.reply_to(m, "Usage: /sendagent <id_prefix> <message>")
+        return
+    prefix, msg = parts[1], parts[2]
+    found = None
+    for aid, agent in agents_dict.items():
+        if aid.startswith(prefix):
+            found = aid
+            agent["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": msg})
+            break
+    if found:
+        bot.reply_to(m, f"✉️ Message sent to {agents_dict[found]['name']}")
+    else:
+        bot.reply_to(m, "❌ Agent not found")
+
+@bot.message_handler(commands=['inbox'])
+def inbox(m):
+    prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
+    if not prefix:
+        bot.reply_to(m, "Usage: /inbox <id_prefix>")
+        return
+    found = None
+    for aid, agent in agents_dict.items():
+        if aid.startswith(prefix):
+            found = aid
+            break
+    if found:
+        msgs = agents_dict[found]["inbox"]
+        if not msgs:
+            bot.reply_to(m, "📬 Inbox empty")
+        else:
+            lines = [f"{m['time']}: {m['message']}" for m in msgs[-5:]]
+            bot.reply_to(m, "📬 Inbox:\n" + "\n".join(lines))
+    else:
+        bot.reply_to(m, "❌ Agent not found")
+
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
