@@ -37,6 +37,17 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 bot = telebot.TeleBot(TOKEN)
 agents_dict = {}
 
+# ---- Load agents from persistent storage ----
+try:
+    import json, os
+    if os.path.exists("/app/agents.json"):
+        with open("/app/agents.json") as f:
+            agents_dict.update(json.load(f))
+        print(f"Loaded {len(agents_dict)} agents from disk")
+except Exception as e:
+    print("Could not load agents.json:", e)
+
+
 
 # ---------------- KERNEL INIT ----------------
 try:
@@ -153,11 +164,20 @@ def task(m):
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
-    import time
+    import time, json, os
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
     aid = str(int(time.time() * 1000))
-    agents_dict[aid] = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
+    agent_data = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
+    agents_dict[aid] = agent_data
+    # save to file for persistence across deploys
+    try:
+        path = "/app/agents.json"
+        existing = json.load(open(path)) if os.path.exists(path) else {}
+        existing[aid] = agent_data
+        json.dump(existing, open(path, "w"), indent=2)
+    except Exception as e:
+        print("Could not save agents.json:", e)
     bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
 
 @bot.message_handler(commands=['agents'])
