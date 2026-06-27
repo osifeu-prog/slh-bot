@@ -460,6 +460,23 @@ def goal(m):
     elif parts[1] == "list":
         goals = json.load(open(path)) if os.path.exists(path) else []
         bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
+@bot.message_handler(commands=['agent_debug'])
+def agent_debug(m):
+    import os, json
+    path = "/app/agents.json"
+    info = []
+    info.append(f"Path exists: {os.path.exists(path)}")
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+            info.append(f"File size: {os.path.getsize(path)}")
+            info.append(f"Agents count: {len(data)}")
+        except Exception as e:
+            info.append(f"Error reading: {e}")
+    else:
+        info.append("File missing")
+    bot.reply_to(m, "\n".join(info))
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
