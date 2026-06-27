@@ -1,5 +1,6 @@
 import os, sys, json, time
 import telebot
+from core.agent_store import AgentStore
 try:
     import psutil
     _PSUTIL_OK = True
@@ -39,6 +40,21 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+try:
+    agent_store = AgentStore('/app/agents.json')
+except:
+    print("[WARN] Could not open agents.json, using memory store")
+    class InMemoryAgentStore:
+        def __init__(self):
+            self._data = {}
+        def create(self, name, role="agent"):
+            aid = str(int(time.time() * 1000))
+            self._data[aid] = {"name": name, "role": role, "state": "idle", "inbox": [], "history": [], "permissions": ["read"]}
+            return aid
+        def list(self):
+            return [{"id": k, **v} for k, v in self._data.items()]
+    agent_store = InMemoryAgentStore()
+
 # ---- Safe Kernel Import ----
 import os as _os, sys as _sys
 _KERNEL_ERROR = ""
@@ -496,3 +512,13 @@ def task(m):
         kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
         kernel.bus.emit("task_list", {"chat": m.chat.id})
+
+@bot.message_handler(commands=['agent_create'])
+def agent_create(m):
+    parts = m.text.split(" ", 1)
+    name = parts[1] if len(parts) > 1 else "agent"
+    try:
+        aid = agent_store.create(name)
+        bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
