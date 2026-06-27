@@ -251,12 +251,25 @@ def restart(m):
 
 @bot.message_handler(commands=['logs'])
 def logs(m):
+    import os, glob
+    parts = m.text.split()
+    n = int(parts[1]) if len(parts) > 1 else 50
+    
+    # Find any log file
+    log_files = glob.glob("/app/*.log") + glob.glob("/app/*.jsonl")
+    
+    if not log_files:
+        bot.reply_to(m, "No log files found")
+        return
+    
     try:
-        with open("system.log") as f:
-            lines = f.readlines()[-50:]
-        bot.reply_to(m, "".join(lines) or "No logs")
-    except:
-        bot.reply_to(m, "No log file found")
+        with open(log_files[0], "r") as f:
+            lines = f.readlines()[-n:]
+        output = "".join(lines)[:2000]
+        bot.reply_to(m, output if output else "Log file is empty")
+    except Exception as e:
+        bot.reply_to(m, f"Error: {e}")
+
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
