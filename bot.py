@@ -280,6 +280,21 @@ def task(m):
     elif parts[1] == "list":
         bus.emit("task_list", {"chat": m.chat.id})
 
+
+@bot.message_handler(commands=['debug'])
+def debug(m):
+    import os, sys
+    lines = []
+    lines.append(f"cwd: {os.getcwd()}")
+    lines.append(f"files: {os.listdir('.')}")
+    lines.append(f"sys.path: {sys.path}")
+    try:
+        import core
+        lines.append("core module: OK")
+    except Exception as e:
+        lines.append(f"core import: {e}")
+    bot.reply_to(m, "\n".join(lines))
+
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
