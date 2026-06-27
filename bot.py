@@ -2,7 +2,6 @@ import os, sys, json, time, subprocess
 import telebot
 from datetime import datetime
 from audit_logger import audit, get_audit
-from core.agent_store import InMemoryAgentStore
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 
@@ -36,7 +35,8 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-agent_store = InMemoryAgentStore()
+agents_dict = {}
+
 
 # ---------------- KERNEL INIT ----------------
 try:
@@ -123,7 +123,7 @@ def admin(m):
 @bot.message_handler(commands=['status'])
 def status(m):
     db = load_db()
-    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agent_store.list())}\nTasks: {len(db['tasks'])}")
+    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
 
 @bot.message_handler(commands=['health'])
 def health(m):
@@ -153,29 +153,30 @@ def task(m):
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
+    import time
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
-    aid = agent_store.create(name)
+    aid = str(int(time.time() * 1000))
+    agents_dict[aid] = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
     bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
 
 @bot.message_handler(commands=['agents'])
 def agents_list(m):
-    agents = agent_store.list()
-    if not agents:
+    if not agents_dict:
         bot.reply_to(m, "No agents yet")
     else:
-        lines = [f"{a['name']} [{a.get('state','idle')}] – {a.get('role','?')}" for a in agents]
+        lines = [f"{v['name']} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
         bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['agent_debug'])
 def agent_debug(m):
-    bot.reply_to(m, f"Agents in memory: {len(agent_store.list())}")
+    bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
 
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
     # simple test: create and list
     agent_store.create("test_agent")
-    bot.reply_to(m, f"Test agent created. Total agents: {len(agent_store.list())}")
+    bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
 
 @bot.message_handler(commands=['vote'])
 def vote(m):
