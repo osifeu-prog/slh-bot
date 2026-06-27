@@ -417,6 +417,12 @@ def update(m):
     except Exception as e:
         bot.reply_to(m, f"❌ Update failed: {e}")
 
+
+# Create initial bot.log if missing
+if not os.path.exists("/app/bot.log"):
+    with open("/app/bot.log", "w") as f:
+        f.write("Bot started\n")
+
 print("🚀 SLH SYSTEM RUNNING")
 
 while True:
