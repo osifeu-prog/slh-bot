@@ -3,7 +3,10 @@ from datetime import datetime
 
 AUDIT_FILE = os.getenv("AUDIT_FILE", "/app/audit.jsonl" if os.path.exists("/app") else "audit.jsonl")
 
-def audit(action, user="system", details=""):
+def audit(action, user=None, details=""):
+    """Record an audit event. user is optional (defaults to 'system')."""
+    if user is None:
+        user = "system"
     entry = {
         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "user": str(user),
