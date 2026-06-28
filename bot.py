@@ -1,16 +1,16 @@
 import os, sys, json, time, subprocess
+
+import os
+if os.getenv("RAILWAY_STOP_BOT") == "true":
+    print("RAILWAY_STOP_BOT is set. Exiting.")
+    exit(0)
+
 import telebot
 from marketplace import load_store, save_store
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
-
-import os
-if os.getenv("RAILWAY_ENV") or os.getenv("REPLICA_NAME"):
-    print("Running on Railway, exiting to avoid duplicate")
-    exit(0)
-
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
