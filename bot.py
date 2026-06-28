@@ -1,9 +1,11 @@
 import os, sys, json, time, subprocess
 
 import os, sys
-if os.getenv("RAILWAY_SERVICE_ID"):
+if os.getenv("RAILWAY_STOP_BOT") == "true":
     print("Railway detected – exiting to avoid duplicate bot.")
     sys.exit(0)
+
+
 
 import telebot
 from marketplace import load_store, save_store
