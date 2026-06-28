@@ -664,21 +664,4 @@ def price(m):
 
 
 
-# --- DevOps Commands ---
-@bot.message_handler(commands=['syscheck'])
-def syscheck(m):
-    import subprocess
-    result = subprocess.run("bash ~/slh_clean/system_verification.sh", shell=True, capture_output=True, text=True, timeout=30)
-    bot.reply_to(m, result.stdout[:2000] or "System check complete.")
-
-@bot.message_handler(commands=['update'])
-def update_cmd(m):
-    import subprocess
-    result = subprocess.run("cd ~/slh_clean && git pull && git push", shell=True, capture_output=True, text=True, timeout=30)
-    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
-
-@bot.message_handler(commands=['daemon'])
-def daemon(m):
-    import subprocess
-    result = subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True, capture_output=True, text=True, timeout=10)
     bot.reply_to(m, f"Daemon:\n{result.stdout[:500] or 'Restarted'}")
