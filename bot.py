@@ -6,6 +6,12 @@ from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 
+import os
+if os.getenv("RAILWAY_ENV") or os.getenv("REPLICA_NAME"):
+    print("Running on Railway, exiting to avoid duplicate")
+    exit(0)
+
+
 # ---------------- LOAD TOKEN ----------------
 def load_token():
     env_token = os.getenv("BOT_TOKEN")
