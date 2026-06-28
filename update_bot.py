@@ -171,3 +171,75 @@ import subprocess
 subprocess.run(["git", "add", "bot.py", "allowed_ids.json"])
 subprocess.run(["git", "commit", "-m", "add auth, /sync, and public /id command"])
 print("✅ Changes committed (not pushed)")
+
+# ----- Append /request handler -----
+# We'll re-read bot.py, insert handler, and write back
+with open("bot.py", "r") as f:
+    code = f.read()
+
+request_handler = r'''
+# --- Open to everyone ---
+@bot.message_handler(commands=['request'])
+def request_access(m):
+    user = m.from_user
+    admin_id = get_admin()
+    if not admin_id:
+        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
+        return
+    if is_allowed(m.chat.id):
+        bot.reply_to(m, "✅ You already have access!")
+        return
+    # Notify admin
+    user_info = f"@{user.username}" if user.username else f"user {user.id}"
+    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
+    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
+'''
+
+lines = code.split('\n')
+# Insert before polling, but after existing open /id handler (find /id handler and put after it)
+id_index = None
+for i, line in enumerate(lines):
+    if "commands=['id']" in line:
+        id_index = i
+        break
+if id_index is not None:
+    # find end of show_id function
+    func_end = None
+    for j in range(id_index, len(lines)):
+        if lines[j].strip() == "" and j > id_index+3 and lines[j-1].strip().startswith("bot.reply_to"):
+            func_end = j+1
+            break
+    if func_end:
+        lines.insert(func_end, request_handler)
+    else:
+        # fallback: insert before polling
+        poll = next((k for k, l in enumerate(lines) if 'bot.infinity_polling()' in l), None)
+        if poll:
+            lines.insert(poll, request_handler)
+        else:
+            lines.append(request_handler)
+else:
+    # no /id? just add before polling
+    poll = next((k for k, l in enumerate(lines) if 'bot.infinity_polling()' in l), None)
+    if poll:
+        lines.insert(poll, request_handler)
+    else:
+        lines.append(request_handler)
+
+code = '\n'.join(lines)
+
+with open("bot.py", "w") as f:
+    f.write(code)
+
+import py_compile
+try:
+    py_compile.compile("bot.py", doraise=True)
+    print("✅ /request handler added successfully")
+except py_compile.PyCompileError as e:
+    print("❌ Syntax ERROR:", e)
+    exit(1)
+
+import subprocess
+subprocess.run(["git", "add", "bot.py"])
+subprocess.run(["git", "commit", "-m", "add /request access command"])
+print("✅ Committed locally (not pushed)")
