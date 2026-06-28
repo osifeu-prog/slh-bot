@@ -1,5 +1,6 @@
 import os, sys, json, time, subprocess
 import telebot
+from subscriptions import PLANS, get_user_plan, set_user_plan, list_plans
 from master_agent import MasterAgent
 from inspector import InspectorAgent
 from datetime import datetime
@@ -128,7 +129,7 @@ def admin(m):
 /termux — Show Termux status
 /deploy — Trigger Railway deploy
 /errors — Show recent errors
-/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
+/subscribe — Manage subscription\n/myplan — View your plan\n/price — Pricing\n/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
 /goal add/list — Manage goals
 /exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
 /disk — Disk usage
@@ -283,14 +284,7 @@ def errors(m):
     except:
         bot.reply_to(m, "No log file")
 
-@bot.message_handler(commands=['plugin'])
-def plugin(m):
-    parts = m.text.split()
-    if len(parts) > 1 and parts[1] == "list":
-        plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
-        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
-    else:
-        bot.reply_to(m, "Usage: /plugin list")
+
 
 @bot.message_handler(commands=['goal'])
 def goal(m):
@@ -471,7 +465,7 @@ def user(m):
 /audit — Audit log
 /sysinfo — System resources
 /debug — Container debug info
-/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
+/subscribe — Manage subscription\n/myplan — View your plan\n/price — Pricing\n/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
 /goal add/list — Manage goals
 /rlogs — Railway logs (admin)
 /disk — Disk usage""")
@@ -636,6 +630,40 @@ Status: {'✅ Active' if info.get('active', True) else '❌ Inactive'}"""
         bot.reply_to(m, msg)
     else:
         bot.reply_to(m, "Usage: /plugin store | list | install <id> | uninstall <id> | search <query> | info <id>")
+
+
+@bot.message_handler(commands=['subscribe'])
+def subscribe(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        plans = list_plans()
+        lines = [f"• {v['name']} (₪{v['price']}/month) – {v['agents']} agents, {v['tasks']} tasks, {v['plugins']} plugins" for k, v in plans.items()]
+        bot.reply_to(m, "📦 Available Plans:\n" + "\n".join(lines))
+        return
+    plan = parts[1].lower()
+    if plan not in PLANS:
+        bot.reply_to(m, "❌ Invalid plan. Choose: free, pro, enterprise")
+        return
+    if set_user_plan(m.from_user.id, plan):
+        bot.reply_to(m, f"✅ Subscribed to {PLANS[plan]['name']}!")
+    else:
+        bot.reply_to(m, "❌ Subscription failed")
+
+@bot.message_handler(commands=['myplan'])
+def myplan(m):
+    plan = get_user_plan(m.from_user.id)
+    info = PLANS[plan]
+    bot.reply_to(m, f"""📋 Your Plan: {info['name']}
+💰 Price: ₪{info['price']}/month
+🤖 Agents: {info['agents']}
+📋 Tasks: {info['tasks']}
+🔌 Plugins: {info['plugins']}""")
+
+@bot.message_handler(commands=['price'])
+def price(m):
+    plans = list_plans()
+    lines = [f"• {v['name']} – ₪{v['price']}/month" for k, v in plans.items()]
+    bot.reply_to(m, "💰 Pricing:\n" + "\n".join(lines))
 
 print("🚀 SLH SYSTEM RUNNING")
 master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
