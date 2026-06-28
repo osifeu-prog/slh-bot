@@ -577,6 +577,9 @@ inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 while True:
     try:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except KeyboardInterrupt:
+        print("Bot stopped by user")
+        break
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
