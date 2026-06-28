@@ -1117,4 +1117,52 @@ def request_access(m):
     bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
 
 # --- Admin only ---
+
+@bot.message_handler(commands=['diagnose'])
+def diagnose_cmd(m):
+    import os, sys, json, datetime, py_compile
+    cwd = os.path.expanduser("~/slh_clean")
+    issues = []
+    # Check bot.py
+    bot_path = os.path.join(cwd, "bot.py")
+    if not os.path.exists(bot_path):
+        issues.append("❌ bot.py missing")
+    else:
+        issues.append("✅ bot.py exists")
+        try:
+            py_compile.compile(bot_path, doraise=True)
+            issues.append("✅ Syntax OK")
+        except py_compile.PyCompileError as e:
+            issues.append(f"❌ Syntax error: {e}")
+    # Check guard
+    with open(bot_path) as f:
+        content = f.read()
+    if "SLH_LOCAL" in content:
+        issues.append("✅ Guard present")
+    else:
+        issues.append("❌ Guard missing")
+    # Check essential commands
+    for cmd in ['id', 'sync', 'vbackup', 'fullcheck', 'diagnose']:
+        if f"commands=['{cmd}']" in content:
+            issues.append(f"✅ /{cmd} exists")
+        else:
+            issues.append(f"❌ /{cmd} missing")
+    # Check imports
+    try:
+        import slh
+        issues.append("✅ slh importable")
+    except:
+        issues.append("❌ slh import failed")
+    # Check DB
+    if os.path.exists(os.path.join(cwd, "db.json")):
+        issues.append("✅ db.json exists")
+    else:
+        issues.append("❌ db.json missing")
+    # Overall
+    if any("❌" in i for i in issues):
+        issues.insert(0, "⚠️ Issues found:")
+    else:
+        issues.insert(0, "✅ No issues detected.")
+    bot.reply_to(m, "\n".join(issues))
+
 bot.infinity_polling()
