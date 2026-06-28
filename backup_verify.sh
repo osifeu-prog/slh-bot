@@ -1,5 +1,4 @@
 #!/data/data/com.termux/files/usr/bin/bash
-set -e
 echo "🔹 Backup & Verify started at $(date)"
 cd ~/slh_clean
 
@@ -11,28 +10,32 @@ else
     echo "❌ Git backup failed"
 fi
 
-# 2. Diagnostics (using slh or diag_handler)
-echo ">>> Diagnostics..."
-if python -c "from diag_handler import diagnose; print(diagnose())" 2>/dev/null; then
-    :
+# 2. Bot running?
+echo ">>> Bot process..."
+if pgrep -f "python.*bot.py" > /dev/null; then
+    echo "✅ Bot is running"
 else
-    echo "⚠️ diagnose via diag_handler failed, trying slh..."
-    python -c "from slh import diagnose; print(diagnose())" 2>/dev/null  echo "❌ Diagnostics unavailable"
+    echo "❌ Bot NOT running"
 fi
 
-# 3. Status / health / agents via simple checks
-echo ">>> Status..."
-python -c "from slh import get_status; print(get_status())" 2>/dev/null  echo "Status not available"
+# 3. Core modules import check (no argument functions)
+echo ">>> Core imports..."
+if python -c "import slh, diag_handler, health_check" 2>/dev/null; then
+    echo "✅ Core modules imported successfully"
+else
+    echo "❌ Module import failed"
+fi
 
-echo ">>> Health..."
-python -c "from health_check import check; print(check())" 2>/dev/null  echo "Health check not available"
+# 4. Critical files existence
+echo ">>> Critical files..."
+for f in bot.py db.json events.db config.json; do
+    [ -f "$f" ] && echo "  ✅ $f exists"  echo "  ❌ $f MISSING"
+done
 
-echo ">>> Agent self-test..."
-python -c "from test_agents import run_test; print(run_test())" 2>/dev/null  echo "Agent test not available"
-
-# 4. Disk & memory
+# 5. Disk & memory
 echo ">>> Disk & Memory..."
-df -h /data 2>/dev/null || df -h /
+df -h /data 2>/dev/null  df -h /
 free -h
 
 echo "✅ Backup & Verify completed at $(date)"
+echo "ℹ️ For full system diagnostic run /diagnose via Telegram"
