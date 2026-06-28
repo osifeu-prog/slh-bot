@@ -654,13 +654,17 @@ def hello(m):
     bot.reply_to(m, "Hello World!")
 
 @bot.message_handler(commands=['greet'])
-def greet(m):
     bot.reply_to(m, "Greetings!")
 
-@bot.message_handler(commands=['greet'])
-def greet(m):
     bot.reply_to(m, "Greetings!")
 
-@bot.message_handler(commands=['greet'])
-def greet(m):
     bot.reply_to(m, "Greetings!")
+
+# === MAIN LOOP ===
+print("🚀 SLH SYSTEM RUNNING")
+while True:
+    try:
+        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except Exception as e:
+        print("Polling error:", e)
+        time.sleep(5)
