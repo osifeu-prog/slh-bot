@@ -9,7 +9,7 @@ class MasterAgent:
         self._watchdog_running = False
         self._watchdog_thread = None
 
-    # ---------- quick check ----------
+    # ---------- quick check (5 tests) ----------
     def quick_check(self):
         report = ["⚡ QUICK CHECK"]
         # 1. Process
@@ -30,7 +30,7 @@ class MasterAgent:
         report.append(f"Git: {'✅' if git_ok else '❌'}")
         return "\n".join(report)
 
-    # ---------- full check (uses Inspector) ----------
+    # ---------- full check (delegates to Inspector) ----------
     def full_check(self, chat_id):
         from inspector import InspectorAgent
         insp = InspectorAgent(self.bot, self.agents_dict, self._KERNEL_READY, self.get_audit)
