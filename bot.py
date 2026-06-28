@@ -817,45 +817,6 @@ def diagnose_cmd(m):
     
     bot.reply_to(m, "\n".join(issues))
 
-@bot.message_handler(commands=['fix'])
-def fix_cmd(m):
-    import re, os, sys, subprocess
-    cwd = os.path.expanduser("~/slh_clean")
-    bot_path = os.path.join(cwd, "bot.py")
-    
-    with open(bot_path) as f:
-        code = f.read()
-    
-    loop_pos = code.find("while True:")
-    if loop_pos == -1:
-        bot.reply_to(m, "❌ No while True loop found")
-        return
-    
-    after_loop = code[loop_pos:]
-    if "@bot.message_handler" not in after_loop:
-        bot.reply_to(m, "✅ No misplaced handlers")
-        return
-    
-    # Extract handler blocks after loop
-    handler_blocks = re.findall(r"(@bot\.message_handler\(commands=\[.*?\]\).*?)(?=\n@bot|\n\n@bot|\Z)", after_loop, re.DOTALL)
-    if not handler_blocks:
-        bot.reply_to(m, "❌ Could not extract handlers")
-        return
-    
-    # Remove blocks from code
-    for block in handler_blocks:
-        code = code.replace(block, "")
-    
-    # Insert before while True
-    code = code.replace("while True:", "\n".join(handler_blocks) + "\nwhile True:")
-    
-    with open(bot_path, "w") as f:
-        f.write(code)
-    
-    # Restart bot
-    subprocess.Popen([sys.executable, "-B", bot_path])
-    os._exit(0)
-    bot.reply_to(m, "✅ Handlers moved and bot restarted")
 
 while True:
     try:
@@ -863,44 +824,3 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
-
-
-@bot.message_handler(commands=['reload'])
-def reload(m):
-    import subprocess, os, sys
-    bot.reply_to(m, "🔄 Reloading bot...")
-    # Restart the bot process without the daemon
-    subprocess.Popen([sys.executable, "-B", "bot.py"])
-    os._exit(0)
-
-@bot.message_handler(commands=['alert'])
-def alert(m):
-    import os, time
-    bot.reply_to(m, "🔔 Alert system active. Checking...")
-    alerts = []
-    
-    # Check disk
-    stat = os.statvfs(".")
-    free_mb = (stat.f_frsize * stat.f_bavail) / 1024 / 1024
-    if free_mb < 100:
-        alerts.append(f"⚠️ Low disk space: {free_mb:.0f} MB")
-    
-    # Check bot process
-    import subprocess
-    procs = subprocess.run("pgrep -af 'python3.*bot'", shell=True, capture_output=True, text=True).stdout.strip()
-    if len(procs.splitlines()) > 1:
-        alerts.append("⚠️ Multiple bot instances detected")
-    elif not procs:
-        alerts.append("❌ Bot not running!")
-    
-    # Check API
-    try:
-        import urllib.request
-        urllib.request.urlopen("http://localhost:5000/api/health", timeout=3)
-    except:
-        alerts.append("⚠️ API not responding")
-    
-    if alerts:
-        bot.reply_to(m, "🚨 Alerts:\n" + "\n".join(alerts))
-    else:
-        bot.reply_to(m, "✅ All systems OK")
