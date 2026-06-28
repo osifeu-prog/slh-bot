@@ -1074,4 +1074,13 @@ def sync(m):
     output.append("Railway: auto-deploy triggered (will exit due to SLH_LOCAL)")
     bot.reply_to(m, "\n".join(output))
 
+
+@bot.message_handler(commands=['fullcheck'], func=auth_filter)
+def fullcheck(m):
+    import subprocess
+    r=subprocess.run(['bash','full_sync_check.sh'],capture_output=True,text=True,cwd=os.path.expanduser('~/slh_clean'))
+    out=r.stdout+r.stderr
+    if len(out)>4000: out=out[-4000:]
+    bot.reply_to(m,f'',parse_mode='Markdown')
+
 bot.infinity_polling()
