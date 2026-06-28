@@ -1,9 +1,9 @@
 import os, sys, json, time, subprocess
 
-import os
-if os.getenv("RAILWAY_STOP_BOT") == "true":
-    print("RAILWAY_STOP_BOT is set. Exiting.")
-    exit(0)
+import os, sys
+if os.getenv("RAILWAY_SERVICE_ID"):
+    print("Railway detected – exiting to avoid duplicate bot.")
+    sys.exit(0)
 
 import telebot
 from marketplace import load_store, save_store
@@ -774,8 +774,6 @@ def debugcmd(m):
     bot.reply_to(m, f"❌ Command /{cmd} not found.")
 
 
-bot.infinity_polling()
-
 @bot.message_handler(commands=['diagnose'])
 def diagnose(m):
     import re
@@ -801,3 +799,4 @@ def diagnose(m):
     else:
         bot.reply_to(m, "✅ No issues detected.")
 
+bot.infinity_polling()
