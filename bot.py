@@ -57,7 +57,6 @@ try:
     bus = EventBus(workers=2)
     kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
     TaskPlugin().on_start(kernel)
-        bus.start()
     _KERNEL_READY = True
     print("✅ Kernel modules loaded")
 except Exception as e:
@@ -655,3 +654,31 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
+
+@bot.message_handler(commands=['build'])
+def build(m):
+    """Add a new command to the bot via Telegram"""
+    parts = m.text.split("\n", 1)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /build <command_name>\n<code>")
+        return
+    
+    cmd_name = parts[0].split(" ", 1)[1].strip()
+    code = parts[1] if len(parts) > 1 else ""
+    
+    if not cmd_name or not code:
+        bot.reply_to(m, "Usage: /build <command_name>\n<code>")
+        return
+    
+    # Add the command to bot.py
+    with open("bot.py", "a") as f:
+        f.write(f"\n@bot.message_handler(commands=['{cmd_name}'])\n")
+        f.write(f"def {cmd_name}(m):\n")
+        for line in code.split("\n"):
+            f.write(f"    {line}\n")
+    
+    # Reload the bot
+    import subprocess
+    subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True)
+    
+    bot.reply_to(m, f"✅ Command /{cmd_name} added and bot restarted")
