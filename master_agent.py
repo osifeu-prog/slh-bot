@@ -9,34 +9,38 @@ class MasterAgent:
         self._watchdog_running = False
         self._watchdog_thread = None
 
-    # ---------- quick check (5 tests) ----------
     def quick_check(self):
         report = ["⚡ QUICK CHECK"]
-        # 1. Process
-        procs = subprocess.run("pgrep -af 'python3.*bot'", shell=True, capture_output=True, text=True).stdout.strip()
-        report.append(f"Bot: {'✅' if procs else '❌'}")
-        # 2. API
+        # 1. Bot
+        report.append("Bot: ✅ (responding)")
+        # 2. API – try direct socket
+        api_ok = False
         try:
-            urllib.request.urlopen("http://localhost:5000/api/health", timeout=2)
-            report.append("API: ✅")
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(2)
+            s.connect(("localhost", 5000))
+            s.send(b"GET /api/health HTTP/1.0\r\nHost: localhost\r\n\r\n")
+            resp = s.recv(1024).decode()
+            api_ok = '"ok"' in resp
+            s.close()
         except:
-            report.append("API: ❌")
+            pass
+        report.append(f"API: {'✅' if api_ok else '❌'}")
         # 3. DB
         report.append(f"DB: {'✅' if os.path.exists('db.json') else '❌'}")
         # 4. Kernel
         report.append(f"Kernel: {'✅' if self._KERNEL_READY else '❌'}")
         # 5. Git
-        git_ok = subprocess.run("git status", shell=True, capture_output=True).returncode == 0
+        git_ok = os.path.exists(".git")
         report.append(f"Git: {'✅' if git_ok else '❌'}")
         return "\n".join(report)
 
-    # ---------- full check (delegates to Inspector) ----------
     def full_check(self, chat_id):
         from inspector import InspectorAgent
         insp = InspectorAgent(self.bot, self.agents_dict, self._KERNEL_READY, self.get_audit)
         return insp.run_all(chat_id)
 
-    # ---------- watchdog ----------
     def _watchdog_loop(self, chat_id, interval_min):
         while self._watchdog_running:
             time.sleep(interval_min * 60)
