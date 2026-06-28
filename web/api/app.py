@@ -1,3 +1,5 @@
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json, os, time
@@ -87,5 +89,47 @@ def get_stats():
 def health():
     return jsonify({'status': 'ok', 'version': '2.0'})
 
+
+
+# ── Subscription endpoints ──────────────────────────
+import sys
+sys.path.insert(0, '/data/data/com.termux/files/home/slh_clean')
+from subscriptions import load_subscriptions, get_user_plan, PLANS
+import time as _time
+
+@app.route('/api/subscriptions')
+def api_all_subscriptions():
+    return jsonify(load_subscriptions())
+
+@app.route('/api/subscriptions/me')
+def api_my_plan():
+    user_id = request.args.get('user_id', '0')
+    plan = get_user_plan(user_id)
+    return jsonify({'plan': plan, 'info': PLANS.get(plan, {})})
+
+@app.route('/api/subscriptions/set', methods=['POST'])
+def api_set_plan():
+    data = request.json or {}
+    plan = data.get('plan', 'free')
+    user_id = str(data.get('user_id', '0'))
+    subs = load_subscriptions()
+    subs[user_id] = {'plan': plan, 'since': _time.strftime('%Y-%m-%d')}
+    import json
+    with open('subscriptions.json', 'w') as f:
+        json.dump(subs, f, indent=2)
+    return jsonify({'ok': True})
+
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000)
+
+# --- Auth ---
+API_KEY = os.getenv("SLH_API_KEY", "slh-secret-key")
+
+@app.before_request
+def check_auth():
+    if request.endpoint not in ('health', 'get_agents', 'get_tasks', 'get_stats', 'get_logs', 'get_subscriptions', 'get_my_plan'):
+        key = request.headers.get('X-API-Key', '')
+        if key != API_KEY:
+            return jsonify({"error": "Unauthorized"}), 401
