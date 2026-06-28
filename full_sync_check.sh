@@ -7,7 +7,7 @@ LOCAL=$(git rev-parse main)
 REMOTE=$(git rev-parse origin/main)
 echo "Local HEAD:  ${LOCAL:0:7}"
 echo "Remote HEAD: ${REMOTE:0:7}"
-if [ "$LOCAL" = "$REMOTE" ]; then echo "✅ Local and remote are in sync"; else echo "❌ Local is ahead of remote (or diverged)"; fi
+[ "$LOCAL" = "$REMOTE" ] && echo "✅ Local and remote are in sync"  echo "❌ Local is ahead of remote (or diverged)"
 echo ">>> Unpushed commits:" && git log origin/main..HEAD --oneline
 echo ">>> Local changes:" && git status --short
 echo ">>> Testing push..." && git push --dry-run 2>&1
@@ -19,5 +19,5 @@ grep -q "commands=\['request'\]" bot.py && echo "✅ /request exists"  echo "❌
 grep -q "commands=\['vbackup'\]" bot.py && echo "✅ /vbackup exists"  echo "❌ /vbackup missing"
 grep -q "commands=\['fullcheck'\]" bot.py && echo "✅ /fullcheck exists"  echo "❌ /fullcheck missing"
 echo ">>> Railway deployment status:"
-if command -v railway &>/dev/null; then railway status 2>&1 || echo "Railway status command failed"; else echo "Railway CLI not installed (check Dashboard manually)"; fi
+command -v railway &>/dev/null && railway status 2>&1  echo "Railway CLI not installed (check Dashboard manually)"
 echo "✅ Full sync check completed"

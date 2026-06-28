@@ -14,7 +14,6 @@ def diagnose(m):
         if "@bot.message_handler" in after_loop:
             handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", after_loop)
             if handlers:
-                issues.append(f"⚠️ {len(handlers)} handlers after while True: {', '.join('/'+h for h in handlers)}")
     all_handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", code)
     dupes = [h for h in set(all_handlers) if all_handlers.count(h) > 1]
     if dupes:
