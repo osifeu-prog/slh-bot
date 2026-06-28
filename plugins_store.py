@@ -18,10 +18,7 @@ def save_plugins(data):
         json.dump(data, f, indent=2)
 
 def install_plugin(plugin_id):
-    """Install a plugin from available list"""
     plugins = load_plugins()
-    
-    # Find in available
     for p in plugins["available"]:
         if p["id"] == plugin_id:
             plugins["installed"][plugin_id] = {
@@ -31,11 +28,9 @@ def install_plugin(plugin_id):
             }
             save_plugins(plugins)
             return f"✅ Plugin '{p['name']}' installed successfully"
-    
     return f"❌ Plugin '{plugin_id}' not found in store"
 
 def uninstall_plugin(plugin_id):
-    """Remove an installed plugin"""
     plugins = load_plugins()
     if plugin_id in plugins["installed"]:
         name = plugins["installed"][plugin_id]["name"]
@@ -45,21 +40,16 @@ def uninstall_plugin(plugin_id):
     return f"❌ Plugin '{plugin_id}' not found"
 
 def list_plugins():
-    """List all installed plugins"""
-    plugins = load_plugins()
-    return plugins["installed"]
+    return load_plugins()["installed"]
 
 def search_plugins(query):
-    """Search available plugins"""
     plugins = load_plugins()
     query = query.lower()
     return [p for p in plugins["available"] if query in p["name"].lower() or query in p["description"].lower()]
 
 def get_store():
-    """Get all available plugins"""
     return load_plugins()["available"]
 
 def get_plugin_info(plugin_id):
-    """Get plugin details"""
     plugins = load_plugins()
     return plugins["installed"].get(plugin_id) or next((p for p in plugins["available"] if p["id"] == plugin_id), None)

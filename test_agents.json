@@ -1,0 +1,1 @@
+{"1": {"name": "test", "role": "agent", "state": "busy", "inbox": [{"time": "now", "message": "hello"}], "history": [], "permissions": ["read"]}}

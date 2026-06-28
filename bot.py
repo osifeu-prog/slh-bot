@@ -128,7 +128,7 @@ def admin(m):
 /termux — Show Termux status
 /deploy — Trigger Railway deploy
 /errors — Show recent errors
-/plugin list — List plugins
+/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
 /goal add/list — Manage goals
 /exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
 /disk — Disk usage
@@ -471,7 +471,7 @@ def user(m):
 /audit — Audit log
 /sysinfo — System resources
 /debug — Container debug info
-/plugin list — List plugins
+/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
 /goal add/list — Manage goals
 /rlogs — Railway logs (admin)
 /disk — Disk usage""")
@@ -571,6 +571,72 @@ def watchdog(m):
     else:
         result = "Usage: /watchdog start [interval_min] | stop"
     bot.reply_to(m, result)
+
+@bot.message_handler(commands=['plugin'])
+def plugin_cmd(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        msg = """🛍️ PLUGIN STORE
+/plugin store — Browse available plugins
+/plugin list — Installed plugins
+/plugin install <id> — Install plugin
+/plugin uninstall <id> — Remove plugin
+/plugin search <query> — Search plugins
+/plugin info <id> — Plugin details"""
+        bot.reply_to(m, msg)
+        return
+    action = parts[1]
+    if action == "store":
+        from plugins_store import get_store
+        store = get_store()
+        if not store:
+            bot.reply_to(m, "Store is empty")
+            return
+        lines = [f"• {p['name']} ({p['id']}) – {p['description']}" for p in store]
+        bot.reply_to(m, "🛍️ Plugin Store:\n" + "\n".join(lines))
+    elif action == "list":
+        from plugins_store import list_plugins
+        plugins = list_plugins()
+        if not plugins:
+            bot.reply_to(m, "No plugins installed")
+            return
+        lines = [f"• {v['name']} ({k}) – {'✅ active' if v.get('active', True) else '❌ inactive'}" for k, v in plugins.items()]
+        bot.reply_to(m, "📦 Installed Plugins:\n" + "\n".join(lines))
+    elif action == "install" and len(parts) >= 3:
+        from plugins_store import install_plugin
+        plugin_id = parts[2]
+        result = install_plugin(plugin_id)
+        bot.reply_to(m, result)
+    elif action == "uninstall" and len(parts) >= 3:
+        from plugins_store import uninstall_plugin
+        plugin_id = parts[2]
+        result = uninstall_plugin(plugin_id)
+        bot.reply_to(m, result)
+    elif action == "search" and len(parts) >= 3:
+        from plugins_store import search_plugins
+        query = parts[2]
+        results = search_plugins(query)
+        if not results:
+            bot.reply_to(m, "No plugins found")
+            return
+        lines = [f"• {p['name']} ({p['id']}) – {p['description']}" for p in results]
+        bot.reply_to(m, "🔍 Search Results:\n" + "\n".join(lines))
+    elif action == "info" and len(parts) >= 3:
+        from plugins_store import get_plugin_info
+        plugin_id = parts[2]
+        info = get_plugin_info(plugin_id)
+        if not info:
+            bot.reply_to(m, "Plugin not found")
+            return
+        msg = f"""📋 {info['name']} ({info['id']})
+Description: {info.get('description', 'N/A')}
+URL: {info.get('url', 'N/A')}
+Price: {'Free' if info.get('price', 0) == 0 else f"₪{info['price']}"}
+Status: {'✅ Active' if info.get('active', True) else '❌ Inactive'}"""
+        bot.reply_to(m, msg)
+    else:
+        bot.reply_to(m, "Usage: /plugin store | list | install <id> | uninstall <id> | search <query> | info <id>")
+
 print("🚀 SLH SYSTEM RUNNING")
 master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
