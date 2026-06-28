@@ -564,7 +564,11 @@ def market_installed(m):
 @bot.message_handler(commands=["market_install"])
 def market_install(m):
     store = load_store()
-    plugin_id = m.text.replace("/market_install", "").strip()
+    # Handle both /market_install id and /market_install@BotName id
+    import re
+    text = m.text
+    # Remove the command part (with optional mention)
+    plugin_id = re.sub(r"^/market_install(@\S+)?\s*", "", text).strip()
     for p in store["plugins"]:
         if p["id"] == plugin_id:
             store["installed"].append(plugin_id)
@@ -572,7 +576,7 @@ def market_install(m):
             save_store(store)
             bot.reply_to(m, f"✅ Plugin '{p["name"]}' installed!")
             return
-    bot.reply_to(m, "❌ Plugin not found")
+    bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
 
 print("🚀 SLH SYSTEM RUNNING")
 while True:
