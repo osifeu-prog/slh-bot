@@ -665,6 +665,16 @@ def price(m):
     lines = [f"• {v['name']} – ₪{v['price']}/month" for k, v in plans.items()]
     bot.reply_to(m, "💰 Pricing:\n" + "\n".join(lines))
 
+@bot.message_handler(commands=['syscheck'])
+def syscheck(m):
+    import subprocess
+    result = subprocess.run("bash ~/slh_clean/system_verification.sh", shell=True, capture_output=True, text=True, timeout=30)
+    bot.reply_to(m, result.stdout[:2000] or "System check complete.")
+@bot.message_handler(commands=['daemon'])
+def daemon(m):
+    import subprocess
+    result = subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True, capture_output=True, text=True, timeout=10)
+    bot.reply_to(m, f"Daemon:\n{result.stdout[:500] or 'Restarted'}")
 print("🚀 SLH SYSTEM RUNNING")
 master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
