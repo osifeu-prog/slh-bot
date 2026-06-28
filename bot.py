@@ -546,6 +546,34 @@ def termlog(m):
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
 
+
+@bot.message_handler(commands=['market'])
+def market(m):
+    store = load_store()
+    lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in store['plugins']]
+    bot.reply_to(m, "🛍️ Marketplace:\n" + "\n".join(lines))
+
+@bot.message_handler(commands=['market_install'])
+def market_install(m):
+    store = load_store()
+    plugin_id = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
+    for p in store['plugins']:
+        if p['id'] == plugin_id:
+            store['installed'].append(plugin_id)
+            p['installs'] += 1
+            save_store(store)
+            bot.reply_to(m, f"✅ Plugin '{p['name']}' installed!")
+            return
+    bot.reply_to(m, "❌ Plugin not found")
+
+@bot.message_handler(commands=['market_installed'])
+def market_installed(m):
+    store = load_store()
+    if not store['installed']:
+        bot.reply_to(m, "No plugins installed yet.")
+    else:
+        bot.reply_to(m, "📦 Installed: " + ", ".join(store['installed']))
+
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
