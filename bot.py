@@ -20,6 +20,47 @@ from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 
 import json
+
+import json
+ALLOWED_FILE = os.path.expanduser("~/slh_clean/allowed_ids.json")
+def load_allowed():
+    if not os.path.exists(ALLOWED_FILE):
+        return {"admin": None, "allowed": []}
+    with open(ALLOWED_FILE, "r") as f:
+        return json.load(f)
+
+def save_allowed(data):
+    with open(ALLOWED_FILE, "w") as f:
+        json.dump(data, f)
+
+def is_allowed(chat_id):
+    data = load_allowed()
+    return chat_id in data["allowed"]
+
+def add_allowed(chat_id):
+    data = load_allowed()
+    if chat_id not in data["allowed"]:
+        data["allowed"].append(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def remove_allowed(chat_id):
+    data = load_allowed()
+    if chat_id == data["admin"]:
+        return False
+    if chat_id in data["allowed"]:
+        data["allowed"].remove(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def get_admin():
+    return load_allowed()["admin"]
+
+auth_filter = lambda m: is_allowed(m.chat.id)
+
+
 ALLOWED_FILE = os.path.expanduser("~/slh_clean/allowed_ids.json")
 def load_allowed():
     if not os.path.exists(ALLOWED_FILE):
@@ -861,6 +902,83 @@ def vbackup(m):
         bot.reply_to(m, f"```\n{output}\n```", parse_mode="Markdown")
     except Exception as e:
         bot.reply_to(m, f"❌ Failed to run backup: {e}")
+
+
+# --- Open to everyone ---
+@bot.message_handler(commands=['id'], func=auth_filter)
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+# --- Admin only ---
+@bot.message_handler(commands=['users'], func=auth_filter)
+def list_users(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    data = load_allowed()
+    users = "\n".join([str(uid) for uid in data["allowed"]])
+    bot.reply_to(m, f"📋 Allowed users:\n{users}")
+
+@bot.message_handler(commands=['allow'], func=auth_filter)
+def allow_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /allow <chat_id>")
+        return
+    uid = int(parts[1])
+    if add_allowed(uid):
+        bot.reply_to(m, f"✅ User {uid} added to allowed list")
+    else:
+        bot.reply_to(m, "User already in list")
+
+@bot.message_handler(commands=['revoke'], func=auth_filter)
+def revoke_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /revoke <chat_id>")
+        return
+    uid = int(parts[1])
+    if remove_allowed(uid):
+        bot.reply_to(m, f"❌ User {uid} removed from allowed list")
+    else:
+        bot.reply_to(m, "User not in list or is admin")
+@bot.message_handler(commands=['sync'], func=auth_filter)
+def sync(m):
+    import subprocess
+    cwd = os.path.expanduser("~/slh_clean")
+    output = []
+    r = subprocess.run(["git", "pull"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Pull: {r.stdout.strip() or 'OK'}")
+    subprocess.run(["git", "add", "-A"], cwd=cwd)
+    r = subprocess.run(["git", "commit", "-m", f"sync {subprocess.run(['date', '-Iseconds'], capture_output=True, text=True).stdout.strip()}"], cwd=cwd, capture_output=True, text=True)
+    if "nothing to commit" in r.stdout + r.stderr:
+        output.append("Commit: nothing to commit")
+    else:
+        output.append("Commit: OK")
+    r = subprocess.run(["git", "push"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Push: {r.stdout.strip() or 'OK'}")
+    output.append("Railway: auto-deploy triggered (will exit due to SLH_LOCAL)")
+    bot.reply_to(m, "\n".join(output))
 
 
 # --- Open to everyone ---
