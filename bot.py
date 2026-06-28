@@ -872,6 +872,40 @@ def diagnose(m):
         compile(code, "bot.py", "exec")
     except SyntaxError as e:
         issues.append(f"❌ Syntax error at line {e.lineno}: {e.msg}")
+
+# --- Open to everyone (placed before any while True) ---
+@bot.message_handler(commands=['id'])
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+@bot.message_handler(commands=['request'])
+def request_access(m):
+    user = m.from_user
+    admin_id = get_admin()
+    if not admin_id:
+        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
+        return
+    if is_allowed(m.chat.id):
+        bot.reply_to(m, "✅ You already have access!")
+        return
+    user_info = f"@{user.username}" if user.username else f"user {user.id}"
+    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
+    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
+
     loop_pos = code.find("while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
@@ -965,7 +999,6 @@ def sync(m):
 
 
 # --- Open to everyone ---
-@bot.message_handler(commands=['id'])
 def show_id(m):
     chat = m.chat
     user = m.from_user
@@ -1049,7 +1082,6 @@ def fullcheck(m):
     if len(out)>4000: out=out[-4000:]
     bot.reply_to(m,f'```\n{out}\n```',parse_mode='Markdown')
 
-@bot.message_handler(commands=['id'], func=auth_filter)
 def show_id(m):
     chat = m.chat
     user = m.from_user
@@ -1069,7 +1101,6 @@ def show_id(m):
 
 
 # --- Open to everyone ---
-@bot.message_handler(commands=['request'])
 def request_access(m):
     user = m.from_user
     admin_id = get_admin()
