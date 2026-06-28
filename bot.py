@@ -1,5 +1,6 @@
 import os, sys, json, time, subprocess
 import telebot
+from marketplace import load_store, save_store
 from subscriptions import PLANS, get_user_plan, set_user_plan, list_plans
 from master_agent import MasterAgent
 from inspector import InspectorAgent
