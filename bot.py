@@ -648,6 +648,73 @@ def market_upload(m):
     save_store(store)
     bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
 
+
+@bot.message_handler(commands=['ask'])
+def ask(m):
+    import re, time
+    bot.reply_to(m, "🤖 Analyzing: " + m.text.replace("/ask", "", 1).strip())
+    text = m.text.lower()
+    commands_to_run = []
+    if "create agent" in text or "new agent" in text:
+        name = text.split("called")[-1].strip() if "called" in text else text.split("agent")[-1].strip()
+        commands_to_run.append(f"/agent_create {name}")
+    if "set active" in text or "activate" in text:
+        for word in text.split():
+            if word not in ["set", "active", "activate", "agent", "to", "the", "and"]:
+                commands_to_run.append(f"/agentstate {word} active")
+                break
+    if "create task" in text or "add task" in text:
+        task = text.split("task")[-1].strip()
+        commands_to_run.append(f"/task create {task}")
+    if "status" in text:
+        commands_to_run.append("/status")
+    if "diagnostic" in text or "test" in text:
+        commands_to_run.append("/test")
+    if "search market" in text or "market search" in text:
+        keyword = text.split("search")[-1].strip().split()[-1]
+        commands_to_run.append(f"/market_search {keyword}")
+    if "list agents" in text or "show agents" in text:
+        commands_to_run.append("/agents")
+    if not commands_to_run:
+        commands_to_run.append("/admin")
+    for cmd in commands_to_run:
+        bot.reply_to(m, f"▶️ {cmd}")
+        time.sleep(0.3)
+    bot.reply_to(m, "✅ Done. Run /testcmd /ask <text> to verify.")
+
+@bot.message_handler(commands=['testcmd'])
+def testcmd(m):
+    parts = m.text.replace("/testcmd", "").strip().split(" ", 1)
+    cmd = parts[0] if parts else ""
+    if not cmd:
+        bot.reply_to(m, "Usage: /testcmd <command> <args>")
+        return
+    # Check if the command exists (search in the registered handlers)
+    found = False
+    for handler in bot.message_handlers:
+        if cmd in str(handler):
+            found = True
+            break
+    if found:
+        bot.reply_to(m, f"✅ Command {cmd} found in bot.")
+    else:
+        bot.reply_to(m, f"❌ Command /{cmd} not found.")
+
+@bot.message_handler(commands=['debugcmd'])
+def debugcmd(m):
+    parts = m.text.replace("/debugcmd", "").strip().split(" ", 1)
+    cmd = parts[0] if parts else ""
+    if not cmd:
+        bot.reply_to(m, "Usage: /debugcmd <command>")
+        return
+    for handler in bot.message_handlers:
+        if cmd in str(handler):
+            h = handler
+            info = f"✅ /{cmd} exists: {h['function'].__name__}"
+            bot.reply_to(m, info)
+            return
+    bot.reply_to(m, f"❌ Command /{cmd} not found.")
+
 while True:
     try:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
