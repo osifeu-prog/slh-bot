@@ -38,8 +38,6 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 agents_dict = {}
-master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
-inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 
 # ---- Load agents from persistent storage ----
 try:
@@ -59,6 +57,8 @@ try:
     kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
     TaskPlugin().on_start(kernel)
     _KERNEL_READY = True
+master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
     print("✅ Kernel modules loaded")
 except Exception as e:
     print("Kernel init failed:", e)
