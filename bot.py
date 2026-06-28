@@ -646,6 +646,10 @@ def daemon(m):
     result = subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True, capture_output=True, text=True, timeout=10)
     bot.reply_to(m, f"Daemon:\n{result.stdout[:500] or 'Restarted'}")
 
+@bot.message_handler(commands=["greet"])
+def greet(m):
+    bot.reply_to(m, "Greetings!")
+
 # === MAIN LOOP ===
 
 
@@ -656,6 +660,10 @@ def hello(m):
 
 
 
+@bot.message_handler(commands=["greet"])
+def greet(m):
+    bot.reply_to(m, "Greetings!")
+
 # === MAIN LOOP ===
 print("🚀 SLH SYSTEM RUNNING")
 while True:
@@ -665,7 +673,5 @@ while True:
         print("Polling error:", e)
         time.sleep(5)
 
-@bot.message_handler(commands=["greet"])
-def greet(m):
-    bot.reply_to(m, "Greetings!")
+
 
