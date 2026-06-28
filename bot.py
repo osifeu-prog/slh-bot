@@ -818,6 +818,7 @@ def diagnose_cmd(m):
     bot.reply_to(m, "\n".join(issues))
 
 
+import learn_handlers, project_commands; learn_handlers.register(bot); project_commands.init(bot)
 while True:
     try:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
