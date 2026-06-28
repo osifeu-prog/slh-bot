@@ -814,3 +814,75 @@ def alert(m):
         bot.reply_to(m, "🚨 Alerts:\n" + "\n".join(alerts))
     else:
         bot.reply_to(m, "✅ All systems OK")
+
+@bot.message_handler(commands=['diagnose'])
+def diagnose(m):
+    import re
+    issues = []
+    with open("bot.py", "r") as f:
+        code = f.read()
+
+    # 1. Syntax check
+    try:
+        compile(code, "bot.py", "exec")
+    except SyntaxError as e:
+        issues.append(f"❌ Syntax error at line {e.lineno}: {e.msg}")
+
+    # 2. Handlers after while True
+    loop_pos = code.find("while True:")
+    if loop_pos != -1:
+        after_loop = code[loop_pos:]
+        if "@bot.message_handler" in after_loop:
+            # Find handler names
+            handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", after_loop)
+            issues.append(f"⚠️ {len(handlers)} handlers after while True: {', '.join('/'+h for h in handlers)}")
+
+    # 3. Duplicate handlers
+    all_handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", code)
+    dupes = [h for h in set(all_handlers) if all_handlers.count(h) > 1]
+    if dupes:
+        issues.append(f"⚠️ Duplicate handlers: {', '.join('/'+h for h in dupes)}")
+
+    if issues:
+        bot.reply_to(m, "🔍 Issues found:\n" + "\n".join(issues))
+    else:
+        bot.reply_to(m, "✅ No issues detected.")
+
+
+@bot.message_handler(commands=['fix'])
+def fix(m):
+    import re
+    with open("bot.py", "r") as f:
+        code = f.read()
+
+    loop_pos = code.find("while True:")
+    if loop_pos == -1:
+        bot.reply_to(m, "❌ No while True loop found.")
+        return
+
+    after_loop = code[loop_pos:]
+    if "@bot.message_handler" not in after_loop:
+        bot.reply_to(m, "✅ No misplaced handlers found.")
+        return
+
+    # Extract the block of handlers after while True
+    # Find all handler blocks after loop
+    handler_blocks = re.findall(r"(@bot\.message_handler.*?)(?=\n@bot|\n\n@bot|\Z)", after_loop, re.DOTALL)
+    if not handler_blocks:
+        bot.reply_to(m, "❌ Could not extract handlers.")
+        return
+
+    # Remove them from the end and insert before while True
+    for block in handler_blocks:
+        code = code.replace(block, "")
+    # Insert before while True
+    code = code.replace("while True:", "\n".join(handler_blocks) + "\nwhile True:")
+
+    with open("bot.py", "w") as f:
+        f.write(code)
+
+    # Restart bot
+    import subprocess, sys, os
+    subprocess.Popen([sys.executable, "-B", "bot.py"])
+    os._exit(0)
+    bot.reply_to(m, "✅ Handlers moved and bot restarted.")
