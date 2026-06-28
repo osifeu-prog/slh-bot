@@ -29,7 +29,11 @@ fi
 # 4. Critical files existence
 echo ">>> Critical files..."
 for f in bot.py db.json events.db config.json; do
-    [ -f "$f" ] && echo "  ✅ $f exists"  echo "  ❌ $f MISSING"
+    if [ -f "$f" ]; then
+        echo "  ✅ $f exists"
+    else
+        echo "  ❌ $f MISSING"
+    fi
 done
 
 # 5. Disk & memory
