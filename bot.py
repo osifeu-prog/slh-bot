@@ -863,7 +863,7 @@ def debugcmd(m):
             return
     bot.reply_to(m, f"❌ Command /{cmd} not found.")
 
-@bot.message_handler(commands=['diagnose'], func=auth_filter)
+@bot.message_handler(commands=['diagnose'])
 def diagnose(m):
     import re
     issues = []
