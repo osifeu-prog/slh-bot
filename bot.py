@@ -57,6 +57,7 @@ try:
     bus = EventBus(workers=2)
     kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
     TaskPlugin().on_start(kernel)
+        bus.start()
     _KERNEL_READY = True
     print("✅ Kernel modules loaded")
 except Exception as e:
