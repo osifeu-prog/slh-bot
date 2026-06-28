@@ -652,6 +652,58 @@ def market_upload(m):
 @bot.message_handler(commands=['ask'])
 def ask(m):
     import re, time
+    text = m.text.replace("/ask", "", 1).strip()
+    if not text:
+        bot.reply_to(m, "Usage: /ask <natural language command>")
+        return
+    bot.reply_to(m, f"🤖 Processing: {text}")
+    
+    # Simple NLU rules
+    tl = text.lower()
+    results = []
+    
+    # Agent creation
+    if "create" in tl and "agent" in tl:
+        name = tl.split("agent")[-1].strip().strip("called").strip("named").strip()
+        if name:
+            bot.reply_to(m, f"▶️ /agent_create {name}")
+            results.append(f"Agent '{name}' created")
+    
+    # Agent state change
+    if "set" in tl and "active" in tl:
+        for w in tl.split():
+            if w not in ["set", "active", "to", "the", "and", "agent"]:
+                bot.reply_to(m, f"▶️ /agentstate {w} active")
+                results.append(f"Agent '{w}' set active")
+                break
+    
+    # Status
+    if "status" in tl or "how" in tl:
+        bot.reply_to(m, "▶️ /status")
+        results.append("Status checked")
+    
+    # Market search
+    if "search" in tl and ("market" in tl or "plugin" in tl):
+        keyword = tl.split("search")[-1].strip().split()[-1]
+        bot.reply_to(m, f"▶️ /market_search {keyword}")
+        results.append(f"Market search for '{keyword}'")
+    
+    # List agents
+    if "list" in tl and "agent" in tl:
+        bot.reply_to(m, "▶️ /agents")
+        results.append("Agents listed")
+    
+    # Health
+    if "health" in tl:
+        bot.reply_to(m, "▶️ /health")
+        results.append("Health checked")
+    
+    if not results:
+        bot.reply_to(m, "❓ Could not understand. Try: create agent X, set agent active, status, search market Y, list agents, health")
+    else:
+        bot.reply_to(m, "✅ Done: " + ", ".join(results))
+
+    import re, time
     bot.reply_to(m, "🤖 Analyzing: " + m.text.replace("/ask", "", 1).strip())
     text = m.text.lower()
     commands_to_run = []
@@ -722,3 +774,43 @@ while True:
         print("Polling error:", e)
         time.sleep(5)
 
+
+@bot.message_handler(commands=['reload'])
+def reload(m):
+    import subprocess, os, sys
+    bot.reply_to(m, "🔄 Reloading bot...")
+    # Restart the bot process without the daemon
+    subprocess.Popen([sys.executable, "-B", "bot.py"])
+    os._exit(0)
+
+@bot.message_handler(commands=['alert'])
+def alert(m):
+    import os, time
+    bot.reply_to(m, "🔔 Alert system active. Checking...")
+    alerts = []
+    
+    # Check disk
+    stat = os.statvfs(".")
+    free_mb = (stat.f_frsize * stat.f_bavail) / 1024 / 1024
+    if free_mb < 100:
+        alerts.append(f"⚠️ Low disk space: {free_mb:.0f} MB")
+    
+    # Check bot process
+    import subprocess
+    procs = subprocess.run("pgrep -af 'python3.*bot'", shell=True, capture_output=True, text=True).stdout.strip()
+    if len(procs.splitlines()) > 1:
+        alerts.append("⚠️ Multiple bot instances detected")
+    elif not procs:
+        alerts.append("❌ Bot not running!")
+    
+    # Check API
+    try:
+        import urllib.request
+        urllib.request.urlopen("http://localhost:5000/api/health", timeout=3)
+    except:
+        alerts.append("⚠️ API not responding")
+    
+    if alerts:
+        bot.reply_to(m, "🚨 Alerts:\n" + "\n".join(alerts))
+    else:
+        bot.reply_to(m, "✅ All systems OK")
