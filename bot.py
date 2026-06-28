@@ -807,4 +807,18 @@ def diagnose(m):
         bot.reply_to(m, "✅ No issues detected.")
 
 
+
+@bot.message_handler(commands=['vbackup'])
+def vbackup(m):
+    import subprocess, os
+    cmd = ["bash", os.path.expanduser("~/slh_clean/backup_verify.sh")]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=os.path.expanduser("~/slh_clean"))
+        output = result.stdout + result.stderr
+        if len(output) > 4000:
+            output = output[-4000:]
+        bot.reply_to(m, f"```\n{output}\n```", parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Failed to run backup: {e}")
+
 bot.infinity_polling()
