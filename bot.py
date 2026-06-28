@@ -57,8 +57,6 @@ try:
     kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
     TaskPlugin().on_start(kernel)
     _KERNEL_READY = True
-master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
-inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
     print("✅ Kernel modules loaded")
 except Exception as e:
     print("Kernel init failed:", e)
@@ -574,6 +572,8 @@ def watchdog(m):
         result = "Usage: /watchdog start [interval_min] | stop"
     bot.reply_to(m, result)
 print("🚀 SLH SYSTEM RUNNING")
+master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
+inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 while True:
     try:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
