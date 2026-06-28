@@ -20,6 +20,7 @@ from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 
 import json
+from diag_handler import diagnose
 
 import json
 ALLOWED_FILE = os.path.expanduser("~/slh_clean/allowed_ids.json")
@@ -1116,4 +1117,8 @@ def request_access(m):
     bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
 
 # --- Admin only ---
+
+@bot.message_handler(commands=['diagnose'])
+def diagnose_cmd(m):
+    diagnose(m)
 bot.infinity_polling()
