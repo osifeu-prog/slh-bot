@@ -7,7 +7,7 @@ print("\n=== SLH UNIFIED HEALTH CHECK ===\n")
 results = []
 
 results.append(ok("bot.py exists", os.path.exists("bot.py")))
-results.append(ok("kernel exists", os.path.exists("../slh_os_v4_real")))
+results.append(ok("kernel exists", os.path.exists("SLH_KERNEL.py") and os.path.exists("KERNEL_RULES.md")))
 results.append(ok("config exists", os.path.exists("config.json")))
 
 try:
