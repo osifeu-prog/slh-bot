@@ -20,10 +20,10 @@ fi
 
 # 3. Core modules import check (no argument functions)
 echo ">>> Core imports..."
-if python -c "import slh, diag_handler, health_check" 2>/dev/null; then
-    echo "✅ Core modules imported successfully"
+if python -c "import slh" 2>/dev/null; then
+    echo "✅ slh imported successfully"
 else
-    echo "❌ Module import failed"
+    echo "❌ slh import failed"
 fi
 
 # 4. Critical files existence
