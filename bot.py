@@ -585,3 +585,72 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
+
+@bot.message_handler(commands=['market_search'])
+def market_search(m):
+    store = load_store()
+    query = m.text.replace("/market_search", "").strip().lower()
+    if not query:
+        bot.reply_to(m, "Usage: /market_search <keyword>")
+        return
+    results = [p for p in store['plugins'] if query in p['name'].lower() or query in p['desc'].lower()]
+    if not results:
+        bot.reply_to(m, f"No plugins found for '{query}'")
+        return
+    lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in results]
+    bot.reply_to(m, "🔍 Search Results:\n" + "\n".join(lines))
+
+@bot.message_handler(commands=['market_rate'])
+def market_rate(m):
+    store = load_store()
+    parts = m.text.split(" ", 2)
+    if len(parts) < 3:
+        bot.reply_to(m, "Usage: /market_rate <plugin_id> <rating 1-5>")
+        return
+    plugin_id = parts[1]
+    try:
+        rating = int(parts[2])
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except:
+        bot.reply_to(m, "Rating must be 1-5")
+        return
+    for p in store['plugins']:
+        if p['id'] == plugin_id:
+            p.setdefault('ratings', []).append(rating)
+            p.setdefault('avg_rating', 0)
+            p['avg_rating'] = sum(p['ratings']) / len(p['ratings'])
+            save_store(store)
+            bot.reply_to(m, f"✅ Rated '{p['name']}' {rating}/5 (avg: {p['avg_rating']:.1f})")
+            return
+    bot.reply_to(m, "❌ Plugin not found")
+
+@bot.message_handler(commands=['market_upload'])
+def market_upload(m):
+    store = load_store()
+    parts = m.text.split("\n", 1)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /market_upload <id>\n<name>\n<description>\n<price>")
+        return
+    header = parts[0].replace("/market_upload", "").strip()
+    body = parts[1].strip().split("\n")
+    if len(body) < 3:
+        bot.reply_to(m, "Need: name, description, price")
+        return
+    plugin_id = header or body[0].lower().replace(" ", "_")
+    name = body[0]
+    desc = body[1]
+    try:
+        price = int(body[2])
+    except:
+        bot.reply_to(m, "Price must be a number")
+        return
+    store['plugins'].append({
+        "id": plugin_id,
+        "name": name,
+        "desc": desc,
+        "price": price,
+        "installs": 0
+    })
+    save_store(store)
+    bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
