@@ -1,5 +1,15 @@
 {
-  "installed": {},
+  "installed": {
+    "health_check": {
+      "id": "health_check",
+      "name": "Health Check",
+      "description": "Adds /health command",
+      "url": "https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/health.py",
+      "price": 0,
+      "installed_at": "2026-06-28 12:18:18",
+      "active": true
+    }
+  },
   "available": [
     {
       "id": "health_check",

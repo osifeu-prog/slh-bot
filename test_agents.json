@@ -1,1 +1,1 @@
-{"1": {"name": "test", "role": "agent", "state": "busy", "inbox": [{"time": "now", "message": "hello"}], "history": [], "permissions": ["read"]}}
+{"1": {"name": "verify", "role": "agent", "state": "busy", "inbox": [{"time": "2026-06-28 17:29:02", "message": "test"}], "history": [{"time": "2026-06-28 17:29:02", "action": "state\u2192busy"}], "created": "2026-06-28 17:29:02", "permissions": ["read"]}}

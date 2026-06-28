@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SLH OS Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .nav { display: flex; gap: 20px; }
+        .nav a { text-decoration: none; color: #94a3b8; cursor: pointer; }
+        .nav a.active { color: #00ff88; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; }
+        .card h3 { margin-bottom: 10px; color: #00ff88; }
+        .stat { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .list { max-height: 300px; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+        .list pre { white-space: pre-wrap; word-break: break-all; }
+        .btn { background: #00ff88; color: #000; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #00dd77; }
+        .section { display: none; }
+        .section.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🚀 SLH OS Dashboard</div>
+            <div class="nav">
+                <a class="active" onclick="showSection('dashboard')">Dashboard</a>
+                <a onclick="showSection('agents')">Agents</a>
+                <a onclick="showSection('tasks')">Tasks</a>
+                <a onclick="showSection('logs')">Logs</a>
+            </div>
+        </div>
+
+        <div id="dashboard" class="section active">
+            <div class="grid">
+                <div class="card">
+                    <h3>🤖 Agents</h3>
+                    <div class="stat" id="agent-count">0</div>
+                    <button class="btn" onclick="loadStats()">Refresh</button>
+                </div>
+                <div class="card">
+                    <h3>📋 Tasks</h3>
+                    <div class="stat" id="task-count">0</div>
+                    <button class="btn" onclick="loadStats()">Refresh</button>
+                </div>
+                <div class="card">
+                    <h3>⚡ Health</h3>
+                    <div class="stat" id="health-status">OK</div>
+                    <button class="btn" onclick="checkHealth()">Check</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="agents" class="section">
+            <div class="card">
+                <h3>🤖 Agents</h3>
+                <div class="list" id="agents-list">Loading...</div>
+                <button class="btn" onclick="loadAgents()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="tasks" class="section">
+            <div class="card">
+                <h3>📋 Tasks</h3>
+                <div class="list" id="tasks-list">Loading...</div>
+                <button class="btn" onclick="loadTasks()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="logs" class="section">
+            <div class="card">
+                <h3>📋 Logs</h3>
+                <div class="list" id="logs-content"><pre>Loading...</pre></div>
+                <button class="btn" onclick="loadLogs()">Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:5000/api';
+
+        async function loadStats() {
+            const res = await fetch(API + '/stats');
+            const data = await res.json();
+            document.getElementById('agent-count').textContent = data.agents || 0;
+            document.getElementById('task-count').textContent = data.tasks || 0;
+        }
+
+        async function loadAgents() {
+            const res = await fetch(API + '/agents');
+            const data = await res.json();
+            const div = document.getElementById('agents-list');
+            const ids = Object.keys(data);
+            if (ids.length === 0) {
+                div.innerHTML = 'No agents yet.';
+                return;
+            }
+            div.innerHTML = ids.map(id => {
+                const a = data[id];
+                return `<div>${a.name} [${a.state || 'idle'}] – ${a.role || 'agent'}</div>`;
+            }).join('');
+        }
+
+        async function loadTasks() {
+            const res = await fetch(API + '/tasks');
+            const data = await res.json();
+            const div = document.getElementById('tasks-list');
+            if (!data.length) {
+                div.innerHTML = 'No tasks yet.';
+                return;
+            }
+            div.innerHTML = data.map(t => `<div>[${t.done ? '✅' : '⬜'}] ${t.title || t.task || t.text || '?'}</div>`).join('');
+        }
+
+        async function loadLogs() {
+            const res = await fetch(API + '/logs?n=50');
+            const data = await res.json();
+            const pre = document.querySelector('#logs-content pre');
+            pre.textContent = data.join('');
+        }
+
+        async function checkHealth() {
+            const res = await fetch(API + '/health');
+            const data = await res.json();
+            document.getElementById('health-status').textContent = data.status.toUpperCase();
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Initial load
+        loadStats();
+        loadAgents();
+        loadTasks();
+        loadLogs();
+        checkHealth();
+    </script>
+</body>
+</html>

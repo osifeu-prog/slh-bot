@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-export BOT_TOKEN=$(python3 -c "import json; print(json.load(open("config.json"))["BOT_TOKEN"])")
+export BOT_TOKEN=$(python3 get_token.py)
 cd ~/slh_clean
 
 echo "🚀 SLH OS Daemon started – $(date)"
