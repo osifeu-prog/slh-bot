@@ -1,9 +1,6 @@
 import os, sys, json, time, subprocess
 import telebot
 from marketplace import load_store, save_store
-from subscriptions import PLANS, get_user_plan, set_user_plan, list_plans
-from master_agent import MasterAgent
-from inspector import InspectorAgent
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
@@ -107,7 +104,7 @@ def start(m):
 def admin(m):
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
 📊 DIAGNOSTICS:
-/test — Run full system diagnostic\n/inspect — Inspector Agent report\n/test_agents — Quick agent self-test
+/test — Run full system diagnostic\n/test_agents — Quick agent self-test
 /status — System status
 /health — Health check
 🤖 AGENTS:
@@ -130,7 +127,7 @@ def admin(m):
 /termux — Show Termux status
 /deploy — Trigger Railway deploy
 /errors — Show recent errors
-/subscribe — Manage subscription\n/myplan — View your plan\n/price — Pricing\n/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
+/plugin list — List plugins
 /goal add/list — Manage goals
 /exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
 /disk — Disk usage
@@ -285,7 +282,14 @@ def errors(m):
     except:
         bot.reply_to(m, "No log file")
 
-
+@bot.message_handler(commands=['plugin'])
+def plugin(m):
+    parts = m.text.split()
+    if len(parts) > 1 and parts[1] == "list":
+        plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
+        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
+    else:
+        bot.reply_to(m, "Usage: /plugin list")
 
 @bot.message_handler(commands=['goal'])
 def goal(m):
@@ -338,7 +342,10 @@ def kernellog(m):
 def kernelstatus(m):
     bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
 
-
+@bot.message_handler(commands=['update'])
+def update(m):
+    result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
+    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
 
 @bot.message_handler(commands=['rollback'])
 def rollback(m):
@@ -463,7 +470,7 @@ def user(m):
 /audit — Audit log
 /sysinfo — System resources
 /debug — Container debug info
-/subscribe — Manage subscription\n/myplan — View your plan\n/price — Pricing\n/plugin store — Browse plugin store\n/plugin list — List installed plugins\n/plugin install <id> — Install plugin\n/plugin uninstall <id> — Remove plugin\n/plugin search <query> — Search plugins\n/plugin info <id> — Plugin details
+/plugin list — List plugins
 /goal add/list — Manage goals
 /rlogs — Railway logs (admin)
 /disk — Disk usage""")
@@ -539,133 +546,6 @@ def termlog(m):
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['q'])
-def q(m):
-    report = master.quick_check()
-    bot.reply_to(m, report)
-@bot.message_handler(commands=['inspect'])
-def inspect(m):
-    bot.reply_to(m, "🔍 Inspector Agent running...")
-    report = master.full_check(m.chat.id)
-    bot.reply_to(m, report)
-@bot.message_handler(commands=['watchdog'])
-def watchdog(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /watchdog start [interval_min] | stop")
-        return
-    action = parts[1]
-    if action == "start":
-        interval = int(parts[2]) if len(parts) > 2 else 60
-        result = master.watchdog_start(m.chat.id, interval)
-    elif action == "stop":
-        result = master.watchdog_stop()
-    else:
-        result = "Usage: /watchdog start [interval_min] | stop"
-    bot.reply_to(m, result)
-
-@bot.message_handler(commands=['plugin'])
-def plugin_cmd(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        msg = """🛍️ PLUGIN STORE
-/plugin store — Browse available plugins
-/plugin list — Installed plugins
-/plugin install <id> — Install plugin
-/plugin uninstall <id> — Remove plugin
-/plugin search <query> — Search plugins
-/plugin info <id> — Plugin details"""
-        bot.reply_to(m, msg)
-        return
-    action = parts[1]
-    if action == "store":
-        from plugins_store import get_store
-        store = get_store()
-        if not store:
-            bot.reply_to(m, "Store is empty")
-            return
-        lines = [f"• {p['name']} ({p['id']}) – {p['description']}" for p in store]
-        bot.reply_to(m, "🛍️ Plugin Store:\n" + "\n".join(lines))
-    elif action == "list":
-        from plugins_store import list_plugins
-        plugins = list_plugins()
-        if not plugins:
-            bot.reply_to(m, "No plugins installed")
-            return
-        lines = [f"• {v['name']} ({k}) – {'✅ active' if v.get('active', True) else '❌ inactive'}" for k, v in plugins.items()]
-        bot.reply_to(m, "📦 Installed Plugins:\n" + "\n".join(lines))
-    elif action == "install" and len(parts) >= 3:
-        from plugins_store import install_plugin
-        plugin_id = parts[2]
-        result = install_plugin(plugin_id)
-        bot.reply_to(m, result)
-    elif action == "uninstall" and len(parts) >= 3:
-        from plugins_store import uninstall_plugin
-        plugin_id = parts[2]
-        result = uninstall_plugin(plugin_id)
-        bot.reply_to(m, result)
-    elif action == "search" and len(parts) >= 3:
-        from plugins_store import search_plugins
-        query = parts[2]
-        results = search_plugins(query)
-        if not results:
-            bot.reply_to(m, "No plugins found")
-            return
-        lines = [f"• {p['name']} ({p['id']}) – {p['description']}" for p in results]
-        bot.reply_to(m, "🔍 Search Results:\n" + "\n".join(lines))
-    elif action == "info" and len(parts) >= 3:
-        from plugins_store import get_plugin_info
-        plugin_id = parts[2]
-        info = get_plugin_info(plugin_id)
-        if not info:
-            bot.reply_to(m, "Plugin not found")
-            return
-        msg = f"""📋 {info['name']} ({info['id']})
-Description: {info.get('description', 'N/A')}
-URL: {info.get('url', 'N/A')}
-Price: {'Free' if info.get('price', 0) == 0 else f"₪{info['price']}"}
-Status: {'✅ Active' if info.get('active', True) else '❌ Inactive'}"""
-        bot.reply_to(m, msg)
-    else:
-        bot.reply_to(m, "Usage: /plugin store | list | install <id> | uninstall <id> | search <query> | info <id>")
-
-@bot.message_handler(commands=["syscheck"])
-def syscheck(m):
-    import subprocess
-    result = subprocess.run("bash ~/slh_clean/system_verification.sh", shell=True, capture_output=True, text=True, timeout=30)
-    bot.reply_to(m, result.stdout[:2000] or "System check complete.")
-
-@bot.message_handler(commands=["update"])
-def update_cmd(m):
-    import subprocess
-    result = subprocess.run("cd ~/slh_clean && git pull && git push", shell=True, capture_output=True, text=True, timeout=30)
-    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
-
-@bot.message_handler(commands=["daemon"])
-def daemon(m):
-    import subprocess
-    result = subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True, capture_output=True, text=True, timeout=10)
-    bot.reply_to(m, f"Daemon:\n{result.stdout[:500] or 'Restarted'}")
-
-@bot.message_handler(commands=["greet"])
-def greet(m):
-    bot.reply_to(m, "Greetings!")
-
-# === MAIN LOOP ===
-
-
-@bot.message_handler(commands=['hello'])
-def hello(m):
-    bot.reply_to(m, "Hello World!")
-
-
-
-
-@bot.message_handler(commands=["greet"])
-def greet(m):
-    bot.reply_to(m, "Greetings!")
-
-# === MAIN LOOP ===
 print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
@@ -673,6 +553,3 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
-
-
-
