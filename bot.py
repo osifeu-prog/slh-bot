@@ -628,40 +628,29 @@ Status: {'✅ Active' if info.get('active', True) else '❌ Inactive'}"""
     else:
         bot.reply_to(m, "Usage: /plugin store | list | install <id> | uninstall <id> | search <query> | info <id>")
 
+@bot.message_handler(commands=["syscheck"])
+def syscheck(m):
+    import subprocess
+    result = subprocess.run("bash ~/slh_clean/system_verification.sh", shell=True, capture_output=True, text=True, timeout=30)
+    bot.reply_to(m, result.stdout[:2000] or "System check complete.")
 
-@bot.message_handler(commands=['subscribe'])
-def subscribe(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        plans = list_plans()
-        lines = [f"• {v['name']} (₪{v['price']}/month) – {v['agents']} agents, {v['tasks']} tasks, {v['plugins']} plugins" for k, v in plans.items()]
-        bot.reply_to(m, "📦 Available Plans:\n" + "\n".join(lines))
-        return
-    plan = parts[1].lower()
-    if plan not in PLANS:
-        bot.reply_to(m, "❌ Invalid plan. Choose: free, pro, enterprise")
-        return
-    if set_user_plan(m.from_user.id, plan):
-        bot.reply_to(m, f"✅ Subscribed to {PLANS[plan]['name']}!")
-    else:
-        bot.reply_to(m, "❌ Subscription failed")
+@bot.message_handler(commands=["update"])
+def update_cmd(m):
+    import subprocess
+    result = subprocess.run("cd ~/slh_clean && git pull && git push", shell=True, capture_output=True, text=True, timeout=30)
+    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
 
-@bot.message_handler(commands=['myplan'])
-def myplan(m):
-    plan = get_user_plan(m.from_user.id)
-    info = PLANS[plan]
-    bot.reply_to(m, f"""📋 Your Plan: {info['name']}
-💰 Price: ₪{info['price']}/month
-🤖 Agents: {info['agents']}
-📋 Tasks: {info['tasks']}
-🔌 Plugins: {info['plugins']}""")
-
-@bot.message_handler(commands=['price'])
-def price(m):
-    plans = list_plans()
-    lines = [f"• {v['name']} – ₪{v['price']}/month" for k, v in plans.items()]
-    bot.reply_to(m, "💰 Pricing:\n" + "\n".join(lines))
-
-
-
+@bot.message_handler(commands=["daemon"])
+def daemon(m):
+    import subprocess
+    result = subprocess.run("bash ~/slh_clean/slh_daemon.sh", shell=True, capture_output=True, text=True, timeout=10)
     bot.reply_to(m, f"Daemon:\n{result.stdout[:500] or 'Restarted'}")
+
+# === MAIN LOOP ===
+print("🚀 SLH SYSTEM RUNNING")
+while True:
+    try:
+        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except Exception as e:
+        print("Polling error:", e)
+        time.sleep(5)
