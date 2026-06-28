@@ -653,12 +653,8 @@ def daemon(m):
 def hello(m):
     bot.reply_to(m, "Hello World!")
 
-@bot.message_handler(commands=['greet'])
-    bot.reply_to(m, "Greetings!")
 
-    bot.reply_to(m, "Greetings!")
 
-    bot.reply_to(m, "Greetings!")
 
 # === MAIN LOOP ===
 print("🚀 SLH SYSTEM RUNNING")
@@ -668,3 +664,8 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
+
+@bot.message_handler(commands=["greet"])
+def greet(m):
+    bot.reply_to(m, "Greetings!")
+
