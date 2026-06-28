@@ -574,10 +574,9 @@ def watchdog(m):
         result = "Usage: /watchdog start [interval_min] | stop"
     bot.reply_to(m, result)
 
+print("🚀 SLH SYSTEM RUNNING")
 inspector = InspectorAgent(bot, agents_dict, _KERNEL_READY, get_audit)
 master = MasterAgent(bot, agents_dict, _KERNEL_READY, get_audit)
-
-print("🚀 SLH SYSTEM RUNNING")
 while True:
     try:
         bot.infinity_polling(timeout=20, long_polling_timeout=20)
