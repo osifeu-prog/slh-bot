@@ -1117,8 +1117,4 @@ def request_access(m):
     bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
 
 # --- Admin only ---
-
-@bot.message_handler(commands=['diagnose'])
-def diagnose_cmd(m):
-    diagnose(m)
 bot.infinity_polling()
