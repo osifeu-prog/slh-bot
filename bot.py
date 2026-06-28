@@ -905,42 +905,8 @@ def vbackup(m):
 
 
 # --- Open to everyone ---
-@bot.message_handler(commands=['id'], func=auth_filter)
-def show_id(m):
-    chat = m.chat
-    user = m.from_user
-    info = []
-    info.append(f"Chat ID: {chat.id}")
-    info.append(f"Chat type: {chat.type}")
-    if chat.type == "private":
-        info.append(f"Your user ID: {user.id}")
-        if user.username:
-            info.append(f"Username: @{user.username}")
-    elif chat.type in ["group", "supergroup"]:
-        info.append(f"Group title: {chat.title}")
-        info.append(f"Your user ID: {user.id}")
-        if user.username:
-            info.append(f"Your username: @{user.username}")
-    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
 
 
-# --- Open to everyone ---
-@bot.message_handler(commands=['request'])
-def request_access(m):
-    user = m.from_user
-    admin_id = get_admin()
-    if not admin_id:
-        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
-        return
-    if is_allowed(m.chat.id):
-        bot.reply_to(m, "✅ You already have access!")
-        return
-    # Notify admin
-    user_info = f"@{user.username}" if user.username else f"user {user.id}"
-    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
-    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
-
-# --- Admin only ---
 @bot.message_handler(commands=['users'], func=auth_filter)
 def list_users(m):
     if m.chat.id != get_admin():
@@ -1083,4 +1049,40 @@ def fullcheck(m):
     if len(out)>4000: out=out[-4000:]
     bot.reply_to(m,f'```\n{out}\n```',parse_mode='Markdown')
 
+@bot.message_handler(commands=['id'], func=auth_filter)
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+
+# --- Open to everyone ---
+@bot.message_handler(commands=['request'])
+def request_access(m):
+    user = m.from_user
+    admin_id = get_admin()
+    if not admin_id:
+        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
+        return
+    if is_allowed(m.chat.id):
+        bot.reply_to(m, "✅ You already have access!")
+        return
+    # Notify admin
+    user_info = f"@{user.username}" if user.username else f"user {user.id}"
+    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
+    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
+
+# --- Admin only ---
 bot.infinity_polling()
