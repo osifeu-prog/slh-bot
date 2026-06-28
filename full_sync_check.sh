@@ -7,17 +7,21 @@ LOCAL=$(git rev-parse main)
 REMOTE=$(git rev-parse origin/main)
 echo "Local HEAD:  ${LOCAL:0:7}"
 echo "Remote HEAD: ${REMOTE:0:7}"
-[ "$LOCAL" = "$REMOTE" ] && echo "✅ Local and remote are in sync"  echo "❌ Local is ahead of remote (or diverged)"
+if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "✅ Local and remote are in sync"
+else
+    echo "❌ Local is ahead of remote (or diverged)"
+fi
 echo ">>> Unpushed commits:" && git log origin/main..HEAD --oneline
 echo ">>> Local changes:" && git status --short
 echo ">>> Testing push..." && git push --dry-run 2>&1
 echo ">>> Bot key features:"
-grep -q "SLH_LOCAL" bot.py && echo "✅ SLH_LOCAL guard present"  echo "❌ Guard missing"
-grep -q "commands=\['sync'\]" bot.py && echo "✅ /sync exists"  echo "❌ /sync missing"
-grep -q "commands=\['id'\]" bot.py && echo "✅ /id exists"  echo "❌ /id missing"
-grep -q "commands=\['request'\]" bot.py && echo "✅ /request exists"  echo "❌ /request missing"
-grep -q "commands=\['vbackup'\]" bot.py && echo "✅ /vbackup exists"  echo "❌ /vbackup missing"
-grep -q "commands=\['fullcheck'\]" bot.py && echo "✅ /fullcheck exists"  echo "❌ /fullcheck missing"
+if grep -q "SLH_LOCAL" bot.py; then echo "✅ SLH_LOCAL guard present"; else echo "❌ Guard missing"; fi
+if grep -q "commands=\['sync'\]" bot.py; then echo "✅ /sync exists"; else echo "❌ /sync missing"; fi
+if grep -q "commands=\['id'\]" bot.py; then echo "✅ /id exists"; else echo "❌ /id missing"; fi
+if grep -q "commands=\['request'\]" bot.py; then echo "✅ /request exists"; else echo "❌ /request missing"; fi
+if grep -q "commands=\['vbackup'\]" bot.py; then echo "✅ /vbackup exists"; else echo "❌ /vbackup missing"; fi
+if grep -q "commands=\['fullcheck'\]" bot.py; then echo "✅ /fullcheck exists"; else echo "❌ /fullcheck missing"; fi
 echo ">>> Railway deployment status:"
-command -v railway &>/dev/null && railway status 2>&1  echo "Railway CLI not installed (check Dashboard manually)"
+if command -v railway &>/dev/null; then railway status 2>&1 || echo "Railway status command failed"; else echo "Railway CLI not installed (check Dashboard manually)"; fi
 echo "✅ Full sync check completed"
