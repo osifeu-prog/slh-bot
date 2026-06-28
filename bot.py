@@ -1,3 +1,8 @@
+import os, sys
+if not os.getenv("SLH_LOCAL"):
+    print("Not running locally – exiting.")
+    sys.exit(0)
+
 import os, sys, json, time, subprocess
 
 import os, sys
