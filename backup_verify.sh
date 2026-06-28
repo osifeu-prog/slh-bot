@@ -4,7 +4,9 @@ cd ~/slh_clean
 
 # 1. Git backup
 echo ">>> Git backup..."
-if git add -A && git commit -m "backup $(date -Iseconds)"; then
+if git diff --quiet && git diff --cached --quiet; then
+    echo "✅ Nothing to commit (already clean)"
+elif git add -A && git commit -m "backup $(date -Iseconds)"; then
     echo "✅ Git backup done"
 else
     echo "❌ Git backup failed"
