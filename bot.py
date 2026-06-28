@@ -579,13 +579,6 @@ def market_install(m):
     bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
 
 print("🚀 SLH SYSTEM RUNNING")
-while True:
-    try:
-        bot.infinity_polling(timeout=20, long_polling_timeout=20)
-    except Exception as e:
-        print("Polling error:", e)
-        time.sleep(5)
-
 @bot.message_handler(commands=['market_search'])
 def market_search(m):
     store = load_store()
@@ -654,3 +647,11 @@ def market_upload(m):
     })
     save_store(store)
     bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
+
+while True:
+    try:
+        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except Exception as e:
+        print("Polling error:", e)
+        time.sleep(5)
+
