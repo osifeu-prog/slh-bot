@@ -767,3 +767,5 @@ def debugcmd(m):
             return
     bot.reply_to(m, f"❌ Command /{cmd} not found.")
 
+
+bot.infinity_polling()
