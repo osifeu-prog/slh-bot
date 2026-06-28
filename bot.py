@@ -556,7 +556,8 @@ def market(m):
 @bot.message_handler(commands=['market_install'])
 def market_install(m):
     store = load_store()
-    plugin_id = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
+    # Extract plugin ID from command (e.g., /market_install health_check)
+    plugin_id = m.text.replace("/market_install", "").strip()
     for p in store['plugins']:
         if p['id'] == plugin_id:
             store['installed'].append(plugin_id)
