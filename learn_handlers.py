@@ -1,6 +1,11 @@
-import json, datetime, os
+import json, datetime, os, uuid
 
 DB_PATH = os.path.expanduser("~/slh_clean/db.json")
+ADMIN_ID = "8789977826"
+PAYMENT_WALLET = "EQDxsCK9f3ZgXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"   # <-- החלף בכתובת USDT שלך ב-TON
+
+PAYMENT_WALLET = "EQDxsCK9f3ZgXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"   # ← החלף בכתובת USDT שלך
+PAYMENT_AMOUNT = "60 USDT"
 
 def load_db():
     with open(DB_PATH) as f:
@@ -50,15 +55,22 @@ def register(bot):
         if goal.lower() == 'skip':
             goal = ""
         db = load_db()
+        referred_by = db.get("referred_by", {}).get(uid)
         db.setdefault("students", {})[uid] = {
             "name": data["name"],
             "group": data["group"],
             "goal": goal,
-            "registered": datetime.datetime.now().isoformat()
+            "registered": datetime.datetime.now().isoformat(),
+            "premium": False,
+            "referral_code": None,
+            "referred_by": referred_by
         }
         add_points(uid, 10)
         save_db(db)
-        bot.reply_to(m, f"✅ Registered: {data['name']} ({data['group']})\n🎯 Goal: {goal if goal else 'Not specified'}\n💰 +10 points. Use /courses.")
+        msg = f"✅ Registered: {data['name']} ({data['group']})\n"
+        if not referred_by:
+            msg += "🔗 Do you have a referral code? Use /usereferral <code>"
+        bot.reply_to(m, msg)
 
     @bot.message_handler(commands=['register'])
     def register_student(m):
@@ -77,8 +89,108 @@ def register(bot):
         save_db(db)
         bot.reply_to(m, f"✅ Registered: {name} ({group}) +10 points")
 
+    @bot.message_handler(commands=['referral'])
+    def my_referral(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first.")
+            return
+        if not student.get("referral_code"):
+            code = uid[:4] + str(uuid.uuid4())[:6]
+            student["referral_code"] = code
+            db["referral_codes"][uid] = code
+            save_db(db)
+        bot.reply_to(m, f"🔗 Your referral link:\nhttps://t.me/SLH_OS_Bot?start={student['referral_code']}\n\nShare this link with friends. When they register and pay, you earn 85% commission!")
+
+    @bot.message_handler(commands=['usereferral'])
+    def use_referral(m):
+        args = m.text.split(maxsplit=1)
+        if len(args) < 2:
+            bot.reply_to(m, "❌ Usage: /usereferral <code>")
+            return
+        code = args[1]
+        uid = str(m.chat.id)
+        db = load_db()
+        owner = None
+        for id_, ref_code in db.get("referral_codes", {}).items():
+            if ref_code == code:
+                owner = id_
+                break
+        if not owner:
+            bot.reply_to(m, "❌ Invalid referral code.")
+            return
+        if uid == owner:
+            bot.reply_to(m, "❌ You cannot refer yourself.")
+            return
+        db.setdefault("referred_by", {})[uid] = owner
+        save_db(db)
+        bot.reply_to(m, "✅ Referral code applied! You will be linked to your referrer when you pay.")
+
+    @bot.message_handler(commands=['pay'])
+    def pay_info(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first.")
+            return
+        if student.get("premium"):
+            bot.reply_to(m, "✅ You are already a premium member.")
+            return
+        msg = f"💳 **Premium Access – {PAYMENT_AMOUNT}**\n"
+        msg += f"Send exactly {PAYMENT_AMOUNT} (USDT on TON network) to:\n`{PAYMENT_WALLET}`\n"
+        msg += "After payment, send the transaction hash here or contact the admin.\n"
+        msg += "Once verified, you'll get full course access and your referral link."
+        bot.reply_to(m, msg, parse_mode="Markdown")
+
+    @bot.message_handler(commands=['activate'])
+    def activate_user(m):
+        if str(m.chat.id) != ADMIN_ID:
+            bot.reply_to(m, "❌ Admin only.")
+            return
+        args = m.text.split()
+        if len(args) < 2:
+            bot.reply_to(m, "❌ Usage: /activate <user_id>")
+            return
+        target_uid = args[1]
+        db = load_db()
+        student = db.get("students", {}).get(target_uid)
+        if not student:
+            bot.reply_to(m, "❌ User not registered.")
+            return
+        student["premium"] = True
+        referrer = db.get("referred_by", {}).get(target_uid)
+        if referrer:
+            db.setdefault("commissions", {}).setdefault(referrer, 0)
+            db["commissions"][referrer] += 85
+            db.setdefault("commissions", {}).setdefault(ADMIN_ID, 0)
+            db["commissions"][ADMIN_ID] += 15
+        save_db(db)
+        bot.reply_to(m, f"✅ User {target_uid} activated. Premium access granted.")
+
+    @bot.message_handler(commands=['commission'])
+    def check_commission(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        comm = db.get("commissions", {}).get(uid, 0)
+        bot.reply_to(m, f"💰 Your total commission: {comm} USDT")
+
+    @bot.message_handler(commands=['withdraw'])
+    def withdraw_commission(m):
+        bot.reply_to(m, "📤 Withdrawal request sent. Admin will process it.")
+
+    def is_premium(uid):
+        db = load_db()
+        return db.get("students", {}).get(uid, {}).get("premium", False)
+
     @bot.message_handler(commands=['courses'])
     def list_courses(m):
+        uid = str(m.chat.id)
+        if not is_premium(uid):
+            bot.reply_to(m, f"🔒 Premium content. Use /pay to unlock for {PAYMENT_AMOUNT}.")
+            return
         db = load_db()
         courses = db.get("courses", {})
         if not courses:
@@ -91,6 +203,10 @@ def register(bot):
 
     @bot.message_handler(commands=['task'])
     def show_task(m):
+        uid = str(m.chat.id)
+        if not is_premium(uid):
+            bot.reply_to(m, "🔒 Premium required. Use /pay to unlock.")
+            return
         args = m.text.split(maxsplit=2)
         if len(args) < 3:
             bot.reply_to(m, "❌ Use: /task <course> <task_id>")
@@ -106,12 +222,15 @@ def register(bot):
 
     @bot.message_handler(commands=['submit'])
     def submit_task(m):
+        uid = str(m.chat.id)
+        if not is_premium(uid):
+            bot.reply_to(m, "🔒 Premium required.")
+            return
         args = m.text.split(maxsplit=3)
         if len(args) < 4:
             bot.reply_to(m, "❌ Use: /submit <course> <task_id> <answer>")
             return
         cid, tid, answer = args[1], args[2], args[3]
-        uid = str(m.chat.id)
         db = load_db()
         course = db.get("courses", {}).get(cid)
         if not course or tid not in course.get("tasks", {}):
@@ -124,28 +243,11 @@ def register(bot):
         save_db(db)
         bot.reply_to(m, f"✅ Submission received for `{tid}` in `{cid}`. +5 points\nStatus: pending review.")
 
-    @bot.message_handler(commands=['myprogress'])
-    def my_progress(m):
-        uid = str(m.chat.id)
-        db = load_db()
-        student = db.get("students", {}).get(uid)
-        if not student:
-            bot.reply_to(m, "❌ Register first: /register <name> <group>")
-            return
-        progress = db.get("progress", {}).get(uid, {})
-        points = db.get("users", {}).get(uid, {}).get("points", 0)
-        msg = f"📊 Progress of {student['name']} (Points: {points}):\n"
-        for cid, pdata in progress.items():
-            course = db.get("courses", {}).get(cid, {})
-            title = course.get("title", cid)
-            completed = len(pdata.get("completed", []))
-            total = len(course.get("tasks", {}))
-            submitted = len(pdata.get("submissions", {}))
-            msg += f"• {title}: {submitted}/{total} submitted, {completed} approved\n"
-        bot.reply_to(m, msg)
-
     @bot.message_handler(commands=['add_course'])
     def add_course(m):
+        if str(m.chat.id) != ADMIN_ID:
+            bot.reply_to(m, "❌ Admin only.")
+            return
         args = m.text.split(maxsplit=2)
         if len(args) < 3:
             bot.reply_to(m, "❌ Use: /add_course <course_id> <title>")
@@ -161,6 +263,9 @@ def register(bot):
 
     @bot.message_handler(commands=['add_task'])
     def add_task(m):
+        if str(m.chat.id) != ADMIN_ID:
+            bot.reply_to(m, "❌ Admin only.")
+            return
         args = m.text.split(maxsplit=3)
         if len(args) < 4:
             bot.reply_to(m, "❌ Use: /add_task <course_id> <task_id> <description>")
@@ -176,6 +281,9 @@ def register(bot):
 
     @bot.message_handler(commands=['review'])
     def review_submissions(m):
+        if str(m.chat.id) != ADMIN_ID:
+            bot.reply_to(m, "❌ Admin only.")
+            return
         args = m.text.split()
         if len(args) < 3:
             bot.reply_to(m, "❌ Use: /review <student_id> <course_id>")
@@ -200,6 +308,9 @@ def register(bot):
 
     @bot.message_handler(commands=['approve'])
     def approve_task(m):
+        if str(m.chat.id) != ADMIN_ID:
+            bot.reply_to(m, "❌ Admin only.")
+            return
         args = m.text.split()
         if len(args) < 4:
             bot.reply_to(m, "❌ Use: /approve <student_id> <course_id> <task_id>")
