@@ -22,7 +22,6 @@ echo -e "${NC}"
 echo -e "${MAGENTA}      SLH Learning System Dashboard${NC}"
 echo -e "${YELLOW}=======================================${NC}"
 
-# 1. Check bot process
 if pgrep -f "python.*bot.py" > /dev/null; then
     echo -e "🤖 Bot:        ${GREEN}● Running${NC}"
 else
@@ -32,7 +31,6 @@ else
     sleep 3
 fi
 
-# 2. Check files
 for f in bot.py learn_handlers.py project_commands.py smart_leaderboard.py; do
     if [ -f "$f" ]; then
         echo -e "📄 $f: ${GREEN}✓${NC}"
@@ -41,7 +39,6 @@ for f in bot.py learn_handlers.py project_commands.py smart_leaderboard.py; do
     fi
 done
 
-# 3. DB stats
 python3 << 'PYSTATS' 2>/dev/null
 import json
 try:
@@ -108,7 +105,6 @@ BROADCAST
 import json, requests
 db = json.load(open('db.json'))
 token = db['token']
-# Get leaderboard from bot by sending /leaderboard to yourself
 r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
                   json={'chat_id': 8789977826, 'text': '/leaderboard'})
 print(r.json().get('result', {}).get('text', 'No response'))

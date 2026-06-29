@@ -1,5 +1,5 @@
 import time
-from SLH_V3_KERNEL import SLHV3Kernel, TelegramModule
+from SLH_KERNEL import SLHV3Kernel, TelegramModule
 
 
 # GLOBAL SINGLE INSTANCE (הדבר שחסר לך)

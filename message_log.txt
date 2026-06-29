@@ -1,0 +1,3947 @@
+2026-06-29T13:33:03.774982 | 8789977826 | בוט לא מגיב
+2026-06-29T14:25:13.425635 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'AUTOCHECK'
+import os, json, py_compile, requests, subprocess, datetime
+
+print("=" * 60)
+print("🔍 SLH SYSTEM AUTO DIAGNOSTIC")
+print("=" * 60)
+
+issues = []
+                                                                 # 1. Bot process
+if subprocess.run(["pgrep", "-f", "python.*bot.py"], capture_output=True).returncode == 0:
+    issues.append("✅ Bot process RUNNING")                      else:
+    issues.append("❌ Bot process NOT RUNNING")
+
+# 2. Syntax check for all Python files
+for fname, desc in [
+    ("bot.py", "bot core"),
+    ("learn_handlers.py", "learning"),
+    ("project_commands.py", "projects"),
+    ("smart_leaderboard.py", "leaderboard"),
+    ("welcome_handler.py", "welcome"),
+    ("course_handlers.py", "course")
+]:
+    if os.path.exists(fname):
+        try:                                                                 py_compile.compile(fname, doraise=True)
+            issues.append(f"✅ {desc} ({fname}) syntax OK")              except py_compile.PyCompileError as e:
+            issues.append(f"❌ {desc} ({fname}) SYNTAX ERROR")       else:
+        issues.append(f"⚠️ {desc} ({fname}) MISSING")
+
+# 3. Check imports in bot.py
+with open("bot.py", "r") as f:
+    bot_code = f.read()
+for mod in ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler"]:
+    if f"import {mod}" in bot_code:
+        issues.append(f"✅ {mod} imported")
+    else:
+        issues.append(f"❌ {mod} NOT imported")
+if "learn_handlers.register(bot)" in bot_code:
+    issues.append("✅ init calls present")
+else:
+    issues.append("❌ init calls MISSING")
+
+# 4. DB structure
+try:
+    db = json.load(open("db.json"))
+    required = ["users", "students", "courses", "progress", "admins", "token",
+                "referral_codes", "commissions", "premium", "votes", "lost_reports"]
+    missing = [k for k in required if k not in db]
+    if missing:
+        issues.append(f"⚠️ DB missing keys: {missing}")
+    else:
+        issues.append("✅ DB structure OK")
+    if db.get("token"):
+        issues.append("✅ Token present")
+    else:
+        issues.append("❌ Token MISSING")
+    # Check admins
+    if "8789977826" in db.get("admins", []):
+        issues.append("✅ Admin 8789977826 authorized")
+    else:
+        issues.append("⚠️ Admin 8789977826 NOT in admins")
+    # Courses
+    courses = db.get("courses", {})
+    if "slh_mastery" in courses:
+        issues.append(f"✅ Course slh_mastery ({len(courses['slh_mastery'].get('tasks',{}))} tasks)")
+    else:
+        issues.append("⚠️ Course slh_mastery MISSING")
+    if "bitcoin_mastery" in courses:
+        issues.append(f"✅ Course bitcoin_mastery ({len(courses['bitcoin_mastery'].get('tasks',{}))} tasks)")
+    else:
+        issues.append("⚠️ Course bitcoin_mastery MISSING")
+except Exception as e:
+    issues.append(f"❌ DB corrupt: {e}")
+
+# 5. API response test
+try:
+    token = db.get("token")
+    if token:
+        r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                          json={"chat_id": 8789977826, "text": "/diagnose"}, timeout=5)
+        resp = r.json().get("result", {}).get("text", "NO TEXT")
+        if resp != "/diagnose":
+            issues.append(f"✅ Bot responds to /diagnose: {resp[:50]}...")
+        else:
+            issues.append("❌ Bot returns ECHO (no handler)")
+    else:
+        issues.append("❌ Cannot test API – no token")
+except Exception as e:
+    issues.append(f"❌ API test failed: {e}")
+
+# 6. Logger & monitor
+if os.path.exists("message_log.txt"):
+    issues.append("✅ message_log.txt exists")
+else:
+    issues.append("⚠️ No message_log.txt yet (will be created on first message)")
+if "def monitor" in open("learn_handlers.py").read():
+    issues.append("✅ /monitor handler present")
+else:
+    issues.append("⚠️ /monitor handler MISSING")
+
+# 7. Cron
+cron = subprocess.run(["crontab", "-l"], capture_output=True, text=True).stdout
+if "slh_clean" in cron:
+    issues.append("✅ Cron job for sync/backup present")
+else:
+    issues.append("⚠️ No cron job found")
+2026-06-29T14:25:13.426440 | 8789977826 | # 8. Dashboard
+if os.path.exists("slh_dashboard.sh"):
+    issues.append("✅ Dashboard script exists")
+else:
+    issues.append("⚠️ Dashboard script MISSING")
+
+# Print summary
+print("\n".join(issues))
+print("=" * 60)
+print("🔚 DIAGNOSTIC COMPLETE")
+AUTOCHECK
+============================================================
+🔍 SLH SYSTEM AUTO DIAGNOSTIC
+============================================================
+❌ Bot process NOT RUNNING
+❌ bot core (bot.py) SYNTAX ERROR
+✅ learning (learn_handlers.py) syntax OK
+✅ projects (project_commands.py) syntax OK
+✅ leaderboard (smart_leaderboard.py) syntax OK
+✅ welcome (welcome_handler.py) syntax OK
+✅ course (course_handlers.py) syntax OK
+✅ learn_handlers imported
+❌ project_commands NOT imported
+❌ smart_leaderboard NOT imported
+❌ welcome_handler NOT imported
+❌ init calls MISSING
+✅ DB structure OK
+✅ Token present
+✅ Admin 8789977826 authorized
+✅ Course slh_mastery (10 tasks)
+⚠️ Course bitcoin_mastery MISSING
+❌ Bot returns ECHO (no handler)
+✅ message_log.txt exists
+✅ /monitor handler present
+✅ Cron job for sync/backup present
+✅ Dashboard script exists
+============================================================
+🔚 DIAGNOSTIC COMPLETE
+~/slh_clean $
+2026-06-29T14:25:13.426902 | 8789977826 | SlxARSOVCgYIARAAGAMSNwF-L9Ir4oRr6s22UxUKmg1XTRWrjyS4tmcPrYv5cBm8VouOcqyLQn5MypFXD3e05JOUnznFhtM","expiry":"2026-06-29T11:50:14.793582893Z","expires_in":3599}
+- team_drive:
+Keep this "slh" remote?
+y) Yes this is OK (default)
+e) Edit this remote
+d) Delete this remote
+y/e/d> y
+
+Current remotes:
+
+Name                 Type
+====                 ====
+slh                  drive
+
+e) Edit existing remote
+n) New remote
+d) Delete remote
+r) Rename remote
+c) Copy remote
+s) Set configuration password
+q) Quit config
+e/n/d/r/c/s/q> clear
+This value must be a single character, one of the following: e, n, d, r, c, s, q.
+e/n/d/r/c/s/q> ^C
+2026/06/29 10:51:55 CRITICAL: Failed to read: prompt aborted
+~/slh_clean $ rclone mkdir slh:slh_backups
+rclone ls slh:slh_backups
+
+
+
+^C
+2026/06/29 10:52:27 NOTICE: Failed to ls: directory not found
+~/slh_clean $ ^C
+~/slh_clean $
+2026-06-29T14:25:13.427324 | 8789977826 | ~/slh_clean $ dir
+API_REFERENCE.md               fix_token.py
+ARCHITECTURE.md                full_diagnostic.sh
+AUDIT_DEEP.md                  full_sync_check.sh
+DEPLOYMENT_PLAN.md             get_token.py
+Dockerfile                     health_check.py
+KERNEL_RULES.md                inspect_slh.sh
+Procfile                       inspector.py
+README.md                      install_slh_os.sh
+RUN_GUIDE.md                   learn_handlers.py
+SLH_GATEWAY.py                 marketplace.json
+SLH_KERNEL.py                  marketplace.py
+SLH_KERNEL_backup.py           master_agent.py
+SLH_MAIN.py                    memory.db
+STATUS.md                      message_log.txt
+UPDATE.md                      os.log
+^C                             plugins
+pycache                    plugins.json
+allowed_ids.json               plugins_store.py
+archive                        project_commands.py
+audit.jsonl                    projects                          audit_logger.py                railway.json
+backup_verify.sh               requirements.txt
+bot.log                        run.py
+bot.py                         run_bot.sh
+bot.py.backup.20260627_223227  runtime.txt
+bot.py.backup.20260627_223342  slh.py
+bot_startup.log                slh_daemon.sh
+bot_test_output.log            slh_dashboard.sh
+config.json                    slh_os_v3_backup_1782510194
+control_layer.py               slh_startup.log
+core                           slh_state.db
+core.log                       slh_v9
+course_handlers.py             smart_leaderboard.py
+daily_check.sh                 snapshot.sh
+db.json                        start.sh
+deep_diagnostic.sh             subscriptions.json
+deep_recovery.sh               subscriptions.py
+diag_fix.py                    system.log
+diag_handler.py                system_profile.json
+diag_handler.py.bak            system_scan.sh
+diagnose_all.sh                system_verification.sh
+diagnose_deploy.sh             test_agents.json
+diagnose_railway.sh            test_marketplace.py
+direct_test.log                tests
+events.db                      update_bot.py
+final_fix.sh                   watchdog.sh
+final_verification.sh          web
+fix_all.sh                     web.log
+fix_polling.py                 welcome_handler.py
+fix_railway_deploy.sh
+~/slh_clean $
+2026-06-29T14:25:13.427834 | 8789977826 | /slh_clean
+2026-06-29T14:25:13.428282 | 8789977826 | /slh_clean
+2026-06-29T14:25:13.428803 | 8789977826 | /slh_clean
+2026-06-29T14:25:13.429144 | 8789977826 | /slh_clean
+2026-06-29T14:25:13.429472 | 8789977826 | /slh_clean
+2026-06-29T14:25:13.429766 | 8789977826 | cd ~/slh_clean
+
+echo "===== GIT ====="
+git status
+
+echo
+echo "===== ROOT FILES ====="
+find . -maxdepth 1 -type f | sort
+
+echo
+echo "===== DIRECTORIES ====="
+find . -maxdepth 2 -type d | sort
+
+echo
+echo "===== PYTHON FILES ====="
+find . -name "*.py" | sort
+
+echo
+echo "===== SHELL FILES ====="
+find . -name "*.sh" | sort
+
+echo
+echo "===== DATABASE FILES ====="
+find . -name "*.db" | sort
+
+echo
+echo "===== CONFIG FILES ====="
+find . \( -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.env*" \) | sort
+2026-06-29T14:25:13.430056 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+                                                                 echo "===== GIT ====="
+git status
+
+echo
+echo "===== ROOT FILES ====="
+find . -maxdepth 1 -type f | sort
+
+echo
+echo "===== DIRECTORIES ====="
+find . -maxdepth 2 -type d | sort
+
+echo
+echo "===== PYTHON FILES ====="
+find . -name "*.py" | sort
+
+echo
+echo "===== SHELL FILES ====="
+find . -name "*.sh" | sort
+
+echo
+echo "===== DATABASE FILES ====="
+find . -name "*.db" | sort
+
+echo
+echo "===== CONFIG FILES ====="
+find . \( -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.env*" \) | sort
+===== GIT =====
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   audit.jsonl
+        modified:   bot.py
+        new file:   bot.py.backup.20260627_223227
+        new file:   bot.py.backup.20260627_223342
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   bot.py
+        modified:   learn_handlers.py
+        modified:   slh_dashboard.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        course_handlers.py
+        message_log.txt
+
+
+===== ROOT FILES =====
+./.env.example
+./.gitignore
+./API_REFERENCE.md
+./ARCHITECTURE.md
+./AUDIT_DEEP.md
+./DEPLOYMENT_PLAN.md
+./Dockerfile
+./KERNEL_RULES.md
+./Procfile
+./README.md
+./RUN_GUIDE.md
+./SLH_GATEWAY.py
+./SLH_KERNEL.py
+./SLH_KERNEL_backup.py
+./SLH_MAIN.py
+./STATUS.md
+./UPDATE.md
+./^C
+./allowed_ids.json
+./audit.jsonl
+./audit_logger.py
+./backup_verify.sh
+./bot.log
+./bot.py
+./bot.py.backup.20260627_223227
+./bot.py.backup.20260627_223342
+./bot_startup.log
+./bot_test_output.log
+./config.json
+./control_layer.py
+./core.log
+./course_handlers.py
+./daily_check.sh
+./db.json
+./deep_diagnostic.sh
+./deep_recovery.sh
+./diag_fix.py
+./diag_handler.py
+./diag_handler.py.bak
+./diagnose_all.sh
+./diagnose_deploy.sh
+./diagnose_railway.sh
+./direct_test.log
+./events.db
+./final_fix.sh
+./final_verification.sh
+./fix_all.sh
+./fix_polling.py
+./fix_railway_deploy.sh
+./fix_token.py
+./full_diagnostic.sh
+./full_sync_check.sh
+./get_token.py
+./health_check.py
+./inspect_slh.sh
+./inspector.py
+./install_slh_os.sh
+./learn_handlers.py
+./marketplace.json
+./marketplace.py
+./master_agent.py
+./memory.db
+./message_log.txt
+./os.log
+./plugins.json
+./plugins_store.py
+./project_commands.py
+./railway.json
+./requirements.txt
+./run.py
+./run_bot.sh
+./runtime.txt
+./slh.py
+./slh_daemon.sh
+./slh_dashboard.sh
+./slh_startup.log
+./slh_state.db
+./smart_leaderboard.py
+./snapshot.sh
+./start.sh
+./subscriptions.json
+./subscriptions.py
+./system.log
+./system_profile.json
+./system_scan.sh
+./system_verification.sh
+./test_agents.json
+./test_marketplace.py
+./update_bot.py
+./watchdog.sh
+./web.log
+./welcome_handler.py
+
+===== DIRECTORIES =====
+.
+./.git
+./.git/hooks
+./.git/info
+./.git/logs
+./.git/objects
+./.git/refs
+./pycache
+./archive
+./archive/slh_os
+./archive/slh_os_v2
+./archive/slh_os_v3
+./core
+./core/pycache
+./plugins
+./plugins/pycache
+./projects
+./projects/TzvikBot
+./slh_os_v3_backup_1782510194
+./slh_v9
+./slh_v9/agents
+./slh_v9/core
+./slh_v9/plugins
+./slh_v9/slh_clean
+./slh_v9/storage
+./tests
+./web
+./web/api
+./web/dashboard
+
+===== PYTHON FILES =====
+./SLH_GATEWAY.py
+./SLH_KERNEL.py
+./SLH_KERNEL_backup.py
+./SLH_MAIN.py
+./archive/SLH_CANONICAL.py
+./archive/bot.py
+./archive/slh_os/boot.py
+./archive/slh_os/control.py
+./archive/slh_os/core.py
+./archive/slh_os_v2/core.py
+./archive/slh_os_v3/core.py
+./audit_logger.py
+./bot.py
+./control_layer.py
+./core/agent_store.py
+./core/event_bus.py
+./core/event_store.py
+./core/payload.py
+./core/router.py
+./course_handlers.py
+./diag_fix.py
+./diag_handler.py
+./fix_polling.py
+2026-06-29T14:25:13.430706 | 8789977826 | ./fix_token.py
+./get_token.py
+./health_check.py
+./inspector.py
+./learn_handlers.py
+./marketplace.py
+./master_agent.py
+./plugins/task.py
+./plugins_store.py
+./project_commands.py
+./run.py
+./slh.py
+./slh_os_v3_backup_1782510194/core.py
+./slh_v9/memory_core.py
+./slh_v9/slh_clean/slh_v9/swarm.py
+./slh_v9/swarm_v10.py
+./slh_v9/swarm_v11.py
+./slh_v9/swarm_v12.py
+./slh_v9/swarm_v14.py
+./slh_v9/swarm_v15.py
+./slh_v9/swarm_v15_5.py
+./slh_v9/swarm_v16.2_stable.py
+./slh_v9/swarm_v16.3_stable.py
+./slh_v9/swarm_v16.py
+./slh_v9/swarm_v16_fixed.py
+./slh_v9/swarm_v8.py
+./slh_v9/swarm_v81.py
+./slh_v9/swarm_v95.py
+./slh_v9/swarm_v96.py
+./smart_leaderboard.py
+./subscriptions.py
+./test_marketplace.py
+./tests/system_check.py
+./tests/test_agent.py
+./tests/test_task_and_audit.py
+./update_bot.py
+./web/api/app.py
+./welcome_handler.py
+
+===== SHELL FILES =====
+./backup_verify.sh
+./daily_check.sh
+./deep_diagnostic.sh
+./deep_recovery.sh
+./diagnose_all.sh
+./diagnose_deploy.sh
+./diagnose_railway.sh
+./final_fix.sh
+./final_verification.sh
+./fix_all.sh
+./fix_railway_deploy.sh
+./full_diagnostic.sh
+./full_sync_check.sh
+./inspect_slh.sh
+./install_slh_os.sh
+./run_bot.sh
+./slh_daemon.sh
+./slh_dashboard.sh
+./slh_v9/install_swarm.sh
+./slh_v9/install_swarm_full.sh
+./slh_v9/install_swarm_v14.sh
+./slh_v9/install_swarm_v15.sh
+./slh_v9/install_swarm_v15_5.sh
+./slh_v9/install_swarm_v16.sh
+./slh_v9/run_swarm.sh
+./slh_v9/run_v16.sh
+./slh_v9/swarm_patch_install.sh
+./slh_v9/swarm_search.sh
+./snapshot.sh
+./start.sh
+./system_scan.sh
+./system_verification.sh
+./watchdog.sh
+
+===== DATABASE FILES =====
+./events.db
+./memory.db
+./slh_state.db
+./slh_v9/slh_clean/slh_v9/swarm.db
+./slh_v9/swarm.db
+./slh_v9/swarm_os.db
+./slh_v9/swarm_v10.db
+./slh_v9/swarm_v11.db
+./slh_v9/swarm_v12.db
+./slh_v9/swarm_v15.db
+./slh_v9/swarm_v15_5.db
+./slh_v9/swarm_v16.2.db
+./slh_v9/swarm_v16.3.db
+./slh_v9/swarm_v16.db
+./slh_v9/swarm_v16_fixed.db
+./slh_v9/swarm_v96.db
+
+===== CONFIG FILES =====
+./.env.example
+./allowed_ids.json
+./config.json
+./db.json
+./marketplace.json
+./plugins.json
+./railway.json
+./subscriptions.json
+./system_profile.json
+./test_agents.json
+~/slh_clean $
+2026-06-29T14:25:13.431105 | 8789977826 | מעולה. זה בדיוק המידע שהייתי צריך.
+אני עברתי על הפלט, ויש כאן כבר תמונה די ברורה של הפרויקט. הנה דוח מצב ראשוני.
+📊 SLH OS – Project Audit (שלב א')
+מצב Git
+הפרויקט אינו "נקי".
+קיימים שינויים שלא נשמרו
+bot.py
+learn_handlers.py
+slh_dashboard.sh
+קיימים קבצים חדשים
+course_handlers.py
+message_log.txt
+קיימים גם גיבויים
+bot.py.backup....
+כלומר כרגע לא מומלץ לבצע reset או pull לפני שנגבה הכול.
+מבנה המערכת
+כרגע ניתן לזהות לפחות 6 שכבות שונות.
+SLH_MAIN.py
+        │
+        ▼
+SLH_KERNEL.py
+        │
+        ▼
+SLH_GATEWAY.py
+        │
+        ▼
+master_agent.py
+        │
+        ▼
+control_layer.py
+        │
+        ▼
+core/
+זו כבר התחלה של מערכת הפעלה (Operating System) ולא רק בוט.
+Core Framework
+יש תיקיית Core מסודרת:
+core/
+    router.py
+    payload.py
+    event_bus.py
+    event_store.py
+    agent_store.py
+זו אינדיקציה לכך שהתחלת לבנות Kernel מודולרי.
+Plugins
+זוהתה מערכת Plugin אמיתית:
+plugins/
+
+plugins.json
+
+plugins_store.py
+
+marketplace.py
+
+marketplace.json
+כלומר קיימת תשתית Marketplace.
+Agents
+כרגע זוהו:
+master_agent.py
+
+control_layer.py
+
+SLH_KERNEL.py
+
+SLH_GATEWAY.py
+אבל אני כמעט בטוח שיש Agents נוספים שמוגדרים דינמית.
+Databases
+כרגע קיימים לפחות
+memory.db
+
+events.db
+
+slh_state.db
+בנוסף:
+swarm.db
+swarm_v16.db
+...
+כלומר קיימות כמה גרסאות של מנוע ה־Swarm.
+Swarm Evolution
+מצאתי היסטוריה ארוכה של גרסאות.
+swarm_v8
+
+↓
+
+v9
+
+↓
+
+v10
+
+↓
+
+v11
+
+↓
+
+v12
+
+↓
+
+v14
+
+↓
+
+v15
+
+↓
+
+v15.5
+
+↓
+
+v16
+
+↓
+
+v16_fixed
+
+↓
+
+v16.2
+
+↓
+
+v16.3
+זו התפתחות יפה מאוד.
+Web
+web/
+
+web/api
+
+web/dashboard
+יש כבר Backend ו־Dashboard.
+Diagnostics
+מצאתי מערכת עצומה של כלי אבחון.
+לפחות:
+Deep Diagnostic
+Health Check
+Full Diagnostic
+Verification
+Recovery
+Snapshot
+Audit
+Watchdog
+זה מצוין.
+Documentation
+יש כבר תיעוד רחב:
+README
+
+STATUS
+
+ARCHITECTURE
+
+API_REFERENCE
+
+DEPLOYMENT_PLAN
+
+RUN_GUIDE
+
+AUDIT_DEEP
+
+UPDATE
+
+KERNEL_RULES
+מעט מאוד פרויקטים אישיים מגיעים לרמת תיעוד כזו.
+הגרסאות הישנות
+יש גם
+archive/
+
+archive/slh_os
+
+archive/slh_os_v2
+
+archive/slh_os_v3
+כלומר שמרת היסטוריה טובה.
+מצב כללי
+כרגע הייתי מדרג את הפרויקט בערך כך:
+תחום
+מצב
+ארכיטקטורה
+⭐️⭐️⭐️⭐️☆
+מודולריות
+⭐️⭐️⭐️⭐️⭐️
+Kernel
+⭐️⭐️⭐️⭐️☆
+Plugins
+⭐️⭐️⭐️⭐️☆
+Diagnostics
+⭐️⭐️⭐️⭐️⭐️
+Documentation
+⭐️⭐️⭐️⭐️⭐️
+Production readiness
+⭐️⭐️⭐️☆☆
+מה עדיין חסר
+לפי הסריקה בלבד, אני עדיין לא יודע:
+אילו Agents באמת פעילים.
+איך Kernel טוען Plugins.
+איך Event Bus עובד.
+איך מתבצעת התקשורת בין הסוכנים.
+אילו יכולות Marketplace כבר ממומשות.
+האם קיימת מערכת הרשאות פנימית.
+איך ה־Memory Manager עובד.
+מהו מנגנון האתחול (Boot Sequence) המלא.
+לדעתי זה הזמן לעצור את הפיתוח לשעה-שעתיים ולעשות Audit Architecture מלא.
+במקום להמשיך להוסיף קוד, נמפה את כל המערכת עד לרמת כל מחלקה, פונקציה וקשר בין הרכיבים. כך נוכל לבנות מסמך ארכיטקטורה עדכני, לזהות כפילויות, להסיר קוד מיושן ולתכנן בצורה מסודרת את הדרך לגרסה הבאה של SLH OS. זה בדרך כלל משתלם בפרויקטים שכבר הגיעו להיקף כזה.
+2026-06-29T14:25:13.431558 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+                                                                 echo "===== GIT ====="
+git status
+
+echo
+echo "===== ROOT FILES ====="
+find . -maxdepth 1 -type f | sort
+
+echo
+echo "===== DIRECTORIES ====="
+find . -maxdepth 2 -type d | sort
+
+echo
+echo "===== PYTHON FILES ====="
+find . -name "*.py" | sort
+
+echo
+echo "===== SHELL FILES ====="
+find . -name "*.sh" | sort
+
+echo
+echo "===== DATABASE FILES ====="
+find . -name "*.db" | sort
+
+echo
+echo "===== CONFIG FILES ====="
+find . \( -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.env*" \) | sort
+===== GIT =====
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   audit.jsonl
+        modified:   bot.py
+        new file:   bot.py.backup.20260627_223227
+        new file:   bot.py.backup.20260627_223342
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   bot.py
+        modified:   learn_handlers.py
+        modified:   slh_dashboard.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        course_handlers.py
+        message_log.txt
+
+
+===== ROOT FILES =====
+./.env.example
+./.gitignore
+./API_REFERENCE.md
+./ARCHITECTURE.md
+./AUDIT_DEEP.md
+./DEPLOYMENT_PLAN.md
+./Dockerfile
+./KERNEL_RULES.md
+./Procfile
+./README.md
+./RUN_GUIDE.md
+./SLH_GATEWAY.py
+./SLH_KERNEL.py
+./SLH_KERNEL_backup.py
+./SLH_MAIN.py
+./STATUS.md
+./UPDATE.md
+./^C
+./allowed_ids.json
+./audit.jsonl
+./audit_logger.py
+./backup_verify.sh
+./bot.log
+./bot.py
+./bot.py.backup.20260627_223227
+./bot.py.backup.20260627_223342
+./bot_startup.log
+./bot_test_output.log
+./config.json
+./control_layer.py
+./core.log
+./course_handlers.py
+./daily_check.sh
+./db.json
+./deep_diagnostic.sh
+./deep_recovery.sh
+./diag_fix.py
+./diag_handler.py
+./diag_handler.py.bak
+./diagnose_all.sh
+./diagnose_deploy.sh
+./diagnose_railway.sh
+./direct_test.log
+./events.db
+./final_fix.sh
+./final_verification.sh
+./fix_all.sh
+./fix_polling.py
+./fix_railway_deploy.sh
+./fix_token.py
+./full_diagnostic.sh
+./full_sync_check.sh
+./get_token.py
+./health_check.py
+./inspect_slh.sh
+./inspector.py
+./install_slh_os.sh
+./learn_handlers.py
+./marketplace.json
+./marketplace.py
+./master_agent.py
+./memory.db
+./message_log.txt
+./os.log
+./plugins.json
+./plugins_store.py
+./project_commands.py
+./railway.json
+./requirements.txt
+./run.py
+./run_bot.sh
+./runtime.txt
+./slh.py
+./slh_daemon.sh
+./slh_dashboard.sh
+./slh_startup.log
+./slh_state.db
+./smart_leaderboard.py
+./snapshot.sh
+./start.sh
+./subscriptions.json
+./subscriptions.py
+./system.log
+./system_profile.json
+./system_scan.sh
+./system_verification.sh
+./test_agents.json
+./test_marketplace.py
+./update_bot.py
+./watchdog.sh
+./web.log
+./welcome_handler.py
+
+===== DIRECTORIES =====
+.
+./.git
+./.git/hooks
+./.git/info
+./.git/logs
+./.git/objects
+./.git/refs
+./pycache
+./archive
+./archive/slh_os
+./archive/slh_os_v2
+./archive/slh_os_v3
+./core
+./core/pycache
+./plugins
+./plugins/pycache
+./projects
+./projects/TzvikBot
+./slh_os_v3_backup_1782510194
+./slh_v9
+./slh_v9/agents
+./slh_v9/core
+./slh_v9/plugins
+./slh_v9/slh_clean
+./slh_v9/storage
+./tests
+./web
+./web/api
+./web/dashboard
+
+===== PYTHON FILES =====
+./SLH_GATEWAY.py
+./SLH_KERNEL.py
+./SLH_KERNEL_backup.py
+./SLH_MAIN.py
+./archive/SLH_CANONICAL.py
+./archive/bot.py
+./archive/slh_os/boot.py
+./archive/slh_os/control.py
+./archive/slh_os/core.py
+./archive/slh_os_v2/core.py
+./archive/slh_os_v3/core.py
+./audit_logger.py
+./bot.py
+./control_layer.py
+./core/agent_store.py
+./core/event_bus.py
+./core/event_store.py
+./core/payload.py
+./core/router.py
+./course_handlers.py
+./diag_fix.py
+./diag_handler.py
+./fix_polling.py
+2026-06-29T14:25:13.432122 | 8789977826 | ./fix_token.py
+./get_token.py
+./health_check.py
+./inspector.py
+./learn_handlers.py
+./marketplace.py
+./master_agent.py
+./plugins/task.py
+./plugins_store.py
+./project_commands.py
+./run.py
+./slh.py
+./slh_os_v3_backup_1782510194/core.py
+./slh_v9/memory_core.py
+./slh_v9/slh_clean/slh_v9/swarm.py
+./slh_v9/swarm_v10.py
+./slh_v9/swarm_v11.py
+./slh_v9/swarm_v12.py
+./slh_v9/swarm_v14.py
+./slh_v9/swarm_v15.py
+./slh_v9/swarm_v15_5.py
+./slh_v9/swarm_v16.2_stable.py
+./slh_v9/swarm_v16.3_stable.py
+./slh_v9/swarm_v16.py
+./slh_v9/swarm_v16_fixed.py
+./slh_v9/swarm_v8.py
+./slh_v9/swarm_v81.py
+./slh_v9/swarm_v95.py
+./slh_v9/swarm_v96.py
+./smart_leaderboard.py
+./subscriptions.py
+./test_marketplace.py
+./tests/system_check.py
+./tests/test_agent.py
+./tests/test_task_and_audit.py
+./update_bot.py
+./web/api/app.py
+./welcome_handler.py
+
+===== SHELL FILES =====
+./backup_verify.sh
+./daily_check.sh
+./deep_diagnostic.sh
+./deep_recovery.sh
+./diagnose_all.sh
+./diagnose_deploy.sh
+./diagnose_railway.sh
+./final_fix.sh
+./final_verification.sh
+./fix_all.sh
+./fix_railway_deploy.sh
+./full_diagnostic.sh
+./full_sync_check.sh
+./inspect_slh.sh
+./install_slh_os.sh
+./run_bot.sh
+./slh_daemon.sh
+./slh_dashboard.sh
+./slh_v9/install_swarm.sh
+./slh_v9/install_swarm_full.sh
+./slh_v9/install_swarm_v14.sh
+./slh_v9/install_swarm_v15.sh
+./slh_v9/install_swarm_v15_5.sh
+./slh_v9/install_swarm_v16.sh
+./slh_v9/run_swarm.sh
+./slh_v9/run_v16.sh
+./slh_v9/swarm_patch_install.sh
+./slh_v9/swarm_search.sh
+./snapshot.sh
+./start.sh
+./system_scan.sh
+./system_verification.sh
+./watchdog.sh
+
+===== DATABASE FILES =====
+./events.db
+./memory.db
+./slh_state.db
+./slh_v9/slh_clean/slh_v9/swarm.db
+./slh_v9/swarm.db
+./slh_v9/swarm_os.db
+./slh_v9/swarm_v10.db
+./slh_v9/swarm_v11.db
+./slh_v9/swarm_v12.db
+./slh_v9/swarm_v15.db
+./slh_v9/swarm_v15_5.db
+./slh_v9/swarm_v16.2.db
+./slh_v9/swarm_v16.3.db
+./slh_v9/swarm_v16.db
+./slh_v9/swarm_v16_fixed.db
+./slh_v9/swarm_v96.db
+
+===== CONFIG FILES =====
+./.env.example
+./allowed_ids.json
+./config.json
+./db.json
+./marketplace.json
+./plugins.json
+./railway.json
+./subscriptions.json
+./system_profile.json
+./test_agents.json
+~/slh_clean $ rclone mkdir slh:slh_backups && rclone ls slh:slh_backups
+~/slh_clean $
+2026-06-29T14:25:14.098643 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'FULLDIAG'            import os, json, py_compile, requests, subprocess, datetime, re
+
+print("=" * 70)
+print("🩺 SLH FULL DEBUG DIAGNOSTIC")
+print(datetime.datetime.now().isoformat())
+print("=" * 70)
+
+issues = []
+                                                                 # ---------- 1. תהליך ----------
+rc = subprocess.run(["pgrep", "-f", "python.*bot.py"], capture_output=True)
+if rc.returncode == 0:
+    pid = rc.stdout.decode().strip()
+    issues.append(f"✅ Bot process RUNNING (PID {pid})")
+else:
+    issues.append("❌ Bot process NOT RUNNING")
+
+# ---------- 2. תחביר ----------
+for fname, desc in [
+    ("bot.py", "bot core"),
+    ("learn_handlers.py", "learning"),                               ("project_commands.py", "projects"),
+    ("smart_leaderboard.py", "smart leaderboard"),
+    ("welcome_handler.py", "welcome"),
+    ("course_handlers.py", "course")
+]:
+    if not os.path.exists(fname):
+        issues.append(f"❌ {desc} ({fname}) MISSING")
+        continue
+    try:
+        py_compile.compile(fname, doraise=True)
+        issues.append(f"✅ {desc} ({fname}) syntax OK")
+    except py_compile.PyCompileError as e:
+        issues.append(f"❌ {desc} ({fname}) SYNTAX ERROR: {e}")
+
+# ---------- 3. ייבואים ----------
+with open("bot.py") as f:
+    bot_code = f.read()
+for mod in ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler", "course_handlers"]:
+    if f"import {mod}" in bot_code:
+        issues.append(f"✅ import {mod}")
+    else:
+        issues.append(f"❌ import {mod} MISSING")
+if "learn_handlers.register(bot)" in bot_code:
+    issues.append("✅ init calls present")
+else:
+    issues.append("❌ init calls MISSING")
+
+# ---------- 4. DB ----------
+try:
+    db = json.load(open("db.json"))
+    required = ["users","students","courses","progress","admins","token","referral_codes","commissions","premium","votes","lost_reports"]
+    missing = [k for k in required if k not in db]
+    if missing:
+        issues.append(f"⚠️ DB missing keys: {missing}")
+    else:
+        issues.append("✅ DB structure OK")
+    issues.append(f"👥 Users: {len(db.get('users',{}))}, 🎓 Students: {len(db.get('students',{}))}")
+    issues.append(f"📚 Courses: {list(db.get('courses',{}).keys())}")
+    issues.append(f"👑 Admins: {db.get('admins',[])}")
+    if db.get("token"):
+        issues.append("✅ Token present")
+    else:
+        issues.append("❌ Token MISSING")
+except Exception as e:
+    issues.append(f"❌ DB corrupt: {e}")
+
+# ---------- 5. API ----------
+token = db.get("token") if 'db' in dir() else None
+if token:
+    for cmd in ["/start", "/admin", "/diagnose", "/pay", "/course"]:
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                              json={"chat_id": 8789977826, "text": cmd}, timeout=5)
+            resp = r.json().get("result", {}).get("text", "NO TEXT")
+            if resp == cmd:
+                issues.append(f"❌ {cmd} returns ECHO (no handler)")
+            else:
+                issues.append(f"✅ {cmd} responds: {resp[:60]}...")
+        except Exception as e:
+            issues.append(f"❌ {cmd} API failed: {e}")
+else:
+    issues.append("❌ Cannot test API – no token")
+
+# ---------- 6. לוגים ----------
+if os.path.exists("message_log.txt"):
+    with open("message_log.txt") as f:
+        lines = f.readlines()[-5:]
+    if lines:
+        issues.append("📜 Last 5 log entries:")
+        for l in lines:
+            issues.append(f"   {l.strip()}")
+    else:
+        issues.append("⚠️ message_log.txt empty")
+else:
+    issues.append("⚠️ No message_log.txt")
+
+# ---------- 7. Cron ----------
+cron = subprocess.run(["crontab", "-l"], capture_output=True, text=True).stdout
+if "slh_clean" in cron or "slh_heal" in cron:
+    issues.append("✅ Cron jobs present")
+else:
+    issues.append("⚠️ No cron jobs found")
+
+# ---------- 8. Dashboard ----------
+if os.path.exists("slh_dashboard.sh"):
+    issues.append("✅ Dashboard script exists")
+else:
+    issues.append("❌ Dashboard MISSING")
+2026-06-29T14:25:14.099415 | 8789977826 | # ---------- 9. rclone ----------
+rc = subprocess.run(["rclone", "ls", "slh:slh_backups"], capture_output=True, text=True)
+if rc.returncode == 0:
+    issues.append("✅ rclone backup accessible")
+else:
+    issues.append(f"⚠️ rclone issue: {rc.stderr.strip()}")
+
+print("\n".join(issues))
+print("=" * 70)
+print("🔚 FULL DIAGNOSTIC COMPLETE")
+FULLDIAG
+======================================================================
+🩺 SLH FULL DEBUG DIAGNOSTIC
+2026-06-29T14:04:44.812675
+======================================================================
+❌ Bot process NOT RUNNING
+❌ bot core (bot.py) SYNTAX ERROR: Sorry: IndentationError: unexpected indent (bot.py, line 782)
+✅ learning (learn_handlers.py) syntax OK
+✅ projects (project_commands.py) syntax OK
+✅ smart leaderboard (smart_leaderboard.py) syntax OK
+✅ welcome (welcome_handler.py) syntax OK
+✅ course (course_handlers.py) syntax OK
+✅ import learn_handlers
+✅ import project_commands
+✅ import smart_leaderboard
+✅ import welcome_handler
+❌ import course_handlers MISSING
+❌ init calls MISSING
+✅ DB structure OK
+👥 Users: 4, 🎓 Students: 1
+📚 Courses: ['slh_mastery', 'bitcoin_mastery']
+👑 Admins: ['8789977826']
+✅ Token present
+❌ /start returns ECHO (no handler)
+❌ /admin returns ECHO (no handler)
+❌ /diagnose returns ECHO (no handler)
+❌ /pay returns ECHO (no handler)
+❌ /course returns ECHO (no handler)
+📜 Last 5 log entries:
+   2026-06-29T13:33:03.774982 | 8789977826 | בוט לא מגיב
+✅ Cron jobs present
+✅ Dashboard script exists
+✅ rclone backup accessible
+======================================================================
+🔚 FULL DIAGNOSTIC COMPLETE
+~/slh_clean $
+2026-06-29T14:25:14.986329 | 8789977826 | /diagnose
+2026-06-29T14:25:14.987273 | 8789977826 | כן. אם המטרה היא לוודא שהפרויקט באמת יציב לפני שממשיכים לפתח, הייתי עובד לפי הרשימה הבאה, מהחשוב ביותר לפחות חשוב.
+✅ שלב 1 – Boot (חובה)
+בדוק שכל הרכיבים הראשיים עולים.
+python run.py
+או
+./start.sh
+בדוק:
+✅ אין Traceback
+✅ אין ImportError
+✅ אין ModuleNotFoundError
+✅ אין SyntaxError
+✅ שלב 2 – Kernel
+בדוק שה־Kernel נטען.
+חפש בלוגים משהו בסגנון:
+SLH Kernel started
+
+Loading Core
+
+Loading Gateway
+
+Loading Plugins
+
+System Ready
+✅ שלב 3 – Gateway
+בדוק שה־Gateway פעיל.
+אם קיימת פקודת Health:
+curl localhost:8000/health
+או
+python health_check.py
+צריך לקבל:
+healthy
+✅ שלב 4 – Plugins
+בדוק שכל ה־Plugins נטענים.
+צפה שאין הודעות כמו
+Plugin failed
+
+ImportError
+
+Module not found
+אלא
+Plugin loaded
+✅ שלב 5 – Marketplace
+בדוק:
+marketplace.json
+נטען.
+וכן
+marketplace.py
+לא זורק שגיאה.
+✅ שלב 6 – Databases
+בדוק שקיימים
+memory.db
+
+events.db
+
+slh_state.db
+ושאפשר לפתוח אותם.
+אין
+database locked
+
+database missing
+
+no such table
+✅ שלב 7 – Event Bus
+בדוק שהאירועים עוברים.
+לא מופיע:
+Queue blocked
+
+Deadlock
+
+Unhandled event
+✅ שלב 8 – Master Agent
+ודא ש־
+master_agent.py
+רץ.
+לא מופיע
+Agent crashed
+✅ שלב 9 – Telegram
+בדוק:
+/start
+
+/help
+
+/menu
+עובדים.
+✅ שלב 10 – Handlers
+בדוק:
+learn
+
+course
+
+welcome
+
+subscriptions
+לא מחזירים Exception.
+✅ שלב 11 – Dashboard
+בדוק:
+web/
+
+dashboard/
+
+api/
+עולים.
+✅ שלב 12 – Railway
+אם אתה משתמש ב־Railway:
+railway status
+או
+railway logs
+ללא Errors.
+✅ שלב 13 – Watchdog
+בדוק ש־
+watchdog.sh
+מזהה נפילות.
+✅ שלב 14 – Diagnostics
+הרץ
+health_check.py
+
+diagnose_all.sh
+
+full_diagnostic.sh
+ללא Errors.
+✅ שלב 15 – Audit
+ודא שנוצרים
+audit.jsonl
+
+system.log
+
+bot.log
+באופן תקין.
+✅ שלב 16 – Tests
+הרץ
+tests/
+כל הטסטים צריכים לעבור.
+✅ שלב 17 – Git
+בסיום:
+git status
+צריך להיות נקי ככל האפשר, או לכל הפחות להבין בדיוק אילו שינויים עדיין ממתינים לשמירה.
+סדר העדיפויות שלי
+אם יש לנו זמן מוגבל, זה הסדר שבו הייתי בודק:
+Boot
+Kernel
+Gateway
+Databases
+Plugins
+Telegram Bot
+Master Agent
+Event Bus
+Dashboard
+Diagnostics
+Tests
+Git
+זה ייתן תמונה טובה אם המערכת באמת יציבה ומוכנה להמשך פיתוח.
+2026-06-29T14:25:14.988370 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'MOVECALLS'
+with open("bot.py", "r") as f:
+    lines = f.readlines()
+                                                                 # 1. מצא את שורת הקריאות (זו שמכילה את כל הפונקציות)
+calls_idx = None                                                 for i, line in enumerate(lines):
+    if "learn_handlers.register(bot)" in line:
+        calls_idx = i
+        break                                                    
+if calls_idx is None:
+    print("❌ Could not find calls line")
+    exit(1)
+
+# 2. מצא את שורת יצירת ה-bot
+bot_idx = None
+for i, line in enumerate(lines):                                     if line.strip().startswith("bot = "):
+        bot_idx = i                                                      break
+
+if bot_idx is None:
+~/slh_clean $ cd ~/slh_clean && python3 << 'FIXORDER'
+import re
+
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 1. מצא את שורת הקריאות (זו שמכילה "learn_handlers.register(bot)")
+calls_pattern = r'^.*learn_handlers\.register\(bot\).*$'
+calls_match = re.search(calls_pattern, code, re.MULTILINE)
+if not calls_match:
+    print("❌ Could not find calls line")
+    exit(1)
+calls_line = calls_match.group(0)
+
+# 2. מחק את שורת הקריאות מהמיקום הנוכחי
+code = code.replace(calls_line, "")                              
+# 3. מצא את שורת יצירת ה־bot (משהו כמו "bot = telebot.TeleBot(token)")
+#    נזהה לפי "bot = " (או "bot=")
+bot_pattern = r'^.*\bbot\s*=\s*.*$'
+bot_match = re.search(bot_pattern, code, re.MULTILINE)
+if not bot_match:
+    # אם לא נמצא, נחפש "TeleBot" (יכול להיות שהשורה היא "bot=TeleBot(...)")
+    bot_match = re.search(r'^.*TeleBot.*$', code, re.MULTILINE)
+    if not bot_match:
+        print("❌ Could not find bot creation")
+        exit(1)
+
+bot_line = bot_match.group(0)                                    
+# 4. הכנס את שורת הקריאות מיד אחרי שורת יצירת ה־bot
+code = code.replace(bot_line, bot_line + "\n" + calls_line)
+
+# 5. שמור
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ Calls line moved after bot creation")
+FIXORDER
+
+# 6. בדיקת תחביר
+python3 -c "import py_compile; py_compile.compile('bot.py', doraise=True)" && echo "✅ Syntax OK" || echo "❌ Syntax error"
+
+# 7. הפעלה מחדש
+pkill -9 -f "python.*bot.py"
+sleep 2
+./slh_daemon.sh
+❌ Could not find bot creation
+✅ Syntax OK
+🚀 SLH OS Daemon started – Mon Jun 29 14:14:51 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $
+2026-06-29T14:25:15.406470 | 8789977826 | ✅ ניתוח הבעיה + פתרון מיידי
+
+מהלוגים האחרונים, הבעיה העיקרית ברורה:
+
+1. IndentationError ב-`bot.py` שורה ~782 → הבוט לא מתחיל בכלל.
+2. חסר import + register של `course_handlers`.
+3. Handlers לא נטענים → כל הפקודות (/start, /pay, /course...) מחזירות ECHO.
+4. Bitcoin course קיים ב-DB אבל לא פעיל כי ה-register שבור.
+
+### שלב 1: תיקון מיידי של bot.py (העתק-הדבק)
+
+cd ~/slh_clean
+
+# גיבוי + תיקון
+cp bot.py bot.py.bak.$(date +%s)
+
+python3 << 'FIXBOT'
+import re
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# 1. תיקון IndentationError (שורות ריקות/רווחים מיותרים)
+code = re.sub(r'^\s+$', '', code, flags=re.MULTILINE)  # נקה שורות ריקות עם רווחים
+
+# 2. וידוא imports
+if 'import course_handlers' not in code:
+    code = code.replace('import json', 'import json\nimport course_handlers', 1)
+    print('✅ Added course_handlers import')
+
+# 3. וידוא register calls (אחרי יצירת bot)
+if 'course_handlers.register_course_handlers(bot)' not in code:
+    # מצא את שורת bot = TeleBot...
+    bot_creation = re.search(r'bot\s*=\s*telebot\.TeleBot', code, re.IGNORECASE)
+    if bot_creation:
+        pos = bot_creation.end()
+        # הוסף אחרי יצירת הבוט
+        insert_point = code.find('\n', pos) + 1
+        code = code[:insert_point] + '    course_handlers.register_course_handlers(bot)\n' + code[insert_point:]
+        print('✅ Added register_course_handlers call')
+    else:
+        # fallback - לפני infinity_polling
+        code = code.replace('bot.infinity_polling()', 
+                          'course_handlers.register_course_handlers(bot)\nbot.infinity_polling()')
+        print('✅ Added register before polling')
+
+# 4. וידוא imports אחרים
+for mod in ['learn_handlers', 'project_commands', 'smart_leaderboard', 'welcome_handler']:
+    if f'import {mod}' not in code:
+        code = code.replace('import json', f'import json\nimport {mod}', 1)
+        print(f'✅ Added {mod} import')
+
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+# בדיקת תחביר
+try:
+    import py_compile
+    py_compile.compile('bot.py', doraise=True)
+    print('✅ bot.py syntax OK')
+except Exception as e:
+    print('❌ Still error:', e)
+FIXBOT
+
+### שלב 2: הפעלה מחדש + בדיקה
+
+cd ~/slh_clean
+
+# הרג + הפעל
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+# בדיקה
+sleep 3
+python3 -c "
+import json
+db = json.load(open('db.json'))
+print('Courses:', list(db.get('courses', {}).keys()))
+print('Students:', len(db.get('students', {})))
+" 
+
+### שלב 3: בדוק פקודות (בטלגרם)
+
+1. /start — צריך להופיע גם Bitcoin Code Unveiled
+2. /pay
+3. /course
+4. /activate 5010371391 bitcoin_mastery (אם צריך)
+
+### המלצות נוספות (מיד אחרי שהבוט עולה)
+
+# Dashboard
+./slh_dashboard.sh
+
+# Diagnostic מלא
+cd ~/slh_clean && python3 << 'DIAG'
+import os, json, py_compile, subprocess
+print("Bot running?", subprocess.run(["pgrep","-f","bot.py"], capture_output=True).returncode == 0)
+for f in ["bot.py","course_handlers.py","learn_handlers.py"]:
+    try:
+        py_compile.compile(f, doraise=True)
+        print(f"✅ {f} OK")
+    except Exception as e: print(f"❌ {f}:", e)
+DIAG
+
+שלח לי את הפלט של הפקודות האלה (במיוחד השגיאה אם עדיין יש) ואני אתן תיקון מדויק יותר.
+
+המערכת שלך כבר מאוד מתקדמת (Kernel + Plugins + Swarm + Marketplace + Diagnostics) — רק צריך לייצב את ה-boot layer. נעשה את זה צעד אחר צעד. 🚀
+2026-06-29T14:25:15.406981 | 8789977826 | ✅ תיקון IndentationError ב-`bot.py` (הוראות מדויקות)
+
+### שלב 1: אבחון מהיר
+הרץ את זה קודם כדי לראות את השגיאה המדויקת:
+
+cd ~/slh_clean
+python3 -m py_compile bot.py
+
+### שלב 2: תיקון אוטומטי (הכי מומלץ)
+
+cd ~/slh_clean
+
+python3 << 'AUTO_FIX'
+import re
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+fixed_lines = []
+indent_level = 0
+in_function = False
+
+for i, line in enumerate(lines):
+    stripped = line.strip()
+    
+    # נקה רווחים מיותרים בשורות ריקות
+    if not stripped:
+        fixed_lines.append('\n')
+        continue
+    
+    # זיהוי פונקציות / if / for וכו'
+    if stripped.startswith(('def ', 'class ', 'if ', 'elif ', 'else:', 'for ', 'while ', 'try:', 'except ', '@')):
+        # חישוב אינדנטציה נכונה
+        if stripped.startswith(('def ', 'class ')):
+            indent_level = 0
+        elif stripped.startswith(('elif ', 'else:', 'except ')):
+            indent_level = max(0, indent_level - 1)
+        
+        fixed_line = '    ' * indent_level + stripped + '\n'
+        fixed_lines.append(fixed_line)
+        
+        if stripped.endswith(':'):
+            indent_level += 1
+            in_function = True
+    else:
+        # שורות רגילות בתוך בלוק
+        fixed_line = '    ' * indent_level + stripped + '\n'
+        fixed_lines.append(fixed_line)
+
+# שמירה
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.writelines(fixed_lines)
+
+print("✅ תיקון אוטומטי של אינדנטציה הסתיים")
+print("   שורות מתוקנות:", len(fixed_lines))
+AUTO_FIX
+
+### שלב 3: בדיקה + הפעלה
+
+cd ~/slh_clean
+
+# בדיקת תחביר
+python3 -m py_compile bot.py && echo "✅ Syntax OK - אין IndentationError" || echo "❌ עדיין שגיאה"
+
+# הפעלה מחדש של הבוט
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### אם עדיין יש שגיאה (שיטה ידנית)
+
+cd ~/slh_clean
+
+# הצג את האזור הבעייתי
+sed -n '770,800p' bot.py
+
+שלח לי את הפלט של sed -n '770,800p' bot.py ואני אתן לך תיקון מדויק לשורות האלה.
+
+---
+
+טיפים למניעה בעתיד:
+- השתמש ב-black או autopep8 אם מותקן:
+  ```bash
+  pip install black
+  black bot.py
+  ```
+- או פשוט: python -m tabnanny bot.py לבדיקת אינדנטציה.
+
+נסה את התיקון האוטומטי ועדכן אותי מה קורה!
+2026-06-29T14:25:15.407356 | 8789977826 | ✅ תסריט תיקון משופר ומתוקן (גרסה יציבה יותר)
+
+הבעיה הקודמת הייתה שהסקריפט היה מורכב מדי ונכשל. הנה גרסה פשוטה, בטוחה ויעילה יותר:
+
+### הרץ את זה עכשיו:
+
+cd ~/slh_clean
+
+python3 << 'FIX_INDENT'
+import re
+
+print("🔧 מתחיל תיקון IndentationError...")
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# 1. הסר רווחים/טאבים מיותרים בשורות ריקות
+code = re.sub(r'^\s+$', '', code, flags=re.MULTILINE)
+
+# 2. החלף טאבים ברווחים (4 רווחים)
+code = code.replace('\t', '    ')
+
+# 3. תיקון אינדנטציה בסיסי - נרמל שורות שמתחילות עם רווחים לא עקביים
+lines = code.splitlines()
+fixed_lines = []
+current_indent = 0
+
+for line in lines:
+    stripped = line.strip()
+    if not stripped:
+        fixed_lines.append('')
+        continue
+    
+    # זיהוי שורות שפותחות בלוק (:)
+    if stripped.endswith(':') and not stripped.startswith(('return', 'raise', 'pass', 'break', 'continue')):
+        indent = '    ' * current_indent
+        fixed_lines.append(indent + stripped)
+        current_indent += 1
+    # שורות שסוגרות בלוק (else, elif, except)
+    elif stripped.startswith(('else:', 'elif ', 'except ', 'finally:')):
+        current_indent = max(0, current_indent - 1)
+        indent = '    ' * current_indent
+        fixed_lines.append(indent + stripped)
+    else:
+        indent = '    ' * current_indent
+        fixed_lines.append(indent + stripped)
+
+new_code = '\n'.join(fixed_lines) + '\n'
+
+# שמירה
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(new_code)
+
+print("✅ תיקון הושלם!")
+
+# בדיקה
+try:
+    compile(new_code, 'bot.py', 'exec')
+    print("✅ אין שגיאות תחביר - IndentationError תוקן")
+except SyntaxError as e:
+    print("❌ עדיין שגיאה:", e)
+    print("   שורה:", e.lineno)
+except Exception as e:
+    print("❌ שגיאה:", e)
+FIX_INDENT
+
+### אחרי הרצת התיקון:
+
+cd ~/slh_clean
+
+# בדיקה סופית
+python3 -m py_compile bot.py && echo "✅ bot.py תקין לחלוטין" || echo "❌ עדיין בעיה"
+
+# הפעלה מחדש
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+---
+
+שלח לי את הפלט של הסקריפט (כולל אם יש עדיין שגיאה) + הפלט של:
+
+sed -n '760,810p' bot.py
+
+ואני אתן תיקון מדויק יותר אם צריך.
+2026-06-29T14:25:15.407848 | 8789977826 | ✅ תסריט משופר עם הודעות שגיאה מפורטות מאוד:
+
+cd ~/slh_clean
+
+python3 << 'FIX_DETAILED'
+import re
+import shutil
+import traceback
+from datetime import datetime
+
+print("="*60)
+print("🔧 SLH - תיקון IndentationError עם דיאגנוסטיקה מפורטת")
+print("="*60)
+
+# 1. גיבוי
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+backup_file = f"bot.py.backup.{timestamp}"
+shutil.copy2('bot.py', backup_file)
+print(f"✅ גיבוי נוצר: {backup_file}")
+
+# 2. קריאת הקובץ
+try:
+    with open('bot.py', 'r', encoding='utf-8') as f:
+        original_code = f.read()
+    print(f"✅ קובץ נטען בהצלחה ({len(original_code)} תווים)")
+except Exception as e:
+    print(f"❌ שגיאה בטעינת הקובץ: {e}")
+    exit(1)
+
+# 3. תיקון אינדנטציה
+try:
+    # ניקוי ראשוני
+    code = re.sub(r'^\s+$', '', original_code, flags=re.MULTILINE)
+    code = code.replace('\t', '    ')
+    
+    lines = code.splitlines()
+    fixed_lines = []
+    current_indent = 0
+    error_count = 0
+
+    for i, line in enumerate(lines, 1):
+        original_line = line
+        stripped = line.strip()
+        
+        if not stripped:
+            fixed_lines.append('')
+            continue
+        
+        # זיהוי בלוקים
+        opens_block = stripped.endswith(':') and not stripped.startswith(('return', 'raise', 'pass', 'break', 'continue', 'yield'))
+        closes_block = stripped.startswith(('else:', 'elif ', 'except ', 'finally:'))
+        
+        if closes_block:
+            current_indent = max(0, current_indent - 1)
+        
+        indent = '    ' * current_indent
+        fixed_line = indent + stripped
+        
+        fixed_lines.append(fixed_line)
+        
+        if opens_block:
+            current_indent += 1
+
+    new_code = '\n'.join(fixed_lines) + '\n'
+    print(f"✅ תיקון אינדנטציה הסתיים (עובד על {len(lines)} שורות)")
+
+except Exception as e:
+    print(f"❌ שגיאה בתהליך התיקון: {e}")
+    traceback.print_exc()
+    exit(1)
+
+# 4. שמירה
+try:
+    with open('bot.py', 'w', encoding='utf-8') as f:
+        f.write(new_code)
+    print("✅ הקובץ נשמר בהצלחה")
+except Exception as e:
+    print(f"❌ שגיאה בשמירה: {e}")
+    exit(1)
+
+# 5. בדיקת תחביר מפורטת
+print("\n🔍 בדיקת תחביר...")
+try:
+    compile(new_code, 'bot.py', 'exec')
+    print("✅ ✅ ✅ אין שגיאות תחביר! IndentationError תוקן בהצלחה")
+except SyntaxError as e:
+    print("❌ ❌ ❌ SyntaxError זוהתה:")
+    print(f"   • שורה: {e.lineno}")
+    print(f"   • הודעה: {e.msg}")
+    print(f"   • טקסט: {e.text.strip() if e.text else 'N/A'}")
+    print(f"\n💡 שחזר מגיבוי: cp {backup_file} bot.py")
+except Exception as e:
+    print("❌ שגיאה לא צפויה בבדיקה:")
+    traceback.print_exc()
+else:
+    print("\n🚀 הכל מוכן! מומלץ להפעיל מחדש את הבוט")
+
+print("="*60)
+FIX_DETAILED
+
+### אחרי הרצה:
+
+cd ~/slh_clean
+./slh_daemon.sh
+
+שלח לי את הפלט המלא של הסקריפט — במיוחד את חלק הבדיקה — ואני אראה בדיוק מה קורה.
+2026-06-29T14:25:15.408216 | 8789977826 | ✅ תוכנית מקיפה לבדיקת קורס "Bitcoin Code Unveiled"
+
+הנה איך אני הייתי בונה ובודק את זה בצורה מסודרת ומקצועית:
+
+### שלב 1: וידוא מבנה הקורס (הרץ עכשיו)
+
+cd ~/slh_clean
+
+python3 -c '
+import json
+db = json.load(open("db.json"))
+course = db["courses"].get("bitcoin_mastery")
+if course:
+    print("✅ Course found:", course["title"])
+    print("   Tasks:", len(course["tasks"]))
+    for tid, t in course["tasks"].items():
+        print(f"   {tid}: {t["desc"][:60]}... (refs: {t.get("required_refs",0)})")
+else:
+    print("❌ Course not found")
+'
+
+### שלב 2: בדיקת handlers + פקודות בסיסיות
+
+# בדיקה מהירה
+python3 -c '
+import course_handlers
+print("✅ course_handlers imported successfully")
+' 2>&1 | cat
+
+בטלגרם נסה את הפקודות הבאות (בסדר):
+
+1. /start — רואה את ההודעה על הקורס החדש?
+2. /pay — רואה פרטי תשלום + ארנק TON?
+3. /course — רואה רשימת שלבים עם 🔒 / 🔓?
+4. /course 1 — רואה את המשימה הראשונה?
+5. /activate <your_user_id> bitcoin_mastery (כאדמין)
+
+### שלב 3: בדיקת זרימה מלאה (User Journey)
+
+צור משתמש בדיקה (אם צריך):
+
+python3 -c '
+import json
+db = json.load(open("db.json"))
+uid = "999999999"
+db["students"][uid] = {"name": "Test Student", "referral_count": 10, "courses": {}}
+db["users"][uid] = {"username": "test_student"}
+json.dump(db, open("db.json", "w"), indent=2)
+print("✅ Test user created:", uid)
+'
+
+ואז:
+- /activate 999999999 bitcoin_mastery
+- /course 2 — צריך להראות קוד של pubkey_to_address.py
+- /course 3, /course 4 וכו'.
+
+### שלב 4: בדיקת קבצי הקוד (course_code)
+
+וודא שהתיקייה והקבצים קיימים:
+
+ls -la ~/slh_clean/course_code/
+
+אם חסרים — צור אותם (דוגמה לקובץ פשוט):
+
+mkdir -p ~/slh_clean/course_code
+
+cat > ~/slh_clean/course_code/pubkey_to_address.py << 'EOF'
+# Bitcoin Demo - Pubkey to Address
+import hashlib
+import base58
+
+def pubkey_to_address(pubkey_hex):
+    # Simple demo conversion
+    print("🔑 Public Key:", pubkey_hex[:16] + "...")
+    # Real implementation would go here
+    return "1DemoBitcoinAddressForLearning"
+
+print("✅ Wallet address generated!")
+EOF
+
+עשה את אותו הדבר לשאר הקבצים (sign_message.py, mine_block.py, admin_backdoor.py).
+
+### שלב 5: בדיקות אוטומטיות (מומלץ)
+
+צור סקריפט בדיקה:
+
+cat > test_bitcoin_course.py << 'TEST'
+import json, os, requests
+
+def test_course():
+    db = json.load(open("db.json"))
+    course = db["courses"]["bitcoin_mastery"]
+    print("Course Title:", course["title"])
+    
+    for tid in course["tasks"]:
+        task = course["tasks"][tid]
+        print(f"Task {tid}: {task['desc'][:50]}... Refs needed: {task.get('required_refs',0)}")
+    
+    print("\n✅ Course structure looks good!")
+
+if __name__ == "__main__":
+    test_course()
+TEST
+
+python3 test_bitcoin_course.py
+
+---
+
+מה אתה רוצה לעשות עכשיו?
+
+1. תיקון handlers (אם עדיין לא עובד)
+2. הוספת קבצי קוד חסרים
+3. שיפור זרימת הקורס (הוספת הערות, וידאו, בדיקת הגשה)
+4. בניית מערכת בדיקת משימות אוטומטית
+
+תגיד לי באיזה שלב אתה נמצא ואני אתן לך את הפקודות/קוד המדויק.
+2026-06-29T14:25:46.289674 | 8789977826 | slh_clean
+python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+token = db['token']
+r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',                                                                               json={'chat_id': 8789977826, 'text': '/start'})
+print('Status:', r.status_code)
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+"
+Status: 200
+Response: /start
+~/slh_clean $ cd ~/slh_clean && timeout 5 python3 bot.py 2>&1 | tail -30
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/slh_clean/bot.py", line 8, in <module>
+    TOKEN = cfg["token"]
+            ~~~^^^^^^^^^
+KeyError: 'token'
+~/slh_clean $ cd ~/slh_clean && python3 -c "import json; print(json.load(open('config.json')).keys())"
+dict_keys(['BOT_TOKEN', 'SUPER_ADMIN', 'SITE_DIR', 'DB_FILE', 'VERSION', 'TON_WALLET', 'COURSE_PRICE_ILS', 'COURSE_PRICE_USDT'])
+~/slh_clean $ cd ~/slh_clean && python3 -c "
+import json
+db = json.load(open('db.json'))
+cfg = json.load(open('config.json'))
+cfg['token'] = db['token']
+json.dump(cfg, open('config.json','w'), indent=2)
+print('✅ Token copied to config.json')
+"
+✅ Token copied to config.json
+~/slh_clean $ pkill -9 -f "python.*bot.py"
+sleep 2
+./slh_daemon.sh
+🚀 SLH OS Daemon started – Mon Jun 29 14:25:10 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $ cd ~/slh_clean && python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+token = db['token']
+r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/start'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+"
+Response: /start
+~/slh_clean $
+2026-06-29T14:28:56.015203 | 8789977826 | /exec python3 -c "
+with open('learn_handlers.py', 'r') as f:
+    code = f.read()
+
+# הוסף בדיקה לכל שלב
+code = code.replace('def process_name(m):', 'def process_name(m):\\n    if m.text.startswith(\"/\"):\\n        return bot.process_new_messages([m])\\n')
+code = code.replace('def process_group(m):', 'def process_group(m):\\n    if m.text.startswith(\"/\"):\\n        return bot.process_new_messages([m])\\n')
+code = code.replace('def process_goal(m):', 'def process_goal(m):\\n    if m.text.startswith(\"/\"):\\n        return bot.process_new_messages([m])\\n')
+
+with open('learn_handlers.py', 'w') as f:
+    f.write(code)
+print('✅ /join now ignores commands')
+" && pkill -f "python.*bot.py" && sleep 2 && ~/slh_clean/slh_daemon.sh
+2026-06-29T14:32:05.250626 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+token = db['token']
+r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',                                                                               json={'chat_id': 8789977826, 'text': '/start'})
+print('Status:', r.status_code)
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+"
+Status: 200
+Response: /start
+~/slh_clean $ cd ~/slh_clean && timeout 5 python3 bot.py 2>&1 | tail -30
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/slh_clean/bot.py", line 8, in <module>
+    TOKEN = cfg["token"]
+            ~~~^^^^^^^^^
+KeyError: 'token'
+~/slh_clean $ cd ~/slh_clean && git checkout 1254a5e -- bot.py && python3 << 'RESTOREALL'
+import os, json, re, subprocess, time                            
+# 1. קרא את bot.py (הגרסה הנקייה)
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 2. הוסף ייבואים (כל המודולים) – שורה אחת אחרי import os
+modules = ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler"]
+if os.path.exists("course_handlers.py"):
+    modules.append("course_handlers")
+if os.path.exists("logger_handler.py"):
+    modules.append("logger_handler")
+
+imports_line = "import " + ", ".join(modules)
+if "import learn_handlers" not in code:
+    code = code.replace("import os", "import os\n" + imports_line)
+
+# 3. אתר את שורת יצירת ה-bot (מכילה TeleBot) – נוסיף ממש אחריה את הקריאות
+bot_pattern = r"^(\s*bot\s*=\s*telebot\.TeleBot\(.*\))"  # מחפש bot = TeleBot(...)
+bot_match = re.search(bot_pattern, code, re.MULTILINE | re.IGNORECASE)
+if bot_match:                                                        bot_line = bot_match.group(1)
+    # בנה את שורת הקריאות                                            calls = "; ".join([f"{m}.{('register' if m=='learn_handlers' else 'init')}(bot)" for m in modules])
+    code = code.replace(bot_line, bot_line + "\n" + calls)
+    # הסר את שורת הקריאות הישנה (אם קיימת) – מניעה כפילות
+    code = code.replace("learn_handlers.register(bot);", "")
+else:
+    # fallback: הוסף לפני infinity_polling
+    calls = "; ".join([f"{m}.{('register' if m=='learn_handlers' else 'init')}(bot)" for m in modules])
+    code = code.replace("bot.infinity_polling()", calls + "\nbot.infinity_polling()")
+
+# 4. וודא שהטוקן נטען (אם לא קיים, הוסף)
+if "config.json" not in code:
+    token_block = '''
+# Load token from config.json
+with open("config.json") as f:
+    cfg = json.load(f)
+TOKEN = cfg["token"]
+'''
+    code = code.replace("import telebot", "import telebot\n" + token_block)
+    # תיקון: bot ייווצר עם TOKEN
+    code = code.replace("telebot.TeleBot(TOKEN)", "telebot.TeleBot(TOKEN)")
+
+# 5. מחק שורות ריקות מיותרות (הגנה)
+code = re.sub(r'\n\s*\n', '\n', code)
+
+# 6. שמור
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ bot.py restored with all modules")
+
+# 7. בדיקת תחביר
+import py_compile
+try:
+    py_compile.compile("bot.py", doraise=True)
+    print("✅ Syntax OK")
+except py_compile.PyCompileError as e:
+    print("❌ Syntax error:", e)
+    # נסה לתקן על ידי הסרת שורות בעייתיות
+    with open("bot.py", "r") as f:
+        code = f.read()
+    # הסרת שורות עם 'cwd = os.path.expanduser' (אם נשארו)
+    code = re.sub(r'^.*cwd = os\.path\.expanduser.*$\n?', '', code, flags=re.MULTILINE)
+    with open("bot.py", "w") as f:
+        f.write(code)
+    py_compile.compile("bot.py", doraise=True)
+    print("✅ Syntax fixed")
+
+# 8. הפעלה מחדש
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+RESTOREALL
+✅ bot.py restored with all modules
+❌ Syntax error: Sorry: IndentationError: unexpected indent (bot.py, line 36)
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/usr/lib/python3.13/py_compile.py", line 144, in compile
+2026-06-29T14:32:05.414731 | 8789977826 | code = loader.source_to_code(source_bytes, dfile or file,
+                                 _optimize=optimize)
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "bot.py", line 36
+    project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.init(bot); logger_handler.init(bot)
+IndentationError: unexpected indent
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 56, in <module>
+  File "/data/data/com.termux/files/usr/lib/python3.13/py_compile.py", line 150, in compile
+    raise py_exc
+py_compile.PyCompileError: Sorry: IndentationError: unexpected indent (bot.py, line 36)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/usr/lib/python3.13/py_compile.py", line 144, in compile
+    code = loader.source_to_code(source_bytes, dfile or file,
+                                 _optimize=optimize)
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "bot.py", line 36
+    project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.init(bot); logger_handler.init(bot)
+IndentationError: unexpected indent
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 67, in <module>
+  File "/data/data/com.termux/files/usr/lib/python3.13/py_compile.py", line 150, in compile
+    raise py_exc
+py_compile.PyCompileError: Sorry: IndentationError: unexpected indent (bot.py, line 36)
+~/slh_clean $
+2026-06-29T14:32:19.740564 | 8789977826 | /exec python3 -c "
+with open('project_commands.py', 'r') as f:
+    code = f.read()
+if 'def project_list_admin' not in code:
+    new_func = '''
+    @bot.message_handler(commands=['students'])
+    def list_students(m):
+        if str(m.chat.id) != '8789977826': return bot.reply_to(m, 'Admin only')
+        db = json.load(open('db.json'))
+        students = db.get('students', {})
+        if not students:
+            bot.reply_to(m, 'No students.')
+            return
+        msg = 'Students:\\n'
+        for uid, data in students.items():
+            msg += f'• {data[\"name\"]} (ID: {uid})\\n'
+        bot.reply_to(m, msg)
+
+    @bot.message_handler(commands=['plist'])
+    def project_list_admin(m):
+        if str(m.chat.id) != '8789977826': return bot.reply_to(m, 'Admin only')
+        args = m.text.split()
+        if len(args) < 2:
+            bot.reply_to(m, 'Usage: /plist <user_id>')
+            return
+        uid = args[1]
+        projects_root = os.path.expanduser('~/slh_clean/projects')
+        if not os.path.isdir(projects_root):
+            bot.reply_to(m, 'No projects folder.')
+            return
+        user_projects = []
+        for proj in os.listdir(projects_root):
+            proj_path = os.path.join(projects_root, proj)
+            if os.path.isdir(proj_path):
+                owner_file = os.path.join(proj_path, 'owner.txt')
+                if os.path.exists(owner_file):
+                    with open(owner_file) as f:
+                        if f.read().strip() == uid:
+                            user_projects.append(proj)
+        if not user_projects:
+            bot.reply_to(m, 'No projects found for user ' + uid)
+        else:
+            bot.reply_to(m, 'Projects of user ' + uid + ':\\n' + '\\n'.join(user_projects))
+    '''
+    code = code.replace('def init(bot):', 'def init(bot):\\n' + new_func)
+    with open('project_commands.py', 'w') as f:
+        f.write(code)
+    print('✅ /students and /plist added')
+else:
+    print('Already present')
+" && pkill -f "python.*bot.py" && sleep 2 && ~/slh_clean/slh_daemon.sh
+2026-06-29T14:37:08.183206 | 8789977826 | ✅ תוכנית מקיפה לבדיקת קורס "Bitcoin Code Unveiled"
+
+הנה איך אני הייתי בונה ובודק את זה בצורה מסודרת ומקצועית:
+
+### שלב 1: וידוא מבנה הקורס (הרץ עכשיו)
+
+cd ~/slh_clean
+
+python3 -c '
+import json
+db = json.load(open("db.json"))
+course = db["courses"].get("bitcoin_mastery")
+if course:
+    print("✅ Course found:", course["title"])
+    print("   Tasks:", len(course["tasks"]))
+    for tid, t in course["tasks"].items():
+        print(f"   {tid}: {t["desc"][:60]}... (refs: {t.get("required_refs",0)})")
+else:
+    print("❌ Course not found")
+'
+
+### שלב 2: בדיקת handlers + פקודות בסיסיות
+
+# בדיקה מהירה
+python3 -c '
+import course_handlers
+print("✅ course_handlers imported successfully")
+' 2>&1 | cat
+
+בטלגרם נסה את הפקודות הבאות (בסדר):
+
+1. /start — רואה את ההודעה על הקורס החדש?
+2. /pay — רואה פרטי תשלום + ארנק TON?
+3. /course — רואה רשימת שלבים עם 🔒 / 🔓?
+4. /course 1 — רואה את המשימה הראשונה?
+5. /activate <your_user_id> bitcoin_mastery (כאדמין)
+
+### שלב 3: בדיקת זרימה מלאה (User Journey)
+
+צור משתמש בדיקה (אם צריך):
+
+python3 -c '
+import json
+db = json.load(open("db.json"))
+uid = "999999999"
+db["students"][uid] = {"name": "Test Student", "referral_count": 10, "courses": {}}
+db["users"][uid] = {"username": "test_student"}
+json.dump(db, open("db.json", "w"), indent=2)
+print("✅ Test user created:", uid)
+'
+
+ואז:
+- /activate 999999999 bitcoin_mastery
+- /course 2 — צריך להראות קוד של pubkey_to_address.py
+- /course 3, /course 4 וכו'.
+
+### שלב 4: בדיקת קבצי הקוד (course_code)
+
+וודא שהתיקייה והקבצים קיימים:
+
+ls -la ~/slh_clean/course_code/
+
+אם חסרים — צור אותם (דוגמה לקובץ פשוט):
+
+mkdir -p ~/slh_clean/course_code
+
+cat > ~/slh_clean/course_code/pubkey_to_address.py << 'EOF'
+# Bitcoin Demo - Pubkey to Address
+import hashlib
+import base58
+
+def pubkey_to_address(pubkey_hex):
+    # Simple demo conversion
+    print("🔑 Public Key:", pubkey_hex[:16] + "...")
+    # Real implementation would go here
+    return "1DemoBitcoinAddressForLearning"
+
+print("✅ Wallet address generated!")
+EOF
+
+עשה את אותו הדבר לשאר הקבצים (sign_message.py, mine_block.py, admin_backdoor.py).
+
+### שלב 5: בדיקות אוטומטיות (מומלץ)
+
+צור סקריפט בדיקה:
+
+cat > test_bitcoin_course.py << 'TEST'
+import json, os, requests
+
+def test_course():
+    db = json.load(open("db.json"))
+    course = db["courses"]["bitcoin_mastery"]
+    print("Course Title:", course["title"])
+    
+    for tid in course["tasks"]:
+        task = course["tasks"][tid]
+        print(f"Task {tid}: {task['desc'][:50]}... Refs needed: {task.get('required_refs',0)}")
+    
+    print("\n✅ Course structure looks good!")
+
+if __name__ == "__main__":
+    test_course()
+TEST
+
+python3 test_bitcoin_course.py
+
+---
+
+מה אתה רוצה לעשות עכשיו?
+
+1. תיקון handlers (אם עדיין לא עובד)
+2. הוספת קבצי קוד חסרים
+3. שיפור זרימת הקורס (הוספת הערות, וידאו, בדיקת הגשה)
+4. בניית מערכת בדיקת משימות אוטומטית
+
+תגיד לי באיזה שלב אתה נמצא ואני אתן לך את הפקודות/קוד המדויק.
+2026-06-29T14:37:08.187274 | 8789977826 | השגיאה ברורה: course_handlers משתמש בפונקציה register_course_handlers(bot), לא init(bot).
+נתקן את השורה, נפעיל מחדש, והבוט יחזור לחיים.
+
+---
+
+🔧 תיקון מיידי (הדבק ב‑Termux)
+
+cd ~/slh_clean && python3 -c "
+with open('bot.py', 'r') as f:
+    code = f.read()
+code = code.replace('course_handlers.init(bot)', 'course_handlers.register_course_handlers(bot)')
+with open('bot.py', 'w') as f:
+    f.write(code)
+print('✅ Fixed course_handlers call')
+" && pkill -9 -f 'python.*bot.py' && sleep 2 && ./slh_daemon.sh
+---
+
+📱 בדוק מיד (טלגרם)
+
+1. שלח /start – תופיע הודעת פתיחה (ברוכים הבאים…).
+2. שלח /admin – יופיע לוח הבקרה.
+3. שלח /pay – פרטי תשלום.
+4. שלח /course – שלבי הקורס.
+
+---
+
+🧪 וידוא API (בטרמינל)
+
+cd ~/slh_clean && python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+r = requests.post(f'https://api.telegram.org/bot{db[\"token\"]}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/start'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+"
+אם מופיע ברוכים הבאים…, הבוט פעיל ומגיב.
+
+---
+
+🚀 מה נשאר לעבוד על "מערכת ההפעלה"?
+
+כל הרכיבים הבאים כבר קיימים בתיקייה שלך, ואפשר לבדוק/להריץ אותם ישירות מהטרמינל (או דרך /exec כשהבוט חי):
+
+רכיב איך בודקים
+Kernel python3 SLH_KERNEL.py
+Gateway python3 SLH_GATEWAY.py (או curl localhost:8000/health)
+Plugins python3 -c "import plugins.task; print('OK')"
+Marketplace python3 marketplace.py
+Event Bus python3 core/event_bus.py (אם רץ)
+Master Agent python3 master_agent.py
+Web Dashboard cd web/api && python3 app.py (פתח דפדפן http://localhost:5000)
+Watchdog bash watchdog.sh
+Diagnostics bash full_diagnostic.sh
+
+אחרי שהבוט רץ, תוכל להריץ כל אחד מהם דרך /exec (אדמין) – למשל:
+
+/exec python3 SLH_KERNEL.py
+/exec curl localhost:8000/health
+/exec bash watchdog.sh
+---
+
+📌 תוספות דחופות (אחרי תיקון הבוט)
+
+· פקודת /students – מציגה את כל התלמידים.
+· פקודת /plist <id> – מציגה פרויקטים של תלמיד ספציפי (ללמידה משותפת).
+· השלמת קבצי הקורס – course_code/ (pubkey_to_address.py, sign_message.py…).
+· בדיקת זרימה מלאה – תלמיד נרשם, משלם, לומד, מגיש.
+
+אחרי שהבוט ישוב לעבוד, אתן לך פקודות /exec שיוסיפו את כל אלה.
+תחילה – תקן את הקריאה, הפעל מחדש, ובדוק /start.
+2026-06-29T14:37:08.191215 | 8789977826 | ✅ תוכנית פעולה לבנייה + בדיקה של קורס Bitcoin Demo
+
+המצב הנוכחי: הבוט עדיין שבור (IndentationError + בעיית token). נתקן את זה קודם, ואז נבדוק את הקורס.
+
+### שלב 0: תיקון הבוט (חובה לפני בדיקת הקורס)
+
+cd ~/slh_clean
+
+# גיבוי + תיקון token + indentation
+cp bot.py bot.py.bak.$(date +%s)
+
+python3 << 'FINAL_FIX'
+import json, re, shutil
+
+# 1. טען config + db
+with open('config.json') as f:
+    cfg = json.load(f)
+with open('db.json') as f:
+    db = json.load(f)
+
+if 'token' not in cfg and 'token' in db:
+    cfg['token'] = db['token']
+    with open('config.json', 'w') as f:
+        json.dump(cfg, f, indent=2)
+    print("✅ Token synced to config.json")
+
+# 2. תיקון bot.py
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# נקה indentation
+code = re.sub(r'^\s+$', '', code, flags=re.MULTILINE)
+code = code.replace('\t', '    ')
+
+# וידוא imports
+imports = ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler", "course_handlers"]
+for mod in imports:
+    if f"import {mod}" not in code:
+        code = re.sub(r'^import .*?(?=\n)', f'import {mod}\n\\g<0>', code, count=1, flags=re.MULTILINE)
+
+# Register calls אחרי bot =
+if 'register_course_handlers' not in code:
+    code = re.sub(
+        r'(bot\s*=\s*telebot\.TeleBot.*?\))',
+        r'\1\n    course_handlers.register_course_handlers(bot)',
+        code,
+        flags=re.IGNORECASE
+    )
+
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("✅ bot.py fixed")
+FINAL_FIX
+
+# בדיקה + הפעלה
+python3 -m py_compile bot.py && echo "✅ Syntax OK" || echo "❌ Still error"
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### שלב 1: בדיקת הקורס (אחרי שהבוט עולה)
+
+cd ~/slh_clean
+
+# 1. וידוא קורס ב-DB
+python3 -c '
+import json
+db = json.load(open("db.json"))
+c = db["courses"].get("bitcoin_mastery", {})
+print("Course:", c.get("title"))
+print("Tasks:", list(c.get("tasks", {}).keys()))
+'
+
+בטלגרם (כאדמין):
+
+1. /start
+2. /pay
+3. /course
+4. /course 1
+5. /activate 8789977826 bitcoin_mastery (או UID שלך)
+
+### שלב 2: יצירת קבצי קוד לדמו
+
+mkdir -p course_code
+
+cat > course_code/pubkey_to_address.py << 'PY'
+print("🔑 Bitcoin Address Generator Demo")
+print("Public Key -> Address conversion simulation")
+print("✅ Demo address: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+PY
+
+cat > course_code/sign_message.py << 'PY'
+print("✍️ Digital Signature Demo")
+print("Message signed with private key (simulation)")
+PY
+
+cat > course_code/mine_block.py << 'PY'
+print("⛏️ Simple Proof-of-Work Demo")
+nonce = 0
+while True:
+    if nonce % 10000 == 0:
+        print(f"Mining... nonce={nonce}")
+    nonce += 1
+    if nonce > 50000: break  # demo limit
+print("✅ Block mined!")
+PY
+
+### שלב 3: בדיקות אוטומטיות
+
+שלח לי פלט של /course אחרי התיקון, ואני אעזור לשפר את course_handlers.py או להוסיף בדיקת משימות.
+
+מה אתה רוצה עכשיו?
+- תיקון סופי של הבוט
+- שיפור course_handlers.py
+- הוספת בדיקת הגשת משימה
+- או משהו אחר?
+
+תגיד לי ואני אתן קוד מדויק.
+2026-06-29T14:39:18.246308 | 8789977826 | /myprogress
+2026-06-29T14:39:18.291026 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+echo "=== 1. תגובת API ==="
+python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+token = db['token']
+r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/start'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))                                                               "
+
+echo ""
+echo "=== 2. תוכן bot.py (שורות 1–45) ==="
+head -45 bot.py
+
+echo ""
+echo "=== 3. הרצה ישירה עם timeout ==="
+timeout 5 python3 bot.py 2>&1 | tail -30
+=== 1. תגובת API ===
+Response: /start
+
+=== 2. תוכן bot.py (שורות 1–45) ===
+import os, sys, json, time, subprocess
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+import telebot
+from marketplace import load_store, save_store
+from datetime import datetime
+from audit_logger import audit, get_audit
+from core.event_bus import EventBus
+from plugins.task import TaskPlugin
+# ---------------- LOAD TOKEN ----------------
+def load_token():
+    env_token = os.getenv("BOT_TOKEN")
+    if env_token and ":" in env_token:
+        return env_token
+    try:
+        with open("config.json") as f:
+            cfg = json.load(f)
+            token = cfg.get("BOT_TOKEN", "")
+            if token and ":" in token and "WILL_BE_SET" not in token:
+                return token
+    except:
+        pass
+    return None
+TOKEN = load_token()
+if not TOKEN:
+    print("No valid token found. Exiting.")
+    sys.exit(1)
+# ---------------- CONFIG ----------------
+try:
+    with open("config.json") as f:
+        cfg = json.load(f)
+except:
+    cfg = {}
+SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
+DB_FILE = cfg.get("DB_FILE", "db.json")
+bot = telebot.TeleBot(TOKEN)
+learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.init(bot); logger_handler.init(bot)
+agents_dict = {}
+# ---- Load agents from persistent storage ----
+try:
+    import json, os
+    if os.path.exists("/app/agents.json"):
+        with open("/app/agents.json") as f:
+            agents_dict.update(json.load(f))
+        print(f"Loaded {len(agents_dict)} agents from disk")
+except Exception as e:
+
+=== 3. הרצה ישירה עם timeout ===
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/slh_clean/bot.py", line 36, in <module>
+    learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.init(bot); logger_handler.init(bot)
+                                                                                                                      ^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'course_handlers' has no attribute 'init'
+~/slh_clean $ cd ~/slh_clean && python3 -c "
+with open('bot.py', 'r') as f:
+    code = f.read()
+code = code.replace('course_handlers.init(bot)', 'course_handlers.register_course_handlers(bot)')
+with open('bot.py', 'w') as f:
+    f.write(code)
+print('✅ Fixed course_handlers call')
+" && pkill -9 -f 'python.*bot.py' && sleep 2 && ./slh_daemon.sh
+✅ Fixed course_handlers call
+~/slh_clean $ cd ~/slh_clean && python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+r = requests.post(f'https://api.telegram.org/bot{db[\"token\"]}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/start'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+"
+Response: /start
+~/slh_clean $ cd ~/slh_clean
+echo "=== תהליכים ==="
+pgrep -af "bot.py" || echo "לא רץ"
+echo ""
+echo "=== הרצה ישירה (5 שניות) ==="
+timeout 5 python3 bot.py 2>&1 | tail -40
+echo ""
+echo "=== config.json (טוקן) ==="
+python3 -c "import json; cfg=json.load(open('config.json')); print('token' in cfg, 'BOT_TOKEN' in cfg)"
+echo ""
+echo "=== קריאות init / register ==="
+grep -n "register\|\.init\|TeleBot\|bot\s*=" bot.py | head -20
+echo ""
+echo "=== 50 שורות ראשונות ==="
+head -50 bot.py
+=== תהליכים ===
+לא רץ
+
+=== הרצה ישירה (5 שניות) ===
+Terminated                 timeout 5 python3 bot.py 2>&1 | tail -40
+2026-06-29T14:39:18.291622 | 8789977826 | === config.json (טוקן) ===
+True True
+
+=== קריאות init / register ===
+35:bot = telebot.TeleBot(TOKEN)
+36:learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.register_course_handlers(bot); logger_handler.init(bot)
+661:    # Check if the command exists (search in the registered handlers)
+
+=== 50 שורות ראשונות ===
+import os, sys, json, time, subprocess
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+import telebot
+from marketplace import load_store, save_store
+from datetime import datetime
+from audit_logger import audit, get_audit
+from core.event_bus import EventBus
+from plugins.task import TaskPlugin
+# ---------------- LOAD TOKEN ----------------
+def load_token():
+    env_token = os.getenv("BOT_TOKEN")
+    if env_token and ":" in env_token:
+        return env_token
+    try:
+        with open("config.json") as f:
+            cfg = json.load(f)
+            token = cfg.get("BOT_TOKEN", "")
+            if token and ":" in token and "WILL_BE_SET" not in token:
+                return token
+    except:
+        pass
+    return None
+TOKEN = load_token()
+if not TOKEN:
+    print("No valid token found. Exiting.")
+    sys.exit(1)
+# ---------------- CONFIG ----------------
+try:
+    with open("config.json") as f:
+        cfg = json.load(f)
+except:
+    cfg = {}
+SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
+DB_FILE = cfg.get("DB_FILE", "db.json")
+bot = telebot.TeleBot(TOKEN)
+learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.register_course_handlers(bot); logger_handler.init(bot)
+agents_dict = {}
+# ---- Load agents from persistent storage ----
+try:
+    import json, os
+    if os.path.exists("/app/agents.json"):
+        with open("/app/agents.json") as f:
+            agents_dict.update(json.load(f))
+        print(f"Loaded {len(agents_dict)} agents from disk")
+except Exception as e:
+    print("Could not load agents.json:", e)
+# ---------------- KERNEL INIT ----------------
+try:
+    bus = EventBus(workers=2)
+    kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
+~/slh_clean $
+2026-06-29T14:39:18.291916 | 8789977826 | ✅ הבוט כמעט עובד!  
+הבעיה הנוכחית: logger_handler לא קיים או אין לו init().
+
+### תיקון מהיר (העתק-הדבק):
+
+cd ~/slh_clean
+
+python3 << 'FINAL_BOT_FIX'
+import re
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# הסר קריאה ל-logger_handler אם הוא לא קיים
+code = re.sub(r'logger_handler\.init\(bot\)', '', code)
+
+# וידוא קריאה נכונה ל-course_handlers
+code = code.replace('course_handlers.init(bot)', 'course_handlers.register_course_handlers(bot)')
+
+# ניקוי שורת register ארוכה
+code = re.sub(r'learn_handlers\.register\(bot\);.*?logger_handler\.init\(bot\)', 
+              'learn_handlers.register(bot)', code, flags=re.DOTALL)
+
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("✅ Fixed registration line")
+FINAL_BOT_FIX
+
+# בדיקה + הפעלה
+python3 -m py_compile bot.py && echo "✅ Syntax OK" || echo "❌ Still error"
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### אחרי שהבוט עולה — בדוק את הקורס:
+
+# בדיקת DB
+python3 -c '
+import json
+db = json.load(open("db.json"))
+print("Courses:", list(db["courses"].keys()))
+print("Bitcoin tasks:", list(db["courses"].get("bitcoin_mastery", {}).get("tasks", {}).keys()))
+'
+
+בטלגרם נסה:
+- /start
+- /course
+- /pay
+- /course 1
+
+---
+
+שלח לי את הפלט של:
+1. ./slh_daemon.sh (או tail -30 bot.log)
+2. /course בטלגרם
+
+ואני אתן לך את השלב הבא (שיפור course_handlers.py + בדיקת משימות). 
+
+אנחנו קרובים! 🚀
+2026-06-29T14:39:18.971460 | 8789977826 | ✅ הבוט כמעט עובד!  
+הבעיה הנוכחית: logger_handler לא קיים או אין לו init().
+
+### תיקון מהיר (העתק-הדבק):
+
+cd ~/slh_clean
+
+python3 << 'FINAL_BOT_FIX'
+import re
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# הסר קריאה ל-logger_handler אם הוא לא קיים
+code = re.sub(r'logger_handler\.init\(bot\)', '', code)
+
+# וידוא קריאה נכונה ל-course_handlers
+code = code.replace('course_handlers.init(bot)', 'course_handlers.register_course_handlers(bot)')
+
+# ניקוי שורת register ארוכה
+code = re.sub(r'learn_handlers\.register\(bot\);.*?logger_handler\.init\(bot\)', 
+              'learn_handlers.register(bot)', code, flags=re.DOTALL)
+
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("✅ Fixed registration line")
+FINAL_BOT_FIX
+
+# בדיקה + הפעלה
+python3 -m py_compile bot.py && echo "✅ Syntax OK" || echo "❌ Still error"
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### אחרי שהבוט עולה — בדוק את הקורס:
+
+# בדיקת DB
+python3 -c '
+import json
+db = json.load(open("db.json"))
+print("Courses:", list(db["courses"].keys()))
+print("Bitcoin tasks:", list(db["courses"].get("bitcoin_mastery", {}).get("tasks", {}).keys()))
+'
+
+בטלגרם נסה:
+- /start
+- /course
+- /pay
+- /course 1
+
+---
+
+שלח לי את הפלט של:
+1. ./slh_daemon.sh (או tail -30 bot.log)
+2. /course בטלגרם
+
+ואני אתן לך את השלב הבא (שיפור course_handlers.py + בדיקת משימות). 
+
+אנחנו קרובים! 🚀
+2026-06-29T14:39:57.937396 | 8789977826 | /exec python3 SLH_KERNEL.py
+/exec curl localhost:8000/health
+/exec bash watchdog.sh
+2026-06-29T14:40:13.419405 | 8789977826 | הבוט לא רץ כרגע (האבחון מראה שאין תהליך פעיל).
+הסיבה: הפקודה pkill הרגה את התהליך, אבל slh_daemon.sh כנראה נכשל.
+נפעיל אותו מחדש, נוודא שהוא רץ, ונבדוק את כל הפקודות.
+
+---
+
+🔧 הפעלת הבוט מחדש (הדבק ב‑Termux)
+
+cd ~/slh_clean
+./slh_daemon.sh
+sleep 4
+echo "=== בדיקת תהליך ==="
+pgrep -af "bot.py" && echo "✅ רץ" || echo "❌ לא רץ"
+אם מופיע ✅ רץ, המשיכו לבדוק את הפקודות בטלגרם.
+אם עדיין ❌ לא רץ, שלחו לי את הפלט של הפקודה:
+
+timeout 5 python3 bot.py 2>&1
+---
+
+📱 בדיקת הפקודות (אחרי שהבוט רץ)
+
+1. /start – תופיע הודעת פתיחה (כולל הפניה לקורס).
+2. /admin – יופיע לוח בקרה מלא.
+3. /pay – יופיעו פרטי תשלום (ארנק TON, מחיר).
+4. /course – יופיעו שלבי הקורס Bitcoin Code Unveiled.
+5. /course 1 – יופיע תיאור המשימה הראשונה.
+6. /activate 8789977826 bitcoin_mastery – אמור להפעיל את הקורס עבורך (אדמין).
+
+---
+
+🛠️ אם הפקודות עדיין לא עובדות
+
+נבדוק את יומן השגיאות:
+
+tail -50 bot.log 2>/dev/null || echo "אין bot.log"
+או נריץ אבחון מהיר:
+
+python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+token = db['token']
+for cmd in ['/start', '/admin', '/pay', '/course']:
+    r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': 8789977826, 'text': cmd}, timeout=5)
+    resp = r.json().get('result',{}).get('text','NO TEXT')
+    print(f'{cmd}: {resp[:50]}...')
+"
+---
+
+💡 לגבי "מערכת ההפעלה" והרכיבים המתקדמים
+
+ברגע שהבוט רץ, כל הרכיבים (Kernel, Gateway, Plugins, Marketplace, Web Dashboard, Watchdog) זמינים להרצה דרך /exec (או ישירות בטרמינל).
+למשל:
+
+/exec python3 SLH_KERNEL.py
+/exec curl localhost:8000/health
+/exec bash watchdog.sh
+נוכל לעבור עליהם אחרי שהבוט יציב.
+
+---
+
+בבקשה הפעל את הבוט ושלח לי את התוצאה.
+אם הוא לא עולה, שלח את הפלט של timeout 5 python3 bot.py 2>&1.
+2026-06-29T14:40:49.280923 | 8789977826 | 🎉 מצוין! הקורס כבר עובד חלקית.
+
+/course מחזיר את רשימת השלבים של Bitcoin Code Unveiled — זה סימן טוב.
+
+### מה צריך לתקן עכשיו
+
+1. הבוט לא רץ יציב (slh_daemon.sh לא מחזיק אותו).
+2. /pay ו-/course 1 לא עובדים כמו שצריך.
+3. logger_handler וחלק מה-init עדיין גורמים בעיות.
+
+### תיקון מיידי + שיפור
+
+cd ~/slh_clean
+
+# תיקון סופי של bot.py
+python3 << 'STABLE_FIX'
+import re
+
+with open('bot.py', 'r', encoding='utf-8') as f:
+    code = f.read()
+
+# הסר logger_handler (אם לא קיים)
+code = re.sub(r',?\s*logger_handler\.init\(bot\)', '', code)
+
+# וידוא register_course_handlers
+if 'register_course_handlers' not in code:
+    code = code.replace('bot = telebot.TeleBot(TOKEN)', 
+                       'bot = telebot.TeleBot(TOKEN)\n    course_handlers.register_course_handlers(bot)')
+
+# ניקוי שורת init ארוכה
+code = re.sub(r'learn_handlers\.register\(bot\);.*?\n', 'learn_handlers.register(bot)\n', code)
+
+with open('bot.py', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("✅ bot.py stabilized")
+STABLE_FIX
+
+python3 -m py_compile bot.py && echo "✅ Syntax OK" || echo "❌ Error"
+
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### בדיקה אחרי הפעלה
+
+בטלגרם נסה שוב:
+
+- /course
+- /course 1
+- /pay
+- /activate 8789977826 bitcoin_mastery
+
+שלח לי:
+1. הפלט של ./slh_daemon.sh
+2. מה /course 1 מחזיר
+3. pgrep -af bot.py
+
+---
+
+ברגע שהפקודות האלה יעבדו, נעבור לשלב הבא:
+- שיפור course_handlers.py (הצגת קוד + בדיקת refs)
+- יצירת קבצי הדמו הנוספים
+- בדיקת זרימה מלאה (תשלום → unlock → שלבים)
+
+אנחנו ממש קרובים לזה שהקורס יעבוד כמו שצריך. תן לי עדכון!
+2026-06-29T15:02:43.515280 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'RESTOREALL'
+import os, subprocess, time
+
+# ====== 1. learn_handlers.py (גרסה תקינה) ======
+with open("learn_handlers.py", "w") as f:
+    f.write(r'''import json, datetime, os, uuid
+
+DB_PATH = os.path.expanduser("~/slh_clean/db.json")
+
+def load_db():
+    with open(DB_PATH) as f:
+        return json.load(f)
+
+def save_db(db):
+    with open(DB_PATH, "w") as f:                                        json.dump(db, f, indent=2, ensure_ascii=False)
+                                                                 def add_points(uid, points):
+    db = load_db()                                                   db.setdefault("users", {}).setdefault(uid, {"points": 0})
+    db["users"][uid]["points"] = db["users"][uid].get("points", 0) + points                                                           save_db(db)
+                                                                 def register(bot):
+    @bot.message_handler(commands=['join'])                          def start_join(m):
+        uid = str(m.chat.id)                                             db = load_db()
+        if uid in db.get("students", {}):                                    bot.reply_to(m, "⚠️ Already registered. Use /myprogress.")
+            return
+        sent = bot.reply_to(m, "👋 Welcome to SLH Learning!\nWhat is your full name?")
+        bot.register_next_step_handler(sent, process_name)
+
+    def process_name(m):
+        if m.text.startswith("/"):
+            bot.process_new_messages([m])
+            return
+        name = m.text.strip()
+        uid = str(m.chat.id)
+        if not hasattr(process_name, 'temp'):
+            process_name.temp = {}
+        process_name.temp[uid] = {"name": name}
+        sent = bot.reply_to(m, f"Nice to meet you, {name}!\nWhich group do you belong to? (e.g., 'Class A')")
+        bot.register_next_step_handler(sent, process_group)
+
+    def process_group(m):
+        if m.text.startswith("/"):
+            bot.process_new_messages([m])
+            return
+        group = m.text.strip()
+        uid = str(m.chat.id)
+        process_name.temp[uid]["group"] = group
+        sent = bot.reply_to(m, "What would you like to achieve? (type 'skip' to leave empty)")
+        bot.register_next_step_handler(sent, process_goal)
+
+    def process_goal(m):
+        if m.text.startswith("/"):
+            bot.process_new_messages([m])
+            return
+        goal = m.text.strip()
+        uid = str(m.chat.id)
+        data = process_name.temp.pop(uid)
+        if goal.lower() == 'skip':
+            goal = ""
+        db = load_db()
+        referred_by = db.get("referred_by", {}).get(uid)
+        db.setdefault("students", {})[uid] = {
+            "name": data["name"],
+            "group": data["group"],
+            "goal": goal,
+            "registered": datetime.datetime.now().isoformat(),
+            "premium": False,
+            "referral_code": None,
+            "referred_by": referred_by
+        }
+        add_points(uid, 10)
+        save_db(db)
+        msg = f"✅ Registered: {data['name']} ({data['group']})\n"
+        if not referred_by:
+            msg += "🔗 Do you have a referral code? Use /usereferral <code>"
+        bot.reply_to(m, msg)
+
+    @bot.message_handler(commands=['register'])
+    def register_student(m):
+        args = m.text.split(maxsplit=2)
+        if len(args) < 3:
+            bot.reply_to(m, "❌ Use: /register <name> <group>")
+            return
+        name, group = args[1], args[2]
+        uid = str(m.chat.id)
+        db = load_db()
+        if uid in db["students"]:
+            bot.reply_to(m, "⚠️ Already registered.")
+            return
+        db["students"][uid] = {"name": name, "group": group, "registered": datetime.datetime.now().isoformat()}
+        add_points(uid, 10)
+        save_db(db)
+        bot.reply_to(m, f"✅ Registered: {name} ({group}) +10 points")
+2026-06-29T15:02:43.519647 | 8789977826 | @bot.message_handler(commands=['courses'])
+    def list_courses(m):
+        db = load_db()
+        courses = db.get("courses", {})
+        if not courses:
+            bot.reply_to(m, "📭 No courses yet.")
+            return
+        msg = "📚 Courses:\n"
+        for cid, cdata in courses.items():
+            msg += f"• {cid} – {cdata['title']}\n"
+        bot.reply_to(m, msg, parse_mode="Markdown")
+
+    @bot.message_handler(commands=['myprogress'])
+    def my_progress(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first: /register <name> <group>")
+            return
+        progress = db.get("progress", {}).get(uid, {})
+        points = db.get("users", {}).get(uid, {}).get("points", 0)
+        msg = f"📊 Progress of {student['name']} (Points: {points}):\n"
+        for cid, pdata in progress.items():
+            course = db.get("courses", {}).get(cid, {})
+            title = course.get("title", cid)
+            completed = len(pdata.get("completed", []))
+            total = len(course.get("tasks", {}))
+            submitted = len(pdata.get("submissions", {}))
+            msg += f"• {title}: {submitted}/{total} submitted, {completed} approved\n"
+        bot.reply_to(m, msg)
+
+    @bot.message_handler(commands=['referral'])
+    def my_referral(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first.")
+            return
+        if not student.get("referral_code"):
+            code = uid[:4] + str(uuid.uuid4())[:6]
+            student["referral_code"] = code
+            db["referral_codes"][uid] = code
+            save_db(db)
+        bot.reply_to(m, f"🔗 Your referral link:\nhttps://t.me/SLH_OS_Bot?start={student['referral_code']}\n\nShare this link with friends. When they register and pay, you earn 85% commission!")
+
+    @bot.message_handler(commands=['usereferral'])
+    def use_referral(m):
+        args = m.text.split(maxsplit=1)
+        if len(args) < 2:
+            bot.reply_to(m, "❌ Usage: /usereferral <code>")
+            return
+        code = args[1]
+        uid = str(m.chat.id)
+        db = load_db()
+        owner = None
+        for id_, ref_code in db.get("referral_codes", {}).items():
+            if ref_code == code:
+                owner = id_
+                break
+        if not owner:
+            bot.reply_to(m, "❌ Invalid referral code.")
+            return
+        if uid == owner:
+            bot.reply_to(m, "❌ You cannot refer yourself.")
+            return
+        db.setdefault("referred_by", {})[uid] = owner
+        save_db(db)
+        bot.reply_to(m, "✅ Referral code applied! You will be linked to your referrer when you pay.")
+''')
+print("✅ learn_handlers.py restored")
+
+# ====== 2. project_commands.py (גרסה תקינה) ======
+with open("project_commands.py", "w") as f:
+    f.write(r'''import os, shutil, json, datetime
+
+PROJECTS_ROOT = os.path.expanduser("~/slh_clean/projects")
+
+def init(bot):
+    @bot.message_handler(commands=['project'])
+    def handle_project(m):
+        args = m.text.split()
+        if len(args) < 2:
+            bot.reply_to(m, "Usage: /project create/list/open/status/roadmap/task/agent/backup")
+            return
+        cmd = args[1].lower()
+        uid = str(m.chat.id)
+
+        if cmd == 'create':
+            if len(args) < 3:
+                bot.reply_to(m, "Usage: /project create <name>")
+                return
+            name = args[2]
+            project_path = os.path.join(PROJECTS_ROOT, name)
+            if os.path.exists(project_path):
+                bot.reply_to(m, f"❌ Project {name} already exists.")
+                return
+            try:
+2026-06-29T15:02:43.521542 | 8789977826 | os.makedirs(project_path, exist_ok=True)
+                for folder in ['vision','roadmap','tasks','agents','memory','knowledge','decisions','status','deploy','logs']:
+                    os.makedirs(os.path.join(project_path, folder), exist_ok=True)
+                with open(os.path.join(project_path, 'owner.txt'), 'w') as f:
+                    f.write(uid)
+                bot.reply_to(m, f"✅ Project {name} created successfully!")
+            except Exception as e:
+                bot.reply_to(m, f"❌ Error: {e}")
+
+        elif cmd == 'list':
+            if not os.path.exists(PROJECTS_ROOT):
+                bot.reply_to(m, "📭 No projects yet.")
+                return
+            projects = [d for d in os.listdir(PROJECTS_ROOT) if os.path.isdir(os.path.join(PROJECTS_ROOT, d))]
+            if not projects:
+                bot.reply_to(m, "📭 No projects found.")
+            else:
+                msg = "📁 Projects:\n" + "\n".join(f"• {p}" for p in projects)
+                bot.reply_to(m, msg, parse_mode="Markdown")
+
+        elif cmd == 'open':
+            if len(args) < 3:
+                bot.reply_to(m, "Usage: /project open <name>")
+                return
+            name = args[2]
+            project_path = os.path.join(PROJECTS_ROOT, name)
+            if not os.path.exists(project_path):
+                bot.reply_to(m, f"❌ Project {name} not found.")
+                return
+            owner_file = os.path.join(project_path, 'owner.txt')
+            if os.path.exists(owner_file):
+                with open(owner_file) as f:
+                    owner = f.read().strip()
+                if owner != uid:
+                    bot.reply_to(m, "❌ You are not the owner of this project.")
+                    return
+            db = json.load(open("db.json"))
+            db.setdefault("active_projects", {})[uid] = name
+            json.dump(db, open("db.json", "w"), indent=2)
+            bot.reply_to(m, f"✅ Active project set to {name}")
+
+        elif cmd == 'status':
+            db = json.load(open("db.json"))
+            active = db.get("active_projects", {}).get(uid)
+            if not active:
+                bot.reply_to(m, "❌ No active project. Use /project open <name>")
+                return
+            tasks_file = os.path.join(PROJECTS_ROOT, active, 'tasks', 'TASKS.md')
+            if os.path.exists(tasks_file):
+                with open(tasks_file) as f:
+                    lines = f.readlines()
+                total = len([l for l in lines if l.strip().startswith('- [ ]') or l.strip().startswith('- [x]')])
+                done = len([l for l in lines if l.strip().startswith('- [x]')])
+                msg = f"📊 {active}: {done}/{total} tasks completed"
+            else:
+                msg = f"📊 {active}: No tasks defined yet."
+            bot.reply_to(m, msg)
+
+        elif cmd == 'task':
+            if len(args) < 4 or args[2] != 'add':
+                bot.reply_to(m, "Usage: /project task add <description>")
+                return
+            db = json.load(open("db.json"))
+            active = db.get("active_projects", {}).get(uid)
+            if not active:
+                bot.reply_to(m, "❌ No active project.")
+                return
+            desc = ' '.join(args[3:])
+            tasks_file = os.path.join(PROJECTS_ROOT, active, 'tasks', 'TASKS.md')
+            with open(tasks_file, 'a') as f:
+                f.write(f"- [ ] {desc}\n")
+            bot.reply_to(m, f"✅ Task added to {active}")
+
+        elif cmd == 'agent':
+            if len(args) < 4 or args[2] != 'add':
+                bot.reply_to(m, "Usage: /project agent add <agent_name>")
+                return
+            db = json.load(open("db.json"))
+            active = db.get("active_projects", {}).get(uid)
+            if not active:
+                bot.reply_to(m, "❌ No active project.")
+2026-06-29T15:02:43.523462 | 8789977826 | return
+            agent_name = args[3]
+            agents_file = os.path.join(PROJECTS_ROOT, active, 'agents', 'AGENTS.md')
+            with open(agents_file, 'a') as f:
+                f.write(f"- {agent_name}\n")
+            bot.reply_to(m, f"✅ Agent {agent_name} linked to {active}")
+
+        elif cmd == 'roadmap':
+            db = json.load(open("db.json"))
+            active = db.get("active_projects", {}).get(uid)
+            if not active:
+                bot.reply_to(m, "❌ No active project.")
+                return
+            roadmap_file = os.path.join(PROJECTS_ROOT, active, 'roadmap', 'ROADMAP.md')
+            if os.path.exists(roadmap_file):
+                with open(roadmap_file) as f:
+                    content = f.read()
+                bot.reply_to(m, f"🗺 Roadmap for {active}:\n{content}")
+            else:
+                bot.reply_to(m, "📭 Roadmap is empty.")
+
+        elif cmd == 'backup':
+            db = json.load(open("db.json"))
+            active = db.get("active_projects", {}).get(uid)
+            if not active:
+                bot.reply_to(m, "❌ No active project.")
+                return
+            backup_root = os.path.expanduser("~/slh_clean/backups")
+            os.makedirs(backup_root, exist_ok=True)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_root, f"{active}_{timestamp}")
+            shutil.copytree(os.path.join(PROJECTS_ROOT, active), backup_path)
+            bot.reply_to(m, f"✅ Project backed up to backups/{active}_{timestamp}")
+
+        else:
+            bot.reply_to(m, "❌ Unknown subcommand. Use create/list/open/status/roadmap/task/agent/backup")
+''')
+print("✅ project_commands.py restored")
+
+# ====== 3. smart_leaderboard.py (גרסה תקינה) ======
+with open("smart_leaderboard.py", "w") as f:
+    f.write(r'''import json, datetime, os, uuid
+
+DB_PATH = os.path.expanduser("~/slh_clean/db.json")
+
+def load_db():
+    with open(DB_PATH) as f:
+        return json.load(f)
+
+def save_db(db):
+    with open(DB_PATH, "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+
+def init(bot):
+    @bot.message_handler(commands=['leaderboard'])
+    def smart_leaderboard(m):
+        db = load_db()
+        users = db.get("users", {})
+        if not users:
+            bot.reply_to(m, "📭 No users yet.")
+            return
+        sorted_users = sorted(users.items(), key=lambda x: x[1].get("points", 0), reverse=True)
+        msg = "🏆 Leaderboard:\n"
+        for i, (uid, data) in enumerate(sorted_users[:10], 1):
+            name = db.get("students", {}).get(uid, {}).get("name", uid)
+            points = data.get("points", 0)
+            active_proj = db.get("active_projects", {}).get(uid)
+            proj_info = ""
+            agent_str = ""
+            if active_proj:
+                proj_path = os.path.expanduser(f"~/slh_clean/projects/{active_proj}")
+                tasks_file = os.path.join(proj_path, "tasks", "TASKS.md")
+                agents_file = os.path.join(proj_path, "agents", "AGENTS.md")
+                if os.path.exists(tasks_file):
+                    with open(tasks_file) as f:
+                        lines = f.readlines()
+                    total = len([l for l in lines if l.strip().startswith("- [ ]") or l.strip().startswith("- [x]")])
+                    done = len([l for l in lines if l.strip().startswith("- [x]")])
+                    proj_info = f" | Project: {done}/{total}"
+                if os.path.exists(agents_file):
+                    with open(agents_file) as f:
+                        agent_count = f.read().count("Agent:")
+                    agent_str = f" | Agents: {agent_count}" if agent_count else ""
+            msg += f"{i}. {name} – {points} pts{proj_info}{agent_str}\n"
+        bot.reply_to(m, msg, parse_mode="Markdown")
+2026-06-29T15:02:43.525870 | 8789977826 | @bot.message_handler(commands=['vote'])
+    def vote_handler(m):
+        args = m.text.split(maxsplit=2)
+        if len(args) == 1:
+            bot.reply_to(m, "Usage: /vote <question> | <opt1> | <opt2> ...\nOr: /vote <id> <option#>")
+        elif len(args) == 2:
+            vote_id = args[1]
+            db = load_db()
+            vote = db.get("votes", {}).get(vote_id)
+            if not vote:
+                bot.reply_to(m, "❌ Vote not found.")
+                return
+            msg = f"📊 {vote['question']}\n"
+            total = sum(vote["options"].values()) or 1
+            for opt, count in vote["options"].items():
+                bar = "█" * int(count / total * 10)
+                msg += f"{opt}: {count} {bar}\n"
+            bot.reply_to(m, msg)
+        else:
+            full_text = args[2] if len(args) > 2 else ""
+            parts = full_text.split("|")
+            if len(parts) >= 2:
+                question = parts[0].strip()
+                options = [opt.strip() for opt in parts[1:]]
+                db = load_db()
+                vote_id = str(uuid.uuid4())[:8]
+                db.setdefault("votes", {})[vote_id] = {
+                    "question": question,
+                    "options": {opt: 0 for opt in options},
+                    "voters": {},
+                    "created": datetime.datetime.now().isoformat()
+                }
+                save_db(db)
+                msg = f"📊 Vote started: {question}\n"
+                for i, opt in enumerate(options, 1):
+                    msg += f"{i}. {opt}\n"
+                msg += f"\nVote with: /vote {vote_id} <option_number>"
+                bot.reply_to(m, msg, parse_mode="Markdown")
+            else:
+                try:
+                    vote_id, choice = args[1], args[2]
+                    uid = str(m.chat.id)
+                    db = load_db()
+                    vote = db.get("votes", {}).get(vote_id)
+                    if not vote:
+                        bot.reply_to(m, "❌ Vote not found.")
+                        return
+                    if uid in vote.get("voters", {}):
+                        bot.reply_to(m, "⚠️ You already voted.")
+                        return
+                    choice_idx = int(choice) - 1
+                    option = list(vote["options"].keys())[choice_idx]
+                    vote["options"][option] += 1
+                    vote["voters"][uid] = option
+                    save_db(db)
+                    bot.reply_to(m, f"✅ Voted: {option}")
+                except:
+                    bot.reply_to(m, "❌ Invalid input. Usage: /vote <id> <option#>")
+
+    @bot.message_handler(commands=['lost'])
+    def report_lost(m):
+        args = m.text.split(maxsplit=1)
+        if len(args) < 2:
+            bot.reply_to(m, "❌ Usage: /lost <what are you stuck on?>")
+            return
+        uid = str(m.chat.id)
+        db = load_db()
+        report = {
+            "user": uid,
+            "text": args[1],
+            "time": datetime.datetime.now().isoformat()
+        }
+        db.setdefault("lost_reports", []).append(report)
+        save_db(db)
+        bot.reply_to(m, "📝 Your struggle has been recorded. We'll help soon!")
+''')
+print("✅ smart_leaderboard.py restored")
+
+# ====== 4. welcome_handler.py (גרסה תקינה) ======
+with open("welcome_handler.py", "w") as f:
+    f.write(r'''import json
+
+def init(bot):
+    @bot.message_handler(commands=['start'])
+    def send_welcome(message):
+        uid = str(message.chat.id)
+        name = ""
+        try:
+            with open("db.json") as f:
+                db = json.load(f)
+            if uid in db.get("students", {}):
+                name = db["students"][uid].get("name", "")
+        except:
+            pass
+        msg = "🌟 ברוכים הבאים ל-SLH Learning! 🌟\n\n"
+        if name:
+            msg = f"נעים לראותך שוב, {name}!\n\n" + msg
+2026-06-29T15:02:43.528069 | 8789977826 | msg += "🎯 הצעדים הראשונים:\n"
+        msg += "1️⃣ /join – הרשמה\n"
+        msg += "2️⃣ /courses – צפייה בקורס\n"
+        msg += "3️⃣ /project create – פרויקט אישי\n"
+        msg += "4️⃣ /project task add – הוספת משימות\n"
+        msg += "5️⃣ /myprogress – מעקב התקדמות\n"
+        msg += "6️⃣ /referral – הזמנת חברים\n\n"
+        msg += "👥 בואו נבנה יחד!"
+        bot.reply_to(message, msg, parse_mode="Markdown")
+''')
+print("✅ welcome_handler.py restored")
+
+# ====== 5. course_handlers.py (גרסה תקינה) ======
+with open("course_handlers.py", "w") as f:
+    f.write(r'''import json, os
+
+DB_PATH = os.path.expanduser("~/slh_clean/db.json")
+
+def load_db():
+    with open(DB_PATH) as f:
+        return json.load(f)
+
+def save_db(db):
+    with open(DB_PATH, "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+
+def register_course_handlers(bot):
+    @bot.message_handler(commands=['pay'])
+    def pay_info(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first.")
+            return
+        if student.get("premium"):
+            bot.reply_to(m, "✅ You are already a premium member.")
+            return
+        with open("config.json") as f:
+            cfg = json.load(f)
+        wallet = cfg.get('TON_WALLET', 'UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj')
+        msg = f"💳 Premium Access – {cfg.get('COURSE_PRICE_USDT', 60)} USDT\n"
+        msg += f"Send exactly {cfg.get('COURSE_PRICE_USDT', 60)} USDT (TON network) to:\n{wallet}\n"
+        msg += "After payment, send the transaction hash here or contact the admin.\n"
+        msg += "Once verified, you'll get full course access and your referral link."
+        bot.reply_to(m, msg, parse_mode="Markdown")
+
+    @bot.message_handler(commands=['activate'])
+    def activate_user(m):
+        if str(m.chat.id) != "8789977826":
+            bot.reply_to(m, "❌ Admin only.")
+            return
+        args = m.text.split()
+        if len(args) < 3:
+            bot.reply_to(m, "❌ Usage: /activate <user_id> <course_id>")
+            return
+        target_uid = args[1]
+        course_id = args[2]
+        db = load_db()
+        student = db.get("students", {}).get(target_uid)
+        if not student:
+            bot.reply_to(m, "❌ User not registered.")
+            return
+        if "courses" not in student:
+            student["courses"] = {}
+        student["courses"][course_id] = {"paid": True, "progress": 0}
+        save_db(db)
+        bot.reply_to(m, f"✅ User {target_uid} activated for {course_id}")
+
+    @bot.message_handler(commands=['course'])
+    def course_command(m):
+        db = load_db()
+        uid = str(m.chat.id)
+        parts = m.text.split()
+        if len(parts) < 2:
+            course_id = "bitcoin_mastery"
+            course = db.get("courses", {}).get(course_id)
+            if not course:
+                bot.reply_to(m, "📭 No course found.")
+                return
+            msg = f"📚 {course['title']}\n\n"
+            for tid, tdata in course["tasks"].items():
+                enrolled = db.get("students", {}).get(uid, {}).get("courses", {}).get(course_id, {})
+                if enrolled.get("paid"):
+                    status = "🔓"
+                else:
+                    status = "🔒" if tdata.get("required_refs", 0) > 0 else "🔓"
+                msg += f"{status} שלב {tid}: {tdata['desc']}\n"
+            bot.reply_to(m, msg, parse_mode="Markdown")
+            return
+        # /course <task_id> – requires payment and referrals
+        task_id = parts[1]
+        course_id = "bitcoin_mastery"
+        student = db.get("students", {}).get(uid, {})
+        enrolled = student.get("courses", {}).get(course_id, {})
+        if not enrolled.get("paid"):
+2026-06-29T15:02:43.530289 | 8789977826 | bot.reply_to(m, "❌ יש לשלם קודם. שלח /pay")
+            return
+        task = db["courses"][course_id]["tasks"][task_id]
+        required = task.get("required_refs", 0)
+        refs = student.get("referral_count", 0)
+        if refs < required:
+            bot.reply_to(m, f"🔒 דרושות {required} הפניות. יש לך {refs}.")
+            return
+        code_file = task.get("code", "")
+        if code_file:
+            try:
+                with open(os.path.expanduser(f"~/slh_clean/course_code/{code_file}")) as f:
+                    code = f.read()
+                bot.reply_to(m, f"`python\n{code[:3000]}\n```", parse_mode="Markdown")
+            except:
+                bot.reply_to(m, "⚠️ קוד לא זמין עדיין")
+        else:
+            bot.reply_to(m, f"📖 משימה: {task['desc']}")
+''')
+print("✅ course_handlers.py restored")
+
+# ====== 6. logger_handler.py (תקין, בלי echo) ======
+with open("logger_handler.py", "w") as f:
+    f.write(r'''import datetime
+
+def init(bot):
+    @bot.message_handler(func=lambda m: True)
+    def log_everything(message):
+        uid = str(message.chat.id)
+        text = message.text or "[no text]"
+        timestamp = datetime.datetime.now().isoformat()
+        entry = f"{timestamp} | {uid} | {text}\n"
+        with open("message_log.txt", "a", encoding="utf-8") as logfile:
+            logfile.write(entry)
+        # No reply - just log
+''')
+print("✅ logger_handler.py restored")
+
+# ====== 7. תיקון bot.py ======
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# וודא ייבואים
+modules = ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler", "course_handlers", "logger_handler"]
+imports_line = "import " + ", ".join(modules)
+if "import learn_handlers" not in code:
+    code = code.replace("import telebot", f"{imports_line}\nimport telebot", 1)
+# וודא קריאות init (כולל course_handlers register)
+init_calls = "learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.register_course_handlers(bot); logger_handler.init(bot)"
+# הסר קריאות ישנות
+for old in ["learn_handlers.register(bot);", "project_commands.init(bot);", "smart_leaderboard.init(bot);", "welcome_handler.init(bot);", "course_handlers.register_course_handlers(bot);", "logger_handler.init(bot);"]:
+    code = code.replace(old, "")
+# הוסף ממש אחרי bot = TeleBot(...)
+code = code.replace("bot = telebot.TeleBot(TOKEN)", f"bot = telebot.TeleBot(TOKEN)\n{init_calls}")
+# נוודא ש-welcome_handler.init(bot) נקרא אחרון (אם יש כפילות, אבל כבר הוחלף)
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ bot.py updated with correct calls")
+
+# 8. הפעלה מחדש
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+
+# 9. בדיקת API
+time.sleep(2)
+import requests, json
+db = json.load(open("db.json"))
+r = requests.post(f'https://api.telegram.org/bot{db["token"]}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/start'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT'))
+RESTOREALL
+✅ learn_handlers.py restored
+✅ project_commands.py restored
+✅ smart_leaderboard.py restored
+✅ welcome_handler.py restored
+✅ course_handlers.py restored
+✅ logger_handler.py restored
+✅ bot.py updated with correct calls
+🚀 SLH OS Daemon started – Mon Jun 29 15:00:14 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+✅ Bot restarted
+Response: /start
+~/slh_clean $ grep -n "init_calls\|welcome_handler.init\|TeleBot" bot.py
+39:bot = telebot.TeleBot(TOKEN)
+40:learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.register_course_handlers(bot); logger_handler.init(bot)
+41:   welcome_handler.init(bot)
+~/slh_clean $
+2026-06-29T15:05:20.641798 | 8789977826 | /admin
+2026-06-29T15:05:21.935310 | 8789977826 | /admin
+2026-06-29T15:05:22.584000 | 8789977826 | /admin
+2026-06-29T15:06:24.045881 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+grep -rn "commands=\['admin'\]" learn_handlers.py smart_leaderboard.py welcome_handler.py bot.py 2>/dev/null
+bot.py:93:@bot.message_handler(commands=['admin'])
+~/slh_clean $
+2026-06-29T15:07:06.764346 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && sed -n '90,150p' bot.py
+        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
+@bot.message_handler(commands=['admin'])
+def admin(m):
+    bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
+📊 DIAGNOSTICS:                                                  /test — Run full system diagnostic\n/test_agents — Quick agent self-test                                                          /status — System status
+/health — Health check                                           🤖 AGENTS:
+/agents — List all agents
+/agent_create [name] — Create new agent\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox
+🗳️ VOTING:
+/vote — Create vote
+/results — See results
+💰 REVENUE:
+/revenue — Revenue status
+🔄 SYSTEM:
+/backup — Git backup now
+/restart — Restart bot
+/logs <n> — Last N log lines
+/clean — Clean temp files
+📈 ANALYTICS:
+/audit — Audit log
+/memory — Memory status
+/debug — Container debug info
+/termux — Show Termux status
+/deploy — Trigger Railway deploy
+/errors — Show recent errors
+/plugin list — List plugins
+/goal add/list — Manage goals
+/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
+/disk — Disk usage
+/sysinfo — System resources""")
+@bot.message_handler(commands=['status'])
+def status(m):
+    db = load_db()
+    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
+@bot.message_handler(commands=['health'])
+def health(m):
+    try:
+        import psutil
+        mem = psutil.virtual_memory()
+        disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
+        uptime = time.time() - psutil.boot_time()
+        msg = f"Uptime: {uptime/3600:.1f}h\nRAM: {mem.percent}% used\nDisk: {disk.percent}% used"
+    except:
+        msg = "Health: limited info (psutil not available)"
+    bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
+@bot.message_handler(commands=['task'])
+def task(m):
+    if not _KERNEL_READY:
+        bot.reply_to(m, "Kernel not loaded")
+        return
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+~/slh_clean $
+2026-06-29T15:12:02.181690 | 8789977826 | /admin
+2026-06-29T15:12:03.466944 | 8789977826 | /admin
+2026-06-29T15:12:04.280214 | 8789977826 | /admin
+2026-06-29T15:12:11.149594 | 8789977826 | /admin
+2026-06-29T15:12:12.114331 | 8789977826 | /admin
+2026-06-29T15:12:55.254840 | 8789977826 | /start
+2026-06-29T15:13:50.272846 | 8789977826 | /start
+2026-06-29T15:13:51.213122 | 8789977826 | /start
+2026-06-29T15:26:34.600901 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && ./slh_daemon.sh
+sleep 3
+python3 -c "
+import json, requests
+db = json.load(open('db.json'))
+r = requests.post(f'https://api.telegram.org/bot{db[\"token\"]}/sendMessage',
+                  json={'chat_id': 8789977826, 'text': '/admin'})
+print('Response:', r.json().get('result',{}).get('text','NO TEXT')[:80])
+"
+🚀 SLH OS Daemon started – Mon Jun 29 15:21:06 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+Response: /admin
+~/slh_clean $
+2026-06-29T15:28:09.360252 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && git checkout 1254a5e -- bot.py && python3 << 'FINALFIX'
+import re, subprocess, time, os
+                                                                 with open("bot.py", "r") as f:
+    code = f.read()                                              
+# 1. תיקון ייבואים                                               modules = ["learn_handlers", "project_commands", "smart_leaderboard", "welcome_handler"]
+if os.path.exists("course_handlers.py"):
+    modules.append("course_handlers")
+if os.path.exists("logger_handler.py"):
+    modules.append("logger_handler")
+
+imports_line = "import " + ", ".join(modules)
+if "import learn_handlers" not in code:
+    code = code.replace("import telebot", f"{imports_line}\nimport telebot", 1)
+
+# 2. תיקון קריאות init                                           init_calls = "learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot)"
+if "course_handlers" in modules:
+    init_calls += "; course_handlers.register_course_handlers(bot)"
+if "logger_handler" in modules:                                      init_calls += "; logger_handler.init(bot)"
+                                                                 for old in ["learn_handlers.register(bot);", "project_commands.init(bot);", "smart_leaderboard.init(bot);", "welcome_handler.init(bot);", "course_handlers.register_course_handlers(bot);", "logger_handler.init(bot);"]:
+    code = code.replace(old, "")
+
+code = code.replace("bot = telebot.TeleBot(TOKEN)", f"bot = telebot.TeleBot(TOKEN)\n{init_calls}")
+
+# 3. הוסף /admin לפני while True:
+admin_handler = '''
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    msg = "\\uD83D\\uDD27 ADMIN CONTROL PANEL\\n\\n"
+    msg += "\\uD83D\\uDCCA DIAGNOSTICS:\\n"
+    msg += "/test — Run full system diagnostic\\n"
+    msg += "/status — System status\\n"
+    msg += "/health — Health check\\n\\n"
+    msg += "\\uD83E\\uDD16 AGENTS:\\n"
+    msg += "/agents — List all agents\\n"
+    msg += "/agent_create [name] — Create new agent\\n\\n"
+    msg += "\\uD83D\\uDDF3 VOTING:\\n"
+    msg += "/vote — Create vote\\n"
+    msg += "/results — See results\\n\\n"
+    msg += "\\uD83D\\uDCB0 REVENUE:\\n"
+    msg += "/revenue — Revenue status\\n\\n"
+    msg += "\\uD83D\\uDD04 SYSTEM:\\n"
+    msg += "/backup — Git backup now\\n"
+    msg += "/restart — Restart bot\\n"
+    msg += "/logs <n> — Last N log lines\\n"
+    msg += "/clean — Clean temp files\\n\\n"
+    msg += "\\uD83D\\uDCCA ANALYTICS:\\n"
+    msg += "/audit — Audit log\\n"
+    msg += "/memory — Memory status\\n"
+~/slh_clean $ cd ~/slh_clean && python3 << 'NEWBOT'
+import json, os, shutil
+
+# 1. גיבוי
+shutil.copy("bot.py", "bot.py.old_backup")
+
+# 2. קרא טוקן (מעדיף config.json, אחרת db.json)
+with open("config.json") as f:
+    cfg = json.load(f)
+token = cfg.get("token") or cfg.get("BOT_TOKEN")
+if not token:
+    with open("db.json") as f:
+        db = json.load(f)
+    token = db["token"]
+                                                                 # 3. כתוב bot.py חדש
+bot_code = f'''import telebot, json, os, time, datetime
+
+TOKEN = "{token}"
+bot = telebot.TeleBot(TOKEN)
+
+# ========== /start ==========
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    uid = str(message.chat.id)
+    name = ""
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {{}}):
+            name = db["students"][uid].get("name", "")
+    except:
+        pass
+    msg = "🌟 ברוכים הבאים ל-SLH Learning! 🌟\\n\\n"
+    if name:
+        msg = f"נעים לראותך שוב, {{name}}!\\n\\n" + msg
+    msg += "🎯 הצעדים הראשונים:\\n"
+    msg += "1️⃣ /join – הרשמה\\n"
+    msg += "2️⃣ /courses – צפייה בקורס\\n"
+    msg += "3️⃣ /project create – פרויקט אישי\\n"
+    msg += "4️⃣ /project task add – הוספת משימות\\n"
+    msg += "5️⃣ /myprogress – מעקב התקדמות\\n"
+    msg += "6️⃣ /referral – הזמנת חברים\\n\\n"
+    msg += "👥 בואו נבנה יחד!"
+    bot.reply_to(message, msg, parse_mode="Markdown")
+2026-06-29T15:28:09.597316 | 8789977826 | # ========== /admin ==========
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    msg = "🔧 ADMIN CONTROL PANEL\\n\\n"
+    msg += "📊 DIAGNOSTICS:\\n"
+    msg += "/test — Run full system diagnostic\\n"
+    msg += "/test_agents — Quick agent self-test\\n"
+    msg += "/status — System status\\n"
+    msg += "/health — Health check\\n\\n"
+    msg += "🤖 AGENTS:\\n"
+    msg += "/agents — List all agents\\n"
+    msg += "/agent_create [name] — Create new agent\\n"
+    msg += "/agentstate <prefix> <state> — Change agent state\\n"
+    msg += "/sendagent <prefix> <msg> — Send message to agent\\n"
+    msg += "/inbox <prefix> — Check agent inbox\\n\\n"
+    msg += "🗳️ VOTING:\\n"
+    msg += "/vote — Create vote\\n"
+    msg += "/results — See results\\n\\n"
+    msg += "💰 REVENUE:\\n"
+    msg += "/revenue — Revenue status\\n\\n"
+    msg += "🔄 SYSTEM:\\n"
+    msg += "/backup — Git backup now\\n"
+    msg += "/restart — Restart bot\\n"
+    msg += "/logs <n> — Last N log lines\\n"
+    msg += "/clean — Clean temp files\\n\\n"
+    msg += "📈 ANALYTICS:\\n"
+    msg += "/audit — Audit log\\n"
+    msg += "/memory — Memory status\\n"
+    msg += "/debug — Container debug info\\n"
+    msg += "/termux — Show Termux status\\n"
+    msg += "/deploy — Trigger Railway deploy\\n"
+    msg += "/errors — Show recent errors\\n"
+    msg += "/plugin list — List plugins\\n"
+    msg += "/goal add/list — Manage goals\\n"
+    msg += "/exec <cmd> — Run shell command (admin)\\n"
+    msg += "/termlog — Show Termux logs (admin)\\n"
+    msg += "/rlogs — Railway logs (admin)\\n"
+    msg += "/disk — Disk usage\\n"
+    msg += "/sysinfo — System resources"
+    bot.reply_to(message, msg, parse_mode="Markdown")
+
+# ========== טען מודולים חיצוניים (אם קיימים) ==========
+try:
+    import learn_handlers
+    learn_handlers.register(bot)
+    print("✅ learn_handlers loaded")
+except Exception as e:
+    print("⚠️ learn_handlers skipped:", e)
+
+try:
+    import project_commands
+    project_commands.init(bot)
+    print("✅ project_commands loaded")
+except Exception as e:
+    print("⚠️ project_commands skipped:", e)
+
+try:
+    import smart_leaderboard
+    smart_leaderboard.init(bot)
+    print("✅ smart_leaderboard loaded")
+except Exception as e:
+    print("⚠️ smart_leaderboard skipped:", e)
+
+try:
+    import welcome_handler
+    welcome_handler.init(bot)
+    print("✅ welcome_handler loaded")
+except Exception as e:
+    print("⚠️ welcome_handler skipped:", e)
+
+try:
+    import course_handlers
+    course_handlers.register_course_handlers(bot)
+    print("✅ course_handlers loaded")
+except Exception as e:
+    print("⚠️ course_handlers skipped:", e)
+
+try:
+    import logger_handler
+    logger_handler.init(bot)
+    print("✅ logger_handler loaded")
+except Exception as e:
+    print("⚠️ logger_handler skipped:", e)
+
+print("🚀 Bot is ready. Starting polling...")
+bot.infinity_polling()
+'''
+
+with open("bot.py", "w") as f:
+    f.write(bot_code)
+print("✅ New bot.py written")
+NEWBOT
+
+# 4. הפעלה מחדש
+pkill -9 -f "python.*bot.py"
+sleep 2
+./slh_daemon.sh
+✅ New bot.py written
+🚀 SLH OS Daemon started – Mon Jun 29 15:26:31 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $ cd ~/slh_clean && grep -E "loaded|skipped" bot.log 2>/dev/null || grep -E "⚠️|✅" bot.log
+~/slh_clean $
+2026-06-29T15:28:17.080933 | 8789977826 | /test
+2026-06-29T15:28:18.763803 | 8789977826 | /test
+2026-06-29T15:28:19.594511 | 8789977826 | /test
+2026-06-29T15:30:11.423498 | 8789977826 | ה‑/test נוסף בהצלחה, הבוט רץ, אבל המודולים החיצוניים (כמו learn_handlers) כנראה לא מדפיסים כלום – לכן No load info captured.
+עכשיו נברר מה עובד ומה חסר.
+
+---
+
+📱 בצע בטלגרם
+
+1. שלח /test – יופיע דוח מצב בסיסי.
+2. שלח /courses – אם עובד, learn_handlers נטען.
+3. שלח /project – אם עובד, project_commands נטען.
+4. שלח /leaderboard – בודק smart_leaderboard.
+5. שלח /pay – בודק course_handlers.
+
+---
+
+📤 אחרי הבדיקה, שלח לי אילו פקודות עבדו ואילו לא.
+
+אם רובן לא עובדות, נשחזר את המודולים במהירות – יש לך את כל הקבצים (learn_handlers.py, project_commands.py וכו'), הם פשוט לא נטענו לגרסה החדשה של bot.py.
+אוסיף אותם בחזרה בפקודה אחת, והכול יחזור.
+
+---
+
+🔒 שחזור מלא (אם תצטרך)
+
+הגיבויים שלך:
+
+· backup_manual/ – כל הקבצים מלפני העדכון.
+· bot.py.old_backup – הגרסה הקודמת.
+· Git – commit 1254a5e ומעלה.
+
+אין חשש – לא איבדת כלום.
+2026-06-29T15:30:42.485044 | 8789977826 | lh_clean $ cd ~/slh_clean && python3 << 'ADDTEST'
+import re, subprocess, time
+
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 1. הוסף /test
+test_handler = '''
+@bot.message_handler(commands=['test'])
+def test_system(message):
+    import json, os, py_compile, subprocess
+    issues = []
+    if os.path.exists("db.json"):
+        issues.append("✅ db.json exists")
+    try:
+        py_compile.compile("bot.py", doraise=True)
+        issues.append("✅ bot.py syntax OK")
+    except Exception as e:
+        issues.append(f"❌ bot.py error: {e}")
+    r = subprocess.run(["pgrep", "-f", "python.*bot.py"], capture_output=True)
+    if r.returncode == 0:
+        issues.append("✅ Bot process running")
+    else:
+        issues.append("❌ Bot not running")
+    bot.reply_to(message, "\\n".join(issues))
+'''
+
+code = code.replace("bot.infinity_polling()", test_handler + "\nbot.infinity_polling()")
+with open("bot.py", "w") as f:                                       f.write(code)
+print("✅ /test handler added")
+
+# 2. בדוק טעינת מודולים (מהריץ bot.py ל־3 שניות)
+import os
+os.system("timeout 3 python3 bot.py 2>&1 | grep -E 'loaded|skipped|Error' || echo 'No load info captured'")
+
+# 3. הפעל מחדש
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+ADDTEST
+✅ /test handler added
+No load info captured
+🚀 SLH OS Daemon started – Mon Jun 29 15:29:14 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+✅ Bot restarted
+~/slh_clean $
+2026-06-29T15:31:18.511952 | 8789977826 | מה התוצאה של הפקודות בטלגרם? /test, /courses, /project, /leaderboard עבדו?
+2026-06-29T15:31:20.198014 | 8789977826 | /test
+2026-06-29T15:35:01.094387 | 8789977826 | /test
+2026-06-29T15:35:02.225257 | 8789977826 | /test
+2026-06-29T15:35:02.893951 | 8789977826 | /test
+2026-06-29T15:35:03.551295 | 8789977826 | /test
+2026-06-29T15:38:35.672748 | 8789977826 | /test
+2026-06-29T15:38:35.677169 | 8789977826 | /test
+2026-06-29T15:38:35.671498 | 8789977826 | /test
+2026-06-29T15:44:57.263581 | 8789977826 | /test
+2026-06-29T15:44:57.881536 | 8789977826 | /test
