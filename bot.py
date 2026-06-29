@@ -49,7 +49,7 @@ project_commands.init(bot)
 smart_leaderboard.init(bot)
 welcome_handler.init(bot)
 course_handlers.register_course_handlers(bot)
-logger_handler.init(bot)
+
 print("✅ All modules loaded")
 
 
