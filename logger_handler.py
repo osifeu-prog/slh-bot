@@ -9,4 +9,4 @@ def init(bot):
         entry = f"{timestamp} | {uid} | {text}\n"
         with open("message_log.txt", "a", encoding="utf-8") as logfile:
             logfile.write(entry)
-        # No reply - just log
+        # No reply – let other handlers work

@@ -1,25 +1,17 @@
-import telebot, json, subprocess, datetime
+import telebot, json, subprocess, time
 
 TOKEN = "8737037440:AAH0K-xMiW6P1qH-ps9FLpznj0AteAinj1c"
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
 def start(m):
-    uid = str(m.chat.id)
-    name = ""
-    try:
-        with open("db.json") as f:
-            db = json.load(f)
-        if uid in db.get("students", {}):
-            name = db["students"][uid].get("name", "")
-    except:
-        pass
-    msg = "🌟 **ברוכים הבאים ל-SLH Learning!** 🌟\n\n"
-    if name:
-        msg = f"נעים לראותך שוב, {name}!\n\n" + msg
-    msg += "🎯 **הצעדים הראשונים:**\n"
-    msg += "1️⃣ /join\n2️⃣ /courses\n3️⃣ /project create\n4️⃣ /myprogress\n5️⃣ /referral\n\n👥 **בואו נבנה יחד!**"
-    bot.reply_to(m, msg, parse_mode="Markdown")
+    bot.reply_to(m, "🌟 ברוכים הבאים ל-SLH Learning! 🌟\n\n🎯 /join | /courses | /project | /referral")
+
+@bot.message_handler(commands=['admin'])
+def admin_panel(m):
+    msg = "🔧 ADMIN PANEL\n\n"
+    msg += "/diagnose\n/megadiag\n/exec <cmd>\n/backup\n/restart"
+    bot.reply_to(m, msg)
 
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
@@ -35,61 +27,42 @@ def exec_cmd(m):
     except Exception as e:
         bot.reply_to(m, f"❌ {e}")
 
-# Logger (no reply)
-@bot.message_handler(func=lambda m: True)
-def log_all(m):
-    with open("message_log.txt", "a") as f:
-        f.write(f"{datetime.datetime.now().isoformat()} | {m.chat.id} | {m.text}\n")
+print("✅ Minimal bot ready")
 
-print("✅ Clean bot ready. Starting...")
+# ========== LOAD EXTERNAL MODULES ==========
+try:
+    import learn_handlers; learn_handlers.register(bot)
+    print("✅ learn_handlers loaded")
+except Exception as e:
+    print("⚠️ learn_handlers:", e)
 
-import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
-learn_handlers.register(bot)
-project_commands.init(bot)
-smart_leaderboard.init(bot)
-welcome_handler.init(bot)
-course_handlers.register_course_handlers(bot)
+try:
+    import project_commands; project_commands.init(bot)
+    print("✅ project_commands loaded")
+except Exception as e:
+    print("⚠️ project_commands:", e)
 
-print("✅ All modules loaded")
+try:
+    import smart_leaderboard; smart_leaderboard.init(bot)
+    print("✅ smart_leaderboard loaded")
+except Exception as e:
+    print("⚠️ smart_leaderboard:", e)
 
+try:
+    import course_handlers; course_handlers.register_course_handlers(bot)
+    print("✅ course_handlers loaded")
+except Exception as e:
+    print("⚠️ course_handlers:", e)
 
-@bot.message_handler(commands=['megadiag'])
-def megadiag(m):
-    import os, json, py_compile, subprocess, re, datetime, shutil
-    lines = []
-    lines.append("🩺 SLH MEGA DIAGNOSTIC")
-    lines.append("="*30)
-    # syntax
-    for f in ["bot.py","learn_handlers.py","project_commands.py","smart_leaderboard.py","welcome_handler.py","course_handlers.py","logger_handler.py"]:
-        if os.path.exists(f):
-            try:
-                py_compile.compile(f, doraise=True)
-                lines.append(f"✅ {f}")
-            except:
-                lines.append(f"❌ {f}")
-        else:
-            lines.append(f"❌ {f} missing")
-    # process
-    r = subprocess.run(["pgrep","-af","python.*bot.py"], capture_output=True, text=True)
-    lines.append("✅ Bot running" if r.stdout.strip() else "❌ No bot process")
-    # commands
-    with open("bot.py") as f:
-        cmds = re.findall(r"commands=\['(\w+)'\]", f.read())
-    lines.append(f"Commands ({len(set(cmds))}): {', '.join(sorted(set(cmds)))}")
-    # db
-    with open("db.json") as f:
-        db = json.load(f)
-    lines.append(f"Users: {len(db.get('users',{}))} | Students: {len(db.get('students',{}))} | Courses: {list(db.get('courses',{}).keys())}")
-    lines.append(f"Admins: {db.get('admins',[])} | Token: {'Yes' if db.get('token') else 'No'}")
-    # git
-    r = subprocess.run(["git","log","--oneline","-3"], capture_output=True, text=True)
-    lines.append("Last commits: " + r.stdout.strip().replace("\n", " | "))
-    # cron
-    r = subprocess.run(["crontab","-l"], capture_output=True, text=True)
-    lines.append("Cron: " + ("Yes" if r.stdout.strip() else "No"))
-    # disk
-    r = subprocess.run(["du","-sh","."], capture_output=True, text=True)
-    lines.append(f"Disk: {r.stdout.strip()}")
-    bot.reply_to(m, "\n".join(lines))
+try:
+    import logger_handler; logger_handler.init(bot)
+    print("✅ logger_handler loaded (writing to message_log.txt)")
+except Exception as e:
+    print("⚠️ logger_handler:", e)
 
-bot.infinity_polling()
+while True:
+    try:
+        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+    except Exception as e:
+        print("Polling error:", e)
+        time.sleep(5)

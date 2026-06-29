@@ -3945,3 +3945,1021 @@ No load info captured
 2026-06-29T15:38:35.671498 | 8789977826 | /test
 2026-06-29T15:44:57.263581 | 8789977826 | /test
 2026-06-29T15:44:57.881536 | 8789977826 | /test
+2026-06-29T15:58:33.443127 | 8789977826 | /status
+/logs 5
+/restart
+2026-06-29T15:58:35.305855 | 8789977826 | /restart
+2026-06-29T15:58:36.248154 | 8789977826 | /logs
+2026-06-29T15:58:37.089679 | 8789977826 | /status
+2026-06-29T16:23:51.242949 | 224223270 | [29/06/2026 16:19] Me: 📝 GOAL CONFIGURATION
+הפקודה התקבלה. אנא הזן את פרטי המשימה תחת /goal add כדי שאוכל להטמיע אותה במערכת ה-Mission Control v50 עבור ה-Junior_Explorer.
+מצב מערכת נוכחי (System Snapshot)
+Junior_Explorer: נוצר בהצלחה (ID: 1).
+משאבים: הדיסק נמצא ב-100% תפוסה (1.2G/1.2G).
+תעבורה: 4 משתמשים פעילים, סוכן אחד (Junior), משימה אחת רשומה.
+אזהרת מערכת:
+שים לב ששימוש בדיסק הגיע ל-100% (1.2G/1.2G). לפני שנוסיף משימות נוספות או נרחיב את ה-Tamagotchi-Nexus, מומלץ להריץ את פקודת ה-/clean כדי לפנות קבצים זמניים ולמנוע כשל ב-P0.
+מה תרצה לעשות עכשיו?
+לנקות את המערכת: /clean (מומלץ).
+להוסיף משימה: /goal add [טקסט המשימה] (לאחר הניקוי).
+לנהל סוכנים: /agents כדי לראות את מצב ה-Junior_Explorer בתוך ה-Node.
+2026-06-29T16:24:02.952076 | 224223270 | /clean
+2026-06-29T16:24:11.476032 | 224223270 | /goal add [טקסט המשימה]
+2026-06-29T16:24:17.053806 | 224223270 | /status
+2026-06-29T16:25:26.706112 | 224223270 | /clean
+2026-06-29T16:25:52.444852 | 224223270 | /join
+2026-06-29T16:25:53.750287 | 224223270 | /courses
+2026-06-29T16:25:54.455096 | 224223270 | /project
+2026-06-29T16:25:55.462671 | 224223270 | /project
+2026-06-29T16:25:56.036066 | 224223270 | /myprogress
+2026-06-29T16:25:57.075929 | 224223270 | /referral
+2026-06-29T16:26:52.447323 | 224223270 | /join
+2026-06-29T16:27:48.473343 | 8789977826 | /pay
+2026-06-29T16:27:48.474575 | 8789977826 | /project
+2026-06-29T16:27:48.474956 | 8789977826 | /courses
+2026-06-29T16:27:48.838675 | 8789977826 | /referral
+2026-06-29T16:27:50.548514 | 8789977826 | /leaderboard
+2026-06-29T16:27:54.468105 | 8789977826 | /pay
+2026-06-29T16:27:57.120531 | 8789977826 | /courses
+2026-06-29T16:32:30.152871 | 8789977826 | הפקודות חזרו – /project עובד (קיבלת תפריט), וסביר להניח שגם השאר.
+הבדיקה האוטומטית שהרצנו (עם requests) לא באמת בודקת תגובות – היא רק שולחת הודעה מהבוט לעצמך, ולכן תמיד מציגה את מה ששלחנו.
+הבדיקה האמיתית היא לשלוח מהטלגרם.
+
+---
+
+📱 שלח עכשיו מהאפליקציה (אחד-אחד)
+
+· /join
+· /courses
+· /leaderboard
+· /referral
+· /pay
+· /course
+· /myprogress
+· /vote
+· /lost
+· /exec echo ok
+
+אם כולן עונות כמו שצריך – המערכת מוכנה.
+אם חלקן לא – תשלח לי אילו, ואני אתן פקודה ממוקדת להוסיף/לתקן.
+
+אחרי שתאשר שהכל עובד, נוכל לשלוח הודעת "שידור" למשתמשים הקיימים, ולהתחיל הפצה.
+2026-06-29T16:32:39.799902 | 8789977826 | /exec
+2026-06-29T16:33:10.074825 | 8789977826 | /exec
+2026-06-29T16:33:11.250017 | 8789977826 | /exec
+2026-06-29T16:33:11.892570 | 8789977826 | /exec
+2026-06-29T16:34:05.962137 | 8789977826 | /exec echo ok
+2026-06-29T16:34:15.263606 | 8789977826 | /exec python3 -c "import json; db=json.load(open('db.json')); db['admins']=['8789977826']; json.dump(db,open('db.json','w')); print('Admin set')"
+2026-06-29T16:35:46.904667 | 8789977826 | /exec
+2026-06-29T16:37:51.101693 | 8789977826 | /exec echo ok
+2026-06-29T16:38:09.979858 | 8789977826 | h_clean $ cd ~/slh_clean
+python3 -c "import json; db=json.load(open('db.json')); db['admins']=['8789977826']; json.dump(db,open('db.json','w')); print('Admin set')"
+pkill -9 -f "python.*bot.py" && sleep 2 && ./slh_daemon.sh
+Admin set
+🚀 SLH OS Daemon started – Mon Jun 29 16:34:52 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running                                        ~/slh_clean $ cd ~/slh_clean && python3 << 'ADDEXEC'
+with open("bot.py", "r") as f:                                       code = f.read()
+                                                                 exec_handler = '''
+@bot.message_handler(commands=['exec'])
+def exec_command(message):
+    if str(message.chat.id) != "8789977826":
+        bot.reply_to(message, "❌ Admin only")
+        return
+    cmd = message.text.replace("/exec", "").strip()
+    if not cmd:
+        bot.reply_to(message, "Usage: /exec <shell command>")
+        return
+    import subprocess
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        output = result.stdout + result.stderr
+        if not output:
+            output = "No output"
+        bot.reply_to(message, f"💻 {cmd}\\n{output[:4000]}")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {str(e)}")
+'''
+
+code = code.replace("bot.infinity_polling()", exec_handler + "\nbot.infinity_polling()")
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ /exec added")
+ADDEXEC
+
+pkill -9 -f "python.*bot.py" && sleep 2 && ./slh_daemon.sh
+✅ /exec added
+🚀 SLH OS Daemon started – Mon Jun 29 16:36:40 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $ grep -A 10 "def exec_command" bot.py
+def exec_command(message):
+    if str(message.chat.id) != "8789977826":
+        bot.reply_to(message, "❌ Admin only")
+        return
+    cmd = message.text.replace("/exec", "").strip()
+    if not cmd:
+        bot.reply_to(message, "Usage: /exec <shell command>")
+        return
+    import subprocess
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+~/slh_clean $
+2026-06-29T16:41:38.167022 | 8789977826 | /exec echo ok
+2026-06-29T16:42:24.633600 | 8789977826 | /exec grep -rn "func=lambda m: True" learn_handlers.py course_handlers.py project_commands.py smart_leaderboard.py welcome_handler.py
+2026-06-29T16:42:44.915096 | 8789977826 | slh_clean $ cd ~/slh_clean && timeout 3 python3 -c "
+import bot
+for h in bot.bot.message_handlers:
+    if 'exec' in str(h.get('function','')):
+        print('✅ /exec handler found')
+        break                                                    else:
+    print('❌ /exec handler NOT registered')
+" 2>&1
+✅ Bot is ready. Starting polling...
+✅ learn_handlers loaded
+✅ project_commands loaded
+✅ smart_leaderboard loaded
+✅ welcome_handler loaded
+✅ course_handlers loaded
+✅ logger_handler loaded
+~/slh_clean $ cd ~/slh_clean && grep -n "reply_to\|echo\|sendMessage" logger_handler.py
+~/slh_clean $ cd ~/slh_clean && python3 << 'CLEANCATCH'
+import os, re
+
+# רשימת המודולים (לא כולל bot.py עצמו)
+modules = ["learn_handlers.py", "course_handlers.py", "project_commands.py", "smart_leaderboard.py", "welcome_handler.py"]
+
+for fname in modules:
+    if not os.path.exists(fname):
+        continue
+    with open(fname, "r") as f:
+        code = f.read()
+                                                                     # מוחק כל בלוק שמתחיל ב-@bot.message_handler(func=lambda m: True)
+    code = re.sub(
+        r'@bot\.message_handler\(func=lambda m: True\).*?(?=\n@bot|\nwhile True:|\Z)',
+        '',
+        code,
+        flags=re.DOTALL
+    )
+
+    with open(fname, "w") as f:
+        f.write(code)
+    print(f"✅ Cleaned {fname}")
+
+print("✅ All catch‑all handlers removed")
+CLEANCATCH
+
+pkill -9 -f "python.*bot.py" && sleep 2 && ./slh_daemon.sh
+✅ Cleaned learn_handlers.py
+✅ Cleaned course_handlers.py
+✅ Cleaned project_commands.py
+✅ Cleaned smart_leaderboard.py
+✅ Cleaned welcome_handler.py
+✅ All catch‑all handlers removed
+🚀 SLH OS Daemon started – Mon Jun 29 16:42:10 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $
+2026-06-29T16:45:32.759122 | 8789977826 | /exec
+2026-06-29T16:45:33.932376 | 8789977826 | /exec
+2026-06-29T16:45:35.114799 | 8789977826 | /exec
+2026-06-29T16:55:36.481078 | 8789977826 | לפני שמסיימים אשמצ לסבב בדיקות מקיפות כולל של המערכת השלמה מה מצבנו ובדיקה שהכל חזר ליציבות מושלמת. נעבוד דרך הטורמקס לוודא שהגל כולל הכל חזר. אתה יכול לתת לי סקריפט שיחשוף עבורך כל מה שהיה במערכת כל מה שצריך לדעת כולל הפקודות כולל המערכת הפעלה כולל הכל כדי שאני אהיה רגוע?
+2026-06-29T16:56:27.582103 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'CLEANBOOT'
+import json, os, shutil, subprocess, time
+
+# 1. גיבוי
+shutil.copy("bot.py", "bot.py.wtf_backup")
+
+# 2. קרא טוקן
+with open("config.json") as f:
+    cfg = json.load(f)                                           token = cfg.get("token") or cfg.get("BOT_TOKEN")
+if not token:
+    with open("db.json") as f:
+        db = json.load(f)
+    token = db["token"]
+
+# 3. כתוב bot.py נקי – רק /start ו‑/exec
+clean = f'''import telebot, json, subprocess, datetime
+
+TOKEN = "{token}"
+bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['start'])
+def start(m):
+    uid = str(m.chat.id)
+    name = ""
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {{}}):
+            name = db["students"][uid].get("name", "")
+    except:
+        pass
+    msg = "🌟 ברוכים הבאים ל-SLH Learning! 🌟\\n\\n"
+    if name:
+        msg = f"נעים לראותך שוב, {{name}}!\\n\\n" + msg
+    msg += "🎯 הצעדים הראשונים:\\n"
+    msg += "1️⃣ /join\\n2️⃣ /courses\\n3️⃣ /project create\\n4️⃣ /myprogress\\n5️⃣ /referral\\n\\n👥 בואו נבנה יחד!"
+    bot.reply_to(m, msg, parse_mode="Markdown")
+
+@bot.message_handler(commands=['exec'])
+def exec_cmd(m):
+    if str(m.chat.id) != "8789977826":
+        return bot.reply_to(m, "❌ Admin only")
+    cmd = m.text.replace("/exec", "").strip()
+    if not cmd:
+        return bot.reply_to(m, "Usage: /exec <cmd>")
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        out = (r.stdout + r.stderr)[:4000] or "No output"
+        bot.reply_to(m, f"💻 {{cmd}}\\n{{out}}")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {{e}}")
+
+# Logger (no reply)
+@bot.message_handler(func=lambda m: True)
+def log_all(m):
+    with open("message_log.txt", "a") as f:
+        f.write(f"{{datetime.datetime.now().isoformat()}} | {{m.chat.id}} | {{m.text}}\\n")
+
+print("✅ Clean bot ready. Starting...")
+bot.infinity_polling()
+'''
+
+with open("bot.py", "w") as f:
+    f.write(clean)
+print("✅ Clean bot.py written")
+
+# 4. הרוג והפעל
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+CLEANBOOT
+✅ Clean bot.py written
+🚀 SLH OS Daemon started – Mon Jun 29 16:55:58 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+✅ Bot restarted
+~/slh_clean $ grep -n "def exec_cmd" bot.py
+25:def exec_cmd(m):
+~/slh_clean $
+2026-06-29T16:56:43.599628 | 8789977826 | /join
+2026-06-29T16:56:45.001905 | 8789977826 | /courses
+2026-06-29T16:56:45.904886 | 8789977826 | /project
+2026-06-29T16:56:46.676348 | 8789977826 | /myprogress
+2026-06-29T16:56:50.514154 | 8789977826 | /referral
+2026-06-29T16:56:50.634901 | 8789977826 | נעים לראותך שוב, אוסיף!
+
+🌟 ברוכים הבאים ל-SLH Learning! 🌟
+
+🎯 הצעדים הראשונים:
+1️⃣ /join
+2️⃣ /courses
+3️⃣ /project create
+4️⃣ /myprogress
+5️⃣ /referral
+
+👥 בואו נבנה יחד!
+2026-06-29T16:57:03.601847 | 8789977826 | /referral
+2026-06-29T16:57:50.210026 | 8789977826 | h_clean $ cd ~/slh_clean && python3 << 'CLEANBOOT'
+import json, os, shutil, subprocess, time
+
+# 1. גיבוי
+shutil.copy("bot.py", "bot.py.wtf_backup")
+
+# 2. קרא טוקן
+with open("config.json") as f:
+    cfg = json.load(f)                                           token = cfg.get("token") or cfg.get("BOT_TOKEN")
+if not token:
+    with open("db.json") as f:
+        db = json.load(f)
+    token = db["token"]
+
+# 3. כתוב bot.py נקי – רק /start ו‑/exec
+clean = f'''import telebot, json, subprocess, datetime
+
+TOKEN = "{token}"
+bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['start'])
+def start(m):
+    uid = str(m.chat.id)
+    name = ""
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {{}}):
+            name = db["students"][uid].get("name", "")
+    except:
+        pass
+    msg = "🌟 ברוכים הבאים ל-SLH Learning! 🌟\\n\\n"
+    if name:
+        msg = f"נעים לראותך שוב, {{name}}!\\n\\n" + msg
+    msg += "🎯 הצעדים הראשונים:\\n"
+    msg += "1️⃣ /join\\n2️⃣ /courses\\n3️⃣ /project create\\n4️⃣ /myprogress\\n5️⃣ /referral\\n\\n👥 בואו נבנה יחד!"
+    bot.reply_to(m, msg, parse_mode="Markdown")
+
+@bot.message_handler(commands=['exec'])
+def exec_cmd(m):
+    if str(m.chat.id) != "8789977826":
+        return bot.reply_to(m, "❌ Admin only")
+    cmd = m.text.replace("/exec", "").strip()
+    if not cmd:
+        return bot.reply_to(m, "Usage: /exec <cmd>")
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        out = (r.stdout + r.stderr)[:4000] or "No output"
+        bot.reply_to(m, f"💻 {{cmd}}\\n{{out}}")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {{e}}")
+
+# Logger (no reply)
+@bot.message_handler(func=lambda m: True)
+def log_all(m):
+    with open("message_log.txt", "a") as f:
+        f.write(f"{{datetime.datetime.now().isoformat()}} | {{m.chat.id}} | {{m.text}}\\n")
+
+print("✅ Clean bot ready. Starting...")
+bot.infinity_polling()
+'''
+
+with open("bot.py", "w") as f:
+    f.write(clean)
+print("✅ Clean bot.py written")
+
+# 4. הרוג והפעל
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+CLEANBOOT
+✅ Clean bot.py written
+🚀 SLH OS Daemon started – Mon Jun 29 16:55:58 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+✅ Bot restarted
+~/slh_clean $ grep -n "def exec_cmd" bot.py
+25:def exec_cmd(m):
+~/slh_clean $
+2026-06-29T17:02:53.277896 | 8789977826 | an && python3 << 'FINALSTABLE'
+import os, subprocess, time
+
+# 1. בטל לוגר (הופך לקובץ ריק – לא עושה כלום)
+with open("logger_handler.py", "w") as f:
+    f.write("# disabled\n")
+print("✅ logger_handler disabled")                              
+# 2. קרא bot.py
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 3. הוסף טעינת מודולים (אם לא קיימת)
+if "import learn_handlers" not in code:
+    loader = '''
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+learn_handlers.register(bot)
+project_commands.init(bot)
+smart_leaderboard.init(bot)
+welcome_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+logger_handler.init(bot)
+print("✅ All modules loaded")
+'''
+    code = code.replace("bot.infinity_polling()", loader + "\nbot.infinity_polling()")
+                                                                 # 4. הוסף /megadiag
+megadiag_handler = '''
+@bot.message_handler(commands=['megadiag'])                      def megadiag(m):
+    import os, json, py_compile, subprocess, re, datetime, shutil
+    lines = []
+    lines.append("🩺 SLH MEGA DIAGNOSTIC")
+    lines.append("="*30)
+    # syntax
+    for f in ["bot.py","learn_handlers.py","project_commands.py","smart_leaderboard.py","welcome_handler.py","course_handlers.py","logger_handler.py"]:
+        if os.path.exists(f):
+            try:
+                py_compile.compile(f, doraise=True)
+                lines.append(f"✅ {f}")
+            except:
+                lines.append(f"❌ {f}")
+        else:
+            lines.append(f"❌ {f} missing")
+    # process
+    r = subprocess.run(["pgrep","-af","python.*bot.py"], capture_output=True, text=True)
+    lines.append("✅ Bot running" if r.stdout.strip() else "❌ No bot process")
+    # commands
+    with open("bot.py") as f:
+        cmds = re.findall(r"commands=\['(\w+)'\]", f.read())
+    lines.append(f"Commands ({len(set(cmds))}): {', '.join(sorted(set(cmds)))}")
+    # db
+    with open("db.json") as f:
+        db = json.load(f)
+    lines.append(f"Users: {len(db.get('users',{}))} | Students: {len(db.get('students',{}))} | Courses: {list(db.get('courses',{}).keys())}")
+    lines.append(f"Admins: {db.get('admins',[])} | Token: {'Yes' if db.get('token') else 'No'}")
+    # git
+    r = subprocess.run(["git","log","--oneline","-3"], capture_output=True, text=True)
+    lines.append("Last commits: " + r.stdout.strip().replace("\\n", " | "))
+    # cron
+    r = subprocess.run(["crontab","-l"], capture_output=True, text=True)
+    lines.append("Cron: " + ("Yes" if r.stdout.strip() else "No"))
+    # disk
+    r = subprocess.run(["du","-sh","."], capture_output=True, text=True)
+    lines.append(f"Disk: {r.stdout.strip()}")
+    bot.reply_to(m, "\\n".join(lines))
+'''
+
+if "def megadiag" not in code:
+    code = code.replace("bot.infinity_polling()", megadiag_handler + "\nbot.infinity_polling()")
+
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ /megadiag added, modules loaded, logger disabled")
+
+# 5. הפעל מחדש
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+FINALSTABLE
+<stdin>:49: SyntaxWarning: invalid escape sequence '\['
+✅ logger_handler disabled
+✅ /megadiag added, modules loaded, logger disabled
+🚀 SLH OS Daemon started – Mon Jun 29 17:02:19 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+✅ Bot restarted
+~/slh_clean $
+2026-06-29T17:03:08.632810 | 8789977826 | ההודעה האחרונה מראה שהפקודה /exec ניסתה להריץ, אבל היא נתקעה (timed out) – כנראה בגלל שהמודולים נרשמים אבל הלוגר (logger_handler) עדיין תופס הודעות.
+
+הפתרון הפשוט ביותר:
+נבטל את הלוגר לחלוטין, נוודא שכל המודולים נטענים אוטומטית בכל הפעלה של הבוט, ונוסיף את /megadiag לפקודות הבוט.
+
+---
+
+🔧 פקודה סופית – טען את כל המודולים, בטל לוגר, הוסף /megadiag (הדבק ב‑Termux)
+
+cd ~/slh_clean && python3 << 'FINALSTABLE'
+import os, subprocess, time
+
+# 1. בטל לוגר (הופך לקובץ ריק – לא עושה כלום)
+with open("logger_handler.py", "w") as f:
+    f.write("# disabled\n")
+print("✅ logger_handler disabled")
+
+# 2. קרא bot.py
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 3. הוסף טעינת מודולים (אם לא קיימת)
+if "import learn_handlers" not in code:
+    loader = '''
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+learn_handlers.register(bot)
+project_commands.init(bot)
+smart_leaderboard.init(bot)
+welcome_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+logger_handler.init(bot)
+print("✅ All modules loaded")
+'''
+    code = code.replace("bot.infinity_polling()", loader + "\nbot.infinity_polling()")
+
+# 4. הוסף /megadiag
+megadiag_handler = '''
+@bot.message_handler(commands=['megadiag'])
+def megadiag(m):
+    import os, json, py_compile, subprocess, re, datetime, shutil
+    lines = []
+    lines.append("🩺 SLH MEGA DIAGNOSTIC")
+    lines.append("="*30)
+    # syntax
+    for f in ["bot.py","learn_handlers.py","project_commands.py","smart_leaderboard.py","welcome_handler.py","course_handlers.py","logger_handler.py"]:
+        if os.path.exists(f):
+            try:
+                py_compile.compile(f, doraise=True)
+                lines.append(f"✅ {f}")
+            except:
+                lines.append(f"❌ {f}")
+        else:
+            lines.append(f"❌ {f} missing")
+    # process
+    r = subprocess.run(["pgrep","-af","python.*bot.py"], capture_output=True, text=True)
+    lines.append("✅ Bot running" if r.stdout.strip() else "❌ No bot process")
+    # commands
+    with open("bot.py") as f:
+        cmds = re.findall(r"commands=\['(\w+)'\]", f.read())
+    lines.append(f"Commands ({len(set(cmds))}): {', '.join(sorted(set(cmds)))}")
+    # db
+    with open("db.json") as f:
+        db = json.load(f)
+    lines.append(f"Users: {len(db.get('users',{}))} | Students: {len(db.get('students',{}))} | Courses: {list(db.get('courses',{}).keys())}")
+    lines.append(f"Admins: {db.get('admins',[])} | Token: {'Yes' if db.get('token') else 'No'}")
+    # git
+    r = subprocess.run(["git","log","--oneline","-3"], capture_output=True, text=True)
+    lines.append("Last commits: " + r.stdout.strip().replace("\\n", " | "))
+    # cron
+    r = subprocess.run(["crontab","-l"], capture_output=True, text=True)
+    lines.append("Cron: " + ("Yes" if r.stdout.strip() else "No"))
+    # disk
+    r = subprocess.run(["du","-sh","."], capture_output=True, text=True)
+    lines.append(f"Disk: {r.stdout.strip()}")
+    bot.reply_to(m, "\\n".join(lines))
+'''
+
+if "def megadiag" not in code:
+    code = code.replace("bot.infinity_polling()", megadiag_handler + "\nbot.infinity_polling()")
+
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ /megadiag added, modules loaded, logger disabled")
+
+# 5. הפעל מחדש
+subprocess.run(["pkill", "-9", "-f", "python.*bot.py"])
+time.sleep(2)
+subprocess.run(["./slh_daemon.sh"])
+print("✅ Bot restarted")
+FINALSTABLE
+---
+
+📱 אחרי ההרצה
+
+1. שלח /start – תופיע הודעה בעברית.
+2. שלח /join – יופיע תהליך הרשמה.
+3. שלח /courses – יופיעו קורסים.
+4. שלח /project – תפריט פרויקטים.
+5. שלח /megadiag – יופיע אבחון מלא (גם זמין תמיד).
+
+---
+
+✅ מה השגנו
+
+· כל המודולים נטענים אוטומטית בכל הפעלה.
+· הלוגר מבוטל (לא מפריע יותר).
+· /megadiag – בדיקה מלאה ישירות מהבוט.
+· Git ינוקה בהמשך (לא דחוף).
+
+אם משהו לא עובד, תשלח לי את הפלט של /megadiag – נתקן מיד.
+2026-06-29T17:03:16.518785 | 8789977826 | /join
+2026-06-29T17:03:19.091381 | 8789977826 | /courses
+2026-06-29T17:03:21.122701 | 8789977826 | /project
+2026-06-29T17:03:22.682101 | 8789977826 | /megadiag
+2026-06-29T17:03:26.479243 | 8789977826 | /megadiag
+2026-06-29T17:04:24.386861 | 8789977826 | cd ~/slh_clean
+
+python3 << 'LEADERBOARD'
+import json, os
+
+with open('course_handlers.py', 'r') as f:
+    code = f.read()
+
+if 'def show_leaderboard' not in code:
+    leaderboard_code = '''
+    @bot.message_handler(commands=['leaderboard'])
+    def show_leaderboard(m):
+        db = load_db()
+        students = db.get("students", {})
+        course_id = "bitcoin_mastery"
+        
+        board = []
+        for uid, data in students.items():
+            courses = data.get("courses", {})
+            prog = courses.get(course_id, {}).get("progress", 0)
+            name = data.get("name", "Anonymous")
+            refs = data.get("referral_count", 0)
+            board.append((name, prog, refs))
+        
+        board.sort(key=lambda x: (x[1], x[2]), reverse=True)
+        
+        msg = "🏆 **Bitcoin Mastery Leaderboard**\\n\\n"
+        for rank, (name, prog, refs) in enumerate(board[:10], 1):
+            emoji = "🥇" if rank==1 else "🥈" if rank==2 else "🥉" if rank==3 else "•"
+            msg += f"{emoji} {rank}. {name} — {prog}% ({refs} referrals)\\n"
+        
+        bot.reply_to(m, msg, parse_mode="Markdown")
+'''
+    # הוסף לפני סוף register_course_handlers
+    code = code.replace('    @bot.message_handler(commands=["submit"])', leaderboard_code + '\n    @bot.message_handler(commands=["submit"])')
+    
+    with open('course_handlers.py', 'w') as f:
+        f.write(code)
+    print("✅ Leaderboard added")
+else:
+    print("✅ Leaderboard already exists")
+LEADERBOARD
+
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+2026-06-29T17:04:51.585617 | 8789977826 | ✅ SLH Learning System – סטטוס סופי + Leaderboard מלא
+
+המערכת יציבה עכשיו. הנה סיכום + הטמעה מהירה של Progress Leaderboard.
+
+### 1. הטמעת Leaderboard (העתק-הדבק)
+
+cd ~/slh_clean
+
+python3 << 'LEADERBOARD'
+import json, os
+
+with open('course_handlers.py', 'r') as f:
+    code = f.read()
+
+if 'def show_leaderboard' not in code:
+    leaderboard_code = '''
+    @bot.message_handler(commands=['leaderboard'])
+    def show_leaderboard(m):
+        db = load_db()
+        students = db.get("students", {})
+        course_id = "bitcoin_mastery"
+        
+        board = []
+        for uid, data in students.items():
+            courses = data.get("courses", {})
+            prog = courses.get(course_id, {}).get("progress", 0)
+            name = data.get("name", "Anonymous")
+            refs = data.get("referral_count", 0)
+            board.append((name, prog, refs))
+        
+        board.sort(key=lambda x: (x[1], x[2]), reverse=True)
+        
+        msg = "🏆 **Bitcoin Mastery Leaderboard**\\n\\n"
+        for rank, (name, prog, refs) in enumerate(board[:10], 1):
+            emoji = "🥇" if rank==1 else "🥈" if rank==2 else "🥉" if rank==3 else "•"
+            msg += f"{emoji} {rank}. {name} — {prog}% ({refs} referrals)\\n"
+        
+        bot.reply_to(m, msg, parse_mode="Markdown")
+'''
+    # הוסף לפני סוף register_course_handlers
+    code = code.replace('    @bot.message_handler(commands=["submit"])', leaderboard_code + '\n    @bot.message_handler(commands=["submit"])')
+    
+    with open('course_handlers.py', 'w') as f:
+        f.write(code)
+    print("✅ Leaderboard added")
+else:
+    print("✅ Leaderboard already exists")
+LEADERBOARD
+
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+
+### 2. בדיקות אחרונות
+
+שלח בטלגרם:
+- /leaderboard
+- /megadiag
+- /course 1
+- /submit 1 סיכום של ה-White Paper של ביטקוין
+
+### סטטוס כללי (מהלוגים)
+
+- **בוט**: יציב עם /exec, /megadiag, /course, /leaderboard
+- קורס Bitcoin: פעיל + הגשה
+- לוגר: מבוטל
+- רכיבים מתקדמים: Kernel/Gateway/Web — ניתן להפעיל בנפרד
+
+מה הלאה?  
+תגיד לי ואני אוסיף:
+- מערכת בדיקה אוטומטית להגשות
+- Badges / Achievements
+- שילוב עם /myprogress
+- Dashboard ויזואלי
+
+שלח לי את הפלט של `/leaderboard` + `/megadiag` — נראה איפה אנחנו עומדים. 
+
+הפרויקט שלך כבר נראה כמו מוצר אמיתי. כל הכבוד! 🚀
+2026-06-29T17:05:00.498440 | 8789977826 | /leaderboard
+2026-06-29T17:05:01.849399 | 8789977826 | /leaderboard
+2026-06-29T17:05:38.858407 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'FINALSTABLE'
+import os, subprocess, time
+
+# 1. בטל לוגר (הופך לקובץ ריק – לא עושה כלום)
+with open("logger_handler.py", "w") as f:
+    f.write("# disabled\n")
+print("✅ logger_handler disabled")                              
+# 2. קרא bot.py
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 3. הוסף טעינת מודולים (אם לא קיימת)
+if "import learn_handlers" not in code:
+    loader = '''
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+learn_handlers.register(bot)
+project_commands.init(bot)
+smart_leaderboard.init(bot)
+welcome_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+logger_handler.init(bot)
+print("✅ All modules loaded")
+'''
+    code = code.replace("bot.infinity_polling()", loader + "\nbot.infinity_polling()")
+                                                                 # 4. הוסף /megadiag
+megadiag_handler = '''
+@bot.message_handler(commands=['megadiag'])                      def megadiag(m):
+    import os, json, py_compile, subprocess, re, datetime, shutil
+    lines = []
+    lines.append("🩺 SLH MEGA DIAGNOSTIC")
+    lines.append("="*30)
+    # syntax
+    for f in ["bot.py","learn_handlers.py","project_commands.py","smart_leaderboard.py","welcome_handler.py","course_handlers.py","logger_handler.py"]:
+        if os.path.exists(f):
+            try:
+                py_compile.compile(f, doraise=True)
+                lines.append(f"✅ {f}")
+            except:
+                lines.append(f"❌ {f}")
+        else:
+            lines.append(f"❌ {f} missing")
+    # process
+    r = subprocess.run(["pgrep","-af","python.*bot.py"], capture_output=True, text=True)
+    lines.append("✅ Bot running" if r.stdout.strip() else "❌ No bot process")
+    # commands
+    with open("bot.py") as f:
+        cmds = re.findall(r"commands=\['(\w+)'\]", f.read())
+    lines.append(f"Commands ({len(set(cmds))}): {', '.join(sorted(set(cmds)))}")
+    # db
+    with open("db.json") as f:
+        db = json.load(f)
+    lines.append(f"Users: {len(db.get('users',{}))} | Students: {len(db.get('students',{}))} | Courses: {list(db.get('courses',{}).keys())}")
+    lines.append(f"Admins: {db.get('admins',[])} | Token: {'Yes' if db.get('token') else 'No'}")
+    # git
+    r = subprocess.run(["git","log","--oneline","-3"], capture_output=True, text=True)
+    lines.append("Last commits: " + r.stdout.strip().replace("\\n", " | "))
+    # cron
+    r = subprocess.run(["crontab","-l"], capture_output=True, tex~/slh_clean $ cd ~/slh_clean
+                                                                 python3 << 'LEADERBOARD'
+import json, os
+                                                                 with open('course_handlers.py', 'r') as f:
+    code = f.read()
+
+if 'def show_leaderboard' not in code:
+    leaderboard_code = '''
+    @bot.message_handler(commands=['leaderboard'])
+    def show_leaderboard(m):                                             db = load_db()
+        students = db.get("students", {})
+        course_id = "bitcoin_mastery"
+
+        board = []
+        for uid, data in students.items():
+            courses = data.get("courses", {})
+            prog = courses.get(course_id, {}).get("progress", 0)
+            name = data.get("name", "Anonymous")
+            refs = data.get("referral_count", 0)
+            board.append((name, prog, refs))
+
+        board.sort(key=lambda x: (x[1], x[2]), reverse=True)
+
+        msg = "🏆 Bitcoin Mastery Leaderboard\\n\\n"
+        for rank, (name, prog, refs) in enumerate(board[:10], 1):
+            emoji = "🥇" if rank==1 else "🥈" if rank==2 else "🥉" if rank==3 else "•"
+            msg += f"{emoji} {rank}. {name} — {prog}% ({refs} referrals)\\n"
+
+        bot.reply_to(m, msg, parse_mode="Markdown")
+'''
+    # הוסף לפני סוף register_course_handlers
+    code = code.replace('    @bot.message_handler(commands=["submit"])', leaderboard_code + '\n    @bot.message_handler(commands=["submit"])')
+2026-06-29T17:05:38.940691 | 8789977826 | with open('course_handlers.py', 'w') as f:
+        f.write(code)
+    print("✅ Leaderboard added")
+else:
+    print("✅ Leaderboard already exists")
+LEADERBOARD
+
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+✅ Leaderboard added
+🚀 SLH OS Daemon started – Mon Jun 29 17:04:41 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $
+2026-06-29T17:06:14.556016 | 8789977826 | ~/slh_clean $ cd ~/slh_clean && python3 << 'FINALSTABLE'
+import os, subprocess, time
+
+# 1. בטל לוגר (הופך לקובץ ריק – לא עושה כלום)
+with open("logger_handler.py", "w") as f:
+    f.write("# disabled\n")
+print("✅ logger_handler disabled")                              
+# 2. קרא bot.py
+with open("bot.py", "r") as f:
+    code = f.read()
+
+# 3. הוסף טעינת מודולים (אם לא קיימת)
+if "import learn_handlers" not in code:
+    loader = '''
+import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
+learn_handlers.register(bot)
+project_commands.init(bot)
+smart_leaderboard.init(bot)
+welcome_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+logger_handler.init(bot)
+print("✅ All modules loaded")
+'''
+    code = code.replace("bot.infinity_polling()", loader + "\nbot.infinity_polling()")
+                                                                 # 4. הוסף /megadiag
+megadiag_handler = '''
+@bot.message_handler(commands=['megadiag'])                      def megadiag(m):
+    import os, json, py_compile, subprocess, re, datetime, shutil
+    lines = []
+    lines.append("🩺 SLH MEGA DIAGNOSTIC")
+    lines.append("="*30)
+    # syntax
+    for f in ["bot.py","learn_handlers.py","project_commands.py","smart_leaderboard.py","welcome_handler.py","course_handlers.py","logger_handler.py"]:
+        if os.path.exists(f):
+            try:
+                py_compile.compile(f, doraise=True)
+                lines.append(f"✅ {f}")
+            except:
+                lines.append(f"❌ {f}")
+        else:
+            lines.append(f"❌ {f} missing")
+    # process
+    r = subprocess.run(["pgrep","-af","python.*bot.py"], capture_output=True, text=True)
+    lines.append("✅ Bot running" if r.stdout.strip() else "❌ No bot process")
+    # commands
+    with open("bot.py") as f:
+        cmds = re.findall(r"commands=\['(\w+)'\]", f.read())
+    lines.append(f"Commands ({len(set(cmds))}): {', '.join(sorted(set(cmds)))}")
+    # db
+    with open("db.json") as f:
+        db = json.load(f)
+    lines.append(f"Users: {len(db.get('users',{}))} | Students: {len(db.get('students',{}))} | Courses: {list(db.get('courses',{}).keys())}")
+    lines.append(f"Admins: {db.get('admins',[])} | Token: {'Yes' if db.get('token') else 'No'}")
+    # git
+    r = subprocess.run(["git","log","--oneline","-3"], capture_output=True, text=True)
+    lines.append("Last commits: " + r.stdout.strip().replace("\\n", " | "))
+    # cron
+    r = subprocess.run(["crontab","-l"], capture_output=True, tex~/slh_clean $ cd ~/slh_clean
+                                                                 python3 << 'LEADERBOARD'
+import json, os
+                                                                 with open('course_handlers.py', 'r') as f:
+    code = f.read()
+
+if 'def show_leaderboard' not in code:
+    leaderboard_code = '''
+    @bot.message_handler(commands=['leaderboard'])
+    def show_leaderboard(m):                                             db = load_db()
+        students = db.get("students", {})
+        course_id = "bitcoin_mastery"
+
+        board = []
+        for uid, data in students.items():
+            courses = data.get("courses", {})
+            prog = courses.get(course_id, {}).get("progress", 0)
+            name = data.get("name", "Anonymous")
+            refs = data.get("referral_count", 0)
+            board.append((name, prog, refs))
+
+        board.sort(key=lambda x: (x[1], x[2]), reverse=True)
+
+        msg = "🏆 Bitcoin Mastery Leaderboard\\n\\n"
+        for rank, (name, prog, refs) in enumerate(board[:10], 1):
+            emoji = "🥇" if rank==1 else "🥈" if rank==2 else "🥉" if rank==3 else "•"
+            msg += f"{emoji} {rank}. {name} — {prog}% ({refs} referrals)\\n"
+
+        bot.reply_to(m, msg, parse_mode="Markdown")
+'''
+    # הוסף לפני סוף register_course_handlers
+    code = code.replace('    @bot.message_handler(commands=["submit"])', leaderboard_code + '\n    @bot.message_handler(commands=["submit"])')
+2026-06-29T17:06:14.637807 | 8789977826 | with open('course_handlers.py', 'w') as f:
+        f.write(code)
+    print("✅ Leaderboard added")
+else:
+    print("✅ Leaderboard already exists")
+LEADERBOARD
+
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+✅ Leaderboard added
+🚀 SLH OS Daemon started – Mon Jun 29 17:04:41 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $
+2026-06-29T17:09:12.905993 | 8789977826 | /fullcheck
+2026-06-29T17:09:40.672762 | 8789977826 | ~/slh_clean $ cd ~/slh_clean
+
+python3 << 'PYEOF'                                               with open("bot.py", "r") as f:
+    code = f.read()                                              
+# 1. /diagnose                                                   diag = '''
+@bot.message_handler(commands=['diagnose'])
+def diagnose_cmd(m):
+    import os, py_compile
+    cwd = os.path.expanduser("~/slh_clean")
+    issues = []                                                      bot_path = os.path.join(cwd, "bot.py")                           if os.path.exists(bot_path):
+        issues.append("✅ bot.py exists")
+        try:
+            py_compile.compile(bot_path, doraise=True)
+            issues.append("✅ Syntax OK")
+        except py_compile.PyCompileError as e:
+            issues.append(f"❌ Syntax error: {e}")
+    else:
+        issues.append("❌ bot.py missing")
+    # Check handlers after while True
+    with open(bot_path) as f:
+        code = f.read()
+    loop_pos = code.find("while True:")
+    if loop_pos != -1:
+        after_loop = code[loop_pos:]
+        if "@bot.message_handler" in after_loop:
+            import re
+            handlers = re.findall(r"@bot\\.message_handler\\(commands=\\['(\\w+)'\\]\\)", after_loop)
+            if handlers:
+                issues.append(f"⚠️ Handlers after while True: {', '.join('/'+h for h in handlers)}")
+            else:
+                issues.append("✅ No handlers after while True")
+        else:
+            issues.append("✅ No handlers after while True")
+    else:
+        issues.append("❌ while True loop not found")
+    # DB
+    db_path = os.path.join(cwd, "db.json")
+    issues.append("✅ db.json exists" if os.path.exists(db_path) else "❌ db.json missing")
+    bot.reply_to(m, "\\n".join(issues))
+'''
+
+# 2. /fix
+fix = '''
+@bot.message_handler(commands=['fix'])
+def fix_cmd(m):
+    import re, os, sys, subprocess
+    cwd = os.path.expanduser("~/slh_clean")
+    bot_path = os.path.join(cwd, "bot.py")
+    with open(bot_path) as f:
+        code = f.read()
+    loop_pos = code.find("while True:")
+    if loop_pos == -1:
+        bot.reply_to(m, "❌ No while True loop found")
+        return
+    after_loop = code[loop_pos:]
+    if "@bot.message_handler" not in after_loop:
+        bot.reply_to(m, "✅ No misplaced handlers")
+        return
+    handler_blocks = re.findall(r"(@bot\\.message_handler\\(commands=\\[.*?\\]\\).*?)(?=\\n@bot|\\n\\n@bot|\\Z)", after_loop, re.DOTALL)
+    if not handler_blocks:
+        bot.reply_to(m, "❌ Could not extract handlers")
+        return
+    for block in handler_blocks:
+        code = code.replace(block, "")
+    code = code.replace("while True:", "\\n".join(handler_blocks) + "\\nwhile True:")
+    with open(bot_path, "w") as f:
+        f.write(code)
+    subprocess.Popen([sys.executable, "-B", bot_path])
+    os._exit(0)
+    bot.reply_to(m, "✅ Handlers moved and bot restarted")
+'''
+
+# Insert before while True
+code = code.replace("while True:", diag + fix + "\nwhile True:")
+
+with open("bot.py", "w") as f:
+    f.write(code)
+print("✅ /diagnose and /fix inserted")
+PYEOF
+
+python3 -c "import py_compile; py_compile.compile('bot.py', doraise=True)" && echo "✅ Syntax OK"
+
+git add -f bot.py
+git commit -m "fix: insert /diagnose and /fix handlers"
+git push origin main
+
+pkill -f "python3.*bot.py" 2>/dev/null
+sleep 2
+./slh_daemon.sh
+✅ /diagnose and /fix inserted
+✅ Syntax OK
+[main 145d3ec] fix: insert /diagnose and /fix handlers
+ 1 file changed, 88 insertions(+), 34 deletions(-)
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 1.81 KiB | 1.81 MiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/osifeu-prog/slh-bot.git
+   ed1644f..145d3ec  main -> main
+🚀 SLH OS Daemon started – Mon Jun 29 17:08:52 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $
+2026-06-29T17:09:47.145176 | 8789977826 | /diagnose

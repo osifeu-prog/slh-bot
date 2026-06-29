@@ -1,0 +1,45 @@
+import telebot, json, subprocess, datetime
+
+TOKEN = "8737037440:AAH0K-xMiW6P1qH-ps9FLpznj0AteAinj1c"
+bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['start'])
+def start(m):
+    uid = str(m.chat.id)
+    name = ""
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {}):
+            name = db["students"][uid].get("name", "")
+    except:
+        pass
+    msg = "🌟 **ברוכים הבאים ל-SLH Learning!** 🌟\n\n"
+    if name:
+        msg = f"נעים לראותך שוב, {name}!\n\n" + msg
+    msg += "🎯 **הצעדים הראשונים:**\n"
+    msg += "1️⃣ /join\n2️⃣ /courses\n3️⃣ /project create\n4️⃣ /myprogress\n5️⃣ /referral\n\n👥 **בואו נבנה יחד!**"
+    bot.reply_to(m, msg, parse_mode="Markdown")
+
+@bot.message_handler(commands=['exec'])
+def exec_cmd(m):
+    if str(m.chat.id) != "8789977826":
+        return bot.reply_to(m, "❌ Admin only")
+    cmd = m.text.replace("/exec", "").strip()
+    if not cmd:
+        return bot.reply_to(m, "Usage: /exec <cmd>")
+    try:
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+        out = (r.stdout + r.stderr)[:4000] or "No output"
+        bot.reply_to(m, f"💻 {cmd}\n{out}")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {e}")
+
+# Logger (no reply)
+@bot.message_handler(func=lambda m: True)
+def log_all(m):
+    with open("message_log.txt", "a") as f:
+        f.write(f"{datetime.datetime.now().isoformat()} | {m.chat.id} | {m.text}\n")
+
+print("✅ Clean bot ready. Starting...")
+bot.infinity_polling()
