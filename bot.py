@@ -1,10 +1,105 @@
+import os, sys
+if not os.getenv("SLH_LOCAL"):
+    print("Not running locally – exiting.")
+    sys.exit(0)
+
 import os, sys, json, time, subprocess
+
+import os, sys
+if os.getenv("RAILWAY_STOP_BOT") == "true":
+    print("Railway detected – exiting to avoid duplicate bot.")
+    sys.exit(0)
+
+
+
 import telebot
 from marketplace import load_store, save_store
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
+
+import json
+
+import json
+ALLOWED_FILE = os.path.expanduser("~/slh_clean/allowed_ids.json")
+def load_allowed():
+    if not os.path.exists(ALLOWED_FILE):
+        return {"admin": None, "allowed": []}
+    with open(ALLOWED_FILE, "r") as f:
+        return json.load(f)
+
+def save_allowed(data):
+    with open(ALLOWED_FILE, "w") as f:
+        json.dump(data, f)
+
+def is_allowed(chat_id):
+    data = load_allowed()
+    return chat_id in data["allowed"]
+
+def add_allowed(chat_id):
+    data = load_allowed()
+    if chat_id not in data["allowed"]:
+        data["allowed"].append(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def remove_allowed(chat_id):
+    data = load_allowed()
+    if chat_id == data["admin"]:
+        return False
+    if chat_id in data["allowed"]:
+        data["allowed"].remove(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def get_admin():
+    return load_allowed()["admin"]
+
+auth_filter = lambda m: is_allowed(m.chat.id)
+
+
+ALLOWED_FILE = os.path.expanduser("~/slh_clean/allowed_ids.json")
+def load_allowed():
+    if not os.path.exists(ALLOWED_FILE):
+        return {"admin": None, "allowed": []}
+    with open(ALLOWED_FILE, "r") as f:
+        return json.load(f)
+
+def save_allowed(data):
+    with open(ALLOWED_FILE, "w") as f:
+        json.dump(data, f)
+
+def is_allowed(chat_id):
+    data = load_allowed()
+    return chat_id in data["allowed"]
+
+def add_allowed(chat_id):
+    data = load_allowed()
+    if chat_id not in data["allowed"]:
+        data["allowed"].append(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def remove_allowed(chat_id):
+    data = load_allowed()
+    if chat_id == data["admin"]:
+        return False
+    if chat_id in data["allowed"]:
+        data["allowed"].remove(chat_id)
+        save_allowed(data)
+        return True
+    return False
+
+def get_admin():
+    return load_allowed()["admin"]
+
+auth_filter = lambda m: is_allowed(m.chat.id)
+
+
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -90,7 +185,6 @@ def ensure_user(db, uid):
 
 # ---------------- COMMANDS ----------------
 
-@bot.message_handler(commands=['start'])
 def start(m):
     try:
         db = ensure_user(load_db(), m.from_user.id)
@@ -100,7 +194,7 @@ def start(m):
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['admin'])
+@bot.message_handler(commands=['admin'], func=auth_filter)
 def admin(m):
     bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
 📊 DIAGNOSTICS:
@@ -133,12 +227,12 @@ def admin(m):
 /disk — Disk usage
 /sysinfo — System resources""")
 
-@bot.message_handler(commands=['status'])
+@bot.message_handler(commands=['status'], func=auth_filter)
 def status(m):
     db = load_db()
     bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
 
-@bot.message_handler(commands=['health'])
+@bot.message_handler(commands=['health'], func=auth_filter)
 def health(m):
     try:
         import psutil
@@ -150,7 +244,7 @@ def health(m):
         msg = "Health: limited info (psutil not available)"
     bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
 
-@bot.message_handler(commands=['task'])
+@bot.message_handler(commands=['task'], func=auth_filter)
 def task(m):
     if not _KERNEL_READY:
         bot.reply_to(m, "Kernel not loaded")
@@ -164,7 +258,7 @@ def task(m):
     elif parts[1] == "list":
         kernel.bus.emit("task_list", {"chat": m.chat.id})
 
-@bot.message_handler(commands=['agent_create'])
+@bot.message_handler(commands=['agent_create'], func=auth_filter)
 def agent_create(m):
     import time, json, os
     parts = m.text.split(" ", 1)
@@ -182,7 +276,7 @@ def agent_create(m):
         print("Could not save agents.json:", e)
     bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
 
-@bot.message_handler(commands=['agents'])
+@bot.message_handler(commands=['agents'], func=auth_filter)
 def agents_list(m):
     if not agents_dict:
         bot.reply_to(m, "No agents yet")
@@ -190,17 +284,17 @@ def agents_list(m):
         lines = [f"{v['name']} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
         bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
 
-@bot.message_handler(commands=['agent_debug'])
+@bot.message_handler(commands=['agent_debug'], func=auth_filter)
 def agent_debug(m):
     bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
 
-@bot.message_handler(commands=['agent_test'])
+@bot.message_handler(commands=['agent_test'], func=auth_filter)
 def agent_test(m):
     # simple test: create and list
     agent_store.create("test_agent")
     bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
 
-@bot.message_handler(commands=['vote'])
+@bot.message_handler(commands=['vote'], func=auth_filter)
 def vote(m):
     db = ensure_user(load_db(), m.from_user.id)
     key = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
@@ -211,29 +305,29 @@ def vote(m):
     save_db(db)
     bot.reply_to(m, f"Voted {key}")
 
-@bot.message_handler(commands=['results'])
+@bot.message_handler(commands=['results'], func=auth_filter)
 def results(m):
     db = load_db()
     bot.reply_to(m, json.dumps(db["votes"], indent=2))
 
-@bot.message_handler(commands=['revenue'])
+@bot.message_handler(commands=['revenue'], func=auth_filter)
 def revenue(m):
     bot.reply_to(m, "Revenue: ₪0")
 
-@bot.message_handler(commands=['master'])
+@bot.message_handler(commands=['master'], func=auth_filter)
 def master(m):
     bot.reply_to(m, "MASTER.json: locked")
 
-@bot.message_handler(commands=['backup'])
+@bot.message_handler(commands=['backup'], func=auth_filter)
 def backup(m):
     bot.reply_to(m, "✅ Backup committed to Git")
 
-@bot.message_handler(commands=['restart'])
+@bot.message_handler(commands=['restart'], func=auth_filter)
 def restart(m):
     bot.reply_to(m, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
-@bot.message_handler(commands=['logs'])
+@bot.message_handler(commands=['logs'], func=auth_filter)
 def logs(m):
     n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
@@ -242,11 +336,11 @@ def logs(m):
     except:
         bot.reply_to(m, "No log file")
 
-@bot.message_handler(commands=['clean'])
+@bot.message_handler(commands=['clean'], func=auth_filter)
 def clean(m):
     bot.reply_to(m, "Temp files cleaned")
 
-@bot.message_handler(commands=['audit'])
+@bot.message_handler(commands=['audit'], func=auth_filter)
 def audit_cmd(m):
     entries = get_audit(15)
     if not entries:
@@ -255,24 +349,24 @@ def audit_cmd(m):
         lines = [f"{e['time']}: {e['user']} – {e['action']}" for e in entries]
         bot.reply_to(m, "📋 Audit Log:\n" + "\n".join(lines))
 
-@bot.message_handler(commands=['memory'])
+@bot.message_handler(commands=['memory'], func=auth_filter)
 def memory(m):
     bot.reply_to(m, "Memory: empty")
 
-@bot.message_handler(commands=['debug'])
+@bot.message_handler(commands=['debug'], func=auth_filter)
 def debug(m):
     bot.reply_to(m, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
 
-@bot.message_handler(commands=['termux'])
+@bot.message_handler(commands=['termux'], func=auth_filter)
 def termux(m):
     bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
 
-@bot.message_handler(commands=['deploy'])
+@bot.message_handler(commands=['deploy'], func=auth_filter)
 def deploy(m):
     result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
 
-@bot.message_handler(commands=['errors'])
+@bot.message_handler(commands=['errors'], func=auth_filter)
 def errors(m):
     try:
         with open("/app/bot.log") as f:
@@ -282,7 +376,7 @@ def errors(m):
     except:
         bot.reply_to(m, "No log file")
 
-@bot.message_handler(commands=['plugin'])
+@bot.message_handler(commands=['plugin'], func=auth_filter)
 def plugin(m):
     parts = m.text.split()
     if len(parts) > 1 and parts[1] == "list":
@@ -291,7 +385,7 @@ def plugin(m):
     else:
         bot.reply_to(m, "Usage: /plugin list")
 
-@bot.message_handler(commands=['goal'])
+@bot.message_handler(commands=['goal'], func=auth_filter)
 def goal(m):
     parts = m.text.split(None, 2)
     path = "/app/goals.json"
@@ -307,7 +401,7 @@ def goal(m):
         goals = json.load(open(path)) if os.path.exists(path) else []
         bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
 
-@bot.message_handler(commands=['sysinfo'])
+@bot.message_handler(commands=['sysinfo'], func=auth_filter)
 def sysinfo(m):
     try:
         df = subprocess.run("df -h / | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
@@ -324,36 +418,36 @@ def sysinfo(m):
     except Exception as e:
         bot.reply_to(m, f"Sysinfo error: {e}")
 
-@bot.message_handler(commands=['disk'])
+@bot.message_handler(commands=['disk'], func=auth_filter)
 def disk(m):
     bot.reply_to(m, "Disk: OK")
 
-@bot.message_handler(commands=['test'])
+@bot.message_handler(commands=['test'], func=auth_filter)
 def test(m):
     import subprocess
     result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
     bot.reply_to(m, result.stdout or "Diagnostics complete.")
 
-@bot.message_handler(commands=['kernellog'])
+@bot.message_handler(commands=['kernellog'], func=auth_filter)
 def kernellog(m):
     bot.reply_to(m, "See /debug for kernel info")
 
-@bot.message_handler(commands=['kernelstatus'])
+@bot.message_handler(commands=['kernelstatus'], func=auth_filter)
 def kernelstatus(m):
     bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
 
-@bot.message_handler(commands=['update'])
+@bot.message_handler(commands=['update'], func=auth_filter)
 def update(m):
     result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
 
-@bot.message_handler(commands=['rollback'])
+@bot.message_handler(commands=['rollback'], func=auth_filter)
 def rollback(m):
     bot.reply_to(m, "Rollback: not implemented yet")
 
 # ---------------- MAIN ----------------
 
-@bot.message_handler(commands=['agentstate'])
+@bot.message_handler(commands=['agentstate'], func=auth_filter)
 def agentstate(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
@@ -372,7 +466,7 @@ def agentstate(m):
     else:
         bot.reply_to(m, "❌ Agent not found")
 
-@bot.message_handler(commands=['sendagent'])
+@bot.message_handler(commands=['sendagent'], func=auth_filter)
 def sendagent(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
@@ -390,7 +484,7 @@ def sendagent(m):
     else:
         bot.reply_to(m, "❌ Agent not found")
 
-@bot.message_handler(commands=['inbox'])
+@bot.message_handler(commands=['inbox'], func=auth_filter)
 def inbox(m):
     prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not prefix:
@@ -412,7 +506,7 @@ def inbox(m):
         bot.reply_to(m, "❌ Agent not found")
 
 
-@bot.message_handler(commands=['test_agents'])
+@bot.message_handler(commands=['test_agents'], func=auth_filter)
 def test_agents(m):
     import time, json, os
     results = []
@@ -455,7 +549,7 @@ def test_agents(m):
     bot.reply_to(m, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
 
 
-@bot.message_handler(commands=['user'])
+@bot.message_handler(commands=['user'], func=auth_filter)
 def user(m):
     bot.reply_to(m, """👤 USER COMMANDS
 /start — Start
@@ -475,7 +569,7 @@ def user(m):
 /rlogs — Railway logs (admin)
 /disk — Disk usage""")
 
-@bot.message_handler(commands=['rlogs'])
+@bot.message_handler(commands=['rlogs'], func=auth_filter)
 def rlogs(m):
     import urllib.request, json, os, ssl
     # Admin only
@@ -513,7 +607,7 @@ def rlogs(m):
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
 
-@bot.message_handler(commands=['exec'])
+@bot.message_handler(commands=['exec'], func=auth_filter)
 def exec_cmd(m):
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
@@ -533,7 +627,7 @@ def exec_cmd(m):
         bot.reply_to(m, f"❌ Error: {e}")
 
 
-@bot.message_handler(commands=['termlog'])
+@bot.message_handler(commands=['termlog'], func=auth_filter)
 def termlog(m):
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
@@ -547,13 +641,13 @@ def termlog(m):
         bot.reply_to(m, f"❌ Error: {e}")
 
 
-@bot.message_handler(commands=['market'])
+@bot.message_handler(commands=['market'], func=auth_filter)
 def market(m):
     store = load_store()
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in store['plugins']]
     bot.reply_to(m, "🛍️ Marketplace:\n" + "\n".join(lines))
 
-@bot.message_handler(commands=['market_installed'])
+@bot.message_handler(commands=['market_installed'], func=auth_filter)
 def market_installed(m):
     store = load_store()
     if not store['installed']:
@@ -561,7 +655,7 @@ def market_installed(m):
     else:
         bot.reply_to(m, "📦 Installed: " + ", ".join(store['installed']))
 
-@bot.message_handler(commands=["market_install"])
+@bot.message_handler(commands=["market_install"], func=auth_filter)
 def market_install(m):
     store = load_store()
     # Handle both /market_install id and /market_install@BotName id
@@ -574,12 +668,12 @@ def market_install(m):
             store["installed"].append(plugin_id)
             p["installs"] += 1
             save_store(store)
-            bot.reply_to(m, f"✅ Plugin '{p["name"]}' installed!")
+            bot.reply_to(m, f"✅ Plugin '{p['name']}' installed!")
             return
     bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
 
 print("🚀 SLH SYSTEM RUNNING")
-@bot.message_handler(commands=['market_search'])
+@bot.message_handler(commands=['market_search'], func=auth_filter)
 def market_search(m):
     store = load_store()
     query = m.text.replace("/market_search", "").strip().lower()
@@ -593,7 +687,7 @@ def market_search(m):
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in results]
     bot.reply_to(m, "🔍 Search Results:\n" + "\n".join(lines))
 
-@bot.message_handler(commands=['market_rate'])
+@bot.message_handler(commands=['market_rate'], func=auth_filter)
 def market_rate(m):
     store = load_store()
     parts = m.text.split(" ", 2)
@@ -618,7 +712,7 @@ def market_rate(m):
             return
     bot.reply_to(m, "❌ Plugin not found")
 
-@bot.message_handler(commands=['market_upload'])
+@bot.message_handler(commands=['market_upload'], func=auth_filter)
 def market_upload(m):
     store = load_store()
     parts = m.text.split("\n", 1)
@@ -649,7 +743,7 @@ def market_upload(m):
     bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
 
 
-@bot.message_handler(commands=['ask'])
+@bot.message_handler(commands=['ask'], func=auth_filter)
 def ask(m):
     import re, time
     text = m.text.replace("/ask", "", 1).strip()
@@ -734,7 +828,7 @@ def ask(m):
         time.sleep(0.3)
     bot.reply_to(m, "✅ Done. Run /testcmd /ask <text> to verify.")
 
-@bot.message_handler(commands=['testcmd'])
+@bot.message_handler(commands=['testcmd'], func=auth_filter)
 def testcmd(m):
     parts = m.text.replace("/testcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
@@ -752,7 +846,7 @@ def testcmd(m):
     else:
         bot.reply_to(m, f"❌ Command /{cmd} not found.")
 
-@bot.message_handler(commands=['debugcmd'])
+@bot.message_handler(commands=['debugcmd'], func=auth_filter)
 def debugcmd(m):
     parts = m.text.replace("/debugcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
@@ -767,60 +861,283 @@ def debugcmd(m):
             return
     bot.reply_to(m, f"❌ Command /{cmd} not found.")
 
-
-@bot.message_handler(commands=['diagnose'])
-def diagnose_cmd(m):
-    import os, py_compile
-    cwd = os.path.expanduser("~/slh_clean")
+@bot.message_handler(commands=['diagnose'], func=auth_filter)
+def diagnose(m):
+    import re
     issues = []
-    bot_path = os.path.join(cwd, "bot.py")
-    
-    if os.path.exists(bot_path):
-        issues.append("✅ bot.py exists")
-        try:
-            py_compile.compile(bot_path, doraise=True)
-            issues.append("✅ Syntax OK")
-        except py_compile.PyCompileError as e:
-            issues.append(f"❌ Syntax error: {e}")
-    else:
-        issues.append("❌ bot.py missing")
-    
-    # Check for handler placement
-    with open(bot_path) as f:
+    with open("bot.py", "r") as f:
         code = f.read()
+    try:
+        compile(code, "bot.py", "exec")
+    except SyntaxError as e:
+        issues.append(f"❌ Syntax error at line {e.lineno}: {e.msg}")
+
+# --- Open to everyone (placed before any while True) ---
+@bot.message_handler(commands=['id'])
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+@bot.message_handler(commands=['request'])
+def request_access(m):
+    user = m.from_user
+    admin_id = get_admin()
+    if not admin_id:
+        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
+        return
+    if is_allowed(m.chat.id):
+        bot.reply_to(m, "✅ You already have access!")
+        return
+    user_info = f"@{user.username}" if user.username else f"user {user.id}"
+    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
+    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
+
     loop_pos = code.find("while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
         if "@bot.message_handler" in after_loop:
-            import re
             handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", after_loop)
             if handlers:
-                issues.append(f"⚠️ Handlers after while True: {', '.join('/'+h for h in handlers)}")
-            else:
-                issues.append("✅ No handlers after while True")
-        else:
-            issues.append("✅ No handlers after while True")
+                issues.append(f"⚠️ {len(handlers)} handlers after while True: {', '.join('/'+h for h in handlers)}")
+    all_handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", code)
+    dupes = [h for h in set(all_handlers) if all_handlers.count(h) > 1]
+    if dupes:
+        issues.append(f"⚠️ Duplicate handlers: {', '.join('/'+h for h in dupes)}")
+    if issues:
+        bot.reply_to(m, "🔍 Issues found:\n" + "\n".join(issues))
     else:
-        issues.append("❌ while True loop not found")
-    
-    # Check DB
-    db_path = os.path.join(cwd, "db.json")
-    if os.path.exists(db_path):
-        issues.append("✅ db.json exists")
-    else:
-        issues.append("❌ db.json missing")
-    
-    if any("❌" in i or "⚠️" in i for i in issues):
-        issues.insert(0, "⚠️ Issues found:")
-    else:
-        issues.insert(0, "✅ All checks passed")
-    
-    bot.reply_to(m, "\n".join(issues))
+        bot.reply_to(m, "✅ No issues detected.")
 
 
-while True:
+
+@bot.message_handler(commands=['vbackup'], func=auth_filter)
+def vbackup(m):
+    import subprocess, os
+    cmd = ["bash", os.path.expanduser("~/slh_clean/backup_verify.sh")]
     try:
-        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=os.path.expanduser("~/slh_clean"))
+        output = result.stdout + result.stderr
+        if len(output) > 4000:
+            output = output[-4000:]
+        bot.reply_to(m, f"```\n{output}\n```", parse_mode="Markdown")
     except Exception as e:
-        print("Polling error:", e)
-        time.sleep(5)
+        bot.reply_to(m, f"❌ Failed to run backup: {e}")
+
+
+# --- Open to everyone ---
+
+
+@bot.message_handler(commands=['users'], func=auth_filter)
+def list_users(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    data = load_allowed()
+    users = "\n".join([str(uid) for uid in data["allowed"]])
+    bot.reply_to(m, f"📋 Allowed users:\n{users}")
+
+@bot.message_handler(commands=['allow'], func=auth_filter)
+def allow_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /allow <chat_id>")
+        return
+    uid = int(parts[1])
+    if add_allowed(uid):
+        bot.reply_to(m, f"✅ User {uid} added to allowed list")
+    else:
+        bot.reply_to(m, "User already in list")
+
+@bot.message_handler(commands=['revoke'], func=auth_filter)
+def revoke_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /revoke <chat_id>")
+        return
+    uid = int(parts[1])
+    if remove_allowed(uid):
+        bot.reply_to(m, f"❌ User {uid} removed from allowed list")
+    else:
+        bot.reply_to(m, "User not in list or is admin")
+@bot.message_handler(commands=['sync'], func=auth_filter)
+def sync(m):
+    import subprocess
+    cwd = os.path.expanduser("~/slh_clean")
+    output = []
+    r = subprocess.run(["git", "pull"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Pull: {r.stdout.strip() or 'OK'}")
+    subprocess.run(["git", "add", "-A"], cwd=cwd)
+    r = subprocess.run(["git", "commit", "-m", f"sync {subprocess.run(['date', '-Iseconds'], capture_output=True, text=True).stdout.strip()}"], cwd=cwd, capture_output=True, text=True)
+    if "nothing to commit" in r.stdout + r.stderr:
+        output.append("Commit: nothing to commit")
+    else:
+        output.append("Commit: OK")
+    r = subprocess.run(["git", "push"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Push: {r.stdout.strip() or 'OK'}")
+    output.append("Railway: auto-deploy triggered (will exit due to SLH_LOCAL)")
+    bot.reply_to(m, "\n".join(output))
+
+
+# --- Open to everyone ---
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+# --- Admin only ---
+@bot.message_handler(commands=['users'], func=auth_filter)
+def list_users(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    data = load_allowed()
+    users = "\n".join([str(uid) for uid in data["allowed"]])
+    bot.reply_to(m, f"📋 Allowed users:\n{users}")
+
+@bot.message_handler(commands=['allow'], func=auth_filter)
+def allow_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /allow <chat_id>")
+        return
+    uid = int(parts[1])
+    if add_allowed(uid):
+        bot.reply_to(m, f"✅ User {uid} added to allowed list")
+    else:
+        bot.reply_to(m, "User already in list")
+
+@bot.message_handler(commands=['revoke'], func=auth_filter)
+def revoke_user(m):
+    if m.chat.id != get_admin():
+        bot.reply_to(m, "⛔️ Admin only")
+        return
+    parts = m.text.split()
+    if len(parts) != 2 or not parts[1].isdigit():
+        bot.reply_to(m, "Usage: /revoke <chat_id>")
+        return
+    uid = int(parts[1])
+    if remove_allowed(uid):
+        bot.reply_to(m, f"❌ User {uid} removed from allowed list")
+    else:
+        bot.reply_to(m, "User not in list or is admin")
+@bot.message_handler(commands=['sync'], func=auth_filter)
+def sync(m):
+    import subprocess
+    cwd = os.path.expanduser("~/slh_clean")
+    output = []
+    r = subprocess.run(["git", "pull"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Pull: {r.stdout.strip() or 'OK'}")
+    subprocess.run(["git", "add", "-A"], cwd=cwd)
+    r = subprocess.run(["git", "commit", "-m", f"sync {subprocess.run(['date', '-Iseconds'], capture_output=True, text=True).stdout.strip()}"], cwd=cwd, capture_output=True, text=True)
+    if "nothing to commit" in r.stdout + r.stderr:
+        output.append("Commit: nothing to commit")
+    else:
+        output.append("Commit: OK")
+    r = subprocess.run(["git", "push"], cwd=cwd, capture_output=True, text=True)
+    output.append(f"Push: {r.stdout.strip() or 'OK'}")
+    output.append("Railway: auto-deploy triggered (will exit due to SLH_LOCAL)")
+    bot.reply_to(m, "\n".join(output))
+
+
+@bot.message_handler(commands=['fullcheck'], func=auth_filter)
+def fullcheck(m):
+    import subprocess
+    r=subprocess.run(['bash','full_sync_check.sh'],capture_output=True,text=True,cwd=os.path.expanduser('~/slh_clean'))
+    out=r.stdout+r.stderr
+    if len(out)>4000: out=out[-4000:]
+    bot.reply_to(m,f'```\n{out}\n```',parse_mode='Markdown')
+
+def show_id(m):
+    chat = m.chat
+    user = m.from_user
+    info = []
+    info.append(f"Chat ID: {chat.id}")
+    info.append(f"Chat type: {chat.type}")
+    if chat.type == "private":
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Username: @{user.username}")
+    elif chat.type in ["group", "supergroup"]:
+        info.append(f"Group title: {chat.title}")
+        info.append(f"Your user ID: {user.id}")
+        if user.username:
+            info.append(f"Your username: @{user.username}")
+    bot.reply_to(m, "\n".join(info), parse_mode="Markdown")
+
+
+# --- Open to everyone ---
+def request_access(m):
+    user = m.from_user
+    admin_id = get_admin()
+    if not admin_id:
+        bot.reply_to(m, "⚠️ No admin configured. Please contact the developer.")
+        return
+    if is_allowed(m.chat.id):
+        bot.reply_to(m, "✅ You already have access!")
+        return
+    # Notify admin
+    user_info = f"@{user.username}" if user.username else f"user {user.id}"
+    bot.send_message(admin_id, f"📩 Access request from {user_info} (ID: {user.id}). Use /allow {user.id} to approve.")
+    bot.reply_to(m, "📨 Your access request has been sent to the admin. You'll be notified once approved.")
+
+# --- Admin only ---
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    uid = str(message.chat.id)
+    name = ""
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {}):
+            name = db["students"][uid].get("name", "")
+    except:
+        pass
+    msg = "ברוכים הבאים ל-SLH Learning!\n\n"
+    if name:
+        msg = f"נעים לראותך שוב, {name}!\n\n" + msg
+    msg += "הצעדים הראשונים:\n"
+    msg += "1. /join - הרשמה\n"
+    msg += "2. /courses - קורסים\n"
+    msg += "3. /project create - פרויקט אישי\n"
+    msg += "4. /project task add - משימות\n"
+    msg += "5. /myprogress - מעקב\n"
+    msg += "6. /referral - הזמינו חברים\n\n"
+    msg += "בואו נבנה יחד!"
+    bot.reply_to(message, msg)
+
+
+bot.infinity_polling()
