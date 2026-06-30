@@ -251,6 +251,7 @@ def revenue(m):
 
 @bot.message_handler(commands=['master'])
 def master(m):
+    if not is_admin(m): return
     bot.reply_to(m, "MASTER.json: locked")
 
 @bot.message_handler(commands=['backup'])
@@ -281,6 +282,7 @@ def clean(m):
 
 @bot.message_handler(commands=['audit'])
 def audit_cmd(m):
+    if not is_admin(m): return
     entries = get_audit(15)
     if not entries:
         bot.reply_to(m, "Audit log empty")
@@ -372,25 +374,30 @@ def disk(m):
 
 @bot.message_handler(commands=['test'])
 def test(m):
+    if not is_admin(m): return
     import subprocess
     result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
     bot.reply_to(m, result.stdout or "Diagnostics complete.")
 
 @bot.message_handler(commands=['kernellog'])
 def kernellog(m):
+    if not is_admin(m): return
     bot.reply_to(m, "See /debug for kernel info")
 
 @bot.message_handler(commands=['kernelstatus'])
 def kernelstatus(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
 
 @bot.message_handler(commands=['update'])
 def update(m):
+    if not is_admin(m): return
     result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
 
 @bot.message_handler(commands=['rollback'])
 def rollback(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Rollback: not implemented yet")
 
 # ---------------- MAIN ----------------
@@ -459,6 +466,7 @@ def inbox(m):
 
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
+    if not is_admin(m): return
     import time, json, os
     results = []
     
@@ -502,6 +510,7 @@ def test_agents(m):
 
 @bot.message_handler(commands=['user'])
 def user(m):
+    if not is_admin(m): return
     bot.reply_to(m, """👤 USER COMMANDS
 /start — Start
 /status — System status
@@ -668,6 +677,7 @@ def market_rate(m):
 
 @bot.message_handler(commands=['market_upload'])
 def market_upload(m):
+    if not is_admin(m): return
     store = load_store()
     parts = m.text.split("\n", 1)
     if len(parts) < 2:
@@ -784,6 +794,7 @@ def ask(m):
 
 @bot.message_handler(commands=['testcmd'])
 def testcmd(m):
+    if not is_admin(m): return
     parts = m.text.replace("/testcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
@@ -802,6 +813,7 @@ def testcmd(m):
 
 @bot.message_handler(commands=['debugcmd'])
 def debugcmd(m):
+    if not is_admin(m): return
     parts = m.text.replace("/debugcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
@@ -818,6 +830,7 @@ def debugcmd(m):
 
 @bot.message_handler(commands=['diagnose'])
 def diagnose_cmd(m):
+    if not is_admin(m): return
     import os, py_compile
     cwd = os.path.expanduser("~/slh_clean")
     issues = []
@@ -902,6 +915,7 @@ def log_event(event_type, user_id=None, data=None):
 # ===== SLH SNAPSHOT SYSTEM =====
 @bot.message_handler(commands=['snapshot'])
 def snapshot(m):
+    if not is_admin(m): return
     import json
     try:
         logs = json.load(open("state/event_log.json"))
@@ -933,6 +947,7 @@ def logs(m):
 
 @bot.message_handler(commands=['endday'])
 def endday(m):
+    if not is_admin(m): return
     import json
     try:
         logs = json.load(open("state/event_log.json"))
@@ -978,7 +993,7 @@ def generate_report():
             report["events"] = len(events)
 
         if os.path.exists("db.json"):
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             report["users"] = len(db.get("users", {}))
 
         if os.path.exists("logs/error.log"):
@@ -996,6 +1011,7 @@ def generate_report():
 
 @bot.message_handler(commands=['report'])
 def report(m):
+    if not is_admin(m): return
     import os, json
     try:
         cmd = m.text.split()

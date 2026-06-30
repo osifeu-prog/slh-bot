@@ -1,8 +1,12 @@
-config.json
-db.json
 *.pyc
 __pycache__/
 .env
 *.log
 runtime/
 backup_v2_1782764885/
+config.json
+db.json
+config.json
+db.json
+config.json
+db.json
