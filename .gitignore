@@ -4,3 +4,5 @@ db.json
 __pycache__/
 .env
 *.log
+runtime/
+backup_v2_1782764885/

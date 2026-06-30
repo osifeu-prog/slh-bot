@@ -4963,3 +4963,39 @@ To https://github.com/osifeu-prog/slh-bot.git
   ✅ All services running
 ~/slh_clean $
 2026-06-29T17:09:47.145176 | 8789977826 | /diagnose
+2026-06-29T23:20:27.432251 | 8789977826 | ^C                                                               ~/slh_clean $
+~/slh_clean $ pkill -9 -f bot.py
+pkill -9 -f python
+sleep 2
+~/slh_clean $ pgrep -af bot.py
+~/slh_clean $ cd ~/slh_clean
+./slh_daemon.sh
+🚀 SLH OS Daemon started – Mon Jun 29 23:19:59 IDT 2026
+  ✅ Bot started
+  ✅ API started
+  ✅ Dashboard started
+  ✅ All services running
+~/slh_clean $ pgrep -af bot.py
+21447 python3 /data/data/com.termux/files/usr/bin/python3 -B bot.py
+~/slh_clean $
+2026-06-29T23:20:38.439326 | 8789977826 | /admin
+2026-06-29T23:20:39.845618 | 8789977826 | /admin
+2026-06-29T23:20:40.756787 | 8789977826 | /admin
+2026-06-30T00:17:34.161551 | 8789977826 | /admin
+2026-06-30T00:17:37.936692 | 8789977826 | /admin
+2026-06-30T00:17:38.687905 | 8789977826 | /admin
+2026-06-30T00:17:39.806884 | 8789977826 | /admin
+2026-06-30T00:17:59.908410 | 8789977826 | 🌟 ברוכים הבאים ל-SLH Learning! 🌟
+
+🎯 /join | /courses | /project | /referral
+2026-06-30T00:18:00.187972 | 8789977826 | 🌟 ברוכים הבאים ל-SLH Learning! 🌟
+
+🎯 /join | /courses | /project | /referral
+2026-06-30T00:18:00.188533 | 8789977826 | /admin
+2026-06-30T00:18:00.188818 | 8789977826 | /admin
+2026-06-30T00:18:00.189102 | 8789977826 | /admin
+2026-06-30T00:18:00.189324 | 8789977826 | /admin
+2026-06-30T00:18:04.206207 | 8789977826 | /admin
+2026-06-30T00:18:05.540026 | 8789977826 | /admin
+2026-06-30T00:18:06.497436 | 8789977826 | /admin
+2026-06-30T00:18:07.010338 | 8789977826 | /admin

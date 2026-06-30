@@ -5,11 +5,6 @@ from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
-import welcome_handler
-import course_handlers
-import learn_handlers
-import project_commands
-import smart_leaderboard
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -41,12 +36,6 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-
-welcome_handler.init(bot)
-course_handlers.register_course_handlers(bot)
-learn_handlers.register(bot)
-project_commands.register(bot)
-smart_leaderboard.register(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----

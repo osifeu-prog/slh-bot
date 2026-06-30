@@ -5,11 +5,6 @@ from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
-import welcome_handler
-import course_handlers
-import learn_handlers
-import project_commands
-import smart_leaderboard
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -41,12 +36,6 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-
-welcome_handler.init(bot)
-course_handlers.register_course_handlers(bot)
-learn_handlers.register(bot)
-project_commands.register(bot)
-smart_leaderboard.register(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
@@ -835,150 +824,3 @@ while True:
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
-
-
-# ===== SLH EVENT LOGGER =====
-def log_event(event_type, user_id=None, data=None):
-    import json, os
-    from datetime import datetime
-
-    path = "state/event_log.json"
-
-    try:
-        if os.path.exists(path):
-            logs = json.load(open(path))
-        else:
-            logs = []
-
-        logs.append({
-            "time": datetime.now().isoformat(),
-            "type": event_type,
-            "user": str(user_id),
-            "data": str(data)
-        })
-
-        json.dump(logs[-500:], open(path, "w"), indent=2)
-    except:
-        pass
-
-
-# ===== SLH SNAPSHOT SYSTEM =====
-@bot.message_handler(commands=['snapshot'])
-def snapshot(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
-        total = len(logs)
-        last = logs[-10:] if total > 10 else logs
-
-        msg = f"""📊 SNAPSHOT REPORT
-
-Total events: {total}
-
-Last 10 events:
-{last}
-"""
-
-        bot.reply_to(m, msg)
-    except Exception as e:
-        bot.reply_to(m, f"snapshot error: {e}")
-
-
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    try:
-        with open("logs/error.log") as f:
-            data = f.readlines()[-20:]
-        bot.reply_to(m, "".join(data))
-    except Exception as e:
-        bot.reply_to(m, str(e))
-
-
-@bot.message_handler(commands=['endday'])
-def endday(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
-
-        summary = {
-            "total_events": len(logs),
-            "users": len(set([x.get("user") for x in logs])),
-            "types": list(set([x.get("type") for x in logs]))
-        }
-
-        json.dump(summary, open("state/daily_summary.json","w"), indent=2)
-
-        bot.reply_to(m, f"""🌙 END DAY COMPLETE
-
-Events: {summary['total_events']}
-Users: {summary['users']}
-Types: {summary['types']}
-
-Saved to daily_summary.json
-""")
-    except Exception as e:
-        bot.reply_to(m, f"endday error: {e}")
-
-
-# ===== SLH REPORT ENGINE =====
-import json, os
-from datetime import datetime
-
-def generate_report():
-    date = datetime.now().strftime("%Y-%m-%d")
-
-    report = {
-        "date": date,
-        "bot_running": True,
-        "users": 0,
-        "events": 0,
-        "errors_last_20": [],
-    }
-
-    try:
-        if os.path.exists("state/event_log.json"):
-            events = json.load(open("state/event_log.json"))
-            report["events"] = len(events)
-
-        if os.path.exists("db.json"):
-            db = json.load(open("db.json"))
-            report["users"] = len(db.get("users", {}))
-
-        if os.path.exists("logs/error.log"):
-            with open("logs/error.log") as f:
-                report["errors_last_20"] = f.readlines()[-20:]
-
-    except:
-        pass
-
-    os.makedirs("state/reports", exist_ok=True)
-    json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
-
-    return report
-
-
-@bot.message_handler(commands=['report'])
-def report(m):
-    import os, json
-    try:
-        cmd = m.text.split()
-
-        if len(cmd) == 1 or cmd[1] == "today":
-            r = generate_report()
-            bot.reply_to(m, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
-
-        elif cmd[1] == "list":
-            files = os.listdir("state/reports")
-            bot.reply_to(m, "Reports:\n" + "\n".join(files))
-
-        else:
-            date = cmd[1]
-            path = f"state/reports/{date}.json"
-            if os.path.exists(path):
-                data = json.load(open(path))
-                bot.reply_to(m, str(data))
-            else:
-                bot.reply_to(m, "No report found")
-
-    except Exception as e:
-        bot.reply_to(m, f"report error: {e}")
