@@ -585,7 +585,7 @@ def market_install(m):
             store["installed"].append(plugin_id)
             p["installs"] += 1
             save_store(store)
-            bot.reply_to(m, f"✅ Plugin '{p["name"]}' installed!")
+            bot.reply_to(m, f"✅ Plugin '{p['name']}' installed!")
             return
     bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
 
