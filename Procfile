@@ -1,1 +1,1 @@
-web: python3 -B bot.py
+web: python3 -B bot_stable.py

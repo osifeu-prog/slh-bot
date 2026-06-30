@@ -3,6 +3,6 @@
     "builder": "dockerfile"
   },
   "deploy": {
-    "startCommand": "python3 -B bot.py"
+    "startCommand": "python3 -B bot_stable.py"
   }
 }
