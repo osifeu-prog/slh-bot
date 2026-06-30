@@ -42,6 +42,21 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
+import json as _json_auth
+try:
+    with open("allowed_ids.json") as _f:
+        _ALLOWED = _json_auth.load(_f)
+except Exception:
+    _ALLOWED = {"admin": 8789977826, "allowed": [8789977826]}
+
+def is_admin(m):
+    uid = m.from_user.id
+    if uid not in _ALLOWED.get("allowed", []) and uid != _ALLOWED.get("admin"):
+        bot.reply_to(m, "⛔ Unauthorized - admin only")
+        return False
+    return True
+
+
 welcome_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
@@ -177,6 +192,7 @@ def task(m):
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
+    if not is_admin(m): return
     import time, json, os
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
@@ -203,10 +219,12 @@ def agents_list(m):
 
 @bot.message_handler(commands=['agent_debug'])
 def agent_debug(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
 
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
+    if not is_admin(m): return
     # simple test: create and list
     agent_store.create("test_agent")
     bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
@@ -237,15 +255,18 @@ def master(m):
 
 @bot.message_handler(commands=['backup'])
 def backup(m):
+    if not is_admin(m): return
     bot.reply_to(m, "✅ Backup committed to Git")
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 @bot.message_handler(commands=['logs'])
 def logs(m):
+    if not is_admin(m): return
     n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
         result = subprocess.run(f"tail -n {n} /app/bot.log", shell=True, capture_output=True, text=True)
@@ -255,6 +276,7 @@ def logs(m):
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Temp files cleaned")
 
 @bot.message_handler(commands=['audit'])
@@ -268,23 +290,28 @@ def audit_cmd(m):
 
 @bot.message_handler(commands=['memory'])
 def memory(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Memory: empty")
 
 @bot.message_handler(commands=['debug'])
 def debug(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
 
 @bot.message_handler(commands=['termux'])
 def termux(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
 
 @bot.message_handler(commands=['deploy'])
 def deploy(m):
+    if not is_admin(m): return
     result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
 
 @bot.message_handler(commands=['errors'])
 def errors(m):
+    if not is_admin(m): return
     try:
         with open("/app/bot.log") as f:
             lines = f.readlines()
@@ -295,6 +322,7 @@ def errors(m):
 
 @bot.message_handler(commands=['plugin'])
 def plugin(m):
+    if not is_admin(m): return
     parts = m.text.split()
     if len(parts) > 1 and parts[1] == "list":
         plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
@@ -304,6 +332,7 @@ def plugin(m):
 
 @bot.message_handler(commands=['goal'])
 def goal(m):
+    if not is_admin(m): return
     parts = m.text.split(None, 2)
     path = "/app/goals.json"
     if len(parts) < 2:
@@ -320,6 +349,7 @@ def goal(m):
 
 @bot.message_handler(commands=['sysinfo'])
 def sysinfo(m):
+    if not is_admin(m): return
     try:
         df = subprocess.run("df -h / | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
         mem = subprocess.run("cat /proc/meminfo 2>/dev/null | grep MemTotal", shell=True, capture_output=True, text=True).stdout.strip()
@@ -337,6 +367,7 @@ def sysinfo(m):
 
 @bot.message_handler(commands=['disk'])
 def disk(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Disk: OK")
 
 @bot.message_handler(commands=['test'])
@@ -366,6 +397,7 @@ def rollback(m):
 
 @bot.message_handler(commands=['agentstate'])
 def agentstate(m):
+    if not is_admin(m): return
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
         bot.reply_to(m, "Usage: /agentstate <id_prefix> <state>")
@@ -385,6 +417,7 @@ def agentstate(m):
 
 @bot.message_handler(commands=['sendagent'])
 def sendagent(m):
+    if not is_admin(m): return
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
         bot.reply_to(m, "Usage: /sendagent <id_prefix> <message>")
@@ -403,6 +436,7 @@ def sendagent(m):
 
 @bot.message_handler(commands=['inbox'])
 def inbox(m):
+    if not is_admin(m): return
     prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not prefix:
         bot.reply_to(m, "Usage: /inbox <id_prefix>")
@@ -488,6 +522,7 @@ def user(m):
 
 @bot.message_handler(commands=['rlogs'])
 def rlogs(m):
+    if not is_admin(m): return
     import urllib.request, json, os, ssl
     # Admin only
     if str(m.from_user.id) != str(SUPER_ADMIN):
@@ -526,6 +561,7 @@ def rlogs(m):
 
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
+    if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
         return
@@ -546,6 +582,7 @@ def exec_cmd(m):
 
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
+    if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
         return
