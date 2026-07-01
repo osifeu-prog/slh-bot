@@ -86,6 +86,7 @@ def smart_reply(bot, chat_id, text, max_len=3800):
     if len(text) <= max_len:
         bot.send_message(chat_id, text)
         return
+    # Long text - offer split/download without sending the full text
     from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
     parts = len(text) // max_len + 1
     markup = InlineKeyboardMarkup()
@@ -93,7 +94,7 @@ def smart_reply(bot, chat_id, text, max_len=3800):
         InlineKeyboardButton(f"Send as {parts} messages", callback_data=f"split_msg_{chat_id}"),
         InlineKeyboardButton("Download as .txt", callback_data=f"dl_msg_{chat_id}")
     )
-    bot.send_message(chat_id, f"Message is {len(text)} chars. Choose:", reply_markup=markup)
+    bot.send_message(chat_id, f"📩 Message is {len(text)} chars. Choose how to receive:", reply_markup=markup)
     import tempfile
     tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
     tmp.write(text)
