@@ -39,7 +39,7 @@ def _validate_token(token):
 
 
 def init(bot):
-    from is_admin import is_admin  # מניח שקיים לפי הזיכרון התיעודי
+    from bot_stable import is_admin
 
     @bot.message_handler(commands=["refreshtoken"])
     def refresh_token_start(message):
