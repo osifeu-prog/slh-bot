@@ -12,13 +12,13 @@ echo ""
 
 # 1. PROCESSES
 echo "[1] PROCESSES"
-pgrep -f "python3.*bot.py" > /dev/null 2>&1
+pgrep -f "python3.*bot_stable.py" > /dev/null 2>&1
 check $? "Bot running"
 pgrep -f "web/api/app.py" > /dev/null 2>&1
 check $? "Flask API running"
 pgrep -f "http.server 8000" > /dev/null 2>&1
 check $? "Dashboard server running"
-BOT_COUNT=$(pgrep -c "python3.*bot.py" 2>/dev/null)
+BOT_COUNT=$(pgrep -c "python3.*bot_stable.py" 2>/dev/null)
 if [ "$BOT_COUNT" -eq 1 ]; then echo "  ✅ Single bot instance (1)"; ((PASS++)); else echo "  ❌ Multiple bot instances ($BOT_COUNT)"; ((FAIL++)); fi
 echo ""
 
@@ -115,12 +115,12 @@ echo ""
 
 # 8. BOT COMMANDS
 echo "[8] BOT COMMANDS"
-COMMANDS=$(grep -c "@bot.message_handler" bot.py 2>/dev/null)
+COMMANDS=$(grep -c "@bot.message_handler" bot_stable.py 2>/dev/null)
 if [ "$COMMANDS" -ge 50 ]; then echo "  ✅ $COMMANDS commands defined (≥50)"; ((PASS++)); else echo "  ❌ Only $COMMANDS commands (<50)"; ((FAIL++)); fi
 
 # Key new commands
 for cmd in ask reload alert testcmd debugcmd market market_install market_search market_rate market_upload; do
-    grep -q "def $cmd\|def market_$cmd" bot.py 2>/dev/null
+    grep -q "def $cmd\|def market_$cmd" bot_stable.py 2>/dev/null
     check $? "Handler: /$cmd"
 done
 echo ""

@@ -7,7 +7,7 @@ echo ""
 
 # 1. Processes
 echo "[1] Processes"
-pgrep -f "python3.*bot.py" > /dev/null 2>&1 && echo "  ✅ Bot running" || echo "  ❌ Bot not running"
+pgrep -f "python3.*bot_stable.py" > /dev/null 2>&1 && echo "  ✅ Bot running" || echo "  ❌ Bot not running"
 pgrep -f "web/api/app.py" > /dev/null 2>&1 && echo "  ✅ API running" || echo "  ❌ API not running"
 pgrep -f "http.server 8000" > /dev/null 2>&1 && echo "  ✅ Dashboard running" || echo "  ❌ Dashboard not running"
 echo ""

@@ -14,7 +14,7 @@ if [ -d ~/slh_clean ]; then
     cp -r ~/slh_clean/core ./
     cp -r ~/slh_clean/plugins ./
     cp -r ~/slh_clean/web ./
-    cp ~/slh_clean/bot.py ./
+    cp ~/slh_clean/bot_stable.py ./
     cp ~/slh_clean/audit_logger.py ./
     cp ~/slh_clean/config.json ./
     cp ~/slh_clean/requirements.txt ./
@@ -34,11 +34,11 @@ pip install flask flask-cors pyTelegramBotAPI --break-system-packages 2>/dev/nul
 echo "✅ Dependencies installed"
 
 # 4. הפעלת שירותים
-pkill -f "python3.*bot.py" 2>/dev/null
+pkill -f "python3.*bot_stable.py" 2>/dev/null
 pkill -f "web/api/app.py" 2>/dev/null
 pkill -f "http.server 8000" 2>/dev/null
 
-nohup python3 -B bot.py >> bot.log 2>&1 &
+nohup python3 -B bot_stable.py >> bot.log 2>&1 &
 nohup python3 web/api/app.py >> web.log 2>&1 &
 nohup python3 -m http.server 8000 -d web/dashboard >> /dev/null 2>&1 &
 

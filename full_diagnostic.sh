@@ -7,12 +7,12 @@ echo ""
 # 1. Processes
 echo "[1] PROCESSES"
 echo "Bot:"
-pgrep -af "python3.*bot.py" || echo "  ❌ Not running"
+pgrep -af "python3.*bot_stable.py" || echo "  ❌ Not running"
 echo "API:"
 pgrep -af "web/api/app.py" || echo "  ❌ Not running"
 echo "Dashboard:"
 pgrep -af "http.server 8000" || echo "  ❌ Not running"
-BOT_COUNT=$(pgrep -c "python3.*bot.py" 2>/dev/null)
+BOT_COUNT=$(pgrep -c "python3.*bot_stable.py" 2>/dev/null)
 echo "  Bot instances: $BOT_COUNT"
 echo ""
 

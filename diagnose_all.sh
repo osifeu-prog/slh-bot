@@ -72,7 +72,7 @@ echo ""
 
 # 6. Processes
 echo "[6] Processes"
-pgrep -af "python3.*bot.py" || echo "  ❌ Bot not running"
+pgrep -af "python3.*bot_stable.py" || echo "  ❌ Bot not running"
 pgrep -af "web/api/app.py" || echo "  ❌ API not running"
 pgrep -af "http.server 8000" || echo "  ❌ Dashboard not running"
 echo ""

@@ -116,4 +116,4 @@ def init(bot):
             bot.reply_to(m, "📭 Journal empty")
         else:
             msg = "\n".join([f"🕒 {e['time']}\n{e['text']}\n" for e in entries[-10:]])
-            bot.reply_to(m, msg)
+            smart_reply(bot, m.chat.id, msg)

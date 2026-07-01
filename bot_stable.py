@@ -81,6 +81,58 @@ def is_admin(m):
     return True
 
 
+
+def smart_reply(bot, chat_id, text, max_len=3800):
+    if len(text) <= max_len:
+        bot.send_message(chat_id, text)
+        return
+    from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+    parts = len(text) // max_len + 1
+    markup = InlineKeyboardMarkup()
+    markup.add(
+        InlineKeyboardButton(f"Send as {parts} messages", callback_data=f"split_msg_{chat_id}"),
+        InlineKeyboardButton("Download as .txt", callback_data=f"dl_msg_{chat_id}")
+    )
+    bot.send_message(chat_id, f"Message is {len(text)} chars. Choose:", reply_markup=markup)
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
+    tmp.write(text)
+    tmp.close()
+    if not hasattr(bot, "_msg_files"):
+        bot._msg_files = {}
+    bot._msg_files[chat_id] = tmp.name
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
+def handle_msg_split(call):
+    chat_id = call.message.chat.id
+    action, _, uid = call.data.partition("_")
+    try:
+        orig_chat = int(uid)
+    except:
+        orig_chat = chat_id
+    tmp_path = bot._msg_files.get(orig_chat) if hasattr(bot, "_msg_files") else None
+    if not tmp_path or not os.path.exists(tmp_path):
+        bot.answer_callback_query(call.id, "File expired")
+        return
+    with open(tmp_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    if action == "split":
+        bot.answer_callback_query(call.id, "Sending...")
+        for i in range(0, len(text), 3800):
+            bot.send_message(orig_chat, text[i:i+3800])
+    elif action == "dl":
+        bot.answer_callback_query(call.id, "Uploading...")
+        with open(tmp_path, "rb") as f:
+            bot.send_document(orig_chat, f, visible_file_name="message.txt")
+    try:
+        os.unlink(tmp_path)
+    except:
+        pass
+    if hasattr(bot, "_msg_files") and orig_chat in bot._msg_files:
+        del bot._msg_files[orig_chat]
+    bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+
 welcome_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
@@ -632,7 +684,7 @@ def exec_cmd(m):
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
         output = result.stdout[:2000] or result.stderr[:500] or "No output"
-        bot.send_message(m.chat.id, f"💻 {cmd}\n{output}")
+        smart_reply(bot, m.chat.id, f"💻 {cmd}\n{output}")
     except subprocess.TimeoutExpired:
         bot.send_message(m.chat.id, "⏰ Command timed out")
     except Exception as e:
@@ -649,7 +701,7 @@ def termlog(m):
     try:
         result = subprocess.run("tail -n 30 ~/slh_clean/bot.log", shell=True, capture_output=True, text=True, timeout=5)
         output = result.stdout[:2000] or "No logs"
-        bot.send_message(m.chat.id, f"📋 Termux log:\n{output}")
+        smart_reply(bot, m.chat.id, f"📋 Termux log:\n{output}")
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
 

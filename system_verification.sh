@@ -12,13 +12,13 @@ echo ""
 
 # 1. PROCESSES
 echo "[1] PROCESSES"
-pgrep -f "python3.*bot.py" > /dev/null 2>&1
+pgrep -f "python3.*bot_stable.py" > /dev/null 2>&1
 check $? "Bot running"
 pgrep -f "web/api/app.py" > /dev/null 2>&1
 check $? "Flask API running"
 pgrep -f "http.server 8000" > /dev/null 2>&1
 check $? "Dashboard server running"
-BOT_COUNT=$(pgrep -f "python3.*bot.py" | wc -l)
+BOT_COUNT=$(pgrep -f "python3.*bot_stable.py" | wc -l)
 if [ "$BOT_COUNT" -eq 1 ]; then echo "  ✅ Single bot instance (1)"; ((PASS++)); else echo "  ❌ Multiple bot instances ($BOT_COUNT)"; ((FAIL++)); fi
 echo ""
 
@@ -136,10 +136,10 @@ echo ""
 
 # 8. BOT COMMANDS
 echo "[8] BOT COMMANDS"
-COMMANDS=$(grep -c "@bot.message_handler" bot.py 2>/dev/null)
+COMMANDS=$(grep -c "@bot.message_handler" bot_stable.py 2>/dev/null)
 if [ "$COMMANDS" -ge 30 ]; then echo "  ✅ $COMMANDS commands defined"; ((PASS++)); else echo "  ❌ Only $COMMANDS commands"; ((FAIL++)); fi
 for cmd in exec termlog rlogs user agent_create agents task; do
-    grep -q "def $cmd\|def exec_cmd\|def termlog\|def rlogs\|def user\|def agent_create\|def agents_list\|def task" bot.py 2>/dev/null
+    grep -q "def $cmd\|def exec_cmd\|def termlog\|def rlogs\|def user\|def agent_create\|def agents_list\|def task" bot_stable.py 2>/dev/null
     check $? "Handler: /$cmd"
 done
 echo ""
