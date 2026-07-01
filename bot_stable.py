@@ -1,4 +1,5 @@
 import os, sys, json, time, subprocess
+from internal_agent import start_agent_thread
 import telebot
 from marketplace import load_store, save_store
 from datetime import datetime
@@ -9,6 +10,17 @@ import welcome_handler
 import course_handlers
 import learn_handlers
 import project_commands
+import monitor_handler
+import ask_handler
+import complete_handler
+import diagnostic_handler
+import report_handler
+import junk_handler
+import sandbox_handler
+import myprogress_handler
+import help_handler
+import broadcast_handler
+import refresh_token_handler
 import smart_leaderboard
 
 # ---------------- LOAD TOKEN ----------------
@@ -42,6 +54,18 @@ DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
+# Runtime state initialization (volumes mount empty at runtime, not build time)
+os.makedirs("state", exist_ok=True)
+if not os.path.exists("state/db.json"):
+    with open("state/db.json", "w") as _f:
+        json.dump({"users": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}, _f)
+for _fname, _default in [("event_log.json", []), ("progress.json", {}), ("system.json", {}), ("users.json", {})]:
+    _path = f"state/{_fname}"
+    if not os.path.exists(_path):
+        with open(_path, "w") as _f:
+            json.dump(_default, _f)
+
+
 import json as _json_auth
 try:
     with open("allowed_ids.json") as _f:
@@ -52,7 +76,7 @@ except Exception:
 def is_admin(m):
     uid = m.from_user.id
     if uid not in _ALLOWED.get("allowed", []) and uid != _ALLOWED.get("admin"):
-        bot.reply_to(m, "⛔ Unauthorized - admin only")
+        bot.send_message(m.chat.id, "⛔ Unauthorized - admin only")
         return False
     return True
 
@@ -61,8 +85,14 @@ welcome_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
 project_commands.register(bot)
+monitor_handler.init(bot)
+ask_handler.init(bot)
+report_handler.init(bot)
+junk_handler.init(bot)
+refresh_token_handler.init(bot)
 smart_leaderboard.register(bot)
 agents_dict = {}
+start_agent_thread()
 
 # ---- Load agents from persistent storage ----
 try:
@@ -122,13 +152,13 @@ def start(m):
         db = ensure_user(load_db(), m.from_user.id)
         save_db(db)
         audit('start', m.from_user.id)
-        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+        bot.send_message(m.chat.id, "🚀 SLH SYSTEM ONLINE\n/admin for control")
     except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+        bot.send_message(m.chat.id, f"❌ Error: {e}")
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
-    bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
+    bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
 📊 DIAGNOSTICS:
 /test — Run full system diagnostic\n/test_agents — Quick agent self-test
 /status — System status
@@ -162,7 +192,7 @@ def admin(m):
 @bot.message_handler(commands=['status'])
 def status(m):
     db = load_db()
-    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
+    bot.send_message(m.chat.id, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
 
 @bot.message_handler(commands=['health'])
 def health(m):
@@ -174,16 +204,16 @@ def health(m):
         msg = f"Uptime: {uptime/3600:.1f}h\nRAM: {mem.percent}% used\nDisk: {disk.percent}% used"
     except:
         msg = "Health: limited info (psutil not available)"
-    bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
+    bot.send_message(m.chat.id, f"🩺 SYSTEM HEALTH\n{msg}")
 
 @bot.message_handler(commands=['task'])
 def task(m):
     if not _KERNEL_READY:
-        bot.reply_to(m, "Kernel not loaded")
+        bot.send_message(m.chat.id, "Kernel not loaded")
         return
     parts = m.text.split(" ", 2)
     if len(parts) < 2:
-        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        bot.send_message(m.chat.id, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
         kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
@@ -191,43 +221,49 @@ def task(m):
         kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 @bot.message_handler(commands=['agent_create'])
+@bot.message_handler(commands=['agent_create'])
+@bot.message_handler(commands=["agent_create"])
 def agent_create(m):
     if not is_admin(m): return
-    import time, json, os
-    parts = m.text.split(" ", 1)
-    name = parts[1] if len(parts) > 1 else "agent"
-    aid = str(len(agents_dict) + 1)
-    agent_data = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
-    agents_dict[aid] = agent_data
-    # save to file for persistence across deploys
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.send_message(m.chat.id, "Usage: /agent_create <name>")
+        return
+    name = parts[1]
     try:
-        path = "/app/agents.json"
-        existing = json.load(open(path)) if os.path.exists(path) else {}
-        existing[aid] = agent_data
-        json.dump(existing, open(path, "w"), indent=2)
-    except Exception as e:
-        print("Could not save agents.json:", e)
-    bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
-
+        with open("db.json") as f:
+            db = json.load(f)
+    except:
+        db = {}
+    agents = db.setdefault("agents", {})
+    if name in agents:
+        bot.send_message(m.chat.id, "❌ Agent already exists")
+        return
+    agents[name] = {"inbox": [], "outbox": [], "state": "idle"}
+    with open("db.json", "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    agents_dict.clear()
+    agents_dict.update(agents)
+    bot.send_message(m.chat.id, f"✅ Agent created: {name}")
 @bot.message_handler(commands=['agents'])
 def agents_list(m):
     if not agents_dict:
-        bot.reply_to(m, "No agents yet")
+        bot.send_message(m.chat.id, "No agents yet")
     else:
         lines = [f"{v['name']} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
-        bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
+        bot.send_message(m.chat.id, "🤖 Agents:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['agent_debug'])
 def agent_debug(m):
     if not is_admin(m): return
-    bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
+    bot.send_message(m.chat.id, f"Agents in memory: {len(agents_dict)}")
 
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
     if not is_admin(m): return
     # simple test: create and list
     agent_store.create("test_agent")
-    bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
+    bot.send_message(m.chat.id, f"Test agent created. Total agents: {len(agents_dict)}")
 
 @bot.message_handler(commands=['vote'])
 def vote(m):
@@ -238,31 +274,31 @@ def vote(m):
     else:
         db["votes"][key] = 1
     save_db(db)
-    bot.reply_to(m, f"Voted {key}")
+    bot.send_message(m.chat.id, f"Voted {key}")
 
 @bot.message_handler(commands=['results'])
 def results(m):
     db = load_db()
-    bot.reply_to(m, json.dumps(db["votes"], indent=2))
+    bot.send_message(m.chat.id, json.dumps(db["votes"], indent=2))
 
 @bot.message_handler(commands=['revenue'])
 def revenue(m):
-    bot.reply_to(m, "Revenue: ₪0")
+    bot.send_message(m.chat.id, "Revenue: ₪0")
 
 @bot.message_handler(commands=['master'])
 def master(m):
     if not is_admin(m): return
-    bot.reply_to(m, "MASTER.json: locked")
+    bot.send_message(m.chat.id, "MASTER.json: locked")
 
 @bot.message_handler(commands=['backup'])
 def backup(m):
     if not is_admin(m): return
-    bot.reply_to(m, "✅ Backup committed to Git")
+    bot.send_message(m.chat.id, "✅ Backup committed to Git")
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
     if not is_admin(m): return
-    bot.reply_to(m, "Restarting...")
+    bot.send_message(m.chat.id, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 @bot.message_handler(commands=['logs'])
@@ -271,45 +307,45 @@ def logs(m):
     n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
         result = subprocess.run(f"tail -n {n} /app/bot.log", shell=True, capture_output=True, text=True)
-        bot.reply_to(m, result.stdout[:2000] or "No logs yet")
+        bot.send_message(m.chat.id, result.stdout[:2000] or "No logs yet")
     except:
-        bot.reply_to(m, "No log file")
+        bot.send_message(m.chat.id, "No log file")
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
     if not is_admin(m): return
-    bot.reply_to(m, "Temp files cleaned")
+    bot.send_message(m.chat.id, "Temp files cleaned")
 
 @bot.message_handler(commands=['audit'])
 def audit_cmd(m):
     if not is_admin(m): return
     entries = get_audit(15)
     if not entries:
-        bot.reply_to(m, "Audit log empty")
+        bot.send_message(m.chat.id, "Audit log empty")
     else:
         lines = [f"{e['time']}: {e['user']} – {e['action']}" for e in entries]
-        bot.reply_to(m, "📋 Audit Log:\n" + "\n".join(lines))
+        bot.send_message(m.chat.id, "📋 Audit Log:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['memory'])
 def memory(m):
     if not is_admin(m): return
-    bot.reply_to(m, "Memory: empty")
+    bot.send_message(m.chat.id, "Memory: empty")
 
 @bot.message_handler(commands=['debug'])
 def debug(m):
     if not is_admin(m): return
-    bot.reply_to(m, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
+    bot.send_message(m.chat.id, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
 
 @bot.message_handler(commands=['termux'])
 def termux(m):
     if not is_admin(m): return
-    bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
+    bot.send_message(m.chat.id, f"Python: {sys.version}\ncwd: {os.getcwd()}")
 
 @bot.message_handler(commands=['deploy'])
 def deploy(m):
     if not is_admin(m): return
     result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
+    bot.send_message(m.chat.id, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
 
 @bot.message_handler(commands=['errors'])
 def errors(m):
@@ -318,9 +354,9 @@ def errors(m):
         with open("/app/bot.log") as f:
             lines = f.readlines()
         errors = [line for line in lines if "ERROR" in line or "Traceback" in line][-10:]
-        bot.reply_to(m, "".join(errors) or "No recent errors")
+        bot.send_message(m.chat.id, "".join(errors) or "No recent errors")
     except:
-        bot.reply_to(m, "No log file")
+        bot.send_message(m.chat.id, "No log file")
 
 @bot.message_handler(commands=['plugin'])
 def plugin(m):
@@ -328,9 +364,9 @@ def plugin(m):
     parts = m.text.split()
     if len(parts) > 1 and parts[1] == "list":
         plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
-        bot.reply_to(m, "Plugins: " + ", ".join(plugins) if plugins else "None")
+        bot.send_message(m.chat.id, "Plugins: " + ", ".join(plugins) if plugins else "None")
     else:
-        bot.reply_to(m, "Usage: /plugin list")
+        bot.send_message(m.chat.id, "Usage: /plugin list")
 
 @bot.message_handler(commands=['goal'])
 def goal(m):
@@ -338,16 +374,16 @@ def goal(m):
     parts = m.text.split(None, 2)
     path = "/app/goals.json"
     if len(parts) < 2:
-        bot.reply_to(m, "Usage: /goal add <text> | /goal list")
+        bot.send_message(m.chat.id, "Usage: /goal add <text> | /goal list")
         return
     if parts[1] == "add" and len(parts) > 2:
         goals = json.load(open(path)) if os.path.exists(path) else []
         goals.append({"text": parts[2], "status": "active"})
         json.dump(goals, open(path, "w"))
-        bot.reply_to(m, f"Goal added: {parts[2]}")
+        bot.send_message(m.chat.id, f"Goal added: {parts[2]}")
     elif parts[1] == "list":
         goals = json.load(open(path)) if os.path.exists(path) else []
-        bot.reply_to(m, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
+        bot.send_message(m.chat.id, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
 
 @bot.message_handler(commands=['sysinfo'])
 def sysinfo(m):
@@ -363,42 +399,42 @@ def sysinfo(m):
             uptime_str = f"{hours}h {mins}m"
         else:
             uptime_str = "N/A"
-        bot.reply_to(m, f"Disk: {df}\nMemory: {mem}\nUptime: {uptime_str}")
+        bot.send_message(m.chat.id, f"Disk: {df}\nMemory: {mem}\nUptime: {uptime_str}")
     except Exception as e:
-        bot.reply_to(m, f"Sysinfo error: {e}")
+        bot.send_message(m.chat.id, f"Sysinfo error: {e}")
 
 @bot.message_handler(commands=['disk'])
 def disk(m):
     if not is_admin(m): return
-    bot.reply_to(m, "Disk: OK")
+    bot.send_message(m.chat.id, "Disk: OK")
 
 @bot.message_handler(commands=['test'])
 def test(m):
     if not is_admin(m): return
     import subprocess
     result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, result.stdout or "Diagnostics complete.")
+    bot.send_message(m.chat.id, result.stdout or "Diagnostics complete.")
 
 @bot.message_handler(commands=['kernellog'])
 def kernellog(m):
     if not is_admin(m): return
-    bot.reply_to(m, "See /debug for kernel info")
+    bot.send_message(m.chat.id, "See /debug for kernel info")
 
 @bot.message_handler(commands=['kernelstatus'])
 def kernelstatus(m):
     if not is_admin(m): return
-    bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
+    bot.send_message(m.chat.id, f"KERNEL_READY: {_KERNEL_READY}")
 
 @bot.message_handler(commands=['update'])
 def update(m):
     if not is_admin(m): return
     result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
+    bot.send_message(m.chat.id, f"Update:\n{result.stdout[:500] or 'OK'}")
 
 @bot.message_handler(commands=['rollback'])
 def rollback(m):
     if not is_admin(m): return
-    bot.reply_to(m, "Rollback: not implemented yet")
+    bot.send_message(m.chat.id, "Rollback: not implemented yet")
 
 # ---------------- MAIN ----------------
 
@@ -407,7 +443,7 @@ def agentstate(m):
     if not is_admin(m): return
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
-        bot.reply_to(m, "Usage: /agentstate <id_prefix> <state>")
+        bot.send_message(m.chat.id, "Usage: /agentstate <id_prefix> <state>")
         return
     prefix, new_state = parts[1], parts[2]
     found = None
@@ -418,52 +454,66 @@ def agentstate(m):
             agent["history"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "action": f"state→{new_state}"})
             break
     if found:
-        bot.reply_to(m, f"✅ Agent {agents_dict[found]['name']} state changed to {new_state}")
+        bot.send_message(m.chat.id, f"✅ Agent {agents_dict[found]['name']} state changed to {new_state}")
     else:
-        bot.reply_to(m, "❌ Agent not found")
+        bot.send_message(m.chat.id, "❌ Agent not found")
 
+@bot.message_handler(commands=['sendagent'])
+@bot.message_handler(commands=['sendagent'])
+@bot.message_handler(commands=['sendagent'])
+@bot.message_handler(commands=['sendagent'])
+@bot.message_handler(commands=['sendagent'])
 @bot.message_handler(commands=['sendagent'])
 def sendagent(m):
     if not is_admin(m): return
-    parts = m.text.split(" ", 2)
+    parts = m.text.split()
     if len(parts) < 3:
-        bot.reply_to(m, "Usage: /sendagent <id_prefix> <message>")
+        bot.reply_to(m, "Usage: /sendagent <prefix> <msg>")
         return
-    prefix, msg = parts[1], parts[2]
-    found = None
-    for aid, agent in agents_dict.items():
-        if aid.startswith(prefix):
-            found = aid
-            agent["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": msg})
-            break
-    if found:
-        bot.reply_to(m, f"✉️ Message sent to {agents_dict[found]['name']}")
-    else:
+    prefix = parts[1]
+    msg = " ".join(parts[2:])
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+    except:
+        db = {}
+    agents = db.setdefault("agents", {})
+    if prefix not in agents:
         bot.reply_to(m, "❌ Agent not found")
-
+        return
+    cmd = msg.split()[0].lower() if msg else ""
+    if cmd == "ask":
+        prompt = " ".join(msg.split()[1:]) if len(msg.split()) > 1 else ""
+        data = {"command": "ask", "prompt": prompt, "time": time.time()}
+    agents[prefix].setdefault("inbox", []).append({"command": msg, "time": time.time()})
+    with open("db.json", "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    agents_dict.clear()
+    agents_dict.update(agents)
+    bot.reply_to(m, f"📨 Sent to {prefix}")
 @bot.message_handler(commands=['inbox'])
 def inbox(m):
     if not is_admin(m): return
-    prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
-    if not prefix:
-        bot.reply_to(m, "Usage: /inbox <id_prefix>")
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.send_message(m.chat.id, "Usage: /inbox <agent_prefix>")
         return
-    found = None
-    for aid, agent in agents_dict.items():
-        if aid.startswith(prefix):
-            found = aid
-            break
-    if found:
-        msgs = agents_dict[found]["inbox"]
-        if not msgs:
-            bot.reply_to(m, "📬 Inbox empty")
+    prefix = parts[1]
+    try:
+        with open("db.json") as f:
+            db = json.load(f)
+        agent = db.get("agents", {}).get(prefix)
+        if not agent:
+            bot.send_message(m.chat.id, "❌ Agent not found")
+            return
+        outbox = agent.get("outbox", [])
+        if outbox:
+            msg = "📬 Outbox:\n" + "\n".join(outbox[-5:])
         else:
-            lines = [f"{m['time']}: {m['message']}" for m in msgs[-5:]]
-            bot.reply_to(m, "📬 Inbox:\n" + "\n".join(lines))
-    else:
-        bot.reply_to(m, "❌ Agent not found")
-
-
+            msg = "📭 Outbox empty"
+    except Exception as e:
+        msg = f"Error reading db: {e}"
+    bot.send_message(m.chat.id, msg)
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
     if not is_admin(m): return
@@ -505,13 +555,13 @@ def test_agents(m):
     entries = get_audit(5)
     results.append(f"✅ Audit: {len(entries)} entries")
     
-    bot.reply_to(m, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
+    bot.send_message(m.chat.id, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
 
 
 @bot.message_handler(commands=['user'])
 def user(m):
     if not is_admin(m): return
-    bot.reply_to(m, """👤 USER COMMANDS
+    bot.send_message(m.chat.id, """👤 USER COMMANDS
 /start — Start
 /status — System status
 /health — Health check
@@ -535,7 +585,7 @@ def rlogs(m):
     import urllib.request, json, os, ssl
     # Admin only
     if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.reply_to(m, "❌ Admin only")
+        bot.send_message(m.chat.id, "❌ Admin only")
         return
     # Load token
     token = os.getenv("RAILWAY_API_TOKEN", "")
@@ -546,7 +596,7 @@ def rlogs(m):
         except:
             pass
     if not token:
-        bot.reply_to(m, "❌ RAILWAY_API_TOKEN not set")
+        bot.send_message(m.chat.id, "❌ RAILWAY_API_TOKEN not set")
         return
     # SSL bypass
     ctx = ssl.create_default_context()
@@ -564,59 +614,59 @@ def rlogs(m):
     try:
         with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
             data = json.loads(resp.read())
-            bot.reply_to(m, f"📋 Railway response:\n{str(data)[:2000]}")
+            bot.send_message(m.chat.id, f"📋 Railway response:\n{str(data)[:2000]}")
     except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+        bot.send_message(m.chat.id, f"❌ Error: {e}")
 
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
     if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.reply_to(m, "❌ Admin only")
+        bot.send_message(m.chat.id, "❌ Admin only")
         return
     cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not cmd:
-        bot.reply_to(m, "Usage: /exec <shell command>")
+        bot.send_message(m.chat.id, "Usage: /exec <shell command>")
         return
     import subprocess
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
         output = result.stdout[:2000] or result.stderr[:500] or "No output"
-        bot.reply_to(m, f"💻 {cmd}\n{output}")
+        bot.send_message(m.chat.id, f"💻 {cmd}\n{output}")
     except subprocess.TimeoutExpired:
-        bot.reply_to(m, "⏰ Command timed out")
+        bot.send_message(m.chat.id, "⏰ Command timed out")
     except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+        bot.send_message(m.chat.id, f"❌ Error: {e}")
 
 
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
     if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.reply_to(m, "❌ Admin only")
+        bot.send_message(m.chat.id, "❌ Admin only")
         return
     import subprocess
     try:
         result = subprocess.run("tail -n 30 ~/slh_clean/bot.log", shell=True, capture_output=True, text=True, timeout=5)
         output = result.stdout[:2000] or "No logs"
-        bot.reply_to(m, f"📋 Termux log:\n{output}")
+        bot.send_message(m.chat.id, f"📋 Termux log:\n{output}")
     except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+        bot.send_message(m.chat.id, f"❌ Error: {e}")
 
 
 @bot.message_handler(commands=['market'])
 def market(m):
     store = load_store()
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in store['plugins']]
-    bot.reply_to(m, "🛍️ Marketplace:\n" + "\n".join(lines))
+    bot.send_message(m.chat.id, "🛍️ Marketplace:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['market_installed'])
 def market_installed(m):
     store = load_store()
     if not store['installed']:
-        bot.reply_to(m, "No plugins installed yet.")
+        bot.send_message(m.chat.id, "No plugins installed yet.")
     else:
-        bot.reply_to(m, "📦 Installed: " + ", ".join(store['installed']))
+        bot.send_message(m.chat.id, "📦 Installed: " + ", ".join(store['installed']))
 
 @bot.message_handler(commands=["market_install"])
 def market_install(m):
@@ -631,9 +681,9 @@ def market_install(m):
             store["installed"].append(plugin_id)
             p["installs"] += 1
             save_store(store)
-            bot.reply_to(m, f"✅ Plugin '{p['name']}' installed!")
+            bot.send_message(m.chat.id, f"✅ Plugin '{p['name']}' installed!")
             return
-    bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
+    bot.send_message(m.chat.id, f"❌ Plugin '{plugin_id}' not found")
 
 print("🚀 SLH SYSTEM RUNNING")
 @bot.message_handler(commands=['market_search'])
@@ -641,21 +691,21 @@ def market_search(m):
     store = load_store()
     query = m.text.replace("/market_search", "").strip().lower()
     if not query:
-        bot.reply_to(m, "Usage: /market_search <keyword>")
+        bot.send_message(m.chat.id, "Usage: /market_search <keyword>")
         return
     results = [p for p in store['plugins'] if query in p['name'].lower() or query in p['desc'].lower()]
     if not results:
-        bot.reply_to(m, f"No plugins found for '{query}'")
+        bot.send_message(m.chat.id, f"No plugins found for '{query}'")
         return
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in results]
-    bot.reply_to(m, "🔍 Search Results:\n" + "\n".join(lines))
+    bot.send_message(m.chat.id, "🔍 Search Results:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['market_rate'])
 def market_rate(m):
     store = load_store()
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
-        bot.reply_to(m, "Usage: /market_rate <plugin_id> <rating 1-5>")
+        bot.send_message(m.chat.id, "Usage: /market_rate <plugin_id> <rating 1-5>")
         return
     plugin_id = parts[1]
     try:
@@ -663,7 +713,7 @@ def market_rate(m):
         if rating < 1 or rating > 5:
             raise ValueError
     except:
-        bot.reply_to(m, "Rating must be 1-5")
+        bot.send_message(m.chat.id, "Rating must be 1-5")
         return
     for p in store['plugins']:
         if p['id'] == plugin_id:
@@ -671,9 +721,9 @@ def market_rate(m):
             p.setdefault('avg_rating', 0)
             p['avg_rating'] = sum(p['ratings']) / len(p['ratings'])
             save_store(store)
-            bot.reply_to(m, f"✅ Rated '{p['name']}' {rating}/5 (avg: {p['avg_rating']:.1f})")
+            bot.send_message(m.chat.id, f"✅ Rated '{p['name']}' {rating}/5 (avg: {p['avg_rating']:.1f})")
             return
-    bot.reply_to(m, "❌ Plugin not found")
+    bot.send_message(m.chat.id, "❌ Plugin not found")
 
 @bot.message_handler(commands=['market_upload'])
 def market_upload(m):
@@ -681,12 +731,12 @@ def market_upload(m):
     store = load_store()
     parts = m.text.split("\n", 1)
     if len(parts) < 2:
-        bot.reply_to(m, "Usage: /market_upload <id>\n<name>\n<description>\n<price>")
+        bot.send_message(m.chat.id, "Usage: /market_upload <id>\n<name>\n<description>\n<price>")
         return
     header = parts[0].replace("/market_upload", "").strip()
     body = parts[1].strip().split("\n")
     if len(body) < 3:
-        bot.reply_to(m, "Need: name, description, price")
+        bot.send_message(m.chat.id, "Need: name, description, price")
         return
     plugin_id = header or body[0].lower().replace(" ", "_")
     name = body[0]
@@ -694,7 +744,7 @@ def market_upload(m):
     try:
         price = int(body[2])
     except:
-        bot.reply_to(m, "Price must be a number")
+        bot.send_message(m.chat.id, "Price must be a number")
         return
     store['plugins'].append({
         "id": plugin_id,
@@ -704,93 +754,8 @@ def market_upload(m):
         "installs": 0
     })
     save_store(store)
-    bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
+    bot.send_message(m.chat.id, f"✅ Plugin '{name}' uploaded to Marketplace!")
 
-
-@bot.message_handler(commands=['ask'])
-def ask(m):
-    import re, time
-    text = m.text.replace("/ask", "", 1).strip()
-    if not text:
-        bot.reply_to(m, "Usage: /ask <natural language command>")
-        return
-    bot.reply_to(m, f"🤖 Processing: {text}")
-    
-    # Simple NLU rules
-    tl = text.lower()
-    results = []
-    
-    # Agent creation
-    if "create" in tl and "agent" in tl:
-        name = tl.split("agent")[-1].strip().strip("called").strip("named").strip()
-        if name:
-            bot.reply_to(m, f"▶️ /agent_create {name}")
-            results.append(f"Agent '{name}' created")
-    
-    # Agent state change
-    if "set" in tl and "active" in tl:
-        for w in tl.split():
-            if w not in ["set", "active", "to", "the", "and", "agent"]:
-                bot.reply_to(m, f"▶️ /agentstate {w} active")
-                results.append(f"Agent '{w}' set active")
-                break
-    
-    # Status
-    if "status" in tl or "how" in tl:
-        bot.reply_to(m, "▶️ /status")
-        results.append("Status checked")
-    
-    # Market search
-    if "search" in tl and ("market" in tl or "plugin" in tl):
-        keyword = tl.split("search")[-1].strip().split()[-1]
-        bot.reply_to(m, f"▶️ /market_search {keyword}")
-        results.append(f"Market search for '{keyword}'")
-    
-    # List agents
-    if "list" in tl and "agent" in tl:
-        bot.reply_to(m, "▶️ /agents")
-        results.append("Agents listed")
-    
-    # Health
-    if "health" in tl:
-        bot.reply_to(m, "▶️ /health")
-        results.append("Health checked")
-    
-    if not results:
-        bot.reply_to(m, "❓ Could not understand. Try: create agent X, set agent active, status, search market Y, list agents, health")
-    else:
-        bot.reply_to(m, "✅ Done: " + ", ".join(results))
-
-    import re, time
-    bot.reply_to(m, "🤖 Analyzing: " + m.text.replace("/ask", "", 1).strip())
-    text = m.text.lower()
-    commands_to_run = []
-    if "create agent" in text or "new agent" in text:
-        name = text.split("called")[-1].strip() if "called" in text else text.split("agent")[-1].strip()
-        commands_to_run.append(f"/agent_create {name}")
-    if "set active" in text or "activate" in text:
-        for word in text.split():
-            if word not in ["set", "active", "activate", "agent", "to", "the", "and"]:
-                commands_to_run.append(f"/agentstate {word} active")
-                break
-    if "create task" in text or "add task" in text:
-        task = text.split("task")[-1].strip()
-        commands_to_run.append(f"/task create {task}")
-    if "status" in text:
-        commands_to_run.append("/status")
-    if "diagnostic" in text or "test" in text:
-        commands_to_run.append("/test")
-    if "search market" in text or "market search" in text:
-        keyword = text.split("search")[-1].strip().split()[-1]
-        commands_to_run.append(f"/market_search {keyword}")
-    if "list agents" in text or "show agents" in text:
-        commands_to_run.append("/agents")
-    if not commands_to_run:
-        commands_to_run.append("/admin")
-    for cmd in commands_to_run:
-        bot.reply_to(m, f"▶️ {cmd}")
-        time.sleep(0.3)
-    bot.reply_to(m, "✅ Done. Run /testcmd /ask <text> to verify.")
 
 @bot.message_handler(commands=['testcmd'])
 def testcmd(m):
@@ -798,7 +763,7 @@ def testcmd(m):
     parts = m.text.replace("/testcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
-        bot.reply_to(m, "Usage: /testcmd <command> <args>")
+        bot.send_message(m.chat.id, "Usage: /testcmd <command> <args>")
         return
     # Check if the command exists (search in the registered handlers)
     found = False
@@ -807,9 +772,9 @@ def testcmd(m):
             found = True
             break
     if found:
-        bot.reply_to(m, f"✅ Command {cmd} found in bot.")
+        bot.send_message(m.chat.id, f"✅ Command {cmd} found in bot.")
     else:
-        bot.reply_to(m, f"❌ Command /{cmd} not found.")
+        bot.send_message(m.chat.id, f"❌ Command /{cmd} not found.")
 
 @bot.message_handler(commands=['debugcmd'])
 def debugcmd(m):
@@ -817,15 +782,15 @@ def debugcmd(m):
     parts = m.text.replace("/debugcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
-        bot.reply_to(m, "Usage: /debugcmd <command>")
+        bot.send_message(m.chat.id, "Usage: /debugcmd <command>")
         return
     for handler in bot.message_handlers:
         if cmd in str(handler):
             h = handler
             info = f"✅ /{cmd} exists: {h['function'].__name__}"
-            bot.reply_to(m, info)
+            bot.send_message(m.chat.id, info)
             return
-    bot.reply_to(m, f"❌ Command /{cmd} not found.")
+    bot.send_message(m.chat.id, f"❌ Command /{cmd} not found.")
 
 
 @bot.message_handler(commands=['diagnose'])
@@ -876,12 +841,92 @@ def diagnose_cmd(m):
     else:
         issues.insert(0, "✅ All checks passed")
     
-    bot.reply_to(m, "\n".join(issues))
+    bot.send_message(m.chat.id, "\n".join(issues))
 
 
 while True:
     try:
-        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+        
+        @bot.message_handler(commands=['refreshtoken'])
+        def refresh_token(m):
+            if not is_admin(m):
+                bot.send_message(m.chat.id, "❌ Admin only")
+                return
+            msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
+            bot.register_next_step_handler(msg, process_new_token)
+        
+        def process_new_token(m):
+            token = m.text.strip()
+            # מחיקת הודעת הטוקן מהצ'אט
+            try:
+                bot.delete_message(m.chat.id, m.message_id)
+            except:
+                pass
+            # בדיקת תקינות
+            if ":" not in token or len(token) < 20:
+                bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
+                return
+            try:
+                test_bot = telebot.TeleBot(token)
+                me = test_bot.get_me()
+                bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
+                # עדכון config.json
+                cfg = json.load(open("config.json"))
+                cfg["BOT_TOKEN"] = token
+                json.dump(cfg, open("config.json", "w"), indent=2)
+                # עדכון state/system.json
+                state = {}
+                if os.path.exists("state/system.json"):
+                    state = json.load(open("state/system.json"))
+                state["BOT_TOKEN"] = token
+                os.makedirs("state", exist_ok=True)
+                json.dump(state, open("state/system.json", "w"), indent=2)
+                # הפעלה מחדש
+                os.system("bash start.sh &")
+                # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
+            except Exception as e:
+                bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
+        
+        @bot.message_handler(commands=['refreshtoken'])
+        def refresh_token(m):
+            if not is_admin(m):
+                bot.send_message(m.chat.id, "❌ Admin only")
+                return
+            msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
+            bot.register_next_step_handler(msg, process_new_token)
+        
+        def process_new_token(m):
+            token = m.text.strip()
+            # מחיקת הודעת הטוקן מהצ'אט
+            try:
+                bot.delete_message(m.chat.id, m.message_id)
+            except:
+                pass
+            # בדיקת תקינות
+            if ":" not in token or len(token) < 20:
+                bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
+                return
+            try:
+                test_bot = telebot.TeleBot(token)
+                me = test_bot.get_me()
+                bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
+                # עדכון config.json
+                cfg = json.load(open("config.json"))
+                cfg["BOT_TOKEN"] = token
+                json.dump(cfg, open("config.json", "w"), indent=2)
+                # עדכון state/system.json
+                state = {}
+                if os.path.exists("state/system.json"):
+                    state = json.load(open("state/system.json"))
+                state["BOT_TOKEN"] = token
+                os.makedirs("state", exist_ok=True)
+                json.dump(state, open("state/system.json", "w"), indent=2)
+                # הפעלה מחדש
+                os.system("bash start.sh &")
+                # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
+            except Exception as e:
+                bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
+        bot.infinity_polling() # שנה לכתובת שלך
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
@@ -930,9 +975,9 @@ Last 10 events:
 {last}
 """
 
-        bot.reply_to(m, msg)
+        bot.send_message(m.chat.id, msg)
     except Exception as e:
-        bot.reply_to(m, f"snapshot error: {e}")
+        bot.send_message(m.chat.id, f"snapshot error: {e}")
 
 
 @bot.message_handler(commands=['logs'])
@@ -940,9 +985,9 @@ def logs(m):
     try:
         with open("logs/error.log") as f:
             data = f.readlines()[-20:]
-        bot.reply_to(m, "".join(data))
+        bot.send_message(m.chat.id, "".join(data))
     except Exception as e:
-        bot.reply_to(m, str(e))
+        bot.send_message(m.chat.id, str(e))
 
 
 @bot.message_handler(commands=['endday'])
@@ -960,7 +1005,7 @@ def endday(m):
 
         json.dump(summary, open("state/daily_summary.json","w"), indent=2)
 
-        bot.reply_to(m, f"""🌙 END DAY COMPLETE
+        bot.send_message(m.chat.id, f"""🌙 END DAY COMPLETE
 
 Events: {summary['total_events']}
 Users: {summary['users']}
@@ -969,7 +1014,7 @@ Types: {summary['types']}
 Saved to daily_summary.json
 """)
     except Exception as e:
-        bot.reply_to(m, f"endday error: {e}")
+        bot.send_message(m.chat.id, f"endday error: {e}")
 
 
 # ===== SLH REPORT ENGINE =====
@@ -1018,20 +1063,20 @@ def report(m):
 
         if len(cmd) == 1 or cmd[1] == "today":
             r = generate_report()
-            bot.reply_to(m, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
+            bot.send_message(m.chat.id, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
 
         elif cmd[1] == "list":
             files = os.listdir("state/reports")
-            bot.reply_to(m, "Reports:\n" + "\n".join(files))
+            bot.send_message(m.chat.id, "Reports:\n" + "\n".join(files))
 
         else:
             date = cmd[1]
             path = f"state/reports/{date}.json"
             if os.path.exists(path):
                 data = json.load(open(path))
-                bot.reply_to(m, str(data))
+                bot.send_message(m.chat.id, str(data))
             else:
-                bot.reply_to(m, "No report found")
+                bot.send_message(m.chat.id, "No report found")
 
     except Exception as e:
-        bot.reply_to(m, f"report error: {e}")
+        bot.send_message(m.chat.id, f"report error: {e}")
