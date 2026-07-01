@@ -359,7 +359,7 @@ def logs(m):
     n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
         result = subprocess.run(f"tail -n {n} /app/bot.log", shell=True, capture_output=True, text=True)
-        bot.send_message(m.chat.id, result.stdout[:2000] or "No logs yet")
+        bot.send_message(m.chat.id, result.stdout[:4000] or "No logs yet")
     except:
         bot.send_message(m.chat.id, "No log file")
 
@@ -683,7 +683,7 @@ def exec_cmd(m):
     import subprocess
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
-        output = result.stdout[:2000] or result.stderr[:500] or "No output"
+        output = result.stdout[:4000] or result.stderr[:1000] or "No output"
         smart_reply(bot, m.chat.id, f"💻 {cmd}\n{output}")
     except subprocess.TimeoutExpired:
         bot.send_message(m.chat.id, "⏰ Command timed out")
@@ -700,7 +700,7 @@ def termlog(m):
     import subprocess
     try:
         result = subprocess.run("tail -n 30 ~/slh_clean/bot.log", shell=True, capture_output=True, text=True, timeout=5)
-        output = result.stdout[:2000] or "No logs"
+        output = result.stdout[:4000] or "No logs"
         smart_reply(bot, m.chat.id, f"📋 Termux log:\n{output}")
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
