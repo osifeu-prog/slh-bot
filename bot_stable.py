@@ -192,7 +192,7 @@ def admin(m):
 @bot.message_handler(commands=['status'])
 def status(m):
     db = load_db()
-    bot.send_message(m.chat.id, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
+    bot.send_message(m.chat.id, f"Users: {len(db.get('students', {}))}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
 
 @bot.message_handler(commands=['health'])
 def health(m):
