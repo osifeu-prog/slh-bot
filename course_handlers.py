@@ -1,6 +1,6 @@
 import json, os
 
-DB_PATH = os.path.expanduser("~/slh_clean/db.json")
+DB_PATH = "state/db.json"
 
 def load_db():
     with open(DB_PATH) as f:
@@ -98,3 +98,99 @@ def register_course_handlers(bot):
                 bot.reply_to(m, "⚠️ קוד לא זמין עדיין")
         else:
             bot.reply_to(m, f"📖 משימה: {task['desc']}")
+
+    # ----- Bitcoin Mastery Course Commands -----
+
+    @bot.message_handler(commands=['start_course'])
+    def start_course(m):
+        uid = str(m.from_user.id)
+        db = load_db()
+        if uid not in db.get("students", {}):
+            bot.reply_to(m, "תחילה הירשם עם /join")
+            return
+        try:
+            courses_def = json.load(open("courses.json"))
+        except:
+            bot.reply_to(m, "courses.json not found")
+            return
+        course_key = "bitcoin_mastery"
+        if course_key not in courses_def:
+            bot.reply_to(m, "הקורס לא זמין.")
+            return
+        student = db["students"][uid]
+        if "courses" not in student:
+            student["courses"] = {}
+        if course_key in student["courses"]:
+            bot.reply_to(m, "אתה כבר רשום לקורס. שלח /next להמשך.")
+            return
+        total_stages = len(courses_def[course_key]["stages"])
+        student["courses"][course_key] = {
+            "progress": 0,
+            "current_stage": 1,
+            "completed_stages": [],
+            "total_stages": total_stages
+        }
+        save_db(db)
+        bot.reply_to(m, "🎓 נרשמת לקורס ביטקוין מאסטרי!\nשלח /next לשיעור הראשון.")
+
+    @bot.message_handler(commands=['next'])
+    def next_lesson(m):
+        uid = str(m.from_user.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student or "bitcoin_mastery" not in student.get("courses", {}):
+            bot.reply_to(m, "תחילה הירשם עם /start_course")
+            return
+        try:
+            courses_def = json.load(open("courses.json"))
+        except:
+            bot.reply_to(m, "courses.json not found")
+            return
+        stages = courses_def["bitcoin_mastery"]["stages"]
+        total_stages = len(stages)
+        course_data = student["courses"]["bitcoin_mastery"]
+        stage_id = course_data.get("current_stage", 1)
+        if stage_id > total_stages:
+            bot.reply_to(m, "🎉 סיימת את כל השלבים! כל הכבוד!")
+            return
+        stage = stages[stage_id - 1]
+        lesson_file = stage["lesson"]
+        if os.path.exists(lesson_file):
+            with open(lesson_file, 'r') as f:
+                text = f.read()
+        else:
+            text = f"שיעור {stage_id}: {stage['name']} (תוכן לא זמין כרגע)"
+        completed = course_data.get("completed_stages", [])
+        if stage_id not in completed:
+            completed.append(stage_id)
+            course_data["completed_stages"] = completed
+            course_data["progress"] = int(len(completed) / total_stages * 100)
+            course_data["current_stage"] = stage_id + 1
+            save_db(db)
+        bot.reply_to(m, f"📚 **{stage['name']}**\n\n{text}\n\nלשלב הבא – /next")
+
+    @bot.message_handler(commands=['progress'])
+    def progress(m):
+        uid = str(m.from_user.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student or "bitcoin_mastery" not in student.get("courses", {}):
+            bot.reply_to(m, "אתה לא רשום לקורס. /start_course")
+            return
+        cd = student["courses"]["bitcoin_mastery"]
+        total_stages = cd.get("total_stages", 3)
+        done = len(cd.get("completed_stages", []))
+        pct = cd.get("progress", 0)
+        current = cd.get("current_stage", 1)
+        msg = f"📊 התקדמות: {pct}% ({done}/{total_stages} שלבים)\n"
+        if current <= total_stages:
+            try:
+                stages_def = json.load(open("courses.json"))["bitcoin_mastery"]["stages"]
+                stage_name = stages_def[current-1]["name"]
+            except:
+                stage_name = "?"
+            msg += f"בשלב: {current} – {stage_name}"
+        else:
+            msg += "סיימת את הקורס!"
+        bot.reply_to(m, msg)
+

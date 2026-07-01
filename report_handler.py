@@ -19,7 +19,7 @@ def init(bot):
     def my_report(m):
         uid = str(m.chat.id)
         try:
-            with open(os.path.expanduser("~/slh_clean/db.json")) as f:
+            with open("state/db.json") as f:
                 db = json.load(f)
             student = db.get("students", {}).get(uid)
             if not student:
@@ -52,7 +52,7 @@ def init(bot):
         if str(m.chat.id) not in ["8789977826"]:
             bot.reply_to(m, "❌ Admin only"); return
         try:
-            with open(os.path.expanduser("~/slh_clean/db.json")) as f:
+            with open("state/db.json") as f:
                 db = json.load(f)
             students = db.get("students", {})
             total_points = sum(s.get("points",0) for s in students.values())
@@ -78,7 +78,7 @@ def init(bot):
         try:
             backups = os.popen("ls -lt ~/slh_clean/backups/*.json ~/slh_clean/backups/*.tar.gz 2>/dev/null | head -3").read()
             disk = subprocess.check_output("df -h ~ | tail -1 | awk '{print $5}'", shell=True, text=True).strip()
-            with open(os.path.expanduser("~/slh_clean/db.json")) as f:
+            with open("state/db.json") as f:
                 db = json.load(f)
             students = len(db.get("students",{}))
             agents = len(db.get("agents",{}))
