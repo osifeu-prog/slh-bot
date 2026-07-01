@@ -5,8 +5,8 @@ cd ~/slh_clean
 echo "🚀 SLH OS Daemon started – $(date)"
 
 # 1. Bot
-pkill -f "python3.*bot.py" 2>/dev/null
-nohup python3 -B bot.py >> bot.log 2>&1 &
+pkill -f "python3.*bot_stable.py" 2>/dev/null
+nohup python3 -B bot_stable.py >> bot.log 2>&1 &
 echo "  ✅ Bot started"
 
 # 2. API

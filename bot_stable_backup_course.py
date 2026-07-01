@@ -1,11 +1,15 @@
 import os, sys, json, time, subprocess
-import learn_handlers, project_commands, smart_leaderboard, welcome_handler, course_handlers, logger_handler
 import telebot
 from marketplace import load_store, save_store
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
+import welcome_handler
+import course_handlers
+import learn_handlers
+import project_commands
+import smart_leaderboard
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -37,7 +41,39 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
-learn_handlers.register(bot); project_commands.init(bot); smart_leaderboard.init(bot); welcome_handler.init(bot); course_handlers.register_course_handlers(bot); logger_handler.init(bot)
+
+# Runtime state initialization (volumes mount empty at runtime, not build time)
+os.makedirs("state", exist_ok=True)
+if not os.path.exists("state/db.json"):
+    with open("state/db.json", "w") as _f:
+        json.dump({"users": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}, _f)
+for _fname, _default in [("event_log.json", []), ("progress.json", {}), ("system.json", {}), ("users.json", {})]:
+    _path = f"state/{_fname}"
+    if not os.path.exists(_path):
+        with open(_path, "w") as _f:
+            json.dump(_default, _f)
+
+
+import json as _json_auth
+try:
+    with open("allowed_ids.json") as _f:
+        _ALLOWED = _json_auth.load(_f)
+except Exception:
+    _ALLOWED = {"admin": 8789977826, "allowed": [8789977826]}
+
+def is_admin(m):
+    uid = m.from_user.id
+    if uid not in _ALLOWED.get("allowed", []) and uid != _ALLOWED.get("admin"):
+        bot.reply_to(m, "⛔ Unauthorized - admin only")
+        return False
+    return True
+
+
+welcome_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+learn_handlers.register(bot)
+project_commands.register(bot)
+smart_leaderboard.register(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
@@ -168,6 +204,7 @@ def task(m):
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
+    if not is_admin(m): return
     import time, json, os
     parts = m.text.split(" ", 1)
     name = parts[1] if len(parts) > 1 else "agent"
@@ -194,10 +231,12 @@ def agents_list(m):
 
 @bot.message_handler(commands=['agent_debug'])
 def agent_debug(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
 
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
+    if not is_admin(m): return
     # simple test: create and list
     agent_store.create("test_agent")
     bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
@@ -224,19 +263,23 @@ def revenue(m):
 
 @bot.message_handler(commands=['master'])
 def master(m):
+    if not is_admin(m): return
     bot.reply_to(m, "MASTER.json: locked")
 
 @bot.message_handler(commands=['backup'])
 def backup(m):
+    if not is_admin(m): return
     bot.reply_to(m, "✅ Backup committed to Git")
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 @bot.message_handler(commands=['logs'])
 def logs(m):
+    if not is_admin(m): return
     n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
     try:
         result = subprocess.run(f"tail -n {n} /app/bot.log", shell=True, capture_output=True, text=True)
@@ -246,10 +289,12 @@ def logs(m):
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Temp files cleaned")
 
 @bot.message_handler(commands=['audit'])
 def audit_cmd(m):
+    if not is_admin(m): return
     entries = get_audit(15)
     if not entries:
         bot.reply_to(m, "Audit log empty")
@@ -259,23 +304,28 @@ def audit_cmd(m):
 
 @bot.message_handler(commands=['memory'])
 def memory(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Memory: empty")
 
 @bot.message_handler(commands=['debug'])
 def debug(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
 
 @bot.message_handler(commands=['termux'])
 def termux(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
 
 @bot.message_handler(commands=['deploy'])
 def deploy(m):
+    if not is_admin(m): return
     result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
 
 @bot.message_handler(commands=['errors'])
 def errors(m):
+    if not is_admin(m): return
     try:
         with open("/app/bot.log") as f:
             lines = f.readlines()
@@ -286,6 +336,7 @@ def errors(m):
 
 @bot.message_handler(commands=['plugin'])
 def plugin(m):
+    if not is_admin(m): return
     parts = m.text.split()
     if len(parts) > 1 and parts[1] == "list":
         plugins = os.listdir("/app/plugins") if os.path.exists("/app/plugins") else []
@@ -295,6 +346,7 @@ def plugin(m):
 
 @bot.message_handler(commands=['goal'])
 def goal(m):
+    if not is_admin(m): return
     parts = m.text.split(None, 2)
     path = "/app/goals.json"
     if len(parts) < 2:
@@ -311,6 +363,7 @@ def goal(m):
 
 @bot.message_handler(commands=['sysinfo'])
 def sysinfo(m):
+    if not is_admin(m): return
     try:
         df = subprocess.run("df -h / | tail -1", shell=True, capture_output=True, text=True).stdout.strip()
         mem = subprocess.run("cat /proc/meminfo 2>/dev/null | grep MemTotal", shell=True, capture_output=True, text=True).stdout.strip()
@@ -328,35 +381,42 @@ def sysinfo(m):
 
 @bot.message_handler(commands=['disk'])
 def disk(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Disk: OK")
 
 @bot.message_handler(commands=['test'])
 def test(m):
+    if not is_admin(m): return
     import subprocess
     result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
     bot.reply_to(m, result.stdout or "Diagnostics complete.")
 
 @bot.message_handler(commands=['kernellog'])
 def kernellog(m):
+    if not is_admin(m): return
     bot.reply_to(m, "See /debug for kernel info")
 
 @bot.message_handler(commands=['kernelstatus'])
 def kernelstatus(m):
+    if not is_admin(m): return
     bot.reply_to(m, f"KERNEL_READY: {_KERNEL_READY}")
 
 @bot.message_handler(commands=['update'])
 def update(m):
+    if not is_admin(m): return
     result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
     bot.reply_to(m, f"Update:\n{result.stdout[:500] or 'OK'}")
 
 @bot.message_handler(commands=['rollback'])
 def rollback(m):
+    if not is_admin(m): return
     bot.reply_to(m, "Rollback: not implemented yet")
 
 # ---------------- MAIN ----------------
 
 @bot.message_handler(commands=['agentstate'])
 def agentstate(m):
+    if not is_admin(m): return
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
         bot.reply_to(m, "Usage: /agentstate <id_prefix> <state>")
@@ -376,6 +436,7 @@ def agentstate(m):
 
 @bot.message_handler(commands=['sendagent'])
 def sendagent(m):
+    if not is_admin(m): return
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
         bot.reply_to(m, "Usage: /sendagent <id_prefix> <message>")
@@ -394,6 +455,7 @@ def sendagent(m):
 
 @bot.message_handler(commands=['inbox'])
 def inbox(m):
+    if not is_admin(m): return
     prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not prefix:
         bot.reply_to(m, "Usage: /inbox <id_prefix>")
@@ -416,6 +478,7 @@ def inbox(m):
 
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
+    if not is_admin(m): return
     import time, json, os
     results = []
     
@@ -459,6 +522,7 @@ def test_agents(m):
 
 @bot.message_handler(commands=['user'])
 def user(m):
+    if not is_admin(m): return
     bot.reply_to(m, """👤 USER COMMANDS
 /start — Start
 /status — System status
@@ -479,6 +543,7 @@ def user(m):
 
 @bot.message_handler(commands=['rlogs'])
 def rlogs(m):
+    if not is_admin(m): return
     import urllib.request, json, os, ssl
     # Admin only
     if str(m.from_user.id) != str(SUPER_ADMIN):
@@ -517,6 +582,7 @@ def rlogs(m):
 
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
+    if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
         return
@@ -537,6 +603,7 @@ def exec_cmd(m):
 
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
+    if not is_admin(m): return
     if str(m.from_user.id) != str(SUPER_ADMIN):
         bot.reply_to(m, "❌ Admin only")
         return
@@ -576,7 +643,7 @@ def market_install(m):
             store["installed"].append(plugin_id)
             p["installs"] += 1
             save_store(store)
-            bot.reply_to(m, f"✅ Plugin '{p["name"]}' installed!")
+            bot.reply_to(m, f"✅ Plugin '{p['name']}' installed!")
             return
     bot.reply_to(m, f"❌ Plugin '{plugin_id}' not found")
 
@@ -622,6 +689,7 @@ def market_rate(m):
 
 @bot.message_handler(commands=['market_upload'])
 def market_upload(m):
+    if not is_admin(m): return
     store = load_store()
     parts = m.text.split("\n", 1)
     if len(parts) < 2:
@@ -651,12 +719,94 @@ def market_upload(m):
     bot.reply_to(m, f"✅ Plugin '{name}' uploaded to Marketplace!")
 
 
-def _old_ask_removed(m):
-    pass
-def _old_ask_removed(m):
-    pass
+@bot.message_handler(commands=['ask'])
+def ask(m):
+    import re, time
+    text = m.text.replace("/ask", "", 1).strip()
+    if not text:
+        bot.reply_to(m, "Usage: /ask <natural language command>")
+        return
+    bot.reply_to(m, f"🤖 Processing: {text}")
+    
+    # Simple NLU rules
+    tl = text.lower()
+    results = []
+    
+    # Agent creation
+    if "create" in tl and "agent" in tl:
+        name = tl.split("agent")[-1].strip().strip("called").strip("named").strip()
+        if name:
+            bot.reply_to(m, f"▶️ /agent_create {name}")
+            results.append(f"Agent '{name}' created")
+    
+    # Agent state change
+    if "set" in tl and "active" in tl:
+        for w in tl.split():
+            if w not in ["set", "active", "to", "the", "and", "agent"]:
+                bot.reply_to(m, f"▶️ /agentstate {w} active")
+                results.append(f"Agent '{w}' set active")
+                break
+    
+    # Status
+    if "status" in tl or "how" in tl:
+        bot.reply_to(m, "▶️ /status")
+        results.append("Status checked")
+    
+    # Market search
+    if "search" in tl and ("market" in tl or "plugin" in tl):
+        keyword = tl.split("search")[-1].strip().split()[-1]
+        bot.reply_to(m, f"▶️ /market_search {keyword}")
+        results.append(f"Market search for '{keyword}'")
+    
+    # List agents
+    if "list" in tl and "agent" in tl:
+        bot.reply_to(m, "▶️ /agents")
+        results.append("Agents listed")
+    
+    # Health
+    if "health" in tl:
+        bot.reply_to(m, "▶️ /health")
+        results.append("Health checked")
+    
+    if not results:
+        bot.reply_to(m, "❓ Could not understand. Try: create agent X, set agent active, status, search market Y, list agents, health")
+    else:
+        bot.reply_to(m, "✅ Done: " + ", ".join(results))
+
+    import re, time
+    bot.reply_to(m, "🤖 Analyzing: " + m.text.replace("/ask", "", 1).strip())
+    text = m.text.lower()
+    commands_to_run = []
+    if "create agent" in text or "new agent" in text:
+        name = text.split("called")[-1].strip() if "called" in text else text.split("agent")[-1].strip()
+        commands_to_run.append(f"/agent_create {name}")
+    if "set active" in text or "activate" in text:
+        for word in text.split():
+            if word not in ["set", "active", "activate", "agent", "to", "the", "and"]:
+                commands_to_run.append(f"/agentstate {word} active")
+                break
+    if "create task" in text or "add task" in text:
+        task = text.split("task")[-1].strip()
+        commands_to_run.append(f"/task create {task}")
+    if "status" in text:
+        commands_to_run.append("/status")
+    if "diagnostic" in text or "test" in text:
+        commands_to_run.append("/test")
+    if "search market" in text or "market search" in text:
+        keyword = text.split("search")[-1].strip().split()[-1]
+        commands_to_run.append(f"/market_search {keyword}")
+    if "list agents" in text or "show agents" in text:
+        commands_to_run.append("/agents")
+    if not commands_to_run:
+        commands_to_run.append("/admin")
+    for cmd in commands_to_run:
+        bot.reply_to(m, f"▶️ {cmd}")
+        time.sleep(0.3)
+    bot.reply_to(m, "✅ Done. Run /testcmd /ask <text> to verify.")
+
 @bot.message_handler(commands=['testcmd'])
 def testcmd(m):
+    if not is_admin(m): return
     parts = m.text.replace("/testcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
@@ -675,6 +825,7 @@ def testcmd(m):
 
 @bot.message_handler(commands=['debugcmd'])
 def debugcmd(m):
+    if not is_admin(m): return
     parts = m.text.replace("/debugcmd", "").strip().split(" ", 1)
     cmd = parts[0] if parts else ""
     if not cmd:
@@ -691,6 +842,7 @@ def debugcmd(m):
 
 @bot.message_handler(commands=['diagnose'])
 def diagnose_cmd(m):
+    if not is_admin(m): return
     import os, py_compile
     cwd = os.path.expanduser("~/slh_clean")
     issues = []
@@ -741,7 +893,157 @@ def diagnose_cmd(m):
 
 while True:
     try:
-        bot.infinity_polling(timeout=20, long_polling_timeout=20)
+        bot.infinity_polling() # שנה לכתובת שלך
     except Exception as e:
         print("Polling error:", e)
         time.sleep(5)
+
+
+# ===== SLH EVENT LOGGER =====
+def log_event(event_type, user_id=None, data=None):
+    import json, os
+    from datetime import datetime
+
+    path = "state/event_log.json"
+
+    try:
+        if os.path.exists(path):
+            logs = json.load(open(path))
+        else:
+            logs = []
+
+        logs.append({
+            "time": datetime.now().isoformat(),
+            "type": event_type,
+            "user": str(user_id),
+            "data": str(data)
+        })
+
+        json.dump(logs[-500:], open(path, "w"), indent=2)
+    except:
+        pass
+
+
+# ===== SLH SNAPSHOT SYSTEM =====
+@bot.message_handler(commands=['snapshot'])
+def snapshot(m):
+    if not is_admin(m): return
+    import json
+    try:
+        logs = json.load(open("state/event_log.json"))
+        total = len(logs)
+        last = logs[-10:] if total > 10 else logs
+
+        msg = f"""📊 SNAPSHOT REPORT
+
+Total events: {total}
+
+Last 10 events:
+{last}
+"""
+
+        bot.reply_to(m, msg)
+    except Exception as e:
+        bot.reply_to(m, f"snapshot error: {e}")
+
+
+@bot.message_handler(commands=['logs'])
+def logs(m):
+    try:
+        with open("logs/error.log") as f:
+            data = f.readlines()[-20:]
+        bot.reply_to(m, "".join(data))
+    except Exception as e:
+        bot.reply_to(m, str(e))
+
+
+@bot.message_handler(commands=['endday'])
+def endday(m):
+    if not is_admin(m): return
+    import json
+    try:
+        logs = json.load(open("state/event_log.json"))
+
+        summary = {
+            "total_events": len(logs),
+            "users": len(set([x.get("user") for x in logs])),
+            "types": list(set([x.get("type") for x in logs]))
+        }
+
+        json.dump(summary, open("state/daily_summary.json","w"), indent=2)
+
+        bot.reply_to(m, f"""🌙 END DAY COMPLETE
+
+Events: {summary['total_events']}
+Users: {summary['users']}
+Types: {summary['types']}
+
+Saved to daily_summary.json
+""")
+    except Exception as e:
+        bot.reply_to(m, f"endday error: {e}")
+
+
+# ===== SLH REPORT ENGINE =====
+import json, os
+from datetime import datetime
+
+def generate_report():
+    date = datetime.now().strftime("%Y-%m-%d")
+
+    report = {
+        "date": date,
+        "bot_running": True,
+        "users": 0,
+        "events": 0,
+        "errors_last_20": [],
+    }
+
+    try:
+        if os.path.exists("state/event_log.json"):
+            events = json.load(open("state/event_log.json"))
+            report["events"] = len(events)
+
+        if os.path.exists("db.json"):
+            db = json.load(open("state/db.json"))
+            report["users"] = len(db.get("users", {}))
+
+        if os.path.exists("logs/error.log"):
+            with open("logs/error.log") as f:
+                report["errors_last_20"] = f.readlines()[-20:]
+
+    except:
+        pass
+
+    os.makedirs("state/reports", exist_ok=True)
+    json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
+
+    return report
+
+
+@bot.message_handler(commands=['report'])
+def report(m):
+    if not is_admin(m): return
+    import os, json
+    try:
+        cmd = m.text.split()
+
+        if len(cmd) == 1 or cmd[1] == "today":
+            r = generate_report()
+            bot.reply_to(m, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
+
+        elif cmd[1] == "list":
+            files = os.listdir("state/reports")
+            bot.reply_to(m, "Reports:\n" + "\n".join(files))
+
+        else:
+            date = cmd[1]
+            path = f"state/reports/{date}.json"
+            if os.path.exists(path):
+                data = json.load(open(path))
+                bot.reply_to(m, str(data))
+            else:
+                bot.reply_to(m, "No report found")
+
+    except Exception as e:
+        bot.reply_to(m, f"report error: {e}")

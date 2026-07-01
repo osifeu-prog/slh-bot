@@ -11,3 +11,11 @@ db.json
 config.json
 db.json
 config.json
+*.bak
+backups/junk/
+archive_old_backups/
+*.bak_*
+state/system.json
+archive_old_backups/
+*.bak_*
+state/system.json
