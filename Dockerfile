@@ -4,7 +4,6 @@ COPY . /app/
 
 # Create minimal config.json (token will come from env)
 RUN echo '{"SUPER_ADMIN": 8789977826, "SITE_DIR": "/app", "DB_FILE": "/app/state/db.json", "VERSION": "1.0-RAILWAY", "BOT_TOKEN": "placeholder"}' > /app/config.json
-ENV BOT_TOKEN=${BOT_TOKEN}
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p state
