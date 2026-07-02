@@ -20,3 +20,22 @@ archive_old_backups/
 *.bak_*
 state/system.json
 *.txt
+# session cleanup
+*.lock
+*.pid
+archive_unused_*/
+backups/
+bot.pid
+slh*.sh
+swarm*.sh
+upgrade_kernel*.sh
+install_*.sh
+deploy.sh
+bootstrap.sh
+patch_*.sh
+fix_*.sh
+health_*.sh
+diag_full_reality.py
+manifest.json
+slh*.py
+slh*.txt
