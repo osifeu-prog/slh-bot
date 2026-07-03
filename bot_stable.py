@@ -145,7 +145,8 @@ junk_handler.init(bot)
 refresh_token_handler.init(bot)
 smart_leaderboard.register(bot)
 agents_dict = {}
-start_agent_thread()
+# agents_dict loaded in main block
+# start_agent_thread() moved to main block
 
 # ---- Load agents from persistent storage ----
 try:
@@ -1133,3 +1134,12 @@ def report(m):
 
     except Exception as e:
         bot.send_message(m.chat.id, f"report error: {e}")
+
+if __name__ == "__main__":
+    print("Loading DB and agents...")
+    db = load_db()
+    agents_dict.update(db.get("agents", {}))
+    print(f"Agents loaded: {len(agents_dict)}")
+    start_agent_thread()
+    print("Bot polling...")
+    bot.polling()
