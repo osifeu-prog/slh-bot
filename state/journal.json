@@ -10,5 +10,13 @@
   {
     "time": "2026-07-02 18:25:57.902148",
     "text": "SESSION 2-JUL-2026: Cleanup + hardening. DONE: AGENT_RULES.md created, journal initialized, 5 .bak files deleted, Dockerfile ENV BOT_TOKEN removed, .gitignore expanded. ISSUES: Railway usage limit reached (deploy blocked), token exposed in CLI history - must revoke. NEXT: replace token via @BotFather + Railway Dashboard, wait for usage reset, then deploy STABLE CORE."
+  },
+  {
+    "time": "2026-07-03 20:00:15.595769",
+    "text": "SESSION 3-JUL-2026: Final stabilization. DONE: journal_read fixed (removed smart_reply), Dockerfile cleaned (ENV BOT_TOKEN removed), .gitignore expanded, old backup folders ignored, git status clean, /agent_create works in memory. OPEN: agents not persisted to db.json (volatile), /agents command hangs, start_agent_thread blocks import of bot_stable. NEXT SESSION PRIORITY: fix agent persistence to db.json, unblock /agents command, test full agent lifecycle. READY: Railway Online, Users:2, Deploy passes, security OK."
+  },
+  {
+    "time": "2026-07-03 23:24:10.261860",
+    "text": "SESSION 3-JUL-2026 COMPLETED: agent persistence fixed (state/db.json + Volume), /exec runs Python, /demo with tasks/agents/guide, /inbox shows outbox, /start updated, state_manager centralizes DB access, tutor agent auto-replies. System ready for alpha users. Next: Ollama LLM integration, monetization plan."
   }
 ]
