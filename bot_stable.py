@@ -931,7 +931,7 @@ while True:
         bot.infinity_polling() # שנה לכתובת שלך
     except Exception as e:
         print("Polling error:", e)
-        time.sleep(5)
+        time.sleep(20)
 
 # ===== SLH EVENT LOGGER =====
 def log_event(event_type, user_id=None, data=None):
@@ -1134,7 +1134,7 @@ def tutor_loop():
                 state_manager.set_agents(agents)
         except:
             pass
-        time.sleep(5)
+        time.sleep(20)
 
 import threading
 threading.Thread(target=tutor_loop, daemon=True).start()
