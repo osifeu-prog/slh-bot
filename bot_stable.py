@@ -518,7 +518,11 @@ def inbox(m):
     if inbox:
         msg = "📬 Inbox:\n" + "\n".join(str(m) for m in inbox[-5:])
     else:
-        msg = "📭 Inbox empty"
+        outbox = agent.get("outbox", [])
+        if outbox:
+            msg = "📭 Inbox empty\n📤 Outbox:\n" + "\n".join(str(m) for m in outbox[-5:])
+        else:
+            msg = "📭 Both inbox & outbox empty"
     bot.send_message(m.chat.id, msg)
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
