@@ -22,5 +22,9 @@
   {
     "time": "2026-07-03 23:54:34.645372",
     "text": "SESSION COMPLETE 3-JUL-2026: fixed /start menu via welcome_handler.py, tutor worker replies, inbox shows outbox, /demo works, persistency stable. Ready for alpha + monetization."
+  },
+  {
+    "time": "2026-07-04 00:19:36.122985",
+    "text": "SESSION 4-JUL-2026: Fixed slh_dashboard.sh token KeyError (options 1 and 2) - now falls back to BOT_TOKEN env var if db.json lacks token key, matches slh_daemon.sh pattern. Verified via live test + git push (2fb7af7). DISCOVERED RISK: dashboard health check uses pgrep -f python.*bot.py which never matches bot_stable.py, so it always reports Stopped and auto-triggers ./slh_daemon.sh - currently harmless because local bot_stable.py crashes immediately (ModuleNotFoundError: core.event_bus, plugins.task; No valid token found) but becomes a live 409-conflict generator if local deps ever get fixed. NEXT SESSION PRIORITY: fix dashboard pgrep pattern to match bot_stable.py, or remove auto-start entirely and just report status."
   }
 ]
