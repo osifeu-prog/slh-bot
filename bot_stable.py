@@ -275,8 +275,6 @@ def task(m):
         kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 @bot.message_handler(commands=['agent_create'])
-@bot.message_handler(commands=['agent_create'])
-@bot.message_handler(commands=["agent_create"])
 def agent_create(m):
     if not is_admin(m): return
     parts = m.text.split()
@@ -284,18 +282,13 @@ def agent_create(m):
         bot.send_message(m.chat.id, "Usage: /agent_create <name>")
         return
     name = parts[1]
-    try:
-        with open("db.json") as f:
-            db = json.load(f)
-    except:
-        db = {}
+    db = load_db()
     agents = db.setdefault("agents", {})
     if name in agents:
         bot.send_message(m.chat.id, "❌ Agent already exists")
         return
-    agents[name] = {"inbox": [], "outbox": [], "state": "idle"}
-    with open("db.json", "w") as f:
-        json.dump(db, f, indent=2, ensure_ascii=False)
+    agents[name] = {"name": name, "inbox": [], "outbox": [], "state": "idle", "role": "agent"}
+    save_db(db)
     agents_dict.clear()
     agents_dict.update(agents)
     bot.send_message(m.chat.id, f"✅ Agent created: {name}")
@@ -304,7 +297,7 @@ def agents_list(m):
     if not agents_dict:
         bot.send_message(m.chat.id, "No agents yet")
     else:
-        lines = [f"{v['name']} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
+        lines = [f"{v.get('name','?')} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
         bot.send_message(m.chat.id, "🤖 Agents:\n" + "\n".join(lines))
 
 @bot.message_handler(commands=['agent_debug'])
