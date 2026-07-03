@@ -187,7 +187,28 @@ def start(m):
         db = ensure_user(state_manager.load_db(), m.from_user.id)
         state_manager.save_db(db)
         audit('start', m.from_user.id)
-        bot.send_message(m.chat.id, "🚀 SLH SYSTEM ONLINE\n/admin for control")
+        bot.send_message(m.chat.id,
+            "🌟 ברוכים הבאים ל-SLH Learning! 🌟\n\n"
+            "🎯 פקודות עיקריות:\n"
+            "1️⃣ /join – הרשמה\n"
+            "2️⃣ /courses – צפייה בקורסים\n"
+            "3️⃣ /project create – פרויקט אישי\n"
+            "4️⃣ /project task add – הוספת משימות\n"
+            "5️⃣ /myprogress – מעקב התקדמות\n"
+            "6️⃣ /referral – הזמנת חברים\n\n"
+            "🤖 סוכנים חכמים:\n"
+            "/agent_create <name> – צור סוכן\n"
+            "/agents – רשימת סוכנים\n"
+            "/sendagent <prefix> <msg> – שלח הודעה\n"
+            "/inbox <prefix> – תיבת הודעות\n"
+            "/agentstate <prefix> <state> – שנה מצב\n\n"
+            "📋 התנסות מהירה:\n"
+            "/demo – תפריט דמו\n"
+            "/demo agents – צור סוכני דמו\n"
+            "/demo tasks – משימות לדוגמה\n"
+            "/demo guide – מדריך מהיר\n\n"
+            "👥 בואו נבנה יחד!"
+        )
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
 
