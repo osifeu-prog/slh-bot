@@ -1119,3 +1119,22 @@ if __name__ == "__main__":
     start_agent_thread()
     print("Bot polling...")
     bot.polling()
+
+def tutor_loop():
+    import time
+    while True:
+        try:
+            agents = state_manager.get_agents()
+            tutor = agents.get("tutor")
+            if tutor and tutor.get("inbox"):
+                msg = tutor["inbox"].pop(0)["command"]
+                # fallback reply
+                reply = f"Tutor received: {msg}"
+                tutor.setdefault("outbox", []).append(reply)
+                state_manager.set_agents(agents)
+        except:
+            pass
+        time.sleep(5)
+
+import threading
+threading.Thread(target=tutor_loop, daemon=True).start()
