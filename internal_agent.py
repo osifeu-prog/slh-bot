@@ -1,3 +1,4 @@
+import state_manager
 import json, time, datetime, os, threading, traceback
 
 ALLOWED = {"complete","whoami","dbsize","status","uptime","sysinfo","logs","errors","restart","ask"}
@@ -122,3 +123,28 @@ def complete_task(uid, task_id):
     db["students"][uid] = student
     with open("db.json","w") as f: json.dump(db, f, indent=2, ensure_ascii=False)
     return f"✅ Task {task_id} completed! +{points} points"
+
+# Tutor auto-reply
+def tutor_worker():
+    import time, json
+    while True:
+        try:
+            agents = state_manager.get_agents()
+            tutor = agents.get("tutor", {})
+            inbox = tutor.get("inbox", [])
+            if inbox:
+                msg = inbox.pop(0)["command"]
+                # try Ollama
+                try:
+                    import subprocess as sp
+                    ans = sp.check_output(["ollama", "run", "phi3:mini", msg], text=True, timeout=30)[:1000]
+                except:
+                    ans = f"Tutor: received '{msg}'. LLM offline, but I'm learning!"
+                tutor.setdefault("outbox", []).append(ans)
+                agents["tutor"] = tutor
+                state_manager.set_agents(agents)
+        except:
+            pass
+        time.sleep(5)
+
+threading.Thread(target=tutor_worker, daemon=True).start()
