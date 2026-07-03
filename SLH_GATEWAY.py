@@ -1,20 +1,12 @@
 import time
-from SLH_KERNEL import SLHV3Kernel, TelegramModule
+from SLH_KERNEL import SLHKernel
 
-
-# GLOBAL SINGLE INSTANCE (הדבר שחסר לך)
-KERNEL = SLHV3Kernel()
-KERNEL.register("telegram", TelegramModule())
-
+KERNEL = SLHKernel()
 
 class SLHGateway:
-
     def __init__(self):
         self.kernel = KERNEL
-        print("🌐 Gateway ready (singleton kernel)")
-
-    def handle_event(self, event):
-        return self.kernel.route(event)
+        print("🌐 Gateway ready (stable)")
 
     def send(self, source, cmd, payload=None):
         event = {
@@ -23,4 +15,4 @@ class SLHGateway:
             "payload": payload or {},
             "timestamp": time.time()
         }
-        return self.handle_event(event)
+        return self.kernel.route(event)

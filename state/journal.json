@@ -1,0 +1,14 @@
+[
+  {
+    "time": "2026-07-02 01:39:10.601622",
+    "text": "SESSION 2-JUL-2026: Architecture review. System assessment: bot_stable.py online, EventBus workers mismatch identified, duplicate polling resolved. Priority: STABLE CORE - single entrypoint, clean init, zero 409 by design. OPEN: create AGENT_RULES.md, populate journal, clean .bak files, verify bot.py dependencies, Dockerfile warnings, /refreshtoken decision, student onboarding."
+  },
+  {
+    "time": "2026-07-02 01:39:10.601660",
+    "text": "NEXT SESSION TASKS: (1) Clean .bak files from disk. (2) Verify zero dependencies on bot.py, delete if clean. (3) Fix Dockerfile warnings. (4) Decide on /refreshtoken Railway auto-update. (5) Student onboarding - recruit 10 students. (6) smart_reply edge case - partial output before buttons."
+  },
+  {
+    "time": "2026-07-02 18:25:57.902148",
+    "text": "SESSION 2-JUL-2026: Cleanup + hardening. DONE: AGENT_RULES.md created, journal initialized, 5 .bak files deleted, Dockerfile ENV BOT_TOKEN removed, .gitignore expanded. ISSUES: Railway usage limit reached (deploy blocked), token exposed in CLI history - must revoke. NEXT: replace token via @BotFather + Railway Dashboard, wait for usage reset, then deploy STABLE CORE."
+  }
+]

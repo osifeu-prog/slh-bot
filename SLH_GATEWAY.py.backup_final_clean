@@ -1,0 +1,52 @@
+
+# === AUTO STUB: TelegramModule ===
+try:
+    TelegramModule
+except NameError:
+    class TelegramModule:
+        def __init__(self):
+            self.name = "telegram_stub"
+
+        def send(self, *args, **kwargs):
+            print("[TELEGRAM STUB] send called")
+# === END STUB ===
+
+import time
+from SLH_KERNEL import SLHKernel
+
+
+# GLOBAL SINGLE INSTANCE (הדבר שחסר לך)
+KERNEL = SLHKernel()
+
+# === AUTO INJECTED COMPAT LAYER ===
+try:
+    if not hasattr(KERNEL, 'register'):
+        def _register_module(name, obj=None):
+            if not hasattr(KERNEL, '_registry'):
+                KERNEL._registry = {}
+            KERNEL._registry[name] = obj
+        KERNEL.register = _register
+except Exception as e:
+    print('[PATCH ERROR]', e)
+# === END PATCH ===
+
+KERNEL.register_module("telegram", TelegramModule())
+
+
+class SLHGateway:
+
+    def __init__(self):
+        self.kernel = KERNEL
+        print("🌐 Gateway ready (singleton kernel)")
+
+    def handle_event(self, event):
+        return self.kernel.route(event)
+
+    def send(self, source, cmd, payload=None):
+        event = {
+            "source": source,
+            "cmd": cmd,
+            "payload": payload or {},
+            "timestamp": time.time()
+        }
+        return self.handle_event(event)

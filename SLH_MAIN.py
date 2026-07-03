@@ -1,18 +1,18 @@
-from SLH_GATEWAY import SLHGateway
-from SLH_BOT_ADAPTER import SLHBotAdapter
-
+from core.kernel import SLHKernel
+from core.runtime import Runtime
+from adapters.cli import CLIAdapter
+from agents.echo import EchoAgent
 
 def main():
-    print("🚀 SLH SYSTEM START")
+    kernel = SLHKernel()
 
-    gateway = SLHGateway()
-    bot = SLHBotAdapter(gateway)
+    kernel.register("echo", EchoAgent())
 
-    try:
-        bot.chat()
-    except KeyboardInterrupt:
-        print("\n🛑 SYSTEM STOPPED")
+    runtime = Runtime(kernel)
+    runtime.start()
 
+    cli = CLIAdapter(runtime)
+    cli.run()
 
 if __name__ == "__main__":
     main()
