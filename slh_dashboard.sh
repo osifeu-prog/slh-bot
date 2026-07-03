@@ -22,13 +22,10 @@ echo -e "${NC}"
 echo -e "${MAGENTA}      SLH Learning System Dashboard${NC}"
 echo -e "${YELLOW}=======================================${NC}"
 
-if pgrep -f "python.*bot.py" > /dev/null; then
-    echo -e "🤖 Bot:        ${GREEN}● Running${NC}"
+if pgrep -f "python.*bot_stable.py" > /dev/null; then
+    echo -e "🤖 Local Bot:  ${GREEN}● Running${NC}"
 else
-    echo -e "🤖 Bot:        ${RED}● Stopped${NC}"
-    echo -e "   Starting bot..."
-    ./slh_daemon.sh > /dev/null 2>&1
-    sleep 3
+    echo -e "🤖 Local Bot:  ${YELLOW}● Not running (expected - production is on Railway)${NC}"
 fi
 
 for f in bot.py learn_handlers.py project_commands.py smart_leaderboard.py; do
