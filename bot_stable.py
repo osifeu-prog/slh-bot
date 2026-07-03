@@ -51,6 +51,10 @@ except:
     cfg = {}
 SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
+try:
+    with open(DB_FILE) as f:
+        agents_dict.update(__import__("json").load(f).get("agents", {}))
+except: pass
 
 bot = telebot.TeleBot(TOKEN)
 
