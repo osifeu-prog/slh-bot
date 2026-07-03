@@ -19,7 +19,6 @@ state/system.json
 archive_old_backups/
 *.bak_*
 state/system.json
-*.txt
 # session cleanup
 *.lock
 *.pid
