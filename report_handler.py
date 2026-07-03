@@ -112,8 +112,9 @@ def init(bot):
         if str(m.chat.id) not in ["8789977826"]:
             bot.reply_to(m, "❌ Admin only"); return
         entries = load_journal()
-        if not entries:
+        valid = [e for e in entries if isinstance(e, dict) and "text" in e]
+        if not valid:
             bot.reply_to(m, "📭 Journal empty")
         else:
-            msg = "\n".join([f"🕒 {e['time']}\n{e['text']}\n" for e in entries[-10:]])
+            msg = "\n".join([f"🕒 {e.get('time','?')}\n{e['text']}\n" for e in valid[-10:]])
             smart_reply(bot, m.chat.id, msg)
