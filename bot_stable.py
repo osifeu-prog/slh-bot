@@ -663,17 +663,19 @@ def exec_cmd(m):
         return
     cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not cmd:
-        bot.send_message(m.chat.id, "Usage: /exec <shell command>")
+        bot.send_message(m.chat.id, "Usage: /exec <python code>")
         return
-    import subprocess
+    import sys, io, traceback
+    old_stdout = sys.stdout
+    sys.stdout = io.StringIO()
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
-        output = result.stdout[:4000] or result.stderr[:1000] or "No output"
-        smart_reply(bot, m.chat.id, f"💻 {cmd}\n{output}")
-    except subprocess.TimeoutExpired:
-        bot.send_message(m.chat.id, "⏰ Command timed out")
+        exec(cmd)
+        output = sys.stdout.getvalue() or "(executed successfully)"
     except Exception as e:
-        bot.send_message(m.chat.id, f"❌ Error: {e}")
+        output = traceback.format_exc()
+    finally:
+        sys.stdout = old_stdout
+    bot.send_message(m.chat.id, f"💻 {cmd}\n{output[:4000]}")
 
 
 @bot.message_handler(commands=['termlog'])
