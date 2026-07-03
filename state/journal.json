@@ -26,5 +26,9 @@
   {
     "time": "2026-07-04 00:19:36.122985",
     "text": "SESSION 4-JUL-2026: Fixed slh_dashboard.sh token KeyError (options 1 and 2) - now falls back to BOT_TOKEN env var if db.json lacks token key, matches slh_daemon.sh pattern. Verified via live test + git push (2fb7af7). DISCOVERED RISK: dashboard health check uses pgrep -f python.*bot.py which never matches bot_stable.py, so it always reports Stopped and auto-triggers ./slh_daemon.sh - currently harmless because local bot_stable.py crashes immediately (ModuleNotFoundError: core.event_bus, plugins.task; No valid token found) but becomes a live 409-conflict generator if local deps ever get fixed. NEXT SESSION PRIORITY: fix dashboard pgrep pattern to match bot_stable.py, or remove auto-start entirely and just report status."
+  },
+  {
+    "time": "2026-07-04 00:31:00.730450",
+    "text": "SESSION 4-JUL-2026 PART 2: Fixed dashboard auto-start risk - pgrep pattern now matches bot_stable.py (was matching bot.py, always false), removed automatic ./slh_daemon.sh launch entirely, relabeled as Local Bot to clarify it does not reflect Railway production status. Verified Railway container has zero local dependency on slh_dashboard.sh (only process running is bot_stable.py itself, no ps binary in container). Tested live - shows correct Not running status with no auto-launch. NOTE: dashboard DB health check (option 4) still checks stale schema fields (students, courses, admins, etc) that do not exist in current db.json schema (users, agents, tasks, memory, votes) - cosmetic, low priority, not fixed this session."
   }
 ]
