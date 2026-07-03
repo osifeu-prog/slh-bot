@@ -212,6 +212,9 @@ def start(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
 
+    except Exception as e:
+        bot.send_message(m.chat.id, f"❌ Error: {e}")
+
 @bot.message_handler(commands=['admin'])
 def admin(m):
     bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
