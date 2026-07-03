@@ -1,5 +1,6 @@
 import os, sys, json, time, subprocess
 from internal_agent import start_agent_thread
+import state_manager
 import telebot
 from marketplace import load_store, save_store
 from datetime import datetime
@@ -50,11 +51,8 @@ try:
 except:
     cfg = {}
 SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
-DB_FILE = cfg.get("DB_FILE", "db.json")
-try:
-    with open(DB_FILE) as f:
-        agents_dict.update(__import__("json").load(f).get("agents", {}))
-except: pass
+
+agents_dict = state_manager.get_agents()
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -69,7 +67,6 @@ for _fname, _default in [("event_log.json", []), ("progress.json", {}), ("system
         with open(_path, "w") as _f:
             json.dump(_default, _f)
 
-
 import json as _json_auth
 try:
     with open("allowed_ids.json") as _f:
@@ -83,8 +80,6 @@ def is_admin(m):
         bot.send_message(m.chat.id, "⛔ Unauthorized - admin only")
         return False
     return True
-
-
 
 def smart_reply(bot, chat_id, text, max_len=3800):
     if len(text) <= max_len:
@@ -106,7 +101,6 @@ def smart_reply(bot, chat_id, text, max_len=3800):
     if not hasattr(bot, "_msg_files"):
         bot._msg_files = {}
     bot._msg_files[chat_id] = tmp.name
-
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
@@ -148,11 +142,7 @@ report_handler.init(bot)
 junk_handler.init(bot)
 refresh_token_handler.init(bot)
 smart_leaderboard.register(bot)
-try:
-    with open(DB_FILE) as f:
-        agents_dict = __import__("json").load(f).get("agents", {})
-except:
-    agents_dict = {}
+agents_dict = state_manager.get_agents()
 # agents_dict loaded in main block
 # start_agent_thread() moved to main block
 
@@ -165,8 +155,6 @@ try:
         print(f"Loaded {len(agents_dict)} agents from disk")
 except Exception as e:
     print("Could not load agents.json:", e)
-
-
 
 # ---------------- KERNEL INIT ----------------
 try:
@@ -182,22 +170,6 @@ except Exception as e:
 # ---------------- DB ----------------
 BASE_DB = {"users": {}, "agents": {}, "tasks": {}, "memory": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}
 
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return BASE_DB.copy()
-    try:
-        with open(DB_FILE) as f:
-            db = json.load(f)
-    except:
-        db = {}
-    for k in BASE_DB:
-        db.setdefault(k, BASE_DB[k])
-    return db
-
-def save_db(db):
-    with open(DB_FILE, "w") as f:
-        json.dump(db, f, indent=2)
-
 def now():
     return datetime.now().isoformat()
 
@@ -211,8 +183,8 @@ def ensure_user(db, uid):
 @bot.message_handler(commands=['start'])
 def start(m):
     try:
-        db = ensure_user(load_db(), m.from_user.id)
-        save_db(db)
+        db = ensure_user(state_manager.load_db(), m.from_user.id)
+        state_manager.save_db(db)
         audit('start', m.from_user.id)
         bot.send_message(m.chat.id, "🚀 SLH SYSTEM ONLINE\n/admin for control")
     except Exception as e:
@@ -253,7 +225,7 @@ def admin(m):
 
 @bot.message_handler(commands=['status'])
 def status(m):
-    db = load_db()
+    db = state_manager.load_db()
     bot.send_message(m.chat.id, f"Users: {len(db.get('students', {}))}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
 
 @bot.message_handler(commands=['health'])
@@ -290,15 +262,13 @@ def agent_create(m):
         bot.send_message(m.chat.id, "Usage: /agent_create <name>")
         return
     name = parts[1]
-    db = load_db()
-    agents = db.setdefault("agents", {})
+    agents = state_manager.get_agents()
     if name in agents:
         bot.send_message(m.chat.id, "❌ Agent already exists")
         return
     agents[name] = {"name": name, "inbox": [], "outbox": [], "state": "idle", "role": "agent"}
-    save_db(db)
-    agents_dict.clear()
-    agents_dict.update(agents)
+    state_manager.set_agents(agents)
+    agents_dict = agents
     bot.send_message(m.chat.id, f"✅ Agent created: {name}")
 @bot.message_handler(commands=['agents'])
 def agents_list(m):
@@ -322,18 +292,18 @@ def agent_test(m):
 
 @bot.message_handler(commands=['vote'])
 def vote(m):
-    db = ensure_user(load_db(), m.from_user.id)
+    db = ensure_user(state_manager.load_db(), m.from_user.id)
     key = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if key in db["votes"]:
         db["votes"][key] += 1
     else:
         db["votes"][key] = 1
-    save_db(db)
+    state_manager.save_db(db)
     bot.send_message(m.chat.id, f"Voted {key}")
 
 @bot.message_handler(commands=['results'])
 def results(m):
-    db = load_db()
+    db = state_manager.load_db()
     bot.send_message(m.chat.id, json.dumps(db["votes"], indent=2))
 
 @bot.message_handler(commands=['revenue'])
@@ -522,15 +492,13 @@ def sendagent(m):
         return
     prefix = parts[1]
     msg = " ".join(parts[2:])
-    db = load_db()
-    agents = db.setdefault("agents", {})
+    agents = state_manager.get_agents()
     if prefix not in agents:
         bot.reply_to(m, "❌ Agent not found")
         return
     agents[prefix].setdefault("inbox", []).append({"command": msg, "time": time.time()})
-    save_db(db)
-    agents_dict.clear()
-    agents_dict.update(agents)
+    state_manager.set_agents(agents)
+    agents_dict = agents
     bot.reply_to(m, f"📨 Sent to {prefix}")
 @bot.message_handler(commands=['inbox'])
 def inbox(m):
@@ -540,8 +508,8 @@ def inbox(m):
         bot.send_message(m.chat.id, "Usage: /inbox <agent_prefix>")
         return
     prefix = parts[1]
-    db = load_db()
-    agent = db.get("agents", {}).get(prefix)
+    agents = state_manager.get_agents()
+    agent = agents.get(prefix)
     if not agent:
         bot.send_message(m.chat.id, "❌ Agent not found")
         return
@@ -593,7 +561,6 @@ def test_agents(m):
     results.append(f"✅ Audit: {len(entries)} entries")
     
     bot.send_message(m.chat.id, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
-
 
 @bot.message_handler(commands=['user'])
 def user(m):
@@ -677,7 +644,6 @@ def exec_cmd(m):
         sys.stdout = old_stdout
     bot.send_message(m.chat.id, f"💻 {cmd}\n{output[:4000]}")
 
-
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
     if not is_admin(m): return
@@ -691,7 +657,6 @@ def termlog(m):
         smart_reply(bot, m.chat.id, f"📋 Termux log:\n{output}")
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
-
 
 @bot.message_handler(commands=['market'])
 def market(m):
@@ -795,7 +760,6 @@ def market_upload(m):
     save_store(store)
     bot.send_message(m.chat.id, f"✅ Plugin '{name}' uploaded to Marketplace!")
 
-
 @bot.message_handler(commands=['testcmd'])
 def testcmd(m):
     if not is_admin(m): return
@@ -830,7 +794,6 @@ def debugcmd(m):
             bot.send_message(m.chat.id, info)
             return
     bot.send_message(m.chat.id, f"❌ Command /{cmd} not found.")
-
 
 @bot.message_handler(commands=['diagnose'])
 def diagnose_cmd(m):
@@ -881,7 +844,6 @@ def diagnose_cmd(m):
         issues.insert(0, "✅ All checks passed")
     
     bot.send_message(m.chat.id, "\n".join(issues))
-
 
 while True:
     try:
@@ -970,7 +932,6 @@ while True:
         print("Polling error:", e)
         time.sleep(5)
 
-
 # ===== SLH EVENT LOGGER =====
 def log_event(event_type, user_id=None, data=None):
     import json, os
@@ -995,7 +956,6 @@ def log_event(event_type, user_id=None, data=None):
     except:
         pass
 
-
 # ===== SLH SNAPSHOT SYSTEM =====
 @bot.message_handler(commands=['snapshot'])
 def snapshot(m):
@@ -1018,7 +978,6 @@ Last 10 events:
     except Exception as e:
         bot.send_message(m.chat.id, f"snapshot error: {e}")
 
-
 @bot.message_handler(commands=['logs'])
 def logs(m):
     try:
@@ -1027,7 +986,6 @@ def logs(m):
         bot.send_message(m.chat.id, "".join(data))
     except Exception as e:
         bot.send_message(m.chat.id, str(e))
-
 
 @bot.message_handler(commands=['endday'])
 def endday(m):
@@ -1054,7 +1012,6 @@ Saved to daily_summary.json
 """)
     except Exception as e:
         bot.send_message(m.chat.id, f"endday error: {e}")
-
 
 # ===== SLH REPORT ENGINE =====
 import json, os
@@ -1092,7 +1049,6 @@ def generate_report():
 
     return report
 
-
 @bot.message_handler(commands=['report'])
 def report(m):
     if not is_admin(m): return
@@ -1122,7 +1078,7 @@ def report(m):
 
 if __name__ == "__main__":
     print("Loading DB and agents...")
-    db = load_db()
+    db = state_manager.load_db()
     agents_dict.update(db.get("agents", {}))
     print(f"Agents loaded: {len(agents_dict)}")
     start_agent_thread()
