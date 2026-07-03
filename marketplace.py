@@ -1,7 +1,7 @@
 """SLH OS Marketplace"""
 import json, os
 
-STORE_FILE = "marketplace.json"
+STORE_FILE = "state/marketplace.json"
 
 def load_store():
     try:
