@@ -148,7 +148,11 @@ report_handler.init(bot)
 junk_handler.init(bot)
 refresh_token_handler.init(bot)
 smart_leaderboard.register(bot)
-agents_dict = {}
+try:
+    with open(DB_FILE) as f:
+        agents_dict = __import__("json").load(f).get("agents", {})
+except:
+    agents_dict = {}
 # agents_dict loaded in main block
 # start_agent_thread() moved to main block
 
