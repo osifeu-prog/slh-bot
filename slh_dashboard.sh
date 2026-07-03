@@ -76,7 +76,9 @@ case $choice in
 import json, requests, time
 with open("db.json") as f:
     db = json.load(f)
-token = db["token"]
+token = db.get("token") or __import__("os").environ.get("BOT_TOKEN")
+if not token:
+    print("❌ No token found"); exit(1)
 users = db.get("users", {})
 msg = """🌟 **SLH Learning – הבוט שודרג!** 🌟
 
@@ -104,7 +106,10 @@ BROADCAST
         python3 -c "
 import json, requests
 db = json.load(open('db.json'))
-token = db['token']
+token = db.get('token') or __import__('os').environ.get('BOT_TOKEN')
+if not token:
+    print('No token found in db.json or BOT_TOKEN env var')
+    exit(1)
 r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
                   json={'chat_id': 8789977826, 'text': '/leaderboard'})
 print(r.json().get('result', {}).get('text', 'No response'))
