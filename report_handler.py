@@ -1,6 +1,6 @@
 import json, os, subprocess, datetime
 
-JOURNAL_FILE = os.path.expanduser("~/slh_clean/state/journal.json")
+JOURNAL_FILE = "/app/state/journal.json"
 
 def load_journal():
     if os.path.exists(JOURNAL_FILE):
