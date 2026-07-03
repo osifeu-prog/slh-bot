@@ -514,11 +514,6 @@ def agentstate(m):
         bot.send_message(m.chat.id, "❌ Agent not found")
 
 @bot.message_handler(commands=['sendagent'])
-@bot.message_handler(commands=['sendagent'])
-@bot.message_handler(commands=['sendagent'])
-@bot.message_handler(commands=['sendagent'])
-@bot.message_handler(commands=['sendagent'])
-@bot.message_handler(commands=['sendagent'])
 def sendagent(m):
     if not is_admin(m): return
     parts = m.text.split()
@@ -527,22 +522,13 @@ def sendagent(m):
         return
     prefix = parts[1]
     msg = " ".join(parts[2:])
-    try:
-        with open("db.json") as f:
-            db = json.load(f)
-    except:
-        db = {}
+    db = load_db()
     agents = db.setdefault("agents", {})
     if prefix not in agents:
         bot.reply_to(m, "❌ Agent not found")
         return
-    cmd = msg.split()[0].lower() if msg else ""
-    if cmd == "ask":
-        prompt = " ".join(msg.split()[1:]) if len(msg.split()) > 1 else ""
-        data = {"command": "ask", "prompt": prompt, "time": time.time()}
     agents[prefix].setdefault("inbox", []).append({"command": msg, "time": time.time()})
-    with open("db.json", "w") as f:
-        json.dump(db, f, indent=2, ensure_ascii=False)
+    save_db(db)
     agents_dict.clear()
     agents_dict.update(agents)
     bot.reply_to(m, f"📨 Sent to {prefix}")
@@ -554,20 +540,16 @@ def inbox(m):
         bot.send_message(m.chat.id, "Usage: /inbox <agent_prefix>")
         return
     prefix = parts[1]
-    try:
-        with open("db.json") as f:
-            db = json.load(f)
-        agent = db.get("agents", {}).get(prefix)
-        if not agent:
-            bot.send_message(m.chat.id, "❌ Agent not found")
-            return
-        outbox = agent.get("outbox", [])
-        if outbox:
-            msg = "📬 Outbox:\n" + "\n".join(outbox[-5:])
-        else:
-            msg = "📭 Outbox empty"
-    except Exception as e:
-        msg = f"Error reading db: {e}"
+    db = load_db()
+    agent = db.get("agents", {}).get(prefix)
+    if not agent:
+        bot.send_message(m.chat.id, "❌ Agent not found")
+        return
+    inbox = agent.get("inbox", [])
+    if inbox:
+        msg = "📬 Inbox:\n" + "\n".join(str(m) for m in inbox[-5:])
+    else:
+        msg = "📭 Inbox empty"
     bot.send_message(m.chat.id, msg)
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
