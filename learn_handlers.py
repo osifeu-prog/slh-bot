@@ -17,64 +17,6 @@ def add_points(uid, points):
     save_db(db)
 
 def register(bot):
-    @bot.message_handler(commands=['join'])
-    def start_join(m):
-        uid = str(m.chat.id)
-        db = load_db()
-        if uid in db.get("students", {}):
-            bot.reply_to(m, "⚠️ Already registered. Use /myprogress.")
-            return
-        sent = bot.reply_to(m, "👋 Welcome to SLH Learning!\nWhat is your full name?")
-        bot.register_next_step_handler(sent, process_name)
-    def process_name(m):
-        if m.text.startswith("/"):
-            bot.process_new_messages([m])
-            return
-        name = m.text.strip()
-        uid = str(m.chat.id)
-        if not hasattr(process_name, 'temp'):
-            process_name.temp = {}
-        process_name.temp[uid] = {"name": name}
-        sent = bot.reply_to(m, f"Nice to meet you, {name}!\nWhich group do you belong to? (e.g., 'Class A')")
-        bot.register_next_step_handler(sent, process_group)
-
-    def process_group(m):
-        if m.text.startswith("/"):
-            bot.process_new_messages([m])
-            return
-        group = m.text.strip()
-        uid = str(m.chat.id)
-        process_name.temp[uid]["group"] = group
-        sent = bot.reply_to(m, "What would you like to achieve? (type 'skip' to leave empty)")
-        bot.register_next_step_handler(sent, process_goal)
-
-    def process_goal(m):
-        if m.text.startswith("/"):
-            bot.process_new_messages([m])
-            return
-        goal = m.text.strip()
-        uid = str(m.chat.id)
-        data = process_name.temp.pop(uid)
-        if goal.lower() == 'skip':
-            goal = ""
-        db = load_db()
-        referred_by = db.get("referred_by", {}).get(uid)
-        db.setdefault("students", {})[uid] = {
-            "name": data["name"],
-            "group": data["group"],
-            "goal": goal,
-            "registered": datetime.datetime.now().isoformat(),
-            "premium": False,
-            "referral_code": None,
-            "referred_by": referred_by
-        }
-        add_points(uid, 10)
-        save_db(db)
-        msg = f"✅ Registered: {data['name']} ({data['group']})\n"
-        if not referred_by:
-            msg += "🔗 Do you have a referral code? Use /usereferral <code>"
-        bot.reply_to(m, msg)
-
     @bot.message_handler(commands=['register'])
     def register_student(m):
         args = m.text.split(maxsplit=2)
