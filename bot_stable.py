@@ -837,9 +837,9 @@ while True:
             if handlers:
                 issues.append(f"⚠️ Handlers after while True: {', '.join('/'+h for h in handlers)}")
             else:
-                issues.append("✅ No handlers after while True")
+        issues.append("✅ No handlers after while True")
         else:
-            issues.append("✅ No handlers after while True")
+        issues.append("✅ No handlers after while True")
     else:
         issues.append("❌ while True loop not found")
     
