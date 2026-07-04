@@ -31,52 +31,11 @@ def load_token():
     env_token = os.getenv("BOT_TOKEN")
     if env_token and ":" in env_token:
         return env_token
-    try:
-        with open("config.json") as f:
-            cfg = json.load(f)
-            token = cfg.get("BOT_TOKEN", "")
-            if token and ":" in token and "WILL_BE_SET" not in token:
-                return token
-    except:
-        pass
-    return None
-
-TOKEN = load_token()
-if not TOKEN:
-    print("No valid token found. Exiting.")
-    sys.exit(1)
-
-# ---------------- CONFIG ----------------
 try:
-    with open("config.json") as f:
-        cfg = json.load(f)
-except:
-    cfg = {}
-SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
-
-agents_dict = state_manager.get_agents()
-
-bot = telebot.TeleBot(TOKEN)
-econ_handler.register_econ_handlers(bot, is_admin)
-
-# Runtime state initialization (volumes mount empty at runtime, not build time)
-os.makedirs("state", exist_ok=True)
-if not os.path.exists("state/db.json"):
-    with open("state/db.json", "w") as _f:
-        json.dump({"users": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}, _f)
-for _fname, _default in [("event_log.json", []), ("progress.json", {}), ("system.json", {}), ("users.json", {})]:
-    _path = f"state/{_fname}"
-    if not os.path.exists(_path):
-        with open(_path, "w") as _f:
-            json.dump(_default, _f)
-
-import json as _json_auth
-try:
-    with open("allowed_ids.json") as _f:
+    with open('allowed_ids.json') as _f:
         _ALLOWED = _json_auth.load(_f)
 except Exception:
-
-_ALLOWED = {"admin": 8789977826, "allowed": [8789977826]}
+    _ALLOWED = {'admin': 8789977826, 'allowed': [8789977826]}
 
 def is_admin(m):
     uid = m.from_user.id if hasattr(m, 'from_user') else m
