@@ -128,7 +128,7 @@ def handle_reload(message):
         bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
     else:
         bot.send_message(8789977826, "✅ All handlers reloaded successfully")
-    bot.reply_to(message, "✅ Reload complete")
+    bot.send_message(message.chat.id, "✅ Reload complete")
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
     chat_id = call.message.chat.id
@@ -829,7 +829,8 @@ def diagnose_cmd(m):
     # Check for handler placement
     with open(bot_path) as f:
         code = f.read()
-    loop_pos = code.find("while True:")
+    loop_pos = code.find("    print("Sending startup notification to admin"); bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + str(__import__("datetime").datetime.now()), disable_notification=True)
+while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
         if "@bot.message_handler" in after_loop:
@@ -898,7 +899,6 @@ def process_new_token(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
-    print("Sending startup notification to admin"); bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + str(__import__("datetime").datetime.now()), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
