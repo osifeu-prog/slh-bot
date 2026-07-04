@@ -31,6 +31,14 @@ def load_token():
     env_token = os.getenv("BOT_TOKEN")
     if env_token and ":" in env_token:
         return env_token
+
+token = load_token()
+if not token:
+    print('No valid token found. Exiting.')
+    exit(1)
+bot = telebot.TeleBot(token)
+econ_handler.register_econ_handlers(bot)
+
 try:
     with open('allowed_ids.json') as _f:
         _ALLOWED = _json_auth.load(_f)
