@@ -80,6 +80,32 @@ def smart_reply(bot, chat_id, text, max_len=3800):
         bot._msg_files = {}
     bot._msg_files[chat_id] = tmp.name
 
+
+@bot.message_handler(commands=["reload"])
+def handle_reload(message):
+    if message.from_user.id != 8789977826:
+        bot.reply_to(message, "⛔ Admin only")
+        return
+    bot.reply_to(message, "🔄 Reloading handlers...")
+    bot.handlers.clear()
+    import importlib
+    modules = [
+        "welcome_handler","learn_handlers","project_commands",
+        "course_handlers","demo_handlers","report_handler",
+        "broadcast_handler","ask_handler","help_handler",
+        "diagnostic_handler","junk_handler","monitor_handler",
+        "myprogress_handler","econ_handler","roadmap_handler",
+        "refresh_token_handler"
+    ]
+    for mod_name in modules:
+        try:
+            mod = importlib.import_module(mod_name)
+            importlib.reload(mod)
+            if hasattr(mod, "init"):
+                mod.init(bot)
+        except Exception as e:
+            print(f"✗ {mod_name}: {e}")
+    bot.reply_to(message, "✅ Reload complete")
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
     chat_id = call.message.chat.id
@@ -991,33 +1017,6 @@ def report(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"report error: {e}")
 
-
-@bot.message_handler(commands=["reload"])
-def handle_reload(message):
-    import importlib, admin_utils
-    if not admin_utils.is_admin(message):
-        bot.reply_to(message, "⛔ מנהלים בלבד")
-        return
-    bot.reply_to(message, "🔄 טוען מחדש מודולים...")
-    modules_to_reload = [
-        "welcome_handler", "learn_handlers", "project_commands",
-        "course_handlers", "demo_handlers", "report_handler",
-        "broadcast_handler", "ask_handler", "help_handler",
-        "diagnostic_handler", "junk_handler", "monitor_handler",
-        "myprogress_handler", "econ_handler", "roadmap_handler",
-        "refresh_token_handler"
-    ]
-    bot.handlers.clear()  # נקה את כל ה-handlers
-    for mod_name in modules_to_reload:
-        try:
-            mod = importlib.import_module(mod_name)
-            importlib.reload(mod)
-            if hasattr(mod, "init"):
-                mod.init(bot)
-            print(f"✓ {mod_name}")
-        except Exception as e:
-            print(f"✗ {mod_name}: {e}")
-    bot.reply_to(message, "✅ רענון הושלם – כל הפקודות עודכנו.")
 
 
 if __name__ == "__main__":
