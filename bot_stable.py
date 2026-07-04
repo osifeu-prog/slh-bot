@@ -75,7 +75,18 @@ try:
     with open("allowed_ids.json") as _f:
         _ALLOWED = _json_auth.load(_f)
 except Exception:
-from admin_utils import is_admin
+
+_ALLOWED = {"admin": 8789977826, "allowed": [8789977826]}
+
+def is_admin(m):
+    uid = m.from_user.id if hasattr(m, 'from_user') else m
+    if uid not in _ALLOWED.get("allowed", []) and uid != _ALLOWED.get("admin"):
+        try:
+            bot.send_message(m.chat.id, "⛔ Unauthorized - admin only")
+        except:
+            pass
+        return False
+    return True
 
 def smart_reply(bot, chat_id, text, max_len=3800):
     if len(text) <= max_len:
