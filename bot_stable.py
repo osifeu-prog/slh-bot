@@ -41,7 +41,7 @@ import brief_handler
 import econ_handler
 import junk_handler
 import sandbox_handler
-import myprogress_handler
+# import myprogress_handler
 import help_handler
 import broadcast_handler
 import refresh_token_handler
@@ -208,6 +208,25 @@ def ensure_user(db, uid):
     return db
 
 # ---------------- COMMANDS ----------------
+
+
+# Simple stub commands (until full implementation)
+@bot.message_handler(commands=['courses'])
+def courses_stub(m):
+    bot.reply_to(m, "📚 Courses: Python Basics, AI for Beginners, Tech Entrepreneurship.\nUse /join to enroll!")
+
+@bot.message_handler(commands=['referral'])
+def referral_stub(m):
+    bot.reply_to(m, "🔗 Your referral link will be ready soon. Check back later!")
+
+@bot.message_handler(commands=['project'])
+def project_stub(m):
+    bot.reply_to(m, "📁 Projects: /project create [name] or /project list")
+
+@bot.message_handler(commands=['myprogress'])
+def myprogress_stub(m):
+    bot.reply_to(m, "📊 Progress tracking is being set up. Check back later!")
+
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
