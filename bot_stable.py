@@ -17,6 +17,8 @@ import complete_handler
 import diagnostic_handler
 import report_handler
 import roadmap_handler
+import econ_handler
+econ_handler.register_econ_handlers(bot)
 import junk_handler
 import sandbox_handler
 import myprogress_handler
