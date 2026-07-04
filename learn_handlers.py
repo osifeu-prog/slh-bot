@@ -46,24 +46,6 @@ def register(bot):
             msg += f"• `{cid}` – {cdata['title']}\n"
         bot.reply_to(m, msg, parse_mode="Markdown")
 
-    def my_progress(m):
-        uid = str(m.chat.id)
-        db = load_db()
-        student = db.get("students", {}).get(uid)
-        if not student:
-            bot.reply_to(m, "❌ Register first: /register <name> <group>")
-            return
-        progress = db.get("progress", {}).get(uid, {})
-        points = db.get("users", {}).get(uid, {}).get("points", 0)
-        msg = f"📊 Progress of {student['name']} (Points: {points}):\n"
-        for cid, pdata in progress.items():
-            course = db.get("courses", {}).get(cid, {})
-            title = course.get("title", cid)
-            completed = len(pdata.get("completed", []))
-            total = len(course.get("tasks", {}))
-            submitted = len(pdata.get("submissions", {}))
-            msg += f"• {title}: {submitted}/{total} submitted, {completed} approved\n"
-        bot.reply_to(m, msg)
 
     @bot.message_handler(commands=['referral'])
     def my_referral(m):
