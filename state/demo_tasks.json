@@ -1,11 +1,5 @@
-{
-  "demo_project": {
-    "title": "פרויקט הדגמה",
-    "tasks": [
-      {"id": "1", "desc": "צור סוכן חדש עם /agent_create"},
-      {"id": "2", "desc": "שלח הודעה לסוכן עם /sendagent"},
-      {"id": "3", "desc": "בדוק את תיבת הסוכן עם /inbox"},
-      {"id": "4", "desc": "שנה מצב סוכן עם /agentstate"}
-    ]
-  }
-}
+[
+  {"id": "1", "title": "להשלים קורס ביטקוין", "status": "pending"},
+  {"id": "2", "title": "ליצור פרויקט ראשון", "status": "pending"},
+  {"id": "3", "title": "להזמין 3 חברים", "status": "pending"}
+]
