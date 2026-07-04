@@ -23,18 +23,18 @@ def init(bot):
         msg += "5️⃣ /myprogress – מעקב התקדמות\n"
         msg += "6️⃣ /referral – הזמנת חברים\n\n"
         msg += "🤖 **סוכנים חכמים:**\n"
-        msg += "/agent_create <name> – צור סוכן\n"
+        msg += "/agent_create name – צור סוכן\n"
         msg += "/agents – רשימת סוכנים\n"
-        msg += "/sendagent <prefix> <msg> – שלח הודעה\n"
-        msg += "/inbox <prefix> – תיבת הודעות\n"
-        msg += "/agentstate <prefix> <state> – שנה מצב\n\n"
+        msg += "/sendagent prefix <msg> – שלח הודעה\n"
+        msg += "/inbox prefix – תיבת הודעות\n"
+        msg += "/agentstate prefix state – שנה מצב\n\n"
         msg += "📋 **התנסות מהירה:**\n"
         msg += "/demo – תפריט דמו\n"
         msg += "/demo agents – צור סוכני דמו\n"
         msg += "/demo tasks – משימות לדוגמה\n"
         msg += "/demo guide – מדריך מהיר\n\n"
         msg += "👥 **בואו נבנה יחד!**"
-        bot.reply_to(message, msg, parse_mode="Markdown")
+        bot.reply_to(message, msg, )
     @bot.message_handler(commands=['join'])
     def join(m):
         uid = str(m.from_user.id)
