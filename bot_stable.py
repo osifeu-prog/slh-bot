@@ -1022,7 +1022,13 @@ def handle_reload(message):
         bot.reply_to(message, "⛔ מנהלים בלבד")
         return
     bot.reply_to(message, "🔄 טוען מחדש מודולים...")
+    import admin_utils
+    if not admin_utils.is_admin(message):
+        bot.reply_to(message, "⛔ מנהלים בלבד")
+        return
+    bot.reply_to(message, "🔄 טוען מחדש מודולים...")
     bot.stop_polling()
+    bot.handlers = []  # נקה את כל ה־handlers הישנים
     reload_handlers()
     bot.reply_to(message, "✅ רענון הושלם – כל הפקודות עודכנו.")
     bot.infinity_polling()
@@ -1110,4 +1116,5 @@ from core.bootstrap_commands import init as init_commands
 init_commands()
 
 from init_router import bootstrap
+import admin_utils
 bootstrap()
