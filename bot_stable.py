@@ -123,8 +123,9 @@ def handle_reload(message):
             importlib.reload(mod)
             if hasattr(mod, "init"):
                 mod.init(bot)
+            bot.send_message(8789977826, f"✓ {mod_name} reloaded", disable_notification=True)
         except Exception as e:
-            print(f"✗ {mod_name}: {e}")
+            bot.send_message(8789977826, f"✗ {mod_name}: {e}", disable_notification=True)
             failed.append(f"{mod_name}: {e}")
         if failed:
             bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
