@@ -1,4 +1,10 @@
 import os, sys, json, time, subprocess
+
+# --- Local process lock: run only if /app/state exists (Railway Volume) ---
+import os, sys
+if not os.path.isdir("/app/state"):
+    print("❌ This bot runs only on Railway. Exiting.")
+    sys.exit(0)
 if not os.getenv("RAILWAY_ENVIRONMENT") and not os.getenv("DYNO"):
     print("❌ This bot runs only on Railway. Exiting.")
 from internal_agent import start_agent_thread
@@ -1018,6 +1024,25 @@ def report(m):
         bot.send_message(m.chat.id, f"report error: {e}")
 
 
+
+
+# --- Healthcheck background thread ---
+import threading, time
+def healthcheck_loop():
+    fails = 0
+    while True:
+        time.sleep(300)  # כל 5 דקות
+        try:
+            bot.get_me()
+            fails = 0
+        except Exception as e:
+            fails += 1
+            if fails >= 3:
+                try:
+                    bot.send_message(8789977826, f"⚠️ Healthcheck failed 3 times: {e}")
+                except:
+                    pass
+threading.Thread(target=healthcheck_loop, daemon=True).start()
 
 if __name__ == "__main__":
     print("Loading DB and agents...")
