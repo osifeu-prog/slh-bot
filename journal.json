@@ -50,5 +50,9 @@
   {
     "time": "2026-07-04 15:22:08.402488",
     "text": "SESSION 4-JUL-2026 PART 7 (FINAL): Migrated journal from Volume-only state/journal.json to git-tracked journal.json in project root. Updated report_handler.py JOURNAL_FILE path. Now journal.json and ROADMAP.md both auto-sync Termux to Railway via git push - no /exec sync needed anymore for either. Verified live - /journal_read shows all entries correctly after deploy. This resolves the recurring Volume/git split issue that caused confusion multiple times this session (journal showing stale test data, requiring manual /exec writes). State files that still remain Volume-only by necessity (live user data): state/db.json, state/marketplace.json - these correctly stay on Volume since they change in real-time from user actions, not from code edits."
+  },
+  {
+    "time": "2026-07-04 15:34:01.192341",
+    "text": "SESSION 4-JUL-2026 PART 8: Discovered parallel work completed economic engine - econ_handler.py with /balance, /buy, /giveme all live and verified working (tested balance 170 -> 160 after /buy ask_credit, real DB writes confirmed). admin_utils.py created to house is_admin() avoiding circular imports. Updated ROADMAP.md with accurate current state. Parallel cleanup also in progress: bot.py and other legacy files moved to archive/, not yet committed. NOTE: slh_dashboard.sh now shows bot.py missing (expected, file intentionally archived, not a bug). REMAINING FOR REAL MONEY: credits currently only enter system via admin /giveme, no real payment path (Stars/TON) connects to credits yet. Referral commissions (85% promised) still not automated on purchase."
   }
 ]

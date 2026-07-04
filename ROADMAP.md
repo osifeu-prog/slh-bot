@@ -62,3 +62,32 @@
   code changes deploy automatically via git push, but state file changes
   need explicit /exec sync to Railway
 - Always pull live db.json via /exec before local DB work (local copy drifts stale)
+
+
+## 📅 Session Update — 4 July 2026, Part 2 (parallel work discovered)
+
+### ✅ Economic Engine LIVE (verified working in production)
+- /balance — shows real credit balance from db.json
+- /buy <item> — deducts credits, grants item (ask_credit=10cr, premium_agent=50cr)
+- /giveme — admin-only, adds 50 credits (for testing/manual grants)
+- econ_handler.py — clean separate module, wired into bot_stable.py
+- CONFIRMED LIVE: tested /balance (170 credits) and /buy ask_credit
+  (correctly deducted to 160) - real DB writes, not simulated
+
+### 🔴 Still needed for REAL money (not just internal credits)
+- [ ] Connect credits to real payment: Telegram Stars or TON purchase
+      (currently credits only enter system via admin /giveme - no
+      real payment path exists yet)
+- [ ] Wire referral commissions in /buy (85% to referrer - promised in
+      /referral text, not yet automated)
+- [ ] Rebuild /admin menu from real 81-command list (still pending,
+      original goal from this session, not yet done)
+
+### 🟡 Also discovered - parallel cleanup in progress
+- Large untracked archive/ cleanup happening (bot.py, bot_test.py,
+  run.py, minimal_bot.py etc moved to archive/) - not yet committed
+- New untracked files appearing: core/command_router.py,
+  core/bootstrap_commands.py, state/token_loader.py - possible
+  larger refactor starting, needs review before committing
+- admin_utils.py created (new) - houses is_admin() to avoid circular
+  imports, referenced by econ_handler.py giveme command
