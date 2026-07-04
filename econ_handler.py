@@ -1,5 +1,4 @@
 import state_manager
-from refresh_token_handler import <שם_אמיתי> as is_admin
 
 def register_econ_handlers(bot):
     @bot.message_handler(commands=['balance'])
@@ -42,9 +41,6 @@ def register_econ_handlers(bot):
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
-        if not is_admin(m.from_user.id):
-            bot.send_message(m.chat.id, "⛔ Admin only.")
-            return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, {}).get("balance", 0) + 50
