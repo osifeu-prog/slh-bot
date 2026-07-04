@@ -992,10 +992,13 @@ def report(m):
         bot.send_message(m.chat.id, f"report error: {e}")
 
 
-# --- Hot-reload: /reload command (admin only) ---
-def reload_handlers():
-    """טוען מחדש את כל המודולים ומוודא שאין כפילויות"""
+@bot.message_handler(commands=["reload"])
+def handle_reload(message):
     import importlib, admin_utils
+    if not admin_utils.is_admin(message):
+        bot.reply_to(message, "⛔ מנהלים בלבד")
+        return
+    bot.reply_to(message, "🔄 טוען מחדש מודולים...")
     modules_to_reload = [
         "welcome_handler", "learn_handlers", "project_commands",
         "course_handlers", "demo_handlers", "report_handler",
@@ -1004,6 +1007,7 @@ def reload_handlers():
         "myprogress_handler", "econ_handler", "roadmap_handler",
         "refresh_token_handler"
     ]
+    bot.handlers.clear()  # נקה את כל ה-handlers
     for mod_name in modules_to_reload:
         try:
             mod = importlib.import_module(mod_name)
@@ -1013,20 +1017,8 @@ def reload_handlers():
             print(f"✓ {mod_name}")
         except Exception as e:
             print(f"✗ {mod_name}: {e}")
-
-@bot.message_handler(commands=["reload"])
-def handle_reload(message):
-    import admin_utils
-    if not admin_utils.is_admin(message):
-        bot.reply_to(message, "⛔ מנהלים בלבד")
-        return
-    bot.reply_to(message, "🔄 טוען מחדש מודולים...")
-    bot.stop_polling()
-    bot.handlers = []
-    reload_handlers()
     bot.reply_to(message, "✅ רענון הושלם – כל הפקודות עודכנו.")
-    bot.infinity_polling()
-bot.register_message_handler(handle_reload, commands=['reload'])
+
 
 if __name__ == "__main__":
     print("Loading DB and agents...")
