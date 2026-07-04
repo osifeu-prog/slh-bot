@@ -1,6 +1,6 @@
 import state_manager
 
-def register_econ_handlers(bot, is_admin):
+def register_econ_handlers(bot):
     @bot.message_handler(commands=['balance'])
     def balance(m):
         uid = str(m.from_user.id)
@@ -41,6 +41,7 @@ def register_econ_handlers(bot, is_admin):
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
+        from bot_stable import is_admin
         if not is_admin(m):
             return
         uid = str(m.from_user.id)
