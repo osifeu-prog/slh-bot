@@ -1,5 +1,5 @@
 import state_manager
-from refresh_token_handler import is_admin
+from refresh_token_handler import <שם_אמיתי> as is_admin
 
 def register_econ_handlers(bot):
     @bot.message_handler(commands=['balance'])
