@@ -17,6 +17,7 @@ import complete_handler
 import diagnostic_handler
 import report_handler
 import roadmap_handler
+import brief_handler
 import econ_handler
 import junk_handler
 import sandbox_handler
@@ -115,6 +116,7 @@ monitor_handler.init(bot)
 ask_handler.init(bot)
 report_handler.init(bot)
 roadmap_handler.init(bot)
+brief_handler.init(bot)
 junk_handler.init(bot)
 refresh_token_handler.init(bot)
 import demo_handlers; demo_handlers.register(bot, agents_dict)
