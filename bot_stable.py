@@ -57,7 +57,7 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 agents_dict = state_manager.get_agents()
 
 bot = telebot.TeleBot(TOKEN)
-econ_handler.register_econ_handlers(bot)
+econ_handler.register_econ_handlers(bot, is_admin)
 
 # Runtime state initialization (volumes mount empty at runtime, not build time)
 os.makedirs("state", exist_ok=True)

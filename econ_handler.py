@@ -1,6 +1,6 @@
 import state_manager
 
-def register_econ_handlers(bot):
+def register_econ_handlers(bot, is_admin):
     @bot.message_handler(commands=['balance'])
     def balance(m):
         uid = str(m.from_user.id)
