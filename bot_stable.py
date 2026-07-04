@@ -126,11 +126,11 @@ def handle_reload(message):
         except Exception as e:
             print(f"✗ {mod_name}: {e}")
             failed.append(f"{mod_name}: {e}")
-    if failed:
-        bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
+        if failed:
+            bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
             failed.append(f"{mod_name}: {e}")
-    if failed:
-        bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
+        if failed:
+            bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
     bot.reply_to(message, "✅ Reload complete")
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
