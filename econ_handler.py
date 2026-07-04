@@ -41,7 +41,7 @@ def register_econ_handlers(bot):
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
-        from bot_stable import is_admin
+        from admin_utils import is_admin
         if not is_admin(m):
             return
         uid = str(m.from_user.id)
