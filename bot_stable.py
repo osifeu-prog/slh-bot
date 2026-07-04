@@ -559,10 +559,6 @@ def user(m):
 def rlogs(m):
     if not is_admin(m): return
     import urllib.request, json, os, ssl
-    # Admin only
-    if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.send_message(m.chat.id, "❌ Admin only")
-        return
     # Load token
     token = os.getenv("RAILWAY_API_TOKEN", "")
     if not token:
@@ -597,9 +593,6 @@ def rlogs(m):
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
     if not is_admin(m): return
-    if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.send_message(m.chat.id, "❌ Admin only")
-        return
     cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
     if not cmd:
         bot.send_message(m.chat.id, "Usage: /exec <python code>")
@@ -619,9 +612,6 @@ def exec_cmd(m):
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
     if not is_admin(m): return
-    if str(m.from_user.id) != str(SUPER_ADMIN):
-        bot.send_message(m.chat.id, "❌ Admin only")
-        return
     import subprocess
     try:
         result = subprocess.run("tail -n 30 ~/slh_clean/bot.log", shell=True, capture_output=True, text=True, timeout=5)
