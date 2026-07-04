@@ -46,5 +46,9 @@
   {
     "time": "2026-07-04 10:33:30.582009",
     "text": "SESSION 4-JUL-2026 PART 6: Created /roadmap command (roadmap_handler.py) that reads ROADMAP.md and sends it via Telegram, auto-chunked to stay under 4096 char limit. Verified no existing duplicate before adding. ROADMAP.md updated with full 4-Jul session summary (9 bugs fixed) and critical working rules learned (no /tmp, no long paste blocks, no long python3 -c strings, state file Volume/git split). Since ROADMAP.md is a regular git-tracked file (not in state/), it auto-syncs to Railway on every push - no special /exec sync needed like journal/db/marketplace required. Verified live - /roadmap displays full updated content correctly."
+  },
+  {
+    "time": "2026-07-04 15:22:08.402488",
+    "text": "SESSION 4-JUL-2026 PART 7 (FINAL): Migrated journal from Volume-only state/journal.json to git-tracked journal.json in project root. Updated report_handler.py JOURNAL_FILE path. Now journal.json and ROADMAP.md both auto-sync Termux to Railway via git push - no /exec sync needed anymore for either. Verified live - /journal_read shows all entries correctly after deploy. This resolves the recurring Volume/git split issue that caused confusion multiple times this session (journal showing stale test data, requiring manual /exec writes). State files that still remain Volume-only by necessity (live user data): state/db.json, state/marketplace.json - these correctly stay on Volume since they change in real-time from user actions, not from code edits."
   }
 ]
