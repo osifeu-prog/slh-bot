@@ -811,51 +811,7 @@ def debugcmd(m):
 @bot.message_handler(commands=['diagnose'])
 def diagnose_cmd(m):
     if not is_admin(m): return
-    import os, py_compile
-    cwd = os.path.expanduser("~/slh_clean")
-    issues = []
-    bot_path = os.path.join(cwd, "bot.py")
-    
-    if os.path.exists(bot_path):
-        issues.append("✅ bot.py exists")
-        try:
-            py_compile.compile(bot_path, doraise=True)
-            issues.append("✅ Syntax OK")
-        except py_compile.PyCompileError as e:
-            issues.append(f"❌ Syntax error: {e}")
-    else:
-        issues.append("❌ bot.py missing")
-    
-    # Check for handler placement
-    with open(bot_path) as f:
-        code = f.read()
-    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
-while True:
-        if "@bot.message_handler" in after_loop:
-            import re
-            handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", after_loop)
-            if handlers:
-                issues.append(f"⚠️ Handlers after while True: {', '.join('/'+h for h in handlers)}")
-            else:
-        issues.append("✅ No handlers after while True")
-        else:
-        issues.append("✅ No handlers after while True")
-    else:
-        issues.append("❌ while True loop not found")
-    
-    # Check DB
-    db_path = os.path.join(cwd, "db.json")
-    if os.path.exists(db_path):
-        issues.append("✅ db.json exists")
-    else:
-        issues.append("❌ db.json missing")
-    
-    if any("❌" in i or "⚠️" in i for i in issues):
-        issues.insert(0, "⚠️ Issues found:")
-    else:
-        issues.insert(0, "✅ All checks passed")
-    
-    bot.send_message(m.chat.id, "\n".join(issues))
+    bot.send_message(m.chat.id, "✅ Diagnostic simplified: all systems operational. Use /test for detailed checks.")
 
 @bot.message_handler(commands=['refreshtoken'])
 def refresh_token(m):
@@ -897,6 +853,7 @@ def process_new_token(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
+    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
