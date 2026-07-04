@@ -20,7 +20,7 @@
 - [ ] Telegram Stars for /ask usage
 - [ ] Premium agents (paid via Stars)
 - [ ] Course payments (USDT/Stars)
-- [ ] Affiliate referral commissions
+- [x] Affiliate referral commissions (85% wired into /buy, commit 33ac4ed, 4-Jul PART 9)
 
 ## 🏗 Architecture (Matala 2)
 - [ ] State Manager → single source of truth
@@ -78,8 +78,8 @@
 - [ ] Connect credits to real payment: Telegram Stars or TON purchase
       (currently credits only enter system via admin /giveme - no
       real payment path exists yet)
-- [ ] Wire referral commissions in /buy (85% to referrer - promised in
-      /referral text, not yet automated)
+- [x] Wire referral commissions in /buy (85% to referrer - DONE commit 33ac4ed,
+      4-Jul PART 9; not yet end-to-end tested with second live account)
 - [ ] Rebuild /admin menu from real 81-command list (still pending,
       original goal from this session, not yet done)
 
