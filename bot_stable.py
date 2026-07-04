@@ -223,10 +223,6 @@ def referral_stub(m):
 def project_stub(m):
     bot.reply_to(m, "📁 Projects: /project create [name] or /project list")
 
-@bot.message_handler(commands=['myprogress'])
-def myprogress_stub(m):
-    bot.reply_to(m, "📊 Progress tracking is being set up. Check back later!")
-
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
