@@ -1,8 +1,6 @@
 import os, sys, json, time, subprocess
-# --- Local process lock: prevent running outside Railway ---
 if not os.getenv("RAILWAY_ENVIRONMENT") and not os.getenv("DYNO"):
     print("❌ This bot runs only on Railway. Exiting.")
-    sys.exit(0)
 from internal_agent import start_agent_thread
 import state_manager
 import telebot
