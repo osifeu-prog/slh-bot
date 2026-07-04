@@ -40,10 +40,13 @@ def register_econ_handlers(bot):
         bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
 
     @bot.message_handler(commands=['giveme'])
-    def giveme(m):
-        uid = str(m.from_user.id)
-        db = state_manager.load_db()
-        db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, {}).get("balance", 0) + 50
-        state_manager.save_db(db)
-        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {db['users'][uid]['balance']} credits")
+def giveme(m):
+    if not is_admin(m.from_user.id):
+        bot.send_message(m.chat.id, "⛔ Admin only.")
+        return
+    uid = str(m.from_user.id)
+    db = state_manager.load_db()
+    db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, {}).get("balance", 0) + 50
+    state_manager.save_db(db)
+    bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {db['users'][uid]['balance']} credits")
 
