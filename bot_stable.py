@@ -181,40 +181,6 @@ def ensure_user(db, uid):
 
 # ---------------- COMMANDS ----------------
 
-@bot.message_handler(commands=['start'])
-def start(m):
-    try:
-        db = ensure_user(state_manager.load_db(), m.from_user.id)
-        state_manager.save_db(db)
-        audit('start', m.from_user.id)
-        bot.send_message(m.chat.id,
-            "🌟 ברוכים הבאים ל-SLH Learning! 🌟\n\n"
-            "🎯 פקודות עיקריות:\n"
-            "1️⃣ /join – הרשמה\n"
-            "2️⃣ /courses – צפייה בקורסים\n"
-            "3️⃣ /project create – פרויקט אישי\n"
-            "4️⃣ /project task add – הוספת משימות\n"
-            "5️⃣ /myprogress – מעקב התקדמות\n"
-            "6️⃣ /referral – הזמנת חברים\n\n"
-            "🤖 סוכנים חכמים:\n"
-            "/agent_create <name> – צור סוכן\n"
-            "/agents – רשימת סוכנים\n"
-            "/sendagent <prefix> <msg> – שלח הודעה\n"
-            "/inbox <prefix> – תיבת הודעות\n"
-            "/agentstate <prefix> <state> – שנה מצב\n\n"
-            "📋 התנסות מהירה:\n"
-            "/demo – תפריט דמו\n"
-            "/demo agents – צור סוכני דמו\n"
-            "/demo tasks – משימות לדוגמה\n"
-            "/demo guide – מדריך מהיר\n\n"
-            "👥 בואו נבנה יחד!"
-        )
-    except Exception as e:
-        bot.send_message(m.chat.id, f"❌ Error: {e}")
-
-    except Exception as e:
-        bot.send_message(m.chat.id, f"❌ Error: {e}")
-
 @bot.message_handler(commands=['admin'])
 def admin(m):
     bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
@@ -1007,15 +973,6 @@ Last 10 events:
     except Exception as e:
         bot.send_message(m.chat.id, f"snapshot error: {e}")
 
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    try:
-        with open("logs/error.log") as f:
-            data = f.readlines()[-20:]
-        bot.send_message(m.chat.id, "".join(data))
-    except Exception as e:
-        bot.send_message(m.chat.id, str(e))
-
 @bot.message_handler(commands=['endday'])
 def endday(m):
     if not is_admin(m): return
@@ -1106,39 +1063,6 @@ def report(m):
         bot.send_message(m.chat.id, f"report error: {e}")
 
 
-@bot.message_handler(commands=['demo'])
-def demo(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.send_message(m.chat.id, "📋 /demo tasks | agents | guide")
-        return
-    sub = parts[1].lower()
-    if sub == "agents":
-        agents = state_manager.get_agents()
-        if "helper" not in agents:
-            agents["helper"] = {"name": "helper", "inbox": [], "outbox": [], "state": "idle", "role": "assistant"}
-        if "tutor" not in agents:
-            agents["tutor"] = {"name": "tutor", "inbox": [], "outbox": [], "state": "idle", "role": "teacher"}
-        state_manager.set_agents(agents)
-        agents_dict.clear()
-        agents_dict.update(agents)
-        bot.send_message(m.chat.id, "✅ Demo agents created: helper, tutor")
-    elif sub == "tasks":
-        try:
-            with open("state/demo_tasks.json") as f:
-                demo = json.load(f)
-            proj = demo.get("demo_project", {})
-            msg = f"📋 {proj.get('title','')}\n"
-            for t in proj.get("tasks", []):
-                msg += f"  {t['id']}. {t['desc']}\n"
-        except Exception as e:
-            msg = f"Error: {e}"
-        bot.send_message(m.chat.id, msg)
-    elif sub == "guide":
-        bot.send_message(m.chat.id, "📖 מדריך מהיר:\n1. /agent_create <name>\n2. /sendagent <name> <msg>\n3. /inbox <name>\n4. /agentstate <name> busy\n\nהשתמש ב-/demo tasks למשימות מסודרות.")
-    else:
-        bot.send_message(m.chat.id, "תת-פקודה לא מוכרת. נסה tasks, agents, guide")
-
 if __name__ == "__main__":
     print("Loading DB and agents...")
     db = state_manager.load_db()
@@ -1167,3 +1091,20 @@ def tutor_loop():
 import threading
 threading.Thread(target=tutor_loop, daemon=True).start()
 # Start menu v2
+
+from core.command_router import dispatch_command
+
+@bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
+def _universal_router(message):
+    try:
+        cmd = message.text.split()[0].replace("/", "").strip()
+        return dispatch_command(cmd, message, bot)
+    except Exception as e:
+        bot.reply_to(message, f"Router error: {e}")
+
+from core.bootstrap_commands import init as init_commands
+
+init_commands()
+
+from init_router import bootstrap
+bootstrap()
