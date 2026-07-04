@@ -840,89 +840,49 @@ def diagnose_cmd(m):
     
     bot.send_message(m.chat.id, "\n".join(issues))
 
+@bot.message_handler(commands=['refreshtoken'])
+def refresh_token(m):
+    if not is_admin(m):
+        bot.send_message(m.chat.id, "❌ Admin only")
+        return
+    msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
+    bot.register_next_step_handler(msg, process_new_token)
+        
+def process_new_token(m):
+    token = m.text.strip()
+    # מחיקת הודעת הטוקן מהצ'אט
+    try:
+        bot.delete_message(m.chat.id, m.message_id)
+    except:
+        pass
+    # בדיקת תקינות
+    if ":" not in token or len(token) < 20:
+        bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
+        return
+    try:
+        test_bot = telebot.TeleBot(token)
+        me = test_bot.get_me()
+        bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
+        # עדכון config.json
+        cfg = json.load(open("config.json"))
+        cfg["BOT_TOKEN"] = token
+        json.dump(cfg, open("config.json", "w"), indent=2)
+        # עדכון state/system.json
+        state = {}
+        if os.path.exists("state/system.json"):
+            state = json.load(open("state/system.json"))
+        state["BOT_TOKEN"] = token
+        os.makedirs("state", exist_ok=True)
+        json.dump(state, open("state/system.json", "w"), indent=2)
+        # הפעלה מחדש
+        os.system("bash start.sh &")
+        # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
+    except Exception as e:
+        bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
+
 while True:
     try:
-        
-        @bot.message_handler(commands=['refreshtoken'])
-        def refresh_token(m):
-            if not is_admin(m):
-                bot.send_message(m.chat.id, "❌ Admin only")
-                return
-            msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
-            bot.register_next_step_handler(msg, process_new_token)
-        
-        def process_new_token(m):
-            token = m.text.strip()
-            # מחיקת הודעת הטוקן מהצ'אט
-            try:
-                bot.delete_message(m.chat.id, m.message_id)
-            except:
-                pass
-            # בדיקת תקינות
-            if ":" not in token or len(token) < 20:
-                bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
-                return
-            try:
-                test_bot = telebot.TeleBot(token)
-                me = test_bot.get_me()
-                bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
-                # עדכון config.json
-                cfg = json.load(open("config.json"))
-                cfg["BOT_TOKEN"] = token
-                json.dump(cfg, open("config.json", "w"), indent=2)
-                # עדכון state/system.json
-                state = {}
-                if os.path.exists("state/system.json"):
-                    state = json.load(open("state/system.json"))
-                state["BOT_TOKEN"] = token
-                os.makedirs("state", exist_ok=True)
-                json.dump(state, open("state/system.json", "w"), indent=2)
-                # הפעלה מחדש
-                os.system("bash start.sh &")
-                # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
-            except Exception as e:
-                bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
-        
-        @bot.message_handler(commands=['refreshtoken'])
-        def refresh_token(m):
-            if not is_admin(m):
-                bot.send_message(m.chat.id, "❌ Admin only")
-                return
-            msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
-            bot.register_next_step_handler(msg, process_new_token)
-        
-        def process_new_token(m):
-            token = m.text.strip()
-            # מחיקת הודעת הטוקן מהצ'אט
-            try:
-                bot.delete_message(m.chat.id, m.message_id)
-            except:
-                pass
-            # בדיקת תקינות
-            if ":" not in token or len(token) < 20:
-                bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
-                return
-            try:
-                test_bot = telebot.TeleBot(token)
-                me = test_bot.get_me()
-                bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
-                # עדכון config.json
-                cfg = json.load(open("config.json"))
-                cfg["BOT_TOKEN"] = token
-                json.dump(cfg, open("config.json", "w"), indent=2)
-                # עדכון state/system.json
-                state = {}
-                if os.path.exists("state/system.json"):
-                    state = json.load(open("state/system.json"))
-                state["BOT_TOKEN"] = token
-                os.makedirs("state", exist_ok=True)
-                json.dump(state, open("state/system.json", "w"), indent=2)
-                # הפעלה מחדש
-                os.system("bash start.sh &")
-                # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
-            except Exception as e:
-                bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
-        bot.infinity_polling() # שנה לכתובת שלך
+        bot.infinity_polling()
     except Exception as e:
         print("Polling error:", e)
         time.sleep(20)
