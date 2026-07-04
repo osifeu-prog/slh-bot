@@ -893,6 +893,7 @@ def process_new_token(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
+    bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + str(__import__("datetime").datetime.now()), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
