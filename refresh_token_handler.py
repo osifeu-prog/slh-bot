@@ -43,7 +43,7 @@ def init(bot):
 
     @bot.message_handler(commands=["refreshtoken"])
     def refresh_token_start(message):
-        if not is_admin(message.from_user.id):
+        if not is_admin(message):
             bot.reply_to(message, "⛔ פקודה זו לאדמין בלבד")
             return
         _pending[message.from_user.id] = "awaiting_confirm"
