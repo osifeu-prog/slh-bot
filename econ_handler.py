@@ -36,6 +36,11 @@ def register_econ_handlers(bot):
             user["ask_credits"] += 1
         elif item == "premium_agent":
             user["premium"] = True
+        referrer_uid = db.get("referred_by", {}).get(uid)
+        if referrer_uid:
+            commission = round(price * 0.85, 2)
+            ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
+            ref_user["balance"] = ref_user.get("balance", 0) + commission
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
 
