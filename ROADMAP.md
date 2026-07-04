@@ -91,3 +91,12 @@
   larger refactor starting, needs review before committing
 - admin_utils.py created (new) - houses is_admin() to avoid circular
   imports, referenced by econ_handler.py giveme command
+
+
+## 🎯 NEXT SESSION — START HERE
+1. **Rebuild /admin menu** from the real 81-command list (this was
+   the ORIGINAL goal of the 4-Jul session, still not done — everything
+   else was bugs discovered along the way). Split into /admin (system/
+   agents/voting/revenue) and /help (learning/courses/referral/demo).
+   Full command list already gathered - see "Immediate Next" section above.
+2. Then continue down the priority list below.
