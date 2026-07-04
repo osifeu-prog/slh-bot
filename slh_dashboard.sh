@@ -28,7 +28,7 @@ else
     echo -e "🤖 Local Bot:  ${YELLOW}● Not running (expected - production is on Railway)${NC}"
 fi
 
-for f in bot.py learn_handlers.py project_commands.py smart_leaderboard.py; do
+for f in bot_stable.py learn_handlers.py project_commands.py smart_leaderboard.py; do
     if [ -f "$f" ]; then
         echo -e "📄 $f: ${GREEN}✓${NC}"
     else
@@ -113,17 +113,14 @@ print(r.json().get('result', {}).get('text', 'No response'))
 "
         ;;
     3)
-        echo -e "${CYAN}🔄 מפעיל מחדש...${NC}"
-        pkill -9 -f "python.*bot.py"
-        sleep 2
-        ./slh_daemon.sh
+        echo -e "${CYAN}ℹ️  Local restart disabled. Railway manages production.${NC}"
         ;;
     4)
         echo -e "${CYAN}🧪 מריץ אבחון מלא...${NC}"
         python3 << 'CHECK'
 import os, json, py_compile, datetime
 issues = []
-for fname, desc in [("bot.py","bot.py"),("learn_handlers.py","learn"),("project_commands.py","project"),("smart_leaderboard.py","smart")]:
+for fname, desc in [("bot_stable.py","bot_stable.py"),("learn_handlers.py","learn"),("project_commands.py","project"),("smart_leaderboard.py","smart")]:
     if os.path.exists(fname):
         try:
             py_compile.compile(fname, doraise=True)
