@@ -116,22 +116,18 @@ def handle_reload(message):
         "refresh_token_handler"
     ]
     failed = []
-    failed = []
     for mod_name in modules:
         try:
             mod = importlib.import_module(mod_name)
             importlib.reload(mod)
             if hasattr(mod, "init"):
                 mod.init(bot)
-            bot.send_message(8789977826, f"✓ {mod_name} reloaded", disable_notification=True)
         except Exception as e:
-            bot.send_message(8789977826, f"✗ {mod_name}: {e}", disable_notification=True)
             failed.append(f"{mod_name}: {e}")
-        if failed:
-            bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
-            failed.append(f"{mod_name}: {e}")
-        if failed:
-            bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
+    if failed:
+        bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
+    else:
+        bot.send_message(8789977826, "✅ All handlers reloaded successfully")
     bot.reply_to(message, "✅ Reload complete")
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
