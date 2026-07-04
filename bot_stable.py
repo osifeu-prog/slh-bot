@@ -18,7 +18,6 @@ import diagnostic_handler
 import report_handler
 import roadmap_handler
 import econ_handler
-econ_handler.register_econ_handlers(bot)
 import junk_handler
 import sandbox_handler
 import myprogress_handler
@@ -58,6 +57,7 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 agents_dict = state_manager.get_agents()
 
 bot = telebot.TeleBot(TOKEN)
+econ_handler.register_econ_handlers(bot)
 
 # Runtime state initialization (volumes mount empty at runtime, not build time)
 os.makedirs("state", exist_ok=True)
