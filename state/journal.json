@@ -42,5 +42,9 @@
   {
     "time": "2026-07-04 10:10:18.582942",
     "text": "SESSION 4-JUL-2026 PART 5 - Admin menu audit found 4 duplicate handlers in bot_stable.py (start, demo, logs, refreshtoken). Telebot only runs first-registered handler, rest were dead code. Removed dead start/demo/logs duplicates (76 lines), verified live via welcome_handler.py and demo_handlers.py. MAJOR FIX: refreshtoken handlers were re-registering every reconnect loop iteration inside while True - moved outside loop entirely, matches known risk flagged in prior session memory. CRITICAL BUG FOUND (pre-existing, unrelated to our changes): refresh_token_handler.py called is_admin(message.from_user.id) passing an int, but is_admin() expects full message object - caused silent AttributeError crash on every refreshtoken call, zero user feedback. Fixed to is_admin(message). Verified live - full confirm flow works now (yes/cancel, safe abort on interrupt). Commits: 5302fb6, 460db40, 245cddf."
+  },
+  {
+    "time": "2026-07-04 10:33:30.582009",
+    "text": "SESSION 4-JUL-2026 PART 6: Created /roadmap command (roadmap_handler.py) that reads ROADMAP.md and sends it via Telegram, auto-chunked to stay under 4096 char limit. Verified no existing duplicate before adding. ROADMAP.md updated with full 4-Jul session summary (9 bugs fixed) and critical working rules learned (no /tmp, no long paste blocks, no long python3 -c strings, state file Volume/git split). Since ROADMAP.md is a regular git-tracked file (not in state/), it auto-syncs to Railway on every push - no special /exec sync needed like journal/db/marketplace required. Verified live - /roadmap displays full updated content correctly."
   }
 ]
