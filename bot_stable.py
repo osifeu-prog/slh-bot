@@ -105,7 +105,7 @@ def handle_reload(message):
         bot.reply_to(message, "⛔ Admin only")
         return
     bot.reply_to(message, "🔄 Reloading handlers...")
-    bot.handlers.clear()
+    bot.message_handlers.clear()
     import importlib
     modules = [
         "welcome_handler","learn_handlers","project_commands",
@@ -893,7 +893,7 @@ def process_new_token(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
-    bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + str(__import__("datetime").datetime.now()), disable_notification=True)
+    print("Sending startup notification to admin"); bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + str(__import__("datetime").datetime.now()), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
