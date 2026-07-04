@@ -1071,6 +1071,15 @@ def buy(m):
     state_manager.save_db(db)
     bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
 
+
+@bot.message_handler(commands=['giveme'])
+def giveme(m):
+    uid = str(m.from_user.id)
+    db = state_manager.load_db()
+    db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, {}).get("balance", 0) + 50
+    state_manager.save_db(db)
+    bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {db['users'][uid]['balance']} credits")
+
     bot.polling()
 
 def tutor_loop():
