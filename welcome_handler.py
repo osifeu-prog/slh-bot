@@ -1,8 +1,7 @@
-import json
-
 def init(bot):
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
+        from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
         uid = str(message.chat.id)
         name = ""
         try:
@@ -12,43 +11,36 @@ def init(bot):
                     name = db["students"][uid].get("name", "")
         except:
             pass
-        msg = "🌟 **ברוכים הבאים ל-SLH Learning!** 🌟\n\n"
-        if name:
-            msg = f"נעים לראותך שוב, {name}!\n\n" + msg
-        msg += "🎯 **פקודות עיקריות:**\n"
-        msg += "1️⃣ /join – הרשמה\n"
-        msg += "2️⃣ /courses – צפייה בקורסים\n"
-        msg += "3️⃣ /project create – פרויקט אישי\n"
-        msg += "4️⃣ /project task add – הוספת משימות\n"
-        msg += "5️⃣ /myprogress – מעקב התקדמות\n"
-        msg += "6️⃣ /referral – הזמנת חברים\n\n"
-        msg += "🤖 **סוכנים חכמים:**\n"
-        msg += "/agent_create name – צור סוכן\n"
-        msg += "/agents – רשימת סוכנים\n"
-        msg += "/sendagent prefix <msg> – שלח הודעה\n"
-        msg += "/inbox prefix – תיבת הודעות\n"
-        msg += "/agentstate prefix state – שנה מצב\n\n"
-        msg += "📋 **התנסות מהירה:**\n"
-        msg += "/demo – תפריט דמו\n"
-        msg += "/demo agents – צור סוכני דמו\n"
-        msg += "/demo tasks – משימות לדוגמה\n"
-        msg += "/demo guide – מדריך מהיר\n\n"
-        msg += "👥 **בואו נבנה יחד!**"
-        bot.reply_to(message, msg, )
-    @bot.message_handler(commands=['join'])
-    def join(m):
-        uid = str(m.from_user.id)
-        name = m.from_user.first_name or "ללא שם"
-        db = json.load(open("state/db.json"))
-        if "students" not in db:
-            db["students"] = {}
-        if uid in db["students"]:
-            bot.reply_to(m, "אתה כבר רשום!")
-            return
-        db["students"][uid] = {
-            "name": name,
-            "referral_count": 0,
-            "courses": {}
-        }
-        json.dump(db, open("state/db.json","w"), indent=2, ensure_ascii=False)
-        bot.reply_to(m, f"ברוך הבא, {name}! נרשמת בהצלחה.\nשלח /start_course להתחיל.")
+        greeting = f"נעים לראותך שוב, {name}!" if name else "🌟 ברוכים הבאים ל-SLH Learning!"
+        
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("📚 קורסים", callback_data="menu_courses"),
+            InlineKeyboardButton("📁 פרויקטים", callback_data="menu_projects"),
+            InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"),
+            InlineKeyboardButton("👤 התקדמות שלי", callback_data="menu_progress"),
+            InlineKeyboardButton("🔗 הפניה", callback_data="menu_referral"),
+            InlineKeyboardButton("🛠 דמו", callback_data="menu_demo"),
+            InlineKeyboardButton("❓ עזרה", callback_data="menu_help")
+        )
+        bot.send_message(message.chat.id, greeting, reply_markup=markup)
+
+    # מטפל בלחיצות על הכפתורים
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))
+    def handle_menu_click(call):
+        action = call.data.replace("menu_", "")
+        if action == "courses":
+            bot.send_message(call.message.chat.id, "📚 קורסים:\n/ courses – לרשימת הקורסים\n/ join – להרשמה")
+        elif action == "projects":
+            bot.send_message(call.message.chat.id, "📁 פרויקטים:\n/ project create – יצירה\n/ project list – צפייה")
+        elif action == "agents":
+            bot.send_message(call.message.chat.id, "🤖 סוכנים:\n/ agents – רשימה\n/ agent_create [שם] – יצירה")
+        elif action == "progress":
+            bot.send_message(call.message.chat.id, "👤 השתמש ב- /myprogress")
+        elif action == "referral":
+            bot.send_message(call.message.chat.id, "🔗 השתמש ב- /referral")
+        elif action == "demo":
+            bot.send_message(call.message.chat.id, "🛠 השתמש ב- /demo tasks / agents / guide")
+        elif action == "help":
+            bot.send_message(call.message.chat.id, "❓ עזרה:\n/admin – לוח מנהל\n/start – התחלה")
+        bot.answer_callback_query(call.id)
