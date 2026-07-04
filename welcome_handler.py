@@ -1,6 +1,7 @@
 def init(bot):
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
+        import json
         from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
         uid = str(message.chat.id)
         name = ""
