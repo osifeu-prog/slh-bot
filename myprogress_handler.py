@@ -5,7 +5,12 @@ def init(bot):
     def my_progress(m):
         uid = str(m.chat.id)
         try:
-            with open("db.json") as f: db = json.load(f)
+            try:
+            with open("state/db.json") as f:
+                db = json.load(f)
+        except Exception as e:
+            bot.reply_to(m, f"❌ DB error: {e}")
+            return
         except:
             bot.reply_to(m, "❌ DB error")
             return

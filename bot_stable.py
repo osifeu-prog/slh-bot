@@ -41,7 +41,7 @@ import brief_handler
 import econ_handler
 import junk_handler
 import sandbox_handler
-# import myprogress_handler
+import myprogress_handler
 import help_handler
 import broadcast_handler
 import refresh_token_handler
