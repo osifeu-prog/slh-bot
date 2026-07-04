@@ -829,6 +829,7 @@ def diagnose_cmd(m):
     # Check for handler placement
     with open(bot_path) as f:
         code = f.read()
+    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
@@ -898,7 +899,6 @@ def process_new_token(m):
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
-print("Sending startup notification to admin"); bot.send_message(8789977826, "✅ SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
