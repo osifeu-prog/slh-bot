@@ -1026,6 +1026,7 @@ def handle_reload(message):
     reload_handlers()
     bot.reply_to(message, "✅ רענון הושלם – כל הפקודות עודכנו.")
     bot.infinity_polling()
+bot.register_message_handler(handle_reload, commands=['reload'])
 
 if __name__ == "__main__":
     print("Loading DB and agents...")
