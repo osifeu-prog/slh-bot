@@ -11,6 +11,12 @@ import os, sys
 if not os.path.isdir("/app/state"):
     print("❌ This bot runs only on Railway. Exiting.")
     sys.exit(0)
+
+# --- Local process lock: run only if /app/state exists (Railway Volume) ---
+import os, sys
+if not os.path.isdir("/app/state"):
+    print("❌ This bot runs only on Railway. Exiting.")
+    sys.exit(0)
 if not os.getenv("RAILWAY_ENVIRONMENT") and not os.getenv("DYNO"):
     print("❌ This bot runs only on Railway. Exiting.")
 from internal_agent import start_agent_thread
