@@ -13,9 +13,9 @@ def main():
 
     results = []
 
-    results.append(ok("Bot file exists", os.path.exists("bot.py")))
+    results.append(ok("Bot file exists", os.path.exists("bot_stable.py")))
     results.append(ok("Config exists", os.path.exists("config.json")))
-    results.append(ok("DB exists", os.path.exists("db.json")))
+    results.append(ok("DB exists", os.path.exists("state/db.json")))
 
     # config validation
     try:
@@ -29,7 +29,7 @@ def main():
     results.append(ok("Python OK", subprocess.call(["python3", "--version"]) == 0))
 
     # syntax check
-    results.append(ok("Bot syntax OK", subprocess.call(["python3", "-m", "py_compile", "bot.py"]) == 0))
+    results.append(ok("Bot syntax OK", subprocess.call(["python3", "-m", "py_compile", "bot_stable.py"]) == 0))
 
     print("\n====================")
     print("PASS:", sum(results))
