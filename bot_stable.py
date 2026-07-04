@@ -831,8 +831,6 @@ def diagnose_cmd(m):
         code = f.read()
     print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:
-    if loop_pos != -1:
-        after_loop = code[loop_pos:]
         if "@bot.message_handler" in after_loop:
             import re
             handlers = re.findall(r"@bot\.message_handler\(commands=\['(\w+)'\]\)", after_loop)
