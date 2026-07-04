@@ -37,6 +37,7 @@ if not token:
     print('No valid token found. Exiting.')
     exit(1)
 bot = telebot.TeleBot(token)
+agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
 
 try:
@@ -118,7 +119,6 @@ junk_handler.init(bot)
 refresh_token_handler.init(bot)
 import demo_handlers; demo_handlers.register(bot, agents_dict)
 smart_leaderboard.register(bot)
-agents_dict = state_manager.get_agents()
 # agents_dict loaded in main block
 # start_agent_thread() moved to main block
 
