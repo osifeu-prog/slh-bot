@@ -159,6 +159,7 @@ def handle_msg_split(call):
         del bot._msg_files[orig_chat]
     bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
 
+myprogress_handler.init(bot)
 welcome_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
