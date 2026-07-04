@@ -1018,17 +1018,13 @@ def reload_handlers():
 
 @bot.message_handler(commands=["reload"])
 def handle_reload(message):
-    if not admin_utils.is_admin(message):
-        bot.reply_to(message, "⛔ מנהלים בלבד")
-        return
-    bot.reply_to(message, "🔄 טוען מחדש מודולים...")
     import admin_utils
     if not admin_utils.is_admin(message):
         bot.reply_to(message, "⛔ מנהלים בלבד")
         return
     bot.reply_to(message, "🔄 טוען מחדש מודולים...")
     bot.stop_polling()
-    bot.handlers = []  # נקה את כל ה־handlers הישנים
+    bot.handlers = []
     reload_handlers()
     bot.reply_to(message, "✅ רענון הושלם – כל הפקודות עודכנו.")
     bot.infinity_polling()
