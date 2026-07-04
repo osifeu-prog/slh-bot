@@ -41,6 +41,8 @@ def register_econ_handlers(bot):
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
+        if not is_admin(m):
+            return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, {}).get("balance", 0) + 50
