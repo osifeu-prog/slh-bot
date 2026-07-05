@@ -2,8 +2,8 @@ import state_manager
 from telebot.types import LabeledPrice, PreCheckoutQuery
 from datetime import datetime
 
-# Ammer Pay Test token (already connected to your bot)
-PROVIDER_TOKEN = "6073714100:TEST:TG_aj4xUMjubJKttoCkpA2wjKYA"
+# No external provider – Telegram Stars are processed natively
+PROVIDER_TOKEN = ""  # leave empty for XTR
 
 STARS_PACKS = {
     "100credits": (100, 100, "100 Credits"),
@@ -44,7 +44,7 @@ def register_payment_handlers(bot):
                 title="SLH Credits",
                 description=f"Add {credits} credits to your SLH account",
                 invoice_payload=f"credits_{credits}_{call.from_user.id}",
-                provider_token=PROVIDER_TOKEN,
+                provider_token=PROVIDER_TOKEN,   # empty for Stars
                 currency="XTR",
                 prices=prices,
                 start_parameter=f"credits_{credits}",
@@ -65,7 +65,7 @@ def register_payment_handlers(bot):
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
         uid = str(m.from_user.id)
-        payload = m.successful_payment.invoice_payload  # "credits_100_123456"
+        payload = m.successful_payment.invoice_payload
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits":
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
