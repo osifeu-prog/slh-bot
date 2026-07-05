@@ -60,6 +60,7 @@ if not token:
     print('No valid token found. Exiting.')
     exit(1)
 bot = telebot.TeleBot(token)
+help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
 

@@ -1,8 +1,7 @@
-from bot_stable import bot
-
-@bot.message_handler(commands=['help'])
-def help_command(m):
-    bot.send_message(m.chat.id, """📘 HELP & COMMANDS (user)
+def register_help(bot):
+    @bot.message_handler(commands=['help'])
+    def help_command(m):
+        bot.send_message(m.chat.id, """📘 HELP & COMMANDS (user)
 👋 Getting Started
 /start – Welcome & menu
 /join – Register for learning
