@@ -123,3 +123,16 @@ def register_payment_handlers(bot):
 
         bot.send_message(m.chat.id, f"✅ Payment received! {credits} credits added to your account.\nYour balance: {user['balance']} credits")
         print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
+@bot.message_handler(commands=['fakepay'])
+    def fakepay(m):
+        # Admin only
+        from admin_utils import is_admin
+        if not is_admin(m):
+            return
+        uid = str(m.from_user.id)
+        db = state_manager.load_db()
+        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user["balance"] = user.get("balance", 0) + 100
+        state_manager.save_db(db)
+        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {user['balance']}")
+        print(f"[FAKEPAY] 100 credits added to {uid}")
