@@ -1,8 +1,9 @@
 def init(bot):
+    from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+    import json
+
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
-        import json
-        from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
         uid = str(message.chat.id)
         name = ""
         try:
@@ -13,7 +14,7 @@ def init(bot):
         except:
             pass
         greeting = f"נעים לראותך שוב, {name}!" if name else "🌟 ברוכים הבאים ל-SLH Learning!"
-        
+
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("📚 קורסים", callback_data="menu_courses"),
@@ -26,7 +27,6 @@ def init(bot):
         )
         bot.send_message(message.chat.id, greeting, reply_markup=markup)
 
-    # מטפל בלחיצות על הכפתורים
     @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))
     def handle_menu_click(call):
         action = call.data.replace("menu_", "")
