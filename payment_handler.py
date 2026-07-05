@@ -1,0 +1,113 @@
+import state_manager
+from telebot.types import LabeledPrice, PreCheckoutQuery
+
+# Replace with your actual token from @BotFather (via /mybots → Payments)
+PROVIDER_TOKEN = "YOUR_STRIPE_OR_PROVIDER_TOKEN"
+
+# Mapping of currency amounts
+STARS_PACKS = {
+    "100credits": (100, 100, "100 Credits"),
+    "500credits": (500, 450, "500 Credits (10% off)"),
+    "1000credits": (1000, 800, "1000 Credits (20% off)"),
+}
+
+def register_payment_handlers(bot):
+
+    @bot.message_handler(commands=['pay'])
+    def pay_command(m):
+        """Offer payment in Telegram Stars."""
+        uid = str(m.from_user.id)
+        # Check if user is registered
+        db = state_manager.load_db()
+        if uid not in db.get("users", {}):
+            bot.send_message(m.chat.id, "❌ Please /join first.")
+            return
+
+        # Create inline keyboard with packs
+        from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+        markup = InlineKeyboardMarkup(row_width=1)
+        for pack_id, (stars, credits, label) in STARS_PACKS.items():
+            markup.add(InlineKeyboardButton(
+                text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+                callback_data=f"pay_{pack_id}"
+            ))
+        bot.send_message(m.chat.id, "💰 Select a credits package:", reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
+    def payment_callback(call):
+        """When a package is selected, send an invoice."""
+        pack_id = call.data.split("_")[1]
+        if pack_id not in STARS_PACKS:
+            bot.answer_callback_query(call.id, "Invalid package.")
+            return
+        stars, credits, label = STARS_PACKS[pack_id]
+        # Telegram Stars uses XTR currency, amount in integer (smallest unit). Stars are integer, so amount=stars
+        prices = [LabeledPrice(label=label, amount=stars)]  # amount in Stars (integer)
+        try:
+            bot.send_invoice(
+                chat_id=call.message.chat.id,
+                title="SLH Credits",
+                description=f"Add {credits} credits to your SLH account",
+                invoice_payload=f"credits_{credits}_{call.from_user.id}",
+                provider_token=PROVIDER_TOKEN,
+                currency="XTR",
+                prices=prices,
+                start_parameter=f"credits_{credits}",
+                need_name=False,
+                need_phone_number=False,
+                need_email=False,
+                is_flexible=False
+            )
+            bot.answer_callback_query(call.id)
+        except Exception as e:
+            print(f"Error sending invoice: {e}")
+            bot.answer_callback_query(call.id, "Failed to send invoice. Try again later.")
+
+    @bot.pre_checkout_query_handler(func=lambda query: True)
+    def pre_checkout(query: PreCheckoutQuery):
+        """Always approve pre-checkout (we trust Telegram)."""
+        bot.answer_pre_checkout_query(query.id, ok=True)
+
+    @bot.message_handler(content_types=['successful_payment'])
+    def successful_payment(m):
+        """Add credits after successful payment."""
+        uid = str(m.from_user.id)
+        payload = m.successful_payment.invoice_payload  # e.g., "credits_100_123456"
+        parts = payload.split("_")
+        if len(parts) != 3 or parts[0] != "credits":
+            bot.send_message(m.chat.id, "❌ Invalid payment payload.")
+            return
+        try:
+            credits = int(parts[1])
+        except:
+            bot.send_message(m.chat.id, "❌ Error parsing credits.")
+            return
+
+        db = state_manager.load_db()
+        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user["balance"] = user.get("balance", 0) + credits
+
+        # Handle referral commission (85% of the amount in credits? We'll use credits as base for now)
+        referrer_uid = db.get("referred_by", {}).get(uid)
+        if referrer_uid:
+            commission = round(credits * 0.85, 2)
+            ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
+            ref_user["balance"] = ref_user.get("balance", 0) + commission
+            # Log commission
+            db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
+            db["commissions"][referrer_uid] += commission
+
+        # Record transaction
+        trans = {
+            "uid": uid,
+            "credits": credits,
+            "stars_paid": m.successful_payment.total_amount,
+            "currency": m.successful_payment.currency,
+            "telegram_payment_charge_id": m.successful_payment.telegram_payment_charge_id,
+            "provider_payment_charge_id": m.successful_payment.provider_payment_charge_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db.setdefault("transactions", []).append(trans)
+
+        state_manager.save_db(db)
+        bot.send_message(m.chat.id, f"✅ Payment received! {credits} credits added to your account.\nYour balance: {user['balance']} credits")
