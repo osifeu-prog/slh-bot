@@ -255,6 +255,70 @@ def echo_admin(m):
     text = m.text.replace("/echo", "", 1).strip()
     bot.reply_to(m, text or "Echo.")
 
+
+# ===== INTERACTIVE /join WIZARD =====
+@bot.message_handler(commands=['join'])
+def start_join(m):
+    uid = str(m.chat.id)
+    # check if already registered
+    try:
+        with open("state/db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {}):
+            bot.reply_to(m, "אתה כבר רשום!\nשלח /myprogress למעקב.")
+            return
+    except:
+        pass
+    msg = bot.reply_to(m, "ברוכים הבאים! מה שמך המלא?")
+    bot.register_next_step_handler(msg, process_join_name)
+
+def process_join_name(m):
+    name = m.text.strip()
+    if not name:
+        msg = bot.reply_to(m, "השם לא יכול להיות ריק. מה שמך המלא?")
+        bot.register_next_step_handler(msg, process_join_name)
+        return
+    # store temporary data in bot context
+    bot._join_data = {"name": name}
+    msg = bot.reply_to(m, f"נעים להכיר, {name}!\nמה הקבוצה / כיתה שלך?")
+    bot.register_next_step_handler(msg, process_join_group)
+
+def process_join_group(m):
+    group = m.text.strip()
+    if not group:
+        group = "לא צוין"
+    bot._join_data["group"] = group
+    msg = bot.reply_to(m, "מה המטרה שלך בלמידה?\n(אפשר להקיש - לדלג)")
+    bot.register_next_step_handler(msg, process_join_goal)
+
+def process_join_goal(m):
+    goal = m.text.strip()
+    if goal == "-" or not goal:
+        goal = "לא צוין"
+    uid = str(m.chat.id)
+    name = bot._join_data.get("name", "ללא שם")
+    group = bot._join_data.get("group", "לא צוין")
+    try:
+        with open("state/db.json") as f:
+            db = json.load(f)
+    except:
+        db = {"students": {}}
+    db.setdefault("students", {})[uid] = {
+        "name": name,
+        "group": group,
+        "goal": goal,
+        "registered": __import__("datetime").datetime.now().isoformat(),
+        "referral_count": 0,
+        "courses": {}
+    }
+    with open("state/db.json", "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    summary = f"✅ נרשמת בהצלחה, {name}!\nקבוצה: {group}\nמטרה: {goal}\n\nשלח /start להתחיל."
+    bot.reply_to(m, summary)
+    # clean up
+    if hasattr(bot, "_join_data"):
+        del bot._join_data
+
 @bot.message_handler(commands=['admin'])
 def admin(m):
     bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
