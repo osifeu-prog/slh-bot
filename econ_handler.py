@@ -13,7 +13,7 @@ def register_econ_handlers(bot):
         uid = str(m.from_user.id)
         parts = m.text.split()
         if len(parts) < 2:
-            bot.send_message(m.chat.id, "Usage: /buy <item>")
+            bot.send_message(m.chat.id, "Usage: /buy <item>\nAvailable: ask_credit (10), premium_agent (50)")
             return
         item = parts[1]
         db = state_manager.load_db()
@@ -25,7 +25,7 @@ def register_econ_handlers(bot):
         prices = {"ask_credit": 10, "premium_agent": 50}
         price = prices.get(item, 0)
         if price == 0:
-            bot.send_message(m.chat.id, "Unknown item.")
+            bot.send_message(m.chat.id, "Unknown item. Available: ask_credit, premium_agent.")
             return
         if balance < price:
             bot.send_message(m.chat.id, f"Not enough credits. Need {price}, have {balance}.")
@@ -42,7 +42,11 @@ def register_econ_handlers(bot):
             ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
             ref_user["balance"] = ref_user.get("balance", 0) + commission
         state_manager.save_db(db)
-        bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
+        bot.send_message(
+            m.chat.id,
+            f"✅ Purchased {item} for {price} credits.\n"
+            f"Remaining balance: {user['balance']} credits."
+        )
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
