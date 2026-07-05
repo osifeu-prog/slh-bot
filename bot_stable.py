@@ -231,6 +231,30 @@ def project_stub(m):
     bot.reply_to(m, "📁 Projects: /project create [name] or /project list")
 
 
+
+# Admin utility: grep inside project files
+@bot.message_handler(commands=['grep'])
+def grep_admin(m):
+    if not is_admin(m): return
+    args = m.text.split(" ", 2)
+    if len(args) < 3:
+        bot.reply_to(m, "Usage: /grep <pattern> <filename>")
+        return
+    pattern, fname = args[1], args[2]
+    try:
+        import subprocess
+        result = subprocess.check_output(f"grep -n '{pattern}' {fname}", shell=True, text=True, stderr=subprocess.STDOUT)
+        bot.reply_to(m, result[:4000] or "No matches.")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {e}")
+
+# Admin utility: echo (test)
+@bot.message_handler(commands=['echo'])
+def echo_admin(m):
+    if not is_admin(m): return
+    text = m.text.replace("/echo", "", 1).strip()
+    bot.reply_to(m, text or "Echo.")
+
 @bot.message_handler(commands=['admin'])
 def admin(m):
     bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
