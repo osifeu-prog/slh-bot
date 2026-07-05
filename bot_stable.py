@@ -42,6 +42,7 @@ import roadmap_handler
 import brief_handler
 import econ_handler
 import payment_handler
+import ton_handler
 import junk_handler
 import sandbox_handler
 import myprogress_handler
@@ -65,6 +66,7 @@ help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
 payment_handler.register_payment_handlers(bot)
+ton_handler.register_ton_handlers(bot)
 
 try:
     with open('allowed_ids.json') as _f:
