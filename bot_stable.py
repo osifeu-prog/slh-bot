@@ -318,7 +318,21 @@ def process_join_goal(m):
     }
     with open("state/db.json", "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
-    summary = f"✅ נרשמת בהצלחה, {name}!\nקבוצה: {group}\nמטרה: {goal}\n\nשלח /start להתחיל."
+    summary = (
+        f"✅ נרשמת בהצלחה, {name}!\n"
+        f"קבוצה: {group}\n"
+        f"מטרה: {goal}\n\n"
+        "💡 **איך מתחילים להרוויח:**\n"
+        "  👥 /referral – הזמן חברים וקבל 85% עמלה\n"
+        "  ⭐ /pay – קנה Credits בכוכבי טלגרם\n"
+        "  💎 /ton – שלח TON וקבל Credits\n\n"
+        "🛒 **מה אפשר לקנות:**\n"
+        "  /buy ask_credit – שאל את ה־AI (10 Credits)\n"
+        "  /buy premium_agent – סוכן פרימיום (50 Credits)\n\n"
+        "📊 לעקוב: /balance, /history\n"
+        "📚 קורסים: /courses\n\n"
+        "שלח /start לתפריט הראשי."
+    )
     bot.reply_to(m, summary)
     # clean up
     if hasattr(bot, "_join_data"):
