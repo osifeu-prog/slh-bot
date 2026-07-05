@@ -321,36 +321,95 @@ def process_join_goal(m):
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
-    bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL
-📊 DIAGNOSTICS:
-/test — Run full system diagnostic\n/test_agents — Quick agent self-test
-/status — System status
-/health — Health check
-🤖 AGENTS:
-/agents — List all agents
-/agent_create [name] — Create new agent\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox
-🗳️ VOTING:
-/vote — Create vote
-/results — See results
-💰 REVENUE:
-/revenue — Revenue status
-🔄 SYSTEM:
-/backup — Git backup now
-/restart — Restart bot
-/logs <n> — Last N log lines
-/clean — Clean temp files
-📈 ANALYTICS:
-/audit — Audit log
-/memory — Memory status
-/debug — Container debug info
-/termux — Show Termux status
-/deploy — Trigger Railway deploy
-/errors — Show recent errors
-/plugin list — List plugins
-/goal add/list — Manage goals
-/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
-/disk — Disk usage
-/sysinfo — System resources""")
+    bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL (admin only)
+📊 Diagnostics
+/status – System overview
+/health – Resource health
+/test – Full diagnostic
+/test_agents – Agent self-test
+/diagnose – System diagnosis
+/diagnostic – Alt diagnosis
+/disk – Disk usage
+/sysinfo – System resources
+/memory – Memory status
+/debug – Container debug
+/debugcmd – Debug command
+/testcmd – Test command
+/errors – Recent errors
+/audit – Audit log
+/logs <n> – Last N log lines
+/rlogs – Railway logs
+/termlog – Termux logs
+
+🔄 Operations
+/restart – Restart bot
+/deploy – Trigger Railway deploy
+/backup – Git backup
+/clean – Clean temp files
+/exec <cmd> – Run shell command
+/termux – Termux status
+
+🤖 Agents
+/agents – List all agents
+/agent_create <name> – Create agent
+/agentstate <prefix> <state> – Set state
+/sendagent <prefix> <msg> – Send message
+/inbox <prefix> – Agent inbox
+/agent_debug – Debug agent
+/agent_test – Test agent
+
+📢 Broadcast & Master
+/broadcast <msg> – Broadcast to all
+/master – Master control panel
+
+💰 Revenue
+/revenue – Revenue status
+
+🔐 Tokens
+/refreshtoken – Refresh tokens
+/activate – Activate user
+
+🗳 Voting
+/vote – Create vote
+/results – See results
+
+🧩 Plugins & Goals
+/plugin list – List plugins
+/goal add/list – Manage goals
+
+🕒 Snapshots & Monitor
+/monitor – Start monitoring
+/snapshot – Create snapshot
+/rollback – Rollback to snapshot
+
+🗑 Junk Management
+/scan_junk – Scan junk files
+/clean_junk – Clean junk
+/backup_junk – Backup junk
+
+🛒 Marketplace (Admin)
+/market – Browse/manage
+/market_upload – Upload plugin
+/market_installed – Installed list
+/market_search <term> – Search
+/market_rate <id> <rating> – Rate
+
+🧪 Sandbox
+/sandbox – Enter sandbox
+
+👥 User Management
+/user <id> – User info
+/users – List users
+
+⚠️ Kernel
+/kernellog – Kernel logs
+/kernelstatus – Kernel status
+
+🔒 Permissions
+/allow – Manage permissions
+
+All 81 system commands. For user commands: /help
+""")
 
 @bot.message_handler(commands=['status'])
 def status(m):
