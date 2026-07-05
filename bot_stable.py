@@ -131,40 +131,6 @@ def handle_reload(message):
     else:
         bot.send_message(8789977826, "✅ All handlers reloaded successfully")
     bot.send_message(message.chat.id, "✅ Reload complete")
-    # re-register catch-all handler after reload
-    @bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
-    def catch_all_after_reload(m):
-        bot.reply_to(m, "פקודה לא מוכרת. שלח /start")
-@bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
-def handle_msg_split(call):
-    chat_id = call.message.chat.id
-    action, _, uid = call.data.partition("_")
-    try:
-        orig_chat = int(uid)
-    except:
-        orig_chat = chat_id
-    tmp_path = bot._msg_files.get(orig_chat) if hasattr(bot, "_msg_files") else None
-    if not tmp_path or not os.path.exists(tmp_path):
-        bot.answer_callback_query(call.id, "File expired")
-        return
-    with open(tmp_path, "r", encoding="utf-8") as f:
-        text = f.read()
-    if action == "split":
-        bot.answer_callback_query(call.id, "Sending...")
-        for i in range(0, len(text), 3800):
-            bot.send_message(orig_chat, text[i:i+3800])
-    elif action == "dl":
-        bot.answer_callback_query(call.id, "Uploading...")
-        with open(tmp_path, "rb") as f:
-            bot.send_document(orig_chat, f, visible_file_name="message.txt")
-    try:
-        os.unlink(tmp_path)
-    except:
-        pass
-    if hasattr(bot, "_msg_files") and orig_chat in bot._msg_files:
-        del bot._msg_files[orig_chat]
-    bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
-
 myprogress_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
@@ -230,6 +196,29 @@ def referral_stub(m):
 def project_stub(m):
     bot.reply_to(m, "📁 Projects: /project create [name] or /project list")
 
+
+
+# Admin utility: grep inside project files
+@bot.message_handler(commands=['grep'])
+def grep_admin(m):
+    if not is_admin(m): return
+    args = m.text.split(" ", 2)
+    if len(args) < 3:
+        bot.reply_to(m, "Usage: /grep <pattern> <filename>")
+        return
+    pattern, fname = args[1], args[2]
+    try:
+        result = __import__('subprocess').check_output(f"grep -n '{pattern}' {fname}", shell=True, text=True, stderr=__import__('subprocess').STDOUT)
+        bot.reply_to(m, result[:4000] or "No matches.")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {e}")
+
+# Admin utility: echo (test)
+@bot.message_handler(commands=['echo'])
+def echo_admin(m):
+    if not is_admin(m): return
+    text = m.text.replace("/echo", "", 1).strip()
+    bot.reply_to(m, text or "Echo.")
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
