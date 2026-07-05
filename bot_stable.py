@@ -1,4 +1,6 @@
 import os, sys, json, time, subprocess
+print("Bot script started")
+print("Bot script started")
 import welcome_handler
 
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
@@ -108,6 +110,7 @@ def handle_reload(message):
     bot.message_handlers.clear()
     import importlib
     modules = [
+        "welcome_handler","learn_handlers","project_commands",
         "course_handlers","demo_handlers","report_handler",
         "broadcast_handler","ask_handler","help_handler",
         "diagnostic_handler","junk_handler","monitor_handler",
@@ -128,7 +131,10 @@ def handle_reload(message):
     else:
         bot.send_message(8789977826, "✅ All handlers reloaded successfully")
     bot.send_message(message.chat.id, "✅ Reload complete")
-welcome_handler.init(bot)
+    # re-register catch-all handler after reload
+    @bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
+    def catch_all_after_reload(m):
+        bot.reply_to(m, "פקודה לא מוכרת. שלח /start")
 @bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
 def handle_msg_split(call):
     chat_id = call.message.chat.id
@@ -162,6 +168,7 @@ def handle_msg_split(call):
 myprogress_handler.init(bot)
 course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
+welcome_handler.init(bot)
 project_commands.register(bot)
 monitor_handler.init(bot)
 ask_handler.init(bot)
