@@ -2,8 +2,7 @@ import state_manager
 from telebot.types import LabeledPrice, PreCheckoutQuery
 from datetime import datetime
 
-# No external provider – Telegram Stars are processed natively
-PROVIDER_TOKEN = ""  # leave empty for XTR
+PROVIDER_TOKEN = ""  # Telegram Stars native (XTR)
 
 STARS_PACKS = {
     "100credits": (100, 100, "100 Credits"),
@@ -44,7 +43,7 @@ def register_payment_handlers(bot):
                 title="SLH Credits",
                 description=f"Add {credits} credits to your SLH account",
                 invoice_payload=f"credits_{credits}_{call.from_user.id}",
-                provider_token=PROVIDER_TOKEN,   # empty for Stars
+                provider_token=PROVIDER_TOKEN,
                 currency="XTR",
                 prices=prices,
                 start_parameter=f"credits_{credits}",
@@ -54,17 +53,20 @@ def register_payment_handlers(bot):
                 is_flexible=False
             )
             bot.answer_callback_query(call.id)
+            print(f"[PAY] Invoice sent to {call.from_user.id} for {stars} Stars")
         except Exception as e:
-            print(f"Error sending invoice: {e}")
+            print(f"[PAY] Error sending invoice: {e}")
             bot.answer_callback_query(call.id, "Failed to send invoice. Try again later.")
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
+        print(f"[PAY] Pre-checkout query from {query.from_user.id}, payload={query.invoice_payload}")
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
         uid = str(m.from_user.id)
+        print(f"[PAY] Successful payment from {uid}, payload={m.successful_payment.invoice_payload}")
         payload = m.successful_payment.invoice_payload
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits":
@@ -87,6 +89,7 @@ def register_payment_handlers(bot):
             ref_user["balance"] = ref_user.get("balance", 0) + commission
             db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
             db["commissions"][referrer_uid] += commission
+            print(f"[PAY] Commission {commission} to referrer {referrer_uid}")
 
         trans = {
             "uid": uid,
@@ -98,6 +101,6 @@ def register_payment_handlers(bot):
             "timestamp": datetime.utcnow().isoformat()
         }
         db.setdefault("transactions", []).append(trans)
-
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"✅ Payment received! {credits} credits added to your account.\nYour balance: {user['balance']} credits")
+        print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
