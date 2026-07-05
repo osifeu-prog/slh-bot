@@ -1,10 +1,10 @@
 import state_manager
 from telebot.types import LabeledPrice, PreCheckoutQuery
+from datetime import datetime
 
-# Replace with your actual token from @BotFather (via /mybots → Payments)
-PROVIDER_TOKEN = "YOUR_STRIPE_OR_PROVIDER_TOKEN"
+# Ammer Pay Test token (already connected to your bot)
+PROVIDER_TOKEN = "6073714100:TEST:TG_aj4xUMjubJKttoCkpA2wjKYA"
 
-# Mapping of currency amounts
 STARS_PACKS = {
     "100credits": (100, 100, "100 Credits"),
     "500credits": (500, 450, "500 Credits (10% off)"),
@@ -15,15 +15,12 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
-        """Offer payment in Telegram Stars."""
         uid = str(m.from_user.id)
-        # Check if user is registered
         db = state_manager.load_db()
         if uid not in db.get("users", {}):
             bot.send_message(m.chat.id, "❌ Please /join first.")
             return
 
-        # Create inline keyboard with packs
         from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
         markup = InlineKeyboardMarkup(row_width=1)
         for pack_id, (stars, credits, label) in STARS_PACKS.items():
@@ -35,14 +32,12 @@ def register_payment_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
-        """When a package is selected, send an invoice."""
         pack_id = call.data.split("_")[1]
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
             return
         stars, credits, label = STARS_PACKS[pack_id]
-        # Telegram Stars uses XTR currency, amount in integer (smallest unit). Stars are integer, so amount=stars
-        prices = [LabeledPrice(label=label, amount=stars)]  # amount in Stars (integer)
+        prices = [LabeledPrice(label=label, amount=stars)]
         try:
             bot.send_invoice(
                 chat_id=call.message.chat.id,
@@ -65,14 +60,12 @@ def register_payment_handlers(bot):
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
-        """Always approve pre-checkout (we trust Telegram)."""
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
-        """Add credits after successful payment."""
         uid = str(m.from_user.id)
-        payload = m.successful_payment.invoice_payload  # e.g., "credits_100_123456"
+        payload = m.successful_payment.invoice_payload  # "credits_100_123456"
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits":
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
@@ -87,17 +80,14 @@ def register_payment_handlers(bot):
         user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
         user["balance"] = user.get("balance", 0) + credits
 
-        # Handle referral commission (85% of the amount in credits? We'll use credits as base for now)
         referrer_uid = db.get("referred_by", {}).get(uid)
         if referrer_uid:
             commission = round(credits * 0.85, 2)
             ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
             ref_user["balance"] = ref_user.get("balance", 0) + commission
-            # Log commission
             db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
             db["commissions"][referrer_uid] += commission
 
-        # Record transaction
         trans = {
             "uid": uid,
             "credits": credits,
