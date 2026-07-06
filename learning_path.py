@@ -1,0 +1,71 @@
+import state_manager
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+def register_learning_path(bot):
+    # 1. Course: SLH OS Basics
+    @bot.message_handler(commands=['course_slh'])
+    def course_slh(m):
+        uid = str(m.from_user.id)
+        db = state_manager.load_db()
+        user = db.get("users", {}).get(uid, {})
+        # Check if user is registered
+        if not user:
+            bot.send_message(m.chat.id, "❌ Please /join first.")
+            return
+        lessons = [
+            ("ברוכים הבאים ל-SLH OS", "מערכת ההפעלה שלכם ללימוד, בניית סוכנים, וכלכלה דיגיטלית."),
+            ("פקודות בסיסיות", "/help – תפריט פקודות\n/balance – יתרה\n/buy – קניית כלים"),
+            ("סוכנים חכמים", "/agent_create <name> – צור סוכן\n/agents – רשימת סוכנים"),
+            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+            ("בניית סוכן משלך", "צור סוכן, תכנת אותו, והגש אותו לשוק!\n/agent_submit <agent_name>"),
+            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע ב-/market!")
+        ]
+        markup = InlineKeyboardMarkup(row_width=1)
+        for i, (title, _) in enumerate(lessons):
+            markup.add(InlineKeyboardButton(f"{i+1}. {title}", callback_data=f"course_slh_{i}"))
+        bot.send_message(m.chat.id, "📚 **SLH OS Basics** – בחר שיעור:", reply_markup=markup, parse_mode="Markdown")
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("course_slh_"))
+    def course_slh_callback(call):
+        index = int(call.data.split("_")[-1])
+        lessons = [
+            ("ברוכים הבאים ל-SLH OS", "מערכת ההפעלה שלכם ללימוד, בניית סוכנים, וכלכלה דיגיטלית."),
+            ("פקודות בסיסיות", "/help – תפריט פקודות\n/balance – יתרה\n/buy – קניית כלים"),
+            ("סוכנים חכמים", "/agent_create <name> – צור סוכן\n/agents – רשימת סוכנים"),
+            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+            ("בניית סוכן משלך", "צור סוכן, תכנת אותו, והגש אותו לשוק!\n/agent_submit <agent_name>"),
+            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע ב-/market!")
+        ]
+        title, content = lessons[index]
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=f"📖 **{title}**\n\n{content}",
+            parse_mode="Markdown"
+        )
+        bot.answer_callback_query(call.id)
+
+    # 2. Agent Submission Challenge
+    @bot.message_handler(commands=['agent_submit'])
+    def agent_submit(m):
+        uid = str(m.from_user.id)
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.send_message(m.chat.id, "Usage: /agent_submit <agent_name> – הגש את הסוכן שבנית לשוק!")
+            return
+        agent_name = parts[1].strip()
+        # Check if agent exists in user's list (simplified: we trust the name)
+        db = state_manager.load_db()
+        # Record submission
+        submissions = db.setdefault("agent_submissions", [])
+        submissions.append({"uid": uid, "agent_name": agent_name, "timestamp": __import__('datetime').datetime.utcnow().isoformat()})
+        # Award initial submission bonus (half now, half on approval)
+        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user["balance"] = user.get("balance", 0) + 10
+        state_manager.save_db(db)
+        bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
+        # Notify admin (you) to review
+        bot.send_message(8789977826, f"📢 Submission from {uid}: {agent_name}")
+
+    # 3. Marketplace integration (placeholder – will be expanded)
+    # Already handled by market commands; submissions will be added to market upon approval.

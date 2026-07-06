@@ -44,6 +44,7 @@ import econ_handler
 import payment_handler
 import ton_handler
 import language_handler
+import learning_path
 import advanced_ask_handler
 import junk_handler
 import sandbox_handler
@@ -71,6 +72,7 @@ econ_handler.register_econ_handlers(bot)
 payment_handler.register_payment_handlers(bot)
 ton_handler.register_ton_handlers(bot)  # RE-ENABLED 2026-07-06: datetime import fixed, real wallet configured, placeholder guard added
 language_handler.register_language(bot)
+learning_path.register_learning_path(bot)
 advanced_ask_handler.register_ask_handler(bot)
 
 try:
