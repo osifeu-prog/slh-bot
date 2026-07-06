@@ -60,3 +60,79 @@ def register_learning_path(bot):
         bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
         bot.send_message(8789977826, f"📢 Submission from {uid}: {agent_name}")
 Force refresh Mon Jul  6 15:33:14 IDT 2026
+
+    # 4. Admin: Approve/Reject submissions
+    @bot.message_handler(commands=['agent_approve'])
+    def agent_approve(m):
+        from admin_utils import is_admin
+        if not is_admin(m):
+            bot.reply_to(m, "⛔️ Admin only")
+            return
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /agent_approve <submission_id>")
+            return
+        try:
+            sub_id = int(parts[1])
+        except:
+            bot.reply_to(m, "Invalid ID.")
+            return
+        db = state_manager.load_db()
+        submissions = db.get("agent_submissions", [])
+        if sub_id < 0 or sub_id >= len(submissions):
+            bot.reply_to(m, "Submission not found.")
+            return
+        sub = submissions[sub_id]
+        # Add to marketplace
+        marketplace = db.setdefault("marketplace", [])
+        marketplace.append({"name": sub["agent_name"], "creator": sub["uid"], "approved_at": __import__('datetime').datetime.utcnow().isoformat()})
+        # Award 40 credits to creator
+        user = db.setdefault("users", {}).setdefault(sub["uid"], {"balance": 0})
+        user["balance"] = user.get("balance", 0) + 40
+        # Remove submission
+        del submissions[sub_id]
+        state_manager.save_db(db)
+        bot.reply_to(m, f"✅ Agent '{sub['agent_name']}' approved and added to /market! Creator received 40 Credits.")
+        bot.send_message(sub["uid"], f"🎉 הסוכן '{sub['agent_name']}' אושר! קיבלת 40 Credits נוספים. הוא זמין עכשיו ב-/market.")
+
+    @bot.message_handler(commands=['agent_reject'])
+    def agent_reject(m):
+        from admin_utils import is_admin
+        if not is_admin(m):
+            bot.reply_to(m, "⛔️ Admin only")
+            return
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /agent_reject <submission_id>")
+            return
+        try:
+            sub_id = int(parts[1])
+        except:
+            bot.reply_to(m, "Invalid ID.")
+            return
+        db = state_manager.load_db()
+        submissions = db.get("agent_submissions", [])
+        if sub_id < 0 or sub_id >= len(submissions):
+            bot.reply_to(m, "Submission not found.")
+            return
+        sub = submissions.pop(sub_id)
+        state_manager.save_db(db)
+        bot.reply_to(m, f"❌ Agent '{sub['agent_name']}' rejected.")
+        bot.send_message(sub["uid"], f"❌ הסוכן '{sub['agent_name']}' נדחה. נסה שוב עם שיפור.")
+
+    # 5. List pending submissions (admin)
+    @bot.message_handler(commands=['agent_submissions'])
+    def agent_submissions(m):
+        from admin_utils import is_admin
+        if not is_admin(m):
+            bot.reply_to(m, "⛔️ Admin only")
+            return
+        db = state_manager.load_db()
+        submissions = db.get("agent_submissions", [])
+        if not submissions:
+            bot.reply_to(m, "No pending submissions.")
+            return
+        msg = "📋 **Pending Submissions:**\n"
+        for i, sub in enumerate(submissions):
+            msg += f"{i}: {sub['agent_name']} by {sub['uid']}\n"
+        bot.reply_to(m, msg.strip())
