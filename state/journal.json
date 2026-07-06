@@ -118,6 +118,16 @@
         "Tested /ask with both providers successfully (or Gemini still limited)"
       ],
       "status": "Operational (Groq working, Gemini may need new key)"
+    },
+    {
+      "date": "2026-07-06T12:17:00.947509+00:00",
+      "summary": "Groq model fixed to llama-3.1-8b-instant and verified via automatic test",
+      "details": [
+        "Switched model name in advanced_ask_handler.py",
+        "Restarted Railway service to clear cache",
+        "Sent test /ask command – Groq responded correctly"
+      ],
+      "status": "Groq operational"
     }
   ]
 }
