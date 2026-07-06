@@ -144,7 +144,7 @@ def register_learning_path(bot):
         new_name = parts[1].strip()
         uid = str(m.from_user.id)
         db = state_manager.load_db()
-        user = db.setdefault("users", {}).setdefault(uid, {"name": "אסף", "balance": 0})
+        user = db.setdefault("users", {}).setdefault(uid, {"name": "אוסיף", "balance": 0})
         user["name"] = new_name
         state_manager.save_db(db)
         bot.reply_to(m, f"✅ Your name is now {new_name}.")
