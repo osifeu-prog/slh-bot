@@ -1246,7 +1246,6 @@ if __name__ == "__main__":
     start_agent_thread()
     
 @bot.message_handler(commands=['pnl'])
-@bot.message_handler(commands=['pnl'])
 def pnl(m):
     bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
 
