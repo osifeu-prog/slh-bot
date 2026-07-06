@@ -10,7 +10,7 @@ def init(bot):
         except Exception as e:
             bot.reply_to(m, f"❌ DB error: {e}")
             return
-        student = db.get("students", {}).get(uid)
+        student = db.get("users", {}).get(uid)
         if not student:
             bot.reply_to(m, "❌ לא רשום. שלח /join")
             return
