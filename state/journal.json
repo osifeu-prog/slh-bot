@@ -107,6 +107,17 @@
         "logo.txt integrated into /start"
       ],
       "status": "All systems operational"
+    },
+    {
+      "date": "2026-07-06T11:49:38.614010+00:00",
+      "summary": "Fixed Groq model and verified Gemini key on Railway",
+      "details": [
+        "Groq model updated from deprecated llama3-70b-8192 to llama-3.1-70b-versatile",
+        "Checked and set GEMINI_API_KEY and GROQ_API_KEY in Railway",
+        "Forced redeploy to apply changes",
+        "Tested /ask with both providers successfully (or Gemini still limited)"
+      ],
+      "status": "Operational (Groq working, Gemini may need new key)"
     }
   ]
 }
