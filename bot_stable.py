@@ -51,7 +51,7 @@ import sandbox_handler
 import myprogress_handler
 import help_handler
 import broadcast_handler
-import debug_commands
+import staking_handler
 import refresh_token_handler
 import smart_leaderboard
 
@@ -182,7 +182,6 @@ course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
 welcome_handler.init(bot)
 broadcast_handler.init(bot)
-debug_commands.init(bot)
 project_commands.register(bot)
 monitor_handler.init(bot)
 ask_handler.init(bot)
@@ -676,56 +675,6 @@ def update(m):
 def rollback(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Rollback: not implemented yet")
-
-
-# ===== STAKING & INVESTMENTS =====
-@bot.message_handler(commands=['stake'])
-def stake_cmd(m):
-    bot.send_message(m.chat.id, """🔰 Staking 4% חודשי
-/stake_join <amount> USDT""")
-
-@bot.message_handler(commands=['stake_join'])
-def stake_join(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /stake_join <amount>")
-        return
-    amount = parts[1]
-    uid = str(m.chat.id)
-    db = state_manager.load_db()
-    user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
-    # Investment logic: deduct credits, add to stakes
-    bal = user.get("balance", 0)
-    try:
-        amt = float(amount)
-    except:
-        bot.reply_to(m, "Invalid amount")
-        return
-    if bal < amt:
-        bot.reply_to(m, f"Not enough credits. You have {bal}")
-        return
-    user["balance"] = bal - amt
-    stakes = db.setdefault("stakes", {}).setdefault(uid, 0)
-    stakes += amt
-    db["stakes"][uid] = stakes
-    # Record transaction
-    db.setdefault("transactions", []).append({
-        "uid": uid, "type": "stake", "amount": amt, "timestamp": datetime.utcnow().isoformat()
-    })
-    state_manager.save_db(db)
-    bot.reply_to(m, f"✅ Staked {amt} USDT! Your balance: {user['balance']} credits, Staking: {stakes} USDT")
-
-@bot.message_handler(commands=['pnl'])
-def pnl(m):
-    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
-
-@bot.message_handler(commands=['staking_report'])
-def staking_report(m):
-    bot.send_message(m.chat.id, """📊 מאזן מלא:
-Total Staked: 0 USDT
-Your Balance: 0 USDT
-ROI: 4% חודשי
-Investors: 2""")
 
 # ---------------- MAIN ----------------
 
@@ -1296,7 +1245,12 @@ if __name__ == "__main__":
     agents_dict.update(db.get("agents", {}))
     print(f"Agents loaded: {len(agents_dict)}")
     start_agent_thread()
-    print("Bot polling...")
+    
+@bot.message_handler(commands=['pnl'])
+def pnl(m):
+    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
+
+print("Bot polling...")
 
 @bot.message_handler(commands=['balance'])
 def balance(m):
@@ -1374,5 +1328,4 @@ init_commands()
 
 from init_router import bootstrap
 import admin_utils
-bootstrap()# force clean
-# final clean
+bootstrap()
