@@ -113,3 +113,4 @@ def register_ask_handler(bot):
             bot.reply_to(m, f"🧠 [{prov}] {answer}")
         except Exception as e:
             bot.reply_to(m, f"❌ Error: {e}")
+# force redeploy
