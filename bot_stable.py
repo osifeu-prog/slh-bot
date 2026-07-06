@@ -48,6 +48,7 @@ import sandbox_handler
 import myprogress_handler
 import help_handler
 import broadcast_handler
+import staking_handler
 import refresh_token_handler
 import smart_leaderboard
 
