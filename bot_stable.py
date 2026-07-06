@@ -51,7 +51,6 @@ import sandbox_handler
 import myprogress_handler
 import help_handler
 import broadcast_handler
-import staking_handler
 import refresh_token_handler
 import smart_leaderboard
 
@@ -1324,3 +1323,4 @@ init_commands()
 from init_router import bootstrap
 import admin_utils
 bootstrap()# force clean
+# final clean
