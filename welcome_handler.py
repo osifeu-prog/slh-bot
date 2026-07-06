@@ -46,3 +46,4 @@ def init(bot):
         elif action == "help":
             bot.send_message(call.message.chat.id, "❓ עזרה:\n/admin – לוח מנהל\n/start – התחלה")
         bot.answer_callback_query(call.id)
+# force refresh Mon Jul  6 17:42:50 IDT 2026
