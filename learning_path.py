@@ -135,3 +135,17 @@ def register_learning_path(bot):
         for i, sub in enumerate(submissions):
             msg += f"{i}: {sub['agent_name']} by {sub['uid']}\n"
         bot.reply_to(m, msg.strip())
+    @bot.message_handler(commands=['setname'])
+    def setname(m):
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /setname <new_name>")
+            return
+        new_name = parts[1].strip()
+        uid = str(m.from_user.id)
+        db = state_manager.load_db()
+        user = db.setdefault("users", {}).setdefault(uid, {"name": "אסף", "balance": 0})
+        user["name"] = new_name
+        state_manager.save_db(db)
+        bot.reply_to(m, f"✅ Your name is now {new_name}.")
+
