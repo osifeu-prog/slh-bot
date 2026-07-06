@@ -95,7 +95,7 @@ def testadd(m):
         'id': len(data['entries']) + 1,
         'user_id': m.from_user.id,
         'text': text,
-        'time': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        'time': datetime.datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     data['entries'].append(entry)
     save_test_data(data)
@@ -344,7 +344,7 @@ except Exception as e:
 # ---------------- DB ----------------
 BASE_DB = {"users": {}, "agents": {}, "tasks": {}, "memory": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}
 def now():
-    return datetime.datetime.now().isoformat()
+    return datetime.datetime.datetime.now().isoformat()
 def ensure_user(db, uid):
     uid = str(uid)
     db["users"].setdefault(uid, {"created": now(), "points": 0})
@@ -429,7 +429,7 @@ def process_join_goal(m):
         "name": name,
         "group": group,
         "goal": goal,
-        "registered": __import__("datetime").datetime.datetime.now().isoformat(),
+        "registered": __import__("datetime").datetime.datetime.datetime.now().isoformat(),
         "referral_count": 0,
         "courses": {}
     }
@@ -1093,7 +1093,7 @@ def process_new_token(m):
         # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
-    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
+    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
@@ -1111,7 +1111,7 @@ def log_event(event_type, user_id=None, data=None):
         else:
             logs = []
         logs.append({
-            "time": datetime.datetime.now().isoformat(),
+            "time": datetime.datetime.datetime.now().isoformat(),
             "type": event_type,
             "user": str(user_id),
             "data": str(data)
@@ -1160,7 +1160,7 @@ Saved to daily_summary.json
 import json, os
 from datetime import datetime
 def generate_report():
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
+    date = datetime.datetime.datetime.now().strftime("%Y-%m-%d")
     report = {
         "date": date,
         "bot_running": True,
