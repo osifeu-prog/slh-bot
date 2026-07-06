@@ -1,26 +1,20 @@
 import os, requests, state_manager
 
-# Supported LLM providers
 PROVIDERS = {
-    "openai": {
-        "url": "https://api.openai.com/v1/chat/completions",
-        "model": "gpt-3.5-turbo",
-        "key_env": "OPENAI_API_KEY"
-    },
-    "grok": {
-        "url": "https://api.x.ai/v1/chat/completions",
-        "model": "grok-2-1212",
-        "key_env": "GROK_API_KEY"
-    },
-    "groq": {
-        "url": "https://api.groq.com/openai/v1/chat/completions",
-        "model": "llama-3.1-70b-versatile",   # Groq current Llama3 model
-        "key_env": "GROQ_API_KEY"
-    },
     "gemini": {
         "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         "model": None,
         "key_env": "GEMINI_API_KEY"
+    },
+    "groq": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "model": "llama-3.1-70b-versatile",
+        "key_env": "GROQ_API_KEY"
+    },
+    "openai": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "model": "gpt-3.5-turbo",
+        "key_env": "OPENAI_API_KEY"
     }
 }
 
@@ -74,7 +68,7 @@ def register_ask_handler(bot):
             _set_current_provider()
         prov = current_provider
         if not prov:
-            bot.reply_to(m, "❌ No LLM provider configured. Set an API key (e.g., GEMINI_API_KEY) and try /llm_provider.")
+            bot.reply_to(m, "❌ No LLM provider configured. Set an API key and try /llm_provider.")
             return
 
         key = _get_api_key(prov)
@@ -84,9 +78,7 @@ def register_ask_handler(bot):
         try:
             if prov == "gemini":
                 url_with_key = f"{url}?key={key}"
-                payload = {
-                    "contents": [{"parts": [{"text": question}]}]
-                }
+                payload = {"contents": [{"parts": [{"text": question}]}]}
                 resp = requests.post(url_with_key, json=payload, timeout=15)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -95,16 +87,8 @@ def register_ask_handler(bot):
                     bot.reply_to(m, f"❌ Gemini error: {resp.status_code} {resp.text[:200]}")
                     return
             else:
-                headers = {
-                    "Authorization": f"Bearer {key}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "model": model,
-                    "messages": [{"role": "user", "content": question}],
-                    "max_tokens": 500,
-                    "temperature": 0.7
-                }
+                headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+                payload = {"model": model, "messages": [{"role": "user", "content": question}], "max_tokens": 500, "temperature": 0.7}
                 resp = requests.post(url, json=payload, headers=headers, timeout=15)
                 if resp.status_code == 200:
                     data = resp.json()
@@ -118,5 +102,3 @@ def register_ask_handler(bot):
             bot.reply_to(m, f"🧠 [{prov}] {answer}")
         except Exception as e:
             bot.reply_to(m, f"❌ Error: {e}")
-# force redeploy
-# force fresh build Mon Jul  6 14:52:32 IDT 2026
