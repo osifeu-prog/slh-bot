@@ -84,6 +84,17 @@
         "All Python modules compile clean"
       ],
       "status": "All systems operational"
+    },
+    {
+      "date": "2026-07-06T11:00:49.898605+00:00",
+      "summary": "Windows Agent connected: automated heartbeat via Task Scheduler",
+      "details": [
+        "Registered windows_main agent via Telegram API",
+        "Set up C:\\SLH\\heartbeat_windows.ps1",
+        "Task Scheduler job SLH_Windows_Heartbeat runs every 5 min",
+        "Agent appears online in /agents_status"
+      ],
+      "status": "All systems operational"
     }
   ]
 }
