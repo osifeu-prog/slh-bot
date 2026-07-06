@@ -2,13 +2,11 @@ import state_manager
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def register_learning_path(bot):
-    # 1. Course: SLH OS Basics
     @bot.message_handler(commands=['course_slh'])
     def course_slh(m):
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         user = db.get("users", {}).get(uid, {})
-        # Check if user is registered
         if not user:
             bot.send_message(m.chat.id, "❌ Please /join first.")
             return
@@ -45,7 +43,6 @@ def register_learning_path(bot):
         )
         bot.answer_callback_query(call.id)
 
-    # 2. Agent Submission Challenge
     @bot.message_handler(commands=['agent_submit'])
     def agent_submit(m):
         uid = str(m.from_user.id)
@@ -54,18 +51,11 @@ def register_learning_path(bot):
             bot.send_message(m.chat.id, "Usage: /agent_submit <agent_name> – הגש את הסוכן שבנית לשוק!")
             return
         agent_name = parts[1].strip()
-        # Check if agent exists in user's list (simplified: we trust the name)
         db = state_manager.load_db()
-        # Record submission
         submissions = db.setdefault("agent_submissions", [])
         submissions.append({"uid": uid, "agent_name": agent_name, "timestamp": __import__('datetime').datetime.utcnow().isoformat()})
-        # Award initial submission bonus (half now, half on approval)
         user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
         user["balance"] = user.get("balance", 0) + 10
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
-        # Notify admin (you) to review
         bot.send_message(8789977826, f"📢 Submission from {uid}: {agent_name}")
-
-    # 3. Marketplace integration (placeholder – will be expanded)
-    # Already handled by market commands; submissions will be added to market upon approval.
