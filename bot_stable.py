@@ -432,6 +432,18 @@ def admin(m):
 
 All 81 system commands. For user commands: /help
 
+@bot.message_handler(commands=['healthcheck'])
+def healthcheck(m):
+    if not is_allowed(m.chat.id):
+        bot.reply_to(m, "⛔ Unauthorized")
+        return
+    import subprocess
+    try:
+        result = subprocess.run(["python3", "system_diagnostics.py", "--json"], capture_output=True, text=True, timeout=30, cwd="/app")
+        bot.reply_to(m, f"🩺 System Diagnostics:\n```\n{result.stdout[-3500:]}\n```", parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
+
 @bot.message_handler(commands=['agent_heartbeat'])
 def agent_heartbeat(m):
     parts = m.text.split()
