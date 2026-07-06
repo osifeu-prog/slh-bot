@@ -1322,4 +1322,4 @@ init_commands()
 
 from init_router import bootstrap
 import admin_utils
-bootstrap()
+bootstrap()# force rebuild Mon Jul  6 18:24:07 IDT 2026
