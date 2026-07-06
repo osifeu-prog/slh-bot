@@ -61,6 +61,101 @@ if not token:
     exit(1)
 bot = telebot.TeleBot(token)
 
+# --- Persistent handlers (git_sync, testadd, testlist, stake, ton, dashboard) ---
+import subprocess, datetime, os
+
+TEST_DATA_FILE = 'state/test_data.json'
+
+def load_test_data():
+    try:
+        with open(TEST_DATA_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {'entries': []}
+
+def save_test_data(data):
+    with open(TEST_DATA_FILE, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+@bot.message_handler(commands=['git_sync'])
+def git_sync(m):
+    os.chdir('/app')
+    subprocess.run(['git', 'add', 'bot_stable.py'])
+    subprocess.run(['git', 'commit', '-m', 'Auto-sync from Telegram'])
+    subprocess.run(['git', 'push'])
+    bot.reply_to(m, '✅ קובץ נדחף ל-GitHub. Railway יבנה מחדש בעוד דקה.')
+
+@bot.message_handler(commands=['testadd'])
+def testadd(m):
+    text = m.text.replace('/testadd', '').strip()
+    if not text:
+        return bot.send_message(m.chat.id, '❌ /testadd <טקסט>')
+    data = load_test_data()
+    entry = {
+        'id': len(data['entries']) + 1,
+        'user_id': m.from_user.id,
+        'text': text,
+        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    data['entries'].append(entry)
+    save_test_data(data)
+    bot.send_message(m.chat.id, f'✅ נשמר! ID: {entry["id"]}')
+
+@bot.message_handler(commands=['testlist'])
+def testlist(m):
+    data = load_test_data()
+    if not data['entries']:
+        return bot.send_message(m.chat.id, '📭 אין רשומות')
+    msg = '📋 Test Entries:\n\n' + '\n'.join(
+        [f'#{e["id"]} | {e["time"]} | {e["text"]}' for e in data['entries'][-8:]]
+    )
+    bot.send_message(m.chat.id, msg)
+
+@bot.message_handler(commands=['stake'])
+def stake(m):
+    bot.send_message(m.chat.id, "🔰 Staking 4% חודשי\n/stake_join <amount> USDT")
+
+@bot.message_handler(commands=['stake_join'])
+def stake_join(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /stake_join <amount>")
+        return
+    try:
+        amount = float(parts[1])
+    except:
+        bot.reply_to(m, "Invalid amount")
+        return
+    uid = str(m.chat.id)
+    db = state_manager.load_db()
+    user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+    if amount > user.get("balance", 0):
+        bot.reply_to(m, "Not enough credits.")
+        return
+    user["balance"] -= amount
+    user.setdefault("stakes", []).append({
+        "amount": amount,
+        "start": datetime.utcnow().isoformat(),
+        "rate": 0.04
+    })
+    state_manager.save_db(db)
+    bot.reply_to(m, f"✅ Staked {amount} USDT! Balance: {user['balance']}")
+
+@bot.message_handler(commands=['ton'])
+def ton_info(m):
+    bot.send_message(m.chat.id, "💎 **TON Payments**\nSend TON to: `EQ...YOUR_WALLET`\nRate: 1 TON = 100 Credits\nUse /ton_check <tx_hash> after sending.")
+
+@bot.message_handler(commands=['dashboard'])
+def dashboard(m):
+    db = state_manager.load_db()
+    users = len(db.get("users", {}))
+    stakes = sum(
+        sum(s["amount"] for s in u.get("stakes", []))
+        for u in db.get("users", {}).values()
+    )
+    bot.send_message(m.chat.id, f"📊 SLH Dashboard\nUsers: {users}\nTotal Staked: {stakes} USDT\nInvestors: 2")
+
+
 # --- Investment & TON handlers (auto-added) ---
 @bot.message_handler(commands=['stake'])
 def stake(m):
