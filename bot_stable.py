@@ -436,8 +436,6 @@ def admin(m):
 
 All 81 system commands. For user commands: /help
 
-        msg += f"  {aid} – {status} (last: {hb})\n"
-    bot.reply_to(m, msg.strip())
 """)
 
 @bot.message_handler(commands=['status'])
