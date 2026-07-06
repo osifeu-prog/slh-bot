@@ -713,6 +713,7 @@ def stake_join(m):
     state_manager.save_db(db)
     bot.reply_to(m, f"✅ Staked {amt} USDT! Your balance: {user['balance']} credits, Staking: {stakes} USDT")
 
+@bot.message_handler(commands=['pnl'])
 def pnl(m):
     bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
 
