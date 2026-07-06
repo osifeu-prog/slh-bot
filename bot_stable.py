@@ -61,6 +61,57 @@ if not token:
     exit(1)
 bot = telebot.TeleBot(token)
 
+# --- Persistent handlers (git_sync, testadd, testlist, stake, ton, dashboard) ---
+import subprocess, datetime as dt, os, json as _json
+
+TEST_DATA_FILE = "state/test_data.json"
+
+def _load_test_data():
+    try:
+        with open(TEST_DATA_FILE, "r") as f:
+            return _json.load(f)
+    except:
+        return {"entries": []}
+
+def _save_test_data(data):
+    with open(TEST_DATA_FILE, "w") as f:
+        _json.dump(data, f, ensure_ascii=False, indent=2)
+
+@bot.message_handler(commands=['git_sync'])
+def git_sync(m):
+    os.chdir('/app')
+    subprocess.run(['git', 'add', 'bot_stable.py'])
+    subprocess.run(['git', 'commit', '-m', 'Auto-sync from Telegram'])
+    subprocess.run(['git', 'push'])
+    bot.reply_to(m, '✅ קובץ נדחף ל-GitHub. Railway יבנה מחדש בעוד דקה.')
+
+@bot.message_handler(commands=['testadd'])
+def testadd(m):
+    text = m.text.replace('/testadd', '').strip()
+    if not text:
+        return bot.send_message(m.chat.id, '❌ /testadd <טקסט>')
+    data = _load_test_data()
+    entry = {
+        'id': len(data['entries']) + 1,
+        'user_id': m.from_user.id,
+        'text': text,
+        'time': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    data['entries'].append(entry)
+    _save_test_data(data)
+    bot.send_message(m.chat.id, f'✅ נשמר! ID: {entry["id"]}')
+
+@bot.message_handler(commands=['testlist'])
+def testlist(m):
+    data = _load_test_data()
+    if not data['entries']:
+        return bot.send_message(m.chat.id, '📭 אין רשומות')
+    msg = '📋 Test Entries:\n\n' + '\n'.join(
+        [f'#{e["id"]} | {e["time"]} | {e["text"]}' for e in data['entries'][-8:]]
+    )
+    bot.send_message(m.chat.id, msg)
+
+
 @bot.message_handler(commands=['status'])
 def status(m):
     db = state_manager.load_db()
