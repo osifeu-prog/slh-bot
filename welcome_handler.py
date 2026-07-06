@@ -26,8 +26,13 @@ def init(bot):
             InlineKeyboardButton("❓ עזרה", callback_data="menu_help")
         )
         bot.send_message(message.chat.id, f"```\n{open('logo.txt').read()}\n```", parse_mode="Markdown")
-        bot.send_message(message.chat.id, f"```\n{open('logo.txt').read()}\n```", parse_mode="Markdown")
-    bot.send_message(message.chat.id, greeting, reply_markup=markup)
+        try:
+            with open("logo.txt") as lf:
+                logo = lf.read()
+            bot.send_message(message.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
+        except:
+            pass
+        bot.send_message(message.chat.id, greeting, reply_markup=markup)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))
     def handle_menu_click(call):
