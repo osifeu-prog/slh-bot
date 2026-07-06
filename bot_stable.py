@@ -689,9 +689,30 @@ def stake_join(m):
         bot.reply_to(m, "Usage: /stake_join <amount>")
         return
     amount = parts[1]
-    bot.reply_to(m, f"✅ Staked {amount} USDT at 4% monthly!")
+    uid = str(m.chat.id)
+    db = state_manager.load_db()
+    user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+    # Investment logic: deduct credits, add to stakes
+    bal = user.get("balance", 0)
+    try:
+        amt = float(amount)
+    except:
+        bot.reply_to(m, "Invalid amount")
+        return
+    if bal < amt:
+        bot.reply_to(m, f"Not enough credits. You have {bal}")
+        return
+    user["balance"] = bal - amt
+    stakes = db.setdefault("stakes", {}).setdefault(uid, 0)
+    stakes += amt
+    db["stakes"][uid] = stakes
+    # Record transaction
+    db.setdefault("transactions", []).append({
+        "uid": uid, "type": "stake", "amount": amt, "timestamp": datetime.utcnow().isoformat()
+    })
+    state_manager.save_db(db)
+    bot.reply_to(m, f"✅ Staked {amt} USDT! Your balance: {user['balance']} credits, Staking: {stakes} USDT")
 
-@bot.message_handler(commands=['pnl'])
 def pnl(m):
     bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
 
