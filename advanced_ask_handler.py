@@ -14,7 +14,7 @@ PROVIDERS = {
     },
     "groq": {
         "url": "https://api.groq.com/openai/v1/chat/completions",
-        "model": "llama3-70b-8192",   # Groq's fast Llama3 model
+        "model": "llama-3.1-70b-versatile",   # Groq current Llama3 model
         "key_env": "GROQ_API_KEY"
     },
     "gemini": {
