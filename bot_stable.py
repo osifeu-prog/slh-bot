@@ -871,7 +871,14 @@ def exec_cmd(m):
     old_stdout = sys.stdout
     sys.stdout = io.StringIO()
     try:
-        exec(cmd)
+        import subprocess
+        try:
+            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+            out = (r.stdout + r.stderr).strip()
+            out = out[-3800:] if len(out) > 3800 else out
+            bot.reply_to(m, f'OK {cmd}\n{out}' if out else f'OK {cmd}\n(no output)')
+        except Exception as e:
+            bot.reply_to(m, f'ERR: {e}')
         output = sys.stdout.getvalue() or "(executed successfully)"
     except Exception as e:
         output = traceback.format_exc()
