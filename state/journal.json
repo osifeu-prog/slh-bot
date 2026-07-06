@@ -149,6 +149,16 @@
         "Full system unification: Termux + Windows + Railway + Telegram"
       ],
       "status": "All systems operational and unified"
+    },
+    {
+      "date": "2026-07-06T14:12:48.899279+00:00",
+      "summary": "Cleaned /admin menu – removed duplicate raw Python blocks",
+      "details": [
+        "Removed lines 439-478 which displayed raw handler code in /admin",
+        "Healthcheck, agent_heartbeat, agents_status still functional",
+        "Menu now clean and professional"
+      ],
+      "status": "Operational"
     }
   ]
 }
