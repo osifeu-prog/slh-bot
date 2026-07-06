@@ -323,6 +323,13 @@ def process_join_goal(m):
         "referral_count": 0,
         "courses": {}
     }
+    # Also create a "users" record so this person can use credits/balance/payments
+    if uid not in db.setdefault("users", {}):
+        db["users"][uid] = {
+            "name": name,
+            "created": __import__("datetime").datetime.now().isoformat(),
+            "balance": 0
+        }
     with open("state/db.json", "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
     summary = (
