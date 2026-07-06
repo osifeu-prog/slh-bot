@@ -73,7 +73,8 @@ def register_payment_handlers(bot):
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
         uid = str(m.from_user.id)
-        print(f"[PAY] Successful payment from {uid}, payload={m.successful_payment.invoice_payload}")
+        charge_id = m.successful_payment.telegram_payment_charge_id
+        print(f"[PAY] Successful payment from {uid}, payload={m.successful_payment.invoice_payload}, charge_id={charge_id}")
         payload = m.successful_payment.invoice_payload
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits":
@@ -86,6 +87,13 @@ def register_payment_handlers(bot):
             return
 
         db = state_manager.load_db()
+
+        existing_charge_ids = {t.get("telegram_payment_charge_id") for t in db.get("transactions", [])}
+        if charge_id in existing_charge_ids:
+            print(f"[PAY] DUPLICATE payment ignored, charge_id={charge_id}, uid={uid}")
+            bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
+            return
+
         user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
         user["balance"] = user.get("balance", 0) + credits
 
@@ -98,7 +106,6 @@ def register_payment_handlers(bot):
             db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
             db["commissions"][referrer_uid] += commission
             print(f"[PAY] Commission {commission} to referrer {referrer_uid}")
-            # Notify referrer
             try:
                 bot.send_message(
                     int(referrer_uid),
@@ -107,21 +114,28 @@ def register_payment_handlers(bot):
             except Exception as e:
                 print(f"[PAY] Failed to notify referrer {referrer_uid}: {e}")
 
-        # Record transaction
         trans = {
             "uid": uid,
             "credits": credits,
             "stars_paid": m.successful_payment.total_amount,
             "currency": m.successful_payment.currency,
-            "telegram_payment_charge_id": m.successful_payment.telegram_payment_charge_id,
+            "telegram_payment_charge_id": charge_id,
             "provider_payment_charge_id": m.successful_payment.provider_payment_charge_id,
             "timestamp": datetime.utcnow().isoformat()
         }
         db.setdefault("transactions", []).append(trans)
 
-        state_manager.save_db(db)
+        try:
+            state_manager.save_db(db)
+        except Exception as e:
+            print(f"[PAY] CRITICAL: save_db failed AFTER payment charged! uid={uid}, charge_id={charge_id}, credits={credits}, error={e}")
+            bot.send_message(m.chat.id, "⚠️ Payment received but there was an error saving your credits. Please contact support with this reference: " + charge_id)
+            try:
+                bot.send_message(8789977826, f"🚨 PAYMENT SAVE FAILED uid={uid} charge_id={charge_id} credits={credits} error={e}")
+            except Exception:
+                pass
+            return
 
-        # Success message to payer
         bot.send_message(
             m.chat.id,
             f"✅ Payment received! {credits} credits added.\n"
