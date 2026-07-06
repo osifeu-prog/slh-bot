@@ -2,16 +2,19 @@ import os, sys, json, time, subprocess
 print("Bot script started")
 print("Bot script started")
 import welcome_handler
+
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
 import os, sys
 if not os.path.isdir("/app/state"):
     print("❌ This bot runs only on Railway. Exiting.")
     sys.exit(0)
+
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
 import os, sys
 if not os.path.isdir("/app/state"):
     print("❌ This bot runs only on Railway. Exiting.")
     sys.exit(0)
+
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
 import os, sys
 if not os.path.isdir("/app/state"):
@@ -48,74 +51,398 @@ import sandbox_handler
 import myprogress_handler
 import help_handler
 import broadcast_handler
+import staking_handler
 import refresh_token_handler
 import smart_leaderboard
+
 # ---------------- LOAD TOKEN ----------------
 def load_token():
     env_token = os.getenv("BOT_TOKEN")
     if env_token and ":" in env_token:
         return env_token
+
 token = load_token()
 if not token:
     print('No valid token found. Exiting.')
     exit(1)
 bot = telebot.TeleBot(token)
+help_handler.register_help(bot)
+agents_dict = state_manager.get_agents()
+econ_handler.register_econ_handlers(bot)
+payment_handler.register_payment_handlers(bot)
+ton_handler.register_ton_handlers(bot)  # RE-ENABLED 2026-07-06: datetime import fixed, real wallet configured, placeholder guard added
+language_handler.register_language(bot)
+learning_path.register_learning_path(bot)
+advanced_ask_handler.register_ask_handler(bot)
 
-# --- Persistent handlers (git_sync, testadd, testlist, stake, ton, dashboard) ---
-import subprocess, datetime as dt, os, json as _json
+try:
+    with open('allowed_ids.json') as _f:
+        _ALLOWED = _json_auth.load(_f)
+except Exception:
+    _ALLOWED = {'admin': 8789977826, 'allowed': [8789977826]}
 
-TEST_DATA_FILE = "state/test_data.json"
+def is_admin(m):
+    uid = m.from_user.id if hasattr(m, 'from_user') else m
+    if uid not in _ALLOWED.get("allowed", []) and uid != _ALLOWED.get("admin"):
+        try:
+            bot.send_message(m.chat.id, "⛔ Unauthorized - admin only")
+        except:
+            pass
+        return False
+    return True
 
-def _load_test_data():
-    try:
-        with open(TEST_DATA_FILE, "r") as f:
-            return _json.load(f)
-    except:
-        return {"entries": []}
-
-def _save_test_data(data):
-    with open(TEST_DATA_FILE, "w") as f:
-        _json.dump(data, f, ensure_ascii=False, indent=2)
-
-@bot.message_handler(commands=['git_sync'])
-def git_sync(m):
-    os.chdir('/app')
-    subprocess.run(['git', 'add', 'bot_stable.py'])
-    subprocess.run(['git', 'commit', '-m', 'Auto-sync from Telegram'])
-    subprocess.run(['git', 'push'])
-    bot.reply_to(m, '✅ קובץ נדחף ל-GitHub. Railway יבנה מחדש בעוד דקה.')
-
-@bot.message_handler(commands=['testadd'])
-def testadd(m):
-    text = m.text.replace('/testadd', '').strip()
-    if not text:
-        return bot.send_message(m.chat.id, '❌ /testadd <טקסט>')
-    data = _load_test_data()
-    entry = {
-        'id': len(data['entries']) + 1,
-        'user_id': m.from_user.id,
-        'text': text,
-        'time': dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    data['entries'].append(entry)
-    _save_test_data(data)
-    bot.send_message(m.chat.id, f'✅ נשמר! ID: {entry["id"]}')
-
-@bot.message_handler(commands=['testlist'])
-def testlist(m):
-    data = _load_test_data()
-    if not data['entries']:
-        return bot.send_message(m.chat.id, '📭 אין רשומות')
-    msg = '📋 Test Entries:\n\n' + '\n'.join(
-        [f'#{e["id"]} | {e["time"]} | {e["text"]}' for e in data['entries'][-8:]]
+def smart_reply(bot, chat_id, text, max_len=3800):
+    if len(text) <= max_len:
+        bot.send_message(chat_id, text)
+        return
+    # Long text - offer split/download without sending the full text
+    from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+    parts = len(text) // max_len + 1
+    markup = InlineKeyboardMarkup()
+    markup.add(
+        InlineKeyboardButton(f"Send as {parts} messages", callback_data=f"split_msg_{chat_id}"),
+        InlineKeyboardButton("Download as .txt", callback_data=f"dl_msg_{chat_id}")
     )
-    bot.send_message(m.chat.id, msg)
+    bot.send_message(chat_id, f"📩 Message is {len(text)} chars. Choose how to receive:", reply_markup=markup)
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
+    tmp.write(text)
+    tmp.close()
+    if not hasattr(bot, "_msg_files"):
+        bot._msg_files = {}
+    bot._msg_files[chat_id] = tmp.name
 
 
+@bot.message_handler(commands=["reload"])
+def handle_reload(message):
+    if message.from_user.id != 8789977826:
+        bot.reply_to(message, "⛔ Admin only")
+        return
+    bot.reply_to(message, "🔄 Reloading handlers...")
+    bot.message_handlers.clear()
+    import importlib
+    modules = [
+        "welcome_handler","learn_handlers","project_commands",
+        "course_handlers","demo_handlers","report_handler",
+        "broadcast_handler","ask_handler","help_handler",
+        "diagnostic_handler","junk_handler","monitor_handler",
+        "myprogress_handler","econ_handler","roadmap_handler",
+        "refresh_token_handler"
+    ]
+    failed = []
+    for mod_name in modules:
+        try:
+            mod = importlib.import_module(mod_name)
+            importlib.reload(mod)
+            if hasattr(mod, "init"):
+                mod.init(bot)
+        except Exception as e:
+            failed.append(f"{mod_name}: {e}")
+    if failed:
+        bot.send_message(8789977826, "⚠️ Reload failures:\n" + "\n".join(failed))
+    else:
+        bot.send_message(8789977826, "✅ All handlers reloaded successfully")
+    bot.send_message(message.chat.id, "✅ Reload complete")
+    # re-register catch-all handler after reload
+    @bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
+    def catch_all_after_reload(m):
+        bot.reply_to(m, "פקודה לא מוכרת. שלח /start")
+@bot.callback_query_handler(func=lambda call: call.data.startswith("split_msg_") or call.data.startswith("dl_msg_"))
+def handle_msg_split(call):
+    chat_id = call.message.chat.id
+    action, _, uid = call.data.partition("_")
+    try:
+        orig_chat = int(uid)
+    except:
+        orig_chat = chat_id
+    tmp_path = bot._msg_files.get(orig_chat) if hasattr(bot, "_msg_files") else None
+    if not tmp_path or not os.path.exists(tmp_path):
+        bot.answer_callback_query(call.id, "File expired")
+        return
+    with open(tmp_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    if action == "split":
+        bot.answer_callback_query(call.id, "Sending...")
+        for i in range(0, len(text), 3800):
+            bot.send_message(orig_chat, text[i:i+3800])
+    elif action == "dl":
+        bot.answer_callback_query(call.id, "Uploading...")
+        with open(tmp_path, "rb") as f:
+            bot.send_document(orig_chat, f, visible_file_name="message.txt")
+    try:
+        os.unlink(tmp_path)
+    except:
+        pass
+    if hasattr(bot, "_msg_files") and orig_chat in bot._msg_files:
+        del bot._msg_files[orig_chat]
+    bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+
+myprogress_handler.init(bot)
+course_handlers.register_course_handlers(bot)
+learn_handlers.register(bot)
+broadcast_handler.init(bot)
+welcome_handler.init(bot)
+project_commands.register(bot)
+monitor_handler.init(bot)
+ask_handler.init(bot)
+report_handler.init(bot)
+roadmap_handler.init(bot)
+brief_handler.init(bot)
+junk_handler.init(bot)
+refresh_token_handler.init(bot)
+import demo_handlers; demo_handlers.register(bot, agents_dict)
+smart_leaderboard.register(bot)
+# agents_dict loaded in main block
+# start_agent_thread() moved to main block
+
+# ---- Load agents from persistent storage ----
+try:
+    import json, os
+    if os.path.exists("/app/agents.json"):
+        with open("/app/agents.json") as f:
+            agents_dict.update(json.load(f))
+        print(f"Loaded {len(agents_dict)} agents from disk")
+except Exception as e:
+    print("Could not load agents.json:", e)
+
+# ---------------- KERNEL INIT ----------------
+try:
+    bus = EventBus(workers=2)
+    kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
+    TaskPlugin().on_start(kernel)
+    _KERNEL_READY = True
+    print("✅ Kernel modules loaded")
+except Exception as e:
+    print("Kernel init failed:", e)
+    _KERNEL_READY = False
+
+# ---------------- DB ----------------
+BASE_DB = {"users": {}, "agents": {}, "tasks": {}, "memory": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}
+
+def now():
+    return datetime.now().isoformat()
+
+def ensure_user(db, uid):
+    uid = str(uid)
+    db["users"].setdefault(uid, {"created": now(), "points": 0})
+    return db
+
+# ---------------- COMMANDS ----------------
+
+
+# Simple stub commands (until full implementation)
+@bot.message_handler(commands=['courses'])
+def courses_stub(m):
+    bot.reply_to(m, "📚 Courses: Python Basics, AI for Beginners, Tech Entrepreneurship.\nUse /join to enroll!")
+
+@bot.message_handler(commands=['referral'])
+def referral_stub(m):
+    bot.reply_to(m, "🔗 Your referral link will be ready soon. Check back later!")
+
+@bot.message_handler(commands=['project'])
+def project_stub(m):
+    bot.reply_to(m, "📁 Projects: /project create [name] or /project list")
+
+
+
+# Admin utility: grep inside project files
+@bot.message_handler(commands=['grep'])
+def grep_admin(m):
+    if not is_admin(m): return
+    args = m.text.split(" ", 2)
+    if len(args) < 3:
+        bot.reply_to(m, "Usage: /grep <pattern> <filename>")
+        return
+    pattern, fname = args[1], args[2]
+    try:
+        import subprocess
+        result = subprocess.check_output(f"grep -n '{pattern}' {fname}", shell=True, text=True, stderr=subprocess.STDOUT)
+        bot.reply_to(m, result[:4000] or "No matches.")
+    except Exception as e:
+        bot.reply_to(m, f"❌ {e}")
+
+# Admin utility: echo (test)
+@bot.message_handler(commands=['echo'])
+def echo_admin(m):
+    if not is_admin(m): return
+    text = m.text.replace("/echo", "", 1).strip()
+    bot.reply_to(m, text or "Echo.")
+
+
+# ===== INTERACTIVE /join WIZARD =====
+@bot.message_handler(commands=['join'])
+def start_join(m):
+    uid = str(m.chat.id)
+    # check if already registered
+    try:
+        with open("state/db.json") as f:
+            db = json.load(f)
+        if uid in db.get("students", {}):
+            bot.reply_to(m, "אתה כבר רשום!\nשלח /myprogress למעקב.")
+            return
+    except:
+        pass
+    msg = bot.reply_to(m, "ברוכים הבאים! מה שמך המלא?")
+    bot.register_next_step_handler(msg, process_join_name)
+
+def process_join_name(m):
+    name = m.text.strip()
+    if not name:
+        msg = bot.reply_to(m, "השם לא יכול להיות ריק. מה שמך המלא?")
+        bot.register_next_step_handler(msg, process_join_name)
+        return
+    # store temporary data in bot context
+    bot._join_data = {"name": name}
+    msg = bot.reply_to(m, f"נעים להכיר, {name}!\nמה הקבוצה / כיתה שלך?")
+    bot.register_next_step_handler(msg, process_join_group)
+
+def process_join_group(m):
+    group = m.text.strip()
+    if not group:
+        group = "לא צוין"
+    bot._join_data["group"] = group
+    msg = bot.reply_to(m, "מה המטרה שלך בלמידה?\n(אפשר להקיש - לדלג)")
+    bot.register_next_step_handler(msg, process_join_goal)
+
+def process_join_goal(m):
+    goal = m.text.strip()
+    if goal == "-" or not goal:
+        goal = "לא צוין"
+    uid = str(m.chat.id)
+    name = bot._join_data.get("name", "ללא שם")
+    group = bot._join_data.get("group", "לא צוין")
+    try:
+        with open("state/db.json") as f:
+            db = json.load(f)
+    except:
+        db = {"students": {}}
+    db.setdefault("students", {})[uid] = {
+        "name": name,
+        "group": group,
+        "goal": goal,
+        "registered": __import__("datetime").datetime.now().isoformat(),
+        "referral_count": 0,
+        "courses": {}
+    }
+    with open("state/db.json", "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    summary = (
+        f"✅ נרשמת בהצלחה, {name}!\n"
+        f"קבוצה: {group}\n"
+        f"מטרה: {goal}\n\n"
+        "💡 **איך מתחילים להרוויח:**\n"
+        "  👥 /referral – הזמן חברים וקבל 85% עמלה\n"
+        "  ⭐ /pay – קנה Credits בכוכבי טלגרם\n"
+        "  💎 /ton – שלח TON וקבל Credits\n\n"
+        "🛒 **מה אפשר לקנות:**\n"
+        "  /buy ask_credit – שאל את ה־AI (10 Credits)\n"
+        "  /buy premium_agent – סוכן פרימיום (50 Credits)\n\n"
+        "📊 לעקוב: /balance, /history\n"
+        "📚 קורסים: /courses\n\n"
+        "שלח /start לתפריט הראשי."
+    )
+    bot.reply_to(m, summary)
+    # clean up
+    if hasattr(bot, "_join_data"):
+        del bot._join_data
+
+@bot.message_handler(commands=['admin'])
+def admin(m):
+    bot.send_message(m.chat.id, """🔧 ADMIN CONTROL PANEL (admin only)
+📊 Diagnostics
+/status – System overview
+/health – Resource health
+/test – Full diagnostic
+/test_agents – Agent self-test
+/diagnose – System diagnosis
+/diagnostic – Alt diagnosis
+/disk – Disk usage
+/sysinfo – System resources
+/memory – Memory status
+/debug – Container debug
+/debugcmd – Debug command
+/testcmd – Test command
+/errors – Recent errors
+/audit – Audit log
+/logs <n> – Last N log lines
+/rlogs – Railway logs
+/termlog – Termux logs
+
+🔄 Operations
+/restart – Restart bot
+/deploy – Trigger Railway deploy
+/backup – Git backup
+/clean – Clean temp files
+/exec <cmd> – Run shell command
+/termux – Termux status
+
+🤖 Agents
+/agents – List all agents
+/agent_create <name> – Create agent
+/agentstate <prefix> <state> – Set state
+/sendagent <prefix> <msg> – Send message
+/inbox <prefix> – Agent inbox
+/agent_debug – Debug agent
+/agent_test – Test agent
+
+📢 Broadcast & Master
+/broadcast <msg> – Broadcast to all
+/master – Master control panel
+
+💰 Revenue
+/revenue – Revenue status
+
+🔐 Tokens
+/refreshtoken – Refresh tokens
+/activate – Activate user
+
+🗳 Voting
+/vote – Create vote
+/results – See results
+
+🧩 Plugins & Goals
+/plugin list – List plugins
+/goal add/list – Manage goals
+
+🕒 Snapshots & Monitor
+/monitor – Start monitoring
+/snapshot – Create snapshot
+/rollback – Rollback to snapshot
+
+🗑 Junk Management
+/scan_junk – Scan junk files
+/clean_junk – Clean junk
+/backup_junk – Backup junk
+
+🛒 Marketplace (Admin)
+/market – Browse/manage
+/market_upload – Upload plugin
+/market_installed – Installed list
+/market_search <term> – Search
+/market_rate <id> <rating> – Rate
+
+🧪 Sandbox
+/sandbox – Enter sandbox
+
+👥 User Management
+/user <id> – User info
+/users – List users
+
+⚠️ Kernel
+/kernellog – Kernel logs
+/kernelstatus – Kernel status
+
+🔒 Permissions
+/allow – Manage permissions
+
+All 81 system commands. For user commands: /help
+
+""")
 @bot.message_handler(commands=['status'])
 def status(m):
     db = state_manager.load_db()
     bot.send_message(m.chat.id, f"Users: {len(db.get('students', {}))}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
+
 @bot.message_handler(commands=['health'])
 def health(m):
     try:
@@ -127,6 +454,7 @@ def health(m):
     except:
         msg = "Health: limited info (psutil not available)"
     bot.send_message(m.chat.id, f"🩺 SYSTEM HEALTH\n{msg}")
+
 @bot.message_handler(commands=['task'])
 def task(m):
     if not _KERNEL_READY:
@@ -140,6 +468,7 @@ def task(m):
         kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
     elif parts[1] == "list":
         kernel.bus.emit("task_list", {"chat": m.chat.id})
+
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
     if not is_admin(m): return
@@ -163,16 +492,19 @@ def agents_list(m):
     else:
         lines = [f"{v.get('name','?')} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
         bot.send_message(m.chat.id, "🤖 Agents:\n" + "\n".join(lines))
+
 @bot.message_handler(commands=['agent_debug'])
 def agent_debug(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, f"Agents in memory: {len(agents_dict)}")
+
 @bot.message_handler(commands=['agent_test'])
 def agent_test(m):
     if not is_admin(m): return
     # simple test: create and list
     agent_store.create("test_agent")
     bot.send_message(m.chat.id, f"Test agent created. Total agents: {len(agents_dict)}")
+
 @bot.message_handler(commands=['vote'])
 def vote(m):
     db = ensure_user(state_manager.load_db(), m.from_user.id)
@@ -183,26 +515,32 @@ def vote(m):
         db["votes"][key] = 1
     state_manager.save_db(db)
     bot.send_message(m.chat.id, f"Voted {key}")
+
 @bot.message_handler(commands=['results'])
 def results(m):
     db = state_manager.load_db()
     bot.send_message(m.chat.id, json.dumps(db["votes"], indent=2))
+
 @bot.message_handler(commands=['revenue'])
 def revenue(m):
     bot.send_message(m.chat.id, "Revenue: ₪0")
+
 @bot.message_handler(commands=['master'])
 def master(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "MASTER.json: locked")
+
 @bot.message_handler(commands=['backup'])
 def backup(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "✅ Backup committed to Git")
+
 @bot.message_handler(commands=['restart'])
 def restart(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
+
 @bot.message_handler(commands=['logs'])
 def logs(m):
     if not is_admin(m): return
@@ -212,10 +550,12 @@ def logs(m):
         bot.send_message(m.chat.id, result.stdout[:4000] or "No logs yet")
     except:
         bot.send_message(m.chat.id, "No log file")
+
 @bot.message_handler(commands=['clean'])
 def clean(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Temp files cleaned")
+
 @bot.message_handler(commands=['audit'])
 def audit_cmd(m):
     if not is_admin(m): return
@@ -225,23 +565,28 @@ def audit_cmd(m):
     else:
         lines = [f"{e['time']}: {e['user']} – {e['action']}" for e in entries]
         bot.send_message(m.chat.id, "📋 Audit Log:\n" + "\n".join(lines))
+
 @bot.message_handler(commands=['memory'])
 def memory(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Memory: empty")
+
 @bot.message_handler(commands=['debug'])
 def debug(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, f"cwd: {os.getcwd()}\nfiles: {os.listdir('.')}\nsys.path: {sys.path}\ncore module: OK")
+
 @bot.message_handler(commands=['termux'])
 def termux(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, f"Python: {sys.version}\ncwd: {os.getcwd()}")
+
 @bot.message_handler(commands=['deploy'])
 def deploy(m):
     if not is_admin(m): return
     result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
     bot.send_message(m.chat.id, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
+
 @bot.message_handler(commands=['errors'])
 def errors(m):
     if not is_admin(m): return
@@ -252,6 +597,7 @@ def errors(m):
         bot.send_message(m.chat.id, "".join(errors) or "No recent errors")
     except:
         bot.send_message(m.chat.id, "No log file")
+
 @bot.message_handler(commands=['plugin'])
 def plugin(m):
     if not is_admin(m): return
@@ -261,6 +607,7 @@ def plugin(m):
         bot.send_message(m.chat.id, "Plugins: " + ", ".join(plugins) if plugins else "None")
     else:
         bot.send_message(m.chat.id, "Usage: /plugin list")
+
 @bot.message_handler(commands=['goal'])
 def goal(m):
     if not is_admin(m): return
@@ -277,6 +624,7 @@ def goal(m):
     elif parts[1] == "list":
         goals = json.load(open(path)) if os.path.exists(path) else []
         bot.send_message(m.chat.id, "\n".join([f"{g['text']} [{g['status']}]" for g in goals]) or "No goals")
+
 @bot.message_handler(commands=['sysinfo'])
 def sysinfo(m):
     if not is_admin(m): return
@@ -294,34 +642,42 @@ def sysinfo(m):
         bot.send_message(m.chat.id, f"Disk: {df}\nMemory: {mem}\nUptime: {uptime_str}")
     except Exception as e:
         bot.send_message(m.chat.id, f"Sysinfo error: {e}")
+
 @bot.message_handler(commands=['disk'])
 def disk(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Disk: OK")
+
 @bot.message_handler(commands=['test'])
 def test(m):
     if not is_admin(m): return
     import subprocess
     result = subprocess.run("python3 tests/system_check.py", shell=True, capture_output=True, text=True)
     bot.send_message(m.chat.id, result.stdout or "Diagnostics complete.")
+
 @bot.message_handler(commands=['kernellog'])
 def kernellog(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "See /debug for kernel info")
+
 @bot.message_handler(commands=['kernelstatus'])
 def kernelstatus(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, f"KERNEL_READY: {_KERNEL_READY}")
+
 @bot.message_handler(commands=['update'])
 def update(m):
     if not is_admin(m): return
     result = subprocess.run("cd /app && git pull && git push", shell=True, capture_output=True, text=True)
     bot.send_message(m.chat.id, f"Update:\n{result.stdout[:500] or 'OK'}")
+
 @bot.message_handler(commands=['rollback'])
 def rollback(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "Rollback: not implemented yet")
+
 # ---------------- MAIN ----------------
+
 @bot.message_handler(commands=['agentstate'])
 def agentstate(m):
     if not is_admin(m): return
@@ -341,6 +697,7 @@ def agentstate(m):
         bot.send_message(m.chat.id, f"✅ Agent {agents_dict[found]['name']} state changed to {new_state}")
     else:
         bot.send_message(m.chat.id, "❌ Agent not found")
+
 @bot.message_handler(commands=['sendagent'])
 def sendagent(m):
     if not is_admin(m): return
@@ -386,19 +743,24 @@ def test_agents(m):
     if not is_admin(m): return
     import time, json, os
     results = []
+    
     # 1. Create test agent
     aid = str(len(agents_dict) + 1)
     agents_dict[aid] = {"name": "test_agent", "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
     results.append(f"✅ Agent created: id={aid}")
+    
     # 2. Change state
     agents_dict[aid]["state"] = "busy"
     results.append("✅ State changed")
+    
     # 3. Send message
     agents_dict[aid]["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": "test message"})
     results.append("✅ Message sent")
+    
     # 4. Check inbox
     inbox = agents_dict[aid]["inbox"]
     results.append(f"✅ Inbox has {len(inbox)} messages")
+    
     # 5. Persistence
     try:
         path = "/app/agents.json"
@@ -408,13 +770,17 @@ def test_agents(m):
         results.append("✅ Persistence OK")
     except:
         results.append("❌ Persistence FAILED")
+    
     # 6. Kernel status
     results.append(f"✅ Kernel: {'ACTIVE' if _KERNEL_READY else 'INACTIVE'}")
+    
     # 7. Audit
     audit('test_agents', m.from_user.id, 'auto')
     entries = get_audit(5)
     results.append(f"✅ Audit: {len(entries)} entries")
+    
     bot.send_message(m.chat.id, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
+
 @bot.message_handler(commands=['user'])
 def user(m):
     if not is_admin(m): return
@@ -435,6 +801,7 @@ def user(m):
 /goal add/list — Manage goals
 /rlogs — Railway logs (admin)
 /disk — Disk usage""")
+
 @bot.message_handler(commands=['rlogs'])
 def rlogs(m):
     if not is_admin(m): return
@@ -469,6 +836,7 @@ def rlogs(m):
             bot.send_message(m.chat.id, f"📋 Railway response:\n{str(data)[:2000]}")
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
+
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
     if not is_admin(m): return
@@ -494,6 +862,7 @@ def exec_cmd(m):
     finally:
         sys.stdout = old_stdout
     bot.send_message(m.chat.id, f"💻 {cmd}\n{output[:4000]}")
+
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
     if not is_admin(m): return
@@ -504,11 +873,13 @@ def termlog(m):
         smart_reply(bot, m.chat.id, f"📋 Termux log:\n{output}")
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ Error: {e}")
+
 @bot.message_handler(commands=['market'])
 def market(m):
     store = load_store()
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in store['plugins']]
     bot.send_message(m.chat.id, "🛍️ Marketplace:\n" + "\n".join(lines))
+
 @bot.message_handler(commands=['market_installed'])
 def market_installed(m):
     store = load_store()
@@ -516,6 +887,7 @@ def market_installed(m):
         bot.send_message(m.chat.id, "No plugins installed yet.")
     else:
         bot.send_message(m.chat.id, "📦 Installed: " + ", ".join(store['installed']))
+
 @bot.message_handler(commands=["market_install"])
 def market_install(m):
     store = load_store()
@@ -532,6 +904,7 @@ def market_install(m):
             bot.send_message(m.chat.id, f"✅ Plugin '{p['name']}' installed!")
             return
     bot.send_message(m.chat.id, f"❌ Plugin '{plugin_id}' not found")
+
 print("🚀 SLH SYSTEM RUNNING")
 @bot.message_handler(commands=['market_search'])
 def market_search(m):
@@ -546,6 +919,7 @@ def market_search(m):
         return
     lines = [f"• {p['name']} ({p['id']}) – ₪{p['price']} [{p['installs']} installs]" for p in results]
     bot.send_message(m.chat.id, "🔍 Search Results:\n" + "\n".join(lines))
+
 @bot.message_handler(commands=['market_rate'])
 def market_rate(m):
     store = load_store()
@@ -570,6 +944,7 @@ def market_rate(m):
             bot.send_message(m.chat.id, f"✅ Rated '{p['name']}' {rating}/5 (avg: {p['avg_rating']:.1f})")
             return
     bot.send_message(m.chat.id, "❌ Plugin not found")
+
 @bot.message_handler(commands=['market_upload'])
 def market_upload(m):
     if not is_admin(m): return
@@ -600,6 +975,7 @@ def market_upload(m):
     })
     save_store(store)
     bot.send_message(m.chat.id, f"✅ Plugin '{name}' uploaded to Marketplace!")
+
 @bot.message_handler(commands=['testcmd'])
 def testcmd(m):
     if not is_admin(m): return
@@ -618,6 +994,7 @@ def testcmd(m):
         bot.send_message(m.chat.id, f"✅ Command {cmd} found in bot.")
     else:
         bot.send_message(m.chat.id, f"❌ Command /{cmd} not found.")
+
 @bot.message_handler(commands=['debugcmd'])
 def debugcmd(m):
     if not is_admin(m): return
@@ -633,10 +1010,12 @@ def debugcmd(m):
             bot.send_message(m.chat.id, info)
             return
     bot.send_message(m.chat.id, f"❌ Command /{cmd} not found.")
+
 @bot.message_handler(commands=['diagnose'])
 def diagnose_cmd(m):
     if not is_admin(m): return
     bot.send_message(m.chat.id, "✅ Diagnostic simplified: all systems operational. Use /test for detailed checks.")
+
 @bot.message_handler(commands=['refreshtoken'])
 def refresh_token(m):
     if not is_admin(m):
@@ -644,6 +1023,7 @@ def refresh_token(m):
         return
     msg = bot.send_message(m.chat.id, "🔐 שלח עכשיו את הטוקן החדש (התקבל מ-@BotFather).\nשים לב: הטוקן יימחק מיד לאחר הבדיקה.")
     bot.register_next_step_handler(msg, process_new_token)
+        
 def process_new_token(m):
     token = m.text.strip()
     # מחיקת הודעת הטוקן מהצ'אט
@@ -675,32 +1055,39 @@ def process_new_token(m):
         # הדרך הנקייה: bot.stop_polling() והרצת start.sh, אבל הפעלה מחדש תהרוג תהליך
     except Exception as e:
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
-    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
+
+    print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
 while True:
     try:
         bot.infinity_polling()
     except Exception as e:
         print("Polling error:", e)
         time.sleep(20)
+
 # ===== SLH EVENT LOGGER =====
 def log_event(event_type, user_id=None, data=None):
     import json, os
     from datetime import datetime
+
     path = "state/event_log.json"
+
     try:
         if os.path.exists(path):
             logs = json.load(open(path))
         else:
             logs = []
+
         logs.append({
-            "time": datetime.datetime.now().isoformat(),
+            "time": datetime.now().isoformat(),
             "type": event_type,
             "user": str(user_id),
             "data": str(data)
         })
+
         json.dump(logs[-500:], open(path, "w"), indent=2)
     except:
         pass
+
 # ===== SLH SNAPSHOT SYSTEM =====
 @bot.message_handler(commands=['snapshot'])
 def snapshot(m):
@@ -710,39 +1097,52 @@ def snapshot(m):
         logs = json.load(open("state/event_log.json"))
         total = len(logs)
         last = logs[-10:] if total > 10 else logs
+
         msg = f"""📊 SNAPSHOT REPORT
+
 Total events: {total}
+
 Last 10 events:
 {last}
 """
+
         bot.send_message(m.chat.id, msg)
     except Exception as e:
         bot.send_message(m.chat.id, f"snapshot error: {e}")
+
 @bot.message_handler(commands=['endday'])
 def endday(m):
     if not is_admin(m): return
     import json
     try:
         logs = json.load(open("state/event_log.json"))
+
         summary = {
             "total_events": len(logs),
             "users": len(set([x.get("user") for x in logs])),
             "types": list(set([x.get("type") for x in logs]))
         }
+
         json.dump(summary, open("state/daily_summary.json","w"), indent=2)
+
         bot.send_message(m.chat.id, f"""🌙 END DAY COMPLETE
+
 Events: {summary['total_events']}
 Users: {summary['users']}
 Types: {summary['types']}
+
 Saved to daily_summary.json
 """)
     except Exception as e:
         bot.send_message(m.chat.id, f"endday error: {e}")
+
 # ===== SLH REPORT ENGINE =====
 import json, os
 from datetime import datetime
+
 def generate_report():
-    date = datetime.datetime.now().strftime("%Y-%m-%d")
+    date = datetime.now().strftime("%Y-%m-%d")
+
     report = {
         "date": date,
         "bot_running": True,
@@ -750,33 +1150,43 @@ def generate_report():
         "events": 0,
         "errors_last_20": [],
     }
+
     try:
         if os.path.exists("state/event_log.json"):
             events = json.load(open("state/event_log.json"))
             report["events"] = len(events)
+
         if os.path.exists("db.json"):
             db = json.load(open("state/db.json"))
             report["users"] = len(db.get("users", {}))
+
         if os.path.exists("logs/error.log"):
             with open("logs/error.log") as f:
                 report["errors_last_20"] = f.readlines()[-20:]
+
     except:
         pass
+
     os.makedirs("state/reports", exist_ok=True)
     json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
+
     return report
+
 @bot.message_handler(commands=['report'])
 def report(m):
     if not is_admin(m): return
     import os, json
     try:
         cmd = m.text.split()
+
         if len(cmd) == 1 or cmd[1] == "today":
             r = generate_report()
             bot.send_message(m.chat.id, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
+
         elif cmd[1] == "list":
             files = os.listdir("state/reports")
             bot.send_message(m.chat.id, "Reports:\n" + "\n".join(files))
+
         else:
             date = cmd[1]
             path = f"state/reports/{date}.json"
@@ -785,8 +1195,13 @@ def report(m):
                 bot.send_message(m.chat.id, str(data))
             else:
                 bot.send_message(m.chat.id, "No report found")
+
     except Exception as e:
         bot.send_message(m.chat.id, f"report error: {e}")
+
+
+
+
 # --- Healthcheck background thread ---
 import threading, time
 def healthcheck_loop():
@@ -804,6 +1219,8 @@ def healthcheck_loop():
                 except:
                     pass
 threading.Thread(target=healthcheck_loop, daemon=True).start()
+
+
 # --- Healthcheck background thread ---
 import threading, time
 def healthcheck_loop():
@@ -828,22 +1245,15 @@ if __name__ == "__main__":
     agents_dict.update(db.get("agents", {}))
     print(f"Agents loaded: {len(agents_dict)}")
     start_agent_thread()
+    print("Bot polling...")
 
-
-
-
-    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
-
-
-
-welcome_handler.init(bot)
-print("Bot polling...")
 @bot.message_handler(commands=['balance'])
 def balance(m):
     uid = str(m.from_user.id)
     db = state_manager.load_db()
     bal = db.get("users", {}).get(uid, {}).get("balance", 0)
     bot.send_message(m.chat.id, f"💰 Your balance: {bal} credits")
+
 @bot.message_handler(commands=['buy'])
 def buy(m):
     uid = str(m.from_user.id)
@@ -874,7 +1284,9 @@ def buy(m):
         user["premium"] = True
     state_manager.save_db(db)
     bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
+
     bot.polling()
+
 def tutor_loop():
     import time
     while True:
@@ -890,10 +1302,13 @@ def tutor_loop():
         except:
             pass
         time.sleep(20)
+
 import threading
 threading.Thread(target=tutor_loop, daemon=True).start()
 # Start menu v2
+
 from core.command_router import dispatch_command
+
 @bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
 def _universal_router(message):
     try:
@@ -901,8 +1316,11 @@ def _universal_router(message):
         return dispatch_command(cmd, message, bot)
     except Exception as e:
         bot.reply_to(message, f"Router error: {e}")
+
 from core.bootstrap_commands import init as init_commands
+
 init_commands()
+
 from init_router import bootstrap
 import admin_utils
 bootstrap()
