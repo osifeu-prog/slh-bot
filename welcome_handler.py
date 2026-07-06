@@ -1,7 +1,7 @@
-def init(bot):
-    from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-    import json
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+import json, os
 
+def init(bot):
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         uid = str(message.chat.id)
@@ -9,42 +9,57 @@ def init(bot):
         try:
             with open("state/db.json") as f:
                 db = json.load(f)
-                if uid in db.get("users", {}):
-                    name = db["users"][uid].get("name", "")
+                name = db.get("users", {}).get(uid, {}).get("name", "")
         except:
             pass
-        greeting = f"נעים לראותך שוב, {name}!" if name else "🌟 ברוכים הבאים ל-SLH Learning!"
 
+        # Logo
+        try:
+            with open("logo.txt") as lf:
+                logo = lf.read()
+            bot.send_message(message.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
+        except:
+            pass
+
+        greeting = f"נעים לראותך שוב, {name}!" if name else "🌟 ברוכים הבאים ל-SLH OS!"
+
+        # Welcome message with explanation
+        welcome_text = (
+            f"{greeting}\n\n"
+            "📚 **מערכת הפעלה חכמה** – קורסים, סוכני AI, השקעות, וכלכלה דיגיטלית.\n"
+            "👇 בחר אפשרות להתחיל:"
+        )
         markup = InlineKeyboardMarkup(row_width=2)
         markup.add(
             InlineKeyboardButton("📚 קורסים", callback_data="menu_courses"),
-            InlineKeyboardButton("📁 פרויקטים", callback_data="menu_projects"),
+            InlineKeyboardButton("💰 השקעות", callback_data="menu_investments"),
             InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"),
-            InlineKeyboardButton("👤 התקדמות שלי", callback_data="menu_progress"),
-            InlineKeyboardButton("🔗 הפניה", callback_data="menu_referral"),
-            InlineKeyboardButton("🛠 דמו", callback_data="menu_demo"),
+            InlineKeyboardButton("👤 פרופיל", callback_data="menu_progress"),
             InlineKeyboardButton("❓ עזרה", callback_data="menu_help"),
-            InlineKeyboardButton("💰 השקעות", callback_data="menu_investments")
         )
-        bot.send_message(message.chat.id, f"```\n{open('logo.txt').read()}\n```", parse_mode="Markdown")
-        bot.send_message(message.chat.id, greeting, reply_markup=markup)
+        # Admin button only for admin IDs
+        if uid in ("8789977826",):  # replace with your ID(s)
+            markup.add(InlineKeyboardButton("🔧 אדמין", callback_data="menu_admin"))
+
+        bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="Markdown")
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))
     def handle_menu_click(call):
         action = call.data.replace("menu_", "")
         if action == "courses":
-            bot.send_message(call.message.chat.id, "📚 קורסים:\n/ courses – לרשימת הקורסים\n/ join – להרשמה")
-        elif action == "projects":
-            bot.send_message(call.message.chat.id, "📁 פרויקטים:\n/ project create – יצירה\n/ project list – צפייה")
+            bot.send_message(call.message.chat.id, "📚 קורסים:\n/courses – לרשימת קורסים\n/course_slh – קורס SLH")
+        elif action == "investments":
+            bot.send_message(call.message.chat.id, "💰 השקעות:\n/stake – Staking\n/stake_join <amount> – הצטרף\n/pnl – PnL\n/staking_report – דו\"ח")
         elif action == "agents":
-            bot.send_message(call.message.chat.id, "🤖 סוכנים:\n/ agents – רשימה\n/ agent_create [שם] – יצירה")
+            bot.send_message(call.message.chat.id, "🤖 סוכנים:\n/agents – רשימה\n/agent_create <name> – יצירה\n/agent_submit <name> – הגשה")
         elif action == "progress":
             bot.send_message(call.message.chat.id, "👤 השתמש ב- /myprogress")
-        elif action == "referral":
-            bot.send_message(call.message.chat.id, "🔗 השתמש ב- /referral")
-        elif action == "demo":
-            bot.send_message(call.message.chat.id, "🛠 השתמש ב- /demo tasks / agents / guide")
         elif action == "help":
-            bot.send_message(call.message.chat.id, "❓ עזרה:\n/admin – לוח מנהל\n/start – התחלה")
+            bot.send_message(call.message.chat.id, "❓ עזרה:\n/help – תפריט הפקודות\n/admin – לוח מנהל\n/start – התחלה")
+        elif action == "admin":
+            # Additional admin check
+            if str(call.message.chat.id) not in ("8789977826",):
+                bot.answer_callback_query(call.id, "⛔️ אין הרשאה")
+                return
+            bot.send_message(call.message.chat.id, "🔧 לוח מנהל:\n/admin – תפריט מלא\n/exec – הרצת פקודות\n/broadcast – שידור")
         bot.answer_callback_query(call.id)
-# force refresh Mon Jul  6 17:42:50 IDT 2026
