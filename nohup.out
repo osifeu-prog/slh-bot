@@ -3,3 +3,4 @@
 2026/07/06 10:50:09 Permitting clients to write input to the PTY.
 2026/07/06 10:50:09 HTTP server is listening at: http://[::]:8080/
 2026/07/06 12:28:51 10.0.0.138:59458 401 GET /
+2026/07/06 13:40:10 10.0.0.138:37646 401 GET /
