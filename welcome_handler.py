@@ -9,8 +9,8 @@ def init(bot):
         try:
             with open("state/db.json") as f:
                 db = json.load(f)
-                if uid in db.get("students", {}):
-                    name = db["students"][uid].get("name", "")
+                if uid in db.get("users", {}):
+                    name = db["users"][uid].get("name", "")
         except:
             pass
         greeting = f"נעים לראותך שוב, {name}!" if name else "🌟 ברוכים הבאים ל-SLH Learning!"
