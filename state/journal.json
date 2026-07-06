@@ -66,5 +66,10 @@
       "payment_handler.py",
       "econ_handler.py"
     ]
+  },
+  {
+    "timestamp": "2026-07-05T21:43:55.343166+00:00",
+    "action": "added_ton_payment_handler",
+    "details": "Created ton_handler.py with /ton, /ton_check, /ton_rate, /ton_set_wallet. Integrates toncenter.com API for transaction verification. No credit card needed."
   }
 ]
