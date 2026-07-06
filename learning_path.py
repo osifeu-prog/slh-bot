@@ -59,3 +59,4 @@ def register_learning_path(bot):
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
         bot.send_message(8789977826, f"📢 Submission from {uid}: {agent_name}")
+Force refresh Mon Jul  6 15:33:14 IDT 2026
