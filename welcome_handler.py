@@ -23,7 +23,8 @@ def init(bot):
             InlineKeyboardButton("👤 התקדמות שלי", callback_data="menu_progress"),
             InlineKeyboardButton("🔗 הפניה", callback_data="menu_referral"),
             InlineKeyboardButton("🛠 דמו", callback_data="menu_demo"),
-            InlineKeyboardButton("❓ עזרה", callback_data="menu_help")
+            InlineKeyboardButton("❓ עזרה", callback_data="menu_help"),
+            InlineKeyboardButton("💰 השקעות", callback_data="menu_investments")
         )
         bot.send_message(message.chat.id, f"```\n{open('logo.txt').read()}\n```", parse_mode="Markdown")
         bot.send_message(message.chat.id, greeting, reply_markup=markup)
