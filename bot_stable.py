@@ -1100,16 +1100,21 @@ def healthcheck_loop():
                     pass
 threading.Thread(target=healthcheck_loop, daemon=True).start()
 
-@bot.message_handler(commands=['pnl'])
-def pnl_handler(m):
-    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
-
 if __name__ == "__main__":
     print("Loading DB and agents...")
     db = state_manager.load_db()
     agents_dict.update(db.get("agents", {}))
     print(f"Agents loaded: {len(agents_dict)}")
     start_agent_thread()
+
+@bot.message_handler(commands=['pnl'])
+def pnl_handler(m):
+    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
+
+@bot.message_handler(commands=['pnl2'])
+def pnl2_handler(m):
+    bot.send_message(m.chat.id, "📊 PnL (backup): -1310$\nTrades: 36\nWin Rate: 58%")
+
 print("Bot polling...")
 @bot.message_handler(commands=['balance'])
 def balance(m):
