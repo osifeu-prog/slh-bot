@@ -95,6 +95,18 @@
         "Agent appears online in /agents_status"
       ],
       "status": "All systems operational"
+    },
+    {
+      "date": "2026-07-06T11:12:35.938471+00:00",
+      "summary": "Economy UX upgrade: /buy inline keyboard, language handler, diagnostics, logo",
+      "details": [
+        "/buy now shows inline buttons (ask_credit, premium_agent) when no arg",
+        "callback handler processes inline purchases",
+        "language_handler connected: /language he|en",
+        "system_diagnostics.py with 9 health checks",
+        "logo.txt integrated into /start"
+      ],
+      "status": "All systems operational"
     }
   ]
 }
