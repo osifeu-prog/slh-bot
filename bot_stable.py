@@ -1,4 +1,3 @@
-welcome_handler.init(bot)
 import os, sys, json, time, subprocess
 print("Bot script started")
 print("Bot script started")
@@ -837,6 +836,7 @@ if __name__ == "__main__":
 
 
 
+welcome_handler.init(bot)
 print("Bot polling...")
 @bot.message_handler(commands=['balance'])
 def balance(m):
