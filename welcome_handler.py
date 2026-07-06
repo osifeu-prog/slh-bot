@@ -25,6 +25,7 @@ def init(bot):
             InlineKeyboardButton("🛠 דמו", callback_data="menu_demo"),
             InlineKeyboardButton("❓ עזרה", callback_data="menu_help")
         )
+        bot.send_message(message.chat.id, f"```\n{open('logo.txt').read()}\n```", parse_mode="Markdown")
         bot.send_message(message.chat.id, greeting, reply_markup=markup)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))

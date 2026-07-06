@@ -12,6 +12,11 @@ PROVIDERS = {
         "model": "grok-2-1212",
         "key_env": "GROK_API_KEY"
     },
+    "groq": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "model": "llama3-70b-8192",   # Groq's fast Llama3 model
+        "key_env": "GROQ_API_KEY"
+    },
     "gemini": {
         "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
         "model": None,

@@ -117,3 +117,15 @@ def init(bot, is_admin):
             msg += f"• {d.get('name','?')} — ${s['amount_usd']} {s['currency']}\n"
         bot.reply_to(m, msg)
 
+
+# === PnL Reader from shared data (via bridge) ===
+def get_trading_pnl():
+    try:
+        # אם יש shared volume או API call
+        # כרגע נשתמש ב-dummy עד שנסנכרן volumes
+        return {"total_pnl": 245.5, "trades_count": 12}
+    except:
+        return {"total_pnl": 0, "trades_count": 0}
+
+# הוסף לפונקציית /stake
+# (אפשר להוסיף ידנית או שאני אתן patch)
