@@ -1114,6 +1114,11 @@ if __name__ == "__main__":
 def pnl_handler(m):
     bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
 
+
+@bot.message_handler(commands=['testpnl'])
+def testpnl_handler(m):
+    bot.send_message(m.chat.id, "✅ /testpnl works!")
+
 print("Bot polling...")
 @bot.message_handler(commands=['balance'])
 def balance(m):
