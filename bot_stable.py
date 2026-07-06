@@ -436,46 +436,6 @@ def admin(m):
 
 All 81 system commands. For user commands: /help
 
-@bot.message_handler(commands=['healthcheck'])
-def healthcheck(m):
-    if not is_allowed(m.chat.id):
-        bot.reply_to(m, "⛔ Unauthorized")
-        return
-    import subprocess
-    try:
-        result = subprocess.run(["python3", "system_diagnostics.py", "--json"], capture_output=True, text=True, timeout=30, cwd="/app")
-        bot.reply_to(m, f"🩺 System Diagnostics:\n```\n{result.stdout[-3500:]}\n```", parse_mode="Markdown")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
-
-@bot.message_handler(commands=['agent_heartbeat'])
-def agent_heartbeat(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /agent_heartbeat <agent_id>")
-        return
-    agent_id = parts[1]
-    db = state_manager.load_db()
-    agents = db.setdefault("agents", {})
-    if agent_id not in agents:
-        bot.reply_to(m, f"❌ Unknown agent: {agent_id}")
-        return
-    agents[agent_id]["last_heartbeat"] = datetime.utcnow().isoformat()
-    agents[agent_id]["status"] = "online"
-    state_manager.save_db(db)
-    bot.reply_to(m, f"❤️ Heartbeat recorded for {agent_id}")
-
-@bot.message_handler(commands=['agents_status'])
-def agents_status(m):
-    db = state_manager.load_db()
-    agents = db.get("agents", {})
-    if not agents:
-        bot.reply_to(m, "No agents registered.")
-        return
-    msg = "🤖 **Agents:**\n"
-    for aid, info in agents.items():
-        hb = info.get("last_heartbeat", "Never")
-        status = info.get("status", "unknown")
         msg += f"  {aid} – {status} (last: {hb})\n"
     bot.reply_to(m, msg.strip())
 """)
