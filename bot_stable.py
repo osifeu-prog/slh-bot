@@ -60,6 +60,11 @@ if not token:
     print('No valid token found. Exiting.')
     exit(1)
 bot = telebot.TeleBot(token)
+
+@bot.message_handler(commands=['pnl'])
+def pnl_fix(m):
+    bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
+
 help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
@@ -1110,14 +1115,9 @@ if __name__ == "__main__":
 
 
 
-@bot.message_handler(commands=['pnl'])
-def pnl_handler(m):
     bot.send_message(m.chat.id, "📊 PnL: -1310$\nTrades: 36\nWin Rate: 58%")
 
 
-@bot.message_handler(commands=['testpnl'])
-def testpnl_handler(m):
-    bot.send_message(m.chat.id, "✅ /testpnl works!")
 
 print("Bot polling...")
 @bot.message_handler(commands=['balance'])
