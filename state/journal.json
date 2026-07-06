@@ -190,6 +190,18 @@
         "All core commands verified: /start, /admin, /help, /pnl, /balance, /ask, /broadcast, /course_slh"
       ],
       "status": "All systems go"
+    },
+    {
+      "date": "2026-07-06T18:11:50.296703+00:00",
+      "summary": "Final persistent setup: all commands survive restarts, /start improved, admin protected",
+      "details": [
+        "Added git_sync, testadd, testlist, stake, ton, dashboard directly to bot_stable.py",
+        "Redesigned /start with clear welcome, navigation buttons, and admin-only access",
+        "Ensured admin_utils.py protects sensitive commands",
+        "Railway auto-deploy enabled – changes via GitHub take effect automatically",
+        "System ready for Telegram-only workflow"
+      ],
+      "status": "All systems go"
     }
   ]
 }
