@@ -66,7 +66,7 @@ help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
 payment_handler.register_payment_handlers(bot)
-# ton_handler.register_ton_handlers(bot)  # DISABLED 2026-07-06: missing datetime import + placeholder wallet address, will crash on real deposit verification
+ton_handler.register_ton_handlers(bot)  # RE-ENABLED 2026-07-06: datetime import fixed, real wallet configured, placeholder guard added
 
 try:
     with open('allowed_ids.json') as _f:

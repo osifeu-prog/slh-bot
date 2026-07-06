@@ -1,8 +1,9 @@
 import requests
 import state_manager
+from datetime import datetime
 
 # Default settings – will be stored in db.json under "ton_settings"
-DEFAULT_WALLET = "YOUR_WALLET_ADDRESS"          # ← החלף בכתובת שלך
+DEFAULT_WALLET = "UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj"  # Real wallet set 2026-07-06
 DEFAULT_RATE = 100                             # 1 TON = 100 Credits
 TONCENTER_API = "https://toncenter.com/api/v2" # mainnet
 TESTNET = False                                # שנה ל-True לבדיקה
@@ -26,6 +27,10 @@ def register_ton_handlers(bot):
         settings = get_ton_settings()
         wallet = settings["wallet"]
         rate = settings["rate"]
+        if not wallet or wallet == "YOUR_WALLET_ADDRESS":
+            bot.send_message(m.chat.id, "⚠️ TON payments are not configured yet. Please contact the admin.")
+            print(f"[TON] BLOCKED: wallet not configured, user={m.from_user.id}")
+            return
         msg = (
             f"💎 **TON Payments**\n"
             f"Send TON to this address:\n`{wallet}`\n"
