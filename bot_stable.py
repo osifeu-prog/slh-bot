@@ -437,7 +437,6 @@ def admin(m):
 All 81 system commands. For user commands: /help
 
 """)
-
 @bot.message_handler(commands=['status'])
 def status(m):
     db = state_manager.load_db()
