@@ -179,6 +179,17 @@
         "Ready for user onboarding"
       ],
       "status": "All systems integrated"
+    },
+    {
+      "date": "2026-07-06T17:54:23.365729+00:00",
+      "summary": "Permanent /pnl fix deployed; system stable and fully operational",
+      "details": [
+        "pnl_fix added immediately after bot creation in bot_stable.py",
+        "Duplicate decorator issue resolved",
+        "Railway built new image via railway up",
+        "All core commands verified: /start, /admin, /help, /pnl, /balance, /ask, /broadcast, /course_slh"
+      ],
+      "status": "All systems go"
     }
   ]
 }
