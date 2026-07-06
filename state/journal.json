@@ -202,6 +202,17 @@
         "System ready for Telegram-only workflow"
       ],
       "status": "All systems go"
+    },
+    {
+      "date": "2026-07-06T18:48:06.805335+00:00",
+      "summary": "Final victory: /testadd and /testlist working, data persists, system locked for Telegram-only workflow",
+      "details": [
+        "Added clean persistent block directly after bot creation",
+        "Pushed via Git and built with railway up",
+        "All previous /exec overwrites cleaned",
+        "Strict rule: code changes only via GitHub"
+      ],
+      "status": "Rock solid"
     }
   ]
 }
