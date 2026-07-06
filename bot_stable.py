@@ -51,7 +51,7 @@ import sandbox_handler
 import myprogress_handler
 import help_handler
 import broadcast_handler
-import staking_handler
+import stake_handler
 import refresh_token_handler
 import smart_leaderboard
 
@@ -182,7 +182,7 @@ course_handlers.register_course_handlers(bot)
 learn_handlers.register(bot)
 welcome_handler.init(bot)
 broadcast_handler.init(bot)
-staking_handler.init(bot)
+stake_handler.init(bot)
 project_commands.register(bot)
 monitor_handler.init(bot)
 ask_handler.init(bot)

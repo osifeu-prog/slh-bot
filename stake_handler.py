@@ -21,4 +21,3 @@ def init(bot):
     @bot.message_handler(commands=['staking_report'])
     def staking_report(m):
         bot.send_message(m.chat.id, "📊 מאזן מלא:\nTotal Staked: 0 USDT\nYour Balance: 0 USDT\nROI: 4% חודשי\nInvestors: 2")
-# force clean deploy
