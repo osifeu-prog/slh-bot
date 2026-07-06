@@ -119,3 +119,4 @@ def register_ask_handler(bot):
         except Exception as e:
             bot.reply_to(m, f"❌ Error: {e}")
 # force redeploy
+# force fresh build Mon Jul  6 14:52:32 IDT 2026
