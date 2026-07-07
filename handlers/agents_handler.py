@@ -2,7 +2,7 @@ def register(bot, context):
 
     state_manager = context["state_manager"]
     agents_dict = context["agents_dict"]
-    agent_store = context["agent_store"]
+    agentstate = context["agentstate"]
     is_admin = context["is_admin"]
 
     @bot.message_handler(commands=['agent_create'])
@@ -76,7 +76,7 @@ def register(bot, context):
         if not is_admin(m):
             return
 
-        agent_store.create("test_agent")
+        agentstate("test_agent")
 
         bot.send_message(
             m.chat.id,
