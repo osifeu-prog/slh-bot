@@ -1313,6 +1313,9 @@ def _universal_router(message):
 
 from init_router import bootstrap
 import admin_utils
+
+from handlers.agents_handler import register as register_agents
+
 bootstrap(bot)
 
 from core.telegram_router_bridge import extract_commands
