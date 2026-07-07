@@ -1078,12 +1078,7 @@ def process_new_token(m):
         bot.send_message(m.chat.id, f"❌ הטוקן לא תקין או שאין חיבור: {e}")
 
     print("Sending startup notification to admin"); bot.send_message(8789977826, "SLH Bot started on Railway\nVersion: 1.0\nTime: " + __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S"), disable_notification=True)
-while True:
-    try:
-        bot.infinity_polling()
-    except Exception as e:
-        print("Polling error:", e)
-        time.sleep(20)
+# polling moved to end of file
 
 # ===== SLH EVENT LOGGER =====
 def log_event(event_type, user_id=None, data=None):
@@ -1306,7 +1301,6 @@ def buy(m):
     state_manager.save_db(db)
     bot.send_message(m.chat.id, f"✅ Purchased {item}! Remaining: {user['balance']} credits")
 
-    bot.polling()
 
 def tutor_loop():
     import time
@@ -1345,3 +1339,13 @@ init_commands()
 from init_router import bootstrap
 import admin_utils
 bootstrap()
+
+# ===== SINGLE BOT POLLING ENTRYPOINT =====
+if __name__ == "__main__":
+    print("🚀 SLH BOT POLLING START")
+    while True:
+        try:
+            bot.infinity_polling()
+        except Exception as e:
+            print("Polling error:", e)
+            time.sleep(20)
