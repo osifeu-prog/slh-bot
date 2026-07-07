@@ -1330,6 +1330,10 @@ if __name__ == "__main__":
         "is_admin": is_admin
     })
 
+    # Re-bridge handlers loaded after initial startup scan
+    loaded = extract_commands(bot)
+    print(f"🔗 Post-loader bridge loaded: {loaded}")
+
     start_agent_thread()
     print("🚀 SLH BOT POLLING START")
     while True:
