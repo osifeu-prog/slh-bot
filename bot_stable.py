@@ -56,9 +56,34 @@ def load_token():
 
 token = load_token()
 if not token:
-    print('No valid token found. Exiting.')
-    exit(1)
-bot = telebot.TeleBot(token)
+    print('No valid token found.')
+    if __name__ == "__main__":
+        exit(1)
+    else:
+        BOT_DISABLED = True
+if token:
+    bot = telebot.TeleBot(token)
+else:
+    class DisabledBot:
+        def _decorator(self, *args, **kwargs):
+            def wrapper(fn):
+                return fn
+            return wrapper
+
+        def __getattr__(self, name):
+            if name in ("message_handlers", "callback_query_handlers", "handlers"):
+                return []
+
+            if name.endswith("_handler"):
+                return self._decorator
+
+            def noop(*args, **kwargs):
+                return None
+
+            return noop
+
+    bot = DisabledBot()
+    print("⚠️ Bot disabled - no token loaded")
 help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
@@ -1301,7 +1326,7 @@ if __name__ == "__main__":
     load_handlers(bot, {
         "state_manager": state_manager,
         "agents_dict": agents_dict,
-        "agent_store": agent_store,
+        "agentstate": agentstate,
         "is_admin": is_admin
     })
 
