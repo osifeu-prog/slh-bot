@@ -1,30 +1,25 @@
-# Python
-__pycache__/
-*.pyc
+# Runtime secrets
+config.json
+db.json
+state/config.json
+state/db.json
 
 # Logs
 *.log
-*.out
-*.pid
-*.lock
+*.txt
 
-# Backups
-*.bak
-*.backup
-*.bak_*
-*.before_*
-backup*/
-backups/
-archive*/
-archive_old_backups/
+# Termux/runtime
+__pycache__/
+*.pyc
+.bot.lock
 
-# Environment / secrets
-.env
-state/.env
+# Local scripts and diagnostics
+bootstrap.sh
+deploy.sh
+health_v5.sh
+patch_live_input.sh
+router_status.sh
 
-# Runtime state
-state/audit_logs/
-
-# Temporary
-*.tmp
-*.swp
+# Temporary files
+AttributeError:
+Python
