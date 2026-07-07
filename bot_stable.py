@@ -1,6 +1,7 @@
 import os, sys, json, time, subprocess
-print("Bot script started")
-print("Bot script started")
+print("DEBUG: imports started", flush=True)
+print("Bot script started", flush=True)
+print("Bot script started", flush=True)
 import welcome_handler
 
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
@@ -64,7 +65,9 @@ token = load_token()
 if not token:
     print('No valid token found. Exiting.')
     exit(1)
+print("DEBUG: token loaded", flush=True)
 bot = telebot.TeleBot(token)
+print("DEBUG: telebot created", flush=True)
 help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
@@ -1057,7 +1060,9 @@ def process_new_token(m):
         bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
         return
     try:
-        test_bot = telebot.TeleBot(token)
+        test_print("DEBUG: token loaded", flush=True)
+bot = telebot.TeleBot(token)
+print("DEBUG: telebot created", flush=True)
         me = test_bot.get_me()
         bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
         # עדכון config.json
@@ -1325,7 +1330,9 @@ def _universal_router(message):
     except Exception as e:
         bot.reply_to(message, f"Router error: {e}")
 
+print("DEBUG: before command imports", flush=True)
 from core.bootstrap_commands import init as init_commands
+print("DEBUG: command imports ok", flush=True)
 
 init_commands(bot)
 
