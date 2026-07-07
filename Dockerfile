@@ -8,4 +8,4 @@ RUN echo '{"SUPER_ADMIN": 8789977826, "SITE_DIR": "/app", "DB_FILE": "/app/state
 RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p state
 RUN if [ ! -f state/db.json ]; then echo '{"users": {}, "votes": {"yes": 0, "no": 0, "unsure": 0}}' > state/db.json; fi
-CMD ["python3", "-B", "bot_stable.py"]
+CMD ["python3", "-u", "-B", "bot_stable.py"]
