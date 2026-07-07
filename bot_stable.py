@@ -1345,6 +1345,9 @@ if __name__ == "__main__":
 
         print("🧠 Control Center router commands registered")
 
+        from core.command_router import HANDLERS
+        print("🧠 ROUTER FINAL:", list(HANDLERS.keys()))
+
     except Exception as e:
         print("Control Center router error:", e)
 
