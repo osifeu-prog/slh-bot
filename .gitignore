@@ -23,3 +23,31 @@ router_status.sh
 # Temporary files
 AttributeError:
 Python
+
+# Backups
+*.bak
+*.backup
+*_backup*
+backups/
+backup*/
+archive_old_backups/
+archive_unused_*/
+archive/
+
+# Runtime locks/pids
+*.pid
+*.lock
+bot.pid
+slh.pid
+
+# Environment secrets
+.env
+state/.env
+
+# Old docker/proc backups
+Dockerfile.*
+Procfile.*
+
+# Temporary output
+nohup.out
+
