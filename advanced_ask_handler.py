@@ -33,11 +33,13 @@ def _set_current_provider():
     return None
 
 def _get_wikipedia_source(query):
+    headers = {"User-Agent": "SLH-OS-Bot/1.0 (https://t.me/Me_ad_main_bot)"}
     for lang in ("he", "en"):
         try:
             resp = requests.get(
                 f"https://{lang}.wikipedia.org/w/api.php",
                 params={"action": "opensearch", "search": query, "limit": 1, "namespace": 0, "format": "json"},
+                headers=headers,
                 timeout=8
             )
             if resp.status_code == 200:
@@ -140,7 +142,7 @@ def register_ask_handler(bot):
                     u2["ask_credits"] = max(0, u2.get("ask_credits", 0) - 1)
                     state_manager.save_db(db2)
 
-                bot.reply_to(m, f"🧠 [{prov}] {answer}", parse_mode="Markdown")
+                bot.reply_to(m, f"🧠 ({prov})\n{answer}", parse_mode="Markdown")
                 current_provider = prov
                 return
             except Exception as e:
