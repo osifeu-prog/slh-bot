@@ -4,20 +4,18 @@ print("PYTHON STARTED")
 import os, sys, json, time, subprocess
 import welcome_handler
 
-# --- Local process lock: run only if /app/state exists (Railway Volume) ---
+# --- Runtime environment check ---
 import os, sys
-print("BOOT CHECK /app/state:", os.path.isdir("/app/state"))
-print("BOOT CHECK files:", os.listdir("/app")[:20])
 
-if not os.path.isdir("/app/state"):
-    print("❌ This bot runs only on Railway. Exiting.")
-    sys.exit(0)
+BASE_DIR = "/app" if os.path.isdir("/app") else os.getcwd()
+STATE_DIR = os.path.join(BASE_DIR, "state")
 
-# --- Local process lock: run only if /app/state exists (Railway Volume) ---
-import os, sys
-if not os.path.isdir("/app/state"):
-    print("❌ This bot runs only on Railway. Exiting.")
-    sys.exit(0)
+print("BOOT BASE:", BASE_DIR)
+print("BOOT STATE:", os.path.isdir(STATE_DIR))
+
+if not os.path.isdir(STATE_DIR):
+    print("⚠️ State directory missing, creating...")
+    os.makedirs(STATE_DIR, exist_ok=True)
 from internal_agent import start_agent_thread
 import state_manager
 import telebot
@@ -1312,10 +1310,6 @@ def _universal_router(message):
         return dispatch_command(cmd, message, bot)
     except Exception as e:
         bot.reply_to(message, f"Router error: {e}")
-
-from core.bootstrap_commands import init as init_commands
-
-init_commands(bot)
 
 from init_router import bootstrap
 import admin_utils
