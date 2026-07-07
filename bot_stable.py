@@ -1331,7 +1331,7 @@ init_commands(bot)
 
 from init_router import bootstrap
 import admin_utils
-bootstrap()
+bootstrap(bot)
 
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
 if __name__ == "__main__":
