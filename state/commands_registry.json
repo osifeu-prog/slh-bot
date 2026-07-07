@@ -101,5 +101,7 @@
   "update": "system",
   "user": "core",
   "usereferral": "market",
-  "vote": "core"
+  "vote": "core",
+  "slh": "system",
+  "morning": "system"
 }
