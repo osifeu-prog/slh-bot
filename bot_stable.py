@@ -1327,7 +1327,7 @@ def _universal_router(message):
 
 from core.bootstrap_commands import init as init_commands
 
-init_commands()
+init_commands(bot)
 
 from init_router import bootstrap
 import admin_utils
