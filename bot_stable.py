@@ -183,7 +183,7 @@ broadcast_handler.init(bot)
 welcome_handler.init(bot)
 project_commands.register(bot)
 monitor_handler.init(bot)
-ask_handler.init(bot)
+# ask_handler.init(bot)  # DISABLED 2026-07-07: uses local ollama which doesn't exist on Railway, causes duplicate/broken responses alongside advanced_ask_handler
 report_handler.init(bot)
 roadmap_handler.init(bot)
 brief_handler.init(bot)
