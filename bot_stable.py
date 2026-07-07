@@ -25,10 +25,12 @@ if not os.getenv("RAILWAY_ENVIRONMENT") and not os.getenv("DYNO"):
 from internal_agent import start_agent_thread
 import state_manager
 import telebot
+print("DEBUG: telebot imported")
 from marketplace import load_store, save_store
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
+print("DEBUG: core imported")
 from plugins.task import TaskPlugin
 import course_handlers
 import learn_handlers
@@ -64,7 +66,9 @@ token = load_token()
 if not token:
     print('No valid token found. Exiting.')
     exit(1)
+print("DEBUG: token loaded")
 bot = telebot.TeleBot(token)
+print("DEBUG: bot object created")
 help_handler.register_help(bot)
 agents_dict = state_manager.get_agents()
 econ_handler.register_econ_handlers(bot)
@@ -1057,7 +1061,9 @@ def process_new_token(m):
         bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
         return
     try:
-        test_bot = telebot.TeleBot(token)
+        test_print("DEBUG: token loaded")
+bot = telebot.TeleBot(token)
+print("DEBUG: bot object created")
         me = test_bot.get_me()
         bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
         # עדכון config.json
@@ -1334,6 +1340,7 @@ import admin_utils
 bootstrap(bot)
 
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
+print("DEBUG: reached main block")
 if __name__ == "__main__":
     print("Loading DB and agents...")
     db = state_manager.load_db()
