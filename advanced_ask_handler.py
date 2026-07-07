@@ -137,7 +137,7 @@ def register_ask_handler(bot):
                         continue
                 else:
                     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-                    payload = {"model": model, "messages": [{"role": "user", "content": question}], "max_tokens": 500, "temperature": 0.7}
+                    payload = {"model": model, "messages": [{"role": "user", "content": question}], "max_tokens": 1200, "temperature": 0.7}
                     resp = requests.post(url, json=payload, headers=headers, timeout=15)
                     if resp.status_code == 200:
                         data = resp.json()
