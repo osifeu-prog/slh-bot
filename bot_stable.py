@@ -1,3 +1,6 @@
+print("SLH ENTRYPOINT")
+import os
+print("PYTHON STARTED")
 import os, sys, json, time, subprocess
 import welcome_handler
 
