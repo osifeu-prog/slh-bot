@@ -207,7 +207,7 @@ except Exception as e:
 # ---------------- KERNEL INIT ----------------
 try:
     bus = EventBus(workers=2)
-    kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
+    kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None, 'bot': bot})()
     TaskPlugin().on_start(kernel)
     _KERNEL_READY = True
     print("✅ Kernel modules loaded")
