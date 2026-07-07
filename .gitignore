@@ -1,46 +1,30 @@
-*.pyc
+# Python
 __pycache__/
-.env
+*.pyc
+
+# Logs
 *.log
-runtime/
-backup_v2_1782764885/
-config.json
-db.json
-config.json
-db.json
-config.json
-db.json
-config.json
-*.bak
-backups/junk/
-archive_old_backups/
-*.bak_*
-state/system.json
-archive_old_backups/
-*.bak_*
-state/system.json
-# session cleanup
-*.lock
+*.out
 *.pid
-archive_unused_*/
+*.lock
+
+# Backups
+*.bak
+*.backup
+*.bak_*
+*.before_*
+backup*/
 backups/
-bot.pid
-slh*.sh
-swarm*.sh
-upgrade_kernel*.sh
-install_*.sh
-deploy.sh
-bootstrap.sh
-patch_*.sh
-fix_*.sh
-health_*.sh
-diag_full_reality.py
-manifest.json
-slh*.py
-slh*.txt
-backup_20260701_220739/
-backup_20260701_220828/
-backup_20260701_220739/
-backup_20260701_220828/
-nohup.out
-fix_*.py
+archive*/
+archive_old_backups/
+
+# Environment / secrets
+.env
+state/.env
+
+# Runtime state
+state/audit_logs/
+
+# Temporary
+*.tmp
+*.swp
