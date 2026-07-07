@@ -1,32 +1,28 @@
 from core.command_router import register_command
-import re
 
 
 def extract_commands(bot):
     count = 0
 
-    for handler in getattr(bot, "message_handlers", []):
+    handlers = getattr(bot, "message_handlers", [])
+
+    for handler in handlers:
         try:
-            commands = handler.get("commands")
-        except:
-            commands = None
+            commands = getattr(handler, "commands", None)
 
-        if not commands:
-            continue
+            if not commands:
+                continue
 
-        callback = getattr(handler, "callback", None)
+            callback = getattr(handler, "callback", None)
 
-        if not callback:
-            try:
-                callback = handler["function"]
-            except:
-                pass
+            if not callback:
+                continue
 
-        if not callback:
-            continue
+            for cmd in commands:
+                register_command(cmd, callback)
+                count += 1
 
-        for cmd in commands:
-            register_command(cmd, callback)
-            count += 1
+        except Exception as e:
+            print("bridge error:", e)
 
     return count
