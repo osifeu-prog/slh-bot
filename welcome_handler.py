@@ -17,7 +17,7 @@ def init(bot):
         try:
             with open("logo.txt") as lf:
                 logo = lf.read()
-            bot.send_message(message.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
+            bot.send_message(message.chat.id, f"```\n{logo}\n```", parse_mode="HTML")
         except:
             pass
 
@@ -26,7 +26,7 @@ def init(bot):
         # Welcome message with explanation
         welcome_text = (
             f"{greeting}\n\n"
-            "📚 **מערכת הפעלה חכמה** – קורסים, סוכני AI, השקעות, וכלכלה דיגיטלית.\n"
+            "📚 <b>מערכת הפעלה חכמה</b> – קורסים, סוכני AI, השקעות, וכלכלה דיגיטלית.\n"
             "👇 בחר אפשרות להתחיל:"
         )
         markup = InlineKeyboardMarkup(row_width=2)
@@ -41,7 +41,7 @@ def init(bot):
         if uid in ("8789977826",):  # replace with your ID(s)
             markup.add(InlineKeyboardButton("🔧 אדמין", callback_data="menu_admin"))
 
-        bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="Markdown")
+        bot.send_message(message.chat.id, welcome_text, reply_markup=markup, parse_mode="HTML")
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("menu_"))
     def handle_menu_click(call):
