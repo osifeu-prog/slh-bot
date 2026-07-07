@@ -1255,13 +1255,6 @@ def healthcheck_loop():
                     pass
 threading.Thread(target=healthcheck_loop, daemon=True).start()
 
-if __name__ == "__main__":
-    print("Loading DB and agents...")
-    db = state_manager.load_db()
-    agents_dict.update(db.get("agents", {}))
-    print(f"Agents loaded: {len(agents_dict)}")
-    start_agent_thread()
-    print("Bot polling...")
 
 @bot.message_handler(commands=['balance'])
 def balance(m):
@@ -1342,6 +1335,11 @@ bootstrap()
 
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
 if __name__ == "__main__":
+    print("Loading DB and agents...")
+    db = state_manager.load_db()
+    agents_dict.update(db.get("agents", {}))
+    print(f"Agents loaded: {len(agents_dict)}")
+    start_agent_thread()
     print("🚀 SLH BOT POLLING START")
     while True:
         try:
