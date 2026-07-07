@@ -5,7 +5,7 @@ from core.command_router import register_command
 
 import ask_handler
 import admin_handler
-import task_handler
+from plugins import task as task_handler
 import learn_handlers
 import course_handlers
 import project_commands
