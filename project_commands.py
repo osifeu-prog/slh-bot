@@ -58,13 +58,13 @@ def register(bot):
                 if owner != uid:
                     bot.reply_to(m, "❌ You are not the owner of this project.")
                     return
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             db.setdefault("active_projects", {})[uid] = name
             json.dump(db, open("db.json", "w"), indent=2)
             bot.reply_to(m, f"✅ Active project set to {name}")
 
         elif cmd == 'status':
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             active = db.get("active_projects", {}).get(uid)
             if not active:
                 bot.reply_to(m, "❌ No active project. Use /project open <name>")
@@ -84,7 +84,7 @@ def register(bot):
             if len(args) < 4 or args[2] != 'add':
                 bot.reply_to(m, "Usage: /project task add <description>")
                 return
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             active = db.get("active_projects", {}).get(uid)
             if not active:
                 bot.reply_to(m, "❌ No active project.")
@@ -99,7 +99,7 @@ def register(bot):
             if len(args) < 4 or args[2] != 'add':
                 bot.reply_to(m, "Usage: /project agent add <agent_name>")
                 return
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             active = db.get("active_projects", {}).get(uid)
             if not active:
                 bot.reply_to(m, "❌ No active project.")
@@ -111,7 +111,7 @@ def register(bot):
             bot.reply_to(m, f"✅ Agent {agent_name} linked to {active}")
 
         elif cmd == 'roadmap':
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             active = db.get("active_projects", {}).get(uid)
             if not active:
                 bot.reply_to(m, "❌ No active project.")
@@ -125,7 +125,7 @@ def register(bot):
                 bot.reply_to(m, "📭 Roadmap is empty.")
 
         elif cmd == 'backup':
-            db = json.load(open("db.json"))
+            db = json.load(open("state/db.json"))
             active = db.get("active_projects", {}).get(uid)
             if not active:
                 bot.reply_to(m, "❌ No active project.")

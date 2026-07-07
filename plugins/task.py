@@ -3,6 +3,7 @@ class TaskPlugin:
 
     def on_start(self, k):
         self.k = k
+        self.bot = getattr(k, 'bot', None)
         k.state.setdefault("tasks", [])
         k.bus.register("task_create", self.create)
         k.bus.register("task_list", self.list)
@@ -10,12 +11,16 @@ class TaskPlugin:
     def create(self, p):
         task = p.get("task") or p.get("value") or str(p)
         self.k.state["tasks"].append(task)
-        if hasattr(self.k, 'telegram') and self.k.telegram and p.get("chat"):
-            self.k.telegram.reply(p["chat"], f"✅ {task}")
+        chat = p.get("chat")
+        if chat and self.bot:
+            self.bot.send_message(chat, f"✅ נוצרה משימה: {task}")
 
     def list(self, p):
         chat = p.get("chat")
         tasks = self.k.state.get("tasks", [])
-        msg = "📋 Tasks:\n" + "\n".join(tasks) if tasks else "No tasks"
-        if hasattr(self.k, 'telegram') and self.k.telegram and chat:
-            self.k.telegram.reply(chat, msg)
+        if tasks:
+            msg = "📋 המשימות שלך:\n" + "\n".join(f"• {t}" for t in tasks)
+        else:
+            msg = "📭 אין משימות עדיין. /task create <טקסט>"
+        if chat and self.bot:
+            self.bot.send_message(chat, msg)
