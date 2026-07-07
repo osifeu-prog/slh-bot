@@ -471,9 +471,24 @@ def task(m):
         bot.send_message(m.chat.id, "Usage: /task create <text> | /task list")
         return
     if parts[1] == "create":
-        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+        task_text = parts[2] if len(parts) > 2 else ""
+        if not task_text:
+            bot.send_message(m.chat.id, "❌ /task create <טקסט>")
+            return
+        db = state_manager.load_db()
+        uid = str(m.from_user.id)
+        db.setdefault("user_tasks", {}).setdefault(uid, []).append(task_text)
+        state_manager.save_db(db)
+        bot.send_message(m.chat.id, "✅ נוצרה משימה: " + task_text)
     elif parts[1] == "list":
-        kernel.bus.emit("task_list", {"chat": m.chat.id})
+        db = state_manager.load_db()
+        uid = str(m.from_user.id)
+        tasks = db.get("user_tasks", {}).get(uid, [])
+        if tasks:
+            msg = "📋 המשימות שלך:\n" + "\n".join(f"• {t}" for t in tasks)
+        else:
+            msg = "📭 אין משימות. /task create <טקסט>"
+        bot.send_message(m.chat.id, msg)
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
