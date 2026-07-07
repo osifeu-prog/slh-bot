@@ -1278,7 +1278,6 @@ def _universal_router(message):
 from init_router import bootstrap
 import admin_utils
 
-from handlers.agents_handler import register as register_agents
 
 bootstrap(bot)
 
@@ -1296,6 +1295,16 @@ if __name__ == "__main__":
     db = state_manager.load_db()
     agents_dict.update(db.get("agents", {}))
     print(f"Agents loaded: {len(agents_dict)}")
+
+    from handlers.loader import load_handlers
+
+    load_handlers(bot, {
+        "state_manager": state_manager,
+        "agents_dict": agents_dict,
+        "agent_store": agent_store,
+        "is_admin": is_admin
+    })
+
     start_agent_thread()
     print("🚀 SLH BOT POLLING START")
     while True:
