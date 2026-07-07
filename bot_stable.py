@@ -1334,6 +1334,20 @@ if __name__ == "__main__":
     loaded = extract_commands(bot)
     print(f"🔗 Post-loader bridge loaded: {loaded}")
 
+    # Register modular router commands after loader
+    try:
+        from handlers import system_handler
+        from core.command_router import register_command
+
+        if hasattr(system_handler, "COMMANDS"):
+            for cmd, fn in system_handler.COMMANDS.items():
+                register_command(cmd, fn)
+
+        print("🧠 Control Center router commands registered")
+
+    except Exception as e:
+        print("Control Center router error:", e)
+
     start_agent_thread()
     print("🚀 SLH BOT POLLING START")
     while True:
