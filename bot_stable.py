@@ -1053,17 +1053,9 @@ def process_new_token(m):
     token = m.text.strip()
     # מחיקת הודעת הטוקן מהצ'אט
     try:
-        bot.delete_message(m.chat.id, m.message_id)
-    except:
-        pass
-    # בדיקת תקינות
-    if ":" not in token or len(token) < 20:
-        bot.send_message(m.chat.id, "❌ פורמט לא תקין. נסה שוב /refreshtoken")
-        return
-    try:
-        test_print("DEBUG: token loaded")
-bot = telebot.TeleBot(token)
-print("DEBUG: bot object created")
+        print("DEBUG: token loaded")
+        test_bot = telebot.TeleBot(token)
+        print("DEBUG: bot object created")
         me = test_bot.get_me()
         bot.send_message(m.chat.id, f"✅ הטוקן תקין! (בוט: @{me.username})\nמעדכן קבצים ומפעיל מחדש...")
         # עדכון config.json
