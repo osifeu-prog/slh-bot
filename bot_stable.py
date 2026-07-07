@@ -1315,6 +1315,11 @@ from init_router import bootstrap
 import admin_utils
 bootstrap(bot)
 
+from core.telegram_router_bridge import extract_commands
+
+loaded = extract_commands(bot)
+print(f"🔗 Telegram bridge loaded: {loaded}")
+
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
 if __name__ == "__main__":
     print("Loading DB and agents...")
