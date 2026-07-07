@@ -1292,13 +1292,15 @@ threading.Thread(target=tutor_loop, daemon=True).start()
 
 from core.command_router import dispatch_command
 
-@bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
-def _universal_router(message):
-    try:
-        cmd = message.text.split()[0].replace("/", "").strip()
-        return dispatch_command(cmd, message, bot)
-    except Exception as e:
-        bot.reply_to(message, f"Router error: {e}")
+def install_universal_router():
+
+    @bot.message_handler(func=lambda m: m.text and m.text.startswith("/"))
+    def _universal_router(message):
+        try:
+            cmd = message.text.split()[0].replace("/", "").strip()
+            return dispatch_command(cmd, message, bot)
+        except Exception as e:
+            bot.reply_to(message, f"Router error: {e}")
 
 from init_router import bootstrap
 import admin_utils
@@ -1329,6 +1331,8 @@ if __name__ == "__main__":
         "agentstate": agentstate,
         "is_admin": is_admin
     })
+
+    install_universal_router()
 
     # Re-bridge handlers loaded after initial startup scan
     loaded = extract_commands(bot)
