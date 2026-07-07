@@ -3,6 +3,9 @@ import welcome_handler
 
 # --- Local process lock: run only if /app/state exists (Railway Volume) ---
 import os, sys
+print("BOOT CHECK /app/state:", os.path.isdir("/app/state"))
+print("BOOT CHECK files:", os.listdir("/app")[:20])
+
 if not os.path.isdir("/app/state"):
     print("❌ This bot runs only on Railway. Exiting.")
     sys.exit(0)
