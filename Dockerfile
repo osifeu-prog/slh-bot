@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY . /app/
 
-RUN echo "IMAGE BUILD OK"
+RUN pip install --no-cache-dir pyTelegramBotAPI psutil requests aiohttp
 
-CMD ["sh", "-c", "echo CONTAINER SHELL START OK && python3 --version && env | grep RAILWAY && sleep 300"]
+RUN mkdir -p /app/state
+
+CMD ["python3", "-u", "-B", "bot_stable.py"]
