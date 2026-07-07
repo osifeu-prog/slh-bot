@@ -6,21 +6,24 @@ def extract_commands(bot):
 
     handlers = getattr(bot, "message_handlers", [])
 
+    print("🔎 Telegram handlers found:", len(handlers))
+
     for handler in handlers:
         try:
-            commands = getattr(handler, "commands", None)
-
-            if not commands:
+            if not isinstance(handler, dict):
                 continue
 
-            callback = getattr(handler, "callback", None)
+            commands = handler.get("filters", {}).get("commands")
 
-            if not callback:
+            callback = handler.get("function")
+
+            if not commands or not callback:
                 continue
 
             for cmd in commands:
                 register_command(cmd, callback)
                 count += 1
+                print(f"🔗 bridged /{cmd}")
 
         except Exception as e:
             print("bridge error:", e)
