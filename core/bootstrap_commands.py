@@ -1,17 +1,6 @@
 from core.command_router import register_command, HANDLERS
-
 import importlib
-
-
-def _register_module_commands(module):
-    """
-    Supports modules that expose:
-    register_commands(register_command)
-    """
-
-    if hasattr(module, "register_commands"):
-        module.register_commands(register_command)
-
+import telebot
 
 def init(bot):
 
@@ -26,26 +15,28 @@ def init(bot):
         "help_handler",
     ]
 
-    loaded = []
+    loaded = 0
 
     for name in modules:
         try:
             m = importlib.import_module(name)
 
-            # Existing Telegram registration
+            # רגיל - Telegram decorators
             if hasattr(m, "register"):
                 try:
                     m.register(bot)
                 except Exception as e:
-                    print(f"⚠️ {name} register(bot) failed: {e}")
+                    print(f"⚠️ {name} telegram register: {e}")
 
-            # New router registration
-            _register_module_commands(m)
+            # חדש - Router
+            if hasattr(m, "COMMANDS"):
+                for cmd, fn in m.COMMANDS.items():
+                    register_command(cmd, fn)
 
-            loaded.append(name)
+            loaded += 1
 
         except Exception as e:
-            print(f"❌ Command module failed {name}: {e}")
+            print(f"❌ {name}: {e}")
 
-    print(f"📦 Command modules loaded: {len(loaded)}")
+    print(f"📦 Command modules loaded: {loaded}")
     print(f"🧭 Router commands: {len(HANDLERS)}")
