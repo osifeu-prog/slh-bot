@@ -1320,6 +1320,9 @@ from core.telegram_router_bridge import extract_commands
 loaded = extract_commands(bot)
 print(f"🔗 Telegram bridge loaded: {loaded}")
 
+from core.command_router import HANDLERS
+print(f"🧭 Router runtime handlers: {len(HANDLERS)}")
+
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
 if __name__ == "__main__":
     print("Loading DB and agents...")
