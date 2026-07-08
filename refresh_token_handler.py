@@ -38,12 +38,14 @@ def _validate_token(token):
         return False, str(e)
 
 
-def init(bot):
-    from bot_stable import is_admin
+def init(bot, is_admin_func=None):
+    if is_admin_func is None:
+        def is_admin_func(message):
+            return False
 
     @bot.message_handler(commands=["refreshtoken"])
     def refresh_token_start(message):
-        if not is_admin(message):
+        if not is_admin_func(message):
             bot.reply_to(message, "⛔ פקודה זו לאדמין בלבד")
             return
         _pending[message.from_user.id] = "awaiting_confirm"

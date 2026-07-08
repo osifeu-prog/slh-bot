@@ -50,6 +50,20 @@ import smart_leaderboard
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
+    # Load local state/.env if BOT_TOKEN is missing
+    if not os.getenv("BOT_TOKEN"):
+        env_file = "state/.env"
+        try:
+            with open(env_file) as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("export BOT_TOKEN="):
+                        value = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        os.environ["BOT_TOKEN"] = value
+                        break
+        except Exception:
+            pass
+
     env_token = os.getenv("BOT_TOKEN")
     if env_token and ":" in env_token:
         return env_token
@@ -207,7 +221,7 @@ report_handler.init(bot)
 roadmap_handler.init(bot)
 brief_handler.init(bot)
 junk_handler.init(bot)
-refresh_token_handler.init(bot)
+refresh_token_handler.init(bot, is_admin)
 import demo_handlers; demo_handlers.register(bot, agents_dict)
 smart_leaderboard.register(bot)
 # agents_dict loaded in main block
@@ -1302,11 +1316,7 @@ def install_universal_router():
         except Exception as e:
             bot.reply_to(message, f"Router error: {e}")
 
-from init_router import bootstrap
 import admin_utils
-
-
-bootstrap(bot)
 
 from core.telegram_router_bridge import extract_commands
 
@@ -1318,6 +1328,10 @@ print(f"🧭 Router runtime handlers: {len(HANDLERS)}")
 
 # ===== SINGLE BOT POLLING ENTRYPOINT =====
 if __name__ == "__main__":
+    from slh_lock import slh_lock
+
+    slh_lock.acquire_lock()
+
     print("Loading DB and agents...")
     db = state_manager.load_db()
     agents_dict.update(db.get("agents", {}))
@@ -1331,6 +1345,11 @@ if __name__ == "__main__":
         "agentstate": agentstate,
         "is_admin": is_admin
     })
+
+
+    # Router bootstrap moved after handlers are loaded
+    from init_router import bootstrap
+    bootstrap(bot)
 
     install_universal_router()
 
