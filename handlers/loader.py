@@ -48,6 +48,14 @@ def load_handlers(bot, context):
             if hasattr(module, "register"):
                 module.register(bot)
 
+            # welcome uses init(bot)
+            elif module_name == "welcome_handler" and hasattr(module, "init"):
+                module.init(bot)
+
+            # help uses register_help(bot)
+            elif module_name == "help_handler" and hasattr(module, "register_help"):
+                module.register_help(bot)
+
             # course/economy style handlers
             elif module_name == "course_handlers" and hasattr(module, "register_course_handlers"):
                 module.register_course_handlers(bot)
