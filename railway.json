@@ -1,8 +1,5 @@
 {
   "build": {
     "builder": "DOCKERFILE"
-  },
-  "deploy": {
-    "startCommand": "python3 -u -B /app/bot_stable.py"
   }
 }
