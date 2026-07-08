@@ -9,7 +9,9 @@ def load_journal():
     return []
 
 def save_journal(entries):
-    os.makedirs(os.path.dirname(JOURNAL_FILE), exist_ok=True)
+    folder = os.path.dirname(JOURNAL_FILE)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
     with open(JOURNAL_FILE, "w") as f:
         json.dump(entries, f, indent=2)
 
