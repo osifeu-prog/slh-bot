@@ -5,6 +5,7 @@ from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
+from help_handler import register_help
 
 # ---------------- LOAD TOKEN ----------------
 def load_token():
@@ -818,6 +819,7 @@ def diagnose_cmd(m):
 try:
     import welcome_handler
     welcome_handler.init(bot)
+    register_help(bot)
     print("✅ Legacy UX handlers loaded")
 except Exception as e:
     print("❌ Legacy UX loader error:", e)
