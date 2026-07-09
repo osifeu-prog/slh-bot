@@ -90,15 +90,7 @@ def ensure_user(db, uid):
 
 # ---------------- COMMANDS ----------------
 
-@bot.message_handler(commands=['start'])
-def start(m):
-    try:
-        db = ensure_user(load_db(), m.from_user.id)
-        save_db(db)
-        audit('start', m.from_user.id)
-        bot.reply_to(m, "🚀 SLH SYSTEM ONLINE\n/admin for control")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
+# /start handler removed - now owned exclusively by welcome_handler.py
 
 @bot.message_handler(commands=['admin'])
 def admin(m):
@@ -821,6 +813,14 @@ def diagnose_cmd(m):
     
     bot.reply_to(m, "\n".join(issues))
 
+
+# ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
+try:
+    import welcome_handler
+    welcome_handler.init(bot)
+    print("✅ Legacy UX handlers loaded")
+except Exception as e:
+    print("❌ Legacy UX loader error:", e)
 
 while True:
     try:
