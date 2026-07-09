@@ -5,6 +5,10 @@ from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
+register_payment_handlers(bot)
+from payment_handler import register_payment_handlers
+register_econ_handlers(bot)
+from econ_handler import register_econ_handlers
 from help_handler import register_help
 
 # ---------------- LOAD TOKEN ----------------
@@ -102,7 +106,7 @@ def admin(m):
 /health — Health check
 🤖 AGENTS:
 /agents — List all agents
-/agent_create [name] — Create new agent\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox
+/agent_create [name] — Create new agent\n/agentstate &lt;prefix&gt; &lt;state&gt; — Change agent state\n/sendagent &lt;prefix&gt; &lt;msg&gt; — Send message to agent\n/inbox &lt;prefix&gt; — Check agent inbox\n/agentstate &lt;prefix&gt; &lt;state&gt; — Change agent state\n/sendagent &lt;prefix&gt; &lt;msg&gt; — Send message to agent\n/inbox &lt;prefix&gt; — Check agent inbox
 🗳️ VOTING:
 /vote — Create vote
 /results — See results
@@ -111,7 +115,7 @@ def admin(m):
 🔄 SYSTEM:
 /backup — Git backup now
 /restart — Restart bot
-/logs <n> — Last N log lines
+/logs &lt;n&gt; — Last N log lines
 /clean — Clean temp files
 📈 ANALYTICS:
 /audit — Audit log
@@ -122,7 +126,7 @@ def admin(m):
 /errors — Show recent errors
 /plugin list — List plugins
 /goal add/list — Manage goals
-/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
+/exec &lt;cmd&gt; — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
 /disk — Disk usage
 /sysinfo — System resources""")
 
@@ -350,7 +354,7 @@ def rollback(m):
 def agentstate(m):
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
-        bot.reply_to(m, "Usage: /agentstate <id_prefix> <state>")
+        bot.reply_to(m, "Usage: /agentstate <id_prefix> &lt;state&gt;")
         return
     prefix, new_state = parts[1], parts[2]
     found = None
@@ -459,7 +463,7 @@ def user(m):
 /agents — List agents
 /agent_create [name] — Create new agent
 /task create/list — Manage tasks
-/logs <n> — Last N log lines
+/logs &lt;n&gt; — Last N log lines
 /audit — Audit log
 /sysinfo — System resources
 /debug — Container debug info
@@ -595,7 +599,7 @@ def market_rate(m):
     store = load_store()
     parts = m.text.split(" ", 2)
     if len(parts) < 3:
-        bot.reply_to(m, "Usage: /market_rate <plugin_id> <rating 1-5>")
+        bot.reply_to(m, "Usage: /market_rate <plugin_id> &lt;rating 1-5&gt;")
         return
     plugin_id = parts[1]
     try:
@@ -620,7 +624,7 @@ def market_upload(m):
     store = load_store()
     parts = m.text.split("\n", 1)
     if len(parts) < 2:
-        bot.reply_to(m, "Usage: /market_upload <id>\n<name>\n<description>\n<price>")
+        bot.reply_to(m, "Usage: /market_upload &lt;id&gt;\n&lt;name&gt;\n<description>\n<price>")
         return
     header = parts[0].replace("/market_upload", "").strip()
     body = parts[1].strip().split("\n")
