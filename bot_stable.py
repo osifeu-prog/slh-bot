@@ -107,7 +107,7 @@ def admin(m):
 /health — Health check
 🤖 AGENTS:
 /agents — List all agents
-/agent_create [name] — Create new agent\n/agentstate &lt;prefix&gt; &lt;state&gt; — Change agent state\n/sendagent &lt;prefix&gt; &lt;msg&gt; — Send message to agent\n/inbox &lt;prefix&gt; — Check agent inbox\n/agentstate &lt;prefix&gt; &lt;state&gt; — Change agent state\n/sendagent &lt;prefix&gt; &lt;msg&gt; — Send message to agent\n/inbox &lt;prefix&gt; — Check agent inbox
+/agent_create [name] — Create new agent\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox
 🗳️ VOTING:
 /vote — Create vote
 /results — See results
