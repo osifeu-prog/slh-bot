@@ -116,7 +116,7 @@ def admin(m):
 🔄 SYSTEM:
 /backup — Git backup now
 /restart — Restart bot
-/logs &lt;n&gt; — Last N log lines
+/logs <n> — Last N log lines
 /clean — Clean temp files
 📈 ANALYTICS:
 /audit — Audit log
@@ -127,7 +127,7 @@ def admin(m):
 /errors — Show recent errors
 /plugin list — List plugins
 /goal add/list — Manage goals
-/exec &lt;cmd&gt; — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
+/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
 /disk — Disk usage
 /sysinfo — System resources""")
 
@@ -464,7 +464,7 @@ def user(m):
 /agents — List agents
 /agent_create [name] — Create new agent
 /task create/list — Manage tasks
-/logs &lt;n&gt; — Last N log lines
+/logs <n> — Last N log lines
 /audit — Audit log
 /sysinfo — System resources
 /debug — Container debug info
