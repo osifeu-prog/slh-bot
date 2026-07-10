@@ -821,7 +821,15 @@ try:
     import welcome_handler
     welcome_handler.init(bot)
     register_help(bot)
+
+    import report_handler
+    report_handler.init(bot)
+
+    import roadmap_handler
+    roadmap_handler.init(bot)
+
     print("✅ Legacy UX handlers loaded")
+    print("✅ Journal + Roadmap handlers loaded")
 except Exception as e:
     print("❌ Legacy UX loader error:", e)
 
