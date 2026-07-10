@@ -58,7 +58,7 @@ def register_econ_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("buy_"))
     def buy_callback(call):
-        item = call.data.split("_")[1]
+        item = call.data.split("_", 1)[1]
         uid = str(call.from_user.id)
         db = state_manager.load_db()
         user = db.get("users", {}).get(uid)
