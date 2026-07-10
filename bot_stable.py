@@ -5,9 +5,7 @@ from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
 from plugins.task import TaskPlugin
-register_payment_handlers(bot)
 from payment_handler import register_payment_handlers
-register_econ_handlers(bot)
 from econ_handler import register_econ_handlers
 from help_handler import register_help
 
@@ -41,6 +39,9 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "db.json")
 
 bot = telebot.TeleBot(TOKEN)
+
+register_payment_handlers(bot)
+register_econ_handlers(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
