@@ -214,10 +214,6 @@ def results(m):
     db = load_db()
     bot.reply_to(m, json.dumps(db["votes"], indent=2))
 
-@bot.message_handler(commands=['revenue'])
-def revenue(m):
-    bot.reply_to(m, "Revenue: ₪0")
-
 @bot.message_handler(commands=['master'])
 def master(m):
     bot.reply_to(m, "MASTER.json: locked")
