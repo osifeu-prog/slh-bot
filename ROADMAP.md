@@ -109,3 +109,29 @@
    agents/voting/revenue) and /help (learning/courses/referral/demo).
    Full command list already gathered - see "Immediate Next" section above.
 2. Then continue down the priority list below.
+
+## 📅 Session Update — 10 July 2026 (Cleanup Session)
+
+### ✅ Completed Today
+- [x] Fixed critical NameError crash — payment_handler/econ_handler called before import and before bot creation (bot was Crashed, restored to Online)
+- [x] Verified full economy flow live: /fakepay, /balance, /pay, /revenue
+- [x] Fixed /revenue — was a hardcoded stub ("Revenue: ₪0"), now uses real payment_handler.py implementation
+- [x] Fixed /admin menu — removed duplicate agentstate/sendagent/inbox lines, corrected double-HTML-escaped &lt; &gt; entities (agent commands, /logs, /exec)
+- [x] Caught and reverted a near-regression in admin_handler.py, handlers/agents_handler.py, help_handler.py (uncommitted changes were re-escaping < > the wrong way — discarded before they broke /help)
+- [x] Confirmed admin_handler.py, course_handlers.py, join_fix.py, bot_patch*.py, ask_handler.py, advanced_ask_handler.py are dead code — not imported anywhere in live path; apparent duplicate handlers for admin/join/pay/agents were NOT live conflicts
+- [x] Confirmed users/students schema question from 4-Jul is moot — live db.json only has 'users' key, no merge needed
+- [x] Major cleanup: removed 56 tracked files (~9,972 lines) of obsolete archive/backup dirs + stray .bak/.before_*files
+- [x] Removed 10 dead one-off fix scripts
+- [x] Added docs/ (Railway inventory/ownership maps), manifest.json, daily tooling scripts to git tracking
+- [x] Tagged gold-v1.0 (post economy-fix) and gold-v2.0-clean (post full cleanup) as rollback points
+
+### 🟢 System State End of Day
+- Railway: Online, zero errors across all deploys
+- Working tree: fully clean
+- Economy: verified working end-to-end with real DB-backed data
+
+## 🎯 NEXT SESSION — START HERE (updated 10-Jul)
+1. **Rebuild /admin menu from real 81-command list** — still the original deeper goal (today only fixed duplicates/escaping, not a full rebuild). Split into /admin (system/agents/voting/revenue) and /help (learning/courses/referral/demo).
+2. Connect credits to real payment (Telegram Stars or TON) — currently only /giveme (admin) or /fakepay (test) add credits
+3. End-to-end test of referral commission path with a second live Telegram account
+4. Review remaining open tasks in Railway live DB (user_tasks key) — several pre-existing items still open (EventBus check, /project status fix, welcome_handler sub-menus)
