@@ -58,7 +58,7 @@ def generate_health_report(bot: TeleBot) -> str:
         import socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        result = s.connect_ex(('localhost', 8080))
+        result = s.connect_ex(('localhost', 5000))
         s.close()
         checks['Dashboard'] = "🟢 רץ" if result == 0 else "🔴 לא מאזין"
     except:
