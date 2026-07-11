@@ -850,6 +850,14 @@ def report(m):
     except Exception as e:
         bot.reply_to(m, f"report error: {e}")
 
+
+    import viewfile_handler
+    viewfile_handler.register(bot)
+    print("✅ viewfile_handler loaded")
+
+    import handlers.termux_handler
+    handlers.termux_handler.register(bot)
+    print("✅ termux_handler loaded")
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
     import welcome_handler
