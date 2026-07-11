@@ -37,3 +37,15 @@ state/snapshots/
 __pycache__/
 *.pyc
 
+
+# local maintenance scripts
+bootstrap.sh
+check_state.sh
+deploy.sh
+fix_all_handlers.py
+health_v5.sh
+heb_convert.py
+list_live_commands.sh
+patch_live_input.sh
+router_status.sh
+
