@@ -127,6 +127,14 @@ def api_set_plan():
 
 
 
+
+
+@app.route("/dashboard")
+def dashboard():
+    from flask import send_file
+    return send_file("/app/web/dashboard/index.html")
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
 
