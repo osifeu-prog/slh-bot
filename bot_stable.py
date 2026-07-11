@@ -9,6 +9,13 @@ from payment_handler import register_payment_handlers
 from econ_handler import register_econ_handlers
 from help_handler import register_help
 
+try:
+    from handlers.llm_handler import register as register_llm
+    LLM_AVAILABLE = True
+except Exception as e:
+    print("⚠️ LLM handler not available:", e)
+    LLM_AVAILABLE = False
+
 # ---------------- LOAD TOKEN ----------------
 def load_token():
     env_token = os.getenv("BOT_TOKEN")
@@ -821,6 +828,10 @@ try:
     import welcome_handler
     welcome_handler.init(bot)
     register_help(bot)
+
+    if LLM_AVAILABLE:
+        register_llm(bot)
+        print("✅ LLM handler (Groq) loaded")
 
     import report_handler
     report_handler.init(bot)
