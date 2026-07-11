@@ -122,7 +122,7 @@ def api_set_plan():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
 
 # --- Auth ---
 API_KEY = os.getenv("SLH_API_KEY", "slh-secret-key")
