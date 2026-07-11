@@ -7,7 +7,7 @@ def register_doctor_handlers(bot: TeleBot):
     def doctor(m):
         msg = bot.reply_to(m, "🩺 מריץ אבחון מערכת מקיף...")
         report = generate_health_report(bot)
-        bot.edit_message_text(report, m.chat.id, msg.message_id, parse_mode="Markdown")
+        bot.edit_message_text(report, m.chat.id, msg.message_id)
 
 
 def generate_health_report(bot: TeleBot) -> str:
@@ -68,11 +68,11 @@ def generate_health_report(bot: TeleBot) -> str:
     checks['Agents'] = "⚪️ לא נבדק"
     checks['Lock'] = "⚪️ לא נבדק"
     checks['Health'] = "⚪️ לא נבדק"
-    lines = ["*🩺 SLH HEALTH REPORT*", ""]
+    lines = ["🩺 SLH HEALTH REPORT", ""]
     for key, val in checks.items():
         lines.append(f"{key}: {val}")
     lines.append("")
-    lines.append("*המלצה:*")
+    lines.append("המלצה:")
     if "🔴" in str(checks.values()):
         lines.append("❌ יש בעיות – בדוק את הרכיבים באדום")
     else:
