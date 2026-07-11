@@ -827,7 +827,6 @@ def generate_report():
     json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
     return report
 
-
 @bot.message_handler(commands=['report'])
 def report(m):
     import os, json
