@@ -1,9 +1,11 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY . /app/
 
-RUN pip install --no-cache-dir pyTelegramBotAPI psutil requests aiohttp
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app/
 
 RUN mkdir -p /app/state
 
