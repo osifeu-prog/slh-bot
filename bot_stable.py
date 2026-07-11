@@ -746,6 +746,10 @@ try:
 except Exception as e:
     print("❌ viewfile_handler load error:", e)
 
+
+    import tutorial_handler
+    tutorial_handler.register(bot)
+    print("✅ tutorial_handler loaded")
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
     import welcome_handler
