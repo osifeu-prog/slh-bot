@@ -132,7 +132,7 @@ def api_set_plan():
 @app.route("/dashboard")
 def dashboard():
     from flask import send_file
-    return send_file("/app/web/dashboard/index.html")
+    return send_file("/app/web/dashboard_v2/index.html")
 
 
 
