@@ -9,6 +9,7 @@ def register_doctor_handlers(bot: TeleBot):
         report = generate_health_report(bot)
         bot.edit_message_text(report, m.chat.id, msg.message_id, parse_mode="Markdown")
 
+
 def generate_health_report(bot: TeleBot) -> str:
     checks = {}
     try:
