@@ -140,7 +140,7 @@ def dashboard():
 @app.route("/dashboard-v2")
 def dashboard_v2():
     from flask import send_file
-    return send_file("/app/web/dashboard_v2/index.html")
+    return send_file("/app/web/dashboard/index.html")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
