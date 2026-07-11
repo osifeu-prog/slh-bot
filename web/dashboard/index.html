@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        const API = 'http://localhost:5000/api';
+        const API = '/api';
 
         async function loadStats() { const r = await fetch(API+'/stats'); const d = await r.json(); document.getElementById('agent-count').textContent = d.agents||0; document.getElementById('task-count').textContent = d.tasks||0; }
         async function loadAgents() { const r = await fetch(API+'/agents'); const d = await r.json(); const div = document.getElementById('agents-list'); const ids = Object.keys(d); div.innerHTML = ids.length ? ids.map(id => `<div>${d[id].name} [${d[id].state||'idle'}] – ${d[id].role||'agent'}</div>`).join('') : 'No agents yet.'; }
