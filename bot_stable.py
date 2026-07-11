@@ -766,24 +766,6 @@ try:
     print("✅ Journal + Roadmap handlers loaded")
 except Exception as e:
     print("❌ Legacy UX loader error:", e)
-
-while True:
-    try:
-        print("🟢 POLLING START")
-        bot.infinity_polling(
-            timeout=20,
-            long_polling_timeout=20,
-            logger_level=10
-        )
-        print("🔴 POLLING ENDED CLEAN")
-
-    except Exception as e:
-        import traceback
-        print("🔥 POLLING EXCEPTION:", repr(e))
-        traceback.print_exc()
-        time.sleep(5)
-
-
 # ===== SLH EVENT LOGGER =====
 def log_event(event_type, user_id=None, data=None):
     import json, os
@@ -929,3 +911,21 @@ def report(m):
 
     except Exception as e:
         bot.reply_to(m, f"report error: {e}")
+
+while True:
+    try:
+        print("🟢 POLLING START")
+        bot.infinity_polling(
+            timeout=20,
+            long_polling_timeout=20,
+            logger_level=10
+        )
+        print("🔴 POLLING ENDED CLEAN")
+
+    except Exception as e:
+        import traceback
+        print("🔥 POLLING EXCEPTION:", repr(e))
+        traceback.print_exc()
+        time.sleep(5)
+
+
