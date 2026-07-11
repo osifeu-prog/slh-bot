@@ -9,7 +9,6 @@ state/snapshots/*.tar.gz
 # SLH runtime
 .env
 *.log
-*.txt
 nohup.out
 
 # configs / secrets
