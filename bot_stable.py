@@ -707,7 +707,37 @@ def diagnose_cmd(m):
     # Check for handler placement
     with open(bot_path) as f:
         code = f.read()
-    loop_pos = code.find("while True:")
+    loop_pos = code.find("
+@bot.message_handler(commands=['viewfile'])
+def viewfile_cmd(m):
+    if str(m.from_user.id) not in [str(SUPER_ADMIN), "224223270"]:
+        bot.reply_to(m, "❌ Admin only")
+        return
+    parts = m.text.split(maxsplit=1)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /viewfile <path>")
+        return
+    path = parts[1].strip()
+    try:
+        import viewfile_handler
+        # viewfile_handler.read_file(path) is not defined; we'll implement inline
+        full_path = os.path.join(os.getcwd(), path)
+        if not os.path.exists(full_path):
+            bot.reply_to(m, f"❌ File not found: {path}")
+            return
+        with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+            content = f.read()
+        if len(content) > 3800:
+            chunks = [content[i:i+3800] for i in range(0, len(content), 3800)]
+            for idx, chunk in enumerate(chunks, 1):
+                bot.send_message(m.chat.id, f"[{idx}/{len(chunks)}]\n```\n{chunk}\n```", parse_mode="Markdown")
+        else:
+            bot.reply_to(m, f"📄 {path}\n```\n{content}\n```", parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(m, f"❌ Error: {e}")
+
+
+while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
         if "@bot.message_handler" in after_loop:
