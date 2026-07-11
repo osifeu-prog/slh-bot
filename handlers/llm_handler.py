@@ -68,3 +68,12 @@ def register(bot):
         except Exception as e:
             answer = f"⚠️ LLM error: {e}"
         bot.reply_to(m, answer)
+
+
+def is_llm_available():
+    """
+    Health check for SLH doctor.
+    Does not call the API.
+    """
+    import os
+    return bool(os.getenv("GROQ_API_KEY"))
