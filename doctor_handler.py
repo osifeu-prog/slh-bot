@@ -26,14 +26,8 @@ def generate_health_report(bot: TeleBot) -> str:
     except:
         railway_status = "🔴 שגיאה"
     checks['Railway'] = railway_status
-    try:
-        result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, cwd="/app")
-        if result.returncode == 0:
-            checks['Git'] = "🟢 נקי" if not result.stdout.strip() else "🟡 שינויים"
-        else:
-            checks['Git'] = "🔴 פקודה נכשלה"
-    except:
-        checks['Git'] = "🔴 git לא זמין"
+    checks['Git'] = "⚪️ לא נבדק (Railway container)"
+
     db_path = "slh_state.db"
     if os.path.exists(db_path):
         try:
@@ -45,24 +39,14 @@ def generate_health_report(bot: TeleBot) -> str:
             checks['DB'] = "🔴 גישה נכשלה"
     else:
         checks['DB'] = "🟡 קובץ לא נמצא"
-    if os.path.exists("/app/state"):
-        checks['Volume'] = "🟢 מחובר"
-    else:
-        checks['Volume'] = "🔴 לא מחובר"
+    checks['Volume'] = "⚪ לא נבדק (Railway runtime)"
     try:
         from handlers.llm_handler import is_llm_available
         checks['LLM API'] = "🟢 זמין" if is_llm_available() else "🟡 לא זמין"
     except:
         checks['LLM API'] = "⚪️ לא נבדק"
-    try:
-        import socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(1)
-        result = s.connect_ex(('localhost', 5000))
-        s.close()
-        checks['Dashboard'] = "🟢 רץ" if result == 0 else "🔴 לא מאזין"
-    except:
-        checks['Dashboard'] = "⚪️ לא נבדק"
+    checks['Dashboard'] = "⚪️ לא נבדק (שירות נפרד)"
+
     handlers_count = len(bot.message_handlers) if hasattr(bot, 'message_handlers') else 0
     checks['Handlers'] = f"{handlers_count} רשומים"
     checks['Agents'] = "⚪️ לא נבדק"
@@ -73,8 +57,15 @@ def generate_health_report(bot: TeleBot) -> str:
         lines.append(f"{key}: {val}")
     lines.append("")
     lines.append("המלצה:")
-    if "🔴" in str(checks.values()):
-        lines.append("❌ יש בעיות – בדוק את הרכיבים באדום")
+    critical = [
+        checks.get("Bot"),
+        checks.get("DB"),
+        
+        checks.get("LLM API")
+    ]
+
+    if any("🔴" in str(x) for x in critical):
+        lines.append("❌ יש בעיות ברכיב קריטי")
     else:
         lines.append("✅ Safe to deploy / operate")
     return "\n".join(lines)
