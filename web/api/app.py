@@ -93,6 +93,12 @@ def health():
 
 # ── Subscription endpoints ──────────────────────────
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 sys.path.insert(0, '/data/data/com.termux/files/home/slh_clean')
 from subscriptions import load_subscriptions, get_user_plan, PLANS
 import time as _time
