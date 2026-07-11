@@ -50,7 +50,7 @@ def generate_health_report(bot: TeleBot) -> str:
     else:
         checks['Volume'] = "🔴 לא מחובר"
     try:
-        from llm_handler import is_llm_available
+        from handlers.llm_handler import is_llm_available
         checks['LLM API'] = "🟢 זמין" if is_llm_available() else "🟡 לא זמין"
     except:
         checks['LLM API'] = "⚪️ לא נבדק"
