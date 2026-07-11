@@ -1,0 +1,10 @@
+{
+  "roles": {
+    "owner": [],
+    "admin": [],
+    "teacher": [],
+    "student": [],
+    "agent": [],
+    "system": []
+  }
+}
