@@ -707,37 +707,7 @@ def diagnose_cmd(m):
     # Check for handler placement
     with open(bot_path) as f:
         code = f.read()
-    loop_pos = code.find("
-@bot.message_handler(commands=['viewfile'])
-def viewfile_cmd(m):
-    if str(m.from_user.id) not in [str(SUPER_ADMIN), "224223270"]:
-        bot.reply_to(m, "❌ Admin only")
-        return
-    parts = m.text.split(maxsplit=1)
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /viewfile <path>")
-        return
-    path = parts[1].strip()
-    try:
-        import viewfile_handler
-        # viewfile_handler.read_file(path) is not defined; we'll implement inline
-        full_path = os.path.join(os.getcwd(), path)
-        if not os.path.exists(full_path):
-            bot.reply_to(m, f"❌ File not found: {path}")
-            return
-        with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
-            content = f.read()
-        if len(content) > 3800:
-            chunks = [content[i:i+3800] for i in range(0, len(content), 3800)]
-            for idx, chunk in enumerate(chunks, 1):
-                bot.send_message(m.chat.id, f"[{idx}/{len(chunks)}]\n```\n{chunk}\n```", parse_mode="Markdown")
-        else:
-            bot.reply_to(m, f"📄 {path}\n```\n{content}\n```", parse_mode="Markdown")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
-
-
-while True:")
+    loop_pos = code.find("while True:")
     if loop_pos != -1:
         after_loop = code[loop_pos:]
         if "@bot.message_handler" in after_loop:
@@ -768,125 +738,14 @@ while True:")
 
 
 
-# ===== SLH EVENT LOGGER =====
-def log_event(event_type, user_id=None, data=None):
-    import json, os
-    from datetime import datetime
-    path = "state/event_log.json"
-    try:
-        if os.path.exists(path):
-            logs = json.load(open(path))
-        else:
-            logs = []
-        logs.append({
-            "time": datetime.now().isoformat(),
-            "type": event_type,
-            "user": str(user_id),
-            "data": str(data)
-        })
-        json.dump(logs[-500:], open(path, "w"), indent=2)
-    except:
-        pass
-
-# ===== SLH SNAPSHOT SYSTEM =====
-@bot.message_handler(commands=['snapshot'])
-def snapshot(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
-        total = len(logs)
-        last = logs[-10:] if total > 10 else logs
-        msg = f"""📊 SNAPSHOT REPORT
-
-Total events: {total}
-
-Last 10 events:
-{last}
-"""
-        bot.reply_to(m, msg)
-    except Exception as e:
-        bot.reply_to(m, f"snapshot error: {e}")
-
-@bot.message_handler(commands=['endday'])
-def endday(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
-        summary = {
-            "total_events": len(logs),
-            "users": len(set([x.get("user") for x in logs])),
-            "types": list(set([x.get("type") for x in logs]))
-        }
-        json.dump(summary, open("state/daily_summary.json","w"), indent=2)
-        bot.reply_to(m, f"""🌙 END DAY COMPLETE
-
-Events: {summary['total_events']}
-Users: {summary['users']}
-Types: {summary['types']}
-
-Saved to daily_summary.json
-""")
-    except Exception as e:
-        bot.reply_to(m, f"endday error: {e}")
-
-# ===== SLH REPORT ENGINE =====
-def generate_report():
-    import json, os
-    from datetime import datetime
-    date = datetime.now().strftime("%Y-%m-%d")
-    report = {
-        "date": date,
-        "bot_running": True,
-        "users": 0,
-        "events": 0,
-        "errors_last_20": [],
-    }
-    try:
-        if os.path.exists("state/event_log.json"):
-            events = json.load(open("state/event_log.json"))
-            report["events"] = len(events)
-        if os.path.exists("db.json"):
-            db = json.load(open("db.json"))
-            report["users"] = len(db.get("users", {}))
-        if os.path.exists("logs/error.log"):
-            with open("logs/error.log") as f:
-                report["errors_last_20"] = f.readlines()[-20:]
-    except:
-        pass
-    os.makedirs("state/reports", exist_ok=True)
-    json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
-    return report
-
-@bot.message_handler(commands=['report'])
-def report(m):
-    import os, json
-    try:
-        cmd = m.text.split()
-        if len(cmd) == 1 or cmd[1] == "today":
-            r = generate_report()
-            bot.reply_to(m, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
-        elif cmd[1] == "list":
-            files = os.listdir("state/reports")
-            bot.reply_to(m, "Reports:\n" + "\n".join(files))
-        else:
-            date = cmd[1]
-            path = f"state/reports/{date}.json"
-            if os.path.exists(path):
-                data = json.load(open(path))
-                bot.reply_to(m, str(data))
-            else:
-                bot.reply_to(m, "No report found")
-    except Exception as e:
-        bot.reply_to(m, f"report error: {e}")
-
-
+# ===== VIEWFILE HANDLER =====
+try:
     import viewfile_handler
     viewfile_handler.register(bot)
     print("✅ viewfile_handler loaded")
+except Exception as e:
+    print("❌ viewfile_handler load error:", e)
 
-    import handlers.termux_handler
-    handlers.termux_handler.register(bot)
-    print("✅ termux_handler loaded")
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
     import welcome_handler
