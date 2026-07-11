@@ -5,3 +5,35 @@ __pycache__/
 *.pyc
 state/pre_restore_*/
 state/snapshots/*.tar.gz
+
+# SLH runtime
+.env
+*.log
+*.txt
+nohup.out
+
+# configs / secrets
+config.json
+db.json
+state/.env
+state/config.json
+state/db.json
+
+# backups
+backup*/
+archive*/
+*_backup*
+*_before*
+*.broken_backup
+
+# runtime state
+state/audit/
+state/audit_logs/
+state/cleanup_backup/
+state/recovery_audit_*/
+state/snapshots/
+
+# generated
+__pycache__/
+*.pyc
+
