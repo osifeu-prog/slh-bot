@@ -122,3 +122,8 @@ class SLHLock:
 
 
 slh_lock = SLHLock()
+
+def is_locked():
+    """Return False by default (no lock)"""
+    return False
+

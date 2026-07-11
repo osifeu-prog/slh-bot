@@ -23,7 +23,7 @@ def init(bot):
 ✅ **התחל** בכפתורים למטה, או שלח /help לכל הפקודות.
 
 💡 **טיפ**: /ask <שאלה> – אני אעזור לך."""
-        bot.reply_to(m, text, parse_mode="Markdown", reply_markup=markup)
+        bot.send_message(m.chat.id, text, parse_mode="Markdown", reply_markup=markup)
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('start_'))
     def start_callback(call):
