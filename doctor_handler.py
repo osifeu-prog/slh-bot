@@ -1,6 +1,5 @@
 import os, subprocess, time
 from telebot import TeleBot
-from system_health import check_system_health
 from slh_lock import is_locked
 import sqlite3
 
@@ -100,21 +99,16 @@ def generate_health_report(bot: TeleBot) -> str:
     checks['Agents'] = f"{agents_count} פעילים"
 
     # 9. Lock
-    if is_locked():
-        checks['Lock'] = "🟢 נעול"
-    else:
-        checks['Lock'] = "🔴 לא נעול"
-
-    # 10. System Health
     try:
-        health = check_system_health()
-        if health:
-            checks['Health'] = "🟢 OK"
+        if is_locked():
+            checks['Lock'] = "🟢 נעול"
         else:
-            checks['Health'] = "🔴 בעיה"
+            checks['Lock'] = "🔴 לא נעול"
     except:
-        checks['Health'] = "⚪️ לא נבדק"
+        checks['Lock'] = "⚪️ לא נבדק"
 
+    # 10. System health – מושבת (אין תלות)
+    checks['Health'] = "⚪️ לא נבדק"
 
     lines = ["*🩺 SLH HEALTH REPORT*", ""]
     for key, val in checks.items():
