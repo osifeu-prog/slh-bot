@@ -1,53 +1,7 @@
-# Runtime secrets
-config.json
-db.json
-state/config.json
-state/db.json
-
-# Logs
-*.log
-*.txt
-
-# Termux/runtime
+*.backup*
+*.before*
+*.bak
 __pycache__/
 *.pyc
-.bot.lock
-
-# Local scripts and diagnostics
-bootstrap.sh
-deploy.sh
-health_v5.sh
-patch_live_input.sh
-router_status.sh
-
-# Temporary files
-AttributeError:
-Python
-
-# Backups
-*.bak
-*.backup
-*_backup*
-backups/
-backup*/
-archive_old_backups/
-archive_unused_*/
-archive/
-
-# Runtime locks/pids
-*.pid
-*.lock
-bot.pid
-slh.pid
-
-# Environment secrets
-.env
-state/.env
-
-# Old docker/proc backups
-Dockerfile.*
-Procfile.*
-
-# Temporary output
-nohup.out
-
+state/pre_restore_*/
+state/snapshots/*.tar.gz
