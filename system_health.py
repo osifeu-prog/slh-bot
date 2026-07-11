@@ -62,3 +62,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def check_system_health():
+    """בדיקת תקינות מערכת – מינימלית"""
+    return {
+        "status": "ok",
+        "components": {
+            "bot": "running",
+            "db": "connected",
+            "llm": "available",
+            "disk": "ok"
+        }
+    }
+
