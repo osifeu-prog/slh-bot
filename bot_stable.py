@@ -1,3 +1,4 @@
+from doctor_handler import register_doctor_handlers
 import os, sys, json, time, subprocess
 import telebot
 from marketplace import load_store, save_store
@@ -933,3 +934,4 @@ while True:
         time.sleep(5)
 
 
+register_doctor_handlers(bot)
