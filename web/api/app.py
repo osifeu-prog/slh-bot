@@ -129,6 +129,12 @@ def api_set_plan():
 
 
 
+
+@app.route("/branding/<path:filename>")
+def branding(filename):
+    from flask import send_from_directory
+    return send_from_directory("/app/branding", filename)
+
 @app.route("/dashboard")
 def dashboard():
     from flask import send_file
