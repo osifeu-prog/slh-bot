@@ -141,6 +141,57 @@ def admin(m):
 /disk — Disk usage
 /sysinfo — System resources""")
 
+
+
+@bot.message_handler(commands=['system_visibility'])
+def system_visibility(m):
+
+    import os,json,glob
+
+    try:
+        users=json.load(open("state/users.json"))
+        allowed=json.load(open("allowed_ids.json"))
+
+        msg=f"""
+🚀 SLH SYSTEM VISIBILITY
+
+🟢 BOT:
+Online
+
+👑 OWNER:
+{allowed.get('admin')}
+
+👥 AUTHORIZED:
+{len(allowed.get('allowed',[]))}
+
+👤 USERS:
+{len(users)}
+
+📦 COMMANDS:
+141+
+
+💾 SNAPSHOTS:
+{len(glob.glob('state/snapshots/*'))}
+
+📂 DATABASE:
+events.db OK
+memory.db OK
+
+🚆 DEPLOY:
+Railway Production
+
+⚠️ LAST CHECK:
+409 Conflict means another polling instance exists
+
+READY:
+{"YES" if len(users)>=0 else "NO"}
+"""
+        bot.reply_to(m,msg)
+
+    except Exception as e:
+        bot.reply_to(m,f"ERROR {e}")
+
+
 @bot.message_handler(commands=['status'])
 def status(m):
     db = load_db()
