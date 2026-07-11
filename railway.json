@@ -3,6 +3,6 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "sh /app/start_slh.sh"
+    "restartPolicyType": "ON_FAILURE"
   }
 }
