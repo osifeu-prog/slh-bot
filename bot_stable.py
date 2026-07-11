@@ -755,6 +755,11 @@ except Exception as e:
 try:
     import welcome_handler
     welcome_handler.init(bot)
+
+    import guide_handler
+    guide_handler.init(bot)
+    print("✅ guide_handler loaded")
+
     # ===== DOCTOR HANDLER =====
     register_doctor_handlers(bot)
     print("✅ doctor_handler loaded")
