@@ -13,3 +13,4 @@ RUN mkdir -p /app/state
 
 # פקודת הפעלה
 CMD ["sh","-c","echo ==== CONTAINER START ====; pwd; ls -la /app; which python3; python3 --version; python3 -u -B /app/bot_stable.py"]
+# Sat Jul 11 16:47:37 IDT 2026
