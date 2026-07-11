@@ -1,24 +1,50 @@
 # SLH Stable State - 2026-07-11
 
-## Deployment
-- Railway container: OK
-- start_slh.sh: OK
+## Railway Production
+Status: SUCCESS
 
-## API
-- /api/health: OK
-- /api/stats: OK
-- /api/tasks: OK
-- /api/agents: OK
-- /api/logs: OK
+Commit:
+a27a8d1cc84b0c236754d743cc32cb5fc4a81582
+
+Branch:
+main
 
 ## Dashboard
-- /dashboard route: OK
-- Dashboard uses relative /api path
 
-## Runtime
-- bot_stable.py running
-- polling active
+Legacy:
+GET /dashboard
 
-## Tags
-- stable-dashboard-api-v1
-- stable-dashboard-live-v1
+Production V2:
+GET /dashboard-v2
+
+Status:
+LIVE ✅
+
+## API
+
+Health:
+GET /api/health
+
+Expected:
+{"status":"ok","version":"2.0"}
+
+## Deployment
+
+Repository:
+osifeu-prog/slh-bot
+
+Builder:
+Dockerfile
+
+Start:
+sh /app/start_slh.sh
+
+Volume:
+ /app/state
+
+## Notes
+
+Dashboard V2 was merged from dashboard-v2-development
+into main.
+
+Railway source is now synchronized with production.
