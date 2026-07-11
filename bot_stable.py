@@ -8,6 +8,7 @@ from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 from payment_handler import register_payment_handlers
 from econ_handler import register_econ_handlers
+from staking_handler import register_staking_handlers
 from help_handler import register_help
 
 try:
@@ -50,6 +51,7 @@ bot = telebot.TeleBot(TOKEN)
 
 register_payment_handlers(bot)
 register_econ_handlers(bot)
+register_staking_handlers(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
