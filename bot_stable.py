@@ -755,6 +755,10 @@ except Exception as e:
 try:
     import welcome_handler
     welcome_handler.init(bot)
+    # ===== DOCTOR HANDLER =====
+    register_doctor_handlers(bot)
+    print("✅ doctor_handler loaded")
+
     register_help(bot)
 
     if LLM_AVAILABLE:
@@ -934,4 +938,4 @@ while True:
         time.sleep(5)
 
 
-register_doctor_handlers(bot)
+
