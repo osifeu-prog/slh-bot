@@ -753,6 +753,10 @@ try:
     import roadmap_handler
     roadmap_handler.init(bot)
 
+    import viewfile_handler
+    viewfile_handler.register(bot)
+    print("✅ viewfile_handler loaded")
+
     print("✅ Legacy UX handlers loaded")
     print("✅ Journal + Roadmap handlers loaded")
 except Exception as e:
