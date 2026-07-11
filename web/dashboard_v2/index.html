@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>SLH Dashboard V2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <h1>🚀 SLH Dashboard V2</h1>
+    <div id="health">בודק מערכת...</div>
+</header>
+
+<nav>
+    <button onclick="show('overview')">🏠 ראשי</button>
+    <button onclick="show('agents')">🤖 Agents</button>
+    <button onclick="show('tasks')">📋 Tasks</button>
+    <button onclick="show('logs')">📜 Logs</button>
+</nav>
+
+<main>
+
+<section id="overview" class="card">
+<h2>System Overview</h2>
+
+<div class="grid">
+<div class="box">
+<h3>Users</h3>
+<span id="users">0</span>
+</div>
+
+<div class="box">
+<h3>Agents</h3>
+<span id="agents">0</span>
+</div>
+
+<div class="box">
+<h3>Tasks</h3>
+<span id="tasks">0</span>
+</div>
+</div>
+
+</section>
+
+
+<section id="agents" class="card hidden">
+<h2>Agents</h2>
+<pre id="agents-data">Loading...</pre>
+</section>
+
+
+<section id="tasks" class="card hidden">
+<h2>Tasks</h2>
+<pre id="tasks-data">Loading...</pre>
+</section>
+
+
+<section id="logs" class="card hidden">
+<h2>Logs</h2>
+<pre id="logs-data">Loading...</pre>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+
+</body>
+</html>
