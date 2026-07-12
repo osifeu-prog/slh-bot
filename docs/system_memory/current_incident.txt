@@ -1,3 +1,7 @@
 2026-07-13 Telegram 409 incident
 Status: Railway polling starts but Telegram returns 409 Conflict
 Known history: e2b3192 single startup entry, 1536863 single entrypoint
+
+Future direction:
+SLH Academy microservices developer course planned.
+Purpose: create ecosystem developers who integrate through protected APIs.
