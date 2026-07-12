@@ -1,0 +1,3 @@
+# keep source files
+!heb_convert.py
+!bot_stable.py
