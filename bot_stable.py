@@ -601,23 +601,18 @@ def test_agents(m):
 
 @bot.message_handler(commands=['user'])
 def user(m):
-    bot.reply_to(m, """👤 USER COMMANDS
-/start — Start
-/status — System status
-/health — Health check
-/vote — Create vote
-/results — See results
-/agents — List agents
-/agent_create [name] — Create new agent
-/task create/list — Manage tasks
-/logs <n> — Last N log lines
-/audit — Audit log
-/sysinfo — System resources
-/debug — Container debug info
-/plugin list — List plugins
-/goal add/list — Manage goals
-/rlogs — Railway logs (admin)
-/disk — Disk usage""")
+    uid = str(m.chat.id)
+    db = load_db()
+    u = db.get('users', {}).get(uid, {})
+    if not u:
+        bot.reply_to(m, 'משתמש לא נמצא')
+        return
+    name = u.get('name', 'ללא שם')
+    bal = u.get('balance', 0)
+    course = u.get('active_course', 'אין')
+    prog = u.get('progress', 0)
+    text = "👤 " + name + "\n💰 קרדיטים: " + str(bal) + "\n📚 קורס פעיל: " + course + "\n📊 התקדמות: " + str(prog) + "%"
+    bot.reply_to(m, text)
 
 @bot.message_handler(commands=['rlogs'])
 def rlogs(m):
@@ -919,15 +914,45 @@ except Exception as e:
     print("❌ academy_handler load error:", e)
 
 
+
+
+# ===== ADVANCED MULTI LLM HANDLER =====
+try:
+    from advanced_ask_handler import register_ask_handler
+    register_ask_handler(bot)
+    print("✅ advanced_ask_handler loaded")
+except Exception as e:
+    print("❌ advanced_ask_handler error:", e)
+
+# ===== HANDLER CONTEXT =====
+try:
+    from admin_utils import is_admin
+
+    context = {
+        "state_manager": globals().get("state_manager", None),
+        "agents_dict": agents_dict,
+        "agentstate": globals().get("agentstate", None),
+        "is_admin": is_admin
+    }
+
+    print("✅ handler context created")
+
+except Exception as e:
+    print("❌ context creation error:", e)
+    context = {
+        "agents_dict": agents_dict
+    }
+
+
+from handlers.loader import load_handlers
+load_handlers(bot, context)
+
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
 
     import guide_handler
     guide_handler.init(bot)
     print("✅ guide_handler loaded")
-
-    import welcome_handler
-    welcome_handler.init(bot)
     print("✅ welcome_handler loaded")
 
     # ===== DOCTOR HANDLER =====
@@ -947,13 +972,6 @@ try:
     if LLM_AVAILABLE:
         register_llm(bot)
         print("✅ LLM handler (Groq) loaded")
-
-    import report_handler
-    report_handler.init(bot)
-
-    import roadmap_handler
-    roadmap_handler.init(bot)
-
     print("✅ Legacy UX handlers loaded")
     print("✅ Journal + Roadmap handlers loaded")
 except Exception as e:

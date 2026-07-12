@@ -7,7 +7,7 @@ import json, os, time
 app = Flask(__name__)
 CORS(app)
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "../../db.json")
+DB_FILE = os.path.join(os.path.dirname(__file__), "../../state/db.json")
 
 def load_db():
     try:
