@@ -965,7 +965,7 @@ def broadcast(m):
         except Exception as e:
             fail += 1
             print(f'Broadcast failed for {uid}: {e}')
-    bot.reply_to(m, f'📢 Broadcast sent\n✅ {success} succeeded\n❌ {fail} failed')
+    bot.send_message(m.chat.id, f'📢 Broadcast sent\n✅ {success} succeeded\n❌ {fail} failed')
 
 # ===== IMPROVED SNAPSHOT HANDLER =====
 @bot.message_handler(commands=['snapshot'])
@@ -987,7 +987,7 @@ Tasks: {tasks_count}
 AI: {ai_status}
 DB: state/db.json"""
 
-    bot.reply_to(m, report)
+    bot.send_message(m.chat.id, report)
 
 
 
