@@ -29,6 +29,15 @@ def load_handlers(bot, context):
 
 
 
+    # ===== CHAT REGISTRY =====
+    try:
+        from handlers.chat_registry_handler import register as register_chat_registry
+        register_chat_registry(bot)
+        print("💬 Chat registry handler loaded")
+    except Exception as e:
+        print("chat_registry error:", e)
+
+
     # ===== SLH GATEWAY BRIDGE =====
     try:
         from handlers.gateway_handler import register as register_gateway
