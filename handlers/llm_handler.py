@@ -44,6 +44,12 @@ def register(bot):
     def ask_llm(m):
         uid = str(m.chat.id)
         query = m.text.replace("/ask", "", 1).strip()
+        # Auto-convert if typed in Hebrew intent but English keyboard layout
+        if query and all(ord(c) < 128 for c in query.replace(" ", "")):
+            from heb_convert import convert_to_hebrew
+            converted = convert_to_hebrew(query)
+            if converted != query:
+                query = converted
         if not query:
             bot.reply_to(m, "Usage: /ask <question>")
             return
