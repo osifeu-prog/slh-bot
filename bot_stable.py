@@ -1,4 +1,5 @@
 from doctor_handler import register_doctor_handlers
+from heb_convert import convert_to_hebrew
 import os, sys, json, time, subprocess
 import telebot
 
@@ -932,6 +933,10 @@ try:
     # ===== DOCTOR HANDLER =====
     register_doctor_handlers(bot)
     print("✅ doctor_handler loaded")
+
+    from help_handler import register_help
+    register_help(bot)
+    print("✅ help_handler loaded")
 
 
     if LLM_AVAILABLE:
