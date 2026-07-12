@@ -1,6 +1,14 @@
 from doctor_handler import register_doctor_handlers
 import os, sys, json, time, subprocess
 import telebot
+
+# ---------------- SLH PID LOCK ----------------
+try:
+    from slh_lock import slh_lock
+    slh_lock.acquire_lock()
+except Exception as e:
+    print("❌ SLH LOCK FAILED:", e)
+    raise
 from marketplace import load_store, save_store
 from datetime import datetime
 from audit_logger import audit, get_audit
@@ -44,7 +52,7 @@ try:
 except:
     cfg = {}
 SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
-DB_FILE = cfg.get("DB_FILE", "db.json")
+DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -872,12 +880,46 @@ except Exception as e:
     import tutorial_handler
     tutorial_handler.register(bot)
     print("✅ tutorial_handler loaded")
+
+
+
+# ===== SLH ACADEMY MENU HANDLER =====
+try:
+    from handlers.academy_menu_handler import register as register_academy_menu
+    register_academy_menu(bot)
+    print("✅ academy_menu_handler loaded")
+except Exception as e:
+    print("❌ academy_menu_handler load error:", e)
+
+
+# ===== SLH LESSON ENGINE HANDLER =====
+try:
+    from handlers.lesson_handler import register as register_lesson
+    register_lesson(bot)
+    print("✅ lesson_handler loaded")
+except Exception as e:
+    print("❌ lesson_handler load error:", e)
+
+
+# ===== SLH ACADEMY HANDLER =====
+try:
+    from handlers.academy_handler import register as register_academy
+    register_academy(bot)
+    print("✅ academy_handler loaded")
+except Exception as e:
+    print("❌ academy_handler load error:", e)
+
+
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
 
     import guide_handler
     guide_handler.init(bot)
     print("✅ guide_handler loaded")
+
+    import welcome_handler
+    welcome_handler.init(bot)
+    print("✅ welcome_handler loaded")
 
     # ===== DOCTOR HANDLER =====
     register_doctor_handlers(bot)
@@ -898,151 +940,57 @@ try:
     print("✅ Journal + Roadmap handlers loaded")
 except Exception as e:
     print("❌ Legacy UX loader error:", e)
-# ===== SLH EVENT LOGGER =====
-def log_event(event_type, user_id=None, data=None):
-    import json, os
-    from datetime import datetime
+# ===== BROADCAST HANDLER (AUTO-GENERATED) =====
+@bot.message_handler(commands=['broadcast'])
+def broadcast(m):
+    if str(m.chat.id) != str(SUPER_ADMIN):
+        bot.reply_to(m, '❌ Admin only.')
+        return
+    args = m.text.split(' ', 1)
+    if len(args) < 2:
+        bot.reply_to(m, '❌ Usage: /broadcast <message>')
+        return
+    msg_text = args[1]
+    db = load_db()
+    users = db.get('users', {})
+    if not users:
+        bot.reply_to(m, 'No users found.')
+        return
+    success = 0
+    fail = 0
+    for uid in users:
+        try:
+            bot.send_message(uid, msg_text)
+            success += 1
+        except Exception as e:
+            fail += 1
+            print(f'Broadcast failed for {uid}: {e}')
+    bot.reply_to(m, f'📢 Broadcast sent\n✅ {success} succeeded\n❌ {fail} failed')
 
-    path = "state/event_log.json"
-
-    try:
-        if os.path.exists(path):
-            logs = json.load(open(path))
-        else:
-            logs = []
-
-        logs.append({
-            "time": datetime.now().isoformat(),
-            "type": event_type,
-            "user": str(user_id),
-            "data": str(data)
-        })
-
-        json.dump(logs[-500:], open(path, "w"), indent=2)
-    except:
-        pass
-
-
-# ===== SLH SNAPSHOT SYSTEM =====
+# ===== IMPROVED SNAPSHOT HANDLER =====
 @bot.message_handler(commands=['snapshot'])
 def snapshot(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
-        total = len(logs)
-        last = logs[-10:] if total > 10 else logs
+    import datetime
+    db = load_db()
 
-        msg = f"""📊 SNAPSHOT REPORT
+    users_count = len(db.get('users', {}))
+    students_count = len(db.get('students', {}))
+    tasks_count = len(db.get('tasks', []))
+    ai_status = 'Available' if LLM_AVAILABLE else 'Unavailable'
 
-Total events: {total}
+    report = f"""📊 SLH SNAPSHOT
+{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-Last 10 events:
-{last}
-"""
+Users: {users_count}
+Students: {students_count}
+Tasks: {tasks_count}
+AI: {ai_status}
+DB: state/db.json"""
 
-        bot.reply_to(m, msg)
-    except Exception as e:
-        bot.reply_to(m, f"snapshot error: {e}")
-
-
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    try:
-        with open("logs/error.log") as f:
-            data = f.readlines()[-20:]
-        bot.reply_to(m, "".join(data))
-    except Exception as e:
-        bot.reply_to(m, str(e))
+    bot.reply_to(m, report)
 
 
-@bot.message_handler(commands=['endday'])
-def endday(m):
-    import json
-    try:
-        logs = json.load(open("state/event_log.json"))
 
-        summary = {
-            "total_events": len(logs),
-            "users": len(set([x.get("user") for x in logs])),
-            "types": list(set([x.get("type") for x in logs]))
-        }
-
-        json.dump(summary, open("state/daily_summary.json","w"), indent=2)
-
-        bot.reply_to(m, f"""🌙 END DAY COMPLETE
-
-Events: {summary['total_events']}
-Users: {summary['users']}
-Types: {summary['types']}
-
-Saved to daily_summary.json
-""")
-    except Exception as e:
-        bot.reply_to(m, f"endday error: {e}")
-
-
-# ===== SLH REPORT ENGINE =====
-import json, os
-from datetime import datetime
-
-def generate_report():
-    date = datetime.now().strftime("%Y-%m-%d")
-
-    report = {
-        "date": date,
-        "bot_running": True,
-        "users": 0,
-        "events": 0,
-        "errors_last_20": [],
-    }
-
-    try:
-        if os.path.exists("state/event_log.json"):
-            events = json.load(open("state/event_log.json"))
-            report["events"] = len(events)
-
-        if os.path.exists("db.json"):
-            db = json.load(open("db.json"))
-            report["users"] = len(db.get("users", {}))
-
-        if os.path.exists("logs/error.log"):
-            with open("logs/error.log") as f:
-                report["errors_last_20"] = f.readlines()[-20:]
-
-    except:
-        pass
-
-    os.makedirs("state/reports", exist_ok=True)
-    json.dump(report, open(f"state/reports/{date}.json","w"), indent=2)
-
-    return report
-
-
-@bot.message_handler(commands=['report'])
-def report(m):
-    import os, json
-    try:
-        cmd = m.text.split()
-
-        if len(cmd) == 1 or cmd[1] == "today":
-            r = generate_report()
-            bot.reply_to(m, f"📊 REPORT TODAY\nEvents: {r['events']}\nUsers: {r['users']}")
-
-        elif cmd[1] == "list":
-            files = os.listdir("state/reports")
-            bot.reply_to(m, "Reports:\n" + "\n".join(files))
-
-        else:
-            date = cmd[1]
-            path = f"state/reports/{date}.json"
-            if os.path.exists(path):
-                data = json.load(open(path))
-                bot.reply_to(m, str(data))
-            else:
-                bot.reply_to(m, "No report found")
-
-    except Exception as e:
-        bot.reply_to(m, f"report error: {e}")
 
 def start_bot():
     while True:
@@ -1061,9 +1009,5 @@ def start_bot():
             traceback.print_exc()
             time.sleep(5)
 
-
 if __name__ == "__main__":
     start_bot()
-
-
-
