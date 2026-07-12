@@ -50,3 +50,11 @@ router_status.sh
 
 config.json
 config.json
+*.log
+*REPORT*.txt
+*SNAPSHOT*.txt
+SAFE_STATE_*.txt
+safe_diag.txt
+railway_status_debug.json
+slh_daily_log_*.txt
+slh_log.txt
