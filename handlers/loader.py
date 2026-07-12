@@ -28,6 +28,16 @@ def load_handlers(bot, context):
         print("system_handler error:", e)
 
 
+
+    # ===== SLH GATEWAY BRIDGE =====
+    try:
+        from handlers.gateway_handler import register as register_gateway
+        register_gateway(bot)
+        print("🌐 SLH Gateway handler loaded")
+    except Exception as e:
+        print("gateway_handler error:", e)
+
+
     # ===== LEGACY USER EXPERIENCE =====
     legacy = [
         "welcome_handler",
