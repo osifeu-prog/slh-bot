@@ -10,6 +10,7 @@ except Exception as e:
     print("❌ SLH LOCK FAILED:", e)
     raise
 from marketplace import load_store, save_store
+from core import profile_manager
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
@@ -335,16 +336,26 @@ def agent_test(m):
     agent_store.create("test_agent")
     bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
 
+VOTE_MIN_BALANCE = 50
+VOTE_COST = 3.9
+
 @bot.message_handler(commands=['vote'])
 def vote(m):
-    db = ensure_user(load_db(), m.from_user.id)
+    uid = str(m.from_user.id)
+    balance = profile_manager.get_balance(uid)
+    if balance < VOTE_MIN_BALANCE:
+        bot.reply_to(m, f"\U0001F512 \u05dc\u05d4\u05e6\u05d1\u05e2\u05d4 \u05e0\u05d3\u05e8\u05e9\u05d9\u05dd {VOTE_MIN_BALANCE} \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd \u05dc\u05e4\u05d7\u05d5\u05ea. \u05d4\u05d9\u05ea\u05e8\u05d4 \u05e9\u05dc\u05da: {balance}")
+        return
     key = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
-    if key in db["votes"]:
-        db["votes"][key] += 1
-    else:
-        db["votes"][key] = 1
+    if not key:
+        bot.reply_to(m, "\u05e9\u05d9\u05de\u05d5\u05e9: /vote <yes|no|unsure>")
+        return
+    db = ensure_user(load_db(), uid)
+    db["votes"][key] = db["votes"].get(key, 0) + 1
     save_db(db)
-    bot.reply_to(m, f"Voted {key}")
+    profile_manager.add_balance(uid, -VOTE_COST)
+    new_balance = round(balance - VOTE_COST, 2)
+    bot.reply_to(m, f"\u2705 \u05d4\u05e6\u05d1\u05e2\u05d4 '{key}' \u05e0\u05e8\u05e9\u05de\u05d4. \u05e0\u05d5\u05db\u05d5 {VOTE_COST} \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd. \u05d9\u05ea\u05e8\u05d4 \u05d7\u05d3\u05e9\u05d4: {new_balance}")
 
 @bot.message_handler(commands=['results'])
 def results(m):
