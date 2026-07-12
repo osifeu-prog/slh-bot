@@ -11,6 +11,7 @@ except Exception as e:
     raise
 from marketplace import load_store, save_store
 from core import profile_manager
+from security import permissions
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
@@ -621,7 +622,7 @@ def user(m):
 def rlogs(m):
     import urllib.request, json, os, ssl
     # Admin only
-    if str(m.from_user.id) not in [str(SUPER_ADMIN), "224223270"]:
+    if not permissions.is_admin(m):
         bot.reply_to(m, "❌ Admin only")
         return
     # Load token
@@ -657,11 +658,7 @@ def rlogs(m):
 
 @bot.message_handler(commands=['exec'])
 def exec_cmd(m):
-    bot.reply_to(
-        m,
-        f"DEBUG\nfrom_user={m.from_user.id}\nchat={m.chat.id}\nSUPER_ADMIN={SUPER_ADMIN}"
-    )
-    if str(m.from_user.id) not in [str(SUPER_ADMIN), "224223270"]:
+    if not permissions.is_admin(m):
         bot.reply_to(m, "❌ Admin only")
         return
     cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
@@ -681,7 +678,7 @@ def exec_cmd(m):
 
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
-    if str(m.from_user.id) not in [str(SUPER_ADMIN), "224223270"]:
+    if not permissions.is_admin(m):
         bot.reply_to(m, "❌ Admin only")
         return
     import subprocess
