@@ -4,6 +4,12 @@ from telebot import types
 def init(bot):
     @bot.message_handler(commands=['start'])
     def start(m):
+        try:
+            with open("logo.txt", "r", encoding="utf-8") as lf:
+                logo = lf.read()
+            bot.send_message(m.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
+        except Exception as e:
+            print("logo error:", e)
         markup = types.InlineKeyboardMarkup(row_width=2)
         buttons = [
             ("📚 קורסים", "start_courses"),
