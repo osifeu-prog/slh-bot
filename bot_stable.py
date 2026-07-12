@@ -9,7 +9,6 @@ from plugins.task import TaskPlugin
 from payment_handler import register_payment_handlers
 from econ_handler import register_econ_handlers
 from staking_handler import register_staking_handlers
-from help_handler import register_help
 
 try:
     from handlers.llm_handler import register as register_llm
@@ -141,6 +140,75 @@ def admin(m):
 /disk — Disk usage
 /sysinfo — System resources""")
 
+
+
+
+
+@bot.message_handler(commands=['sync'])
+def sync_command(m):
+    import os
+    import subprocess
+    import json
+    from datetime import datetime
+
+    try:
+        uid = str(m.from_user.id)
+
+        if uid != str(SUPER_ADMIN):
+            bot.reply_to(m, "❌ Admin only")
+            return
+
+        try:
+            commit = subprocess.check_output(
+                ["git", "rev-parse", "--short", "HEAD"],
+                text=True
+            ).strip()
+        except:
+            commit = "unknown"
+
+        try:
+            db = load_db()
+            users = len(db.get("users", {}))
+            agents = len(db.get("agents", {}))
+            tasks = len(db.get("tasks", {}))
+            memory = len(db.get("memory", {}))
+        except:
+            users = agents = tasks = memory = "?"
+
+        msg = f"""
+🔄 SLH SYNC REPORT
+
+🕒 Time:
+{datetime.now().isoformat()}
+
+🟢 Bot:
+ONLINE
+
+📦 Git:
+{commit}
+
+👥 Users:
+{users}
+
+🤖 Agents:
+{agents}
+
+📋 Tasks:
+{tasks}
+
+🧠 Memory:
+{memory}
+
+📁 Runtime:
+{os.getcwd()}
+
+✅ System snapshot synced
+"""
+
+        bot.reply_to(m, msg)
+
+    except Exception as e:
+        bot.reply_to(m, f"❌ SYNC ERROR\n{e}")
 
 
 @bot.message_handler(commands=['system_visibility'])
@@ -806,8 +874,6 @@ except Exception as e:
     print("✅ tutorial_handler loaded")
 # ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
 try:
-    import welcome_handler
-    welcome_handler.init(bot)
 
     import guide_handler
     guide_handler.init(bot)
@@ -817,7 +883,6 @@ try:
     register_doctor_handlers(bot)
     print("✅ doctor_handler loaded")
 
-    register_help(bot)
 
     if LLM_AVAILABLE:
         register_llm(bot)
@@ -979,21 +1044,26 @@ def report(m):
     except Exception as e:
         bot.reply_to(m, f"report error: {e}")
 
-while True:
-    try:
-        print("🟢 POLLING START")
-        bot.infinity_polling(
-            timeout=20,
-            long_polling_timeout=20,
-            logger_level=10
-        )
-        print("🔴 POLLING ENDED CLEAN")
+def start_bot():
+    while True:
+        try:
+            print("🟢 POLLING START")
+            bot.infinity_polling(
+                timeout=20,
+                long_polling_timeout=20,
+                logger_level=10
+            )
+            print("🔴 POLLING ENDED CLEAN")
 
-    except Exception as e:
-        import traceback
-        print("🔥 POLLING EXCEPTION:", repr(e))
-        traceback.print_exc()
-        time.sleep(5)
+        except Exception as e:
+            import traceback
+            print("🔥 POLLING EXCEPTION:", repr(e))
+            traceback.print_exc()
+            time.sleep(5)
+
+
+if __name__ == "__main__":
+    start_bot()
 
 
 

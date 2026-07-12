@@ -1,0 +1,25 @@
+{
+  "lesson_id": "btc_security_409_identity_collision",
+  "course_id": "bitcoin_mastery",
+  "title": "409 Conflict - כשהמערכת פוגשת כפיל",
+  "version": "1.0.0",
+  "status": "proposal",
+  "category": [
+    "security",
+    "identity",
+    "devops"
+  ],
+  "tags": [
+    "telegram_409",
+    "duplicate_prevention",
+    "digital_identity",
+    "bitcoin_security"
+  ],
+  "source": "SLH_real_case",
+  "description": "שיעור על שגיאת 409 Conflict, מניעת כפילויות, זהויות דיגיטליות, והרלוונטיות לעולמות ביטקוין ו-AI Agents.",
+  "created_by": "SLH_SYSTEM",
+  "prerequisites": [
+    "wallet_basics",
+    "digital_identity_basics"
+  ]
+}

@@ -48,3 +48,5 @@ list_live_commands.sh
 patch_live_input.sh
 router_status.sh
 
+config.json
+config.json

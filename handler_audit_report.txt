@@ -1,0 +1,461 @@
+======================================================================
+SLH HANDLER AUDIT
+======================================================================
+
+=== COMMAND MAP ===
+
+/activate
+  -> course_handlers.py:34
+
+/admin
+  -> admin_handler.py:2
+  -> bot_stable.py:103
+
+/agent_approve
+  -> learning_path.py:64
+
+/agent_create
+  -> bot_stable.py:167
+  -> handlers/agents_handler.py:8
+
+/agent_debug
+  -> bot_stable.py:193
+  -> handlers/agents_handler.py:61
+
+/agent_reject
+  -> learning_path.py:97
+
+/agent_submissions
+  -> learning_path.py:123
+
+/agent_submit
+  -> learning_path.py:46
+
+/agent_test
+  -> bot_stable.py:197
+  -> handlers/agents_handler.py:73
+
+/agents
+  -> bot_stable.py:185
+  -> handlers/agents_handler.py:43
+
+/agentstate
+  -> bot_stable.py:356
+
+/ask
+  -> advanced_ask_handler.py:92
+  -> ask_handler.py:4
+  -> bot_stable.py:656
+
+/audit
+  -> bot_stable.py:249
+
+/backup
+  -> bot_stable.py:227
+
+/backup_junk
+  -> junk_handler.py:26
+
+/balance
+  -> econ_handler.py:4
+
+/brief
+  -> brief_handler.py:5
+
+/broadcast
+  -> broadcast_handler.py:4
+
+/buy
+  -> econ_handler.py:11
+
+/clean
+  -> bot_stable.py:245
+
+/clean_junk
+  -> junk_handler.py:50
+
+/complete
+  -> complete_handler.py:4
+
+/course
+  -> course_handlers.py:56
+
+/course_slh
+  -> learning_path.py:5
+
+/courses
+  -> learn_handlers.py:37
+
+/debug
+  -> bot_stable.py:262
+
+/debugcmd
+  -> bot_stable.py:759
+
+/demo
+  -> demo_handlers.py:5
+
+/deploy
+  -> bot_stable.py:270
+
+/diagnose
+  -> bot_stable.py:775
+  -> diag_fix_handlers.py:5
+
+/diagnostic
+  -> diagnostic_handler.py:6
+
+/disk
+  -> bot_stable.py:327
+
+/endday
+  -> bot_stable.py:917
+
+/errors
+  -> bot_stable.py:275
+
+/evening_report
+  -> report_handler.py:76
+
+/exec
+  -> bot_stable.py:516
+
+/fakepay
+  -> payment_handler.py:177
+
+/fix
+  -> diag_fix_handlers.py:38
+
+/giveme
+  -> econ_handler.py:96
+
+/goal
+  -> bot_stable.py:294
+
+/health
+  -> bot_stable.py:141
+
+/help
+  -> help_handler.py:2
+
+/history
+  -> payment_handler.py:73
+
+/inbox
+  -> bot_stable.py:393
+
+/join
+  -> join_fix.py:7
+  -> join_fix.py:42
+  -> welcome_handler.py:192
+
+/journal
+  -> report_handler.py:98
+
+/journal_read
+  -> report_handler.py:112
+
+/kernellog
+  -> bot_stable.py:337
+
+/kernelstatus
+  -> bot_stable.py:341
+
+/language
+  -> language_handler.py:21
+
+/leaderboard
+  -> smart_leaderboard.py:10
+
+/llm_provider
+  -> advanced_ask_handler.py:71
+
+/logs
+  -> bot_stable.py:236
+  -> bot_stable.py:907
+
+/market
+  -> bot_stable.py:554
+
+/market_install
+  -> bot_stable.py:568
+
+/market_installed
+  -> bot_stable.py:560
+
+/market_rate
+  -> bot_stable.py:600
+
+/market_search
+  -> bot_stable.py:586
+
+/market_upload
+  -> bot_stable.py:625
+
+/master
+  -> bot_stable.py:223
+
+/memory
+  -> bot_stable.py:258
+
+/monitor
+  -> monitor_handler.py:4
+
+/morning
+  -> handlers/morning_handler.py:16
+
+/morning_report
+  -> report_handler.py:52
+
+/my_junk
+  -> junk_handler.py:76
+
+/myprogress
+  -> myprogress_handler.py:4
+
+/myreport
+  -> report_handler.py:20
+
+/next
+  -> bot_patch_next.py:21
+  -> course_handlers.py:136
+
+/pay
+  -> course_handlers.py:14
+  -> payment_handler.py:15
+
+/plugin
+  -> bot_stable.py:285
+
+/progress
+  -> bot_dna_patch.py:26
+  -> bot_patch.py:31
+  -> bot_patch_next.py:38
+  -> course_handlers.py:172
+
+/project
+  -> project_commands.py:6
+
+/referral
+  -> learn_handlers.py:50
+
+/refreshtoken
+  -> refresh_token_handler.py:46
+
+/register
+  -> learn_handlers.py:20
+
+/report
+  -> bot_stable.py:980
+
+/restart
+  -> bot_stable.py:231
+
+/results
+  -> bot_stable.py:214
+
+/revenue
+  -> bot_stable.py:219
+  -> payment_handler.py:160
+
+/rlogs
+  -> bot_stable.py:478
+
+/roadmap
+  -> roadmap_handler.py:2
+
+/rollback
+  -> bot_stable.py:350
+
+/sandbox
+  -> sandbox_handler.py:4
+
+/scan_junk
+  -> junk_handler.py:7
+
+/self_test
+  -> test_handler.py:4
+
+/sendagent
+  -> bot_stable.py:375
+
+/setname
+  -> learning_path.py:138
+
+/slh
+  -> handlers/system_handler.py:15
+
+/snapshot
+  -> bot_stable.py:886
+
+/stake
+  -> staking_handler.py:2
+
+/stake_join
+  -> staking_handler.py:6
+
+/staking_report
+  -> staking_handler.py:10
+
+/start
+  -> bot_patch.py:5
+  -> bot_stable.py:93
+  -> welcome_handler.py:8
+
+/start_course
+  -> bot_dna_patch.py:6
+  -> bot_patch.py:16
+  -> bot_patch_next.py:10
+  -> course_handlers.py:104
+
+/status
+  -> bot_stable.py:136
+
+/sysinfo
+  -> bot_stable.py:310
+
+/task
+  -> bot_stable.py:153
+  -> handlers/task_handler.py:31
+
+/termlog
+  -> bot_stable.py:540
+
+/termux
+  -> bot_stable.py:266
+
+/test
+  -> bot_stable.py:331
+
+/test_agents
+  -> bot_stable.py:415
+
+/testcmd
+  -> bot_stable.py:741
+
+/ton
+  -> ton_handler.py:25
+
+/ton_check
+  -> ton_handler.py:42
+
+/ton_rate
+  -> ton_handler.py:129
+
+/ton_set_wallet
+  -> ton_handler.py:148
+
+/update
+  -> bot_stable.py:345
+
+/user
+  -> bot_stable.py:458
+
+/usereferral
+  -> learn_handlers.py:65
+
+/vote
+  -> bot_stable.py:203
+
+
+=== DUPLICATES ===
+
+DUPLICATE: admin
+  admin_handler.py 2
+  bot_stable.py 103
+
+DUPLICATE: agent_create
+  bot_stable.py 167
+  handlers/agents_handler.py 8
+
+DUPLICATE: agent_debug
+  bot_stable.py 193
+  handlers/agents_handler.py 61
+
+DUPLICATE: agent_test
+  bot_stable.py 197
+  handlers/agents_handler.py 73
+
+DUPLICATE: agents
+  bot_stable.py 185
+  handlers/agents_handler.py 43
+
+DUPLICATE: ask
+  advanced_ask_handler.py 92
+  ask_handler.py 4
+  bot_stable.py 656
+
+DUPLICATE: diagnose
+  bot_stable.py 775
+  diag_fix_handlers.py 5
+
+DUPLICATE: join
+  join_fix.py 7
+  join_fix.py 42
+  welcome_handler.py 192
+
+DUPLICATE: logs
+  bot_stable.py 236
+  bot_stable.py 907
+
+DUPLICATE: next
+  bot_patch_next.py 21
+  course_handlers.py 136
+
+DUPLICATE: pay
+  course_handlers.py 14
+  payment_handler.py 15
+
+DUPLICATE: progress
+  bot_dna_patch.py 26
+  bot_patch.py 31
+  bot_patch_next.py 38
+  course_handlers.py 172
+
+DUPLICATE: revenue
+  bot_stable.py 219
+  payment_handler.py 160
+
+DUPLICATE: start
+  bot_patch.py 5
+  bot_stable.py 93
+  welcome_handler.py 8
+
+DUPLICATE: start_course
+  bot_dna_patch.py 6
+  bot_patch.py 16
+  bot_patch_next.py 10
+  course_handlers.py 104
+
+DUPLICATE: task
+  bot_stable.py 153
+  handlers/task_handler.py 31
+
+
+=== LOADER / REGISTER MAP ===
+admin_handler.py: init(bot)
+ask_handler.py: init(bot)
+bot_stable.py: load_handlers, infinity_polling
+brief_handler.py: init(bot)
+broadcast_handler.py: init(bot)
+complete_handler.py: init(bot)
+core/bootstrap_commands.py: init(bot), command_router
+core/telegram_router_bridge.py: command_router
+course_handlers.py: register_course
+diagnostic_handler.py: init(bot)
+econ_handler.py: register_econ
+handler_audit.py: load_handlers, register_help, register_course, register_payment, register_econ, init(bot), infinity_polling, command_router
+handlers/loader.py: load_handlers, register_help, register_course, register_payment, register_econ, init(bot)
+help_handler.py: register_help
+init_router.py: command_router
+junk_handler.py: init(bot)
+monitor_handler.py: init(bot)
+myprogress_handler.py: init(bot)
+payment_handler.py: register_payment
+report_handler.py: init(bot)
+roadmap_handler.py: init(bot)
+sandbox_handler.py: init(bot)
+test_handler.py: init(bot)
+welcome_handler.py: init(bot)
+
+=== END AUDIT ===

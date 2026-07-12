@@ -1,0 +1,59 @@
+========================
+SLH SYSTEM REBUILD PLAN
+DATE: Thu Jul  2 01:21:37 IDT 2026
+========================
+
+TARGET: FULL STABLE BOOT ARCHITECTURE
+
+========================
+PHASE 1 - BOOT CONTROL (09:00 - 10:30)
+========================
+- create single boot.py
+- enforce single bot instance
+- remove duplicate polling sources
+- validate config + env priority
+
+CHECKPOINT 1 (10:30): BOOT STABILITY TEST
+EXPECTED: bot starts ONCE, no 409 errors
+
+========================
+PHASE 2 - CORE CLEANUP (10:45 - 12:30)
+========================
+- unify EventBus usage (single implementation)
+- fix kernel init mismatch (workers issue)
+- ensure plugin loader safe init order
+
+CHECKPOINT 2 (12:30): CORE HEALTH TEST
+EXPECTED: EventBus OK + Kernel OK
+
+========================
+PHASE 3 - PLUGINS INTEGRATION (13:00 - 14:30)
+========================
+- load TaskPlugin safely
+- ensure on_start runs once
+- prevent duplicate handler registration
+
+CHECKPOINT 3 (14:30): PLUGINS TEST
+EXPECTED: no duplicate handlers, clean startup
+
+========================
+PHASE 4 - TELEGRAM STABILITY (15:00 - 16:00)
+========================
+- fix polling lifecycle
+- eliminate 409 conflict root cause
+- ensure clean shutdown/restart
+
+FINAL CHECK (16:00)
+- bot runs stable 10+ minutes
+- zero crashes
+- single instance verified
+
+========================
+SUCCESS CRITERIA
+========================
+- ONE bot process only
+- ZERO 409 errors
+- clean boot sequence
+- plugins load once
+
+END OF PLAN
