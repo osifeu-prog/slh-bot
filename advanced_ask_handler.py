@@ -159,7 +159,7 @@ def register_ask_handler(bot):
                     u2["ask_credits"] = max(0, u2.get("ask_credits", 0) - 1)
                     state_manager.save_db(db2)
 
-                bot.reply_to(m, f"🧠 ({prov})\n{answer}", parse_mode="Markdown")
+                bot.reply_to(m, f"🧠 ({prov})\n{answer}")
                 current_provider = prov
                 return
             except Exception as e:
