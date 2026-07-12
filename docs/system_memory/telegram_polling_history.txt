@@ -1,0 +1,10 @@
+d552ea5 fix: add snapshot/endday/report before polling, restore from known good base
+e2b3192 fix: move telegram polling to single startup entry
+135a5b2 Simplify /reload: clear handlers without stopping polling loop
+1536863 Enforce single entrypoint: archive duplicate polling files, fix SyntaxWarning
+ed1644f stable: all modules loaded, none_stop polling, /test /admin working
+2c56462 move /start handler before polling, fix warning
+ccbbde0 final: polling + diagnose handler at end
+a89a1f5 ensure polling present
+76f926a feat: auto-recovery on polling crash, audit on crash
+a3bb48e fix: restored bot.py from bot_fix, env token, stable polling
