@@ -5,3 +5,9 @@ Known history: e2b3192 single startup entry, 1536863 single entrypoint
 Future direction:
 SLH Academy microservices developer course planned.
 Purpose: create ecosystem developers who integrate through protected APIs.
+
+2026-07-13:
+SLH Gateway Evolution Phase 1 documented.
+Microservices academy model planned.
+No production runtime changes approved.
+Gateway remains future integration boundary.
