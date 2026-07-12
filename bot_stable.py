@@ -938,6 +938,11 @@ try:
     register_help(bot)
     print("✅ help_handler loaded")
 
+    from admin_utils import is_admin
+    import refresh_token_handler
+    refresh_token_handler.init(bot, is_admin_func=is_admin)
+    print("✅ refresh_token_handler loaded")
+
 
     if LLM_AVAILABLE:
         register_llm(bot)
