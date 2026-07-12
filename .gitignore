@@ -58,3 +58,7 @@ safe_diag.txt
 railway_status_debug.json
 slh_daily_log_*.txt
 slh_log.txt
+
+# Runtime temporary files
+.bot.lock
+runtime/*.pid
