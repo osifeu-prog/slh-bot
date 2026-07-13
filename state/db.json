@@ -1,0 +1,77 @@
+{
+  "users": {
+    "8789977826": {
+      "profile": {
+        "created": "2026-07-13T13:27:18.459720",
+        "telegram_id": "8789977826"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": true,
+        "stage": "completed"
+      },
+      "ai": {
+        "initialized": true
+      }
+    },
+    "224223270": {
+      "profile": {
+        "created": "2026-07-13T17:51:55.477866",
+        "telegram_id": "224223270"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": false,
+        "stage": "welcome"
+      },
+      "ai": {
+        "initialized": false
+      }
+    }
+  },
+  "students": {},
+  "tasks": {},
+  "votes": {}
+}
