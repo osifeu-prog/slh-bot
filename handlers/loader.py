@@ -92,4 +92,12 @@ def load_handlers(bot, context):
             print(f"{module_name} load error:", e)
 
 
+    
+    try:
+        from handlers.ownership_transfer_handler import register as register_ownership
+        register_ownership(bot)
+        print("🎓 ownership_transfer_handler loaded")
+    except Exception as e:
+        print("ownership_transfer_handler error:", e)
+
     print("🧩 Modular + Legacy handlers loaded")
