@@ -49,40 +49,9 @@ def get_bot_context(uid: str) -> str:
     return ctx
 
 def register(bot):
-    @bot.message_handler(commands=['ask'])
-    def ask_llm(m):
-        uid = str(m.chat.id)
-        query = m.text.replace("/ask", "", 1).strip()
-        # Auto-convert if typed in Hebrew intent but English keyboard layout
-        if query and all(ord(c) < 128 for c in query.replace(" ", "")):
-            from heb_convert import convert_to_hebrew
-            converted = convert_to_hebrew(query)
-            if converted != query:
-                query = converted
-        if not query:
-            bot.reply_to(m, "Usage: /ask <question>")
-            return
-        context = get_bot_context(uid)
-        system_msg = (
-            "You are SLH Assistant, an AI helper for the SLH learning platform. "
-            "Use the provided user context to answer questions, give advice, "
-            "and suggest actions within the platform.\n\n"
-            "Context:\n" + context
-        )
-        try:
-            resp = get_client().chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": system_msg},
-                    {"role": "user", "content": query}
-                ],
-                temperature=0.7,
-                max_tokens=500
-            )
-            answer = resp.choices[0].message.content
-        except Exception as e:
-            answer = f"⚠️ LLM error: {e}"
-        bot.reply_to(m, answer)
+    # Legacy stub.
+    # /ask is now handled exclusively by advanced_ask_handler.py
+    pass
 
 
 def is_llm_available():

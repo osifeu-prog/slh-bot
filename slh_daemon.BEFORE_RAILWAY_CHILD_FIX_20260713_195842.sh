@@ -37,7 +37,7 @@ pkill -f "python3.*bot_stable.py" 2>/dev/null || true
 sleep 2
 
 
-nohup railway run -- python3 -u -B bot_stable.py >> bot.log 2>&1 &
+nohup railway run python3 -u -B bot_stable.py >> bot.log 2>&1 &
 
 BOT_PID=$!
 

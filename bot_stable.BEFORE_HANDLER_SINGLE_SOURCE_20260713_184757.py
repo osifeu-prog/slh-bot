@@ -1,16 +1,6 @@
 from doctor_handler import register_doctor_handlers
 from heb_convert import convert_to_hebrew
-import os
-from dotenv import load_dotenv
-load_dotenv('.env')
-import sys, json, time, subprocess
-
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
+import os, sys, json, time, subprocess
 import telebot
 
 # ---------------- SLH PID LOCK ----------------
@@ -69,8 +59,9 @@ DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
-# payment/econ/staking loaded through handlers.loader.py
-print("ℹ️ payment/econ/staking delegated to handler loader")
+register_payment_handlers(bot)
+register_econ_handlers(bot)
+register_staking_handlers(bot)
 agents_dict = {}
 
 # ---- Load agents from persistent storage ----
@@ -328,9 +319,19 @@ def health(m):
         msg = "Health: limited info (psutil not available)"
     bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
 
-# ===== TASK HANDLER MOVED TO handlers/task_handler.py =====
-# Kernel task endpoint removed from main bot.
-# Single source: handlers.task_handler
+@bot.message_handler(commands=['task'])
+def task(m):
+    if not _KERNEL_READY:
+        bot.reply_to(m, "Kernel not loaded")
+        return
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
@@ -948,7 +949,9 @@ except Exception as e:
 
 # ===== ADVANCED MULTI LLM HANDLER =====
 try:
-    print("ℹ️ advanced_ask_handler delegated to handlers.loader.py")
+    from advanced_ask_handler import register_ask_handler
+    register_ask_handler(bot)
+    print("✅ advanced_ask_handler loaded")
 except Exception as e:
     print("❌ advanced_ask_handler error:", e)
 
@@ -975,9 +978,35 @@ except Exception as e:
 from handlers.loader import load_handlers
 load_handlers(bot, context)
 
-# ===== HANDLERS LOADED THROUGH SINGLE LOADER =====
-print("✅ Single handler loader active")
+# ===== LEGACY USER EXPERIENCE BOOTSTRAP =====
+try:
 
+    import guide_handler
+    guide_handler.init(bot)
+    print("✅ guide_handler loaded")
+    print("✅ welcome_handler loaded")
+
+    # ===== DOCTOR HANDLER =====
+    register_doctor_handlers(bot)
+    print("✅ doctor_handler loaded")
+
+    from help_handler import register_help
+    register_help(bot)
+    print("✅ help_handler loaded")
+
+    from admin_utils import is_admin
+    import refresh_token_handler
+    refresh_token_handler.init(bot, is_admin_func=is_admin)
+    print("✅ refresh_token_handler loaded")
+
+
+    if LLM_AVAILABLE:
+        register_llm(bot)
+        print("✅ LLM handler (Groq) loaded")
+    print("✅ Legacy UX handlers loaded")
+    print("✅ Journal + Roadmap handlers loaded")
+except Exception as e:
+    print("❌ Legacy UX loader error:", e)
 # ===== BROADCAST HANDLER (AUTO-GENERATED) =====
 @bot.message_handler(commands=['broadcast'])
 def broadcast(m):

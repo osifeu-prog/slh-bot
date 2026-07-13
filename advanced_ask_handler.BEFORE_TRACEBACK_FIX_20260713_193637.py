@@ -151,8 +151,9 @@ def register_ask_handler(bot):
                 if len(answer) > 4000:
                     answer = answer[:4000] + "..."
 
-                # Wikipedia auto-source disabled:
-                # avoid attaching unrelated pages to general LLM answers
+                title, wiki_url = _get_wikipedia_source(question)
+                if wiki_url:
+                    answer += f"\n\n📖 מקור: [{title}]({wiki_url})"
 
                 if not admin:
                     db2 = state_manager.load_db()
@@ -165,10 +166,6 @@ def register_ask_handler(bot):
                 current_provider = prov
                 return
             except Exception as e:
-                import traceback
-                print("===== LLM EXCEPTION =====")
-                traceback.print_exc()
-                print("===== END LLM EXCEPTION =====")
                 errors.append(f"{prov}: {e}")
                 continue
 

@@ -11,8 +11,26 @@ def save_db(db):
         json.dump(db, f, indent=2, ensure_ascii=False)
 
 def register_course_handlers(bot):
-    # /pay moved to payment_handler.py
-    # Single source payment handler
+    @bot.message_handler(commands=['pay'])
+    def pay_info(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student:
+            bot.reply_to(m, "❌ Register first.")
+            return
+        if student.get("premium"):
+            bot.reply_to(m, "✅ You are already a premium member.")
+            return
+        with open("config.json") as f:
+            cfg = json.load(f)
+        wallet = cfg.get('TON_WALLET', 'UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj')
+        msg = f"💳 **Premium Access – {cfg.get('COURSE_PRICE_USDT', 60)} USDT**\n"
+        msg += f"Send exactly {cfg.get('COURSE_PRICE_USDT', 60)} USDT (TON network) to:\n`{wallet}`\n"
+        msg += "After payment, send the transaction hash here or contact the admin.\n"
+        msg += "Once verified, you'll get full course access and your referral link."
+        bot.reply_to(m, msg, parse_mode="Markdown")
+
     @bot.message_handler(commands=['activate'])
     def activate_user(m):
         if str(m.chat.id) != "8789977826":
@@ -151,5 +169,28 @@ def register_course_handlers(bot):
             save_db(db)
         bot.reply_to(m, f"📚 **{stage['name']}**\n\n{text}\n\nלשלב הבא – /next")
 
-    # /progress moved to handlers/academy_handler.py
-    # Single source academy progress handler
+    @bot.message_handler(commands=['progress'])
+    def progress(m):
+        uid = str(m.from_user.id)
+        db = load_db()
+        student = db.get("students", {}).get(uid)
+        if not student or "bitcoin_mastery" not in student.get("courses", {}):
+            bot.reply_to(m, "אתה לא רשום לקורס. /start_course")
+            return
+        cd = student["courses"]["bitcoin_mastery"]
+        total_stages = cd.get("total_stages", 3)
+        done = len(cd.get("completed_stages", []))
+        pct = cd.get("progress", 0)
+        current = cd.get("current_stage", 1)
+        msg = f"📊 התקדמות: {pct}% ({done}/{total_stages} שלבים)\n"
+        if current <= total_stages:
+            try:
+                stages_def = json.load(open("courses.json"))["bitcoin_mastery"]["stages"]
+                stage_name = stages_def[current-1]["name"]
+            except:
+                stage_name = "?"
+            msg += f"בשלב: {current} – {stage_name}"
+        else:
+            msg += "סיימת את הקורס!"
+        bot.reply_to(m, msg)
+

@@ -4,13 +4,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv('.env')
 import sys, json, time, subprocess
-
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
 import telebot
 
 # ---------------- SLH PID LOCK ----------------

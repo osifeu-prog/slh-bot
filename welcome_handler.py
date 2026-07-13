@@ -76,6 +76,7 @@ def init(bot):
             print("logo error:", e)
         markup = types.InlineKeyboardMarkup(row_width=2)
         buttons = [
+            ("🚀 התחלת מערכת", "onboarding_start"),
             ("📚 קורסים", "start_courses"),
             ("🤖 סוכנים", "start_agents"),
             ("💰 יתרה", "start_balance"),

@@ -1,16 +1,6 @@
 from doctor_handler import register_doctor_handlers
 from heb_convert import convert_to_hebrew
-import os
-from dotenv import load_dotenv
-load_dotenv('.env')
-import sys, json, time, subprocess
-
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
+import os, sys, json, time, subprocess
 import telebot
 
 # ---------------- SLH PID LOCK ----------------
@@ -948,7 +938,9 @@ except Exception as e:
 
 # ===== ADVANCED MULTI LLM HANDLER =====
 try:
-    print("ℹ️ advanced_ask_handler delegated to handlers.loader.py")
+    from advanced_ask_handler import register_ask_handler
+    register_ask_handler(bot)
+    print("✅ advanced_ask_handler loaded")
 except Exception as e:
     print("❌ advanced_ask_handler error:", e)
 

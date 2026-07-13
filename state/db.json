@@ -63,11 +63,12 @@
         "commission": 0
       },
       "onboarding": {
-        "completed": false,
-        "stage": "welcome"
+        "completed": true,
+        "stage": "completed",
+        "completed_at": "2026-07-13T18:04:05.179666"
       },
       "ai": {
-        "initialized": false
+        "initialized": true
       }
     }
   },

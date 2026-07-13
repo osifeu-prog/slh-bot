@@ -12,7 +12,6 @@ def load_handlers(bot, context):
     try:
         from handlers.task_handler import register as register_task
         register_task(bot, context)
-        print("✅ task_handler loaded")
     except Exception as e:
         print("task_handler error:", e)
 

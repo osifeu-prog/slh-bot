@@ -1,16 +1,6 @@
 from doctor_handler import register_doctor_handlers
 from heb_convert import convert_to_hebrew
-import os
-from dotenv import load_dotenv
-load_dotenv('.env')
-import sys, json, time, subprocess
-
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-except Exception:
-    pass
-
+import os, sys, json, time, subprocess
 import telebot
 
 # ---------------- SLH PID LOCK ----------------
@@ -328,9 +318,19 @@ def health(m):
         msg = "Health: limited info (psutil not available)"
     bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
 
-# ===== TASK HANDLER MOVED TO handlers/task_handler.py =====
-# Kernel task endpoint removed from main bot.
-# Single source: handlers.task_handler
+@bot.message_handler(commands=['task'])
+def task(m):
+    if not _KERNEL_READY:
+        bot.reply_to(m, "Kernel not loaded")
+        return
+    parts = m.text.split(" ", 2)
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /task create <text> | /task list")
+        return
+    if parts[1] == "create":
+        kernel.bus.emit("task_create", {"chat": m.chat.id, "task": parts[2] if len(parts) > 2 else ""})
+    elif parts[1] == "list":
+        kernel.bus.emit("task_list", {"chat": m.chat.id})
 
 @bot.message_handler(commands=['agent_create'])
 def agent_create(m):
@@ -948,7 +948,9 @@ except Exception as e:
 
 # ===== ADVANCED MULTI LLM HANDLER =====
 try:
-    print("ℹ️ advanced_ask_handler delegated to handlers.loader.py")
+    from advanced_ask_handler import register_ask_handler
+    register_ask_handler(bot)
+    print("✅ advanced_ask_handler loaded")
 except Exception as e:
     print("❌ advanced_ask_handler error:", e)
 

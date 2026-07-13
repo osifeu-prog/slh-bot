@@ -138,12 +138,10 @@ def register_ask_handler(bot):
                 else:
                     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
                     payload = {"model": model, "messages": [{"role": "user", "content": question}], "max_tokens": 1200, "temperature": 0.7}
-                    print("DEBUG GROQ REQUEST UTF8")
                     resp = requests.post(url, json=payload, headers=headers, timeout=15)
                     if resp.status_code == 200:
                         data = resp.json()
                         answer = data["choices"][0]["message"]["content"].strip()
-                        print("DEBUG GROQ ANSWER OK")
                     else:
                         errors.append(f"{prov}: HTTP {resp.status_code}")
                         continue
@@ -151,8 +149,9 @@ def register_ask_handler(bot):
                 if len(answer) > 4000:
                     answer = answer[:4000] + "..."
 
-                # Wikipedia auto-source disabled:
-                # avoid attaching unrelated pages to general LLM answers
+                title, wiki_url = _get_wikipedia_source(question)
+                if wiki_url:
+                    answer += f"\n\n📖 מקור: [{title}]({wiki_url})"
 
                 if not admin:
                     db2 = state_manager.load_db()
@@ -160,15 +159,10 @@ def register_ask_handler(bot):
                     u2["ask_credits"] = max(0, u2.get("ask_credits", 0) - 1)
                     state_manager.save_db(db2)
 
-                print("DEBUG BEFORE TELEGRAM REPLY")
                 bot.reply_to(m, f"🧠 ({prov})\n{answer}")
                 current_provider = prov
                 return
             except Exception as e:
-                import traceback
-                print("===== LLM EXCEPTION =====")
-                traceback.print_exc()
-                print("===== END LLM EXCEPTION =====")
                 errors.append(f"{prov}: {e}")
                 continue
 
