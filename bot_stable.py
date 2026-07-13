@@ -1029,21 +1029,30 @@ DB: state/db.json"""
 
 
 def start_bot():
-    while True:
-        try:
-            print("🟢 POLLING START")
-            bot.infinity_polling(
-                timeout=20,
-                long_polling_timeout=20,
-                logger_level=10
-            )
-            print("🔴 POLLING ENDED CLEAN")
+    print("🟢 POLLING START")
 
-        except Exception as e:
-            import traceback
-            print("🔥 POLLING EXCEPTION:", repr(e))
-            traceback.print_exc()
-            time.sleep(5)
+    try:
+        bot.remove_webhook()
+        time.sleep(2)
+
+        bot.infinity_polling(
+            timeout=20,
+            long_polling_timeout=20,
+            logger_level=10,
+            skip_pending=True
+        )
+
+    except Exception as e:
+        import traceback
+        print("🔥 POLLING EXCEPTION:", repr(e))
+        traceback.print_exc()
+
+    finally:
+        print("🔴 POLLING STOPPED")
+        try:
+            bot.stop_polling()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     start_bot()
