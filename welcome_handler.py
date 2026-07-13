@@ -1,9 +1,73 @@
 import telebot
 from telebot import types
+import json
+from datetime import datetime
+
+DB_PATH="state/db.json"
+
+def ensure_onboarding_user(uid):
+    uid=str(uid)
+
+    try:
+        with open(DB_PATH, encoding="utf-8") as f:
+            db=json.load(f)
+    except:
+        db={"users":{}}
+
+    db.setdefault("users",{})
+
+    if uid not in db["users"]:
+        db["users"][uid]={
+            "profile":{
+                "created":datetime.now().isoformat(),
+                "telegram_id":uid
+            },
+            "wallet":{
+                "credits":10
+            },
+            "academy":{
+                "courses":{
+                    "bitcoin_mastery":{
+                        "stage":1,
+                        "completed":[1]
+                    }
+                }
+            },
+            "gamification":{
+                "points":25,
+                "level":1
+            },
+            "referral":{
+                "code":None,
+                "count":0,
+                "commission":0
+            },
+            "onboarding":{
+                "completed":False,
+                "stage":"welcome"
+            },
+            "ai":{
+                "initialized":False
+            }
+        }
+
+    else:
+        db["users"][uid].setdefault("onboarding",{
+            "completed":False,
+            "stage":"welcome"
+        })
+
+    with open(DB_PATH,"w",encoding="utf-8") as f:
+        json.dump(db,f,indent=2,ensure_ascii=False)
+
+    return db["users"][uid]
+
 
 def init(bot):
     @bot.message_handler(commands=['start'])
     def start(m):
+        user=ensure_onboarding_user(m.from_user.id)
+        print("ONBOARDING USER:",m.from_user.id)
         try:
             with open("logo.txt", "r", encoding="utf-8") as lf:
                 logo = lf.read()

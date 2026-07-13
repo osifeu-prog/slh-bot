@@ -111,7 +111,38 @@ def now():
 
 def ensure_user(db, uid):
     uid = str(uid)
-    db["users"].setdefault(uid, {"created": now(), "points": 0})
+
+    if uid not in db["users"]:
+        db["users"][uid] = {
+            "profile": {
+                "created": now()
+            },
+            "wallet": {
+                "credits": 10
+            },
+            "academy": {
+                "courses": {
+                    "bitcoin_mastery": {
+                        "stage": 1,
+                        "completed": [1]
+                    }
+                }
+            },
+            "gamification": {
+                "points": 25,
+                "level": 1
+            },
+            "referral": {
+                "code": None,
+                "count": 0,
+                "commission": 0
+            },
+            "onboarding": {
+                "completed": False,
+                "stage": "welcome"
+            }
+        }
+
     return db
 
 # ---------------- COMMANDS ----------------
