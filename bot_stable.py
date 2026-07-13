@@ -69,6 +69,25 @@ DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
 
+# --- Load custom handlers from local state directory ---
+import importlib.util
+custom_dir = os.path.join(os.path.dirname(__file__), "state", "custom_handlers")
+if os.path.isdir(custom_dir):
+    for fname in sorted(os.listdir(custom_dir)):
+        if fname.endswith(".py") and fname != "__init__.py":
+            mod_name = fname[:-3]
+            path = os.path.join(custom_dir, fname)
+            spec = importlib.util.spec_from_file_location(mod_name, path)
+            mod = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(mod)
+                if hasattr(mod, "register"):
+                    mod.register(bot)
+                    print(f"✅ Custom handler loaded: {mod_name}")
+            except Exception as e:
+                print(f"❌ Failed to load custom handler {mod_name}: {e}")
+# --------------------------------------------------------
+
 # payment/econ/staking loaded through handlers.loader.py
 print("ℹ️ payment/econ/staking delegated to handler loader")
 agents_dict = {}
