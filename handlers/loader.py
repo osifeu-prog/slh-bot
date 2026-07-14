@@ -12,7 +12,6 @@ def load_handlers(bot, context):
     try:
         from handlers.task_handler import register as register_task
         register_task(bot, context)
-        print("✅ task_handler loaded")
     except Exception as e:
         print("task_handler error:", e)
 
@@ -48,76 +47,49 @@ def load_handlers(bot, context):
         print("gateway_handler error:", e)
 
 
-    # ===== ONBOARDING SYSTEM =====
-    try:
-        import onboarding_handler
-        onboarding_handler.init(bot)
-        print("🚀 onboarding_handler loaded")
-    except Exception as e:
-        print("onboarding_handler error:", e)
-
-
-    # ===== SINGLE SOURCE LEGACY HANDLERS =====
-
-    handlers = [
-        ("welcome_handler", "init"),
-        ("help_handler", "register_help"),
-        ("course_handlers", "register_course_handlers"),
-        ("learn_handlers", "register"),
-        ("econ_handler", "register_econ_handlers"),
-        ("payment_handler", "register_payment_handlers"),
-        ("staking_handler", "register_staking_handlers"),
-        ("project_commands", "register"),
-        ("smart_leaderboard", "register"),
-        ("viewfile_handler", "register"),
-        ("tutorial_handler", "register"),
+    # ===== LEGACY USER EXPERIENCE =====
+    legacy = [
+        "welcome_handler",
+        "help_handler",
+        "course_handlers",
+        "learn_handlers",
+        "econ_handler",
+        "payment_handler",
+        "project_commands",
+        "smart_leaderboard",
     ]
 
-    for module_name, fn_name in handlers:
+    for module_name in legacy:
         try:
             module = __import__(module_name)
-            fn = getattr(module, fn_name)
-            fn(bot)
-            print(f"✅ {module_name} loaded")
+
+            # handlers with register(bot)
+            if hasattr(module, "register"):
+                module.register(bot)
+
+            # welcome uses init(bot)
+            elif module_name == "welcome_handler" and hasattr(module, "init"):
+                module.init(bot)
+
+            # help uses register_help(bot)
+            elif module_name == "help_handler" and hasattr(module, "register_help"):
+                module.register_help(bot)
+
+            # course/economy style handlers
+            elif module_name == "course_handlers" and hasattr(module, "register_course_handlers"):
+                module.register_course_handlers(bot)
+
+            elif module_name == "econ_handler" and hasattr(module, "register_econ_handlers"):
+                module.register_econ_handlers(bot)
+
+            elif module_name == "payment_handler" and hasattr(module, "register_payment_handlers"):
+                module.register_payment_handlers(bot)
+
+            elif module_name == "smart_leaderboard" and hasattr(module, "register"):
+                module.register(bot)
+
         except Exception as e:
             print(f"{module_name} load error:", e)
 
-
-    # ===== EXTRA MODULAR HANDLERS =====
-
-    try:
-        from handlers.academy_menu_handler import register as register_academy_menu
-        register_academy_menu(bot)
-        print("✅ academy_menu_handler loaded")
-    except Exception as e:
-        print("academy_menu_handler error:", e)
-
-    try:
-        from handlers.lesson_handler import register as register_lesson
-        register_lesson(bot)
-        print("✅ lesson_handler loaded")
-    except Exception as e:
-        print("lesson_handler error:", e)
-
-    try:
-        from handlers.academy_handler import register as register_academy
-        register_academy(bot)
-        print("✅ academy_handler loaded")
-    except Exception as e:
-        print("academy_handler error:", e)
-
-    try:
-        from advanced_ask_handler import register_ask_handler
-        register_ask_handler(bot)
-        print("✅ advanced_ask_handler loaded")
-    except Exception as e:
-        print("advanced_ask_handler error:", e)
-
-    try:
-        from doctor_handler import register_doctor_handlers
-        register_doctor_handlers(bot)
-        print("✅ doctor_handler loaded")
-    except Exception as e:
-        print("doctor_handler error:", e)
 
     print("🧩 Modular + Legacy handlers loaded")

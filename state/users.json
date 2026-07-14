@@ -7,7 +7,14 @@
       "deploy",
       "restart",
       "developer_manage",
-      "economy"
+      "economy",
+      "restart"
+    ]
+  },
+  "224223270": {
+    "role": "USER",
+    "permissions": [
+      "restart"
     ]
   }
 }

@@ -1,7 +1,7 @@
 import json, os, time
 
-DEV_FILE = os.path.join(os.path.dirname(file), '..', 'developers.json')
-USERS_FILE = os.path.join(os.path.dirname(file), '..', 'users.json')
+DEV_FILE = os.path.join(os.path.dirname(__file__), '..', 'developers.json')
+USERS_FILE = os.path.join(os.path.dirname(__file__), '..', 'users.json')
 
 def get_owner_id():
     if not os.path.exists(USERS_FILE):

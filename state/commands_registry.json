@@ -103,5 +103,12 @@
   "usereferral": "market",
   "vote": "core",
   "slh": "system",
-  "morning": "system"
+  "morning": "system",
+  "commands": [
+    "token"
+  ],
+  "token": {
+    "description": "SLH Token",
+    "category": "Economy"
+  }
 }

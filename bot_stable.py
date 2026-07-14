@@ -95,8 +95,8 @@ agents_dict = {}
 # ---- Load agents from persistent storage ----
 try:
     import json, os
-    if os.path.exists("/app/agents.json"):
-        with open("/app/agents.json") as f:
+    if os.path.exists("state/agents.json"):
+        with open("state/agents.json") as f:
             agents_dict.update(json.load(f))
         print(f"Loaded {len(agents_dict)} agents from disk")
 except Exception as e:
@@ -361,7 +361,7 @@ def agent_create(m):
     agents_dict[aid] = agent_data
     # save to file for persistence across deploys
     try:
-        path = "/app/agents.json"
+        path = "state/agents.json"
         existing = json.load(open(path)) if os.path.exists(path) else {}
         existing[aid] = agent_data
         json.dump(existing, open(path, "w"), indent=2)
@@ -629,7 +629,7 @@ def test_agents(m):
     
     # 5. Persistence
     try:
-        path = "/app/agents.json"
+        path = "state/agents.json"
         existing = json.load(open(path)) if os.path.exists(path) else {}
         existing[aid] = agents_dict[aid]
         json.dump(existing, open(path, "w"), indent=2)

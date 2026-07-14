@@ -6,20 +6,22 @@
         "telegram_id": "8789977826"
       },
       "wallet": {
-        "credits": 10
+        "credits": 30
       },
       "academy": {
         "courses": {
           "bitcoin_mastery": {
-            "stage": 1,
+            "stage": 6,
             "completed": [
-              1
+              1,
+              6
             ]
           }
-        }
+        },
+        "active_course": "bitcoin_mastery"
       },
       "gamification": {
-        "points": 25,
+        "points": 75,
         "level": 1
       },
       "referral": {
@@ -70,9 +72,154 @@
       "ai": {
         "initialized": true
       }
+    },
+    "1849509514": {
+      "profile": {
+        "created": "2026-07-14T15:18:02.216747",
+        "telegram_id": "1849509514"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": false,
+        "stage": "questions"
+      },
+      "ai": {
+        "initialized": false
+      }
+    },
+    "1518680802": {
+      "profile": {
+        "created": "2026-07-14T19:52:59.687375",
+        "telegram_id": "1518680802"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": false,
+        "stage": "welcome"
+      },
+      "ai": {
+        "initialized": false
+      }
+    },
+    "5010371391": {
+      "profile": {
+        "created": "2026-07-14T20:32:56.551903",
+        "telegram_id": "5010371391"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": false,
+        "stage": "welcome"
+      },
+      "ai": {
+        "initialized": false
+      }
     }
   },
   "students": {},
   "tasks": {},
-  "votes": {}
+  "votes": {},
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "role": "agent",
+      "state": "active",
+      "inbox": [],
+      "created": "2026-07-14 14:26"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": []
+    },
+    "3": {
+      "name": "SyncAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": []
+    },
+    "4": {
+      "name": "TokenAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": [],
+      "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02"
+    }
+  },
+  "token": {
+    "supply": 111186.33,
+    "balances": {
+      "8789977826": 26232.9423
+    }
+  },
+  "staking": {
+    "8789977826": {
+      "amount": 100.02868001924621,
+      "since": 1784051688.956198
+    }
+  }
 }

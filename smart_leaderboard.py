@@ -10,26 +10,17 @@ def register(bot):
     @bot.message_handler(commands=['leaderboard'])
     def leaderboard(m):
         db = load_db()
-        students = db.get("students", {})
-        if not students:
-            bot.reply_to(m, "📭 No students registered yet.")
+        users = db.get('users', {})
+        ranking = []
+        for uid, u in users.items():
+            name = u.get('profile', {}).get('name') or u.get('profile', {}).get('first_name') or uid
+            points = u.get('gamification', {}).get('points', 0)
+            ranking.append((name, points))
+        if not ranking:
+            bot.reply_to(m, '📭 No users yet.')
             return
-
-        ranked = sorted(
-            students.items(),
-            key=lambda kv: kv[1].get("referral_count", 0),
-            reverse=True
-        )
-
-        medals = ["🥇", "🥈", "🥉"]
-        lines = ["🏆 **Leaderboard – Top Referrers**\n"]
-        for i, (uid, data) in enumerate(ranked[:10]):
-            name = data.get("name", f"User {uid}")
-            count = data.get("referral_count", 0)
-            prefix = medals[i] if i < 3 else f"{i+1}."
-            lines.append(f"{prefix} {name} — {count} referrals")
-
-        bot.reply_to(m, "\n".join(lines), parse_mode="Markdown")
-
-def init():
-    pass
+        ranking.sort(key=lambda x: x[1], reverse=True)
+        lines = ['🏆 Leaderboard:']
+        for i, (name, pts) in enumerate(ranking, 1):
+            lines.append(f'{i}. {name} – ⭐️ {pts}')
+        bot.reply_to(m, '\n'.join(lines))

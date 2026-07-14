@@ -5,7 +5,7 @@ COMMANDS = {}
 def task(message, bot):
     args = message.text.split(maxsplit=1)
 
-    if len(args) == 1:
+    if len(args) == 1 or (len(args) > 1 and args[1].strip().lower() == "list"):
         tasks = task_service.list_tasks()
 
         if not tasks:

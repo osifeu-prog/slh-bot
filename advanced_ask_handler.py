@@ -174,3 +174,9 @@ def register_ask_handler(bot):
 
         current_provider = None
         bot.reply_to(m, "❌ All LLM providers failed:\n" + "\n".join(errors))
+
+# SLH System Prompt (patched)
+SLH_SYSTEM_PROMPT = """אתה SLH AI – עוזר מערכת ההפעלה SLH OS.
+המערכת כוללת: קורסים, משימות, סוכני AI, ארנק, Marketplace, Staking.
+ענה בעברית טבעית ותמציתית. כאשר נשאל על המערכת, התייחס לרכיבים האמיתיים שלה.
+לעולם אל תמציא נתונים. אם חסר מידע, שאל."""

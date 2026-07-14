@@ -69,3 +69,12 @@ ps aux | grep -E "bot_stable|web/api|http.server" | grep -v grep
 
 echo ""
 echo "✅ ALL SERVICES STARTED"
+
+# --- Auto-validate handlers before start ---
+echo "🔍 Checking handler syntax..."
+python3 -m compileall handlers/ >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "❌ Handler syntax warning – aborting start."
+    exit 1
+fi
+echo "✅ All handlers valid"

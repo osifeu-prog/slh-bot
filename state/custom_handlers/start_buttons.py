@@ -1,0 +1,38 @@
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+def register(bot):
+    @bot.message_handler(commands=['start'])
+    def start_with_buttons(msg):
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        buttons = [
+            InlineKeyboardButton("💰 Token Wizard", callback_data="token_wizard_start"),
+            InlineKeyboardButton("🏆 Leaderboard", callback_data="leaderboard_show"),
+            InlineKeyboardButton("📚 Courses", callback_data="courses_show"),
+            InlineKeyboardButton("📖 Help", callback_data="help_show"),
+        ]
+        keyboard.add(*buttons)
+        bot.send_message(
+            msg.chat.id,
+            "🚀 ברוכים הבאים ל-SLH OS!\nמה תרצו לעשות?",
+            reply_markup=keyboard
+        )
+
+    @bot.callback_query_handler(func=lambda call: call.data == "token_wizard_start")
+    def cb_wizard(call):
+        bot.send_message(call.message.chat.id, "/token_wizard")
+        bot.answer_callback_query(call.id)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "leaderboard_show")
+    def cb_leaderboard(call):
+        bot.send_message(call.message.chat.id, "/leaderboard")
+        bot.answer_callback_query(call.id)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "courses_show")
+    def cb_courses(call):
+        bot.send_message(call.message.chat.id, "/courses")
+        bot.answer_callback_query(call.id)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "help_show")
+    def cb_help(call):
+        bot.send_message(call.message.chat.id, "/help")
+        bot.answer_callback_query(call.id)
