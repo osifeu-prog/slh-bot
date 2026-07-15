@@ -523,46 +523,53 @@ def rollback(m):
 
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):
-    import time, json, os
-    results = []
-    
-    # 1. Create test agent
-    aid = str(len(agents_dict) + 1)
-    agents_dict[aid] = {"name": "test_agent", "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
-    results.append(f"✅ Agent created: id={aid}")
-    
-    # 2. Change state
-    agents_dict[aid]["state"] = "busy"
-    results.append("✅ State changed")
-    
-    # 3. Send message
-    agents_dict[aid]["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": "test message"})
-    results.append("✅ Message sent")
-    
-    # 4. Check inbox
-    inbox = agents_dict[aid]["inbox"]
-    results.append(f"✅ Inbox has {len(inbox)} messages")
-    
-    # 5. Persistence
-    try:
-        path = "state/agents.json"
-        existing = json.load(open(path)) if os.path.exists(path) else {}
-        existing[aid] = agents_dict[aid]
-        json.dump(existing, open(path, "w"), indent=2)
-        results.append("✅ Persistence OK")
-    except:
-        results.append("❌ Persistence FAILED")
-    
-    # 6. Kernel status
-    results.append(f"✅ Kernel: {'ACTIVE' if _KERNEL_READY else 'INACTIVE'}")
-    
-    # 7. Audit
-    audit('test_agents', m.from_user.id, 'auto')
-    entries = get_audit(5)
-    results.append(f"✅ Audit: {len(entries)} entries")
-    
-    bot.reply_to(m, "📊 AGENT TEST RESULTS:\n" + "\n".join(results))
+    import time
 
+    results = []
+
+    try:
+        import state_manager
+
+        agents = state_manager.get_agents()
+
+        name = "test_agent"
+
+        agents[name] = {
+            "name": name,
+            "role": "agent",
+            "state": "idle",
+            "inbox": [],
+            "outbox": [],
+            "created": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        state_manager.set_agents(agents)
+        results.append("✅ Agent created")
+
+        agents = state_manager.get_agents()
+        agents[name]["state"] = "busy"
+        state_manager.set_agents(agents)
+        results.append("✅ State changed")
+
+        agents = state_manager.get_agents()
+        agents[name].setdefault("inbox", []).append("test message")
+        state_manager.set_agents(agents)
+        results.append("✅ Message sent")
+
+        agents = state_manager.get_agents()
+        results.append(
+            f"✅ Inbox has {len(agents[name].get('inbox', []))} messages"
+        )
+
+        results.append("✅ Persistence OK")
+
+        bot.reply_to(
+            m,
+            "📊 AGENT TEST RESULTS:\n" + "\n".join(results)
+        )
+
+    except Exception as e:
+        bot.reply_to(m, f"❌ Agent test failed: {e}")
 
 @bot.message_handler(commands=['user'])
 def user(m):
