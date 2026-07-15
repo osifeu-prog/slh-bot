@@ -91,6 +91,8 @@ if os.path.isdir(custom_dir):
 
 # payment/econ/staking loaded through handlers.loader.py
 print("ℹ️ payment/econ/staking delegated to handler loader")
+import state_manager
+
 # Agents are managed only by handlers/agents_handler.py
 # Legacy agents_dict removed from runtime storage
 agents_dict = {}
@@ -326,7 +328,10 @@ READY:
 @bot.message_handler(commands=['status'])
 def status(m):
     db = load_db()
-    bot.reply_to(m, f"Users: {len(db['users'])}\nAgents: {len(agents_dict)}\nTasks: {len(db['tasks'])}")
+    bot.reply_to(
+        m,
+        f"Users: {len(db['users'])}\nAgents: {len(state_manager.get_agents())}\nTasks: {len(db['tasks'])}"
+    )
 
 @bot.message_handler(commands=['health'])
 def health(m):
