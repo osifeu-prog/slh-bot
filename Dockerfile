@@ -12,4 +12,6 @@ RUN echo "=== BUILD CHECK ===" && ls -la /app && test -f /app/bot_stable.py
 
 RUN mkdir -p /app/state
 
-ENTRYPOINT ["python3","-u","-B","/app/bot_stable.py"]
+RUN chmod +x /app/start_railway.sh
+
+CMD ["bash","/app/start_railway.sh"]
