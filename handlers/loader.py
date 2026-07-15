@@ -1,5 +1,16 @@
 def load_handlers(bot, context):
 
+    @bot.message_handler(commands=['register'])
+    def register_redirect(m):
+        bot.reply_to(m, '👋 נא להשתמש ב־/join להרשמה:')
+        from handlers.join_handler import register as jr
+        jr(bot)
+        # call join_start manually
+        for h in bot.message_handlers:
+            if hasattr(h, 'name') and h.name == 'join_start':
+                h(m)
+                break
+
     print("🔄 Loading modular handlers...")
 
     # ===== MODULAR HANDLERS =====
@@ -57,6 +68,7 @@ def load_handlers(bot, context):
         "payment_handler",
         "project_commands",
         "smart_leaderboard",
+        "report_handler",
     ]
 
     for module_name in legacy:
@@ -66,6 +78,10 @@ def load_handlers(bot, context):
             # handlers with register(bot)
             if hasattr(module, "register"):
                 module.register(bot)
+
+            # report uses init(bot)
+            elif module_name == "report_handler" and hasattr(module, "init"):
+                module.init(bot)
 
             # welcome uses init(bot)
             elif module_name == "welcome_handler" and hasattr(module, "init"):
@@ -93,3 +109,16 @@ def load_handlers(bot, context):
 
 
     print("🧩 Modular + Legacy handlers loaded")
+    try:
+        from handlers.join_handler import register as register_join
+        register_join(bot)
+        print("👤 join_handler loaded")
+    except Exception as e:
+        print("join_handler error:", e)
+    try:
+        from advanced_ask_handler import register_ask_handler
+        register_ask_handler(bot)
+        print("🔥 ASK HANDLER REGISTERED ON BOT:", id(bot))
+        print("✅ advanced_ask_handler loaded")
+    except Exception as e:
+        print("advanced_ask_handler error:", e)
