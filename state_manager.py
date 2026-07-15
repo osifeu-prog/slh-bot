@@ -20,13 +20,24 @@ def save_db(db):
     with open(DB_FILE, "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
 
+AGENTS_FILE = "state/agents.json"
+
 def get_agents():
-    return load_db().get("agents", {})
+    try:
+        if os.path.exists(AGENTS_FILE):
+            with open(AGENTS_FILE) as f:
+                return json.load(f)
+    except Exception as e:
+        print("Could not load agents:", e)
+    return {}
 
 def set_agents(agents):
-    db = load_db()
-    db["agents"] = agents
-    save_db(db)
+    try:
+        os.makedirs("state", exist_ok=True)
+        with open(AGENTS_FILE, "w") as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print("Could not save agents:", e)
 
 def update_agent(prefix, data):
     agents = get_agents()
