@@ -1,6 +1,7 @@
 from doctor_handler import register_doctor_handlers
 from heb_convert import convert_to_hebrew
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv('.env')
 import sys, json, time, subprocess
@@ -341,10 +342,9 @@ def health(m):
         import psutil
         mem = psutil.virtual_memory()
         disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
-        uptime = time.time() - psutil.boot_time()
-        msg = f"Uptime: {uptime/3600:.1f}h\nRAM: {mem.percent}% used\nDisk: {disk.percent}% used"
-    except:
-        msg = "Health: limited info (psutil not available)"
+        msg = f"RAM: {mem.percent}% used\nDisk: {disk.percent}% used"
+    except Exception as e:
+        msg = f"psutil error: {e}"
     bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
 
 # ===== TASK HANDLER MOVED TO handlers/task_handler.py =====
@@ -423,6 +423,10 @@ def backup(m):
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
+    import subprocess, os
+    os.chdir("/data/data/com.termux/files/home/slh_clean")
+    subprocess.Popen(["bash", "start_safe.sh"])
+    bot.reply_to(m, "🔄 Restarting with safety checks...")
     bot.reply_to(m, "Restarting...")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
@@ -450,7 +454,13 @@ def audit_cmd(m):
 
 @bot.message_handler(commands=['memory'])
 def memory(m):
-    bot.reply_to(m, "Memory: empty")
+    try:
+        import psutil
+        v = psutil.virtual_memory()
+        msg = f"RAM: {v.used//1048576}MB / {v.total//1048576}MB ({v.percent}%)"
+    except:
+        msg = "psutil not available"
+    bot.reply_to(m, msg)
 
 @bot.message_handler(commands=['debug'])
 def debug(m):
@@ -468,7 +478,7 @@ def deploy(m):
 @bot.message_handler(commands=['errors'])
 def errors(m):
     try:
-        with open("/app/bot.log") as f:
+        with open("bot.log") as f:
             lines = f.readlines()
         errors = [line for line in lines if "ERROR" in line or "Traceback" in line][-10:]
         bot.reply_to(m, "".join(errors) or "No recent errors")
@@ -1051,6 +1061,8 @@ DB: state/db.json"""
 
 def start_bot():
     import traceback
+
+    register_doctor_handlers(bot)
 
     print("🟢 POLLING START")
 
