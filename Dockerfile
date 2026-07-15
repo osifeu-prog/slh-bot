@@ -2,6 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY . /app
+COPY requirements.txt .
 
-CMD ["sh","-c","echo SLH PAUSED && sleep infinity"]
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN echo "=== BUILD CHECK ===" && ls -la /app && test -f /app/bot_stable.py
+
+RUN mkdir -p /app/state
+
+ENTRYPOINT ["python3","-u","-B","/app/bot_stable.py"]
