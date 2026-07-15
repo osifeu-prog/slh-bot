@@ -91,17 +91,9 @@ if os.path.isdir(custom_dir):
 
 # payment/econ/staking loaded through handlers.loader.py
 print("ℹ️ payment/econ/staking delegated to handler loader")
+# Agents are managed only by handlers/agents_handler.py
+# Legacy agents_dict removed from runtime storage
 agents_dict = {}
-
-# ---- Load agents from persistent storage ----
-try:
-    import json, os
-    if os.path.exists("state/agents.json"):
-        with open("state/agents.json") as f:
-            agents_dict.update(json.load(f))
-        print(f"Loaded {len(agents_dict)} agents from disk")
-except Exception as e:
-    print("Could not load agents.json:", e)
 
 
 
@@ -351,41 +343,7 @@ def health(m):
 # Kernel task endpoint removed from main bot.
 # Single source: handlers.task_handler
 
-@bot.message_handler(commands=['agent_create'])
-def agent_create(m):
-    import time, json, os
-    parts = m.text.split(" ", 1)
-    name = parts[1] if len(parts) > 1 else "agent"
-    aid = str(len(agents_dict) + 1)
-    agent_data = {"name": name, "role": "agent", "state": "idle", "inbox": [], "history": [], "created": time.strftime("%Y-%m-%d %H:%M:%S"), "permissions": ["read"]}
-    agents_dict[aid] = agent_data
-    # save to file for persistence across deploys
-    try:
-        path = "state/agents.json"
-        existing = json.load(open(path)) if os.path.exists(path) else {}
-        existing[aid] = agent_data
-        json.dump(existing, open(path, "w"), indent=2)
-    except Exception as e:
-        print("Could not save agents.json:", e)
-    bot.reply_to(m, f"🤖 Agent created: {name} (id: {aid[:8]}...)")
-
-@bot.message_handler(commands=['agents'])
-def agents_list(m):
-    if not agents_dict:
-        bot.reply_to(m, "No agents yet")
-    else:
-        lines = [f"{v['name']} [{v.get('state','idle')}] – {v.get('role','?')}" for k, v in agents_dict.items()]
-        bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
-
-@bot.message_handler(commands=['agent_debug'])
-def agent_debug(m):
-    bot.reply_to(m, f"Agents in memory: {len(agents_dict)}")
-
-@bot.message_handler(commands=['agent_test'])
-def agent_test(m):
-    # simple test: create and list
-    agent_store.create("test_agent")
-    bot.reply_to(m, f"Test agent created. Total agents: {len(agents_dict)}")
+# Agents moved to handlers/agents_handler.py (single source)
 
 VOTE_MIN_BALANCE = 50
 VOTE_COST = 3.9
@@ -556,64 +514,7 @@ def rollback(m):
 
 # ---------------- MAIN ----------------
 
-@bot.message_handler(commands=['agentstate'])
-def agentstate(m):
-    parts = m.text.split(" ", 2)
-    if len(parts) < 3:
-        bot.reply_to(m, "Usage: /agentstate <id_prefix> &lt;state&gt;")
-        return
-    prefix, new_state = parts[1], parts[2]
-    found = None
-    for aid, agent in agents_dict.items():
-        if aid.startswith(prefix):
-            found = aid
-            agent["state"] = new_state
-            agent["history"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "action": f"state→{new_state}"})
-            break
-    if found:
-        bot.reply_to(m, f"✅ Agent {agents_dict[found]['name']} state changed to {new_state}")
-    else:
-        bot.reply_to(m, "❌ Agent not found")
-
-@bot.message_handler(commands=['sendagent'])
-def sendagent(m):
-    parts = m.text.split(" ", 2)
-    if len(parts) < 3:
-        bot.reply_to(m, "Usage: /sendagent <id_prefix> <message>")
-        return
-    prefix, msg = parts[1], parts[2]
-    found = None
-    for aid, agent in agents_dict.items():
-        if aid.startswith(prefix):
-            found = aid
-            agent["inbox"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "message": msg})
-            break
-    if found:
-        bot.reply_to(m, f"✉️ Message sent to {agents_dict[found]['name']}")
-    else:
-        bot.reply_to(m, "❌ Agent not found")
-
-@bot.message_handler(commands=['inbox'])
-def inbox(m):
-    prefix = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
-    if not prefix:
-        bot.reply_to(m, "Usage: /inbox <id_prefix>")
-        return
-    found = None
-    for aid, agent in agents_dict.items():
-        if aid.startswith(prefix):
-            found = aid
-            break
-    if found:
-        msgs = agents_dict[found]["inbox"]
-        if not msgs:
-            bot.reply_to(m, "📬 Inbox empty")
-        else:
-            lines = [f"{m['time']}: {m['message']}" for m in msgs[-5:]]
-            bot.reply_to(m, "📬 Inbox:\n" + "\n".join(lines))
-    else:
-        bot.reply_to(m, "❌ Agent not found")
-
+# Legacy agent commands removed - handled by handlers/agents_handler.py
 
 @bot.message_handler(commands=['test_agents'])
 def test_agents(m):

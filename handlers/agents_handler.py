@@ -1,5 +1,5 @@
 def register(bot, context):
-    state_manager = context["state_manager"]
+    import state_manager
     is_admin = context["is_admin"]
 
     @bot.message_handler(commands=['agent_create'])

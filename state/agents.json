@@ -1,90 +1,11 @@
 {
-  "4": {
-    "name": "AuditTest",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-13 23:40:15",
-    "permissions": [
-      "read"
-    ]
-  },
-  "8": {
-    "name": "TestPersist",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 03:16:09",
-    "permissions": [
-      "read"
-    ]
-  },
-  "9": {
-    "name": "agent",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-15 13:29:32",
-    "permissions": [
-      "read"
-    ]
-  },
-  "10": {
-    "name": "GuardAgent",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 06:25:47",
-    "permissions": [
-      "read"
-    ]
-  },
-  "11": {
-    "name": "SyncAgent",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 06:25:50",
-    "permissions": [
-      "read"
-    ]
-  },
-  "12": {
-    "name": "test_agent_1",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 06:28:03",
-    "permissions": [
-      "read"
-    ]
-  },
-  "13": {
-    "name": "test_agent_2",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 06:28:08",
-    "permissions": [
-      "read"
-    ]
-  },
-  "14": {
-    "name": "test_agent_3",
-    "role": "agent",
-    "state": "idle",
-    "inbox": [],
-    "history": [],
-    "created": "2026-07-14 06:28:10",
-    "permissions": [
-      "read"
-    ]
+  "Guardian": {
+    "name": "Guardian",
+    "inbox": [
+      "system_online"
+    ],
+    "outbox": [],
+    "state": "active",
+    "role": "agent"
   }
 }
