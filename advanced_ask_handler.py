@@ -22,7 +22,18 @@ current_provider = None
 
 def _get_api_key(provider):
     key_name = PROVIDERS[provider]["key_env"]
-    return os.environ.get(key_name, "")
+    # try environment first
+    key = os.environ.get(key_name, '')
+    if key:
+        return key
+    # fallback to config.json
+    try:
+        import json
+        with open('config.json', 'r') as cf:
+            cfg = json.load(cf)
+        return cfg.get(key_name, '')
+    except:
+        return ''
 
 def _set_current_provider():
     global current_provider
@@ -137,7 +148,21 @@ def register_ask_handler(bot):
                         continue
                 else:
                     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-                    payload = {"model": model, "messages": [{"role": "user", "content": question}], "max_tokens": 1200, "temperature": 0.7}
+                    payload = {
+    "model": model,
+    "messages": [
+        {
+            "role": "system",
+            "content": SLH_SYSTEM_PROMPT
+        },
+        {
+            "role": "user",
+            "content": question
+        }
+    ],
+    "max_tokens": 1200,
+    "temperature": 0.7
+}
                     print("DEBUG GROQ REQUEST UTF8")
                     resp = requests.post(url, json=payload, headers=headers, timeout=15)
                     if resp.status_code == 200:
