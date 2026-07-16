@@ -112,6 +112,7 @@ def register_ask_handler(bot):
             return
         question = parts[1]
 
+        from admin_utils import is_admin
         import state_manager
         uid_str = str(m.from_user.id)
         context = get_bot_context(uid_str)
