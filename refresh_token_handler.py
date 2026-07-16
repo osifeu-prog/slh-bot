@@ -1,6 +1,7 @@
 """
 refresh_token_handler.py
 תהליך בטוח להחלפת BOT_TOKEN דרך טלגרם.
+דורש אימות הטוקן הנוכחי לפני קבלת החדש - מונע טעויות/בלבול.
 הטוקן החדש נמחק מהצ'אט מיד עם קבלתו. הטוקן הישן אינו מוקלד מחדש.
 """
 import json
@@ -8,7 +9,7 @@ import os
 import requests
 
 # מצב תהליך לכל אדמין (in-memory, לא נשמר בדיסק)
-_pending = {}  # {user_id: "awaiting_confirm" | "awaiting_token"}
+_pending = {}  # {user_id: "awaiting_confirm" | "awaiting_current" | "awaiting_token"}
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
@@ -61,15 +62,46 @@ def init(bot, is_admin_func=None):
         uid = message.from_user.id
         text = message.text.strip()
         if text == "כן":
-            _pending[uid] = "awaiting_token"
+            _pending[uid] = "awaiting_current"
             bot.reply_to(
                 message,
-                "שלח עכשיו את הטוקן החדש (מ-BotFather).\n"
+                "🔑 שלב 1/2: שלח את הטוקן הנוכחי (הישן) לאימות.\n"
+                "זה מוודא ששני הצדדים מסכימים על מה שמוחלף.\n"
                 "⚠️ ההודעה תימחק אוטומטית מיד אחרי הקבלה."
             )
         else:
             _pending.pop(uid, None)
             bot.reply_to(message, "❌ תהליך רענון הטוקן בוטל")
+
+    @bot.message_handler(func=lambda m: _pending.get(m.from_user.id) == "awaiting_current")
+    def refresh_token_verify_current(message):
+        uid = message.from_user.id
+        claimed_current = message.text.strip()
+
+        try:
+            bot.delete_message(message.chat.id, message.message_id)
+        except Exception:
+            pass
+
+        cfg = _load_config()
+        actual_current = cfg.get("BOT_TOKEN", "")
+
+        if claimed_current != actual_current:
+            _pending.pop(uid, None)
+            bot.send_message(
+                message.chat.id,
+                "❌ הטוקן שהזנת לא תואם לטוקן הפעיל כרגע במערכת.\n"
+                "תהליך רענון הטוקן בוטל, למען הזהירות."
+            )
+            return
+
+        _pending[uid] = "awaiting_token"
+        bot.send_message(
+            message.chat.id,
+            "✅ הטוקן הנוכחי אומת בהצלחה.\n"
+            "🔑 שלב 2/2: שלח עכשיו את הטוקן החדש (מ-BotFather).\n"
+            "⚠️ ההודעה תימחק אוטומטית מיד אחרי הקבלה."
+        )
 
     @bot.message_handler(func=lambda m: _pending.get(m.from_user.id) == "awaiting_token")
     def refresh_token_apply(message):
@@ -77,11 +109,10 @@ def init(bot, is_admin_func=None):
         new_token = message.text.strip()
         _pending.pop(uid, None)
 
-        # מחיקה מיידית של ההודעה עם הטוקן, בכל מצב
         try:
             bot.delete_message(message.chat.id, message.message_id)
         except Exception:
-            pass  # ייתכן שאין הרשאת מחיקה בצ'אט הזה; ממשיכים בכל מקרה
+            pass
 
         status_msg = bot.send_message(message.chat.id, "🔍 בודק תקינות טוקן חדש...")
 
@@ -93,14 +124,13 @@ def init(bot, is_admin_func=None):
             )
             return
 
-        # שלב זה עדיין לא מפעיל restart בפועל - רק כותב לconfig.json
         cfg = _load_config()
         cfg["BOT_TOKEN"] = new_token
         _save_config(cfg)
 
         bot.edit_message_text(
-            f"✅ טוקן חדש אומת (@{info}) ונשמר ב-config.json.\n"
-            "⚠️ שלב ידני נדרש עדיין: עדכון Railway ו-restart.\n"
-            "הפעל בטרמוקס: railway variables set BOT_TOKEN=<חדש> && railway redeploy",
+            f"✅ טוקן חדש אומת (@{info}) ונשמר ב-config.json (בתוך container Railway).\n"
+            "⚠️ שלב ידני נדרש עדיין: עדכון Railway ו-restart, וגם עדכון local config.json/state/.env בטרמוקס.\n"
+            "הפעל בטרמוקס: railway variables --set BOT_TOKEN=<חדש> && railway redeploy",
             message.chat.id, status_msg.message_id
         )
