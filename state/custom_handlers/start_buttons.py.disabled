@@ -3,6 +3,12 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 def register(bot):
     @bot.message_handler(commands=['start'])
     def start_with_buttons(msg):
+        try:
+            with open("logo.txt", "r", encoding="utf-8") as lf:
+                logo = lf.read()
+            bot.send_message(msg.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
+        except Exception as e:
+            print("Logo error:", e)
         keyboard = InlineKeyboardMarkup(row_width=2)
         buttons = [
             InlineKeyboardButton("💰 Token Wizard", callback_data="token_wizard_start"),

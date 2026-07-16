@@ -62,3 +62,13 @@ slh_log.txt
 # Runtime temporary files
 .bot.lock
 runtime/*.pid
+
+# Case-insensitive BEFORE/backup patterns (fixes .BEFORE_* not being caught)
+*.BEFORE_*
+*.BEFORE*
+*BEFORE_*
+*.CRASH_*
+*.crash_backup*
+*.token_fix_*
+*.back_boot_fix_*
+railway_vars.txt

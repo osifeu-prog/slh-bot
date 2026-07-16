@@ -71,4 +71,32 @@ def register(bot, context):
         inbox = agents[name].get("inbox", [])
         bot.reply_to(m, f"📬 {name} Inbox:\n" + ("\n".join(f"• {msg}" for msg in inbox) if inbox else "Empty"))
 
+
+    @bot.message_handler(commands=['agent_audit'])
+    def agent_audit_cmd(m):
+        if not is_admin(m):
+            return
+
+        agents = state_manager.get_agents()
+
+        if not agents:
+            bot.reply_to(m, "🤖 No agents")
+            return
+
+        lines = ["🤖 AGENT AUDIT"]
+
+        for name, agent in agents.items():
+            inbox = len(agent.get("inbox", []))
+            history = len(agent.get("history", []))
+            state = agent.get("state", "unknown")
+
+            lines.append(
+                f"\n{name}\n"
+                f"STATE: {state}\n"
+                f"INBOX: {inbox}\n"
+                f"HISTORY: {history}"
+            )
+
+        bot.reply_to(m, "\n".join(lines))
+
     print("🤖 Agents handler loaded (full)")

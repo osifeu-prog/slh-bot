@@ -6,7 +6,7 @@
         "telegram_id": "8789977826"
       },
       "wallet": {
-        "credits": 40
+        "credits": 30
       },
       "academy": {
         "courses": {
@@ -21,8 +21,8 @@
         "active_course": "bitcoin_mastery"
       },
       "gamification": {
-        "points": 100,
-        "level": 2
+        "points": 75,
+        "level": 1
       },
       "referral": {
         "code": null,
@@ -35,10 +35,7 @@
       },
       "ai": {
         "initialized": true
-      },
-      "name": "אני אמור להיות כבר רשום",
-      "group": "/ask\n\nנעלם לי התפריט המלא והלוגו צריך למצא מהארכיון הכל דרך המערכת",
-      "joined": true
+      }
     },
     "224223270": {
       "profile": {
@@ -110,76 +107,6 @@
       "ai": {
         "initialized": false
       }
-    },
-    "1518680802": {
-      "profile": {
-        "created": "2026-07-14T19:52:59.687375",
-        "telegram_id": "1518680802"
-      },
-      "wallet": {
-        "credits": 10
-      },
-      "academy": {
-        "courses": {
-          "bitcoin_mastery": {
-            "stage": 1,
-            "completed": [
-              1
-            ]
-          }
-        }
-      },
-      "gamification": {
-        "points": 25,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "onboarding": {
-        "completed": false,
-        "stage": "welcome"
-      },
-      "ai": {
-        "initialized": false
-      }
-    },
-    "5010371391": {
-      "profile": {
-        "created": "2026-07-14T20:32:56.551903",
-        "telegram_id": "5010371391"
-      },
-      "wallet": {
-        "credits": 10
-      },
-      "academy": {
-        "courses": {
-          "bitcoin_mastery": {
-            "stage": 1,
-            "completed": [
-              1
-            ]
-          }
-        }
-      },
-      "gamification": {
-        "points": 25,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "onboarding": {
-        "completed": false,
-        "stage": "welcome"
-      },
-      "ai": {
-        "initialized": false
-      }
     }
   },
   "students": {},
@@ -211,18 +138,6 @@
       "state": "idle",
       "inbox": [],
       "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02"
-    }
-  },
-  "token": {
-    "supply": 111186.33,
-    "balances": {
-      "8789977826": 26232.9423
-    }
-  },
-  "staking": {
-    "8789977826": {
-      "amount": 100.02868001924621,
-      "since": 1784051688.956198
     }
   }
 }

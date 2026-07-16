@@ -9,7 +9,7 @@ def register(bot):
         user_states[uid] = {"step": "name"}
         bot.reply_to(msg, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
 
-    @bot.message_handler(func=lambda m: str(m.from_user.id) in user_states)
+    @bot.message_handler(func=lambda m: str(m.from_user.id) in user_states and not str(m.text).startswith("/"))
     def join_steps(msg):
         uid = str(msg.from_user.id)
         state = user_states[uid]

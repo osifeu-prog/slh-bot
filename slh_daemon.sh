@@ -32,18 +32,20 @@ fi
 echo "🚀 SLH OS Daemon started – $(date)"
 
 
-# prevent duplicates
-pkill -f "python3.*bot_stable.py" 2>/dev/null || true
-sleep 2
-
-
-nohup railway run -- python3 -u -B bot_stable.py >> bot.log 2>&1 &
-
-BOT_PID=$!
-
-echo "$BOT_PID" > runtime/bot.pid
-
-echo "  ✅ Bot started PID=$BOT_PID"
+if [ "$1" = "--with-bot" ]; then
+    echo "⚠️  --with-bot flag detected: starting bot_stable.py LOCALLY."
+    echo "⚠️  This WILL conflict with Railway (409 Conflict) unless Railway is stopped"
+    echo "⚠️  or this Termux instance uses a separate BOT_TOKEN. See DO_NOT_RUN_LOCALLY.md"
+    pkill -f "python3.*bot_stable.py" 2>/dev/null || true
+    sleep 2
+    nohup python3 -u -B bot_stable.py >> bot.log 2>&1 &
+    BOT_PID=$!
+    echo "$BOT_PID" > runtime/bot.pid
+    echo "  ✅ Bot started locally PID=$BOT_PID"
+else
+    echo "  ℹ️  Skipping local bot_stable.py (Railway is production)."
+    echo "  ℹ️  Use './slh_daemon.sh start --with-bot' to override. See DO_NOT_RUN_LOCALLY.md"
+fi
 
 
 pkill -f "web/api/app.py" 2>/dev/null || true

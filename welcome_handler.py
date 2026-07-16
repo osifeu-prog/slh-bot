@@ -69,7 +69,7 @@ def init(bot):
         user=ensure_onboarding_user(m.from_user.id)
         print("ONBOARDING USER:",m.from_user.id)
         try:
-            with open("logo.txt", "r", encoding="utf-8") as lf:
+            with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as lf:
                 logo = lf.read()
             bot.send_message(m.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
         except Exception as e:
@@ -96,6 +96,14 @@ def init(bot):
 💡 **טיפ**: /ask <שאלה> – אני אעזור לך."""
         bot.send_message(m.chat.id, text, parse_mode="Markdown", reply_markup=markup)
 
+    @bot.callback_query_handler(func=lambda call: call.data == "onboarding_start")
+    def onboarding_start(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(
+            call.message.chat.id,
+            "🚀 מתחילים את SLH OS!\n\nבחר מסלול:\n\n📚 /courses\n🤖 /agents\n💰 /balance\n❓ /ask"
+        )
+
     @bot.callback_query_handler(func=lambda call: call.data.startswith('start_'))
     def start_callback(call):
         mapping = {
@@ -114,3 +122,4 @@ def init(bot):
             message_id=call.message.message_id,
             parse_mode="Markdown"
         )
+
