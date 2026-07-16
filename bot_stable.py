@@ -996,33 +996,27 @@ def start_bot():
 
     retry = 0
 
-    while True:
+    print("🔄 STARTING SINGLE POLLING INSTANCE")
+
+    try:
+        bot.infinity_polling(
+            timeout=20,
+            long_polling_timeout=20,
+            logger_level=10,
+            skip_pending=True
+        )
+
+    except Exception as e:
+        print("🔥 POLLING STOPPED:", repr(e))
+        traceback.print_exc()
+
+    finally:
         try:
-            retry += 1
+            bot.stop_polling()
+        except Exception:
+            pass
 
-            print(f"🔄 POLLING ATTEMPT #{retry}")
-
-            bot.infinity_polling(
-                timeout=20,
-                long_polling_timeout=20,
-                logger_level=10,
-                skip_pending=True
-            )
-
-            print("⚠️ POLLING RETURNED")
-
-        except Exception as e:
-            print("🔥 POLLING EXCEPTION:", repr(e))
-            traceback.print_exc()
-
-        finally:
-            try:
-                bot.stop_polling()
-            except Exception:
-                pass
-
-        print("⏳ RETRYING POLLING IN 5 SECONDS")
-        time.sleep(5)
+    print("🛑 POLLING EXIT")
 
 if __name__ == "__main__":
     start_bot()
