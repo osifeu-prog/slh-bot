@@ -115,7 +115,21 @@ def register_ask_handler(bot):
         from admin_utils import is_admin
         import state_manager
         uid_str = str(m.from_user.id)
-        context = get_bot_context(uid_str)
+        # Load SLH context only for system-related questions
+        slh_keywords = [
+            "slh", "system", "מערכת", "משתמש", "משתמשים",
+            "קורס", "קורסים", "משימה", "משימות",
+            "agent", "agents", "סוכן", "סוכנים",
+            "progress", "התקדמות", "wallet", "ארנק",
+            "credit", "credits", "staking", "marketplace"
+        ]
+
+        is_slh_question = any(
+            k.lower() in question.lower()
+            for k in slh_keywords
+        )
+
+        context = get_bot_context(uid_str) if is_slh_question else ""
 
         db = state_manager.load_db()
         user = db.get("users", {}).get(uid_str, {})
