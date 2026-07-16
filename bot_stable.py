@@ -917,6 +917,14 @@ except Exception as e:
 from handlers.loader import load_handlers
 load_handlers(bot, context)
 
+# ===== REFRESH TOKEN HANDLER =====
+try:
+    from refresh_token_handler import init as init_refresh_token
+    init_refresh_token(bot, context.get("is_admin"))
+    print("🔐 refresh_token_handler loaded")
+except Exception as e:
+    print("❌ refresh_token_handler error:", e)
+
 # ===== HANDLERS LOADED THROUGH SINGLE LOADER =====
 print("✅ Single handler loader active")
 
