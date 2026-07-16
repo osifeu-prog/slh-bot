@@ -987,7 +987,11 @@ def start_bot():
 
     print("🟢 POLLING START")
 
-    bot.remove_webhook()
+    try:
+        bot.remove_webhook()
+        print("✅ Webhook cleared")
+    except Exception as e:
+        print(f"⚠️ Webhook cleanup skipped: {e}")
     time.sleep(2)
 
     retry = 0

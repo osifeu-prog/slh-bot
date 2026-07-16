@@ -1,7 +1,6 @@
 {
   "version": "1.0",
   "name": "SLH Self Model Policy",
-
   "learning_sources": [
     "bot_stable.py",
     "handlers/",
@@ -13,7 +12,6 @@
     "state/journal.json",
     "docs/"
   ],
-
   "blocked_sources": [
     ".git/",
     "backups/",
@@ -22,15 +20,16 @@
     "state/pre_restore/",
     "state/pre_fix/",
     "*.bak",
-    "*.before_*"
+    "*.before_*",
+    "archive_unused/",
+    "*.backup*",
+    "*.env.backup*"
   ],
-
   "security_rules": [
     "never_store_tokens",
     "never_store_api_keys",
     "never_learn_from_backup_files"
   ],
-
   "memory_events": [
     "decision",
     "change",
@@ -38,6 +37,5 @@
     "solution",
     "verification"
   ],
-
   "source_of_truth": "bot_stable.py"
 }
