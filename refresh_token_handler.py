@@ -15,8 +15,14 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
 
 def _load_config():
-    with open(CONFIG_PATH) as f:
-        return json.load(f)
+    # Prefer config.json, fallback to environment
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH) as f:
+            return json.load(f)
+
+    return {
+        "BOT_TOKEN": os.getenv("BOT_TOKEN", "")
+    }
 
 
 def _save_config(cfg):
