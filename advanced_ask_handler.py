@@ -1,4 +1,5 @@
 import os, requests, state_manager
+from handlers.llm_handler import get_bot_context
 
 PROVIDERS = {
     "groq": {
@@ -110,8 +111,9 @@ def register_ask_handler(bot):
         question = parts[1]
 
         import state_manager
-        from admin_utils import is_admin
         uid_str = str(m.from_user.id)
+        context = get_bot_context(uid_str)
+
         db = state_manager.load_db()
         user = db.get("users", {}).get(uid_str, {})
         credits = user.get("ask_credits", 0)
@@ -138,7 +140,17 @@ def register_ask_handler(bot):
             try:
                 if prov == "gemini":
                     url_with_key = f"{url}?key={key}"
-                    payload = {"contents": [{"parts": [{"text": question}]}]}
+                    payload = {
+    "contents": [
+        {
+            "parts": [
+                {
+                    "text": SLH_SYSTEM_PROMPT + "\n\nSYSTEM CONTEXT:\n" + context + "\n\nUSER QUESTION:\n" + question
+                }
+            ]
+        }
+    ]
+}
                     resp = requests.post(url_with_key, json=payload, timeout=15)
                     if resp.status_code == 200:
                         data = resp.json()
@@ -153,7 +165,7 @@ def register_ask_handler(bot):
     "messages": [
         {
             "role": "system",
-            "content": SLH_SYSTEM_PROMPT
+            "content": SLH_SYSTEM_PROMPT + "\n\nSYSTEM CONTEXT:\n" + context
         },
         {
             "role": "user",
@@ -204,4 +216,15 @@ def register_ask_handler(bot):
 SLH_SYSTEM_PROMPT = """אתה SLH AI – עוזר מערכת ההפעלה SLH OS.
 המערכת כוללת: קורסים, משימות, סוכני AI, ארנק, Marketplace, Staking.
 ענה בעברית טבעית ותמציתית. כאשר נשאל על המערכת, התייחס לרכיבים האמיתיים שלה.
-לעולם אל תמציא נתונים. אם חסר מידע, שאל."""
+לעולם אל תמציא נתונים.
+SYSTEM CONTEXT שמצורף להודעה הוא מקור אמת פנימי של SLH OS.
+כאשר המשתמש שואל על:
+- משתמשים
+- קורסים
+- התקדמות אישית
+- סוכנים
+- משימות
+- מצב מערכת
+
+השתמש בנתונים מה־SYSTEM CONTEXT וענה ישירות.
+אל תגיד שאין לך גישה אם הנתונים קיימים שם."""

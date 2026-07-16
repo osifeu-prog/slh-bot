@@ -20,7 +20,15 @@ def get_bot_context(uid: str) -> str:
     except:
         db = {}
     user = db.get("users", {}).get(uid, {})
-    ctx = f"User: {user.get('name','')} (ID: {uid})\n"
+    
+    total_users = len(db.get("users", {}))
+    total_agents = len(db.get("agents", {}))
+
+    ctx = f"SLH SYSTEM METRICS:\n"
+    ctx += f"משתמשים רשומים במערכת: {total_users}\n"
+    ctx += f"Registered agents: {total_agents}\n\n"
+
+    ctx += f"User: {user.get('name','')} (ID: {uid})\n"
     ctx += f"Balance: {user.get('balance',0)} credits\nRole: {user.get('role','user')}\n"
     student = db.get("students", {}).get(uid, {})
     courses = student.get("courses", {})
