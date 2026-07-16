@@ -26,11 +26,40 @@ def _load_config():
 
 
 def _save_config(cfg):
+    import subprocess
+
     backup_path = CONFIG_PATH + f".bak_refresh_{__import__('time').strftime('%Y%m%d_%H%M%S')}"
-    with open(backup_path, "w") as f:
-        json.dump(_load_config(), f, indent=2, ensure_ascii=False)
+
+    try:
+        with open(backup_path, "w") as f:
+            json.dump(_load_config(), f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
     with open(CONFIG_PATH, "w") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+    token = cfg.get("BOT_TOKEN", "")
+
+    if token:
+        try:
+            subprocess.run(
+                [
+                    "railway",
+                    "variables",
+                    "--set",
+                    f"BOT_TOKEN={token}"
+                ],
+                check=True,
+                timeout=30,
+                capture_output=True,
+                text=True
+            )
+            return True, "railway_updated"
+        except Exception as e:
+            return False, str(e)
+
+    return False, "missing_token"
 
 
 def _validate_token(token):

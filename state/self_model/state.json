@@ -1,0 +1,12 @@
+{
+  "system": "SLH",
+  "version": "1.0",
+  "role": "AI operational memory",
+  "knowledge_sources": [
+    "docs/SELF_MODEL.md",
+    "state/db.json",
+    "git history",
+    "logs"
+  ],
+  "last_learning_event": null
+}
