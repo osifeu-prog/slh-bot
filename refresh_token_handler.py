@@ -78,6 +78,11 @@ def init(bot, is_admin_func=None):
         uid = message.from_user.id
         claimed_current = message.text.strip()
 
+        if claimed_current in ["ביטול", "בטל", "/cancel"]:
+            _pending.pop(uid, None)
+            bot.reply_to(message, "❌ תהליך רענון הטוקן בוטל")
+            return
+
         try:
             bot.delete_message(message.chat.id, message.message_id)
         except Exception:
