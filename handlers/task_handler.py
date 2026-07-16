@@ -2,6 +2,7 @@ from services import task_service
 
 COMMANDS = {}
 
+
 def task(message, bot):
     args = message.text.split(maxsplit=1)
 
@@ -25,9 +26,33 @@ def task(message, bot):
         "✅ המשימה נוספה למערכת"
     )
 
+
+def task_add(message, bot):
+    args = message.text.split(maxsplit=1)
+
+    if len(args) < 2:
+        bot.send_message(
+            message.chat.id,
+            "❌ שימוש:\n/task_add <משימה>"
+        )
+        return
+
+    task = task_service.add_task(args[1])
+
+    bot.send_message(
+        message.chat.id,
+        f"✅ Task Added\nID: {task['id']}\n{task['text']}"
+    )
+
+
 def register(bot, context=None):
     COMMANDS["task"] = task
+    COMMANDS["task_add"] = task_add
 
     @bot.message_handler(commands=["task"])
     def task_telegram(message):
         task(message, bot)
+
+    @bot.message_handler(commands=["task_add"])
+    def task_add_telegram(message):
+        task_add(message, bot)
