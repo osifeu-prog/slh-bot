@@ -103,8 +103,10 @@ def register_ask_handler(bot):
 
     @bot.message_handler(commands=['ask'])
     def ask(m):
+        print("DEBUG m.text =", repr(m.text))
         uid = str(m.from_user.id)
         parts = m.text.split(maxsplit=1)
+        print("DEBUG parts =", parts)
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /ask <your question>")
             return
