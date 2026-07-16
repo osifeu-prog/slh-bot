@@ -201,7 +201,9 @@ def register_ask_handler(bot):
                     state_manager.save_db(db2)
 
                 print("DEBUG BEFORE TELEGRAM REPLY")
-                bot.reply_to(m, f"🧠 ({prov})\n{answer}")
+                print("CHAT ID:", m.chat.id)
+                bot.send_message(m.chat.id, f"🧠 ({prov})\n{answer}")
+                print("DEBUG AFTER TELEGRAM SEND")
                 current_provider = prov
                 return
             except Exception as e:
