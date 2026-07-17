@@ -1,0 +1,27 @@
+{
+  "learning_completed": {
+    "points": 10,
+    "verified": true,
+    "description": "Completed learning activity"
+  },
+  "helpful_answer": {
+    "points": 5,
+    "verified": true,
+    "description": "Helped another user"
+  },
+  "bug_report": {
+    "points": 15,
+    "verified": true,
+    "description": "Reported a valid issue"
+  },
+  "content_created": {
+    "points": 20,
+    "verified": true,
+    "description": "Created useful content"
+  },
+  "feature_testing": {
+    "points": 10,
+    "verified": true,
+    "description": "Tested system feature"
+  }
+}
