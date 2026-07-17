@@ -1,4 +1,5 @@
 from state.reputation_service import reward_user
+from state.reputation_audit import record_reward
 
 
 def register(bot, is_admin_func=None):
@@ -41,6 +42,12 @@ def register(bot, is_admin_func=None):
                 f"❌ {result['error']}"
             )
             return
+
+        record_reward(
+            message.from_user.id,
+            user_id,
+            action
+        )
 
         bot.reply_to(
             message,
