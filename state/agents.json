@@ -2,10 +2,18 @@
   "Guardian": {
     "name": "Guardian",
     "inbox": [
-      "system_online"
+      "system_online",
+      "hello"
     ],
     "outbox": [],
     "state": "active",
+    "role": "agent"
+  },
+  "Test": {
+    "name": "Test",
+    "inbox": [],
+    "outbox": [],
+    "state": "idle",
     "role": "agent"
   }
 }
