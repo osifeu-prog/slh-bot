@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "user_id": "guard_test",
+    "action": "learning_completed",
+    "points": 10,
+    "time": 1784289572.9867098
+  },
+  {
+    "event_id": "173801e095e168f260a165d01d00676dbda48120c0b6f93fcd6d678113f72c84",
+    "time": 1784289572.9875398
+  }
+]
