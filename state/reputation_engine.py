@@ -66,3 +66,26 @@ def add_reputation(user_id, action, points):
 def get_reputation(user_id):
     reputation = load_reputation()
     return reputation.get(str(user_id), None)
+
+
+def load_actions():
+    with open("state/reputation_actions.json") as f:
+        return json.load(f)
+
+
+def award_reputation(user_id, action):
+    actions = load_actions()
+
+    if action not in actions:
+        raise ValueError("Unknown reputation action")
+
+    rule = actions[action]
+
+    if not rule.get("verified"):
+        raise ValueError("Action not verified")
+
+    return add_reputation(
+        user_id,
+        action,
+        rule["points"]
+    )
