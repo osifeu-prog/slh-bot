@@ -66,6 +66,11 @@ def ensure_onboarding_user(uid):
 def init(bot):
     @bot.message_handler(commands=['start'])
     def start(m):
+        print(
+            f"START HANDLER: chat={m.chat.id} "
+            f"msg={m.message_id} "
+            f"text={repr(m.text)}"
+        )
         user=ensure_onboarding_user(m.from_user.id)
         print("ONBOARDING USER:",m.from_user.id)
         try:
@@ -95,14 +100,6 @@ def init(bot):
 
 💡 **טיפ**: /ask <שאלה> – אני אעזור לך."""
         bot.send_message(m.chat.id, text, parse_mode="Markdown", reply_markup=markup)
-
-    @bot.callback_query_handler(func=lambda call: call.data == "onboarding_start")
-    def onboarding_start(call):
-        bot.answer_callback_query(call.id)
-        bot.send_message(
-            call.message.chat.id,
-            "🚀 מתחילים את SLH OS!\n\nבחר מסלול:\n\n📚 /courses\n🤖 /agents\n💰 /balance\n❓ /ask"
-        )
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('start_'))
     def start_callback(call):

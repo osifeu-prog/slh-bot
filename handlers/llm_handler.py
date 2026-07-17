@@ -29,7 +29,22 @@ def get_bot_context(uid: str) -> str:
     ctx += f"סוכני AI במערכת: {total_agents}\n\n"
 
     ctx += f"User: {user.get('name','')} (ID: {uid})\n"
-    ctx += f"Balance: {user.get('balance',0)} credits\nRole: {user.get('role','user')}\n"
+
+    # HARD SYSTEM FACTS
+    joined = user.get("joined", False)
+    onboarding = user.get("onboarding", {})
+    credits = user.get("wallet", {}).get("credits", 0)
+
+    ctx += "SYSTEM FACTS (authoritative):\n"
+    ctx += f"- User registered: {joined}\n"
+    ctx += f"- Onboarding completed: {onboarding.get('completed', False)}\n"
+    ctx += f"- Wallet credits: {credits}\n"
+
+    if joined:
+        ctx += "- RULE: User is already registered. Never ask for registration again.\n"
+        ctx += "- RULE: Continue directly to user interface/help/actions.\n"
+
+    ctx += f"Role: {user.get('role','user')}\n"
     student = db.get("students", {}).get(uid, {})
     courses = student.get("courses", {})
     if courses:

@@ -31,13 +31,12 @@
       },
       "onboarding": {
         "completed": true,
-        "stage": "completed"
+        "stage": "questions"
       },
       "ai": {
         "initialized": true
       },
       "name": "אני אמור להיות כבר רשום",
-      "group": "/ask\n\nנעלם לי התפריט המלא והלוגו צריך למצא מהארכיון הכל דרך המערכת",
       "joined": true
     },
     "224223270": {

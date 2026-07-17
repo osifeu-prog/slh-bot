@@ -61,6 +61,7 @@ def load_handlers(bot, context):
     # ===== LEGACY USER EXPERIENCE =====
     legacy = [
         "welcome_handler",
+        "onboarding_handler",
         "help_handler",
         "course_handlers",
         "learn_handlers",
@@ -86,6 +87,12 @@ def load_handlers(bot, context):
             # welcome uses init(bot)
             elif module_name == "welcome_handler" and hasattr(module, "init"):
                 module.init(bot)
+
+            # onboarding uses init(bot)
+            elif module_name == "onboarding_handler" and hasattr(module, "init"):
+                print(">>> LOADING ONBOARDING HANDLER")
+                module.init(bot)
+                print(">>> ONBOARDING HANDLER LOADED")
 
             # help uses register_help(bot)
             elif module_name == "help_handler" and hasattr(module, "register_help"):
