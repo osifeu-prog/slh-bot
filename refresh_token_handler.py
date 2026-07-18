@@ -145,11 +145,6 @@ def init(bot, is_admin_func=None):
         new_token = message.text.strip()
         _pending.pop(uid, None)
 
-        try:
-            # bot.delete_message(message.chat.id, message.message_id)
-        except Exception:
-            pass
-
         status_msg = bot.send_message(message.chat.id, "🔍 בודק תקינות טוקן חדש...")
 
         valid, info = _validate_token(new_token)
