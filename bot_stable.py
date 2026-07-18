@@ -34,7 +34,6 @@ from staking_handler import register_staking_handlers
 
 try:
     from handlers.llm_handler import register as register_llm
-register_llm(bot)
     LLM_AVAILABLE = True
 except Exception as e:
     print("⚠️ LLM handler not available:", e)
@@ -923,6 +922,7 @@ try:
     from refresh_token_handler import init as init_refresh_token
     init_refresh_token(bot, context.get("is_admin"))
     print("🔐 refresh_token_handler loaded")
+register_llm(bot)
 except Exception as e:
     print("❌ refresh_token_handler error:", e)
 
