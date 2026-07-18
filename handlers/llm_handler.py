@@ -45,6 +45,17 @@ def get_bot_context(uid: str) -> str:
         ctx += "- RULE: Continue directly to user interface/help/actions.\n"
 
     ctx += f"Role: {user.get('role','user')}\n"
+    ctx += "\nAUTHORITATIVE SLH OS COMMANDS:\n"
+    ctx += "- /balance — בדיקת יתרת Credits של המשתמש\n"
+    ctx += "- /pay — רכישת Credits באמצעות תשלום\n"
+    ctx += "- /buy — רכישת פריטים או Credits, אם זמין במערכת\n"
+    ctx += "- /token balance — בדיקת יתרת SLH Token\n"
+    ctx += "- /token supply — בדיקת היצע ה-SLH Token\n"
+    ctx += "- /token send <user_id> <amount> — שליחת SLH Token\n"
+    ctx += "- /stake — הצגת מצב Staking\n"
+    ctx += "- /stake_join — הצטרפות ל-Staking\n"
+    ctx += "- /staking_report — דוח Staking ותגמולים\n"
+    ctx += "- RULE: When the user asks how to perform an action, prefer the authoritative command above. Do not invent alternative menus, pages, marketplaces, or purchase systems.\n"
     student = db.get("students", {}).get(uid, {})
     courses = student.get("courses", {})
     if courses:
@@ -72,6 +83,51 @@ def get_bot_context(uid: str) -> str:
     return ctx
 
 def register(bot):
+
+    @bot.message_handler(commands=['journal_ask'])
+    def journal_ask(m):
+        question = m.text.replace('/journal_ask', '').strip()
+        if not question:
+            bot.reply_to(m, "Usage: /journal_ask <question>")
+            return
+        
+        journal_path = "state/journal.json"
+        context = ""
+        if os.path.exists(journal_path):
+            try:
+                with open(journal_path) as f:
+                    journal = json.load(f)
+                if isinstance(journal, list):
+                    context = "Journal:\n" + "\n".join(
+                        e.get("text", str(e))[:200] for e in journal[-5:]
+                    )
+            except:
+                context = "(could not read journal)"
+        
+        try:
+            import groq
+            client = groq.Client(api_key=os.getenv("GROQ_API_KEY"))
+            prompt = f"Based on this journal:\n{context}\n\nQuestion: {question}\n\nAnswer in Hebrew, concise:"
+            response = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-3.1-8b-instant",
+                max_tokens=300
+            )
+            answer = response.choices[0].message.content
+        except Exception as e:
+            answer = f"(LLM unavailable: {e})"
+        
+        try:
+            with open(journal_path) as f:
+                journal = json.load(f)
+            journal.append({"time": str(datetime.now()), "type": "llm_ask", "question": question, "answer": answer})
+            with open(journal_path, "w") as f:
+                json.dump(journal, f, indent=2, ensure_ascii=False)
+        except:
+            pass
+        
+        bot.reply_to(m, f"🧠 {answer}")
+
     # Legacy stub.
     # /ask is now handled exclusively by advanced_ask_handler.py
     pass
