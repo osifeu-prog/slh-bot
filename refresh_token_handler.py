@@ -118,10 +118,6 @@ def init(bot, is_admin_func=None):
             bot.reply_to(message, "❌ תהליך רענון הטוקן בוטל")
             return
 
-        try:
-            # bot.delete_message(message.chat.id, message.message_id)
-        except Exception:
-            pass
 
         cfg = _load_config()
         actual_current = cfg.get("BOT_TOKEN", "")
