@@ -1,229 +1,239 @@
-{
-  "entries": [
-    {
-      "time": "2026-07-02 01:39:10.601622",
-      "text": "SESSION 2-JUL-2026: Architecture review. System assessment: bot_stable.py online, EventBus workers mismatch identified, duplicate polling resolved. Priority: STABLE CORE - single entrypoint, clean init, zero 409 by design. OPEN: create AGENT_RULES.md, populate journal, clean .bak files, verify bot.py dependencies, Dockerfile warnings, /refreshtoken decision, student onboarding."
-    },
-    {
-      "time": "2026-07-02 01:39:10.601660",
-      "text": "NEXT SESSION TASKS: (1) Clean .bak files from disk. (2) Verify zero dependencies on bot.py, delete if clean. (3) Fix Dockerfile warnings. (4) Decide on /refreshtoken Railway auto-update. (5) Student onboarding - recruit 10 students. (6) smart_reply edge case - partial output before buttons."
-    },
-    {
-      "time": "2026-07-02 18:25:57.902148",
-      "text": "SESSION 2-JUL-2026: Cleanup + hardening. DONE: AGENT_RULES.md created, journal initialized, 5 .bak files deleted, Dockerfile ENV BOT_TOKEN removed, .gitignore expanded. ISSUES: Railway usage limit reached (deploy blocked), token exposed in CLI history - must revoke. NEXT: replace token via @BotFather + Railway Dashboard, wait for usage reset, then deploy STABLE CORE."
-    },
-    {
-      "time": "2026-07-03 20:00:15.595769",
-      "text": "SESSION 3-JUL-2026: Final stabilization. DONE: journal_read fixed (removed smart_reply), Dockerfile cleaned (ENV BOT_TOKEN removed), .gitignore expanded, old backup folders ignored, git status clean, /agent_create works in memory. OPEN: agents not persisted to db.json (volatile), /agents command hangs, start_agent_thread blocks import of bot_stable. NEXT SESSION PRIORITY: fix agent persistence to db.json, unblock /agents command, test full agent lifecycle. READY: Railway Online, Users:2, Deploy passes, security OK."
-    },
-    {
-      "time": "2026-07-03 23:24:10.261860",
-      "text": "SESSION 3-JUL-2026 COMPLETED: agent persistence fixed (state/db.json + Volume), /exec runs Python, /demo with tasks/agents/guide, /inbox shows outbox, /start updated, state_manager centralizes DB access, tutor agent auto-replies. System ready for alpha users. Next: Ollama LLM integration, monetization plan."
-    },
-    {
-      "time": "2026-07-03 23:54:34.645372",
-      "text": "SESSION COMPLETE 3-JUL-2026: fixed /start menu via welcome_handler.py, tutor worker replies, inbox shows outbox, /demo works, persistency stable. Ready for alpha + monetization."
-    },
-    {
-      "time": "2026-07-04 00:19:36.122985",
-      "text": "SESSION 4-JUL-2026: Fixed slh_dashboard.sh token KeyError (options 1 and 2) - now falls back to BOT_TOKEN env var if db.json lacks token key, matches slh_daemon.sh pattern. Verified via live test + git push (2fb7af7). DISCOVERED RISK: dashboard health check uses pgrep -f python.*bot.py which never matches bot_stable.py, so it always reports Stopped and auto-triggers ./slh_daemon.sh - currently harmless because local bot_stable.py crashes immediately (ModuleNotFoundError: core.event_bus, plugins.task; No valid token found) but becomes a live 409-conflict generator if local deps ever get fixed. NEXT SESSION PRIORITY: fix dashboard pgrep pattern to match bot_stable.py, or remove auto-start entirely and just report status."
-    },
-    {
-      "time": "2026-07-04 00:31:00.730450",
-      "text": "SESSION 4-JUL-2026 PART 2: Fixed dashboard auto-start risk - pgrep pattern now matches bot_stable.py (was matching bot.py, always false), removed automatic ./slh_daemon.sh launch entirely, relabeled as Local Bot to clarify it does not reflect Railway production status. Verified Railway container has zero local dependency on slh_dashboard.sh (only process running is bot_stable.py itself, no ps binary in container). Tested live - shows correct Not running status with no auto-launch. NOTE: dashboard DB health check (option 4) still checks stale schema fields (students, courses, admins, etc) that do not exist in current db.json schema (users, agents, tasks, memory, votes) - cosmetic, low priority, not fixed this session."
-    },
-    {
-      "time": "2026-07-04 00:48:39.053630",
-      "text": "SESSION 4-JUL-2026 PART 3 - Economic engine audit: Found marketplace.py wrote to /app/marketplace.json (ephemeral container disk, NOT Volume) - active data-loss risk, would reset on every deploy. FIXED: changed STORE_FILE path to state/marketplace.json, preserved existing data (health_check, task_plugin, agent_os, junk_cleaner plugins) by copying to new location before code change. Verified live on Railway post-deploy - code and file both confirmed at new path. ALSO DISCOVERED (not yet fixed): (1) TWO competing /join handlers registered - learn_handlers.py and welcome_handler.py both claim commands=[join], likely causing referral flow to silently fail since welcome_handler writes db[students] without referral_code field that learn_handlers /referral expects. (2) welcome_handler.py and learn_handlers.py bypass state_manager.py entirely, doing raw json.load/dump on relative db.json path instead of using the centralized DB access built last session - same single-source-of-truth risk as journal.json had. (3) Local Termux state/db.json was significantly stale vs Railway live db.json (missing students/courses/admins keys) - must always pull live data via /exec before doing local DB work. (4) orphaned join_fix.py file present in root, unclear if still relevant. NEXT SESSION: resolve duplicate /join handlers, migrate welcome_handler.py and learn_handlers.py to use state_manager.py, decide fate of join_fix.py."
-    },
-    {
-      "time": "2026-07-04 01:11:49.022203",
-      "text": "SESSION 4-JUL-2026 PART 4 - Join handler cleanup + critical bug fix: Removed dead /join code (start_join/process_name/process_group/process_goal, 58 lines) from learn_handlers.py - was unreachable since welcome_handler.init(bot) registers first in bot_stable.py load order, telebot only executes first-matching handler for a command. CRITICAL BUG FOUND during live testing: welcome_handler.py join handler used relative path db.json (not state/db.json), which does not exist on Railway (no symlink present there unlike Termux local setup) - caused silent FileNotFoundError crash on every /join call, no user-facing response at all. Not caused by our changes - pre-existing bug, only surfaced because we tested /join live for the first time this session. FIXED: changed all 3 db.json references in welcome_handler.py to state/db.json. Verified live - /join now correctly responds. NOTE: my_progress() function in learn_handlers.py also confirmed dead code (referenced in error messages but /myprogress command never registered) - pre-existing, not touched, flagged for future cleanup. NOTE: SyntaxWarning for invalid escape sequences in welcome_handler.py markdown text (\\_ \\<) - cosmetic, not blocking, low priority."
-    },
-    {
-      "time": "2026-07-04 10:10:18.582942",
-      "text": "SESSION 4-JUL-2026 PART 5 - Admin menu audit found 4 duplicate handlers in bot_stable.py (start, demo, logs, refreshtoken). Telebot only runs first-registered handler, rest were dead code. Removed dead start/demo/logs duplicates (76 lines), verified live via welcome_handler.py and demo_handlers.py. MAJOR FIX: refreshtoken handlers were re-registering every reconnect loop iteration inside while True - moved outside loop entirely, matches known risk flagged in prior session memory. CRITICAL BUG FOUND (pre-existing, unrelated to our changes): refresh_token_handler.py called is_admin(message.from_user.id) passing an int, but is_admin() expects full message object - caused silent AttributeError crash on every refreshtoken call, zero user feedback. Fixed to is_admin(message). Verified live - full confirm flow works now (yes/cancel, safe abort on interrupt). Commits: 5302fb6, 460db40, 245cddf."
-    },
-    {
-      "time": "2026-07-04 10:33:30.582009",
-      "text": "SESSION 4-JUL-2026 PART 6: Created /roadmap command (roadmap_handler.py) that reads ROADMAP.md and sends it via Telegram, auto-chunked to stay under 4096 char limit. Verified no existing duplicate before adding. ROADMAP.md updated with full 4-Jul session summary (9 bugs fixed) and critical working rules learned (no /tmp, no long paste blocks, no long python3 -c strings, state file Volume/git split). Since ROADMAP.md is a regular git-tracked file (not in state/), it auto-syncs to Railway on every push - no special /exec sync needed like journal/db/marketplace required. Verified live - /roadmap displays full updated content correctly."
-    },
-    {
-      "timestamp": "2026-07-05T13:19:53.719554Z",
-      "action": "fixed_help_circular_import",
-      "details": "Changed help_handler.py to register_help(bot) pattern to avoid circular import. Added call in bot_stable.py. /help now works live.",
-      "files_touched": [
-        "help_handler.py",
-        "bot_stable.py"
+[
+  {
+    "time": "2026-07-19T00:00:00",
+    "text": "Journal initialized",
+    "entries": {
+      "entries": [
+        {
+          "time": "2026-07-02 01:39:10.601622",
+          "text": "SESSION 2-JUL-2026: Architecture review. System assessment: bot_stable.py online, EventBus workers mismatch identified, duplicate polling resolved. Priority: STABLE CORE - single entrypoint, clean init, zero 409 by design. OPEN: create AGENT_RULES.md, populate journal, clean .bak files, verify bot.py dependencies, Dockerfile warnings, /refreshtoken decision, student onboarding."
+        },
+        {
+          "time": "2026-07-02 01:39:10.601660",
+          "text": "NEXT SESSION TASKS: (1) Clean .bak files from disk. (2) Verify zero dependencies on bot.py, delete if clean. (3) Fix Dockerfile warnings. (4) Decide on /refreshtoken Railway auto-update. (5) Student onboarding - recruit 10 students. (6) smart_reply edge case - partial output before buttons."
+        },
+        {
+          "time": "2026-07-02 18:25:57.902148",
+          "text": "SESSION 2-JUL-2026: Cleanup + hardening. DONE: AGENT_RULES.md created, journal initialized, 5 .bak files deleted, Dockerfile ENV BOT_TOKEN removed, .gitignore expanded. ISSUES: Railway usage limit reached (deploy blocked), token exposed in CLI history - must revoke. NEXT: replace token via @BotFather + Railway Dashboard, wait for usage reset, then deploy STABLE CORE."
+        },
+        {
+          "time": "2026-07-03 20:00:15.595769",
+          "text": "SESSION 3-JUL-2026: Final stabilization. DONE: journal_read fixed (removed smart_reply), Dockerfile cleaned (ENV BOT_TOKEN removed), .gitignore expanded, old backup folders ignored, git status clean, /agent_create works in memory. OPEN: agents not persisted to db.json (volatile), /agents command hangs, start_agent_thread blocks import of bot_stable. NEXT SESSION PRIORITY: fix agent persistence to db.json, unblock /agents command, test full agent lifecycle. READY: Railway Online, Users:2, Deploy passes, security OK."
+        },
+        {
+          "time": "2026-07-03 23:24:10.261860",
+          "text": "SESSION 3-JUL-2026 COMPLETED: agent persistence fixed (state/db.json + Volume), /exec runs Python, /demo with tasks/agents/guide, /inbox shows outbox, /start updated, state_manager centralizes DB access, tutor agent auto-replies. System ready for alpha users. Next: Ollama LLM integration, monetization plan."
+        },
+        {
+          "time": "2026-07-03 23:54:34.645372",
+          "text": "SESSION COMPLETE 3-JUL-2026: fixed /start menu via welcome_handler.py, tutor worker replies, inbox shows outbox, /demo works, persistency stable. Ready for alpha + monetization."
+        },
+        {
+          "time": "2026-07-04 00:19:36.122985",
+          "text": "SESSION 4-JUL-2026: Fixed slh_dashboard.sh token KeyError (options 1 and 2) - now falls back to BOT_TOKEN env var if db.json lacks token key, matches slh_daemon.sh pattern. Verified via live test + git push (2fb7af7). DISCOVERED RISK: dashboard health check uses pgrep -f python.*bot.py which never matches bot_stable.py, so it always reports Stopped and auto-triggers ./slh_daemon.sh - currently harmless because local bot_stable.py crashes immediately (ModuleNotFoundError: core.event_bus, plugins.task; No valid token found) but becomes a live 409-conflict generator if local deps ever get fixed. NEXT SESSION PRIORITY: fix dashboard pgrep pattern to match bot_stable.py, or remove auto-start entirely and just report status."
+        },
+        {
+          "time": "2026-07-04 00:31:00.730450",
+          "text": "SESSION 4-JUL-2026 PART 2: Fixed dashboard auto-start risk - pgrep pattern now matches bot_stable.py (was matching bot.py, always false), removed automatic ./slh_daemon.sh launch entirely, relabeled as Local Bot to clarify it does not reflect Railway production status. Verified Railway container has zero local dependency on slh_dashboard.sh (only process running is bot_stable.py itself, no ps binary in container). Tested live - shows correct Not running status with no auto-launch. NOTE: dashboard DB health check (option 4) still checks stale schema fields (students, courses, admins, etc) that do not exist in current db.json schema (users, agents, tasks, memory, votes) - cosmetic, low priority, not fixed this session."
+        },
+        {
+          "time": "2026-07-04 00:48:39.053630",
+          "text": "SESSION 4-JUL-2026 PART 3 - Economic engine audit: Found marketplace.py wrote to /app/marketplace.json (ephemeral container disk, NOT Volume) - active data-loss risk, would reset on every deploy. FIXED: changed STORE_FILE path to state/marketplace.json, preserved existing data (health_check, task_plugin, agent_os, junk_cleaner plugins) by copying to new location before code change. Verified live on Railway post-deploy - code and file both confirmed at new path. ALSO DISCOVERED (not yet fixed): (1) TWO competing /join handlers registered - learn_handlers.py and welcome_handler.py both claim commands=[join], likely causing referral flow to silently fail since welcome_handler writes db[students] without referral_code field that learn_handlers /referral expects. (2) welcome_handler.py and learn_handlers.py bypass state_manager.py entirely, doing raw json.load/dump on relative db.json path instead of using the centralized DB access built last session - same single-source-of-truth risk as journal.json had. (3) Local Termux state/db.json was significantly stale vs Railway live db.json (missing students/courses/admins keys) - must always pull live data via /exec before doing local DB work. (4) orphaned join_fix.py file present in root, unclear if still relevant. NEXT SESSION: resolve duplicate /join handlers, migrate welcome_handler.py and learn_handlers.py to use state_manager.py, decide fate of join_fix.py."
+        },
+        {
+          "time": "2026-07-04 01:11:49.022203",
+          "text": "SESSION 4-JUL-2026 PART 4 - Join handler cleanup + critical bug fix: Removed dead /join code (start_join/process_name/process_group/process_goal, 58 lines) from learn_handlers.py - was unreachable since welcome_handler.init(bot) registers first in bot_stable.py load order, telebot only executes first-matching handler for a command. CRITICAL BUG FOUND during live testing: welcome_handler.py join handler used relative path db.json (not state/db.json), which does not exist on Railway (no symlink present there unlike Termux local setup) - caused silent FileNotFoundError crash on every /join call, no user-facing response at all. Not caused by our changes - pre-existing bug, only surfaced because we tested /join live for the first time this session. FIXED: changed all 3 db.json references in welcome_handler.py to state/db.json. Verified live - /join now correctly responds. NOTE: my_progress() function in learn_handlers.py also confirmed dead code (referenced in error messages but /myprogress command never registered) - pre-existing, not touched, flagged for future cleanup. NOTE: SyntaxWarning for invalid escape sequences in welcome_handler.py markdown text (\\_ \\<) - cosmetic, not blocking, low priority."
+        },
+        {
+          "time": "2026-07-04 10:10:18.582942",
+          "text": "SESSION 4-JUL-2026 PART 5 - Admin menu audit found 4 duplicate handlers in bot_stable.py (start, demo, logs, refreshtoken). Telebot only runs first-registered handler, rest were dead code. Removed dead start/demo/logs duplicates (76 lines), verified live via welcome_handler.py and demo_handlers.py. MAJOR FIX: refreshtoken handlers were re-registering every reconnect loop iteration inside while True - moved outside loop entirely, matches known risk flagged in prior session memory. CRITICAL BUG FOUND (pre-existing, unrelated to our changes): refresh_token_handler.py called is_admin(message.from_user.id) passing an int, but is_admin() expects full message object - caused silent AttributeError crash on every refreshtoken call, zero user feedback. Fixed to is_admin(message). Verified live - full confirm flow works now (yes/cancel, safe abort on interrupt). Commits: 5302fb6, 460db40, 245cddf."
+        },
+        {
+          "time": "2026-07-04 10:33:30.582009",
+          "text": "SESSION 4-JUL-2026 PART 6: Created /roadmap command (roadmap_handler.py) that reads ROADMAP.md and sends it via Telegram, auto-chunked to stay under 4096 char limit. Verified no existing duplicate before adding. ROADMAP.md updated with full 4-Jul session summary (9 bugs fixed) and critical working rules learned (no /tmp, no long paste blocks, no long python3 -c strings, state file Volume/git split). Since ROADMAP.md is a regular git-tracked file (not in state/), it auto-syncs to Railway on every push - no special /exec sync needed like journal/db/marketplace required. Verified live - /roadmap displays full updated content correctly."
+        },
+        {
+          "timestamp": "2026-07-05T13:19:53.719554Z",
+          "action": "fixed_help_circular_import",
+          "details": "Changed help_handler.py to register_help(bot) pattern to avoid circular import. Added call in bot_stable.py. /help now works live.",
+          "files_touched": [
+            "help_handler.py",
+            "bot_stable.py"
+          ]
+        },
+        {
+          "timestamp": "2026-07-05T18:38:29.278990+00:00",
+          "action": "session_2026-07-05_economic_and_menus",
+          "details": "Restructured /admin and /help menus (full command coverage). Fixed /help circular import via register_help pattern. Built payment_handler.py with native Telegram Stars (XTR) flow. Added /fakepay admin command for testing. Verified syntax, imports, and live functionality. Economy live: users can pay Stars, get credits, referral commissions auto-calculated.",
+          "files_touched": [
+            "bot_stable.py",
+            "help_handler.py",
+            "payment_handler.py",
+            "econ_handler.py"
+          ]
+        },
+        {
+          "timestamp": "2026-07-05T21:43:55.343166+00:00",
+          "action": "added_ton_payment_handler",
+          "details": "Created ton_handler.py with /ton, /ton_check, /ton_rate, /ton_set_wallet. Integrates toncenter.com API for transaction verification. No credit card needed."
+        },
+        {
+          "date": "2026-07-06T10:58:22.269424+00:00",
+          "summary": "Full remote access established: Gotty + SSH. Agent sync verified.",
+          "details": [
+            "Gotty running on http://10.25.191.82:8080 (auth: u0_a364 / TERMUX_PASS)",
+            "SSH server active on port 8022",
+            "BOT_TOKEN verified: @Me_ad_main_bot connected",
+            "Agent termux_main heartbeat OK (cron every 5 min)",
+            "All Python modules compile clean"
+          ],
+          "status": "All systems operational"
+        },
+        {
+          "date": "2026-07-06T11:00:49.898605+00:00",
+          "summary": "Windows Agent connected: automated heartbeat via Task Scheduler",
+          "details": [
+            "Registered windows_main agent via Telegram API",
+            "Set up C:\\SLH\\heartbeat_windows.ps1",
+            "Task Scheduler job SLH_Windows_Heartbeat runs every 5 min",
+            "Agent appears online in /agents_status"
+          ],
+          "status": "All systems operational"
+        },
+        {
+          "date": "2026-07-06T11:12:35.938471+00:00",
+          "summary": "Economy UX upgrade: /buy inline keyboard, language handler, diagnostics, logo",
+          "details": [
+            "/buy now shows inline buttons (ask_credit, premium_agent) when no arg",
+            "callback handler processes inline purchases",
+            "language_handler connected: /language he|en",
+            "system_diagnostics.py with 9 health checks",
+            "logo.txt integrated into /start"
+          ],
+          "status": "All systems operational"
+        },
+        {
+          "date": "2026-07-06T11:49:38.614010+00:00",
+          "summary": "Fixed Groq model and verified Gemini key on Railway",
+          "details": [
+            "Groq model updated from deprecated llama3-70b-8192 to llama-3.1-70b-versatile",
+            "Checked and set GEMINI_API_KEY and GROQ_API_KEY in Railway",
+            "Forced redeploy to apply changes",
+            "Tested /ask with both providers successfully (or Gemini still limited)"
+          ],
+          "status": "Operational (Groq working, Gemini may need new key)"
+        },
+        {
+          "date": "2026-07-06T12:17:00.947509+00:00",
+          "summary": "Groq model fixed to llama-3.1-8b-instant and verified via automatic test",
+          "details": [
+            "Switched model name in advanced_ask_handler.py",
+            "Restarted Railway service to clear cache",
+            "Sent test /ask command – Groq responded correctly"
+          ],
+          "status": "Groq operational"
+        },
+        {
+          "date": "2026-07-06T12:40:04.617732+00:00",
+          "summary": "Agent approval system deployed and operational",
+          "details": [
+            "/agent_approve, /agent_reject, /agent_submissions added",
+            "Approved agents go to /market, creator gets 40 Credits",
+            "Stray line cleaned from learning_path.py"
+          ],
+          "status": "Operational"
+        },
+        {
+          "date": "2026-07-06T13:11:02.203979+00:00",
+          "summary": "Day complete: name fixed, agent approved, Windows cleaned",
+          "details": [
+            "Name successfully changed to אוסיף via Telegram API re-registration",
+            "test_agent approved and added to marketplace with 40 Credits bonus",
+            "Windows project cleaned from problematic 't ' file",
+            "Full system unification: Termux + Windows + Railway + Telegram"
+          ],
+          "status": "All systems operational and unified"
+        },
+        {
+          "date": "2026-07-06T14:12:48.899279+00:00",
+          "summary": "Cleaned /admin menu – removed duplicate raw Python blocks",
+          "details": [
+            "Removed lines 439-478 which displayed raw handler code in /admin",
+            "Healthcheck, agent_heartbeat, agents_status still functional",
+            "Menu now clean and professional"
+          ],
+          "status": "Operational"
+        },
+        {
+          "date": "2026-07-06T14:14:29.255703+00:00",
+          "summary": "Final /admin cleanup – all raw code removed",
+          "details": [
+            "Removed leftover agent_status fragment from /admin",
+            "Admin panel now displays clean menu only",
+            "All functions still operational"
+          ],
+          "status": "Operational and clean"
+        },
+        {
+          "date": "2026-07-06T16:26:25.201795+00:00",
+          "summary": "Investments connected to economy: stake_join integrates with balance & transactions",
+          "details": [
+            "stake_join now deducts from user balance, records in stakes and transactions",
+            "Full system check: all 11 endpoints respond",
+            "Ready for user onboarding"
+          ],
+          "status": "All systems integrated"
+        },
+        {
+          "date": "2026-07-06T17:54:23.365729+00:00",
+          "summary": "Permanent /pnl fix deployed; system stable and fully operational",
+          "details": [
+            "pnl_fix added immediately after bot creation in bot_stable.py",
+            "Duplicate decorator issue resolved",
+            "Railway built new image via railway up",
+            "All core commands verified: /start, /admin, /help, /pnl, /balance, /ask, /broadcast, /course_slh"
+          ],
+          "status": "All systems go"
+        },
+        {
+          "date": "2026-07-06T18:11:50.296703+00:00",
+          "summary": "Final persistent setup: all commands survive restarts, /start improved, admin protected",
+          "details": [
+            "Added git_sync, testadd, testlist, stake, ton, dashboard directly to bot_stable.py",
+            "Redesigned /start with clear welcome, navigation buttons, and admin-only access",
+            "Ensured admin_utils.py protects sensitive commands",
+            "Railway auto-deploy enabled – changes via GitHub take effect automatically",
+            "System ready for Telegram-only workflow"
+          ],
+          "status": "All systems go"
+        },
+        {
+          "date": "2026-07-06T18:48:06.805335+00:00",
+          "summary": "Final victory: /testadd and /testlist working, data persists, system locked for Telegram-only workflow",
+          "details": [
+            "Added clean persistent block directly after bot creation",
+            "Pushed via Git and built with railway up",
+            "All previous /exec overwrites cleaned",
+            "Strict rule: code changes only via GitHub"
+          ],
+          "status": "Rock solid"
+        },
+        {
+          "date": "2026-07-06T18:49:17.791178+00:00",
+          "summary": "System locked, data persists, ready for monetization",
+          "details": [
+            "testadd/testlist working with state/ persistence",
+            "All persistent commands stable",
+            "Strict rules established: GitHub-only changes, no /exec",
+            "Ready for TON and auto-payout"
+          ],
+          "status": "Production ready"
+        }
       ]
-    },
-    {
-      "timestamp": "2026-07-05T18:38:29.278990+00:00",
-      "action": "session_2026-07-05_economic_and_menus",
-      "details": "Restructured /admin and /help menus (full command coverage). Fixed /help circular import via register_help pattern. Built payment_handler.py with native Telegram Stars (XTR) flow. Added /fakepay admin command for testing. Verified syntax, imports, and live functionality. Economy live: users can pay Stars, get credits, referral commissions auto-calculated.",
-      "files_touched": [
-        "bot_stable.py",
-        "help_handler.py",
-        "payment_handler.py",
-        "econ_handler.py"
-      ]
-    },
-    {
-      "timestamp": "2026-07-05T21:43:55.343166+00:00",
-      "action": "added_ton_payment_handler",
-      "details": "Created ton_handler.py with /ton, /ton_check, /ton_rate, /ton_set_wallet. Integrates toncenter.com API for transaction verification. No credit card needed."
-    },
-    {
-      "date": "2026-07-06T10:58:22.269424+00:00",
-      "summary": "Full remote access established: Gotty + SSH. Agent sync verified.",
-      "details": [
-        "Gotty running on http://10.25.191.82:8080 (auth: u0_a364 / TERMUX_PASS)",
-        "SSH server active on port 8022",
-        "BOT_TOKEN verified: @Me_ad_main_bot connected",
-        "Agent termux_main heartbeat OK (cron every 5 min)",
-        "All Python modules compile clean"
-      ],
-      "status": "All systems operational"
-    },
-    {
-      "date": "2026-07-06T11:00:49.898605+00:00",
-      "summary": "Windows Agent connected: automated heartbeat via Task Scheduler",
-      "details": [
-        "Registered windows_main agent via Telegram API",
-        "Set up C:\\SLH\\heartbeat_windows.ps1",
-        "Task Scheduler job SLH_Windows_Heartbeat runs every 5 min",
-        "Agent appears online in /agents_status"
-      ],
-      "status": "All systems operational"
-    },
-    {
-      "date": "2026-07-06T11:12:35.938471+00:00",
-      "summary": "Economy UX upgrade: /buy inline keyboard, language handler, diagnostics, logo",
-      "details": [
-        "/buy now shows inline buttons (ask_credit, premium_agent) when no arg",
-        "callback handler processes inline purchases",
-        "language_handler connected: /language he|en",
-        "system_diagnostics.py with 9 health checks",
-        "logo.txt integrated into /start"
-      ],
-      "status": "All systems operational"
-    },
-    {
-      "date": "2026-07-06T11:49:38.614010+00:00",
-      "summary": "Fixed Groq model and verified Gemini key on Railway",
-      "details": [
-        "Groq model updated from deprecated llama3-70b-8192 to llama-3.1-70b-versatile",
-        "Checked and set GEMINI_API_KEY and GROQ_API_KEY in Railway",
-        "Forced redeploy to apply changes",
-        "Tested /ask with both providers successfully (or Gemini still limited)"
-      ],
-      "status": "Operational (Groq working, Gemini may need new key)"
-    },
-    {
-      "date": "2026-07-06T12:17:00.947509+00:00",
-      "summary": "Groq model fixed to llama-3.1-8b-instant and verified via automatic test",
-      "details": [
-        "Switched model name in advanced_ask_handler.py",
-        "Restarted Railway service to clear cache",
-        "Sent test /ask command – Groq responded correctly"
-      ],
-      "status": "Groq operational"
-    },
-    {
-      "date": "2026-07-06T12:40:04.617732+00:00",
-      "summary": "Agent approval system deployed and operational",
-      "details": [
-        "/agent_approve, /agent_reject, /agent_submissions added",
-        "Approved agents go to /market, creator gets 40 Credits",
-        "Stray line cleaned from learning_path.py"
-      ],
-      "status": "Operational"
-    },
-    {
-      "date": "2026-07-06T13:11:02.203979+00:00",
-      "summary": "Day complete: name fixed, agent approved, Windows cleaned",
-      "details": [
-        "Name successfully changed to אוסיף via Telegram API re-registration",
-        "test_agent approved and added to marketplace with 40 Credits bonus",
-        "Windows project cleaned from problematic 't ' file",
-        "Full system unification: Termux + Windows + Railway + Telegram"
-      ],
-      "status": "All systems operational and unified"
-    },
-    {
-      "date": "2026-07-06T14:12:48.899279+00:00",
-      "summary": "Cleaned /admin menu – removed duplicate raw Python blocks",
-      "details": [
-        "Removed lines 439-478 which displayed raw handler code in /admin",
-        "Healthcheck, agent_heartbeat, agents_status still functional",
-        "Menu now clean and professional"
-      ],
-      "status": "Operational"
-    },
-    {
-      "date": "2026-07-06T14:14:29.255703+00:00",
-      "summary": "Final /admin cleanup – all raw code removed",
-      "details": [
-        "Removed leftover agent_status fragment from /admin",
-        "Admin panel now displays clean menu only",
-        "All functions still operational"
-      ],
-      "status": "Operational and clean"
-    },
-    {
-      "date": "2026-07-06T16:26:25.201795+00:00",
-      "summary": "Investments connected to economy: stake_join integrates with balance & transactions",
-      "details": [
-        "stake_join now deducts from user balance, records in stakes and transactions",
-        "Full system check: all 11 endpoints respond",
-        "Ready for user onboarding"
-      ],
-      "status": "All systems integrated"
-    },
-    {
-      "date": "2026-07-06T17:54:23.365729+00:00",
-      "summary": "Permanent /pnl fix deployed; system stable and fully operational",
-      "details": [
-        "pnl_fix added immediately after bot creation in bot_stable.py",
-        "Duplicate decorator issue resolved",
-        "Railway built new image via railway up",
-        "All core commands verified: /start, /admin, /help, /pnl, /balance, /ask, /broadcast, /course_slh"
-      ],
-      "status": "All systems go"
-    },
-    {
-      "date": "2026-07-06T18:11:50.296703+00:00",
-      "summary": "Final persistent setup: all commands survive restarts, /start improved, admin protected",
-      "details": [
-        "Added git_sync, testadd, testlist, stake, ton, dashboard directly to bot_stable.py",
-        "Redesigned /start with clear welcome, navigation buttons, and admin-only access",
-        "Ensured admin_utils.py protects sensitive commands",
-        "Railway auto-deploy enabled – changes via GitHub take effect automatically",
-        "System ready for Telegram-only workflow"
-      ],
-      "status": "All systems go"
-    },
-    {
-      "date": "2026-07-06T18:48:06.805335+00:00",
-      "summary": "Final victory: /testadd and /testlist working, data persists, system locked for Telegram-only workflow",
-      "details": [
-        "Added clean persistent block directly after bot creation",
-        "Pushed via Git and built with railway up",
-        "All previous /exec overwrites cleaned",
-        "Strict rule: code changes only via GitHub"
-      ],
-      "status": "Rock solid"
-    },
-    {
-      "date": "2026-07-06T18:49:17.791178+00:00",
-      "summary": "System locked, data persists, ready for monetization",
-      "details": [
-        "testadd/testlist working with state/ persistence",
-        "All persistent commands stable",
-        "Strict rules established: GitHub-only changes, no /exec",
-        "Ready for TON and auto-payout"
-      ],
-      "status": "Production ready"
     }
-  ]
-}
+  },
+  {
+    "time": "2026-07-19T21:35:00",
+    "text": "Token refresh fully operational. /journal_ask responding. All handlers loaded."
+  }
+]
