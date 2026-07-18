@@ -119,7 +119,7 @@ def init(bot, is_admin_func=None):
             return
 
         try:
-            bot.delete_message(message.chat.id, message.message_id)
+            # bot.delete_message(message.chat.id, message.message_id)
         except Exception:
             pass
 
@@ -150,7 +150,7 @@ def init(bot, is_admin_func=None):
         _pending.pop(uid, None)
 
         try:
-            bot.delete_message(message.chat.id, message.message_id)
+            # bot.delete_message(message.chat.id, message.message_id)
         except Exception:
             pass
 
@@ -165,6 +165,15 @@ def init(bot, is_admin_func=None):
             return
 
         cfg = _load_config()
+        # גיבוי הטוקן הישן למקרה של תקלה
+        old_token = cfg.get("BOT_TOKEN", "")
+        if old_token and old_token != new_token:
+            try:
+                with open(CONFIG_PATH + ".token_backup", 'w') as bk:
+                    bk.write(old_token)
+                print("[TOKEN] Old token backed up")
+            except Exception as e:
+                print(f"[TOKEN] Backup failed: {e}")
         cfg["BOT_TOKEN"] = new_token
         _save_config(cfg)
 
