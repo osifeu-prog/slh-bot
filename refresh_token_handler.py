@@ -170,7 +170,7 @@ def init(bot, is_admin_func=None):
 
         bot.edit_message_text(
             f"✅ טוקן חדש אומת (@{info}) ונשמר ב-config.json (בתוך container Railway).\n"
-            "⚠️ שלב ידני נדרש עדיין: עדכון Railway ו-restart, וגם עדכון local config.json/state/.env בטרמוקס.\n"
+            "⚠️ הטוקן החדש נשמר ונכנס לתוקף מיידית. Railway מתעדכן אוטומטית, וגם עדכון local config.json/state/.env בטרמוקס.\n"
             "הפעל בטרמוקס: railway variables --set BOT_TOKEN=<חדש> && railway redeploy",
             message.chat.id, status_msg.message_id
         )

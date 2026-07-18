@@ -34,6 +34,7 @@ from staking_handler import register_staking_handlers
 
 try:
     from handlers.llm_handler import register as register_llm
+register_llm(bot)
     LLM_AVAILABLE = True
 except Exception as e:
     print("⚠️ LLM handler not available:", e)
