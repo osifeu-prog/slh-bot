@@ -922,9 +922,14 @@ try:
     from refresh_token_handler import init as init_refresh_token
     init_refresh_token(bot, context.get("is_admin"))
     print("🔐 refresh_token_handler loaded")
-register_llm(bot)
 except Exception as e:
     print("❌ refresh_token_handler error:", e)
+
+# Register LLM handler
+try:
+    register_llm(bot)
+except Exception as e:
+    print("⚠️ register_llm failed:", e)
 
 # ===== HANDLERS LOADED THROUGH SINGLE LOADER =====
 print("✅ Single handler loader active")
