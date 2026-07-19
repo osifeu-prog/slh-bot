@@ -100,6 +100,35 @@ agents_dict = {}
 
 
 
+
+# ===== AI AGENTS REGISTRATION =====
+@bot.message_handler(commands=['register_ai'])
+def register_ai_cmd(m):
+    uid = str(m.from_user.id)
+    if uid != "8789977826":
+        bot.reply_to(m, "❌ Only owner can register AI agents")
+        return
+    import json
+    with open("state/db.json") as f:
+        db = json.load(f)
+    agents = db.setdefault("agents", {})
+    ai_agents = [
+        ("ClaudeAgent", "Anthropic Claude AI assistant"),
+        ("GroqAgent", "Groq-powered AI agent"),
+        ("GeminiAgent", "Google Gemini AI agent"),
+        ("OpenAI_Agent", "OpenAI GPT agent")
+    ]
+    created = []
+    for name, desc in ai_agents:
+        if name not in [a.get("name") for a in agents.values()]:
+            nid = str(max([int(k) for k in agents.keys()] + [0]) + 1)
+            agents[nid] = {"name": name, "role": "ai_assistant", "state": "idle", "inbox": [], "description": desc, "permissions": ["read", "vote", "propose"]}
+            created.append(name)
+    db["agents"] = agents
+    with open("state/db.json", "w") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    bot.reply_to(m, f"✅ AI agents created: {', '.join(created)}" if created else "ℹ️ All AI agents already exist")
+
 # ===== AI AGENTS REGISTRATION =====
 @bot.message_handler(commands=['register_ai'])
 def register_ai_via_bot(m):
