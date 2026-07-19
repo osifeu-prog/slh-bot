@@ -102,7 +102,7 @@ agents_dict = {}
 
 # ===== AI AGENTS REGISTRATION =====
 @bot.message_handler(commands=['register_ai'])
-def register_ai_cmd(m):
+def register_ai_via_bot(m):
     uid = str(m.from_user.id)
     if uid != "8789977826":
         bot.reply_to(m, "❌ Only owner can register AI agents")
