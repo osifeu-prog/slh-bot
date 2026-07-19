@@ -108,6 +108,57 @@ def load_handlers(bot, context):
             )
     except Exception as e:
         print("control_handler error:", e)
+
+    # ===== AGENT ONBOARDING =====
+    try:
+        @bot.message_handler(commands=['agent_onboard'])
+        def agent_onboard(m):
+            import json, time
+            parts = m.text.split(maxsplit=2)
+            if len(parts) < 2:
+                bot.reply_to(m, "Usage: /agent_onboard <name> [description]")
+                return
+            name = parts[1]
+            desc = parts[2] if len(parts) > 2 else "New AI agent"
+            uid = str(m.from_user.id)
+            db = json.load(open('state/db.json'))
+            agents = db.get('agents', {})
+            
+            # בדיקת כפילות
+            if name in [a.get('name') for a in agents.values()]:
+                bot.reply_to(m, f"❌ Agent '{name}' already exists")
+                return
+            
+            # יצירת סוכן חדש עם schema אחיד
+            nid = str(max([int(k) for k in agents.keys() if k.isdigit()] + [0]) + 1)
+            agents[nid] = {
+                "name": name,
+                "role": "ai_assistant",
+                "state": "idle",
+                "inbox": [],
+                "outbox": [],
+                "history": [],
+                "created": time.time(),
+                "description": desc,
+                "permissions": ["read", "vote", "propose"],
+                "onboarded_by": uid
+            }
+            db['agents'] = agents
+            json.dump(db, open('state/db.json','w'), indent=2, ensure_ascii=False)
+            
+            # שליחת הודעת ברוכים הבאים לסוכן
+            bot.reply_to(m, f"🎉 Agent '{name}' onboarded successfully!\n"
+                           f"🆔 ID: {nid}\n"
+                           f"📝 {desc}\n\n"
+                           f"Welcome to SLH OS! You can now:\n"
+                           f"• Read proposals\n"
+                           f"• Vote on decisions\n"
+                           f"• Propose new ideas\n"
+                           f"• Receive tasks via inbox\n\n"
+                           f"Your AI assistant will help you get started.")
+        print("✅ agent_onboard handler loaded")
+    except Exception as e:
+        print("agent_onboard error:", e)
     # ===== LEGACY USER EXPERIENCE =====
     legacy = [
         "welcome_handler",
