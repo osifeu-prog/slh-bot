@@ -34,7 +34,9 @@ def load_handlers(bot, context):
 
     try:
         from handlers.system_handler import register as register_system
+        from state.custom_handlers.ai_voting_handler import register as register_ai_voting
         register_system(bot, context)
+        register_ai_voting(bot)
     except Exception as e:
         print("system_handler error:", e)
 
