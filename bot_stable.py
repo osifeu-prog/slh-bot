@@ -69,6 +69,12 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
+try:
+    from core.event_bus import EventBus
+    bus = EventBus(workers=2)
+    print("✅ EventBus started")
+except Exception as e:
+    print("EventBus error:", e)
 
 # --- Load custom handlers from local state directory ---
 import importlib.util
