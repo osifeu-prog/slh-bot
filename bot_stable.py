@@ -69,6 +69,9 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
+from handlers.loader import ping_cmd, fullcheck_cmd
+bot.message_handler(commands=["ping"])(ping_cmd)
+bot.message_handler(commands=["fullcheck"])(fullcheck_cmd)
 try:
     from core.event_bus import EventBus
     bus = EventBus(workers=2)
