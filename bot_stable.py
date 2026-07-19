@@ -927,7 +927,21 @@ def token_cmd(m):
         bot.reply_to(m, "Usage: /token <supply|balance>")
         return
     sub = parts[1].lower()
-    from state.token_loader import get_balance, get_supply
+    import json
+    def get_balance(uid):
+        try:
+            with open('state/db.json') as f:
+                db = json.load(f)
+            return db.get('users', {}).get(str(uid), {}).get('wallet', {}).get('credits', 0)
+        except:
+            return 0
+    def get_supply():
+        try:
+            with open('state/db.json') as f:
+                db = json.load(f)
+            return sum(u.get('wallet', {}).get('credits', 0) for u in db.get('users', {}).values())
+        except:
+            return 0
     if sub == 'supply':
         bot.reply_to(m, f"💰 Total SLH Supply: {get_supply()} credits")
     elif sub == 'balance':
