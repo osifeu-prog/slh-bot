@@ -59,6 +59,21 @@ def load_handlers(bot, context):
         print("gateway_handler error:", e)
 
 
+
+    # ===== ECONOMY DASHBOARD =====
+    try:
+        import json
+        @bot.message_handler(commands=['economy'])
+        def economy_cmd(m):
+            uid = str(m.from_user.id)
+            db = json.load(open('state/db.json'))
+            user = db.get('users', {}).get(uid, {})
+            credits = user.get('wallet', {}).get('credits', 0)
+            points = user.get('gamification', {}).get('points', 0)
+            token = db.get('token', {}).get('balances', {}).get(uid, 0)
+            bot.reply_to(m, f'💰 Economy Dashboard\n🔹 Credits: {credits}\n🔹 Points: {points}\n🔹 SLH: {token}')
+    except Exception as e:
+        print("economy_handler error:", e)
     # ===== LEGACY USER EXPERIENCE =====
     legacy = [
         "welcome_handler",
