@@ -919,6 +919,22 @@ except Exception as e:
 from handlers.loader import load_handlers
 load_handlers(bot, context)
 
+
+@bot.message_handler(commands=['token'])
+def token_cmd(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /token <supply|balance>")
+        return
+    sub = parts[1].lower()
+    from state.token_loader import get_balance, get_supply
+    if sub == 'supply':
+        bot.reply_to(m, f"💰 Total SLH Supply: {get_supply()} credits")
+    elif sub == 'balance':
+        bot.reply_to(m, f"💰 Your balance: {get_balance(m.from_user.id)} credits")
+    else:
+        bot.reply_to(m, "Usage: /token <supply|balance>")
+
 # ===== REFRESH TOKEN HANDLER =====
 try:
     from refresh_token_handler import init as init_refresh_token
