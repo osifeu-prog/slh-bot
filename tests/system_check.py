@@ -20,7 +20,7 @@ def main():
     # config validation
     try:
         cfg = json.load(open("config.json"))
-        results.append(ok("Token present", "BOT_TOKEN" in cfg))
+        results.append(ok("Token present", "BOT_TOKEN" in cfg or os.getenv("BOT_TOKEN")))
         results.append(ok("Admin set", cfg.get("SUPER_ADMIN") == 8789977826))
     except:
         results.append(False)
