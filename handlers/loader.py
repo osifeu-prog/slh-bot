@@ -35,4 +35,99 @@ def load_handlers(bot, context):
     try:
         from handlers.system_handler import register as register_system
         from state.custom_handlers.ai_voting_handler import register as register_ai_voting
-        register_ai_voting(bot)
+        register_system(bot, context)
+    except Exception as e:
+        print("system_handler error:", e)
+
+
+
+    # ===== CHAT REGISTRY =====
+    try:
+        from handlers.chat_registry_handler import register as register_chat_registry
+        register_chat_registry(bot)
+        print("💬 Chat registry handler loaded")
+    except Exception as e:
+        print("chat_registry error:", e)
+
+
+    # ===== SLH GATEWAY BRIDGE =====
+    try:
+        from handlers.gateway_handler import register as register_gateway
+        register_gateway(bot)
+        print("🌐 SLH Gateway handler loaded")
+    except Exception as e:
+        print("gateway_handler error:", e)
+
+
+    # ===== LEGACY USER EXPERIENCE =====
+    legacy = [
+        "welcome_handler",
+        "onboarding_handler",
+        "help_handler",
+        "course_handlers",
+        "learn_handlers",
+        "econ_handler",
+        "payment_handler",
+        "project_commands",
+        "smart_leaderboard",
+        "report_handler",
+    ]
+
+    for module_name in legacy:
+        try:
+            module = __import__(module_name)
+
+            # handlers with register(bot)
+            if hasattr(module, "register"):
+                module.register(bot)
+
+            # report uses init(bot)
+            elif module_name == "report_handler" and hasattr(module, "init"):
+                module.init(bot)
+
+            # welcome uses init(bot)
+            elif module_name == "welcome_handler" and hasattr(module, "init"):
+                module.init(bot)
+
+            # onboarding uses init(bot)
+            elif module_name == "onboarding_handler" and hasattr(module, "init"):
+                print(">>> LOADING ONBOARDING HANDLER")
+                module.init(bot)
+                print(">>> ONBOARDING HANDLER LOADED")
+
+            # help uses register_help(bot)
+            elif module_name == "help_handler" and hasattr(module, "register_help"):
+                module.register_help(bot)
+
+            # course/economy style handlers
+            elif module_name == "course_handlers" and hasattr(module, "register_course_handlers"):
+                module.register_course_handlers(bot)
+
+            elif module_name == "econ_handler" and hasattr(module, "register_econ_handlers"):
+                module.register_econ_handlers(bot)
+
+            elif module_name == "payment_handler" and hasattr(module, "register_payment_handlers"):
+                module.register_payment_handlers(bot)
+
+            elif module_name == "smart_leaderboard" and hasattr(module, "register"):
+                module.register(bot)
+
+        except Exception as e:
+            print(f"{module_name} load error:", e)
+
+
+    print("🧩 Modular + Legacy handlers loaded")
+    register_ai_voting(bot)
+    try:
+        from handlers.join_handler import register as register_join
+        register_join(bot)
+        print("👤 join_handler loaded")
+    except Exception as e:
+        print("join_handler error:", e)
+    try:
+        from advanced_ask_handler import register_ask_handler
+        register_ask_handler(bot)
+        print("🔥 ASK HANDLER REGISTERED ON BOT:", id(bot))
+        print("✅ advanced_ask_handler loaded")
+    except Exception as e:
+        print("advanced_ask_handler error:", e)
