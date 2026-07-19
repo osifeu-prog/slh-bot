@@ -22,16 +22,19 @@ def register(bot):
     def wrapped_send(chat_id, *args, **kwargs):
         try:
             chats = load()
-            chats[str(chat_id)] = {
-                "id": chat_id,
-                "type": "known",
-                "updated": time.time(),
-                "last_message": args[0] if args else ""
-            }
+            key = str(chat_id)
+            if key not in chats:
+                chats[key] = {"id": chat_id, "type": "known", "messages": []}
+            chats[key].setdefault("messages", []).append({
+                "time": time.time(),
+                "direction": "out",
+                "text": args[0] if args else ""
+            })
+            chats[key]["updated"] = time.time()
             save(chats)
         except Exception as e:
             print("chat registry save error:", e)
         return original_send(chat_id, *args, **kwargs)
 
     bot.send_message = wrapped_send
-    print("💬 Chat registry active")
+    print("💬 Chat registry active (full message log)")
