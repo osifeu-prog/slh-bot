@@ -231,7 +231,7 @@ def load_handlers(bot, context):
     except Exception as e:
         print("economy_handler error:", e)
     print("🧩 Modular + Legacy handlers loaded")
-    register_ai_voting(bot)
+    register_ai_voting(bot, None)
     try:
         from handlers.join_handler import register as register_join
         register_join(bot)

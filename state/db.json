@@ -1,7 +1,13 @@
 {
   "users": {},
   "agents": {},
-  "votes": {},
+  "votes": {
+    "localtest_9838": {
+      "yes": 0,
+      "no": 0,
+      "voters": {}
+    }
+  },
   "tasks": {},
   "memory": {}
 }
