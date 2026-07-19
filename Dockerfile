@@ -15,4 +15,3 @@ RUN mkdir -p /app/state
 RUN chmod +x /app/start_railway.sh
 
 CMD ["bash","/app/start_railway.sh"]
-COPY config.json /app/config.json
