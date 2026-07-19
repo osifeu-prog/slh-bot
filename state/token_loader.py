@@ -14,3 +14,23 @@ def get_token():
         return data.get("BOT_TOKEN")
     except Exception:
         return None
+
+def get_balance(uid):
+    """Return user balance in credits"""
+    import json
+    try:
+        with open('state/db.json') as f:
+            db = json.load(f)
+        return db.get('users', {}).get(str(uid), {}).get('wallet', {}).get('credits', 0)
+    except:
+        return 0
+
+def get_supply():
+    """Return total credits in circulation"""
+    import json
+    try:
+        with open('state/db.json') as f:
+            db = json.load(f)
+        return sum(u.get('wallet', {}).get('credits', 0) for u in db.get('users', {}).values())
+    except:
+        return 0
