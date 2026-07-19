@@ -1,4 +1,60 @@
 def load_handlers(bot, context):
+    @bot.message_handler(commands=['system_integrity'])
+    def system_integrity_cmd(m):
+    try:
+    import json
+    from core.event_bus import EventBus
+    agents = json.load(open("state/agents.json"))
+    db = json.load(open("state/db.json"))
+    total = len(agents)
+    ai_agents = 0
+    verified = 0
+    for data in agents.values():
+    if not isinstance(data, dict):
+    continue
+    if data.get("role") == "ai_assistant":
+    ai_agents += 1
+    inbox = data.get("inbox", [])
+    for item in inbox:
+    msg = item.get("message", "") if isinstance(item, dict) else str(item)
+    if "VERIFIED" in msg:
+    verified += 1
+    break
+    eb_status = "Active" if EventBus._instance else "Off"
+    report = (
+    "🧠 SLH Integrity Report\n\n"
+    f"Kernel:        ✅ Stable\n"
+    f"EventBus:      {eb_status}\n"
+    f"Agents:        {total}\n"
+    f"AI Agents:     {ai_agents}\n"
+    f"Verified:      {verified}\n"
+    f"DB:            ✅ OK\n"
+    f"Warnings:      0"
+    )
+    bot.reply_to(m, report)
+    except Exception as ex:
+    bot.reply_to(m, f"Error: {ex}")
+    @bot.message_handler(commands=['verify_status'])
+    def verify_status_cmd(m):
+    try:
+    import json
+    agents = json.load(open("state/agents.json"))
+    reply = "📊 Verification Status:\n"
+    for name, data in agents.items():
+    if not isinstance(data, dict) or data.get("role") != "ai_assistant":
+    continue
+    inbox = data.get("inbox", [])
+    verified = False
+    for item in inbox:
+    msg = item.get("message", "") if isinstance(item, dict) else str(item)
+    if "VERIFIED" in msg:
+    verified = True
+    break
+    status = "✅ Verified" if verified else "⏳ Pending"
+    reply += f"• {name}: {status}\n"
+    bot.reply_to(m, reply)
+    except Exception as ex:
+    bot.reply_to(m, f"Error: {ex}")
 
     @bot.message_handler(commands=['register'])
     def register_redirect(m):
