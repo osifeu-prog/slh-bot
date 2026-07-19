@@ -52,3 +52,24 @@ def register(bot):
             json.dump(agents, f, indent=2, ensure_ascii=False)
         EventBus.publish('authority_delegated', {'from': from_agent, 'to': to_agent, 'permissions': perms})
         bot.reply_to(m, f'🔑 Permissions {perms} delegated from {from_agent} to {to_agent}')
+
+    @bot.message_handler(commands=['confirm_verification'])
+    def confirm_verification(m):
+        parts = m.text.split()
+        if len(parts) < 2:
+            bot.reply_to(m, 'Usage: /confirm_verification <agent_name>')
+            return
+        agent_name = parts[1]
+        with open('state/agents.json') as f:
+            agents = json.load(f)
+        if agent_name not in agents:
+            bot.reply_to(m, 'Agent not found.')
+            return
+        # Add VERIFIED message to inbox
+        agents[agent_name].setdefault('inbox', []).append({
+            'time': time.time(),
+            'message': 'VERIFIED: No prior project information'
+        })
+        with open('state/agents.json', 'w') as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
+        bot.reply_to(m, f'✅ {agent_name} marked as verified')
