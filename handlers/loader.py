@@ -74,6 +74,40 @@ def load_handlers(bot, context):
             bot.reply_to(m, f'💰 Economy Dashboard\n🔹 Credits: {credits}\n🔹 Points: {points}\n🔹 SLH: {token}')
     except Exception as e:
         print("economy_handler error:", e)
+
+    # ===== CONTROL TOWER =====
+    try:
+        @bot.message_handler(commands=['control'])
+        def control_cmd(m):
+            import json, os, time
+            db = json.load(open('state/db.json'))
+            users = len(db.get('users', {}))
+            agents_all = db.get('agents', {})
+            agents_active = sum(1 for a in agents_all.values() if a.get('state') == 'active')
+            agents_idle = sum(1 for a in agents_all.values() if a.get('state') == 'idle')
+            agents_busy = sum(1 for a in agents_all.values() if a.get('state') == 'busy')
+            token = db.get('token', {})
+            token_supply = token.get('supply', 'N/A')
+            votes = len(db.get('votes', {}))
+            # commands loaded – estimate from handler files
+            import subprocess
+            cmds = subprocess.getoutput("grep -r '@bot.message_handler' handlers/ | wc -l").strip()
+            # last commit
+            commit = os.popen("git log -1 --format='%h %s'").read().strip() or "N/A"
+            bot.reply_to(m,
+                f"🧠 SLH OS CONTROL TOWER\n\n"
+                f"🟢 System: Online\n"
+                f"📦 DB: state/db.json\n\n"
+                f"👥 Users: {users}\n"
+                f"🤖 Agents: {len(agents_all)} (🟢{agents_active} 🟡{agents_idle} 🔴{agents_busy})\n"
+                f"💰 Token Supply: {token_supply}\n"
+                f"🗳 Votes: {votes}\n"
+                f"📡 Commands loaded: ~{cmds}\n"
+                f"🔧 Last Deploy: {commit}\n"
+                f"\n/control agents | /control economy | /control health"
+            )
+    except Exception as e:
+        print("control_handler error:", e)
     # ===== LEGACY USER EXPERIENCE =====
     legacy = [
         "welcome_handler",
