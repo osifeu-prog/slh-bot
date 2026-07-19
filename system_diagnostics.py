@@ -23,6 +23,9 @@ class SystemDiagnostics:
                 for line in f:
                     if line.startswith("export BOT_TOKEN="):
                         self.token = line.split('"')[1]
+                    if not self.token:
+                        import os
+                        self.token = os.getenv("BOT_TOKEN", "")
                         break
 
     def check_bot_connection(self) -> str:
