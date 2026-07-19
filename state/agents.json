@@ -1,19 +1,28 @@
 {
-  "Guardian": {
-    "name": "Guardian",
-    "inbox": [
-      "system_online",
-      "hello"
-    ],
-    "outbox": [],
+  "1": {
+    "name": "SystemGuard",
+    "role": "agent",
     "state": "active",
-    "role": "agent"
-  },
-  "Test": {
-    "name": "Test",
     "inbox": [],
-    "outbox": [],
+    "created": "2026-07-14 14:26"
+  },
+  "2": {
+    "name": "DoctorAgent",
+    "role": "agent",
     "state": "idle",
-    "role": "agent"
+    "inbox": []
+  },
+  "3": {
+    "name": "SyncAgent",
+    "role": "agent",
+    "state": "idle",
+    "inbox": []
+  },
+  "4": {
+    "name": "TokenAgent",
+    "role": "agent",
+    "state": "idle",
+    "inbox": [],
+    "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02"
   }
 }
