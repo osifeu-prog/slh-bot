@@ -27,7 +27,7 @@ def register(bot):
         created = []
         for name, desc in ai_agents:
             if name not in [a.get("name") for a in agents.values()]:
-                nid = str(max([int(k) for k in agents.keys()] + [0]) + 1)
+                nid = str(max([int(k) for k in agents.keys() if k.isdigit()] + [0]) + 1)
                 agents[nid] = {"name": name, "role": "ai_assistant", "state": "idle", "inbox": [], "description": desc, "permissions": ["read", "vote", "propose"]}
                 created.append(name)
         db["agents"] = agents
