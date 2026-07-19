@@ -7,116 +7,91 @@ DB_PATH="state/db.json"
 
 def ensure_onboarding_user(uid):
     uid=str(uid)
-
     try:
         with open(DB_PATH, encoding="utf-8") as f:
-            db=json.load(f)
+            db = json.load(f)
     except:
-        db={"users":{}}
-
-    db.setdefault("users",{})
-
-    if uid not in db["users"]:
-        db["users"][uid]={
-            "profile":{
-                "created":datetime.now().isoformat(),
-                "telegram_id":uid
-            },
-            "wallet":{
-                "credits":10
-            },
-            "academy":{
-                "courses":{
-                    "bitcoin_mastery":{
-                        "stage":1,
-                        "completed":[1]
-                    }
-                }
-            },
-            "gamification":{
-                "points":25,
-                "level":1
-            },
-            "referral":{
-                "code":None,
-                "count":0,
-                "commission":0
-            },
-            "onboarding":{
-                "completed":False,
-                "stage":"welcome"
-            },
-            "ai":{
-                "initialized":False
-            }
-        }
-
-    else:
-        db["users"][uid].setdefault("onboarding",{
-            "completed":False,
-            "stage":"welcome"
-        })
-
-    with open(DB_PATH,"w",encoding="utf-8") as f:
-        json.dump(db,f,indent=2,ensure_ascii=False)
-
-    return db["users"][uid]
-
+        return
+    if uid not in db.get("users", {}):
+        return
+    user = db["users"][uid]
+    user.setdefault("onboarding", {})
+    user["onboarding"]["completed"] = True
+    user.setdefault("ai", {})
+    user["ai"]["initialized"] = True
+    with open(DB_PATH, "w", encoding="utf-8") as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
 
 def init(bot):
     @bot.message_handler(commands=['start'])
-    def start(m):
-        print(
-            f"START HANDLER: chat={m.chat.id} "
-            f"msg={m.message_id} "
-            f"text={repr(m.text)}"
-        )
-        user=ensure_onboarding_user(m.from_user.id)
-        print("ONBOARDING USER:",m.from_user.id)
+    def send_welcome(message):
+        uid = str(message.chat.id)
+        name = ""
         try:
-            with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as lf:
-                logo = lf.read()
-            bot.send_message(m.chat.id, f"```\n{logo}\n```", parse_mode="Markdown")
-        except Exception as e:
-            print("logo error:", e)
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        buttons = [
-            ("🚀 התחלת מערכת", "onboarding_start"),
-            ("📚 קורסים", "start_courses"),
-            ("🤖 סוכנים", "start_agents"),
-            ("💰 יתרה", "start_balance"),
-            ("📘 עזרה", "start_help"),
-            ("❓ שאלה", "start_ask"),
-            ("🛠 אדמין", "start_admin")
-        ]
-        for text, callback in buttons:
-            markup.add(types.InlineKeyboardButton(text, callback_data=callback))
-        text = """**ברוך הבא ל-SLH OS!** 🚀
+            with open("db.json") as f:
+                db = json.load(f)
+                if uid in db.get("students", {}):
+                    name = db["students"][uid].get("name", "")
+        except:
+            pass
+        
+        msg = "🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
+        if name:
+            msg = f"נעים לראותך שוב, {name}!\n\n" + msg
+        
+        msg += "🟢 **מצב מערכת**\n"
+        msg += "• סטטוס מערכת — /status\n"
+        msg += "• בריאות מערכת — /health\n"
+        msg += "• אבחון מלא — /test\n"
+        msg += "• אבחון סוכנים — /test_agents\n\n"
+        
+        msg += "🤖 **סוכנים**\n"
+        msg += "• רשימת סוכנים — /agents\n"
+        msg += "• צור סוכן — /agent_create\n"
+        msg += "• שלח הודעה — /sendagent\n"
+        msg += "• תיבת סוכן — /inbox\n\n"
+        
+        msg += "🧠 **AI & מודולים**\n"
+        msg += "• רישום AI — /register_ai\n"
+        msg += "• שאל AI — /ask\n"
+        msg += "• יומן חכם — /journal_ask\n"
+        msg += "• מודולים — /plugin list\n\n"
+        
+        msg += "💰 **כלכלה**\n"
+        msg += "• יתרה — /balance\n"
+        msg += "• קנייה — /buy\n"
+        msg += "• תשלום — /pay\n"
+        msg += "• טוקן — /token balance\n\n"
+        
+        msg += "📚 **למידה**\n"
+        msg += "• קורסים — /courses\n"
+        msg += "• התקדמות — /myprogress\n"
+        msg += "• הפניות — /referral\n\n"
+        
+        msg += "🔧 **אדמין**\n"
+        msg += "• פאנל אדמין — /admin\n"
+        msg += "• גיבוי — /backup\n"
+        msg += "• ריסטארט — /restart\n"
+        msg += "• לוגים — /logs 20\n\n"
+        
+        msg += "👥 **בואו נבנה יחד!**"
+        
+        bot.reply_to(message, msg, parse_mode="Markdown")
 
-מערכת הפעלה חכמה – קורסים, סוכני AI, השקעות, וכלכלה דיגיטלית.
-
-✅ **הכל כבר פה** – אין צורך להמציא כלום.
-✅ **התחל** בכפתורים למטה, או שלח /help לכל הפקודות.
-
-💡 **טיפ**: /ask <שאלה> – אני אעזור לך."""
-        bot.send_message(m.chat.id, text, parse_mode="Markdown", reply_markup=markup)
-
-    @bot.callback_query_handler(func=lambda call: call.data.startswith('start_'))
-    def start_callback(call):
-        mapping = {
-            "courses": "📚 קורסים זמינים – /courses",
-            "agents": "🤖 סוכנים – /agents",
-            "balance": "💰 יתרה – /balance",
-            "help": "📘 עזרה – /help",
-            "ask": "❓ שלח /ask <שאלה>",
-            "admin": "🛠 אדמין – /admin"
+    @bot.message_handler(commands=['join'])
+    def join(m):
+        uid = str(m.from_user.id)
+        name = m.from_user.first_name or "ללא שם"
+        db = json.load(open("db.json"))
+        if "students" not in db:
+            db["students"] = {}
+        if uid in db["students"]:
+            bot.reply_to(m, "אתה כבר רשום!")
+            return
+        db["students"][uid] = {
+            "name": name,
+            "referral_count": 0,
+            "courses": {}
         }
-        key = call.data.replace('start_', '')
-        bot.answer_callback_query(call.id)
-        bot.edit_message_text(
-            mapping.get(key, "❓ בחר אפשרות"),
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            parse_mode="Markdown"
-        )
-
+        json.dump(db, open("db.json","w"), indent=2, ensure_ascii=False)
+        bot.reply_to(m, f"ברוך הבא, {name}! נרשמת בהצלחה.\nשלח /start_course להתחיל.")
