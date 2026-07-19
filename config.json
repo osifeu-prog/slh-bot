@@ -1,0 +1,6 @@
+{
+  "SUPER_ADMIN": 8789977826,
+  "SITE_DIR": "/app",
+  "DB_FILE": "state/db.json",
+  "VERSION": "1.0-RAILWAY"
+}
