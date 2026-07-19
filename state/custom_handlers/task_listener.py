@@ -19,6 +19,6 @@ def on_agent_task(payload):
     except Exception as e:
         print("agents.json update error:", e)
 
-def register(bot=None):  # accept bot but ignore
+def register(bot=None):
     EventBus.subscribe("agent_task", on_agent_task)
     print("✅ Task listener registered (dual write)")

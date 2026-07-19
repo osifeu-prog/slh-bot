@@ -24,6 +24,6 @@ def on_proposal_created(payload):
     with open("state/db.json", "w") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
 
-def register(bot=None):  # accept bot but ignore
+def register(bot=None):
     EventBus.subscribe("proposal_created", on_proposal_created)
     print("✅ AI Event Handler registered")
