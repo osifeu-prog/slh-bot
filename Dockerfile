@@ -16,3 +16,4 @@ RUN chmod +x /app/start_railway.sh
 
 CMD ["bash","/app/start_railway.sh"]
 
+
