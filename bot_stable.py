@@ -69,6 +69,10 @@ SUPER_ADMIN = cfg.get("SUPER_ADMIN", 8789977826)
 DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
+# SLH OS Brain – /me and /askdebug
+from handlers.me_handler import register as reg_me; reg_me(bot)
+from handlers.askdebug_handler import register as reg_askdebug; reg_askdebug(bot)
+
 try:
     from core.event_bus import EventBus
     bus = EventBus(workers=2)
