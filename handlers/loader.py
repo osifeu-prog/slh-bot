@@ -235,6 +235,7 @@ def load_handlers(bot, context):
     try:
         from handlers.join_handler import register as register_join
         register_join(bot)
+    from handlers.feedback_handler import register as register_feedback; register_feedback(bot)
         print("👤 join_handler loaded")
     except Exception as e:
         print("join_handler error:", e)
