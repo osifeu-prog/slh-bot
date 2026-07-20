@@ -45,7 +45,7 @@ def init(bot):
         except:
             logo = "🌟 SLH OS"
 
-        msg = f"{logo}\n\n🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
+        msg = f"```\n{logo}```\n\n🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
         if name:
             msg = f"נעים לראותך שוב, {name}!\n\n" + msg
         
