@@ -28,7 +28,7 @@ def init(bot):
         uid = str(message.chat.id)
         name = ""
         try:
-            with open("db.json") as f:
+            with open("state/db.json") as f:
                 db = json.load(f)
                 if uid in db.get("students", {}):
                     name = db["students"][uid].get("name", "")
@@ -92,7 +92,7 @@ def init(bot):
     def join(m):
         uid = str(m.from_user.id)
         name = m.from_user.first_name or "ללא שם"
-        db = json.load(open("db.json"))
+        db = json.load(open("state/db.json"))
         if "students" not in db:
             db["students"] = {}
         if uid in db["students"]:
