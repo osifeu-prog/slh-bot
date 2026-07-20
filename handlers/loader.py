@@ -60,21 +60,6 @@ def load_handlers(bot, context):
 
 
 
-    # ===== ECONOMY DASHBOARD =====
-    try:
-        import json
-        @bot.message_handler(commands=['economy'])
-        def economy_cmd(m):
-            uid = str(m.from_user.id)
-            db = json.load(open('state/db.json'))
-            user = db.get('users', {}).get(uid, {})
-            credits = user.get('wallet', {}).get('credits', 0)
-            points = user.get('gamification', {}).get('points', 0)
-            token = db.get('token', {}).get('balances', {}).get(uid, 0)
-            bot.reply_to(m, f'💰 Economy Dashboard\n🔹 Credits: {credits}\n🔹 Points: {points}\n🔹 SLH: {token}')
-    except Exception as e:
-        print("economy_handler error:", e)
-
     # ===== CONTROL TOWER =====
     try:
         @bot.message_handler(commands=['control'])
@@ -245,28 +230,9 @@ def load_handlers(bot, context):
     except Exception as e:
         print("mission_handler error:", e)
     try:
-        from handlers.mission_handler import register as register_mission
-        register_mission(bot)
-        print("📋 mission_handler loaded")
-    except Exception as e:
-        print("mission_handler error:", e)
-    try:
         from advanced_ask_handler import register_ask_handler
         register_ask_handler(bot, context)
         print("🔥 ASK HANDLER REGISTERED ON BOT:", id(bot))
         print("✅ advanced_ask_handler loaded")
     except Exception as e:
         print("advanced_ask_handler error:", e)
-try:
-    import json
-    @bot.message_handler(commands=['economy'])
-    def economy_cmd(m):
-        uid = str(m.from_user.id)
-        db = json.load(open('state/db.json'))
-        user = db.get('users', {}).get(uid, {})
-        credits = user.get('wallet', {}).get('credits', 0)
-        points = user.get('gamification', {}).get('points', 0)
-        token = db.get('token', {}).get('balances', {}).get(uid, 0)
-        bot.reply_to(m, f'💰 Economy Dashboard\n🔹 Credits: {credits}\n🔹 Points: {points}\n🔹 SLH: {token}')
-except Exception as e:
-    print("economy_handler error:", e)
