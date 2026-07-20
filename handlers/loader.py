@@ -21,6 +21,7 @@ def load_handlers(bot, context):
         print("agents_handler error:", e)
 
     try:
+        from handlers.task_handler import register as register_task
         register_task(bot, context)
     except Exception as e:
         print("task_handler error:", e)
