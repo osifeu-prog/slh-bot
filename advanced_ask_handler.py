@@ -1,5 +1,5 @@
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(file)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core.ask_router import route as ask_route
 
 def register_ask_handler(bot, context):
