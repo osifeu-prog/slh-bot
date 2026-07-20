@@ -64,7 +64,7 @@ def register(bot):
                 if t['id'] == mid:
                     t['status'] = 'done'
                     if t['assigned_to']:
-                        award_reward(t['assigned_to'], t['reward'])
+                        award_reward(t['assigned_to'], t['reward'], t['id'])
                     save_board(board)
                     bot.reply_to(m, f"✅ משימה #{mid} הושלמה! התגמול הועבר.")
                     return
@@ -100,13 +100,13 @@ def load_ledger():
             return json.load(f)
     except:
         return []
-def award_reward(agent, amount):
+def award_reward(agent, amount, mission_id=None):
     ledger = load_ledger()
     ledger.append({
         "agent": agent,
         "amount": amount,
         "time": datetime.datetime.now().isoformat(),
-        "mission_id": None
+        "mission_id": mission_id
     })
     with open("state/rewards_ledger.json", 'w') as f:
         json.dump(ledger, f, indent=2, ensure_ascii=False)
