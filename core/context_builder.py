@@ -1,5 +1,26 @@
 import os, sqlite3
 
+
+def _get_missions_summary():
+    import json, os
+    board = "state/missions/board.json"
+    if not os.path.exists(board):
+        return "אין נתוני משימות."
+    try:
+        with open(board) as f:
+            missions = json.load(f)
+        if not missions:
+            return "אין משימות כרגע."
+        lines = ["משימות אחרונות:"]
+        for m in missions[-20:]:
+            status = m.get('status', '?')
+            agent = m.get('assigned_to') or 'לא שויך'
+            lines.append(f"#{m['id']} [{status}] {m['desc']} (אחראי: {agent})")
+        return "\n".join(lines)
+    except:
+        return "שגיאה בטעינת משימות."
+
+
 def get_context():
     ctx = {
         "system": "SLH OS",
@@ -7,7 +28,8 @@ def get_context():
         "users": 0,
         "agents": 0,
         "tasks": 0,
-        "last_error": None
+        "last_error": None,
+        "missions_summary": _get_missions_summary()
     }
     if os.path.exists('slh_state.db'):
         try:
