@@ -1,25 +1,23 @@
-import os, sqlite3
-
+import os, sqlite3, json
 
 def _get_missions_summary():
-    import json, os
     board = "state/missions/board.json"
     if not os.path.exists(board):
         return "אין נתוני משימות."
     try:
-        with open(board) as f:
-            missions = json.load(f)
+        with open(board, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        missions = data.get("missions", [])
         if not missions:
             return "אין משימות כרגע."
         lines = ["משימות אחרונות:"]
         for m in missions[-20:]:
-            status = m.get('status', '?')
-            agent = m.get('assigned_to') or 'לא שויך'
+            status = m.get("status", "?")
+            agent = m.get("assigned_to") or "לא שויך"
             lines.append(f"#{m['id']} [{status}] {m['desc']} (אחראי: {agent})")
         return "\n".join(lines)
-    except:
-        return "שגיאה בטעינת משימות."
-
+    except Exception as e:
+        return f"שגיאה בטעינת משימות: {e}"
 
 def get_context():
     ctx = {
@@ -42,5 +40,6 @@ def get_context():
             if 'tasks' in tables:
                 ctx['tasks'] = conn.execute('SELECT COUNT(*) FROM tasks').fetchone()[0]
             conn.close()
-        except: pass
+        except:
+            pass
     return ctx
