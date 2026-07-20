@@ -347,24 +347,32 @@ def status(m):
 
 @bot.message_handler(commands=['health'])
 def health(m):
+    import psutil, json, os, sqlite3, time, subprocess
+    ram = psutil.virtual_memory().percent
+    disk = psutil.disk_usage('/').percent
+    db_ok = False
+    events = 0
     try:
-        import psutil
-        mem = psutil.virtual_memory()
-        disk = psutil.disk_usage('/app' if os.path.exists('/app') else '.')
-        msg = f"RAM: {mem.percent}% used\nDisk: {disk.percent}% used"
-    except Exception as e:
-        msg = f"psutil error: {e}"
-    bot.reply_to(m, f"🩺 SYSTEM HEALTH\n{msg}")
-
-# ===== TASK HANDLER MOVED TO handlers/task_handler.py =====
-# Kernel task endpoint removed from main bot.
-# Single source: handlers.task_handler
-
-# Agents moved to handlers/agents_handler.py (single source)
-
-VOTE_MIN_BALANCE = 50
-VOTE_COST = 3.9
-
+        conn = sqlite3.connect("slh_state.db")
+        events = conn.execute("SELECT count(*) FROM events").fetchone()[0]
+        conn.close()
+        db_ok = True
+    except:
+        pass
+    agents_count = 0
+    try:
+        with open("state/db.json") as f:
+            db = json.load(f)
+        agents_count = len(db.get("agents", {}))
+    except:
+        pass
+    uptime = "N/A"
+    try:
+        uptime = subprocess.check_output("uptime -p", shell=True, text=True).strip()
+    except:
+        pass
+    msg = f"🩺 SYSTEM HEALTH\nRAM: {ram:.1f}% used\nDisk: {disk:.1f}% used\nDB: {'✅' if db_ok else '❌'} (events: {events})\nAgents: {agents_count}\nUptime: {uptime}"
+    bot.reply_to(m, msg)
 @bot.message_handler(commands=['vote'])
 def vote(m):
     uid = str(m.from_user.id)
