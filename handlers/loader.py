@@ -21,7 +21,6 @@ def load_handlers(bot, context):
         print("agents_handler error:", e)
 
     try:
-        from handlers.task_handler import register as register_task
         register_task(bot, context)
     except Exception as e:
         print("task_handler error:", e)
@@ -236,6 +235,7 @@ def load_handlers(bot, context):
         from handlers.join_handler import register as register_join
         register_join(bot)
     from handlers.feedback_handler import register as register_feedback; register_feedback(bot)
+    from handlers.mission_handler import register as register_mission; register_mission(bot)
         print("👤 join_handler loaded")
     except Exception as e:
         print("join_handler error:", e)
