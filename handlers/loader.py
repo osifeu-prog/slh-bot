@@ -234,6 +234,8 @@ def load_handlers(bot, context):
     register_ai_voting(bot, None)
     try:
         from handlers.join_handler import register as register_join
+from handlers.me_handler import register as register_me; register_me(bot)
+from handlers.askdebug_handler import register as register_askdebug; register_askdebug(bot)
         register_join(bot)
         print("👤 join_handler loaded")
     except Exception as e:
