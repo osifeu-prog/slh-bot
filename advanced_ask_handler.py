@@ -9,14 +9,10 @@ def register_ask_handler(bot, context):
         if not question:
             bot.reply_to(msg, "Usage: /ask <your question>")
             return
-
-        # ניתוב
         local_answer = ask_route(question)
         if local_answer:
             bot.reply_to(msg, local_answer)
             return
-
-        # LLM fallback
         try:
             from handlers.llm_handler import query_llm
             answer = query_llm(question)
