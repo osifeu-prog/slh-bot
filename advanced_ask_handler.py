@@ -1,5 +1,5 @@
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(file)))
 from core.ask_router import route as ask_route
 
 def register_ask_handler(bot, context):
@@ -15,7 +15,15 @@ def register_ask_handler(bot, context):
             return
         try:
             from handlers.llm_handler import query_llm
-            answer = query_llm(question)
+            # שליפת הקשר מערכתי
+            from core.context_builder import get_context
+            ctx = get_context()
+            # מרכיבים prompt עם הקשר
+            system_msg = "אתה SLH OS Assistant. המצב הנוכחי:\n"
+            for k, v in ctx.items():
+                system_msg += f"- {k}: {v}\n"
+            prompt = f"{system_msg}\n\nשאלת המשתמש: {question}\n\nענה בעברית תמציתית."
+            answer = query_llm(prompt)
             bot.reply_to(msg, answer)
         except Exception as e:
             bot.reply_to(msg, f"⚠️ כל מנועי ה-AI עמוסים כרגע ({e}). נסה שוב מאוחר יותר.")
