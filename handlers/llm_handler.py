@@ -140,3 +140,27 @@ def is_llm_available():
     """
     import os
     return bool(os.getenv("GROQ_API_KEY"))
+
+
+def query_llm(question):
+    """
+    Main LLM gateway for ASK.
+    """
+    client = get_client()
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are SLH OS AI assistant. Answer in Hebrew when possible."
+            },
+            {
+                "role": "user",
+                "content": question
+            }
+        ],
+        max_tokens=500
+    )
+
+    return response.choices[0].message.content
