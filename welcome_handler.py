@@ -35,7 +35,15 @@ def init(bot):
         except:
             pass
         
-        msg = "🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
+import os
+logo_path = os.path.join(os.path.dirname(__file__), "logo.txt")
+try:
+    with open(logo_path, "r", encoding="utf-8") as f:
+        logo = f.read().strip()
+except:
+    logo = "🌟 SLH OS"
+
+msg = f"{logo}\n\n🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
         if name:
             msg = f"נעים לראותך שוב, {name}!\n\n" + msg
         
