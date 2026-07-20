@@ -15,10 +15,8 @@ def register_ask_handler(bot, context):
             return
         try:
             from handlers.llm_handler import query_llm
-            # שליפת הקשר מערכתי
             from core.context_builder import get_context
             ctx = get_context()
-            # מרכיבים prompt עם הקשר
             system_msg = "אתה SLH OS Assistant. המצב הנוכחי:\n"
             for k, v in ctx.items():
                 system_msg += f"- {k}: {v}\n"
