@@ -240,7 +240,7 @@ def load_handlers(bot, context):
         print("join_handler error:", e)
     try:
         from advanced_ask_handler import register_ask_handler
-        register_ask_handler(bot)
+        register_ask_handler(bot, context)
         print("🔥 ASK HANDLER REGISTERED ON BOT:", id(bot))
         print("✅ advanced_ask_handler loaded")
     except Exception as e:
