@@ -407,7 +407,7 @@ def backup(m):
 @bot.message_handler(commands=['restart'])
 def restart(m):
     import subprocess, os
-    os.chdir("/data/data/com.termux/files/home/slh_clean")
+    os.chdir(os.getcwd())
     subprocess.Popen(["bash", "start_safe.sh"])
     bot.reply_to(m, "🔄 Restarting with safety checks...")
     bot.reply_to(m, "Restarting...")
