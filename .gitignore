@@ -72,3 +72,4 @@ runtime/*.pid
 *.token_fix_*
 *.back_boot_fix_*
 railway_vars.txt
+*.txt
