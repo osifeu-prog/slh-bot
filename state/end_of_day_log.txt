@@ -1,6 +1,9 @@
-=== SNAPSHOT Tue Jul 21 14:16:24 IDT 2026 ===
+=== SNAPSHOT Tue Jul 21 14:37:30 IDT 2026 ===
 
 --- Railway Status ---
+
+A newer Railway CLI is available: v5.27.2 (current: v5.23.0).
+Run `railway upgrade --yes` to update.
 
 Workspace:       osifeu-prog's Projects
 
@@ -18,7 +21,7 @@ web
     url:           https://web-production-22f28.up.railway.app
     volume:        web-volume · /app/state · 0.2 GB / 4.9 GB
     region:        EU West
-    deployment ID: 3a1997dc-d340-43a5-8b22-6c506ab4f2b9
+    deployment ID: 773b97a0-2c0c-44b6-8739-cd9c2f52b915
     service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
 
 ────────────────────────────────────────────────
@@ -30,9 +33,9 @@ All resources
 
 
 --- Git Log (last 3) ---
-d70eede Fix onboarding: auto-create user in db if not exists
-6a2be10 End-of-day snapshot 2026-07-21
-282b33c End-of-day snapshot 2026-07-21
+356ce25 docs: add runtime work and load test protocols
+74b020f chore: update morning script
+fe5e5cc End-of-day snapshot 2026-07-21
 
 --- DB Stats ---
 users: 0
