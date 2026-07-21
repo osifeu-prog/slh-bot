@@ -1,4 +1,4 @@
-=== SNAPSHOT Tue Jul 21 13:30:13 IDT 2026 ===
+=== SNAPSHOT Tue Jul 21 13:37:48 IDT 2026 ===
 
 --- Railway Status ---
 
@@ -13,12 +13,12 @@ Environment ID:  661caa13-83cb-4197-8825-943bebf96c5a
 Linked service
 
 web
-    status:        ● Online · Initializing (0s)
+    status:        ● Online
     repo:          osifeu-prog/slh-bot
     url:           https://web-production-22f28.up.railway.app
     volume:        web-volume · /app/state · 0.2 GB / 4.9 GB
     region:        EU West
-    deployment ID: 23f04092-3692-407f-b1ec-effb0915a59f
+    deployment ID: f609a471-08a9-4a40-b920-1dc1f61f404d
     service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
 
 ────────────────────────────────────────────────
@@ -26,13 +26,13 @@ web
 All resources
 
     Services
-      - web: ● Online · Initializing (0s) · https://web-production-22f28.up.railway.app · web-volume
+      - web: ● Online · https://web-production-22f28.up.railway.app · web-volume
 
 
 --- Git Log (last 3) ---
+620ac86 End-of-day snapshot 2026-07-21
 4c50496 End-of-day snapshot + scripts + journal (21-Jul-2026)
 9180668 Connect context to live state files, add registration_help intent
-fe0e3a6 Fix ask guard (remove token/api block), debug (token info intent, no registration catch), remove duplicate /join
 
 --- DB Stats ---
 users: 0
