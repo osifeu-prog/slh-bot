@@ -1,4 +1,4 @@
-=== SNAPSHOT Tue Jul 21 13:57:57 IDT 2026 ===
+=== SNAPSHOT Tue Jul 21 13:59:02 IDT 2026 ===
 
 --- Railway Status ---
 
@@ -18,7 +18,7 @@ web
     url:           https://web-production-22f28.up.railway.app
     volume:        web-volume · /app/state · 0.2 GB / 4.9 GB
     region:        EU West
-    deployment ID: e4ab34a8-e009-49bd-b50b-dfe82e3eaff8
+    deployment ID: d9508ad2-d76d-4687-9a09-aa5b20fa1446
     service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
 
 ────────────────────────────────────────────────
@@ -30,9 +30,9 @@ All resources
 
 
 --- Git Log (last 3) ---
+282b33c End-of-day snapshot 2026-07-21
 dca9695 End-of-day snapshot 2026-07-21
 620ac86 End-of-day snapshot 2026-07-21
-4c50496 End-of-day snapshot + scripts + journal (21-Jul-2026)
 
 --- DB Stats ---
 users: 0
