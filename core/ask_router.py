@@ -16,5 +16,10 @@ def route(text):
         return f"👥 משתמשים במערכת: {ctx['users']}"
     if debug['intent'] == 'registration':
         return "📝 להרשמה השתמש ב־/join"
+    if debug['intent'] == 'token_info':
+        return (
+            "🪙 SLH Token הוא נכס דיגיטלי במערכת SLH.\n"
+            "הוא משמש ככלכלת המערכת, הרשאות, תגמולים ואינטראקציות בתוך האקוסיסטם."
+        )
 
     return None  # LLM

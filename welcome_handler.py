@@ -88,20 +88,5 @@ def init(bot):
         
         bot.reply_to(message, msg, parse_mode="Markdown")
 
-    @bot.message_handler(commands=['join'])
-    def join(m):
-        uid = str(m.from_user.id)
-        name = m.from_user.first_name or "ללא שם"
-        db = json.load(open("state/db.json"))
-        if "students" not in db:
-            db["students"] = {}
-        if uid in db["students"]:
-            bot.reply_to(m, "אתה כבר רשום!")
-            return
-        db["students"][uid] = {
-            "name": name,
-            "referral_count": 0,
-            "courses": {}
-        }
-        json.dump(db, open("db.json","w"), indent=2, ensure_ascii=False)
-        bot.reply_to(m, f"ברוך הבא, {name}! נרשמת בהצלחה.\nשלח /start_course להתחיל.")
+
+    # /join removed – now using handlers/join_handler.py
