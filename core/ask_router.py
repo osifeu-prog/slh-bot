@@ -26,26 +26,6 @@ def detect_intent(text):
 
 
 
-# ===== ASK Router v1 – Intent Detection =====
-INTENTS = {
-    "onboarding": ["הרשמה", "להצטרף", "רישום", "איך מתחילים", "איך משתמשים", "מה עושים", "/join"],
-    "greeting": ["היי", "שלום", "בוקר טוב", "ערב טוב", "אהלן"],
-    "courses": ["קורס", "לימוד", "ביטקוין", "מאסטרי", "אקדמיה", "/courses"],
-    "agents": ["סוכן", "סוכנים", "agent", "צור סוכן", "/agents"],
-    "help": ["עזרה", "פקודות", "מה אפשר לעשות", "/help"],
-    "system": ["הסבר", "מה זה", "מהי המערכת", "איך זה עובד", "להסביר"],
-    "general": []
-}
-
-def detect_intent(text):
-    text_lower = text.strip().lower()
-    for intent, keywords in INTENTS.items():
-        if intent == "general":
-            continue
-        for kw in keywords:
-            if kw in text_lower:
-                return intent
-    return "general"
 
 
 def route(text):
