@@ -294,7 +294,7 @@ def system_visibility(m):
     import os,json,glob
 
     try:
-        users=json.load(open("state/users.json"))
+        users=json.load(open("state/db.json")).get("users", {})
         allowed=json.load(open("allowed_ids.json"))
 
         msg=f"""

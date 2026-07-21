@@ -5,8 +5,8 @@ def register(bot):
     def me_cmd(message):
         uid = str(message.from_user.id)
         try:
-            with open('state/users.json') as f:
-                users = json.load(f)
+            with open('state/db.json') as f:
+                users = json.load(f).get('users', {})
             user = users.get(uid, {})
             if not user:
                 return bot.reply_to(message, "❌ לא נמצאה הרשמה. השתמש ב־/join")

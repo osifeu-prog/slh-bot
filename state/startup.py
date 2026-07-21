@@ -11,8 +11,8 @@ def me_cmd(m):
     uid = str(m.from_user.id)
     try:
         import json
-        with open('state/users.json') as f:
-            users = json.load(f)
+        with open('state/db.json') as f:
+            users = json.load(f).get('users', {})
         user = users.get(uid, {})
         if not user:
             bot.reply_to(m, "❌ לא נמצאה הרשמה. השתמש ב־/join")

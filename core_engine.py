@@ -1,7 +1,7 @@
 import json, os
 from datetime import datetime
 
-USERS = "state/users.json"
+USERS = "state/db.json"
 PROGRESS = "state/progress.json"
 COURSES = "courses.json"
 
