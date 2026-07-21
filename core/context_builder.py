@@ -1,4 +1,4 @@
-import os, sqlite3, json
+import os, json
 
 def _get_missions_summary():
     board = "state/missions/board.json"
@@ -19,6 +19,19 @@ def _get_missions_summary():
     except Exception as e:
         return f"שגיאה בטעינת משימות: {e}"
 
+def _count_from_file(path, key=None):
+    if not os.path.exists(path):
+        return 0
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if key:
+            return len(data.get(key, {}))
+        else:
+            return len(data) if isinstance(data, (dict, list)) else 0
+    except:
+        return 0
+
 def get_context():
     ctx = {
         "system": "SLH OS",
@@ -29,17 +42,9 @@ def get_context():
         "last_error": None,
         "missions_summary": _get_missions_summary()
     }
-    if os.path.exists('slh_state.db'):
-        try:
-            conn = sqlite3.connect('slh_state.db')
-            tables = [r[0] for r in conn.execute('SELECT name FROM sqlite_master WHERE type="table"').fetchall()]
-            if 'users' in tables:
-                ctx['users'] = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-            if 'agents' in tables:
-                ctx['agents'] = conn.execute('SELECT COUNT(*) FROM agents').fetchone()[0]
-            if 'tasks' in tables:
-                ctx['tasks'] = conn.execute('SELECT COUNT(*) FROM tasks').fetchone()[0]
-            conn.close()
-        except:
-            pass
+
+    ctx["users"] = _count_from_file("state/db.json", "users")
+    ctx["tasks"] = _count_from_file("state/db.json", "tasks")
+    ctx["agents"] = _count_from_file("state/agents.json")
+
     return ctx
