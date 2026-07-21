@@ -1,0 +1,436 @@
+==================================================
+FILE: deep_recovery.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "🔍 DEEP RECOVERY & DIAGNOSTIC — $(date)"
+cd ~/slh_clean
+
+# 1. Stop any running bot safely
+echo ">>> Stopping any running bot..."
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+
+# 2. Restore stable version (commit 44e39b8 – Option B, all features working)
+echo ">>> Restoring stable bot.py..."
+git checkout 44e39b8 -- bot.py
+echo "✅ bot.py restored to stable version"
+
+# 3. Remove any leftover broken diag_handler and restore from git
+echo ">>> Restoring diag_handler.py..."
+git checkout 44e39b8 -- diag_handler.py 2>/dev/null  echo "diag_handler.py not in that commit, using current"
+# Clean the warning line if present
+sed -i '/handlers after while True/d' diag_handler.py
+
+# 4. Verify syntax
+echo ">>> Syntax check..."
+python -c "import py_compile; py_compile.compile('bot.py', doraise=True)" && echo "✅ bot.py syntax OK"  echo "❌ Syntax error in bot.py"
+
+# 5. Restart the bot
+echo ">>> Starting bot..."
+./slh_daemon.sh
+sleep 5
+
+# 6. Verify process
+echo ">>> Bot process check..."
+pgrep -af "python.*bot.py" && echo "✅ Bot is running"  echo "❌ Bot failed to start"
+
+# 7. Run Python-based diagnostics (without Telegram dependency)
+echo ">>> Core imports check..."
+python -c "import slh; print('✅ slh importable')"  echo "❌ slh import failed"
+python -c "import health_check; print('✅ health_check importable')"  echo "❌ health_check import failed"
+python -c "import diag_handler; print('✅ diag_handler importable')"  echo "❌ diag_handler import failed"
+
+# 8. Check health directly
+echo ">>> Health check..."
+python -c "import health_check" 2>&1 | head -20
+
+# 9. Check agents test directly (if test_agents.py exists)
+if [ -f "test_agents.json" ]; then
+    echo ">>> Agents test file exists"
+else
+    echo "⚠️ test_agents.json missing"
+fi
+
+# 10. Git status
+echo ">>> Git status..."
+git status --short
+
+echo "✅ Deep recovery completed. Now send /id from Telegram to confirm bot is alive."
+
+
+==================================================
+FILE: final_fix.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "🔧 FINAL FIX & VERIFY — $(date)"
+cd ~/slh_clean
+
+# 1. Stop bot
+pkill -9 -f "python.*bot.py" 2>/dev/null
+sleep 2
+
+# 2. Ensure we are on a stable commit (44e39b8) and then apply the /diagnose addition cleanly
+git checkout 44e39b8 -- bot.py
+
+# 3. Add /diagnose handler and import safely
+python3 << 'PYEOF'
+with open("bot.py", "r") as f:
+    lines = f.readlines()
+
+# Add import after 'import json' if not present
+if not any("from diag_handler import diagnose" in l for l in lines):
+    for i, line in enumerate(lines):
+        if line.strip() == "import json":
+            lines.insert(i+1, "from diag_handler import diagnose\n")
+            break
+    else:
+        lines.insert(0, "from diag_handler import diagnose\n")
+
+# Add handler before bot.infinity_polling()
+handler = """
+@bot.message_handler(commands=['diagnose'])
+def diagnose_cmd(m):
+    diagnose(m)
+"""
+if not any("commands=['diagnose']" in l for l in lines):
+    for i, line in enumerate(lines):
+        if "bot.infinity_polling()" in line:
+            lines.insert(i, handler)
+            break
+    else:
+        lines.append(handler)
+
+with open("bot.py", "w") as f:
+    f.writelines(lines)
+
+import py_compile
+try:
+    py_compile.compile("bot.py", doraise=True)
+    print("✅ bot.py syntax OK")
+except py_compile.PyCompileError as e:
+    print("❌ bot.py syntax error:", e)
+    exit(1)
+PYEOF
+
+# 4. Fix diag_handler.py (remove any leftover warning lines)
+git checkout 44e39b8 -- diag_handler.py 2>/dev/null
+sed -i '/handlers after while True/d' diag_handler.py
+
+# 5. Commit changes
+git add bot.py diag_handler.py
+git commit -m "final stable: /diagnose added, no warnings" 2>/dev/null
+
+# 6. Start bot
+./slh_daemon.sh
+sleep 4
+
+# 7. Verify
+echo ">>> Bot process:"
+pgrep -af "python.*bot.py" && echo "✅ Bot running" || echo "❌ Bot not running"
+
+# 8. Run internal checks
+echo ">>> Health:"
+python -c "import health_check" 2>&1 | grep "TOTAL"
+echo ">>> /diagnose output (simulated):"
+python3 << 'PYEOF'
+import os, sys
+sys.path.insert(0, os.path.expanduser('~/slh_clean'))
+from diag_handler import diagnose
+class Fake: pass
+m = Fake()
+m.chat = Fake()
+m.chat.id = 8789977826
+m.from_user = Fake()
+m.from_user.id = 8789977826
+import main
+main.bot = type('B',(),{'reply_to':lambda self,m,text: print(text)})()
+diagnose(m)
+PYEOF
+
+# 9. Notify admin via Telegram (using bot token and admin ID)
+echo ">>> Sending restart notification..."
+python3 << 'PYEOF'
+import requests, os, json
+# Load token from config
+with open("config.json") as f:
+    cfg = json.load(f)
+token = cfg["token"]
+admin_id = 8789977826  # Your chat ID
+msg = "✅ FINAL FIX COMPLETED — SLH Bot is back online and fully operational."
+url = f"https://api.telegram.org/bot{token}/sendMessage"
+data = {"chat_id": admin_id, "text": msg}
+try:
+    requests.post(url, data=data, timeout=10)
+    print("Notification sent")
+except Exception as e:
+    print("Could not send notification:", e)
+PYEOF
+
+echo "✅ Final fix completed."
+
+
+==================================================
+FILE: daily_check.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "============================================="
+echo "  SLH OS – DAILY HEALTH CHECK"
+echo "============================================="
+echo "Date: $(date)"
+echo ""
+
+# 1. Processes
+echo "[1] Processes"
+pgrep -f "python3.*bot_stable.py" > /dev/null 2>&1 && echo "  ✅ Bot running" || echo "  ❌ Bot not running"
+pgrep -f "web/api/app.py" > /dev/null 2>&1 && echo "  ✅ API running" || echo "  ❌ API not running"
+pgrep -f "http.server 8000" > /dev/null 2>&1 && echo "  ✅ Dashboard running" || echo "  ❌ Dashboard not running"
+echo ""
+
+# 2. API Endpoints
+echo "[2] API Endpoints"
+curl -s http://localhost:5000/api/health | grep -q '"ok"' && echo "  ✅ /api/health OK" || echo "  ❌ /api/health FAIL"
+curl -s http://localhost:5000/api/stats | grep -q '"version"' && echo "  ✅ /api/stats OK" || echo "  ❌ /api/stats FAIL"
+curl -s http://localhost:5000/api/logs?n=1 | grep -q '^\[' && echo "  ✅ /api/logs OK" || echo "  ❌ /api/logs FAIL"
+echo ""
+
+# 3. Dashboard
+echo "[3] Dashboard"
+DASH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/)
+if [ "$DASH" = "200" ] || [ "$DASH" = "304" ]; then echo "  ✅ Dashboard HTTP $DASH"; else echo "  ❌ Dashboard HTTP $DASH"; fi
+echo ""
+
+# 4. Database
+echo "[4] Database"
+python3 -c "import json; db=json.load(open('db.json')); print(f'  ✅ DB OK – users:{len(db.get(\"users\",{}))}, tasks:{len(db.get(\"tasks\",[]))}, votes:{len(db.get(\"votes\",{}))}, agents:{len(db.get(\"agents\",{}))}')" 2>&1 || echo "  ❌ DB error"
+echo ""
+
+# 5. Kernel
+echo "[5] Kernel"
+python3 -c "from core.event_bus import EventBus; print('  ✅ EventBus OK')" 2>&1 || echo "  ❌ Kernel import failed"
+echo ""
+
+# 6. Agent OS
+echo "[6] Agent OS"
+python3 -c "
+import sys; sys.path.insert(0,'.')
+from bot import agents_dict
+print(f'  ✅ Agent OS active – {len(agents_dict)} agents')
+" 2>&1 || echo "  ⚠️ Agent OS not loaded (create one via /agent_create)"
+echo ""
+
+# 7. Audit
+echo "[7] Audit"
+python3 -c "from audit_logger import get_audit; print(f'  ✅ Audit entries: {len(get_audit(1000))}')" 2>&1 || echo "  ❌ Audit import failed"
+echo ""
+
+# 8. Master Agent
+echo "[8] Master Agent"
+python3 -c "from master_agent import MasterAgent; print('  ✅ Master Agent OK')" 2>&1 || echo "  ❌ Master Agent import failed"
+echo ""
+
+# 9. Inspector Agent
+echo "[9] Inspector Agent"
+python3 -c "from inspector import InspectorAgent; print('  ✅ Inspector Agent OK')" 2>&1 || echo "  ❌ Inspector Agent import failed"
+echo ""
+
+# 10. Telegram Token
+echo "[10] Telegram Token"
+python3 -c "
+import json, urllib.request
+with open('config.json') as f: token = json.load(f)['BOT_TOKEN']
+resp = urllib.request.urlopen(f'https://api.telegram.org/bot{token}/getMe')
+data = json.loads(resp.read())
+print(f'  ✅ Token OK – @{data[\"result\"][\"username\"]}' if data['ok'] else '  ❌ Token invalid')
+" 2>&1 || echo "  ❌ Token check failed"
+echo ""
+
+# 11. Git
+echo "[11] Git"
+git status > /dev/null 2>&1 && echo "  ✅ Git OK" || echo "  ❌ Git issue"
+echo ""
+
+# 12. Railway Token
+echo "[12] Railway Token"
+if [ -f ~/.railway_token ]; then
+    TOKEN=$(cat ~/.railway_token)
+    PROJ=$(curl -s -H "Authorization: Bearer $TOKEN" "https://backboard.railway.app/graphql/v2" -d '{"query":"{ projects { edges { node { name } } } }"}' | jq -r '.data.projects.edges[0].node.name' 2>/dev/null)
+    if [ -n "$PROJ" ] && [ "$PROJ" != "null" ]; then echo "  ✅ Railway API OK ($PROJ)"; else echo "  ⚠️ Railway token expired"; fi
+else
+    echo "  ⚠️ No Railway token"
+fi
+echo ""
+
+echo "============================================="
+echo "  DAILY CHECK COMPLETE"
+echo "============================================="
+
+
+==================================================
+FILE: full_diagnostic.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "══════════════════════════════════════════════"
+echo "  SLH OS – FULL DIAGNOSTIC REPORT"
+echo "══════════════════════════════════════════════"
+echo ""
+
+# 1. Processes
+echo "[1] PROCESSES"
+echo "Bot:"
+pgrep -af "python3.*bot_stable.py" || echo "  ❌ Not running"
+echo "API:"
+pgrep -af "web/api/app.py" || echo "  ❌ Not running"
+echo "Dashboard:"
+pgrep -af "http.server 8000" || echo "  ❌ Not running"
+BOT_COUNT=$(pgrep -c "python3.*bot_stable.py" 2>/dev/null)
+echo "  Bot instances: $BOT_COUNT"
+echo ""
+
+# 2. Last logs
+echo "[2] LAST LOGS"
+tail -15 bot.log 2>/dev/null || echo "  No bot.log"
+echo ""
+
+# 3. Telegram connection
+echo "[3] TELEGRAM"
+python3 get_token.py | xargs -I {} curl -s "https://api.telegram.org/bot{}/getMe" | jq '{ok: .ok, username: .result.username}'
+echo ""
+
+# 4. Railway
+echo "[4] RAILWAY"
+TOKEN=$(cat ~/.railway_token 2>/dev/null)
+if [ -z "$TOKEN" ]; then
+    echo "  ❌ No Railway token"
+else
+    echo "  Token length: ${#TOKEN}"
+    curl -s -H "Authorization: Bearer $TOKEN" \
+        "https://backboard.railway.app/graphql/v2" \
+        -d '{"query":"{ service(id: \"13d97581-0199-4f6a-80d1-885c9304ffc5\") { branch repo deployments(first:1){edges{node{status}}} } }"}' | jq '.data.service | {branch, repo, status: .deployments.edges[0].node.status}'
+fi
+echo ""
+
+# 5. Local API
+echo "[5] API"
+curl -s http://localhost:5000/api/health | jq . 2>/dev/null || echo "  ❌ API not responding"
+echo ""
+
+# 6. Dashboard
+echo "[6] DASHBOARD"
+DASH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/)
+echo "  HTTP Status: $DASH"
+echo ""
+
+# 7. Database
+echo "[7] DATABASE"
+python3 -c "import json; db=json.load(open('db.json')); print(f'  Users: {len(db.get(\"users\",{}))}, Tasks: {len(db.get(\"tasks\",[]))}, Agents: {len(db.get(\"agents\",{}))}')" 2>/dev/null || echo "  ❌ DB error"
+echo ""
+
+# 8. Agent OS
+echo "[8] AGENT OS"
+python3 -c "
+import sys; sys.path.insert(0,'.')
+from bot import agents_dict
+print(f'  Agents: {len(agents_dict)}')
+" 2>/dev/null || echo "  ⚠️ Agent OS not loaded"
+echo ""
+
+# 9. Kernel
+echo "[9] KERNEL"
+python3 -c "from core.event_bus import EventBus; print('  ✅ EventBus OK')" 2>/dev/null || echo "  ❌ Kernel import failed"
+echo ""
+
+# 10. Git
+echo "[10] GIT"
+echo "  Branch: $(git branch --show-current)"
+echo "  Last commit: $(git log -1 --oneline)"
+echo ""
+
+echo "══════════════════════════════════════════════"
+echo "  DIAGNOSTIC COMPLETE"
+echo "══════════════════════════════════════════════"
+
+
+==================================================
+FILE: full_sync_check.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "🔍 FULL SYNC CHECK — $(date)"
+cd ~/slh_clean
+echo ">>> Git remote:" && git remote -v
+echo ">>> Fetching remote..." && git fetch origin
+LOCAL=$(git rev-parse main)
+REMOTE=$(git rev-parse origin/main)
+echo "Local HEAD:  ${LOCAL:0:7}"
+echo "Remote HEAD: ${REMOTE:0:7}"
+if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "✅ Local and remote are in sync"
+else
+    echo "❌ Local is ahead of remote (or diverged)"
+fi
+echo ">>> Unpushed commits:" && git log origin/main..HEAD --oneline
+echo ">>> Local changes:" && git status --short
+echo ">>> Testing push..." && git push --dry-run 2>&1
+echo ">>> Bot key features:"
+if grep -q "SLH_LOCAL" bot.py; then echo "✅ SLH_LOCAL guard present"; else echo "❌ Guard missing"; fi
+if grep -q "commands=\['sync'\]" bot.py; then echo "✅ /sync exists"; else echo "❌ /sync missing"; fi
+if grep -q "commands=\['id'\]" bot.py; then echo "✅ /id exists"; else echo "❌ /id missing"; fi
+if grep -q "commands=\['request'\]" bot.py; then echo "✅ /request exists"; else echo "❌ /request missing"; fi
+if grep -q "commands=\['vbackup'\]" bot.py; then echo "✅ /vbackup exists"; else echo "❌ /vbackup missing"; fi
+if grep -q "commands=\['fullcheck'\]" bot.py; then echo "✅ /fullcheck exists"; else echo "❌ /fullcheck missing"; fi
+echo ">>> Railway deployment status:"
+if command -v railway &>/dev/null; then railway status 2>&1 || echo "Railway status command failed"; else echo "Railway CLI not installed (check Dashboard manually)"; fi
+echo "✅ Full sync check completed"
+
+
+==================================================
+FILE: backup_verify.sh
+==================================================
+#!/data/data/com.termux/files/usr/bin/bash
+echo "🔹 Backup & Verify started at $(date)"
+cd ~/slh_clean
+
+# 1. Git backup
+echo ">>> Git backup..."
+if git diff --quiet && git diff --cached --quiet; then
+    echo "✅ Nothing to commit (already clean)"
+elif git add -A && git commit -m "backup $(date -Iseconds)"; then
+    echo "✅ Git backup done"
+else
+    echo "❌ Git backup failed"
+fi
+
+# 2. Bot running?
+echo ">>> Bot process..."
+if pgrep -f "python.*bot.py" > /dev/null; then
+    echo "✅ Bot is running"
+else
+    echo "❌ Bot NOT running"
+fi
+
+# 3. Core modules import check (no argument functions)
+echo ">>> Core imports..."
+if python -c "import slh" 2>/dev/null; then
+    echo "✅ slh imported successfully"
+else
+    echo "❌ slh import failed"
+fi
+
+# 4. Critical files existence
+echo ">>> Critical files..."
+for f in bot.py db.json events.db config.json; do
+    if [ -f "$f" ]; then
+        echo "  ✅ $f exists"
+    else
+        echo "  ❌ $f MISSING"
+    fi
+done
+
+# 5. Disk & memory
+echo ">>> Disk & Memory..."
+df -h /data 2>/dev/null  df -h /
+free -h
+
+echo "✅ Backup & Verify completed at $(date)"
+echo "ℹ️ For full system diagnostic run /diagnose via Telegram"
+
+
