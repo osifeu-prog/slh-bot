@@ -1,3 +1,4 @@
+from core.identity import get_assistant_name
 import telebot
 from telebot import types
 import json
@@ -43,7 +44,7 @@ def init(bot):
             with open(logo_path, "r", encoding="utf-8") as f:
                 logo = f.read().strip()
         except:
-            logo = "🌟 SLH OS"
+            logo = f"🌟 {get_assistant_name()}"
 
         msg = f"```\n{logo}```\n\n🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
         if name:

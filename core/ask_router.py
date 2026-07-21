@@ -72,4 +72,4 @@ def route(text):
             "ואני אוביל אותך שלב אחרי שלב."
         )
 
-    return None  # LLM
+    return ""  # LLM fallback – will be handled by advanced_ask_handler
