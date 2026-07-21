@@ -19,8 +19,16 @@ def update_onboarding(uid, data):
     db = load_db()
     uid = str(uid)
 
-    if uid not in db.get("users", {}):
-        return
+    if "users" not in db:
+        db["users"] = {}
+    if uid not in db["users"]:
+        db["users"][uid] = {
+            "id": uid,
+            "joined": datetime.now().isoformat(),
+            "role": "user",
+            "onboarding": {},
+            "ai": {"initialized": False}
+        }
 
     user = db["users"][uid]
 
