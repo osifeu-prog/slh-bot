@@ -1,4 +1,5 @@
 import json, os
+from datetime import datetime
 from groq import Groq
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -70,7 +71,7 @@ def get_bot_context(uid: str) -> str:
         ctx += "Agents:\n"
         for aid, a in list(agents.items())[:5]:
             ctx += f"- {a.get('name', aid)} [{a.get('state','idle')}]\n"
-    journal_path = "state/journal.json"
+    journal_path = "journal.json"
     if os.path.exists(journal_path):
         try:
             with open(journal_path) as f:
@@ -91,7 +92,7 @@ def register(bot):
             bot.reply_to(m, "Usage: /journal_ask <question>")
             return
         
-        journal_path = "state/journal.json"
+        journal_path = "journal.json"
         context = ""
         if os.path.exists(journal_path):
             try:

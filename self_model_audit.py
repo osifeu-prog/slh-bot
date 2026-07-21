@@ -9,7 +9,7 @@ ALLOW = [
     "state/db.json",
     "state/system_memory.json",
     "state/memory.jsonl",
-    "state/journal.json",
+    "journal.json",
     "docs",
     "SOURCE_OF_TRUTH.md",
     "KERNEL_RULES.md",
