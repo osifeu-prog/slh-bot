@@ -1,59 +1,46 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# SLH OS – Morning Startup
 cd ~/slh_clean
-clear
-cat logo.txt 2>/dev/null || echo "SLH OS"
-echo ""
-echo "======================================="
-echo "   SLH Morning Dashboard"
-echo "======================================="
-echo ""
 
-echo "🚂 Railway:"
-railway status 2>/dev/null | grep -E "status:|deployment ID:"
-echo ""
+echo "=== START DAY $(date) ==="
 
-echo "📓 Latest journal entry:"
+echo ""
+echo "📜 AGENT RULES:"
+cat AGENT_RULES.md
+
+echo ""
+echo "📜 SYSTEM RULES:"
+cat SYSTEM_RULES.md
+
+echo ""
+echo "📜 KERNEL RULES:"
+cat KERNEL_RULES.md
+
+echo ""
+echo "📜 SOURCE OF TRUTH:"
+cat SOURCE_OF_TRUTH.md
+
+echo ""
+echo "📓 Journal (last 5 entries):"
 python3 -c "
 import json
-try:
-    with open('journal.json', encoding='utf-8') as f:
-        entries = json.load(f)
-    if entries:
-        last = entries[-1]
-        print('  ', last.get('time', ''))
-        text = last.get('text', '')
-        print('  ', text[:200] + ('...' if len(text) > 200 else ''))
-    else:
-        print('   (no entries)')
-except Exception as e:
-    print('   Error:', e)
+j=json.load(open('journal.json'))
+for e in j[-5:]: print(e.get('time','?'), e.get('text','')[:100])
 "
-echo ""
 
-echo "📋 Open tasks (from Railway live DB):"
-railway ssh -- "python3 -c \"
+echo ""
+echo "🚆 Railway Status:"
+railway status
+
+echo ""
+echo "💾 DB Snapshot:"
+python3 -c "
 import json
-d = json.load(open('/app/state/db.json'))
-tasks = d.get('user_tasks', {}).get('8789977826', [])
-if tasks:
-    for i, t in enumerate(tasks, 1):
-        print(f'   {i}. {t}')
-else:
-    print('   (no tasks)')
-\"" 2>/dev/null
+db=json.load(open('state/db.json'))
+print('users:', len(db.get('users',{})))
+print('agents:', len(db.get('agents',{})))
+print('tasks:', len(db.get('tasks',{})))
+"
+
 echo ""
-
-echo "======================================="
-echo "Commands: railway status | railway logs --tail 50"
-echo "======================================="
-
-# תפריט 5 אפשרויות
-select opt in "🟢 הפעל מערכת" "🔴 עצור מערכת" "📊 מצב מערכת" "🚂 לוגים Railway" "🚪 יציאה"; do
-    case $opt in
-        "🟢 הפעל מערכת") ~/slh_clean/slh start; break;;
-        "🔴 עצור מערכת") ~/slh_clean/slh stop; break;;
-        "📊 מצב מערכת") ~/slh_clean/slh status; break;;
-        "🚂 לוגים Railway") railway logs --tail 20; break;;
-        "🚪 יציאה") break;;
-    esac
-done
+echo "🟢 Ready to work."
