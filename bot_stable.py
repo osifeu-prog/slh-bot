@@ -439,10 +439,16 @@ def restart(m):
     bot.reply_to(m, '?? Railway restart requested')
     print('Restart requested by admin')
 
-        with open("/proc/1/fd/1", "r") as f:
+@bot.message_handler(commands=['logs'])
+def logs(m):
+    n = int(m.text.split(' ', 1)[1]) if len(m.text.split(' ', 1)) > 1 else 20
+    try:
+        with open('/proc/1/fd/1', 'r') as f:
             lines = f.readlines()[-n:]
-        bot.reply_to(m, ''.join(lines) if lines else "אין לוגים")
+        bot.reply_to(m, ''.join(lines) if lines else '??? ?????')
     except Exception as e:
+        bot.reply_to(m, f'? ????? ?????? ?????: {e}')
+
         bot.reply_to(m, f"❌ שגיאה בקריאת לוגים: {e}")
 
 @bot.message_handler(commands=['clean'])
