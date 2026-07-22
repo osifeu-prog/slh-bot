@@ -216,6 +216,7 @@ def load_handlers(bot, context):
     except Exception as e:
         print("economy_handler error:", e)
     print("🧩 Modular + Legacy handlers loaded")
+    from handlers.kb_handler import register as reg_kb; reg_kb(bot)
     register_ai_voting(bot, None)
     try:
         from handlers.join_handler import register as register_join
@@ -236,4 +237,3 @@ def load_handlers(bot, context):
         print("✅ advanced_ask_handler loaded")
     except Exception as e:
         print("advanced_ask_handler error:", e)
-from handlers.kb_handler import register as reg_kb; reg_kb(bot)
