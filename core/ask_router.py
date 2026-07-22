@@ -37,6 +37,9 @@ def route(text):
         return "👋 שלום! איך אוכל לעזור?"
     elif intent == "courses":
         return "🎓 קורסים זמינים:\n/course_bitcoin_mastery"
+    elif intent == "analysis":
+        # ניתוח – המשך ל-LLM
+        return None  # יגרום ל-fallback
     elif intent == "agents":
         return "🤖 נסה /agents לרשימת הסוכנים."
     elif intent == "help":
