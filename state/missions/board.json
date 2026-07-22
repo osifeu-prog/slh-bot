@@ -1,0 +1,12 @@
+{
+  "missions": [
+    {
+      "id": 1,
+      "desc": "SYNC TEST",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created": "2026-07-22T21:23:01.540830"
+    }
+  ]
+}

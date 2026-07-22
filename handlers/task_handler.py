@@ -15,7 +15,7 @@ def task(message, bot):
 
         txt = "📋 משימות:\n\n"
         for t in tasks:
-            txt += f"{t['id']}. {t['text']} [{t['status']}]\n"
+            txt += f"{t['id']}. {t.get('desc', t.get('text',''))} [{t['status']}]\n"
 
         bot.send_message(message.chat.id, txt)
         return
@@ -41,7 +41,7 @@ def task_add(message, bot):
 
     bot.send_message(
         message.chat.id,
-        f"✅ Task Added\nID: {task['id']}\n{task['text']}"
+        f"✅ Task Added\nID: {task['id']}\n{task.get('desc', task.get('text',''))}"
     )
 
 
