@@ -16,7 +16,11 @@ INTENTS = {
 
 def detect_intent(text):
     text_lower = text.strip().lower()
-    for intent, keywords in INTENTS.items():
+    priority = ["analysis", "system", "agents", "courses", "help", "onboarding", "greeting"]
+    for intent in priority:
+        if intent == "general":
+            continue
+        for kw in INTENTS[intent]:
         if intent == "general":
             continue
         for kw in keywords:
