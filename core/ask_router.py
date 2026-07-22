@@ -8,32 +8,26 @@ INTENTS = {
     "onboarding": ["הרשמה", "להצטרף", "רישום", "איך מתחילים", "איך משתמשים", "מה עושים", "/join"],
     "greeting": ["היי", "שלום", "בוקר טוב", "ערב טוב", "אהלן"],
     "courses": ["קורס", "לימוד", "ביטקוין", "מאסטרי", "אקדמיה", "/courses"],
+    "analysis": ["נתח", "ניתוח", "תנתח", "מצב המערכת", "שיפור", "איך לשפר", "המלצה", "ארכיטקטורה", "אסטרטגיה"],
     "agents": ["סוכן", "סוכנים", "agent", "צור סוכן", "/agents"],
     "help": ["עזרה", "פקודות", "מה אפשר לעשות", "/help"],
     "system": ["הסבר", "מה זה", "מהי המערכת", "איך זה עובד", "להסביר"],
     "general": []
 }
 
+PRIORITY = ["analysis", "system", "agents", "courses", "help", "onboarding", "greeting"]
+
 def detect_intent(text):
     text_lower = text.strip().lower()
-    priority = ["analysis", "system", "agents", "courses", "help", "onboarding", "greeting"]
-    for intent in priority:
+    for intent in PRIORITY:
         if intent == "general":
             continue
         for kw in INTENTS[intent]:
-        if intent == "general":
-            continue
-        for kw in keywords:
             if kw in text_lower:
                 return intent
     return "general"
 
-
-
-
-
 def route(text):
-    # Intent Detection (v1)
     intent = detect_intent(text)
     if intent == "onboarding":
         return "📝 בעיית הרשמה?\nהשתמש בפקודה /join"
@@ -42,8 +36,7 @@ def route(text):
     elif intent == "courses":
         return "🎓 קורסים זמינים:\n/course_bitcoin_mastery"
     elif intent == "analysis":
-        # ניתוח – המשך ל-LLM
-        return None  # יגרום ל-fallback
+        return None  # fallback to LLM
     elif intent == "agents":
         return "🤖 נסה /agents לרשימת הסוכנים."
     elif intent == "help":
@@ -51,32 +44,13 @@ def route(text):
     elif intent == "system":
         return "SLH OS היא מערכת AI אוטונומית עם סוכנים, קורסים וכלכלה פנימית."
 
-    # fallback – continue to guard and LLM
     blocked, msg = guard(text)
     if blocked:
         return msg
 
     debug = debug_ask(text)
-
     if debug['intent'] == 'agent_count':
         ctx = get_context()
         return f"🤖 מספר סוכנים רשומים: {ctx['agents']}"
 
-    if debug['intent'] == 'user_count':
-        ctx = get_context()
-        return f"👥 משתמשים במערכת: {ctx['users']}"
-
-    if debug['intent'] == 'token_info':
-        return (
-            "🪙 SLH Token הוא נכס דיגיטלי במערכת SLH.\n"
-            "הוא משמש ככלכלת המערכת, הרשאות, תגמולים ואינטראקציות בתוך האקוסיסטם."
-        )
-
-    if debug['intent'] == 'registration_help':
-        return (
-            "📝 בעיית הרשמה?\n"
-            "השתמש בפקודה /join "
-            "ואני אוביל אותך שלב אחרי שלב."
-        )
-
-    return ""  # LLM fallback – will be handled by advanced_ask_handler
+    return None  # fallback to LLM
