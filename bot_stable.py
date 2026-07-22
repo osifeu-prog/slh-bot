@@ -432,17 +432,13 @@ def backup(m):
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
-    import subprocess, os
-    os.chdir(os.getcwd())
-    subprocess.Popen(["bash", "start_safe.sh"])
-    bot.reply_to(m, "🔄 Restarting with safety checks...")
-    bot.reply_to(m, "Restarting...")
-    os.execv(sys.executable, [sys.executable] + sys.argv)
+    if not permissions.is_admin(m):
+        bot.reply_to(m, '? Admin only')
+        return
 
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    n = int(m.text.split(" ", 1)[1]) if len(m.text.split(" ", 1)) > 1 else 20
-    try:
+    bot.reply_to(m, '?? Railway restart requested')
+    print('Restart requested by admin')
+
         with open("/proc/1/fd/1", "r") as f:
             lines = f.readlines()[-n:]
         bot.reply_to(m, ''.join(lines) if lines else "אין לוגים")
