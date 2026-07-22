@@ -56,3 +56,5 @@ def register(bot, context=None):
     @bot.message_handler(commands=["task_add"])
     def task_add_telegram(message):
         task_add(message, bot)
+
+# deploy-check-122
