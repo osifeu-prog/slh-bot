@@ -236,3 +236,4 @@ def load_handlers(bot, context):
         print("✅ advanced_ask_handler loaded")
     except Exception as e:
         print("advanced_ask_handler error:", e)
+from handlers.kb_handler import register as reg_kb; reg_kb(bot)
