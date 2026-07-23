@@ -1,0 +1,17 @@
+📋 **SLH Command Center (105 commands)**
+
+**SYSTEM**
+activate /backup /backup_junk /broadcast /clean /clean_junk /deploy /disk /endday /exec /grep /health /kernellog /kernelstatus /logs /master /monitor /morning /my_junk /plugin /reload /restart /rlogs /rollback /scan_junk /slh /snapshot /start /status /sysinfo /termlog /termux /test /testcmd /update
+
+**CORE**
+admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote
+
+**AGENTS**
+agent_approve /agent_create /agent_debug /agent_reject /agent_submissions /agent_submit /agent_test /agents /agentstate /sendagent /test_agents
+
+**MARKET**
+buy /fakepay /market /market_install /market_installed /market_rate /market_search /market_upload /pay /referral /revenue /ton /ton_check /ton_rate /ton_set_wallet /usereferral
+
+**AUTH**
+refreshtoken
+

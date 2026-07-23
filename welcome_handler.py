@@ -39,6 +39,7 @@ def init(bot):
 
         # טעינת הלוגו
         import os
+        logo = ""
         logo_path = os.path.join(os.path.dirname(__file__), "logo.txt")
         try:
             with open(logo_path, "r", encoding="utf-8") as f:
