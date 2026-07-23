@@ -95,7 +95,7 @@ if __name__ == "__main__":
     print("1. Local Computer Agent (register this PC)")
     print("2. Bridge Server (accept connections)")
     print("3. Bridge Client (connect to server)")
-    choice = sys.argv[1] if len(sys.argv) > 1 else input('Enter choice (1/2/3): '): ").strip()
+    choice = sys.argv[1] if len(sys.argv) > 1 else input("Enter choice (1/2/3): ").strip()
     if choice == "1":
         bridge = TelegramBridge(TELEGRAM_TOKEN, CHAT_ID)
         agent = LocalComputerAgent(bridge)

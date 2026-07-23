@@ -1,14 +1,18 @@
-﻿{
+{
   "devices": {
-    "BRIDGE_PC_OSIF2_MANUAL": {
-      "name": "PC_OSIF2",
+    "BRIDGE_PC_OSIF2_1784781883": {
+      "name": "PC_Osif2",
       "type": "pc",
       "status": "online",
-      "capabilities": ["compute", "network", "storage", "ai"],
-      "registered": 1784781015,
-      "last_seen": 1784781015,
-      "bridge": true,
-      "owner": "8789977826"
+      "capabilities": [
+        "compute",
+        "network",
+        "storage",
+        "ai"
+      ],
+      "registered": 1784781883.6425214,
+      "last_seen": 1784781985.6041691,
+      "bridge": true
     }
   }
 }

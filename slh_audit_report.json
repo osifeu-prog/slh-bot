@@ -1,8 +1,8 @@
 {
-  "time": "2026-07-23 04:19:25.292801",
+  "time": "2026-07-23 08:12:41.639793",
   "checks": {
     "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
-    "ram": 86.9,
+    "ram": 84.7,
     "disk": 90.0,
     "state/db.json": {
       "exists": true,
@@ -24,20 +24,9 @@
       "memory": 0
     },
     "agent_schema": {},
-    "handler_count": 132,
-    "duplicates": {
-      "register_ai": 2,
-      "propose": 2,
-      "vote": 3,
-      "tally": 2,
-      "leaderboard": 2,
-      "ping": 2,
-      "fullcheck": 2,
-      "token": 2,
-      "courses": 2,
-      "register": 2
-    },
-    "ask": "🤖 מספר הסוכנים הרשומים במערכת: 10",
-    "git": " M slh_audit_report.json\n"
+    "handler_count": 125,
+    "duplicates": {},
+    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 10",
+    "git": " M device_bridge.py\n M state/devices.json\n?? core/ask_router.py.bak2\n"
   }
 }
