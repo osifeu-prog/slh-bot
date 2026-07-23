@@ -154,7 +154,6 @@ def load_handlers(bot, context):
         "econ_handler",
         "payment_handler",
         "project_commands",
-        "smart_leaderboard",
         "report_handler",
     ]
 
@@ -194,8 +193,6 @@ def load_handlers(bot, context):
             elif module_name == "payment_handler" and hasattr(module, "register_payment_handlers"):
                 module.register_payment_handlers(bot)
 
-            elif module_name == "smart_leaderboard" and hasattr(module, "register"):
-                module.register(bot)
 
         except Exception as e:
             print(f"{module_name} load error:", e)
