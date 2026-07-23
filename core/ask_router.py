@@ -56,7 +56,7 @@ def route(text):
     elif intent == "system":
         return "SLH OS היא מערכת AI אוטונומית עם סוכנים, קורסים וכלכלה פנימית."
 
-    blocked, msg = guard(text)
+    result = guard(text); blocked, msg = (result, None) if isinstance(result, bool) else result
     if blocked:
         return msg
 
