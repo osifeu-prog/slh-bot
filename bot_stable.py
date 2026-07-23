@@ -939,7 +939,7 @@ except Exception as e:
 
 
 from handlers.loader import load_handlers
-load_handlers(bot, {'app': app})
+load_handlers(bot, None)
 
 
 # LEGACY /token DISABLED 2026-07-23
