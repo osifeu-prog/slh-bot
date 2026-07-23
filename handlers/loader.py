@@ -17,7 +17,9 @@
     try:
         from handlers.agents_handler import register as register_agents
     from handlers.device_handler import register as register_device
+    from handlers.device_handler import register as register_device
         register_agents(bot, context)
+    register_device(bot, context)
     register_device(bot, context)
     except Exception as e:
         print("agents_handler error:", e)
