@@ -1,8 +1,8 @@
-def load_handlers(bot, context):
+﻿def load_handlers(bot, context):
 
     @bot.message_handler(commands=['register'])
     def register_redirect(m):
-        bot.reply_to(m, '👋 נא להשתמש ב־/join להרשמה:')
+        bot.reply_to(m, 'נ‘‹ ׳ ׳ ׳׳”׳©׳×׳׳© ׳‘ײ¾/join ׳׳”׳¨׳©׳׳”:')
         from handlers.join_handler import register as jr
         jr(bot)
         # call join_start manually
@@ -11,12 +11,14 @@ def load_handlers(bot, context):
                 h(m)
                 break
 
-    print("🔄 Loading modular handlers...")
+    print("נ”„ Loading modular handlers...")
 
     # ===== MODULAR HANDLERS =====
     try:
         from handlers.agents_handler import register as register_agents
+    from handlers.device_handler import register as register_device
         register_agents(bot, context)
+    register_device(bot, context)
     except Exception as e:
         print("agents_handler error:", e)
 
@@ -45,7 +47,7 @@ def load_handlers(bot, context):
     try:
         from handlers.chat_registry_handler import register as register_chat_registry
         register_chat_registry(bot)
-        print("💬 Chat registry handler loaded")
+        print("נ’¬ Chat registry handler loaded")
     except Exception as e:
         print("chat_registry error:", e)
 
@@ -54,7 +56,7 @@ def load_handlers(bot, context):
     try:
         from handlers.gateway_handler import register as register_gateway
         register_gateway(bot)
-        print("🌐 SLH Gateway handler loaded")
+        print("נ SLH Gateway handler loaded")
     except Exception as e:
         print("gateway_handler error:", e)
 
@@ -74,21 +76,21 @@ def load_handlers(bot, context):
             token = db.get('token', {})
             token_supply = token.get('supply', 'N/A')
             votes = len(db.get('votes', {}))
-            # commands loaded – estimate from handler files
+            # commands loaded ג€“ estimate from handler files
             import subprocess
             cmds = subprocess.getoutput("grep -r '@bot.message_handler' handlers/ | wc -l").strip()
             # last commit
             commit = os.popen("git log -1 --format='%h %s'").read().strip() or "N/A"
             bot.reply_to(m,
-                f"🧠 SLH OS CONTROL TOWER\n\n"
-                f"🟢 System: Online\n"
-                f"📦 DB: state/db.json\n\n"
-                f"👥 Users: {users}\n"
-                f"🤖 Agents: {len(agents_all)} (🟢{agents_active} 🟡{agents_idle} 🔴{agents_busy})\n"
-                f"💰 Token Supply: {token_supply}\n"
-                f"🗳 Votes: {votes}\n"
-                f"📡 Commands loaded: ~{cmds}\n"
-                f"🔧 Last Deploy: {commit}\n"
+                f"נ§  SLH OS CONTROL TOWER\n\n"
+                f"נ¢ System: Online\n"
+                f"נ“¦ DB: state/db.json\n\n"
+                f"נ‘¥ Users: {users}\n"
+                f"נ₪– Agents: {len(agents_all)} (נ¢{agents_active} נ¡{agents_idle} נ”´{agents_busy})\n"
+                f"נ’° Token Supply: {token_supply}\n"
+                f"נ—³ Votes: {votes}\n"
+                f"נ“¡ Commands loaded: ~{cmds}\n"
+                f"נ”§ Last Deploy: {commit}\n"
                 f"\n/control agents | /control economy | /control health"
             )
     except Exception as e:
@@ -109,12 +111,12 @@ def load_handlers(bot, context):
             db = json.load(open('state/db.json'))
             agents = db.get('agents', {})
             
-            # בדיקת כפילות
+            # ׳‘׳“׳™׳§׳× ׳›׳₪׳™׳׳•׳×
             if name in [a.get('name') for a in agents.values()]:
-                bot.reply_to(m, f"❌ Agent '{name}' already exists")
+                bot.reply_to(m, f"ג Agent '{name}' already exists")
                 return
             
-            # יצירת סוכן חדש עם schema אחיד
+            # ׳™׳¦׳™׳¨׳× ׳¡׳•׳›׳ ׳—׳“׳© ׳¢׳ schema ׳׳—׳™׳“
             nid = str(max([int(k) for k in agents.keys() if k.isdigit()] + [0]) + 1)
             agents[nid] = {
                 "name": name,
@@ -131,17 +133,17 @@ def load_handlers(bot, context):
             db['agents'] = agents
             json.dump(db, open('state/db.json','w'), indent=2, ensure_ascii=False)
             
-            # שליחת הודעת ברוכים הבאים לסוכן
-            bot.reply_to(m, f"🎉 Agent '{name}' onboarded successfully!\n"
-                           f"🆔 ID: {nid}\n"
-                           f"📝 {desc}\n\n"
+            # ׳©׳׳™׳—׳× ׳”׳•׳“׳¢׳× ׳‘׳¨׳•׳›׳™׳ ׳”׳‘׳׳™׳ ׳׳¡׳•׳›׳
+            bot.reply_to(m, f"נ‰ Agent '{name}' onboarded successfully!\n"
+                           f"נ†” ID: {nid}\n"
+                           f"נ“ {desc}\n\n"
                            f"Welcome to SLH OS! You can now:\n"
-                           f"• Read proposals\n"
-                           f"• Vote on decisions\n"
-                           f"• Propose new ideas\n"
-                           f"• Receive tasks via inbox\n\n"
+                           f"ג€¢ Read proposals\n"
+                           f"ג€¢ Vote on decisions\n"
+                           f"ג€¢ Propose new ideas\n"
+                           f"ג€¢ Receive tasks via inbox\n\n"
                            f"Your AI assistant will help you get started.")
-        print("✅ agent_onboard handler loaded")
+        print("ג… agent_onboard handler loaded")
     except Exception as e:
         print("agent_onboard error:", e)
     # ===== LEGACY USER EXPERIENCE =====
@@ -209,28 +211,28 @@ def load_handlers(bot, context):
             credits = user.get("wallet", {}).get("credits", 0)
             points = user.get("gamification", {}).get("points", 0)
             token = db.get("token", {}).get("balances", {}).get(uid, 0)
-            bot.reply_to(m, f"💰 Economy Dashboard\n🔹 Credits: {credits}\n🔹 Points: {points}\n🔹 SLH: {token}")
+            bot.reply_to(m, f"נ’° Economy Dashboard\nנ”¹ Credits: {credits}\nנ”¹ Points: {points}\nנ”¹ SLH: {token}")
     except Exception as e:
         print("economy_handler error:", e)
-    print("🧩 Modular + Legacy handlers loaded")
+    print("נ§© Modular + Legacy handlers loaded")
     from handlers.kb_handler import register as reg_kb; reg_kb(bot)
     # register_ai_voting(bot) disabled - ownership moved to custom loader
     try:
         from handlers.join_handler import register as register_join
         register_join(bot)
-        print("👤 join_handler loaded")
+        print("נ‘₪ join_handler loaded")
     except Exception as e:
         print("join_handler error:", e)
     try:
         from handlers.mission_handler import register as register_mission
         register_mission(bot)
-        print("📋 mission_handler loaded")
+        print("נ“‹ mission_handler loaded")
     except Exception as e:
         print("mission_handler error:", e)
     try:
         from advanced_ask_handler import register_ask_handler
         register_ask_handler(bot, context)
-        print("🔥 ASK HANDLER REGISTERED ON BOT:", id(bot))
-        print("✅ advanced_ask_handler loaded")
+        print("נ”¥ ASK HANDLER REGISTERED ON BOT:", id(bot))
+        print("ג… advanced_ask_handler loaded")
     except Exception as e:
         print("advanced_ask_handler error:", e)
