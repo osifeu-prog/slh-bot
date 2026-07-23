@@ -1,128 +1,135 @@
-
-@bot.message_handler(commands=['agent_delete'])
-def agent_delete_cmd(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /agent_delete <name>")
-        return
-    name = parts[1]
-    import json, os
-    db_path = "state/db.json"
-    with open(db_path, 'r', encoding='utf-8') as f:
-        db = json.load(f)
-    agents = db.get("agents", {})
-    if name not in agents:
-        bot.reply_to(m, f"? Agent '{name}' not found")
-        return
-    # Delete
-    del agents[name]
-    db["agents"] = agents
-    with open(db_path, 'w', encoding='utf-8') as f:
-        json.dump(db, f, indent=2, ensure_ascii=False)
-    # Sync with agents.json
-    with open("state/agents.json", 'w', encoding='utf-8') as f:
-        json.dump(agents, f, indent=2, ensure_ascii=False)
-    bot.reply_to(m, f"? Agent '{name}' deleted successfully")
+﻿import json
+import os
 
 def register(bot, context):
-    import state_manager
-    is_admin = context["is_admin"]
-
     @bot.message_handler(commands=['agent_create'])
-    def agent_create(m):
-        if not is_admin(m): return
+    def agent_create_cmd(m):
         parts = m.text.split()
         if len(parts) < 2:
-            bot.send_message(m.chat.id, "Usage: /agent_create <name>")
+            bot.reply_to(m, "Usage: /agent_create <name>")
             return
         name = parts[1]
-        agents = state_manager.get_agents()
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
         if name in agents:
-            bot.send_message(m.chat.id, "❌ Agent already exists")
+            bot.reply_to(m, f"❌ Agent '{name}' already exists")
             return
-        agents[name] = {"name": name, "inbox": [], "outbox": [], "state": "idle", "role": "agent"}
-        state_manager.set_agents(agents)
-        bot.send_message(m.chat.id, f"✅ Agent created: {name}")
+        # הוסף סוכן חדש
+        agents[name] = {"name": name, "state": "idle", "role": "agent", "inbox": [], "outbox": []}
+        db["agents"] = agents
+        with open(db_path, 'w', encoding='utf-8') as f:
+            json.dump(db, f, indent=2, ensure_ascii=False)
+        # סנכרון עם agents.json
+        with open("state/agents.json", 'w', encoding='utf-8') as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
+        bot.reply_to(m, f"✅ Agent '{name}' created")
 
     @bot.message_handler(commands=['agents'])
-    def agents_list(m):
-        agents = state_manager.get_agents()
+    def agents_list_cmd(m):
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
         if not agents:
-            bot.send_message(m.chat.id, "No agents yet")
+            bot.reply_to(m, "🤖 No agents found")
             return
-        lines = [f"{v.get('name')} [{v.get('state','idle')}] – {v.get('role','?')}" for v in agents.values()]
-        bot.send_message(m.chat.id, "🤖 Agents:\n" + "\n".join(lines))
+        lines = []
+        for name, data in agents.items():
+            state = data.get('state', 'unknown')
+            role = data.get('role', 'agent')
+            lines.append(f"{name} [{state}] – {role}")
+        bot.reply_to(m, "🤖 Agents:\n" + "\n".join(lines))
 
     @bot.message_handler(commands=['agentstate'])
     def agentstate_cmd(m):
-        parts = m.text.split(maxsplit=2)
+        parts = m.text.split()
         if len(parts) < 3:
-            bot.reply_to(m, 'Usage: /agentstate <name> <state>')
+            bot.reply_to(m, "Usage: /agentstate <name> <state>")
             return
-        name, state = parts[1], parts[2]
-        agents = state_manager.get_agents()
+        name = parts[1]
+        state = parts[2]
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
         if name not in agents:
-            bot.reply_to(m, '❌ Agent not found')
+            bot.reply_to(m, f"❌ Agent '{name}' not found")
             return
-        agents[name]["state"] = state
-        state_manager.set_agents(agents)
+        agents[name]['state'] = state
+        db["agents"] = agents
+        with open(db_path, 'w', encoding='utf-8') as f:
+            json.dump(db, f, indent=2, ensure_ascii=False)
+        with open("state/agents.json", 'w', encoding='utf-8') as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
         bot.reply_to(m, f"✅ {name} → {state}")
 
     @bot.message_handler(commands=['sendagent'])
     def sendagent_cmd(m):
         parts = m.text.split(maxsplit=2)
         if len(parts) < 3:
-            bot.reply_to(m, 'Usage: /sendagent <name> <msg>')
+            bot.reply_to(m, "Usage: /sendagent <name> <msg>")
             return
-        name, msg = parts[1], parts[2]
-        agents = state_manager.get_agents()
+        name = parts[1]
+        msg = parts[2]
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
         if name not in agents:
-            bot.reply_to(m, '❌ Agent not found')
+            bot.reply_to(m, f"❌ Agent '{name}' not found")
             return
         agents[name].setdefault("inbox", []).append(msg)
-        state_manager.set_agents(agents)
+        db["agents"] = agents
+        with open(db_path, 'w', encoding='utf-8') as f:
+            json.dump(db, f, indent=2, ensure_ascii=False)
+        with open("state/agents.json", 'w', encoding='utf-8') as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
         bot.reply_to(m, f"✅ Sent to {name}")
 
     @bot.message_handler(commands=['inbox'])
     def inbox_cmd(m):
         parts = m.text.split()
         if len(parts) < 2:
-            bot.reply_to(m, 'Usage: /inbox <name>')
+            bot.reply_to(m, "Usage: /inbox <name>")
             return
         name = parts[1]
-        agents = state_manager.get_agents()
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
         if name not in agents:
-            bot.reply_to(m, '❌ Agent not found')
+            bot.reply_to(m, f"❌ Agent '{name}' not found")
             return
         inbox = agents[name].get("inbox", [])
-        bot.reply_to(m, f"📬 {name} Inbox:\n" + ("\n".join(f"• {msg}" for msg in inbox) if inbox else "Empty"))
-
-
-    @bot.message_handler(commands=['agent_audit'])
-    def agent_audit_cmd(m):
-        if not is_admin(m):
+        if not inbox:
+            bot.reply_to(m, f"📬 {name} Inbox: (empty)")
             return
-
-        agents = state_manager.get_agents()
-
-        if not agents:
-            bot.reply_to(m, "🤖 No agents")
-            return
-
-        lines = ["🤖 AGENT AUDIT"]
-
-        for name, agent in agents.items():
-            inbox = len(agent.get("inbox", []))
-            history = len(agent.get("history", []))
-            state = agent.get("state", "unknown")
-
-            lines.append(
-                f"\n{name}\n"
-                f"STATE: {state}\n"
-                f"INBOX: {inbox}\n"
-                f"HISTORY: {history}"
-            )
-
+        lines = [f"📬 {name} Inbox:"]
+        for i, msg in enumerate(inbox, 1):
+            lines.append(f"• {msg}")
         bot.reply_to(m, "\n".join(lines))
 
-    print("🤖 Agents handler loaded (full)")
+    @bot.message_handler(commands=['agent_delete'])
+    def agent_delete_cmd(m):
+        parts = m.text.split()
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /agent_delete <name>")
+            return
+        name = parts[1]
+        import json, os
+        db_path = "state/db.json"
+        with open(db_path, 'r', encoding='utf-8') as f:
+            db = json.load(f)
+        agents = db.get("agents", {})
+        if name not in agents:
+            bot.reply_to(m, f"❌ Agent '{name}' not found")
+            return
+        del agents[name]
+        db["agents"] = agents
+        with open(db_path, 'w', encoding='utf-8') as f:
+            json.dump(db, f, indent=2, ensure_ascii=False)
+        with open("state/agents.json", 'w', encoding='utf-8') as f:
+            json.dump(agents, f, indent=2, ensure_ascii=False)
+        bot.reply_to(m, f"✅ Agent '{name}' deleted successfully")
