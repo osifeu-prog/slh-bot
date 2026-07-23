@@ -1,8 +1,8 @@
 {
-  "time": "2026-07-23 04:12:42.948867",
+  "time": "2026-07-23 04:15:08.371799",
   "checks": {
     "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
-    "ram": 87.5,
+    "ram": 87.1,
     "disk": 90.0,
     "state/db.json": {
       "exists": true,
@@ -38,6 +38,6 @@
       "register": 2
     },
     "ask": "🤖 מספר הסוכנים הרשומים במערכת: 10",
-    "git": " M slh_audit_report.json\n M state/hardening_report.json\n M state/state_sync_report.json\n"
+    "git": " M slh_audit_report.json\n"
   }
 }
