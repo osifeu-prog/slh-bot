@@ -56,8 +56,8 @@ def route(text):
     elif intent == "system":
         return "SLH OS ׳”׳™׳ ׳׳¢׳¨׳›׳× AI ׳׳•׳˜׳•׳ ׳•׳׳™׳× ׳¢׳ ׳¡׳•׳›׳ ׳™׳, ׳§׳•׳¨׳¡׳™׳ ׳•׳›׳׳›׳׳” ׳₪׳ ׳™׳׳™׳×."
 
-    blocked, msg = guard(text)
-    if blocked:
+    # blocked, msg = guard(text)  # DISABLED
+    # if blocked:  # DISABLED
         return msg
 
     debug = debug_ask(text)
