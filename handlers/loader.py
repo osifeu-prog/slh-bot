@@ -34,7 +34,7 @@ def load_handlers(bot, context):
 
     try:
         from handlers.system_handler import register as register_system
-        from state.custom_handlers.ai_voting_handler import register as register_ai_voting
+        # disabled: loaded by bot_stable custom handler loader
         register_system(bot, context)
     except Exception as e:
         print("system_handler error:", e)
@@ -217,7 +217,7 @@ def load_handlers(bot, context):
         print("economy_handler error:", e)
     print("🧩 Modular + Legacy handlers loaded")
     from handlers.kb_handler import register as reg_kb; reg_kb(bot)
-    register_ai_voting(bot)
+    # register_ai_voting(bot) disabled - ownership moved to custom loader
     try:
         from handlers.join_handler import register as register_join
         register_join(bot)
