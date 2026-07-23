@@ -1081,5 +1081,17 @@ def start_bot():
 
     print("🛑 POLLING EXIT")
 
+@bot.message_handler(commands=["dashboard"])
+def dashboard_cmd(message):
+    import json
+    with open("state/db.json") as f:
+        db = json.load(f)
+    agents = db.get("agents", {})
+    agents_str = "\n".join([f"  {name} [{data.get("state","unknown")}]" for name, data in agents.items()])
+    user_id = str(message.from_user.id)
+    balance = db.get("users", {}).get(user_id, {}).get("balance", 0)
+    msg = f"📊 Dashboard\n\n🤖 Agents:\n{agents_str}\n\n💰 Balance: {balance} SLH"
+    bot.reply_to(message, msg)
+
 if __name__ == "__main__":
     start_bot()
