@@ -1,28 +1,31 @@
-def load_handlers(bot, context=None):
-    print("🔄 Loading modular handlers...")
-    handlers = [
-        ("dashboard", "handlers.dashboard_handler"),
-        ("onboarding", "handlers.onboarding_v2"),
-        ("voting", "handlers.voting_handler"),
-        ("agents", "handlers.agents_handler"),
-        ("ask", "handlers.advanced_ask_handler"),
-    ]
-    for name, mod in handlers:
-        try:
-            m = __import__(mod, fromlist=["register"])
-            if name == "agents": m.register(bot, context)
-            elif name == "ask": m.register_ask_handler(bot)
-            else: m.register(bot)
-            print(f"✅ {name}_handler loaded")
-        except Exception as e:
-            print(f"❌ {name} error:", str(e)[:100])
+"""Safe loader - loads only working handlers"""
+import importlib, os, sys
 
-    # API נטען רק אם יש app
-    if context and 'app' in context:
+def load_handlers(bot, kernel):
+    handlers_dir = os.path.dirname(__file__)
+    safe_list = [
+        'ask_handler', 'terminal_handler', 'map_handler',
+        'admin_handler', 'help_handler', 'device_bridge',
+        'voting_handler'  # הפלייסהולדר החדש
+    ]
+
+    for name in safe_list:
         try:
-            from handlers.device_bridge import register_api
-            register_api(context['app'])
-            print("✅ device_bridge API loaded")
+            mod = importlib.import_module(f'handlers.{name}')
+            if hasattr(mod, 'register_handlers'):
+                mod.register_handlers(bot, kernel)
+                print(f"✅ Loaded: {name}")
         except Exception as e:
-            print("device_bridge error:", e)
-    print("✅ All handlers loaded")
+            print(f"⚠️ Skip {name}: {e}")
+
+    # טוען API
+    try:
+        from handlers.device_bridge import register_api
+        from flask import Flask
+        app = Flask("SLH_API")
+        register_api(app)
+        print("✅ API loaded")
+    except Exception as e:
+        print(f"⚠️ API failed: {e}")
+
+print("✅ Safe loader active")
