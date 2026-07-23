@@ -1072,5 +1072,15 @@ def dashboard_cmd(message):
     )
     bot.reply_to(message, msg)
 
+
+@bot.message_handler(commands=['admin'])
+def admin_cmd(message):
+    try:
+        with open("admin_menu.txt", "r", encoding="utf-8") as f:
+            menu = f.read()
+        bot.reply_to(message, menu, parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(message, f"⚠️ Could not load admin menu: {e}")
+
 if __name__ == "__main__":
     start_bot()
