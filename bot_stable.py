@@ -942,34 +942,9 @@ from handlers.loader import load_handlers
 load_handlers(bot, context)
 
 
-@bot.message_handler(commands=['token'])
-def token_cmd(m):
-    parts = m.text.split()
-    if len(parts) < 2:
-        bot.reply_to(m, "Usage: /token <supply|balance>")
-        return
-    sub = parts[1].lower()
-    import json
-    def get_balance(uid):
-        try:
-            with open('state/db.json') as f:
-                db = json.load(f)
-            return db.get('users', {}).get(str(uid), {}).get('wallet', {}).get('credits', 0)
-        except:
-            return 0
-    def get_supply():
-        try:
-            with open('state/db.json') as f:
-                db = json.load(f)
-            return sum(u.get('wallet', {}).get('credits', 0) for u in db.get('users', {}).values())
-        except:
-            return 0
-    if sub == 'supply':
-        bot.reply_to(m, f"💰 Total SLH Supply: {get_supply()} credits")
-    elif sub == 'balance':
-        bot.reply_to(m, f"💰 Your balance: {get_balance(m.from_user.id)} credits")
-    else:
-        bot.reply_to(m, "Usage: /token <supply|balance>")
+# LEGACY /token DISABLED 2026-07-23
+# Ownership moved to state.custom_handlers.token_handler
+# Original saved in bot_stable.py.before_token_cleanup_20260723
 
 # ===== REFRESH TOKEN HANDLER =====
 try:
