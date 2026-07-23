@@ -1,99 +1,28 @@
 {
-  "test123": {
-    "name": "test123",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
-  },
   "1": {
     "name": "SystemGuard",
     "role": "agent",
     "state": "active",
     "inbox": [],
-    "created": "2026-07-14 14:26",
-    "history": [],
-    "permissions": []
+    "created": "2026-07-14 14:26"
   },
   "2": {
     "name": "DoctorAgent",
     "role": "agent",
     "state": "idle",
-    "inbox": [],
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
+    "inbox": []
   },
   "3": {
     "name": "SyncAgent",
     "role": "agent",
     "state": "idle",
-    "inbox": [],
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
+    "inbox": []
   },
   "4": {
     "name": "TokenAgent",
     "role": "agent",
     "state": "idle",
     "inbox": [],
-    "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
-  },
-  "tutu2": {
-    "name": "tutu2",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
-  },
-  "TestPersist": {
-    "name": "TestPersist",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
-  },
-  "RuntimeCheck": {
-    "name": "RuntimeCheck",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T03:57:56.593238"
-  },
-  "FinalCheck": {
-    "name": "FinalCheck",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T04:11:06.123732"
-  },
-  "RestartProof": {
-    "name": "RestartProof",
-    "inbox": [],
-    "outbox": [],
-    "state": "idle",
-    "role": "agent",
-    "history": [],
-    "permissions": [],
-    "created": "2026-07-23T04:11:06.123732"
+    "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02"
   }
 }
