@@ -13,3 +13,11 @@ def load_handlers(bot, context):
         except Exception as e:
             print(f"{name} error:", str(e)[:100])
     print("✅ All handlers loaded")
+
+# === DEVICE BRIDGE API ===
+try:
+    from handlers.device_bridge import register_api
+    register_api(app) # app מגיע מ-bot_stable
+    print("✅ device_bridge API loaded")
+except Exception as e:
+    print("device_bridge error:", e)

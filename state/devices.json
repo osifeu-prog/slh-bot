@@ -14,5 +14,11 @@
       "last_seen": 1784781985.6041691,
       "bridge": true
     }
+  },
+  "termux-01": {
+    "name": "Termux Phone",
+    "type": "microserver",
+    "status": "online",
+    "last_seen": "now"
   }
 }
