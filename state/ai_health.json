@@ -1,6 +1,6 @@
 {
   "groq": {
-    "failures": 1,
-    "blocked_until": 0
+    "failures": 3,
+    "blocked_until": 1784784672.2928915
   }
 }
