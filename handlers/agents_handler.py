@@ -16,12 +16,10 @@ def register(bot, context):
         if name in agents:
             bot.reply_to(m, f"❌ Agent '{name}' already exists")
             return
-        # הוסף סוכן חדש
         agents[name] = {"name": name, "state": "idle", "role": "agent", "inbox": [], "outbox": []}
         db["agents"] = agents
         with open(db_path, 'w', encoding='utf-8') as f:
             json.dump(db, f, indent=2, ensure_ascii=False)
-        # סנכרון עם agents.json
         with open("state/agents.json", 'w', encoding='utf-8') as f:
             json.dump(agents, f, indent=2, ensure_ascii=False)
         bot.reply_to(m, f"✅ Agent '{name}' created")
@@ -118,7 +116,6 @@ def register(bot, context):
             bot.reply_to(m, "Usage: /agent_delete <name>")
             return
         name = parts[1]
-        import json, os
         db_path = "state/db.json"
         with open(db_path, 'r', encoding='utf-8') as f:
             db = json.load(f)
