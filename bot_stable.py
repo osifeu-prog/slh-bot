@@ -1034,22 +1034,6 @@ def start_bot():
     print("🔄 STARTING SINGLE POLLING INSTANCE")
 
     try:
-@bot.message_handler(commands=['dashboard'])
-def dashboard_cmd(message):
-    import json
-    with open('state/db.json') as f:
-        db = json.load(f)
-    agents = db.get('agents', {})
-    agents_lines = [f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()]
-    agents_str = chr(10).join(agents_lines) if agents_lines else " (none)"
-    user_id = str(message.from_user.id)
-    balance = db.get('users', {}).get(user_id, {}).get('balance', 0)
-    msg = (
-        "\U0001F4CA SLH Dashboard" + chr(10)*2 +
-        "\U0001F4CB Agents:" + chr(10) + agents_str + chr(10)*2 +
-        "\U0001F4B0 Balance: " + str(balance) + " SLH"
-    )
-    bot.reply_to(message, msg)
 
         bot.infinity_polling(
             timeout=20,
@@ -1069,6 +1053,24 @@ def dashboard_cmd(message):
             pass
 
     print("🛑 POLLING EXIT")
+
+
+@bot.message_handler(commands=['dashboard'])
+def dashboard_cmd(message):
+    import json
+    with open('state/db.json') as f:
+        db = json.load(f)
+    agents = db.get('agents', {})
+    agents_lines = [f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()]
+    agents_str = chr(10).join(agents_lines) if agents_lines else " (none)"
+    user_id = str(message.from_user.id)
+    balance = db.get('users', {}).get(user_id, {}).get('balance', 0)
+    msg = (
+        "\U0001F4CA SLH Dashboard" + chr(10)*2 +
+        "\U0001F4CB Agents:" + chr(10) + agents_str + chr(10)*2 +
+        "\U0001F4B0 Balance: " + str(balance) + " SLH"
+    )
+    bot.reply_to(message, msg)
 
 if __name__ == "__main__":
     start_bot()
