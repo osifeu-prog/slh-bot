@@ -44,7 +44,9 @@ def init(bot):
             with open(logo_path, "r", encoding="utf-8") as f:
                 logo = f.read().strip()
         except:
-            logo = f"🌟 {get_assistant_name(str(message.chat.id))}"
+            pass
+        # always add assistant name below logo
+        logo += chr(10) + f"🌟 {get_assistant_name(str(message.chat.id))}"
 
         msg = f"```\n{logo}```\n\n🌟 **ברוכים הבאים ל-SLH OS!** 🚀\n\n"
         if name:
