@@ -67,7 +67,7 @@ def register_ask_handler(bot, context):
 
         # Fallback to LLM
         try:
-            from handlers.llm_handler import query_llm_with_context_with_context
+            from handlers.llm_handler import query_llm_with_context
             from core.context_builder import get_context
             ctx = get_context()
             system_msg = "אתה SLH OS Assistant. המצב הנוכחי:\n"

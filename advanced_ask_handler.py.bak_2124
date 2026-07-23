@@ -67,15 +67,14 @@ def register_ask_handler(bot, context):
 
         # Fallback to LLM
         try:
-            from handlers.llm_handler import query_llm_with_context_with_context
+            from handlers.llm_handler import query_llm
             from core.context_builder import get_context
             ctx = get_context()
             system_msg = "אתה SLH OS Assistant. המצב הנוכחי:\n"
             for k, v in ctx.items():
                 system_msg += f"- {k}: {v}\n"
             prompt = f"{system_msg}\n\nשאלת המשתמש: {question}\n\nענה בעברית תמציתית."
-            answer = user_id = str(msg.from_user.id)
-    answer = query_llm_with_context(question, user_id)
+            answer = query_llm(prompt)
             bot.reply_to(msg, answer)
         except Exception as e:
             bot.reply_to(msg, f"⚠️ כל מנועי ה-AI עמוסים כרגע ({e}). נסה שוב מאוחר יותר.")

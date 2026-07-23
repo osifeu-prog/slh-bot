@@ -177,3 +177,24 @@ def query_llm(question):
     except Exception as e:
         provider_failure("groq")
         raise e
+import json, os, requests
+def query_llm_with_context(question, user_id):
+    k = os.getenv('GROQ_API_KEY')
+    try:
+        with open('state/db.json', encoding='utf-8') as f:
+            d = json.load(f)
+    except:
+        d = {}
+    user = d.get('users',{}).get(str(user_id),{})
+    context = f"מצב משתמש: יתרה {user.get('balance',0)} SLH, קורס {user.get('active_course','אין')}. יש 10 סוכנים במערכת."
+    r = requests.post('https://api.groq.com/openai/v1/chat/completions',
+        headers={'Authorization':'Bearer '+k},
+        json={
+            'model':'llama-3.1-8b-instant',
+            'messages':[
+                {'role':'system','content':'אתה רובוטוש - העוזר האישי של SLH OS. ענה בעברית קצר וישיר. השתמש במידע המערכת כדי לעזור.'},
+                {'role':'user','content':context + '\n\nשאלה: ' + question}
+            ],
+            'max_tokens':200
+        }, timeout=15)
+    return r.json()['choices'][0]['message']['content'] if r.ok else 'שגיאה ב-LLM'
