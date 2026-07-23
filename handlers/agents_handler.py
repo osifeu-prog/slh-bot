@@ -1,3 +1,29 @@
+
+@bot.message_handler(commands=['agent_delete'])
+def agent_delete_cmd(m):
+    parts = m.text.split()
+    if len(parts) < 2:
+        bot.reply_to(m, "Usage: /agent_delete <name>")
+        return
+    name = parts[1]
+    import json, os
+    db_path = "state/db.json"
+    with open(db_path, 'r', encoding='utf-8') as f:
+        db = json.load(f)
+    agents = db.get("agents", {})
+    if name not in agents:
+        bot.reply_to(m, f"? Agent '{name}' not found")
+        return
+    # Delete
+    del agents[name]
+    db["agents"] = agents
+    with open(db_path, 'w', encoding='utf-8') as f:
+        json.dump(db, f, indent=2, ensure_ascii=False)
+    # Sync with agents.json
+    with open("state/agents.json", 'w', encoding='utf-8') as f:
+        json.dump(agents, f, indent=2, ensure_ascii=False)
+    bot.reply_to(m, f"? Agent '{name}' deleted successfully")
+
 def register(bot, context):
     import state_manager
     is_admin = context["is_admin"]
