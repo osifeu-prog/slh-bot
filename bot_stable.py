@@ -400,23 +400,9 @@ def health(m):
         pass
     msg = f"🩺 SYSTEM HEALTH\nRAM: {ram:.1f}% used\nDisk: {disk:.1f}% used\nDB: {'✅' if db_ok else '❌'} (events: {events})\nAgents: {agents_count}\nUptime: {uptime}"
     bot.reply_to(m, msg)
-@bot.message_handler(commands=['vote'])
-def vote(m):
-    uid = str(m.from_user.id)
-    balance = profile_manager.get_balance(uid)
-    if balance < VOTE_MIN_BALANCE:
-        bot.reply_to(m, f"\U0001F512 \u05dc\u05d4\u05e6\u05d1\u05e2\u05d4 \u05e0\u05d3\u05e8\u05e9\u05d9\u05dd {VOTE_MIN_BALANCE} \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd \u05dc\u05e4\u05d7\u05d5\u05ea. \u05d4\u05d9\u05ea\u05e8\u05d4 \u05e9\u05dc\u05da: {balance}")
-        return
-    key = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
-    if not key:
-        bot.reply_to(m, "\u05e9\u05d9\u05de\u05d5\u05e9: /vote <yes|no|unsure>")
-        return
-    db = ensure_user(load_db(), uid)
-    db["votes"][key] = db["votes"].get(key, 0) + 1
-    save_db(db)
-    profile_manager.add_balance(uid, -VOTE_COST)
-    new_balance = round(balance - VOTE_COST, 2)
-    bot.reply_to(m, f"\u2705 \u05d4\u05e6\u05d1\u05e2\u05d4 '{key}' \u05e0\u05e8\u05e9\u05de\u05d4. \u05e0\u05d5\u05db\u05d5 {VOTE_COST} \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd. \u05d9\u05ea\u05e8\u05d4 \u05d7\u05d3\u05e9\u05d4: {new_balance}")
+# LEGACY /vote DISABLED 2026-07-23
+# Ownership moved to state.custom_handlers.ai_voting_handler
+# Original saved in bot_stable.py.before_vote_cleanup_20260723
 
 @bot.message_handler(commands=['results'])
 def results(m):
