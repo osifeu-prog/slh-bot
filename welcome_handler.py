@@ -24,7 +24,7 @@ def ensure_onboarding_user(uid):
         json.dump(db, f, indent=2, ensure_ascii=False)
 
 def init(bot):
-    @bot.message_handler(commands=['start'])
+    @bot.message_handler(commands=['start_old_disabled'])
     def send_welcome(message):
         uid = str(message.chat.id)
         name = ""
