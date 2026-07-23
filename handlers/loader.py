@@ -1,31 +1,23 @@
-"""Safe loader - loads only working handlers"""
-import importlib, os, sys
-
-def load_handlers(bot, kernel):
-    handlers_dir = os.path.dirname(__file__)
-    safe_list = [
-        'ask_handler', 'terminal_handler', 'map_handler',
-        'admin_handler', 'help_handler', 'device_bridge',
-        'voting_handler'  # הפלייסהולדר החדש
-    ]
-
-    for name in safe_list:
+def load_handlers(bot, context):
+    print("🔄 Loading modular handlers...")
+    for name, mod in [
+        ("dashboard", "handlers.dashboard_handler"),
+        ("onboarding", "handlers.onboarding_v2"),
+        ("agents", "handlers.agents_handler"),
+    ]:
         try:
-            mod = importlib.import_module(f'handlers.{name}')
-            if hasattr(mod, 'register_handlers'):
-                mod.register_handlers(bot, kernel)
-                print(f"✅ Loaded: {name}")
+            m = __import__(mod, fromlist=["register"])
+            m.register(bot, context) if name=="agents" else m.register(bot)
+            print(f"✅ {name}_handler loaded")
         except Exception as e:
-            print(f"⚠️ Skip {name}: {e}")
+            print(f"{name} error:", str(e)[:100])
 
-    # טוען API
+    # Ask handler (LLM)
     try:
-        from handlers.device_bridge import register_api
-        from flask import Flask
-        app = Flask("SLH_API")
-        register_api(app)
-        print("✅ API loaded")
+        from handlers.advanced_ask_handler import register_ask_handler
+        register_ask_handler(bot)
+        print("✅ advanced_ask_handler loaded")
     except Exception as e:
-        print(f"⚠️ API failed: {e}")
+        print("ask handler error:", str(e)[:100])
 
-print("✅ Safe loader active")
+    print("✅ All handlers loaded")
