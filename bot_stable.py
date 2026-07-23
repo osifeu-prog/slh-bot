@@ -138,21 +138,6 @@ def ask_cmd(m):
     except Exception as e:
         bot.reply_to(m, f"⚠️ כל מנועי ה-AI עמוסים כרגע ({e}). נסה שוב מאוחר יותר.")
 
-@bot.message_handler(commands=['dashboard'])
-def dashboard_cmd(m):
-    try:
-        import json
-        with open("state/db.json", "r", encoding='utf-8') as f:
-            db = json.load(f)
-        agents = db.get("agents", {})
-        agents_str = "\n".join([f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()])
-        user_id = str(m.from_user.id)
-        balance = db.get("users", {}).get(user_id, {}).get("balance", 0)
-        msg = f"?? SLH Dashboard\\n\\n?? Agents:\\n{agents_str}\\n\\n?? Balance: {balance} SLH"
-        bot.reply_to(m, msg)
-    except Exception as e:
-        bot.reply_to(m, f"? Error: {e}")
-
 # ---------------- KERNEL INIT ----------------
 try:
     bus = EventBus(workers=2)
@@ -1049,6 +1034,18 @@ def start_bot():
     print("🔄 STARTING SINGLE POLLING INSTANCE")
 
     try:
+@bot.message_handler(commands=['dashboard'])
+def dashboard_cmd(message):
+    import json
+    with open('state/db.json') as f:
+        db = json.load(f)
+    agents = db.get('agents', {})
+    agents_str = '\n'.join([f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()])
+    user_id = str(message.from_user.id)
+    balance = db.get('users', {}).get(user_id, {}).get('balance', 0)
+    msg = f"📊 Dashboard\n\n🤖 Agents:\n{agents_str}\n\n💰 Balance: {balance} SLH"
+    bot.reply_to(message, msg)
+
         bot.infinity_polling(
             timeout=20,
             long_polling_timeout=20,
@@ -1067,18 +1064,6 @@ def start_bot():
             pass
 
     print("🛑 POLLING EXIT")
-
-@bot.message_handler(commands=['dashboard'])
-def dashboard_cmd(message):
-    import json
-    with open('state/db.json') as f:
-        db = json.load(f)
-    agents = db.get('agents', {})
-    agents_str = '\n'.join([f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()])
-    user_id = str(message.from_user.id)
-    balance = db.get('users', {}).get(user_id, {}).get('balance', 0)
-    msg = f"📊 Dashboard\n\n🤖 Agents:\n{agents_str}\n\n💰 Balance: {balance} SLH"
-    bot.reply_to(message, msg)
 
 if __name__ == "__main__":
     start_bot()
