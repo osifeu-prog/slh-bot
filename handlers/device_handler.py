@@ -1,4 +1,4 @@
-﻿import json, os, time, re
+import json, os, time, re
 
 def load_devices():
     try:
