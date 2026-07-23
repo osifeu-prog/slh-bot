@@ -1,0 +1,8 @@
+﻿{
+  "monitors": {},
+  "settings": {
+    "heartbeat_interval": 30,
+    "log_retention": 7,
+    "alert_channels": ["telegram"]
+  }
+}
