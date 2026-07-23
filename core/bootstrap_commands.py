@@ -1,4 +1,4 @@
-from core.command_router import register_command, HANDLERS
+﻿from core.command_router import register_command, HANDLERS
 import importlib
 import telebot
 
@@ -7,7 +7,6 @@ def init(bot):
     modules = [
         "ask_handler",
         "admin_handler",
-        "learn_handlers",
         "course_handlers",
         "project_commands",
         "monitor_handler",
@@ -21,14 +20,14 @@ def init(bot):
         try:
             m = importlib.import_module(name)
 
-            # רגיל - Telegram decorators
+            # ׳¨׳’׳™׳ - Telegram decorators
             if hasattr(m, "register"):
                 try:
                     m.register(bot)
                 except Exception as e:
-                    print(f"⚠️ {name} telegram register: {e}")
+                    print(f"ג ן¸ {name} telegram register: {e}")
 
-            # חדש - Router
+            # ׳—׳“׳© - Router
             if hasattr(m, "COMMANDS"):
                 for cmd, fn in m.COMMANDS.items():
                     register_command(cmd, fn)
@@ -36,7 +35,7 @@ def init(bot):
             loaded += 1
 
         except Exception as e:
-            print(f"❌ {name}: {e}")
+            print(f"ג {name}: {e}")
 
-    print(f"📦 Command modules loaded: {loaded}")
-    print(f"🧭 Router commands: {len(HANDLERS)}")
+    print(f"נ“¦ Command modules loaded: {loaded}")
+    print(f"נ§­ Router commands: {len(HANDLERS)}")
