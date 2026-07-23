@@ -113,7 +113,8 @@ agents_dict = {}
 
 
 # ===== ASK HANDLER (DIRECT) =====
-@bot.message_handler(commands=['ask'])
+# DISABLED: ASK moved to advanced_ask_handler.py
+# @bot.message_handler(commands=['ask'])
 def ask_cmd(m):
     question = m.text.replace('/ask', '').strip()
     if not question:
