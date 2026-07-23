@@ -1,4 +1,5 @@
 import json, random, time
+import state_manager
 from core.event_bus import EventBus
 
 def register(bot):
@@ -17,7 +18,7 @@ def register(bot):
         EventBus.publish('proposal_created', {'proposal_id': pid, 'text': 'Full check'})
         EventBus.publish('agent_task', {'agent': 'Osif', 'task': 'Full check task'})
         time.sleep(0.5)
-        agents = json.load(open('state/agents.json'))
+        agents = state_manager.get_agents()
         osif_inbox = agents.get('Osif', {}).get('inbox', [])
         ai_inbox = []
         for a in agents.values():

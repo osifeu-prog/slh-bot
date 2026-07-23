@@ -1,0 +1,52 @@
+{
+  "time": "2026-07-23 04:10:59.638005",
+  "checks": {
+    "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
+    "ram": 86.9,
+    "disk": 90.0,
+    "state/db.json": {
+      "exists": true,
+      "size": 2713
+    },
+    "state/agents.json": {
+      "exists": true,
+      "size": 2067
+    },
+    "state/tasks.json": {
+      "exists": true,
+      "size": 2
+    },
+    "db_counts": {
+      "users": 2,
+      "agents": 10,
+      "votes": 1,
+      "tasks": 0,
+      "memory": 0
+    },
+    "agent_schema": {
+      "FinalCheck": [
+        "permissions",
+        "created"
+      ],
+      "RestartProof": [
+        "permissions",
+        "created"
+      ]
+    },
+    "handler_count": 132,
+    "duplicates": {
+      "register_ai": 2,
+      "propose": 2,
+      "vote": 3,
+      "tally": 2,
+      "leaderboard": 2,
+      "ping": 2,
+      "fullcheck": 2,
+      "token": 2,
+      "courses": 2,
+      "register": 2
+    },
+    "ask": "🤖 מספר הסוכנים הרשומים במערכת: 10",
+    "git": " M advanced_ask_handler.py\n M core/ask_guard.py\n M core/ask_router.py\n M core/context_builder.py\n M handlers/chat_registry_handler.py\n M handlers/llm_handler.py\n M handlers/loader.py\n M start_railway.sh\n M state/agents.json\n M state/chats.json\n M state/custom_handlers/audit_handler.py\n M state/custom_handlers/ping_fullcheck_handler.py\n M state/custom_handlers/ping_handler.py\n M state/custom_handlers/task_listener.py\n M state/db.json\n M state_manager.py\n?? core/ai_guard.py\n?? slh_audit.py\n?? slh_audit_report.json\n?? slh_consolidate.py\n?? slh_full_check.py\n?? slh_hardening.py\n?? slh_snapshot.py\n?? slh_sync_fix.py\n?? state/ai_health.json\n?? state/consolidation_report.json\n?? state/hardening_report.json\n?? state/state_sync_report.json\n?? state/tasks.json\n?? tools/\n"
+  }
+}

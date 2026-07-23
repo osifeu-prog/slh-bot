@@ -1,6 +1,7 @@
 import json, os
 from datetime import datetime
 from groq import Groq
+from core.ai_guard import provider_available, provider_success, provider_failure
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = None
@@ -147,21 +148,32 @@ def query_llm(question):
     """
     Main LLM gateway for ASK.
     """
-    client = get_client()
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are SLH OS AI assistant. Answer in Hebrew when possible."
-            },
-            {
-                "role": "user",
-                "content": question
-            }
-        ],
-        max_tokens=500
-    )
+    if not provider_available("groq"):
+        return "⏳ שירות ה-AI בהשהיה זמנית. נסה שוב בעוד מספר דקות."
 
-    return response.choices[0].message.content
+    try:
+        client = get_client()
+
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are SLH OS AI assistant. Answer in Hebrew when possible."
+                },
+                {
+                    "role": "user",
+                    "content": question
+                }
+            ],
+            max_tokens=500
+        )
+
+        provider_success("groq")
+
+        return response.choices[0].message.content
+
+    except Exception as e:
+        provider_failure("groq")
+        raise e

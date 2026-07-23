@@ -2,26 +2,228 @@
   "8789977826": {
     "id": 8789977826,
     "type": "known",
-    "updated": 1784285300.4527657
-  },
-  "224223270": {
-    "id": 224223270,
-    "type": "known",
-    "updated": 1784024578.7795758
-  },
-  "5010371391": {
-    "id": 5010371391,
-    "type": "known",
-    "updated": 1784285146.285105
-  },
-  "1849509514": {
-    "id": 1849509514,
-    "type": "known",
-    "updated": 1784031493.02765
-  },
-  "1518680802": {
-    "id": 1518680802,
-    "type": "known",
-    "updated": 1784048621.200205
+    "messages": [
+      {
+        "time": 1784760806.2315228,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784760965.4924283,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 0\nTasks: 0"
+      },
+      {
+        "time": 1784760969.995548,
+        "direction": "out",
+        "text": "✅ Agent created: test123"
+      },
+      {
+        "time": 1784760973.625085,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 1\nTasks: 0"
+      },
+      {
+        "time": 1784761012.8723927,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761021.3211277,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761055.7433896,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent"
+      },
+      {
+        "time": 1784761067.020253,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761100.2588637,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761391.039082,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761394.9597075,
+        "direction": "out",
+        "text": "🤖 נסה /agents לרשימת הסוכנים."
+      },
+      {
+        "time": 1784761717.7503946,
+        "direction": "out",
+        "text": "⚠️ כל מנועי ה-AI עמוסים כרגע (GROQ_API_KEY missing). נסה שוב מאוחר יותר."
+      },
+      {
+        "time": 1784767545.4760838,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 6"
+      },
+      {
+        "time": 1784767554.477664,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 6"
+      },
+      {
+        "time": 1784767566.2873077,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 6"
+      },
+      {
+        "time": 1784767702.7843127,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 6"
+      },
+      {
+        "time": 1784767718.4531891,
+        "direction": "out",
+        "text": "```\n███████╗██╗     ██╗  ██╗\n██╔════╝██║     ██║  ██║\n███████╗██║     ███████║\n╚════██║██║     ██╔══██║\n███████║███████╗██║  ██║\n╚══════╝╚══════╝╚═╝  ╚═╝\n\nSLH SYSTEM\nSmart Layer Hub```\n\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\n\n🟢 **מצב מערכת**\n• סטטוס מערכת — /status\n• בריאות מערכת — /health\n• אבחון מלא — /test\n• אבחון סוכנים — /test_agents\n\n🤖 **סוכנים**\n• רשימת סוכנים — /agents\n• צור סוכן — /agent_create\n• שלח הודעה — /sendagent\n• תיבת סוכן — /inbox\n\n🧠 **AI & מודולים**\n• רישום AI — /register_ai\n• שאל AI — /ask\n• יומן חכם — /journal_ask\n• מודולים — /plugin list\n\n💰 **כלכלה**\n• יתרה — /balance\n• קנייה — /buy\n• תשלום — /pay\n• טוקן — /token balance\n\n📚 **למידה**\n• קורסים — /courses\n• התקדמות — /myprogress\n• הפניות — /referral\n\n🔧 **אדמין**\n• פאנל אדמין — /admin\n• גיבוי — /backup\n• ריסטארט — /restart\n• לוגים — /logs 20\n\n👥 **בואו נבנה יחד!**"
+      },
+      {
+        "time": 1784767724.5030086,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 6\nTasks: 0"
+      },
+      {
+        "time": 1784767733.1015196,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 6"
+      },
+      {
+        "time": 1784767741.4674613,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent"
+      },
+      {
+        "time": 1784767743.5164635,
+        "direction": "out",
+        "text": "✅ Agent created: TestPersist"
+      },
+      {
+        "time": 1784767751.7806418,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent"
+      },
+      {
+        "time": 1784767773.8854482,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent"
+      },
+      {
+        "time": 1784767849.3015013,
+        "direction": "out",
+        "text": "🩺 SYSTEM HEALTH\nRAM: 87.3% used\nDisk: 90.0% used\nDB: ✅ (events: 9)\nAgents: 7\nUptime: N/A"
+      },
+      {
+        "time": 1784767872.9625225,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent"
+      },
+      {
+        "time": 1784767901.850845,
+        "direction": "out",
+        "text": "```\n███████╗██╗     ██╗  ██╗\n██╔════╝██║     ██║  ██║\n███████╗██║     ███████║\n╚════██║██║     ██╔══██║\n███████║███████╗██║  ██║\n╚══════╝╚══════╝╚═╝  ╚═╝\n\nSLH SYSTEM\nSmart Layer Hub```\n\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\n\n🟢 **מצב מערכת**\n• סטטוס מערכת — /status\n• בריאות מערכת — /health\n• אבחון מלא — /test\n• אבחון סוכנים — /test_agents\n\n🤖 **סוכנים**\n• רשימת סוכנים — /agents\n• צור סוכן — /agent_create\n• שלח הודעה — /sendagent\n• תיבת סוכן — /inbox\n\n🧠 **AI & מודולים**\n• רישום AI — /register_ai\n• שאל AI — /ask\n• יומן חכם — /journal_ask\n• מודולים — /plugin list\n\n💰 **כלכלה**\n• יתרה — /balance\n• קנייה — /buy\n• תשלום — /pay\n• טוקן — /token balance\n\n📚 **למידה**\n• קורסים — /courses\n• התקדמות — /myprogress\n• הפניות — /referral\n\n🔧 **אדמין**\n• פאנל אדמין — /admin\n• גיבוי — /backup\n• ריסטארט — /restart\n• לוגים — /logs 20\n\n👥 **בואו נבנה יחד!**"
+      },
+      {
+        "time": 1784767904.9890962,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 7\nTasks: 0"
+      },
+      {
+        "time": 1784767911.6255722,
+        "direction": "out",
+        "text": "🩺 SYSTEM HEALTH\nRAM: 88.0% used\nDisk: 90.0% used\nDB: ✅ (events: 9)\nAgents: 7\nUptime: N/A"
+      },
+      {
+        "time": 1784767916.3209586,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 7"
+      },
+      {
+        "time": 1784767919.9135878,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent"
+      },
+      {
+        "time": 1784767923.8937438,
+        "direction": "out",
+        "text": "Diagnostics complete."
+      },
+      {
+        "time": 1784767934.5462751,
+        "direction": "out",
+        "text": "✅ Agent created: RuntimeCheck"
+      },
+      {
+        "time": 1784767938.6506803,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent"
+      },
+      {
+        "time": 1784767957.8639224,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent"
+      },
+      {
+        "time": 1784768412.0929272,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 8\nTasks: 0"
+      },
+      {
+        "time": 1784768416.2195575,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent"
+      },
+      {
+        "time": 1784768421.2802172,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 8\nTasks: 0"
+      },
+      {
+        "time": 1784768423.1036346,
+        "direction": "out",
+        "text": "🤖 מספר הסוכנים הרשומים במערכת: 8"
+      },
+      {
+        "time": 1784768427.080086,
+        "direction": "out",
+        "text": "✅ Agent created: FinalCheck"
+      },
+      {
+        "time": 1784768428.4588804,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent\nFinalCheck [idle] – agent"
+      },
+      {
+        "time": 1784768562.4977205,
+        "direction": "out",
+        "text": "Users: 2\nAgents: 9\nTasks: 0"
+      },
+      {
+        "time": 1784768570.539694,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent\nFinalCheck [idle] – agent"
+      },
+      {
+        "time": 1784768577.5324633,
+        "direction": "out",
+        "text": "✅ Agent created: RestartProof"
+      },
+      {
+        "time": 1784768580.5692549,
+        "direction": "out",
+        "text": "🤖 Agents:\ntest123 [idle] – agent\nSystemGuard [active] – agent\nDoctorAgent [idle] – agent\nSyncAgent [idle] – agent\nTokenAgent [idle] – agent\ntutu2 [idle] – agent\nTestPersist [idle] – agent\nRuntimeCheck [idle] – agent\nFinalCheck [idle] – agent\nRestartProof [idle] – agent"
+      }
+    ],
+    "updated": 1784768580.5692568
   }
 }

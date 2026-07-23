@@ -217,7 +217,7 @@ def load_handlers(bot, context):
         print("economy_handler error:", e)
     print("🧩 Modular + Legacy handlers loaded")
     from handlers.kb_handler import register as reg_kb; reg_kb(bot)
-    register_ai_voting(bot, None)
+    register_ai_voting(bot)
     try:
         from handlers.join_handler import register as register_join
         register_join(bot)

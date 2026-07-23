@@ -5,7 +5,7 @@ FILE = "state/chats.json"
 def load():
     if os.path.exists(FILE):
         try:
-            with open(FILE) as f:
+            with open(FILE, encoding='utf-8') as f:
                 return json.load(f)
         except:
             pass
@@ -13,7 +13,7 @@ def load():
 
 def save(data):
     os.makedirs("state", exist_ok=True)
-    with open(FILE, "w") as f:
+    with open(FILE, "w", encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 def register(bot):

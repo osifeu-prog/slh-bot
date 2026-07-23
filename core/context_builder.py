@@ -45,6 +45,6 @@ def get_context():
 
     ctx["users"] = _count_from_file("state/db.json", "users")
     ctx["tasks"] = _count_from_file("state/db.json", "tasks")
-    ctx["agents"] = _count_from_file("state/agents.json")
+    ctx["agents"] = _count_from_file("state/db.json", "agents")
 
     return ctx

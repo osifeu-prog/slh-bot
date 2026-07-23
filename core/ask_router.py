@@ -11,11 +11,22 @@ INTENTS = {
     "analysis": ["נתח", "ניתוח", "תנתח", "מצב המערכת", "שיפור", "איך לשפר", "המלצה", "ארכיטקטורה", "אסטרטגיה"],
     "agents": ["סוכן", "סוכנים", "agent", "צור סוכן", "/agents"],
     "help": ["עזרה", "פקודות", "מה אפשר לעשות", "/help"],
-    "system": ["הסבר", "מה זה", "מהי המערכת", "איך זה עובד", "להסביר"],
+    "system": [
+        "הסבר",
+        "מה זה",
+        "מהי המערכת",
+        "איך זה עובד",
+        "להסביר",
+        "מצב המערכת",
+        "סטטוס מערכת",
+        "health",
+        "status",
+        "מצב slh"
+    ],
     "general": []
 }
 
-PRIORITY = ["analysis", "system", "agents", "courses", "help", "onboarding", "greeting"]
+PRIORITY = ["system", "agents", "courses", "help", "onboarding", "greeting", "analysis"]
 
 def detect_intent(text):
     text_lower = text.strip().lower()
@@ -38,7 +49,8 @@ def route(text):
     elif intent == "analysis":
         return None  # fallback to LLM
     elif intent == "agents":
-        return "🤖 נסה /agents לרשימת הסוכנים."
+        ctx = get_context()
+        return f"🤖 מספר הסוכנים הרשומים במערכת: {ctx['agents']}"
     elif intent == "help":
         return "📘 פקודות עיקריות: /start, /join, /courses, /agents, /ask"
     elif intent == "system":

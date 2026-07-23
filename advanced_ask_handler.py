@@ -1,6 +1,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core.ask_router import route as ask_route
+from core.ask_guard import allow_request, guarded_message
 
 def register_ask_handler(bot, context):
     @bot.message_handler(commands=['ask'])
@@ -8,6 +9,10 @@ def register_ask_handler(bot, context):
         question = msg.text.replace('/ask', '').strip()
         if not question:
             bot.reply_to(msg, "Usage: /ask <your question>")
+            return
+
+        if not allow_request(question):
+            bot.reply_to(msg, guarded_message())
             return
         local_answer = ask_route(question)
         if local_answer:

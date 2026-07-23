@@ -1,4 +1,8 @@
+﻿from pathlib import Path
 
+p = Path("core/ask_guard.py")
+
+content = r'''
 import time
 import hashlib
 
@@ -27,7 +31,8 @@ def allow_request(text):
 
 def guarded_message():
     return "⏳ הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
+'''
 
+p.write_text(content, encoding="utf-8")
 
-def guard(text):
-    return allow_request(text)
+print("ASK Guard created")
