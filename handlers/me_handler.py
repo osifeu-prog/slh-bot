@@ -17,4 +17,4 @@ def register(bot):
                   f"• הצטרף: {user.get('joined','לא ידוע')}"
             bot.reply_to(message, txt, parse_mode='Markdown')
         except Exception as e:
-            bot.reply_to(message, f"שגיאה: {e}")
+            bot.reply_to(message, f"שיאה: {e}")

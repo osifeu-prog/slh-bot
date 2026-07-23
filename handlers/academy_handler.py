@@ -11,7 +11,7 @@ def register(bot):
         if not courses:
             bot.reply_to(
                 m,
-                "📚 אין קורסים זמינים כרגע"
+                "📚 אין קורסים זמינים כרע"
             )
             return
 

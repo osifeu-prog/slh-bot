@@ -28,5 +28,5 @@ def register(bot):
         text += f'💰 חואיוה: {credits}\n'
         text += f'⭐ חווידייד: {points}\n'
         text += f'� בריד: {level}\n'
-        text += f'📚 חריני נלינדירכית פוירגותיית דרית תכית אכא'
+        text += f'📚 חריני נלינדירכית פוירותיית דרית תכית אכא'
         bot.reply_to(m, text)

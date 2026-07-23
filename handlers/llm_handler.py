@@ -54,9 +54,9 @@ def get_bot_context(uid: str) -> str:
     ctx += "- /token balance — בדיקת יתרת SLH Token\n"
     ctx += "- /token supply — בדיקת היצע ה-SLH Token\n"
     ctx += "- /token send <user_id> <amount> — שליחת SLH Token\n"
-    ctx += "- /stake — הצגת מצב Staking\n"
+    ctx += "- /stake — הצת מצב Staking\n"
     ctx += "- /stake_join — הצטרפות ל-Staking\n"
-    ctx += "- /staking_report — דוח Staking ותגמולים\n"
+    ctx += "- /staking_report — דוח Staking ותמולים\n"
     ctx += "- RULE: When the user asks how to perform an action, prefer the authoritative command above. Do not invent alternative menus, pages, marketplaces, or purchase systems.\n"
     student = db.get("students", {}).get(uid, {})
     courses = student.get("courses", {})
@@ -197,4 +197,4 @@ def query_llm_with_context(question, user_id):
             ],
             'max_tokens':200
         }, timeout=15)
-    return r.json()['choices'][0]['message']['content'] if r.ok else 'שגיאה ב-LLM'
+    return r.json()['choices'][0]['message']['content'] if r.ok else 'שיאה ב-LLM'

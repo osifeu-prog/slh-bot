@@ -18,7 +18,7 @@ def register(bot):
         if step == "name":
             state["name"] = msg.text.strip()
             state["step"] = "group"
-            bot.reply_to(msg, f"נעים מאוד, {state['name']}!\nלאיזו קבוצה תרצה להצטרף?\n(לדוגמה: Bitcoin Masters, AI Builders, או כל שם שתרצה)")
+            bot.reply_to(msg, f"נעים מאוד, {state['name']}!\nלאיזו קבוצה תרצה להצטרף?\n(לדומה: Bitcoin Masters, AI Builders, או כל שם שתרצה)")
 
         elif step == "group":
             group = msg.text.strip()

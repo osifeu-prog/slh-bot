@@ -27,4 +27,4 @@ def register(bot):
         with open(FEEDBACK_FILE, 'w') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         
-        bot.reply_to(m, "🙏 תודה על הפידבק! אנחנו קוראים כל תגובה.")
+        bot.reply_to(m, "🙏 תודה על הפידבק! אנחנו קוראים כל תובה.")

@@ -42,7 +42,7 @@ def register(bot):
         if user.get("academy", {}).get("graduated"):
             bot.reply_to(
                 message,
-                "✅ אתה כבר בוגר האקדמיה"
+                "✅ אתה כבר בור האקדמיה"
             )
             return
 
@@ -88,7 +88,7 @@ def register(bot):
         bot.reply_to(
             message,
             "🎓 סיום קורס הושלם!\n\n"
-            "אתה מוגדר כבוגר SLH Academy.\n"
+            "אתה מודר כבור SLH Academy.\n"
             "שלב הבא יהיה חיבור הבוט העצמאי שלך."
         )
 

@@ -7,6 +7,6 @@ def register(bot):
         if not is_admin(m):
             bot.reply_to(m, "❌ Admin only")
             return
-        # גרסה בטוחה – מחזירה מידע על ה‑Container
-        # (זו גרסת דמה, לא Remote Control מלא)
+        # רסה בטוחה – מחזירה מידע על ה‑Container
+        # (זו רסת דמה, לא Remote Control מלא)
         bot.reply_to(m, f"Python: {os.sys.version}\ncwd: {os.getcwd()}")

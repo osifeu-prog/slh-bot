@@ -12,5 +12,5 @@ def register_ask_handler(bot):
         try:
             answer = query_llm_with_context(question, user_id)
         except Exception as e:
-            answer = f"שגיאה: {e}"
+            answer = f"שיאה: {e}"
         bot.reply_to(msg, answer)

@@ -66,16 +66,16 @@ def register(bot):
                     if t['assigned_to']:
                         award_reward(t['assigned_to'], t['reward'], t['id'])
                     save_board(board)
-                    bot.reply_to(m, f"✅ משימה #{mid} הושלמה! התגמול הועבר.")
+                    bot.reply_to(m, f"✅ משימה #{mid} הושלמה! התמול הועבר.")
                     return
             bot.reply_to(m, "❌ משימה לא נמצאה")
 
         elif action == 'rewards':
             ledger = load_ledger()
             if not ledger:
-                bot.reply_to(m, "אין תגמולים עדיין.")
+                bot.reply_to(m, "אין תמולים עדיין.")
             else:
-                msg = "💰 **תגמולים**\n\n"
+                msg = "💰 **תמולים**\n\n"
                 for entry in ledger[-10:]:
                     msg += f"👤 {entry['agent']}: {entry['amount']} SLH (משימה #{entry['mission_id']})\n"
                 bot.reply_to(m, msg, parse_mode='Markdown')
