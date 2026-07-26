@@ -4,6 +4,7 @@ def load_handlers(bot, context):
         ("dashboard", "handlers.dashboard_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
+        ("termux", "handlers.termux_handler"),
     ]:
         try:
             m = __import__(mod, fromlist=["register"])

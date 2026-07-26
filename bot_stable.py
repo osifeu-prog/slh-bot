@@ -30,7 +30,7 @@ from core.event_bus import EventBus
 from plugins.task import TaskPlugin
 from payment_handler import register_payment_handlers
 from econ_handler import register_econ_handlers
-from staking_handler import register_staking_handlers
+# from staking_handler import register_staking_handlers
 
 try:
     from handlers.llm_handler import register as register_llm
@@ -210,42 +210,6 @@ def ensure_user(db, uid):
 # ---------------- COMMANDS ----------------
 
 # /start handler removed - now owned exclusively by welcome_handler.py
-
-@bot.message_handler(commands=['admin'])
-def admin(m):
-    bot.reply_to(m, """🔧 ADMIN CONTROL PANEL
-📊 DIAGNOSTICS:
-/test — Run full system diagnostic\n/test_agents — Quick agent self-test
-/status — System status
-/health — Health check
-🤖 AGENTS:
-/agents — List all agents
-/agent_create [name] — Create new agent\n/agentstate <prefix> <state> — Change agent state\n/sendagent <prefix> <msg> — Send message to agent\n/inbox <prefix> — Check agent inbox
-🗳️ VOTING:
-/vote — Create vote
-/results — See results
-💰 REVENUE:
-/revenue — Revenue status
-🔄 SYSTEM:
-/backup — Git backup now
-/restart — Restart bot
-/logs <n> — Last N log lines
-/clean — Clean temp files
-📈 ANALYTICS:
-/audit — Audit log
-/memory — Memory status
-/debug — Container debug info
-/termux — Show Termux status
-/deploy — Trigger Railway deploy
-/errors — Show recent errors
-/plugin list — List plugins
-/goal add/list — Manage goals
-/exec <cmd> — Run shell command (admin)\n/termlog — Show Termux logs (admin)\n/rlogs — Railway logs (admin)
-/disk — Disk usage
-/sysinfo — System resources""")
-
-
-
 
 
 @bot.message_handler(commands=['sync'])
@@ -469,9 +433,6 @@ def debug(m):
     except Exception as e:
         bot.reply_to(m, f"❌ debug error: {e}")
 
-@bot.message_handler(commands=['termux'])
-def termux(m):
-    bot.reply_to(m, f"Python: {sys.version}\ncwd: {os.getcwd()}")
 
 @bot.message_handler(commands=['deploy'])
 def deploy(m):
@@ -1055,32 +1016,7 @@ def start_bot():
     print("🛑 POLLING EXIT")
 
 
-@bot.message_handler(commands=['dashboard'])
-def dashboard_cmd(message):
-    import json
-    with open('state/db.json') as f:
-        db = json.load(f)
-    agents = db.get('agents', {})
-    agents_lines = [f"  {name} [{data.get('state','unknown')}]" for name, data in agents.items()]
-    agents_str = chr(10).join(agents_lines) if agents_lines else " (none)"
-    user_id = str(message.from_user.id)
-    balance = db.get('users', {}).get(user_id, {}).get('balance', 0)
-    msg = (
-        "\U0001F4CA SLH Dashboard" + chr(10)*2 +
-        "\U0001F4CB Agents:" + chr(10) + agents_str + chr(10)*2 +
-        "\U0001F4B0 Balance: " + str(balance) + " SLH"
-    )
-    bot.reply_to(message, msg)
 
-
-@bot.message_handler(commands=['admin'])
-def admin_cmd(message):
-    try:
-        with open("admin_menu.txt", "r", encoding="utf-8") as f:
-            menu = f.read()
-        bot.reply_to(message, menu, parse_mode="Markdown")
-    except Exception as e:
-        bot.reply_to(message, f"⚠️ Could not load admin menu: {e}")
 
 if __name__ == "__main__":
     start_bot()
