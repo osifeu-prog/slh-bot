@@ -5,3 +5,4 @@ requests
 python-dotenv==1.0.0
 flask
 flask-cors
+groq==0.4.2
