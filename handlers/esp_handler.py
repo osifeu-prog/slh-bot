@@ -5,8 +5,10 @@ import paho.mqtt.client as mqtt
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 RESPONSES = {}
+
 def on_message(client, userdata, msg):
     RESPONSES[msg.topic] = msg.payload.decode()
+
 mqtt_client = mqtt.Client()
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
@@ -42,12 +44,5 @@ def register_esp_handler(bot):
         if not devs:
             bot.reply_to(msg, "No devices registered.")
             return
-        lines = [f"{did}: {d.get('status','?')} | last: {d.get('last_heartbeat','never')}" for did, d in dev
-
-
-cd ~/slh_clean
-
-# 1. סוגר את הקובץ כמו שצריך
-cat >> handlers/esp_handler.py << 'EOF'
-.items()]}
+        lines = [f"{did}: {d.get('status','?')} | last: {d.get('last_heartbeat','never')}" for did, d in devs.items()]
         bot.reply_to(msg, "\n".join(lines))
