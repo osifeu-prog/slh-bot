@@ -1,0 +1,179 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-27T08:23:01.689070+00:00",
+  "entrypoint": "bot_stable.py",
+  "loader": "handlers/loader.py",
+  "direct_registrations": [
+    {
+      "command": "/user",
+      "path": "DIRECT",
+      "source": "bot_stable.py",
+      "function": "user",
+      "line": 560,
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/market",
+      "path": "DIRECT",
+      "source": "bot_stable.py",
+      "function": "market",
+      "line": 647,
+      "confidence": "HIGH"
+    }
+  ],
+  "dynamic_custom_registrations": [
+    {
+      "command": "/token",
+      "path": "DYNAMIC_CUSTOM_HANDLER",
+      "source": "state/custom_handlers/token_handler.py",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 27
+        }
+      ],
+      "confidence": "MEDIUM"
+    },
+    {
+      "command": "/progress",
+      "path": "DYNAMIC_CUSTOM_HANDLER",
+      "source": "state/custom_handlers/token_wizard.py",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 23
+        }
+      ],
+      "confidence": "MEDIUM"
+    },
+    {
+      "command": "/token",
+      "path": "DYNAMIC_CUSTOM_HANDLER",
+      "source": "state/custom_handlers/token_wizard.py",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 23
+        }
+      ],
+      "confidence": "MEDIUM"
+    }
+  ],
+  "modular_loader_registrations": [],
+  "command_map": {
+    "/start": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/help": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/join": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/register": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/user": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/user",
+          "path": "DIRECT",
+          "source": "bot_stable.py",
+          "function": "user",
+          "line": 560,
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/progress": {
+      "status": "REGISTERED_MEDIUM_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/progress",
+          "path": "DYNAMIC_CUSTOM_HANDLER",
+          "source": "state/custom_handlers/token_wizard.py",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 23
+            }
+          ],
+          "confidence": "MEDIUM"
+        }
+      ]
+    },
+    "/report": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/market": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/market",
+          "path": "DIRECT",
+          "source": "bot_stable.py",
+          "function": "market",
+          "line": 647,
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/balance": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/token": {
+      "status": "REGISTERED_MEDIUM_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/token",
+          "path": "DYNAMIC_CUSTOM_HANDLER",
+          "source": "state/custom_handlers/token_handler.py",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 27
+            }
+          ],
+          "confidence": "MEDIUM"
+        },
+        {
+          "command": "/token",
+          "path": "DYNAMIC_CUSTOM_HANDLER",
+          "source": "state/custom_handlers/token_wizard.py",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 23
+            }
+          ],
+          "confidence": "MEDIUM"
+        }
+      ]
+    },
+    "/course": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/learn": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/ask": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    }
+  },
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

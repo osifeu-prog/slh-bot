@@ -1,4 +1,4 @@
-﻿from core.ask_guard import guard
+from core.ask_guard import guard
 from core.context_builder import get_context
 from core.ask_debug import debug_ask
 

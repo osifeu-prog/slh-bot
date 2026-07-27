@@ -1,13 +1,6 @@
-"""SLH Personal AI Identity Layer"""
+# SLH OS - Single Source of Truth
+OWNER_TELEGRAM_ID = 8789977826  # אתה - אדמין טלגרם
+OWNER_VIRTUAL_PHONE = "972500000001"  # המספר שאתה נותן לאנשים
 
-OWNER_ID = "8789977826"
-
-DEFAULT_ASSISTANT_NAME = "SLH OS Assistant"
-OWNER_ASSISTANT_NAME = "רובוטוש"
-
-
-def get_assistant_name(user_id=None):
-    if str(user_id) == OWNER_ID:
-        return OWNER_ASSISTANT_NAME
-
-    return DEFAULT_ASSISTANT_NAME
+# Backward compatibility
+OWNER_ID = str(OWNER_TELEGRAM_ID)

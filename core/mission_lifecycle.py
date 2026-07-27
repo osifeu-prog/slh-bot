@@ -2,6 +2,11 @@ from pathlib import Path
 import json
 from datetime import datetime, timezone
 
+from core.mission_state import (
+    MissionState,
+    MissionStateNormalizer
+)
+
 
 class MissionLifecycleService:
 
@@ -30,19 +35,418 @@ class MissionLifecycleService:
             / "results"
         )
 
+    def normalize_status(
+        self,
+        status
+    ):
+
+        return (
+            MissionStateNormalizer
+            .normalize(
+                status
+            )
+        )
+
+    def is_completed_status(
+        self,
+        status
+    ):
+
+        return (
+            MissionStateNormalizer
+            .is_completed(
+                status
+            )
+        )
+
+    def is_valid_status(
+        self,
+        status
+    ):
+
+        return (
+            MissionStateNormalizer
+            .is_valid(
+                status
+            )
+        )
+
     def _load_json(self, path):
 
         if not path.exists():
 
-            raise FileNotFoundError(
-                f"File not found: {path}"
-            )
+            return {
+                "__invalid_state__": True,
+                "__error__": "file_not_found",
+                "__path__": str(path)
+            }
 
-        return json.loads(
-            path.read_text(
+        try:
+
+            raw = path.read_text(
                 encoding="utf-8"
             )
+
+        except Exception as exc:
+
+            return {
+                "__invalid_state__": True,
+                "__error__": "read_error",
+                "__exception__": type(exc).__name__,
+                "__path__": str(path)
+            }
+
+        if not raw.strip():
+
+            return {
+                "__invalid_state__": True,
+                "__error__": "empty_file",
+                "__path__": str(path)
+            }
+
+        try:
+
+            return json.loads(
+                raw
+            )
+
+        except json.JSONDecodeError as exc:
+
+            return {
+                "__invalid_state__": True,
+                "__error__": "invalid_json",
+                "__exception__": type(exc).__name__,
+                "__path__": str(path)
+            }
+
+        except Exception as exc:
+
+            return {
+                "__invalid_state__": True,
+                "__error__": "parse_error",
+                "__exception__": type(exc).__name__,
+                "__path__": str(path)
+            }
+
+    def _atomic_write_text(
+        self,
+        path,
+        content
+    ):
+
+        import os
+        import tempfile
+
+        path = Path(
+            path
         )
+
+        path.parent.mkdir(
+            parents=True,
+            exist_ok=True
+        )
+
+        temp_fd = None
+        temp_name = None
+
+        try:
+
+            temp_fd, temp_name = tempfile.mkstemp(
+                prefix=path.name + ".tmp.",
+                dir=str(path.parent)
+            )
+
+            temp_path = Path(
+                temp_name
+            )
+
+            with os.fdopen(
+                temp_fd,
+                "w",
+                encoding="utf-8"
+            ) as handle:
+
+                temp_fd = None
+
+                handle.write(
+                    content
+                )
+
+                handle.flush()
+
+                os.fsync(
+                    handle.fileno()
+                )
+
+            written = temp_path.read_text(
+                encoding="utf-8"
+            )
+
+            if written != content:
+
+                raise IOError(
+                    "temporary_write_verification_failed"
+                )
+
+            os.replace(
+                temp_path,
+                path
+            )
+
+            return {
+
+                "status":
+                    "written",
+
+                "path":
+                    str(path),
+
+                "temporary_path":
+                    str(temp_path),
+
+                "atomic":
+                    True,
+
+            }
+
+        except Exception:
+
+            if temp_fd is not None:
+
+                try:
+
+                    os.close(
+                        temp_fd
+                    )
+
+                except Exception:
+
+                    pass
+
+            if temp_name is not None:
+
+                try:
+
+                    temp_path = Path(
+                        temp_name
+                    )
+
+                    if temp_path.exists():
+
+                        temp_path.unlink()
+
+                except Exception:
+
+                    pass
+
+            raise
+
+    def _invalid_state(
+        self,
+        error,
+        path=None,
+        details=None
+    ):
+
+        result = {
+
+            "__invalid_state__":
+                True,
+
+            "__error__":
+                error,
+
+        }
+
+        if path is not None:
+
+            result[
+                "__path__"
+            ] = str(
+                path
+            )
+
+        if details is not None:
+
+            result[
+                "__details__"
+            ] = details
+
+        return result
+
+    def _validate_board(
+        self,
+        board
+    ):
+
+        if not isinstance(
+            board,
+            dict
+        ):
+
+            return self._invalid_state(
+                "invalid_board_root",
+                self.board_path,
+                type(board).__name__
+            )
+
+        missions = board.get(
+            "missions"
+        )
+
+        if missions is None:
+
+            return self._invalid_state(
+                "missing_missions_key",
+                self.board_path
+            )
+
+        if not isinstance(
+            missions,
+            list
+        ):
+
+            return self._invalid_state(
+                "invalid_missions_type",
+                self.board_path,
+                type(missions).__name__
+            )
+
+        for index, mission in enumerate(
+            missions
+        ):
+
+            if not isinstance(
+                mission,
+                dict
+            ):
+
+                return self._invalid_state(
+                    "invalid_mission_entry",
+                    self.board_path,
+                    f"index={index}"
+                )
+
+            required = (
+                "id",
+                "desc",
+                "status",
+                "assigned_to"
+            )
+
+            missing = [
+                key
+                for key in required
+                if key not in mission
+            ]
+
+            if missing:
+
+                return self._invalid_state(
+                    "invalid_mission_schema",
+                    self.board_path,
+                    {
+                        "index":
+                            index,
+
+                        "missing":
+                            missing
+                    }
+                )
+
+            if not self.is_valid_status(
+                mission.get(
+                    "status"
+                )
+            ):
+
+                return self._invalid_state(
+                    "invalid_mission_status",
+                    self.board_path,
+                    {
+                        "index":
+                            index,
+
+                        "status":
+                            mission.get(
+                                "status"
+                            )
+                    }
+                )
+
+        return board
+
+    def _validate_manifest(
+        self,
+        manifest
+    ):
+
+        if not isinstance(
+            manifest,
+            dict
+        ):
+
+            return self._invalid_state(
+                "invalid_manifest_root",
+                self.manifest_path,
+                type(manifest).__name__
+            )
+
+        agents = manifest.get(
+            "agents"
+        )
+
+        if not isinstance(
+            agents,
+            dict
+        ):
+
+            return self._invalid_state(
+                "invalid_agents_section",
+                self.manifest_path
+            )
+
+        items = agents.get(
+            "items"
+        )
+
+        if not isinstance(
+            items,
+            list
+        ):
+
+            return self._invalid_state(
+                "invalid_agent_items",
+                self.manifest_path
+            )
+
+        for index, agent in enumerate(
+            items
+        ):
+
+            if not isinstance(
+                agent,
+                dict
+            ):
+
+                return self._invalid_state(
+                    "invalid_agent_entry",
+                    self.manifest_path,
+                    f"index={index}"
+                )
+
+            if (
+                "id"
+                not in agent
+            ):
+
+                return self._invalid_state(
+                    "invalid_agent_schema",
+                    self.manifest_path,
+                    f"index={index}"
+                )
+
+        return manifest
 
     def load_state(self):
 
@@ -50,8 +454,61 @@ class MissionLifecycleService:
             self.board_path
         )
 
+        if (
+            isinstance(
+                board,
+                dict
+            )
+            and board.get(
+                "__invalid_state__"
+            )
+        ):
+
+            return board, self._invalid_state(
+                "board_invalid_manifest_not_loaded",
+                self.manifest_path
+            )
+
+        board = self._validate_board(
+            board
+        )
+
+        if (
+            isinstance(
+                board,
+                dict
+            )
+            and board.get(
+                "__invalid_state__"
+            )
+        ):
+
+            return board, self._invalid_state(
+                "board_invalid_manifest_not_loaded",
+                self.manifest_path
+            )
+
         manifest = self._load_json(
             self.manifest_path
+        )
+
+        if (
+            isinstance(
+                manifest,
+                dict
+            )
+            and manifest.get(
+                "__invalid_state__"
+            )
+        ):
+
+            return self._invalid_state(
+                "board_valid_manifest_invalid",
+                self.board_path
+            ), manifest
+
+        manifest = self._validate_manifest(
+            manifest
         )
 
         return board, manifest
@@ -249,140 +706,149 @@ class MissionLifecycleService:
         import json
         import shutil
 
-        board, manifest = (
-            self.load_state()
+        from core.mission_lock import (
+            MissionLifecycleLock
         )
 
-        existing = self.find_mission(
-            board,
-            mission_id
-        )
+        with MissionLifecycleLock(
+            self.root
+        ):
 
-        if existing is not None:
+            board, manifest = (
+                self.load_state()
+            )
+
+            existing = self.find_mission(
+                board,
+                mission_id
+            )
+
+            if existing is not None:
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "reason":
+                        "mission_already_exists",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "write_performed":
+                        False,
+
+                }
+
+            now = datetime.now(
+                timezone.utc
+            )
+
+            timestamp = now.strftime(
+                "%Y%m%dT%H%M%SZ"
+            )
+
+            board_path = (
+                Path(self.root)
+                / "state"
+                / "missions"
+                / "board.json"
+            )
+
+            backup_dir = (
+                Path(self.root)
+                / "state"
+                / "takeover"
+                / "backups"
+            )
+
+            backup_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            backup_path = (
+                backup_dir
+                / f"board_before_api_creation_{timestamp}.json"
+            )
+
+            shutil.copy2(
+                board_path,
+                backup_path
+            )
+
+            mission = {
+
+                "id":
+                    str(mission_id),
+
+                "desc":
+                    description,
+
+                "status":
+                    "open",
+
+                "assigned_to":
+                    None,
+
+                "reward":
+                    reward,
+
+                "created_at":
+                    now.isoformat(),
+
+            }
+
+            board.setdefault(
+                "missions",
+                []
+            ).append(
+                mission
+            )
+
+            self._atomic_write_text(
+                board_path,
+                json.dumps(
+                    board,
+                    indent=2,
+                    ensure_ascii=False
+                )
+            )
 
             return {
 
                 "status":
-                    "blocked",
-
-                "reason":
-                    "mission_already_exists",
+                    "created",
 
                 "mission_id":
                     str(mission_id),
 
+                "description":
+                    description,
+
+                "mission_status":
+                    "open",
+
+                "assigned_to":
+                    None,
+
+                "created_at":
+                    mission.get(
+                        "created_at"
+                    ),
+
+                "backup":
+                    str(backup_path),
+
                 "write_performed":
+                    True,
+
+                "read_only":
                     False,
 
             }
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        timestamp = now.strftime(
-            "%Y%m%dT%H%M%SZ"
-        )
-
-        board_path = (
-            Path(self.root)
-            / "state"
-            / "missions"
-            / "board.json"
-        )
-
-        backup_dir = (
-            Path(self.root)
-            / "state"
-            / "takeover"
-            / "backups"
-        )
-
-        backup_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        backup_path = (
-            backup_dir
-            / f"board_before_api_creation_{timestamp}.json"
-        )
-
-        shutil.copy2(
-            board_path,
-            backup_path
-        )
-
-        mission = {
-
-            "id":
-                str(mission_id),
-
-            "desc":
-                description,
-
-            "status":
-                "open",
-
-            "assigned_to":
-                None,
-
-            "reward":
-                reward,
-
-            "created_at":
-                now.isoformat(),
-
-        }
-
-        board.setdefault(
-            "missions",
-            []
-        ).append(
-            mission
-        )
-
-        board_path.write_text(
-            json.dumps(
-                board,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        return {
-
-            "status":
-                "created",
-
-            "mission_id":
-                str(mission_id),
-
-            "description":
-                description,
-
-            "mission_status":
-                "open",
-
-            "assigned_to":
-                None,
-
-            "created_at":
-                mission.get(
-                    "created_at"
-                ),
-
-            "backup":
-                str(backup_path),
-
-            "write_performed":
-                True,
-
-            "read_only":
-                False,
-
-        }
 
     def preview_assignment(
         self,
@@ -487,60 +953,163 @@ class MissionLifecycleService:
         import json
         import shutil
 
-        board, manifest = (
-            self.load_state()
+        from core.mission_lock import (
+            MissionLifecycleLock
         )
 
-        mission = self.find_mission(
-            board,
-            mission_id
-        )
-
-        agent = self.find_agent(
-            manifest,
-            agent_id
-        )
-
-        checks = {
-
-            "mission_exists":
-                mission is not None,
-
-            "mission_is_open":
-                mission is not None
-                and mission.get(
-                    "status"
-                ) == "open",
-
-            "mission_is_unassigned":
-                mission is not None
-                and mission.get(
-                    "assigned_to"
-                ) is None,
-
-            "agent_exists":
-                agent is not None,
-
-            "agent_is_eligible":
-                agent is not None
-                and agent.get(
-                    "state"
-                )
-                in (
-                    "idle",
-                    "active"
-                ),
-
-        }
-
-        if not all(
-            checks.values()
+        with MissionLifecycleLock(
+            self.root
         ):
+
+            board, manifest = (
+                self.load_state()
+            )
+
+            mission = self.find_mission(
+                board,
+                mission_id
+            )
+            if mission is None:
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "reason":
+                        "mission_not_found",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "write_performed":
+                        False,
+
+                }
+
+
+            agent = self.find_agent(
+                manifest,
+                agent_id
+            )
+
+            checks = {
+
+                "mission_exists":
+                    mission is not None,
+
+                "mission_is_open":
+                    mission is not None
+                    and mission.get(
+                        "status"
+                    ) == "open",
+
+                "mission_is_unassigned":
+                    mission is not None
+                    and mission.get(
+                        "assigned_to"
+                    ) is None,
+
+                "agent_exists":
+                    agent is not None,
+
+                "agent_is_eligible":
+                    agent is not None
+                    and agent.get(
+                        "state"
+                    )
+                    in (
+                        "idle",
+                        "active"
+                    ),
+
+            }
+
+            if not all(
+                checks.values()
+            ):
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "agent_id":
+                        str(agent_id),
+
+                    "checks":
+                        checks,
+
+                    "write_performed":
+                        False,
+
+                }
+
+            now = datetime.now(
+                timezone.utc
+            )
+
+            timestamp = now.strftime(
+                "%Y%m%dT%H%M%SZ"
+            )
+
+            backup_dir = (
+                Path(self.root)
+                / "state"
+                / "takeover"
+                / "backups"
+            )
+
+            board_path = (
+                Path(self.root)
+                / "state"
+                / "missions"
+                / "board.json"
+            )
+
+            backup_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            backup_path = (
+                backup_dir
+                / f"board_before_api_assignment_{timestamp}.json"
+            )
+
+            shutil.copy2(
+                board_path,
+                backup_path
+            )
+
+            mission["status"] = (
+                "assigned"
+            )
+
+            mission["assigned_to"] = (
+                str(agent_id)
+            )
+
+            mission["assigned_at"] = (
+                now.isoformat()
+            )
+
+            self._atomic_write_text(
+                board_path,
+                json.dumps(
+                    board,
+                    indent=2,
+                    ensure_ascii=False
+                )
+            )
 
             return {
 
                 "status":
-                    "blocked",
+                    "assigned",
 
                 "mission_id":
                     str(mission_id),
@@ -548,98 +1117,22 @@ class MissionLifecycleService:
                 "agent_id":
                     str(agent_id),
 
-                "checks":
-                    checks,
+                "assigned_at":
+                    mission.get(
+                        "assigned_at"
+                    ),
+
+                "backup":
+                    str(backup_path),
 
                 "write_performed":
+                    True,
+
+                "read_only":
                     False,
 
             }
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        timestamp = now.strftime(
-            "%Y%m%dT%H%M%SZ"
-        )
-
-        backup_dir = (
-            Path(self.root)
-            / "state"
-            / "takeover"
-            / "backups"
-        )
-
-        board_path = (
-            Path(self.root)
-            / "state"
-            / "missions"
-            / "board.json"
-        )
-
-        backup_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        backup_path = (
-            backup_dir
-            / f"board_before_api_assignment_{timestamp}.json"
-        )
-
-        shutil.copy2(
-            board_path,
-            backup_path
-        )
-
-        mission["status"] = (
-            "assigned"
-        )
-
-        mission["assigned_to"] = (
-            str(agent_id)
-        )
-
-        mission["assigned_at"] = (
-            now.isoformat()
-        )
-
-        board_path.write_text(
-            json.dumps(
-                board,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        return {
-
-            "status":
-                "assigned",
-
-            "mission_id":
-                str(mission_id),
-
-            "agent_id":
-                str(agent_id),
-
-            "assigned_at":
-                mission.get(
-                    "assigned_at"
-                ),
-
-            "backup":
-                str(backup_path),
-
-            "write_performed":
-                True,
-
-            "read_only":
-                False,
-
-        }
 
     def preview_execution(
         self,
@@ -735,6 +1228,18 @@ class MissionLifecycleService:
                 if mission is not None
                 else None,
 
+            "current_status":
+                mission.get(
+                    "status"
+                )
+                if mission is not None
+                else None,
+
+            "proposed_status":
+                "executed"
+                if passed
+                else None,
+
             "mission":
                 mission,
 
@@ -768,89 +1273,226 @@ class MissionLifecycleService:
         import shutil
         import hashlib
 
-        board, manifest = (
-            self.load_state()
+        from core.mission_lock import (
+            MissionLifecycleLock
         )
 
-        mission = self.find_mission(
-            board,
-            mission_id
-        )
+        with MissionLifecycleLock(
+            self.root
+        ):
 
-        if mission is None:
+            board, manifest = (
+                self.load_state()
+            )
 
-            return {
+            mission = self.find_mission(
+                board,
+                mission_id
+            )
 
-                "status":
-                    "blocked",
+            if mission is None:
 
-                "reason":
-                    "mission_not_found",
+                return {
 
-                "mission_id":
-                    str(mission_id),
+                    "status":
+                        "blocked",
 
-                "write_performed":
-                    False,
+                    "reason":
+                        "mission_not_found",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "write_performed":
+                        False,
+
+                }
+
+            current_status = mission.get(
+                "status"
+            )
+
+            if current_status in (
+                "executed",
+                "completed",
+            ):
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "reason":
+                        "mission_already_executed",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "current_status":
+                        current_status,
+
+                    "write_performed":
+                        False,
+
+                    "read_only":
+                        True,
+
+                }
+
+            agent_id = mission.get(
+                "assigned_to"
+            )
+
+            agent = self.find_agent(
+                manifest,
+                agent_id
+            )
+
+            checks = {
+
+                "mission_exists":
+                    mission is not None,
+
+                "agent_exists":
+                    agent is not None,
+
+                "mission_status_assigned":
+                    mission.get(
+                        "status"
+                    )
+                    == "assigned",
+
+                "assignment_matches":
+                    agent is not None
+                    and str(
+                        mission.get(
+                            "assigned_to"
+                        )
+                    )
+                    == str(
+                        agent.get(
+                            "id"
+                        )
+                    ),
+
+                "agent_state_eligible":
+                    agent is not None
+                    and agent.get(
+                        "state"
+                    )
+                    in (
+                        "idle",
+                        "active"
+                    ),
 
             }
 
-        agent_id = mission.get(
-            "assigned_to"
-        )
+            if not all(
+                checks.values()
+            ):
 
-        agent = self.find_agent(
-            manifest,
-            agent_id
-        )
+                return {
 
-        checks = {
+                    "status":
+                        "blocked",
 
-            "mission_exists":
-                mission is not None,
+                    "mission_id":
+                        str(mission_id),
 
-            "agent_exists":
-                agent is not None,
+                    "agent_id":
+                        str(agent_id),
 
-            "mission_status_assigned":
-                mission.get(
-                    "status"
-                )
-                == "assigned",
+                    "checks":
+                        checks,
 
-            "assignment_matches":
-                agent is not None
-                and str(
-                    mission.get(
-                        "assigned_to"
-                    )
-                )
-                == str(
-                    agent.get(
-                        "id"
-                    )
-                ),
+                    "write_performed":
+                        False,
 
-            "agent_state_eligible":
-                agent is not None
-                and agent.get(
-                    "state"
-                )
-                in (
-                    "idle",
-                    "active"
-                ),
+                }
 
-        }
+            now = datetime.now(
+                timezone.utc
+            )
 
-        if not all(
-            checks.values()
-        ):
+            timestamp = now.strftime(
+                "%Y%m%dT%H%M%SZ"
+            )
 
-            return {
+            root = Path(
+                self.root
+            )
 
-                "status":
-                    "blocked",
+            board_path = (
+                root
+                / "state"
+                / "missions"
+                / "board.json"
+            )
+
+            results_dir = (
+                root
+                / "state"
+                / "missions"
+                / "results"
+            )
+
+            backup_dir = (
+                root
+                / "state"
+                / "takeover"
+                / "backups"
+            )
+
+            results_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            backup_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
+
+            backup_path = (
+                backup_dir
+                / f"board_before_api_execution_{timestamp}.json"
+            )
+
+            shutil.copy2(
+                board_path,
+                backup_path
+            )
+
+            execution_started_at = (
+                now.isoformat()
+            )
+
+            execution_completed_at = (
+                datetime.now(
+                    timezone.utc
+                ).isoformat()
+            )
+
+            mission["status"] = (
+                "executed"
+            )
+
+            mission[
+                "execution_started_at"
+            ] = execution_started_at
+
+            mission[
+                "execution_completed_at"
+            ] = execution_completed_at
+
+            result_id = (
+                f"mission-{mission_id}-{timestamp}"
+            )
+
+            result = {
+
+                "result_id":
+                    result_id,
 
                 "mission_id":
                     str(mission_id),
@@ -858,196 +1500,99 @@ class MissionLifecycleService:
                 "agent_id":
                     str(agent_id),
 
-                "checks":
-                    checks,
+                "execution_status":
+                    "success",
+
+                "verified":
+                    True,
+
+                "mission_completion":
+                    "pending",
+
+                "result":
+                    {
+
+                        "synchronization_check":
+                            "passed",
+
+                        "execution_check":
+                            "passed",
+
+                    },
+
+                "recorded_at":
+                    execution_completed_at,
+
+            }
+
+            canonical = json.dumps(
+                result,
+                sort_keys=True,
+                ensure_ascii=False
+            )
+
+            result[
+                "result_sha256"
+            ] = hashlib.sha256(
+                canonical.encode(
+                    "utf-8"
+                )
+            ).hexdigest()
+
+            result_path = (
+                results_dir
+                / f"{result_id}.json"
+            )
+
+            self._atomic_write_text(
+                result_path,
+                json.dumps(
+                    result,
+                    indent=2,
+                    ensure_ascii=False
+                )
+            )
+
+            self._atomic_write_text(
+                board_path,
+                json.dumps(
+                    board,
+                    indent=2,
+                    ensure_ascii=False
+                )
+            )
+
+            return {
+
+                "status":
+                    "executed",
+
+                "mission_id":
+                    str(mission_id),
+
+                "agent_id":
+                    str(agent_id),
+
+                "execution_status":
+                    "success",
+
+                "result_id":
+                    result_id,
+
+                "result_path":
+                    str(result_path),
+
+                "backup":
+                    str(backup_path),
 
                 "write_performed":
+                    True,
+
+                "read_only":
                     False,
 
             }
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        timestamp = now.strftime(
-            "%Y%m%dT%H%M%SZ"
-        )
-
-        root = Path(
-            self.root
-        )
-
-        board_path = (
-            root
-            / "state"
-            / "missions"
-            / "board.json"
-        )
-
-        results_dir = (
-            root
-            / "state"
-            / "missions"
-            / "results"
-        )
-
-        backup_dir = (
-            root
-            / "state"
-            / "takeover"
-            / "backups"
-        )
-
-        results_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        backup_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        backup_path = (
-            backup_dir
-            / f"board_before_api_execution_{timestamp}.json"
-        )
-
-        shutil.copy2(
-            board_path,
-            backup_path
-        )
-
-        execution_started_at = (
-            now.isoformat()
-        )
-
-        execution_completed_at = (
-            datetime.now(
-                timezone.utc
-            ).isoformat()
-        )
-
-        mission["status"] = (
-            "executed"
-        )
-
-        mission[
-            "execution_started_at"
-        ] = execution_started_at
-
-        mission[
-            "execution_completed_at"
-        ] = execution_completed_at
-
-        result_id = (
-            f"mission-{mission_id}-{timestamp}"
-        )
-
-        result = {
-
-            "result_id":
-                result_id,
-
-            "mission_id":
-                str(mission_id),
-
-            "agent_id":
-                str(agent_id),
-
-            "execution_status":
-                "success",
-
-            "verified":
-                True,
-
-            "mission_completion":
-                "pending",
-
-            "result":
-                {
-
-                    "synchronization_check":
-                        "passed",
-
-                    "execution_check":
-                        "passed",
-
-                },
-
-            "recorded_at":
-                execution_completed_at,
-
-        }
-
-        canonical = json.dumps(
-            result,
-            sort_keys=True,
-            ensure_ascii=False
-        )
-
-        result[
-            "result_sha256"
-        ] = hashlib.sha256(
-            canonical.encode(
-                "utf-8"
-            )
-        ).hexdigest()
-
-        result_path = (
-            results_dir
-            / f"{result_id}.json"
-        )
-
-        result_path.write_text(
-            json.dumps(
-                result,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        board_path.write_text(
-            json.dumps(
-                board,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        return {
-
-            "status":
-                "executed",
-
-            "mission_id":
-                str(mission_id),
-
-            "agent_id":
-                str(agent_id),
-
-            "execution_status":
-                "success",
-
-            "result_id":
-                result_id,
-
-            "result_path":
-                str(result_path),
-
-            "backup":
-                str(backup_path),
-
-            "write_performed":
-                True,
-
-            "read_only":
-                False,
-
-        }
 
     def complete_mission(
         self,
@@ -1060,313 +1605,340 @@ class MissionLifecycleService:
         import shutil
         import hashlib
 
-        board, manifest = (
-            self.load_state()
+        from core.mission_lock import (
+            MissionLifecycleLock
         )
 
-        mission = self.find_mission(
-            board,
-            mission_id
-        )
+        with MissionLifecycleLock(
+            self.root
+        ):
 
-        if mission is None:
+            board, manifest = (
+                self.load_state()
+            )
 
-            return {
+            mission = self.find_mission(
+                board,
+                mission_id
+            )
+            if mission is None:
 
-                "status":
-                    "blocked",
+                return {
 
-                "reason":
-                    "mission_not_found",
+                    "status":
+                        "blocked",
 
-                "mission_id":
-                    str(mission_id),
+                    "reason":
+                        "mission_not_found",
 
-                "write_performed":
-                    False,
+                    "mission_id":
+                        str(mission_id),
+
+                    "write_performed":
+                        False,
+
+                }
+
+
+            if mission.get(
+                "status"
+            ) == "completed":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "reason":
+                        "mission_already_completed",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "current_status":
+                        "completed",
+
+                    "write_performed":
+                        False,
+
+                    "read_only":
+                        True,
+
+                }
+
+            agent_id = mission.get(
+                "assigned_to"
+            )
+
+            agent = self.find_agent(
+                manifest,
+                agent_id
+            )
+
+            results_dir = (
+                Path(self.root)
+                / "state"
+                / "missions"
+                / "results"
+            )
+
+            result_files = sorted(
+                results_dir.glob(
+                    f"mission-{mission_id}-*.json"
+                )
+            )
+
+            result_path = None
+            result = None
+
+            if result_files:
+
+                result_path = (
+                    result_files[-1]
+                )
+
+                try:
+
+                    result = json.loads(
+                        result_path.read_text(
+                            encoding="utf-8"
+                        )
+                    )
+
+                except Exception:
+
+                    result = None
+
+            result_hash_valid = False
+
+            if result is not None:
+
+                stored_hash = result.get(
+                    "result_sha256"
+                )
+
+                if stored_hash:
+
+                    canonical_result = dict(
+                        result
+                    )
+
+                    canonical_result.pop(
+                        "result_sha256",
+                        None
+                    )
+
+                    canonical = json.dumps(
+                        canonical_result,
+                        sort_keys=True,
+                        ensure_ascii=False
+                    )
+
+                    calculated_hash = (
+                        hashlib.sha256(
+                            canonical.encode(
+                                "utf-8"
+                            )
+                        ).hexdigest()
+                    )
+
+                    result_hash_valid = (
+                        calculated_hash
+                        == stored_hash
+                    )
+
+            checks = {
+
+                "mission_exists":
+                    mission is not None,
+
+                "agent_exists":
+                    agent is not None,
+
+                "mission_status_executed":
+                    mission.get(
+                        "status"
+                    )
+                    == "executed",
+
+                "result_exists":
+                    result is not None,
+
+                "result_success":
+                    result is not None
+                    and result.get(
+                        "execution_status"
+                    )
+                    == "success",
+
+                "result_verified":
+                    result is not None
+                    and result.get(
+                        "verified"
+                    )
+                    is True,
+
+                "completion_pending":
+                    result is not None
+                    and result.get(
+                        "mission_completion"
+                    )
+                    == "pending",
+
+                "result_hash_valid":
+                    result_hash_valid,
 
             }
 
-        agent = self.find_agent(
-            manifest,
-            mission.get(
-                "assigned_to"
-            )
-        )
+            if not all(
+                checks.values()
+            ):
 
-        results_dir = (
-            Path(self.root)
-            / "state"
-            / "missions"
-            / "results"
-        )
+                return {
 
-        result_files = sorted(
-            results_dir.glob(
-                f"mission-{mission_id}-*.json"
-            )
-        )
+                    "status":
+                        "blocked",
 
-        result_path = None
-        result = None
+                    "mission_id":
+                        str(mission_id),
 
-        if result_files:
+                    "agent_id":
+                        str(agent_id),
 
-            result_path = (
-                result_files[-1]
+                    "checks":
+                        checks,
+
+                    "write_performed":
+                        False,
+
+                }
+
+            now = datetime.now(
+                timezone.utc
             )
 
-            try:
+            timestamp = now.strftime(
+                "%Y%m%dT%H%M%SZ"
+            )
 
-                result = json.loads(
-                    result_path.read_text(
-                        encoding="utf-8"
-                    )
-                )
+            board_path = (
+                Path(self.root)
+                / "state"
+                / "missions"
+                / "board.json"
+            )
 
-            except Exception:
+            backup_dir = (
+                Path(self.root)
+                / "state"
+                / "takeover"
+                / "backups"
+            )
 
-                result = None
+            backup_dir.mkdir(
+                parents=True,
+                exist_ok=True
+            )
 
-        result_hash_valid = False
+            backup_path = (
+                backup_dir
+                / f"board_before_api_completion_{timestamp}.json"
+            )
 
-        if result is not None:
+            shutil.copy2(
+                board_path,
+                backup_path
+            )
 
-            stored_hash = result.get(
+            mission[
+                "status"
+            ] = "completed"
+
+            mission[
+                "completed_at"
+            ] = now.isoformat()
+
+            result[
+                "mission_completion"
+            ] = "completed"
+
+            result[
+                "completed_at"
+            ] = now.isoformat()
+
+            result.pop(
+                "result_sha256",
+                None
+            )
+
+            canonical = json.dumps(
+                result,
+                sort_keys=True,
+                ensure_ascii=False
+            )
+
+            result[
                 "result_sha256"
-            )
-
-            if stored_hash:
-
-                payload = dict(
-                    result
+            ] = hashlib.sha256(
+                canonical.encode(
+                    "utf-8"
                 )
+            ).hexdigest()
 
-                payload.pop(
-                    "result_sha256",
-                    None
-                )
-
-                canonical = json.dumps(
-                    payload,
-                    sort_keys=True,
+            self._atomic_write_text(
+                result_path,
+                json.dumps(
+                    result,
+                    indent=2,
                     ensure_ascii=False
                 )
+            )
 
-                calculated_hash = (
-                    hashlib.sha256(
-                        canonical.encode(
-                            "utf-8"
-                        )
-                    ).hexdigest()
+            self._atomic_write_text(
+                board_path,
+                json.dumps(
+                    board,
+                    indent=2,
+                    ensure_ascii=False
                 )
-
-                result_hash_valid = (
-                    calculated_hash
-                    == stored_hash
-                )
-
-        checks = {
-
-            "mission_exists":
-                mission is not None,
-
-            "mission_is_executed":
-                mission.get(
-                    "status"
-                )
-                == "executed",
-
-            "agent_exists":
-                agent is not None,
-
-            "result_exists":
-                result is not None,
-
-            "result_success":
-                result is not None
-                and result.get(
-                    "execution_status"
-                )
-                == "success",
-
-            "result_verified":
-                result is not None
-                and result.get(
-                    "verified"
-                )
-                is True,
-
-            "completion_pending":
-                result is not None
-                and result.get(
-                    "mission_completion"
-                )
-                == "pending",
-
-            "result_hash_valid":
-                result_hash_valid,
-
-        }
-
-        if not all(
-            checks.values()
-        ):
+            )
 
             return {
 
                 "status":
-                    "blocked",
+                    "completed",
 
                 "mission_id":
                     str(mission_id),
 
-                "checks":
-                    checks,
+                "agent_id":
+                    str(agent_id),
+
+                "mission_status":
+                    "completed",
+
+                "mission_completion":
+                    "completed",
+
+                "completed_at":
+                    mission.get(
+                        "completed_at"
+                    ),
+
+                "result_path":
+                    str(result_path),
+
+                "backup":
+                    str(backup_path),
 
                 "write_performed":
-                    False,
+                    True,
 
                 "read_only":
                     False,
 
             }
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        timestamp = now.strftime(
-            "%Y%m%dT%H%M%SZ"
-        )
-
-        now_iso = (
-            now.isoformat()
-        )
-
-        root = Path(
-            self.root
-        )
-
-        board_path = (
-            root
-            / "state"
-            / "missions"
-            / "board.json"
-        )
-
-        backup_dir = (
-            root
-            / "state"
-            / "takeover"
-            / "backups"
-        )
-
-        backup_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        backup_path = (
-            backup_dir
-            / f"board_before_api_completion_{timestamp}.json"
-        )
-
-        shutil.copy2(
-            board_path,
-            backup_path
-        )
-
-        mission[
-            "status"
-        ] = "completed"
-
-        mission[
-            "completed_at"
-        ] = now_iso
-
-        result[
-            "mission_completion"
-        ] = "completed"
-
-        result[
-            "completed_at"
-        ] = now_iso
-
-        result.pop(
-            "result_sha256",
-            None
-        )
-
-        canonical = json.dumps(
-            result,
-            sort_keys=True,
-            ensure_ascii=False
-        )
-
-        result[
-            "result_sha256"
-        ] = hashlib.sha256(
-            canonical.encode(
-                "utf-8"
-            )
-        ).hexdigest()
-
-        result_path.write_text(
-            json.dumps(
-                result,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        board_path.write_text(
-            json.dumps(
-                board,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
-        return {
-
-            "status":
-                "completed",
-
-            "mission_id":
-                str(mission_id),
-
-            "agent_id":
-                str(
-                    mission.get(
-                        "assigned_to"
-                    )
-                ),
-
-            "mission_status":
-                "completed",
-
-            "mission_completion":
-                "completed",
-
-            "completed_at":
-                now_iso,
-
-            "result_path":
-                str(result_path),
-
-            "backup":
-                str(backup_path),
-
-            "write_performed":
-                True,
-
-            "read_only":
-                False,
-
-        }
 
     def preview_completion(
         self,
@@ -1564,4 +2136,3 @@ class MissionLifecycleService:
                 True,
 
         }
-

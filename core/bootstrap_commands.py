@@ -1,4 +1,4 @@
-﻿from core.command_router import register_command, HANDLERS
+from core.command_router import register_command, HANDLERS
 import importlib
 import telebot
 

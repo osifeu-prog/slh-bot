@@ -20,4 +20,4 @@ def on_agent_task(payload):
 
 def register(bot=None):
     EventBus.subscribe("agent_task", on_agent_task)
-    print("✅ Task listener registered (dual write)")
+    print("✅ Task listener registered (single DB write)")

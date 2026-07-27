@@ -4,13 +4,105 @@ from collections import deque
 from core.dispatcher import Dispatcher
 
 class Runtime:
-    def __init__(self, kernel):
-        self.kernel = kernel
-        self.dispatcher = Dispatcher(kernel)
+    def __init__(self, context):
+        # -----------------------------------------------------
+        # RUNTIME CONTEXT CONTRACT
+        # -----------------------------------------------------
+        # Accept either:
+        #   1. BootState
+        #   2. Legacy Kernel
+        #
+        # This preserves compatibility while migrating the
+        # runtime toward a centralized boot context.
+        # -----------------------------------------------------
+
+        self.state = None
+
+        if hasattr(context, "kernel") and hasattr(
+            context,
+            "report"
+        ):
+            self.state = context
+            self.kernel = context.kernel
+
+        else:
+            self.kernel = context
+
+        # -----------------------------------------------------
+        # RUNTIME BOOT INTEGRITY CONTRACT
+        # -----------------------------------------------------
+
+        if self.state is not None:
+
+            if not self.state.boot_ok:
+                raise RuntimeError(
+                    "Runtime cannot start from failed BootState"
+                )
+
+        self.dispatcher = Dispatcher(
+            self.kernel
+        )
 
         self.q = deque()
         self.running = False
         self.cb = None
+
+        # -----------------------------------------------------
+        # EXPLICIT RUNTIME STATE MACHINE
+        # -----------------------------------------------------
+
+        self.state_name = "READY"
+
+    def status(self):
+
+        # -----------------------------------------------------
+        # RUNTIME STATUS CONTRACT
+        # -----------------------------------------------------
+
+        thread = getattr(
+            self,
+            "thread",
+            None
+        )
+
+        return {
+            "state": self.state_name,
+            "running": self.running,
+            "boot_ok": (
+                self.state.boot_ok
+                if self.state is not None
+                else None
+            ),
+            "agents": list(
+                self.kernel.status().get(
+                    "agents",
+                    []
+                )
+            ),
+            "queue_size": len(
+                self.q
+            ),
+            "thread_alive": (
+                thread.is_alive()
+                if thread is not None
+                else False
+            ),
+        }
+
+    def snapshot(self):
+
+        # -----------------------------------------------------
+        # RUNTIME SNAPSHOT CONTRACT
+        # -----------------------------------------------------
+        # Returns a detached status snapshot.
+        #
+        # Consumers receive data.
+        # Consumers do not receive Runtime internals.
+        # -----------------------------------------------------
+
+        return dict(
+            self.status()
+        )
 
     def set_callback(self, cb):
         self.cb = cb
@@ -32,8 +124,58 @@ class Runtime:
                 self.cb(result)
 
     def start(self):
+
+        # -----------------------------------------------------
+        # RUNTIME START INTEGRITY
+        # -----------------------------------------------------
+
+        if self.state_name == "RUNNING":
+            return False
+
+        if self.state_name not in (
+            "READY",
+            "STOPPED",
+        ):
+            return False
+
+        self.state_name = "RUNNING"
         self.running = True
-        threading.Thread(target=self.worker, daemon=True).start()
+
+        self.thread = threading.Thread(
+            target=self.worker,
+            daemon=True
+        )
+
+        self.thread.start()
+
+        return True
 
     def stop(self):
+
+        # -----------------------------------------------------
+        # RUNTIME STOP INTEGRITY
+        # -----------------------------------------------------
+
+        if self.state_name != "RUNNING":
+            return False
+
+        self.state_name = "STOPPING"
         self.running = False
+
+        thread = getattr(
+            self,
+            "thread",
+            None
+        )
+
+        if (
+            thread is not None
+            and thread.is_alive()
+        ):
+            thread.join(
+                timeout=1.0
+            )
+
+        self.state_name = "STOPPED"
+
+        return True

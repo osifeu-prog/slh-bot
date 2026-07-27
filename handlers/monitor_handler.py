@@ -1,4 +1,4 @@
-﻿import json, os, time, subprocess
+import json, os, time, subprocess
 from datetime import datetime
 
 def load_monitors():

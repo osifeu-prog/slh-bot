@@ -1,0 +1,48 @@
+{
+  "graph_version": "1.0",
+  "generated_at": "2026-07-26T20:11:52.862324+00:00",
+  "nodes": [
+    {
+      "id": "project:slh_backup_final",
+      "type": "project",
+      "data": {
+        "project_id": "slh_backup_final",
+        "name": "slh_backup_final",
+        "type": "telegram_bot",
+        "path": "/data/data/com.termux/files/home/slh_backup_final",
+        "status": "discovered",
+        "health": "unknown"
+      }
+    },
+    {
+      "id": "project:slh_clean",
+      "type": "project",
+      "data": {
+        "project_id": "slh_clean",
+        "name": "slh_clean",
+        "type": "multi_component",
+        "path": "/data/data/com.termux/files/home/slh_clean",
+        "status": "discovered",
+        "health": "unknown"
+      }
+    },
+    {
+      "id": "repository:git@github.com:osifeu-prog/slh-bot.git",
+      "type": "repository",
+      "data": {
+        "remote": "git@github.com:osifeu-prog/slh-bot.git"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "project:slh_clean",
+      "target": "repository:git@github.com:osifeu-prog/slh-bot.git",
+      "relation": "HAS_REPOSITORY"
+    }
+  ],
+  "stats": {
+    "nodes": 3,
+    "edges": 1
+  }
+}

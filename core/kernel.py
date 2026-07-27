@@ -7,6 +7,26 @@ class SLHKernel:
         self.agents[name] = agent
         print(f"✅ agent: {name}")
 
+    def snapshot(self):
+
+        # -----------------------------------------------------
+        # KERNEL SNAPSHOT CONTRACT
+        # -----------------------------------------------------
+        # Returns detached public kernel data only.
+        # Kernel internals remain private.
+        # -----------------------------------------------------
+
+        status = self.status()
+
+        return {
+            "agents": list(
+                status.get(
+                    "agents",
+                    []
+                )
+            )
+        }
+
     def status(self):
         return {
             "agents": list(self.agents.keys())

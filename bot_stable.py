@@ -27,9 +27,8 @@ from security import permissions
 from datetime import datetime
 from audit_logger import audit, get_audit
 from core.event_bus import EventBus
+from core.mission_lifecycle import MissionLifecycleService
 from plugins.task import TaskPlugin
-from payment_handler import register_payment_handlers
-from econ_handler import register_econ_handlers
 # from staking_handler import register_staking_handlers
 
 try:
@@ -140,7 +139,6 @@ def ask_cmd(m):
 
 # ---------------- KERNEL INIT ----------------
 try:
-    bus = EventBus(workers=2)
     kernel = type('KernelStub', (), {'state': {}, 'bus': bus, 'telegram': None})()
     TaskPlugin().on_start(kernel)
     _KERNEL_READY = True
@@ -883,11 +881,14 @@ except Exception as e:
 try:
     from admin_utils import is_admin
 
+    mission_lifecycle = MissionLifecycleService(".")
+
     context = {
         "state_manager": globals().get("state_manager", None),
         "agents_dict": agents_dict,
         "agentstate": globals().get("agentstate", None),
-        "is_admin": is_admin
+        "is_admin": is_admin,
+        "mission_lifecycle": mission_lifecycle
     }
 
     print("✅ handler context created")
@@ -900,7 +901,7 @@ except Exception as e:
 
 
 from handlers.loader import load_handlers
-load_handlers(bot, None)
+load_handlers(bot, context)
 
 
 # LEGACY /token DISABLED 2026-07-23

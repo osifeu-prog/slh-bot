@@ -1,9 +1,27 @@
 
-import json, os, datetime
+import datetime
 
-MISSION_FILE = "state/missions/board.json"
 
-def register(bot):
+from core.mission_state import (
+    MissionState,
+    MissionStateNormalizer
+)
+
+from core.mission_lifecycle import (
+    MissionLifecycleService
+)
+
+def register(bot, context=None):
+
+    lifecycle = (
+        context.get("mission_lifecycle")
+        if isinstance(context, dict)
+        else None
+    )
+
+    if lifecycle is None:
+        lifecycle = MissionLifecycleService(".")
+
     @bot.message_handler(commands=['mission'])
     def mission_cmd(m):
         parts = m.text.split(' ', 2)
@@ -11,21 +29,59 @@ def register(bot):
             bot.reply_to(m, "שימוש: /mission add <תיאור> | list | assign <id> <agent> | done <id> | rewards")
             return
         action = parts[1].lower()
-        board = load_board()
-        missions = board.get("missions", [])
+
+        board, manifest = (
+            lifecycle.load_state()
+        )
+
+        missions = board.get(
+            "missions",
+            []
+        )
 
         if action == 'add':
-            desc = parts[2] if len(parts) > 2 else "משימה ללא תיאור"
-            missions.append({
-                "id": len(missions) + 1,
-                "desc": desc,
-                "status": "open",
-                "assigned_to": None,
-                "reward": 0,
-                "created": datetime.datetime.now().isoformat()
-            })
-            save_board(board)
-            bot.reply_to(m, f"✅ משימה #{missions[-1]['id']} נוספה: {desc}")
+            desc = (
+                parts[2]
+                if len(parts) > 2
+                else "משימה ללא תיאור"
+            )
+
+            next_id = str(
+                max(
+                    [
+                        int(
+                            t.get("id")
+                        )
+                        for t in missions
+                        if str(
+                            t.get("id")
+                        ).isdigit()
+                    ]
+                    or [0]
+                )
+                + 1
+            )
+
+            result = lifecycle.create_mission(
+                mission_id=next_id,
+                description=desc,
+                reward=0
+            )
+
+            if result.get("status") != "created":
+                bot.reply_to(
+                    m,
+                    "❌ יצירת המשימה נחסמה: "
+                    + str(
+                        result.get("reason")
+                    )
+                )
+                return
+
+            bot.reply_to(
+                m,
+                f"✅ משימה #{next_id} נוספה: {desc}"
+            )
 
         elif action == 'list':
             if not missions:
@@ -33,42 +89,114 @@ def register(bot):
             else:
                 msg = "📋 **לוח משימות SLH**\n\n"
                 for t in missions:
-                    icon = "🟢" if t['status'] == 'done' else "🔴" if t['status'] == 'open' else "🟡"
+                    icon = "🟢" if MissionStateNormalizer.is_completed(t.get('status')) else "🔴" if t['status'] == 'open' else "🟡"
                     agent = t['assigned_to'] or "לא שויך"
                     msg += f"{icon} #{t['id']}: {t['desc']}\n   ↳ אחראי: {agent} | שכר: {t['reward']} SLH\n\n"
                 bot.reply_to(m, msg, parse_mode='Markdown')
 
         elif action == 'assign':
-            args = parts[2].split()
-            if len(args) < 2:
-                bot.reply_to(m, "שימוש: /mission assign <id> <שם סוכן>")
+
+            if len(parts) < 3:
+
+                bot.reply_to(
+                    m,
+                    "שימוש: /mission assign <id> <שם סוכן>"
+                )
+
                 return
-            mid = int(args[0])
-            agent = args[1]
-            for t in missions:
-                if t['id'] == mid:
-                    t['assigned_to'] = agent
-                    t['status'] = 'assigned'
-                    save_board(board)
-                    bot.reply_to(m, f"✅ משימה #{mid} שויכה ל‑{agent}")
-                    return
-            bot.reply_to(m, "❌ משימה לא נמצאה")
+
+            args = parts[2].split()
+
+            if len(args) < 2:
+
+                bot.reply_to(
+                    m,
+                    "שימוש: /mission assign <id> <שם סוכן>"
+                )
+
+                return
+
+            mission_id = args[0]
+
+            agent_id = args[1]
+
+            result = lifecycle.assign_mission(
+                mission_id=mission_id,
+                agent_id=agent_id
+            )
+
+            if result.get(
+                "status"
+            ) != "assigned":
+
+                checks = result.get(
+                    "checks",
+                    {}
+                )
+
+                bot.reply_to(
+                    m,
+                    "❌ שיוך המשימה נחסם.\n"
+                    + str(
+                        checks
+                        or result.get(
+                            "reason",
+                            "unknown"
+                        )
+                    )
+                )
+
+                return
+
+            bot.reply_to(
+                m,
+                f"✅ משימה #{mission_id} שויכה ל-{agent_id}"
+            )
 
         elif action == 'done':
-            try:
-                mid = int(parts[2])
-            except:
-                bot.reply_to(m, "שימוש: /mission done <id>")
+
+            if len(parts) < 3:
+
+                bot.reply_to(
+                    m,
+                    "שימוש: /mission done <id>"
+                )
+
                 return
-            for t in missions:
-                if t['id'] == mid:
-                    t['status'] = 'done'
-                    if t['assigned_to']:
-                        award_reward(t['assigned_to'], t['reward'], t['id'])
-                    save_board(board)
-                    bot.reply_to(m, f"✅ משימה #{mid} הושלמה! התמול הועבר.")
-                    return
-            bot.reply_to(m, "❌ משימה לא נמצאה")
+
+            mission_id = parts[2].strip()
+
+            result = lifecycle.complete_mission(
+                mission_id=mission_id
+            )
+
+            if result.get(
+                "status"
+            ) != "completed":
+
+                checks = result.get(
+                    "checks",
+                    {}
+                )
+
+                bot.reply_to(
+                    m,
+                    "❌ השלמת המשימה נחסמה.\n"
+                    + str(
+                        checks
+                        or result.get(
+                            "reason",
+                            "unknown"
+                        )
+                    )
+                )
+
+                return
+
+            bot.reply_to(
+                m,
+                f"✅ משימה #{mission_id} הושלמה!"
+            )
 
         elif action == 'rewards':
             ledger = load_ledger()
@@ -83,30 +211,9 @@ def register(bot):
         else:
             bot.reply_to(m, "פעולה לא מוכרת.")
 
-def load_board():
-    if not os.path.exists(MISSION_FILE):
-        return {"missions": [], "rules": {"new_agents_first_task": "system_contribution", "difficulty_levels": ["beginner","intermediate","advanced","expert"]}}
-    with open(MISSION_FILE, 'r') as f:
-        return json.load(f)
-
-def save_board(board):
-    os.makedirs(os.path.dirname(MISSION_FILE), exist_ok=True)
-    with open(MISSION_FILE, 'w') as f:
-        json.dump(board, f, indent=2, ensure_ascii=False)
-
 def load_ledger():
     try:
         with open("state/rewards_ledger.json") as f:
             return json.load(f)
     except:
         return []
-def award_reward(agent, amount, mission_id=None):
-    ledger = load_ledger()
-    ledger.append({
-        "agent": agent,
-        "amount": amount,
-        "time": datetime.datetime.now().isoformat(),
-        "mission_id": mission_id
-    })
-    with open("state/rewards_ledger.json", 'w') as f:
-        json.dump(ledger, f, indent=2, ensure_ascii=False)

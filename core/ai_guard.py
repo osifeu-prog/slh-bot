@@ -1,6 +1,6 @@
-
 import time
 import json
+import os
 from pathlib import Path
 
 
@@ -23,6 +23,7 @@ def load_state():
         return json.loads(
             STATE_FILE.read_text(encoding="utf-8")
         )
+
     except Exception:
         return {
             "groq": {
@@ -33,6 +34,8 @@ def load_state():
 
 
 def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+
     STATE_FILE.write_text(
         json.dumps(
             state,
@@ -44,6 +47,21 @@ def save_state(state):
 
 
 def provider_available(name="groq"):
+    """
+    Returns True only when:
+
+    1. Required provider credentials exist.
+    2. Circuit breaker is not active.
+    """
+
+    # Credential gate
+    if name == "groq":
+        api_key = os.getenv("GROQ_API_KEY")
+
+        if not api_key:
+            return False
+
+    # Circuit breaker gate
     state = load_state()
 
     provider = state.setdefault(
@@ -54,7 +72,7 @@ def provider_available(name="groq"):
         }
     )
 
-    return time.time() >= provider["blocked_until"]
+    return time.time() >= provider.get("blocked_until", 0)
 
 
 def provider_success(name="groq"):
@@ -85,7 +103,7 @@ def provider_failure(name="groq"):
         }
     )
 
-    provider["failures"] += 1
+    provider["failures"] = provider.get("failures", 0) + 1
 
     if provider["failures"] >= MAX_FAILURES:
         provider["blocked_until"] = time.time() + COOLDOWN
@@ -99,3 +117,7 @@ def status():
 
 def guard(text):
     return True
+
+
+def guarded_message():
+    return "⏳ הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
