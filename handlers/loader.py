@@ -1,4 +1,10 @@
 def load_handlers(bot, context):
+    from handlers.logo_handler import register_logo_handler
+    from handlers.esp_handler import register_esp_handler
+    register_esp_handler(bot)
+    register_logo_handler(bot)
+    from handlers.esp_handler import register_esp_handler
+    register_esp_handler(bot)
     print("🔄 Loading modular handlers...")
     for name, mod in [
         ("dashboard", "handlers.dashboard_handler"),
