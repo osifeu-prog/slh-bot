@@ -1,6 +1,6 @@
 import json, os
 from datetime import datetime
-from groq import Groq
+# from groq import Groq
 from core.ai_guard import provider_available, provider_success, provider_failure
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -12,7 +12,7 @@ def get_client():
         key = os.getenv("GROQ_API_KEY")
         if not key:
             raise RuntimeError("GROQ_API_KEY missing")
-        client = Groq(api_key=key)
+        # client = Groq(api_key=key)
     return client
 
 def get_bot_context(uid: str) -> str:
@@ -177,24 +177,69 @@ def query_llm(question):
     except Exception as e:
         provider_failure("groq")
         raise e
-import json, os, requests
+import json
+import os
+import requests
+
 def query_llm_with_context(question, user_id):
-    k = os.getenv('GROQ_API_KEY')
+    """
+    Safe LLM fallback.
+
+    Never concatenates a missing API key.
+    Never sends a request when GROQ_API_KEY is absent.
+    """
+
+    k = os.getenv("GROQ_API_KEY")
+
+    if not k:
+        return "⏳ שירות ה-AI אינו זמין כרגע. GROQ_API_KEY אינו מוגדר."
+
     try:
-        with open('state/db.json', encoding='utf-8') as f:
+        with open("state/db.json", encoding="utf-8") as f:
             d = json.load(f)
-    except:
+    except Exception:
         d = {}
-    user = d.get('users',{}).get(str(user_id),{})
-    context = f"מצב משתמש: יתרה {user.get('balance',0)} SLH, קורס {user.get('active_course','אין')}. יש 10 סוכנים במערכת."
-    r = requests.post('https://api.groq.com/openai/v1/chat/completions',
-        headers={'Authorization':'Bearer '+k},
+
+    user = d.get("users", {}).get(str(user_id), {})
+
+    context = (
+        f"מצב משתמש: "
+        f"יתרה {user.get('balance', 0) or 0} SLH, "
+        f"קורס {user.get('active_course', 'אין') or 'אין'}. "
+        f"יש 10 סוכנים במערכת."
+    )
+
+    safe_question = str(question or "")
+
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": "Bearer " + k,
+            "Content-Type": "application/json",
+        },
         json={
-            'model':'llama-3.1-8b-instant',
-            'messages':[
-                {'role':'system','content':'אתה רובוטוש - העוזר האישי של SLH OS. ענה בעברית קצר וישיר. השתמש במידע המערכת כדי לעזור.'},
-                {'role':'user','content':context + '\n\nשאלה: ' + question}
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "אתה רובוטוש - העוזר האישי של SLH OS. "
+                        "ענה בעברית קצר וישיר. "
+                        "השתמש במידע המערכת כדי לעזור."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": context + "\\n\\nשאלה: " + safe_question,
+                },
             ],
-            'max_tokens':200
-        }, timeout=15)
-    return r.json()['choices'][0]['message']['content'] if r.ok else 'שיאה ב-LLM'
+            "max_tokens": 200,
+        },
+        timeout=15,
+    )
+
+    if response.ok:
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+
+    return "⚠️ שירות ה-AI לא זמין כרגע."
