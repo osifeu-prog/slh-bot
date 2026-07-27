@@ -1,4 +1,8 @@
 def load_handlers(bot, context):
+ from handlers.logo_handler import register_logo_handler
+ register_logo_handler(bot)
+ from handlers.esp_handler import register_esp_handler
+ register_esp_handler(bot)
     from handlers.logo_handler import register_logo_handler
     try:
     from handlers.esp_handler import register_esp_handler
