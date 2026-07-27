@@ -1,9 +1,17 @@
 def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
+    try:
     from handlers.esp_handler import register_esp_handler
+except ImportError:
+    print("esp_handler skipped - paho missing")
+    register_esp_handler = lambda bot: None
     register_esp_handler(bot)
     register_logo_handler(bot)
+    try:
     from handlers.esp_handler import register_esp_handler
+except ImportError:
+    print("esp_handler skipped - paho missing")
+    register_esp_handler = lambda bot: None
     register_esp_handler(bot)
     print("🔄 Loading modular handlers...")
     for name, mod in [
