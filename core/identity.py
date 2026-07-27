@@ -1,6 +1,6 @@
 """SLH Personal AI Identity Layer"""
 
-OWNER_ID = "972500000001"
+OWNER_ID = "8789977826"
 
 DEFAULT_ASSISTANT_NAME = "SLH OS Assistant"
 OWNER_ASSISTANT_NAME = "רובוטוש"
