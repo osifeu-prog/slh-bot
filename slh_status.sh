@@ -1,5 +1,18 @@
 #!/bin/bash
-echo "SLH STATUS"
-slh doctor
-railway logs --tail 20
-railway variables | grep -E "BOT_TOKEN|GROQ"
+echo "================================="
+echo "    SLH SYSTEM v1.0"
+echo "    $(date '+%Y-%m-%d %H:%M')"
+echo "================================="
+echo "Commands:"
+echo "  c     = clear"
+echo "  logs  = Railway logs"
+echo "  up    = git push"
+echo "  slh   = this status"
+echo "  esp   = check ESP"
+echo ""
+echo "--- System Status ---"
+curl -s https://web-production-22f28.up.railway.app/api/status 2>/dev/null || echo "API: DOWN"
+echo ""
+echo "--- Today's Log ---"
+echo "Tasks: check telegram /tasks"
+echo "================================="
