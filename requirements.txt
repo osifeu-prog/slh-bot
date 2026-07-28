@@ -4,3 +4,4 @@ openai>=1.0.0
 groq>=0.4.0
 python-telegram-bot>=20.0
 paho-mqtt>=1.6.0
+pyTelegramBotAPI>=4.12.0

@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-07-27T08:23:01.689070+00:00",
+  "generated_at": "2026-07-27T20:59:07.095241+00:00",
   "entrypoint": "bot_stable.py",
   "loader": "handlers/loader.py",
   "direct_registrations": [
@@ -9,7 +9,7 @@
       "path": "DIRECT",
       "source": "bot_stable.py",
       "function": "user",
-      "line": 560,
+      "line": 558,
       "confidence": "HIGH"
     },
     {
@@ -17,7 +17,7 @@
       "path": "DIRECT",
       "source": "bot_stable.py",
       "function": "market",
-      "line": 647,
+      "line": 645,
       "confidence": "HIGH"
     }
   ],
@@ -85,7 +85,7 @@
           "path": "DIRECT",
           "source": "bot_stable.py",
           "function": "user",
-          "line": 560,
+          "line": 558,
           "confidence": "HIGH"
         }
       ]
@@ -119,7 +119,7 @@
           "path": "DIRECT",
           "source": "bot_stable.py",
           "function": "market",
-          "line": 647,
+          "line": 645,
           "confidence": "HIGH"
         }
       ]
