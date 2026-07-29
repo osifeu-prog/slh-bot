@@ -1035,3 +1035,7 @@ def wallet_handler(message):
     balance = res[0] if res else 0
     conn.close()
     bot.reply_to(message, f"👑 היתרה שלך: {balance} SLH")
+
+@bot.message_handler(commands=['buy'])
+def buy_handler(message):
+    bot.reply_to(message, "לקניית SLH שלח לי כתובת BSC שלך ואני אשלח לך חוזה.\nחוזה SLH: 0xACb0A09414CEA1C879c67bB7A877E4e19480f022\nמחיר: 1 USDT = 10 SLH")
