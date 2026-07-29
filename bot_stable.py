@@ -1039,3 +1039,33 @@ def wallet_handler(message):
 @bot.message_handler(commands=['buy'])
 def buy_handler(message):
     bot.reply_to(message, "לקניית SLH שלח לי כתובת BSC שלך ואני אשלח לך חוזה.\nחוזה SLH: 0xACb0A09414CEA1C879c67bB7A877E4e19480f022\nמחיר: 1 USDT = 10 SLH")
+
+ADMIN_ID = 123456789 # << תחליף ל-ID טלגרם שלך
+
+@bot.message_handler(commands=['broadcast'])
+def broadcast_handler(message):
+    if message.from_user.id!= ADMIN_ID:
+        bot.reply_to(message, "אין לך הרשאה")
+        return
+
+    text = message.text.replace('/broadcast ', '')
+    if not text:
+        bot.reply_to(message, "שימוש: /broadcast ההודעה שלך")
+        return
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute('SELECT user_id FROM wallets')
+    users = c.fetchall()
+    conn.close()
+
+    sent = 0
+    for u in users:
+        try:
+            bot.send_message(u[0], f"📢 הודעה מ-SLH Empire:\n\n{text}")
+            sent += 1
+        except:
+            pass
+
+    bot.reply_to(message, f"נשלח ל-{sent} משתמשים")
+
