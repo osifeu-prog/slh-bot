@@ -1,47 +1,16 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
-<head><meta charset="UTF-8"><title>SLH EMPIRE</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;padding:20px;margin:0}
-.logo{width:140px;height:140px;margin:10px auto;filter:drop-shadow(0 0 15px #FFD700)}
-.card{background:#1a1a1a;margin:10px;padding:15px;border-radius:10px;border:1px solid #333}
-h1{color:#FFD700;margin:5px;font-size:28px}
-button{background:#FFD700;color:#000;border:none;padding:10px 20px;border-radius:5px;font-weight:bold}
-</style>
+<head>
+  <meta charset="UTF-8">
+  <title>SLH EMPIRE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
-<body>
-<img src="assets/logo.svg" class="logo" alt="SLH EMPIRE">
-<h1>SLH EMPIRE</h1>
-<p style="color:#aaa;margin-bottom:20px">האימפריה הדיגיטלית</p>
-
-<div id="status" class="card"><h2>📊 סטטוס</h2></div>
-<div id="shop" class="card"><h2>🛒 חנות</h2></div>
-
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand(); 
-const UID = tg.initDataUnsafe.user.id.toString();
-
-async function load(){
-  let s = await (await fetch(`/api/status?uid=${UID}`)).json()
-  document.getElementById('status').innerHTML = `<h2>📊 סטטוס</h2><p>שלום ${tg.initDataUnsafe.user.first_name}</p><p>💰 קרדיטים: ${s.credits} SLH</p>`
-  
-  let shop = await (await fetch('/api/shop')).json()
-  let shopHTML = "<h2>🛒 חנות</h2>"
-  for(let id in shop){
-    shopHTML += `<div style="margin:10px 0">${shop[id].name} - ${shop[id].price} SLH <button onclick="buy('${id}')">קנה</button></div>`
-  }
-  document.getElementById('shop').innerHTML = shopHTML
-}
-
-async function buy(itemId){
-  let res = await fetch(`/api/buy?uid=${UID}&item=${itemId}`)
-  alert(await res.text())
-  load()
-}
-
-load()
-</script>
+<body style="background:#000; color:#FFD700; text-align:center; font-family:Arial">
+  <h1>SLH EMPIRE 👑</h1>
+  <img src="assets/logo.svg" width="250"/>
+  <h2>האימפריה פעילה</h2>
+  <p>ארנק: 1000 SLH</p>
+  <p>אקדמיה: פעילה</p>
+  <p>לידרבורד: מקום 1</p>
 </body>
 </html>
