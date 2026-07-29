@@ -918,7 +918,10 @@ except Exception as e:
 
 # Register LLM handler
 try:
-    register_llm(bot)
+    try:
+        register_llm(bot)
+    except Exception as e:
+        print("⚠️ register_llm skipped:", e)
 except Exception as e:
     print("⚠️ register_llm failed:", e)
 

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8"><title>SLH EMPIRE</title>
+<style>
+body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;padding:20px}
+.card{background:#1a1a1a;margin:10px;padding:15px;border-radius:10px}
+h1{color:#FFD700}
+button{background:#FFD700;color:#000;border:none;padding:10px 20px;border-radius:5px;cursor:pointer}
+.item{display:flex;justify-content:space-between;margin:10px 0}
+</style>
+</head>
+<body>
+<h1>👑 SLH EMPIRE 👑</h1>
+<div id="status" class="card"><h2>סטטוס</h2></div>
+<div id="shop" class="card"><h2>חנות</h2></div>
+<div id="courses" class="card"><h2>קורסים</h2></div>
+
+<script>
+const UID = "8789977826"; // ה-OWNER_ID שלך
+
+async function load(){
+  let s = await (await fetch('/api/status')).json()
+  document.getElementById('status').innerHTML += `<p>יוזרים: ${s.users}</p><p>קרדיטים: ${s.credits} SLH</p>`
+  
+  let shop = await (await fetch('/api/shop')).json()
+  let shopHTML = ""
+  for(let id in shop){
+    shopHTML += `<div class="item">${shop[id].name} - ${shop[id].price} SLH <button onclick="buy('${id}')">קנה</button></div>`
+  }
+  document.getElementById('shop').innerHTML += shopHTML
+}
+
+async function buy(itemId){
+  let res = await fetch(`/api/buy?uid=${UID}&item=${itemId}`)
+  alert(await res.text())
+  location.reload()
+}
+
+load()
+</script>
+</body>
+</html>

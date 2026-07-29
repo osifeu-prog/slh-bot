@@ -1,0 +1,5 @@
+{
+  "course_bitcoin_101": {"name": "קורס ביטקוין", "price": 0, "type": "course"},
+  "role_vip": {"name": "תפקיד VIP", "price": 500, "type": "role"},
+  "bot_signal": {"name": "בוט סיגנלים", "price": 1000, "type": "bot"}
+}

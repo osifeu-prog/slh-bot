@@ -19,3 +19,4 @@
 {"timestamp": "2026-07-27T08:50:09.787981+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__RUNTIME_TEST_AGENT__"}}
 {"timestamp": "2026-07-27T09:52:43.870710+00:00", "event": "agent.created", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT", "role": "agent"}}
 {"timestamp": "2026-07-27T09:53:15.867456+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT"}}
+{"timestamp": "2026-07-29T14:57:07.400484+00:00", "event": "agent.created", "target": "5", "details": {"name": "O-Agent", "role": "agent"}}

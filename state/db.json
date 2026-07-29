@@ -1,19 +1,20 @@
 {
   "users": {
     "8789977826": {
+      "name": "O",
       "role": "OWNER",
+      "credits": 1000,
+      "phone": "!972000000001",
       "permissions": [
         "admin",
         "exec",
         "deploy",
-        "restart",
-        "developer_manage",
-        "economy",
         "restart"
       ]
     },
     "224223270": {
       "role": "USER",
+      "credits": 0,
       "permissions": [
         "restart"
       ]
@@ -22,67 +23,51 @@
   "agents": {
     "1": {
       "name": "SystemGuard",
-      "role": "agent",
-      "state": "active",
-      "inbox": [
-        "__HANDLER_MESSAGE_TEST__"
-      ],
-      "created": "2026-07-14 14:26",
-      "history": [],
-      "permissions": [],
-      "id": "1",
-      "runtime_class": "SystemGuardAgent"
+      "state": "active"
     },
     "2": {
       "name": "DoctorAgent",
-      "role": "agent",
-      "state": "active",
-      "inbox": [
-        "\u05d1\u05d3\u05d9\u05e7\u05ea \u05e1\u05e0\u05db\u05e8\u05d5\u05df \u05de\u05e9\u05d9\u05de\u05d4"
-      ],
-      "history": [],
-      "permissions": [],
-      "created": "2026-07-23T03:57:56.593238",
-      "id": "2"
+      "state": "active"
     },
     "3": {
       "name": "SyncAgent",
-      "role": "agent",
-      "state": "active",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-07-23T03:57:56.593238",
-      "id": "3"
+      "state": "active"
     },
     "4": {
       "name": "TokenAgent",
-      "role": "agent",
-      "state": "idle",
-      "inbox": [],
-      "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02",
-      "history": [],
-      "permissions": [],
-      "created": "2026-07-23T03:57:56.593238",
-      "id": "4"
+      "state": "idle"
     }
   },
-  "votes": {
-    "localtest_9838": {
-      "yes": 0,
-      "no": 0,
-      "voters": {}
+  "tasks": {
+    "task_1": {
+      "title": "צפה בשיעור 1: מה זה ביטקוין",
+      "reward": 50,
+      "done_by": []
+    },
+    "task_2": {
+      "title": "הזמן חבר לאימפריה",
+      "reward": 100,
+      "done_by": []
+    },
+    "task_3": {
+      "title": "השלם פרופיל",
+      "reward": 25,
+      "done_by": []
     }
   },
-  "tasks": {},
   "memory": {},
-  "devices": {
-    "esp32_01": {
-      "type": "ESP32",
-      "serial": "ESP-20260727-001",
-      "status": "offline",
-      "last_heartbeat": "",
-      "mqtt_topic": "slh/esp/esp32_01"
+  "devices": {},
+  "students": {
+    "8789977826": {
+      "name": "O",
+      "role": "OWNER",
+      "credits": 1000,
+      "joined": "2026-07-29"
+    },
+    "224223270": {
+      "name": "?",
+      "role": "USER",
+      "credits": 0
     }
   }
 }

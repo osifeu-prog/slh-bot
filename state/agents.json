@@ -9,7 +9,8 @@
     "created": "2026-07-14 14:26",
     "history": [],
     "permissions": [],
-    "id": "1"
+    "id": "1",
+    "runtime_class": "SystemGuardAgent"
   },
   "2": {
     "name": "DoctorAgent",
@@ -43,5 +44,16 @@
     "permissions": [],
     "created": "2026-07-23T03:57:56.593238",
     "id": "4"
+  },
+  "5": {
+    "id": "5",
+    "name": "O-Agent",
+    "state": "idle",
+    "role": "agent",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [],
+    "created": "2026-07-29T17:57:07.386646"
   }
 }
