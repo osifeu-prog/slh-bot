@@ -2,3 +2,6 @@ state/db.json
 state/backups/
 *.log
 .keys.secure
+__pycache__/
+*.pyc
+keys.secure
