@@ -1,70 +1,30 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>SLH Dashboard V2</title>
-<link rel="stylesheet" href="style.css">
-</head>
-
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8"><title>SLH COMMAND CENTER</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{background:#000;color:#FFD700;font-family:monospace;padding:10px}
+.logo{width:150px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px}
+.cmd{background:#111;border:1px solid #FFD700;padding:8px;border-radius:5px;font-size:12px;cursor:pointer}
+.cmd:hover{background:#FFD700;color:#000}
+.card{background:#111;border:1px solid #FFD700;padding:10px;margin:10px 0;border-radius:8px}
+</style></head>
 <body>
+<img src="/assets/logo.svg" class="logo"/>
+<h1>SLH COMMAND CENTER 👑</h1>
+<div class="card" id="stats">טוען...</div>
+<div class="card"><h3>105 פקודות</h3><div class="grid" id="commands"></div></div>
 
-<header>
-    <h1>🚀 SLH Dashboard V2</h1>
-    <div id="health">בודק מערכת...</div>
-</header>
+<script>
+async function load(){
+  let s = await fetch('/api/status'); let d = await s.json();
+  document.getElementById('stats').innerHTML = `משתמשים: ${d.users} | קורסים: ${d.courses} | סטטוס: ${d.status}`;
 
-<nav>
-    <button onclick="show('overview')">🏠 ראשי</button>
-    <button onclick="show('agents')">🤖 Agents</button>
-    <button onclick="show('tasks')">📋 Tasks</button>
-    <button onclick="show('logs')">📜 Logs</button>
-</nav>
-
-<main>
-
-<section id="overview" class="card">
-<h2>System Overview</h2>
-
-<div class="grid">
-<div class="box">
-<h3>Users</h3>
-<span id="users">0</span>
-</div>
-
-<div class="box">
-<h3>Agents</h3>
-<span id="agents">0</span>
-</div>
-
-<div class="box">
-<h3>Tasks</h3>
-<span id="tasks">0</span>
-</div>
-</div>
-
-</section>
-
-
-<section id="agents" class="card hidden">
-<h2>Agents</h2>
-<pre id="agents-data">Loading...</pre>
-</section>
-
-
-<section id="tasks" class="card hidden">
-<h2>Tasks</h2>
-<pre id="tasks-data">Loading...</pre>
-</section>
-
-
-<section id="logs" class="card hidden">
-<h2>Logs</h2>
-<pre id="logs-data">Loading...</pre>
-</section>
-
-</main>
-
-<script src="app.js"></script>
-
-</body>
-</html>
+  let a = await fetch('/api/admin?id=8789977826'); let ad = await a.json();
+  let cmds = ad.commands.split(/[\n\/]/).filter(x=>x.trim());
+  document.getElementById('commands').innerHTML = cmds.map(c=>`<div class="cmd">/${c}</div>`).join('');
+}
+load();
+</script>
+</body></html>

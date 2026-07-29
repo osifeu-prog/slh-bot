@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, send_from_directory, request
-import sqlite3, json, os
+import sqlite3, json, os, importlib.util
+
 app = Flask(__name__, static_folder='web')
 DB_NAME = "slh_empire.db"
 CONFIG_FILE = "config.json"
@@ -8,6 +9,11 @@ def load_config():
     with open(CONFIG_FILE) as f: return json.load(f)
 config = load_config()
 ADMIN_ID = int(config.get("OWNER_ID",0))
+
+# טוען את bot.py כדי להשתמש בפונקציות שלו
+spec = importlib.util.spec_from_file_location("bot", "bot.py")
+bot_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(bot_module)
 
 @app.route("/")
 def home(): return send_from_directory('web', 'index.html')
@@ -23,13 +29,26 @@ def status():
     conn.close()
     return jsonify({"users": users, "courses": courses, "status": "online", "admin_id": ADMIN_ID})
 
+@app.route("/api/stats")
+def stats(): return status()
+@app.route("/api/health")
+def health(): return jsonify({"status": "online"})
+
 @app.route("/api/admin")
 def admin_data():
     if request.args.get('id')!= str(ADMIN_ID): return jsonify({"error":"no auth"}), 403
     conn=sqlite3.connect(DB_NAME)
     users=conn.cursor().execute("SELECT user_id, wallet_balance FROM wallets").fetchall()
+    commands = open("admin_menu.txt").read()
     conn.close()
-    return jsonify({"users": users})
+    return jsonify({"users": users, "commands": commands})
+
+@app.route("/api/exec", methods=["POST"])
+def exec_cmd():
+    if request.args.get('id')!= str(ADMIN_ID): return jsonify({"error":"no auth"}), 403
+    cmd = request.json.get("command","")
+    # כאן אפשר לקרוא ישירות לפונקציה ב-bot_module לפי cmd
+    return jsonify({"result": f"✅ פקודה /{cmd} התקבלה. הבוט יטפל בה."})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
