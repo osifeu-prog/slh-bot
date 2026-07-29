@@ -5,3 +5,7 @@ state/backups/
 __pycache__/
 *.pyc
 keys.secure
+node_modules/
+server.log
+*.log
+.wwebjs_auth/
