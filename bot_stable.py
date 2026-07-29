@@ -1024,3 +1024,14 @@ def start_bot():
 
 if __name__ == "__main__":
     start_bot()
+
+
+@bot.message_handler(commands=['wallet', 'יתרה'])
+def wallet_handler(message):
+    conn = sqlite3.connect('slh_empire.db')
+    c = conn.cursor()
+    c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", (str(message.from_user.id),))
+    res = c.fetchone()
+    balance = res[0] if res else 0
+    conn.close()
+    bot.reply_to(message, f"👑 היתרה שלך: {balance} SLH")
