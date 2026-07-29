@@ -54,7 +54,7 @@ def register_llm_handler(bot):
         question = msg.text.replace('/ask', '').strip()
 
         if not question:
-            bot.reply_to(msg, "ωιξεω: /ask <ωΰμδ>")
+            bot.reply_to(msg, "Χ©Χ™ΧΧ•Χ©: /ask <Χ©ΧΧΧ”>")
             return
 
         answer = ask_groq(question)
