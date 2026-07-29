@@ -14,6 +14,8 @@ ADMIN_ID = int(config.get("OWNER_ID",0))
 def home(): return send_from_directory('web', 'index.html')
 
 @app.route("/dashboard")
+@app.route("/market")
+def market(): return send_from_directory("web/dashboard", "market.html")
 def dash(): return send_from_directory('web/dashboard', 'index.html')
 
 @app.route("/api/status")
