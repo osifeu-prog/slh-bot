@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
-<head>
-  <meta charset="UTF-8">
-  <title>SLH EMPIRE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="background:#000; color:#FFD700; text-align:center; font-family:Arial">
-  <h1>SLH EMPIRE 👑</h1>
-  <img src="assets/logo.svg" width="250"/>
-  <h2>האימפריה פעילה</h2>
-  <p>ארנק: 1000 SLH</p>
-  <p>אקדמיה: פעילה</p>
-  <p>לידרבורד: מקום 1</p>
-</body>
-</html>
+<head><meta charset="UTF-8"><title>SLH Empire Panel</title>
+<style>body{background:#0a0a0a;color:#00ff88;font-family:monospace;padding:20px}
+.card{background:#111;border:1px solid #00ff88;padding:15px;margin:10px 0;border-radius:8px}
+h1{color:#00ff88}</style></head>
+<body>
+<h1>SLH EMPIRE PANEL</h1>
+<div class="card" id="status">טוען...</div>
+<script>
+fetch('/api/status').then(r=>r.json()).then(d=>{
+document.getElementById('status').innerHTML = 
+`<b>סטטוס:</b> ${d.status}<br><b>משתמשים:</b> ${d.users}`
+})
+</script>
+</body></html>

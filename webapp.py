@@ -49,3 +49,28 @@ def exec_cmd():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+# חנות ישירה בבוט
+PRODUCTS = {
+    "ai": {"name": "קורס AI Automation", "price_ton": 15, "price_ils": 499},
+    "vip": {"name": "מנוי VIP חודשי", "price_ton": 5, "price_ils": 199}
+}
+
+@app.route("/api/buy", methods=["POST"])
+def buy_product():
+    data = request.json
+    product_id = data.get("product")
+    user_id = data.get("user_id")
+    
+    if product_id not in PRODUCTS:
+        return jsonify({"error": "מוצר לא קיים"})
+    
+    p = PRODUCTS[product_id]
+    wallet = "UQxxxxxxxxxxxxxxxxxxxxxxxxxx" # <- שים כאן ארנק TON שלך
+    
+    return jsonify({
+        "product": p["name"],
+        "amount_ton": p["price_ton"],
+        "pay_link": f"ton://transfer/{wallet}?amount={p['price_ton']}&text=SLH-{user_id}-{product_id}",
+        "instructions": "שלח ושלח לי צילום מסך לקבלת גישה"
+    })

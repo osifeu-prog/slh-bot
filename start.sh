@@ -1,17 +1,17 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
+echo "=== מריץ SLH BOT מלא ==="
 
-cd ~/slh_clean || exit 1
+pkill -f gunicorn
+pkill -f python
+pkill -f node
 
-pkill -f bot_stable.py 2>/dev/null
-pkill -f python3 2>/dev/null
-sleep 2
+echo "1. מריץ שרת API"
+gunicorn webapp:app --bind 0.0.0.0:8080 --workers 2 > flask.log 2>&1 &
 
-rm -f runtime/bot.pid /tmp/slh.lock
+echo "2. מריץ בוט טלגרם"
+python bot.py > bot.log 2>&1 &
 
-echo "START BOT..."
+echo "3. מריץ בוט וואטסאפ"
+node whatsapp_bot.js > whatsapp.log 2>&1 &
 
-nohup python3 -u bot_stable.py > logs/bot.log 2> logs/error.log &
-echo $! > runtime/bot.pid
-
-sleep 3
-pgrep -af bot_stable.py || echo "NOT RUNNING"
+echo "✅ הכל עלה! בדוק logs עם: tail -f flask.log"
