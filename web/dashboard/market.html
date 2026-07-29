@@ -1,4 +1,6 @@
 <!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>SLH MARKET</title>
-<style>body{background:#000;color:#FFD700;font-family:monospace;padding:10px}.card{background:#111;border:1px solid #FFD700;padding:10px;margin:10px 0;border-radius:8px}</style></head>
-<body><h1>SLH MARKET 💰</h1><div class="card"><h3>קורס AI Automation</h3><p>499₪</p><button onclick="buy()">קנה עכשיו</button></div>
-<script>function buy(){fetch('/api/exec?id=8789977826',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:'buy ai'})})}</script></body></html>
+<style>body{background:#000;color:#FFD700;font-family:monospace;padding:10px}.card{background:#111;border:1px solid #FFD700;padding:15px;margin:10px 0;border-radius:8px}button{background:#FFD700;color:#000;border:none;padding:10px 20px;border-radius:5px;font-weight:bold;cursor:pointer}</style></head>
+<body><h1>SLH MARKET 💰</h1>
+<div class="card"><h3>קורס AI Automation</h3><p>499₪ או 15 TON</p><button onclick="buy()">שלם ב-TON</button></div>
+<div id="result"></div>
+<script>async function buy(){let r=await fetch('/api/exec?id=8789977826',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:'buy ai'})});let d=await r.json();document.getElementById('result').innerText=d.result}</script></body></html>
