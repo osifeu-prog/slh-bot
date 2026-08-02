@@ -1,0 +1,172 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-26T22:52:58.280953+00:00",
+  "entrypoint": "bot_stable.py",
+  "discovered": [
+    {
+      "file": "bot_stable.py",
+      "class": "ENTRYPOINT"
+    },
+    {
+      "file": "doctor_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "heb_convert.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "marketplace.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "audit_logger.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/event_bus.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/mission_lifecycle.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "plugins/task.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "payment_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "econ_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "handlers/me_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/askdebug_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "state_manager.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "handlers/loader.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "slh_lock.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "handlers/llm_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "core/ask_router.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "viewfile_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "handlers/academy_menu_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/lesson_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/academy_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "admin_utils.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "refresh_token_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/context_builder.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "tutorial_handler.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/mission_state.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/mission_lock.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/ask_debug.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "handlers/advanced_ask_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "core/ai_guard.py",
+      "class": "OTHER"
+    },
+    {
+      "file": "core/ask_guard.py",
+      "class": "OTHER"
+    }
+  ],
+  "loaders": [],
+  "handlers": [
+    {
+      "file": "handlers/me_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/askdebug_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/loader.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/llm_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/academy_menu_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/lesson_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/academy_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "handlers/advanced_ask_handler.py",
+      "class": "HANDLER"
+    }
+  ],
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

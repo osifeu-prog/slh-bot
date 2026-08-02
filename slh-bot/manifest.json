@@ -1,0 +1,24 @@
+{
+  "version": "V7",
+  "modules": {
+    "core": [
+      "event_bus",
+      "event_store",
+      "kernel",
+      "runtime"
+    ],
+    "swarm": [
+      "agents",
+      "scheduler",
+      "task_queue"
+    ],
+    "control": [
+      "snapshot",
+      "boot_guard",
+      "selftest"
+    ],
+    "api": [
+      "api_server"
+    ]
+  }
+}

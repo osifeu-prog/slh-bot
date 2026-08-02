@@ -1,0 +1,38 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-26T20:28:56.651070+00:00",
+  "loader": "handlers/loader.py",
+  "imported_handlers": [
+    {
+      "module": "handlers.advanced_ask_handler",
+      "name": "register_ask_handler",
+      "alias": null,
+      "type": "from_import"
+    }
+  ],
+  "registration_calls": [
+    "register",
+    "register_ask_handler"
+  ],
+  "command_mentions": {
+    "/learn": false,
+    "/token": false,
+    "/market": false,
+    "/progress": false,
+    "/join": false,
+    "/ask": false,
+    "/user": false,
+    "/balance": false,
+    "/register": false,
+    "/help": false,
+    "/course": false,
+    "/report": false,
+    "/start": false
+  },
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

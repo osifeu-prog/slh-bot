@@ -1,0 +1,22 @@
+{
+  "result_id": "mission-1-20260726T083554Z",
+  "mission_id": "1",
+  "agent_id": "3",
+  "agent_name": "SyncAgent",
+  "operation": "SYNC TEST",
+  "execution_status": "success",
+  "execution_mode": "CONTROLLED LOCAL TEST",
+  "result": {
+    "mission_loaded": true,
+    "agent_loaded": true,
+    "assignment_confirmed": true,
+    "synchronization_check": "passed"
+  },
+  "verified": true,
+  "mission_completion": "completed",
+  "persistence": "result_record_only",
+  "external_network": false,
+  "recorded_at": "2026-07-26T08:35:54.578927+00:00",
+  "result_sha256": "f953f4a5812bd4ee5e123798c805916f7b7d9f05bf429151430632a43b48ed36",
+  "completed_at": "2026-07-26T08:38:19.663954+00:00"
+}

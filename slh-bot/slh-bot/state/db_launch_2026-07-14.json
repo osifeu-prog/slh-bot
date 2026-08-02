@@ -1,0 +1,143 @@
+{
+  "users": {
+    "8789977826": {
+      "profile": {
+        "created": "2026-07-13T13:27:18.459720",
+        "telegram_id": "8789977826"
+      },
+      "wallet": {
+        "credits": 30
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 6,
+            "completed": [
+              1,
+              6
+            ]
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 75,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": true,
+        "stage": "completed"
+      },
+      "ai": {
+        "initialized": true
+      }
+    },
+    "224223270": {
+      "profile": {
+        "created": "2026-07-13T17:51:55.477866",
+        "telegram_id": "224223270"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": true,
+        "stage": "completed",
+        "completed_at": "2026-07-13T18:04:05.179666"
+      },
+      "ai": {
+        "initialized": true
+      }
+    },
+    "1849509514": {
+      "profile": {
+        "created": "2026-07-14T15:18:02.216747",
+        "telegram_id": "1849509514"
+      },
+      "wallet": {
+        "credits": 10
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 25,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding": {
+        "completed": false,
+        "stage": "questions"
+      },
+      "ai": {
+        "initialized": false
+      }
+    }
+  },
+  "students": {},
+  "tasks": {},
+  "votes": {},
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "role": "agent",
+      "state": "active",
+      "inbox": [],
+      "created": "2026-07-14 14:26"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": []
+    },
+    "3": {
+      "name": "SyncAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": []
+    },
+    "4": {
+      "name": "TokenAgent",
+      "role": "agent",
+      "state": "idle",
+      "inbox": [],
+      "wallet": "0x693db6c817083818696a7228aEbfBd0Cd3371f02"
+    }
+  }
+}

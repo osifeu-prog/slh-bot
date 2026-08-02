@@ -1,0 +1,24 @@
+{
+  "devices": {
+    "BRIDGE_PC_OSIF2_1784781883": {
+      "name": "PC_Osif2",
+      "type": "pc",
+      "status": "online",
+      "capabilities": [
+        "compute",
+        "network",
+        "storage",
+        "ai"
+      ],
+      "registered": 1784781883.6425214,
+      "last_seen": 1784781985.6041691,
+      "bridge": true
+    }
+  },
+  "termux-01": {
+    "name": "Termux Phone",
+    "type": "microserver",
+    "status": "online",
+    "last_seen": "now"
+  }
+}

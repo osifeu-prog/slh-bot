@@ -1,0 +1,55 @@
+
+import telebot, time, subprocess, os
+
+# === הגדרות ===
+BOT_TOKEN = "החלף_בטוקן_האמיתי_שלך"      # יש להזין טוקן אמיתי
+ADMIN_ID = 8789977826                     # ה‑ID שלך (המנהל)
+AGENT_PREFIX = "mytermux"                 # שם הסוכן
+
+bot = telebot.TeleBot(BOT_TOKEN)
+
+def send_to_bot(text):
+    """שולח הודעה לבוט (לצ'אט של המנהל – או לצ'אט ייעודי)"""
+    bot.send_message(ADMIN_ID, text)
+
+def register_agent():
+    """שולח פקודה לבוט ליצור סוכן"""
+    send_to_bot(f"/agent_create {AGENT_PREFIX}")
+    print(f"📡 Agent '{AGENT_PREFIX}' registered")
+
+def handle_incoming_commands():
+    """בודק את תיבת הסוכן (inbox) ומבצע פקודות"""
+    try:
+        # שליפת העדכונים האחרונים – מחכה 3 שניות לחדשים
+        updates = bot.get_updates(offset=-1, timeout=3, long_polling_timeout=5)
+        for upd in updates:
+            if not upd.message or not upd.message.text:
+                continue
+            msg = upd.message.text
+            # פקודות שמגיעות בצורה: /sendagent mytermux <הפקודה>
+            if msg.startswith(f"/sendagent {AGENT_PREFIX} "):
+                command = msg[len(f"/sendagent {AGENT_PREFIX} "):].strip()
+                print(f"⚡ Executing: {command}")
+                try:
+                    # הגבלת הרצה – למנוע פקודות מסוכנות (ניתן להרחיב)
+                    if command.startswith("rm ") or ".." in command or "sudo" in command:
+                        result = "❌ Blocked for safety"
+                    else:
+                        result = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as e:
+                    result = f"❌ Error: {e.output}"
+                except Exception as e:
+                    result = f"❌ Exception: {e}"
+                # שליחת התשובה לבוט
+                send_to_bot(f"{AGENT_PREFIX}: {result[:3000]}")
+                print(f"📤 Result: {result[:200]}")
+    except Exception as e:
+        # התעלם משגיאות polling קלות (409, רשת)
+        pass
+
+if __name__ == "__main__":
+    register_agent()
+    print("🔁 Agent client running – waiting for commands...")
+    while True:
+        handle_incoming_commands()
+        time.sleep(2)

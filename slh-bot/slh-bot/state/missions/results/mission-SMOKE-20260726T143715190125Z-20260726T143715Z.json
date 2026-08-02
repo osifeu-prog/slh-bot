@@ -1,0 +1,15 @@
+{
+  "result_id": "mission-SMOKE-20260726T143715190125Z-20260726T143715Z",
+  "mission_id": "SMOKE-20260726T143715190125Z",
+  "agent_id": "1",
+  "execution_status": "success",
+  "verified": true,
+  "mission_completion": "completed",
+  "result": {
+    "synchronization_check": "passed",
+    "execution_check": "passed"
+  },
+  "recorded_at": "2026-07-26T14:37:15.227070+00:00",
+  "completed_at": "2026-07-26T14:37:15.234519+00:00",
+  "result_sha256": "ff6610641f159e759effd3547e4400ddcabde2a52f68c03ae3b8e6f70e15247d"
+}

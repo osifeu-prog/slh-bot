@@ -1,0 +1,213 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-26T22:52:56.410327+00:00",
+  "total_commands": 13,
+  "found": 13,
+  "missing": 0,
+  "results": [
+    {
+      "command": "/start",
+      "status": "FOUND",
+      "files": [
+        "bot_stable.py",
+        "bot_core.py",
+        "help_handler.py",
+        "core/ask_router.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/help",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "language_handler.py",
+        "learning_path.py",
+        "core/ask_router.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/join",
+      "status": "FOUND",
+      "files": [
+        "course_handlers.py",
+        "econ_handler.py",
+        "help_handler.py",
+        "join_fix.py",
+        "learning_path.py",
+        "myprogress_handler.py",
+        "payment_handler.py",
+        "report_handler.py",
+        "tutorial_handler.py",
+        "core/ask_router.py",
+        "handlers/help_handler.py",
+        "handlers/me_handler.py",
+        "handlers/advanced_ask_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py",
+        "state/startup.py",
+        "state/snapshots/ask_router_stable_20260726_104012/advanced_ask_handler.py"
+      ]
+    },
+    {
+      "command": "/register",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/user",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/progress",
+      "status": "FOUND",
+      "files": [
+        "course_handlers.py",
+        "help_handler.py",
+        "handlers/academy_handler.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py",
+        "state/custom_handlers/token_wizard.py"
+      ]
+    },
+    {
+      "command": "/report",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/market",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "learning_path.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/balance",
+      "status": "FOUND",
+      "files": [
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "handlers/llm_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py",
+        "state/snapshots/ask_router_stable_20260726_104012/llm_handler.py"
+      ]
+    },
+    {
+      "command": "/token",
+      "status": "FOUND",
+      "files": [
+        "bot_stable.py",
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "handlers/llm_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py",
+        "state/custom_handlers/token_handler.py",
+        "state/custom_handlers/token_wizard.py",
+        "state/snapshots/ask_router_stable_20260726_104012/llm_handler.py"
+      ]
+    },
+    {
+      "command": "/course",
+      "status": "FOUND",
+      "files": [
+        "course_handlers.py",
+        "help_handler.py",
+        "handlers/help_handler.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/learn",
+      "status": "FOUND",
+      "files": [
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py"
+      ]
+    },
+    {
+      "command": "/ask",
+      "status": "FOUND",
+      "files": [
+        "advanced_ask_handler.py",
+        "ask_handler.py",
+        "bot_stable.py",
+        "help_handler.py",
+        "payment_handler.py",
+        "advanced_ask_handler.backup_2026-07-21_1632.py",
+        "tutorial_handler.py",
+        "core/ask_router.py",
+        "handlers/help_handler.py",
+        "handlers/llm_handler.py",
+        "handlers/advanced_ask_handler.py",
+        "tools/connect_ask_guard.py",
+        "tools/disable_botstable_ask.py",
+        "tools/user_command_audit.py",
+        "tools/user_command_wiring_audit.py",
+        "tools/loader_registration_audit.py",
+        "tools/runtime_command_registration_audit.py",
+        "state/snapshots/ask_router_stable_20260726_104012/advanced_ask_handler.py",
+        "state/snapshots/ask_router_stable_20260726_104012/llm_handler.py"
+      ]
+    }
+  ],
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

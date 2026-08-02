@@ -1,0 +1,4585 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-26T22:52:58.903393+00:00",
+  "files": [
+    {
+      "file": "bot_stable.py",
+      "class": "ENTRYPOINT",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "doctor_handler",
+          "name": "register_doctor_handlers",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "heb_convert",
+          "name": "convert_to_hebrew",
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 4
+        },
+        {
+          "type": "from_import",
+          "module": "dotenv",
+          "name": "load_dotenv",
+          "alias": null,
+          "line": 5
+        },
+        {
+          "type": "import",
+          "module": "sys",
+          "name": null,
+          "alias": null,
+          "line": 7
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 7
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 7
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 7
+        },
+        {
+          "type": "import",
+          "module": "telebot",
+          "name": null,
+          "alias": null,
+          "line": 15
+        },
+        {
+          "type": "from_import",
+          "module": "marketplace",
+          "name": "load_store",
+          "alias": null,
+          "line": 24
+        },
+        {
+          "type": "from_import",
+          "module": "marketplace",
+          "name": "save_store",
+          "alias": null,
+          "line": 24
+        },
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "profile_manager",
+          "alias": null,
+          "line": 25
+        },
+        {
+          "type": "from_import",
+          "module": "security",
+          "name": "permissions",
+          "alias": null,
+          "line": 26
+        },
+        {
+          "type": "from_import",
+          "module": "datetime",
+          "name": "datetime",
+          "alias": null,
+          "line": 27
+        },
+        {
+          "type": "from_import",
+          "module": "audit_logger",
+          "name": "audit",
+          "alias": null,
+          "line": 28
+        },
+        {
+          "type": "from_import",
+          "module": "audit_logger",
+          "name": "get_audit",
+          "alias": null,
+          "line": 28
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 29
+        },
+        {
+          "type": "from_import",
+          "module": "core.mission_lifecycle",
+          "name": "MissionLifecycleService",
+          "alias": null,
+          "line": 30
+        },
+        {
+          "type": "from_import",
+          "module": "plugins.task",
+          "name": "TaskPlugin",
+          "alias": null,
+          "line": 31
+        },
+        {
+          "type": "from_import",
+          "module": "payment_handler",
+          "name": "register_payment_handlers",
+          "alias": null,
+          "line": 32
+        },
+        {
+          "type": "from_import",
+          "module": "econ_handler",
+          "name": "register_econ_handlers",
+          "alias": null,
+          "line": 33
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.me_handler",
+          "name": "register",
+          "alias": "reg_me",
+          "line": 74
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.askdebug_handler",
+          "name": "register",
+          "alias": "reg_askdebug",
+          "line": 75
+        },
+        {
+          "type": "import",
+          "module": "importlib.util",
+          "name": null,
+          "alias": null,
+          "line": 85
+        },
+        {
+          "type": "import",
+          "module": "state_manager",
+          "name": null,
+          "alias": null,
+          "line": 105
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.loader",
+          "name": "load_handlers",
+          "alias": null,
+          "line": 905
+        },
+        {
+          "type": "from_import",
+          "module": "slh_lock",
+          "name": "slh_lock",
+          "alias": null,
+          "line": 19
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.llm_handler",
+          "name": "register",
+          "alias": "register_llm",
+          "line": 37
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 78
+        },
+        {
+          "type": "from_import",
+          "module": "core.ask_router",
+          "name": "route",
+          "alias": "ask_route",
+          "line": 124
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 217
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 218
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 219
+        },
+        {
+          "type": "from_import",
+          "module": "datetime",
+          "name": "datetime",
+          "alias": null,
+          "line": 220
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 285
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 285
+        },
+        {
+          "type": "import",
+          "module": "glob",
+          "name": null,
+          "alias": null,
+          "line": 285
+        },
+        {
+          "type": "import",
+          "module": "psutil",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "sqlite3",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 341
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 500
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 527
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 527
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 527
+        },
+        {
+          "type": "import",
+          "module": "urllib.request",
+          "name": null,
+          "alias": null,
+          "line": 576
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 576
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 576
+        },
+        {
+          "type": "import",
+          "module": "ssl",
+          "name": null,
+          "alias": null,
+          "line": 576
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 621
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 637
+        },
+        {
+          "type": "import",
+          "module": "re",
+          "name": null,
+          "alias": null,
+          "line": 664
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 783
+        },
+        {
+          "type": "import",
+          "module": "py_compile",
+          "name": null,
+          "alias": null,
+          "line": 783
+        },
+        {
+          "type": "import",
+          "module": "viewfile_handler",
+          "name": null,
+          "alias": null,
+          "line": 834
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.academy_menu_handler",
+          "name": "register",
+          "alias": "register_academy_menu",
+          "line": 849
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.lesson_handler",
+          "name": "register",
+          "alias": "register_lesson",
+          "line": 858
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.academy_handler",
+          "name": "register",
+          "alias": "register_academy",
+          "line": 867
+        },
+        {
+          "type": "from_import",
+          "module": "admin_utils",
+          "name": "is_admin",
+          "alias": null,
+          "line": 884
+        },
+        {
+          "type": "from_import",
+          "module": "refresh_token_handler",
+          "name": "init",
+          "alias": "init_refresh_token",
+          "line": 915
+        },
+        {
+          "type": "import",
+          "module": "datetime",
+          "name": null,
+          "alias": null,
+          "line": 960
+        },
+        {
+          "type": "import",
+          "module": "traceback",
+          "name": null,
+          "alias": null,
+          "line": 983
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.llm_handler",
+          "name": "query_llm",
+          "alias": null,
+          "line": 130
+        },
+        {
+          "type": "from_import",
+          "module": "core.context_builder",
+          "name": "get_context",
+          "alias": null,
+          "line": 131
+        },
+        {
+          "type": "import",
+          "module": "psutil",
+          "name": null,
+          "alias": null,
+          "line": 421
+        },
+        {
+          "type": "import",
+          "module": "tutorial_handler",
+          "name": null,
+          "alias": null,
+          "line": 841
+        },
+        {
+          "type": "import",
+          "module": "re",
+          "name": null,
+          "alias": null,
+          "line": 805
+        }
+      ],
+      "register_functions": [],
+      "register_calls": [
+        {
+          "function": "load_handlers",
+          "line": 906
+        },
+        {
+          "function": "register",
+          "line": 835
+        },
+        {
+          "function": "register_academy_menu",
+          "line": 850
+        },
+        {
+          "function": "register_lesson",
+          "line": 859
+        },
+        {
+          "function": "register_academy",
+          "line": 868
+        },
+        {
+          "function": "register_llm",
+          "line": 923
+        },
+        {
+          "function": "register_doctor_handlers",
+          "line": 985
+        },
+        {
+          "function": "load",
+          "line": 66
+        },
+        {
+          "function": "load",
+          "line": 289
+        },
+        {
+          "function": "register",
+          "line": 842
+        },
+        {
+          "function": "load",
+          "line": 50
+        },
+        {
+          "function": "load",
+          "line": 160
+        },
+        {
+          "function": "load",
+          "line": 356
+        },
+        {
+          "function": "load",
+          "line": 469
+        },
+        {
+          "function": "load",
+          "line": 533
+        },
+        {
+          "function": "load",
+          "line": 288
+        },
+        {
+          "function": "load",
+          "line": 474
+        },
+        {
+          "function": "register",
+          "line": 97
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/sync"
+          ],
+          "function": "sync_command",
+          "line": 216
+        },
+        {
+          "commands": [
+            "/system_visibility"
+          ],
+          "function": "system_visibility",
+          "line": 283
+        },
+        {
+          "commands": [
+            "/status"
+          ],
+          "function": "status",
+          "line": 332
+        },
+        {
+          "commands": [
+            "/health"
+          ],
+          "function": "health",
+          "line": 340
+        },
+        {
+          "commands": [
+            "/results"
+          ],
+          "function": "results",
+          "line": 372
+        },
+        {
+          "commands": [
+            "/master"
+          ],
+          "function": "master",
+          "line": 377
+        },
+        {
+          "commands": [
+            "/backup"
+          ],
+          "function": "backup",
+          "line": 381
+        },
+        {
+          "commands": [
+            "/restart"
+          ],
+          "function": "restart",
+          "line": 385
+        },
+        {
+          "commands": [
+            "/logs"
+          ],
+          "function": "logs",
+          "line": 394
+        },
+        {
+          "commands": [
+            "/clean"
+          ],
+          "function": "clean",
+          "line": 406
+        },
+        {
+          "commands": [
+            "/audit"
+          ],
+          "function": "audit_cmd",
+          "line": 410
+        },
+        {
+          "commands": [
+            "/memory"
+          ],
+          "function": "memory",
+          "line": 419
+        },
+        {
+          "commands": [
+            "/debug"
+          ],
+          "function": "debug",
+          "line": 429
+        },
+        {
+          "commands": [
+            "/deploy"
+          ],
+          "function": "deploy",
+          "line": 438
+        },
+        {
+          "commands": [
+            "/errors"
+          ],
+          "function": "errors",
+          "line": 443
+        },
+        {
+          "commands": [
+            "/plugin"
+          ],
+          "function": "plugin",
+          "line": 453
+        },
+        {
+          "commands": [
+            "/goal"
+          ],
+          "function": "goal",
+          "line": 462
+        },
+        {
+          "commands": [
+            "/sysinfo"
+          ],
+          "function": "sysinfo",
+          "line": 478
+        },
+        {
+          "commands": [
+            "/disk"
+          ],
+          "function": "disk",
+          "line": 495
+        },
+        {
+          "commands": [
+            "/test"
+          ],
+          "function": "test",
+          "line": 499
+        },
+        {
+          "commands": [
+            "/kernellog"
+          ],
+          "function": "kernellog",
+          "line": 505
+        },
+        {
+          "commands": [
+            "/kernelstatus"
+          ],
+          "function": "kernelstatus",
+          "line": 509
+        },
+        {
+          "commands": [
+            "/update"
+          ],
+          "function": "update",
+          "line": 513
+        },
+        {
+          "commands": [
+            "/rollback"
+          ],
+          "function": "rollback",
+          "line": 518
+        },
+        {
+          "commands": [
+            "/test_agents"
+          ],
+          "function": "test_agents",
+          "line": 526
+        },
+        {
+          "commands": [
+            "/user"
+          ],
+          "function": "user",
+          "line": 560
+        },
+        {
+          "commands": [
+            "/rlogs"
+          ],
+          "function": "rlogs",
+          "line": 575
+        },
+        {
+          "commands": [
+            "/exec"
+          ],
+          "function": "exec_cmd",
+          "line": 613
+        },
+        {
+          "commands": [
+            "/termlog"
+          ],
+          "function": "termlog",
+          "line": 633
+        },
+        {
+          "commands": [
+            "/market"
+          ],
+          "function": "market",
+          "line": 647
+        },
+        {
+          "commands": [
+            "/market_installed"
+          ],
+          "function": "market_installed",
+          "line": 653
+        },
+        {
+          "commands": [
+            "/market_install"
+          ],
+          "function": "market_install",
+          "line": 661
+        },
+        {
+          "commands": [
+            "/market_search"
+          ],
+          "function": "market_search",
+          "line": 679
+        },
+        {
+          "commands": [
+            "/market_rate"
+          ],
+          "function": "market_rate",
+          "line": 693
+        },
+        {
+          "commands": [
+            "/market_upload"
+          ],
+          "function": "market_upload",
+          "line": 718
+        },
+        {
+          "commands": [
+            "/testcmd"
+          ],
+          "function": "testcmd",
+          "line": 748
+        },
+        {
+          "commands": [
+            "/debugcmd"
+          ],
+          "function": "debugcmd",
+          "line": 766
+        },
+        {
+          "commands": [
+            "/diagnose"
+          ],
+          "function": "diagnose_cmd",
+          "line": 782
+        },
+        {
+          "commands": [
+            "/broadcast"
+          ],
+          "function": "broadcast",
+          "line": 932
+        },
+        {
+          "commands": [
+            "/snapshot"
+          ],
+          "function": "snapshot",
+          "line": 959
+        }
+      ],
+      "command_mentions": [
+        "/app",
+        "/ask",
+        "/askdebug",
+        "/backboard",
+        "/broadcast",
+        "/debug",
+        "/debugcmd",
+        "/dev",
+        "/exec",
+        "/goal",
+        "/market_install",
+        "/market_rate",
+        "/market_search",
+        "/market_upload",
+        "/me",
+        "/plugin",
+        "/proc",
+        "/slh_clean",
+        "/start",
+        "/testcmd",
+        "/token",
+        "/vote"
+      ]
+    },
+    {
+      "file": "handlers/academy_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "academy_manager",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/courses"
+          ],
+          "function": "courses",
+          "line": 7
+        },
+        {
+          "commands": [
+            "/progress"
+          ],
+          "function": "progress",
+          "line": 33
+        },
+        {
+          "commands": [
+            "/complete"
+          ],
+          "function": "complete",
+          "line": 73
+        }
+      ],
+      "command_mentions": [
+        "/course_",
+        "/progress"
+      ]
+    },
+    {
+      "file": "handlers/academy_menu_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "academy_manager",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "profile_manager",
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "telebot.types",
+          "name": "InlineKeyboardMarkup",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "telebot.types",
+          "name": "InlineKeyboardButton",
+          "alias": null,
+          "line": 3
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 6,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/academy"
+          ],
+          "function": "academy",
+          "line": 9
+        }
+      ],
+      "command_mentions": [
+        "/lesson"
+      ]
+    },
+    {
+      "file": "handlers/advanced_ask_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "pathlib",
+          "name": "Path",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "core.ask_guard",
+          "name": "guard",
+          "alias": null,
+          "line": 5
+        },
+        {
+          "type": "from_import",
+          "module": "core.ask_guard",
+          "name": "guarded_message",
+          "alias": null,
+          "line": 5
+        },
+        {
+          "type": "from_import",
+          "module": "core.ai_guard",
+          "name": "provider_available",
+          "alias": null,
+          "line": 6
+        },
+        {
+          "type": "from_import",
+          "module": "handlers.llm_handler",
+          "name": "query_llm_with_context",
+          "alias": null,
+          "line": 7
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register_ask_handler",
+          "line": 83,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 44
+        },
+        {
+          "function": "load",
+          "line": 56
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/ask"
+          ],
+          "function": "ask",
+          "line": 86
+        }
+      ],
+      "command_mentions": [
+        "/ask",
+        "/join"
+      ]
+    },
+    {
+      "file": "handlers/agents_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "list_agents",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "get_agent",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "create_agent",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "update_agent",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "delete_agent",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "send_message",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.agent_registry",
+          "name": "get_inbox",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 12,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/agent_create"
+          ],
+          "function": "agent_create_cmd",
+          "line": 15
+        },
+        {
+          "commands": [
+            "/agents"
+          ],
+          "function": "agents_list_cmd",
+          "line": 44
+        },
+        {
+          "commands": [
+            "/agentstate"
+          ],
+          "function": "agentstate_cmd",
+          "line": 70
+        },
+        {
+          "commands": [
+            "/sendagent"
+          ],
+          "function": "sendagent_cmd",
+          "line": 106
+        },
+        {
+          "commands": [
+            "/inbox"
+          ],
+          "function": "inbox_cmd",
+          "line": 142
+        },
+        {
+          "commands": [
+            "/agent_delete"
+          ],
+          "function": "agent_delete_cmd",
+          "line": 198
+        }
+      ],
+      "command_mentions": [
+        "/agent_create",
+        "/agent_delete",
+        "/agentstate",
+        "/inbox",
+        "/sendagent"
+      ]
+    },
+    {
+      "file": "handlers/askdebug_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core.ask_debug",
+          "name": "debug_ask",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/askdebug"
+          ],
+          "function": "askdebug_cmd",
+          "line": 6
+        }
+      ],
+      "command_mentions": [
+        "/askdebug",
+        "/pre"
+      ]
+    },
+    {
+      "file": "handlers/audit_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core.audit",
+          "name": "read_events",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 64,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/logs"
+          ],
+          "function": "logs_cmd",
+          "line": 67
+        }
+      ],
+      "command_mentions": [
+        "/logs"
+      ]
+    },
+    {
+      "file": "handlers/dashboard_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "telebot",
+          "name": "types",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 9
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/dashboard"
+          ],
+          "function": "dashboard",
+          "line": 6
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/device_bridge.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "flask",
+          "name": "request",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "flask",
+          "name": "jsonify",
+          "alias": null,
+          "line": 3
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register_api",
+          "line": 2,
+          "async": false,
+          "arguments": [
+            "app"
+          ]
+        },
+        {
+          "function": "register",
+          "line": 15,
+          "async": false,
+          "arguments": []
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [],
+      "command_mentions": [
+        "/get_tasks",
+        "/register_esp",
+        "/result"
+      ]
+    },
+    {
+      "file": "handlers/device_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "re",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register_device",
+          "line": 17,
+          "async": false,
+          "arguments": [
+            "bot",
+            "m"
+          ]
+        },
+        {
+          "function": "register",
+          "line": 120,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "register_device",
+          "line": 123
+        },
+        {
+          "function": "load",
+          "line": 6
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/device_register"
+          ],
+          "function": "device_register_cmd",
+          "line": 122
+        },
+        {
+          "commands": [
+            "/device_list"
+          ],
+          "function": "device_list_cmd",
+          "line": 126
+        },
+        {
+          "commands": [
+            "/device_status"
+          ],
+          "function": "device_status_cmd",
+          "line": 130
+        },
+        {
+          "commands": [
+            "/device_delete"
+          ],
+          "function": "device_delete_cmd",
+          "line": 134
+        },
+        {
+          "commands": [
+            "/device_heartbeat"
+          ],
+          "function": "device_heartbeat_cmd",
+          "line": 138
+        }
+      ],
+      "command_mentions": [
+        "/device_delete",
+        "/device_heartbeat",
+        "/device_register",
+        "/device_status"
+      ]
+    },
+    {
+      "file": "handlers/feedback_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "datetime",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 21
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/feedback"
+          ],
+          "function": "feedback_cmd",
+          "line": 7
+        }
+      ],
+      "command_mentions": [
+        "/feedback"
+      ]
+    },
+    {
+      "file": "handlers/gateway_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "SLH_GATEWAY",
+          "name": "SLHGateway",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 6,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/gateway"
+          ],
+          "function": "gateway_command",
+          "line": 9
+        },
+        {
+          "commands": [
+            "/gateway_test"
+          ],
+          "function": "gateway_test",
+          "line": 32
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/help_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [],
+      "register_functions": [
+        {
+          "function": "register_help",
+          "line": 1,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/help"
+          ],
+          "function": "help_command",
+          "line": 3
+        }
+      ],
+      "command_mentions": [
+        "/admin",
+        "/agent_create",
+        "/agents",
+        "/agentstate",
+        "/ask",
+        "/balance",
+        "/buy",
+        "/complete",
+        "/course",
+        "/courses",
+        "/demo",
+        "/endday",
+        "/evening_report",
+        "/help",
+        "/inbox",
+        "/join",
+        "/journal",
+        "/journal_read",
+        "/leaderboard",
+        "/market",
+        "/market_installed",
+        "/market_rate",
+        "/market_search",
+        "/morning_report",
+        "/my_junk",
+        "/myprogress",
+        "/myreport",
+        "/next",
+        "/pay",
+        "/progress",
+        "/project",
+        "/referral",
+        "/register",
+        "/report",
+        "/sendagent",
+        "/start",
+        "/start_course",
+        "/task",
+        "/token",
+        "/token_wizard",
+        "/user",
+        "/usereferral"
+      ]
+    },
+    {
+      "file": "handlers/join_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 28
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/join"
+          ],
+          "function": "join_start",
+          "line": 7
+        },
+        {
+          "commands": [
+            "/cancel_join"
+          ],
+          "function": "join_cancel",
+          "line": 44
+        }
+      ],
+      "command_mentions": [
+        "/courses",
+        "/leaderboard",
+        "/token_wizard"
+      ]
+    },
+    {
+      "file": "handlers/kb_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 6,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/fixkb"
+          ],
+          "function": "fixkb",
+          "line": 8
+        }
+      ],
+      "command_mentions": [
+        "/fixkb"
+      ]
+    },
+    {
+      "file": "handlers/lesson_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "lesson_engine",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/lesson"
+          ],
+          "function": "lesson",
+          "line": 7
+        },
+        {
+          "commands": [
+            "/finish"
+          ],
+          "function": "finish",
+          "line": 69
+        }
+      ],
+      "command_mentions": [
+        "/finish"
+      ]
+    },
+    {
+      "file": "handlers/llm_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "datetime",
+          "name": "datetime",
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "core.ai_guard",
+          "name": "provider_available",
+          "alias": null,
+          "line": 4
+        },
+        {
+          "type": "from_import",
+          "module": "core.ai_guard",
+          "name": "provider_success",
+          "alias": null,
+          "line": 4
+        },
+        {
+          "type": "from_import",
+          "module": "core.ai_guard",
+          "name": "provider_failure",
+          "alias": null,
+          "line": 4
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 180
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 181
+        },
+        {
+          "type": "import",
+          "module": "requests",
+          "name": null,
+          "alias": null,
+          "line": 182
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 143
+        },
+        {
+          "type": "import",
+          "module": "groq",
+          "name": null,
+          "alias": null,
+          "line": 110
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 87,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 21
+        },
+        {
+          "function": "load",
+          "line": 199
+        },
+        {
+          "function": "load",
+          "line": 79
+        },
+        {
+          "function": "load",
+          "line": 124
+        },
+        {
+          "function": "load",
+          "line": 101
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/journal_ask"
+          ],
+          "function": "journal_ask",
+          "line": 90
+        }
+      ],
+      "command_mentions": [
+        "/api",
+        "/ask",
+        "/balance",
+        "/buy",
+        "/journal_ask",
+        "/pay",
+        "/stake",
+        "/stake_join",
+        "/staking_report",
+        "/token"
+      ]
+    },
+    {
+      "file": "handlers/loader.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "handlers.advanced_ask_handler",
+          "name": "register_ask_handler",
+          "alias": null,
+          "line": 25
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "load_handlers",
+          "line": 1,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "register_ask_handler",
+          "line": 26
+        },
+        {
+          "function": "register",
+          "line": 15
+        },
+        {
+          "function": "register",
+          "line": 17
+        }
+      ],
+      "decorated_commands": [],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/map_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 2,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/map"
+          ],
+          "function": "map_cmd",
+          "line": 4
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/me_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 3,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 9
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/me"
+          ],
+          "function": "me_cmd",
+          "line": 5
+        }
+      ],
+      "command_mentions": [
+        "/join"
+      ]
+    },
+    {
+      "file": "handlers/mission_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "datetime",
+          "name": null,
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "core.mission_state",
+          "name": "MissionState",
+          "alias": null,
+          "line": 5
+        },
+        {
+          "type": "from_import",
+          "module": "core.mission_state",
+          "name": "MissionStateNormalizer",
+          "alias": null,
+          "line": 5
+        },
+        {
+          "type": "from_import",
+          "module": "core.mission_lifecycle",
+          "name": "MissionLifecycleService",
+          "alias": null,
+          "line": 10
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 14,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 217
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/mission"
+          ],
+          "function": "mission_cmd",
+          "line": 26
+        }
+      ],
+      "command_mentions": [
+        "/mission"
+      ]
+    },
+    {
+      "file": "handlers/monitor_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "datetime",
+          "name": "datetime",
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 72,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/monitor_list"
+          ],
+          "function": "monitor_list_cmd",
+          "line": 74
+        },
+        {
+          "commands": [
+            "/monitor_status"
+          ],
+          "function": "monitor_status_cmd",
+          "line": 76
+        },
+        {
+          "commands": [
+            "/monitor_logs"
+          ],
+          "function": "monitor_logs_cmd",
+          "line": 78
+        }
+      ],
+      "command_mentions": [
+        "/monitor_logs",
+        "/monitor_status"
+      ]
+    },
+    {
+      "file": "handlers/morning_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "datetime",
+          "name": "datetime",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 13,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/morning"
+          ],
+          "function": "morning_telegram",
+          "line": 17
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/onboarding_v2.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "telebot",
+          "name": "types",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 11
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/start"
+          ],
+          "function": "start",
+          "line": 6
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/ownership_transfer_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "datetime",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "profile_manager",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "core",
+          "name": "academy_manager",
+          "alias": null,
+          "line": 4
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 11,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/graduate"
+          ],
+          "function": "graduate_start",
+          "line": 16
+        },
+        {
+          "commands": [
+            "/confirm_graduation"
+          ],
+          "function": "graduate_confirm",
+          "line": 61
+        }
+      ],
+      "command_mentions": [
+        "/confirm_graduation"
+      ]
+    },
+    {
+      "file": "handlers/system_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 12,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/slh"
+          ],
+          "function": "slh_telegram",
+          "line": 16
+        }
+      ],
+      "command_mentions": [
+        "/morning",
+        "/status",
+        "/task"
+      ]
+    },
+    {
+      "file": "handlers/task_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "services",
+          "name": "task_service",
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 48,
+          "async": false,
+          "arguments": [
+            "bot",
+            "context"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/task"
+          ],
+          "function": "task_telegram",
+          "line": 53
+        },
+        {
+          "commands": [
+            "/task_add"
+          ],
+          "function": "task_add_telegram",
+          "line": 57
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/termux_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "admin_utils",
+          "name": "is_admin",
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/termux"
+          ],
+          "function": "termux_cmd",
+          "line": 6
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/user_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 9,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/profile"
+          ],
+          "function": "user_info",
+          "line": 11
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "handlers/voting_handler.py",
+      "class": "HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [],
+      "register_functions": [
+        {
+          "function": "register_handlers",
+          "line": 2,
+          "async": false,
+          "arguments": [
+            "bot",
+            "kernel"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/__init__.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [],
+      "register_functions": [],
+      "register_calls": [],
+      "decorated_commands": [],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/ai_event_handler.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "random",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 27,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/ai_voting_handler.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 12,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        },
+        {
+          "function": "register_ai",
+          "line": 14,
+          "async": false,
+          "arguments": [
+            "m"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/register_ai"
+          ],
+          "function": "register_ai",
+          "line": 14
+        },
+        {
+          "commands": [
+            "/propose"
+          ],
+          "function": "propose",
+          "line": 38
+        },
+        {
+          "commands": [
+            "/vote"
+          ],
+          "function": "vote",
+          "line": 52
+        },
+        {
+          "commands": [
+            "/tally"
+          ],
+          "function": "tally",
+          "line": 77
+        }
+      ],
+      "command_mentions": [
+        "/propose",
+        "/tally",
+        "/vote"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/audit_handler.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "state_manager",
+          "name": null,
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "state.custom_handlers.ai_event_handler",
+          "name": "register",
+          "alias": "ra",
+          "line": 11
+        },
+        {
+          "type": "from_import",
+          "module": "state.custom_handlers.task_listener",
+          "name": "register",
+          "alias": "rt",
+          "line": 12
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/verify_agents"
+          ],
+          "function": "verify_agents",
+          "line": 7
+        },
+        {
+          "commands": [
+            "/verify_status"
+          ],
+          "function": "verify_status",
+          "line": 25
+        },
+        {
+          "commands": [
+            "/delegate"
+          ],
+          "function": "delegate",
+          "line": 36
+        },
+        {
+          "commands": [
+            "/confirm_verification"
+          ],
+          "function": "confirm_verification",
+          "line": 54
+        }
+      ],
+      "command_mentions": [
+        "/confirm_verification",
+        "/delegate"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/developer.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 29,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 10
+        },
+        {
+          "function": "load",
+          "line": 23
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/developer_join"
+          ],
+          "function": "dev_join",
+          "line": 31
+        },
+        {
+          "commands": [
+            "/developer_list"
+          ],
+          "function": "dev_list",
+          "line": 48
+        },
+        {
+          "commands": [
+            "/developer_promote"
+          ],
+          "function": "dev_promote",
+          "line": 59
+        }
+      ],
+      "command_mentions": [
+        "/developer_promote"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/dynamic_leaderboard.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 8
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/leaderboard"
+          ],
+          "function": "dynamic_leaderboard",
+          "line": 7
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/ping_fullcheck_handler.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "random",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "state_manager",
+          "name": null,
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 3
+        },
+        {
+          "type": "from_import",
+          "module": "state.custom_handlers.ai_event_handler",
+          "name": "register",
+          "alias": "ra",
+          "line": 15
+        },
+        {
+          "type": "from_import",
+          "module": "state.custom_handlers.task_listener",
+          "name": "register",
+          "alias": "rt",
+          "line": 16
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/ping"
+          ],
+          "function": "ping_cmd",
+          "line": 7
+        },
+        {
+          "commands": [
+            "/fullcheck"
+          ],
+          "function": "fullcheck_cmd",
+          "line": 11
+        }
+      ],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/reputation_admin.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "state.reputation_service",
+          "name": "reward_user",
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "state.reputation_audit",
+          "name": "record_reward",
+          "alias": null,
+          "line": 2
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5,
+          "async": false,
+          "arguments": [
+            "bot",
+            "is_admin_func"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/reward"
+          ],
+          "function": "reward_command",
+          "line": 12
+        }
+      ],
+      "command_mentions": [
+        "/reward"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/staking_basic.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 13,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 7
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/stake_deposit"
+          ],
+          "function": "stake_deposit",
+          "line": 15
+        },
+        {
+          "commands": [
+            "/stake_claim"
+          ],
+          "function": "stake_claim",
+          "line": 42
+        },
+        {
+          "commands": [
+            "/stake_info"
+          ],
+          "function": "stake_info",
+          "line": 62
+        }
+      ],
+      "command_mentions": [
+        "/stake_deposit"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/task_listener.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "alias": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "state_manager",
+          "name": null,
+          "alias": null,
+          "line": 2
+        },
+        {
+          "type": "from_import",
+          "module": "core.event_bus",
+          "name": "EventBus",
+          "alias": null,
+          "line": 3
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 21,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [],
+      "command_mentions": []
+    },
+    {
+      "file": "state/custom_handlers/token_handler.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 27,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [
+        {
+          "function": "load",
+          "line": 12
+        },
+        {
+          "function": "load",
+          "line": 21
+        }
+      ],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/token"
+          ],
+          "function": "token_cmd",
+          "line": 30
+        }
+      ],
+      "command_mentions": [
+        "/bsc",
+        "/token"
+      ]
+    },
+    {
+      "file": "state/custom_handlers/token_wizard.py",
+      "class": "CUSTOM_HANDLER",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "alias": null,
+          "line": 1
+        }
+      ],
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 23,
+          "async": false,
+          "arguments": [
+            "bot"
+          ]
+        }
+      ],
+      "register_calls": [],
+      "decorated_commands": [
+        {
+          "commands": [
+            "/token_wizard"
+          ],
+          "function": "wizard",
+          "line": 25
+        }
+      ],
+      "command_mentions": [
+        "/data",
+        "/progress",
+        "/stake_join",
+        "/testnet",
+        "/token",
+        "/token_wizard"
+      ]
+    }
+  ],
+  "command_map": {
+    "/academy": [
+      {
+        "source": "handlers/academy_menu_handler.py",
+        "type": "DECORATOR",
+        "function": "academy",
+        "line": 9
+      }
+    ],
+    "/agent_create": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "agent_create_cmd",
+        "line": 15
+      }
+    ],
+    "/agent_delete": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "agent_delete_cmd",
+        "line": 198
+      }
+    ],
+    "/agents": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "agents_list_cmd",
+        "line": 44
+      }
+    ],
+    "/agentstate": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "agentstate_cmd",
+        "line": 70
+      }
+    ],
+    "/ask": [
+      {
+        "source": "handlers/advanced_ask_handler.py",
+        "type": "DECORATOR",
+        "function": "ask",
+        "line": 86
+      }
+    ],
+    "/askdebug": [
+      {
+        "source": "handlers/askdebug_handler.py",
+        "type": "DECORATOR",
+        "function": "askdebug_cmd",
+        "line": 6
+      }
+    ],
+    "/audit": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "audit_cmd",
+        "line": 410
+      }
+    ],
+    "/backup": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "backup",
+        "line": 381
+      }
+    ],
+    "/broadcast": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "broadcast",
+        "line": 932
+      }
+    ],
+    "/cancel_join": [
+      {
+        "source": "handlers/join_handler.py",
+        "type": "DECORATOR",
+        "function": "join_cancel",
+        "line": 44
+      }
+    ],
+    "/clean": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "clean",
+        "line": 406
+      }
+    ],
+    "/complete": [
+      {
+        "source": "handlers/academy_handler.py",
+        "type": "DECORATOR",
+        "function": "complete",
+        "line": 73
+      }
+    ],
+    "/confirm_graduation": [
+      {
+        "source": "handlers/ownership_transfer_handler.py",
+        "type": "DECORATOR",
+        "function": "graduate_confirm",
+        "line": 61
+      }
+    ],
+    "/confirm_verification": [
+      {
+        "source": "state/custom_handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "confirm_verification",
+        "line": 54
+      }
+    ],
+    "/courses": [
+      {
+        "source": "handlers/academy_handler.py",
+        "type": "DECORATOR",
+        "function": "courses",
+        "line": 7
+      }
+    ],
+    "/dashboard": [
+      {
+        "source": "handlers/dashboard_handler.py",
+        "type": "DECORATOR",
+        "function": "dashboard",
+        "line": 6
+      }
+    ],
+    "/debug": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "debug",
+        "line": 429
+      }
+    ],
+    "/debugcmd": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "debugcmd",
+        "line": 766
+      }
+    ],
+    "/delegate": [
+      {
+        "source": "state/custom_handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "delegate",
+        "line": 36
+      }
+    ],
+    "/deploy": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "deploy",
+        "line": 438
+      }
+    ],
+    "/developer_join": [
+      {
+        "source": "state/custom_handlers/developer.py",
+        "type": "DECORATOR",
+        "function": "dev_join",
+        "line": 31
+      }
+    ],
+    "/developer_list": [
+      {
+        "source": "state/custom_handlers/developer.py",
+        "type": "DECORATOR",
+        "function": "dev_list",
+        "line": 48
+      }
+    ],
+    "/developer_promote": [
+      {
+        "source": "state/custom_handlers/developer.py",
+        "type": "DECORATOR",
+        "function": "dev_promote",
+        "line": 59
+      }
+    ],
+    "/device_delete": [
+      {
+        "source": "handlers/device_handler.py",
+        "type": "DECORATOR",
+        "function": "device_delete_cmd",
+        "line": 134
+      }
+    ],
+    "/device_heartbeat": [
+      {
+        "source": "handlers/device_handler.py",
+        "type": "DECORATOR",
+        "function": "device_heartbeat_cmd",
+        "line": 138
+      }
+    ],
+    "/device_list": [
+      {
+        "source": "handlers/device_handler.py",
+        "type": "DECORATOR",
+        "function": "device_list_cmd",
+        "line": 126
+      }
+    ],
+    "/device_register": [
+      {
+        "source": "handlers/device_handler.py",
+        "type": "DECORATOR",
+        "function": "device_register_cmd",
+        "line": 122
+      }
+    ],
+    "/device_status": [
+      {
+        "source": "handlers/device_handler.py",
+        "type": "DECORATOR",
+        "function": "device_status_cmd",
+        "line": 130
+      }
+    ],
+    "/diagnose": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "diagnose_cmd",
+        "line": 782
+      }
+    ],
+    "/disk": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "disk",
+        "line": 495
+      }
+    ],
+    "/errors": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "errors",
+        "line": 443
+      }
+    ],
+    "/exec": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "exec_cmd",
+        "line": 613
+      }
+    ],
+    "/feedback": [
+      {
+        "source": "handlers/feedback_handler.py",
+        "type": "DECORATOR",
+        "function": "feedback_cmd",
+        "line": 7
+      }
+    ],
+    "/finish": [
+      {
+        "source": "handlers/lesson_handler.py",
+        "type": "DECORATOR",
+        "function": "finish",
+        "line": 69
+      }
+    ],
+    "/fixkb": [
+      {
+        "source": "handlers/kb_handler.py",
+        "type": "DECORATOR",
+        "function": "fixkb",
+        "line": 8
+      }
+    ],
+    "/fullcheck": [
+      {
+        "source": "state/custom_handlers/ping_fullcheck_handler.py",
+        "type": "DECORATOR",
+        "function": "fullcheck_cmd",
+        "line": 11
+      }
+    ],
+    "/gateway": [
+      {
+        "source": "handlers/gateway_handler.py",
+        "type": "DECORATOR",
+        "function": "gateway_command",
+        "line": 9
+      }
+    ],
+    "/gateway_test": [
+      {
+        "source": "handlers/gateway_handler.py",
+        "type": "DECORATOR",
+        "function": "gateway_test",
+        "line": 32
+      }
+    ],
+    "/goal": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "goal",
+        "line": 462
+      }
+    ],
+    "/graduate": [
+      {
+        "source": "handlers/ownership_transfer_handler.py",
+        "type": "DECORATOR",
+        "function": "graduate_start",
+        "line": 16
+      }
+    ],
+    "/health": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "health",
+        "line": 340
+      }
+    ],
+    "/help": [
+      {
+        "source": "handlers/help_handler.py",
+        "type": "DECORATOR",
+        "function": "help_command",
+        "line": 3
+      }
+    ],
+    "/inbox": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "inbox_cmd",
+        "line": 142
+      }
+    ],
+    "/join": [
+      {
+        "source": "handlers/join_handler.py",
+        "type": "DECORATOR",
+        "function": "join_start",
+        "line": 7
+      }
+    ],
+    "/journal_ask": [
+      {
+        "source": "handlers/llm_handler.py",
+        "type": "DECORATOR",
+        "function": "journal_ask",
+        "line": 90
+      }
+    ],
+    "/kernellog": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "kernellog",
+        "line": 505
+      }
+    ],
+    "/kernelstatus": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "kernelstatus",
+        "line": 509
+      }
+    ],
+    "/leaderboard": [
+      {
+        "source": "state/custom_handlers/dynamic_leaderboard.py",
+        "type": "DECORATOR",
+        "function": "dynamic_leaderboard",
+        "line": 7
+      }
+    ],
+    "/lesson": [
+      {
+        "source": "handlers/lesson_handler.py",
+        "type": "DECORATOR",
+        "function": "lesson",
+        "line": 7
+      }
+    ],
+    "/logs": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "logs",
+        "line": 394
+      },
+      {
+        "source": "handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "logs_cmd",
+        "line": 67
+      }
+    ],
+    "/map": [
+      {
+        "source": "handlers/map_handler.py",
+        "type": "DECORATOR",
+        "function": "map_cmd",
+        "line": 4
+      }
+    ],
+    "/market": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market",
+        "line": 647
+      }
+    ],
+    "/market_install": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market_install",
+        "line": 661
+      }
+    ],
+    "/market_installed": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market_installed",
+        "line": 653
+      }
+    ],
+    "/market_rate": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market_rate",
+        "line": 693
+      }
+    ],
+    "/market_search": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market_search",
+        "line": 679
+      }
+    ],
+    "/market_upload": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "market_upload",
+        "line": 718
+      }
+    ],
+    "/master": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "master",
+        "line": 377
+      }
+    ],
+    "/me": [
+      {
+        "source": "handlers/me_handler.py",
+        "type": "DECORATOR",
+        "function": "me_cmd",
+        "line": 5
+      }
+    ],
+    "/memory": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "memory",
+        "line": 419
+      }
+    ],
+    "/mission": [
+      {
+        "source": "handlers/mission_handler.py",
+        "type": "DECORATOR",
+        "function": "mission_cmd",
+        "line": 26
+      }
+    ],
+    "/monitor_list": [
+      {
+        "source": "handlers/monitor_handler.py",
+        "type": "DECORATOR",
+        "function": "monitor_list_cmd",
+        "line": 74
+      }
+    ],
+    "/monitor_logs": [
+      {
+        "source": "handlers/monitor_handler.py",
+        "type": "DECORATOR",
+        "function": "monitor_logs_cmd",
+        "line": 78
+      }
+    ],
+    "/monitor_status": [
+      {
+        "source": "handlers/monitor_handler.py",
+        "type": "DECORATOR",
+        "function": "monitor_status_cmd",
+        "line": 76
+      }
+    ],
+    "/morning": [
+      {
+        "source": "handlers/morning_handler.py",
+        "type": "DECORATOR",
+        "function": "morning_telegram",
+        "line": 17
+      }
+    ],
+    "/ping": [
+      {
+        "source": "state/custom_handlers/ping_fullcheck_handler.py",
+        "type": "DECORATOR",
+        "function": "ping_cmd",
+        "line": 7
+      }
+    ],
+    "/plugin": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "plugin",
+        "line": 453
+      }
+    ],
+    "/profile": [
+      {
+        "source": "handlers/user_handler.py",
+        "type": "DECORATOR",
+        "function": "user_info",
+        "line": 11
+      }
+    ],
+    "/progress": [
+      {
+        "source": "handlers/academy_handler.py",
+        "type": "DECORATOR",
+        "function": "progress",
+        "line": 33
+      }
+    ],
+    "/propose": [
+      {
+        "source": "state/custom_handlers/ai_voting_handler.py",
+        "type": "DECORATOR",
+        "function": "propose",
+        "line": 38
+      }
+    ],
+    "/register_ai": [
+      {
+        "source": "state/custom_handlers/ai_voting_handler.py",
+        "type": "DECORATOR",
+        "function": "register_ai",
+        "line": 14
+      }
+    ],
+    "/restart": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "restart",
+        "line": 385
+      }
+    ],
+    "/results": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "results",
+        "line": 372
+      }
+    ],
+    "/reward": [
+      {
+        "source": "state/custom_handlers/reputation_admin.py",
+        "type": "DECORATOR",
+        "function": "reward_command",
+        "line": 12
+      }
+    ],
+    "/rlogs": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "rlogs",
+        "line": 575
+      }
+    ],
+    "/rollback": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "rollback",
+        "line": 518
+      }
+    ],
+    "/sendagent": [
+      {
+        "source": "handlers/agents_handler.py",
+        "type": "DECORATOR",
+        "function": "sendagent_cmd",
+        "line": 106
+      }
+    ],
+    "/slh": [
+      {
+        "source": "handlers/system_handler.py",
+        "type": "DECORATOR",
+        "function": "slh_telegram",
+        "line": 16
+      }
+    ],
+    "/snapshot": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "snapshot",
+        "line": 959
+      }
+    ],
+    "/stake_claim": [
+      {
+        "source": "state/custom_handlers/staking_basic.py",
+        "type": "DECORATOR",
+        "function": "stake_claim",
+        "line": 42
+      }
+    ],
+    "/stake_deposit": [
+      {
+        "source": "state/custom_handlers/staking_basic.py",
+        "type": "DECORATOR",
+        "function": "stake_deposit",
+        "line": 15
+      }
+    ],
+    "/stake_info": [
+      {
+        "source": "state/custom_handlers/staking_basic.py",
+        "type": "DECORATOR",
+        "function": "stake_info",
+        "line": 62
+      }
+    ],
+    "/start": [
+      {
+        "source": "handlers/onboarding_v2.py",
+        "type": "DECORATOR",
+        "function": "start",
+        "line": 6
+      }
+    ],
+    "/status": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "status",
+        "line": 332
+      }
+    ],
+    "/sync": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "sync_command",
+        "line": 216
+      }
+    ],
+    "/sysinfo": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "sysinfo",
+        "line": 478
+      }
+    ],
+    "/system_visibility": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "system_visibility",
+        "line": 283
+      }
+    ],
+    "/tally": [
+      {
+        "source": "state/custom_handlers/ai_voting_handler.py",
+        "type": "DECORATOR",
+        "function": "tally",
+        "line": 77
+      }
+    ],
+    "/task": [
+      {
+        "source": "handlers/task_handler.py",
+        "type": "DECORATOR",
+        "function": "task_telegram",
+        "line": 53
+      }
+    ],
+    "/task_add": [
+      {
+        "source": "handlers/task_handler.py",
+        "type": "DECORATOR",
+        "function": "task_add_telegram",
+        "line": 57
+      }
+    ],
+    "/termlog": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "termlog",
+        "line": 633
+      }
+    ],
+    "/termux": [
+      {
+        "source": "handlers/termux_handler.py",
+        "type": "DECORATOR",
+        "function": "termux_cmd",
+        "line": 6
+      }
+    ],
+    "/test": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "test",
+        "line": 499
+      }
+    ],
+    "/test_agents": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "test_agents",
+        "line": 526
+      }
+    ],
+    "/testcmd": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "testcmd",
+        "line": 748
+      }
+    ],
+    "/token": [
+      {
+        "source": "state/custom_handlers/token_handler.py",
+        "type": "DECORATOR",
+        "function": "token_cmd",
+        "line": 30
+      }
+    ],
+    "/token_wizard": [
+      {
+        "source": "state/custom_handlers/token_wizard.py",
+        "type": "DECORATOR",
+        "function": "wizard",
+        "line": 25
+      }
+    ],
+    "/update": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "update",
+        "line": 513
+      }
+    ],
+    "/user": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "user",
+        "line": 560
+      }
+    ],
+    "/verify_agents": [
+      {
+        "source": "state/custom_handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "verify_agents",
+        "line": 7
+      }
+    ],
+    "/verify_status": [
+      {
+        "source": "state/custom_handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "verify_status",
+        "line": 25
+      }
+    ],
+    "/vote": [
+      {
+        "source": "state/custom_handlers/ai_voting_handler.py",
+        "type": "DECORATOR",
+        "function": "vote",
+        "line": 52
+      }
+    ]
+  },
+  "registration_map": {
+    "handlers/academy_handler.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/academy_menu_handler.py": [
+      {
+        "function": "register",
+        "line": 6,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/advanced_ask_handler.py": [
+      {
+        "function": "register_ask_handler",
+        "line": 83,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/agents_handler.py": [
+      {
+        "function": "register",
+        "line": 12,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/askdebug_handler.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/audit_handler.py": [
+      {
+        "function": "register",
+        "line": 64,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/dashboard_handler.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/device_bridge.py": [
+      {
+        "function": "register_api",
+        "line": 2,
+        "async": false,
+        "arguments": [
+          "app"
+        ]
+      },
+      {
+        "function": "register",
+        "line": 15,
+        "async": false,
+        "arguments": []
+      }
+    ],
+    "handlers/device_handler.py": [
+      {
+        "function": "register_device",
+        "line": 17,
+        "async": false,
+        "arguments": [
+          "bot",
+          "m"
+        ]
+      },
+      {
+        "function": "register",
+        "line": 120,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/feedback_handler.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/gateway_handler.py": [
+      {
+        "function": "register",
+        "line": 6,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/help_handler.py": [
+      {
+        "function": "register_help",
+        "line": 1,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/join_handler.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/kb_handler.py": [
+      {
+        "function": "register",
+        "line": 6,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/lesson_handler.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/llm_handler.py": [
+      {
+        "function": "register",
+        "line": 87,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/loader.py": [
+      {
+        "function": "load_handlers",
+        "line": 1,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/map_handler.py": [
+      {
+        "function": "register",
+        "line": 2,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/me_handler.py": [
+      {
+        "function": "register",
+        "line": 3,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/mission_handler.py": [
+      {
+        "function": "register",
+        "line": 14,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/monitor_handler.py": [
+      {
+        "function": "register",
+        "line": 72,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/morning_handler.py": [
+      {
+        "function": "register",
+        "line": 13,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/onboarding_v2.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/ownership_transfer_handler.py": [
+      {
+        "function": "register",
+        "line": 11,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/system_handler.py": [
+      {
+        "function": "register",
+        "line": 12,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/task_handler.py": [
+      {
+        "function": "register",
+        "line": 48,
+        "async": false,
+        "arguments": [
+          "bot",
+          "context"
+        ]
+      }
+    ],
+    "handlers/termux_handler.py": [
+      {
+        "function": "register",
+        "line": 4,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/user_handler.py": [
+      {
+        "function": "register",
+        "line": 9,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "handlers/voting_handler.py": [
+      {
+        "function": "register_handlers",
+        "line": 2,
+        "async": false,
+        "arguments": [
+          "bot",
+          "kernel"
+        ]
+      }
+    ],
+    "state/custom_handlers/ai_event_handler.py": [
+      {
+        "function": "register",
+        "line": 27,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/ai_voting_handler.py": [
+      {
+        "function": "register",
+        "line": 12,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      },
+      {
+        "function": "register_ai",
+        "line": 14,
+        "async": false,
+        "arguments": [
+          "m"
+        ]
+      }
+    ],
+    "state/custom_handlers/audit_handler.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/developer.py": [
+      {
+        "function": "register",
+        "line": 29,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/dynamic_leaderboard.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/ping_fullcheck_handler.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/reputation_admin.py": [
+      {
+        "function": "register",
+        "line": 5,
+        "async": false,
+        "arguments": [
+          "bot",
+          "is_admin_func"
+        ]
+      }
+    ],
+    "state/custom_handlers/staking_basic.py": [
+      {
+        "function": "register",
+        "line": 13,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/task_listener.py": [
+      {
+        "function": "register",
+        "line": 21,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/token_handler.py": [
+      {
+        "function": "register",
+        "line": 27,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ],
+    "state/custom_handlers/token_wizard.py": [
+      {
+        "function": "register",
+        "line": 23,
+        "async": false,
+        "arguments": [
+          "bot"
+        ]
+      }
+    ]
+  },
+  "loader_modules": [
+    "handlers.advanced_ask_handler",
+    "handlers.agents_handler",
+    "handlers.audit_handler",
+    "handlers.dashboard_handler",
+    "handlers.onboarding_v2",
+    "handlers.termux_handler"
+  ],
+  "reachable_files": [
+    "bot_stable.py",
+    "handlers/academy_handler.py",
+    "handlers/academy_menu_handler.py",
+    "handlers/advanced_ask_handler.py",
+    "handlers/agents_handler.py",
+    "handlers/askdebug_handler.py",
+    "handlers/audit_handler.py",
+    "handlers/dashboard_handler.py",
+    "handlers/lesson_handler.py",
+    "handlers/llm_handler.py",
+    "handlers/loader.py",
+    "handlers/me_handler.py",
+    "handlers/onboarding_v2.py",
+    "handlers/termux_handler.py"
+  ],
+  "duplicate_commands": {
+    "/logs": [
+      {
+        "source": "bot_stable.py",
+        "type": "DECORATOR",
+        "function": "logs",
+        "line": 394
+      },
+      {
+        "source": "handlers/audit_handler.py",
+        "type": "DECORATOR",
+        "function": "logs_cmd",
+        "line": 67
+      }
+    ]
+  },
+  "orphan_handlers": [
+    "handlers/device_bridge.py",
+    "handlers/device_handler.py",
+    "handlers/feedback_handler.py",
+    "handlers/gateway_handler.py",
+    "handlers/help_handler.py",
+    "handlers/join_handler.py",
+    "handlers/kb_handler.py",
+    "handlers/map_handler.py",
+    "handlers/mission_handler.py",
+    "handlers/monitor_handler.py",
+    "handlers/morning_handler.py",
+    "handlers/ownership_transfer_handler.py",
+    "handlers/system_handler.py",
+    "handlers/task_handler.py",
+    "handlers/user_handler.py",
+    "handlers/voting_handler.py",
+    "state/custom_handlers/__init__.py",
+    "state/custom_handlers/ai_event_handler.py",
+    "state/custom_handlers/ai_voting_handler.py",
+    "state/custom_handlers/audit_handler.py",
+    "state/custom_handlers/developer.py",
+    "state/custom_handlers/dynamic_leaderboard.py",
+    "state/custom_handlers/ping_fullcheck_handler.py",
+    "state/custom_handlers/reputation_admin.py",
+    "state/custom_handlers/staking_basic.py",
+    "state/custom_handlers/task_listener.py",
+    "state/custom_handlers/token_handler.py",
+    "state/custom_handlers/token_wizard.py"
+  ],
+  "syntax_errors": [],
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

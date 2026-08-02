@@ -1,0 +1,22 @@
+{
+  "bitcoin_mastery": {
+    "title": "ביטקוין מאסטרי",
+    "stages": [
+      {
+        "id": 1,
+        "name": "מבוא – מה זה ביטקוין",
+        "lesson": "lessons/bitcoin_mastery/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "ארנקים וכתובות",
+        "lesson": "lessons/bitcoin_mastery/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "בלוקצ'יין וקריפטוגרפיה",
+        "lesson": "lessons/bitcoin_mastery/3.txt"
+      }
+    ]
+  }
+}

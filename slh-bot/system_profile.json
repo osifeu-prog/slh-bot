@@ -1,0 +1,17 @@
+{
+  "mode": "UNIFIED",
+  "kernel": "slh_os_v4_real",
+  "bot": "slh_clean",
+  "deployment": "railway_ready",
+  "features": {
+    "agents": true,
+    "memory": true,
+    "eventbus": true,
+    "voting": true,
+    "revenue": true
+  },
+  "runtime": {
+    "termux_required": true,
+    "dashboard_public": false
+  }
+}

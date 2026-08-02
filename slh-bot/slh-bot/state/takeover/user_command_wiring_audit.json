@@ -1,0 +1,490 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-07-26T22:52:57.557537+00:00",
+  "total_commands": 13,
+  "results": [
+    {
+      "command": "/start",
+      "status": "WIRED_CANDIDATE",
+      "active_entrypoints": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [
+        {
+          "file": "bot_core.py",
+          "class": "LEGACY_OR_CORE"
+        }
+      ],
+      "all_mentions": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        },
+        {
+          "file": "bot_core.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core/ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/help",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "language_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core/ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/join",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/me_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/advanced_ask_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "econ_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "join_fix.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "myprogress_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "report_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "tutorial_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core/ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/me_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/advanced_ask_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state/startup.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/register",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/user",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/progress",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/academy_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/academy_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state/custom_handlers/token_wizard.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/report",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/market",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/balance",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/token",
+      "status": "WIRED_CANDIDATE",
+      "active_entrypoints": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state/custom_handlers/token_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state/custom_handlers/token_wizard.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/course",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/learn",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": []
+    },
+    {
+      "command": "/ask",
+      "status": "WIRED_CANDIDATE",
+      "active_entrypoints": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/advanced_ask_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [
+        {
+          "file": "advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        }
+      ],
+      "all_mentions": [
+        {
+          "file": "advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "advanced_ask_handler.backup_2026-07-21_1632.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "tutorial_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core/ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers/help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/llm_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers/advanced_ask_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    }
+  ],
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

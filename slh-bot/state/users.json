@@ -1,0 +1,20 @@
+{
+  "8789977826": {
+    "role": "OWNER",
+    "permissions": [
+      "admin",
+      "exec",
+      "deploy",
+      "restart",
+      "developer_manage",
+      "economy",
+      "restart"
+    ]
+  },
+  "224223270": {
+    "role": "USER",
+    "permissions": [
+      "restart"
+    ]
+  }
+}

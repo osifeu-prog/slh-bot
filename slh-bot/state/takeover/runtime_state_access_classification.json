@@ -1,0 +1,247 @@
+{
+  "generated_at": "2026-07-26T19:56:53.508992+00:00",
+  "source_map": "state/takeover/runtime_state_dependency_map.json",
+  "source_of_truth": "core.agent_state_store.AgentStateStore",
+  "total_classified": 19,
+  "classifications": [
+    {
+      "path": "core/agent_state_store.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": true,
+      "priority": "CANONICAL",
+      "finding_count": 16
+    },
+    {
+      "path": "bot_stable.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "CONFIG",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 17
+    },
+    {
+      "path": "core/profile_manager.py",
+      "domains": [
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 6
+    },
+    {
+      "path": "handlers/llm_handler.py",
+      "domains": [
+        "AGENT_STATE",
+        "ASK_CONTEXT",
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 8
+    },
+    {
+      "path": "state_manager.py",
+      "domains": [
+        "AGENT_STATE",
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 5
+    },
+    {
+      "path": "refresh_token_handler.py",
+      "domains": [
+        "CONFIG",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "HIGH",
+      "finding_count": 3
+    },
+    {
+      "path": "core/academy_manager.py",
+      "domains": [
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "core/command_registry_loader.py",
+      "domains": [
+        "UNKNOWN"
+      ],
+      "scope": "core/command_registry_loader.py",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "core/context_builder.py",
+      "domains": [
+        "ASK_CONTEXT",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 5
+    },
+    {
+      "path": "handlers/advanced_ask_handler.py",
+      "domains": [
+        "AGENT_STATE",
+        "ASK_CONTEXT",
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 4
+    },
+    {
+      "path": "handlers/me_handler.py",
+      "domains": [
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 2
+    },
+    {
+      "path": "marketplace.py",
+      "domains": [
+        "UNKNOWN"
+      ],
+      "scope": "marketplace.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 2
+    },
+    {
+      "path": "audit_logger.py",
+      "domains": [
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 2
+    },
+    {
+      "path": "core/agent_registry.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "GLOBAL_DB"
+      ],
+      "scope": "AUDIT",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 4
+    },
+    {
+      "path": "core/ai_guard.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core/ai_guard.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 3
+    },
+    {
+      "path": "core/audit.py",
+      "domains": [
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 2
+    },
+    {
+      "path": "core/event_store.py",
+      "domains": [
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB"
+      ],
+      "scope": "GLOBAL_DB",
+      "access": "WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 1
+    },
+    {
+      "path": "core/mission_lifecycle.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core/mission_lifecycle.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 13
+    },
+    {
+      "path": "handlers/askdebug_handler.py",
+      "domains": [
+        "ASK_CONTEXT",
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "ASK",
+      "access": "WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 1
+    }
+  ]
+}

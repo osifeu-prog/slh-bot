@@ -1,0 +1,11 @@
+{
+  "Guardian": {
+    "name": "Guardian",
+    "inbox": [
+      "system_online"
+    ],
+    "outbox": [],
+    "state": "active",
+    "role": "agent"
+  }
+}

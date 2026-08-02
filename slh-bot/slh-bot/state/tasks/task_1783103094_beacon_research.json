@@ -1,0 +1,76 @@
+{
+  "id": "research_beacon_lighter",
+  "type": "research",
+  "priority": "high",
+  "status": "queued",
+
+  "title": "Complete forensic research of Beacon petrol lighter",
+
+  "objective": "Identify the exact Beacon lighter model, production year, patent history, registered design, rarity, and market value using authoritative archival sources.",
+
+  "input": {
+    "manufacturer": "Beacon",
+    "country": "Made in England",
+
+    "visible_markings": {
+      "center": [
+        "Beacon",
+        "LIFT FILL MERIT"
+      ],
+      "left": [
+        "PATENT No. 488087/10",
+        "REGD. DESIGN No. 818188"
+      ],
+      "right": [
+        "BEACON",
+        "MADE IN ENGLAND"
+      ]
+    }
+  },
+
+  "tasks": [
+    "Identify exact model",
+    "Determine production years",
+    "Verify Patent 488087/10",
+    "Verify Registered Design 818188",
+    "Search UKIPO archives",
+    "Search Espacenet",
+    "Search Google Patents",
+    "Search collector forums",
+    "Search auction databases",
+    "Locate original catalog",
+    "Locate original advertisements",
+    "Determine rarity",
+    "Estimate collector value",
+    "Explain ignition mechanism",
+    "List restoration recommendations"
+  ],
+
+  "preferred_sources": [
+    "UKIPO",
+    "Espacenet",
+    "Google Patents",
+    "WorthPoint",
+    "LiveAuctioneers",
+    "eBay Sold Listings",
+    "Lighter Gallery",
+    "Collector Forums"
+  ],
+
+  "requirements": {
+    "citations": true,
+    "no_guessing": true,
+    "include_images_if_found": true,
+    "confidence_score": true
+  },
+
+  "expected_output": [
+    "Exact model",
+    "Production date",
+    "Patent verification",
+    "Historical background",
+    "Technical description",
+    "Market valuation",
+    "Bibliography"
+  ]
+}

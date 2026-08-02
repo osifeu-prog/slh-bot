@@ -1,0 +1,18 @@
+{
+  "result_id": "mission-2-20260726T085119Z",
+  "mission_id": "2",
+  "agent_id": "3",
+  "recorded_at": "2026-07-26T08:51:19.028916+00:00",
+  "execution_status": "success",
+  "execution_mode": "CONTROLLED_TEST",
+  "result": {
+    "description": "LIFECYCLE CORE TEST",
+    "synchronization_check": "passed",
+    "execution_check": "passed",
+    "external_action": false
+  },
+  "verified": true,
+  "mission_completion": "completed",
+  "result_sha256": "aa2a421c1c13b4b30cb3eb74d228dd5d0f376190c4929187c863831a973d4c66",
+  "completed_at": "2026-07-26T08:52:58.863129+00:00"
+}
