@@ -7,7 +7,7 @@ import os
 
 BASE_DIR = os.environ.get(
     "SLH_HOME",
-    "/app" if os.path.exists("/app") else os.path.expanduser("~/slh_clean")
+    "/app" if os.path.exists("/app") else os.path.dirname(os.path.abspath(__file__))
 )
 
 LOCK_FILE = os.path.join(BASE_DIR, ".bot.lock")
