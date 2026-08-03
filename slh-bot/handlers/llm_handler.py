@@ -26,3 +26,8 @@ def register_llm_handler(bot):
             return
         answer = ask_groq(question)
         bot.reply_to(msg, f"🤖 {answer}")
+
+
+
+
+register = register_llm_handler
