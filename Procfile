@@ -1,1 +1,1 @@
-worker: python bot.py
+worker: python3 -B bot_gateway.py

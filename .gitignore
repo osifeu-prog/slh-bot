@@ -16,3 +16,12 @@ state_connection_map.txt
 test_runtime.sh
 tools/slh_doctor.py
 slh-bot/tools/slh_doctor.py
+
+# SLH OS Recovery leftovers
+_quarantine/
+RECOVERY_SNAPSHOT_*/
+__pycache__/
+*.bak
+*.zip
+*.disabled
+*.before_*

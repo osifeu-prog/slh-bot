@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-07-27T11:21:16.244400",
+  "timestamp": "2026-08-03T22:46:34.168108",
   "results": [
     {
       "test": "01_IDENTITY",
-      "status": "ERROR",
-      "data": "No module named 'core'"
+      "status": "PASS",
+      "data": "TG:8789977826 PHONE:972500000001 ADMIN:True"
     },
     {
       "test": "02_DB_STATE",
@@ -24,7 +24,7 @@
     {
       "test": "05_GIT",
       "status": "PASS",
-      "data": "1cc1b40 Freeze v1.0 - OWNER IDENTITY FIXED. Production Ready."
+      "data": "da6404c Fix LLM handler registration compatibility"
     },
     {
       "test": "06_UTF8",
@@ -34,7 +34,7 @@
     {
       "test": "07_RUNTIME",
       "status": "PASS",
-      "data": "bot_stable.py running"
+      "data": "bot_stable import OK"
     }
   ]
 }

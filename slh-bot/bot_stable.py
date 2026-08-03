@@ -32,7 +32,7 @@ from plugins.task import TaskPlugin
 # from staking_handler import register_staking_handlers
 
 try:
-    from handlers.llm_handler import register as register_llm
+    from handlers.llm_handler import register_llm_handler as register_llm
     LLM_AVAILABLE = True
 except Exception as e:
     print("⚠️ LLM handler not available:", e)

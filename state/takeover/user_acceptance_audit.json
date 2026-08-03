@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-07-26T20:24:08.826878+00:00",
+  "generated_at": "2026-08-03T22:32:11.456086+00:00",
   "decision": "GO",
   "total_checks": 11,
   "passed": 11,
@@ -9,12 +9,12 @@
     {
       "name": "Bot file exists",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/bot_stable.py"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py"
     },
     {
       "name": "Database exists",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/state/db.json"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\state\\db.json"
     },
     {
       "name": "Database readable",
@@ -44,22 +44,22 @@
     {
       "name": "Handlers directory exists",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/handlers"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\handlers"
     },
     {
       "name": "Contract test: test_system_snapshot_contract.py",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/tools/test_system_snapshot_contract.py"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\tools\\test_system_snapshot_contract.py"
     },
     {
       "name": "Contract test: test_project_registry_contract.py",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/tools/test_project_registry_contract.py"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\tools\\test_project_registry_contract.py"
     },
     {
       "name": "Contract test: test_project_graph_contract.py",
       "status": "PASS",
-      "detail": "/data/data/com.termux/files/home/slh_clean/tools/test_project_graph_contract.py"
+      "detail": "C:\\Users\\USER\\slh-bot-clean\\tools\\test_project_graph_contract.py"
     }
   ],
   "safety": {

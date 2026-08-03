@@ -1,10 +1,7 @@
-from openai import OpenAI
+﻿from openai import OpenAI
 import os
 
-client = OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+client = None
 
 def ask_groq(prompt):
     try:
@@ -31,3 +28,19 @@ def register_llm_handler(bot):
 
 
 register = register_llm_handler
+
+def query_llm_with_context(question, uid):
+    context = f"User ID: {uid}"
+    prompt = f"""
+You are SLH OS AI assistant.
+Answer in Hebrew, concise and direct.
+
+Context:
+{context}
+
+Question:
+{question}
+"""
+    return ask_groq(prompt)
+
+

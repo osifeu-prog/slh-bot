@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-08-03T12:27:31.913175",
+  "results": [
+    {
+      "test": "01_IDENTITY",
+      "status": "PASS",
+      "data": "TG:8789977826 PHONE:972500000001 ADMIN:True"
+    },
+    {
+      "test": "02_DB_STATE",
+      "status": "ERROR",
+      "data": "[Errno 2] No such file or directory: 'state/db.json'"
+    },
+    {
+      "test": "03_ASK_HANDLER",
+      "status": "ERROR",
+      "data": "[Errno 2] No such file or directory: 'handlers/loader.py'"
+    },
+    {
+      "test": "04_COMMANDS",
+      "status": "ERROR",
+      "data": "[Errno 2] No such file or directory: 'handlers/loader.py'"
+    },
+    {
+      "test": "05_GIT",
+      "status": "PASS",
+      "data": "c91315d cleanup: gitignore, restore bot_gateway, updated handlers"
+    },
+    {
+      "test": "06_UTF8",
+      "status": "ERROR",
+      "data": "[Errno 2] No such file or directory: 'state/agents.json'"
+    },
+    {
+      "test": "07_RUNTIME",
+      "status": "FAIL",
+      "data": "bot_stable.py running"
+    }
+  ]
+}

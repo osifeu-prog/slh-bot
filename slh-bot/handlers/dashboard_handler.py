@@ -12,7 +12,7 @@ def register(bot):
         user_id = str(m.from_user.id)
         user = d.get('users', {}).get(user_id, {})
         balance = user.get('wallet', {}).get('credits', 0)
-        course = user.get('academy', {}).get('active_course', '���')
+        course = user.get('academy', {}).get('active_course', '���')
         text = f"🌟 ה-Dashboard שלך\n\n💰 יתרה: {balance} SLH\n📚 קורס פעיל: {course}\n🤖 סוכנים זמינים: 10\n🎯 משימה מומלצת: סיים שיעור 1 בביטקוין\n\nמה תרצה לעשות?"
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton('📚 המשך לקורס', callback_data='continue_course'))

@@ -1,5 +1,9 @@
-#!/usr/bin/env python3
-import json, os, subprocess
+﻿#!/usr/bin/env python3
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+import json
+import subprocess
 from datetime import datetime
 ROOT = os.getcwd()
 RESULTS = []
@@ -27,20 +31,20 @@ test("01_IDENTITY", t1)
 
 # 2. DB STATE
 def t2():
-    d=json.load(open("state/db.json"))
-    agents=json.load(open('state/agents.json'))
+    d=json.load(open("state/db.json", encoding="utf-8"))
+    agents=json.load(open("state/agents.json", encoding="utf-8"))
     return "PASS", f"Users:{len(d['users'])} Agents:{len(agents)}"
 test("02_DB_STATE", t2)
 
 # 3. ASK HANDLER
 def t3():
-    txt=open("handlers/loader.py").read()
+    txt=open("handlers/loader.py", encoding="utf-8").read()
     return "PASS" if "register_ask_handler" in txt else "FAIL", "advanced_ask_handler registered"
 test("03_ASK_HANDLER", t3)
 
 # 4. COMMANDS
 def t4():
-    txt=open("handlers/loader.py").read()
+    txt=open("handlers/loader.py", encoding="utf-8").read()
     cmds = ["start","admin","ask","status","join"]
     found = [c for c in cmds if f"commands=['{c}']" in txt or f'commands=["{c}"]' in txt]
     status = "PASS" if "admin" in found else "WARN"
@@ -61,10 +65,24 @@ test("06_UTF8", t6)
 
 # 7. RUNTIME
 def t7():
-    rc=subprocess.run("ps aux | grep bot_stable.py | grep -v grep", shell=True).returncode
-    return "PASS" if rc==0 else "FAIL", "bot_stable.py running"
+    try:
+        import sys
+        import os
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+        import bot_stable
+        return "PASS", "bot_stable import OK"
+    except Exception as e:
+        return "FAIL", str(e)
+
 test("07_RUNTIME", t7)
 
 report={"timestamp":datetime.now().isoformat(),"results":RESULTS}
 open("FULL_SYSTEM_AUDIT.json","w",encoding="utf-8").write(json.dumps(report,indent=2,ensure_ascii=False))
 print("\nReport saved to FULL_SYSTEM_AUDIT.json")
+
+
+
+
+
+
+

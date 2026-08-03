@@ -1,16 +1,16 @@
 {
-  "time": "2026-07-23 08:12:41.639793",
+  "time": "2026-08-03 17:13:18.880186",
   "checks": {
     "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
-    "ram": 84.7,
-    "disk": 90.0,
+    "ram": 80.6,
+    "disk": 93.3,
     "state/db.json": {
       "exists": true,
-      "size": 2861
+      "size": 2200
     },
     "state/agents.json": {
       "exists": true,
-      "size": 2159
+      "size": 993
     },
     "state/tasks.json": {
       "exists": true,
@@ -18,15 +18,18 @@
     },
     "db_counts": {
       "users": 2,
-      "agents": 10,
+      "agents": 4,
       "votes": 1,
       "tasks": 0,
-      "memory": 0
+      "memory": 0,
+      "devices": 1
     },
     "agent_schema": {},
-    "handler_count": 125,
-    "duplicates": {},
-    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 10",
-    "git": " M device_bridge.py\n M state/devices.json\n?? core/ask_router.py.bak2\n"
+    "handler_count": 99,
+    "duplicates": {
+      "logs": 2
+    },
+    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 4",
+    "git": " M ../FULL_SYSTEM_AUDIT.json\n M ../SESSION_CLOSURE_AUDIT.json\n D ../bot_gateway.py\n D ../bot_stable.py\n M FULL_SYSTEM_AUDIT.json\n M SESSION_CLOSURE_AUDIT.json\n M bot_stable.py\n M handlers/dashboard_handler.py\n M handlers/llm_handler.py\n M slh_audit_report.json\n?? ../SLH_FULL_20260802_224159.zip\n?? ../__pycache__/\n?? ../_quarantine/\n?? ../adapters/__pycache__/\n?? ../agents/__pycache__/\n?? ../bot_stable_LEGACY.py\n?? ../core/__pycache__/\n?? ../fix_my_profile.py\n?? ../handlers/__pycache__/\n?? ../handlers/dashboard_handler.BROKEN_BACKUP.py\n?? ../plugins/__pycache__/\n?? ../plugins/core/__pycache__/\n?? ../scripts/__pycache__/\n?? ../security/__pycache__/\n?? ../services/__pycache__/\n?? SLH_PROJECT_STATUS_AUTO.md\n?? tools/FULL_SYSTEM_AUDIT.json\n?? ../state/__pycache__/\n?? ../state/custom_handlers/__pycache__/\n?? ../tests/__pycache__/\n?? ../tools/__pycache__/\n?? ../tools/slh_control_center.py\n"
   }
 }

@@ -10,3 +10,11 @@
 !.railwayignore
 !.gitignore
 !config.json
+
+_quarantine/
+
+__pycache__/
+
+RECOVERY_SNAPSHOT_20260803/
+
+RECOVERY_SNAPSHOT_20260803_FINAL/
