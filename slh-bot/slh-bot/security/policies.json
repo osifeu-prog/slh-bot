@@ -1,8 +1,0 @@
-{
-  "policies": {
-    "system_commands": "admin",
-    "agent_management": "admin",
-    "learning": "student",
-    "market": "permission_required"
-  }
-}
