@@ -1,3 +1,5 @@
 [deploy]
 startCommand = "python3 -B bot_gateway.py"
 restartPolicyType = "ON_FAILURE"
+
+regions = ["eu-west"]
