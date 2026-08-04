@@ -1,7 +1,8 @@
 ﻿def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
-    print("נ”„ Loading modular handlers...")
+
+    print("🔧 Loading modular handlers...")
 
     modules = [
         ("dashboard", "handlers.dashboard_handler"),
@@ -16,7 +17,6 @@
         ("academy", "handlers.academy_handler"),
         ("academy_menu", "handlers.academy_menu_handler"),
         ("device", "handlers.device_handler"),
-        ("device_bridge", "handlers.device_bridge"),
         ("feedback", "handlers.feedback_handler"),
         ("gateway", "handlers.gateway_handler"),
         ("help", "handlers.help_handler"),
@@ -34,44 +34,64 @@
         ("system", "handlers.system_handler"),
         ("user", "handlers.user_handler"),
         ("voting", "handlers.voting_handler"),
-        ("admin", "admin_handler"),                # ← /backup, /admin, /exec
+        ("admin", "admin_handler"),
         ("askdebug", "handlers.askdebug_handler"),
     ]
 
     import importlib
+    import inspect
+
     for name, mod_path in modules:
         try:
             m = importlib.import_module(mod_path)
-            if name in ("agents", "audit", "admin"):
-                register = getattr(m, "register")
-                register(bot, context)
-            elif name == "payment":
-                register = getattr(m, "register_payment_handlers")
-                register(bot)
-            elif name == "econ":
-                register = getattr(m, "register_econ_handlers")
-                register(bot)
-            else:
-                register = getattr(m, "register")
-                register(bot)
-            print(f"✅ {name}_handler loaded")
-        except Exception as e:
-            print(f"{name} error:", str(e)[:100])
 
-    # esp & advanced_ask (separate registration)
+            if hasattr(m, "register"):
+                fn = m.register
+                params = inspect.signature(fn).parameters
+
+                if len(params) >= 2:
+                    fn(bot, context)
+                else:
+                    fn(bot)
+
+            elif hasattr(m, "register_llm_handler"):
+                m.register_llm_handler(bot)
+
+            elif hasattr(m, "register_help"):
+                m.register_help(bot)
+
+            elif hasattr(m, "register_repeat_handler"):
+                m.register_repeat_handler(bot)
+
+            elif hasattr(m, "init"):
+                m.init(bot)
+
+            elif hasattr(m, "register_handlers"):
+                m.register_handlers(bot, context)
+
+            else:
+                raise Exception("No supported register function")
+
+            print(f"✅ {name} loaded")
+
+        except Exception as e:
+            print(f"⚠️ {name} skipped:", str(e)[:120])
+
+
     try:
         from handlers.esp_handler import register_esp_handler
         register_esp_handler(bot)
-        print("✅ esp_handler loaded")
+        print("✅ esp loaded")
     except Exception as e:
-        print("esp_handler skipped:", str(e)[:100])
+        print("esp skipped:", e)
+
 
     try:
         from handlers.advanced_ask_handler import register_ask_handler
         register_ask_handler(bot)
-        print("✅ advanced_ask_handler loaded")
+        print("✅ advanced ask loaded")
     except Exception as e:
-        print("ask handler error:", str(e)[:100])
+        print("ask skipped:", e)
 
-    print("✅ All handlers loaded")
 
+    print("✅ ALL HANDLERS READY")
