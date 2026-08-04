@@ -1,1 +1,1 @@
-web: python3 -B api_server.py
+worker: python3 -B bot_gateway.py
