@@ -9,3 +9,14 @@ def show_leaderboard(db_path="state/db.json"):
         credits = data.get("credits", 0)
         text += f"{i}. {name} - {credits} SLH\n"
     return text
+
+
+def register(bot):
+
+    @bot.message_handler(commands=['top'])
+    def top_handler(m):
+        bot.reply_to(
+            m,
+            show_leaderboard()
+        )
+
