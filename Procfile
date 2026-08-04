@@ -1,1 +1,1 @@
-﻿web: python3 -B bot_gateway.py
+web: python3 -B bot_gateway.py
