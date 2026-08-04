@@ -9,29 +9,22 @@ BOTS_FILE = STATE_DIR / "bots.json"
 
 def load_bots():
     if BOTS_FILE.exists():
-        return json.load(open(BOTS_FILE))
+        return json.load(open(BOTS_FILE, encoding="utf-8"))
     return {"Me_ad_main": os.getenv("BOT_TOKEN")}
 
 if __name__ == "__main__":
-    # [SLH] Kill previous Python instances to prevent 409
-    try:
-        subprocess.run(['pkill', '-f', 'python'], capture_output=True, timeout=5)
-        time.sleep(5)
-    except:
-        pass
     if os.getenv("RUN_BOT") != "1":
         print("RUN_BOT not set - skipping bot startup (web service)")
-        while True: time.sleep(3600)
+        while True:
+            time.sleep(3600)
     data = load_bots()
-    for name, token in data.items():
-        if not token: continue
+    for bot_name, token in data.items():
+        if not token:
+            continue
         bot = telebot.TeleBot(token, parse_mode="HTML")
-        
-        
-        load_handlers(bot, {"bot_name": name}) # ג•«׳¨ג•«׳¥ג•«ֳ³ג•«ֶ’ ג•«׳ ג•«ֲ¬ ג•«ֲ¢ג•«ֲ£ ג•«׳₪ג•«׳₪ג•«ֳ¡ג•«׳£ג•«ֲ£ג•«ֲ¿ג•«׳©ג•«ֲ¥
-        print(f"[OK] Bot {name} started")
+        load_handlers(bot, {"bot_name": bot_name})
+        print(f"[OK] Bot {bot_name} started")
         threading.Thread(target=bot.infinity_polling, daemon=True).start()
-    
     print("[SLH] All bots running. Waiting...")
-    while True: time.sleep(1)
-
+    while True:
+        time.sleep(1)
