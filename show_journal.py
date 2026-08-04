@@ -1,5 +1,5 @@
 ﻿import json
-with open(r'C:\Users\USER\slh-bot-clean\state\journal.json', 'r', encoding='utf-8') as f:
+with open('state/journal.json', 'r', encoding='utf-8') as f:
     j = json.load(f)
 entries = j[0].get('entries', {}).get('entries', [])
 for e in entries[-5:]:
