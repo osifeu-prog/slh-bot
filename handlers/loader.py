@@ -74,3 +74,4 @@
         print("ask handler error:", str(e)[:100])
 
     print("✅ All handlers loaded")
+
