@@ -10,7 +10,7 @@
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
         ("termux", "handlers.termux_handler"),
-        ("payment", "payment_handler"),
+        ("payment", "handlers.payment_handler"),
         ("econ", "econ_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
@@ -95,3 +95,4 @@
 
 
     print("✅ ALL HANDLERS READY")
+
