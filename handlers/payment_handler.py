@@ -187,3 +187,8 @@ def register_payment_handlers(bot):
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {user['balance']}")
         print(f"[FAKEPAY] 100 credits added to {uid}")
+
+
+def register(bot):
+    register_payment_handlers(bot)
+
