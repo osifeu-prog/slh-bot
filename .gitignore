@@ -12,3 +12,4 @@ server.log
 SLH_RECOVERY_PROFILE_*.txt
 config.json
 load_keys.sh
+*.backup*
