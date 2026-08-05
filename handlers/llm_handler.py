@@ -139,3 +139,5 @@ USER QUESTION:
 
 def register(bot):
     return register_llm_handler(bot)
+
+print('LLM MODULE LOADED FROM:', __file__)
