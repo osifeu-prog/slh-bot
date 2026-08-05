@@ -1,4 +1,4 @@
-import os, json, time, threading
+﻿import os, json, time, threading
 from pathlib import Path
 import telebot
 from handlers.loader import load_handlers
@@ -21,10 +21,12 @@ if __name__ == "__main__":
     for bot_name, token in data.items():
         if not token:
             continue
-        bot = telebot.TeleBot(token, parse_mode=None)
+        bot = telebot.TeleBot(token, parse_mode="HTML")
         load_handlers(bot, {"bot_name": bot_name})
         print(f"[OK] Bot {bot_name} started")
         threading.Thread(target=bot.infinity_polling, daemon=True).start()
     print("[SLH] All bots running. Waiting...")
     while True:
         time.sleep(1)
+
+
