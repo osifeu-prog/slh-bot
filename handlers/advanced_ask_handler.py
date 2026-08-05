@@ -25,3 +25,5 @@ def register_ask_handler(bot):
 
         bot.send_message(msg.chat.id, answer, parse_mode=None)
 
+
+print('ASK MODULE LOADED FROM:', __file__)
