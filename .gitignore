@@ -9,3 +9,6 @@ node_modules/
 server.log
 *.log
 .wwebjs_auth/
+SLH_RECOVERY_PROFILE_*.txt
+config.json
+load_keys.sh
