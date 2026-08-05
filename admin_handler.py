@@ -34,4 +34,4 @@ def init(bot):
         msg += "/rlogs — Railway logs (admin)\n"
         msg += "/disk — Disk usage\n"
         msg += "/sysinfo — System resources"
-        bot.reply_to(message, msg, parse_mode="Markdown")
+        bot.reply_to(message, msg)
