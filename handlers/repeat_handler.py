@@ -28,7 +28,7 @@ def wrap_send_message(bot, original_send):
     return new_send
 
 def register_repeat_handler(bot):
-    bot.send_message = wrap_send_message(bot, bot.send_message)
+    # bot.send_message wrapper disabled - parse mode recovery
     # bot.reply_to wrapper disabled - breaks parse_mode handling
     @bot.callback_query_handler(func=lambda call: call.data == "repeat")
     def callback(call):
