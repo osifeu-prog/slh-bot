@@ -1,8 +1,8 @@
-﻿def load_handlers(bot, context):
+def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
-    print("🔧 Loading modular handlers...")
+    print("?? Loading modular handlers...")
 
     modules = [
         ("dashboard", "handlers.dashboard_handler"),
@@ -35,6 +35,7 @@
         ("user", "handlers.user_handler"),
         ("voting", "handlers.voting_handler"),
         ("admin", "admin_handler"),
+        ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
     ]
 
@@ -72,16 +73,16 @@
             else:
                 raise Exception("No supported register function")
 
-            print(f"✅ {name} loaded")
+            print(f"? {name} loaded")
 
         except Exception as e:
-            print(f"⚠️ {name} skipped:", str(e)[:120])
+            print(f"?? {name} skipped:", str(e)[:120])
 
 
     try:
         from handlers.esp_handler import register_esp_handler
         register_esp_handler(bot)
-        print("✅ esp loaded")
+        print("? esp loaded")
     except Exception as e:
         print("esp skipped:", e)
 
@@ -89,10 +90,11 @@
     try:
         from handlers.advanced_ask_handler import register_ask_handler
         register_ask_handler(bot)
-        print("✅ advanced ask loaded")
+        print("? advanced ask loaded")
     except Exception as e:
         print("ask skipped:", e)
 
 
-    print("✅ ALL HANDLERS READY")
+    print("? ALL HANDLERS READY")
+
 
