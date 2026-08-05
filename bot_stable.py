@@ -71,8 +71,6 @@ DB_FILE = cfg.get("DB_FILE", "state/db.json")
 
 bot = telebot.TeleBot(TOKEN)
 # SLH OS Brain – /me and /askdebug
-from handlers.me_handler import register as reg_me; reg_me(bot)
-from handlers.askdebug_handler import register as reg_askdebug; reg_askdebug(bot)
 
 try:
     from core.event_bus import EventBus
@@ -389,18 +387,6 @@ def restart(m):
 
     bot.reply_to(m, '?? Railway restart requested')
     print('Restart requested by admin')
-
-@bot.message_handler(commands=['logs'])
-def logs(m):
-    n = int(m.text.split(' ', 1)[1]) if len(m.text.split(' ', 1)) > 1 else 20
-    try:
-        with open('/proc/1/fd/1', 'r') as f:
-            lines = f.readlines()[-n:]
-        bot.reply_to(m, ''.join(lines) if lines else '??? ?????')
-    except Exception as e:
-        bot.reply_to(m, f'? ????? ?????? ?????: {e}')
-
-        bot.reply_to(m, f"❌ שגיאה בקריאת לוגים: {e}")
 
 @bot.message_handler(commands=['clean'])
 def clean(m):
@@ -846,8 +832,6 @@ except Exception as e:
 
 # ===== SLH ACADEMY MENU HANDLER =====
 try:
-    from handlers.academy_menu_handler import register as register_academy_menu
-    register_academy_menu(bot)
     print("✅ academy_menu_handler loaded")
 except Exception as e:
     print("❌ academy_menu_handler load error:", e)
@@ -855,8 +839,6 @@ except Exception as e:
 
 # ===== SLH LESSON ENGINE HANDLER =====
 try:
-    from handlers.lesson_handler import register as register_lesson
-    register_lesson(bot)
     print("✅ lesson_handler loaded")
 except Exception as e:
     print("❌ lesson_handler load error:", e)
@@ -864,8 +846,6 @@ except Exception as e:
 
 # ===== SLH ACADEMY HANDLER =====
 try:
-    from handlers.academy_handler import register as register_academy
-    register_academy(bot)
     print("✅ academy_handler loaded")
 except Exception as e:
     print("❌ academy_handler load error:", e)
