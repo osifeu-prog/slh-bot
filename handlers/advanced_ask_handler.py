@@ -7,7 +7,7 @@ def register_ask_handler(bot):
             return
         question = (msg.text or "").replace("/ask", "", 1).strip()
         if not question:
-            bot.reply_to(msg, "Usage: /ask <שאלה>")
+            bot.reply_to(msg, "Usage: /ask [question]")
             return
         try:
             answer = query_llm_with_context(question, str(msg.from_user.id))
