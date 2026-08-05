@@ -61,17 +61,49 @@ def register_llm_handler(bot):
     print("LLM core loaded (ask handled by advanced_ask_handler)")
 
 
+
 def query_llm_with_context(question, uid=None):
+
+    import json
+
+    context = "No system data."
+
+    try:
+        with open("state/db.json", encoding="utf-8") as f:
+            db = json.load(f)
+
+        user = db.get("users", {}).get(str(uid), {})
+        agents = db.get("agents", {})
+
+        context = f"""
+SLH SYSTEM STATE:
+
+User:
+name={user.get("name")}
+role={user.get("role")}
+credits={user.get("credits",0)}
+
+Agents:
+count={len(agents)}
+names={", ".join([a.get("name","?") for a in agents.values()])}
+"""
+
+    except Exception as e:
+        context = f"Context error: {e}"
 
     prompt = f"""
 You are SLH OS AI assistant.
 Answer in Hebrew, concise and direct.
+
+SYSTEM CONTEXT:
+{context}
 
 USER QUESTION:
 {question}
 """
 
     return ask_groq(prompt)
+
 
 
 def register(bot):
