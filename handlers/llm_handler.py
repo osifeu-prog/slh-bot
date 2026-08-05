@@ -141,3 +141,5 @@ def register(bot):
     return register_llm_handler(bot)
 
 print('LLM MODULE LOADED FROM:', __file__)
+
+print('LLM DEBUG DB:', open('state/db.json',encoding='utf-8').read())
