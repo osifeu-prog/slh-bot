@@ -1,4 +1,5 @@
 import state_manager
+from core import profile_manager
 
 def register_econ_handlers(bot):
     @bot.message_handler(commands=['balance'])

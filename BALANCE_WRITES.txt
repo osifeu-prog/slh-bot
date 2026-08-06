@@ -1,0 +1,24 @@
+﻿
+econ_handler.py:42:        user["balance"] = balance - price
+econ_handler.py:52:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:57:            f"Remaining balance: {user['balance']} credits."
+econ_handler.py:78:        user["balance"] = balance - price
+econ_handler.py:88:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:90:        bot.answer_callback_query(call.id, f"✅ Purchased {item}! Remaining: {user['balance']} 
+credits")
+econ_handler.py:94:            text=f"✅ Purchased {item} for {price} credits.\nRemaining: {user['balance']} credits."
+econ_handler.py:104:        db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, 
+{}).get("balance", 0) + 50
+handlers\payment_handler.py:99:        user["balance"] = user.get("balance", 0) + credits
+handlers\payment_handler.py:106:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+handlers\payment_handler.py:143:            f"Your balance: {user['balance']} credits.\n"
+handlers\payment_handler.py:146:        print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
+handlers\payment_handler.py:187:        user["balance"] = user.get("balance", 0) + 100
+handlers\payment_handler.py:189:        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: 
+{user['balance']}")
+learning_path.py:58:        user["balance"] = user.get("balance", 0) + 10
+learning_path.py:90:        user["balance"] = user.get("balance", 0) + 40
+ton_handler.py:105:        user["balance"] = user.get("balance", 0) + credits
+ton_handler.py:126:            f"Your balance: {user['balance']} credits."
+
+
