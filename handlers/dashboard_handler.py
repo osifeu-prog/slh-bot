@@ -1,3 +1,4 @@
+from core import profile_manager
 from telebot import types
 import json
 

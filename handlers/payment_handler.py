@@ -1,4 +1,5 @@
 import state_manager
+from core import profile_manager
 from telebot.types import LabeledPrice, PreCheckoutQuery
 from datetime import datetime
 
