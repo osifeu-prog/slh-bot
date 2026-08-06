@@ -1,0 +1,89 @@
+﻿
+agent_client.py:90:def save_db(db):
+agent_client.py:127:    save_db(db)
+bot_stable.py:32:from handlers.payment_handler import register_payment_handlers
+bot_stable.py:101:# payment/econ/staking loaded through handlers.loader.py
+bot_stable.py:102:print("ℹ️ payment/econ/staking delegated to handler loader")
+bot_stable.py:141:def save_db(db):
+course_handlers.py:9:def save_db(db):
+course_handlers.py:14:    # /pay moved to payment_handler.py
+course_handlers.py:15:    # Single source payment handler
+course_handlers.py:35:        save_db(db)
+course_handlers.py:59:        # /course <task_id> – requires payment and referrals
+course_handlers.py:115:        save_db(db)
+course_handlers.py:151:            save_db(db)
+econ_handler.py:52:        state_manager.save_db(db)
+econ_handler.py:88:        state_manager.save_db(db)
+econ_handler.py:104:        state_manager.save_db(db)
+help_handler.py:49:💰 Economy & Payments
+help_handler.py:52:/pay – Make a payment
+language_handler.py:34:        state_manager.save_db(db)
+learning_path.py:59:        state_manager.save_db(db)
+learning_path.py:93:        state_manager.save_db(db)
+learning_path.py:118:        state_manager.save_db(db)
+learning_path.py:149:        state_manager.save_db(db)
+onboarding_handler.py:13:def save_db(db):
+onboarding_handler.py:42:    save_db(db)
+slh.py:7:def save_db(db):
+slh.py:20:    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
+state_manager.py:19:def save_db(db):
+state_manager.py:39:        save_db(db)
+system_diagnostics.py:61:            "bot_stable.py", "payment_handler.py", "ton_handler.py",
+system_health.py:29:    required = ["bot_stable.py", "payment_handler.py", "ton_handler.py", "econ_handler.py"]
+system_health.py:37:        for f in ["bot_stable.py", "payment_handler.py", "ton_handler.py", "econ_handler.py"]:
+ton_handler.py:23:        state_manager.save_db(db)
+ton_handler.py:31:            bot.send_message(m.chat.id, "⚠️ TON payments are not configured yet. Please contact the 
+admin.")
+ton_handler.py:35:            f"💎 **TON Payments**\n"
+ton_handler.py:121:        state_manager.save_db(db)
+core\economy_bridge.py:9:    return profile_manager.add_balance(uid, amount)
+core\economy_bridge.py:18:    return profile_manager.add_balance(uid, -amount)
+core\economy_bridge.py:25:        result["credits"] = profile_manager.add_balance(
+core\migration.py:61:        profile_manager.save_db(db)
+core\profile_manager.py:22:def save_db(db):
+core\profile_manager.py:85:        save_db(db)
+core\profile_manager.py:110:    save_db(db)
+core\profile_manager.py:130:def add_balance(uid,amount):
+core\profile_manager.py:154:    save_db(db)
+core\profile_manager.py:188:    save_db(db)
+handlers\help_handler.py:49:💰 Economy & Payments
+handlers\help_handler.py:52:/pay – Make a payment
+handlers\loader.py:13:        ("payment", "handlers.payment_handler"),
+handlers\payment_handler.py:13:def register_payment_handlers(bot):
+handlers\payment_handler.py:40:    def payment_callback(call):
+handlers\payment_handler.py:48:            bot.send_invoice(
+handlers\payment_handler.py:73:    @bot.message_handler(content_types=['successful_payment'])
+handlers\payment_handler.py:74:    def successful_payment(m):
+handlers\payment_handler.py:76:        charge_id = m.successful_payment.telegram_payment_charge_id
+handlers\payment_handler.py:77:        print(f"[PAY] Successful payment from {uid}, 
+payload={m.successful_payment.invoice_payload}, charge_id={charge_id}")
+handlers\payment_handler.py:78:        payload = m.successful_payment.invoice_payload
+handlers\payment_handler.py:81:            bot.send_message(m.chat.id, "❌ Invalid payment payload.")
+handlers\payment_handler.py:91:        existing_charge_ids = {t.get("telegram_payment_charge_id") for t in 
+db.get("transactions", [])}
+handlers\payment_handler.py:93:            print(f"[PAY] DUPLICATE payment ignored, charge_id={charge_id}, uid={uid}")
+handlers\payment_handler.py:94:            bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
+handlers\payment_handler.py:120:            "stars_paid": m.successful_payment.total_amount,
+handlers\payment_handler.py:121:            "currency": m.successful_payment.currency,
+handlers\payment_handler.py:122:            "telegram_payment_charge_id": charge_id,
+handlers\payment_handler.py:123:            "provider_payment_charge_id": 
+m.successful_payment.provider_payment_charge_id,
+handlers\payment_handler.py:129:            state_manager.save_db(db)
+handlers\payment_handler.py:131:            print(f"[PAY] CRITICAL: save_db failed AFTER payment charged! uid={uid}, 
+charge_id={charge_id}, credits={credits}, error={e}")
+handlers\payment_handler.py:132:            bot.send_message(m.chat.id, "⚠️ Payment received but there was an error 
+saving your credits. Please contact support with this reference: " + charge_id)
+handlers\payment_handler.py:134:                bot.send_message(8789977826, f"🚨 PAYMENT SAVE FAILED uid={uid} 
+charge_id={charge_id} credits={credits} error={e}")
+handlers\payment_handler.py:141:            f"✅ Payment received! {credits} credits added.\n"
+handlers\payment_handler.py:187:        state_manager.save_db(db)
+handlers\payment_handler.py:193:    register_payment_handlers(bot)
+state\custom_handlers\ai_voting_handler.py:8:def save_db(db):
+state\custom_handlers\ai_voting_handler.py:34:        save_db(db)
+state\custom_handlers\ai_voting_handler.py:48:        save_db(db)
+state\custom_handlers\ai_voting_handler.py:73:        save_db(db)
+state\custom_handlers\staking_basic.py:9:def save_db(db):
+state\custom_handlers\staking_basic.py:38:        save_db(db)
+state\custom_handlers\staking_basic.py:58:        save_db(db)
+
+
