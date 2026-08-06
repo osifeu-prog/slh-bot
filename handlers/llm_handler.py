@@ -76,11 +76,11 @@ def query_llm_with_context(question, uid=None):
         agents = db.get("agents", {})
 
         if any(x in q for x in ["name", "names", "??", "????"]):
-            return "Agents: names=" + ", ".join(
+            return "Agents names: " + ", ".join(
                 [a.get("name","?") for a in agents.values()]
             )
 
-        return f"Agents: count={len(agents)}"
+        return f"Agents count={len(agents)}"
 
     context = "No system data."
 
@@ -97,13 +97,13 @@ def query_llm_with_context(question, uid=None):
         if any(w in q for w in ["agent", "agents", "????", "??????"]):
 
             if any(x in q for x in ["count", "???", "????", "????"]):
-                return f"Agents: count={len(agents)}"
+                return f"Agents count={len(agents)}"
 
             if any(x in q for x in ["name", "names", "??", "????"]):
                 names = [a.get("name","?") for a in agents.values()]
-                return "Agents: names=" + ", ".join(names)
+                return "Agents names: " + ", ".join(names)
 
-            return f"Agents: count={len(agents)}"
+            return f"Agents count={len(agents)}"
 
 
         context = f"""
