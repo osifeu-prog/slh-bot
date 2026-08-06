@@ -1,1 +1,1 @@
-web: python3 -B bot_gateway.py
+web: /opt/venv/bin/python3 -B bot_gateway.py
