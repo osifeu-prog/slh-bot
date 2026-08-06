@@ -3,21 +3,25 @@
     "8789977826": {
       "name": "O",
       "role": "OWNER",
-      "credits": 1000,
       "phone": "!972000000001",
       "permissions": [
         "admin",
         "exec",
         "deploy",
         "restart"
-      ]
+      ],
+      "wallet": {
+        "credits": 1000
+      }
     },
     "224223270": {
       "role": "USER",
-      "credits": 0,
       "permissions": [
         "restart"
-      ]
+      ],
+      "wallet": {
+        "credits": 0
+      }
     }
   },
   "agents": {
