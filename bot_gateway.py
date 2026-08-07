@@ -1,6 +1,21 @@
 ﻿import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/health')
+def health():
+    return 'OK', 200
+
+@app.route('/')
+def index():
+    return 'SLH OS Gateway', 200
+
+def run_flask():
+    port = int(os.getenv('PORT', 8080))
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 LOG_FILE = Path("logs/bot_startup.log")
 LOG_FILE.parent.mkdir(exist_ok=True)
@@ -35,10 +50,14 @@ def run_bot(bot):
             time.sleep(10)
 
 if __name__ == "__main__":
-    log("=== BOT STARTUP ===")
+    log("=== BOT + API GATEWAY STARTUP ===")
     log(f"Python: {sys.executable} {sys.version}")
     log(f"RUN_BOT: {os.getenv('RUN_BOT')}")
     log(f"BOT_TOKEN: {os.getenv('BOT_TOKEN')[:15]}...")
+
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    log("Flask API gateway started")
 
     if os.getenv("RUN_BOT") != "1":
         log("RUN_BOT != 1, sleeping...")
@@ -54,6 +73,6 @@ if __name__ == "__main__":
         load_handlers(bot, {"bot_name": bot_name})
         log(f"[OK] Bot {bot_name} started")
         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
-    log("[SLH] All bots running. Waiting...")
+    log("[SLH] All bots + API running. Waiting...")
     while True:
         time.sleep(1)
