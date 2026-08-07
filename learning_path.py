@@ -55,7 +55,7 @@ def register_learning_path(bot):
         db = state_manager.load_db()
         submissions = db.setdefault("agent_submissions", [])
         submissions.append({"uid": uid, "agent_name": agent_name, "timestamp": __import__('datetime').datetime.utcnow().isoformat()})
-        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user = db.setdefault("users", {}).setdefault(uid, {})
         profile_manager.add_balance(str(uid), 10)
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
@@ -87,7 +87,7 @@ def register_learning_path(bot):
         marketplace = db.setdefault("marketplace", [])
         marketplace.append({"name": sub["agent_name"], "creator": sub["uid"], "approved_at": __import__('datetime').datetime.utcnow().isoformat()})
         # Award 40 credits to creator
-        user = db.setdefault("users", {}).setdefault(sub["uid"], {"balance": 0})
+        user = db.setdefault("users", {}).setdefault(sub["uid"], {})
         profile_manager.add_balance(str(uid), 40)
         # Remove submission
         del submissions[sub_id]
@@ -145,7 +145,7 @@ def register_learning_path(bot):
         new_name = parts[1].strip()
         uid = str(m.from_user.id)
         db = state_manager.load_db()
-        user = db.setdefault("users", {}).setdefault(uid, {"name": "אוסיף", "balance": 0})
+        user = db.setdefault("users", {}).setdefault(uid, {"name": "�����"})
         user["name"] = new_name
         state_manager.save_db(db)
         bot.reply_to(m, f"✅ Your name is now {new_name}.")

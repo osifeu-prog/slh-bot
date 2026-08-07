@@ -102,7 +102,7 @@ def register_ton_handlers(bot):
         credits = round(amount_ton * rate, 2)
 
         # 5. Add to user balance
-        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user = db.setdefault("users", {}).setdefault(uid, {})
         profile_manager.add_balance(str(uid), credits)
 
         # Mark tx as used

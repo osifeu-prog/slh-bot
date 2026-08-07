@@ -30,7 +30,6 @@ from core.event_bus import EventBus
 from core.mission_lifecycle import MissionLifecycleService
 from plugins.task import TaskPlugin
 from handlers.payment_handler import register_payment_handlers
-from econ_handler import register_econ_handlers
 # from staking_handler import register_staking_handlers
 
 try:
