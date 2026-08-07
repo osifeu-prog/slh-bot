@@ -25,3 +25,6 @@ state/snapshots/
 *_report.txt
 status_*.txt
 state/custom_handlers_disabled/
+
+FULL_SYSTEM_AUDIT.json
+state/agents.json
