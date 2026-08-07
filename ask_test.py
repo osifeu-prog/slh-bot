@@ -1,4 +1,4 @@
-﻿from handlers.advanced_ask_handler import register_ask_handler
+from handlers.advanced_ask_handler import register_ask_handler
 
 class B:
     def message_handler(self, **kwargs):

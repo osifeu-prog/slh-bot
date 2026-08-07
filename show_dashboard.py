@@ -1,4 +1,4 @@
-﻿import json
+import json
 with open(r'C:\Users\USER\slh-bot-clean\state\db.json', 'r', encoding='utf-8') as f:
     d = json.load(f)
 users = len(d.get('users', {}))

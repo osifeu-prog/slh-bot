@@ -3,24 +3,40 @@ import json
 DB_PATH = "state/db.json"
 
 BSC_RPC = "https://bsc-dataseed.binance.org/"
-CONTRACT = "0xYourTokenContract"
+CONTRACT = "0xACb0A09414CEA1C879c67bB7A877E4e19480f022"
 
 
-def get_balance(wallet):
+def get_balance(uid):
     try:
-        with open(DB_PATH, "r") as f:
-            db = json.load(f)
-        return db.get("token", {}).get("balances", {}).get(wallet, 0)
-    except:
+        from core import profile_manager
+
+        user = profile_manager.get_user(str(uid))
+
+        return (
+            user
+            .get("wallet", {})
+            .get("token_balance", 0)
+        )
+
+    except Exception as e:
+        print("TOKEN BALANCE ERROR:", e)
         return 0
 
 
 def get_supply():
     try:
-        with open(DB_PATH, "r") as f:
+        with open(DB_PATH, "r", encoding="utf-8") as f:
             db = json.load(f)
-        return db.get("token", {}).get("supply", 0)
-    except:
+
+        total = 0
+
+        for user in db.get("users", {}).values():
+            total += user.get("wallet", {}).get("token_balance", 0)
+
+        return total
+
+    except Exception as e:
+        print("TOKEN SUPPLY ERROR:", e)
         return 0
 
 
@@ -34,33 +50,37 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(
                 m,
-                "Options: /token supply | /token balance [wallet]"
+                "Options: /token supply | /token balance [user_id]"
             )
             return
 
         sub = parts[1].lower()
 
         if sub == "supply":
+
             bot.reply_to(
                 m,
-                f"💰 Total Supply: {get_supply():,.2f} SLH"
+                f"💰 Total Supply: {get_supply():,.4f} SLH"
             )
 
         elif sub == "balance":
 
-            wallet = parts[2] if len(parts) > 2 else str(m.from_user.id)
+            uid = (
+                parts[2]
+                if len(parts) > 2
+                else str(m.from_user.id)
+            )
 
-            bal = get_balance(wallet)
+            bal = get_balance(uid)
 
-            if bal is not None:
-                msg = f"💰 Balance: {bal:,.4f} SLH"
-            else:
-                msg = "❌ Error"
-
-            bot.reply_to(m, msg)
-
-        else:
             bot.reply_to(
                 m,
-                "Options: /token supply | /token balance [wallet]"
+                f"💰 Balance: {bal:,.4f} SLH"
+            )
+
+        else:
+
+            bot.reply_to(
+                m,
+                "Options: /token supply | /token balance [user_id]"
             )

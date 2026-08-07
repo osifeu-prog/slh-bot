@@ -1,4 +1,4 @@
-﻿def load_handlers(bot, context):
+def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
     print("נ”„ Loading modular handlers...")

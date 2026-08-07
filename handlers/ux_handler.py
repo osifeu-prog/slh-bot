@@ -1,4 +1,4 @@
-﻿def register(bot):
+def register(bot):
     @bot.message_handler(commands=['ux'])
     def ux_menu(msg):
         text = """🎨 SLH OS UI/UX Dashboard
