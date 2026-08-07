@@ -13,11 +13,11 @@ def load_db():
             "users": {}, "students": {}, "courses": {}, "admins": [],
             "agents": {}, "tasks": {}, "memory": {}, "votes": {}
         }
-    with open(DB_FILE) as f:
+    with open(DB_FILE, encoding="utf-8") as f:
         return json.load(f)
 
 def save_db(db):
-    with open(DB_FILE, "w") as f:
+    with open(DB_FILE, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
 
 AGENTS_FILE = "state/db.json"
@@ -54,3 +54,5 @@ def delete_agent(prefix):
 
 def clear_agents():
     set_agents({})
+
+

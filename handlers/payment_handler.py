@@ -138,10 +138,10 @@ def register_payment_handlers(bot):
         bot.send_message(
             m.chat.id,
             f"✅ Payment received! {credits} credits added.\n"
-            f"Your balance: {user['balance']} credits.\n"
+            f"Your balance: {profile_manager.get_balance(uid)} credits.\n"
             "Use /buy to unlock features like /ask or premium agents."
         )
-        print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
+        print(f"[PAY] {credits} credits added to {uid}, new balance {profile_manager.get_balance(uid)}")
 
     @bot.message_handler(commands=['history'])
     def history(m):
@@ -181,10 +181,10 @@ def register_payment_handlers(bot):
             return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
-        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+        user = profile_manager.get_user(uid)
         profile_manager.add_balance(uid, 100)
         state_manager.save_db(db)
-        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {user['balance']}")
+        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {profile_manager.get_balance(uid)}")
         print(f"[FAKEPAY] 100 credits added to {uid}")
 
 

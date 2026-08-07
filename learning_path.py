@@ -1,3 +1,4 @@
+from core import profile_manager
 import state_manager
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -55,7 +56,7 @@ def register_learning_path(bot):
         submissions = db.setdefault("agent_submissions", [])
         submissions.append({"uid": uid, "agent_name": agent_name, "timestamp": __import__('datetime').datetime.utcnow().isoformat()})
         user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
-        user["balance"] = user.get("balance", 0) + 10
+        profile_manager.add_balance(str(uid), 10)
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
         bot.send_message(8789977826, f"📢 Submission from {uid}: {agent_name}")
@@ -87,7 +88,7 @@ def register_learning_path(bot):
         marketplace.append({"name": sub["agent_name"], "creator": sub["uid"], "approved_at": __import__('datetime').datetime.utcnow().isoformat()})
         # Award 40 credits to creator
         user = db.setdefault("users", {}).setdefault(sub["uid"], {"balance": 0})
-        user["balance"] = user.get("balance", 0) + 40
+        profile_manager.add_balance(str(uid), 40)
         # Remove submission
         del submissions[sub_id]
         state_manager.save_db(db)
