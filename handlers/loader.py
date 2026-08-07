@@ -36,9 +36,9 @@
         ("voting", "handlers.voting_handler"),
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
-        ("askdebug", "handlers.askdebug_handler"),        ("exec", "handlers.exec_handler"),
-
-    
+        ("askdebug", "handlers.askdebug_handler"),
+        ("exec", "handlers.exec_handler"),
+    ]
 
     import importlib
     import inspect
@@ -97,7 +97,6 @@
 
 
     print("? ALL HANDLERS READY")
-
 
 
 
