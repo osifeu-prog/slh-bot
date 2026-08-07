@@ -7,3 +7,4 @@ openai>=1.0.0
 groq
 openai>=1.0.0
 groq
+paho-mqtt
