@@ -1,32 +1,46 @@
-import json, time
+import json
+import time
 from datetime import datetime, timezone
-import paho.mqtt.client as mqtt
 
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 RESPONSES = {}
+_mqtt_client = None
 
-def on_message(client, userdata, msg):
-    RESPONSES[msg.topic] = msg.payload.decode()
-
-mqtt_client = mqtt.Client()
-mqtt_client.on_message = on_message
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-mqtt_client.subscribe("slh/esp/response/#")
-mqtt_client.loop_start()
+def _get_mqtt():
+    global _mqtt_client
+    if _mqtt_client is not None:
+        return _mqtt_client
+    try:
+        import paho.mqtt.client as mqtt
+        def on_message(client, userdata, msg):
+            RESPONSES[msg.topic] = msg.payload.decode()
+        c = mqtt.Client()
+        c.on_message = on_message
+        c.connect(MQTT_BROKER, MQTT_PORT, 60)
+        c.subscribe("slh/esp/response/#")
+        c.loop_start()
+        _mqtt_client = c
+    except Exception as e:
+        print("MQTT unavailable:", e)
+        _mqtt_client = None
+    return _mqtt_client
 
 def load_devices():
     try:
-        with open("state/devices.json","r") as f:
-            return json.load(f).get("devices",{})
-    except:
+        with open("state/devices.json", "r", encoding="utf-8") as f:
+            return json.load(f).get("devices", {})
+    except Exception:
         return {}
 
 def save_devices(devices):
-    with open("state/devices.json","r") as f:
-        data = json.load(f)
+    try:
+        with open("state/devices.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        data = {"devices": {}}
     data["devices"] = devices
-    with open("state/devices.json","w") as f:
+    with open("state/devices.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 def register_esp_handler(bot):
@@ -40,7 +54,11 @@ def register_esp_handler(bot):
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
         topic = dev.get("mqtt_topic", f"slh/esp/{device_id}")
-        mqtt_client.publish(topic + "/command", "ping")
+        client = _get_mqtt()
+        if client is None:
+            bot.reply_to(msg, f"ESP32 {device_id}: MQTT unavailable")
+            return
+        client.publish(topic + "/command", "ping")
         time.sleep(2)
         reply = RESPONSES.get(topic + "/response", "No response")
         dev["last_heartbeat"] = datetime.now(timezone.utc).isoformat()
@@ -54,7 +72,8 @@ def register_esp_handler(bot):
         if not devices:
             bot.reply_to(msg, "No devices registered.")
             return
-        lines = [f"{did}: {d.get('status','?')} | last: {d.get('last_heartbeat','never')}" for did, d in devices.items()]
+        lines = [
+            f"{did}: {d.get('status', '?')} | last: {d.get('last_heartbeat', d.get('last_seen', 'never'))}"
+            for did, d in devices.items()
+        ]
         bot.reply_to(msg, "\n".join(lines))
-
-
