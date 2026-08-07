@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 p = Path("handlers/llm_handler.py")
 s = p.read_text(encoding="utf-8")

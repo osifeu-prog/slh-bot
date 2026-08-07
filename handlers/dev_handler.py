@@ -1,4 +1,4 @@
-﻿def register(bot):
+def register(bot):
     @bot.message_handler(commands=['dev'])
     def dev_menu(msg):
         text = """🛠 SLH OS Developer Dashboard

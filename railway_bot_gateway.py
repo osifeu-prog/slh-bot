@@ -1,4 +1,4 @@
-﻿import os, json, time, threading
+import os, json, time, threading
 from pathlib import Path
 import telebot
 from handlers.loader import load_handlers

@@ -1,4 +1,4 @@
-﻿import json, os, subprocess, glob, tempfile, time
+import json, os, subprocess, glob, tempfile, time
 
 def register(bot, context):
     @bot.message_handler(commands=['health'])

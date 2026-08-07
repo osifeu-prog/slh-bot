@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 SLH Device Bridge
 מחבר מכשירים (PC, ESP32, Mobile) ל-SLH OS דרך Telegram API

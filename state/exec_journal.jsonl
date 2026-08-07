@@ -1,1 +1,2 @@
 {"timestamp": "2026-07-27T23:12:56.249540", "script": "termux_ultimate_pipeline", "status": "SUCCESS"}
+{"date":"2026-08-06","event":"RUNTIME_POLICY_LOCK","decision":"Railway is permanent production runtime. Local PowerShell is diagnostics only. Telegram polling owner remains Railway. Avoid local bot_stable.py execution while Railway is active.","status":"ACTIVE"}
