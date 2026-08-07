@@ -1,3 +1,4 @@
+from core import profile_manager
 import requests
 import state_manager
 from datetime import datetime
@@ -102,7 +103,7 @@ def register_ton_handlers(bot):
 
         # 5. Add to user balance
         user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
-        user["balance"] = user.get("balance", 0) + credits
+        profile_manager.add_balance(str(uid), credits)
 
         # Mark tx as used
         used_txs.append(tx_hash)
@@ -123,7 +124,7 @@ def register_ton_handlers(bot):
             m.chat.id,
             f"✅ TON deposit verified! {credits} credits added.\n"
             f"Amount: {amount_ton} TON\n"
-            f"Your balance: {user['balance']} credits."
+            f"Your balance: {profile_manager.get_balance(uid)} credits."
         )
 
     @bot.message_handler(commands=['ton_rate'])
