@@ -13,3 +13,15 @@ SLH_RECOVERY_PROFILE_*.txt
 config.json
 load_keys.sh
 *.backup*
+
+state/*.before_*
+state/snapshots/
+*_report.txt
+status_*.txt
+state/custom_handlers_disabled/
+
+state/*.before_*
+state/snapshots/
+*_report.txt
+status_*.txt
+state/custom_handlers_disabled/
