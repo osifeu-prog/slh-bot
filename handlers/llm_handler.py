@@ -112,7 +112,7 @@ SLH SYSTEM STATE:
 User:
 name={user.get("name")}
 role={user.get("role")}
-credits={user.get("credits",0)}
+credits={user.get("wallet", {}).get("credits",0)}
 
 Agents:
 count={len(agents)}
