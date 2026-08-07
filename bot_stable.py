@@ -527,8 +527,8 @@ def user(m):
         bot.reply_to(m, 'משתמש לא נמצא')
         return
     name = u.get('name', 'ללא שם')
-    bal = u.get('balance', 0)
-    course = u.get('active_course', 'אין')
+    bal = u.get('wallet', {}).get('credits', 0)
+    course = u.get('academy', {}).get('active_course', 'אין')
     prog = u.get('progress', 0)
     text = "👤 " + name + "\n💰 קרדיטים: " + str(bal) + "\n📚 קורס פעיל: " + course + "\n📊 התקדמות: " + str(prog) + "%"
     bot.reply_to(m, text)

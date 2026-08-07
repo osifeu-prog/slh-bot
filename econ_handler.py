@@ -103,7 +103,7 @@ def register_econ_handlers(bot):
         db = state_manager.load_db()
         profile_manager.add_balance(uid, 50)
         state_manager.save_db(db)
-        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {db['users'][uid]['balance']} credits")
+        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {profile_manager.get_balance(uid)} credits")
 
 
 def register(bot):
