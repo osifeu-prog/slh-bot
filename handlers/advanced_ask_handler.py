@@ -10,13 +10,14 @@ def register_ask_handler(bot):
 
         question = (msg.text or "").replace("/ask", "", 1).strip()
 
-        # Repair UTF-8 mojibake from Telegram text path
+        # Repair Telegram mojibake
         try:
-            if "╫" in question or "â" in question:
-                question = question.encode("latin1").decode("utf-8")
+            repaired = question.encode("latin1").decode("utf-8")
+            if repaired != question:
+                question = repaired
                 print("ASK UTF8 REPAIRED:", question)
         except Exception as e:
-            print("ASK UTF8 REPAIR FAILED:", repr(e))
+            print("ASK UTF8 REPAIR SKIPPED:", repr(e))
 
         if not question:
             bot.reply_to(msg, "Usage: /ask [question]")
