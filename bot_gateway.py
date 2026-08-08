@@ -96,3 +96,4 @@ if __name__ == "__main__":
     log("[SLH] All bots + API running. Waiting...")
     while True:
         time.sleep(1)
+
