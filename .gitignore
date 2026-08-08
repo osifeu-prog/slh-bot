@@ -38,3 +38,10 @@ state/agents.json
 *.pre_*
 RECOVERY_SNAPSHOT/
 SLH_*_BACKUP_*/
+
+# all backup variants
+*.bak*
+*.backup*
+*.before*
+*.pre*
+*.broken*
