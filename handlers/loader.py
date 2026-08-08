@@ -37,8 +37,9 @@
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
-        ("exec", "handlers.exec_handler"),
-    ]
+        ("exec", "handlers.exec_handler"),        ("ton", "ton_handler"),
+
+    
 
     import importlib
     import inspect
@@ -97,6 +98,7 @@
 
 
     print("? ALL HANDLERS READY")
+
 
 
 
