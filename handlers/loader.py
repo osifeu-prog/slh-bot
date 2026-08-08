@@ -34,7 +34,7 @@ def load_handlers(bot, context):
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
         ("user", "handlers.user_handler"),
-        ("voting", "handlers.voting_handler"),
+        ("voting", "state.custom_handlers.ai_voting_handler"),
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
