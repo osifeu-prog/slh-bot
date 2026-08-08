@@ -1,7 +1,7 @@
-import os, json, time, threading, traceback, sys
+﻿import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 
 app = Flask(__name__)
 
@@ -33,6 +33,44 @@ def api_devices():
 def index():
     return 'SLH OS Gateway', 200
 
+def api_stats():
+    try:
+        with open("state/db.json", encoding="utf-8") as f:
+            db = json.load(f)
+        users = len(db.get("users", {}))
+        tasks = len(db.get("tasks", {}))
+        agents = len(db.get("agents", {}))
+        owner = db.get("users", {}).get("8789977826", {})
+        credits = owner.get("wallet", {}).get("credits", 0)
+        return jsonify({
+            "users": users,
+            "tasks": tasks,
+            "agents": agents,
+            "credits": credits
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def dashboard():
+    from flask import send_from_directory
+    return send_from_directory('.', 'dashboard.html')
+
+
+def dashboard():
+    return send_from_directory('.', 'dashboard.html')
+
+def stats():
+    try:
+        with open('state/db.json', encoding='utf-8') as fh:
+            db = json.load(fh)
+        users = len(db.get('users', {}))
+        agents = len(db.get('agents', {}))
+        tasks = len(db.get('tasks', {}))
+        user = db['users'].get('8789977826', {})
+        credits = user.get('wallet', {}).get('credits', 0)
+        return jsonify(users=users, agents=agents, tasks=tasks, credits=credits)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 def run_flask():
     port = int(os.getenv('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
@@ -110,4 +148,5 @@ if __name__ == "__main__":
 
 
 # deploy-marker 20260808_113100
+
 

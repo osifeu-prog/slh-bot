@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLH Dashboard</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:24px; }
+  h1 { color:#58a6ff; margin-bottom:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-top:24px; }
+  .card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; }
+  .label { color:#8b949e; font-size:14px; }
+  .value { font-size:28px; font-weight:700; margin-top:8px; }
+  .ok { color:#3fb950; }
+  .muted { color:#8b949e; font-size:13px; margin-top:24px; }
+</style>
+</head>
+<body>
+  <h1>SLH Mission Control</h1>
+  <p class="muted">Live status from production</p>
+  <div class="grid">
+    <div class="card"><div class="label">Users</div><div class="value" id="users">–</div></div>
+    <div class="card"><div class="label">Agents</div><div class="value" id="agents">–</div></div>
+    <div class="card"><div class="label">Tasks</div><div class="value" id="tasks">–</div></div>
+    <div class="card"><div class="label">Credits (Owner)</div><div class="value" id="credits">–</div></div>
+  </div>
+  <p class="muted" id="status">Loading…</p>
+<script>
+fetch('/api/stats')
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('users').textContent = d.users ?? '–';
+    document.getElementById('agents').textContent = d.agents ?? '–';
+    document.getElementById('tasks').textContent = d.tasks ?? '–';
+    document.getElementById('credits').textContent = d.credits ?? '–';
+    document.getElementById('status').textContent = 'Updated just now';
+    document.getElementById('status').classList.add('ok');
+  })
+  .catch(e => {
+    document.getElementById('status').textContent = 'Error: ' + e;
+  });
+</script>
+</body>
+</html>
