@@ -1,4 +1,4 @@
-def load_handlers(bot, context):
+﻿def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
@@ -41,6 +41,7 @@ def load_handlers(bot, context):
         ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
         ("exec", "handlers.exec_handler"),
+        ("git", "handlers.git_handler"),
     ("ton", "ton_handler"),
     ]
 
@@ -104,3 +105,4 @@ def load_handlers(bot, context):
 
 
     print("? ALL HANDLERS READY")
+

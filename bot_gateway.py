@@ -33,6 +33,11 @@ def api_devices():
 def index():
     return 'SLH OS Gateway', 200
 
+@app.route('/dashboard')
+def dashboard():
+    return send_from_directory('.', 'dashboard.html')
+
+@app.route('/api/stats')
 def api_stats():
     try:
         with open("state/db.json", encoding="utf-8") as f:
@@ -51,26 +56,6 @@ def api_stats():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def dashboard():
-    from flask import send_from_directory
-    return send_from_directory('.', 'dashboard.html')
-
-
-def dashboard():
-    return send_from_directory('.', 'dashboard.html')
-
-def stats():
-    try:
-        with open('state/db.json', encoding='utf-8') as fh:
-            db = json.load(fh)
-        users = len(db.get('users', {}))
-        agents = len(db.get('agents', {}))
-        tasks = len(db.get('tasks', {}))
-        user = db['users'].get('8789977826', {})
-        credits = user.get('wallet', {}).get('credits', 0)
-        return jsonify(users=users, agents=agents, tasks=tasks, credits=credits)
-    except Exception as e:
-        return jsonify(error=str(e)), 500
 def run_flask():
     port = int(os.getenv('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
@@ -145,8 +130,4 @@ if __name__ == "__main__":
     log("[SLH] All bots + API running. Waiting...")
     while True:
         time.sleep(1)
-
-
 # deploy-marker 20260808_113100
-
-
