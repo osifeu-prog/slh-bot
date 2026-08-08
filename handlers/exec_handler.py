@@ -1,4 +1,4 @@
-﻿import subprocess, os
+import subprocess, os
 
 def register(bot, context):
     ADMIN_IDS = {int(os.getenv("ADMIN_ID", "8789977826"))}
@@ -6,7 +6,7 @@ def register(bot, context):
     @bot.message_handler(commands=["exec"])
     def exec_cmd(m):
         if m.from_user.id not in ADMIN_IDS:
-            bot.reply_to(m, "⛔ Admin only.")
+            bot.reply_to(m, "ג›” Admin only.")
             return
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
@@ -20,4 +20,4 @@ def register(bot, context):
                 output = output[:4000] + "\n... truncated"
             bot.reply_to(m, f"```\n{output}\n```", parse_mode="Markdown")
         except Exception as e:
-            bot.reply_to(m, f"❌ Error: {e}")
+            bot.reply_to(m, f"ג Error: {e}")

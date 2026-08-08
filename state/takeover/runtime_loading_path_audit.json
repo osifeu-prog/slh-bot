@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-08-06T14:43:17.865280+00:00",
+  "generated_at": "2026-08-08T11:44:46.815247+00:00",
   "entrypoint": "bot_stable.py",
   "loader": "handlers\\loader.py",
   "files": [
@@ -150,24 +150,16 @@
           "line": 32
         },
         {
-          "type": "from_import",
-          "module": "econ_handler",
-          "name": [
-            "register_econ_handlers"
-          ],
-          "line": 33
-        },
-        {
           "type": "import",
           "module": "importlib.util",
           "name": null,
-          "line": 83
+          "line": 82
         },
         {
           "type": "import",
           "module": "state_manager",
           "name": null,
-          "line": 103
+          "line": 102
         },
         {
           "type": "from_import",
@@ -175,7 +167,7 @@
           "name": [
             "load_handlers"
           ],
-          "line": 861
+          "line": 860
         },
         {
           "type": "from_import",
@@ -191,7 +183,7 @@
           "name": [
             "register"
           ],
-          "line": 37
+          "line": 36
         },
         {
           "type": "from_import",
@@ -199,25 +191,25 @@
           "name": [
             "EventBus"
           ],
-          "line": 76
+          "line": 75
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 191
+          "line": 190
         },
         {
           "type": "import",
           "module": "subprocess",
           "name": null,
-          "line": 192
+          "line": 191
         },
         {
           "type": "import",
           "module": "json",
           "name": null,
-          "line": 193
+          "line": 192
         },
         {
           "type": "from_import",
@@ -225,145 +217,145 @@
           "name": [
             "datetime"
           ],
-          "line": 194
+          "line": 193
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 259
+          "line": 258
         },
         {
           "type": "import",
           "module": "json",
           "name": null,
-          "line": 259
+          "line": 258
         },
         {
           "type": "import",
           "module": "glob",
           "name": null,
-          "line": 259
+          "line": 258
         },
         {
           "type": "import",
           "module": "psutil",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "json",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "sqlite3",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "time",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "subprocess",
           "name": null,
-          "line": 315
+          "line": 314
         },
         {
           "type": "import",
           "module": "subprocess",
           "name": null,
-          "line": 462
+          "line": 461
         },
         {
           "type": "import",
           "module": "time",
           "name": null,
-          "line": 489
+          "line": 488
         },
         {
           "type": "import",
           "module": "json",
           "name": null,
-          "line": 489
+          "line": 488
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 489
+          "line": 488
         },
         {
           "type": "import",
           "module": "urllib.request",
           "name": null,
-          "line": 538
+          "line": 537
         },
         {
           "type": "import",
           "module": "json",
           "name": null,
-          "line": 538
+          "line": 537
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 538
+          "line": 537
         },
         {
           "type": "import",
           "module": "ssl",
           "name": null,
-          "line": 538
+          "line": 537
         },
         {
           "type": "import",
           "module": "subprocess",
           "name": null,
-          "line": 583
+          "line": 582
         },
         {
           "type": "import",
           "module": "subprocess",
           "name": null,
-          "line": 599
+          "line": 598
         },
         {
           "type": "import",
           "module": "re",
           "name": null,
-          "line": 626
+          "line": 625
         },
         {
           "type": "import",
           "module": "os",
           "name": null,
-          "line": 745
+          "line": 744
         },
         {
           "type": "import",
           "module": "py_compile",
           "name": null,
-          "line": 745
+          "line": 744
         },
         {
           "type": "import",
           "module": "viewfile_handler",
           "name": null,
-          "line": 796
+          "line": 795
         },
         {
           "type": "from_import",
@@ -371,7 +363,7 @@
           "name": [
             "is_admin"
           ],
-          "line": 840
+          "line": 839
         },
         {
           "type": "from_import",
@@ -379,71 +371,47 @@
           "name": [
             "init"
           ],
-          "line": 871
+          "line": 870
         },
         {
           "type": "import",
           "module": "datetime",
           "name": null,
-          "line": 916
+          "line": 915
         },
         {
           "type": "import",
           "module": "traceback",
           "name": null,
-          "line": 939
+          "line": 938
         },
         {
           "type": "import",
           "module": "psutil",
           "name": null,
-          "line": 383
+          "line": 382
         },
         {
           "type": "import",
           "module": "tutorial_handler",
           "name": null,
-          "line": 803
+          "line": 802
         },
         {
           "type": "import",
           "module": "re",
           "name": null,
-          "line": 767
+          "line": 766
         }
       ],
       "load_calls": [
         {
           "function": "load_handlers",
-          "line": 862
+          "line": 861
         },
         {
           "function": "load",
-          "line": 66
-        },
-        {
-          "function": "load",
-          "line": 263
-        },
-        {
-          "function": "load",
-          "line": 50
-        },
-        {
-          "function": "load",
-          "line": 134
-        },
-        {
-          "function": "load",
-          "line": 330
-        },
-        {
-          "function": "load",
-          "line": 431
-        },
-        {
-          "function": "load",
-          "line": 495
+          "line": 65
         },
         {
           "function": "load",
@@ -451,37 +419,61 @@
         },
         {
           "function": "load",
-          "line": 436
+          "line": 49
+        },
+        {
+          "function": "load",
+          "line": 133
+        },
+        {
+          "function": "load",
+          "line": 329
+        },
+        {
+          "function": "load",
+          "line": 430
+        },
+        {
+          "function": "load",
+          "line": 494
+        },
+        {
+          "function": "load",
+          "line": 261
+        },
+        {
+          "function": "load",
+          "line": 435
         }
       ],
       "register_calls": [
         {
           "function": "register",
-          "line": 797
+          "line": 796
         },
         {
           "function": "register",
-          "line": 804
+          "line": 803
         },
         {
           "function": "register",
-          "line": 95
+          "line": 94
         }
       ],
       "dynamic_loading": [
         {
           "function": "importlib.util",
-          "line": 83,
+          "line": 82,
+          "type": "IMPORTLIB"
+        },
+        {
+          "function": "importlib.util",
+          "line": 89,
           "type": "IMPORTLIB"
         },
         {
           "function": "importlib.util",
           "line": 90,
-          "type": "IMPORTLIB"
-        },
-        {
-          "function": "importlib.util",
-          "line": 91,
           "type": "IMPORTLIB"
         }
       ],
@@ -489,197 +481,197 @@
         {
           "command": "/sync",
           "function": "sync_command",
-          "line": 190
+          "line": 189
         },
         {
           "command": "/system_visibility",
           "function": "system_visibility",
-          "line": 257
+          "line": 256
         },
         {
           "command": "/status",
           "function": "status",
-          "line": 306
+          "line": 305
         },
         {
           "command": "/health",
           "function": "health",
-          "line": 314
+          "line": 313
         },
         {
           "command": "/results",
           "function": "results",
-          "line": 346
+          "line": 345
         },
         {
           "command": "/master",
           "function": "master",
-          "line": 351
+          "line": 350
         },
         {
           "command": "/backup",
           "function": "backup",
-          "line": 355
+          "line": 354
         },
         {
           "command": "/restart",
           "function": "restart",
-          "line": 359
+          "line": 358
         },
         {
           "command": "/clean",
           "function": "clean",
-          "line": 368
+          "line": 367
         },
         {
           "command": "/audit",
           "function": "audit_cmd",
-          "line": 372
+          "line": 371
         },
         {
           "command": "/memory",
           "function": "memory",
-          "line": 381
+          "line": 380
         },
         {
           "command": "/debug",
           "function": "debug",
-          "line": 391
+          "line": 390
         },
         {
           "command": "/deploy",
           "function": "deploy",
-          "line": 400
+          "line": 399
         },
         {
           "command": "/errors",
           "function": "errors",
-          "line": 405
+          "line": 404
         },
         {
           "command": "/plugin",
           "function": "plugin",
-          "line": 415
+          "line": 414
         },
         {
           "command": "/goal",
           "function": "goal",
-          "line": 424
+          "line": 423
         },
         {
           "command": "/sysinfo",
           "function": "sysinfo",
-          "line": 440
+          "line": 439
         },
         {
           "command": "/disk",
           "function": "disk",
-          "line": 457
+          "line": 456
         },
         {
           "command": "/test",
           "function": "test",
-          "line": 461
+          "line": 460
         },
         {
           "command": "/kernellog",
           "function": "kernellog",
-          "line": 467
+          "line": 466
         },
         {
           "command": "/kernelstatus",
           "function": "kernelstatus",
-          "line": 471
+          "line": 470
         },
         {
           "command": "/update",
           "function": "update",
-          "line": 475
+          "line": 474
         },
         {
           "command": "/rollback",
           "function": "rollback",
-          "line": 480
+          "line": 479
         },
         {
           "command": "/test_agents",
           "function": "test_agents",
-          "line": 488
+          "line": 487
         },
         {
           "command": "/user",
           "function": "user",
-          "line": 522
+          "line": 521
         },
         {
           "command": "/rlogs",
           "function": "rlogs",
-          "line": 537
+          "line": 536
         },
         {
           "command": "/exec",
           "function": "exec_cmd",
-          "line": 575
+          "line": 574
         },
         {
           "command": "/termlog",
           "function": "termlog",
-          "line": 595
+          "line": 594
         },
         {
           "command": "/market",
           "function": "market",
-          "line": 609
+          "line": 608
         },
         {
           "command": "/market_installed",
           "function": "market_installed",
-          "line": 615
+          "line": 614
         },
         {
           "command": "/market_install",
           "function": "market_install",
-          "line": 623
+          "line": 622
         },
         {
           "command": "/market_search",
           "function": "market_search",
-          "line": 641
+          "line": 640
         },
         {
           "command": "/market_rate",
           "function": "market_rate",
-          "line": 655
+          "line": 654
         },
         {
           "command": "/market_upload",
           "function": "market_upload",
-          "line": 680
+          "line": 679
         },
         {
           "command": "/testcmd",
           "function": "testcmd",
-          "line": 710
+          "line": 709
         },
         {
           "command": "/debugcmd",
           "function": "debugcmd",
-          "line": 728
+          "line": 727
         },
         {
           "command": "/diagnose",
           "function": "diagnose_cmd",
-          "line": 744
+          "line": 743
         },
         {
           "command": "/broadcast",
           "function": "broadcast",
-          "line": 888
+          "line": 887
         },
         {
           "command": "/snapshot",
           "function": "snapshot",
-          "line": 915
+          "line": 914
         }
       ]
     },
@@ -1177,7 +1169,7 @@
           "type": "import",
           "module": "time",
           "name": null,
-          "line": 1
+          "line": 2
         },
         {
           "type": "from_import",
@@ -1186,23 +1178,23 @@
             "datetime",
             "timezone"
           ],
-          "line": 2
+          "line": 3
         },
         {
           "type": "import",
           "module": "paho.mqtt.client",
           "name": null,
-          "line": 3
+          "line": 15
         }
       ],
       "load_calls": [
         {
           "function": "load",
-          "line": 24
+          "line": 39
         },
         {
           "function": "load",
-          "line": 42
+          "line": 32
         }
       ],
       "register_calls": [],
@@ -1211,12 +1203,41 @@
         {
           "command": "/esp_ping",
           "function": "esp_ping",
-          "line": 20
+          "line": 48
         },
         {
           "command": "/esp_status",
           "function": "esp_status",
-          "line": 40
+          "line": 70
+        }
+      ]
+    },
+    {
+      "file": "handlers\\exec_handler.py",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "subprocess",
+          "name": null,
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "line": 1
+        }
+      ],
+      "load_calls": [],
+      "register_calls": [],
+      "dynamic_loading": [],
+      "registered_commands": [
+        {
+          "command": "/exec",
+          "function": "exec_cmd",
+          "line": 7
         }
       ]
     },
@@ -1479,13 +1500,13 @@
           "type": "import",
           "module": "importlib",
           "name": null,
-          "line": 42
+          "line": 45
         },
         {
           "type": "import",
           "module": "inspect",
           "name": null,
-          "line": 43
+          "line": 46
         },
         {
           "type": "from_import",
@@ -1493,7 +1514,7 @@
           "name": [
             "register_esp_handler"
           ],
-          "line": 83
+          "line": 89
         },
         {
           "type": "from_import",
@@ -1501,29 +1522,29 @@
           "name": [
             "register_ask_handler"
           ],
-          "line": 91
+          "line": 97
         }
       ],
       "load_calls": [],
       "register_calls": [
         {
           "function": "register_ask_handler",
-          "line": 92
+          "line": 98
         },
         {
           "function": "register_handlers",
-          "line": 71
+          "line": 77
         }
       ],
       "dynamic_loading": [
         {
           "function": "import_module",
-          "line": 47,
+          "line": 50,
           "type": "DYNAMIC_IMPORT"
         },
         {
           "function": "importlib.import_module",
-          "line": 47,
+          "line": 50,
           "type": "IMPORTLIB"
         }
       ],
@@ -2456,50 +2477,6 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\staking_basic.py",
-      "syntax_ok": true,
-      "syntax_error": null,
-      "imports": [
-        {
-          "type": "import",
-          "module": "json",
-          "name": null,
-          "line": 1
-        },
-        {
-          "type": "import",
-          "module": "time",
-          "name": null,
-          "line": 1
-        }
-      ],
-      "load_calls": [
-        {
-          "function": "load",
-          "line": 7
-        }
-      ],
-      "register_calls": [],
-      "dynamic_loading": [],
-      "registered_commands": [
-        {
-          "command": "/stake_deposit",
-          "function": "stake_deposit",
-          "line": 15
-        },
-        {
-          "command": "/stake_claim",
-          "function": "stake_claim",
-          "line": 42
-        },
-        {
-          "command": "/stake_info",
-          "function": "stake_info",
-          "line": 62
-        }
-      ]
-    },
-    {
       "file": "state\\custom_handlers\\task_listener.py",
       "syntax_ok": true,
       "syntax_error": null,
@@ -2535,65 +2512,6 @@
       "register_calls": [],
       "dynamic_loading": [],
       "registered_commands": []
-    },
-    {
-      "file": "state\\custom_handlers\\token_handler.py",
-      "syntax_ok": true,
-      "syntax_error": null,
-      "imports": [
-        {
-          "type": "import",
-          "module": "json",
-          "name": null,
-          "line": 1
-        },
-        {
-          "type": "from_import",
-          "module": "core",
-          "name": [
-            "profile_manager"
-          ],
-          "line": 11
-        }
-      ],
-      "load_calls": [
-        {
-          "function": "load",
-          "line": 29
-        }
-      ],
-      "register_calls": [],
-      "dynamic_loading": [],
-      "registered_commands": [
-        {
-          "command": "/token",
-          "function": "token_cmd",
-          "line": 46
-        }
-      ]
-    },
-    {
-      "file": "state\\custom_handlers\\token_wizard.py",
-      "syntax_ok": true,
-      "syntax_error": null,
-      "imports": [
-        {
-          "type": "import",
-          "module": "json",
-          "name": null,
-          "line": 1
-        }
-      ],
-      "load_calls": [],
-      "register_calls": [],
-      "dynamic_loading": [],
-      "registered_commands": [
-        {
-          "command": "/token_wizard",
-          "function": "wizard",
-          "line": 25
-        }
-      ]
     }
   ],
   "loading_graph": {
@@ -2613,6 +2531,7 @@
       "handlers.audit_handler",
       "handlers.dashboard_handler",
       "handlers.device_handler",
+      "handlers.exec_handler",
       "handlers.feedback_handler",
       "handlers.gateway_handler",
       "handlers.help_handler",
@@ -2642,17 +2561,17 @@
         "events": [
           {
             "function": "importlib.util",
-            "line": 83,
+            "line": 82,
+            "type": "IMPORTLIB"
+          },
+          {
+            "function": "importlib.util",
+            "line": 89,
             "type": "IMPORTLIB"
           },
           {
             "function": "importlib.util",
             "line": 90,
-            "type": "IMPORTLIB"
-          },
-          {
-            "function": "importlib.util",
-            "line": 91,
             "type": "IMPORTLIB"
           }
         ]
@@ -2662,12 +2581,12 @@
         "events": [
           {
             "function": "import_module",
-            "line": 47,
+            "line": 50,
             "type": "DYNAMIC_IMPORT"
           },
           {
             "function": "importlib.import_module",
-            "line": 47,
+            "line": 50,
             "type": "IMPORTLIB"
           }
         ]
