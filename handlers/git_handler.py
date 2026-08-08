@@ -5,8 +5,9 @@ REPO_OWNER = 'osifeu-prog'
 REPO_NAME = 'slh-bot'
 BRANCH = 'main'
 BASE_DIR = '/app'
-EXCLUDE = {'.git', '__pycache__', 'state', 'logs', 'venv', '.nixpacks'}
-EXTENSIONS = {'.py', '.html', '.json', '.md', '.txt', '.yml', '.yaml', '.cfg', '.ini'}
+WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive'}
+WHITELIST_FILES = {'bot_gateway.py', 'dashboard.html', 'courses.json', 'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'}
+ALLOWED_EXTENSIONS = {'.py', '.html', '.json', '.txt', '.md', '.yml', '.yaml', '.cfg', '.ini'}
 
 def compute_blob_sha(content: bytes) -> str:
     header = f'blob {len(content)}\0'.encode()
@@ -15,12 +16,21 @@ def compute_blob_sha(content: bytes) -> str:
 def get_local_files():
     result = {}
     for root, dirs, files in os.walk(BASE_DIR):
-        dirs[:] = [d for d in dirs if d not in EXCLUDE]
+        if root == BASE_DIR:
+            dirs[:] = [d for d in dirs if d in WHITELIST_DIRS or d == 'state']
+        else:
+            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
         for f in files:
-            if not any(f.endswith(ext) for ext in EXTENSIONS):
+            rel = os.path.relpath(os.path.join(root, f), BASE_DIR).replace('\\', '/')
+            if rel.startswith('state/'):
+                continue
+            if rel in WHITELIST_FILES:
+                pass
+            elif any(rel.startswith(d + '/') for d in WHITELIST_DIRS) and any(f.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+                pass
+            else:
                 continue
             path = os.path.join(root, f)
-            rel = os.path.relpath(path, BASE_DIR).replace('\\', '/')
             with open(path, 'rb') as fh:
                 content = fh.read()
             result[rel] = {
@@ -53,7 +63,6 @@ def register(bot):
             'Accept': 'application/vnd.github.v3+json'
         }
 
-        # 1. Get latest commit & tree from GitHub
         ref_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/refs/heads/{BRANCH}'
         r = requests.get(ref_url, headers=headers)
         if r.status_code != 200:
@@ -68,7 +77,6 @@ def register(bot):
             return
         base_tree_sha = r.json()['tree']['sha']
 
-        # 2. Get the remote tree recursively
         def get_remote_tree(sha):
             tree = {}
             url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/trees/{sha}?recursive=1'
@@ -85,17 +93,11 @@ def register(bot):
             bot.reply_to(msg, '❌ Failed to fetch remote tree')
             return
 
-        # 3. Scan local files and compare
         local_files = get_local_files()
         changed = []
         for path, info in local_files.items():
             if path not in remote_tree or info['sha'] != remote_tree[path]:
                 changed.append(path)
-
-        # Also detect deletions (optional)
-        # for path in remote_tree:
-        #    if path not in local_files:
-        #        changed.append(path)  # deletion handling would need separate logic
 
         if not changed:
             bot.reply_to(msg, '✅ No changes to commit')
@@ -103,7 +105,6 @@ def register(bot):
 
         bot.reply_to(msg, f'📦 {len(changed)} files changed:\n' + '\n'.join(changed[:10]) + ('\n...' if len(changed)>10 else ''))
 
-        # 4. Create blobs for changed files (only new/modified)
         new_tree_items = []
         for path in changed:
             content = local_files[path]['content']
@@ -123,7 +124,6 @@ def register(bot):
                 'sha': r.json()['sha']
             })
 
-        # 5. Create new tree
         tree_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/trees'
         tree_data = {
             'base_tree': base_tree_sha,
@@ -135,7 +135,6 @@ def register(bot):
             return
         new_tree_sha = r.json()['sha']
 
-        # 6. Create commit
         commit_data = {
             'message': message,
             'tree': new_tree_sha,
@@ -147,7 +146,6 @@ def register(bot):
             return
         new_commit_sha = r.json()['sha']
 
-        # 7. Update branch reference
         r = requests.patch(ref_url, json={'sha': new_commit_sha, 'force': False}, headers=headers)
         if r.status_code == 200:
             bot.reply_to(msg, f'✅ Committed & pushed: {message}')
