@@ -1,13 +1,33 @@
 ﻿import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
 @app.route('/health')
 def health():
-    return 'OK', 200
+    return jsonify({"status": "ok", "service": "SLH OS Gateway"}), 200
+
+@app.route('/api/agents')
+def api_agents():
+    try:
+        from core.agent_registry import STORE
+        agents = STORE.get_all()
+        result = {aid: {"name": a.get("name"), "state": a.get("state")} for aid, a in agents.items()}
+        return jsonify({"total": len(agents), "agents": result}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/devices')
+def api_devices():
+    try:
+        import json
+        with open("state/devices.json", encoding="utf-8") as f:
+            data = json.load(f)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/')
 def index():
