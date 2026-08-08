@@ -23,6 +23,7 @@ def load_handlers(bot, context):
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
         ("leaderboard", "handlers.leaderboard_handler"),
+        ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
         ("llm", "handlers.llm_handler"),
         ("map", "handlers.map_handler"),
@@ -69,6 +70,9 @@ def load_handlers(bot, context):
             elif hasattr(m, "init"):
                 m.init(bot)
 
+            elif hasattr(m, "register_learning_path"):
+                m.register_learning_path(bot)
+
             elif hasattr(m, "register_handlers"):
                 m.register_handlers(bot, context)
 
@@ -98,6 +102,3 @@ def load_handlers(bot, context):
 
 
     print("? ALL HANDLERS READY")
-
-
-
