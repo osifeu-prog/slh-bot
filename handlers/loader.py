@@ -11,7 +11,7 @@ def load_handlers(bot, context):
         ("audit", "handlers.audit_handler"),
         ("termux", "handlers.termux_handler"),
         ("payment", "handlers.payment_handler"),
-        ("econ", "econ_handler"),
+        # ("econ", "econ_handler"), # disabled after wallet migration
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
         ("academy", "handlers.academy_handler"),

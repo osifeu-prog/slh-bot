@@ -28,3 +28,13 @@ state/custom_handlers_disabled/
 
 FULL_SYSTEM_AUDIT.json
 state/agents.json
+
+# SLH cleanup archives
+*.bak
+*.old
+*.disabled
+*.backup*
+*.before_*
+*.pre_*
+RECOVERY_SNAPSHOT/
+SLH_*_BACKUP_*/
