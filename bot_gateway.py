@@ -1,4 +1,4 @@
-﻿import os, json, time, threading, traceback, sys
+import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
 from flask import Flask, jsonify
@@ -90,6 +90,17 @@ if __name__ == "__main__":
             log(f"Skipping {bot_name}: no token")
             continue
         bot = telebot.TeleBot(token, parse_mode=None)
+        # FIX: telebot misinterprets UTF-8 bytes as cp862
+        original_process_new_updates = bot.process_new_updates
+        def patched_process_new_updates(updates):
+            for update in updates:
+                if update.message and update.message.text:
+                    try:
+                        update.message.text = update.message.text.encode('cp862').decode('utf-8')
+                    except (UnicodeError, UnicodeDecodeError, UnicodeEncodeError):
+                        pass
+            return original_process_new_updates(updates)
+        bot.process_new_updates = patched_process_new_updates
         load_handlers(bot, {"bot_name": bot_name})
         log(f"[OK] Bot {bot_name} started")
         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
@@ -99,3 +110,4 @@ if __name__ == "__main__":
 
 
 # deploy-marker 20260808_113100
+
