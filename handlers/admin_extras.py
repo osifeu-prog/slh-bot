@@ -54,16 +54,6 @@ def register(bot, context):
                     pass
         bot.reply_to(m, f"🧹 Cleaned {count} temp files")
 
-    @bot.message_handler(commands=['vote'])
-    def vote(m):
-        parts = m.text.split(' ', 1)
-        if len(parts) < 2:
-            bot.reply_to(m, "Usage: /vote <topic>|<option1,option2>")
-            return
-        topic, opts = parts[1].split('|')
-        opts = [o.strip() for o in opts.split(',')]
-        bot.reply_to(m, f"🗳 Vote \"{topic}\" created with options: {', '.join(opts)}. Not yet implemented.")
-
     @bot.message_handler(commands=['results'])
     def results(m):
         bot.reply_to(m, "📊 No active vote. (voting engine not connected)")

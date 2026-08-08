@@ -301,58 +301,9 @@ READY:
         bot.reply_to(m,f"ERROR {e}")
 
 
-@bot.message_handler(commands=['status'])
-def status(m):
-    db = load_db()
-    bot.reply_to(
-        m,
-        f"Users: {len(db['users'])}\nAgents: {len(state_manager.get_agents())}\nTasks: {len(db['tasks'])}"
-    )
-
-@bot.message_handler(commands=['health'])
-def health(m):
-    import psutil, json, os, sqlite3, time, subprocess
-    ram = psutil.virtual_memory().percent
-    disk = psutil.disk_usage('/').percent
-    db_ok = False
-    events = 0
-    try:
-        conn = sqlite3.connect("slh_state.db")
-        events = conn.execute("SELECT count(*) FROM events").fetchone()[0]
-        conn.close()
-        db_ok = True
-    except:
-        pass
-    agents_count = 0
-    try:
-        with open("state/db.json") as f:
-            db = json.load(f)
-        agents_count = len(db.get("agents", {}))
-    except:
-        pass
-    uptime = "N/A"
-    try:
-        uptime = subprocess.check_output("uptime -p", shell=True, text=True).strip()
-    except:
-        pass
-    msg = f"🩺 SYSTEM HEALTH\nRAM: {ram:.1f}% used\nDisk: {disk:.1f}% used\nDB: {'✅' if db_ok else '❌'} (events: {events})\nAgents: {agents_count}\nUptime: {uptime}"
-    bot.reply_to(m, msg)
-# LEGACY /vote DISABLED 2026-07-23
-# Ownership moved to state.custom_handlers.ai_voting_handler
-# Original saved in bot_stable.py.before_vote_cleanup_20260723
-
-@bot.message_handler(commands=['results'])
-def results(m):
-    db = load_db()
-    bot.reply_to(m, json.dumps(db["votes"], indent=2))
-
 @bot.message_handler(commands=['master'])
 def master(m):
     bot.reply_to(m, "MASTER.json: locked")
-
-@bot.message_handler(commands=['backup'])
-def backup(m):
-    bot.reply_to(m, "✅ Backup committed to Git")
 
 @bot.message_handler(commands=['restart'])
 def restart(m):
@@ -362,10 +313,6 @@ def restart(m):
 
     bot.reply_to(m, '?? Railway restart requested')
     print('Restart requested by admin')
-
-@bot.message_handler(commands=['clean'])
-def clean(m):
-    bot.reply_to(m, "Temp files cleaned")
 
 @bot.message_handler(commands=['audit'])
 def audit_cmd(m):
@@ -569,26 +516,6 @@ def rlogs(m):
             bot.reply_to(m, f"📋 Railway response:\n{str(data)[:2000]}")
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
-
-@bot.message_handler(commands=['exec'])
-def exec_cmd(m):
-    if not permissions.is_admin(m):
-        bot.reply_to(m, "❌ Admin only")
-        return
-    cmd = m.text.split(" ", 1)[1] if len(m.text.split(" ", 1)) > 1 else ""
-    if not cmd:
-        bot.reply_to(m, "Usage: /exec <shell command>")
-        return
-    import subprocess
-    try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
-        output = result.stdout[:2000] or result.stderr[:500] or "No output"
-        bot.reply_to(m, f"💻 {cmd}\n{output}")
-    except subprocess.TimeoutExpired:
-        bot.reply_to(m, "⏰ Command timed out")
-    except Exception as e:
-        bot.reply_to(m, f"❌ Error: {e}")
-
 
 @bot.message_handler(commands=['termlog'])
 def termlog(m):
