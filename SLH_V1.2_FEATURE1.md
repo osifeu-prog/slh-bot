@@ -4,17 +4,26 @@ NAME:
 Control Center Visibility
 
 BASE:
-d6cb03e
+20e720e
 
-GOAL:
-Expose full runtime state.
+OBJECTIVE:
+Create unified runtime visibility layer.
 
-TASKS:
+OUTPUT:
+Single source of truth for:
+- system health
+- agents
+- users
+- handlers
+- AI state
+- deployment state
+
+IMPLEMENTATION:
 1.
 2.
 3.
 
-TESTS:
+ACCEPTANCE TESTS:
 1.
 2.
 3.
