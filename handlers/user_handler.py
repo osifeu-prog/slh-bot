@@ -1,4 +1,4 @@
-import json, os
+﻿import json, os
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'state', 'db.json')
 
@@ -25,8 +25,8 @@ def register(bot):
         total_lessons = 10
         pct = min(100, int(progress / total_lessons * 100)) if total_lessons else 0
         text = f'👤 {name}\n'
-        text += f'💰 חואיוה: {credits}\n'
-        text += f'⭐ חווידייד: {points}\n'
+        text += f'💰 יתרה: {credits}\n'
+        text += f'⭐ נקודות: {points}\n'
         text += f'� בריד: {level}\n'
-        text += f'📚 חריני נלינדירכית פוירותיית דרית תכית אכא'
+        text += f'📚 התקדמות בקורס'
         bot.reply_to(m, text)
