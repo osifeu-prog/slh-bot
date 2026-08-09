@@ -15,7 +15,7 @@ def _format_event(event):
 
     lines = [
         f"🕒 {timestamp}",
-        f"🔹 {event_name}",
+        f"📌 {event_name}",
     ]
 
     if actor is not None:
@@ -33,7 +33,7 @@ def _format_event(event):
         else:
             detail_text = str(details)
 
-        lines.append(f"📦 {detail_text}")
+        lines.append(f"📝 {detail_text}")
 
     return "\n".join(lines)
 
@@ -41,7 +41,6 @@ def _format_event(event):
 def _chunk_text(text, max_length=MAX_MESSAGE_LENGTH):
     chunks = []
     current = []
-
     current_length = 0
 
     for block in text.split("\n\n"):
@@ -62,8 +61,7 @@ def _chunk_text(text, max_length=MAX_MESSAGE_LENGTH):
 
 
 def register(bot, context):
-
-    @bot.message_handler(commands=["logs"])
+    @bot.message_handler(commands=["audit", "logs"])
     def logs_cmd(message):
 
         parts = message.text.split()
@@ -76,7 +74,7 @@ def register(bot, context):
             except ValueError:
                 bot.reply_to(
                     message,
-                    "❌ Usage: /logs [number]"
+                    "Usage: /audit [number]"
                 )
                 return
 
@@ -87,7 +85,7 @@ def register(bot, context):
         if not events:
             bot.reply_to(
                 message,
-                "🛰 AUDIT LOG\n\nNo events recorded."
+                "📋 AUDIT LOG\n\nNo events recorded."
             )
             return
 
@@ -97,7 +95,7 @@ def register(bot, context):
         ]
 
         text = (
-            f"🛰 AUDIT LOG — LAST {len(events)}\n\n"
+            f"📋 AUDIT LOG — LAST {len(events)}\n\n"
             + "\n\n".join(blocks)
         )
 

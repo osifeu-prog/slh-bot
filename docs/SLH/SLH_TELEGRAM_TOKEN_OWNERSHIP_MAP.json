@@ -1,0 +1,244 @@
+﻿{
+    "schema_version":  "1.1",
+    "captured_at":  "2026-08-09T15:34:18.3585840+03:00",
+    "source":  "PowerShell + Railway CLI",
+    "purpose":  "Exact Telegram BOT_TOKEN ownership identification",
+    "raw_tokens_stored":  false,
+    "raw_tokens_logged":  false,
+    "primary_project":  "endearing-amazement",
+    "primary_service":  "web",
+    "primary_fingerprint":  "79d92dbc50579894dcceae09cb39a86fb719a1c0d8abcd03846bc904bf3b4c3e",
+    "exact_primary_matches":  [
+
+                              ],
+    "scanned_services":  32,
+    "results":  [
+                    {
+                        "project":  "endearing-amazement",
+                        "service":  "web",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-cloud-bot",
+                        "service":  "slh-enterprise-bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "SLH_investor_wallet_bot",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "SLH_investor_wallet_bot",
+                        "service":  "slh-bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "nifti-bot",
+                        "service":  "bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "TELEGRAM-BOT",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "TELEGRAM-BOT",
+                        "service":  "Telegram_bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "TELEGRAM-BOT",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "TELEGRAM-BOT",
+                        "service":  "prometheus",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "TELEGRAM-BOT",
+                        "service":  "grafana",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "slh-AI-bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "TON-MNH-bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "slh-fastapi",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "monitor.slh",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "SLH.co.il",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "Osifs_Factory_bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "diligent-radiance",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-guardian",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-guardian",
+                        "service":  "gardian",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-guardian",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "Tax_Free_world_bot",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "Tax_Free_world_bot",
+                        "service":  "Tax_Free_world_bot",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "Tax_Free_world_bot",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh.co.il",
+                        "service":  "SLH.co.il",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-api",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-api",
+                        "service":  "slh-api",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "slh-api",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "dazzling-unity",
+                        "service":  "Postgres",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "dazzling-unity",
+                        "service":  "SLH_PROJECT_V2",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "dazzling-unity",
+                        "service":  "glorious-caring",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    },
+                    {
+                        "project":  "dazzling-unity",
+                        "service":  "Redis",
+                        "status":  "ERROR",
+                        "fingerprint":  "",
+                        "exact_match":  false
+                    }
+                ],
+    "safety_rule":  "NO_RUNTIME_STOPPED",
+    "token_changes":  0,
+    "deployments_triggered":  0
+}

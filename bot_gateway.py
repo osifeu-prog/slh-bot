@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv('.env')
 import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
@@ -97,7 +99,7 @@ if __name__ == "__main__":
     log("=== BOT + API GATEWAY STARTUP ===")
     log(f"Python: {sys.executable} {sys.version}")
     log(f"RUN_BOT: {os.getenv('RUN_BOT')}")
-    log(f"BOT_TOKEN: {os.getenv('BOT_TOKEN')[:15]}...")
+    log(f"BOT_TOKEN: {'PRESENT' if os.getenv('BOT_TOKEN') else 'MISSING'}")
 
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
@@ -114,7 +116,7 @@ if __name__ == "__main__":
             log(f"Skipping {bot_name}: no token")
             continue
         bot = telebot.TeleBot(token, parse_mode=None)
-        # Removed cp862 fix – using native UTF-8
+        # Removed cp862 fix ג€“ using native UTF-8
         # patched_process_new_updates disabled
         load_handlers(bot, {"bot_name": bot_name})
         log(f"[OK] Bot {bot_name} started")
