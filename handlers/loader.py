@@ -29,7 +29,12 @@
         ("map", "handlers.map_handler"),
         ("me", "handlers.me_handler"),
         ("monitor", "handlers.monitor_handler"),
+        ("journal", "handlers.journal_handler"),
+        ("journal", "handlers.journal_handler"),
         ("morning", "handlers.morning_handler"),
+        ("journal", "handlers.journal_handler"),
+        ("endday", "handlers.endday_handler"),
+
         ("ownership_transfer", "handlers.ownership_transfer_handler"),
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
