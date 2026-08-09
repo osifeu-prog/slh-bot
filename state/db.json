@@ -13,6 +13,9 @@
       "wallet": {
         "credits": 1000,
         "token_balance": 26332.94228
+      },
+      "profile": {
+        "name": "Osif"
       }
     },
     "224223270": {

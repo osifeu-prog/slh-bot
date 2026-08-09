@@ -27,6 +27,6 @@ def register(bot):
         text = f'👤 {name}\n'
         text += f'💰 יתרה: {credits}\n'
         text += f'⭐ נקודות: {points}\n'
-        text += f'� בריד: {level}\n'
+        text += f'📊 דרגה: {level}\n'
         text += f'📚 התקדמות בקורס'
         bot.reply_to(m, text)
