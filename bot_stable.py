@@ -877,28 +877,10 @@ def start_bot():
 
     retry = 0
 
-    print("🔄 STARTING SINGLE POLLING INSTANCE")
-
-    try:
-
-        bot.infinity_polling(
-            timeout=20,
-            long_polling_timeout=20,
-            logger_level=10,
-            skip_pending=True
-        )
-
-    except Exception as e:
-        print("🔥 POLLING STOPPED:", repr(e))
-        traceback.print_exc()
-
-    finally:
-        try:
-            bot.stop_polling()
-        except Exception:
-            pass
-
-    print("🛑 POLLING EXIT")
+    print("LEGACY POLLING DISABLED: bot_gateway.py owns Telegram polling")
+    # Telegram polling is owned exclusively by bot_gateway.py.
+    # This legacy function intentionally returns without polling.
+    return
 
 
 
