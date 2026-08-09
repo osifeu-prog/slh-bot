@@ -1,0 +1,19 @@
+﻿SLH OS v1.2 ROADMAP
+
+BASE:
+v1.2-baseline-20260809
+
+START COMMIT:
+d990256
+
+CURRENT:
+Production verified
+
+GOALS:
+1.
+2.
+3.
+
+RISKS:
+1.
+2.
