@@ -6,7 +6,7 @@ def show_leaderboard(db_path="state/db.json"):
     text = "🏆 טבלת המובילים 🏆\n\n"
     for i, (uid, data) in enumerate(top, 1):
         name = data.get("name", f"User{uid}")
-        credits = data.get("credits", 0)
+        credits = data.get("wallet", {}).get("credits", 0)
         text += f"{i}. {name} - {credits} SLH\n"
     return text
 
