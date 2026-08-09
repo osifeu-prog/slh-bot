@@ -16,6 +16,51 @@
         "id": 3,
         "name": "בלוקצ'יין וקריפטוגרפיה",
         "lesson": "lessons/bitcoin_mastery/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "האלברן הראשון",
+        "lesson": "lessons/bitcoin_mastery/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "בורסות ומסחר",
+        "lesson": "lessons/bitcoin_mastery/5.txt"
+      },
+      {
+        "id": 6,
+        "name": "רגולציה ומיסוי",
+        "lesson": "lessons/bitcoin_mastery/6.txt"
+      },
+      {
+        "id": 7,
+        "name": "כרייה (Mining)",
+        "lesson": "lessons/bitcoin_mastery/7.txt"
+      },
+      {
+        "id": 8,
+        "name": "Lightning Network",
+        "lesson": "lessons/bitcoin_mastery/8.txt"
+      },
+      {
+        "id": 9,
+        "name": "DeFi וביטקוין",
+        "lesson": "lessons/bitcoin_mastery/9.txt"
+      },
+      {
+        "id": 10,
+        "name": "אבטחה ושמירה עצמית",
+        "lesson": "lessons/bitcoin_mastery/10.txt"
+      },
+      {
+        "id": 11,
+        "name": "ביטקוין בעולם האמיתי",
+        "lesson": "lessons/bitcoin_mastery/11.txt"
+      },
+      {
+        "id": 12,
+        "name": "סיכום והמשך הדרך",
+        "lesson": "lessons/bitcoin_mastery/12.txt"
       }
     ]
   }
