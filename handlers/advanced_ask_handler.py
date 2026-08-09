@@ -1,14 +1,31 @@
-﻿from handlers.llm_handler import query_llm_with_context
+from handlers.llm_handler import query_llm_with_context
 
 def repair_hebrew(text):
+    """נסיון לשחזר טקסט שקודד לא נכון במעבר"""
     try:
-        fixed = text.encode("cp1255").decode("utf-8")
-        if fixed != text:
-            print("ASK CP1255 REPAIRED:", fixed)
+        # ניסיון cp1255 -> utf8
+        fixed = text.encode("cp1255", errors="ignore").decode("utf-8", errors="ignore")
+        if fixed != text and any('֐' <= c <= 'ת' for c in fixed):
+            print("ASK CP1255 REPAIRED")
             return fixed
-    except Exception as e:
-        print("ASK CP1255 FAILED:", repr(e))
-
+    except:
+        pass
+    try:
+        # ניסיון iso-8859-8 -> utf8
+        fixed = text.encode("iso-8859-8", errors="ignore").decode("utf-8", errors="ignore")
+        if fixed != text and any('֐' <= c <= 'ת' for c in fixed):
+            print("ASK ISO-8859-8 REPAIRED")
+            return fixed
+    except:
+        pass
+    try:
+        # תיקון נפוץ: bytes גולמיים שהתפענחו כ‑latin1
+        fixed = text.encode("latin1", errors="ignore").decode("utf-8", errors="ignore")
+        if fixed != text:
+            print("ASK LATIN1 REPAIRED")
+            return fixed
+    except:
+        pass
     return text
 
 
@@ -48,4 +65,4 @@ def register_ask_handler(bot):
         )
 
 
-print("ASK MODULE LOADED FROM:", __file__)
+print("ASK MODULE LOADED FROM:", file)
