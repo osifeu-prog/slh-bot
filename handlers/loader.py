@@ -30,27 +30,22 @@
         ("me", "handlers.me_handler"),
         ("monitor", "handlers.monitor_handler"),
         ("journal", "handlers.journal_handler"),
-        ("journal", "handlers.journal_handler"),
+        ("endday", "handlers.endday_handler"),
         ("morning", "handlers.morning_handler"),
-        ("journal", "handlers.journal_handler"),
-        ("endday", "handlers.endday_handler"),
-
-        ("journal", "handlers.journal_handler"),
-        ("endday", "handlers.endday_handler"),
-
         ("ownership_transfer", "handlers.ownership_transfer_handler"),
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
         ("user", "handlers.user_handler"),
         ("voting", "handlers.ai_voting_handler"),
-("dev", "handlers.dev_handler"),
-("ux", "handlers.ux_handler"),
+        ("staking", "handlers.staking_handler"),
+        ("dev", "handlers.dev_handler"),
+        ("ux", "handlers.ux_handler"),
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
         ("exec", "handlers.exec_handler"),
         ("git", "handlers.git_handler"),
-    ("ton", "ton_handler"),
+        ("ton", "ton_handler"),
     ]
 
     import importlib
@@ -95,14 +90,12 @@
         except Exception as e:
             print(f"?? {name} skipped:", str(e)[:120])
 
-
     try:
         from handlers.esp_handler import register_esp_handler
         register_esp_handler(bot)
         print("? esp loaded")
     except Exception as e:
         print("esp skipped:", e)
-
 
     try:
         from handlers.advanced_ask_handler import register_ask_handler
@@ -111,6 +104,4 @@
     except Exception as e:
         print("ask skipped:", e)
 
-
     print("? ALL HANDLERS READY")
-
