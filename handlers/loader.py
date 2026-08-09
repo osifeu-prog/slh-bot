@@ -35,6 +35,9 @@
         ("journal", "handlers.journal_handler"),
         ("endday", "handlers.endday_handler"),
 
+        ("journal", "handlers.journal_handler"),
+        ("endday", "handlers.endday_handler"),
+
         ("ownership_transfer", "handlers.ownership_transfer_handler"),
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
