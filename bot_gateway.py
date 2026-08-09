@@ -1,4 +1,4 @@
-﻿import os, json, time, threading, traceback, sys
+import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
 from flask import Flask, jsonify, send_from_directory
