@@ -1,25 +1,25 @@
-from handlers.llm_handler import query_llm_with_context
+﻿from handlers.llm_handler import query_llm_with_context
 
 def repair_hebrew(text):
-    """נסיון לשחזר טקסט שקודד לא נכון במעבר"""
+    """׳ ׳¡׳™׳•׳ ׳׳©׳—׳–׳¨ ׳˜׳§׳¡׳˜ ׳©׳§׳•׳“׳“ ׳׳ ׳ ׳›׳•׳ ׳‘׳׳¢׳‘׳¨"""
     try:
-        # ניסיון cp1255 -> utf8
+        # ׳ ׳™׳¡׳™׳•׳ cp1255 -> utf8
         fixed = text.encode("cp1255", errors="ignore").decode("utf-8", errors="ignore")
-        if fixed != text and any('֐' <= c <= 'ת' for c in fixed):
+        if fixed != text and any('ײ' <= c <= '׳×' for c in fixed):
             print("ASK CP1255 REPAIRED")
             return fixed
     except:
         pass
     try:
-        # ניסיון iso-8859-8 -> utf8
+        # ׳ ׳™׳¡׳™׳•׳ iso-8859-8 -> utf8
         fixed = text.encode("iso-8859-8", errors="ignore").decode("utf-8", errors="ignore")
-        if fixed != text and any('֐' <= c <= 'ת' for c in fixed):
+        if fixed != text and any('ײ' <= c <= '׳×' for c in fixed):
             print("ASK ISO-8859-8 REPAIRED")
             return fixed
     except:
         pass
     try:
-        # תיקון נפוץ: bytes גולמיים שהתפענחו כ‑latin1
+        # ׳×׳™׳§׳•׳ ׳ ׳₪׳•׳¥: bytes ׳’׳•׳׳׳™׳™׳ ׳©׳”׳×׳₪׳¢׳ ׳—׳• ׳›ג€‘latin1
         fixed = text.encode("latin1", errors="ignore").decode("utf-8", errors="ignore")
         if fixed != text:
             print("ASK LATIN1 REPAIRED")
@@ -65,4 +65,5 @@ def register_ask_handler(bot):
         )
 
 
-print("ASK MODULE LOADED FROM:", file)
+print("ASK MODULE LOADED FROM:", __file__)
+
