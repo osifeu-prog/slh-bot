@@ -69,13 +69,13 @@ def query_llm_with_context(question, uid=None):
     # ABSOLUTE AGENT LOCK - never send agent questions to LLM
     q = str(question).lower()
 
-    if any(x in q for x in ["agent", "agents", "????", "??????", "?????", "??? ??????", "???? ???????"]):
+    if any(x in q for x in ["agent", "agents", "סוכן", "סוכנים", "שמות", "שם"]):
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
 
         agents = db.get("agents", {})
 
-        if any(x in q for x in ["name", "names", "??", "????"]):
+        if any(x in q for x in ["name", "names", "שמות", "שם"]):
             return "Agents names: " + ", ".join(
                 [a.get("name","?") for a in agents.values()]
             )
@@ -94,12 +94,12 @@ def query_llm_with_context(question, uid=None):
         # HARD FACT GUARDS - prevent LLM hallucination on system values
         q = str(question).lower()
 
-        if any(w in q for w in ["agent", "agents", "????", "??????", "?????"]):
+        if any(w in q for w in ["agent", "agents", "סוכן", "סוכנים", "שמות"]):
 
-            if any(x in q for x in ["count", "???", "????", "????"]):
+            if any(x in q for x in ["count", "כמה", "מספר", "כמות"]):
                 return f"Agents count={len(agents)}"
 
-            if any(x in q for x in ["name", "names", "??", "????"]):
+            if any(x in q for x in ["name", "names", "שמות", "שם"]):
                 names = [a.get("name","?") for a in agents.values()]
                 return "Agents names: " + ", ".join(names)
 
