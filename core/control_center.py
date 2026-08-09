@@ -13,25 +13,23 @@ def _load_json(path, default):
 
 
 def get_deployment_state():
-    try:
-        commit = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"],
-            text=True
-        ).strip()
-    except Exception:
-        commit = "unknown"
-
-    try:
-        branch = subprocess.check_output(
-            ["git", "branch", "--show-current"],
-            text=True
-        ).strip()
-    except Exception:
-        branch = "unknown"
-
     return {
-        "commit": commit,
-        "branch": branch
+        "commit": os.getenv(
+            "RAILWAY_GIT_COMMIT_SHA",
+            os.getenv("COMMIT_SHA", "unknown")
+        ),
+        "branch": os.getenv(
+            "RAILWAY_GIT_BRANCH",
+            os.getenv("BRANCH", "unknown")
+        ),
+        "environment": os.getenv(
+            "RAILWAY_ENVIRONMENT",
+            "production"
+        ),
+        "deployment_id": os.getenv(
+            "RAILWAY_DEPLOYMENT_ID",
+            "unknown"
+        )
     }
 
 
