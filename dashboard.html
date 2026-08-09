@@ -6,93 +6,52 @@
 <title>SLH Dashboard</title>
 <style>
   body { font-family: system-ui, sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:24px; }
-  h1 { color:#58a6ff; margin-bottom:8px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-top:24px; }
+  h1 { color:#58a6ff; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:16px; margin:24px 0; }
   .card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; }
-  .label { color:#8b949e; font-size:14px; }
-  .value { font-size:28px; font-weight:700; margin-top:8px; }
-  .ok { color:#3fb950; }
-  .muted { color:#8b949e; font-size:13px; margin-top:24px; }
-  .section { margin-top:32px; border-top:1px solid #30363d; padding-top:16px; }
-  h2 { color:#58a6ff; }
-  table { width:100%; border-collapse:collapse; margin-top:12px; }
+  .label { color:#8b949e; font-size:14px; margin-bottom:8px; }
+  .value { font-size:32px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; margin-top:16px; }
   th, td { padding:8px 12px; text-align:right; border-bottom:1px solid #30363d; }
-  th { color:#8b949e; font-weight:normal; }
+  th { color:#8b949e; }
+  .error { color:#f85149; }
 </style>
 </head>
 <body>
   <h1>SLH Mission Control</h1>
-  <p class="muted">Live status from production</p>
   <div class="grid">
-    <div class="card"><div class="label">Users</div><div class="value" id="users">-</div></div>
-    <div class="card"><div class="label">Agents</div><div class="value" id="agents">-</div></div>
-    <div class="card"><div class="label">Tasks</div><div class="value" id="tasks">-</div></div>
-    <div class="card"><div class="label">Credits (Owner)</div><div class="value" id="credits">-</div></div>
+    <div class="card">
+      <div class="label">משתמשים</div>
+      <div class="value" id="users">-</div>
+    </div>
+    <div class="card">
+      <div class="label">סוכנים</div>
+      <div class="value" id="agents">-</div>
+    </div>
+    <div class="card">
+      <div class="label">משימות</div>
+      <div class="value" id="tasks">-</div>
+    </div>
+    <div class="card">
+      <div class="label">קרדיטים</div>
+      <div class="value" id="credits">-</div>
+    </div>
   </div>
-
-  <div class="section">
-    <h2>📚 Academy</h2>
-    <div id="academy">Loading...</div>
-  </div>
-
-  <div class="section">
-    <h2>🤖 Agents</h2>
-    <div id="agents-list">Loading...</div>
-  </div>
-
-  <div class="section">
-    <h2>📡 Devices</h2>
-    <div id="devices">Loading...</div>
-  </div>
-
-  <p class="muted" id="status">Loading.</p>
+  <p id="status">טוען נתונים...</p>
 <script>
 fetch('/api/stats')
   .then(r => r.json())
   .then(d => {
-    document.getElementById('users').textContent = d.users ?? '-';
-    document.getElementById('agents').textContent = d.agents ?? '-';
-    document.getElementById('tasks').textContent = d.tasks ?? '-';
-    document.getElementById('credits').textContent = d.credits ?? '-';
-    document.getElementById('status').textContent = 'Updated just now';
-    document.getElementById('status').classList.add('ok');
+    document.getElementById('users').textContent = d.users ?? 0;
+    document.getElementById('agents').textContent = d.agents ?? 0;
+    document.getElementById('tasks').textContent = d.tasks ?? 0;
+    document.getElementById('credits').textContent = d.credits ?? 0;
+    document.getElementById('status').textContent = 'עודכן זה עתה';
   })
   .catch(e => {
-    document.getElementById('status').textContent = 'Error: ' + e;
+    document.getElementById('status').textContent = 'שגיאה: ' + e.message;
+    document.getElementById('status').classList.add('error');
   });
-
-fetch('/api/agents')
-  .then(r => r.json())
-  .then(d => {
-    let html = '<table><tr><th>Name</th><th>State</th></tr>';
-    for (let id in d.agents) {
-      let a = d.agents[id];
-      html += <tr><td>${a.name}</td><td>${a.state}</td></tr>;
-    }
-    html += '</table>';
-    document.getElementById('agents-list').innerHTML = html;
-  })
-  .catch(() => {
-    document.getElementById('agents-list').textContent = 'Unavailable';
-  });
-
-fetch('/api/devices')
-  .then(r => r.json())
-  .then(d => {
-    let devs = d.devices || {};
-    let html = '<table><tr><th>Name</th><th>Type</th><th>Status</th></tr>';
-    for (let id in devs) {
-      let dev = devs[id];
-      html += <tr><td>${dev.name}</td><td>${dev.type}</td><td>${dev.status}</td></tr>;
-    }
-    html += '</table>';
-    document.getElementById('devices').innerHTML = html;
-  })
-  .catch(() => {
-    document.getElementById('devices').textContent = 'Unavailable';
-  });
-
-document.getElementById('academy').innerHTML = '<p>Bitcoin Mastery – 3 stages available</p>';
 </script>
 </body>
 </html>
