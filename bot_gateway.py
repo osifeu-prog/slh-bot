@@ -8,6 +8,9 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
+from core.control_center_api import register_control_center
+register_control_center(app)
+
 @app.route('/health')
 def health():
     return jsonify({"status": "ok", "service": "SLH OS Gateway"}), 200
