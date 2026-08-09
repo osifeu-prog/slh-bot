@@ -48,7 +48,7 @@ def ask_groq(prompt):
 
     except Exception as e:
         if "429" in str(e):
-            return ask_gemini(prompt)
+            return "LLM Error: Groq rate limit/quota exceeded."
 
         return f"LLM Error: {e}"
 
