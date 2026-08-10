@@ -1,0 +1,3 @@
+﻿SLH OS Launch Candidate 2026-08-10
+Tag: launch-candidate-20260810
+Commit: cebf144
