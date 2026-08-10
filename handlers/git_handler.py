@@ -1,4 +1,4 @@
-﻿import os, requests, json, base64, hashlib
+import os, requests, json, base64, hashlib
 
 GITHUB_TOKEN = os.getenv('GIT_TOKEN')
 REPO_OWNER = 'osifeu-prog'

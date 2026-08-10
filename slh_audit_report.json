@@ -1,16 +1,16 @@
 {
-  "time": "2026-08-04 14:25:23.367093",
+  "time": "2026-08-10 12:27:59.953554",
   "checks": {
     "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
-    "ram": 90.7,
-    "disk": 93.4,
+    "ram": 89.0,
+    "disk": 90.7,
     "state/db.json": {
       "exists": true,
-      "size": 1369
+      "size": 1525
     },
     "state/agents.json": {
       "exists": true,
-      "size": 1273
+      "size": 602
     },
     "state/tasks.json": {
       "exists": true,
@@ -55,7 +55,11 @@
         "created"
       ]
     },
+    "handler_count": 140,
+    "duplicates": {
+      "audit": 2
+    },
     "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 4",
-    "git": " M CLEAN_CURRENT_TREE.txt\n M slh_audit_report.json\n?? BOT_TOKEN_SCAN.txt\n?? DIFF_TERMUX_WINDOWS.txt\n?? DIFF_WINDOWS_GIT.txt\n?? GIT_ADMIN_SEARCH.txt\n?? GIT_ASK_SEARCH.txt\n?? GIT_AUG_TREE.txt\n?? GIT_BOT_TOKEN_HISTORY.txt\n?? GIT_COMMISSION_SEARCH.txt\n?? GIT_CONTROL_SEARCH.txt\n?? GIT_DIFF_STABLE_TO_HEAD.txt\n?? GIT_DISABLED_AND_BACKUPS.txt\n?? GIT_ECON_BALANCE.txt\n?? GIT_ECON_BUY.txt\n?? GIT_ECON_PAY.txt\n?? GIT_ECON_REVENUE.txt\n?? GIT_EVENTBUS_HISTORY.txt\n?? GIT_FIRST_TREE.txt\n?? GIT_FULL_TREE.txt\n?? GIT_HISTORY_GRAPH.txt\n?? GIT_JULY_TREE.txt\n?? GIT_LLM_SEARCH.txt\n?? GIT_PROJECT_SEARCH.txt\n?? GIT_RAILWAY_HISTORY.txt\n?? GIT_REFERRAL_SEARCH.txt\n?? GIT_REMOVED_4d90da6.txt\n?? GIT_SLH_BOT_TREE.txt\n?? GIT_STATE_ENGINE_HISTORY.txt\n?? GIT_STATE_SEARCH.txt\n?? GIT_SUBMODULE_STATUS.txt\n?? TERMUX_FULL.txt\n?? TERMUX_HANDLERS.txt\n?? WINDOWS_HANDLERS.txt\n?? WINDOWS_TREE.txt\n"
+    "git": "?? SLH_TREE.txt\n?? docs/financial/\n?? docs/launch/\n"
   }
 }

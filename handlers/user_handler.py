@@ -1,4 +1,4 @@
-﻿import json, os
+import json, os
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'state', 'db.json')
 

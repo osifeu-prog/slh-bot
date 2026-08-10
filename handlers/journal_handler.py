@@ -1,4 +1,4 @@
-﻿import json, os
+import json, os
 from datetime import datetime
 
 JOURNAL_DIR = '/app/state/journals'

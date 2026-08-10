@@ -1,4 +1,4 @@
-﻿def register(bot):
+def register(bot):
     @bot.message_handler(commands=['endday'])
     def endday(msg):
         uid = str(msg.from_user.id)
