@@ -1,70 +1,75 @@
-def register(bot):
+﻿def register(bot):
     @bot.message_handler(commands=['help'])
     def help_cmd(msg):
-        text = """📘 SLH Commands
+        text = """נ“˜ SLH Commands
 
-👤 Account
-/start – Welcome
-/join – Register
-/me – Your profile
-/profile – Detailed profile
+נ‘₪ Account
+/start ג€“ Welcome
+/join ג€“ Register
+/me ג€“ Your profile
+/profile ג€“ Detailed profile
 
-📚 Learning
-/courses – List courses
-/course_slh – SLH course
-/lesson – Start lesson
-/finish – Finish lesson
-/progress – Your progress
-/map – Learning map
+נ“ Learning
+/courses ג€“ List courses
+/course_slh ג€“ SLH course
+/lesson ג€“ Start lesson
+/finish ג€“ Finish lesson
+/progress ג€“ Your progress
+/map ג€“ Learning map
 
-🤖 Agents
-/agents – List agents
-/agent_create <name> – Create agent
-/agent_delete <id> – Delete agent
-/agentstate <prefix> <state> – Set state
-/sendagent <prefix> <msg> – Send message
-/inbox <prefix> – Check inbox
+נ₪– Agents
+/agents ג€“ List agents
+/agent_create <name> ג€“ Create agent
+/agent_delete <id> ג€“ Delete agent
+/agentstate <prefix> <state> ג€“ Set state
+/sendagent <prefix> <msg> ג€“ Send message
+/inbox <prefix> ג€“ Check inbox
 
-💰 Economy
-/balance – Check balance
-/pay – Make payment
-/buy – Purchase items
-/revenue – Revenue status
+נ’° Economy
+/balance ג€“ Check balance
+/pay ג€“ Make payment
+/buy ג€“ Purchase items
+/revenue ג€“ Revenue status
 
-📋 Tasks & Missions
-/task – Manage tasks
-/task_add – Add task
-/mission – Mission control
-/complete – Mark complete
+נ“‹ Tasks & Missions
+/task ג€“ Manage tasks
+/task_add ג€“ Add task
+/mission ג€“ Mission control
+/complete ג€“ Mark complete
 
-🗳 Voting
-/vote <id> <yes/no> – Vote
-/propose <text> – Create proposal
-/tally <id> – Show results
+נ—³ Voting
+/vote <id> <yes/no> ג€“ Vote
+/propose <text> ג€“ Create proposal
+/tally <id> ג€“ Show results
 
-📡 Devices
+נ“¡ Devices
 /device_register <name>
 /device_list
 /device_status <id>
 /device_delete <id>
 /device_heartbeat
 
-🏆 Leaderboard
-/top – Top learners
+נ† Leaderboard
+/top ג€“ Top learners
 
-🛠 Admin
-/admin – Admin panel
-/exec <cmd> – Shell (admin)
-/backup – Backup DB
-/megadiag – Full diagnostic
-/health – Health check
-/status – System status
-/deploy – Trigger deploy
+נ›  Admin
+/admin ג€“ Admin panel
+/exec  - Shell (admin)
+/autoexec - Execute admin command batches
+/backup ג€“ Backup DB
+/megadiag ג€“ Full diagnostic
+/health ג€“ Health check
+/status ג€“ System status
+/deploy ג€“ Trigger deploy
 
-💬 Ask & Help
-/ask <question> – Ask AI
-/help – This menu
+נ’¬ Ask & Help
+/ask <question> ג€“ Ask AI
+/help ג€“ This menu
 """
         bot.reply_to(msg, text)
+
+
+
+
 
 
