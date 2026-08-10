@@ -104,7 +104,7 @@ def query_llm_with_context(question, uid=None):
             "what is my name",
             "\u05de\u05d4 \u05d4\u05e9\u05dd \u05e9\u05dc\u05d9",
             "\u05d0\u05d9\u05da \u05e7\u05d5\u05e8\u05d0\u05d9\u05dd \u05dc\u05d9",
-            "\u05e9\u05dd"
+
         ]
 
         if any(x in q for x in name_terms):
@@ -155,7 +155,7 @@ def query_llm_with_context(question, uid=None):
             name_terms = [
                 "name",
                 "names",
-                "\u05e9\u05dd",
+
                 "\u05e9\u05de\u05d5\u05ea"
             ]
 
@@ -214,12 +214,4 @@ def register(bot):
     return register_llm_handler(bot)
 
 print('LLM MODULE LOADED FROM:', __file__)
-
-
-
-
-
-
-
-
 
