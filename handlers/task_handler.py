@@ -51,7 +51,7 @@ def task(message, bot):
         txt += (
             f"{status} {key}: "
             f"{t['title']} "
-            f"(+{t['reward']})\n"
+            f"(+{t.get('reward', 0)})\n"
         )
 
 
