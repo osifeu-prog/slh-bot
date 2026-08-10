@@ -63,26 +63,9 @@ def register_llm_handler(bot):
 
 
 def query_llm_with_context(question, uid=None):
-
     import json
 
-    # ABSOLUTE AGENT LOCK - never send agent questions to LLM
     q = str(question).lower()
-
-    if any(x in q for x in ["agent", "agents", "סוכן", "סוכנים", "שמות", "שם"]):
-        with open("state/db.json", encoding="utf-8") as f:
-            db = json.load(f)
-
-        agents = db.get("agents", {})
-
-        if any(x in q for x in ["name", "names", "שמות", "שם"]):
-            return "Agents names: " + ", ".join(
-                [a.get("name","?") for a in agents.values()]
-            )
-
-        return f"Agents count={len(agents)}"
-
-    context = "No system data."
 
     try:
         with open("state/db.json", encoding="utf-8") as f:
@@ -91,20 +74,62 @@ def query_llm_with_context(question, uid=None):
         user = db.get("users", {}).get(str(uid), {})
         agents = db.get("agents", {})
 
-        # HARD FACT GUARDS - prevent LLM hallucination on system values
-        q = str(question).lower()
+        # HARD FACT: user role / identity
+        role_terms = [
+            "role",
+            "permission",
+            "identity",
+            "who am i",
+            "what is my role",
+            "\u05ea\u05e4\u05e7\u05d9\u05d3",
+            "\u05de\u05d9 \u05d0\u05e0\u05d9",
+            "\u05d4\u05e8\u05e9\u05d0\u05d4",
+            "\u05de\u05d4 \u05d4\u05ea\u05e4\u05e7\u05d9\u05d3 \u05e9\u05dc\u05d9"
+        ]
 
-        if any(w in q for w in ["agent", "agents", "סוכן", "סוכנים", "שמות"]):
+        if any(x in q for x in role_terms):
+            return f"Your role is: {user.get('role', 'unknown')}"
 
-            if any(x in q for x in ["count", "כמה", "מספר", "כמות"]):
-                return f"Agents count={len(agents)}"
+        # HARD FACT: user credits / wallet
+        credit_terms = [
+            "credit",
+            "credits",
+            "balance",
+            "wallet",
+            "\u05e7\u05e8\u05d3\u05d9\u05d8",
+            "\u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd",
+            "\u05d9\u05ea\u05e8\u05d4",
+            "\u05db\u05de\u05d4 \u05d9\u05e9 \u05dc\u05d9",
+            "\u05db\u05de\u05d4 \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd \u05d9\u05e9 \u05dc\u05d9"
+        ]
 
-            if any(x in q for x in ["name", "names", "שמות", "שם"]):
-                names = [a.get("name","?") for a in agents.values()]
+        if any(x in q for x in credit_terms):
+            return f"Your credits are: {user.get('wallet', {}).get('credits', 0)}"
+
+        # ABSOLUTE AGENT LOCK: never send agent facts to LLM
+        agent_terms = [
+            "agent",
+            "agents",
+            "\u05e1\u05d5\u05db\u05df",
+            "\u05e1\u05d5\u05db\u05e0\u05d9\u05dd"
+        ]
+
+        if any(x in q for x in agent_terms):
+            name_terms = [
+                "name",
+                "names",
+                "\u05e9\u05dd",
+                "\u05e9\u05de\u05d5\u05ea"
+            ]
+
+            if any(x in q for x in name_terms):
+                names = [
+                    a.get("name", "?")
+                    for a in agents.values()
+                ]
                 return "Agents names: " + ", ".join(names)
 
             return f"Agents count={len(agents)}"
-
 
         context = f"""
 SLH SYSTEM STATE:
@@ -112,11 +137,11 @@ SLH SYSTEM STATE:
 User:
 name={user.get("name")}
 role={user.get("role")}
-credits={user.get("wallet", {}).get("credits",0)}
+credits={user.get("wallet", {}).get("credits", 0)}
 
 Agents:
 count={len(agents)}
-names={", ".join([a.get("name","?") for a in agents.values()])}
+names={", ".join([a.get("name", "?") for a in agents.values()])}
 """
 
     except Exception as e:
@@ -124,7 +149,14 @@ names={", ".join([a.get("name","?") for a in agents.values()])}
 
     prompt = f"""
 You are SLH OS AI assistant.
-Answer in Hebrew, concise and direct.\n\nIMPORTANT SYSTEM RULES:\n- SYSTEM CONTEXT is the only source of truth.\n- Previous conversation messages are NOT system data.\n- Never use names, numbers, or facts from previous messages.\n- Never guess or complete missing data.\n- For agent count questions, answer ONLY from Agents: count= value.\n- For agent names, answer ONLY from Agents: names= value.\n- If not present in SYSTEM CONTEXT, say: לא ידוע במערכת.
+Answer in Hebrew, concise and direct.
+
+IMPORTANT SYSTEM RULES:
+- SYSTEM CONTEXT is the only source of truth.
+- Previous conversation messages are NOT system data.
+- Never guess system values.
+- Never invent names, numbers, balances, roles, or agent counts.
+- If a requested system fact is not present, say it is unknown.
 
 SYSTEM CONTEXT:
 {context}
@@ -134,8 +166,6 @@ USER QUESTION:
 """
 
     return ask_groq(prompt)
-
-
 
 def register(bot):
     return register_llm_handler(bot)
