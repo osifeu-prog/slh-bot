@@ -57,7 +57,7 @@ def list_devices(bot, m):
         lines.append(f"   Type: {d.get('type', 'unknown')}")
         lines.append(f"   Owner: {d.get('owner', 'unknown')}")
         lines.append("")
-    bot.reply_to(m, "\n".join(lines), parse_mode="Markdown")
+    bot.reply_to(m, "\n".join(lines), )
 
 def device_status(bot, m):
     parts = m.text.split()
@@ -81,7 +81,7 @@ def device_status(bot, m):
 👤 Owner: {d.get('owner', 'unknown')}
 ⚙️ Capabilities: {', '.join(d.get('capabilities', []))}
 """
-    bot.reply_to(m, msg, parse_mode="Markdown")
+    bot.reply_to(m, msg, )
 
 def delete_device(bot, m):
     parts = m.text.split()
