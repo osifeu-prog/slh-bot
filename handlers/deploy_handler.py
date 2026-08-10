@@ -17,18 +17,27 @@ def register(bot):
             return
 
         headers = {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json'
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
         }
 
-        project_id = 'fd30fefb-3d35-48a5-a7cb-e05337e812c4'
-        service_id = '13d97581-0199-4f6a-80d1-885c9304ffc5'
+        query = """
+        mutation {
+          serviceInstanceRedeploy(
+            serviceId: "13d97581-0199-4f6a-80d1-885c9304ffc5"
+          )
+        }
+        """
 
-        url = f"https://backboard.railway.app/v1/projects/{project_id}/services/{service_id}/deployments"
+        url = "https://backboard.railway.app/graphql/v2"
 
-        r = requests.post(url, headers=headers)
+        r = requests.post(
+            url,
+            json={"query": query},
+            headers=headers
+        )
 
-        if r.status_code in [200, 201]:
-            bot.reply_to(msg, '🚀 Redeploy triggered! Check logs.')
+        if r.status_code == 200:
+            bot.reply_to(msg, "🚀 Redeploy request sent")
         else:
-            bot.reply_to(msg, f'❌ Failed ({r.status_code}): {r.text[:200]}')
+            bot.reply_to(msg, f"❌ Failed ({r.status_code}): {r.text[:200]}")
