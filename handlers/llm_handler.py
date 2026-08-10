@@ -74,6 +74,20 @@ def query_llm_with_context(question, uid=None):
         user = db.get("users", {}).get(str(uid), {})
         agents = db.get("agents", {})
 
+        # HARD FACT: user name
+        name_terms = [
+            "name",
+            "my name",
+            "what is my name",
+            "\u05de\u05d4 \u05d4\u05e9\u05dd \u05e9\u05dc\u05d9",
+            "\u05d0\u05d9\u05da \u05e7\u05d5\u05e8\u05d0\u05d9\u05dd \u05dc\u05d9",
+            "\u05e9\u05dd"
+        ]
+
+        if any(x in q for x in name_terms):
+            return f"Your name is: {user.get('name', 'unknown')}"
+
+
         # HARD FACT: user role / identity
         role_terms = [
             "role",
