@@ -1,5 +1,12 @@
+
 from pathlib import Path
-import fcntl
+import sys
+
+if sys.platform == "win32":
+    import msvcrt
+    fcntl = None
+else:
+    import fcntl
 
 
 class MissionLifecycleLock:
@@ -14,7 +21,9 @@ class MissionLifecycleLock:
         )
         self._handle = None
 
+
     def acquire(self):
+
         self.lock_path.parent.mkdir(
             parents=True,
             exist_ok=True
@@ -26,26 +35,52 @@ class MissionLifecycleLock:
             encoding="utf-8"
         )
 
-        fcntl.flock(
-            self._handle.fileno(),
-            fcntl.LOCK_EX
-        )
+        if fcntl:
+            fcntl.flock(
+                self._handle.fileno(),
+                fcntl.LOCK_EX
+            )
+        else:
+            try:
+                self._handle.seek(0)
+                msvcrt.locking(
+                    self._handle.fileno(),
+                    msvcrt.LK_LOCK,
+                    1
+                )
+            except:
+                pass
 
         return self
 
+
     def release(self):
+
         if self._handle is not None:
 
-            fcntl.flock(
-                self._handle.fileno(),
-                fcntl.LOCK_UN
-            )
+            if fcntl:
+                fcntl.flock(
+                    self._handle.fileno(),
+                    fcntl.LOCK_UN
+                )
+            else:
+                try:
+                    self._handle.seek(0)
+                    msvcrt.locking(
+                        self._handle.fileno(),
+                        msvcrt.LK_UNLCK,
+                        1
+                    )
+                except:
+                    pass
 
             self._handle.close()
             self._handle = None
 
+
     def __enter__(self):
         return self.acquire()
+
 
     def __exit__(
         self,
