@@ -30,3 +30,5 @@ FULL_SYSTEM_AUDIT.json
 state/agents.json
 .env
 *.bak
+esp_test.py
+virtual_esp_local.py
