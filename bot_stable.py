@@ -314,15 +314,6 @@ def restart(m):
     bot.reply_to(m, '?? Railway restart requested')
     print('Restart requested by admin')
 
-@bot.message_handler(commands=['audit'])
-def audit_cmd(m):
-    entries = get_audit(15)
-    if not entries:
-        bot.reply_to(m, "Audit log empty")
-    else:
-        lines = [f"{e['time']}: {e['user']} – {e['action']}" for e in entries]
-        bot.reply_to(m, "📋 Audit Log:\n" + "\n".join(lines))
-
 @bot.message_handler(commands=['memory'])
 def memory(m):
     try:
@@ -341,11 +332,6 @@ def debug(m):
     except Exception as e:
         bot.reply_to(m, f"❌ debug error: {e}")
 
-
-@bot.message_handler(commands=['deploy'])
-def deploy(m):
-    result = subprocess.run("cd /app && git push", shell=True, capture_output=True, text=True)
-    bot.reply_to(m, f"Deploy triggered:\n{result.stdout[:300] or 'OK'}")
 
 @bot.message_handler(commands=['errors'])
 def errors(m):

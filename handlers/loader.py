@@ -1,4 +1,4 @@
-﻿def load_handlers(bot, context):
+def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
@@ -9,6 +9,7 @@
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
+    ("deploy", "handlers.deploy_handler"),
         ("termux", "handlers.termux_handler"),
         ("payment", "handlers.payment_handler"),
         ("econ", "econ_handler"),
