@@ -73,6 +73,8 @@ def query_llm_with_context(question, uid=None):
 
         user = db.get("users", {}).get(str(uid), {})
         agents = db.get("agents", {})
+        tasks = db.get("tasks", {})
+        votes = db.get("votes", {})
 
         # HARD FACT: user name
         name_terms = [
@@ -156,6 +158,12 @@ credits={user.get("wallet", {}).get("credits", 0)}
 Agents:
 count={len(agents)}
 names={", ".join([a.get("name", "?") for a in agents.values()])}
+
+Tasks:
+{tasks}
+
+Votes:
+{votes}
 """
 
     except Exception as e:
@@ -185,4 +193,11 @@ def register(bot):
     return register_llm_handler(bot)
 
 print('LLM MODULE LOADED FROM:', __file__)
+
+
+
+
+
+
+
 
