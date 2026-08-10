@@ -1,6 +1,7 @@
 ﻿import os
 import requests
 
+
 def register(bot):
 
     @bot.message_handler(commands=['deploy'])
@@ -24,7 +25,8 @@ def register(bot):
         query = """
         mutation {
           serviceInstanceRedeploy(
-            serviceId: "13d97581-0199-4f6a-80d1-885c9304ffc5",`n        environmentId: "661caa13-83cb-4197-8825-943bebf96c5a"
+            serviceId: "13d97581-0199-4f6a-80d1-885c9304ffc5",
+            environmentId: "661caa13-83cb-4197-8825-943bebf96c5a"
           )
         }
         """
