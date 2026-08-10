@@ -10,12 +10,12 @@ def register_ask_handler(bot):
         parts = text.split(maxsplit=1)
         question = parts[1].strip() if len(parts) > 1 else ""
 
-    if len(question) > 2000:
-        question = question[:2000] + "\n[truncated]"
-
         if not question:
             bot.reply_to(msg, "Usage: /ask [question]")
             return
+
+        if len(question) > 2000:
+            question = question[:2000] + "\n[truncated]"
 
         try:
             answer = query_llm_with_context(
@@ -25,11 +25,13 @@ def register_ask_handler(bot):
         except Exception as e:
             answer = f"ERROR: {e}"
 
+        if not answer:
+            answer = "No response"
+
         bot.send_message(
-        msg.chat.id,
-        answer[:4000] if answer else "No response",
-        parse_mode=None
-    )
+            msg.chat.id,
+            str(answer)[:4000],
+            parse_mode=None
+        )
 
-print("ASK MODULE LOADED FROM:", __file__)
-
+    print("ASK MODULE LOADED FROM:", __file__)
