@@ -160,3 +160,7 @@ def register_ton_handlers(bot):
         settings["wallet"] = new_wallet
         save_ton_settings(settings)
         bot.send_message(m.chat.id, f"✅ Wallet updated.")
+
+
+def register(bot):
+    return register_ton_handlers(bot)
