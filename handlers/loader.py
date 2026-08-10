@@ -12,6 +12,7 @@
         ("termux", "handlers.termux_handler"),
         ("payment", "handlers.payment_handler"),
         ("econ", "econ_handler"),
+        ("wallet", "handlers.wallet_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
         ("academy", "handlers.academy_handler"),
