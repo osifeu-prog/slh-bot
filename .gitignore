@@ -32,3 +32,4 @@ state/agents.json
 *.bak
 esp_test.py
 virtual_esp_local.py
+.env
