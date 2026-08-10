@@ -16,7 +16,7 @@ def register(bot):
         }
         project_id = 'fd30fefb-3d35-48a5-a7cb-e05337e812c4'
         service_id = '13d97581-0199-4f6a-80d1-885c9304ffc5'
-        url = f'https://backboard.railway.app/v1/projects/{project_id}/services/{service_id}/deployments'
+                url = f'https://backboard.railway.app/v1/projects/{project_id}/services/{service_id}/deployments'
         r = requests.post(url, headers=headers)
         if r.status_code == 201:
             bot.reply_to(msg, '🚀 Redeploy triggered! Check logs.')
