@@ -1,4 +1,4 @@
-from openai import OpenAI
+﻿from openai import OpenAI
 import os
 
 client = None
@@ -75,6 +75,27 @@ def query_llm_with_context(question, uid=None):
         agents = db.get("agents", {})
         tasks = db.get("tasks", {})
         votes = db.get("votes", {})
+
+        # HARD FACT: tasks
+        task_terms = [
+            "task",
+            "tasks",
+            "משימה",
+            "משימות"
+        ]
+
+        if any(x in q for x in task_terms):
+            if any(x in q for x in ["כמה", "count", "number"]):
+                return f"Tasks count: {len(tasks)}"
+
+            if any(x in q for x in ["list", "רשימה", "אילו", "מהן"]):
+                task_list = "\n".join(
+                    [
+                        f"- {t.get('title', '?')}"
+                        for t in tasks.values()
+                    ]
+                )
+                return "Tasks:\n" + task_list
 
         # HARD FACT: user name
         name_terms = [
@@ -193,6 +214,7 @@ def register(bot):
     return register_llm_handler(bot)
 
 print('LLM MODULE LOADED FROM:', __file__)
+
 
 
 
