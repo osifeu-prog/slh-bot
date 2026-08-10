@@ -33,3 +33,5 @@ state/agents.json
 esp_test.py
 virtual_esp_local.py
 .env
+
+SLH_*_BACKUP_*
