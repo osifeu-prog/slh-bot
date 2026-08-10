@@ -66,3 +66,5 @@ def register(bot):
 /help – This menu
 """
         bot.reply_to(msg, text)
+
+
