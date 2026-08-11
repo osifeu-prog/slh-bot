@@ -78,5 +78,10 @@
       "credits": 0
     }
   },
-  "votes": []
+  "votes": [],
+  "system": {
+    "bot_name": "SLH OS AI",
+    "owner": "Osif",
+    "description": "המערכת החכמה של SLH OS"
+  }
 }
