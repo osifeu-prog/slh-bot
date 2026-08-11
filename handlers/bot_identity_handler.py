@@ -25,7 +25,7 @@ def register(bot):
     @bot.message_handler(commands=["botname"])
     def botname_cmd(msg):
         if not is_owner(msg.from_user.id):
-            bot.reply_to(msg, "⛔ רק OWNER יכול לשנות שם מערכת.")
+            bot.reply_to(msg, "?? OWNER ???? ????? ?? ?????.")
             return
 
         parts = msg.text.split(maxsplit=1)
@@ -36,8 +36,8 @@ def register(bot):
         if len(parts) == 1:
             bot.reply_to(
                 msg,
-                f"🤖 שם נוכחי: {system.get('bot_name','SLH OS AI')}\n"
-                "שימוש:\n/botname שם חדש"
+                f"?? ?? ?????: {system.get('bot_name','SLH OS AI')}\n"
+                "?????:\n/botname ?? ???"
             )
             return
 
@@ -45,13 +45,14 @@ def register(bot):
         new = parts[1].strip()
 
         system["bot_name"] = new
-        system["owner"] = user.get("name", "Osif")
+        system["owner"] = "Osif"
         system["description"] = "?????? ????? ?? SLH OS"
+
         save_db(db)
 
         bot.reply_to(
             msg,
-            f"✅ שם עודכן\nישן: {old}\nחדש: {new}"
+            f"? ?? ?????\n???: {old}\n???: {new}"
         )
 
 
