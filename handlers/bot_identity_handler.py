@@ -45,7 +45,9 @@ def register(bot):
         new = parts[1].strip()
 
         system["bot_name"] = new
-        save_db(db)
+    system["owner"] = user.get("name", "Osif")
+    system["description"] = "?????? ????? ?? SLH OS"
+    save_db(db)
 
         bot.reply_to(
             msg,
