@@ -44,10 +44,10 @@ def register(bot):
         old = system.get("bot_name", "SLH OS AI")
         new = parts[1].strip()
 
-    system["bot_name"] = new
-    system["owner"] = user.get("name", "Osif")
-    system["description"] = "?????? ????? ?? SLH OS"
-    save_db(db)
+        system["bot_name"] = new
+        system["owner"] = user.get("name", "Osif")
+        system["description"] = "?????? ????? ?? SLH OS"
+        save_db(db)
 
         bot.reply_to(
             msg,
