@@ -3,7 +3,7 @@ load_dotenv('.env')
 import os, json, time, threading, traceback, sys
 from pathlib import Path
 import telebot
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -61,8 +61,30 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    return send_from_directory('.', 'dashboard.html')
+    return send_from_directory('web/dashboard_v2', 'index.html')
 
+@app.route('/api/health')
+def api_health():
+    return jsonify({
+        "status": "ok",
+        "service": "SLH OS Dashboard API"
+    }), 200
+
+@app.route('/api/logs')
+def api_logs():
+    try:
+        n = request.args.get('n', 50, type=int)
+        log_file = Path("logs/bot_startup.log")
+
+        if not log_file.exists():
+            return jsonify([]), 200
+
+        with log_file.open("r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+
+        return jsonify(lines[-n:]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/api/stats')
 def api_stats():
     try:
@@ -139,7 +161,7 @@ if __name__ == "__main__":
             log(f"Skipping {bot_name}: no token")
             continue
         bot = telebot.TeleBot(token, parse_mode=None)
-        # Removed cp862 fix ׳’ג‚¬ג€ using native UTF-8
+        # Removed cp862 fix ׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ using native UTF-8
         # patched_process_new_updates disabled
         load_handlers(bot, {"bot_name": bot_name})
         log(f"[OK] Bot {bot_name} started")
@@ -148,3 +170,6 @@ if __name__ == "__main__":
     while True:
         time.sleep(1)
 # deploy-marker 20260808_113100
+
+
+
