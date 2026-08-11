@@ -16,7 +16,7 @@ def register(bot):
         wallet = user.get('wallet', {})
         academy = user.get('academy', {})
         gamification = user.get('gamification', {})
-        name = profile.get('name') or profile.get('first_name') or m.from_user.first_name or 'דוניב נכא'
+        name = get_display_name(m.from_user.id, m.from_user)
         credits = wallet.get('credits', 0)
         points = gamification.get('points', 0)
         level = gamification.get('level', 1)

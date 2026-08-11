@@ -4,6 +4,7 @@ import json
 
 from core.profile_manager import get_user
 from core.agent_registry import create_agent
+from core.identity_resolver import get_display_name
 
 
 def register(bot):
@@ -118,7 +119,7 @@ def register(bot):
         )
 
         user_name = (
-            m.from_user.first_name
+            get_display_name(user_id, m.from_user)
             or "חבר"
         )
 
@@ -247,7 +248,7 @@ def register(bot):
             if not owned_agents:
 
                 create_agent(
-                    f"{call.from_user.first_name or 'User'}-Agent",
+                    f"{get_display_name(call.from_user.id, call.from_user)}-Agent",
                     owner_id=user_id
                 )
 
@@ -312,7 +313,7 @@ def register(bot):
         try:
 
             agent_id, agent = create_agent(
-                f"{call.from_user.first_name or 'User'}-Agent",
+                f"{get_display_name(call.from_user.id, call.from_user)}-Agent",
                 owner_id=user_id
             )
 
