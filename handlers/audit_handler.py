@@ -105,3 +105,5 @@ def register(bot, context):
 
         for chunk in _chunk_text(text):
             bot.reply_to(message, chunk)
+
+from datetime import datetime
