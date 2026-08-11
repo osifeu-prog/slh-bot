@@ -63,6 +63,17 @@ def index():
 def dashboard():
     return send_from_directory('web/dashboard_v2', 'index.html')
 
+@app.route('/app.js')
+def dashboard_app_js():
+    return send_from_directory('web/dashboard_v2', 'app.js')
+
+@app.route('/style.css')
+def dashboard_style_css():
+    return send_from_directory('web/dashboard_v2', 'style.css')
+
+@app.route('/branding/<path:filename>')
+def dashboard_branding(filename):
+    return send_from_directory('branding', filename)
 @app.route('/api/health')
 def api_health():
     return jsonify({
