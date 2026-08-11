@@ -1,4 +1,4 @@
-﻿import handlers.loader
+import handlers.loader
 
 class DummyBot:
     def __init__(self):

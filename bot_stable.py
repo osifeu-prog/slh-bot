@@ -258,7 +258,7 @@ def system_visibility(m):
     import os,json,glob
 
     try:
-        users=json.load(open("state/db.json")).get("users", {})
+        users=json.load(open("state/db.json", encoding="utf-8")).get("users", {})
         allowed=json.load(open("allowed_ids.json"))
 
         msg=f"""
@@ -423,7 +423,7 @@ def test_agents(m):
     # טען סוכנים מתוך db.json (אם קיים)
     agents = {}
     try:
-        with open("state/db.json") as f:
+        with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
         agents = db.get("agents", {})
     except:
@@ -873,3 +873,4 @@ def start_bot():
 
 if __name__ == "__main__":
     start_bot()
+

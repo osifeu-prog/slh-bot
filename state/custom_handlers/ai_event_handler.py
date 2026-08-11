@@ -3,7 +3,7 @@ from core.event_bus import EventBus
 
 def on_proposal_created(payload):
     print("📡 Event received:", payload)
-    with open("state/db.json") as f:
+    with open("state/db.json", encoding="utf-8") as f:
         db = json.load(f)
     agents = db.get("agents", {})
     pid = str(payload.get("proposal_id"))
@@ -27,3 +27,4 @@ def on_proposal_created(payload):
 def register(bot=None):
     EventBus.subscribe("proposal_created", on_proposal_created)
     print("✅ AI Event Handler registered")
+

@@ -1,4 +1,4 @@
-﻿def register(bot):
+def register(bot):
     @bot.message_handler(commands=['help'])
     def help_cmd(msg):
         text = """נ“˜ SLH Commands

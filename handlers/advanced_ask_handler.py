@@ -1,4 +1,4 @@
-﻿from handlers.llm_handler import query_llm_with_context
+from handlers.llm_handler import query_llm_with_context
 
 def register_ask_handler(bot):
     @bot.message_handler(commands=["ask"])

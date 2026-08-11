@@ -5,7 +5,7 @@ def init(bot):
     def my_progress(m):
         uid = str(m.chat.id)
         try:
-            with open("state/db.json") as f:
+            with open("state/db.json", encoding="utf-8") as f:
                 db = json.load(f)
         except Exception as e:
             bot.reply_to(m, f"❌ DB error: {e}")
@@ -33,3 +33,4 @@ def init(bot):
         msg += f"🔗 הפניות: {refs}\n"
         msg += f"⭐ נקודות: {points}"
         bot.reply_to(m, msg)
+

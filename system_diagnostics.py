@@ -46,7 +46,7 @@ class SystemDiagnostics:
     def check_database(self) -> str:
         """Check db.json integrity and stats."""
         try:
-            with open("state/db.json") as f:
+            with open("state/db.json", encoding="utf-8") as f:
                 db = json.load(f)
             users = len(db.get("users", {}))
             agents = len(db.get("agents", {}))
@@ -201,3 +201,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     diag = SystemDiagnostics()
     diag.generate_report(as_json=args.json)
+

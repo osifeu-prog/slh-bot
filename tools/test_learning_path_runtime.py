@@ -1,4 +1,4 @@
-﻿import handlers.loader
+import handlers.loader
 import learning_path
 
 
