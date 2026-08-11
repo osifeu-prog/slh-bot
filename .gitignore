@@ -39,3 +39,6 @@ railway_db_snapshot.txt
 slh_state_audit.py
 state/db_local_backup_before_sync.json
 state/takeover/backups/
+
+# Local production recovery backups
+recovery-production/
