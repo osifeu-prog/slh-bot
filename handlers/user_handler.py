@@ -1,4 +1,5 @@
 import json, os
+from core.identity_resolver import get_display_name
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'state', 'db.json')
 
