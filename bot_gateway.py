@@ -11,6 +11,26 @@ app = Flask(__name__)
 from core.control_center_api import register_control_center
 register_control_center(app)
 
+# SLH Mini App / Market API
+try:
+    from webapp import app as webapp_app
+    for rule in webapp_app.url_map.iter_rules():
+        if rule.rule == '/static/<path:filename>':
+            continue
+        if rule.rule == '/health':
+            continue
+        view = webapp_app.view_functions[rule.endpoint]
+        app.add_url_rule(
+            rule.rule,
+            endpoint='webapp_' + rule.endpoint,
+            view_func=view,
+            methods=[m for m in rule.methods if m not in ('HEAD', 'OPTIONS')]
+        )
+    print('[SLH] WebApp routes mounted into gateway')
+except Exception as e:
+    print(f'[SLH] WebApp route mount failed: {e}')
+
+
 @app.route('/health')
 def health():
     return jsonify({"status": "ok", "service": "SLH OS Gateway"}), 200
@@ -119,7 +139,7 @@ if __name__ == "__main__":
             log(f"Skipping {bot_name}: no token")
             continue
         bot = telebot.TeleBot(token, parse_mode=None)
-        # Removed cp862 fix ג€“ using native UTF-8
+        # Removed cp862 fix ׳’ג‚¬ג€ using native UTF-8
         # patched_process_new_updates disabled
         load_handlers(bot, {"bot_name": bot_name})
         log(f"[OK] Bot {bot_name} started")
@@ -128,4 +148,3 @@ if __name__ == "__main__":
     while True:
         time.sleep(1)
 # deploy-marker 20260808_113100
-
