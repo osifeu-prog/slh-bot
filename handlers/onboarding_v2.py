@@ -1,3 +1,4 @@
+from core.identity import OWNER_TELEGRAM_ID
 from telebot import types
 import json
 
@@ -123,6 +124,8 @@ def register(bot):
 
         db = load_db()
 
+        is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
+
         is_new = (
             user_id
             not in db.get(
@@ -131,7 +134,31 @@ def register(bot):
             )
         )
 
-        if is_new:
+        if is_owner:
+            text = (
+                f"???? ????, {user_name}!\n\n"
+                "??? ???????, ????? ????? ???.\n\n"
+                "?? ?????? ???? ???? ?????? ?? SLH OS.\n"
+                "?? ?-Dashboard ??????? ?????? ??? ??????."
+            )
+
+            markup = types.InlineKeyboardMarkup()
+
+            markup.add(
+                types.InlineKeyboardButton(
+                    "?? ?-Dashboard ???",
+                    callback_data="goto_dashboard"
+                )
+            )
+
+            markup.add(
+                types.InlineKeyboardButton(
+                    "?? ??????? ???",
+                    callback_data="create_agent"
+                )
+            )
+
+        elif is_new:
 
             text = (
                 f"ברוך הבא, {user_name}!\n\n"
