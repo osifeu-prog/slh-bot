@@ -1,4 +1,5 @@
 ﻿from handlers.llm_handler import query_llm_with_context
+from core.keyboard_detector import normalize_keyboard_text
 
 def register(bot, context=None):
     @bot.message_handler(
@@ -10,7 +11,7 @@ def register(bot, context=None):
         if getattr(msg.from_user, "is_bot", False):
             return
 
-        user_text = msg.text.strip()
+        user_text = normalize_keyboard_text(msg.text.strip())
         if not user_text:
             return
 
