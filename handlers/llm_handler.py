@@ -91,8 +91,8 @@ def query_llm_with_context(question, uid=None):
 
         user = db.get("users", {}).get(str(uid), {})
         agents = db.get("agents", {})
-        tasks = dict(list(db.get(tasks, {}).items())[-5:])
-        votes = db.get(votes, [])[-10:]
+        tasks = dict(list(db.get("tasks", {}).items())[-5:])
+        votes = db.get("votes", [])[-10:]
 
 
         # SYSTEM IDENTITY
