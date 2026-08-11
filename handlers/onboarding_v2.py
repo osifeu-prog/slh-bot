@@ -136,24 +136,24 @@ def register(bot):
 
         if is_owner:
             text = (
-                f"???? ????, {user_name}!\n\n"
-                "??? ???????, ????? ????? ???.\n\n"
-                "?? ?????? ???? ???? ?????? ?? SLH OS.\n"
-                "?? ?-Dashboard ??????? ?????? ??? ??????."
+                f"\u05d1\u05e8\u05d5\u05da \u05e9\u05d5\u05d1\u05da, {user_name}!\n\n"
+                "\u05d0\u05e0\u05d9 \u05e8\u05d5\u05d1\u05d5\u05d8\u05d5\u05e9, \u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05d0\u05d9\u05e9\u05d9 \u05e9\u05dc\u05da.\n\n"
+                "\U0001f451 \u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05de\u05d6\u05d4\u05d4 \u05d0\u05d5\u05ea\u05da \u05db\u05d1\u05e2\u05dc\u05d9\u05dd \u05e9\u05dc SLH OS.\n"
+                "\U0001f680 \u05d4-Dashboard \u05d5\u05d4\u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da \u05de\u05d5\u05db\u05e0\u05d9\u05dd."
             )
 
             markup = types.InlineKeyboardMarkup()
 
             markup.add(
                 types.InlineKeyboardButton(
-                    "?? ?-Dashboard ???",
+                    "\U0001f4ca \u05d4-Dashboard \u05e9\u05dc\u05d9",
                     callback_data="goto_dashboard"
                 )
             )
 
             markup.add(
                 types.InlineKeyboardButton(
-                    "?? ??????? ???",
+                    "\U0001f916 \u05d4\u05e1\u05d5\u05db\u05e0\u05d9\u05dd \u05e9\u05dc\u05d9",
                     callback_data="create_agent"
                 )
             )
