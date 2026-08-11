@@ -1,21 +1,43 @@
-from openai import OpenAI
+﻿from openai import OpenAI
 import os
+import json
+import requests
 
 client = None
 
+
 def ask_gemini(prompt):
-    import requests, os
     key = os.getenv("GEMINI_API_KEY")
+
     if not key:
         return "GEMINI_API_KEY missing"
 
-    url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=" + key
-    data = {"contents":[{"parts":[{"text":prompt}]}]}
+    url = (
+        "https://generativelanguage.googleapis.com/"
+        "v1/models/gemini-2.0-flash:generateContent?key=" + key
+    )
 
-    r = requests.post(url, json=data, timeout=20)
-    j = r.json()
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
 
-    return j["candidates"][0]["content"]["parts"][0]["text"] if "candidates" in j else "Gemini Error: " + str(j)
+    try:
+        r = requests.post(url, json=data, timeout=20)
+        j = r.json()
+
+        if "candidates" in j:
+            return j["candidates"][0]["content"]["parts"][0]["text"]
+
+        return "Gemini Error: " + str(j)
+
+    except Exception as e:
+        return f"Gemini Error: {e}"
 
 
 def ask_groq(prompt):
@@ -47,6 +69,7 @@ def ask_groq(prompt):
         return resp.choices[0].message.content
 
     except Exception as e:
+
         if "429" in str(e):
             return "LLM Error: Groq rate limit/quota exceeded."
 
@@ -54,131 +77,131 @@ def ask_groq(prompt):
 
 
 def register_llm_handler(bot):
-    """
-    Disabled command registration.
-    /ask ownership moved to advanced_ask_handler.
-    """
     print("LLM core loaded (ask handled by advanced_ask_handler)")
 
 
-
 def query_llm_with_context(question, uid=None):
-    import json
 
     q = str(question).lower()
 
     try:
+
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
 
         user = db.get("users", {}).get(str(uid), {})
         agents = db.get("agents", {})
         tasks = db.get("tasks", {})
-        votes = db.get("votes", {})
+        votes = db.get("votes", [])
 
-        # HARD FACT: tasks
-        task_terms = [
-            "task",
-            "tasks",
-            "משימה",
-            "משימות"
-        ]
 
-        if any(x in q for x in task_terms):
-            if any(x in q for x in ["כמה", "count", "number"]):
-                return f"Tasks count: {len(tasks)}"
+        # SYSTEM IDENTITY
 
-            if any(x in q for x in ["list", "רשימה", "אילו", "מהן"]):
-                task_list = "\n".join(
-                    [
-                        f"- {t.get('title', '?')}"
-                        for t in tasks.values()
-                    ]
+        if any(x in q for x in [
+            "מי אתה",
+            "what are you",
+            "who are you",
+            "מה אתה"
+        ]):
+            return "אני SLH OS AI assistant. אני המערכת החכמה של SLH OS."
+
+
+        # OWNER IDENTITY
+
+        if any(x in q for x in [
+            "מי אני",
+            "who am i",
+            "my identity",
+            "identity"
+        ]):
+
+            if user.get("role") == "OWNER":
+                return (
+                    f"אתה {user.get('name')} — "
+                    "OWNER של SLH OS."
                 )
-                return "Tasks:\n" + task_list
 
-        # HARD FACT: user name
-        name_terms = [
+            return f"אתה {user.get('name','unknown')}."
+
+
+        # NAME
+
+        if any(x in q for x in [
             "name",
             "my name",
-            "what is my name",
-            "\u05de\u05d4 \u05d4\u05e9\u05dd \u05e9\u05dc\u05d9",
-            "\u05d0\u05d9\u05da \u05e7\u05d5\u05e8\u05d0\u05d9\u05dd \u05dc\u05d9",
+            "מה השם שלי",
+            "איך קוראים לי"
+        ]):
 
-        ]
-
-        if any(x in q for x in name_terms):
-            return f"Your name is: {user.get('name', 'unknown')}"
+            return f"השם שלך הוא: {user.get('name','unknown')}"
 
 
-        # HARD FACT: user role / identity
-        role_terms = [
+        # ROLE
+
+        if any(x in q for x in [
             "role",
             "permission",
-            "identity",
-            "who am i",
-            "what is my role",
-            "\u05ea\u05e4\u05e7\u05d9\u05d3",
-            "\u05de\u05d9 \u05d0\u05e0\u05d9",
-            "\u05d4\u05e8\u05e9\u05d0\u05d4",
-            "\u05de\u05d4 \u05d4\u05ea\u05e4\u05e7\u05d9\u05d3 \u05e9\u05dc\u05d9"
-        ]
+            "תפקיד",
+            "הרשאה",
+            "מה התפקיד שלי"
+        ]):
 
-        if any(x in q for x in role_terms):
-            return f"Your role is: {user.get('role', 'unknown')}"
+            return f"התפקיד שלך הוא: {user.get('role','unknown')}"
 
-        # HARD FACT: user credits / wallet
-        credit_terms = [
+
+        # WALLET
+
+        if any(x in q for x in [
             "credit",
             "credits",
-            "balance",
             "wallet",
-            "\u05e7\u05e8\u05d3\u05d9\u05d8",
-            "\u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd",
-            "\u05d9\u05ea\u05e8\u05d4",
-            "\u05db\u05de\u05d4 \u05d9\u05e9 \u05dc\u05d9",
-            "\u05db\u05de\u05d4 \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd \u05d9\u05e9 \u05dc\u05d9"
-        ]
+            "balance",
+            "קרדיט",
+            "יתרה"
+        ]):
 
-        if any(x in q for x in credit_terms):
-            return f"Your credits are: {user.get('wallet', {}).get('credits', 0)}"
+            return (
+                "הקרדיטים שלך: "
+                + str(
+                    user.get("wallet", {})
+                    .get("credits", 0)
+                )
+            )
 
-        # ABSOLUTE AGENT LOCK: never send agent facts to LLM
-        agent_terms = [
+
+        # AGENTS
+
+        if any(x in q for x in [
             "agent",
             "agents",
-            "\u05e1\u05d5\u05db\u05df",
-            "\u05e1\u05d5\u05db\u05e0\u05d9\u05dd"
-        ]
+            "סוכן",
+            "סוכנים"
+        ]):
 
-        if any(x in q for x in agent_terms):
-            name_terms = [
-                "name",
-                "names",
-
-                "\u05e9\u05de\u05d5\u05ea"
+            names = [
+                a.get("name","?")
+                for a in agents.values()
             ]
 
-            if any(x in q for x in name_terms):
-                names = [
-                    a.get("name", "?")
-                    for a in agents.values()
-                ]
-                return "Agents names: " + ", ".join(names)
+            return (
+                f"סוכנים פעילים: {len(agents)}\n"
+                + ", ".join(names)
+            )
 
-            return f"Agents count={len(agents)}"
 
         context = f"""
 SLH SYSTEM STATE:
 
 User:
-name={user.get("name")}
-role={user.get("role")}
-credits={user.get("wallet", {}).get("credits", 0)}
+name={user.get('name')}
+role={user.get('role')}
+credits={user.get('wallet',{}).get('credits',0)}
 
 Agents:
 count={len(agents)}
-names={", ".join([a.get("name", "?") for a in agents.values()])}
+names={", ".join(
+    [a.get("name","?") for a in agents.values()]
+)}
 
 Tasks:
 {tasks}
@@ -187,31 +210,43 @@ Votes:
 {votes}
 """
 
+
     except Exception as e:
+
         context = f"Context error: {e}"
+
 
     prompt = f"""
 You are SLH OS AI assistant.
-Answer in Hebrew, concise and direct.
 
-IMPORTANT SYSTEM RULES:
-- SYSTEM CONTEXT is the only source of truth.
-- Previous conversation messages are NOT system data.
-- Never guess system values.
-- Never invent names, numbers, balances, roles, or agent counts.
-- If a requested system fact is not present, say it is unknown.
+Answer in Hebrew.
+Be concise.
+
+SYSTEM RULES:
+
+- System context is truth.
+- Never invent user identity.
+- Never invent balances.
+- Never invent roles.
+- Never call the user a partner/friend/human.
 
 SYSTEM CONTEXT:
+
 {context}
 
+
 USER QUESTION:
+
 {question}
 """
 
+
     return ask_groq(prompt)
+
+
 
 def register(bot):
     return register_llm_handler(bot)
 
-print('LLM MODULE LOADED FROM:', __file__)
 
+print("LLM MODULE LOADED FROM:", __file__)
