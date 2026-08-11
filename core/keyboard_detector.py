@@ -5,7 +5,9 @@ COMMON_HEBREW = {
     "האם","אפשר","את","אני","אתה",
     "המערכת","שלום","בוט",
     "עזרה","בדיקה","תודה",
-    "מה","איך","למה","של","עם","על"
+    "מה","איך","למה","של","עם","על",
+    "לה","הבוט","עובד","עונה",
+    "סנכרון","מערכת"
 }
 
 
@@ -58,18 +60,13 @@ def should_convert_keyboard(text):
 
     converted = convert_to_hebrew(text)
 
-    if hebrew_ratio(converted) < 0.35:
-        return False
-
     if hebrew_ratio(text) > 0.1:
         return False
 
+    if hebrew_ratio(converted) < 0.35:
+        return False
+
     if hebrew_word_score(converted) > 0:
-        return True
-
-    words = re.findall(r"[\u0590-\u05FF]+", converted)
-
-    if len(words) >= 2 and hebrew_ratio(converted) > 0.45:
         return True
 
     return False
