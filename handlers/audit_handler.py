@@ -6,6 +6,10 @@ MAX_MESSAGE_LENGTH = 3500
 
 def _format_event(event):
     timestamp = event.get("timestamp", "")
+    if isinstance(timestamp, (int, float)):
+        timestamp = datetime.fromtimestamp(timestamp).isoformat()
+    else:
+        timestamp = str(timestamp)
     timestamp = timestamp.replace("T", " ")[:19]
 
     event_name = event.get("event", "unknown")
