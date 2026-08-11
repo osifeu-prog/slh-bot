@@ -28,6 +28,7 @@ def load_handlers(bot, context):
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
         ("llm", "handlers.llm_handler"),
+        ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
         ("me", "handlers.me_handler"),
         ("monitor", "handlers.monitor_handler"),
