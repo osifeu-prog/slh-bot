@@ -28,6 +28,7 @@ def load_handlers(bot, context):
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
         ("llm", "handlers.llm_handler"),
+        ("natural_chat", "handlers.natural_chat"),
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
         ("me", "handlers.me_handler"),
@@ -109,6 +110,3 @@ def load_handlers(bot, context):
         print("ask skipped:", e)
 
     print("? ALL HANDLERS READY")
-
-
-
