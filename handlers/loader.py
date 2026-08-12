@@ -1,4 +1,4 @@
-def load_handlers(bot, context):
+﻿def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
@@ -6,6 +6,7 @@ def load_handlers(bot, context):
 
     modules = [
         ("dashboard", "handlers.dashboard_handler"),
+        ("os", "handlers.os_handler"),
         ("market", "handlers.market_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
@@ -114,3 +115,4 @@ def load_handlers(bot, context):
         print("ask skipped:", e)
 
     print("? ALL HANDLERS READY")
+
