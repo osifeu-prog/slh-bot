@@ -16,7 +16,6 @@ def register(bot, context=None):
             for f in [
                 "state/db.json",
                 "state/agents.json",
-                "state/users.json",
                 "state/ai_health.json"
             ]:
                 lines.append(
@@ -29,7 +28,6 @@ def register(bot, context=None):
                     d = json.load(x)
 
                 agents = d.get("agents", {})
-
                 active = sum(
                     1 for a in agents.values()
                     if a.get("state") == "active"
@@ -38,9 +36,14 @@ def register(bot, context=None):
                 lines.append("")
                 lines.append(f"Agents: {len(agents)}")
                 lines.append(f"Active: {active}")
+                lines.append(f"Idle: {len(agents)-active}")
+
+                users = d.get("users", {})
+                lines.append("")
+                lines.append(f"Users: source state/db.json ({len(users)})")
 
             except Exception as e:
-                lines.append("Agent check error: " + str(e))
+                lines.append("State check error: " + str(e))
 
             lines.append("")
             lines.append("Recovery Mode: SAFE READ ONLY")
