@@ -33,7 +33,13 @@
       "role": "OWNER",
       "joined": true,
       "test_field": null,
-      "group": "נ"
+      "group": "נ",
+      "permissions": [
+        "admin",
+        "exec",
+        "deploy",
+        "restart"
+      ]
     },
     "224223270": {
       "role": "USER",
@@ -328,17 +334,6 @@
         "vote",
         "propose"
       ]
-    },
-    "10": {
-      "id": "10",
-      "name": "TestAgent",
-      "state": "idle",
-      "role": "tester",
-      "owner_id": "8789977826",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-08-12T01:53:52.767431"
     }
   },
   "products": {
