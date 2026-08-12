@@ -1,4 +1,4 @@
-ο»Ώfrom handlers.llm_handler import query_llm_with_context
+from handlers.llm_handler import query_llm_with_context
 from core.keyboard_detector import normalize_keyboard_text
 
 def register(bot, context=None):
@@ -28,11 +28,11 @@ def register(bot, context=None):
             answer = str(answer or "").strip()
 
             if not answer:
-                answer = "β οΈ ΧΧ Χ”ΧªΧ§Χ‘ΧΧ” ΧªΧ©Χ•Χ‘Χ” ΧΧ”-LLM."
+                answer = "?? μΰ δϊχαμδ ϊωεαδ ξδ-LLM."
 
         except Exception as e:
-            answer = f"β οΈ Χ©Χ’Χ™ΧΧ” Χ‘ΧΆΧ™Χ‘Χ•Χ“ Χ”Χ‘Χ§Χ©Χ”: {e}"
+            answer = f"?? ωβιΰδ αςιαεγ δαχωδ: {e}"
 
-        bot.reply_to(msg, answer[:4000])
+        bot.send_message(msg.chat.id, answer[:4000])
 
-    print("π§  Natural Chat Router loaded")
+    print("?? Natural Chat Router loaded")
