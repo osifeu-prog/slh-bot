@@ -140,11 +140,13 @@ def query_llm_with_context(question, uid=None):
         # ROLE
 
         if any(x in q for x in [
-            "role",
-            "permission",
-            "תפקיד",
-            "הרשאה",
-            "מה התפקיד שלי"
+            "מה התפקיד שלי",
+            "מה תפקידי",
+            "מה התפקיד שלי במערכת",
+            "what is my role",
+            "my role",
+            "my permission",
+            "הרשאה שלי"
         ]):
 
             return f"התפקיד שלך הוא: {user.get('role','unknown')}"
