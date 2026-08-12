@@ -1,6 +1,7 @@
-from core.identity import OWNER_TELEGRAM_ID
+﻿from core.identity import OWNER_TELEGRAM_ID
 from telebot import types
 import json
+from core.message_utils import safe_clip
 
 from core.profile_manager import get_user
 from core.agent_registry import create_agent
@@ -48,7 +49,7 @@ def register(bot):
 
         course = user.get(
             "active_course",
-            "אין"
+            "׳׳™׳"
         )
 
         owned_agents = []
@@ -70,11 +71,11 @@ def register(bot):
                 owned_agents.append(agent)
 
         text = (
-            "🌟 ה-Dashboard שלך\n\n"
-            f"💰 Credits: {credits}\n"
-            f"📚 קורס פעיל: {course}\n"
-            f"🤖 הסוכנים שלך: {len(owned_agents)}\n\n"
-            "מה תרצה לעשות?"
+            "נ ׳”-Dashboard ׳©׳׳\n\n"
+            f"נ’° Credits: {credits}\n"
+            f"נ“ ׳§׳•׳¨׳¡ ׳₪׳¢׳™׳: {course}\n"
+            f"נ₪– ׳”׳¡׳•׳›׳ ׳™׳ ׳©׳׳: {len(owned_agents)}\n\n"
+            "׳׳” ׳×׳¨׳¦׳” ׳׳¢׳©׳•׳×?"
         )
 
         markup = types.InlineKeyboardMarkup(
@@ -83,28 +84,28 @@ def register(bot):
 
         markup.add(
             types.InlineKeyboardButton(
-                "📚 המשך לקורס",
+                "נ“ ׳”׳׳©׳ ׳׳§׳•׳¨׳¡",
                 callback_data="continue_course"
             )
         )
 
         markup.add(
             types.InlineKeyboardButton(
-                "🤖 צור סוכן חדש",
+                "נ₪– ׳¦׳•׳¨ ׳¡׳•׳›׳ ׳—׳“׳©",
                 callback_data="create_agent"
             )
         )
 
         markup.add(
             types.InlineKeyboardButton(
-                "📊 סטטוס מערכת",
+                "נ“ ׳¡׳˜׳˜׳•׳¡ ׳׳¢׳¨׳›׳×",
                 callback_data="system_status"
             )
         )
 
         bot.send_message(
-            chat_id,
-            text,
+        chat_id,
+        safe_clip(text),
             reply_markup=markup
         )
 
@@ -120,7 +121,7 @@ def register(bot):
 
         user_name = (
             get_display_name(user_id, m.from_user)
-            or "חבר"
+            or "׳—׳‘׳¨"
         )
 
         db = load_db()
@@ -162,16 +163,16 @@ def register(bot):
         elif is_new:
 
             text = (
-                f"ברוך הבא, {user_name}!\n\n"
-                "אני רובוטוש, העוזר האישי שלך.\n\n"
-                "🚀 בוא נתחיל את ההפעלה."
+                f"׳‘׳¨׳•׳ ׳”׳‘׳, {user_name}!\n\n"
+                "׳׳ ׳™ ׳¨׳•׳‘׳•׳˜׳•׳©, ׳”׳¢׳•׳–׳¨ ׳”׳׳™׳©׳™ ׳©׳׳.\n\n"
+                "נ€ ׳‘׳•׳ ׳ ׳×׳—׳™׳ ׳׳× ׳”׳”׳₪׳¢׳׳”."
             )
 
             markup = types.InlineKeyboardMarkup()
 
             markup.add(
                 types.InlineKeyboardButton(
-                    "🚀 כן, תתחיל אותי!",
+                    "נ€ ׳›׳, ׳×׳×׳—׳™׳ ׳׳•׳×׳™!",
                     callback_data="onboard_start"
                 )
             )
@@ -179,29 +180,29 @@ def register(bot):
         else:
 
             text = (
-                f"ברוך שובך, {user_name}!\n\n"
-                "ה-Dashboard שלך מחכה לך."
+                f"׳‘׳¨׳•׳ ׳©׳•׳‘׳, {user_name}!\n\n"
+                "׳”-Dashboard ׳©׳׳ ׳׳—׳›׳” ׳׳."
             )
 
             markup = types.InlineKeyboardMarkup()
 
             markup.add(
                 types.InlineKeyboardButton(
-                    "📊 לך ל-Dashboard",
+                    "נ“ ׳׳ ׳-Dashboard",
                     callback_data="goto_dashboard"
                 )
             )
 
             markup.add(
                 types.InlineKeyboardButton(
-                    "🤖 צור סוכן חדש",
+                    "נ₪– ׳¦׳•׳¨ ׳¡׳•׳›׳ ׳—׳“׳©",
                     callback_data="create_agent"
                 )
             )
 
         bot.send_message(
-            m.chat.id,
-            text,
+        m.chat.id,
+        safe_clip(text),
             reply_markup=markup
         )
 
@@ -254,14 +255,14 @@ def register(bot):
 
             bot.answer_callback_query(
                 call.id,
-                "✅ החשבון הופעל"
+                "ג… ׳”׳—׳©׳‘׳•׳ ׳”׳•׳₪׳¢׳"
             )
 
             bot.send_message(
                 call.message.chat.id,
-                "✅ הפרופיל שלך הופעל!\n"
-                "🤖 הסוכן האישי שלך מוכן.\n\n"
-                "ברוך הבא ל-SLH OS."
+                "ג… ׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳׳ ׳”׳•׳₪׳¢׳!\n"
+                "נ₪– ׳”׳¡׳•׳›׳ ׳”׳׳™׳©׳™ ׳©׳׳ ׳׳•׳›׳.\n\n"
+                "׳‘׳¨׳•׳ ׳”׳‘׳ ׳-SLH OS."
             )
 
             send_dashboard(
@@ -273,12 +274,12 @@ def register(bot):
 
             bot.answer_callback_query(
                 call.id,
-                "❌ שגיאה בהפעלת החשבון"
+                "ג ׳©׳’׳™׳׳” ׳‘׳”׳₪׳¢׳׳× ׳”׳—׳©׳‘׳•׳"
             )
 
             bot.send_message(
                 call.message.chat.id,
-                f"❌ Onboarding failed: {type(e).__name__}"
+                f"ג Onboarding failed: {type(e).__name__}"
             )
 
 
@@ -319,35 +320,36 @@ def register(bot):
 
             bot.answer_callback_query(
                 call.id,
-                "🤖 הסוכן נוצר"
+                "נ₪– ׳”׳¡׳•׳›׳ ׳ ׳•׳¦׳¨"
             )
 
             bot.send_message(
                 call.message.chat.id,
-                "✅ הסוכן נוצר בהצלחה\n"
-                f"🆔 ID: {agent_id}"
+                "ג… ׳”׳¡׳•׳›׳ ׳ ׳•׳¦׳¨ ׳‘׳”׳¦׳׳—׳”\n"
+                f"נ†” ID: {agent_id}"
             )
 
         except ValueError as e:
 
             bot.answer_callback_query(
                 call.id,
-                "⚠️ הסוכן כבר קיים"
+                "ג ן¸ ׳”׳¡׳•׳›׳ ׳›׳‘׳¨ ׳§׳™׳™׳"
             )
 
             bot.send_message(
                 call.message.chat.id,
-                f"ℹ️ {e}"
+                f"ג„¹ן¸ {e}"
             )
 
         except Exception as e:
 
             bot.answer_callback_query(
                 call.id,
-                "❌ שגיאה"
+                "ג ׳©׳’׳™׳׳”"
             )
 
             bot.send_message(
                 call.message.chat.id,
-                f"❌ Agent creation failed: {type(e).__name__}"
+                f"ג Agent creation failed: {type(e).__name__}"
             )
+
