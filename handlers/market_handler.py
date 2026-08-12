@@ -1,30 +1,37 @@
-import json
+﻿import json
 from pathlib import Path
 
+STORE_FILE = Path("state/marketplace.json")
+
 def load_store():
-    path = Path("state/marketplace.json")
-    if not path.exists():
+    if not STORE_FILE.exists():
         return {"plugins": [], "installed": []}
-    return json.loads(path.read_text(encoding="utf-8"))
+
+    return json.loads(
+        STORE_FILE.read_text(encoding="utf-8")
+    )
+
 
 def register(bot, context=None):
 
     @bot.message_handler(commands=["market", "marketplace", "store"])
     def market(m):
         store = load_store()
-        print('MARKET DEBUG STORE:', store)
-        lines = [
-            f"� {p['name']} ({p['id']}) - ??{p['price']} [{p['installs']} installs]"
-            for p in store.get("plugins", [])
-        ]
 
-        if not lines:
+        plugins = store.get("plugins", [])
+
+        if not plugins:
             bot.reply_to(m, "Marketplace empty.")
             return
 
+        lines = [
+            f"• {p['name']} ({p['id']}) - {p['price']} credits [{p['installs']} installs]"
+            for p in plugins
+        ]
+
         bot.reply_to(
             m,
-            "?? Marketplace:\n" + "\n".join(lines)
+            "🛒 Marketplace:\n" + "\n".join(lines)
         )
 
-    print("? market handler registered")
+    print("✅ market handler registered")
