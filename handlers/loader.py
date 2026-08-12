@@ -50,6 +50,7 @@ def load_handlers(bot, context):
         ("askdebug", "handlers.askdebug_handler"),
         ("exec", "handlers.exec_handler"),
         ("recovery", "handlers.recovery_handler"),
+    ("recovery_verify", "handlers.recovery_verify_handler"),
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),
         ("git", "handlers.git_handler"),
