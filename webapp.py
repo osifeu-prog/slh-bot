@@ -26,7 +26,9 @@ def market():
 
 @app.route("/mini-app")
 def mini_app():
-    return send_from_directory(BASE_DIR, "mini_app.html")
+    resp = send_from_directory(BASE_DIR, "mini_app.html")
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    return resp
 
 @app.route("/api/wallet/<uid>")
 def get_wallet(uid):
@@ -95,3 +97,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8080
     )
+
