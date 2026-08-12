@@ -14,7 +14,7 @@ def ask_gemini(prompt):
 
     url = (
         "https://generativelanguage.googleapis.com/"
-        "v1/models/gemini-2.0-flash:generateContent?key=" + key
+        "v1/models/gemini-2.5-flash:generateContent?key=" + key
     )
 
     data = {
