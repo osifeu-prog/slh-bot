@@ -6,6 +6,7 @@ def load_handlers(bot, context):
 
     modules = [
         ("dashboard", "handlers.dashboard_handler"),
+        ("market", "handlers.market_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
