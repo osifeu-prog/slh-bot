@@ -49,6 +49,7 @@ def load_handlers(bot, context):
         ("admin_extras", "handlers.admin_extras"),
         ("askdebug", "handlers.askdebug_handler"),
         ("exec", "handlers.exec_handler"),
+        ("recovery", "handlers.recovery_handler"),
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),
         ("git", "handlers.git_handler"),
@@ -112,4 +113,3 @@ def load_handlers(bot, context):
         print("ask skipped:", e)
 
     print("? ALL HANDLERS READY")
-
