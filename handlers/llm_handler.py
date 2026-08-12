@@ -71,7 +71,7 @@ def ask_groq(prompt):
     except Exception as e:
 
         if "429" in str(e):
-            return "LLM Error: Groq rate limit/quota exceeded."
+            return "SLH AI temporarily busy. Please try again in a few seconds."
 
         return f"LLM Error: {e}"
 
