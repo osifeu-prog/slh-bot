@@ -1,4 +1,4 @@
-from handlers.llm_handler import query_llm_with_context
+ן»¿from handlers.llm_handler import query_llm_with_context
 from core.keyboard_detector import normalize_keyboard_text
 
 def register(bot, context=None):
@@ -28,11 +28,14 @@ def register(bot, context=None):
             answer = str(answer or "").strip()
 
             if not answer:
-                answer = "?? לא התקבלה תשובה מה-LLM."
+                answer = "LLM returned no answer."
 
         except Exception as e:
-            answer = f"?? שגיאה בעיבוד הבקשה: {e}"
+            answer = f"LLM error: {e}"
 
-        bot.send_message(msg.chat.id, answer[:4000])
+        try:
+            bot.send_message(msg.chat.id, answer[:4000])
+        except Exception as e:
+            print("NATURAL CHAT SEND ERROR:", e)
 
-    print("?? Natural Chat Router loaded")
+print("Natural Chat Router loaded")
