@@ -1,188 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SLH OS</title>
-
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #111);
-            color: var(--tg-theme-text-color, #fff);
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-
-        .card {
-            padding: 16px;
-            margin: 12px 0;
-            border-radius: 14px;
-            background: var(--tg-theme-secondary-bg-color, #222);
-        }
-
-        .value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .task {
-            padding: 10px 0;
-            border-bottom: 1px solid #444;
-        }
-
-        .done {
-            opacity: 0.55;
-        }
-
-        ol {
-            padding-left: 25px;
-        }
+        body { margin:0; padding:20px; font-family:Arial,sans-serif; background:#111; color:#fff; }
+        h1 { margin-top:0; }
+        .card { padding:16px; margin:12px 0; border-radius:14px; background:#222; }
+        .value { font-size:28px; font-weight:bold; }
+        .task { padding:10px 0; border-bottom:1px solid #444; }
+        .done { opacity:0.55; }
+        ol { padding-left:25px; }
     </style>
 </head>
-
 <body>
+    <h1>🛡 SLH OS</h1>
+    <div class="card">
+        <div>👤 User</div>
+        <div id="name" class="value">Loading...</div>
+    </div>
+    <div class="card">
+        <div>💰 Credits</div>
+        <div id="credits" class="value">0</div>
+    </div>
+    <div class="card">
+        <h2>📋 Tasks</h2>
+        <div id="tasks">Loading...</div>
+    </div>
+    <div class="card">
+        <h2>🏆 Leaderboard</h2>
+        <ol id="leaderboard"><li>Loading...</li></ol>
+    </div>
+    <script>
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+        const uid = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
+            ? String(tg.initDataUnsafe.user.id) : null;
 
-<h1>׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ SLH OS</h1>
+        async function loadWallet() {
+            const nameEl = document.getElementById("name");
+            const creditsEl = document.getElementById("credits");
+            if (!uid) { nameEl.textContent = "Telegram user"; creditsEl.textContent = "0"; return; }
+            const res = await fetch("/api/wallet/" + encodeURIComponent(uid));
+            const data = await res.json();
+            nameEl.textContent = data.name || uid;
+            creditsEl.textContent = data.credits ?? 0;
+        }
 
-<div class="card">
-    <div>׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ»ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ³׳’ג‚¬ג€ User</div>
-    <div id="name" class="value">Loading...</div>
-</div>
+        async function loadTasks() {
+            const tasksEl = document.getElementById("tasks");
+            if (!uid) { tasksEl.textContent = "Open this page inside Telegram."; return; }
+            const res = await fetch("/api/tasks/" + encodeURIComponent(uid));
+            const items = await res.json();
+            if (!items.length) { tasksEl.textContent = "No tasks yet."; return; }
+            tasksEl.innerHTML = "";
+            items.forEach(t => {
+                const div = document.createElement("div");
+                div.className = "task" + (t.status === "done" ? " done" : "");
+                div.textContent = (t.status === "done" ? "✅ " : "⬜ ") + t.title;
+                tasksEl.appendChild(div);
+            });
+        }
 
-<div class="card">
-    <div>׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳³ג€™׳’ג‚¬ֲײ²ֲ¢׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ° Credits</div>
-    <div id="credits" class="value">0</div>
-</div>
+        async function loadLeaderboard() {
+            const lb = document.getElementById("leaderboard");
+            try {
+                const res = await fetch("/api/leaderboard");
+                const users = await res.json();
+                lb.innerHTML = "";
+                users.slice(0, 10).forEach(u => {
+                    const li = document.createElement("li");
+                    li.textContent = u.name + " – " + u.credits + " credits";
+                    lb.appendChild(li);
+                });
+            } catch (e) {
+                lb.innerHTML = "<li>Unavailable</li>";
+            }
+        }
 
-<div class="card">
-    <h2>׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ¹ Tasks</h2>
-    <div id="tasks">Loading...</div>
-</div>
-
-<div class="card">
-    <h2>׳³ֲ³ײ²ֲ³׳²ֲ²ײ²ֲ ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ²ײ²ֲ²׳²ֲ²ײ²ֲ׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ  Leaderboard</h2>
-    <ol id="leaderboard">
-        <li>Loading...</li>
-    </ol>
-</div>
-
-<script>
-const tg = window.Telegram && window.Telegram.WebApp;
-
-if (tg) {
-    tg.ready();
-    tg.expand();
-}
-
-const uid =
-    tg &&
-    tg.initDataUnsafe &&
-    tg.initDataUnsafe.user
-        ? String(tg.initDataUnsafe.user.id)
-        : null;
-
-async function loadWallet() {
-    if (!uid) {
-        document.getElementById("name").textContent = "Telegram user";
-        document.getElementById("credits").textContent = "׳³ֲ³ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג€ֲ¢׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¬׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ";
-        return;
-    }
-
-    const response =
-        await fetch("/api/wallet/" + encodeURIComponent(uid));
-
-    const data = await response.json();
-
-    document.getElementById("name").textContent =
-        data.name || uid;
-
-    document.getElementById("credits").textContent =
-        data.credits ?? 0;
-}
-
-async function loadTasks() {
-    if (!uid) {
-        document.getElementById("tasks").textContent =
-            "Open this page inside Telegram.";
-        return;
-    }
-
-    const response =
-        await fetch("/api/tasks/" + encodeURIComponent(uid));
-
-    const tasks = await response.json();
-
-    const container = document.getElementById("tasks");
-    container.innerHTML = "";
-
-    if (!tasks.length) {
-        container.textContent = "No tasks.";
-        return;
-    }
-
-    tasks.forEach(task => {
-        const div = document.createElement("div");
-
-        div.className =
-            "task " +
-            (task.status === "done" ? "done" : "");
-
-        div.textContent =
-            `${task.title} ׳³ֲ³ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג€ֲ¢׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¬׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ ${task.status}`;
-
-        container.appendChild(div);
-    });
-}
-
-async function loadLeaderboard() {
-    const response =
-        await fetch("/api/leaderboard");
-
-    const data = await response.json();
-
-    const list =
-        document.getElementById("leaderboard");
-
-    list.innerHTML = "";
-
-    if (!Array.isArray(data)) {
-        list.innerHTML =
-            "<li>Leaderboard unavailable</li>";
-        return;
-    }
-
-    data.forEach(user => {
-        const li = document.createElement("li");
-
-        li.textContent =
-            `${user.name} ׳³ֲ³ײ²ֲ³׳³ג€™׳’ג€ֲ¬׳’ג€ֲ¢׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג€ֲ¬ײ²ֲ׳²ֲ²ײ²ֲ¬׳³ֲ³׳’ג‚¬ג„¢׳³ג€™׳’ג‚¬ֲײ²ֲ¬׳²ֲ²ײ²ֲ ${user.credits} credits`;
-
-        list.appendChild(li);
-    });
-}
-
-async function init() {
-    try {
-        await loadWallet();
-        await loadTasks();
-        await loadLeaderboard();
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-init();
-</script>
-
+        loadWallet();
+        loadTasks();
+        loadLeaderboard();
+    </script>
 </body>
 </html>
