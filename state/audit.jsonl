@@ -21,3 +21,9 @@
 {"timestamp": "2026-07-27T09:53:15.867456+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT"}}
 {"timestamp": "2026-07-29T14:57:07.400484+00:00", "event": "agent.created", "target": "5", "details": {"name": "O-Agent", "role": "agent"}}
 {"timestamp": "2026-08-11T22:53:52.788691+00:00", "event": "agent.created", "target": "10", "details": {"name": "TestAgent", "role": "tester"}}
+{"timestamp": "2026-08-12T16:50:31.109910+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TempTester"}}
+{"timestamp": "2026-08-12T16:50:31.136867+00:00", "event": "agent.deleted", "target": "6", "details": {"name": "ClaudeAgent"}}
+{"timestamp": "2026-08-12T16:50:31.162702+00:00", "event": "agent.deleted", "target": "7", "details": {"name": "GroqAgent"}}
+{"timestamp": "2026-08-12T16:50:31.183366+00:00", "event": "agent.deleted", "target": "8", "details": {"name": "GeminiAgent"}}
+{"timestamp": "2026-08-12T16:50:31.203687+00:00", "event": "agent.deleted", "target": "9", "details": {"name": "OpenAI_Agent"}}
+{"time": 1786553529.402531, "actor": "8789977826", "action": "release_cleanup_completed", "details": {"removed_agents": ["TempTester", "ClaudeAgent", "GroqAgent", "GeminiAgent", "OpenAI_Agent"], "remaining_agents": ["SystemGuard", "DoctorAgent", "SyncAgent", "TokenAgent"], "task_13_reassigned": "SystemGuard"}}

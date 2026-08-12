@@ -181,7 +181,7 @@
       "description": "כתיבת תיעוד ציבורי למערכת",
       "progress": 0,
       "reward": 100,
-      "agent": "TempTester",
+      "agent": "SystemGuard",
       "status": "open",
       "created_at": "2026-08-11T12:55:27.646238Z"
     }
@@ -277,65 +277,6 @@
         "send"
       ],
       "created": "2026-08-07T22:43:47"
-    },
-    "5": {
-      "id": "5",
-      "name": "TempTester",
-      "state": "idle",
-      "role": "test",
-      "owner_id": "8789977826",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-08-10T23:09:47.074901"
-    },
-    "6": {
-      "name": "ClaudeAgent",
-      "role": "ai_assistant",
-      "state": "idle",
-      "inbox": [],
-      "description": "Anthropic Claude AI assistant",
-      "permissions": [
-        "read",
-        "vote",
-        "propose"
-      ]
-    },
-    "7": {
-      "name": "GroqAgent",
-      "role": "ai_assistant",
-      "state": "idle",
-      "inbox": [],
-      "description": "Groq-powered AI agent",
-      "permissions": [
-        "read",
-        "vote",
-        "propose"
-      ]
-    },
-    "8": {
-      "name": "GeminiAgent",
-      "role": "ai_assistant",
-      "state": "idle",
-      "inbox": [],
-      "description": "Google Gemini AI agent",
-      "permissions": [
-        "read",
-        "vote",
-        "propose"
-      ]
-    },
-    "9": {
-      "name": "OpenAI_Agent",
-      "role": "ai_assistant",
-      "state": "idle",
-      "inbox": [],
-      "description": "OpenAI GPT agent",
-      "permissions": [
-        "read",
-        "vote",
-        "propose"
-      ]
     }
   },
   "products": {
