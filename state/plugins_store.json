@@ -1,0 +1,23 @@
+{
+  "plugins": [
+    {
+      "id": "ai_chat_plus",
+      "name": "AI Chat Plus",
+      "price": 99,
+      "installs": 120
+    },
+    {
+      "id": "slh_agent_pack",
+      "name": "SLH Agent Pack",
+      "price": 250,
+      "installs": 42
+    },
+    {
+      "id": "analytics_pro",
+      "name": "Analytics Pro",
+      "price": 180,
+      "installs": 78
+    }
+  ],
+  "installed": []
+}
