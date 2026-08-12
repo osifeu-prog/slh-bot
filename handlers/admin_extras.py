@@ -19,7 +19,6 @@ def register(bot, context):
 
     @bot.message_handler(commands=['megadiag'])
     def megadiag(m):
-        from system_diagnostics import check_logo_presence
         lines = ["נ“ MEGA DIAGNOSTICS", ""]
         lines.append("Disk usage:")
         try:
@@ -59,3 +58,4 @@ def register(bot, context):
         bot.reply_to(m, "נ“ No active vote. (voting engine not connected)")
 
     print("ג… admin_extras loaded")
+
