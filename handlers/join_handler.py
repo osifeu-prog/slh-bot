@@ -42,12 +42,7 @@ def register(bot):
             state["name"] = msg.text.strip()
             state["step"] = "group"
 
-            bot.reply_to(
-                msg,
-                f"נעים מאוד, {state['name']}!\n"
-                "לאיזו קבוצה תרצה להצטרף?\n"
-                "(לדוגמה: Bitcoin Masters, AI Builders)"
-            )
+            bot.reply_to(msg, f"נעים מאוד, {state['name']}!`nלאיזו קבוצה תרצה להצטרף?")
 
         elif step == "group":
             group = msg.text.strip()
@@ -94,3 +89,4 @@ def register(bot):
 
 
 print("join handler loaded")
+
