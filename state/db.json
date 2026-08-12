@@ -50,7 +50,10 @@
       ],
       "wallet": {
         "credits": 0
-      }
+      },
+      "name": "User",
+      "display_name": "User",
+      "telegram_name": "User"
     }
   },
   "students": {
