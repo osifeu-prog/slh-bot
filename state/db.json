@@ -11,14 +11,24 @@
       "academy": {
         "courses": {
           "bitcoin_mastery": {
-            "stage": 4,
+            "stage": 12,
             "completed": [
               1,
               2,
-              3
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
             ]
           }
-        }
+        },
+        "active_course": "bitcoin_mastery"
       },
       "gamification": {
         "points": 75,
@@ -64,13 +74,13 @@
   "tasks": {
     "1": {
       "title": "השלם קורס Bitcoin",
-      "progress": 40,
+      "progress": 100,
       "reward": 100,
       "done_by": [
         8789977826
       ],
       "agent": "DoctorAgent",
-      "status": "in_progress"
+      "status": "done"
     },
     "2": {
       "title": "SLH OS Full Production Launch & Voting Integration",
