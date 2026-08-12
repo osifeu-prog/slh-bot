@@ -1,4 +1,4 @@
-﻿import os, json, subprocess
+import os, json, subprocess
 from datetime import datetime
 from telebot import types
 

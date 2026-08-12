@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 user_states = {}
 

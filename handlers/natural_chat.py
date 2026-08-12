@@ -1,4 +1,4 @@
-﻿from handlers.llm_handler import query_llm_with_context
+from handlers.llm_handler import query_llm_with_context
 from core.keyboard_detector import normalize_keyboard_text
 
 def register(bot, context=None):

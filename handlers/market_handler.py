@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 
 from core.profile_manager import get_balance, add_balance

@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 def _clip(value, limit):
     text = str(value if value is not None else "")

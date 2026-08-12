@@ -1,4 +1,4 @@
-﻿from core.identity import OWNER_TELEGRAM_ID
+from core.identity import OWNER_TELEGRAM_ID
 from telebot import types
 import json
 from core.message_utils import safe_clip

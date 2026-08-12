@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 
 DB_PATH = Path("state/db.json")

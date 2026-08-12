@@ -1,4 +1,4 @@
-﻿import json, os
+import json, os
 
 def register(bot):
     @bot.message_handler(commands=['stake'])

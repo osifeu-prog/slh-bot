@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 def register(bot, context=None):
     @bot.message_handler(commands=['cleanup'])
