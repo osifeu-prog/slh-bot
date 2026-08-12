@@ -2,6 +2,7 @@
 import os
 import json
 import requests
+import time
 
 client = None
 
@@ -79,7 +80,8 @@ def ask_groq(prompt):
             ):
                 return gemini_result
 
-            return "SLH AI temporarily busy. Please try again in a few seconds."
+            return f"Groq rate limited. Gemini fallback unavailable: {gemini_result}"
+
 
         return f"LLM Error: {e}"
 
@@ -118,19 +120,17 @@ def query_llm_with_context(question, uid=None):
         # OWNER IDENTITY
 
         if any(x in q for x in [
-            "׳׳™ ׳׳ ׳™",
+            "\u05de\u05d9 \u05d0\u05e0\u05d9",
             "who am i",
             "my identity",
             "identity"
         ]):
 
             if user.get("role") == "OWNER":
-                return (
-                    f"׳׳×׳” {user.get('name')} ג€” "
-                    "OWNER ׳©׳ SLH OS."
-                )
+                return f"\u05d0\u05ea\u05d4 {user.get('name')} - OWNER \u05e9\u05dc SLH OS."
 
-            return f"׳׳×׳” {user.get('name','unknown')}."
+            return f"\u05d0\u05ea\u05d4 {user.get('name','unknown')}"
+
 
 
         # NAME
