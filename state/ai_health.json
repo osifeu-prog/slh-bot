@@ -2,5 +2,7 @@
   "groq": {
     "failures": 0,
     "blocked_until": 0
-  }
+  },
+  "failures": 0,
+  "blocked_until": 0
 }
