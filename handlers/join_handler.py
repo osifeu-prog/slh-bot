@@ -31,21 +31,28 @@ def register(bot):
         user_states[uid] = {"step": "name"}
         bot.reply_to(msg, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
 
-
-    @bot.message_handler(func=lambda m: str(m.from_user.id) in user_states and not str(m.text).startswith("/"))
+    @bot.message_handler(
+        func=lambda m: str(m.from_user.id) in user_states
+        and not str(m.text or "").startswith("/")
+    )
     def join_steps(msg):
         uid = str(msg.from_user.id)
         state = user_states[uid]
         step = state["step"]
 
         if step == "name":
-            state["name"] = msg.text.strip()
+            state["name"] = (msg.text or "").strip()
             state["step"] = "group"
 
-            bot.reply_to(msg, f"נעים מאוד, {state['name']}!`nלאיזו קבוצה תרצה להצטרף?")
+            bot.reply_to(
+                msg,
+                f"נעים מאוד, {state['name']}!\n"
+                "לאיזו קבוצה תרצה להצטרף?\n"
+                "(לדוגמה: Bitcoin Masters, AI Builders)"
+            )
 
         elif step == "group":
-            group = msg.text.strip()
+            group = (msg.text or "").strip()
 
             try:
                 with open("state/db.json", "r", encoding="utf-8") as f:
@@ -76,7 +83,6 @@ def register(bot):
                 "🏆 /leaderboard"
             )
 
-
     @bot.message_handler(commands=['cancel_join'])
     def join_cancel(msg):
         uid = str(msg.from_user.id)
@@ -87,6 +93,4 @@ def register(bot):
         else:
             bot.reply_to(msg, "אין הרשמה פעילה.")
 
-
 print("join handler loaded")
-
