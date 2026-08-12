@@ -1,4 +1,4 @@
-from openai import OpenAI
+﻿from openai import OpenAI
 import os
 import json
 import requests
@@ -107,18 +107,18 @@ def query_llm_with_context(question, uid=None):
         # SYSTEM IDENTITY
 
         if any(x in q for x in [
-            "מי אתה",
+            "׳׳™ ׳׳×׳”",
             "what are you",
             "who are you",
-            "מה אתה"
+            "׳׳” ׳׳×׳”"
         ]):
-            return "אני SLH OS AI assistant. אני המערכת החכמה של SLH OS."
+            return "׳׳ ׳™ SLH OS AI assistant. ׳׳ ׳™ ׳”׳׳¢׳¨׳›׳× ׳”׳—׳›׳׳” ׳©׳ SLH OS."
 
 
         # OWNER IDENTITY
 
         if any(x in q for x in [
-            "מי אני",
+            "׳׳™ ׳׳ ׳™",
             "who am i",
             "my identity",
             "identity"
@@ -126,11 +126,11 @@ def query_llm_with_context(question, uid=None):
 
             if user.get("role") == "OWNER":
                 return (
-                    f"אתה {user.get('name')} — "
-                    "OWNER של SLH OS."
+                    f"׳׳×׳” {user.get('name')} ג€” "
+                    "OWNER ׳©׳ SLH OS."
                 )
 
-            return f"אתה {user.get('name','unknown')}."
+            return f"׳׳×׳” {user.get('name','unknown')}."
 
 
         # NAME
@@ -138,26 +138,26 @@ def query_llm_with_context(question, uid=None):
         if any(x in q for x in [
             "name",
             "my name",
-            "מה השם שלי",
-            "איך קוראים לי"
+            "׳׳” ׳”׳©׳ ׳©׳׳™",
+            "׳׳™׳ ׳§׳•׳¨׳׳™׳ ׳׳™"
         ]):
 
-            return f"השם שלך הוא: {user.get('name','unknown')}"
+            return f"׳”׳©׳ ׳©׳׳ ׳”׳•׳: {user.get('name','unknown')}"
 
 
         # ROLE
 
         if any(x in q for x in [
-            "מה התפקיד שלי",
-            "מה תפקידי",
-            "מה התפקיד שלי במערכת",
+            "׳׳” ׳”׳×׳₪׳§׳™׳“ ׳©׳׳™",
+            "׳׳” ׳×׳₪׳§׳™׳“׳™",
+            "׳׳” ׳”׳×׳₪׳§׳™׳“ ׳©׳׳™ ׳‘׳׳¢׳¨׳›׳×",
             "what is my role",
             "my role",
             "my permission",
-            "הרשאה שלי"
+            "׳”׳¨׳©׳׳” ׳©׳׳™"
         ]):
 
-            return f"התפקיד שלך הוא: {user.get('role','unknown')}"
+            return f"׳”׳×׳₪׳§׳™׳“ ׳©׳׳ ׳”׳•׳: {user.get('role','unknown')}"
 
 
         # WALLET
@@ -167,12 +167,12 @@ def query_llm_with_context(question, uid=None):
             "credits",
             "wallet",
             "balance",
-            "קרדיט",
-            "יתרה"
+            "׳§׳¨׳“׳™׳˜",
+            "׳™׳×׳¨׳”"
         ]):
 
             return (
-                "הקרדיטים שלך: "
+                "׳”׳§׳¨׳“׳™׳˜׳™׳ ׳©׳׳: "
                 + str(
                     user.get("wallet", {})
                     .get("credits", 0)
@@ -185,8 +185,8 @@ def query_llm_with_context(question, uid=None):
         if any(x in q for x in [
             "agent",
             "agents",
-            "סוכן",
-            "סוכנים"
+            "׳¡׳•׳›׳",
+            "׳¡׳•׳›׳ ׳™׳"
         ]):
 
             names = [
@@ -195,7 +195,7 @@ def query_llm_with_context(question, uid=None):
             ]
 
             return (
-                f"סוכנים פעילים: {len(agents)}\n"
+                f"׳¡׳•׳›׳ ׳™׳ ׳₪׳¢׳™׳׳™׳: {len(agents)}\n"
                 + ", ".join(names)
             )
 
@@ -260,7 +260,17 @@ USER QUESTION:
 """
 
 
-    return ask_groq(prompt)
+    try:
+        return ask_groq(prompt)
+    except Exception:
+        time.sleep(1)
+        try:
+            return ask_groq(prompt)
+        except Exception:
+            try:
+                return ask_gemini(prompt)
+            except Exception:
+                return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
 
 
 
@@ -269,3 +279,4 @@ def register(bot):
 
 
 print("LLM MODULE LOADED FROM:", __file__)
+
