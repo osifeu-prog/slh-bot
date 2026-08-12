@@ -1,4 +1,4 @@
-﻿{
+{
     "plugins":  [
                     {
                         "id":  "health_check",
@@ -40,3 +40,4 @@
                       "health_check"
                   ]
 }
+
