@@ -38,7 +38,7 @@ def register(bot):
 
             m,
 
-            show_leaderboard()
+            safe_clip(show_leaderboard())
 
         )
 
