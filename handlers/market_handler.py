@@ -12,6 +12,7 @@ def register(bot, context=None):
     @bot.message_handler(commands=["market", "marketplace", "store"])
     def market(m):
         store = load_store()
+    print('MARKET DEBUG STORE:', store)
         lines = [
             f"• {p['name']} ({p['id']}) - 💎{p['price']} [{p['installs']} installs]"
             for p in store.get("plugins", [])
