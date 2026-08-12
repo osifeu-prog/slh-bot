@@ -6,7 +6,7 @@
         "joined": "2026-08-07T22:43:47.559294"
       },
       "wallet": {
-        "credits": 1440
+        "credits": 1450
       },
       "academy": {
         "courses": {
@@ -39,7 +39,9 @@
         "exec",
         "deploy",
         "restart"
-      ]
+      ],
+      "telegram_name": "Osif",
+      "display_name": "Osif"
     },
     "224223270": {
       "role": "USER",
