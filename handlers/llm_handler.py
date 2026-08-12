@@ -71,6 +71,14 @@ def ask_groq(prompt):
     except Exception as e:
 
         if "429" in str(e):
+            gemini_result = ask_gemini(prompt)
+
+            if (
+                not gemini_result.startswith("Gemini Error")
+                and gemini_result != "GEMINI_API_KEY missing"
+            ):
+                return gemini_result
+
             return "SLH AI temporarily busy. Please try again in a few seconds."
 
         return f"LLM Error: {e}"
