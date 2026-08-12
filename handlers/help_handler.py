@@ -1,72 +1,73 @@
-def register(bot):
+﻿def register(bot):
     @bot.message_handler(commands=['help'])
     def help_cmd(msg):
-        text = """נ“˜ SLH Commands
+        text = """׳ ֲג€ֻ SLH Commands
 
-נ‘₪ Account
-/start ג€“ Welcome
-/join ג€“ Register
-/me ג€“ Your profile
-/profile ג€“ Detailed profile
+׳ ֲג€˜ג‚× Account
+/start ׳’ג‚¬ג€ Welcome
+/join ׳’ג‚¬ג€ Register
+/me ׳’ג‚¬ג€ Your profile
+/profile ׳’ג‚¬ג€ Detailed profile
 
-נ“ Learning
-/courses ג€“ List courses
-/course_slh ג€“ SLH course
-/lesson ג€“ Start lesson
-/finish ג€“ Finish lesson
-/progress ג€“ Your progress
-/map ג€“ Learning map
+׳ ֲג€ֲ Learning
+/courses ׳’ג‚¬ג€ List courses
+/course_slh ׳’ג‚¬ג€ SLH course
+/lesson ׳’ג‚¬ג€ Start lesson
+/finish ׳’ג‚¬ג€ Finish lesson
+/progress ׳’ג‚¬ג€ Your progress
+/map ׳’ג‚¬ג€ Learning map
 
-נ₪– Agents
-/agents ג€“ List agents
-/agent_create <name> ג€“ Create agent
-/agent_delete <id> ג€“ Delete agent
-/agentstate <prefix> <state> ג€“ Set state
-/sendagent <prefix> <msg> ג€“ Send message
-/inbox <prefix> ג€“ Check inbox
+׳ ֲג‚×ג€“ Agents
+/agents ׳’ג‚¬ג€ List agents
+/agent_create <name> ׳’ג‚¬ג€ Create agent
+/agent_delete <id> ׳’ג‚¬ג€ Delete agent
+/agentstate <prefix> <state> ׳’ג‚¬ג€ Set state
+/sendagent <prefix> <msg> ׳’ג‚¬ג€ Send message
+/inbox <prefix> ׳’ג‚¬ג€ Check inbox
 
-נ’° Economy
-/balance ג€“ Check balance
-/pay ג€“ Make payment
-/buy ג€“ Purchase items
-/revenue ג€“ Revenue status
+׳ ֲג€™ֲ° Economy
+/balance ׳’ג‚¬ג€ Check balance
+/pay ׳’ג‚¬ג€ Make payment
+/buy ׳’ג‚¬ג€ Purchase items
+/revenue ׳’ג‚¬ג€ Revenue status
 
-נ“‹ Tasks & Missions
-/task ג€“ Manage tasks
-/task_add ג€“ Add task
-/mission ג€“ Mission control
-/complete ג€“ Mark complete
+׳ ֲג€ג€¹ Tasks & Missions
+/task ׳’ג‚¬ג€ Manage tasks
+/task_add ׳’ג‚¬ג€ Add task
+/mission ׳’ג‚¬ג€ Mission control
+/complete ׳’ג‚¬ג€ Mark complete
 
-נ—³ Voting
-/vote <id> <yes/no> ג€“ Vote
-/propose <text> ג€“ Create proposal
-/tally <id> ג€“ Show results
+׳ ֲג€”ֲ³ Voting
+/vote <id> <yes/no> ׳’ג‚¬ג€ Vote
+/propose <text> ׳’ג‚¬ג€ Create proposal
+/tally <id> ׳’ג‚¬ג€ Show results
 
-נ“¡ Devices
+׳ ֲג€ֲ¡ Devices
 /device_register <name>
 /device_list
 /device_status <id>
 /device_delete <id>
 /device_heartbeat
 
-נ† Leaderboard
-/top ג€“ Top learners
+׳ ֲֲג€  Leaderboard
+/top ׳’ג‚¬ג€ Top learners
 
-נ›  Admin
-/admin ג€“ Admin panel
+׳ ֲג€÷ֲ  Admin
+/admin ׳’ג‚¬ג€ Admin panel
 /exec  - Shell (admin)
 /autoexec - Execute admin command batches
-/backup ג€“ Backup DB
-/megadiag ג€“ Full diagnostic
-/health ג€“ Health check
-/status ג€“ System status
-/deploy ג€“ Trigger deploy
+/backup ׳’ג‚¬ג€ Backup DB
+/megadiag ׳’ג‚¬ג€ Full diagnostic
+/health ׳’ג‚¬ג€ Health check
+/status ׳’ג‚¬ג€ System status
+/deploy ׳’ג‚¬ג€ Trigger deploy
 
-נ’¬ Ask & Help
-/ask <question> ג€“ Ask AI
-/help ג€“ This menu
+׳ ֲג€™ֲ¬ Ask & Help
+/ask <question> ׳’ג‚¬ג€ Ask AI
+/help ׳’ג‚¬ג€ This menu
 """
-        bot.reply_to(msg, text)
+        bot.reply_to(msg, text[:4000])
+
 
 
 
