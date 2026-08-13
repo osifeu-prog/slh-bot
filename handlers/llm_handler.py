@@ -41,6 +41,26 @@ def ask_gemini(prompt):
         return f"Gemini Error: {e}"
 
 
+
+
+def _looks_like_error(text):
+    if not isinstance(text, str):
+        return False
+    t = text.lower()
+    markers = [
+        "rate limited", "quota", "429", "error", "traceback",
+        "unavailable", "missing", "exceeded", "resource"
+    ]
+    return any(m in t for m in markers)
+
+
+def _friendly_fallback():
+    return (
+        "🟡 מנוע ה-AI עמוס כרגע.\n"
+        "הליבה של SLH OS פעילה.\n"
+        "נסה שוב בעוד דקה."
+    )
+
 def ask_groq(prompt):
     global client
 
@@ -268,7 +288,10 @@ USER QUESTION:
             return ask_groq(prompt)
         except Exception:
             try:
-                return ask_gemini(prompt)
+                result = ask_gemini(prompt)
+    if _looks_like_error(result):
+        return _friendly_fallback()
+    return result
             except Exception:
                 return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
 
