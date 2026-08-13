@@ -34,3 +34,8 @@ def reward(uid, credits=0, points=0):
         )
 
     return result
+
+
+def spend(uid, amount, reason=None):
+    """Alias for spend_credits to match store/engine.py imports."""
+    return spend_credits(uid, amount)

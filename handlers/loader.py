@@ -16,6 +16,7 @@ def load_handlers(bot, context):
         ("payment", "handlers.payment_handler"),
         ("econ", "econ_handler"),
         ("wallet", "handlers.wallet_handler"),
+        ("store", "handlers.store_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
         ("academy", "handlers.academy_handler"),
