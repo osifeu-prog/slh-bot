@@ -1,7 +1,56 @@
 {
   "version": 1,
   "source_of_truth": "state/db.json",
-  "agents_registry": {},
+  "agents_registry": {
+    "1": {
+      "id": "1",
+      "name": "SystemGuard",
+      "state": "active",
+      "role": "security",
+      "owner_id": "8789977826",
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "2": {
+      "id": "2",
+      "name": "DoctorAgent",
+      "state": "active",
+      "role": "doctor",
+      "owner_id": "8789977826",
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "3": {
+      "id": "3",
+      "name": "SyncAgent",
+      "state": "active",
+      "role": "sync",
+      "owner_id": "8789977826",
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "4": {
+      "id": "4",
+      "name": "TokenAgent",
+      "state": "idle",
+      "role": "token",
+      "owner_id": "8789977826",
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "created": "2026-08-07T22:43:47"
+    }
+  },
   "proposals": [],
   "individual_votes": {},
   "individual_agent_votes": {}
