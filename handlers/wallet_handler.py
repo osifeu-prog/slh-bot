@@ -15,10 +15,10 @@ def register(bot):
         token_balance = wallet.get("token_balance", 0)
 
         text = (
-            "?? SLH Wallet\n\n"
-            f"?? User: {uid}\n"
-            f"?? Credits: {credits}\n"
-            f"?? Token Balance: {token_balance}\n"
+            "💰 SLH Wallet\n\n"
+            f"👤 User: {uid}\n"
+            f"💳 Credits: {credits}\n"
+            f"🪙 Token Balance: {token_balance}\n"
         )
 
         bot.reply_to(msg, text)
