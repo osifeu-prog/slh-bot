@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone
 
-BASE_DIR = Path(file).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parents[1]
 DB_PATH = BASE_DIR / "state" / "db.json"
 FIREWALL_LOG = BASE_DIR / "state" / "firewall.jsonl"
 
