@@ -1,12 +1,10 @@
-from aiogram import types
-
-
 def register(bot, context=None):
 
     @bot.message_handler(commands=['gov_status'])
-    async def gov_status(message):
+    def gov_status(message):
 
-        await message.answer(
+        bot.send_message(
+            message.chat.id,
             '🏛 SLH Governance Online\n'
             'Source: state/db.json\n'
             'Status: foundation ready'
