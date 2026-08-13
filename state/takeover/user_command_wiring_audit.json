@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-08-06T14:43:22.396213+00:00",
+  "generated_at": "2026-08-13T16:52:25.596927+00:00",
   "total_commands": 13,
   "results": [
     {
@@ -15,6 +15,10 @@
       "handlers": [
         {
           "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         },
         {
@@ -42,11 +46,19 @@
           "class": "OTHER"
         },
         {
+          "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+          "class": "OTHER"
+        },
+        {
           "file": "core\\ask_router.py",
           "class": "OTHER"
         },
         {
           "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         },
         {
@@ -62,6 +74,10 @@
       "handlers": [
         {
           "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         }
       ],
@@ -85,6 +101,10 @@
         },
         {
           "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         }
       ]
@@ -164,54 +184,32 @@
         {
           "file": "SLH_ADAPTER_BACKUP_20260804_182035\\payment_handler.py",
           "class": "OTHER"
-        },
-        {
-          "file": "state\\startup.py",
-          "class": "OTHER"
         }
       ]
     },
     {
       "command": "/register",
-      "status": "HANDLER_ONLY",
+      "status": "NOT_FOUND",
       "active_entrypoints": [],
-      "handlers": [
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        }
-      ],
+      "handlers": [],
       "legacy_or_core": [],
       "all_mentions": [
         {
           "file": "help_handler.py",
           "class": "OTHER"
-        },
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
         }
       ]
     },
     {
       "command": "/user",
-      "status": "HANDLER_ONLY",
+      "status": "NOT_FOUND",
       "active_entrypoints": [],
-      "handlers": [
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        }
-      ],
+      "handlers": [],
       "legacy_or_core": [],
       "all_mentions": [
         {
           "file": "help_handler.py",
           "class": "OTHER"
-        },
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
         }
       ]
     },
@@ -222,6 +220,10 @@
       "handlers": [
         {
           "file": "handlers\\academy_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\endday_handler.py",
           "class": "HANDLER"
         },
         {
@@ -244,34 +246,29 @@
           "class": "HANDLER"
         },
         {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
           "file": "handlers\\help_handler.py",
           "class": "HANDLER"
         },
         {
-          "file": "state\\custom_handlers\\token_wizard.py",
+          "file": "state\\custom_handlers_disabled\\token_wizard.py",
           "class": "OTHER"
         }
       ]
     },
     {
       "command": "/report",
-      "status": "HANDLER_ONLY",
+      "status": "NOT_FOUND",
       "active_entrypoints": [],
-      "handlers": [
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        }
-      ],
+      "handlers": [],
       "legacy_or_core": [],
       "all_mentions": [
         {
           "file": "help_handler.py",
           "class": "OTHER"
-        },
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
         }
       ]
     },
@@ -281,7 +278,7 @@
       "active_entrypoints": [],
       "handlers": [
         {
-          "file": "handlers\\help_handler.py",
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         }
       ],
@@ -300,8 +297,12 @@
           "class": "OTHER"
         },
         {
-          "file": "handlers\\help_handler.py",
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
+        },
+        {
+          "file": "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+          "class": "OTHER"
         }
       ]
     },
@@ -311,6 +312,10 @@
       "active_entrypoints": [],
       "handlers": [
         {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
           "file": "handlers\\help_handler.py",
           "class": "HANDLER"
         }
@@ -320,6 +325,10 @@
         {
           "file": "help_handler.py",
           "class": "OTHER"
+        },
+        {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
         },
         {
           "file": "handlers\\help_handler.py",
@@ -329,19 +338,14 @@
     },
     {
       "command": "/token",
-      "status": "WIRED_CANDIDATE",
+      "status": "ENTRYPOINT_ONLY",
       "active_entrypoints": [
         {
           "file": "bot_stable.py",
           "class": "ACTIVE_ENTRYPOINT"
         }
       ],
-      "handlers": [
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        }
-      ],
+      "handlers": [],
       "legacy_or_core": [],
       "all_mentions": [
         {
@@ -353,29 +357,24 @@
           "class": "OTHER"
         },
         {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        },
-        {
-          "file": "state\\custom_handlers\\token_handler.py",
+          "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
           "class": "OTHER"
         },
         {
-          "file": "state\\custom_handlers\\token_wizard.py",
+          "file": "state\\custom_handlers_disabled\\token_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\custom_handlers_disabled\\token_wizard.py",
           "class": "OTHER"
         }
       ]
     },
     {
       "command": "/course",
-      "status": "HANDLER_ONLY",
+      "status": "NOT_FOUND",
       "active_entrypoints": [],
-      "handlers": [
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
-        }
-      ],
+      "handlers": [],
       "legacy_or_core": [],
       "all_mentions": [
         {
@@ -385,10 +384,6 @@
         {
           "file": "help_handler.py",
           "class": "OTHER"
-        },
-        {
-          "file": "handlers\\help_handler.py",
-          "class": "HANDLER"
         }
       ]
     },
@@ -414,7 +409,7 @@
           "class": "HANDLER"
         },
         {
-          "file": "handlers\\llm_handler.py",
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         },
         {
@@ -470,7 +465,7 @@
           "class": "HANDLER"
         },
         {
-          "file": "handlers\\llm_handler.py",
+          "file": "handlers\\os_handler.py",
           "class": "HANDLER"
         },
         {

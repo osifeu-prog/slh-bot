@@ -1,8 +1,20 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-07-26T20:28:56.651070+00:00",
-  "loader": "handlers/loader.py",
+  "generated_at": "2026-08-13T16:52:30.970508+00:00",
+  "loader": "handlers\\loader.py",
   "imported_handlers": [
+    {
+      "module": "handlers.logo_handler",
+      "name": "register_logo_handler",
+      "alias": null,
+      "type": "from_import"
+    },
+    {
+      "module": "handlers.esp_handler",
+      "name": "register_esp_handler",
+      "alias": null,
+      "type": "from_import"
+    },
     {
       "module": "handlers.advanced_ask_handler",
       "name": "register_ask_handler",
@@ -11,23 +23,29 @@
     }
   ],
   "registration_calls": [
-    "register",
-    "register_ask_handler"
+    "register_ask_handler",
+    "register_esp_handler",
+    "register_handlers",
+    "register_help",
+    "register_learning_path",
+    "register_llm_handler",
+    "register_logo_handler",
+    "register_repeat_handler"
   ],
   "command_mentions": {
-    "/learn": false,
+    "/progress": false,
     "/token": false,
     "/market": false,
-    "/progress": false,
-    "/join": false,
-    "/ask": false,
-    "/user": false,
-    "/balance": false,
+    "/start": false,
     "/register": false,
+    "/join": false,
     "/help": false,
+    "/balance": false,
     "/course": false,
     "/report": false,
-    "/start": false
+    "/user": false,
+    "/ask": false,
+    "/learn": false
   },
   "safety": {
     "read_only": true,
