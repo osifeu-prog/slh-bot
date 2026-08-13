@@ -42,3 +42,5 @@ state/takeover/backups/
 
 # Local production recovery backups
 recovery-production/
+
+*.lock
