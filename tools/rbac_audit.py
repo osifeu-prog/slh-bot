@@ -10,9 +10,10 @@ EXPECTED = {
         "db_write": True,
     },
     "224223270": {
-        "exec_request": True,
-        "read_logs": True,
-        "db_read": True,
+        "restart": True,
+        "exec_request": False,
+        "read_logs": False,
+        "db_read": False,
         "deploy": False,
         "db_write": False,
     },
