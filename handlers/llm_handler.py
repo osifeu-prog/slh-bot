@@ -138,6 +138,47 @@ def query_llm_with_context(question, uid=None):
         votes = list(votes_raw.items())[-10:] if isinstance(votes_raw, dict) else votes_raw[-10:]
 
 
+        # LOCAL SYSTEM ANSWERS — no LLM required
+        if any(x in q for x in ["דוח מערכת", "מצב המערכת", "סטטוס מערכת", "system report", "system status", "מה מצב המערכת", "מה קורה במערכת"]):
+            users_count = len(db.get("users", {}))
+            tasks_count = len(db.get("tasks", {}))
+            agents = db.get("agents", {})
+            agents_count = len(agents)
+            votes_count = len(db.get("votes", {}))
+            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+            wallet = user.get("wallet", {})
+            return (
+                "🛡️ דוח מערכת SLH OS\n\n"
+                f"👤 משתמש: {user.get('name','לא ידוע')}\n"
+                f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                f"🔒 staked: {wallet.get('staked',0)}\n"
+                f"👥 משתמשים: {users_count}\n"
+                f"🤖 סוכנים: {agents_count}\n"
+                f"📋 משימות: {tasks_count}\n"
+                f"🗳️ הצבעות: {votes_count}\n"
+                f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                "✅ ליבה פעילה\n"
+                "🟡 AI חיצוני: fallback מקומי פעיל"
+            )
+
+        if any(x in q for x in ["כמה משתמשים", "כמה ארנקים", "user count"]):
+            return f"👥 משתמשים רשומים: {len(db.get('users', {}))}"
+
+        if any(x in q for x in ["כמה סוכנים", "איזה סוכנים", "agents count", "list agents"]):
+            names = ", ".join(a.get("name", "?") for a in db.get("agents", {}).values())
+            return f"🤖 סוכנים פעילים: {len(db.get('agents', {}))}\n{names}"
+
+        if any(x in q for x in ["מקור הנתונים", "data source", "מאיפה הנתונים"]):
+            return "📁 מקור הנתונים: state/db.json + state/agents.json (Railway volume)"
+
+        if any(x in q for x in ["כמה משימות", "task count"]):
+            return f"📋 משימות: {len(db.get('tasks', {}))}"
+
+        if any(x in q for x in ["כמה הצבעות", "vote count"]):
+            return f"🗳️ הצבעות: {len(db.get('votes', {}))}"
+
+
         # SYSTEM IDENTITY
 
         if any(x in q for x in [
