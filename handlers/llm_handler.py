@@ -41,6 +41,36 @@ def ask_gemini(prompt):
         return f"Gemini Error: {e}"
 
 
+
+
+def _looks_like_error(text):
+    if not isinstance(text, str):
+        return False
+
+    t = text.lower()
+
+    markers = [
+        "rate limited",
+        "rate_limit",
+        "quota",
+        "429",
+        "resource_exhausted",
+        "fallback unavailable",
+        "api key",
+        "error"
+    ]
+
+    return any(x in t for x in markers)
+
+
+def _friendly_fallback():
+    return (
+        "🟡 מנוע ה-AI עמוס כרגע.\n"
+        "הליבה של SLH OS פעילה.\n"
+        "נסה שוב בעוד דקה."
+    )
+
+
 def ask_groq(prompt):
     global client
 
@@ -80,7 +110,9 @@ def ask_groq(prompt):
             ):
                 return gemini_result
 
-            return f"Groq rate limited. Gemini fallback unavailable: {gemini_result}"
+            if _looks_like_error(gemini_result):
+                return _friendly_fallback()
+            return gemini_result
 
 
         return f"LLM Error: {e}"
