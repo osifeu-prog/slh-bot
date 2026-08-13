@@ -90,41 +90,39 @@ def register_ton_handlers(bot):
             bot.send_message(m.chat.id, "❌ Invalid amount.")
             return
 
-        # 3. Avoid double credit – check if tx_hash already used
-        db = state_manager.load_db()
-        used_txs = db.setdefault("used_ton_txs", [])
-        if tx_hash in used_txs:
-            bot.send_message(m.chat.id, "❌ This transaction was already credited.")
-            return
-
-        # 4. Calculate credits
+        # 3-5. Atomic check-and-credit: prevents double-spend under concurrent calls
         rate = settings["rate"]
         credits = round(amount_ton * rate, 2)
 
-        # 5. Add to user balance
-        user = db.setdefault("users", {}).setdefault(uid, {})
-        profile_manager.add_balance(str(uid), credits)
+        def mutate(db):
+            used_txs = db.setdefault("used_ton_txs", [])
+            if tx_hash in used_txs:
+                return None
+            user = db.setdefault("users", {}).setdefault(uid, {})
+            wallet = user.setdefault("wallet", {})
+            wallet["credits"] = wallet.get("credits", 0) + credits
+            used_txs.append(tx_hash)
+            db["used_ton_txs"] = used_txs
+            db.setdefault("transactions", []).append({
+                "uid": uid,
+                "credits": credits,
+                "type": "ton",
+                "ton_amount": amount_ton,
+                "tx_hash": tx_hash,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            return wallet["credits"]
 
-        # Mark tx as used
-        used_txs.append(tx_hash)
-        db["used_ton_txs"] = used_txs
+        new_balance = state_manager.atomic_update(mutate)
+        if new_balance is None:
+            bot.send_message(m.chat.id, "❌ This transaction was already credited.")
+            return
 
-        # Record transaction
-        db.setdefault("transactions", []).append({
-            "uid": uid,
-            "credits": credits,
-            "type": "ton",
-            "ton_amount": amount_ton,
-            "tx_hash": tx_hash,
-            "timestamp": datetime.utcnow().isoformat()
-        })
-
-        state_manager.save_db(db)
         bot.send_message(
             m.chat.id,
             f"✅ TON deposit verified! {credits} credits added.\n"
             f"Amount: {amount_ton} TON\n"
-            f"Your balance: {profile_manager.get_balance(uid)} credits."
+            f"Your balance: {new_balance} credits."
         )
 
     @bot.message_handler(commands=['ton_rate'])

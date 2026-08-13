@@ -56,3 +56,24 @@ def clear_agents():
     set_agents({})
 
 
+
+import fcntl
+
+_LOCK_PATH = DB_FILE + ".lock"
+
+
+def atomic_update(mutate_fn):
+    """
+    Safely load, mutate, and save the DB as one atomic operation.
+    mutate_fn receives the db dict, modifies it in place, and returns a result.
+    """
+    os.makedirs("state", exist_ok=True)
+    with open(_LOCK_PATH, "w") as lockfile:
+        fcntl.flock(lockfile, fcntl.LOCK_EX)
+        try:
+            db = load_db()
+            result = mutate_fn(db)
+            save_db(db)
+            return result
+        finally:
+            fcntl.flock(lockfile, fcntl.LOCK_UN)
