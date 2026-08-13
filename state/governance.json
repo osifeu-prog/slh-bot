@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "source_of_truth": "state/db.json",
+  "agents_registry": {},
+  "proposals": [],
+  "individual_votes": {},
+  "individual_agent_votes": {}
+}

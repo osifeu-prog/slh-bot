@@ -3,6 +3,7 @@ import os
 
 from core import profile_manager
 from core import economy_bridge
+from core import reward_engine
 
 
 COURSE_FILE = "courses.json"
@@ -68,7 +69,7 @@ def complete_stage(uid, course_id, stage):
     )
 
 
-    reward = economy_bridge.reward(
+    reward = reward_engine.grant(
         uid,
         credits=10,
         points=25
