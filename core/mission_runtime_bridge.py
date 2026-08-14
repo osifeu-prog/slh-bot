@@ -1,4 +1,4 @@
-from core.mission_lifecycle import MissionLifecycleService
+﻿from core.mission_lifecycle import MissionLifecycleService
 from core.kernel import SLHKernel
 from core.runtime import Runtime
 from core.agent_factory import load_agents_into_kernel
@@ -21,7 +21,7 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
         return {"status": "missing", "mission_id": str(mission_id)}
 
     status = MissionStateNormalizer.normalize(mission.get("status"))
-    assigned_agent = mission.get("assigned_to")
+    assigned_agent_id = mission.get("assigned_to")
 
     if status == "open":
         return {
@@ -30,9 +30,6 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
             "reason": "mission is open, assign an agent first",
         }
 
-    if status == "assigned":
-        lifecycle.execute_mission(mission_id=mission_id)
-
     if status not in ("assigned", "executed"):
         return {
             "status": "blocked",
@@ -40,15 +37,26 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
             "reason": f"mission status is {status}, cannot execute",
         }
 
-    if not assigned_agent:
+    if not assigned_agent_id:
         return {
             "status": "blocked",
             "mission_id": str(mission_id),
             "reason": "no assigned_agent",
         }
 
+    agent = lifecycle.find_agent(manifest, assigned_agent_id)
+
+    if agent is None:
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "assigned agent not found in manifest",
+        }
+
+    agent_name = agent.get("name") or str(assigned_agent_id)
+
     event = {
-        "cmd": f"{assigned_agent}:execute_mission",
+        "cmd": f"{agent_name}:execute_mission",
         "mission_id": str(mission_id),
         "source": "mission_runtime_bridge",
     }
@@ -56,6 +64,8 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
     execution_result = runtime.execute(event)
 
     if isinstance(execution_result, dict) and execution_result.get("type") == "agent":
+        if status == "assigned":
+            lifecycle.execute_mission(mission_id=mission_id)
         lifecycle.complete_mission(mission_id=mission_id)
         lifecycle_result = {
             "status": "completed",
@@ -69,7 +79,8 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
 
     return {
         "mission_id": str(mission_id),
-        "assigned_agent": assigned_agent,
+        "assigned_agent": agent_name,
+        "assigned_agent_id": assigned_agent_id,
         "execution_result": execution_result,
         "lifecycle_result": lifecycle_result,
     }
