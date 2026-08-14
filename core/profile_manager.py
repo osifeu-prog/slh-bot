@@ -62,11 +62,19 @@ def get_user(uid):
     if uid not in users:
 
         users[uid]={
+            "name": f"User{uid}",
+            "display_name": f"User{uid}",
+            "telegram_name": f"User{uid}",
+            "role": "student",
+            "joined": False,
+            "permissions": [],
             "profile":{
                 "created":datetime.utcnow().isoformat()
             },
             "wallet":{
-                "credits":0
+                "credits":0,
+                "staked":0,
+                "token_balance":0
             },
             "academy":{
                 "courses":{}
