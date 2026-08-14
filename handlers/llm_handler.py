@@ -1,4 +1,4 @@
-﻿from openai import OpenAI
+from openai import OpenAI
 import os
 import json
 import requests
@@ -138,6 +138,33 @@ def query_llm_with_context(question, uid=None):
         votes = list(votes_raw.items())[-10:] if isinstance(votes_raw, dict) else votes_raw[-10:]
 
 
+        if any(x in q for x in ["מה השם", "שם שלי", "מי אני", "what is my name", "who am i"]):
+            from core.identity_resolver import get_display_name
+            name = get_display_name(uid) if uid else (user.get('display_name') or user.get('name') or 'לא ידוע')
+            role = user.get('role','unknown')
+            return f"👤 השם שלך הוא: {name}\n🎯 תפקיד: {role}"
+        if any(x in q for x in ["status", "סטטוס", "מצב מערכת", "דוח מערכת"]):
+            users_count = len(db.get("users", {}))
+            tasks_count = len(db.get("tasks", {}))
+            agents = db.get("agents", {})
+            agents_count = len(agents)
+            votes_count = len(db.get("votes", {}))
+            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+            wallet = user.get("wallet", {})
+            return (
+                "🛡 דוח מערכת SLH OS\n\n"
+                f"👤 משתמש: {user.get('display_name') or user.get('name') or 'לא ידוע'}\n"
+                f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                f"🔒 staked: {wallet.get('staked',0)}\n"
+                f"👥 משתמשים: {users_count}\n"
+                f"🤖 סוכנים: {agents_count}\n"
+                f"📋 משימות פעילות: {tasks_count}\n"
+                f"🗳 הצבעות: {votes_count}\n"
+                f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                "✅ ליבה פעילה\n"
+                "🟡 AI חיצוני: fallback מקומי פעיל"
+            )
         # LOCAL SYSTEM ANSWERS — no LLM required
         if any(x in q for x in ["דוח מערכת", "מצב המערכת", "סטטוס מערכת", "system report", "system status", "מה מצב המערכת", "מה קורה במערכת"]):
             users_count = len(db.get("users", {}))
