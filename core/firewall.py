@@ -17,14 +17,13 @@ def get_user(uid):
 
 
 def is_owner(uid):
-    user = get_user(uid)
-    return str(user.get("role", "")).upper() == "OWNER"
+    from security.permissions import _is_owner
+    return _is_owner(uid)
 
 
 def has_permission(uid, permission):
-    user = get_user(uid)
-    perms = user.get("permissions", []) or []
-    return permission in perms
+    from security.permissions import get_permissions
+    return permission in get_permissions(uid)
 
 
 def log_deny(uid, command, reason):
