@@ -13,6 +13,7 @@ import sys
 
 from store.engine import format_shop_message, buy_item
 from core.economy_bridge import get_balance, spend
+from core.profile_manager import user_exists
 
 
 def usage():
@@ -36,6 +37,10 @@ def main():
     if not uid:
         print("ERROR: empty UID", file=sys.stderr)
         return 2
+
+    if not user_exists(uid):
+        print("ERROR: unknown user", file=sys.stderr)
+        return 1
 
     if not cmd:
         print("ERROR: empty command", file=sys.stderr)
