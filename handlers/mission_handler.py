@@ -7,6 +7,7 @@ from core.mission_state import (
     MissionStateNormalizer
 )
 
+from core.mission_runtime_bridge import execute_mission_via_runtime
 from core.mission_lifecycle import (
     MissionLifecycleService
 )
@@ -197,6 +198,37 @@ def register(bot, context=None):
                 m,
                 f"✅ משימה #{mission_id} הושלמה!"
             )
+
+        elif action == 'run':
+
+            if len(parts) < 3:
+                bot.reply_to(m, "שימוש: /mission run <id>")
+                return
+
+            mission_id = parts[2].strip()
+
+            try:
+                result = execute_mission_via_runtime(
+                    mission_id=mission_id
+                )
+
+                bot.reply_to(
+                    m,
+                    "🔵 תוצאת הרצת משימה #"
+                    + mission_id
+                    + "\\n"
+                    + str(result)
+                )
+
+            except Exception as e:
+
+                bot.reply_to(
+                    m,
+                    "❌ שגיאה בהרצת משימה #"
+                    + mission_id
+                    + "\\n"
+                    + str(e)
+                )
 
         elif action == 'rewards':
             ledger = load_ledger()

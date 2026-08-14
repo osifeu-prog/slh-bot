@@ -110,6 +110,21 @@ class Runtime:
     def emit(self, event):
         self.q.append(event)
 
+    def execute(self, event):
+        if not isinstance(event, dict):
+            return {
+                "type": "error",
+                "data": "event must be a dictionary",
+            }
+
+        if not event.get("cmd"):
+            return {
+                "type": "error",
+                "data": "missing cmd",
+            }
+
+        return self.dispatcher.dispatch(event)
+
     def worker(self):
         while self.running:
             if not self.q:
