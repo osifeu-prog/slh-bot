@@ -39,6 +39,8 @@ def get_wallet(uid):
     return jsonify({
         "name": user.get("name", str(uid)),
         "credits": wallet.get("credits", 0),
+        "staked": wallet.get("staked", 0),
+        "token_balance": wallet.get("token_balance", 0),
         "ton_wallet": user.get("ton_wallet")
     })
 
