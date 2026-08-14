@@ -1,0 +1,24 @@
+﻿{
+    "schema":  "slh-os/launch/v1",
+    "project":  "main",
+    "status":  "BLOCKED_PENDING_SYSTEM_REPAIR",
+    "readiness_percent":  0,
+    "launch_target":  null,
+    "launch_clock":  {
+                         "days_remaining":  null,
+                         "target":  null,
+                         "hours_remaining":  null
+                     },
+    "gates":  {
+                  "architecture":  "UNKNOWN",
+                  "runtime":  "UNKNOWN",
+                  "commands":  "UNKNOWN",
+                  "database":  "UNKNOWN",
+                  "deployment":  "UNKNOWN",
+                  "security":  "UNKNOWN",
+                  "investor_path":  "UNKNOWN",
+                  "user_path":  "UNKNOWN"
+              },
+    "rule":  "No launch percentage is invented before evidence exists.",
+    "updated_at":  "2026-08-13T19:12:30.0175277Z"
+}

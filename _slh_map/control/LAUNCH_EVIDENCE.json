@@ -1,0 +1,41 @@
+﻿{
+    "architecture":  {
+                         "scan_policy_exists":  true,
+                         "control_center_exists":  true
+                     },
+    "source_integrity":  {
+                             "recursive_backup_absent":  true,
+                             "nested_slh_map_count":  0
+                         },
+    "version_control":  {
+                            "git_head_available":  true,
+                            "git_repository":  true,
+                            "working_tree_changes":  18
+                        },
+    "command_surface":  {
+                            "available":  7,
+                            "missing":  0,
+                            "total_expected":  7
+                        },
+    "runtime":  {
+                    "pyproject":  false,
+                    "package_json":  false,
+                    "railway_config":  true,
+                    "requirements":  true,
+                    "dockerfile":  false
+                },
+    "investor_path":  {
+                          "investor_path_verified":  false,
+                          "investor_control_exists":  true
+                      },
+    "user_path":  {
+                      "verified":  false
+                  },
+    "deployment":  {
+                       "deployment_verified":  false,
+                       "railway_cli_available":  true
+                   },
+    "security":  {
+                     "verified":  false
+                 }
+}

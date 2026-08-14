@@ -1,0 +1,72 @@
+﻿[
+    {
+        "file":  "requirements.txt",
+        "exists":  true,
+        "size":  131
+    },
+    {
+        "file":  "railway.json",
+        "exists":  true,
+        "size":  314
+    },
+    {
+        "file":  "railway.toml",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "Procfile",
+        "exists":  true,
+        "size":  46
+    },
+    {
+        "file":  "README.md",
+        "exists":  true,
+        "size":  716
+    },
+    {
+        "file":  ".env.example",
+        "exists":  true,
+        "size":  109
+    },
+    {
+        "file":  "bot_stable.py",
+        "exists":  true,
+        "size":  21705
+    },
+    {
+        "file":  "main.py",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "app.py",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "server.py",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "api.py",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "Dockerfile",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "docker-compose.yml",
+        "exists":  false,
+        "size":  0
+    },
+    {
+        "file":  "pyproject.toml",
+        "exists":  false,
+        "size":  0
+    }
+]

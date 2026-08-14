@@ -1,0 +1,11 @@
+{
+  "schema": "slh-system-map-summary/v2",
+  "generated_at": "2026-08-13T19:03:41.924476+00:00",
+  "files": 316,
+  "edges": 243,
+  "parse_errors": 0,
+  "entrypoint_candidates": 175,
+  "command_candidates": 21,
+  "state_read_candidates": 9,
+  "state_write_candidates": 3
+}

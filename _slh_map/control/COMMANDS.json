@@ -1,0 +1,51 @@
+﻿[
+    {
+        "command":  "slh",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     Set-Location \"C:\\Users\\USER\\slh-bot-clean\" "
+    },
+    {
+        "command":  "slhstatus",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     git status     railway status "
+    },
+    {
+        "command":  "slhmap",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     Write-Host \"===== SLH OS MAP =====\" -ForegroundColor Cyan     git log --oneline -5     railway status "
+    },
+    {
+        "command":  "slhwatch",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     Write-Host \"===== SLH WATCH =====\" -ForegroundColor Cyan     python -m compileall -q core handlers     railway status "
+    },
+    {
+        "command":  "slhjournal",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     Write-Host \"===== SLH JOURNAL =====\" -ForegroundColor Cyan     if(Test-Path \"state/journal.json\"){         Get-Content \"state/journal.json\"     }     else {         Write-Host \"No journal\"     } "
+    },
+    {
+        "command":  "slhtasks",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     Write-Host \"===== SLH TASKS =====\" -ForegroundColor Cyan     if(Test-Path \"state/tasks.json\"){         Get-Content \"state/tasks.json\"     }     else {         Write-Host \"No tasks\"     } "
+    },
+    {
+        "command":  "slhsync",
+        "available":  true,
+        "type":  "Function",
+        "source":  "",
+        "definition":  "     slh     Write-Host \"===== SLH SYNC =====\" -ForegroundColor Cyan     git status     git log -1 --oneline     railway status "
+    }
+]

@@ -1,0 +1,423 @@
+﻿diff --git a/core/identity_resolver.py b/core/identity_resolver.py
+index d6ca4f2..cc6a73c 100644
+--- a/core/identity_resolver.py
++++ b/core/identity_resolver.py
+@@ -1,32 +1,32 @@
+-﻿from core.profile_manager import get_user
++from core.profile_manager import get_user
+ 
+ def get_display_name(uid, telegram_user=None):
+     """
+     SLH identity display resolver.
+     Priority:
+     1. Stored SLH profile name
+     2. User name
+     3. Telegram first_name
+     4. User fallback
+     """
+ 
+     try:
+         user = get_user(uid) or {}
+ 
+         profile = user.get("profile", {})
+         name = profile.get("name")
+ 
+         if name:
+             return name
+ 
+         name = user.get("name")
+         if name:
+             return name
+ 
+     except Exception:
+         pass
+ 
+     if telegram_user:
+         return getattr(telegram_user, "first_name", None) or "User"
+ 
+     return "User"
+diff --git a/core/keyboard_detector.py b/core/keyboard_detector.py
+index c84b43e..1151465 100644
+--- a/core/keyboard_detector.py
++++ b/core/keyboard_detector.py
+@@ -1,80 +1,80 @@
+-﻿from heb_convert import convert_to_hebrew
++from heb_convert import convert_to_hebrew
+ import re
+ 
+ COMMON_HEBREW = {
+     "האם","אפשר","את","אני","אתה",
+     "המערכת","שלום","בוט",
+     "עזרה","בדיקה","תודה",
+     "מה","איך","למה","של","עם","על",
+     "לה","הבוט","עובד","עונה",
+     "סנכרון","מערכת"
+ }
+ 
+ 
+ def looks_like_command(text):
+     return text.strip().startswith("/")
+ 
+ 
+ def contains_url(text):
+     low = text.lower()
+     return (
+         "http://" in low
+         or "https://" in low
+         or "www." in low
+     )
+ 
+ 
+ def hebrew_ratio(text):
+     if not text:
+         return 0
+ 
+     count = sum(
+         "\u0590" <= c <= "\u05FF"
+         for c in text
+     )
+ 
+     return count / len(text)
+ 
+ 
+ def hebrew_word_score(text):
+     words = re.findall(r"[\u0590-\u05FF]+", text)
+ 
+     if not words:
+         return 0
+ 
+     hits = sum(
+         1 for w in words
+         if w in COMMON_HEBREW
+     )
+ 
+     return hits / len(words)
+ 
+ 
+ def should_convert_keyboard(text):
+ 
+     if looks_like_command(text):
+         return False
+ 
+     if contains_url(text):
+         return False
+ 
+     converted = convert_to_hebrew(text)
+ 
+     if hebrew_ratio(text) > 0.1:
+         return False
+ 
+     if hebrew_ratio(converted) < 0.35:
+         return False
+ 
+     if hebrew_word_score(converted) > 0:
+         return True
+ 
+     return False
+ 
+ 
+ def normalize_keyboard_text(text):
+ 
+     if should_convert_keyboard(text):
+         return convert_to_hebrew(text)
+ 
+     return text
+diff --git a/core/message_utils.py b/core/message_utils.py
+index 685eece..1d61704 100644
+--- a/core/message_utils.py
++++ b/core/message_utils.py
+@@ -1,10 +1,10 @@
+-﻿def safe_clip(text, limit=3500):
++def safe_clip(text, limit=3500):
+     if text is None:
+         return ""
+ 
+     text = str(text)
+ 
+     if len(text) <= limit:
+         return text
+ 
+     return text[:limit] + "\n\n...[truncated]"
+diff --git a/handlers/llm_handler.py b/handlers/llm_handler.py
+index 6fe6fa5..89b1518 100644
+--- a/handlers/llm_handler.py
++++ b/handlers/llm_handler.py
+@@ -1,81 +1,81 @@
+-﻿from openai import OpenAI
++from openai import OpenAI
+ import os
+ import json
+ import requests
+ import time
+ 
+ client = None
+ 
+ 
+ def ask_gemini(prompt):
+     key = os.getenv("GEMINI_API_KEY")
+ 
+     if not key:
+         return "GEMINI_API_KEY missing"
+ 
+     url = (
+         "https://generativelanguage.googleapis.com/"
+         "v1/models/gemini-2.5-flash:generateContent?key=" + key
+     )
+ 
+     data = {
+         "contents": [
+             {
+                 "parts": [
+                     {"text": prompt}
+                 ]
+             }
+         ]
+     }
+ 
+     try:
+         r = requests.post(url, json=data, timeout=20)
+         j = r.json()
+ 
+         if "candidates" in j:
+             return j["candidates"][0]["content"]["parts"][0]["text"]
+ 
+         return "Gemini Error: " + str(j)
+ 
+     except Exception as e:
+         return f"Gemini Error: {e}"
+ 
+ 
+ 
+ 
+ def _looks_like_error(text):
+     if not isinstance(text, str):
+         return False
+ 
+     t = text.lower()
+ 
+     markers = [
+         "rate limited",
+         "rate_limit",
+         "quota",
+         "429",
+         "resource_exhausted",
+         "fallback unavailable",
+         "api key",
+         "error"
+     ]
+ 
+     return any(x in t for x in markers)
+ 
+ 
+ def _friendly_fallback():
+     return (
+         "🟡 מנוע ה-AI עמוס כרגע.\n"
+         "הליבה של SLH OS פעילה.\n"
+         "נסה שוב בעוד דקה."
+     )
+ 
+ 
+ def ask_groq(prompt):
+     global client
+ 
+     try:
+         if client is None:
+             key = os.getenv("GROQ_API_KEY")
+ 
+             if not key:
+diff --git a/store/grant_engine.py b/store/grant_engine.py
+index b93d8c9..2087108 100644
+--- a/store/grant_engine.py
++++ b/store/grant_engine.py
+@@ -1,32 +1,32 @@
+-﻿from core import profile_manager
++from core import profile_manager
+ 
+ 
+ def apply_grant(uid, grant):
+     user = profile_manager.get_user(uid)
+ 
+     if "permission" in grant:
+         perms = user.get("permissions", [])
+ 
+         if grant["permission"] not in perms:
+             perms.append(grant["permission"])
+ 
+         profile_manager.update_user(uid, {
+             "permissions": perms
+         })
+ 
+         return {
+             "type": "permission",
+             "value": grant["permission"]
+         }
+ 
+     if "course" in grant:
+         profile_manager.update_user(uid, {
+             "active_course": grant["course"]
+         })
+ 
+         return {
+             "type": "course",
+             "value": grant["course"]
+         }
+ 
+     return None
+diff --git a/store/purchase_service.py b/store/purchase_service.py
+index e552024..651434f 100644
+--- a/store/purchase_service.py
++++ b/store/purchase_service.py
+@@ -1,65 +1,65 @@
+-﻿import json
++import json
+ from datetime import datetime
+ 
+ from store.engine import load_items
+ from core.economy_bridge import get_balance, spend
+ from store.grant_engine import apply_grant
+ 
+ 
+ LEDGER_FILE = "state/rewards_ledger.json"
+ 
+ 
+ def load_ledger():
+     try:
+         return json.load(open(LEDGER_FILE, encoding="utf-8-sig"))
+     except:
+         return []
+ 
+ 
+ def save_ledger(data):
+     with open(LEDGER_FILE, "w", encoding="utf-8") as f:
+         json.dump(data, f, indent=2, ensure_ascii=False)
+ 
+ 
+ def purchase(uid, item_id):
+ 
+     items = load_items()
+ 
+     if item_id not in items:
+         return False, "ITEM_NOT_FOUND"
+ 
+     item = items[item_id]
+     price = item.get("price", 0)
+ 
+     balance = get_balance(uid)
+ 
+     if balance < price:
+         return False, "NOT_ENOUGH_SLH"
+ 
+     result = spend(uid, price)
+ 
+     if result is False:
+         return False, "PAYMENT_FAILED"
+ 
+     grant_result = None
+ 
+     if "grant" in item:
+         grant_result = apply_grant(uid, item["grant"])
+ 
+     ledger = load_ledger()
+ 
+     ledger.append({
+         "user_id": str(uid),
+         "item": item_id,
+         "amount": price,
+         "grant": grant_result,
+         "timestamp": datetime.utcnow().isoformat()
+     })
+ 
+     save_ledger(ledger)
+ 
+     return True, {
+         "item": item["name"],
+         "paid": price,
+         "grant": grant_result
+     }
+diff --git a/tools/slh_launch_check.py b/tools/slh_launch_check.py
+index 4046fba..4cd28bb 100644
+--- a/tools/slh_launch_check.py
++++ b/tools/slh_launch_check.py
+@@ -1,81 +1,81 @@
+-﻿from pathlib import Path
++from pathlib import Path
+ import subprocess
+ import json
+ import sys
+ 
+ ROOT = Path(__file__).resolve().parent.parent
+ sys.path.insert(0, str(ROOT))
+ 
+ print("=== SLH OS LAUNCH CHECK ===")
+ 
+ errors = []
+ 
+ print("\n[1] COMPILE")
+ r = subprocess.run(
+     [sys.executable, "-m", "compileall", "-q", "."],
+     capture_output=True,
+     text=True
+ )
+ 
+ print("OK" if r.returncode == 0 else "FAIL")
+ 
+ if r.returncode != 0:
+     errors.append("compile")
+ 
+ 
+ print("\n[2] IMPORTS")
+ 
+ try:
+     import handlers.loader
+     import core.kernel
+     import core.agent_registry
+     print("OK")
+ except Exception as e:
+     print("FAIL:", e)
+     errors.append("imports")
+ 
+ 
+ print("\n[3] HANDLERS")
+ 
+ print("count:", len(list(Path("handlers").glob("*.py"))))
+ 
+ 
+ print("\n[4] AGENTS")
+ 
+ try:
+     import core.agent_registry as r
+     agents = r.STORE.get_all()
+     print("count:", len(agents))
+ except Exception as e:
+     print("FAIL:", e)
+     errors.append("agents")
+ 
+ 
+ print("\n[5] AI HEALTH")
+ 
+ health = Path("state/ai_health.json")
+ 
+ if health.exists():
+     print(json.dumps(
+         json.loads(health.read_text(encoding="utf-8")),
+         indent=2
+     ))
+ else:
+     print("missing")
+ 
+ 
+ print("\n[6] GIT")
+ 
+ subprocess.run(["git", "status", "--short"])
+ 
+ print(subprocess.check_output(
+     ["git", "log", "-1", "--oneline"],
+     text=True
+ ).strip())
+ 
+ 
+ print("\n====================")
+ 
+ if errors:
+     print("STATUS: NOT READY")
+     print(errors)

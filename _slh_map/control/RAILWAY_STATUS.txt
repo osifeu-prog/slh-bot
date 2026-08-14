@@ -1,0 +1,27 @@
+﻿
+Workspace:       osifeu-prog's Projects
+
+Project:         endearing-amazement
+Project ID:      fd30fefb-3d35-48a5-a7cb-e05337e812c4
+
+Environment:     production
+Environment ID:  661caa13-83cb-4197-8825-943bebf96c5a
+
+Linked service
+
+web
+    status:        ● Online
+    repo:          osifeu-prog/slh-bot
+    url:           https://web-production-22f28.up.railway.app
+    volume:        web-volume · /app/state · 0.1 GB / 4.9 GB
+    region:        US West
+    deployment ID: aeba27d5-22b8-49ef-b5a7-ce767701d848
+    service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
+
+────────────────────────────────────────────────
+
+All resources
+
+    Services
+      - web: ● Online · https://web-production-22f28.up.railway.app · web-volume
+
