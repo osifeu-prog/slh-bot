@@ -74,6 +74,7 @@ def load_handlers(bot, context):
         ("test", "test_handler"),
         ("tutorial", "tutorial_handler"),
         ("viewfile", "viewfile_handler"),
+        ("devsetup", "devsetup_handler"),
     ]
 
     import importlib
