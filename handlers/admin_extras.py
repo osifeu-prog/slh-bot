@@ -15,11 +15,11 @@ def register(bot, context):
     @bot.message_handler(commands=['status'])
     def status(m):
         env = os.environ.get("RAILWAY_ENVIRONMENT", "local")
-        bot.reply_to(m, f"נ¢ SLH Bot Online | Railway: {env} | /admin for more")
+        bot.reply_to(m, f"🟢 SLH Bot Online | Railway: {env} | /admin for more")
 
     @bot.message_handler(commands=['megadiag'])
     def megadiag(m):
-        lines = ["נ“ MEGA DIAGNOSTICS", ""]
+        lines = ["📊 MEGA DIAGNOSTICS", ""]
         lines.append("Disk usage:")
         try:
             import shutil
@@ -51,11 +51,11 @@ def register(bot, context):
                     count += 1
                 except:
                     pass
-        bot.reply_to(m, f"נ§¹ Cleaned {count} temp files")
+        bot.reply_to(m, f"🧹 Cleaned {count} temp files")
 
     @bot.message_handler(commands=['results'])
     def results(m):
-        bot.reply_to(m, "נ“ No active vote. (voting engine not connected)")
+        bot.reply_to(m, "🗳 No active vote. (voting engine not connected)")
 
     print("ג… admin_extras loaded")
 
