@@ -44,3 +44,9 @@ state/takeover/backups/
 recovery-production/
 
 *.lock
+*.bak_*
+*.before_*
+state/db_backup_*
+state/db_before_*
+state/db.json.bak_*
+*.lock

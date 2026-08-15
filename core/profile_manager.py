@@ -51,6 +51,13 @@ def deep_merge(target, source):
 
 
 
+def user_exists(uid):
+    """Read-only existence check. Never creates or saves a user."""
+    uid = str(uid)
+    db = load_db()
+    return uid in db.get("users", {})
+
+
 def get_user(uid):
 
     uid=str(uid)
