@@ -1,0 +1,217 @@
+﻿
+### SEARCH: bot.infinity_polling
+
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:11:C:\Users\USER\slh-bot-clean\bot_gateway.py                                      149             bot.infinity_polling...
+AUDIT_20260813_FULL/PHASE_1_RUNTIME/01_bot_gateway.txt:149:            bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+SLH_AUDIT_20260813_201938.txt:3260:bot_gateway.py:149: bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+SLH_AUDIT_20260813_201938.txt:3325:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:116: bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+SLH_AUDIT_20260813_201938.txt:4887:ENTRYPOINT_AUDIT.txt:9: railway_bot_gateway.py:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+SLH_AUDIT_20260813_201938.txt:7022:SLH_AUDIT_20260813_201938.txt:4887: ENTRYPOINT_AUDIT.txt:9: railway_bot_gateway.py:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+_slh_map/scans/2026-08-13T185445_579625Z00/system_map.json:948:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T185445_579625Z00/system_map.json:12569:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T185827_160181Z00/system_map.json:949:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T185827_160181Z00/system_map.json:12727:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190214_435023Z00/system_map.json:949:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190214_435023Z00/system_map.json:12833:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190226_486126Z00/system_map.json:949:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190226_486126Z00/system_map.json:12833:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190341_924476Z00/system_map.json:949:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190341_924476Z00/system_map.json:12833:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190652_301937Z00/system_map.json:947:        "bot.infinity_polling",
+_slh_map/scans/2026-08-13T190652_301937Z00/system_map.json:12784:        "bot.infinity_polling",
+_slh_map/scans/DNA_EXPORT_20260813_215957/system_map.json:949:        "bot.infinity_polling",
+_slh_map/scans/DNA_EXPORT_20260813_215957/system_map.json:12727:        "bot.infinity_polling",
+_slh_map/system_map.json:947:        "bot.infinity_polling",
+_slh_map/system_map.json:12784:        "bot.infinity_polling",
+bot_gateway.py:149:            bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+bot_gateway.py.bak_before_namefix:33:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_gateway.py.before_fix:33:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_stable.py.backup_before_remove_legacy_ask:982:        bot.infinity_polling(
+bot_stable.py.backup_remove_ask:982:        bot.infinity_polling(
+bot_stable.py.before_loader_cleanup:1002:        bot.infinity_polling(
+bot_stable.py.before_logs_cleanup:994:        bot.infinity_polling(
+bot_stable.py.before_logs_remove_final:994:        bot.infinity_polling(
+bot_stable.py.pre_context_import_fix:1002:        bot.infinity_polling(
+bot_stable.py.pre_eventbus_fix:1003:        bot.infinity_polling(
+bot_stable.py.pre_mission_import_fix:1002:        bot.infinity_polling(
+final_fix.sh.disabled:26:# Add handler before bot.infinity_polling()
+final_fix.sh.disabled:34:        if "bot.infinity_polling()" in line:
+railway_bot_gateway.py.disabled:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+telegram_owner_check.sh:19:grep -n "bot.infinity_polling" bot_stable.py
+
+### SEARCH: bot.polling
+
+SLH_AUDIT_20260813_201938.txt:3309:archive\legacy_clients\agent_client_termux.py:79: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:3313:archive\legacy_economy\app.py:52: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:3316:archive\legacy_economy\railway_bot.py:38: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:4886:ENTRYPOINT_AUDIT.txt:8: railway_bot.py:38:bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:4957:GIT_ADMIN_SEARCH.txt:89: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:4965:GIT_ASK_SEARCH.txt:203: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:4995:GIT_BOT_TOKEN_HISTORY.txt:173: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5013:GIT_ECON_PAY.txt:77: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5018:GIT_EVENTBUS_HISTORY.txt:131: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5089:GIT_HISTORY_GRAPH.txt:307: * 9785be0 Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5188:GIT_PROJECT_SEARCH.txt:23: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5199:GIT_RAILWAY_HISTORY.txt:185: Fix local bot polling conflict with Railway (409) + cleanup
+SLH_AUDIT_20260813_201938.txt:5957:SLH_AUDIT_20260813_201938.txt:3316: archive\legacy_economy\railway_bot.py:38: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:7021:SLH_AUDIT_20260813_201938.txt:4886: ENTRYPOINT_AUDIT.txt:8: railway_bot.py:38:bot.polling(none_stop=True)
+archive/legacy_clients/agent_client_termux.py:79:bot.polling(none_stop=True)
+archive/legacy_economy/app.py:52:        bot.polling(none_stop=True)
+archive/legacy_economy/railway_bot.py:38:bot.polling(none_stop=True)
+bot.py.legacy_disabled:38:bot.polling(none_stop=True)
+
+### SEARCH: getUpdates
+
+SLH_AUDIT_20260813_201938.txt:7151:SLH_DISCOVERY_20260802_211429.txt:1652: docs\SLH_RAILWAY_SNAPSHOT_20260708.md:Multiple getUpdates consumers using same BOT_TOKEN
+SLH_AUDIT_20260813_201938.txt:7159:SLH_DISCOVERY_20260802_211429.txt:1684: slh-bot\docs\SLH_RAILWAY_SNAPSHOT_20260708.md:Multiple getUpdates consumers using same BOT_TOKEN
+SLH_AUDIT_20260813_201938.txt:7167:SLH_DISCOVERY_20260802_211429.txt:1713: slh-bot\slh-bot\docs\SLH_RAILWAY_SNAPSHOT_20260708.md:Multiple getUpdates consumers using same BOT_TOKEN
+bot_core.py:38:        BASE + "/getUpdates",
+deep_diagnostic.sh:31:    resp = urllib.request.urlopen(f"https://api.telegram.org/bot{token}/getUpdates", timeout=5)
+docs/SLH_RAILWAY_MAP.md:45:Telegram getUpdates 409 conflict detected.
+docs/SLH_RAILWAY_SNAPSHOT_20260708.md:28:Multiple getUpdates consumers using same BOT_TOKEN
+docs/SLH_REMOTE_PROJECT_INVENTORY.json:13:                            "current_issue":  "Telegram 409 Conflict caused by another getUpdates poller",
+docs/SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md:22:409 Conflict: terminated by other getUpdates request
+docs/SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md:48:- diligent-radiance / TON-MNH-bot — active getUpdates
+docs/SLH_SERVICE_OWNERSHIP_MAP_20260708.md:9:No service may call Telegram getUpdates directly
+docs/system_memory/incidents/slh_409_diag_output.txt:82:telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+docs/system_memory/incidents/slh_409_full_diag.sh:41:curl -s "https://api.telegram.org/bot${TOKEN}/getUpdates?timeout=3"
+slh_broadcast_ready_check.sh:65:for x in ["getWebhookInfo","getUpdates"]:
+slh_full_diag.sh:18:grep -RIn "infinity_polling\|polling\|getUpdates\|while True" . \
+slh_light_20260702_0118.txt:36:telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+slh_light_20260702_0118.txt:38:2026-07-02 01:03:00,916 (__init__.py:1267 MainThread) ERROR - TeleBot: "Threaded polling exception: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running"
+slh_light_20260702_0118.txt:63:telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+slh_pre_broadcast_audit.sh:49:for endpoint in ["getWebhookInfo","getUpdates"]:
+slh_prelaunch_check.sh:31:        f"https://api.telegram.org/bot{t}/getUpdates",
+slh_runtime_audit.sh:123:grep -nE "start_polling|run_polling|getUpdates|delete_webhook" bot_stable.py | head -30
+slh_safe_diag.sh:14:grep -n "infinity_polling\|getUpdates\|while True" bot_stable.py 2>/dev/null
+stable_checkpoint_20260712.sh:37:curl -s "https://api.telegram.org/bot$TOKEN/getUpdates?limit=1" >> "$OUT"
+telegram_chat_audit.py:21:url = f"https://api.telegram.org/bot{token}/getUpdates"
+
+### SEARCH: TeleBot(
+
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:13:C:\Users\USER\slh-bot-clean\bot_gateway.py                                      174         bot = telebot.TeleBot(to...
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:14:C:\Users\USER\slh-bot-clean\bot_stable.py                                        71 bot = telebot.TeleBot(TOKEN)       
+AUDIT_20260813_FULL/PHASE_1_RUNTIME/01_bot_gateway.txt:174:        bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:3262:bot_gateway.py:174: bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:3263:bot_stable.py:71: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3284:SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py:71: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3308:archive\legacy_clients\agent_client_termux.py:15: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3311:archive\legacy_economy\app.py:19: bot = telebot.TeleBot(TOKEN) if TOKEN else None
+SLH_AUDIT_20260813_201938.txt:3315:archive\legacy_economy\railway_bot.py:15: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3327:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:141: bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:5956:SLH_AUDIT_20260813_201938.txt:3315: archive\legacy_economy\railway_bot.py:15: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:8450:TELEBOT_AUDIT.txt:6: railway_bot.py:15:bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:8451:TELEBOT_AUDIT.txt:7: railway_bot_gateway.py:24:        bot = telebot.TeleBot(token, parse_mode="HTML")
+archive/legacy_clients/agent_client_termux.py:15:bot = telebot.TeleBot(TOKEN)
+archive/legacy_economy/app.py:19:bot = telebot.TeleBot(TOKEN) if TOKEN else None
+archive/legacy_economy/railway_bot.py:15:bot = telebot.TeleBot(TOKEN)
+bot.py.legacy_disabled:15:bot = telebot.TeleBot(TOKEN)
+bot_gateway.py:174:        bot = telebot.TeleBot(token, parse_mode=None)
+bot_gateway.py.bak_before_namefix:28:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_gateway.py.before_fix:28:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_stable.py:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.backup_before_remove_legacy_ask:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.backup_remove_ask:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_authority_cleanup_20260813:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_loader_cleanup:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_logs_cleanup:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_logs_remove_final:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_context_import_fix:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_eventbus_fix:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_mission_import_fix:71:bot = telebot.TeleBot(TOKEN)
+"e_mode\357\200\242":5:[35mbot_gateway.py[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+"e_mode\357\200\242":6:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+"e_mode\357\200\242":7:[35mbot_gateway.py.before_fix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+railway_bot_gateway.py.disabled:24:        bot = telebot.TeleBot(token, parse_mode="HTML")
+slh_full_doctor.sh:209:bot=telebot.TeleBot("123:test")
+system_scan.sh:33:grep -R "TeleBot(" . 2>/dev/null
+t === FIND HTML MODE ===:4:[35mbot_gateway.py[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+t === FIND HTML MODE ===:5:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+t === FIND HTML MODE ===:6:[35mbot_gateway.py.before_fix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+
+==============================
+PRODUCTION AUTHORITY
+==============================
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:11:C:\Users\USER\slh-bot-clean\bot_gateway.py                                      149             bot.infinity_polling...
+SLH_AUDIT_20260813_201938.txt:3260:bot_gateway.py:149: bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+SLH_AUDIT_20260813_201938.txt:3325:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:116: bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+SLH_AUDIT_20260813_201938.txt:4887:ENTRYPOINT_AUDIT.txt:9: railway_bot_gateway.py:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+SLH_AUDIT_20260813_201938.txt:7022:SLH_AUDIT_20260813_201938.txt:4887: ENTRYPOINT_AUDIT.txt:9: railway_bot_gateway.py:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_gateway.py:149:            bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+bot_gateway.py.bak_before_namefix:33:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_gateway.py.before_fix:33:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_stable.py.backup_before_remove_legacy_ask:982:        bot.infinity_polling(
+bot_stable.py.backup_remove_ask:982:        bot.infinity_polling(
+bot_stable.py.before_loader_cleanup:1002:        bot.infinity_polling(
+bot_stable.py.before_logs_cleanup:994:        bot.infinity_polling(
+bot_stable.py.before_logs_remove_final:994:        bot.infinity_polling(
+bot_stable.py.pre_context_import_fix:1002:        bot.infinity_polling(
+bot_stable.py.pre_eventbus_fix:1003:        bot.infinity_polling(
+bot_stable.py.pre_mission_import_fix:1002:        bot.infinity_polling(
+railway_bot_gateway.py.disabled:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+telegram_owner_check.sh:19:grep -n "bot.infinity_polling" bot_stable.py
+slh_runtime_audit.sh:123:grep -nE "start_polling|run_polling|getUpdates|delete_webhook" bot_stable.py | head -30
+slh_safe_diag.sh:14:grep -n "infinity_polling\|getUpdates\|while True" bot_stable.py 2>/dev/null
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:13:C:\Users\USER\slh-bot-clean\bot_gateway.py                                      174         bot = telebot.TeleBot(to...
+AUDIT_20260813_FULL/PHASE_1B_PRODUCTION_AUTHORITY/02_production_candidates.txt:14:C:\Users\USER\slh-bot-clean\bot_stable.py                                        71 bot = telebot.TeleBot(TOKEN)       
+SLH_AUDIT_20260813_201938.txt:3262:bot_gateway.py:174: bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:3263:bot_stable.py:71: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3284:SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py:71: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3327:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:141: bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:8451:TELEBOT_AUDIT.txt:7: railway_bot_gateway.py:24:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_gateway.py:174:        bot = telebot.TeleBot(token, parse_mode=None)
+bot_gateway.py.bak_before_namefix:28:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_gateway.py.before_fix:28:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_stable.py:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.backup_before_remove_legacy_ask:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.backup_remove_ask:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_authority_cleanup_20260813:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_loader_cleanup:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_logs_cleanup:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.before_logs_remove_final:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_context_import_fix:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_eventbus_fix:71:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.pre_mission_import_fix:71:bot = telebot.TeleBot(TOKEN)
+"e_mode\357\200\242":5:[35mbot_gateway.py[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+"e_mode\357\200\242":6:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+"e_mode\357\200\242":7:[35mbot_gateway.py.before_fix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+railway_bot_gateway.py.disabled:24:        bot = telebot.TeleBot(token, parse_mode="HTML")
+t === FIND HTML MODE ===:4:[35mbot_gateway.py[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+t === FIND HTML MODE ===:5:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+t === FIND HTML MODE ===:6:[35mbot_gateway.py.before_fix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+
+==============================
+LEGACY / NON AUTHORITY
+==============================
+SLH_AUDIT_20260813_201938.txt:3325:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:116: bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+bot_gateway.py.bak_before_namefix:33:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+bot_stable.py.backup_before_remove_legacy_ask:982:        bot.infinity_polling(
+bot_stable.py.backup_remove_ask:982:        bot.infinity_polling(
+final_fix.sh.disabled:26:# Add handler before bot.infinity_polling()
+final_fix.sh.disabled:34:        if "bot.infinity_polling()" in line:
+railway_bot_gateway.py.disabled:27:        threading.Thread(target=bot.infinity_polling, daemon=True).start()
+SLH_AUDIT_20260813_201938.txt:3309:archive\legacy_clients\agent_client_termux.py:79: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:3313:archive\legacy_economy\app.py:52: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:3316:archive\legacy_economy\railway_bot.py:38: bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:5957:SLH_AUDIT_20260813_201938.txt:3316: archive\legacy_economy\railway_bot.py:38: bot.polling(none_stop=True)
+archive/legacy_clients/agent_client_termux.py:79:bot.polling(none_stop=True)
+archive/legacy_economy/app.py:52:        bot.polling(none_stop=True)
+archive/legacy_economy/railway_bot.py:38:bot.polling(none_stop=True)
+bot.py.legacy_disabled:38:bot.polling(none_stop=True)
+SLH_AUDIT_20260813_201938.txt:3284:SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py:71: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3308:archive\legacy_clients\agent_client_termux.py:15: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3311:archive\legacy_economy\app.py:19: bot = telebot.TeleBot(TOKEN) if TOKEN else None
+SLH_AUDIT_20260813_201938.txt:3315:archive\legacy_economy\railway_bot.py:15: bot = telebot.TeleBot(TOKEN)
+SLH_AUDIT_20260813_201938.txt:3327:SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\bot_gateway.py:141: bot = telebot.TeleBot(token, parse_mode=None)
+SLH_AUDIT_20260813_201938.txt:5956:SLH_AUDIT_20260813_201938.txt:3315: archive\legacy_economy\railway_bot.py:15: bot = telebot.TeleBot(TOKEN)
+archive/legacy_clients/agent_client_termux.py:15:bot = telebot.TeleBot(TOKEN)
+archive/legacy_economy/app.py:19:bot = telebot.TeleBot(TOKEN) if TOKEN else None
+archive/legacy_economy/railway_bot.py:15:bot = telebot.TeleBot(TOKEN)
+bot.py.legacy_disabled:15:bot = telebot.TeleBot(TOKEN)
+bot_gateway.py.bak_before_namefix:28:        bot = telebot.TeleBot(token, parse_mode="HTML")
+bot_stable.py.backup_before_remove_legacy_ask:72:bot = telebot.TeleBot(TOKEN)
+bot_stable.py.backup_remove_ask:72:bot = telebot.TeleBot(TOKEN)
+"e_mode\357\200\242":6:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+railway_bot_gateway.py.disabled:24:        bot = telebot.TeleBot(token, parse_mode="HTML")
+t === FIND HTML MODE ===:5:[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+
