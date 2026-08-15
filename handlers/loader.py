@@ -62,6 +62,18 @@ def load_handlers(bot, context):
         ("autoexec", "handlers.autoexec_handler"),
         ("git", "handlers.git_handler"),
         ("ton", "ton_handler"),
+        ("brief", "brief_handler"),
+        ("complete", "complete_handler"),
+        ("diagnostic", "diagnostic_handler"),
+        ("guide", "guide_handler"),
+        ("junk", "junk_handler"),
+        ("myprogress", "myprogress_handler"),
+        ("report", "report_handler"),
+        ("roadmap", "roadmap_handler"),
+        ("sandbox", "sandbox_handler"),
+        ("test", "test_handler"),
+        ("tutorial", "tutorial_handler"),
+        ("viewfile", "viewfile_handler"),
     ]
 
     import importlib
@@ -105,6 +117,20 @@ def load_handlers(bot, context):
 
         except Exception as e:
             print(f"?? {name} skipped:", str(e)[:120])
+
+    try:
+        from doctor_handler import register_doctor_handlers
+        register_doctor_handlers(bot)
+        print("✅ doctor loaded")
+    except Exception as e:
+        print("doctor skipped:", e)
+
+    try:
+        from language_handler import register_language
+        register_language(bot)
+        print("✅ language loaded")
+    except Exception as e:
+        print("language skipped:", e)
 
     try:
         from handlers.esp_handler import register_esp_handler
