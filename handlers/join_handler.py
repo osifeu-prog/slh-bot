@@ -1,4 +1,5 @@
 import json
+from core import profile_manager
 
 user_states = {}
 
@@ -7,26 +8,6 @@ def register(bot):
     @bot.message_handler(commands=['join'])
     def join_start(msg):
         uid = str(msg.from_user.id)
-
-        try:
-            with open("state/db.json", encoding="utf-8") as f:
-                db = json.load(f)
-
-            user = db.get("users", {}).get(uid)
-
-            if user and user.get("joined"):
-                bot.reply_to(
-                    msg,
-                    f"👋 ברוך שובך {user.get('name','')}!\n\n"
-                    "הפרופיל שלך כבר קיים.\n"
-                    "📚 /courses\n"
-                    "💰 /wallet\n"
-                    "🏆 /leaderboard"
-                )
-                return
-
-        except Exception:
-            pass
 
         user_states[uid] = {"step": "name"}
         bot.reply_to(msg, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
@@ -54,22 +35,13 @@ def register(bot):
         elif step == "group":
             group = (msg.text or "").strip()
 
-            try:
-                with open("state/db.json", "r", encoding="utf-8") as f:
-                    db = json.load(f)
-            except Exception:
-                db = {}
-
-            db.setdefault("users", {}).setdefault(uid, {})
-
-            db["users"][uid].update({
+            profile_manager.update_user(uid, {
                 "name": state.get("name", ""),
                 "group": group,
-                "joined": True
+                "joined": True,
+                "role": "student",
+                "permissions": []
             })
-
-            with open("state/db.json", "w", encoding="utf-8") as f:
-                json.dump(db, f, indent=2, ensure_ascii=False)
 
             del user_states[uid]
 

@@ -57,7 +57,11 @@ def clear_agents():
 
 
 
-import fcntl
+try:
+    import fcntl
+    HAS_FCNTL = True
+except ImportError:
+    HAS_FCNTL = False
 
 _LOCK_PATH = DB_FILE + ".lock"
 
@@ -69,11 +73,13 @@ def atomic_update(mutate_fn):
     """
     os.makedirs("state", exist_ok=True)
     with open(_LOCK_PATH, "w") as lockfile:
-        fcntl.flock(lockfile, fcntl.LOCK_EX)
+        if HAS_FCNTL:
+            fcntl.flock(lockfile, fcntl.LOCK_EX)
         try:
             db = load_db()
             result = mutate_fn(db)
             save_db(db)
             return result
         finally:
-            fcntl.flock(lockfile, fcntl.LOCK_UN)
+            if HAS_FCNTL:
+                fcntl.flock(lockfile, fcntl.LOCK_UN)

@@ -45,8 +45,12 @@ def get_role(uid):
     try:
         user = profile_manager.get_user(uid)
     except Exception:
-        return "student"
-    return user.get("role", "student")
+        return None
+
+    if not user:
+        return None
+
+    return user.get("role")
 
 
 def get_permissions(uid):
@@ -75,6 +79,10 @@ def has_permission(user_or_msg, permission):
         return False
 
     role = get_role(uid)
+
+    if role is None:
+        return False
+
     perms = get_permissions(uid)
 
     if policy == "permission_required":

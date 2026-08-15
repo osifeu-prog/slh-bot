@@ -6,7 +6,7 @@ ITEMS_FILE = os.path.join(os.path.dirname(__file__), "items.json")
 def load_items():
     """טוען את המוצרים מהקובץ"""
     try:
-        with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
+        with open(ITEMS_FILE, 'r', encoding='utf-8-sig') as f:
             return json.load(f)
     except:
         return {}

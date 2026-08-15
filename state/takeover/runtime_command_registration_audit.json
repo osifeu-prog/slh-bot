@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-08-06T14:43:14.892160+00:00",
+  "generated_at": "2026-08-13T16:52:27.552144+00:00",
   "entrypoint": "bot_stable.py",
   "loader": "handlers\\loader.py",
   "direct_registrations": [
@@ -9,56 +9,11 @@
       "path": "DIRECT",
       "source": "bot_stable.py",
       "function": "user",
-      "line": 522,
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/market",
-      "path": "DIRECT",
-      "source": "bot_stable.py",
-      "function": "market",
-      "line": 609,
+      "line": 454,
       "confidence": "HIGH"
     }
   ],
-  "dynamic_custom_registrations": [
-    {
-      "command": "/token",
-      "path": "DYNAMIC_CUSTOM_HANDLER",
-      "source": "state\\custom_handlers\\token_handler.py",
-      "register_functions": [
-        {
-          "function": "register",
-          "line": 43
-        }
-      ],
-      "confidence": "MEDIUM"
-    },
-    {
-      "command": "/progress",
-      "path": "DYNAMIC_CUSTOM_HANDLER",
-      "source": "state\\custom_handlers\\token_wizard.py",
-      "register_functions": [
-        {
-          "function": "register",
-          "line": 23
-        }
-      ],
-      "confidence": "MEDIUM"
-    },
-    {
-      "command": "/token",
-      "path": "DYNAMIC_CUSTOM_HANDLER",
-      "source": "state\\custom_handlers\\token_wizard.py",
-      "register_functions": [
-        {
-          "function": "register",
-          "line": 23
-        }
-      ],
-      "confidence": "MEDIUM"
-    }
-  ],
+  "dynamic_custom_registrations": [],
   "modular_loader_registrations": [
     {
       "command": "/progress",
@@ -74,13 +29,39 @@
       "confidence": "HIGH"
     },
     {
+      "command": "/progress",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\endday_handler.py",
+      "module": "handlers.endday_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/balance",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\endday_handler.py",
+      "module": "handlers.endday_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
       "command": "/start",
       "path": "MODULAR_LOADER",
       "source": "handlers\\help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
-          "function": "register_help",
+          "function": "register",
           "line": 1
         }
       ],
@@ -93,7 +74,7 @@
       "module": "handlers.help_handler",
       "register_functions": [
         {
-          "function": "register_help",
+          "function": "register",
           "line": 1
         }
       ],
@@ -106,33 +87,7 @@
       "module": "handlers.help_handler",
       "register_functions": [
         {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/register",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/user",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
+          "function": "register",
           "line": 1
         }
       ],
@@ -145,33 +100,7 @@
       "module": "handlers.help_handler",
       "register_functions": [
         {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/report",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/market",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
+          "function": "register",
           "line": 1
         }
       ],
@@ -184,33 +113,7 @@
       "module": "handlers.help_handler",
       "register_functions": [
         {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/token",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/course",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
-      "module": "handlers.help_handler",
-      "register_functions": [
-        {
-          "function": "register_help",
+          "function": "register",
           "line": 1
         }
       ],
@@ -222,26 +125,9 @@
       "source": "handlers\\help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
-        {
-          "function": "register_help",
-          "line": 1
-        }
-      ],
-      "confidence": "HIGH"
-    },
-    {
-      "command": "/ask",
-      "path": "MODULAR_LOADER",
-      "source": "handlers\\llm_handler.py",
-      "module": "handlers.llm_handler",
-      "register_functions": [
-        {
-          "function": "register_llm_handler",
-          "line": 56
-        },
         {
           "function": "register",
-          "line": 140
+          "line": 1
         }
       ],
       "confidence": "HIGH"
@@ -254,7 +140,59 @@
       "register_functions": [
         {
           "function": "register",
-          "line": 3
+          "line": 10
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/start",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/help",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/market",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/ask",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
         }
       ],
       "confidence": "HIGH"
@@ -267,11 +205,11 @@
       "register_functions": [
         {
           "function": "register_payment_handlers",
-          "line": 14
+          "line": 15
         },
         {
           "function": "register",
-          "line": 191
+          "line": 204
         }
       ],
       "confidence": "HIGH"
@@ -284,11 +222,24 @@
       "register_functions": [
         {
           "function": "register_payment_handlers",
-          "line": 14
+          "line": 15
         },
         {
           "function": "register",
-          "line": 191
+          "line": 204
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/start",
+      "path": "MODULAR_LOADER",
+      "source": "handlers\\ux_handler.py",
+      "module": "handlers.ux_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
         }
       ],
       "confidence": "HIGH"
@@ -305,7 +256,33 @@
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/start",
+          "path": "MODULAR_LOADER",
+          "source": "handlers\\os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/start",
+          "path": "MODULAR_LOADER",
+          "source": "handlers\\ux_handler.py",
+          "module": "handlers.ux_handler",
+          "register_functions": [
+            {
+              "function": "register",
               "line": 1
             }
           ],
@@ -323,8 +300,21 @@
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
               "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/help",
+          "path": "MODULAR_LOADER",
+          "source": "handlers\\os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
             }
           ],
           "confidence": "HIGH"
@@ -341,7 +331,7 @@
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
               "line": 1
             }
           ],
@@ -355,7 +345,7 @@
           "register_functions": [
             {
               "function": "register",
-              "line": 3
+              "line": 10
             }
           ],
           "confidence": "HIGH"
@@ -368,11 +358,11 @@
           "register_functions": [
             {
               "function": "register_payment_handlers",
-              "line": 14
+              "line": 15
             },
             {
               "function": "register",
-              "line": 191
+              "line": 204
             }
           ],
           "confidence": "HIGH"
@@ -380,22 +370,8 @@
       ]
     },
     "/register": {
-      "status": "REGISTERED_HIGH_CONFIDENCE",
-      "registrations": [
-        {
-          "command": "/register",
-          "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
-          "register_functions": [
-            {
-              "function": "register_help",
-              "line": 1
-            }
-          ],
-          "confidence": "HIGH"
-        }
-      ]
+      "status": "NOT_REGISTERED",
+      "registrations": []
     },
     "/user": {
       "status": "REGISTERED_HIGH_CONFIDENCE",
@@ -405,20 +381,7 @@
           "path": "DIRECT",
           "source": "bot_stable.py",
           "function": "user",
-          "line": 522,
-          "confidence": "HIGH"
-        },
-        {
-          "command": "/user",
-          "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
-          "register_functions": [
-            {
-              "function": "register_help",
-              "line": 1
-            }
-          ],
+          "line": 454,
           "confidence": "HIGH"
         }
       ]
@@ -426,18 +389,6 @@
     "/progress": {
       "status": "REGISTERED_HIGH_CONFIDENCE",
       "registrations": [
-        {
-          "command": "/progress",
-          "path": "DYNAMIC_CUSTOM_HANDLER",
-          "source": "state\\custom_handlers\\token_wizard.py",
-          "register_functions": [
-            {
-              "function": "register",
-              "line": 23
-            }
-          ],
-          "confidence": "MEDIUM"
-        },
         {
           "command": "/progress",
           "path": "MODULAR_LOADER",
@@ -454,11 +405,24 @@
         {
           "command": "/progress",
           "path": "MODULAR_LOADER",
+          "source": "handlers\\endday_handler.py",
+          "module": "handlers.endday_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/progress",
+          "path": "MODULAR_LOADER",
           "source": "handlers\\help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
               "line": 1
             }
           ],
@@ -467,43 +431,21 @@
       ]
     },
     "/report": {
-      "status": "REGISTERED_HIGH_CONFIDENCE",
-      "registrations": [
-        {
-          "command": "/report",
-          "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
-          "register_functions": [
-            {
-              "function": "register_help",
-              "line": 1
-            }
-          ],
-          "confidence": "HIGH"
-        }
-      ]
+      "status": "NOT_REGISTERED",
+      "registrations": []
     },
     "/market": {
       "status": "REGISTERED_HIGH_CONFIDENCE",
       "registrations": [
         {
           "command": "/market",
-          "path": "DIRECT",
-          "source": "bot_stable.py",
-          "function": "market",
-          "line": 609,
-          "confidence": "HIGH"
-        },
-        {
-          "command": "/market",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
+          "source": "handlers\\os_handler.py",
+          "module": "handlers.os_handler",
           "register_functions": [
             {
-              "function": "register_help",
-              "line": 1
+              "function": "register",
+              "line": 5
             }
           ],
           "confidence": "HIGH"
@@ -516,11 +458,24 @@
         {
           "command": "/balance",
           "path": "MODULAR_LOADER",
+          "source": "handlers\\endday_handler.py",
+          "module": "handlers.endday_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/balance",
+          "path": "MODULAR_LOADER",
           "source": "handlers\\help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
               "line": 1
             }
           ],
@@ -529,64 +484,12 @@
       ]
     },
     "/token": {
-      "status": "REGISTERED_HIGH_CONFIDENCE",
-      "registrations": [
-        {
-          "command": "/token",
-          "path": "DYNAMIC_CUSTOM_HANDLER",
-          "source": "state\\custom_handlers\\token_handler.py",
-          "register_functions": [
-            {
-              "function": "register",
-              "line": 43
-            }
-          ],
-          "confidence": "MEDIUM"
-        },
-        {
-          "command": "/token",
-          "path": "DYNAMIC_CUSTOM_HANDLER",
-          "source": "state\\custom_handlers\\token_wizard.py",
-          "register_functions": [
-            {
-              "function": "register",
-              "line": 23
-            }
-          ],
-          "confidence": "MEDIUM"
-        },
-        {
-          "command": "/token",
-          "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
-          "register_functions": [
-            {
-              "function": "register_help",
-              "line": 1
-            }
-          ],
-          "confidence": "HIGH"
-        }
-      ]
+      "status": "NOT_REGISTERED",
+      "registrations": []
     },
     "/course": {
-      "status": "REGISTERED_HIGH_CONFIDENCE",
-      "registrations": [
-        {
-          "command": "/course",
-          "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
-          "module": "handlers.help_handler",
-          "register_functions": [
-            {
-              "function": "register_help",
-              "line": 1
-            }
-          ],
-          "confidence": "HIGH"
-        }
-      ]
+      "status": "NOT_REGISTERED",
+      "registrations": []
     },
     "/learn": {
       "status": "NOT_REGISTERED",
@@ -602,7 +505,7 @@
           "module": "handlers.help_handler",
           "register_functions": [
             {
-              "function": "register_help",
+              "function": "register",
               "line": 1
             }
           ],
@@ -611,16 +514,12 @@
         {
           "command": "/ask",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\llm_handler.py",
-          "module": "handlers.llm_handler",
+          "source": "handlers\\os_handler.py",
+          "module": "handlers.os_handler",
           "register_functions": [
             {
-              "function": "register_llm_handler",
-              "line": 56
-            },
-            {
               "function": "register",
-              "line": 140
+              "line": 5
             }
           ],
           "confidence": "HIGH"
@@ -633,11 +532,11 @@
           "register_functions": [
             {
               "function": "register_payment_handlers",
-              "line": 14
+              "line": 15
             },
             {
               "function": "register",
-              "line": 191
+              "line": 204
             }
           ],
           "confidence": "HIGH"

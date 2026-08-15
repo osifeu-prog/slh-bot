@@ -1,4 +1,4 @@
-﻿from openai import OpenAI
+from openai import OpenAI
 import os
 import json
 import requests
@@ -41,6 +41,36 @@ def ask_gemini(prompt):
         return f"Gemini Error: {e}"
 
 
+
+
+def _looks_like_error(text):
+    if not isinstance(text, str):
+        return False
+
+    t = text.lower()
+
+    markers = [
+        "rate limited",
+        "rate_limit",
+        "quota",
+        "429",
+        "resource_exhausted",
+        "fallback unavailable",
+        "api key",
+        "error"
+    ]
+
+    return any(x in t for x in markers)
+
+
+def _friendly_fallback():
+    return (
+        "🟡 מנוע ה-AI עמוס כרגע.\n"
+        "הליבה של SLH OS פעילה.\n"
+        "נסה שוב בעוד דקה."
+    )
+
+
 def ask_groq(prompt):
     global client
 
@@ -80,7 +110,9 @@ def ask_groq(prompt):
             ):
                 return gemini_result
 
-            return f"Groq rate limited. Gemini fallback unavailable: {gemini_result}"
+            if _looks_like_error(gemini_result):
+                return _friendly_fallback()
+            return gemini_result
 
 
         return f"LLM Error: {e}"
@@ -104,6 +136,74 @@ def query_llm_with_context(question, uid=None):
         tasks = dict(list(db.get("tasks", {}).items())[-5:])
         votes_raw = db.get("votes", {})
         votes = list(votes_raw.items())[-10:] if isinstance(votes_raw, dict) else votes_raw[-10:]
+
+
+        if any(x in q for x in ["מה השם", "שם שלי", "מי אני", "what is my name", "who am i"]):
+            from core.identity_resolver import get_display_name
+            name = get_display_name(uid) if uid else (user.get('display_name') or user.get('name') or 'לא ידוע')
+            role = user.get('role','unknown')
+            return f"👤 השם שלך הוא: {name}\n🎯 תפקיד: {role}"
+        if any(x in q for x in ["status", "סטטוס", "מצב מערכת", "דוח מערכת"]):
+            users_count = len(db.get("users", {}))
+            tasks_count = len(db.get("tasks", {}))
+            agents = db.get("agents", {})
+            agents_count = len(agents)
+            votes_count = len(db.get("votes", {}))
+            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+            wallet = user.get("wallet", {})
+            return (
+                "🛡 דוח מערכת SLH OS\n\n"
+                f"👤 משתמש: {user.get('display_name') or user.get('name') or 'לא ידוע'}\n"
+                f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                f"🔒 staked: {wallet.get('staked',0)}\n"
+                f"👥 משתמשים: {users_count}\n"
+                f"🤖 סוכנים: {agents_count}\n"
+                f"📋 משימות פעילות: {tasks_count}\n"
+                f"🗳 הצבעות: {votes_count}\n"
+                f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                "✅ ליבה פעילה\n"
+                "🟡 AI חיצוני: fallback מקומי פעיל"
+            )
+        # LOCAL SYSTEM ANSWERS — no LLM required
+        if any(x in q for x in ["דוח מערכת", "מצב המערכת", "סטטוס מערכת", "system report", "system status", "מה מצב המערכת", "מה קורה במערכת"]):
+            users_count = len(db.get("users", {}))
+            tasks_count = len(db.get("tasks", {}))
+            agents = db.get("agents", {})
+            agents_count = len(agents)
+            votes_count = len(db.get("votes", {}))
+            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+            wallet = user.get("wallet", {})
+            return (
+                "🛡️ דוח מערכת SLH OS\n\n"
+                f"👤 משתמש: {user.get('name','לא ידוע')}\n"
+                f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                f"🔒 staked: {wallet.get('staked',0)}\n"
+                f"👥 משתמשים: {users_count}\n"
+                f"🤖 סוכנים: {agents_count}\n"
+                f"📋 משימות: {tasks_count}\n"
+                f"🗳️ הצבעות: {votes_count}\n"
+                f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                "✅ ליבה פעילה\n"
+                "🟡 AI חיצוני: fallback מקומי פעיל"
+            )
+
+        if any(x in q for x in ["כמה משתמשים", "כמה ארנקים", "user count"]):
+            return f"👥 משתמשים רשומים: {len(db.get('users', {}))}"
+
+        if any(x in q for x in ["כמה סוכנים", "איזה סוכנים", "agents count", "list agents"]):
+            names = ", ".join(a.get("name", "?") for a in db.get("agents", {}).values())
+            return f"🤖 סוכנים פעילים: {len(db.get('agents', {}))}\n{names}"
+
+        if any(x in q for x in ["מקור הנתונים", "data source", "מאיפה הנתונים"]):
+            return "📁 מקור הנתונים: state/db.json + state/agents.json (Railway volume)"
+
+        if any(x in q for x in ["כמה משימות", "task count"]):
+            return f"📋 משימות: {len(db.get('tasks', {}))}"
+
+        if any(x in q for x in ["כמה הצבעות", "vote count"]):
+            return f"🗳️ הצבעות: {len(db.get('votes', {}))}"
 
 
         # SYSTEM IDENTITY

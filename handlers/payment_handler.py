@@ -1,5 +1,6 @@
 import state_manager
 from core import profile_manager
+from core import reward_engine
 from telebot.types import LabeledPrice, PreCheckoutQuery
 from datetime import datetime
 
@@ -95,13 +96,21 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
             return
 
-        profile_manager.add_balance(uid, credits)
+        reward_engine.grant(
+            uid,
+            "payment_purchase",
+            credits=credits
+        )
 
         # Referrer commission
         referrer_uid = db.get("referred_by", {}).get(uid)
         if referrer_uid:
             commission = round(credits * 0.85, 2)
-            profile_manager.add_balance(referrer_uid, commission)
+            reward_engine.grant(
+                referrer_uid,
+                "referral_commission",
+                credits=commission
+            )
             db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
             db["commissions"][referrer_uid] += commission
             print(f"[PAY] Commission {commission} to referrer {referrer_uid}")
@@ -182,7 +191,11 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         user = profile_manager.get_user(uid)
-        profile_manager.add_balance(uid, 100)
+        reward_engine.grant(
+            uid,
+            "fake_admin_payment",
+            credits=100
+        )
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {profile_manager.get_balance(uid)}")
         print(f"[FAKEPAY] 100 credits added to {uid}")

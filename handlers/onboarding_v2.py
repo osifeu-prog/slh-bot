@@ -3,7 +3,7 @@ from telebot import types
 import json
 from core.message_utils import safe_clip
 
-from core.profile_manager import get_user
+from core.profile_manager import get_user, update_user
 from core.agent_registry import create_agent
 from core.identity_resolver import get_display_name
 
@@ -221,6 +221,22 @@ def register(bot):
 
             get_user(
                 user_id
+            )
+
+            user_name = get_display_name(
+                call.from_user.id,
+                call.from_user
+            )
+
+            update_user(
+                user_id,
+                {
+                    "role": "student",
+                    "joined": True,
+                    "permissions": [],
+                    "name": user_name,
+                    "display_name": user_name,
+                }
             )
 
             db = load_db()

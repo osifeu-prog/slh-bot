@@ -43,8 +43,4 @@ state/takeover/backups/
 # Local production recovery backups
 recovery-production/
 
-# Temporary local backups
-*.bak_*
-
-# Temporary diagnostic output
-compile_err.txt
+*.lock

@@ -1,0 +1,44 @@
+﻿{
+    "schema":  "slh-os/control/v1",
+    "generated_at_utc":  "2026-08-13T19:14:00.4239285Z",
+    "project":  "main",
+    "git":  {
+                "branch":  "main",
+                "head":  "4eca859bcb5669ebd35cb85354602bc2fbe782db",
+                "working_tree_changes":  18
+            },
+    "structural_safety":  {
+                              "encoding_backups_exists":  false,
+                              "nested_slh_map_count":  0,
+                              "nested_encoding_backups_count":  0,
+                              "suspicious_timestamp_dirs":  0
+                          },
+    "command_surface":  {
+                            "expected":  7,
+                            "available":  7,
+                            "missing":  0
+                        },
+    "deployment":  {
+                       "railway_cli_available":  true,
+                       "railway_status_checked":  true,
+                       "deployment_verified":  false
+                   },
+    "investor_path":  {
+                          "verified":  false
+                      },
+    "user_path":  {
+                      "verified":  false
+                  },
+    "security":  {
+                     "verified":  false
+                 },
+    "launch":  {
+                   "target":  null,
+                   "countdown_enabled":  false,
+                   "readiness_percent":  0,
+                   "state":  "EVIDENCE_COLLECTION"
+               },
+    "blockers":  [
+                     "UNCOMMITTED_WORKTREE"
+                 ]
+}

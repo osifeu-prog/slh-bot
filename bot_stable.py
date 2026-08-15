@@ -694,33 +694,6 @@ except Exception as e:
 # ===== HANDLERS LOADED THROUGH SINGLE LOADER =====
 print("✅ Single handler loader active")
 
-# ===== BROADCAST HANDLER (AUTO-GENERATED) =====
-@bot.message_handler(commands=['broadcast'])
-def broadcast(m):
-    if str(m.chat.id) != str(SUPER_ADMIN):
-        bot.reply_to(m, '❌ Admin only.')
-        return
-    args = m.text.split(' ', 1)
-    if len(args) < 2:
-        bot.reply_to(m, '❌ Usage: /broadcast <message>')
-        return
-    msg_text = args[1]
-    db = load_db()
-    users = db.get('users', {})
-    if not users:
-        bot.reply_to(m, 'No users found.')
-        return
-    success = 0
-    fail = 0
-    for uid in users:
-        try:
-            bot.send_message(uid, msg_text)
-            success += 1
-        except Exception as e:
-            fail += 1
-            print(f'Broadcast failed for {uid}: {e}')
-    bot.send_message(m.chat.id, f'📢 Broadcast sent\n✅ {success} succeeded\n❌ {fail} failed')
-
 # ===== IMPROVED SNAPSHOT HANDLER =====
 @bot.message_handler(commands=['snapshot'])
 def snapshot(m):

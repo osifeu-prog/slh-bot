@@ -1,6 +1,7 @@
 from services import task_service
 import json
 from core import economy_bridge
+from core import reward_engine
 
 
 COMMANDS = {}
@@ -118,8 +119,9 @@ def task_done(message, bot):
     save_db(db)
 
 
-    economy_bridge.reward(
+    reward_engine.grant(
         uid,
+        "task_completed",
         credits=reward
     )
 

@@ -1,0 +1,145 @@
+﻿{
+    "schema":  "slh-os/worktree-evidence/v2",
+    "generated_at_utc":  "2026-08-13T19:19:25.9807926Z",
+    "root":  "C:\\Users\\USER\\slh-bot-clean",
+    "git":  {
+                "branch":  "main",
+                "head":  "4eca859bcb5669ebd35cb85354602bc2fbe782db",
+                "status_count":  18
+            },
+    "summary":  {
+                    "total":  18,
+                    "modified":  7,
+                    "untracked":  11,
+                    "deleted":  0,
+                    "other":  0
+                },
+    "entries":  [
+                    {
+                        "status":  " M",
+                        "path":  "core/identity_resolver.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  637
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "core/keyboard_detector.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  1456
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "core/message_utils.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  191
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "handlers/llm_handler.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  10059
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "store/grant_engine.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  702
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "store/purchase_service.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  1315
+                    },
+                    {
+                        "status":  " M",
+                        "path":  "tools/slh_launch_check.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  1442
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "AUDIT_20260813_FULL/",
+                        "exists":  true,
+                        "type":  "directory",
+                        "bytes":  0
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "_slh_map/",
+                        "exists":  true,
+                        "type":  "directory",
+                        "bytes":  0
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "bot_stable.py.before_authority_cleanup_20260813",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  22564
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "fix_dna_entrypoints.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  493
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "report_handler.py.before_authority_cleanup_20260813",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  5516
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slh_authority_audit.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  5224
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slh_clean_inventory.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  1586
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slh_dna_scan.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  11662
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slh_fix_bom.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  2193
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slhdna.bat",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  38
+                    },
+                    {
+                        "status":  "??",
+                        "path":  "slhdna.py",
+                        "exists":  true,
+                        "type":  "file",
+                        "bytes":  13520
+                    }
+                ]
+}

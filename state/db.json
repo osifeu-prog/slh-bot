@@ -6,7 +6,7 @@
         "joined": "2026-08-07T22:43:47.559294"
       },
       "wallet": {
-        "credits": 1450
+        "credits": 1467
       },
       "academy": {
         "courses": {
@@ -31,8 +31,8 @@
         "active_course": "bitcoin_mastery"
       },
       "gamification": {
-        "points": 75,
-        "level": 1
+        "points": 107,
+        "level": 2
       },
       "referral": {
         "code": "ADMIN2026",
@@ -64,6 +64,34 @@
       "name": "User",
       "display_name": "User",
       "telegram_name": "User"
+    },
+    "999_test": {
+      "name": "User999_test",
+      "display_name": "User999_test",
+      "telegram_name": "User999_test",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-14T13:40:59.081522"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
     }
   },
   "students": {

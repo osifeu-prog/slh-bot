@@ -1,0 +1,64 @@
+﻿
+FullName                                                           Length LastWriteTime       
+--------                                                           ------ -------------       
+C:\Users\USER\slh-bot-clean\handlers\academy_handler.py              2382 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\academy_menu_handler.py         2499 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\admin_extras.py                 2299 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\advanced_ask_handler.py         1243 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\agents_handler.py               5273 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\ai_voting_handler.py            5164 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\askdebug_handler.py              464 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\audit_handler.py                2548 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\autoexec_handler.py             2537 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\bot_identity_handler.py         1777 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\broadcast_handler.py            1097 8/13/2026 8:41:17 PM
+C:\Users\USER\slh-bot-clean\handlers\cleanup_handler.py              1850 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\dashboard_handler.py            1635 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\deploy_handler.py               1185 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\dev_admin.py                    3569 8/13/2026 2:55:39 PM
+C:\Users\USER\slh-bot-clean\handlers\dev_handler.py                   770 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\device_bridge.py                 600 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\device_handler.py               4883 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\endday_handler.py                227 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\esp_handler.py                  2586 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\exec_handler.py                 1067 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\exec_request_handler.py         4047 8/13/2026 2:55:39 PM
+C:\Users\USER\slh-bot-clean\handlers\feedback_handler.py              916 8/13/2026 1:40:21 AM
+C:\Users\USER\slh-bot-clean\handlers\gateway_handler.py              1241 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\git_handler.py                  5970 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\governance_handler.py          10232 8/13/2026 7:22:46 PM
+C:\Users\USER\slh-bot-clean\handlers\help_handler.py                 1483 8/13/2026 2:38:38 AM
+C:\Users\USER\slh-bot-clean\handlers\join_handler.py                 2054 8/13/2026 5:24:18 PM
+C:\Users\USER\slh-bot-clean\handlers\journal_handler.py              1403 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\kb_handler.py                    706 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\leaderboard_handler.py           716 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\lesson_handler.py               2564 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\llm_handler.py                 10062 8/13/2026 5:32:50 PM
+C:\Users\USER\slh-bot-clean\handlers\loader.py                       4578 8/13/2026 8:41:17 PM
+C:\Users\USER\slh-bot-clean\handlers\logo_handler.py                  260 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\map_handler.py                   434 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\market_handler.py               2413 8/13/2026 5:11:53 PM
+C:\Users\USER\slh-bot-clean\handlers\me_handler.py                   1596 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\mission_handler.py              5959 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\monitor_handler.py              3035 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\morning_handler.py               468 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\natural_chat.py                 1137 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\onboarding_v2.py               10289 8/13/2026 7:50:49 PM
+C:\Users\USER\slh-bot-clean\handlers\os_handler.py                   1611 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\ownership_transfer_handler.py   2374 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\payment_handler.py              8612 8/13/2026 6:36:34 PM
+C:\Users\USER\slh-bot-clean\handlers\recovery_handler.py             1636 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\recovery_verify_handler.py      2621 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\repeat_handler.py               1254 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\staking_handler.py              1789 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\store_handler.py                 982 8/13/2026 5:01:15 PM
+C:\Users\USER\slh-bot-clean\handlers\system_handler.py                452 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\task_handler.py                 3139 8/13/2026 6:32:45 PM
+C:\Users\USER\slh-bot-clean\handlers\termux_handler.py                443 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\ton_wallet.py                   1315 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\user_handler.py                 1385 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\ux_handler.py                   1190 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\voting_handler.py                157 8/13/2026 1:40:22 AM
+C:\Users\USER\slh-bot-clean\handlers\wallet_handler.py                631 8/13/2026 2:55:39 PM
+
+

@@ -1,4 +1,3 @@
-
 from core import profile_manager
 
 
@@ -12,15 +11,17 @@ def register(bot):
         wallet = user.get("wallet", {})
 
         credits = wallet.get("credits", 0)
+        staked = wallet.get("staked", 0)
         token_balance = wallet.get("token_balance", 0)
 
         text = (
             "💰 SLH Wallet\n\n"
             f"👤 User: {uid}\n"
             f"💳 Credits: {credits}\n"
+            f"🔒 Staked: {staked}\n"
             f"🪙 Token Balance: {token_balance}\n"
         )
 
         bot.reply_to(msg, text)
 
-    print("? wallet_handler loaded")
+    print("wallet_handler loaded")
