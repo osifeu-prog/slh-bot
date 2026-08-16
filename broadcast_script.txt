@@ -1,0 +1,10 @@
+/start
+/token supply
+/token balance
+/token_wizard
+/token_wizard 1
+/leaderboard
+/agents
+/project
+/courses
+/help

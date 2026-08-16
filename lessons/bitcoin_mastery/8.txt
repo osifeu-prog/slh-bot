@@ -1,0 +1,8 @@
+📘 Lightning Network
+
+שיעור 8 – Lightning Network
+
+כאן תלמד את הנושא לעומק.
+
+לאחר שסיימת:
+/finish bitcoin_mastery 8

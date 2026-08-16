@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-08-13T18:54:45.579625+00:00",
+  "files": 313,
+  "edges": 215,
+  "parse_errors": 10,
+  "entrypoint_candidates": 174,
+  "command_candidates": 20,
+  "state_read_candidates": 9,
+  "state_write_candidates": 3
+}

@@ -1,0 +1,465 @@
+SLH OS — MISSION / RUNTIME SOURCE AUDIT
+ROOT: C:\Users\USER\slh-bot-clean
+READ ONLY: YES
+
+
+================================================================================
+FILE: core\mission_orchestrator.py
+CLASS: MissionOrchestrator
+METHOD: run_next_action
+================================================================================
+
+def run_next_action(
+        self,
+        mission_id,
+        agent_id=None,
+        description=None,
+        reward=0
+    ):
+
+        next_action = (
+            self.get_next_action(
+                mission_id=mission_id,
+                agent_id=agent_id
+            )
+        )
+
+        action = (
+            next_action.get(
+                "next_action"
+            )
+        )
+
+        if action == "complete":
+
+            preview = (
+                self.lifecycle
+                .preview_completion(
+                    mission_id=mission_id
+                )
+            )
+
+            if preview.get(
+                "status"
+            ) != "ready":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "complete",
+
+                    "preview":
+                        preview,
+
+                }
+
+            result = (
+                self.lifecycle
+                .complete_mission(
+                    mission_id=mission_id
+                )
+            )
+
+            return {
+
+                "status":
+                    "completed",
+
+                "action":
+                    "complete",
+
+                "result":
+                    result,
+
+            }
+
+        if action == "execute":
+
+            preview = (
+                self.lifecycle
+                .preview_execution(
+                    mission_id=mission_id
+                )
+            )
+
+            if preview.get(
+                "status"
+            ) != "ready":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "execute",
+
+                    "preview":
+                        preview,
+
+                }
+
+            result = (
+                self.lifecycle
+                .execute_mission(
+                    mission_id=mission_id
+                )
+            )
+
+            return {
+
+                "status":
+                    "executed",
+
+                "action":
+                    "execute",
+
+                "result":
+                    result,
+
+            }
+
+        if action == "assign":
+
+            if agent_id is None:
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "assign",
+
+                    "reason":
+                        "agent_id is required",
+
+                }
+
+            preview = (
+                self.lifecycle
+                .preview_assignment(
+                    mission_id=mission_id,
+                    agent_id=agent_id
+                )
+            )
+
+            if preview.get(
+                "status"
+            ) != "ready":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "assign",
+
+                    "preview":
+                        preview,
+
+                }
+
+            result = (
+                self.lifecycle
+                .assign_mission(
+                    mission_id=mission_id,
+                    agent_id=agent_id
+                )
+            )
+
+            return {
+
+                "status":
+                    "assigned",
+
+                "action":
+                    "assign",
+
+                "result":
+                    result,
+
+            }
+
+        if action == "create":
+
+            if description is None:
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "create",
+
+                    "reason":
+                        "description is required",
+
+                }
+
+            preview = (
+                self.lifecycle
+                .preview_mission_creation(
+                    mission_id=mission_id,
+                    description=description,
+                    reward=reward
+                )
+            )
+
+            if preview.get(
+                "status"
+            ) != "ready":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "create",
+
+                    "preview":
+                        preview,
+
+                }
+
+            result = (
+                self.lifecycle
+                .create_mission(
+                    mission_id=mission_id,
+                    description=description,
+                    reward=reward
+                )
+            )
+
+            return {
+
+                "status":
+                    "created",
+
+                "action":
+                    "create",
+
+                "result":
+                    result,
+
+            }
+
+        if action is None:
+
+            if next_action.get(
+                "status"
+            ) == "done":
+
+                return {
+
+                    "status":
+                        "done",
+
+                    "action":
+                        None,
+
+                    "message":
+                        "Mission already completed",
+
+                }
+
+        return {
+
+            "status":
+                "blocked",
+
+            "action":
+                action,
+
+            "reason":
+                "Unknown or unsupported action",
+
+            "router":
+                next_action,
+
+        }
+
+
+================================================================================
+FILE: core\mission_orchestrator.py
+CLASS: MissionOrchestrator
+METHOD: run_mission_to_completion
+================================================================================
+
+def run_mission_to_completion(
+        self,
+        mission_id,
+        agent_id=None,
+        description=None,
+        reward=0,
+        max_steps=10
+    ):
+
+        steps = []
+
+        for step_number in range(
+            1,
+            max_steps + 1
+        ):
+
+            next_action = (
+                self.get_next_action(
+                    mission_id=mission_id,
+                    agent_id=agent_id
+                )
+            )
+
+            action = (
+                next_action.get(
+                    "next_action"
+                )
+            )
+
+            if (
+                next_action.get(
+                    "status"
+                )
+                == "done"
+            ):
+
+                return {
+
+                    "status":
+                        "completed",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "steps":
+                        steps,
+
+                    "message":
+                        "Mission already completed",
+
+                }
+
+            if action is None:
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "steps":
+                        steps,
+
+                    "reason":
+                        "No valid next action",
+
+                    "router":
+                        next_action,
+
+                }
+
+            result = (
+                self.run_next_action(
+                    mission_id=mission_id,
+                    agent_id=agent_id,
+                    description=description,
+                    reward=reward
+                )
+            )
+
+            steps.append({
+
+                "step":
+                    step_number,
+
+                "action":
+                    action,
+
+                "result":
+                    result,
+
+            })
+
+            if result.get(
+                "status"
+            ) == "blocked":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "mission_id":
+                        str(mission_id),
+
+                    "steps":
+                        steps,
+
+                    "failed_action":
+                        action,
+
+                    "result":
+                        result,
+
+                }
+
+        return {
+
+            "status":
+                "blocked",
+
+            "mission_id":
+                str(mission_id),
+
+            "steps":
+                steps,
+
+            "reason":
+                "Maximum lifecycle steps exceeded",
+
+            "max_steps":
+                max_steps,
+
+        }
+
+
+### MISSING FILE: C:\Users\USER\slh-bot-clean\core\mission_lifecycle_service.py
+
+
+### METHOD NOT FOUND
+FILE: core\runtime.py
+CLASS: Runtime
+METHOD: execute
+
+
+================================================================================
+FILE: core\kernel.py
+CLASS: SLHKernel
+METHOD: call_agent
+================================================================================
+
+def call_agent(self, name, cmd, event):
+        agent = self.agents.get(name)
+        if not agent:
+            return {
+                "type": "error",
+                "data": f"unknown agent: {name}"
+            }
+
+        new_event = dict(event)
+        new_event["cmd"] = cmd
+
+        result = agent.process(new_event)
+
+        return {
+            "type": "agent",
+            "data": result,
+            "meta": {"agent": name}
+        }

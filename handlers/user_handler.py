@@ -1,0 +1,33 @@
+import json, os
+from core.identity_resolver import get_display_name
+
+DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'state', 'db.json')
+
+def load_db():
+    with open(DB_PATH, encoding='utf-8') as f:
+        return json.load(f)
+
+def register(bot):
+    @bot.message_handler(commands=['profile'])
+    def user_info(m):
+        uid = str(m.chat.id)
+        db = load_db()
+        user = db.get('users', {}).get(uid, {})
+        profile = user.get('profile', {})
+        wallet = user.get('wallet', {})
+        academy = user.get('academy', {})
+        gamification = user.get('gamification', {})
+        name = get_display_name(m.from_user.id, m.from_user)
+        credits = wallet.get('credits', 0)
+        points = gamification.get('points', 0)
+        level = gamification.get('level', 1)
+        active_course = academy.get('active_course', 'אין')
+        progress = len(academy.get('courses', {}).get(active_course, {}).get('completed', [])) if active_course != 'איק' else 0
+        total_lessons = 10
+        pct = min(100, int(progress / total_lessons * 100)) if total_lessons else 0
+        text = f'👤 {name}\n'
+        text += f'💰 יתרה: {credits}\n'
+        text += f'⭐ נקודות: {points}\n'
+        text += f'📊 דרגה: {level}\n'
+        text += f'📚 התקדמות בקורס'
+        bot.reply_to(m, text)

@@ -1,0 +1,23 @@
+{
+  "schema": "slh-dna/v1",
+  "created_at": "2026-08-13T18:54:44.597552+00:00",
+  "updated_at": "2026-08-13T19:06:51.540390+00:00",
+  "project": "main",
+  "root": "C:\\Users\\USER\\slh-bot-clean",
+  "principles": [
+    "DNA is the persistent project source of truth.",
+    "Scans are immutable snapshots.",
+    "Signals are not automatically treated as authority.",
+    "Existing code is not deleted by mapping.",
+    "PowerShell and Telegram must consume the same DNA state."
+  ],
+  "current_scan": {
+    "generated_at": "2026-08-13T19:06:52.301937+00:00",
+    "snapshot": "_slh_map/scans/2026-08-13T190652_301937Z00",
+    "files": 315,
+    "edges": 225
+  },
+  "canonical_entrypoints": [],
+  "canonical_commands": [],
+  "state_authorities": []
+}

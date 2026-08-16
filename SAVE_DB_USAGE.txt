@@ -1,0 +1,41 @@
+﻿
+agent_client.py:90:def save_db(db):
+agent_client.py:127:    save_db(db)
+bot_stable.py:141:def save_db(db):
+core\migration.py:61:        profile_manager.save_db(db)
+core\profile_manager.py:22:def save_db(db):
+core\profile_manager.py:85:        save_db(db)
+core\profile_manager.py:110:    save_db(db)
+core\profile_manager.py:154:    save_db(db)
+core\profile_manager.py:188:    save_db(db)
+course_handlers.py:9:def save_db(db):
+course_handlers.py:35:        save_db(db)
+course_handlers.py:115:        save_db(db)
+course_handlers.py:151:            save_db(db)
+econ_handler.py:53:        state_manager.save_db(db)
+econ_handler.py:89:        state_manager.save_db(db)
+econ_handler.py:105:        state_manager.save_db(db)
+handlers\payment_handler.py:130:            state_manager.save_db(db)
+handlers\payment_handler.py:188:        state_manager.save_db(db)
+language_handler.py:34:        state_manager.save_db(db)
+learning_path.py:59:        state_manager.save_db(db)
+learning_path.py:93:        state_manager.save_db(db)
+learning_path.py:118:        state_manager.save_db(db)
+learning_path.py:149:        state_manager.save_db(db)
+onboarding_handler.py:13:def save_db(db):
+onboarding_handler.py:42:    save_db(db)
+slh.py:7:def save_db(db):
+slh.py:20:    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
+state\custom_handlers\ai_voting_handler.py:8:def save_db(db):
+state\custom_handlers\ai_voting_handler.py:34:        save_db(db)
+state\custom_handlers\ai_voting_handler.py:48:        save_db(db)
+state\custom_handlers\ai_voting_handler.py:73:        save_db(db)
+state\custom_handlers\staking_basic.py:9:def save_db(db):
+state\custom_handlers\staking_basic.py:38:        save_db(db)
+state\custom_handlers\staking_basic.py:58:        save_db(db)
+state_manager.py:19:def save_db(db):
+state_manager.py:39:        save_db(db)
+ton_handler.py:23:        state_manager.save_db(db)
+ton_handler.py:121:        state_manager.save_db(db)
+
+

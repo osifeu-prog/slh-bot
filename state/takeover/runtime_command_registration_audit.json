@@ -1,0 +1,553 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-08-14T16:20:29.304470+00:00",
+  "entrypoint": "bot_stable.py",
+  "loader": "handlers/loader.py",
+  "direct_registrations": [
+    {
+      "command": "/user",
+      "path": "DIRECT",
+      "source": "bot_stable.py",
+      "function": "user",
+      "line": 454,
+      "confidence": "HIGH"
+    }
+  ],
+  "dynamic_custom_registrations": [],
+  "modular_loader_registrations": [
+    {
+      "command": "/progress",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/academy_handler.py",
+      "module": "handlers.academy_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 4
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/progress",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/endday_handler.py",
+      "module": "handlers.endday_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/balance",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/endday_handler.py",
+      "module": "handlers.endday_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/start",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/help",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/join",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/progress",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/balance",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/ask",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/join",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/me_handler.py",
+      "module": "handlers.me_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 10
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/start",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/help",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/market",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/ask",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/os_handler.py",
+      "module": "handlers.os_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 5
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/join",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/payment_handler.py",
+      "module": "handlers.payment_handler",
+      "register_functions": [
+        {
+          "function": "register_payment_handlers",
+          "line": 15
+        },
+        {
+          "function": "register",
+          "line": 204
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/ask",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/payment_handler.py",
+      "module": "handlers.payment_handler",
+      "register_functions": [
+        {
+          "function": "register_payment_handlers",
+          "line": 15
+        },
+        {
+          "function": "register",
+          "line": 204
+        }
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "command": "/start",
+      "path": "MODULAR_LOADER",
+      "source": "handlers/ux_handler.py",
+      "module": "handlers.ux_handler",
+      "register_functions": [
+        {
+          "function": "register",
+          "line": 1
+        }
+      ],
+      "confidence": "HIGH"
+    }
+  ],
+  "command_map": {
+    "/start": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/start",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/start",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/start",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/ux_handler.py",
+          "module": "handlers.ux_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/help": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/help",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/help",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/join": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/join",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/join",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/me_handler.py",
+          "module": "handlers.me_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 10
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/join",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/payment_handler.py",
+          "module": "handlers.payment_handler",
+          "register_functions": [
+            {
+              "function": "register_payment_handlers",
+              "line": 15
+            },
+            {
+              "function": "register",
+              "line": 204
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/register": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/user": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/user",
+          "path": "DIRECT",
+          "source": "bot_stable.py",
+          "function": "user",
+          "line": 454,
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/progress": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/progress",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/academy_handler.py",
+          "module": "handlers.academy_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 4
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/progress",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/endday_handler.py",
+          "module": "handlers.endday_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/progress",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/report": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/market": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/market",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/balance": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/balance",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/endday_handler.py",
+          "module": "handlers.endday_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/balance",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    },
+    "/token": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/course": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/learn": {
+      "status": "NOT_REGISTERED",
+      "registrations": []
+    },
+    "/ask": {
+      "status": "REGISTERED_HIGH_CONFIDENCE",
+      "registrations": [
+        {
+          "command": "/ask",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/help_handler.py",
+          "module": "handlers.help_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 1
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/ask",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/os_handler.py",
+          "module": "handlers.os_handler",
+          "register_functions": [
+            {
+              "function": "register",
+              "line": 5
+            }
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "command": "/ask",
+          "path": "MODULAR_LOADER",
+          "source": "handlers/payment_handler.py",
+          "module": "handlers.payment_handler",
+          "register_functions": [
+            {
+              "function": "register_payment_handlers",
+              "line": 15
+            },
+            {
+              "function": "register",
+              "line": 204
+            }
+          ],
+          "confidence": "HIGH"
+        }
+      ]
+    }
+  },
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

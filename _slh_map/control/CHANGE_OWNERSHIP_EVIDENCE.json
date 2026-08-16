@@ -1,0 +1,95 @@
+﻿{
+    "schema":  "slh-os/change-ownership-evidence/v1",
+    "generated_at_utc":  "2026-08-13T19:20:02.2752242Z",
+    "git":  {
+                "branch":  "main",
+                "head":  "4eca859bcb5669ebd35cb85354602bc2fbe782db",
+                "status_count":  18
+            },
+    "tracked":  {
+                    "count":  7,
+                    "diff_file":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\TRACKED_CHANGES.diff"
+                },
+    "untracked":  {
+                      "count":  11
+                  },
+    "classification":  [
+                           {
+                               "path":  "AUDIT_20260813_FULL/",
+                               "exists":  true,
+                               "type":  "directory",
+                               "bytes":  0,
+                               "category":  "AUDIT_ARTIFACT"
+                           },
+                           {
+                               "path":  "_slh_map/",
+                               "exists":  true,
+                               "type":  "directory",
+                               "bytes":  0,
+                               "category":  "CONTROL_EVIDENCE"
+                           },
+                           {
+                               "path":  "bot_stable.py.before_authority_cleanup_20260813",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  22564,
+                               "category":  "UNKNOWN"
+                           },
+                           {
+                               "path":  "fix_dna_entrypoints.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  493,
+                               "category":  "REPAIR_TOOL"
+                           },
+                           {
+                               "path":  "report_handler.py.before_authority_cleanup_20260813",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  5516,
+                               "category":  "BACKUP"
+                           },
+                           {
+                               "path":  "slh_authority_audit.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  5224,
+                               "category":  "AUDIT_TOOL"
+                           },
+                           {
+                               "path":  "slh_clean_inventory.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  1586,
+                               "category":  "AUDIT_TOOL"
+                           },
+                           {
+                               "path":  "slh_dna_scan.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  11662,
+                               "category":  "AUDIT_TOOL"
+                           },
+                           {
+                               "path":  "slh_fix_bom.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  2193,
+                               "category":  "AUDIT_TOOL"
+                           },
+                           {
+                               "path":  "slhdna.bat",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  38,
+                               "category":  "DNA_TOOL"
+                           },
+                           {
+                               "path":  "slhdna.py",
+                               "exists":  true,
+                               "type":  "file",
+                               "bytes":  13520,
+                               "category":  "DNA_TOOL"
+                           }
+                       ]
+}

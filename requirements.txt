@@ -1,0 +1,8 @@
+flask==3.0.3
+flask-cors==6.0.5
+gunicorn==26.0.0
+pyTelegramBotAPI==4.26.0
+python-dotenv==1.0.1
+openai>=1.0.0
+groq
+paho-mqtt

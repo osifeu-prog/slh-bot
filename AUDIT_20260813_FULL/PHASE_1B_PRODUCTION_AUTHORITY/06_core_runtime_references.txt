@@ -1,0 +1,10 @@
+﻿
+Path                                            LineNumber Line                                 
+----                                            ---------- ----                                 
+C:\Users\USER\slh-bot-clean\runtime_test.py             12 rt = Runtime()                       
+C:\Users\USER\slh-bot-clean\SLH_MAIN.py                  2 from core.runtime import Runtime     
+C:\Users\USER\slh-bot-clean\SLH_MAIN.py                209     runtime = Runtime(               
+C:\Users\USER\slh-bot-clean\core\runtime.py             42         self.dispatcher = Dispatcher(
+C:\Users\USER\slh-bot-clean\tools\real_audit.py         14 def t_runtime():                     
+
+

@@ -1,0 +1,422 @@
+{
+  "schema": "slh-dna/authority-audit/v1",
+  "generated_at": "2026-08-13T19:32:07.663212+00:00",
+  "principle": "Signals are evidence, not authority.",
+  "targets": [
+    {
+      "path": "bot_core.py",
+      "status": "PARSED",
+      "functions": [
+        "get_updates",
+        "load_plugins",
+        "send"
+      ],
+      "imports": [
+        "importlib",
+        "json",
+        "os",
+        "requests",
+        "time"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 30,
+      "main_guard": false,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "bot_gateway.py",
+      "status": "PARSED",
+      "functions": [
+        "api_agents",
+        "api_devices",
+        "api_health",
+        "api_logs",
+        "api_stats",
+        "dashboard",
+        "dashboard_app_js",
+        "dashboard_branding",
+        "dashboard_style_css",
+        "health",
+        "index",
+        "load_bots",
+        "log",
+        "run_bot",
+        "run_flask"
+      ],
+      "imports": [
+        "core.agent_registry.STORE",
+        "core.control_center_api.register_control_center",
+        "dotenv.load_dotenv",
+        "flask.Flask",
+        "flask.jsonify",
+        "flask.request",
+        "flask.send_from_directory",
+        "flask_cors.CORS",
+        "handlers.loader.load_handlers",
+        "json",
+        "os",
+        "pathlib.Path",
+        "sys",
+        "telebot",
+        "threading",
+        "time",
+        "traceback",
+        "webapp.app"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 106,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "bot_stable.py",
+      "status": "PARSED",
+      "functions": [
+        "debug",
+        "debugcmd",
+        "diagnose_cmd",
+        "disk",
+        "ensure_user",
+        "errors",
+        "goal",
+        "kernellog",
+        "kernelstatus",
+        "load_db",
+        "load_token",
+        "master",
+        "memory",
+        "now",
+        "plugin",
+        "restart",
+        "rlogs",
+        "rollback",
+        "save_db",
+        "snapshot",
+        "start_bot",
+        "sync_command",
+        "sysinfo",
+        "system_visibility",
+        "termlog",
+        "test",
+        "test_agents",
+        "testcmd",
+        "update",
+        "user"
+      ],
+      "imports": [
+        "admin_utils.is_admin",
+        "audit_logger.audit",
+        "audit_logger.get_audit",
+        "core.event_bus.EventBus",
+        "core.mission_lifecycle.MissionLifecycleService",
+        "core.profile_manager",
+        "datetime",
+        "datetime.datetime",
+        "doctor_handler.register_doctor_handlers",
+        "dotenv.load_dotenv",
+        "glob",
+        "handlers.llm_handler.register",
+        "handlers.loader.load_handlers",
+        "handlers.payment_handler.register_payment_handlers",
+        "heb_convert.convert_to_hebrew",
+        "importlib.util",
+        "json",
+        "marketplace.load_store",
+        "marketplace.save_store",
+        "os",
+        "plugins.task.TaskPlugin",
+        "psutil",
+        "py_compile",
+        "re",
+        "refresh_token_handler.init",
+        "security.permissions",
+        "slh_lock.slh_lock",
+        "ssl",
+        "state_manager",
+        "subprocess",
+        "sys",
+        "telebot",
+        "time",
+        "traceback",
+        "tutorial_handler",
+        "urllib.request",
+        "viewfile_handler"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 302,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "slh.py",
+      "status": "PARSED",
+      "functions": [
+        "cmd_agents",
+        "cmd_credits",
+        "cmd_status",
+        "cmd_users",
+        "load_db",
+        "main",
+        "print_menu",
+        "save_db"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "subprocess",
+        "time"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 39,
+      "main_guard": false,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": true,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605/bot_gateway.py",
+      "status": "PARSED",
+      "functions": [
+        "api_agents",
+        "api_devices",
+        "api_stats",
+        "dashboard",
+        "health",
+        "index",
+        "load_bots",
+        "log",
+        "run_bot",
+        "run_flask"
+      ],
+      "imports": [
+        "core.agent_registry.STORE",
+        "core.control_center_api.register_control_center",
+        "dotenv.load_dotenv",
+        "flask.Flask",
+        "flask.jsonify",
+        "flask.send_from_directory",
+        "flask_cors.CORS",
+        "handlers.loader.load_handlers",
+        "json",
+        "os",
+        "pathlib.Path",
+        "sys",
+        "telebot",
+        "threading",
+        "time",
+        "traceback",
+        "webapp.app"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 88,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605/webapp.py",
+      "status": "PARSED",
+      "functions": [
+        "api_leaderboard",
+        "get_tasks",
+        "get_wallet",
+        "health",
+        "load_db",
+        "market",
+        "mini_app"
+      ],
+      "imports": [
+        "flask.Flask",
+        "flask.jsonify",
+        "flask.send_from_directory",
+        "json",
+        "pathlib.Path",
+        "plugins.leaderboard.LeaderboardPlugin"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 48,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "SLH_GATEWAY.py",
+      "status": "PARSED",
+      "functions": [
+        "__init__",
+        "send"
+      ],
+      "imports": [
+        "SLH_KERNEL.SLHKernel",
+        "time"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 4,
+      "main_guard": false,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "SLH_KERNEL.py",
+      "status": "PARSED",
+      "functions": [
+        "__init__",
+        "get_module",
+        "register_module",
+        "route",
+        "status"
+      ],
+      "imports": [
+        "SLH_MODULES.BaseModule",
+        "SLH_MODULES.TelegramModule"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 14,
+      "main_guard": false,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "SLH_MAIN.py",
+      "status": "PARSED",
+      "functions": [
+        "__init__",
+        "boot_kernel",
+        "boot_ok",
+        "fatal_errors",
+        "main",
+        "status",
+        "warnings"
+      ],
+      "imports": [
+        "adapters.cli.CLIAdapter",
+        "core.agent_factory.load_agents_into_kernel",
+        "core.kernel.SLHKernel",
+        "core.runtime.Runtime"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 56,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": true,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    },
+    {
+      "path": "webapp.py",
+      "status": "PARSED",
+      "functions": [
+        "api_leaderboard",
+        "get_tasks",
+        "get_wallet",
+        "health",
+        "load_db",
+        "market",
+        "mini_app"
+      ],
+      "imports": [
+        "flask.Flask",
+        "flask.jsonify",
+        "flask.send_from_directory",
+        "json",
+        "pathlib.Path",
+        "plugins.leaderboard.LeaderboardPlugin"
+      ],
+      "handler_signals": [],
+      "state_reads": [],
+      "state_writes": [],
+      "call_count": 48,
+      "main_guard": true,
+      "signals": {
+        "filename_entrypoint": true,
+        "has_main": false,
+        "has_run": false,
+        "has_start": false,
+        "has_dispatch": false,
+        "has_handlers": false,
+        "has_state_writes": false
+      }
+    }
+  ]
+}

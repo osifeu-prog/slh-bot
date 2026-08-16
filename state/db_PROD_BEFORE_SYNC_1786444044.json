@@ -1,0 +1,163 @@
+{
+  "users": {
+    "8789977826": {
+      "profile": {
+        "created": "2026-08-07T22:43:47.559294",
+        "joined": "2026-08-07T22:43:47.559294"
+      },
+      "wallet": {
+        "credits": 1050
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 4,
+            "completed": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 75,
+        "level": 1
+      },
+      "referral": {
+        "code": "ADMIN2026",
+        "count": 0,
+        "commission": 0
+      },
+      "name": "Osif",
+      "role": "OWNER",
+      "joined": true,
+      "test_field": null,
+      "group": "נ"
+    }
+  },
+  "students": {},
+  "tasks": {
+    "1": {
+      "title": "השלם קורס Bitcoin",
+      "progress": 33,
+      "reward": 50,
+      "done_by": [
+        8789977826
+      ]
+    },
+    "2": {
+      "title": "SLH OS Full Production Launch & Voting Integration",
+      "progress": 10,
+      "reward": 0
+    },
+    "3": {
+      "title": "Direct creation",
+      "progress": 0,
+      "reward": 0
+    }
+  },
+  "votes": {
+    "1": {
+      "text": "\"האם להוסיף קורס AI?\" – הצעה.",
+      "by": "8789977826",
+      "time": 1786232582.536529,
+      "yes": 1,
+      "no": 0,
+      "voters": {
+        "8789977826": "yes"
+      }
+    },
+    "2": {
+      "text": "\"האם לאשר את פריסת ערוצי התשלום וה־Mini App בגרסת הייצור?\" – הצעה מנוהלת.",
+      "by": "8789977826",
+      "time": 1786384994.461242,
+      "yes": 1,
+      "no": 0,
+      "voters": {
+        "8789977826": "yes"
+      }
+    }
+  },
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "state": "active",
+      "id": "1",
+      "role": "security",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "state": "active",
+      "id": "2",
+      "role": "doctor",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "3": {
+      "name": "SyncAgent",
+      "state": "active",
+      "id": "3",
+      "role": "sync",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "4": {
+      "name": "TokenAgent",
+      "state": "idle",
+      "id": "4",
+      "role": "token",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "5": {
+      "id": "5",
+      "name": "TempTester",
+      "state": "idle",
+      "role": "test",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-10T23:09:47.074901"
+    }
+  },
+  "products": {
+    "basic": {
+      "name": "Basic 100 Credits",
+      "price_usd": 5,
+      "credits": 100
+    },
+    "pro": {
+      "name": "Pro 500 Credits",
+      "price_usd": 20,
+      "credits": 500
+    }
+  }
+}

@@ -1,0 +1,74 @@
+﻿[
+    {
+        "status":  " M",
+        "path":  "core/identity_resolver.py"
+    },
+    {
+        "status":  " M",
+        "path":  "core/keyboard_detector.py"
+    },
+    {
+        "status":  " M",
+        "path":  "core/message_utils.py"
+    },
+    {
+        "status":  " M",
+        "path":  "handlers/llm_handler.py"
+    },
+    {
+        "status":  " M",
+        "path":  "store/grant_engine.py"
+    },
+    {
+        "status":  " M",
+        "path":  "store/purchase_service.py"
+    },
+    {
+        "status":  " M",
+        "path":  "tools/slh_launch_check.py"
+    },
+    {
+        "status":  "??",
+        "path":  "AUDIT_20260813_FULL/"
+    },
+    {
+        "status":  "??",
+        "path":  "_slh_map/"
+    },
+    {
+        "status":  "??",
+        "path":  "bot_stable.py.before_authority_cleanup_20260813"
+    },
+    {
+        "status":  "??",
+        "path":  "fix_dna_entrypoints.py"
+    },
+    {
+        "status":  "??",
+        "path":  "report_handler.py.before_authority_cleanup_20260813"
+    },
+    {
+        "status":  "??",
+        "path":  "slh_authority_audit.py"
+    },
+    {
+        "status":  "??",
+        "path":  "slh_clean_inventory.py"
+    },
+    {
+        "status":  "??",
+        "path":  "slh_dna_scan.py"
+    },
+    {
+        "status":  "??",
+        "path":  "slh_fix_bom.py"
+    },
+    {
+        "status":  "??",
+        "path":  "slhdna.bat"
+    },
+    {
+        "status":  "??",
+        "path":  "slhdna.py"
+    }
+]
