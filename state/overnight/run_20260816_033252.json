@@ -1,0 +1,985 @@
+{
+  "run_id": "20260816_033252",
+  "started_at": "2026-08-16T03:32:52.633218",
+  "mode": "READ_ONLY",
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/profile_manager.py",
+      "line": 145,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + amount",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py",
+      "line": 103,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + credits",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/profile_manager.py",
+      "line": 145,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + amount",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py",
+      "line": 103,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + credits",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/profile_manager.py",
+      "line": 145,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + amount",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "money_authority",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/ton_handler.py",
+      "line": 103,
+      "message": "Direct wallet credit mutation outside Money Authority",
+      "evidence": "wallet[\"credits\"] = wallet.get(\"credits\", 0) + credits",
+      "recommendation": "Route mutation through core.money_service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/profile_manager.py",
+      "line": 138,
+      "message": "Legacy add_balance usage",
+      "evidence": "def add_balance(uid, amount):",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/reward_engine.py",
+      "line": 59,
+      "message": "Legacy balance mutation caller",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/reward_engine.py",
+      "line": 59,
+      "message": "Legacy add_balance usage",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/profile_manager.py",
+      "line": 138,
+      "message": "Legacy add_balance usage",
+      "evidence": "def add_balance(uid, amount):",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/reward_engine.py",
+      "line": 59,
+      "message": "Legacy balance mutation caller",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/reward_engine.py",
+      "line": 59,
+      "message": "Legacy add_balance usage",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/profile_manager.py",
+      "line": 138,
+      "message": "Legacy add_balance usage",
+      "evidence": "def add_balance(uid, amount):",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/reward_engine.py",
+      "line": 59,
+      "message": "Legacy balance mutation caller",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/reward_engine.py",
+      "line": 59,
+      "message": "Legacy add_balance usage",
+      "evidence": "result[\"credits\"] = profile_manager.add_balance(",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 30,
+      "message": "Legacy balance mutation caller",
+      "evidence": "profile_manager.add_balance(uid, -price)",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 30,
+      "message": "Legacy add_balance usage",
+      "evidence": "profile_manager.add_balance(uid, -price)",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 39,
+      "message": "Legacy balance mutation caller",
+      "evidence": "profile_manager.add_balance(referrer_uid, commission)",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 39,
+      "message": "Legacy add_balance usage",
+      "evidence": "profile_manager.add_balance(referrer_uid, commission)",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "econ_handler.py",
+      "line": 41,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 56,
+      "message": "Legacy balance mutation caller",
+      "evidence": "profile_manager.add_balance(uid, 50)",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "econ_handler.py",
+      "line": 56,
+      "message": "Legacy add_balance usage",
+      "evidence": "profile_manager.add_balance(uid, 50)",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "econ_handler.py",
+      "line": 57,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "handlers/payment_handler.py",
+      "line": 137,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "learning_path.py",
+      "line": 60,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "learning_path.py",
+      "line": 91,
+      "message": "Legacy balance mutation caller",
+      "evidence": "profile_manager.add_balance(str(sub[\"uid\"]), 40)",
+      "recommendation": "Replace with explicit money_service.credit/debit or domain service."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "learning_path.py",
+      "line": 91,
+      "message": "Legacy add_balance usage",
+      "evidence": "profile_manager.add_balance(str(sub[\"uid\"]), 40)",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "learning_path.py",
+      "line": 94,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "learning_path.py",
+      "line": 120,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "state_consistency",
+      "file": "learning_path.py",
+      "line": 151,
+      "message": "DB snapshot save in financial workflow",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Use one atomic domain operation instead of stale load/mutate/save."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "tools/slh_authority_chain_audit.py",
+      "line": 69,
+      "message": "Legacy add_balance usage",
+      "evidence": "\"add_balance(\",",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "tools/slh_certification.py",
+      "line": 138,
+      "message": "Legacy add_balance usage",
+      "evidence": "\"add_balance(\",",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "tools/slh_payment_flow_audit.py",
+      "line": 77,
+      "message": "Legacy add_balance usage",
+      "evidence": "\"add_balance(\",",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "HIGH",
+      "category": "money_authority",
+      "file": "tools/slh_precise_money_mutation_audit.py",
+      "line": 96,
+      "message": "Legacy add_balance usage",
+      "evidence": "\"add_balance(\",",
+      "recommendation": "Remove legacy money mutation path."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 17,
+      "message": "Command /pay registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py\", \"line\": 17}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py\", \"line\": 17}, {\"file\": \"handlers/payment_handler.py\", \"line\": 17}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py\", \"line\": 15}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 137,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 155,
+      "message": "Command /history registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py\", \"line\": 155}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py\", \"line\": 155}, {\"file\": \"handlers/payment_handler.py\", \"line\": 155}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py\", \"line\": 147}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 168,
+      "message": "Command /revenue registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py\", \"line\": 168}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py\", \"line\": 168}, {\"file\": \"handlers/payment_handler.py\", \"line\": 168}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py\", \"line\": 160}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 185,
+      "message": "Command /fakepay registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py\", \"line\": 185}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py\", \"line\": 185}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py\", \"line\": 177}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/payment_handler.py",
+      "line": 199,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/staking_handler.py",
+      "line": 4,
+      "message": "Command /stake registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/staking_handler.py\", \"line\": 4}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/staking_handler.py\", \"line\": 4}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/staking_handler.py\", \"line\": 4}, {\"file\": \"handlers/staking_handler.py\", \"line\": 6}, {\"file\": \"archive/web3_disabled/staking_handler.py\", \"line\": 22}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/staking_handler.py",
+      "line": 23,
+      "message": "Command /unstake registered in multiple locations",
+      "evidence": "[{\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/staking_handler.py\", \"line\": 23}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/staking_handler.py\", \"line\": 23}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/staking_handler.py\", \"line\": 23}, {\"file\": \"handlers/staking_handler.py\", \"line\": 46}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py",
+      "line": 24,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py",
+      "line": 137,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/payment_handler.py",
+      "line": 199,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py",
+      "line": 24,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "AUDIT_SNAPSHOT_20260815_211655/ton_handler.py",
+      "line": 24,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py",
+      "line": 52,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py",
+      "line": 88,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py",
+      "line": 104,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py",
+      "line": 129,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "SLH_ADAPTER_BACKUP_20260804_182035/payment_handler.py",
+      "line": 187,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+      "line": 520,
+      "message": "Command /market registered in multiple locations",
+      "evidence": "[{\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 520}, {\"file\": \"handlers/market_handler.py\", \"line\": 28}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+      "line": 799,
+      "message": "Command /broadcast registered in multiple locations",
+      "evidence": "[{\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 799}, {\"file\": \"handlers/broadcast_handler.py\", \"line\": 6}, {\"file\": \"_archive/legacy_handlers/20260813_210100/broadcast_handler.py\", \"line\": 4}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "add_sync_patch.py",
+      "line": 6,
+      "message": "Command /system_visibility registered in multiple locations",
+      "evidence": "[{\"file\": \"add_sync_patch.py\", \"line\": 6}, {\"file\": \"add_visibility_report.py\", \"line\": 19}, {\"file\": \"bot_stable.py\", \"line\": 255}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 255}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "add_sync_patch.py",
+      "line": 8,
+      "message": "Command /sync registered in multiple locations",
+      "evidence": "[{\"file\": \"add_sync_patch.py\", \"line\": 8}, {\"file\": \"add_sync_patch.py\", \"line\": 14}, {\"file\": \"bot_stable.py\", \"line\": 188}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 188}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "add_visibility_report.py",
+      "line": 11,
+      "message": "Command /status registered in multiple locations",
+      "evidence": "[{\"file\": \"add_visibility_report.py\", \"line\": 11}, {\"file\": \"handlers/admin_extras.py\", \"line\": 15}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "admin_handler.py",
+      "line": 2,
+      "message": "Command /admin registered in multiple locations",
+      "evidence": "[{\"file\": \"admin_handler.py\", \"line\": 2}, {\"file\": \"archive/legacy_economy/app.py\", \"line\": 36}, {\"file\": \"archive/legacy_economy/railway_bot.py\", \"line\": 31}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "advanced_ask_handler.py",
+      "line": 5,
+      "message": "Command /ask registered in multiple locations",
+      "evidence": "[{\"file\": \"advanced_ask_handler.py\", \"line\": 5}, {\"file\": \"handlers/advanced_ask_handler.py\", \"line\": 16}, {\"file\": \"SLH_ASK_FIX_BACKUP_20260804_182922/advanced_ask_handler.py\", \"line\": 4}, {\"file\": \"SLH_ASK_FIX_BACKUP_20260804_182922/llm_handler.py\", \"line\": 52}, {\"file\": \"tools/disable_botstable_ask.py\", \"line\": 6}, {\"file\": \"tools/disable_botstable_ask.py\", \"line\": 25}, {\"file\": \"tools/disable_botstable_ask.py\", \"line\": 26}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "archive/legacy_clients/agent_client_termux.py",
+      "line": 17,
+      "message": "Command /start registered in multiple locations",
+      "evidence": "[{\"file\": \"archive/legacy_clients/agent_client_termux.py\", \"line\": 17}, {\"file\": \"archive/legacy_economy/app.py\", \"line\": 22}, {\"file\": \"archive/legacy_economy/railway_bot.py\", \"line\": 17}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "archive/legacy_clients/agent_client_termux.py",
+      "line": 26,
+      "message": "Command /staking_report registered in multiple locations",
+      "evidence": "[{\"file\": \"archive/legacy_clients/agent_client_termux.py\", \"line\": 26}, {\"file\": \"archive/web3_disabled/staking_handler.py\", \"line\": 41}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "archive/legacy_clients/agent_client_termux.py",
+      "line": 61,
+      "message": "Command /rotate_keys registered in multiple locations",
+      "evidence": "[{\"file\": \"archive/legacy_clients/agent_client_termux.py\", \"line\": 61}, {\"file\": \"archive/web3_disabled/staking_handler.py\", \"line\": 60}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 304,
+      "message": "Command /master registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 304}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 304}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 308,
+      "message": "Command /restart registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 308}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 308}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 317,
+      "message": "Command /memory registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 317}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 317}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 327,
+      "message": "Command /debug registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 327}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 327}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 336,
+      "message": "Command /errors registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 336}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 336}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 346,
+      "message": "Command /plugin registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 346}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 346}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 355,
+      "message": "Command /goal registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 355}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 355}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 371,
+      "message": "Command /sysinfo registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 371}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 371}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 388,
+      "message": "Command /disk registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 388}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 388}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 392,
+      "message": "Command /test registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 392}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 392}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 398,
+      "message": "Command /kernellog registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 398}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 398}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 402,
+      "message": "Command /kernelstatus registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 402}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 402}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 406,
+      "message": "Command /update registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 406}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 406}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 411,
+      "message": "Command /rollback registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 411}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 411}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 419,
+      "message": "Command /test_agents registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 419}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 419}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 453,
+      "message": "Command /user registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 453}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 453}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 468,
+      "message": "Command /rlogs registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 468}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 468}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 506,
+      "message": "Command /termlog registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 506}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 506}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 520,
+      "message": "Command /testcmd registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 520}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 621}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 538,
+      "message": "Command /debugcmd registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 538}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 639}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 554,
+      "message": "Command /diagnose registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 554}, {\"file\": \"diag_fix_handlers.py\", \"line\": 5}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 655}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "bot_stable.py",
+      "line": 698,
+      "message": "Command /snapshot registered in multiple locations",
+      "evidence": "[{\"file\": \"bot_stable.py\", \"line\": 698}, {\"file\": \"SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py\", \"line\": 826}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "complete_handler.py",
+      "line": 4,
+      "message": "Command /complete registered in multiple locations",
+      "evidence": "[{\"file\": \"complete_handler.py\", \"line\": 4}, {\"file\": \"handlers/academy_handler.py\", \"line\": 72}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "econ_handler.py",
+      "line": 5,
+      "message": "Command /balance registered in multiple locations",
+      "evidence": "[{\"file\": \"econ_handler.py\", \"line\": 5}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py\", \"line\": 4}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "econ_handler.py",
+      "line": 41,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "econ_handler.py",
+      "line": 49,
+      "message": "Command /giveme registered in multiple locations",
+      "evidence": "[{\"file\": \"econ_handler.py\", \"line\": 49}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py\", \"line\": 96}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "econ_handler.py",
+      "line": 57,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "handlers/exec_request_handler.py",
+      "line": 28,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "handlers/payment_handler.py",
+      "line": 137,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "handlers/store_handler.py",
+      "line": 14,
+      "message": "Command /buy registered in multiple locations",
+      "evidence": "[{\"file\": \"handlers/store_handler.py\", \"line\": 14}, {\"file\": \"SLH_ADAPTER_BACKUP_20260804_182035/econ_handler.py\", \"line\": 11}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "handlers/wallet_handler.py",
+      "line": 6,
+      "message": "Command /wallet registered in multiple locations",
+      "evidence": "[{\"file\": \"handlers/wallet_handler.py\", \"line\": 6}, {\"file\": \"archive/legacy_economy/app.py\", \"line\": 29}, {\"file\": \"archive/legacy_economy/fix_registration.py\", \"line\": 22}, {\"file\": \"archive/legacy_economy/railway_bot.py\", \"line\": 24}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "help_handler.py",
+      "line": 2,
+      "message": "Command /help registered in multiple locations",
+      "evidence": "[{\"file\": \"help_handler.py\", \"line\": 2}, {\"file\": \"handlers/help_handler.py\", \"line\": 2}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "join_fix.py",
+      "line": 7,
+      "message": "Command /join registered in multiple locations",
+      "evidence": "[{\"file\": \"join_fix.py\", \"line\": 7}, {\"file\": \"join_fix.py\", \"line\": 42}, {\"file\": \"handlers/join_handler.py\", \"line\": 8}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "language_handler.py",
+      "line": 34,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "learning_path.py",
+      "line": 60,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "learning_path.py",
+      "line": 94,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "learning_path.py",
+      "line": 120,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "learning_path.py",
+      "line": 151,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "smart_leaderboard.py",
+      "line": 10,
+      "message": "Command /leaderboard registered in multiple locations",
+      "evidence": "[{\"file\": \"smart_leaderboard.py\", \"line\": 10}, {\"file\": \"state/custom_handlers/dynamic_leaderboard.py\", \"line\": 6}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "db_writer",
+      "file": "ton_handler.py",
+      "line": 24,
+      "message": "External module directly persists global DB snapshot",
+      "evidence": "state_manager.save_db(db)",
+      "recommendation": "Prefer atomic domain operations for state mutations."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "ton_handler.py",
+      "line": 26,
+      "message": "Command /ton registered in multiple locations",
+      "evidence": "[{\"file\": \"ton_handler.py\", \"line\": 26}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py\", \"line\": 26}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py\", \"line\": 26}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/ton_handler.py\", \"line\": 26}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "ton_handler.py",
+      "line": 43,
+      "message": "Command /ton_check registered in multiple locations",
+      "evidence": "[{\"file\": \"ton_handler.py\", \"line\": 43}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py\", \"line\": 43}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py\", \"line\": 43}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/ton_handler.py\", \"line\": 43}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "ton_handler.py",
+      "line": 122,
+      "message": "Command /ton_rate registered in multiple locations",
+      "evidence": "[{\"file\": \"ton_handler.py\", \"line\": 122}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py\", \"line\": 128}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py\", \"line\": 128}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/ton_handler.py\", \"line\": 128}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "ton_handler.py",
+      "line": 141,
+      "message": "Command /ton_set_wallet registered in multiple locations",
+      "evidence": "[{\"file\": \"ton_handler.py\", \"line\": 141}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211932/ton_handler.py\", \"line\": 147}, {\"file\": \"AUDIT_MONEY_BACKUP_20260815_211946/ton_handler.py\", \"line\": 147}, {\"file\": \"AUDIT_SNAPSHOT_20260815_211655/ton_handler.py\", \"line\": 147}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    },
+    {
+      "severity": "MEDIUM",
+      "category": "duplicate_handler",
+      "file": "tools/runtime_command_registration_audit.py",
+      "line": 72,
+      "message": "Command /x registered in multiple locations",
+      "evidence": "[{\"file\": \"tools/runtime_command_registration_audit.py\", \"line\": 72}, {\"file\": \"tools/runtime_command_registration_audit.py\", \"line\": 73}]",
+      "recommendation": "Establish one authoritative owner for this command."
+    }
+  ],
+  "tests": {
+    "python_files": 1261,
+    "syntax_ok": 1245,
+    "syntax_failed": 0,
+    "commands": 203,
+    "duplicate_commands": 51,
+    "git_changes": 27,
+    "test_files": 2
+  },
+  "summary": {
+    "CRITICAL": 6,
+    "HIGH": 28,
+    "MEDIUM": 73
+  },
+  "finished_at": "2026-08-16T03:32:58.814449"
+}

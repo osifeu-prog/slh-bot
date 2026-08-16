@@ -1,39 +1,83 @@
-import json, os
+﻿from core import money_service
+
 
 def register(bot):
+
     @bot.message_handler(commands=['stake'])
     def stake_cmd(msg):
         try:
-            amount = int(msg.text.split()[-1])
-            with open('state/db.json', encoding='utf-8') as f:
-                db = json.load(f)
-            user = db['users'].setdefault(str(msg.from_user.id), {}).setdefault('wallet', {})
-            if user.get('credits', 0) < amount:
-                bot.reply_to(msg, f"אין מספיק קרדיטים ({user.get('credits', 0)})")
+            parts = msg.text.split()
+
+            if len(parts) != 2:
+                bot.reply_to(msg, "Usage: /stake <amount>")
                 return
-            user['credits'] -= amount
-            user.setdefault('staked', 0)
-            user['staked'] += amount
-            with open('state/db.json', 'w', encoding='utf-8') as f:
-                json.dump(db, f, ensure_ascii=False, indent=2)
-            bot.reply_to(msg, f"✅ {amount} credits הועברו לסטייקינג")
+
+            amount = int(parts[1])
+
+            if amount <= 0:
+                bot.reply_to(msg, "Amount must be positive.")
+                return
+
+            uid = str(msg.from_user.id)
+
+            result = money_service.stake(
+                uid,
+                amount,
+                idempotency_key=f"telegram:stake:{msg.chat.id}:{msg.message_id}",
+            )
+
+            bot.reply_to(
+                msg,
+                f"Stake successful: {amount} credits.\n"
+                f"Staked balance: {result}"
+            )
+
+        except ValueError as e:
+            if str(e) == "Insufficient credits":
+                bot.reply_to(msg, "Not enough credits.")
+            else:
+                bot.reply_to(msg, f"Stake failed: {e}")
+
         except Exception as e:
-            bot.reply_to(msg, f"❌ {e}")
+            print(f"[STAKE] ERROR: {e}")
+            bot.reply_to(msg, "Stake failed.")
+
 
     @bot.message_handler(commands=['unstake'])
     def unstake_cmd(msg):
         try:
-            amount = int(msg.text.split()[-1])
-            with open('state/db.json', encoding='utf-8') as f:
-                db = json.load(f)
-            user = db['users'].setdefault(str(msg.from_user.id), {}).setdefault('wallet', {})
-            if user.get('staked', 0) < amount:
-                bot.reply_to(msg, f"אין מספיק סטייק ({user.get('staked', 0)})")
+            parts = msg.text.split()
+
+            if len(parts) != 2:
+                bot.reply_to(msg, "Usage: /unstake <amount>")
                 return
-            user['staked'] -= amount
-            user['credits'] += amount
-            with open('state/db.json', 'w', encoding='utf-8') as f:
-                json.dump(db, f, ensure_ascii=False, indent=2)
-            bot.reply_to(msg, f"✅ {amount} credits הוחזרו מהסטייקינג")
+
+            amount = int(parts[1])
+
+            if amount <= 0:
+                bot.reply_to(msg, "Amount must be positive.")
+                return
+
+            uid = str(msg.from_user.id)
+
+            result = money_service.unstake(
+                uid,
+                amount,
+                idempotency_key=f"telegram:unstake:{msg.chat.id}:{msg.message_id}",
+            )
+
+            bot.reply_to(
+                msg,
+                f"Unstake successful: {amount} credits.\n"
+                f"Available balance: {result}"
+            )
+
+        except ValueError as e:
+            if str(e) == "Insufficient staked":
+                bot.reply_to(msg, "Not enough staked credits.")
+            else:
+                bot.reply_to(msg, f"Unstake failed: {e}")
+
         except Exception as e:
-            bot.reply_to(msg, f"❌ {e}")
+            print(f"[UNSTAKE] ERROR: {e}")
+            bot.reply_to(msg, "Unstake failed.")

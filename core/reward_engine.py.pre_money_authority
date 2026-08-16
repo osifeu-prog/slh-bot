@@ -1,15 +1,12 @@
-﻿"""
+"""
 SLH Reward Engine
-Reward orchestration layer.
-
-Money mutations belong exclusively to core.money_service.
+Single reward gateway
 """
 
 from datetime import datetime
+from core import profile_manager
 import json
 from pathlib import Path
-
-from core import money_service, profile_manager
 
 
 LEDGER = Path("state/rewards_ledger.json")
@@ -21,9 +18,11 @@ def _load():
 
     try:
         return json.loads(
-            LEDGER.read_text(encoding="utf-8")
+            LEDGER.read_text(
+                encoding="utf-8"
+            )
         )
-    except Exception:
+    except:
         return []
 
 
@@ -42,9 +41,9 @@ def grant(
     uid,
     reason,
     credits=0,
-    points=0,
-    idempotency_key=None,
+    points=0
 ):
+
     if not uid:
         raise ValueError("Reward requires user id")
 
@@ -54,20 +53,12 @@ def grant(
     if credits == 0 and points == 0:
         raise ValueError("Empty reward rejected")
 
-    result = {}
+    result={}
 
     if credits:
-        if credits < 0:
-            raise ValueError(
-                "Reward credits must be positive; use debit for spending"
-            )
-
-        result["credits"] = money_service.credit(
+        result["credits"] = profile_manager.add_balance(
             uid,
-            credits,
-            reason=reason,
-            source="reward",
-            idempotency_key=idempotency_key,
+            credits
         )
 
     if points:
@@ -78,17 +69,19 @@ def grant(
 
         result["points"] = points
 
-    entry = {
-        "user": str(uid),
-        "reason": reason,
-        "credits": credits,
-        "points": points,
-        "timestamp": datetime.utcnow().isoformat(),
-        "idempotency_key": idempotency_key,
+
+    entry={
+        "user":str(uid),
+        "reason":reason,
+        "credits":credits,
+        "points":points,
+        "timestamp":datetime.utcnow().isoformat()
     }
 
-    ledger = _load()
+
+    ledger=_load()
     ledger.append(entry)
     _save(ledger)
+
 
     return result

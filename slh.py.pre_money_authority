@@ -16,6 +16,8 @@ def cmd_users():
 def cmd_agents():
     db=load_db()
     for aid,a in db.get("agents",{}).items(): print(f"{aid} | {a['name']} | {a['state']}")
+def cmd_credits():
+    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
 def main():
     J.log("SLH vNEXT STARTED")
     while True:

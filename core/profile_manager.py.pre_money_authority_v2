@@ -136,30 +136,18 @@ def get_balance(uid):
 
 
 def add_balance(uid, amount):
-    """
-    Legacy compatibility adapter.
+    import state_manager
+    uid = str(uid)
 
-    Wallet credit mutations belong exclusively to money_service.
-    """
-    from core import money_service
+    def mutate(db):
+        user = db.setdefault("users", {}).setdefault(uid, {})
+        wallet = user.setdefault("wallet", {})
+        wallet["credits"] = wallet.get("credits", 0) + amount
+        return wallet["credits"]
 
-    if amount > 0:
-        return money_service.credit(
-            uid,
-            amount,
-            reason="legacy_add_balance",
-            source="profile_manager",
-        )
+    return state_manager.atomic_update(mutate)
 
-    if amount < 0:
-        return money_service.debit(
-            uid,
-            -amount,
-            reason="legacy_add_balance",
-            source="profile_manager",
-        )
 
-    return get_balance(uid)
 
 def add_points(uid,points):
 

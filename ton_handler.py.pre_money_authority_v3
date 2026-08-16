@@ -90,31 +90,37 @@ def register_ton_handlers(bot):
             bot.send_message(m.chat.id, "❌ Invalid amount.")
             return
 
-        # 3-5. Money Authority credit.
-        # The TON transaction hash is the idempotency identity.
+        # 3-5. Atomic check-and-credit: prevents double-spend under concurrent calls
         rate = settings["rate"]
         credits = round(amount_ton * rate, 2)
 
-        from core import money_service
+        def mutate(db):
+            used_txs = db.setdefault("used_ton_txs", [])
+            if tx_hash in used_txs:
+                return None
+            user = db.setdefault("users", {}).setdefault(uid, {})
+            wallet = user.setdefault("wallet", {})
+            wallet["credits"] = wallet.get("credits", 0) + credits
+            used_txs.append(tx_hash)
+            db["used_ton_txs"] = used_txs
+            db.setdefault("transactions", []).append({
+                "uid": uid,
+                "credits": credits,
+                "type": "ton",
+                "ton_amount": amount_ton,
+                "tx_hash": tx_hash,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            return wallet["credits"]
 
-        try:
-            new_balance = money_service.credit(
-                uid,
-                credits,
-                reason="ton_deposit",
-                source="ton",
-                idempotency_key=f"ton:{tx_hash}",
-            )
-        except ValueError as e:
-            bot.send_message(
-                m.chat.id,
-                f"TON credit failed: {e}"
-            )
+        new_balance = state_manager.atomic_update(mutate)
+        if new_balance is None:
+            bot.send_message(m.chat.id, "❌ This transaction was already credited.")
             return
 
         bot.send_message(
             m.chat.id,
-            f"TON deposit verified! {credits} credits added.\n"
+            f"✅ TON deposit verified! {credits} credits added.\n"
             f"Amount: {amount_ton} TON\n"
             f"Your balance: {new_balance} credits."
         )

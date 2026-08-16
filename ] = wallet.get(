@@ -1,0 +1,5 @@
+[33m0fd1351[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mremediation/money-authority[m[33m, [m[1;32mmain[m[33m)[m audit: freeze pre-remediation money authority baseline
+[33mae49008[m[33m ([m[1;33mtag: [m[1;33malpha-security-baseline-20260814[m[33m, [m[1;31morigin/stable-exec-v1-backup[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mstable-exec-v1-backup[m[33m)[m Add local identity and status intents to /ask
+[33m45cd472[m[33m ([m[1;33mtag: [m[1;33mstable-exec-v1[m[33m)[m Add text-based exec approval fallback
+[33m9e6ff63[m Unify firewall RBAC with security.permissions
+[33m6f0e47b[m Add staked to wallet handler
