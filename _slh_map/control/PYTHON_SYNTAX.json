@@ -1,0 +1,50 @@
+﻿[
+    {
+        "file":  "core\\identity_resolver.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "core\\keyboard_detector.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "core\\message_utils.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "handlers\\llm_handler.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "store\\grant_engine.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "store\\purchase_service.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "tools\\slh_launch_check.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    },
+    {
+        "file":  "bot_stable.py",
+        "exists":  true,
+        "syntax":  "PASS",
+        "output":  ""
+    }
+]

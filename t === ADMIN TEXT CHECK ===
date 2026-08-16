@@ -1,0 +1,68 @@
+[35mbot_gateway.py[m[36m:[mfrom handlers.[1;31mloader[m import [1;31mload_handlers[m
+[35mbot_gateway.py[m[36m:[m        [1;31mload_handlers[m(bot, {"bot_name": bot_name})
+[35mbot_stable.py[m[36m:[m                spec.[1;31mloader[m.exec_module(mod)
+[35mbot_stable.py[m[36m:[m# payment/econ/staking loaded through handlers.[1;31mloader[m.py
+[35mbot_stable.py[m[36m:[mprint("ℹ️ payment/econ/staking delegated to handler [1;31mloader[m")
+[35mbot_stable.py[m[36m:[m    print("ℹ️ advanced_ask_handler delegated to handlers.[1;31mloader[m.py")
+[35mbot_stable.py[m[36m:[mfrom handlers.[1;31mloader[m import [1;31mload_handlers[m
+[35mbot_stable.py[m[36m:[m[1;31mload_handlers[m(bot, context)
+[35mbot_stable.py[m[36m:[mprint("✅ Single handler [1;31mloader[m active")
+[35mcore/command_router.py[m[36m:[mfrom core.command_registry_[1;31mloader[m import load_commands_registry
+[35mhandlers/loader.py[m[36m:[m﻿def [1;31mload_handlers[m(bot, context):
+[35mhandlers/loader.py[m[36m:[m            elif hasattr(m, "[1;31mregister_handlers[m"):
+[35mhandlers/loader.py[m[36m:[m                m.[1;31mregister_handlers[m(bot, context)
+[35mhandlers/voting_handler.py[m[36m:[mdef [1;31mregister_handlers[m(bot, kernel):
+[35mscripts/slh_integrity_check.py[m[36m:[m    "handlers/[1;31mloader[m.py",
+[35mslh_autopilot.py[m[36m:[m    rc, out = run("python3 -m py_compile bot_stable.py handlers/advanced_ask_handler.py handlers/llm_handler.py handlers/[1;31mloader[m.py 2>&1")
+[35mtools/active_loader_audit.py[m[36m:[m[1;31mloader[m modules
+[35mtools/active_loader_audit.py[m[36m:[m        "[1;31mloader[m.py",
+[35mtools/active_loader_audit.py[m[36m:[m        "bot_[1;31mloader[m.py",
+[35mtools/active_loader_audit.py[m[36m:[m        "handler_[1;31mloader[m.py",
+[35mtools/active_loader_audit.py[m[36m:[m    [1;31mloader[ms = [
+[35mtools/active_loader_audit.py[m[36m:[m    if [1;31mloader[ms:
+[35mtools/active_loader_audit.py[m[36m:[m        for item in [1;31mloader[ms:
+[35mtools/active_loader_audit.py[m[36m:[m            "  ⚪ No [1;31mloader[m module discovered"
+[35mtools/active_loader_audit.py[m[36m:[m        "[1;31mloader[ms": [1;31mloader[ms,
+[35mtools/active_loader_audit.py[m[36m:[m        / "active_[1;31mloader[m_audit.json"
+[35mtools/full_static_handler_audit.py[m[36m:[m4. handlers/[1;31mloader[m.py
+[35mtools/full_static_handler_audit.py[m[36m:[mLOADER = HANDLERS_DIR / "[1;31mloader[m.py"
+[35mtools/full_static_handler_audit.py[m[36m:[m                "[1;31mload_handlers[m",
+[35mtools/full_static_handler_audit.py[m[36m:[m                "[1;31mload_handlers[m",
+[35mtools/full_static_handler_audit.py[m[36m:[mdef find_[1;31mloader[m_references(files):
+[35mtools/full_static_handler_audit.py[m[36m:[mdef find_[1;31mloader[m_modules():
+[35mtools/full_static_handler_audit.py[m[36m:[m    # Modules explicitly listed in [1;31mloader[m.
+[35mtools/full_static_handler_audit.py[m[36m:[m    for module in find_[1;31mloader[m_modules():
+[35mtools/full_static_handler_audit.py[m[36m:[m        "[1;31mloader[m_modules": find_[1;31mloader[m_modules(),
+[35mtools/full_system_audit.py[m[36m:[m    txt=open("handlers/[1;31mloader[m.py").read()
+[35mtools/full_system_audit.py[m[36m:[m    txt=open("handlers/[1;31mloader[m.py").read()
+[35mtools/loader_registration_audit.py[m[36m:[mAnalyzes handlers/[1;31mloader[m.py and its directly imported modules.
+[35mtools/loader_registration_audit.py[m[36m:[mLOADER = ROOT / "handlers" / "[1;31mloader[m.py"
+[35mtools/loader_registration_audit.py[m[36m:[m            "❌ handlers/[1;31mloader[m.py not found"
+[35mtools/loader_registration_audit.py[m[36m:[m        "[1;31mloader[m": str(
+[35mtools/loader_registration_audit.py[m[36m:[m        / "[1;31mloader[m_registration_audit.json"
+[35mtools/runtime_command_registration_audit.py[m[36m:[m3. Modular handlers/[1;31mloader[m.py loading
+[35mtools/runtime_command_registration_audit.py[m[36m:[mLOADER = ROOT / "handlers" / "[1;31mloader[m.py"
+[35mtools/runtime_command_registration_audit.py[m[36m:[mdef extract_[1;31mloader[m_modules():
+[35mtools/runtime_command_registration_audit.py[m[36m:[mdef audit_modular_[1;31mloader[m():
+[35mtools/runtime_command_registration_audit.py[m[36m:[m    modules = extract_[1;31mloader[m_modules()
+[35mtools/runtime_command_registration_audit.py[m[36m:[m    modular = audit_modular_[1;31mloader[m()
+[35mtools/runtime_command_registration_audit.py[m[36m:[m        "[1;31mloader[m": str(
+[35mtools/runtime_command_registration_audit.py[m[36m:[m        "modular_[1;31mloader[m_registrations": modular,
+[35mtools/runtime_loading_path_audit.py[m[36m:[m2. handlers.[1;31mloader[m
+[35mtools/runtime_loading_path_audit.py[m[36m:[m3. [1;31mload_handlers[m(...)
+[35mtools/runtime_loading_path_audit.py[m[36m:[mLOADER = ROOT / "handlers" / "[1;31mloader[m.py"
+[35mtools/runtime_loading_path_audit.py[m[36m:[m                "[1;31mload_handlers[m",
+[35mtools/runtime_loading_path_audit.py[m[36m:[m                "[1;31mregister_handlers[m",
+[35mtools/runtime_loading_path_audit.py[m[36m:[mdef [1;31mloader[m_modules():
+[35mtools/runtime_loading_path_audit.py[m[36m:[m        "[1;31mloader[m": rel(LOADER)
+[35mtools/runtime_loading_path_audit.py[m[36m:[m        "[1;31mloader[m_modules": [1;31mloader[m_modules(),
+[35mtools/runtime_loading_path_audit.py[m[36m:[m        [1;31mloader[m_modules()
+[35mtools/runtime_loading_path_audit.py[m[36m:[m            "listed_in_[1;31mloader[m": (
+[35mtools/runtime_loading_path_audit.py[m[36m:[m                "[1;31mloader[m_modules"
+[35mtools/runtime_loading_path_audit.py[m[36m:[m        "[1;31mloader[m_modules"
+[35mtools/runtime_loading_path_audit.py[m[36m:[m            or item["listed_in_[1;31mloader[m"]
+[35mtools/runtime_loading_path_audit.py[m[36m:[m                "listed_in_[1;31mloader[m"
+[35mtools/runtime_loading_path_audit.py[m[36m:[m        "[1;31mloader[m": rel(LOADER)
+[35mtools/session_closure_audit.py[m[36m:[m[1;31mloader[m = read("handlers/[1;31mloader[m.py")
+[35mtools/session_closure_audit.py[m[36m:[m    ("handlers/[1;31mloader[m.py", [1;31mloader[m),
+[35mtools/session_closure_audit.py[m[36m:[mcombined = (advanced + "\n" + [1;31mloader[m).lower()

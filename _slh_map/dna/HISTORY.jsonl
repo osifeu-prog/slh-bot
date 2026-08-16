@@ -1,0 +1,47 @@
+{"timestamp": "2026-08-13T18:54:44.605099+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:44.744867+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:45.668726+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185445_579625Z00", "files": 313, "edges": 215, "parse_errors": 10}}
+{"timestamp": "2026-08-13T18:54:45.801196+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:45.965334+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:16.348876+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:16.476571+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:17.102257+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:31.347819+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:57:25.026045+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:57:37.046090+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:24.370074+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:27.218796+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:58:28.166687+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:31.103960+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.393117+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.405820+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:59:57.464297+00:00", "event": "SNAPSHOT_CREATED", "data": {"path": "_slh_map/dna/LAST_SNAPSHOT.json"}}
+{"timestamp": "2026-08-13T18:59:57.598626+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.612350+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:59:57.649554+00:00", "event": "SNAPSHOT_CREATED", "data": {"path": "_slh_map/dna/LAST_SNAPSHOT.json"}}
+{"timestamp": "2026-08-13T18:59:57.799539+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:11.898735+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:14.518626+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T190214_435023Z00", "files": 316, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T19:02:14.649108+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:24.085834+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:26.557092+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T190226_486126Z00", "files": 316, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T19:02:26.687565+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:26.852926+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:52.546307+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:55.523963+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:02:58.700229+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:03:02.187234+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:03:02.199364+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T190226_486126Z00", "files": 316, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T19:03:02.230442+00:00", "event": "SNAPSHOT_CREATED", "data": {"path": "_slh_map/dna/LAST_SNAPSHOT.json"}}
+{"timestamp": "2026-08-13T19:03:39.177658+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:03:41.999582+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T190341_924476Z00", "files": 316, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T19:03:42.125019+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:03:42.292627+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:03:45.227332+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:04:29.938323+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:04:30.049416+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:04:31.804907+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:06:51.540622+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:06:52.364991+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T190652_301937Z00", "files": 315, "edges": 225, "parse_errors": 0}}
+{"timestamp": "2026-08-13T19:06:52.477825+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T19:06:57.521875+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}

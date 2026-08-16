@@ -1,0 +1,41 @@
+﻿TARGET:
+econ_handler.py
+handlers/payment_handler.py
+handlers/dashboard_handler.py
+
+RULES:
+
+OLD:
+user.get("balance",0)
+
+NEW:
+profile_manager.get_balance(uid)
+
+
+OLD:
+user["balance"] = user.get("balance",0)+credits
+
+NEW:
+profile_manager.add_balance(uid,credits)
+
+
+OLD:
+user["balance"] = balance-price
+
+NEW:
+profile_manager.add_balance(uid,-price)
+
+
+OLD:
+user['balance']
+
+NEW:
+profile_manager.get_balance(uid)
+
+KEEP:
+transactions
+commissions
+payment history
+
+REMOVE:
+direct balance writes

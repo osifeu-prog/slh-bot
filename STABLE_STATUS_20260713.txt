@@ -1,0 +1,74 @@
+=== SLH STABLE SNAPSHOT ===
+Mon Jul 13 15:21:57 IDT 2026
+582036e0bdff0683fd7e27bdeac56e9961a3fca3
+PRE_CHANGE_YYYYMMDD
+SLH-v2.0-control-tower
+SLH-v2.0-dashboard-branding
+SLH-v2.0-telegram-control-center
+SLH_LEGACY_UX_FIXED_20260708
+SLH_ONBOARDING_RESTORE_20260708
+SLH_STABLE_20260708
+SLH_STABLE_FULL_UX_20260709
+SLH_UX_STABLE_RESTORE_20260709
+STABLE_NEXT_YYYYMMDD
+STABLE_TELEGRAM_WORKING_20260713
+dashboard-v2-start-v1
+gold-v1.0
+gold-v2.0-clean
+gold-v3.0-llm-live
+milestone-first-autonomous-stability-20260712
+slh-agents-handler-migrated-20260707
+slh-agents-modular-boundary-ready-20260707
+slh-autonomous-memory-security-foundation-20260712
+slh-before-control-center-20260707
+slh-before-control-center-verified-20260708
+slh-before-first-handler-move-20260707
+slh-clean-after-first-module-20260707
+slh-control-center-final-20260708
+slh-control-center-working-20260708
+slh-core-freeze-20260712
+slh-first-module-verified-20260707
+slh-handler-loader-agents-live-20260707
+slh-nightly-log-branded-20260707
+slh-nightly-stable-20260707
+slh-os-stable-before-memory-kernel-20260712
+slh-phase2-ready-20260712
+slh-pre-modularization-20260707
+slh-production-stable-20260707
+slh-registry-sync-20260707
+slh-router-final-sync-20260707
+slh-router-runtime-verified-20260707
+slh-router-stable-20260707
+slh-stable-control-center-router-20260708
+stable-20260712
+stable-dashboard-api-v1
+stable-dashboard-live-v1
+stable-full-stack-v1
+stable-railway-polling-fixed-20260712
+
+Workspace:       osifeu-prog's Projects
+
+Project:         endearing-amazement
+Project ID:      fd30fefb-3d35-48a5-a7cb-e05337e812c4
+
+Environment:     production
+Environment ID:  661caa13-83cb-4197-8825-943bebf96c5a
+
+Linked service
+
+web
+    status:        ● Online
+    repo:          osifeu-prog/slh-bot
+    url:           https://web-production-22f28.up.railway.app
+    volume:        web-volume · /app/state · 0.1 GB / 4.9 GB
+    region:        EU West
+    deployment ID: 8b205d3c-f274-4b60-a9c5-b85988c4607b
+    service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
+
+────────────────────────────────────────────────
+
+All resources
+
+    Services
+      - web: ● Online · https://web-production-22f28.up.railway.app · web-volume
+

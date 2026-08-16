@@ -1,0 +1,213 @@
+﻿
+add_sync_patch.py:3:p = Path("bot_stable.py")
+add_visibility_report.py:3:p=Path("bot_stable.py")
+add_visibility_report.py:6:    print("bot_stable.py missing")
+advanced_ask_handler.py:4:def register_ask_handler(bot):
+agent_client_termux.py:65:    bot.register_next_step_handler(m, get_new_secret)
+agent_client_termux.py:69:    bot.register_next_step_handler(m, save_keys, m.text.strip())
+ask_handler.py:4:# advanced_ask_handler.register_ask_handler(bot)
+ask_test.py:1:from handlers.advanced_ask_handler import register_ask_handler
+ask_test.py:17:register_ask_handler(b)
+bot_core.py:13:# ---------------- PLUGINS LOADER ----------------
+bot_gateway.py:4:from handlers.loader import load_handlers
+bot_stable.py:1:from doctor_handler import register_doctor_handlers
+bot_stable.py:32:from handlers.payment_handler import register_payment_handlers
+bot_stable.py:33:from econ_handler import register_econ_handlers
+bot_stable.py:34:# from staking_handler import register_staking_handlers
+bot_stable.py:93:                spec.loader.exec_module(mod)
+bot_stable.py:101:# payment/econ/staking loaded through handlers.loader.py
+bot_stable.py:102:print("ℹ️ payment/econ/staking delegated to handler loader")
+bot_stable.py:343:# Original saved in bot_stable.py.before_vote_cleanup_20260723
+bot_stable.py:834:    print("ℹ️ advanced_ask_handler delegated to handlers.loader.py")
+bot_stable.py:861:from handlers.loader import load_handlers
+bot_stable.py:867:# Original saved in bot_stable.py.before_token_cleanup_20260723
+bot_stable.py:883:# ===== HANDLERS LOADED THROUGH SINGLE LOADER =====
+bot_stable.py:884:print("✅ Single handler loader active")
+bot_stable.py:941:    register_doctor_handlers(bot)
+core\bootstrap_commands.py:1:from core.command_router import register_command, HANDLERS
+core\command_router.py:1:from core.command_registry_loader import load_commands_registry
+course_handlers.py:13:def register_course_handlers(bot):
+doctor_handler.py:5:def register_doctor_handlers(bot: TeleBot):
+econ_handler.py:4:def register_econ_handlers(bot):
+econ_handler.py:110:    register_econ_handlers(bot)
+fix_registration.py:3:with open('bot_stable.py', 'r') as f:
+fix_registration.py:34:with open('bot_stable.py', 'w') as f:
+handlers\advanced_ask_handler.py:3:def register_ask_handler(bot):
+handlers\esp_handler.py:18:def register_esp_handler(bot):
+handlers\llm_handler.py:56:def register_llm_handler(bot):
+handlers\llm_handler.py:141:    return register_llm_handler(bot)
+handlers\loader.py:2:    from handlers.logo_handler import register_logo_handler
+handlers\loader.py:3:    register_logo_handler(bot)
+handlers\loader.py:58:            elif hasattr(m, "register_llm_handler"):
+handlers\loader.py:59:                m.register_llm_handler(bot)
+handlers\loader.py:64:            elif hasattr(m, "register_repeat_handler"):
+handlers\loader.py:65:                m.register_repeat_handler(bot)
+handlers\loader.py:70:            elif hasattr(m, "register_handlers"):
+handlers\loader.py:71:                m.register_handlers(bot, context)
+handlers\loader.py:83:        from handlers.esp_handler import register_esp_handler
+handlers\loader.py:84:        register_esp_handler(bot)
+handlers\loader.py:91:        from handlers.advanced_ask_handler import register_ask_handler
+handlers\loader.py:92:        register_ask_handler(bot)
+handlers\logo_handler.py:1:def register_logo_handler(bot):
+handlers\payment_handler.py:14:def register_payment_handlers(bot):
+handlers\payment_handler.py:194:    register_payment_handlers(bot)
+handlers\repeat_handler.py:30:def register_repeat_handler(bot):
+handlers\voting_handler.py:2:def register_handlers(bot, kernel):
+railway_bot_gateway.py:4:from handlers.loader import load_handlers
+report_handler.py:63:            bot_status = "✅" if os.popen("pgrep -af bot_stable.py").read().strip() else "❌"
+scripts\slh_integrity_check.py:5:    "handlers/loader.py",
+scripts\slh_integrity_check.py:7:    "bot_stable.py",
+self_check.py:8:    "bot_stable.py",
+self_model_audit.py:5:    "bot_stable.py",
+self_test.py:10:    pid = run("pgrep -af bot_stable.py")
+slh.py:29:        elif choice=="5": os.system("pkill -f bot_stable.py && nohup python3 bot_stable.py > bot.log 2>&1 &")
+slh_audit.py:130:    import bot_stable
+slh_audit.py:132:    handlers=bot_stable.bot.message_handlers
+slh_autopilot.py:22:    rc, out = run("pgrep -f bot_stable.py")
+slh_autopilot.py:25:        log(f"✅ bot_stable.py רץ (PID {pid})")
+slh_autopilot.py:28:        log("❌ bot_stable.py לא רץ")
+slh_autopilot.py:31:            run("nohup python3 bot_stable.py > bot.log 2>&1 &")
+slh_autopilot.py:33:            rc2, _ = run("pgrep -f bot_stable.py")
+slh_autopilot.py:50:    rc, out = run("python3 -m py_compile bot_stable.py handlers/advanced_ask_handler.py 
+handlers/llm_handler.py handlers/loader.py 2>&1")
+slh_full_check.py:164:    import bot_stable
+slh_full_check.py:166:    handlers=bot_stable.bot.message_handlers
+slh_visibility_scan.py:9:"bot_stable.py",
+staking_handler.py:17:def register_staking_handlers(bot: TeleBot):
+staking_handler.py:66:    bot.register_next_step_handler(new_key, get_new_secret)
+staking_handler.py:71:    bot.register_next_step_handler(m, save_keys, api_key)
+state\startup.py:3:# הזרקת /me, /askdebug, /join לתוך bot_stable.py
+state\startup.py:4:with open('/app/bot_stable.py', 'r') as f:
+state\startup.py:45:with open('/app/bot_stable.py', 'w') as f:
+system_diagnostics.py:61:            "bot_stable.py", "payment_handler.py", "ton_handler.py",
+system_health.py:29:    required = ["bot_stable.py", "payment_handler.py", "ton_handler.py", "econ_handler.py"]
+system_health.py:37:        for f in ["bot_stable.py", "payment_handler.py", "ton_handler.py", "econ_handler.py"]:
+tests\system_check.py:16:    results.append(ok("Bot file exists", os.path.exists("bot_stable.py")))
+tests\system_check.py:32:    results.append(ok("Bot syntax OK", subprocess.call(["python3", "-m", "py_compile", 
+"bot_stable.py"]) == 0))
+ton_handler.py:11:def register_ton_handlers(bot):
+tools\active_loader_audit.py:4:SLH ACTIVE LOADER AUDIT v1
+tools\active_loader_audit.py:9:bot_stable.py
+tools\active_loader_audit.py:13:loader modules
+tools\active_loader_audit.py:38:ENTRYPOINT = ROOT / "bot_stable.py"
+tools\active_loader_audit.py:115:        "loader.py",
+tools\active_loader_audit.py:116:        "bot_loader.py",
+tools\active_loader_audit.py:117:        "handler_loader.py",
+tools\active_loader_audit.py:119:        return "LOADER"
+tools\active_loader_audit.py:121:    if path.name == "bot_stable.py":
+tools\active_loader_audit.py:130:    print("SLH ACTIVE LOADER AUDIT v1")
+tools\active_loader_audit.py:135:        print("❌ bot_stable.py not found")
+tools\active_loader_audit.py:182:    loaders = [
+tools\active_loader_audit.py:185:        if item["class"] == "LOADER"
+tools\active_loader_audit.py:195:    print("LOADERS:")
+tools\active_loader_audit.py:197:    if loaders:
+tools\active_loader_audit.py:199:        for item in loaders:
+tools\active_loader_audit.py:209:            "  ⚪ No loader module discovered"
+tools\active_loader_audit.py:213:    print("HANDLERS REACHABLE FROM bot_stable.py:")
+tools\active_loader_audit.py:233:        "entrypoint": "bot_stable.py",
+tools\active_loader_audit.py:235:        "loaders": loaders,
+tools\active_loader_audit.py:249:        / "active_loader_audit.json"
+tools\active_loader_audit.py:268:    print("ACTIVE LOADER AUDIT COMPLETE")
+tools\build_state_migration_queue.py:46:        "bot_stable.py",
+tools\build_state_migration_queue.py:50:        "web/api/app.py",
+tools\disable_botstable_ask.py:3:p = Path("bot_stable.py")
+tools\discover_projects.py:19:    "bot_stable.py": "telegram_bot",
+tools\discover_termux_projects.py:20:    "bot_stable.py": "telegram_bot",
+tools\full_static_handler_audit.py:10:1. bot_stable.py
+tools\full_static_handler_audit.py:13:4. handlers/loader.py
+tools\full_static_handler_audit.py:41:ENTRYPOINT = ROOT / "bot_stable.py"
+tools\full_static_handler_audit.py:44:LOADER = HANDLERS_DIR / "loader.py"
+tools\full_static_handler_audit.py:472:def find_loader_references(files):
+tools\full_static_handler_audit.py:517:def find_loader_modules():
+tools\full_static_handler_audit.py:521:    if not LOADER.exists():
+tools\full_static_handler_audit.py:524:    text = LOADER.read_text(
+tools\full_static_handler_audit.py:551:    # Direct imports/references from bot_stable.
+tools\full_static_handler_audit.py:556:            if item["file"] == "bot_stable.py"
+tools\full_static_handler_audit.py:587:    # Modules explicitly listed in loader.
+tools\full_static_handler_audit.py:588:    for module in find_loader_modules():
+tools\full_static_handler_audit.py:791:        "loader_modules": find_loader_modules(),
+tools\full_system_audit.py:37:    txt=open("handlers/loader.py").read()
+tools\full_system_audit.py:38:    return "PASS" if "register_ask_handler" in txt else "FAIL", "advanced_ask_handler 
+registered"
+tools\full_system_audit.py:43:    txt=open("handlers/loader.py").read()
+tools\full_system_audit.py:64:    rc=subprocess.run("ps aux | grep bot_stable.py | grep -v grep", 
+shell=True).returncode
+tools\full_system_audit.py:65:    return "PASS" if rc==0 else "FAIL", "bot_stable.py running"
+tools\loader_registration_audit.py:4:SLH LOADER REGISTRATION AUDIT v1
+tools\loader_registration_audit.py:8:Analyzes handlers/loader.py and its directly imported modules.
+tools\loader_registration_audit.py:37:LOADER = ROOT / "handlers" / "loader.py"
+tools\loader_registration_audit.py:177:    print("SLH LOADER REGISTRATION AUDIT v1")
+tools\loader_registration_audit.py:180:    if not LOADER.exists():
+tools\loader_registration_audit.py:183:            "❌ handlers/loader.py not found"
+tools\loader_registration_audit.py:189:        LOADER
+tools\loader_registration_audit.py:251:        "LOADER:",
+tools\loader_registration_audit.py:252:        LOADER.relative_to(ROOT)
+tools\loader_registration_audit.py:287:        "COMMAND STRINGS IN LOADER:"
+tools\loader_registration_audit.py:303:        "loader": str(
+tools\loader_registration_audit.py:304:            LOADER.relative_to(ROOT)
+tools\loader_registration_audit.py:325:        / "loader_registration_audit.json"
+tools\loader_registration_audit.py:344:    print("LOADER REGISTRATION AUDIT COMPLETE")
+tools\real_audit.py:16:        "pgrep -af 'python3.*bot_stable' | grep -v real_audit",
+tools\runtime_command_registration_audit.py:10:1. Direct decorators in bot_stable.py
+tools\runtime_command_registration_audit.py:12:3. Modular handlers/loader.py loading
+tools\runtime_command_registration_audit.py:31:ENTRYPOINT = ROOT / "bot_stable.py"
+tools\runtime_command_registration_audit.py:32:LOADER = ROOT / "handlers" / "loader.py"
+tools\runtime_command_registration_audit.py:298:def extract_loader_modules():
+tools\runtime_command_registration_audit.py:302:    if not LOADER.exists():
+tools\runtime_command_registration_audit.py:305:    tree = read_tree(LOADER)
+tools\runtime_command_registration_audit.py:349:def audit_modular_loader():
+tools\runtime_command_registration_audit.py:353:    modules = extract_loader_modules()
+tools\runtime_command_registration_audit.py:382:                        "path": "MODULAR_LOADER",
+tools\runtime_command_registration_audit.py:440:    modular = audit_modular_loader()
+tools\runtime_command_registration_audit.py:523:        "loader": str(
+tools\runtime_command_registration_audit.py:524:            LOADER.relative_to(ROOT)
+tools\runtime_command_registration_audit.py:528:        "modular_loader_registrations": modular,
+tools\runtime_loading_path_audit.py:10:1. bot_stable.py
+tools\runtime_loading_path_audit.py:11:2. handlers.loader
+tools\runtime_loading_path_audit.py:39:ENTRYPOINT = ROOT / "bot_stable.py"
+tools\runtime_loading_path_audit.py:40:LOADER = ROOT / "handlers" / "loader.py"
+tools\runtime_loading_path_audit.py:419:                "register_handler",
+tools\runtime_loading_path_audit.py:420:                "register_handlers",
+tools\runtime_loading_path_audit.py:421:                "register_ask_handler",
+tools\runtime_loading_path_audit.py:457:def loader_modules():
+tools\runtime_loading_path_audit.py:459:    if not LOADER.exists():
+tools\runtime_loading_path_audit.py:462:    parsed = parse(LOADER)
+tools\runtime_loading_path_audit.py:538:        "loader": rel(LOADER)
+tools\runtime_loading_path_audit.py:539:        if LOADER.exists()
+tools\runtime_loading_path_audit.py:544:        "loader_modules": loader_modules(),
+tools\runtime_loading_path_audit.py:599:        loader_modules()
+tools\runtime_loading_path_audit.py:606:        if path == "bot_stable.py":
+tools\runtime_loading_path_audit.py:634:                "LOADER_MODULE"
+tools\runtime_loading_path_audit.py:671:            "listed_in_loader": (
+tools\runtime_loading_path_audit.py:745:        "LOADER MODULES:",
+tools\runtime_loading_path_audit.py:748:                "loader_modules"
+tools\runtime_loading_path_audit.py:765:    print("ENTRYPOINT → LOADER PATH")
+tools\runtime_loading_path_audit.py:801:        "LOADER MODULES:"
+tools\runtime_loading_path_audit.py:805:        "loader_modules"
+tools\runtime_loading_path_audit.py:873:            or item["listed_in_loader"]
+tools\runtime_loading_path_audit.py:907:            "   LOADER:",
+tools\runtime_loading_path_audit.py:909:                "listed_in_loader"
+tools\runtime_loading_path_audit.py:940:        "loader": rel(LOADER)
+tools\runtime_loading_path_audit.py:941:        if LOADER.exists()
+tools\runtime_state_access_classification.py:289:    if rel == "bot_stable.py":
+tools\runtime_state_dependency_map.py:10:ENTRYPOINT = ROOT / "bot_stable.py"
+tools\runtime_state_dependency_map.py:337:        "REACHABLE FROM bot_stable.py:",
+tools\runtime_state_dependency_map.py:380:        "entrypoint": "bot_stable.py",
+tools\session_closure_audit.py:48:loader = read("handlers/loader.py")
+tools\session_closure_audit.py:50:bot = read("bot_stable.py")
+tools\session_closure_audit.py:54:    ("handlers/loader.py", loader),
+tools\session_closure_audit.py:56:    ("bot_stable.py", bot),
+tools\session_closure_audit.py:101:combined = (advanced + "\n" + loader).lower()
+tools\user_acceptance_audit.py:56:    bot_file = ROOT / "bot_stable.py"
+tools\user_command_wiring_audit.py:103:    if path.name == "bot_stable.py":
+venv\Lib\site-packages\aiohttp\client.py:49:    ClientPayloadError,
+venv\Lib\site-packages\aiohttp\client.py:127:    "ClientPayloadError",
+venv\Lib\site-packages\aiohttp\client.py:923:                                raise ClientPayloadError(
+venv\Lib\site-packages\aiohttp\client_exceptions.py:50:    "ClientPayloadError",
+venv\Lib\site-packages\aiohttp\client_exceptions.py:291:class ClientPayloadError(ClientError):
+venv\Lib\site-packages\aiohttp\client_proto.py:9:    ClientPayloadError,
+venv\Lib\site-packages\aiohttp\client_proto.py:156:                        ClientPayloadError(client_payload_exc_msg),
+venv\Lib\site-packages\aiohttp\client_proto.py:253:            payload_exception=ClientPayloadError,
+viewfile_handler.py:14:            bot.reply_to(m, "Usage: /viewfile <path>\nExample: /viewfile bot_stable.py")
+
+

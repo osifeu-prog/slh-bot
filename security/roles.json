@@ -1,0 +1,11 @@
+{
+  "roles": {
+    "owner": ["*"],
+    "admin": ["developer_management", "read_logs", "db_read"],
+    "developer": ["exec_request", "read_logs", "db_read"],
+    "teacher": ["learning_manage", "read_logs"],
+    "student": ["learning"],
+    "agent": ["agent_management"],
+    "system": ["system_commands"]
+  }
+}

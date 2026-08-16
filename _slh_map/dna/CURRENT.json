@@ -1,0 +1,294 @@
+{
+  "schema": "slh-dna/current/v1",
+  "updated_at": "2026-08-13T19:06:51.540390+00:00",
+  "scan": {
+    "generated_at": "2026-08-13T19:06:52.301937+00:00",
+    "snapshot": "_slh_map/scans/2026-08-13T190652_301937Z00",
+    "files": 315,
+    "edges": 225
+  },
+  "health": {
+    "parse_errors": 0,
+    "entrypoint_candidates": 173,
+    "command_candidates": 21,
+    "state_read_candidates": 9,
+    "state_write_candidates": 3
+  },
+  "hotspots": [
+    {
+      "path": "tools/slh_migrate.py",
+      "module": "tools.slh_migrate",
+      "calls": 476,
+      "imports": 19,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "bot_stable.py",
+      "module": "bot_stable",
+      "calls": 302,
+      "imports": 53,
+      "entrypoint_signals": [
+        "filename:bot_stable.py"
+      ]
+    },
+    {
+      "path": "core/mission_lifecycle.py",
+      "module": "core.mission_lifecycle",
+      "calls": 292,
+      "imports": 37,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "slhdna.py",
+      "module": "slhdna",
+      "calls": 254,
+      "imports": 8,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "tools/runtime_loading_path_audit.py",
+      "module": "tools.runtime_loading_path_audit",
+      "calls": 201,
+      "imports": 8,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "tools/full_static_handler_audit.py",
+      "module": "tools.full_static_handler_audit",
+      "calls": 170,
+      "imports": 8,
+      "entrypoint_signals": [
+        "function:main",
+        "handler_filename"
+      ]
+    },
+    {
+      "path": "create_takeover_manifest.py",
+      "module": "create_takeover_manifest",
+      "calls": 160,
+      "imports": 5,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "handlers/governance_handler.py",
+      "module": "handlers.governance_handler",
+      "calls": 151,
+      "imports": 4,
+      "entrypoint_signals": [
+        "handler_filename"
+      ]
+    },
+    {
+      "path": "tools/agent_state_autopilot.py",
+      "module": "tools.agent_state_autopilot",
+      "calls": 150,
+      "imports": 7,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "takeover_controller.py",
+      "module": "takeover_controller",
+      "calls": 126,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "test_mission3_execution_commit.py",
+      "module": "test_mission3_execution_commit",
+      "calls": 122,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "tools/audit_state_access.py",
+      "module": "tools.audit_state_access",
+      "calls": 122,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "test_mission3_completion_commit.py",
+      "module": "test_mission3_completion_commit",
+      "calls": 119,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "tools/test_agent_state_full.py",
+      "module": "tools.test_agent_state_full",
+      "calls": 116,
+      "imports": 7,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "mission_completion_commit.py",
+      "module": "mission_completion_commit",
+      "calls": 116,
+      "imports": 6,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "slh_dna_scan.py",
+      "module": "slh_dna_scan",
+      "calls": 113,
+      "imports": 7,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "project_commands.py",
+      "module": "project_commands",
+      "calls": 111,
+      "imports": 4,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "core/agent_state_store.py",
+      "module": "core.agent_state_store",
+      "calls": 110,
+      "imports": 7,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "mission_completion_commit_2.py",
+      "module": "mission_completion_commit_2",
+      "calls": 110,
+      "imports": 6,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "bot_gateway.py",
+      "module": "bot_gateway",
+      "calls": 106,
+      "imports": 19,
+      "entrypoint_signals": [
+        "filename:bot_gateway.py"
+      ]
+    },
+    {
+      "path": "tools/session_closure_audit.py",
+      "module": "tools.session_closure_audit",
+      "calls": 106,
+      "imports": 6,
+      "entrypoint_signals": [
+        "function:run"
+      ]
+    },
+    {
+      "path": "mission_completion_gate.py",
+      "module": "mission_completion_gate",
+      "calls": 101,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "mission_result_verifier.py",
+      "module": "mission_result_verifier",
+      "calls": 101,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "tools/runtime_command_registration_audit.py",
+      "module": "tools.runtime_command_registration_audit",
+      "calls": 100,
+      "imports": 7,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "test_mission3_post_completion_regression.py",
+      "module": "test_mission3_post_completion_regression",
+      "calls": 99,
+      "imports": 3,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "handlers/llm_handler.py",
+      "module": "handlers.llm_handler",
+      "calls": 98,
+      "imports": 5,
+      "entrypoint_signals": [
+        "handler_filename"
+      ]
+    },
+    {
+      "path": "test_mission3_completion_preview.py",
+      "module": "test_mission3_completion_preview",
+      "calls": 97,
+      "imports": 4,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    },
+    {
+      "path": "internal_agent.py",
+      "module": "internal_agent",
+      "calls": 96,
+      "imports": 11,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "learning_path.py",
+      "module": "learning_path",
+      "calls": 96,
+      "imports": 7,
+      "entrypoint_signals": []
+    },
+    {
+      "path": "tools/runtime_state_dependency_map.py",
+      "module": "tools.runtime_state_dependency_map",
+      "calls": 95,
+      "imports": 6,
+      "entrypoint_signals": [
+        "function:main"
+      ]
+    }
+  ],
+  "parse_errors": [],
+  "next_actions": [
+    {
+      "priority": "P1",
+      "action": "Classify entrypoint candidates into canonical/legacy/unknown.",
+      "reason": "Entrypoint signal count is high."
+    },
+    {
+      "priority": "P1",
+      "action": "Audit state write authority.",
+      "reason": "AST heuristic detected very few state writes."
+    },
+    {
+      "priority": "P1",
+      "action": "Classify runtime authority for bot_stable.py, bot_gateway.py and SLH_MAIN.py.",
+      "reason": "Multiple runtime entrypoint signals exist."
+    }
+  ]
+}

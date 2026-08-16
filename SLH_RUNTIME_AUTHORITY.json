@@ -1,0 +1,8 @@
+{
+  "production_entrypoint": "bot_gateway.py",
+  "railway_start": "/opt/venv/bin/python3 -B bot_gateway.py",
+  "handler_authority": "handlers.loader",
+  "legacy_bot": "bot_stable.py",
+  "local_bot_execution": false,
+  "single_polling_owner": "railway"
+}

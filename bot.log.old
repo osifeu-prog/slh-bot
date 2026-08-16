@@ -1,0 +1,22 @@
+✅ LOCK ACQUIRED (PID 26223)
+✅ Kernel modules loaded
+🚀 SLH SYSTEM RUNNING
+✅ viewfile_handler loaded
+✅ academy_menu_handler loaded
+✅ lesson_handler loaded
+✅ academy_handler loaded
+✅ advanced_ask_handler loaded
+✅ handler context created
+🔄 Loading modular handlers...
+🤖 Agents handler loaded
+🧩 Modular + Legacy handlers loaded
+✅ guide_handler loaded
+✅ welcome_handler loaded
+✅ doctor_handler loaded
+✅ help_handler loaded
+✅ refresh_token_handler loaded
+✅ LLM handler (Groq) loaded
+✅ Legacy UX handlers loaded
+✅ Journal + Roadmap handlers loaded
+🟢 POLLING START
+🔓 LOCK RELEASED

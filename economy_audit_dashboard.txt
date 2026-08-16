@@ -1,0 +1,236 @@
+﻿
+app.py:33:        c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", (uid,)); res=c.fetchone(); 
+conn.close()
+bot_stable.py:157:                "credits": 10
+bot_stable.py:530:    bal = u.get('balance', 0)
+compare_wallets.py:9:    c.execute("SELECT user_id, wallet_balance FROM wallets ORDER BY wallet_balance DESC")
+compare_wallets.py:21:def add_user_from_binance(user_id, balance):
+compare_wallets.py:24:    c.execute("INSERT OR REPLACE INTO wallets VALUES (?,?)", (user_id, balance))
+compare_wallets.py:27:    print(f"הוסף: {user_id} עם {balance} SLH")
+database.py:8:                 (user_id TEXT PRIMARY KEY, wallet_balance INTEGER)''')
+doctor_handler.py:48:    checks['Dashboard'] = "⚪️ לא נבדק (שירות נפרד)"
+econ_handler.py:4:    @bot.message_handler(commands=['balance'])
+econ_handler.py:5:    def balance(m):
+econ_handler.py:8:        bal = db.get("users", {}).get(uid, {}).get("balance", 0)
+econ_handler.py:9:        bot.send_message(m.chat.id, f"💰 Your balance: {bal} credits")
+econ_handler.py:32:        balance = user.get("balance", 0)
+econ_handler.py:38:        if balance < price:
+econ_handler.py:39:            bot.send_message(m.chat.id, f"Not enough credits. Need {price}, have {balance}.")
+econ_handler.py:41:        user["balance"] = balance - price
+econ_handler.py:43:            user.setdefault("ask_credits", 0)
+econ_handler.py:44:            user["ask_credits"] += 1
+econ_handler.py:50:            ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
+econ_handler.py:51:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:55:            f"✅ Purchased {item} for {price} credits.\n"
+econ_handler.py:56:            f"Remaining balance: {user['balance']} credits."
+econ_handler.py:68:        balance = user.get("balance", 0)
+econ_handler.py:74:        if balance < price:
+econ_handler.py:75:            bot.answer_callback_query(call.id, f"Not enough credits. Need {price}, have {balance}.")
+econ_handler.py:77:        user["balance"] = balance - price
+econ_handler.py:79:            user.setdefault("ask_credits", 0)
+econ_handler.py:80:            user["ask_credits"] += 1
+econ_handler.py:86:            ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 0})
+econ_handler.py:87:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:89:        bot.answer_callback_query(call.id, f"✅ Purchased {item}! Remaining: {user['balance']} 
+credits")
+econ_handler.py:93:            text=f"✅ Purchased {item} for {price} credits.\nRemaining: {user['balance']} credits."
+econ_handler.py:103:        db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, 
+{}).get("balance", 0) + 50
+econ_handler.py:105:        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: 
+{db['users'][uid]['balance']} credits")
+fix_registration.py:26:    c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", 
+(str(message.from_user.id),))
+fix_registration.py:28:    balance = res[0] if res else 0
+fix_registration.py:30:    bot.reply_to(message, f"👑 היתרה שלך: {balance} SLH")
+guide_handler.py:69:            "💰 כלכלה\n\n/balance\n/buy\n/pay",
+help_handler.py:45:/token balance – Your SLH balance
+help_handler.py:50:/balance – Check your balance
+help_handler.py:51:/buy – Purchase items/credits
+import_binance.py:10:SLH_ABI = [{"constant":True,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outp
+uts":[{"name":"balance","type":"uint256"}],"type":"function"}]
+import_binance.py:13:def get_slh_balance(address):
+import_binance.py:15:        balance = contract.functions.balanceOf(w3.to_checksum_address(address)).call()
+import_binance.py:16:        return balance / (10**18)
+import_binance.py:29:        balance = get_slh_balance(wallet)
+import_binance.py:30:        c.execute("INSERT OR REPLACE INTO wallets VALUES (?,?)", (user_id, int(balance)))
+import_binance.py:31:        print(f"סונכרן {user_id}: {balance} SLH")
+inspector.py:26:        report.append("🔍 [3/8] Dashboard")
+inspector.py:38:        report.append(f"Dashboard: {'✅' if dash_ok else '❌'}")
+language_handler.py:6:        "balance": "יתרתך: {balance} קרדיטים",
+language_handler.py:8:        "purchase_success": "✅ רכשת {item} ב-{price} קרדיטים. נותרו: {balance} קרדיטים",
+language_handler.py:13:        "balance": "Your balance: {balance} credits",
+language_handler.py:15:        "purchase_success": "✅ Purchased {item} for {price} credits. Remaining: {balance} 
+credits",
+learning_path.py:15:            ("פקודות בסיסיות", "/help – תפריט פקודות\n/balance – יתרה\n/buy – קניית כלים"),
+learning_path.py:17:            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+learning_path.py:19:            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע 
+ב-/market!")
+learning_path.py:31:            ("פקודות בסיסיות", "/help – תפריט פקודות\n/balance – יתרה\n/buy – קניית כלים"),
+learning_path.py:33:            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+learning_path.py:35:            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע 
+ב-/market!")
+learning_path.py:57:        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+learning_path.py:58:        user["balance"] = user.get("balance", 0) + 10
+learning_path.py:60:        bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על 
+ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
+learning_path.py:88:        # Award 40 credits to creator
+learning_path.py:89:        user = db.setdefault("users", {}).setdefault(sub["uid"], {"balance": 0})
+learning_path.py:90:        user["balance"] = user.get("balance", 0) + 40
+learning_path.py:94:        bot.reply_to(m, f"✅ Agent '{sub['agent_name']}' approved and added to /market! Creator 
+received 40 Credits.")
+learning_path.py:95:        bot.send_message(sub["uid"], f"🎉 הסוכן '{sub['agent_name']}' אושר! קיבלת 40 Credits 
+נוספים. הוא זמין עכשיו ב-/market.")
+learning_path.py:147:        user = db.setdefault("users", {}).setdefault(uid, {"name": "אוסיף", "balance": 0})
+railway_bot.py:28:    c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", (uid,)); res=c.fetchone(); 
+conn.close()
+slh.py:11:    print("[1] Status [2] Users [3] Agents\n[4] Credits [5] Restart Bot [6] Exit\n"+"="*40)
+slh.py:15:    for uid,u in db.get("users",{}).items(): print(f"{uid} | {u.get('name','?')} | {u.get('role')} | 
+{u.get('credits',0)} Credits")
+slh.py:19:def cmd_credits():
+slh.py:20:    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
+slh.py:28:        elif choice=="4": cmd_credits()
+staking_handler.py:30:        bot.send_message(m.chat.id, f"🏦 SLH STAKING\nStatus: {'Active' if amount else 'Not 
+active'}\nLocked: {amount} credits")
+staking_handler.py:39:        bot.send_message(m.chat.id, "✅ Joined SLH Staking\nInitial stake: 100 credits\nYour 
+rewards engine is active 🚀")
+staking_handler.py:51:        binance_balance = "N/A"
+staking_handler.py:53:            try: binance_balance = binance.get_asset_balance(asset='USDT')['free']
+staking_handler.py:56:        bot.send_message(m.chat.id, f"📊 STAKING REPORT\nStake: {amount}\nEst Daily Reward: 
+{reward:.4f}\nBinance USDT: {binance_balance}\nStatus: {'ACTIVE' if amount else 'INACTIVE'}")
+ton_handler.py:7:DEFAULT_RATE = 100                             # 1 TON = 100 Credits
+ton_handler.py:37:            f"Rate: 1 TON = {rate} Credits\n"
+ton_handler.py:38:            "After sending, use /ton_check <transaction_hash> to verify and get credits."
+ton_handler.py:99:        # 4. Calculate credits
+ton_handler.py:101:        credits = round(amount_ton * rate, 2)
+ton_handler.py:103:        # 5. Add to user balance
+ton_handler.py:104:        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+ton_handler.py:105:        user["balance"] = user.get("balance", 0) + credits
+ton_handler.py:114:            "credits": credits,
+ton_handler.py:124:            f"✅ TON deposit verified! {credits} credits added.\n"
+ton_handler.py:126:            f"Your balance: {user['balance']} credits."
+ton_handler.py:137:            bot.send_message(m.chat.id, f"Current rate: 1 TON = {settings['rate']} Credits.")
+ton_handler.py:144:            bot.send_message(m.chat.id, f"✅ TON rate updated: 1 TON = {new_rate} Credits.")
+core\academy_manager.py:73:        credits=10,
+core\economy_bridge.py:4:def get_balance(uid):
+core\economy_bridge.py:5:    return profile_manager.get_balance(uid)
+core\economy_bridge.py:8:def add_credits(uid, amount):
+core\economy_bridge.py:9:    return profile_manager.add_balance(uid, amount)
+core\economy_bridge.py:12:def spend_credits(uid, amount):
+core\economy_bridge.py:13:    current = profile_manager.get_balance(uid)
+core\economy_bridge.py:18:    return profile_manager.add_balance(uid, -amount)
+core\economy_bridge.py:21:def reward(uid, credits=0, points=0):
+core\economy_bridge.py:24:    if credits:
+core\economy_bridge.py:25:        result["credits"] = profile_manager.add_balance(
+core\economy_bridge.py:27:            credits
+core\migration.py:24:    # old balance -> wallet
+core\migration.py:25:    if "balance" in user:
+core\migration.py:32:        user["wallet"]["credits"] = user.pop(
+core\migration.py:33:            "balance"
+core\profile_manager.py:69:                "credits":0
+core\profile_manager.py:116:def get_balance(uid):
+core\profile_manager.py:124:        "credits",
+core\profile_manager.py:130:def add_balance(uid,amount):
+core\profile_manager.py:149:    wallet["credits"]=wallet.get(
+core\profile_manager.py:150:        "credits",
+core\profile_manager.py:156:    return wallet["credits"]
+handlers\academy_handler.py:107:            f"💰 קרדיטים: {result['reward']['credits']}"
+handlers\dashboard_handler.py:5:    @bot.message_handler(commands=['dashboard'])
+handlers\dashboard_handler.py:6:    def dashboard(m):
+handlers\dashboard_handler.py:14:        balance = user.get('balance', 0)
+handlers\dashboard_handler.py:16:        text = f"🌟 ה-Dashboard שלך\n\n💰 יתרה: {balance} SLH\n📚 קורס פעיל: 
+{course}\n🤖 סוכנים זמינים: 10\n🎯 משימה מומלצת: סיים שיעור 1 בביטקוין\n\nמה תרצה לעשות?"
+handlers\dev_handler.py:4:        text = """🛠 SLH OS Developer Dashboard
+handlers\help_handler.py:45:/token balance – Your SLH balance
+handlers\help_handler.py:50:/balance – Check your balance
+handlers\help_handler.py:51:/buy – Purchase items/credits
+handlers\leaderboard_handler.py:9:        credits = data.get("credits", 0)
+handlers\leaderboard_handler.py:10:        text += f"{i}. {name} - {credits} SLH\n"
+handlers\lesson_handler.py:117:            f"💰 קרדיטים: {reward['credits']}"
+handlers\llm_handler.py:115:credits={user.get("credits",0)}
+handlers\loader.py:8:        ("dashboard", "handlers.dashboard_handler"),
+handlers\onboarding_v2.py:25:    def send_dashboard(chat_id, user_id):
+handlers\onboarding_v2.py:42:        credits = wallet.get(
+handlers\onboarding_v2.py:43:            "credits",
+handlers\onboarding_v2.py:71:            "🌟 ה-Dashboard שלך\n\n"
+handlers\onboarding_v2.py:72:            f"💰 Credits: {credits}\n"
+handlers\onboarding_v2.py:155:                "ה-Dashboard שלך מחכה לך."
+handlers\onboarding_v2.py:162:                    "📊 לך ל-Dashboard",
+handlers\onboarding_v2.py:163:                    callback_data="goto_dashboard"
+handlers\onboarding_v2.py:239:            send_dashboard(
+handlers\onboarding_v2.py:259:        call.data == "goto_dashboard"
+handlers\onboarding_v2.py:261:    def goto_dashboard(call):
+handlers\onboarding_v2.py:267:        send_dashboard(
+handlers\payment_handler.py:8:    "100credits": (100, 100, "100 Credits"),
+handlers\payment_handler.py:9:    "500credits": (500, 450, "500 Credits (10% off)"),
+handlers\payment_handler.py:10:    "1000credits": (1000, 800, "1000 Credits (20% off)"),
+handlers\payment_handler.py:23:        # Explain what you can buy with credits
+handlers\payment_handler.py:26:            "💎 Credits unlock: AI asks (/ask), premium agents, and more.\n"
+handlers\payment_handler.py:32:        for pack_id, (stars, credits, label) in STARS_PACKS.items():
+handlers\payment_handler.py:34:                text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+handlers\payment_handler.py:37:        bot.send_message(m.chat.id, "💰 Select a credits package:", reply_markup=markup)
+handlers\payment_handler.py:45:        stars, credits, label = STARS_PACKS[pack_id]
+handlers\payment_handler.py:50:                title="SLH Credits",
+handlers\payment_handler.py:51:                description=f"Add {credits} credits to your SLH account",
+handlers\payment_handler.py:52:                invoice_payload=f"credits_{credits}_{call.from_user.id}",
+handlers\payment_handler.py:56:                start_parameter=f"credits_{credits}",
+handlers\payment_handler.py:80:        if len(parts) != 3 or parts[0] != "credits":
+handlers\payment_handler.py:84:            credits = int(parts[1])
+handlers\payment_handler.py:86:            bot.send_message(m.chat.id, "❌ Error parsing credits.")
+handlers\payment_handler.py:97:        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+handlers\payment_handler.py:98:        user["balance"] = user.get("balance", 0) + credits
+handlers\payment_handler.py:103:            commission = round(credits * 0.85, 2)
+handlers\payment_handler.py:104:            ref_user = db.setdefault("users", {}).setdefault(referrer_uid, {"balance": 
+0})
+handlers\payment_handler.py:105:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+handlers\payment_handler.py:112:                    f"🎉 Your friend just purchased credits! You earned {commission} 
+credits."
+handlers\payment_handler.py:119:            "credits": credits,
+handlers\payment_handler.py:131:            print(f"[PAY] CRITICAL: save_db failed AFTER payment charged! uid={uid}, 
+charge_id={charge_id}, credits={credits}, error={e}")
+handlers\payment_handler.py:132:            bot.send_message(m.chat.id, "⚠️ Payment received but there was an error 
+saving your credits. Please contact support with this reference: " + charge_id)
+handlers\payment_handler.py:134:                bot.send_message(8789977826, f"🚨 PAYMENT SAVE FAILED uid={uid} 
+charge_id={charge_id} credits={credits} error={e}")
+handlers\payment_handler.py:141:            f"✅ Payment received! {credits} credits added.\n"
+handlers\payment_handler.py:142:            f"Your balance: {user['balance']} credits.\n"
+handlers\payment_handler.py:145:        print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
+handlers\payment_handler.py:157:            msg += f"▫️ {tx['credits']} credits — {tx['timestamp'][:10]}\n"
+handlers\payment_handler.py:166:        total_credits = sum(tx.get("credits", 0) for tx in txs)
+handlers\payment_handler.py:173:            f"Total credits issued: {total_credits}\n"
+handlers\payment_handler.py:185:        user = db.setdefault("users", {}).setdefault(uid, {"balance": 0})
+handlers\payment_handler.py:186:        user["balance"] = user.get("balance", 0) + 100
+handlers\payment_handler.py:188:        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: 
+{user['balance']}")
+handlers\payment_handler.py:189:        print(f"[FAKEPAY] 100 credits added to {uid}")
+handlers\user_handler.py:20:        credits = wallet.get('credits', 0)
+handlers\user_handler.py:28:        text += f'💰 חואיוה: {credits}\n'
+handlers\ux_handler.py:4:        text = """🎨 SLH OS UI/UX Dashboard
+handlers\ux_handler.py:23:            "📊 /dashboard – Admin dashboard",
+plugins\leaderboard.py:22:            key=lambda x: x[1].get("credits", 0),
+state\token_loader.py:18:def get_balance(uid):
+state\token_loader.py:19:    """Return user balance in credits"""
+state\token_loader.py:24:        return db.get('users', {}).get(str(uid), {}).get('wallet', {}).get('credits', 0)
+state\token_loader.py:29:    """Return total credits in circulation"""
+state\token_loader.py:34:        return sum(u.get('wallet', {}).get('credits', 0) for u in db.get('users', 
+{}).values())
+state\custom_handlers\dynamic_leaderboard.py:18:        # Points from token balance (0.1 point per SLH)
+state\custom_handlers\dynamic_leaderboard.py:20:        balances = token.get("balances", {})
+state\custom_handlers\dynamic_leaderboard.py:21:        for uid, bal in balances.items():
+state\custom_handlers\staking_basic.py:29:        balances = token.setdefault("balances", {})
+state\custom_handlers\staking_basic.py:30:        if balances.get(uid, 0) < amount:
+state\custom_handlers\staking_basic.py:31:            bot.reply_to(msg, "Insufficient balance.")
+state\custom_handlers\staking_basic.py:34:        balances[uid] -= amount
+state\custom_handlers\staking_basic.py:57:        balances = token.setdefault("balances", {})
+state\custom_handlers\token_handler.py:9:def get_balance(wallet):
+state\custom_handlers\token_handler.py:13:        return db.get("token", {}).get("balances", {}).get(wallet, 0)
+state\custom_handlers\token_handler.py:37:                "Options: /token supply | /token balance [wallet]"
+state\custom_handlers\token_handler.py:49:        elif sub == "balance":
+state\custom_handlers\token_handler.py:53:            bal = get_balance(wallet)
+state\custom_handlers\token_handler.py:56:                msg = f"💰 Balance: {bal:,.4f} SLH"
+state\custom_handlers\token_handler.py:65:                "Options: /token supply | /token balance [wallet]"
+tools\loader_registration_audit.py:49:    "/balance",
+tools\runtime_command_registration_audit.py:45:    "/balance",
+tools\user_command_audit.py:41:    "/balance",
+tools\user_command_wiring_audit.py:45:    "/balance",
+
+

@@ -1,0 +1,21 @@
+{"timestamp": "2026-08-13T18:54:44.605099+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:44.744867+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:45.668726+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185445_579625Z00", "files": 313, "edges": 215, "parse_errors": 10}}
+{"timestamp": "2026-08-13T18:54:45.801196+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:54:45.965334+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:16.348876+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:16.476571+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:17.102257+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:55:31.347819+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:57:25.026045+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:57:37.046090+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:24.370074+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:27.218796+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:58:28.166687+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:58:31.103960+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.393117+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.405820+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:59:57.464297+00:00", "event": "SNAPSHOT_CREATED", "data": {"path": "_slh_map/dna/LAST_SNAPSHOT.json"}}
+{"timestamp": "2026-08-13T18:59:57.598626+00:00", "event": "DNA_INITIALIZED", "data": {"schema": "slh-dna/v1"}}
+{"timestamp": "2026-08-13T18:59:57.612350+00:00", "event": "SCAN_IMPORTED", "data": {"snapshot": "_slh_map/scans/2026-08-13T185827_160181Z00", "files": 315, "edges": 243, "parse_errors": 0}}
+{"timestamp": "2026-08-13T18:59:57.649554+00:00", "event": "SNAPSHOT_CREATED", "data": {"path": "_slh_map/dna/LAST_SNAPSHOT.json"}}

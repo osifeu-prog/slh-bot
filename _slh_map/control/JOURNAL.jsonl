@@ -1,0 +1,2 @@
+﻿{"timestamp":"2026-08-13T19:12:30.2212331Z","event":"CONTROL_CENTER_INITIALIZED","result":"SAFE","details":"Recursive encoding backup tree removed; scan boundary policy created; launch state reset to evidence-based pending."}
+{"timestamp_utc":"2026-08-13T19:14:00.4239285Z","event":"CONTROL_PLANE_V1_CREATED","result":"SAFE","git_head":"4eca859bcb5669ebd35cb85354602bc2fbe782db","git_changes":18,"blockers":["UNCOMMITTED_WORKTREE"],"source_modified":false,"deployment_performed":false,"dna_scan_performed":false}

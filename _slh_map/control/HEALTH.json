@@ -1,0 +1,42 @@
+﻿[
+    {
+        "File":  "slhdna.py",
+        "Exists":  true,
+        "Uses_os_walk":  false,
+        "Uses_rglob":  false,
+        "Uses_copy2":  true,
+        "Uses_copytree":  false,
+        "Mentions_backup":  false,
+        "Mentions_slh_map":  true
+    },
+    {
+        "File":  "slh_dna_scan.py",
+        "Exists":  true,
+        "Uses_os_walk":  true,
+        "Uses_rglob":  false,
+        "Uses_copy2":  false,
+        "Uses_copytree":  false,
+        "Mentions_backup":  false,
+        "Mentions_slh_map":  true
+    },
+    {
+        "File":  "slh_fix_bom.py",
+        "Exists":  true,
+        "Uses_os_walk":  true,
+        "Uses_rglob":  false,
+        "Uses_copy2":  false,
+        "Uses_copytree":  false,
+        "Mentions_backup":  true,
+        "Mentions_slh_map":  true
+    },
+    {
+        "File":  "slh_authority_audit.py",
+        "Exists":  true,
+        "Uses_os_walk":  false,
+        "Uses_rglob":  true,
+        "Uses_copy2":  false,
+        "Uses_copytree":  false,
+        "Mentions_backup":  false,
+        "Mentions_slh_map":  true
+    }
+]
