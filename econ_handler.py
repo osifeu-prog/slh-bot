@@ -1,5 +1,5 @@
 import state_manager
-from core import profile_manager
+from core import economy_bridge
 
 def register_econ_handlers(bot):
     @bot.message_handler(commands=['balance'])
@@ -27,7 +27,7 @@ def register_econ_handlers(bot):
         if balance < price:
             bot.answer_callback_query(call.id, f"Not enough credits. Need {price}, have {balance}.")
             return
-        profile_manager.add_balance(uid, -price)
+        economy_bridge.spend_credits(uid, price)
         if item == "ask_credit":
             user.setdefault("ask_credits", 0)
             user["ask_credits"] += 1
@@ -36,7 +36,7 @@ def register_econ_handlers(bot):
         referrer_uid = db.get("referred_by", {}).get(uid)
         if referrer_uid:
             commission = round(price * 0.85, 2)
-            profile_manager.add_balance(referrer_uid, commission)
+            economy_bridge.add_credits(referrer_uid, commission)
 
         state_manager.save_db(db)
         bot.answer_callback_query(call.id, f"✅ Purchased {item}! Remaining: {profile_manager.get_balance(uid)} credits")
@@ -53,7 +53,7 @@ def register_econ_handlers(bot):
             return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
-        profile_manager.add_balance(uid, 50)
+        economy_bridge.add_credits(uid, 50)
         state_manager.save_db(db)
         bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {profile_manager.get_balance(uid)} credits")
 
