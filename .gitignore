@@ -50,3 +50,4 @@ state/db_backup_*
 state/db_before_*
 state/db.json.bak_*
 *.lock
+.nixpacks/build.sh
