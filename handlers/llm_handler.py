@@ -87,7 +87,7 @@ def ask_groq(prompt):
             )
 
         resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="qwen/qwen3.6-27b",
             messages=[
                 {
                     "role": "user",
