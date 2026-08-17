@@ -87,7 +87,7 @@ def ask_groq(prompt):
             )
 
         resp = client.chat.completions.create(
-            model="qwen/qwen3.6-27b",
+            model="openai/gpt-oss-20b",
             messages=[
                 {
                     "role": "user",
