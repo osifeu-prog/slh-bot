@@ -336,5 +336,9 @@
     "bot_name": "OSIF CORE",
     "owner": "Osif",
     "description": "המערכת החכמה של SLH OS"
+  },
+  "community": {
+    "telegram_invite": "https://t.me/+9VUA_6jMyQcxMGVk",
+    "name": "SLH Dev Community"
   }
 }
