@@ -1,0 +1,14 @@
+{
+  "result_id": "mission-1-20260817T152114Z",
+  "mission_id": "1",
+  "agent_id": "1",
+  "execution_status": "success",
+  "verified": true,
+  "mission_completion": "pending",
+  "result": {
+    "synchronization_check": "passed",
+    "execution_check": "passed"
+  },
+  "recorded_at": "2026-08-17T15:21:14.066916+00:00",
+  "result_sha256": "de1ebf028d6e6fa44475f6daef245c7e5406a2479acc7a703afc5c0a49049ffd"
+}

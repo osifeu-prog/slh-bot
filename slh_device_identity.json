@@ -1,0 +1,29 @@
+﻿{
+  "schema": "slh-device-identity-v1",
+  "captured_at": "2026-08-17",
+  "devices": [
+    {
+      "device": "SLH-DEVICE-01",
+      "transport": "USB-Serial-JTAG",
+      "chip": "ESP32-C3",
+      "revision": "v0.4",
+      "mac": "28:37:2F:6A:41:50",
+      "usb_vid": "303A",
+      "usb_pid": "1001",
+      "identity_source": "esptool",
+      "identity_confidence": "HIGH"
+    },
+    {
+      "device": "SLH-DEVICE-02",
+      "transport": "USB-UART-CH340",
+      "chip": "ESP32-D0WD-V3",
+      "revision": "v3.1",
+      "mac": "14:33:5C:6C:32:C0",
+      "usb_vid": "1A86",
+      "usb_pid": "7523",
+      "com_port": "COM4",
+      "identity_source": "esptool",
+      "identity_confidence": "HIGH"
+    }
+  ]
+}
