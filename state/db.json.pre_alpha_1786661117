@@ -1,0 +1,415 @@
+{
+  "users": {
+    "8789977826": {
+      "profile": {
+        "created": "2026-08-07T22:43:47.559294",
+        "joined": "2026-08-07T22:43:47.559294"
+      },
+      "wallet": {
+        "credits": 1434,
+        "staked": 16
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 12,
+            "completed": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 75,
+        "level": 1
+      },
+      "referral": {
+        "code": "ADMIN2026",
+        "count": 0,
+        "commission": 0
+      },
+      "name": "Osif",
+      "role": "OWNER",
+      "joined": true,
+      "test_field": null,
+      "group": "נ",
+      "permissions": [
+        "admin",
+        "exec",
+        "deploy",
+        "restart"
+      ],
+      "telegram_name": "Osif",
+      "display_name": "Osif"
+    },
+    "224223270": {
+      "role": "developer",
+      "permissions": [
+        "exec_request",
+        "read_logs",
+        "db_read"
+      ],
+      "wallet": {
+        "credits": 0
+      },
+      "name": "User",
+      "display_name": "User",
+      "telegram_name": "User"
+    },
+    "7757102350": {
+      "profile": {
+        "created": "2026-08-13T11:38:59.288059"
+      },
+      "wallet": {
+        "credits": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    },
+    "8791275334": {
+      "profile": {
+        "created": "2026-08-13T16:08:03.161333"
+      },
+      "wallet": {
+        "credits": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    },
+    "5010371391": {
+      "profile": {
+        "created": "2026-08-13T18:34:17.515767"
+      },
+      "wallet": {
+        "credits": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    }
+  },
+  "students": {
+    "224223270": {
+      "status": "active"
+    }
+  },
+  "tasks": {
+    "1": {
+      "title": "השלם קורס Bitcoin",
+      "progress": 100,
+      "reward": 100,
+      "done_by": [
+        8789977826
+      ],
+      "agent": "DoctorAgent",
+      "status": "done"
+    },
+    "2": {
+      "title": "SLH OS Full Production Launch & Voting Integration",
+      "progress": 100,
+      "reward": 200,
+      "agent": "SystemGuard",
+      "status": "done",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "3": {
+      "title": "השלמת פריסה ישירה של SLH OS",
+      "progress": 100,
+      "reward": 50,
+      "agent": "SyncAgent",
+      "status": "done",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "4": {
+      "title": "Security audit",
+      "description": "בדיקת אבטחה מלאה של המערכת",
+      "progress": 100,
+      "reward": 80,
+      "agent": "SystemGuard",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646213Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "5": {
+      "title": "Payment test",
+      "description": "בדיקת זרימת תשלומים ומוצרים",
+      "progress": 100,
+      "reward": 60,
+      "agent": "TokenAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646224Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "6": {
+      "title": "User onboarding test",
+      "description": "בדיקת תהליך הצטרפות משתמש חדש",
+      "progress": 100,
+      "reward": 40,
+      "agent": "SyncAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646227Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "7": {
+      "title": "Academy complete flow",
+      "description": "בדיקת זרימה מלאה של האקדמיה",
+      "progress": 100,
+      "reward": 70,
+      "agent": "DoctorAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646228Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "8": {
+      "title": "Agent assignment system",
+      "description": "בדיקת מערכת שיוך סוכנים למטלות",
+      "progress": 100,
+      "reward": 50,
+      "agent": "SystemGuard",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646230Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "9": {
+      "title": "Marketplace test",
+      "description": "בדיקת marketplace ומוצרים",
+      "progress": 100,
+      "reward": 50,
+      "agent": "TokenAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646232Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "10": {
+      "title": "Voting flow test",
+      "description": "בדיקת זרימת הצבעות מקצה לקצה",
+      "progress": 100,
+      "reward": 40,
+      "agent": "SyncAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646233Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "11": {
+      "title": "Backup restore test",
+      "description": "בדיקת גיבוי ושחזור של db.json",
+      "progress": 100,
+      "reward": 90,
+      "agent": "SystemGuard",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646235Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "12": {
+      "title": "LLM fallback test",
+      "description": "בדיקת fallback של ה-LLM",
+      "progress": 100,
+      "reward": 60,
+      "agent": "DoctorAgent",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646237Z",
+      "done_by": [
+        8789977826
+      ]
+    },
+    "13": {
+      "title": "Public documentation",
+      "description": "כתיבת תיעוד ציבורי למערכת",
+      "progress": 100,
+      "reward": 100,
+      "agent": "SystemGuard",
+      "status": "done",
+      "created_at": "2026-08-11T12:55:27.646238Z",
+      "done_by": [
+        8789977826
+      ]
+    }
+  },
+  "votes": {
+    "1": {
+      "text": "\"האם להוסיף קורס AI?\" – הצעה.",
+      "by": "8789977826",
+      "time": 1786232582.536529,
+      "yes": 1,
+      "no": 1,
+      "voters": {
+        "8789977826": "yes",
+        "7757102350": "no"
+      },
+      "status": "approved",
+      "result": "add AI course"
+    },
+    "2": {
+      "text": "\"האם לאשר את פריסת ערוצי התשלום וה־Mini App בגרסת הייצור?\" – הצעה מנוהלת.",
+      "by": "8789977826",
+      "time": 1786384994.461242,
+      "yes": 1,
+      "no": 0,
+      "voters": {
+        "8789977826": "yes"
+      },
+      "status": "approved",
+      "result": "deploy payment channels & Mini App"
+    },
+    "3": {
+      "text": "SLH production voting test",
+      "by": "8789977826",
+      "time": 1786463008.0480983,
+      "yes": 0,
+      "no": 0,
+      "voters": {}
+    }
+  },
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "state": "active",
+      "id": "1",
+      "role": "security",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "state": "active",
+      "id": "2",
+      "role": "doctor",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "3": {
+      "name": "SyncAgent",
+      "state": "active",
+      "id": "3",
+      "role": "sync",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "created": "2026-08-07T22:43:47"
+    },
+    "4": {
+      "name": "TokenAgent",
+      "state": "idle",
+      "id": "4",
+      "role": "token",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "created": "2026-08-07T22:43:47"
+    }
+  },
+  "products": {
+    "basic": {
+      "name": "Basic 100 Credits",
+      "price_usd": 5,
+      "credits": 100
+    },
+    "pro": {
+      "name": "Pro 500 Credits",
+      "price_usd": 20,
+      "credits": 500
+    }
+  },
+  "system": {
+    "bot_name": "OSIF CORE",
+    "owner": "Osif",
+    "description": "המערכת החכמה של SLH OS"
+  },
+  "pending_exec": {
+    "7cfcf12e": {
+      "id": "7cfcf12e",
+      "uid": "224223270",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1786620125.1366355
+    },
+    "74d00a9f": {
+      "id": "74d00a9f",
+      "uid": "8789977826",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1786620180.82774
+    }
+  }
+}

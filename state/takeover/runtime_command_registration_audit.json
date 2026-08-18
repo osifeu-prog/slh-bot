@@ -1,8 +1,8 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-08-13T16:52:27.552144+00:00",
+  "generated_at": "2026-08-14T16:20:29.304470+00:00",
   "entrypoint": "bot_stable.py",
-  "loader": "handlers\\loader.py",
+  "loader": "handlers/loader.py",
   "direct_registrations": [
     {
       "command": "/user",
@@ -18,7 +18,7 @@
     {
       "command": "/progress",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\academy_handler.py",
+      "source": "handlers/academy_handler.py",
       "module": "handlers.academy_handler",
       "register_functions": [
         {
@@ -31,7 +31,7 @@
     {
       "command": "/progress",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\endday_handler.py",
+      "source": "handlers/endday_handler.py",
       "module": "handlers.endday_handler",
       "register_functions": [
         {
@@ -44,7 +44,7 @@
     {
       "command": "/balance",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\endday_handler.py",
+      "source": "handlers/endday_handler.py",
       "module": "handlers.endday_handler",
       "register_functions": [
         {
@@ -57,7 +57,7 @@
     {
       "command": "/start",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -70,7 +70,7 @@
     {
       "command": "/help",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -83,7 +83,7 @@
     {
       "command": "/join",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -96,7 +96,7 @@
     {
       "command": "/progress",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -109,7 +109,7 @@
     {
       "command": "/balance",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -122,7 +122,7 @@
     {
       "command": "/ask",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\help_handler.py",
+      "source": "handlers/help_handler.py",
       "module": "handlers.help_handler",
       "register_functions": [
         {
@@ -135,7 +135,7 @@
     {
       "command": "/join",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\me_handler.py",
+      "source": "handlers/me_handler.py",
       "module": "handlers.me_handler",
       "register_functions": [
         {
@@ -148,7 +148,7 @@
     {
       "command": "/start",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\os_handler.py",
+      "source": "handlers/os_handler.py",
       "module": "handlers.os_handler",
       "register_functions": [
         {
@@ -161,7 +161,7 @@
     {
       "command": "/help",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\os_handler.py",
+      "source": "handlers/os_handler.py",
       "module": "handlers.os_handler",
       "register_functions": [
         {
@@ -174,7 +174,7 @@
     {
       "command": "/market",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\os_handler.py",
+      "source": "handlers/os_handler.py",
       "module": "handlers.os_handler",
       "register_functions": [
         {
@@ -187,7 +187,7 @@
     {
       "command": "/ask",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\os_handler.py",
+      "source": "handlers/os_handler.py",
       "module": "handlers.os_handler",
       "register_functions": [
         {
@@ -200,7 +200,7 @@
     {
       "command": "/join",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\payment_handler.py",
+      "source": "handlers/payment_handler.py",
       "module": "handlers.payment_handler",
       "register_functions": [
         {
@@ -217,7 +217,7 @@
     {
       "command": "/ask",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\payment_handler.py",
+      "source": "handlers/payment_handler.py",
       "module": "handlers.payment_handler",
       "register_functions": [
         {
@@ -234,7 +234,7 @@
     {
       "command": "/start",
       "path": "MODULAR_LOADER",
-      "source": "handlers\\ux_handler.py",
+      "source": "handlers/ux_handler.py",
       "module": "handlers.ux_handler",
       "register_functions": [
         {
@@ -252,7 +252,7 @@
         {
           "command": "/start",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -265,7 +265,7 @@
         {
           "command": "/start",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\os_handler.py",
+          "source": "handlers/os_handler.py",
           "module": "handlers.os_handler",
           "register_functions": [
             {
@@ -278,7 +278,7 @@
         {
           "command": "/start",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\ux_handler.py",
+          "source": "handlers/ux_handler.py",
           "module": "handlers.ux_handler",
           "register_functions": [
             {
@@ -296,7 +296,7 @@
         {
           "command": "/help",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -309,7 +309,7 @@
         {
           "command": "/help",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\os_handler.py",
+          "source": "handlers/os_handler.py",
           "module": "handlers.os_handler",
           "register_functions": [
             {
@@ -327,7 +327,7 @@
         {
           "command": "/join",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -340,7 +340,7 @@
         {
           "command": "/join",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\me_handler.py",
+          "source": "handlers/me_handler.py",
           "module": "handlers.me_handler",
           "register_functions": [
             {
@@ -353,7 +353,7 @@
         {
           "command": "/join",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\payment_handler.py",
+          "source": "handlers/payment_handler.py",
           "module": "handlers.payment_handler",
           "register_functions": [
             {
@@ -392,7 +392,7 @@
         {
           "command": "/progress",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\academy_handler.py",
+          "source": "handlers/academy_handler.py",
           "module": "handlers.academy_handler",
           "register_functions": [
             {
@@ -405,7 +405,7 @@
         {
           "command": "/progress",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\endday_handler.py",
+          "source": "handlers/endday_handler.py",
           "module": "handlers.endday_handler",
           "register_functions": [
             {
@@ -418,7 +418,7 @@
         {
           "command": "/progress",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -440,7 +440,7 @@
         {
           "command": "/market",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\os_handler.py",
+          "source": "handlers/os_handler.py",
           "module": "handlers.os_handler",
           "register_functions": [
             {
@@ -458,7 +458,7 @@
         {
           "command": "/balance",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\endday_handler.py",
+          "source": "handlers/endday_handler.py",
           "module": "handlers.endday_handler",
           "register_functions": [
             {
@@ -471,7 +471,7 @@
         {
           "command": "/balance",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -501,7 +501,7 @@
         {
           "command": "/ask",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\help_handler.py",
+          "source": "handlers/help_handler.py",
           "module": "handlers.help_handler",
           "register_functions": [
             {
@@ -514,7 +514,7 @@
         {
           "command": "/ask",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\os_handler.py",
+          "source": "handlers/os_handler.py",
           "module": "handlers.os_handler",
           "register_functions": [
             {
@@ -527,7 +527,7 @@
         {
           "command": "/ask",
           "path": "MODULAR_LOADER",
-          "source": "handlers\\payment_handler.py",
+          "source": "handlers/payment_handler.py",
           "module": "handlers.payment_handler",
           "register_functions": [
             {

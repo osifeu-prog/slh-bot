@@ -1,24 +1,82 @@
 {
   "devices": {
-    "BRIDGE_PC_OSIF2_1784781883": {
+    "DEV_ESP_NEW_1786177919": {
+      "name": "ESP_New",
+      "description": "\"חדר שינה\"",
+      "type": "esp32",
+      "status": "offline",
+      "capabilities": [
+        "sensor",
+        "wallet",
+        "signing"
+      ],
+      "registered": 1786177919.2686372,
+      "last_seen": 1786178635.7838764,
+      "owner": "8789977826",
+      "permissions": [
+        "receive_tasks",
+        "report_status"
+      ],
+      "last_heartbeat": "2026-08-10T14:51:16.218400+00:00"
+    },
+    "PC_Osif2": {
       "name": "PC_Osif2",
       "type": "pc",
-      "status": "online",
+      "status": "offline",
       "capabilities": [
         "compute",
         "network",
         "storage",
         "ai"
       ],
-      "registered": 1784781883.6425214,
-      "last_seen": 1784781985.6041691,
-      "bridge": true
+      "registered": 1786207579.6199222,
+      "last_seen": 1786207579.6199224,
+      "bridge": true,
+      "hardware": {
+        "model": "Dell Latitude 5490",
+        "bios_serial": "CXZ8NV2",
+        "uuid": "4C4C4544-0058-5A10-8038-C3C04F4E5632",
+        "disk": "NVMe PC401 SK hy ACE4_2E00_9512_0B1C"
+      },
+      "last_heartbeat": "2026-08-12T09:43:59.947305+00:00"
+    },
+    "PC_SELHA_MAIN": {
+      "name": "PC_Selha",
+      "type": "pc",
+      "status": "offline",
+      "capabilities": [
+        "compute",
+        "network",
+        "storage",
+        "ai"
+      ],
+      "registered": 1786208079.1628652,
+      "last_seen": 1786208079.1628654,
+      "bridge": false,
+      "hardware": {
+        "model": "SELHA-MAIN",
+        "os": "Windows 10 Pro 2009",
+        "user": "Giga Store"
+      },
+      "last_heartbeat": "2026-08-12T09:44:07.026747+00:00"
+    },
+    "DEV_TEST_DEVICE_1786363970": {
+      "name": "TEST_DEVICE",
+      "description": "ESP32 Device",
+      "type": "esp32",
+      "status": "offline",
+      "capabilities": [
+        "sensor",
+        "wallet",
+        "signing"
+      ],
+      "registered": 1786363970.841188,
+      "last_seen": null,
+      "owner": "8789977826",
+      "permissions": [
+        "receive_tasks",
+        "report_status"
+      ]
     }
-  },
-  "termux-01": {
-    "name": "Termux Phone",
-    "type": "microserver",
-    "status": "online",
-    "last_seen": "now"
   }
 }

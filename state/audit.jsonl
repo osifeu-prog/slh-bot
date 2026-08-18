@@ -1,29 +1,12 @@
-{"timestamp": "2026-07-26T07:59:19.155331+00:00", "event": "AUDIT_TEST_EVENT", "actor": "test", "target": "SystemGuard", "details": {"test": true, "source": "audit_test"}}
-{"timestamp": "2026-07-26T08:00:52.392999+00:00", "event": "agent.created", "target": "5", "details": {"name": "AUDIT_INTEGRATION_TEST", "role": "agent"}}
-{"timestamp": "2026-07-26T08:00:52.394986+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "audit_test"}}}
-{"timestamp": "2026-07-26T08:00:52.402044+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 18}}
-{"timestamp": "2026-07-26T08:00:52.538051+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "AUDIT_INTEGRATION_TEST"}}
-{"timestamp": "2026-07-26T08:01:19.911629+00:00", "event": "agent.created", "target": "5", "details": {"name": "__AUDIT_INTEGRATION_TEST__", "role": "agent"}}
-{"timestamp": "2026-07-26T08:01:19.913367+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "audit_test"}}}
-{"timestamp": "2026-07-26T08:01:19.914875+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 22}}
-{"timestamp": "2026-07-26T08:01:20.044214+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__AUDIT_INTEGRATION_TEST__"}}
-{"timestamp": "2026-07-26T18:50:56.277974+00:00", "event": "agent.updated", "target": "2", "details": {"updates": {"state": "active"}}}
-{"timestamp": "2026-07-26T18:51:04.068598+00:00", "event": "agent.message_sent", "target": "2", "details": {"message_length": 18}}
-{"timestamp": "2026-07-26T19:44:45.620491+00:00", "event": "agent.created", "target": "5", "details": {"name": "__STATE_TEST_AGENT__", "role": "test"}}
-{"timestamp": "2026-07-26T19:44:45.629897+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "active", "test_marker": "updated"}}}
-{"timestamp": "2026-07-26T19:44:45.649693+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 28}}
-{"timestamp": "2026-07-26T19:44:45.657379+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__STATE_TEST_AGENT__"}}
-{"timestamp": "2026-07-27T08:50:09.770575+00:00", "event": "agent.updated", "target": "3", "details": {"updates": {"state": "active"}}}
-{"timestamp": "2026-07-27T08:50:09.776415+00:00", "event": "agent.created", "target": "5", "details": {"name": "__RUNTIME_TEST_AGENT__", "role": "test"}}
-{"timestamp": "2026-07-27T08:50:09.782426+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 20}}
-{"timestamp": "2026-07-27T08:50:09.787981+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__RUNTIME_TEST_AGENT__"}}
-{"timestamp": "2026-07-27T09:52:43.870710+00:00", "event": "agent.created", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT", "role": "agent"}}
-{"timestamp": "2026-07-27T09:53:15.867456+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT"}}
-{"timestamp": "2026-07-29T14:57:07.400484+00:00", "event": "agent.created", "target": "5", "details": {"name": "O-Agent", "role": "agent"}}
-{"timestamp": "2026-08-11T22:53:52.788691+00:00", "event": "agent.created", "target": "10", "details": {"name": "TestAgent", "role": "tester"}}
-{"timestamp": "2026-08-12T16:50:31.109910+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TempTester"}}
-{"timestamp": "2026-08-12T16:50:31.136867+00:00", "event": "agent.deleted", "target": "6", "details": {"name": "ClaudeAgent"}}
-{"timestamp": "2026-08-12T16:50:31.162702+00:00", "event": "agent.deleted", "target": "7", "details": {"name": "GroqAgent"}}
-{"timestamp": "2026-08-12T16:50:31.183366+00:00", "event": "agent.deleted", "target": "8", "details": {"name": "GeminiAgent"}}
-{"timestamp": "2026-08-12T16:50:31.203687+00:00", "event": "agent.deleted", "target": "9", "details": {"name": "OpenAI_Agent"}}
-{"time": 1786553529.402531, "actor": "8789977826", "action": "release_cleanup_completed", "details": {"removed_agents": ["TempTester", "ClaudeAgent", "GroqAgent", "GeminiAgent", "OpenAI_Agent"], "remaining_agents": ["SystemGuard", "DoctorAgent", "SyncAgent", "TokenAgent"], "task_13_reassigned": "SystemGuard"}}
+{"timestamp": "2026-08-07T22:43:47.566926+00:00", "event": "agent.created", "target": "1", "details": {"name": "O-Agent", "role": "agent"}}
+{"timestamp": "2026-08-08T18:25:47.898694+00:00", "event": "agent.created", "target": "2", "details": {"name": "-", "role": "agent"}}
+{"timestamp": "2026-08-08T21:53:44.934966+00:00", "event": "agent.created", "target": "3", "details": {"name": "TestAgent", "role": "agent"}}
+{"timestamp": "2026-08-08T23:15:10.281257+00:00", "event": "agent.deleted", "target": "3", "details": {"name": "TestAgent"}}
+{"timestamp": "2026-08-08T23:42:06.716641+00:00", "event": "agent.created", "target": "2", "details": {"name": "למחוק", "role": "agent"}}
+{"timestamp": "2026-08-08T23:42:23.540803+00:00", "event": "agent.updated", "target": "2", "details": {"updates": {"state": "working"}}}
+{"timestamp": "2026-08-08T23:42:32.915634+00:00", "event": "agent.message_sent", "target": "2", "details": {"message_length": 27}}
+{"time": 1786384947.5555854, "actor": "8789977826", "action": "mission_create", "mission_id": "1"}
+{"time": 1786385184.2355912, "actor": "8789977826", "action": "manual_exec_snapshot", "note": "post-task-registration check"}
+{"timestamp": 1786386355.2762785, "users": 1, "tasks": 2, "votes": 2, "missions": 0, "status": "pre_release_snapshot"}
+{"timestamp": "2026-08-10T23:09:47.087227+00:00", "event": "agent.created", "target": "5", "details": {"name": "TempTester", "role": "test"}}
+{"timestamp": "2026-08-16T12:23:57.844315+00:00", "event": "economy.record_transaction", "actor": "TEST_USER2", "details": {"amount": 5, "tx": {"credits": 15}, "meta": {"test": 1, "ts": "2026-08-16T12:23:57.843055"}}}

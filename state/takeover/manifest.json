@@ -2,69 +2,76 @@
   "manifest_version": "1.0",
   "system": {
     "name": "SLH OS",
-    "generated_at": "2026-07-26T08:53:46.529633+00:00",
+    "generated_at": "2026-08-14T10:30:47.499559+00:00",
     "generation_mode": "read_only_derived_snapshot",
     "takeover_status": "READY_FOR_LAYER"
   },
   "agents": {
     "total": 4,
     "states": {
-      "active": 1,
-      "idle": 3
+      "active": 3,
+      "idle": 1
     },
     "items": [
       {
         "id": "1",
         "name": "SystemGuard",
-        "role": "agent",
+        "role": "security",
         "state": "active",
-        "inbox_count": 1,
-        "permissions_count": 0
+        "inbox_count": 0,
+        "permissions_count": 2
       },
       {
         "id": "2",
         "name": "DoctorAgent",
-        "role": "agent",
-        "state": "idle",
+        "role": "doctor",
+        "state": "active",
         "inbox_count": 0,
-        "permissions_count": 0
+        "permissions_count": 2
       },
       {
         "id": "3",
         "name": "SyncAgent",
-        "role": "agent",
-        "state": "idle",
+        "role": "sync",
+        "state": "active",
         "inbox_count": 0,
-        "permissions_count": 0
+        "permissions_count": 2
       },
       {
         "id": "4",
         "name": "TokenAgent",
-        "role": "agent",
+        "role": "token",
         "state": "idle",
         "inbox_count": 0,
-        "permissions_count": 0
+        "permissions_count": 2
       }
     ]
   },
   "missions": {
-    "total": 2,
-    "open": 0,
+    "total": 1,
+    "open": 1,
     "assigned": 0,
-    "done": 2,
+    "done": 0,
     "duplicate_ids": [],
     "invalid_agent_references": 0,
-    "open_items": []
+    "open_items": [
+      {
+        "id": "1",
+        "description": "SLH_PUBLIC_LAUNCH — שחרור SLH לקהל",
+        "assigned_to": null,
+        "reward": 0
+      }
+    ]
   },
   "rewards": {
-    "ledger_exists": false,
+    "ledger_exists": true,
     "entries": 0,
     "orphan_entries": 0
   },
   "tasks": {
     "service_exists": true,
     "handler_exists": true,
-    "database_count": 0,
+    "database_count": 13,
     "architecture_status": "parallel_with_missions"
   },
   "knowledge": {
@@ -88,7 +95,7 @@
     "system_identity_module": {
       "exists": true,
       "path": "core/identity.py",
-      "size_bytes": 293
+      "size_bytes": 241
     },
     "formal_takeover_layer": false,
     "formal_knowledge_transfer": false,
@@ -119,54 +126,50 @@
   },
   "system_memory_summary": {
     "memory_version": "1.0",
-    "milestone": "First Autonomous Stability Record",
-    "next_phase": "Autonomous Memory Kernel",
-    "goal": [
-      "self documentation",
-      "health checks",
-      "automatic checkpoints"
-    ]
+    "milestone": "SLH_LAUNCH_STABILIZATION",
+    "next_phase": "ECONOMY_LOCK",
+    "goal": "stable production"
   },
   "source_files": {
     "db": {
       "exists": true,
       "path": "state/db.json",
-      "size_bytes": 1388
+      "size_bytes": 14476
     },
     "missions": {
       "exists": true,
       "path": "state/missions/board.json",
-      "size_bytes": 478
+      "size_bytes": 359
     },
     "rewards": {
-      "exists": false,
+      "exists": true,
       "path": "state/rewards_ledger.json",
-      "size_bytes": 0
+      "size_bytes": 2
     },
     "system_memory": {
       "exists": true,
       "path": "state/system_memory.json",
-      "size_bytes": 507
+      "size_bytes": 119
     },
     "audit": {
       "exists": true,
       "path": "state/audit.jsonl",
-      "size_bytes": 1308
+      "size_bytes": 1438
     },
     "agent_registry": {
       "exists": true,
       "path": "core/agent_registry.py",
-      "size_bytes": 4291
+      "size_bytes": 4276
     },
     "task_service": {
       "exists": true,
       "path": "services/task_service.py",
-      "size_bytes": 1229
+      "size_bytes": 3704
     },
     "task_handler": {
       "exists": true,
       "path": "handlers/task_handler.py",
-      "size_bytes": 1458
+      "size_bytes": 2963
     },
     "ownership_handler": {
       "exists": true,
@@ -181,10 +184,10 @@
   },
   "integrity": {
     "source_sha256": {
-      "db": "6763d3b7d7c15ec021c53cf1640a6262f2c4b1d7056e1fece0c47e737116a788",
-      "missions": "cf78daf24b09333f6379b82af06899fb66df0e6b83b31dd1ec28756b45b40a8c",
-      "system_memory": "e70ae25486615f804d3ecb522b0419034da50032677d290a5a654d7de354cd7b",
-      "agent_registry": "3b3485e75c8b45785bfa8dc8a9cf07f2af112306fe8f5b3be041e05d3ec3a385"
+      "db": "806ed9bde914ef259082a67e1fd9bc0c106bb684019ab33d9c871920542a177f",
+      "missions": "da2c4bb163acf1243dd2597108f88e8e6cf4231f22b2dec92d436e6fbc389197",
+      "system_memory": "1e66cd06f73513bf99b1f11400f17b64f7f87e063b1f51066026282d1fff2b04",
+      "agent_registry": "46eba7e604e9adbe73aa49d5926af4700e2ce6b3af5f6861038447bc5b46660a"
     },
     "issues": []
   }

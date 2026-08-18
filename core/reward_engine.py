@@ -4,7 +4,7 @@ Single reward gateway
 """
 
 from datetime import datetime
-from core import profile_manager
+from core import economy_bridge
 import json
 from pathlib import Path
 
@@ -56,7 +56,7 @@ def grant(
     result={}
 
     if credits:
-        result["credits"] = profile_manager.add_balance(
+        result["credits"] = economy_bridge.add_credits(
             uid,
             credits
         )
