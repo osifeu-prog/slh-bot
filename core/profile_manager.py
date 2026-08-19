@@ -143,16 +143,25 @@ def get_balance(uid):
 
 
 def add_balance(uid, amount):
-    import state_manager
-    uid = str(uid)
+    """
+    Compatibility wrapper.
 
-    def mutate(db):
-        user = db.setdefault("users", {}).setdefault(uid, {})
-        wallet = user.setdefault("wallet", {})
-        wallet["credits"] = wallet.get("credits", 0) + amount
-        return wallet["credits"]
+    Credits must always pass through the global money authority.
+    """
+    from core.economy_bridge import add_credits, spend_credits
 
-    return state_manager.atomic_update(mutate)
+    if amount >= 0:
+        return add_credits(
+            uid,
+            amount,
+            reason="profile_manager:add_balance"
+        )
+
+    return spend_credits(
+        uid,
+        -amount,
+        reason="profile_manager:add_balance"
+    )
 
 
 

@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 
-from core.profile_manager import get_balance, add_balance
+from core.profile_manager import get_balance
+from core.economy_bridge import spend_credits
 from plugins_store import install_plugin
 
 STORE_FILE = Path("state/marketplace.json")
@@ -87,7 +88,22 @@ def register(bot, context=None):
             return
 
         if price > 0:
-            add_balance(uid, -price)
+            result = spend_credits(
+                uid,
+                price,
+                reason="marketplace:purchase",
+                meta={
+                    "plugin_id": plugin_id,
+                    "price": price,
+                },
+            )
+
+            if result is False:
+                bot.reply_to(
+                    m,
+                    "Not enough credits."
+                )
+                return
 
         result = install_plugin(plugin_id)
 
