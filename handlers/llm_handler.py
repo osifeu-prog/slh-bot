@@ -260,24 +260,26 @@ def query_llm_with_context(question, uid=None):
             return f"׳”׳×׳₪׳§׳™׳“ ׳©׳׳ ׳”׳•׳: {user.get('role','unknown')}"
 
 
-        # WALLET
-
+        # WALLET — LOCAL ANSWER, NO LLM
         if any(x in q for x in [
             "credit",
             "credits",
             "wallet",
             "balance",
-            "׳§׳¨׳“׳™׳˜",
-            "׳™׳×׳¨׳”"
+            "קרדיט",
+            "קרדיטים",
+            "יתרה",
+            "כמה כסף",
+            "כמה קרדיטים"
         ]):
-
-            return (
-                "׳”׳§׳¨׳“׳™׳˜׳™׳ ׳©׳׳: "
-                + str(
-                    user.get("wallet", {})
-                    .get("credits", 0)
-                )
-            )
+            try:
+                from core.profile_manager import get_balance
+                if not uid:
+                    return "לא ניתן לזהות את המשתמש לצורך בדיקת היתרה."
+                balance = get_balance(str(uid))
+                return f"הקרדיטים שלך: {balance}"
+            except Exception:
+                return "לא ניתן לקרוא כרגע את יתרת הקרדיטים."
 
 
         # AGENTS
@@ -379,4 +381,3 @@ def register(bot):
 
 
 print("LLM MODULE LOADED FROM:", __file__)
-
