@@ -1,65 +1,25 @@
 {
-  "time": "2026-08-10 12:27:59.953554",
+  "time": "2026-08-17 19:22:35.599190",
   "checks": {
     "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
-    "ram": 89.0,
-    "disk": 90.7,
+    "ram": 90.9,
+    "disk": 94.1,
     "state/db.json": {
-      "exists": true,
-      "size": 1525
+      "exists": false
     },
     "state/agents.json": {
       "exists": true,
-      "size": 602
+      "size": 984
     },
     "state/tasks.json": {
-      "exists": true,
-      "size": 2
+      "exists": false
     },
-    "db_counts": {
-      "users": 2,
-      "agents": 4,
-      "tasks": 3,
-      "memory": 0,
-      "devices": 0,
-      "students": 2,
-      "votes": 0
-    },
-    "agent_schema": {
-      "1": [
-        "role",
-        "inbox",
-        "history",
-        "permissions",
-        "created"
-      ],
-      "2": [
-        "role",
-        "inbox",
-        "history",
-        "permissions",
-        "created"
-      ],
-      "3": [
-        "role",
-        "inbox",
-        "history",
-        "permissions",
-        "created"
-      ],
-      "4": [
-        "role",
-        "inbox",
-        "history",
-        "permissions",
-        "created"
-      ]
-    },
-    "handler_count": 140,
+    "handler_count": 172,
     "duplicates": {
-      "audit": 2
+      "viewfile": 2,
+      "complete": 2
     },
-    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 4",
-    "git": "?? SLH_TREE.txt\n?? docs/financial/\n?? docs/launch/\n"
+    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 0",
+    "git": ""
   }
 }
