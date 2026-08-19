@@ -1,0 +1,294 @@
+{
+  "missions": [
+    {
+<<<<<<< HEAD
+      "id": 1,
+      "desc": "SYNC TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created": "2026-07-22T21:23:01.540830",
+      "assigned_at": "2026-07-26T08:28:44.271958+00:00"
+    },
+    {
+      "id": "2",
+      "desc": "LIFECYCLE CORE TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "created_at": "2026-07-26T08:44:54.348391+00:00",
+      "assigned_at": "2026-07-26T08:46:56.755963+00:00"
+    },
+    {
+      "id": "3",
+      "desc": "API LIFECYCLE TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created_at": "2026-07-26T09:00:15.397877+00:00",
+      "assigned_at": "2026-07-26T09:02:20.603303+00:00",
+      "execution_started_at": "2026-07-26T09:05:26.666789+00:00",
+      "execution_completed_at": "2026-07-26T09:05:26.668844+00:00",
+      "completed_at": "2026-07-26T09:09:53.631152+00:00"
+    },
+    {
+      "id": "4",
+      "desc": "API LIFECYCLE INTEGRATION TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created_at": "2026-07-26T09:13:43.857014+00:00",
+      "assigned_at": "2026-07-26T09:15:20.561409+00:00",
+      "execution_started_at": "2026-07-26T09:18:49.515884+00:00",
+      "execution_completed_at": "2026-07-26T09:18:49.516932+00:00",
+      "completed_at": "2026-07-26T09:28:35.541609+00:00"
+    },
+    {
+      "id": "5",
+      "desc": "FULL AUTOMATED LIFECYCLE TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created_at": "2026-07-26T09:30:30.932406+00:00",
+      "assigned_at": "2026-07-26T09:30:30.935440+00:00",
+      "execution_started_at": "2026-07-26T09:30:30.948739+00:00",
+      "execution_completed_at": "2026-07-26T09:30:30.949751+00:00",
+      "completed_at": "2026-07-26T09:30:30.954983+00:00"
+    },
+    {
+      "id": "6",
+      "desc": "MISSION ENGINE API INTEGRATION TEST",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created_at": "2026-07-26T09:31:57.873380+00:00",
+      "assigned_at": "2026-07-26T09:31:57.876508+00:00",
+      "execution_started_at": "2026-07-26T09:31:57.890717+00:00",
+      "execution_completed_at": "2026-07-26T09:31:57.891771+00:00",
+      "completed_at": "2026-07-26T09:31:57.896276+00:00"
+    },
+    {
+      "id": "API-TEST-20260726T094818Z",
+      "desc": "Lifecycle API integration test",
+      "status": "completed",
+      "assigned_to": "3",
+      "reward": 0,
+      "created_at": "2026-07-26T09:48:18.356439+00:00",
+      "assigned_at": "2026-07-26T09:48:18.358676+00:00",
+      "execution_started_at": "2026-07-26T09:48:18.373092+00:00",
+      "execution_completed_at": "2026-07-26T09:48:18.374152+00:00",
+      "completed_at": "2026-07-26T09:48:18.377719+00:00"
+    },
+    {
+      "id": "SLH_PUBLIC_LAUNCH",
+      "desc": "שחרור SLH לקהל",
+      "status": "completed",
+      "assigned_to": "1",
+      "reward": 0,
+      "created_at": "2026-08-14T08:53:26.680068+00:00",
+      "assigned_at": "2026-08-14T08:55:01.086311+00:00",
+      "execution_started_at": "2026-08-14T08:57:24.752332+00:00",
+      "execution_completed_at": "2026-08-14T08:57:24.753429+00:00",
+      "completed_at": "2026-08-14T08:59:17.297844+00:00"
+=======
+      "id": "1",
+      "desc": "SLH_PUBLIC_LAUNCH — שחרור SLH לקהל",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T08:40:53.236353+00:00"
+    },
+    {
+      "id": "2",
+      "desc": "E2E_SMOKE_TEST",
+      "status": "completed",
+      "assigned_to": "1",
+      "reward": 0,
+      "created_at": "2026-08-14T13:22:15.469602+00:00",
+      "assigned_at": "2026-08-14T13:22:30.565629+00:00",
+      "execution_started_at": "2026-08-14T13:22:36.609594+00:00",
+      "execution_completed_at": "2026-08-14T13:22:36.609968+00:00",
+      "completed_at": "2026-08-14T13:26:37.468937+00:00"
+    },
+    {
+      "id": "3",
+      "desc": "TELEGRAM_E2E_SMOKE",
+      "status": "completed",
+      "assigned_to": "1",
+      "reward": 0,
+      "created_at": "2026-08-14T13:27:35.391145+00:00",
+      "assigned_at": "2026-08-14T13:29:04.928625+00:00",
+      "execution_started_at": "2026-08-14T13:29:12.818016+00:00",
+      "execution_completed_at": "2026-08-14T13:29:12.818305+00:00",
+      "completed_at": "2026-08-14T13:29:12.844154+00:00"
+    },
+    {
+      "id": "TASK-20260814T155823886610Z",
+      "desc": "מצא מנגנון תרגום",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T15:58:23.888998+00:00"
+    },
+    {
+      "id": "TASK-20260814T155827734616Z",
+      "desc": "מצא מנגנון סיבוב טוקנים",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T15:58:27.736142+00:00"
+    },
+    {
+      "id": "TASK-20260814T155832700599Z",
+      "desc": "תקן AI fallback",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T15:58:32.702051+00:00"
+    },
+    {
+      "id": "TASK-20260814T202034659159Z",
+      "desc": "\"1. הפעל בדיקת מערכת מקיפה – /execr python3 system_diagnostics.py\"\n/task_add \"2. בדוק את כל פקודות המשתמש: /start, /join, /ask, /wallet, /mission list, /agents\"\n/task_add \"3. בדוק את ה‑Mini App (https://web-production-22f28.up.railway.app/mini-app) – האם staked ו‑token_balance מוצגים?\"\n/task_add \"4. מצא באג אחד לפחות ודווח עליו (פרטים, איך לשחזר)\"\n/task_add \"5. הצע שיפור אחד (קטן) שאפשר לבצע תוך שעה\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:20:34.662100+00:00"
+    },
+    {
+      "id": "4",
+      "desc": "\"Developer Onboarding – הכר את המערכת\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:22.105116+00:00"
+    },
+    {
+      "id": "TASK-20260814T202932387645Z",
+      "desc": "\"1. /execr ls -la – הצג תיקיות\"\n/task_add \"2. /execr cat state/db.json – הצג מצב DB\"\n/task_add \"3. /execr python3 -c \\\"import json; print(len(json.load(open('state/db.json'))['users']))\\\" – כמה משתמשים?\"\n/task_add \"4. /ask מה השם שלי? – בדיקת זהות\"\n/task_add \"5. /wallet – בדיקת ארנק\"\n/task_add \"6. /mission list – רשימת משימות\"\n/task_add \"7. /miniapp – פתח את ה‑Dashboard ובדוק staked ו‑token_balance\"\n/task_add \"8. שלח דוח באג/שיפור ראשון\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:32.389536+00:00"
+    },
+    {
+      "id": "TASK-20260814T202936711544Z",
+      "desc": "\"2. /execr cat state/db.json – הצג מצב DB\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:36.713025+00:00"
+    },
+    {
+      "id": "TASK-20260814T202941460409Z",
+      "desc": "\"3. /execr python3 -c \\\"import json; print(len(json.load(open('state/db.json'))['users']))\\\" – כמה משתמשים?\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:41.461810+00:00"
+    },
+    {
+      "id": "TASK-20260814T202944508135Z",
+      "desc": "\"4. /ask מה השם שלי? – בדיקת זהות\"\nשלח דוח באג/שיפור ראשון\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:44.509652+00:00"
+    },
+    {
+      "id": "TASK-20260814T202948904814Z",
+      "desc": "\"5. /wallet – בדיקת ארנק\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:48.906268+00:00"
+    },
+    {
+      "id": "TASK-20260814T202952056962Z",
+      "desc": "\"6. /mission list – רשימת משימות\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:52.058940+00:00"
+    },
+    {
+      "id": "TASK-20260814T202958183593Z",
+      "desc": "\"7. /miniapp – פתח את ה‑Dashboard ובדוק staked ו‑token_balance\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:29:58.184825+00:00"
+    },
+    {
+      "id": "TASK-20260814T203002450531Z",
+      "desc": "\"8.",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T20:30:02.452072+00:00"
+    },
+    {
+      "id": "TASK-20260814T210528793359Z",
+      "desc": "\"משימת בדיקה 1\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:05:28.794550+00:00"
+    },
+    {
+      "id": "TASK-20260814T211029398788Z",
+      "desc": "\"משימת בדיקה\"\n/task",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:10:29.399796+00:00"
+    },
+    {
+      "id": "TASK-20260814T211336938972Z",
+      "desc": "\"משימת בדיקת סיבוב טוקן \"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:13:36.940426+00:00"
+    },
+    {
+      "id": "TASK-20260814T212352490865Z",
+      "desc": "\"משימת בדיקה\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:23:52.492234+00:00"
+    },
+    {
+      "id": "5",
+      "desc": "\"משימה ראשונה: הכר את המערכת\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:28:59.300947+00:00"
+    },
+    {
+      "id": "TASK-20260814T212909343086Z",
+      "desc": "\"בדוק את ה‑Mini App\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:29:09.344481+00:00"
+    },
+    {
+      "id": "TASK-20260814T212911008298Z",
+      "desc": "\"שלח /ask מה השם שלך?\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:29:11.009727+00:00"
+    },
+    {
+      "id": "TASK-20260814T214334922253Z",
+      "desc": "\"משימת בדיקה\"",
+      "status": "open",
+      "assigned_to": null,
+      "reward": 0,
+      "created_at": "2026-08-14T21:43:34.925034+00:00"
+>>>>>>> origin/main
+    }
+  ]
+}

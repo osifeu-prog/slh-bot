@@ -1,8 +1,8 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-08-13T16:52:34.122329+00:00",
+  "generated_at": "2026-08-18T22:10:25.693621+00:00",
   "entrypoint": "bot_stable.py",
-  "loader": "handlers\\loader.py",
+  "loader": "handlers/loader.py",
   "files": [
     {
       "file": "bot_stable.py",
@@ -329,13 +329,13 @@
           "type": "import",
           "module": "datetime",
           "name": null,
-          "line": 727
+          "line": 700
         },
         {
           "type": "import",
           "module": "traceback",
           "name": null,
-          "line": 750
+          "line": 723
         },
         {
           "type": "import",
@@ -542,19 +542,14 @@
           "line": 555
         },
         {
-          "command": "/broadcast",
-          "function": "broadcast",
-          "line": 699
-        },
-        {
           "command": "/snapshot",
           "function": "snapshot",
-          "line": 726
+          "line": 699
         }
       ]
     },
     {
-      "file": "handlers\\academy_handler.py",
+      "file": "handlers/academy_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -589,7 +584,7 @@
       ]
     },
     {
-      "file": "handlers\\academy_menu_handler.py",
+      "file": "handlers/academy_menu_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -631,7 +626,7 @@
       ]
     },
     {
-      "file": "handlers\\admin_extras.py",
+      "file": "handlers/admin_extras.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -720,7 +715,7 @@
       ]
     },
     {
-      "file": "handlers\\advanced_ask_handler.py",
+      "file": "handlers/advanced_ask_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -745,7 +740,7 @@
       ]
     },
     {
-      "file": "handlers\\agents_handler.py",
+      "file": "handlers/agents_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -801,7 +796,7 @@
       ]
     },
     {
-      "file": "handlers\\ai_voting_handler.py",
+      "file": "handlers/ai_voting_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -850,7 +845,7 @@
       ]
     },
     {
-      "file": "handlers\\askdebug_handler.py",
+      "file": "handlers/askdebug_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -881,7 +876,7 @@
       ]
     },
     {
-      "file": "handlers\\audit_handler.py",
+      "file": "handlers/audit_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -919,7 +914,7 @@
       ]
     },
     {
-      "file": "handlers\\autoexec_handler.py",
+      "file": "handlers/autoexec_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -930,9 +925,11 @@
           "line": 1
         },
         {
-          "type": "import",
-          "module": "os",
-          "name": null,
+          "type": "from_import",
+          "module": "security.permissions",
+          "name": [
+            "has_permission"
+          ],
           "line": 2
         }
       ],
@@ -943,12 +940,12 @@
         {
           "command": "/autoexec",
           "function": "autoexec_cmd",
-          "line": 10
+          "line": 8
         }
       ]
     },
     {
-      "file": "handlers\\bot_identity_handler.py",
+      "file": "handlers/bot_identity_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -989,7 +986,43 @@
       ]
     },
     {
-      "file": "handlers\\cleanup_handler.py",
+      "file": "handlers/broadcast_handler.py",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "core.identity",
+          "name": [
+            "OWNER_TELEGRAM_ID"
+          ],
+          "line": 2
+        }
+      ],
+      "load_calls": [
+        {
+          "function": "load",
+          "line": 20
+        }
+      ],
+      "register_calls": [],
+      "dynamic_loading": [],
+      "registered_commands": [
+        {
+          "command": "/broadcast",
+          "function": "broadcast_cmd",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "file": "handlers/cleanup_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1017,7 +1050,7 @@
       ]
     },
     {
-      "file": "handlers\\dashboard_handler.py",
+      "file": "handlers/dashboard_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1061,7 +1094,7 @@
       ]
     },
     {
-      "file": "handlers\\deploy_handler.py",
+      "file": "handlers/deploy_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1090,7 +1123,7 @@
       ]
     },
     {
-      "file": "handlers\\dev_admin.py",
+      "file": "handlers/dev_admin.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1151,7 +1184,7 @@
       ]
     },
     {
-      "file": "handlers\\dev_handler.py",
+      "file": "handlers/dev_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1184,7 +1217,7 @@
       ]
     },
     {
-      "file": "handlers\\device_bridge.py",
+      "file": "handlers/device_bridge.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1204,7 +1237,7 @@
       "registered_commands": []
     },
     {
-      "file": "handlers\\device_handler.py",
+      "file": "handlers/device_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1270,7 +1303,7 @@
       ]
     },
     {
-      "file": "handlers\\endday_handler.py",
+      "file": "handlers/endday_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -1286,7 +1319,7 @@
       ]
     },
     {
-      "file": "handlers\\esp_handler.py",
+      "file": "handlers/esp_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1344,7 +1377,7 @@
       ]
     },
     {
-      "file": "handlers\\exec_handler.py",
+      "file": "handlers/exec_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1355,9 +1388,11 @@
           "line": 1
         },
         {
-          "type": "import",
-          "module": "os",
-          "name": null,
+          "type": "from_import",
+          "module": "security.permissions",
+          "name": [
+            "has_permission"
+          ],
           "line": 2
         }
       ],
@@ -1368,12 +1403,12 @@
         {
           "command": "/exec",
           "function": "exec_cmd",
-          "line": 8
+          "line": 6
         }
       ]
     },
     {
-      "file": "handlers\\exec_request_handler.py",
+      "file": "handlers/exec_request_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1431,7 +1466,7 @@
           "name": [
             "has_permission"
           ],
-          "line": 13
+          "line": 78
         }
       ],
       "load_calls": [],
@@ -1441,12 +1476,22 @@
         {
           "command": "/execr",
           "function": "execr",
-          "line": 11
+          "line": 76
+        },
+        {
+          "command": "/approve_exec",
+          "function": "approve_exec_cmd",
+          "line": 136
+        },
+        {
+          "command": "/reject_exec",
+          "function": "reject_exec_cmd",
+          "line": 150
         }
       ]
     },
     {
-      "file": "handlers\\feedback_handler.py",
+      "file": "handlers/feedback_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1486,7 +1531,41 @@
       ]
     },
     {
-      "file": "handlers\\gateway_handler.py",
+      "file": "handlers/firewall_handler.py",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "core.firewall",
+          "name": [
+            "firewall_status",
+            "log_deny"
+          ],
+          "line": 1
+        },
+        {
+          "type": "from_import",
+          "module": "security",
+          "name": [
+            "permissions"
+          ],
+          "line": 2
+        }
+      ],
+      "load_calls": [],
+      "register_calls": [],
+      "dynamic_loading": [],
+      "registered_commands": [
+        {
+          "command": "/firewall",
+          "function": "firewall_cmd",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "file": "handlers/gateway_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1516,7 +1595,7 @@
       ]
     },
     {
-      "file": "handlers\\git_handler.py",
+      "file": "handlers/git_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1563,7 +1642,7 @@
       ]
     },
     {
-      "file": "handlers\\governance_handler.py",
+      "file": "handlers/governance_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1638,7 +1717,7 @@
       ]
     },
     {
-      "file": "handlers\\help_handler.py",
+      "file": "handlers/help_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -1654,7 +1733,7 @@
       ]
     },
     {
-      "file": "handlers\\join_handler.py",
+      "file": "handlers/join_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1690,7 +1769,7 @@
       ]
     },
     {
-      "file": "handlers\\journal_handler.py",
+      "file": "handlers/journal_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1732,7 +1811,7 @@
       ]
     },
     {
-      "file": "handlers\\kb_handler.py",
+      "file": "handlers/kb_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -1748,7 +1827,7 @@
       ]
     },
     {
-      "file": "handlers\\leaderboard_handler.py",
+      "file": "handlers/leaderboard_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1781,7 +1860,7 @@
       ]
     },
     {
-      "file": "handlers\\lesson_handler.py",
+      "file": "handlers/lesson_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1811,17 +1890,63 @@
       ]
     },
     {
-      "file": "handlers\\llm_handler.py",
-      "syntax_ok": false,
-      "syntax_error": "SyntaxError('invalid non-printable character U+FEFF', ('<unknown>', 1, 1, '\\ufefffrom openai import OpenAI', 1, 1))",
-      "imports": [],
-      "load_calls": [],
+      "file": "handlers/llm_handler.py",
+      "syntax_ok": true,
+      "syntax_error": null,
+      "imports": [
+        {
+          "type": "from_import",
+          "module": "openai",
+          "name": [
+            "OpenAI"
+          ],
+          "line": 1
+        },
+        {
+          "type": "import",
+          "module": "os",
+          "name": null,
+          "line": 2
+        },
+        {
+          "type": "import",
+          "module": "json",
+          "name": null,
+          "line": 3
+        },
+        {
+          "type": "import",
+          "module": "requests",
+          "name": null,
+          "line": 4
+        },
+        {
+          "type": "import",
+          "module": "time",
+          "name": null,
+          "line": 5
+        },
+        {
+          "type": "from_import",
+          "module": "core.identity_resolver",
+          "name": [
+            "get_display_name"
+          ],
+          "line": 142
+        }
+      ],
+      "load_calls": [
+        {
+          "function": "load",
+          "line": 132
+        }
+      ],
       "register_calls": [],
       "dynamic_loading": [],
       "registered_commands": []
     },
     {
-      "file": "handlers\\loader.py",
+      "file": "handlers/loader.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1837,13 +1962,29 @@
           "type": "import",
           "module": "importlib",
           "name": null,
-          "line": 65
+          "line": 80
         },
         {
           "type": "import",
           "module": "inspect",
           "name": null,
-          "line": 66
+          "line": 81
+        },
+        {
+          "type": "from_import",
+          "module": "doctor_handler",
+          "name": [
+            "register_doctor_handlers"
+          ],
+          "line": 123
+        },
+        {
+          "type": "from_import",
+          "module": "language_handler",
+          "name": [
+            "register_language"
+          ],
+          "line": 130
         },
         {
           "type": "from_import",
@@ -1851,7 +1992,7 @@
           "name": [
             "register_esp_handler"
           ],
-          "line": 108
+          "line": 137
         },
         {
           "type": "from_import",
@@ -1859,36 +2000,36 @@
           "name": [
             "register_ask_handler"
           ],
-          "line": 115
+          "line": 144
         }
       ],
       "load_calls": [],
       "register_calls": [
         {
           "function": "register_ask_handler",
-          "line": 116
+          "line": 145
         },
         {
           "function": "register_handlers",
-          "line": 97
+          "line": 112
         }
       ],
       "dynamic_loading": [
         {
           "function": "import_module",
-          "line": 70,
+          "line": 85,
           "type": "DYNAMIC_IMPORT"
         },
         {
           "function": "importlib.import_module",
-          "line": 70,
+          "line": 85,
           "type": "IMPORTLIB"
         }
       ],
       "registered_commands": []
     },
     {
-      "file": "handlers\\logo_handler.py",
+      "file": "handlers/logo_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -1909,7 +2050,7 @@
       ]
     },
     {
-      "file": "handlers\\map_handler.py",
+      "file": "handlers/map_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -1943,7 +2084,7 @@
       ]
     },
     {
-      "file": "handlers\\market_handler.py",
+      "file": "handlers/market_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2006,7 +2147,7 @@
       ]
     },
     {
-      "file": "handlers\\me_handler.py",
+      "file": "handlers/me_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2034,7 +2175,7 @@
       ]
     },
     {
-      "file": "handlers\\mission_handler.py",
+      "file": "handlers/mission_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2055,17 +2196,25 @@
         },
         {
           "type": "from_import",
+          "module": "core.mission_runtime_bridge",
+          "name": [
+            "execute_mission_via_runtime"
+          ],
+          "line": 10
+        },
+        {
+          "type": "from_import",
           "module": "core.mission_lifecycle",
           "name": [
             "MissionLifecycleService"
           ],
-          "line": 10
+          "line": 11
         }
       ],
       "load_calls": [
         {
           "function": "load",
-          "line": 217
+          "line": 249
         }
       ],
       "register_calls": [],
@@ -2074,12 +2223,12 @@
         {
           "command": "/mission",
           "function": "mission_cmd",
-          "line": 26
+          "line": 27
         }
       ]
     },
     {
-      "file": "handlers\\monitor_handler.py",
+      "file": "handlers/monitor_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2143,7 +2292,7 @@
       ]
     },
     {
-      "file": "handlers\\morning_handler.py",
+      "file": "handlers/morning_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2168,7 +2317,7 @@
       ]
     },
     {
-      "file": "handlers\\natural_chat.py",
+      "file": "handlers/natural_chat.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2195,7 +2344,7 @@
       "registered_commands": []
     },
     {
-      "file": "handlers\\onboarding_v2.py",
+      "file": "handlers/onboarding_v2.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2272,7 +2421,7 @@
       ]
     },
     {
-      "file": "handlers\\os_handler.py",
+      "file": "handlers/os_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2341,7 +2490,7 @@
       ]
     },
     {
-      "file": "handlers\\ownership_transfer_handler.py",
+      "file": "handlers/ownership_transfer_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2385,7 +2534,7 @@
       ]
     },
     {
-      "file": "handlers\\payment_handler.py",
+      "file": "handlers/payment_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2473,7 +2622,7 @@
       ]
     },
     {
-      "file": "handlers\\recovery_handler.py",
+      "file": "handlers/recovery_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2507,7 +2656,7 @@
       ]
     },
     {
-      "file": "handlers\\recovery_verify_handler.py",
+      "file": "handlers/recovery_verify_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2562,7 +2711,7 @@
       ]
     },
     {
-      "file": "handlers\\repeat_handler.py",
+      "file": "handlers/repeat_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2588,7 +2737,7 @@
       "registered_commands": []
     },
     {
-      "file": "handlers\\staking_handler.py",
+      "file": "handlers/staking_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2631,7 +2780,7 @@
       ]
     },
     {
-      "file": "handlers\\store_handler.py",
+      "file": "handlers/store_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2678,7 +2827,7 @@
       ]
     },
     {
-      "file": "handlers\\system_handler.py",
+      "file": "handlers/system_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -2694,7 +2843,7 @@
       ]
     },
     {
-      "file": "handlers\\task_handler.py",
+      "file": "handlers/task_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2756,7 +2905,7 @@
       ]
     },
     {
-      "file": "handlers\\termux_handler.py",
+      "file": "handlers/termux_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2787,7 +2936,7 @@
       ]
     },
     {
-      "file": "handlers\\ton_wallet.py",
+      "file": "handlers/ton_wallet.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2827,7 +2976,7 @@
       "registered_commands": []
     },
     {
-      "file": "handlers\\user_handler.py",
+      "file": "handlers/user_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2869,7 +3018,7 @@
       ]
     },
     {
-      "file": "handlers\\ux_handler.py",
+      "file": "handlers/ux_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -2895,7 +3044,7 @@
       ]
     },
     {
-      "file": "handlers\\voting_handler.py",
+      "file": "handlers/voting_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -2905,7 +3054,7 @@
       "registered_commands": []
     },
     {
-      "file": "handlers\\wallet_handler.py",
+      "file": "handlers/wallet_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2915,7 +3064,7 @@
           "name": [
             "profile_manager"
           ],
-          "line": 2
+          "line": 1
         }
       ],
       "load_calls": [],
@@ -2925,12 +3074,12 @@
         {
           "command": "/wallet",
           "function": "wallet",
-          "line": 8
+          "line": 7
         }
       ]
     },
     {
-      "file": "state\\custom_handlers\\__init__.py",
+      "file": "state/custom_handlers/__init__.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [],
@@ -2940,7 +3089,7 @@
       "registered_commands": []
     },
     {
-      "file": "state\\custom_handlers\\ai_event_handler.py",
+      "file": "state/custom_handlers/ai_event_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -2982,7 +3131,7 @@
       "registered_commands": []
     },
     {
-      "file": "state\\custom_handlers\\audit_handler.py",
+      "file": "state/custom_handlers/audit_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3056,7 +3205,7 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\developer.py",
+      "file": "state/custom_handlers/developer.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3110,7 +3259,7 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\dynamic_leaderboard.py",
+      "file": "state/custom_handlers/dynamic_leaderboard.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3138,7 +3287,7 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\ping_fullcheck_handler.py",
+      "file": "state/custom_handlers/ping_fullcheck_handler.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3208,7 +3357,7 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\reputation_admin.py",
+      "file": "state/custom_handlers/reputation_admin.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3241,7 +3390,7 @@
       ]
     },
     {
-      "file": "state\\custom_handlers\\task_listener.py",
+      "file": "state/custom_handlers/task_listener.py",
       "syntax_ok": true,
       "syntax_error": null,
       "imports": [
@@ -3280,7 +3429,7 @@
   ],
   "loading_graph": {
     "entrypoint": "bot_stable.py",
-    "loader": "handlers\\loader.py",
+    "loader": "handlers/loader.py",
     "direct_entrypoint_modules": [
       "handlers.llm_handler",
       "handlers.loader",
@@ -3296,6 +3445,7 @@
       "handlers.audit_handler",
       "handlers.autoexec_handler",
       "handlers.bot_identity_handler",
+      "handlers.broadcast_handler",
       "handlers.cleanup_handler",
       "handlers.dashboard_handler",
       "handlers.deploy_handler",
@@ -3306,6 +3456,7 @@
       "handlers.exec_handler",
       "handlers.exec_request_handler",
       "handlers.feedback_handler",
+      "handlers.firewall_handler",
       "handlers.gateway_handler",
       "handlers.git_handler",
       "handlers.governance_handler",
@@ -3361,22 +3512,22 @@
         ]
       },
       {
-        "source": "handlers\\loader.py",
+        "source": "handlers/loader.py",
         "events": [
           {
             "function": "import_module",
-            "line": 70,
+            "line": 85,
             "type": "DYNAMIC_IMPORT"
           },
           {
             "function": "importlib.import_module",
-            "line": 70,
+            "line": 85,
             "type": "IMPORTLIB"
           }
         ]
       },
       {
-        "source": "handlers\\recovery_verify_handler.py",
+        "source": "handlers/recovery_verify_handler.py",
         "events": [
           {
             "function": "import_module",
@@ -3396,26 +3547,1470 @@
         "source": "bot_stable.py"
       },
       {
-        "source": "state\\custom_handlers\\audit_handler.py"
+        "source": "state/custom_handlers/audit_handler.py"
       },
       {
-        "source": "state\\custom_handlers\\ping_fullcheck_handler.py"
+        "source": "state/custom_handlers/ping_fullcheck_handler.py"
       }
     ]
   },
-  "handler_status": [],
-  "syntax_errors": [
+  "handler_status": [
     {
-      "file": "handlers\\llm_handler.py",
-      "syntax_ok": false,
-      "syntax_error": "SyntaxError('invalid non-printable character U+FEFF', ('<unknown>', 1, 1, '\\ufefffrom openai import OpenAI', 1, 1))",
-      "imports": [],
-      "load_calls": [],
-      "register_calls": [],
-      "dynamic_loading": [],
-      "registered_commands": []
+      "file": "handlers/academy_handler.py",
+      "module": "handlers.academy_handler",
+      "commands": [
+        {
+          "command": "/courses",
+          "function": "courses",
+          "line": 7
+        },
+        {
+          "command": "/progress",
+          "function": "progress",
+          "line": 33
+        },
+        {
+          "command": "/complete",
+          "function": "complete",
+          "line": 73
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/academy_menu_handler.py",
+      "module": "handlers.academy_menu_handler",
+      "commands": [
+        {
+          "command": "/academy",
+          "function": "academy",
+          "line": 9
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/admin_extras.py",
+      "module": "handlers.admin_extras",
+      "commands": [
+        {
+          "command": "/health",
+          "function": "health",
+          "line": 5
+        },
+        {
+          "command": "/status",
+          "function": "status",
+          "line": 16
+        },
+        {
+          "command": "/megadiag",
+          "function": "megadiag",
+          "line": 21
+        },
+        {
+          "command": "/backup",
+          "function": "backup",
+          "line": 33
+        },
+        {
+          "command": "/clean",
+          "function": "clean",
+          "line": 41
+        },
+        {
+          "command": "/results",
+          "function": "results",
+          "line": 57
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/advanced_ask_handler.py",
+      "module": "handlers.advanced_ask_handler",
+      "commands": [
+        {
+          "command": "/ask",
+          "function": "ask_cmd",
+          "line": 17
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/agents_handler.py",
+      "module": "handlers.agents_handler",
+      "commands": [
+        {
+          "command": "/agent_create",
+          "function": "agent_create_cmd",
+          "line": 15
+        },
+        {
+          "command": "/agents",
+          "function": "agents_list_cmd",
+          "line": 44
+        },
+        {
+          "command": "/agentstate",
+          "function": "agentstate_cmd",
+          "line": 70
+        },
+        {
+          "command": "/sendagent",
+          "function": "sendagent_cmd",
+          "line": 106
+        },
+        {
+          "command": "/inbox",
+          "function": "inbox_cmd",
+          "line": 142
+        },
+        {
+          "command": "/agent_delete",
+          "function": "agent_delete_cmd",
+          "line": 198
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/ai_voting_handler.py",
+      "module": "handlers.ai_voting_handler",
+      "commands": [
+        {
+          "command": "/register_ai",
+          "function": "register_ai",
+          "line": 53
+        },
+        {
+          "command": "/propose",
+          "function": "propose",
+          "line": 106
+        },
+        {
+          "command": "/vote",
+          "function": "vote",
+          "line": 145
+        },
+        {
+          "command": "/tally",
+          "function": "tally",
+          "line": 183
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/askdebug_handler.py",
+      "module": "handlers.askdebug_handler",
+      "commands": [
+        {
+          "command": "/askdebug",
+          "function": "askdebug_cmd",
+          "line": 6
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/audit_handler.py",
+      "module": "handlers.audit_handler",
+      "commands": [
+        {
+          "command": "/audit",
+          "function": "logs_cmd",
+          "line": 69
+        },
+        {
+          "command": "/logs",
+          "function": "logs_cmd",
+          "line": 69
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/autoexec_handler.py",
+      "module": "handlers.autoexec_handler",
+      "commands": [
+        {
+          "command": "/autoexec",
+          "function": "autoexec_cmd",
+          "line": 8
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/bot_identity_handler.py",
+      "module": "handlers.bot_identity_handler",
+      "commands": [
+        {
+          "command": "/botname",
+          "function": "botname_cmd",
+          "line": 26
+        },
+        {
+          "command": "/botinfo",
+          "function": "botinfo_cmd",
+          "line": 60
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/broadcast_handler.py",
+      "module": "handlers.broadcast_handler",
+      "commands": [
+        {
+          "command": "/broadcast",
+          "function": "broadcast_cmd",
+          "line": 7
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/cleanup_handler.py",
+      "module": "handlers.cleanup_handler",
+      "commands": [
+        {
+          "command": "/cleanup",
+          "function": "cleanup",
+          "line": 5
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/dashboard_handler.py",
+      "module": "handlers.dashboard_handler",
+      "commands": [
+        {
+          "command": "/dashboard",
+          "function": "dashboard",
+          "line": 8
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/deploy_handler.py",
+      "module": "handlers.deploy_handler",
+      "commands": [
+        {
+          "command": "/deploy",
+          "function": "deploy_cmd",
+          "line": 8
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/dev_admin.py",
+      "module": "handlers.dev_admin",
+      "commands": [
+        {
+          "command": "/dev_add",
+          "function": "dev_add",
+          "line": 9
+        },
+        {
+          "command": "/dev_remove",
+          "function": "dev_remove",
+          "line": 29
+        },
+        {
+          "command": "/dev_list",
+          "function": "dev_list",
+          "line": 42
+        },
+        {
+          "command": "/dev_perm",
+          "function": "dev_perm",
+          "line": 59
+        },
+        {
+          "command": "/dev_role",
+          "function": "dev_role",
+          "line": 80
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/dev_handler.py",
+      "module": "handlers.dev_handler",
+      "commands": [
+        {
+          "command": "/dev",
+          "function": "dev_menu",
+          "line": 3
+        },
+        {
+          "command": "/system",
+          "function": "system",
+          "line": 19
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/device_bridge.py",
+      "module": "handlers.device_bridge",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
+    },
+    {
+      "file": "handlers/device_handler.py",
+      "module": "handlers.device_handler",
+      "commands": [
+        {
+          "command": "/device_register",
+          "function": "device_register_cmd",
+          "line": 122
+        },
+        {
+          "command": "/device_list",
+          "function": "device_list_cmd",
+          "line": 126
+        },
+        {
+          "command": "/device_status",
+          "function": "device_status_cmd",
+          "line": 130
+        },
+        {
+          "command": "/device_delete",
+          "function": "device_delete_cmd",
+          "line": 134
+        },
+        {
+          "command": "/device_heartbeat",
+          "function": "device_heartbeat_cmd",
+          "line": 138
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/endday_handler.py",
+      "module": "handlers.endday_handler",
+      "commands": [
+        {
+          "command": "/endday",
+          "function": "endday",
+          "line": 3
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/esp_handler.py",
+      "module": "handlers.esp_handler",
+      "commands": [
+        {
+          "command": "/esp_ping",
+          "function": "esp_ping",
+          "line": 28
+        },
+        {
+          "command": "/esp_status",
+          "function": "esp_status",
+          "line": 70
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/exec_handler.py",
+      "module": "handlers.exec_handler",
+      "commands": [
+        {
+          "command": "/exec",
+          "function": "exec_cmd",
+          "line": 6
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/exec_request_handler.py",
+      "module": "handlers.exec_request_handler",
+      "commands": [
+        {
+          "command": "/execr",
+          "function": "execr",
+          "line": 76
+        },
+        {
+          "command": "/approve_exec",
+          "function": "approve_exec_cmd",
+          "line": 136
+        },
+        {
+          "command": "/reject_exec",
+          "function": "reject_exec_cmd",
+          "line": 150
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/feedback_handler.py",
+      "module": "handlers.feedback_handler",
+      "commands": [
+        {
+          "command": "/feedback",
+          "function": "feedback_cmd",
+          "line": 7
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/firewall_handler.py",
+      "module": "handlers.firewall_handler",
+      "commands": [
+        {
+          "command": "/firewall",
+          "function": "firewall_cmd",
+          "line": 37
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/gateway_handler.py",
+      "module": "handlers.gateway_handler",
+      "commands": [
+        {
+          "command": "/gateway",
+          "function": "gateway_command",
+          "line": 9
+        },
+        {
+          "command": "/gateway_test",
+          "function": "gateway_test",
+          "line": 32
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/git_handler.py",
+      "module": "handlers.git_handler",
+      "commands": [
+        {
+          "command": "/git",
+          "function": "git_cmd",
+          "line": 44
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/governance_handler.py",
+      "module": "handlers.governance_handler",
+      "commands": [
+        {
+          "command": "/agent_status",
+          "function": "agent_status_cmd",
+          "line": 38
+        },
+        {
+          "command": "/agent_vote",
+          "function": "agent_vote_cmd",
+          "line": 56
+        },
+        {
+          "command": "/gov_propose",
+          "function": "gov_propose_cmd",
+          "line": 101
+        },
+        {
+          "command": "/gov_vote",
+          "function": "gov_vote_cmd",
+          "line": 149
+        },
+        {
+          "command": "/gov_tally",
+          "function": "gov_tally_cmd",
+          "line": 220
+        },
+        {
+          "command": "/gov_status",
+          "function": "gov_status_cmd",
+          "line": 276
+        },
+        {
+          "command": "/session_new",
+          "function": "session_new_cmd",
+          "line": 293
+        },
+        {
+          "command": "/session_close",
+          "function": "session_close_cmd",
+          "line": 328
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/help_handler.py",
+      "module": "handlers.help_handler",
+      "commands": [
+        {
+          "command": "/help",
+          "function": "help_cmd",
+          "line": 3
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/join_handler.py",
+      "module": "handlers.join_handler",
+      "commands": [
+        {
+          "command": "/join",
+          "function": "join_start",
+          "line": 9
+        },
+        {
+          "command": "/cancel_join",
+          "function": "join_cancel",
+          "line": 59
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/journal_handler.py",
+      "module": "handlers.journal_handler",
+      "commands": [
+        {
+          "command": "/journal",
+          "function": "journal_write",
+          "line": 10
+        },
+        {
+          "command": "/journal_read",
+          "function": "journal_read",
+          "line": 23
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/kb_handler.py",
+      "module": "handlers.kb_handler",
+      "commands": [
+        {
+          "command": "/fixkb",
+          "function": "fixkb",
+          "line": 8
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/leaderboard_handler.py",
+      "module": "handlers.leaderboard_handler",
+      "commands": [
+        {
+          "command": "/top",
+          "function": "top_handler",
+          "line": 35
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/lesson_handler.py",
+      "module": "handlers.lesson_handler",
+      "commands": [
+        {
+          "command": "/lesson",
+          "function": "lesson",
+          "line": 7
+        },
+        {
+          "command": "/finish",
+          "function": "finish",
+          "line": 69
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/llm_handler.py",
+      "module": "handlers.llm_handler",
+      "commands": [],
+      "reasons": [
+        "DIRECT_ENTRYPOINT_IMPORT",
+        "LOADER_MODULE"
+      ],
+      "directly_referenced": true,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/loader.py",
+      "module": "handlers.loader",
+      "commands": [],
+      "reasons": [
+        "DIRECT_ENTRYPOINT_IMPORT",
+        "HAS_REGISTER_CALLS",
+        "HAS_DYNAMIC_LOADING"
+      ],
+      "directly_referenced": true,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/logo_handler.py",
+      "module": "handlers.logo_handler",
+      "commands": [
+        {
+          "command": "/logo",
+          "function": "logo_cmd",
+          "line": 3
+        },
+        {
+          "command": "/brand",
+          "function": "logo_cmd",
+          "line": 3
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/map_handler.py",
+      "module": "handlers.map_handler",
+      "commands": [
+        {
+          "command": "/map",
+          "function": "map_cmd",
+          "line": 4
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/market_handler.py",
+      "module": "handlers.market_handler",
+      "commands": [
+        {
+          "command": "/market",
+          "function": "market",
+          "line": 29
+        },
+        {
+          "command": "/marketplace",
+          "function": "market",
+          "line": 29
+        },
+        {
+          "command": "/store",
+          "function": "market",
+          "line": 29
+        },
+        {
+          "command": "/mktbuy",
+          "function": "buy",
+          "line": 50
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/me_handler.py",
+      "module": "handlers.me_handler",
+      "commands": [
+        {
+          "command": "/me",
+          "function": "me_cmd",
+          "line": 12
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/mission_handler.py",
+      "module": "handlers.mission_handler",
+      "commands": [
+        {
+          "command": "/mission",
+          "function": "mission_cmd",
+          "line": 27
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/monitor_handler.py",
+      "module": "handlers.monitor_handler",
+      "commands": [
+        {
+          "command": "/monitor_list",
+          "function": "monitor_list_cmd",
+          "line": 74
+        },
+        {
+          "command": "/monitor_status",
+          "function": "monitor_status_cmd",
+          "line": 76
+        },
+        {
+          "command": "/monitor_logs",
+          "function": "monitor_logs_cmd",
+          "line": 78
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/morning_handler.py",
+      "module": "handlers.morning_handler",
+      "commands": [
+        {
+          "command": "/morning",
+          "function": "morning_telegram",
+          "line": 17
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/natural_chat.py",
+      "module": "handlers.natural_chat",
+      "commands": [],
+      "reasons": [
+        "LOADER_MODULE"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/onboarding_v2.py",
+      "module": "handlers.onboarding_v2",
+      "commands": [
+        {
+          "command": "/start",
+          "function": "start",
+          "line": 116
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/os_handler.py",
+      "module": "handlers.os_handler",
+      "commands": [
+        {
+          "command": "/os",
+          "function": "os_cmd",
+          "line": 7
+        },
+        {
+          "command": "/miniapp",
+          "function": "miniapp_cmd",
+          "line": 29
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/ownership_transfer_handler.py",
+      "module": "handlers.ownership_transfer_handler",
+      "commands": [
+        {
+          "command": "/graduate",
+          "function": "graduate_start",
+          "line": 16
+        },
+        {
+          "command": "/confirm_graduation",
+          "function": "graduate_confirm",
+          "line": 61
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/payment_handler.py",
+      "module": "handlers.payment_handler",
+      "commands": [
+        {
+          "command": "/pay",
+          "function": "pay_command",
+          "line": 18
+        },
+        {
+          "command": "/history",
+          "function": "history",
+          "line": 156
+        },
+        {
+          "command": "/revenue",
+          "function": "revenue",
+          "line": 169
+        },
+        {
+          "command": "/fakepay",
+          "function": "fakepay",
+          "line": 186
+        }
+      ],
+      "reasons": [
+        "DIRECT_ENTRYPOINT_IMPORT",
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": true,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/recovery_handler.py",
+      "module": "handlers.recovery_handler",
+      "commands": [
+        {
+          "command": "/recovery",
+          "function": "recovery",
+          "line": 7
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/recovery_verify_handler.py",
+      "module": "handlers.recovery_verify_handler",
+      "commands": [
+        {
+          "command": "/recovery_verify",
+          "function": "recovery_verify",
+          "line": 8
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS",
+        "HAS_DYNAMIC_LOADING"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/repeat_handler.py",
+      "module": "handlers.repeat_handler",
+      "commands": [],
+      "reasons": [
+        "LOADER_MODULE"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/staking_handler.py",
+      "module": "handlers.staking_handler",
+      "commands": [
+        {
+          "command": "/stake",
+          "function": "stake_cmd",
+          "line": 5
+        },
+        {
+          "command": "/unstake",
+          "function": "unstake_cmd",
+          "line": 24
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/store_handler.py",
+      "module": "handlers.store_handler",
+      "commands": [
+        {
+          "command": "/shop",
+          "function": "shop_cmd",
+          "line": 8
+        },
+        {
+          "command": "/buy",
+          "function": "buy_cmd",
+          "line": 15
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/system_handler.py",
+      "module": "handlers.system_handler",
+      "commands": [
+        {
+          "command": "/slh",
+          "function": "slh_telegram",
+          "line": 16
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/task_handler.py",
+      "module": "handlers.task_handler",
+      "commands": [
+        {
+          "command": "/task",
+          "function": "task_telegram",
+          "line": 165
+        },
+        {
+          "command": "/task_done",
+          "function": "task_done_telegram",
+          "line": 170
+        },
+        {
+          "command": "/task_add",
+          "function": "task_add_telegram",
+          "line": 175
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/termux_handler.py",
+      "module": "handlers.termux_handler",
+      "commands": [
+        {
+          "command": "/termux",
+          "function": "termux_cmd",
+          "line": 6
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/ton_wallet.py",
+      "module": "handlers.ton_wallet",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
+    },
+    {
+      "file": "handlers/user_handler.py",
+      "module": "handlers.user_handler",
+      "commands": [
+        {
+          "command": "/profile",
+          "function": "user_info",
+          "line": 12
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/ux_handler.py",
+      "module": "handlers.ux_handler",
+      "commands": [
+        {
+          "command": "/ux",
+          "function": "ux_menu",
+          "line": 3
+        },
+        {
+          "command": "/screens",
+          "function": "screens",
+          "line": 20
+        },
+        {
+          "command": "/colors",
+          "function": "colors",
+          "line": 33
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "handlers/voting_handler.py",
+      "module": "handlers.voting_handler",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
+    },
+    {
+      "file": "handlers/wallet_handler.py",
+      "module": "handlers.wallet_handler",
+      "commands": [
+        {
+          "command": "/wallet",
+          "function": "wallet",
+          "line": 7
+        }
+      ],
+      "reasons": [
+        "LOADER_MODULE",
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": true,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/__init__.py",
+      "module": "state.custom_handlers.__init__",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
+    },
+    {
+      "file": "state/custom_handlers/ai_event_handler.py",
+      "module": "state.custom_handlers.ai_event_handler",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
+    },
+    {
+      "file": "state/custom_handlers/audit_handler.py",
+      "module": "state.custom_handlers.audit_handler",
+      "commands": [
+        {
+          "command": "/verify_agents",
+          "function": "verify_agents",
+          "line": 7
+        },
+        {
+          "command": "/verify_status",
+          "function": "verify_status",
+          "line": 25
+        },
+        {
+          "command": "/delegate",
+          "function": "delegate",
+          "line": 36
+        },
+        {
+          "command": "/confirm_verification",
+          "function": "confirm_verification",
+          "line": 54
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/developer.py",
+      "module": "state.custom_handlers.developer",
+      "commands": [
+        {
+          "command": "/developer_join",
+          "function": "dev_join",
+          "line": 31
+        },
+        {
+          "command": "/developer_list",
+          "function": "dev_list",
+          "line": 48
+        },
+        {
+          "command": "/developer_promote",
+          "function": "dev_promote",
+          "line": 59
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/dynamic_leaderboard.py",
+      "module": "state.custom_handlers.dynamic_leaderboard",
+      "commands": [
+        {
+          "command": "/leaderboard",
+          "function": "dynamic_leaderboard",
+          "line": 7
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/ping_fullcheck_handler.py",
+      "module": "state.custom_handlers.ping_fullcheck_handler",
+      "commands": [
+        {
+          "command": "/ping",
+          "function": "ping_cmd",
+          "line": 7
+        },
+        {
+          "command": "/fullcheck",
+          "function": "fullcheck_cmd",
+          "line": 11
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/reputation_admin.py",
+      "module": "state.custom_handlers.reputation_admin",
+      "commands": [
+        {
+          "command": "/reward",
+          "function": "reward_command",
+          "line": 12
+        }
+      ],
+      "reasons": [
+        "HAS_COMMAND_DECORATORS"
+      ],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": true
+    },
+    {
+      "file": "state/custom_handlers/task_listener.py",
+      "module": "state.custom_handlers.task_listener",
+      "commands": [],
+      "reasons": [],
+      "directly_referenced": false,
+      "listed_in_loader": false,
+      "loading_evidence": false
     }
   ],
+  "syntax_errors": [],
   "safety": {
     "read_only": true,
     "bot_started": false,

@@ -1,0 +1,69 @@
+{
+  "1": {
+    "name": "SystemGuard",
+    "state": "active",
+    "id": "1",
+    "role": "security",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [
+      "monitor",
+      "audit"
+    ],
+    "created": "2026-08-07T22:43:47"
+  },
+  "2": {
+    "name": "DoctorAgent",
+    "state": "active",
+    "id": "2",
+    "role": "doctor",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [
+      "diagnose",
+      "heal"
+    ],
+    "created": "2026-08-07T22:43:47"
+  },
+  "3": {
+    "name": "SyncAgent",
+    "state": "active",
+    "id": "3",
+    "role": "sync",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [
+      "sync_data",
+      "update"
+    ],
+    "created": "2026-08-07T22:43:47"
+  },
+  "4": {
+    "name": "TokenAgent",
+    "state": "idle",
+    "id": "4",
+    "role": "token",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [
+      "manage_tokens",
+      "send"
+    ],
+    "created": "2026-08-07T22:43:47"
+  },
+  "5": {
+    "id": "5",
+    "name": "TempTester",
+    "state": "idle",
+    "role": "test",
+    "owner_id": "8789977826",
+    "inbox": [],
+    "history": [],
+    "permissions": [],
+    "created": "2026-08-10T23:09:47.074901"
+  }
+}

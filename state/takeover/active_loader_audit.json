@@ -1,6 +1,6 @@
 {
   "audit_version": "1.0",
-  "generated_at": "2026-07-26T22:52:58.280953+00:00",
+  "generated_at": "2026-08-18T22:10:24.304140+00:00",
   "entrypoint": "bot_stable.py",
   "discovered": [
     {
@@ -36,19 +36,7 @@
       "class": "OTHER"
     },
     {
-      "file": "payment_handler.py",
-      "class": "OTHER"
-    },
-    {
-      "file": "econ_handler.py",
-      "class": "OTHER"
-    },
-    {
-      "file": "handlers/me_handler.py",
-      "class": "HANDLER"
-    },
-    {
-      "file": "handlers/askdebug_handler.py",
+      "file": "handlers/payment_handler.py",
       "class": "HANDLER"
     },
     {
@@ -68,24 +56,8 @@
       "class": "HANDLER"
     },
     {
-      "file": "core/ask_router.py",
-      "class": "OTHER"
-    },
-    {
       "file": "viewfile_handler.py",
       "class": "OTHER"
-    },
-    {
-      "file": "handlers/academy_menu_handler.py",
-      "class": "HANDLER"
-    },
-    {
-      "file": "handlers/lesson_handler.py",
-      "class": "HANDLER"
-    },
-    {
-      "file": "handlers/academy_handler.py",
-      "class": "HANDLER"
     },
     {
       "file": "admin_utils.py",
@@ -93,10 +65,6 @@
     },
     {
       "file": "refresh_token_handler.py",
-      "class": "OTHER"
-    },
-    {
-      "file": "core/context_builder.py",
       "class": "OTHER"
     },
     {
@@ -112,30 +80,34 @@
       "class": "OTHER"
     },
     {
-      "file": "core/ask_debug.py",
+      "file": "handlers/logo_handler.py",
+      "class": "HANDLER"
+    },
+    {
+      "file": "language_handler.py",
       "class": "OTHER"
+    },
+    {
+      "file": "handlers/esp_handler.py",
+      "class": "HANDLER"
     },
     {
       "file": "handlers/advanced_ask_handler.py",
       "class": "HANDLER"
     },
     {
-      "file": "core/ai_guard.py",
+      "file": "core/identity_resolver.py",
       "class": "OTHER"
     },
     {
-      "file": "core/ask_guard.py",
+      "file": "core/identity.py",
       "class": "OTHER"
     }
   ],
   "loaders": [],
   "handlers": [
     {
-      "file": "handlers/me_handler.py",
-      "class": "HANDLER"
-    },
-    {
-      "file": "handlers/askdebug_handler.py",
+      "file": "handlers/payment_handler.py",
       "class": "HANDLER"
     },
     {
@@ -147,15 +119,11 @@
       "class": "HANDLER"
     },
     {
-      "file": "handlers/academy_menu_handler.py",
+      "file": "handlers/logo_handler.py",
       "class": "HANDLER"
     },
     {
-      "file": "handlers/lesson_handler.py",
-      "class": "HANDLER"
-    },
-    {
-      "file": "handlers/academy_handler.py",
+      "file": "handlers/esp_handler.py",
       "class": "HANDLER"
     },
     {

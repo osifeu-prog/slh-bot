@@ -22,8 +22,8 @@ def is_owner(uid):
 
 
 def has_permission(uid, permission):
-    from security.permissions import get_permissions
-    return permission in get_permissions(uid)
+    from security.permissions import has_permission as security_has_permission
+    return security_has_permission(uid, permission)
 
 
 def log_deny(uid, command, reason):

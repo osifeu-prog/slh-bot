@@ -1,0 +1,15 @@
+{
+  "result_id": "mission-API-TEST-20260726T094818Z-20260726T094818Z",
+  "mission_id": "API-TEST-20260726T094818Z",
+  "agent_id": "3",
+  "execution_status": "success",
+  "verified": true,
+  "mission_completion": "completed",
+  "result": {
+    "synchronization_check": "passed",
+    "execution_check": "passed"
+  },
+  "recorded_at": "2026-07-26T09:48:18.374152+00:00",
+  "completed_at": "2026-07-26T09:48:18.377719+00:00",
+  "result_sha256": "783504170bc0e1d518d582156a80baf0d3bf6e5a7805aedc1a17050f49756d7f"
+}

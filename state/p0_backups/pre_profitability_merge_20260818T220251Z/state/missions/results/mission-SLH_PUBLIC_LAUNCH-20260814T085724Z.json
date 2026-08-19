@@ -1,0 +1,15 @@
+{
+  "result_id": "mission-SLH_PUBLIC_LAUNCH-20260814T085724Z",
+  "mission_id": "SLH_PUBLIC_LAUNCH",
+  "agent_id": "1",
+  "execution_status": "success",
+  "verified": true,
+  "mission_completion": "completed",
+  "result": {
+    "synchronization_check": "passed",
+    "execution_check": "passed"
+  },
+  "recorded_at": "2026-08-14T08:57:24.753429+00:00",
+  "completed_at": "2026-08-14T08:59:17.297844+00:00",
+  "result_sha256": "98416566b30b2a085a994940ed29c95a5e1c31d19573969e16890bda2a2bf8ab"
+}

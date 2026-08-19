@@ -90,33 +90,32 @@ def register_ton_handlers(bot):
             bot.send_message(m.chat.id, "❌ Invalid amount.")
             return
 
-        # 3-5. Atomic check-and-credit: prevents double-spend under concurrent calls
+        # 3-5. Money Authority handles TON idempotency + credit mutation.
+        from core import economy_service
+
         rate = settings["rate"]
         credits = round(amount_ton * rate, 2)
 
-        def mutate(db):
-            used_txs = db.setdefault("used_ton_txs", [])
-            if tx_hash in used_txs:
-                return None
-            user = db.setdefault("users", {}).setdefault(uid, {})
-            wallet = user.setdefault("wallet", {})
-            wallet["credits"] = wallet.get("credits", 0) + credits
-            used_txs.append(tx_hash)
-            db["used_ton_txs"] = used_txs
-            db.setdefault("transactions", []).append({
-                "uid": uid,
-                "credits": credits,
-                "type": "ton",
-                "ton_amount": amount_ton,
-                "tx_hash": tx_hash,
-                "timestamp": datetime.utcnow().isoformat()
-            })
-            return wallet["credits"]
+        result = economy_service.record_ton_deposit(
+            uid=uid,
+            tx_hash=tx_hash,
+            credits=credits,
+            ton_amount=amount_ton,
+            meta={
+                "source": "telegram",
+                "command": "ton_check",
+                "rate": rate,
+            }
+        )
 
-        new_balance = state_manager.atomic_update(mutate)
-        if new_balance is None:
-            bot.send_message(m.chat.id, "❌ This transaction was already credited.")
+        if result is None:
+            bot.send_message(
+                m.chat.id,
+                "❌ This transaction was already credited."
+            )
             return
+
+        new_balance = result["credits"]
 
         bot.send_message(
             m.chat.id,

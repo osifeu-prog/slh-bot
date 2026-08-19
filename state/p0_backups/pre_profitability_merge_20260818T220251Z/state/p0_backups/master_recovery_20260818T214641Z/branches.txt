@@ -1,0 +1,29 @@
+  backup-20260818-1739                                edafd14 add community group link and fix Groq model
+  backup-local-20260818-1740                          edafd14 add community group link and fix Groq model
+  backup-local-work-1207                              92ab810 fix: atomic DB updates + correct wallet.credits field in TON handler; add screen-clear to admin menu
+  backup/pre-integration-local-20260818               fbc158a restore canonical SLH Empire admin UI
+  backup/pre-integration-remote-20260818              b62c225 [origin/main] fix: restore economy_service authority
+  economy-core-freeze-20260814                        22da1c1 chore: remove obsolete backup files, update .gitignore
+* integration/main-sync-20260818                      fbc158a restore canonical SLH Empire admin UI
+  main                                                fbc158a [origin/main: ahead 1274, behind 7] restore canonical SLH Empire admin UI
+  p0-money-authority-safety-20260818-233351           fbc158a restore canonical SLH Empire admin UI
+  recovery/master-20260818T214641Z                    fbc158a restore canonical SLH Empire admin UI
+  remotes/origin/HEAD                                 -> origin/main
+  remotes/origin/audit/mission-runtime-contract       09cd535 Add mission runtime command
+  remotes/origin/backup-main-local-work               b443770 fix: prevent WhatsApp bridge auto-creating users
+  remotes/origin/before-rollback-20260720             5f63ac8 Add /feedback command
+  remotes/origin/dev-v1.1                             d990256 fix: reset AI health circuit breaker state
+  remotes/origin/dev-v1.2                             c6841cc feat: add deployment metadata identity layer
+  remotes/origin/development                          2cc0f0f add branding restore journal entry
+  remotes/origin/economy-core-freeze-20260814         4b24f21 Merge branch 'main' of github.com:osifeu-prog/slh-bot into economy-core-freeze-20260814
+  remotes/origin/feature/release-fix                  6fdfd4f release: current clean state
+  remotes/origin/feature/v1.3-expansion               c6841cc feat: add deployment metadata identity layer
+  remotes/origin/fix/ask-local-credits                706b144 fix: groq model and credits intent router
+  remotes/origin/kernel-safe                          3e1fe15 fix: add /exec and /termlog again
+  remotes/origin/main                                 b62c225 fix: restore economy_service authority
+  remotes/origin/master                               233a45a Recovery: clean, load handlers, fix audit, ready for Railway
+  remotes/origin/ops/rotate-secrets-YYYYMMDD          706b144 fix: groq model and credits intent router
+  remotes/origin/production-v1.0                      0d817e9 release: SLH OS production runtime verified
+  remotes/origin/remediation/money-authority          608bf74 fix: route wallet credits locally without LLM
+  remotes/origin/remediation/money-authority-mainline 5aa2d90 fix: finalize money authority remediation
+  remotes/origin/stable-exec-v1-backup                ae49008 Add local identity and status intents to /ask

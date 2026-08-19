@@ -11,7 +11,6 @@ cat >> ~/.bashrc << 'BASHEOF'
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 cat ~/.termux_logo.txt
-alias c='clear && bash ~/slh-bot/admin_menu.sh'
 alias gs='git status --short'
 alias gp='git add -A && git commit -m "update" && git push origin main'
 alias rl='railway logs --service web --tail 50'

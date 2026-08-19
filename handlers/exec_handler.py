@@ -1,13 +1,11 @@
 import subprocess
-import os
+from security.permissions import has_permission
 
 def register(bot, context):
-    ADMIN_IDS = {int(os.getenv("ADMIN_ID", "8789977826"))}
-
     @bot.message_handler(commands=["exec"])
     def exec_cmd(m):
-        if m.from_user.id not in ADMIN_IDS:
-            bot.reply_to(m, "⛔ Admin only.")
+        if not has_permission(m, "exec"):
+            bot.reply_to(m, "⛔ אין לך הרשאת exec")
             return
 
         parts = m.text.split(maxsplit=1)

@@ -1,0 +1,53 @@
+=== SNAPSHOT Tue Jul 21 14:37:30 IDT 2026 ===
+
+--- Railway Status ---
+
+A newer Railway CLI is available: v5.27.2 (current: v5.23.0).
+Run `railway upgrade --yes` to update.
+
+Workspace:       osifeu-prog's Projects
+
+Project:         endearing-amazement
+Project ID:      fd30fefb-3d35-48a5-a7cb-e05337e812c4
+
+Environment:     production
+Environment ID:  661caa13-83cb-4197-8825-943bebf96c5a
+
+Linked service
+
+web
+    status:        ● Online
+    repo:          osifeu-prog/slh-bot
+    url:           https://web-production-22f28.up.railway.app
+    volume:        web-volume · /app/state · 0.2 GB / 4.9 GB
+    region:        EU West
+    deployment ID: 773b97a0-2c0c-44b6-8739-cd9c2f52b915
+    service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
+
+────────────────────────────────────────────────
+
+All resources
+
+    Services
+      - web: ● Online · https://web-production-22f28.up.railway.app · web-volume
+
+
+--- Git Log (last 3) ---
+356ce25 docs: add runtime work and load test protocols
+74b020f chore: update morning script
+fe5e5cc End-of-day snapshot 2026-07-21
+
+--- DB Stats ---
+users: 0
+agents: 0
+tasks: 0
+
+--- Agents file ---
+agents: 4
+
+--- Journal last 5 ---
+2026-07-04 15:34:01.192341 SESSION 4-JUL-2026 PART 8: Discovered parallel work completed economic engine - 
+2026-07-04 16:17:15.252593 SESSION 4-JUL-2026 PART 9: Investigated students/users schema split flagged in p
+2026-07-10 (session continued 11-JUL early hours) SESSION 10-JUL-2026 CLEANUP: Fixed critical NameError crash (payment_handler/eco
+2026-07-15 14:11:07.233524 בדיקת SLH OS
+2026-07-21T13:19:02.142285 SESSION 21-JUL-2026 (Part 2) – ASK guard & join fixes completed. Removed naive b

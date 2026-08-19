@@ -1,0 +1,85 @@
+@bot.message_handler(commands=['ask'])
+def ask(m):
+    import re, time
+    text = m.text.replace("/ask", "", 1).strip()
+    if not text:
+        bot.reply_to(m, "Usage: /ask <natural language command>")
+        return
+    bot.reply_to(m, f"נ₪– Processing: {text}")
+    
+    # Simple NLU rules
+    tl = text.lower()
+    results = []
+    
+    # Agent creation
+    if "create" in tl and "agent" in tl:
+        name = tl.split("agent")[-1].strip().strip("called").strip("named").strip()
+        if name:
+            bot.reply_to(m, f"ג–¶ן¸ /agent_create {name}")
+            results.append(f"Agent '{name}' created")
+    
+    # Agent state change
+    if "set" in tl and "active" in tl:
+        for w in tl.split():
+            if w not in ["set", "active", "to", "the", "and", "agent"]:
+                bot.reply_to(m, f"ג–¶ן¸ /agentstate {w} active")
+                results.append(f"Agent '{w}' set active")
+                break
+    
+    # Status
+    if "status" in tl or "how" in tl:
+        bot.reply_to(m, "ג–¶ן¸ /status")
+        results.append("Status checked")
+    
+    # Market search
+    if "search" in tl and ("market" in tl or "plugin" in tl):
+        keyword = tl.split("search")[-1].strip().split()[-1]
+        bot.reply_to(m, f"ג–¶ן¸ /market_search {keyword}")
+        results.append(f"Market search for '{keyword}'")
+    
+    # List agents
+    if "list" in tl and "agent" in tl:
+        bot.reply_to(m, "ג–¶ן¸ /agents")
+        results.append("Agents listed")
+    
+    # Health
+    if "health" in tl:
+        bot.reply_to(m, "ג–¶ן¸ /health")
+        results.append("Health checked")
+    
+    if not results:
+        bot.reply_to(m, "ג“ Could not understand. Try: create agent X, set agent active, status, search market Y, list agents, health")
+    else:
+        bot.reply_to(m, "ג… Done: " + ", ".join(results))
+
+    import re, time
+    bot.reply_to(m, "נ₪– Analyzing: " + m.text.replace("/ask", "", 1).strip())
+    text = m.text.lower()
+    commands_to_run = []
+    if "create agent" in text or "new agent" in text:
+        name = text.split("called")[-1].strip() if "called" in text else text.split("agent")[-1].strip()
+        commands_to_run.append(f"/agent_create {name}")
+    if "set active" in text or "activate" in text:
+        for word in text.split():
+            if word not in ["set", "active", "activate", "agent", "to", "the", "and"]:
+                commands_to_run.append(f"/agentstate {word} active")
+                break
+    if "create task" in text or "add task" in text:
+        task = text.split("task")[-1].strip()
+        commands_to_run.append(f"/task create {task}")
+    if "status" in text:
+        commands_to_run.append("/status")
+    if "diagnostic" in text or "test" in text:
+        commands_to_run.append("/test")
+    if "search market" in text or "market search" in text:
+        keyword = text.split("search")[-1].strip().split()[-1]
+        commands_to_run.append(f"/market_search {keyword}")
+    if "list agents" in text or "show agents" in text:
+        commands_to_run.append("/agents")
+    if not commands_to_run:
+        commands_to_run.append("/admin")
+    for cmd in commands_to_run:
+        bot.reply_to(m, f"ג–¶ן¸ {cmd}")
+        time.sleep(0.3)
+    bot.reply_to(m, "ג… Done. Run /testcmd /ask <text> to verify.")
+

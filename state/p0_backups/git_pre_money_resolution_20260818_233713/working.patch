@@ -1,0 +1,1566 @@
+diff --cc .gitignore
+index cc9bc03,5721fc0..0000000
+--- a/.gitignore
++++ b/.gitignore
+diff --cc admin_menu.sh
+index 52aa9da,ee2a9d1..0000000
+--- a/admin_menu.sh
++++ b/admin_menu.sh
+diff --cc core/ask_debug.py
+index 09e59f5,489bf60..0000000
+--- a/core/ask_debug.py
++++ b/core/ask_debug.py
+diff --cc core/economy_bridge.py
+index 48ea08b,2bff57b..0000000
+--- a/core/economy_bridge.py
++++ b/core/economy_bridge.py
+diff --cc core/reward_engine.py
+index 7bffa5e,b4a3a43..0000000
+--- a/core/reward_engine.py
++++ b/core/reward_engine.py
+@@@ -4,7 -4,7 +4,8 @@@ Single reward gatewa
+  """
+  
+  from datetime import datetime
++ from core import economy_bridge
+ +from core import profile_manager
+  import json
+  from pathlib import Path
+  
+diff --cc econ_handler.py
+index 4cc010e,4ef2350..0000000
+--- a/econ_handler.py
++++ b/econ_handler.py
+@@@ -1,5 -1,5 +1,6 @@@
+  import state_manager
++ from core import economy_bridge
+ +from core import profile_manager
+  
+  def register_econ_handlers(bot):
+      @bot.message_handler(commands=['balance'])
+diff --cc handlers/firewall_handler.py
+index 378f4ca,df4bc90..0000000
+--- a/handlers/firewall_handler.py
++++ b/handlers/firewall_handler.py
+diff --cc handlers/llm_handler.py
+index 872e8ae,8721175..0000000
+--- a/handlers/llm_handler.py
++++ b/handlers/llm_handler.py
+diff --cc learning_path.py
+index 67dcebd,34322dd..0000000
+--- a/learning_path.py
++++ b/learning_path.py
+diff --cc state/ai_health.json
+index c9dc388,ec35bcb..0000000
+--- a/state/ai_health.json
++++ b/state/ai_health.json
+@@@ -1,8 -1,6 +1,16 @@@
+  {
+++<<<<<<< HEAD
+ +  "groq": {
+ +    "failures": 0,
+ +    "blocked_until": 0
+ +  },
+ +  "failures": 0,
+ +  "blocked_until": 0
+- }
+++}
+++=======
++  "groq": {
++   "failures": 0,
++   "blocked_until": 0
++  }
++ }
+++>>>>>>> origin/main
+diff --cc state/audit.jsonl
+index b5d6871,4cb74d1..0000000
+--- a/state/audit.jsonl
++++ b/state/audit.jsonl
+@@@ -1,29 -1,12 +1,44 @@@
+++<<<<<<< HEAD
+ +{"timestamp": "2026-07-26T07:59:19.155331+00:00", "event": "AUDIT_TEST_EVENT", "actor": "test", "target": "SystemGuard", "details": {"test": true, "source": "audit_test"}}
+ +{"timestamp": "2026-07-26T08:00:52.392999+00:00", "event": "agent.created", "target": "5", "details": {"name": "AUDIT_INTEGRATION_TEST", "role": "agent"}}
+ +{"timestamp": "2026-07-26T08:00:52.394986+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "audit_test"}}}
+ +{"timestamp": "2026-07-26T08:00:52.402044+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 18}}
+ +{"timestamp": "2026-07-26T08:00:52.538051+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "AUDIT_INTEGRATION_TEST"}}
+ +{"timestamp": "2026-07-26T08:01:19.911629+00:00", "event": "agent.created", "target": "5", "details": {"name": "__AUDIT_INTEGRATION_TEST__", "role": "agent"}}
+ +{"timestamp": "2026-07-26T08:01:19.913367+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "audit_test"}}}
+ +{"timestamp": "2026-07-26T08:01:19.914875+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 22}}
+ +{"timestamp": "2026-07-26T08:01:20.044214+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__AUDIT_INTEGRATION_TEST__"}}
+ +{"timestamp": "2026-07-26T18:50:56.277974+00:00", "event": "agent.updated", "target": "2", "details": {"updates": {"state": "active"}}}
+ +{"timestamp": "2026-07-26T18:51:04.068598+00:00", "event": "agent.message_sent", "target": "2", "details": {"message_length": 18}}
+ +{"timestamp": "2026-07-26T19:44:45.620491+00:00", "event": "agent.created", "target": "5", "details": {"name": "__STATE_TEST_AGENT__", "role": "test"}}
+ +{"timestamp": "2026-07-26T19:44:45.629897+00:00", "event": "agent.updated", "target": "5", "details": {"updates": {"state": "active", "test_marker": "updated"}}}
+ +{"timestamp": "2026-07-26T19:44:45.649693+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 28}}
+ +{"timestamp": "2026-07-26T19:44:45.657379+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__STATE_TEST_AGENT__"}}
+ +{"timestamp": "2026-07-27T08:50:09.770575+00:00", "event": "agent.updated", "target": "3", "details": {"updates": {"state": "active"}}}
+ +{"timestamp": "2026-07-27T08:50:09.776415+00:00", "event": "agent.created", "target": "5", "details": {"name": "__RUNTIME_TEST_AGENT__", "role": "test"}}
+ +{"timestamp": "2026-07-27T08:50:09.782426+00:00", "event": "agent.message_sent", "target": "5", "details": {"message_length": 20}}
+ +{"timestamp": "2026-07-27T08:50:09.787981+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "__RUNTIME_TEST_AGENT__"}}
+ +{"timestamp": "2026-07-27T09:52:43.870710+00:00", "event": "agent.created", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT", "role": "agent"}}
+ +{"timestamp": "2026-07-27T09:53:15.867456+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TEST-PERSONAL-AGENT"}}
+ +{"timestamp": "2026-07-29T14:57:07.400484+00:00", "event": "agent.created", "target": "5", "details": {"name": "O-Agent", "role": "agent"}}
+ +{"timestamp": "2026-08-11T22:53:52.788691+00:00", "event": "agent.created", "target": "10", "details": {"name": "TestAgent", "role": "tester"}}
+ +{"timestamp": "2026-08-12T16:50:31.109910+00:00", "event": "agent.deleted", "target": "5", "details": {"name": "TempTester"}}
+ +{"timestamp": "2026-08-12T16:50:31.136867+00:00", "event": "agent.deleted", "target": "6", "details": {"name": "ClaudeAgent"}}
+ +{"timestamp": "2026-08-12T16:50:31.162702+00:00", "event": "agent.deleted", "target": "7", "details": {"name": "GroqAgent"}}
+ +{"timestamp": "2026-08-12T16:50:31.183366+00:00", "event": "agent.deleted", "target": "8", "details": {"name": "GeminiAgent"}}
+ +{"timestamp": "2026-08-12T16:50:31.203687+00:00", "event": "agent.deleted", "target": "9", "details": {"name": "OpenAI_Agent"}}
+ +{"time": 1786553529.402531, "actor": "8789977826", "action": "release_cleanup_completed", "details": {"removed_agents": ["TempTester", "ClaudeAgent", "GroqAgent", "GeminiAgent", "OpenAI_Agent"], "remaining_agents": ["SystemGuard", "DoctorAgent", "SyncAgent", "TokenAgent"], "task_13_reassigned": "SystemGuard"}}
+++=======
++ {"timestamp": "2026-08-07T22:43:47.566926+00:00", "event": "agent.created", "target": "1", "details": {"name": "O-Agent", "role": "agent"}}
++ {"timestamp": "2026-08-08T18:25:47.898694+00:00", "event": "agent.created", "target": "2", "details": {"name": "-", "role": "agent"}}
++ {"timestamp": "2026-08-08T21:53:44.934966+00:00", "event": "agent.created", "target": "3", "details": {"name": "TestAgent", "role": "agent"}}
++ {"timestamp": "2026-08-08T23:15:10.281257+00:00", "event": "agent.deleted", "target": "3", "details": {"name": "TestAgent"}}
++ {"timestamp": "2026-08-08T23:42:06.716641+00:00", "event": "agent.created", "target": "2", "details": {"name": "למחוק", "role": "agent"}}
++ {"timestamp": "2026-08-08T23:42:23.540803+00:00", "event": "agent.updated", "target": "2", "details": {"updates": {"state": "working"}}}
++ {"timestamp": "2026-08-08T23:42:32.915634+00:00", "event": "agent.message_sent", "target": "2", "details": {"message_length": 27}}
++ {"time": 1786384947.5555854, "actor": "8789977826", "action": "mission_create", "mission_id": "1"}
++ {"time": 1786385184.2355912, "actor": "8789977826", "action": "manual_exec_snapshot", "note": "post-task-registration check"}
++ {"timestamp": 1786386355.2762785, "users": 1, "tasks": 2, "votes": 2, "missions": 0, "status": "pre_release_snapshot"}
++ {"timestamp": "2026-08-10T23:09:47.087227+00:00", "event": "agent.created", "target": "5", "details": {"name": "TempTester", "role": "test"}}
++ {"timestamp": "2026-08-16T12:23:57.844315+00:00", "event": "economy.record_transaction", "actor": "TEST_USER2", "details": {"amount": 5, "tx": {"credits": 15}, "meta": {"test": 1, "ts": "2026-08-16T12:23:57.843055"}}}
+++>>>>>>> origin/main
+diff --cc state/devices.json
+index ae731ba,c52f716..0000000
+--- a/state/devices.json
++++ b/state/devices.json
+@@@ -1,24 -1,82 +1,102 @@@
+  {
+    "devices": {
+++<<<<<<< HEAD
+ +    "BRIDGE_PC_OSIF2_1784781883": {
+ +      "name": "PC_Osif2",
+ +      "type": "pc",
+ +      "status": "online",
+++=======
++     "DEV_ESP_NEW_1786177919": {
++       "name": "ESP_New",
++       "description": "\"חדר שינה\"",
++       "type": "esp32",
++       "status": "offline",
++       "capabilities": [
++         "sensor",
++         "wallet",
++         "signing"
++       ],
++       "registered": 1786177919.2686372,
++       "last_seen": 1786178635.7838764,
++       "owner": "8789977826",
++       "permissions": [
++         "receive_tasks",
++         "report_status"
++       ],
++       "last_heartbeat": "2026-08-10T14:51:16.218400+00:00"
++     },
++     "PC_Osif2": {
++       "name": "PC_Osif2",
++       "type": "pc",
++       "status": "offline",
+++>>>>>>> origin/main
+        "capabilities": [
+          "compute",
+          "network",
+          "storage",
+          "ai"
+        ],
+++<<<<<<< HEAD
+ +      "registered": 1784781883.6425214,
+ +      "last_seen": 1784781985.6041691,
+ +      "bridge": true
+ +    }
+ +  },
+ +  "termux-01": {
+ +    "name": "Termux Phone",
+ +    "type": "microserver",
+ +    "status": "online",
+ +    "last_seen": "now"
+++=======
++       "registered": 1786207579.6199222,
++       "last_seen": 1786207579.6199224,
++       "bridge": true,
++       "hardware": {
++         "model": "Dell Latitude 5490",
++         "bios_serial": "CXZ8NV2",
++         "uuid": "4C4C4544-0058-5A10-8038-C3C04F4E5632",
++         "disk": "NVMe PC401 SK hy ACE4_2E00_9512_0B1C"
++       },
++       "last_heartbeat": "2026-08-12T09:43:59.947305+00:00"
++     },
++     "PC_SELHA_MAIN": {
++       "name": "PC_Selha",
++       "type": "pc",
++       "status": "offline",
++       "capabilities": [
++         "compute",
++         "network",
++         "storage",
++         "ai"
++       ],
++       "registered": 1786208079.1628652,
++       "last_seen": 1786208079.1628654,
++       "bridge": false,
++       "hardware": {
++         "model": "SELHA-MAIN",
++         "os": "Windows 10 Pro 2009",
++         "user": "Giga Store"
++       },
++       "last_heartbeat": "2026-08-12T09:44:07.026747+00:00"
++     },
++     "DEV_TEST_DEVICE_1786363970": {
++       "name": "TEST_DEVICE",
++       "description": "ESP32 Device",
++       "type": "esp32",
++       "status": "offline",
++       "capabilities": [
++         "sensor",
++         "wallet",
++         "signing"
++       ],
++       "registered": 1786363970.841188,
++       "last_seen": null,
++       "owner": "8789977826",
++       "permissions": [
++         "receive_tasks",
++         "report_status"
++       ]
++     }
+++>>>>>>> origin/main
+    }
+  }
+diff --cc state/governance.json
+index 6335ef0,33eb48f..0000000
+--- a/state/governance.json
++++ b/state/governance.json
+@@@ -1,57 -1,136 +1,190 @@@
+  {
+    "version": 1,
+++<<<<<<< HEAD
+ +  "source_of_truth": "state/db.json",
+++=======
++   "created_at": "2026-08-13T14:50:12.297823+00:00",
+++>>>>>>> origin/main
+    "agents_registry": {
+      "1": {
+        "id": "1",
+        "name": "SystemGuard",
+++<<<<<<< HEAD
+ +      "state": "active",
+ +      "role": "security",
+ +      "owner_id": "8789977826",
+ +      "permissions": [
+ +        "monitor",
+ +        "audit"
+ +      ],
+ +      "created": "2026-08-07T22:43:47"
+++=======
++       "role": "security",
++       "status": "active",
++       "registered_from": "db.json",
++       "sessions": []
+++>>>>>>> origin/main
+      },
+      "2": {
+        "id": "2",
+        "name": "DoctorAgent",
+++<<<<<<< HEAD
+ +      "state": "active",
+ +      "role": "doctor",
+ +      "owner_id": "8789977826",
+ +      "permissions": [
+ +        "diagnose",
+ +        "heal"
+ +      ],
+ +      "created": "2026-08-07T22:43:47"
+++=======
++       "role": "doctor",
++       "status": "active",
++       "registered_from": "db.json",
++       "sessions": []
+++>>>>>>> origin/main
+      },
+      "3": {
+        "id": "3",
+        "name": "SyncAgent",
+++<<<<<<< HEAD
+ +      "state": "active",
+ +      "role": "sync",
+ +      "owner_id": "8789977826",
+ +      "permissions": [
+ +        "sync_data",
+ +        "update"
+ +      ],
+ +      "created": "2026-08-07T22:43:47"
+++=======
++       "role": "sync",
++       "status": "active",
++       "registered_from": "db.json",
++       "sessions": []
+++>>>>>>> origin/main
+      },
+      "4": {
+        "id": "4",
+        "name": "TokenAgent",
+++<<<<<<< HEAD
+ +      "state": "idle",
+ +      "role": "token",
+ +      "owner_id": "8789977826",
+ +      "permissions": [
+ +        "manage_tokens",
+ +        "send"
+ +      ],
+ +      "created": "2026-08-07T22:43:47"
+ +    }
+ +  },
+ +  "proposals": [],
+ +  "individual_votes": {},
+ +  "individual_agent_votes": {}
+ +}
+++=======
++       "role": "token",
++       "status": "active",
++       "registered_from": "db.json",
++       "sessions": []
++     }
++   },
++   "proposals": [
++     {
++       "id": 1,
++       "type": "proposal",
++       "title": "בדיקת Governance מלאה",
++       "description": "לוודא הצבעה ותיעוד",
++       "status": "approved",
++       "created_by": "8789977826",
++       "created_at": "2026-08-13T16:26:55.815194+00:00",
++       "votes": {
++         "yes": 1,
++         "no": 0,
++         "abstain": 0,
++         "weighted_yes": 5,
++         "weighted_no": 0
++       }
++     },
++     {
++       "id": 2,
++       "type": "proposal",
++       "title": "Agent Task Mapping",
++       "description": "מיפוי משימות ראשוני לכל 4 הסוכנים",
++       "status": "approved",
++       "created_by": "8789977826",
++       "created_at": "2026-08-13T16:28:33.748255+00:00",
++       "votes": {
++         "yes": 1,
++         "no": 0,
++         "abstain": 0,
++         "weighted_yes": 5,
++         "weighted_no": 0
++       }
++     },
++     {
++       "id": 3,
++       "type": "proposal",
++       "title": "Release Closure — Final User Path",
++       "description": "",
++       "status": "open",
++       "created_by": "8789977826",
++       "created_at": "2026-08-14T00:24:43.235148+00:00",
++       "votes": {
++         "yes": 0,
++         "no": 0,
++         "abstain": 0,
++         "weighted_yes": 0,
++         "weighted_no": 0
++       }
++     },
++     {
++       "id": 4,
++       "type": "proposal",
++       "title": "Release Closure: approve the audited SLH OS user path and freeze the current release baseline",
++       "description": "",
++       "status": "open",
++       "created_by": "8789977826",
++       "created_at": "2026-08-14T00:24:51.129891+00:00",
++       "votes": {
++         "yes": 0,
++         "no": 0,
++         "abstain": 0,
++         "weighted_yes": 0,
++         "weighted_no": 0
++       }
++     }
++   ],
++   "votes": {},
++   "sessions": [],
++   "task_map": [],
++   "rules": {
++     "vote_weights": {
++       "owner": 5,
++       "developer": 3,
++       "teacher": 2,
++       "student": 1,
++       "agent": 1
++     },
++     "pass_threshold": 0.6,
++     "agent_creation_requires_owner": true,
++     "agent_execution_requires_vote": true
++   },
++   "source_of_truth": "state/db.json",
++   "individual_votes": {
++     "p1_8789977826": {
++       "proposal_id": 1,
++       "voter": "8789977826",
++       "choice": "yes",
++       "weight": 5,
++       "timestamp": "2026-08-13T16:26:59.542093+00:00"
++     },
++     "p2_8789977826": {
++       "proposal_id": 2,
++       "voter": "8789977826",
++       "choice": "yes",
++       "weight": 5,
++       "timestamp": "2026-08-13T16:46:51.516116+00:00"
++     }
++   }
+ -}
+++}
+++>>>>>>> origin/main
+diff --cc state/marketplace.json
+index 6a5bc84,16d2bd8..0000000
+--- a/state/marketplace.json
++++ b/state/marketplace.json
+@@@ -1,43 -1,42 +1,87 @@@
+  {
+++<<<<<<< HEAD
+ +    "plugins":  [
+ +                    {
+ +                        "id":  "health_check",
+ +                        "name":  "Health Check",
+ +                        "desc":  "Adds /health command",
+ +                        "price":  0,
+ +                        "installs":  2
+ +                    },
+ +                    {
+ +                        "id":  "task_plugin",
+ +                        "name":  "Task Plugin",
+ +                        "desc":  "Adds /task create/list",
+ +                        "price":  0,
+ +                        "installs":  0
+ +                    },
+ +                    {
+ +                        "id":  "agent_os",
+ +                        "name":  "Agent OS",
+ +                        "desc":  "Full agent system",
+ +                        "price":  49,
+ +                        "installs":  0
+ +                    },
+ +                    {
+ +                        "id":  "junk_cleaner",
+ +                        "name":  "Junk Cleaner",
+ +                        "desc":  "סורק ומנקה קבצים כבדים מטרמוקס (Admin)",
+ +                        "price":  9.99,
+ +                        "installs":  0
+ +                    },
+ +                    {
+ +                        "id":  "slh_full",
+ +                        "name":  "SLH Full Stack",
+ +                        "desc":  "Onboarding, LLM AI, Token Wizard, Staking, Leaderboard, Start Buttons - full SLH experience",
+ +                        "price":  0,
+ +                        "installs":  0
+ +                    }
+ +                ],
+ +    "installed":  [
+ +                      "health_check"
+ +                  ]
+ +}
+ +
+++=======
++   "plugins": [
++     {
++       "id": "health_check",
++       "name": "Health Check",
++       "desc": "Adds /health command",
++       "price": 0,
++       "installs": 6
++     },
++     {
++       "id": "task_plugin",
++       "name": "Task Plugin",
++       "desc": "Adds /task create/list",
++       "price": 0,
++       "installs": 0
++     },
++     {
++       "id": "agent_os",
++       "name": "Agent OS",
++       "desc": "Full agent system",
++       "price": 49,
++       "installs": 2
++     },
++     {
++       "id": "junk_cleaner",
++       "name": "Junk Cleaner",
++       "desc": "סורק ומנקה קבצים כבדים מטרמוקס (Admin)",
++       "price": 9.99,
++       "installs": 0
++     },
++     {
++       "id": "slh_full",
++       "name": "SLH Full Stack",
++       "desc": "Onboarding, LLM AI, Token Wizard, Staking, Leaderboard, Start Buttons - full SLH experience",
++       "price": 0,
++       "installs": 0
++     }
++   ],
++   "installed": [
++     "health_check"
++   ]
+ -}
+++}
+++>>>>>>> origin/main
+diff --cc state/missions/board.json
+index 26b3115,6b3f58e..0000000
+--- a/state/missions/board.json
++++ b/state/missions/board.json
+@@@ -1,93 -1,204 +1,294 @@@
+  {
+    "missions": [
+      {
+++<<<<<<< HEAD
+ +      "id": 1,
+ +      "desc": "SYNC TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created": "2026-07-22T21:23:01.540830",
+ +      "assigned_at": "2026-07-26T08:28:44.271958+00:00"
+ +    },
+ +    {
+ +      "id": "2",
+ +      "desc": "LIFECYCLE CORE TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "created_at": "2026-07-26T08:44:54.348391+00:00",
+ +      "assigned_at": "2026-07-26T08:46:56.755963+00:00"
+ +    },
+ +    {
+ +      "id": "3",
+ +      "desc": "API LIFECYCLE TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created_at": "2026-07-26T09:00:15.397877+00:00",
+ +      "assigned_at": "2026-07-26T09:02:20.603303+00:00",
+ +      "execution_started_at": "2026-07-26T09:05:26.666789+00:00",
+ +      "execution_completed_at": "2026-07-26T09:05:26.668844+00:00",
+ +      "completed_at": "2026-07-26T09:09:53.631152+00:00"
+ +    },
+ +    {
+ +      "id": "4",
+ +      "desc": "API LIFECYCLE INTEGRATION TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created_at": "2026-07-26T09:13:43.857014+00:00",
+ +      "assigned_at": "2026-07-26T09:15:20.561409+00:00",
+ +      "execution_started_at": "2026-07-26T09:18:49.515884+00:00",
+ +      "execution_completed_at": "2026-07-26T09:18:49.516932+00:00",
+ +      "completed_at": "2026-07-26T09:28:35.541609+00:00"
+ +    },
+ +    {
+ +      "id": "5",
+ +      "desc": "FULL AUTOMATED LIFECYCLE TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created_at": "2026-07-26T09:30:30.932406+00:00",
+ +      "assigned_at": "2026-07-26T09:30:30.935440+00:00",
+ +      "execution_started_at": "2026-07-26T09:30:30.948739+00:00",
+ +      "execution_completed_at": "2026-07-26T09:30:30.949751+00:00",
+ +      "completed_at": "2026-07-26T09:30:30.954983+00:00"
+ +    },
+ +    {
+ +      "id": "6",
+ +      "desc": "MISSION ENGINE API INTEGRATION TEST",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created_at": "2026-07-26T09:31:57.873380+00:00",
+ +      "assigned_at": "2026-07-26T09:31:57.876508+00:00",
+ +      "execution_started_at": "2026-07-26T09:31:57.890717+00:00",
+ +      "execution_completed_at": "2026-07-26T09:31:57.891771+00:00",
+ +      "completed_at": "2026-07-26T09:31:57.896276+00:00"
+ +    },
+ +    {
+ +      "id": "API-TEST-20260726T094818Z",
+ +      "desc": "Lifecycle API integration test",
+ +      "status": "completed",
+ +      "assigned_to": "3",
+ +      "reward": 0,
+ +      "created_at": "2026-07-26T09:48:18.356439+00:00",
+ +      "assigned_at": "2026-07-26T09:48:18.358676+00:00",
+ +      "execution_started_at": "2026-07-26T09:48:18.373092+00:00",
+ +      "execution_completed_at": "2026-07-26T09:48:18.374152+00:00",
+ +      "completed_at": "2026-07-26T09:48:18.377719+00:00"
+ +    },
+ +    {
+ +      "id": "SLH_PUBLIC_LAUNCH",
+ +      "desc": "שחרור SLH לקהל",
+ +      "status": "completed",
+ +      "assigned_to": "1",
+ +      "reward": 0,
+ +      "created_at": "2026-08-14T08:53:26.680068+00:00",
+ +      "assigned_at": "2026-08-14T08:55:01.086311+00:00",
+ +      "execution_started_at": "2026-08-14T08:57:24.752332+00:00",
+ +      "execution_completed_at": "2026-08-14T08:57:24.753429+00:00",
+ +      "completed_at": "2026-08-14T08:59:17.297844+00:00"
+++=======
++       "id": "1",
++       "desc": "SLH_PUBLIC_LAUNCH — שחרור SLH לקהל",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T08:40:53.236353+00:00"
++     },
++     {
++       "id": "2",
++       "desc": "E2E_SMOKE_TEST",
++       "status": "completed",
++       "assigned_to": "1",
++       "reward": 0,
++       "created_at": "2026-08-14T13:22:15.469602+00:00",
++       "assigned_at": "2026-08-14T13:22:30.565629+00:00",
++       "execution_started_at": "2026-08-14T13:22:36.609594+00:00",
++       "execution_completed_at": "2026-08-14T13:22:36.609968+00:00",
++       "completed_at": "2026-08-14T13:26:37.468937+00:00"
++     },
++     {
++       "id": "3",
++       "desc": "TELEGRAM_E2E_SMOKE",
++       "status": "completed",
++       "assigned_to": "1",
++       "reward": 0,
++       "created_at": "2026-08-14T13:27:35.391145+00:00",
++       "assigned_at": "2026-08-14T13:29:04.928625+00:00",
++       "execution_started_at": "2026-08-14T13:29:12.818016+00:00",
++       "execution_completed_at": "2026-08-14T13:29:12.818305+00:00",
++       "completed_at": "2026-08-14T13:29:12.844154+00:00"
++     },
++     {
++       "id": "TASK-20260814T155823886610Z",
++       "desc": "מצא מנגנון תרגום",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T15:58:23.888998+00:00"
++     },
++     {
++       "id": "TASK-20260814T155827734616Z",
++       "desc": "מצא מנגנון סיבוב טוקנים",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T15:58:27.736142+00:00"
++     },
++     {
++       "id": "TASK-20260814T155832700599Z",
++       "desc": "תקן AI fallback",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T15:58:32.702051+00:00"
++     },
++     {
++       "id": "TASK-20260814T202034659159Z",
++       "desc": "\"1. הפעל בדיקת מערכת מקיפה – /execr python3 system_diagnostics.py\"\n/task_add \"2. בדוק את כל פקודות המשתמש: /start, /join, /ask, /wallet, /mission list, /agents\"\n/task_add \"3. בדוק את ה‑Mini App (https://web-production-22f28.up.railway.app/mini-app) – האם staked ו‑token_balance מוצגים?\"\n/task_add \"4. מצא באג אחד לפחות ודווח עליו (פרטים, איך לשחזר)\"\n/task_add \"5. הצע שיפור אחד (קטן) שאפשר לבצע תוך שעה\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:20:34.662100+00:00"
++     },
++     {
++       "id": "4",
++       "desc": "\"Developer Onboarding – הכר את המערכת\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:22.105116+00:00"
++     },
++     {
++       "id": "TASK-20260814T202932387645Z",
++       "desc": "\"1. /execr ls -la – הצג תיקיות\"\n/task_add \"2. /execr cat state/db.json – הצג מצב DB\"\n/task_add \"3. /execr python3 -c \\\"import json; print(len(json.load(open('state/db.json'))['users']))\\\" – כמה משתמשים?\"\n/task_add \"4. /ask מה השם שלי? – בדיקת זהות\"\n/task_add \"5. /wallet – בדיקת ארנק\"\n/task_add \"6. /mission list – רשימת משימות\"\n/task_add \"7. /miniapp – פתח את ה‑Dashboard ובדוק staked ו‑token_balance\"\n/task_add \"8. שלח דוח באג/שיפור ראשון\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:32.389536+00:00"
++     },
++     {
++       "id": "TASK-20260814T202936711544Z",
++       "desc": "\"2. /execr cat state/db.json – הצג מצב DB\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:36.713025+00:00"
++     },
++     {
++       "id": "TASK-20260814T202941460409Z",
++       "desc": "\"3. /execr python3 -c \\\"import json; print(len(json.load(open('state/db.json'))['users']))\\\" – כמה משתמשים?\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:41.461810+00:00"
++     },
++     {
++       "id": "TASK-20260814T202944508135Z",
++       "desc": "\"4. /ask מה השם שלי? – בדיקת זהות\"\nשלח דוח באג/שיפור ראשון\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:44.509652+00:00"
++     },
++     {
++       "id": "TASK-20260814T202948904814Z",
++       "desc": "\"5. /wallet – בדיקת ארנק\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:48.906268+00:00"
++     },
++     {
++       "id": "TASK-20260814T202952056962Z",
++       "desc": "\"6. /mission list – רשימת משימות\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:52.058940+00:00"
++     },
++     {
++       "id": "TASK-20260814T202958183593Z",
++       "desc": "\"7. /miniapp – פתח את ה‑Dashboard ובדוק staked ו‑token_balance\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:29:58.184825+00:00"
++     },
++     {
++       "id": "TASK-20260814T203002450531Z",
++       "desc": "\"8.",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T20:30:02.452072+00:00"
++     },
++     {
++       "id": "TASK-20260814T210528793359Z",
++       "desc": "\"משימת בדיקה 1\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:05:28.794550+00:00"
++     },
++     {
++       "id": "TASK-20260814T211029398788Z",
++       "desc": "\"משימת בדיקה\"\n/task",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:10:29.399796+00:00"
++     },
++     {
++       "id": "TASK-20260814T211336938972Z",
++       "desc": "\"משימת בדיקת סיבוב טוקן \"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:13:36.940426+00:00"
++     },
++     {
++       "id": "TASK-20260814T212352490865Z",
++       "desc": "\"משימת בדיקה\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:23:52.492234+00:00"
++     },
++     {
++       "id": "5",
++       "desc": "\"משימה ראשונה: הכר את המערכת\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:28:59.300947+00:00"
++     },
++     {
++       "id": "TASK-20260814T212909343086Z",
++       "desc": "\"בדוק את ה‑Mini App\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:29:09.344481+00:00"
++     },
++     {
++       "id": "TASK-20260814T212911008298Z",
++       "desc": "\"שלח /ask מה השם שלך?\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:29:11.009727+00:00"
++     },
++     {
++       "id": "TASK-20260814T214334922253Z",
++       "desc": "\"משימת בדיקה\"",
++       "status": "open",
++       "assigned_to": null,
++       "reward": 0,
++       "created_at": "2026-08-14T21:43:34.925034+00:00"
+++>>>>>>> origin/main
+      }
+    ]
+  }
+diff --cc state/rewards_ledger.json
+index 0637a08,bdb08fc..0000000
+--- a/state/rewards_ledger.json
++++ b/state/rewards_ledger.json
+@@@ -1,1 -1,16 +1,20 @@@
+- []
+++<<<<<<< HEAD
+++[]
+++=======
++ [
++   {
++     "user": "TEST_USER2",
++     "reason": "test:grant",
++     "credits": 10,
++     "points": 0,
++     "timestamp": "2026-08-16T12:23:57.842926"
++   },
++   {
++     "user": "TEST_USER2",
++     "reason": "test:bridge",
++     "credits": 5,
++     "points": 0,
++     "timestamp": "2026-08-16T12:23:57.843918"
++   }
+ -]
+++]
+++>>>>>>> origin/main
+diff --cc state/system_memory.json
+index 76c2c5e,0e547a5..0000000
+--- a/state/system_memory.json
++++ b/state/system_memory.json
+@@@ -1,26 -1,1 +1,30 @@@
+++<<<<<<< HEAD
+ +{
+ +  "system": "SLH OS",
+ +  "memory_version": "1.0",
+ +  "created": "2026-07-12",
+ +  "milestone": "First Autonomous Stability Record",
+ +  "current_state": {
+ +    "railway": "ONLINE",
+ +    "telegram": "ONLINE",
+ +    "polling": "ACTIVE",
+ +    "webhook": "CLEAN"
+ +  },
+ +  "verified_commands": [
+ +    "/start",
+ +    "/help",
+ +    "/ask",
+ +    "/journal",
+ +    "/roadmap",
+ +    "/doctor"
+ +  ],
+ +  "next_phase": "Autonomous Memory Kernel",
+ +  "goal": [
+ +    "self documentation",
+ +    "health checks",
+ +    "automatic checkpoints"
+ +  ]
+ +}
+++=======
++ {"memory_version":"1.0","milestone":"SLH_LAUNCH_STABILIZATION","next_phase":"ECONOMY_LOCK","goal":"stable production"}
+++>>>>>>> origin/main
+diff --cc state/takeover/manifest.json
+index 5564d34,ae6373e..0000000
+--- a/state/takeover/manifest.json
++++ b/state/takeover/manifest.json
+@@@ -2,69 -2,76 +2,130 @@@
+    "manifest_version": "1.0",
+    "system": {
+      "name": "SLH OS",
+++<<<<<<< HEAD
+ +    "generated_at": "2026-07-26T08:53:46.529633+00:00",
+++=======
++     "generated_at": "2026-08-14T10:30:47.499559+00:00",
+++>>>>>>> origin/main
+      "generation_mode": "read_only_derived_snapshot",
+      "takeover_status": "READY_FOR_LAYER"
+    },
+    "agents": {
+      "total": 4,
+      "states": {
+++<<<<<<< HEAD
+ +      "active": 1,
+ +      "idle": 3
+++=======
++       "active": 3,
++       "idle": 1
+++>>>>>>> origin/main
+      },
+      "items": [
+        {
+          "id": "1",
+          "name": "SystemGuard",
+++<<<<<<< HEAD
+ +        "role": "agent",
+ +        "state": "active",
+ +        "inbox_count": 1,
+ +        "permissions_count": 0
+++=======
++         "role": "security",
++         "state": "active",
++         "inbox_count": 0,
++         "permissions_count": 2
+++>>>>>>> origin/main
+        },
+        {
+          "id": "2",
+          "name": "DoctorAgent",
+++<<<<<<< HEAD
+ +        "role": "agent",
+ +        "state": "idle",
+ +        "inbox_count": 0,
+ +        "permissions_count": 0
+++=======
++         "role": "doctor",
++         "state": "active",
++         "inbox_count": 0,
++         "permissions_count": 2
+++>>>>>>> origin/main
+        },
+        {
+          "id": "3",
+          "name": "SyncAgent",
+++<<<<<<< HEAD
+ +        "role": "agent",
+ +        "state": "idle",
+ +        "inbox_count": 0,
+ +        "permissions_count": 0
+++=======
++         "role": "sync",
++         "state": "active",
++         "inbox_count": 0,
++         "permissions_count": 2
+++>>>>>>> origin/main
+        },
+        {
+          "id": "4",
+          "name": "TokenAgent",
+++<<<<<<< HEAD
+ +        "role": "agent",
+ +        "state": "idle",
+ +        "inbox_count": 0,
+ +        "permissions_count": 0
+++=======
++         "role": "token",
++         "state": "idle",
++         "inbox_count": 0,
++         "permissions_count": 2
+++>>>>>>> origin/main
+        }
+      ]
+    },
+    "missions": {
+++<<<<<<< HEAD
+ +    "total": 2,
+ +    "open": 0,
+ +    "assigned": 0,
+ +    "done": 2,
+ +    "duplicate_ids": [],
+ +    "invalid_agent_references": 0,
+ +    "open_items": []
+ +  },
+ +  "rewards": {
+ +    "ledger_exists": false,
+++=======
++     "total": 1,
++     "open": 1,
++     "assigned": 0,
++     "done": 0,
++     "duplicate_ids": [],
++     "invalid_agent_references": 0,
++     "open_items": [
++       {
++         "id": "1",
++         "description": "SLH_PUBLIC_LAUNCH — שחרור SLH לקהל",
++         "assigned_to": null,
++         "reward": 0
++       }
++     ]
++   },
++   "rewards": {
++     "ledger_exists": true,
+++>>>>>>> origin/main
+      "entries": 0,
+      "orphan_entries": 0
+    },
+    "tasks": {
+      "service_exists": true,
+      "handler_exists": true,
+++<<<<<<< HEAD
+ +    "database_count": 0,
+++=======
++     "database_count": 13,
+++>>>>>>> origin/main
+      "architecture_status": "parallel_with_missions"
+    },
+    "knowledge": {
+@@@ -88,7 -95,7 +149,11 @@@
+      "system_identity_module": {
+        "exists": true,
+        "path": "core/identity.py",
+++<<<<<<< HEAD
+ +      "size_bytes": 293
+++=======
++       "size_bytes": 241
+++>>>>>>> origin/main
+      },
+      "formal_takeover_layer": false,
+      "formal_knowledge_transfer": false,
+@@@ -119,54 -126,50 +184,93 @@@
+    },
+    "system_memory_summary": {
+      "memory_version": "1.0",
+++<<<<<<< HEAD
+ +    "milestone": "First Autonomous Stability Record",
+ +    "next_phase": "Autonomous Memory Kernel",
+ +    "goal": [
+ +      "self documentation",
+ +      "health checks",
+ +      "automatic checkpoints"
+ +    ]
+++=======
++     "milestone": "SLH_LAUNCH_STABILIZATION",
++     "next_phase": "ECONOMY_LOCK",
++     "goal": "stable production"
+++>>>>>>> origin/main
+    },
+    "source_files": {
+      "db": {
+        "exists": true,
+        "path": "state/db.json",
+++<<<<<<< HEAD
+ +      "size_bytes": 1388
+++=======
++       "size_bytes": 14476
+++>>>>>>> origin/main
+      },
+      "missions": {
+        "exists": true,
+        "path": "state/missions/board.json",
+++<<<<<<< HEAD
+ +      "size_bytes": 478
+ +    },
+ +    "rewards": {
+ +      "exists": false,
+ +      "path": "state/rewards_ledger.json",
+ +      "size_bytes": 0
+++=======
++       "size_bytes": 359
++     },
++     "rewards": {
++       "exists": true,
++       "path": "state/rewards_ledger.json",
++       "size_bytes": 2
+++>>>>>>> origin/main
+      },
+      "system_memory": {
+        "exists": true,
+        "path": "state/system_memory.json",
+++<<<<<<< HEAD
+ +      "size_bytes": 507
+++=======
++       "size_bytes": 119
+++>>>>>>> origin/main
+      },
+      "audit": {
+        "exists": true,
+        "path": "state/audit.jsonl",
+++<<<<<<< HEAD
+ +      "size_bytes": 1308
+++=======
++       "size_bytes": 1438
+++>>>>>>> origin/main
+      },
+      "agent_registry": {
+        "exists": true,
+        "path": "core/agent_registry.py",
+++<<<<<<< HEAD
+ +      "size_bytes": 4291
+++=======
++       "size_bytes": 4276
+++>>>>>>> origin/main
+      },
+      "task_service": {
+        "exists": true,
+        "path": "services/task_service.py",
+++<<<<<<< HEAD
+ +      "size_bytes": 1229
+++=======
++       "size_bytes": 3704
+++>>>>>>> origin/main
+      },
+      "task_handler": {
+        "exists": true,
+        "path": "handlers/task_handler.py",
+++<<<<<<< HEAD
+ +      "size_bytes": 1458
+++=======
++       "size_bytes": 2963
+++>>>>>>> origin/main
+      },
+      "ownership_handler": {
+        "exists": true,
+@@@ -181,10 -184,10 +285,17 @@@
+    },
+    "integrity": {
+      "source_sha256": {
+++<<<<<<< HEAD
+ +      "db": "6763d3b7d7c15ec021c53cf1640a6262f2c4b1d7056e1fece0c47e737116a788",
+ +      "missions": "cf78daf24b09333f6379b82af06899fb66df0e6b83b31dd1ec28756b45b40a8c",
+ +      "system_memory": "e70ae25486615f804d3ecb522b0419034da50032677d290a5a654d7de354cd7b",
+ +      "agent_registry": "3b3485e75c8b45785bfa8dc8a9cf07f2af112306fe8f5b3be041e05d3ec3a385"
+++=======
++       "db": "806ed9bde914ef259082a67e1fd9bc0c106bb684019ab33d9c871920542a177f",
++       "missions": "da2c4bb163acf1243dd2597108f88e8e6cf4231f22b2dec92d436e6fbc389197",
++       "system_memory": "1e66cd06f73513bf99b1f11400f17b64f7f87e063b1f51066026282d1fff2b04",
++       "agent_registry": "46eba7e604e9adbe73aa49d5926af4700e2ce6b3af5f6861038447bc5b46660a"
+++>>>>>>> origin/main
+      },
+      "issues": []
+    }
+diff --cc state/takeover/runtime_command_registration_audit.json
+index 552bb13,06fa421..0000000
+--- a/state/takeover/runtime_command_registration_audit.json
++++ b/state/takeover/runtime_command_registration_audit.json
+@@@ -1,8 -1,8 +1,14 @@@
+  {
+    "audit_version": "1.0",
+++<<<<<<< HEAD
+ +  "generated_at": "2026-08-13T16:52:27.552144+00:00",
+ +  "entrypoint": "bot_stable.py",
+ +  "loader": "handlers\\loader.py",
+++=======
++   "generated_at": "2026-08-14T16:20:29.304470+00:00",
++   "entrypoint": "bot_stable.py",
++   "loader": "handlers/loader.py",
+++>>>>>>> origin/main
+    "direct_registrations": [
+      {
+        "command": "/user",
+@@@ -18,7 -18,7 +24,11 @@@
+      {
+        "command": "/progress",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\academy_handler.py",
+++=======
++       "source": "handlers/academy_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.academy_handler",
+        "register_functions": [
+          {
+@@@ -31,7 -31,7 +41,11 @@@
+      {
+        "command": "/progress",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\endday_handler.py",
+++=======
++       "source": "handlers/endday_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.endday_handler",
+        "register_functions": [
+          {
+@@@ -44,7 -44,7 +58,11 @@@
+      {
+        "command": "/balance",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\endday_handler.py",
+++=======
++       "source": "handlers/endday_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.endday_handler",
+        "register_functions": [
+          {
+@@@ -57,7 -57,7 +75,11 @@@
+      {
+        "command": "/start",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -70,7 -70,7 +92,11 @@@
+      {
+        "command": "/help",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -83,7 -83,7 +109,11 @@@
+      {
+        "command": "/join",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -96,7 -96,7 +126,11 @@@
+      {
+        "command": "/progress",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -109,7 -109,7 +143,11 @@@
+      {
+        "command": "/balance",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -122,7 -122,7 +160,11 @@@
+      {
+        "command": "/ask",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\help_handler.py",
+++=======
++       "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.help_handler",
+        "register_functions": [
+          {
+@@@ -135,7 -135,7 +177,11 @@@
+      {
+        "command": "/join",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\me_handler.py",
+++=======
++       "source": "handlers/me_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.me_handler",
+        "register_functions": [
+          {
+@@@ -148,7 -148,7 +194,11 @@@
+      {
+        "command": "/start",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\os_handler.py",
+++=======
++       "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.os_handler",
+        "register_functions": [
+          {
+@@@ -161,7 -161,7 +211,11 @@@
+      {
+        "command": "/help",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\os_handler.py",
+++=======
++       "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.os_handler",
+        "register_functions": [
+          {
+@@@ -174,7 -174,7 +228,11 @@@
+      {
+        "command": "/market",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\os_handler.py",
+++=======
++       "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.os_handler",
+        "register_functions": [
+          {
+@@@ -187,7 -187,7 +245,11 @@@
+      {
+        "command": "/ask",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\os_handler.py",
+++=======
++       "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.os_handler",
+        "register_functions": [
+          {
+@@@ -200,7 -200,7 +262,11 @@@
+      {
+        "command": "/join",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\payment_handler.py",
+++=======
++       "source": "handlers/payment_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.payment_handler",
+        "register_functions": [
+          {
+@@@ -217,7 -217,7 +283,11 @@@
+      {
+        "command": "/ask",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\payment_handler.py",
+++=======
++       "source": "handlers/payment_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.payment_handler",
+        "register_functions": [
+          {
+@@@ -234,7 -234,7 +304,11 @@@
+      {
+        "command": "/start",
+        "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +      "source": "handlers\\ux_handler.py",
+++=======
++       "source": "handlers/ux_handler.py",
+++>>>>>>> origin/main
+        "module": "handlers.ux_handler",
+        "register_functions": [
+          {
+@@@ -252,7 -252,7 +326,11 @@@
+          {
+            "command": "/start",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -265,7 -265,7 +343,11 @@@
+          {
+            "command": "/start",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\os_handler.py",
+++=======
++           "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.os_handler",
+            "register_functions": [
+              {
+@@@ -278,7 -278,7 +360,11 @@@
+          {
+            "command": "/start",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\ux_handler.py",
+++=======
++           "source": "handlers/ux_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.ux_handler",
+            "register_functions": [
+              {
+@@@ -296,7 -296,7 +382,11 @@@
+          {
+            "command": "/help",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -309,7 -309,7 +399,11 @@@
+          {
+            "command": "/help",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\os_handler.py",
+++=======
++           "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.os_handler",
+            "register_functions": [
+              {
+@@@ -327,7 -327,7 +421,11 @@@
+          {
+            "command": "/join",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -340,7 -340,7 +438,11 @@@
+          {
+            "command": "/join",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\me_handler.py",
+++=======
++           "source": "handlers/me_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.me_handler",
+            "register_functions": [
+              {
+@@@ -353,7 -353,7 +455,11 @@@
+          {
+            "command": "/join",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\payment_handler.py",
+++=======
++           "source": "handlers/payment_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.payment_handler",
+            "register_functions": [
+              {
+@@@ -392,7 -392,7 +498,11 @@@
+          {
+            "command": "/progress",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\academy_handler.py",
+++=======
++           "source": "handlers/academy_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.academy_handler",
+            "register_functions": [
+              {
+@@@ -405,7 -405,7 +515,11 @@@
+          {
+            "command": "/progress",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\endday_handler.py",
+++=======
++           "source": "handlers/endday_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.endday_handler",
+            "register_functions": [
+              {
+@@@ -418,7 -418,7 +532,11 @@@
+          {
+            "command": "/progress",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -440,7 -440,7 +558,11 @@@
+          {
+            "command": "/market",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\os_handler.py",
+++=======
++           "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.os_handler",
+            "register_functions": [
+              {
+@@@ -458,7 -458,7 +580,11 @@@
+          {
+            "command": "/balance",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\endday_handler.py",
+++=======
++           "source": "handlers/endday_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.endday_handler",
+            "register_functions": [
+              {
+@@@ -471,7 -471,7 +597,11 @@@
+          {
+            "command": "/balance",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -501,7 -501,7 +631,11 @@@
+          {
+            "command": "/ask",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\help_handler.py",
+++=======
++           "source": "handlers/help_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.help_handler",
+            "register_functions": [
+              {
+@@@ -514,7 -514,7 +648,11 @@@
+          {
+            "command": "/ask",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\os_handler.py",
+++=======
++           "source": "handlers/os_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.os_handler",
+            "register_functions": [
+              {
+@@@ -527,7 -527,7 +665,11 @@@
+          {
+            "command": "/ask",
+            "path": "MODULAR_LOADER",
+++<<<<<<< HEAD
+ +          "source": "handlers\\payment_handler.py",
+++=======
++           "source": "handlers/payment_handler.py",
+++>>>>>>> origin/main
+            "module": "handlers.payment_handler",
+            "register_functions": [
+              {

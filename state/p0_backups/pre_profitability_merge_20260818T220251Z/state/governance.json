@@ -1,0 +1,190 @@
+{
+  "version": 1,
+<<<<<<< HEAD
+  "source_of_truth": "state/db.json",
+=======
+  "created_at": "2026-08-13T14:50:12.297823+00:00",
+>>>>>>> origin/main
+  "agents_registry": {
+    "1": {
+      "id": "1",
+      "name": "SystemGuard",
+<<<<<<< HEAD
+      "state": "active",
+      "role": "security",
+      "owner_id": "8789977826",
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "created": "2026-08-07T22:43:47"
+=======
+      "role": "security",
+      "status": "active",
+      "registered_from": "db.json",
+      "sessions": []
+>>>>>>> origin/main
+    },
+    "2": {
+      "id": "2",
+      "name": "DoctorAgent",
+<<<<<<< HEAD
+      "state": "active",
+      "role": "doctor",
+      "owner_id": "8789977826",
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "created": "2026-08-07T22:43:47"
+=======
+      "role": "doctor",
+      "status": "active",
+      "registered_from": "db.json",
+      "sessions": []
+>>>>>>> origin/main
+    },
+    "3": {
+      "id": "3",
+      "name": "SyncAgent",
+<<<<<<< HEAD
+      "state": "active",
+      "role": "sync",
+      "owner_id": "8789977826",
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "created": "2026-08-07T22:43:47"
+=======
+      "role": "sync",
+      "status": "active",
+      "registered_from": "db.json",
+      "sessions": []
+>>>>>>> origin/main
+    },
+    "4": {
+      "id": "4",
+      "name": "TokenAgent",
+<<<<<<< HEAD
+      "state": "idle",
+      "role": "token",
+      "owner_id": "8789977826",
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "created": "2026-08-07T22:43:47"
+    }
+  },
+  "proposals": [],
+  "individual_votes": {},
+  "individual_agent_votes": {}
+}
+=======
+      "role": "token",
+      "status": "active",
+      "registered_from": "db.json",
+      "sessions": []
+    }
+  },
+  "proposals": [
+    {
+      "id": 1,
+      "type": "proposal",
+      "title": "בדיקת Governance מלאה",
+      "description": "לוודא הצבעה ותיעוד",
+      "status": "approved",
+      "created_by": "8789977826",
+      "created_at": "2026-08-13T16:26:55.815194+00:00",
+      "votes": {
+        "yes": 1,
+        "no": 0,
+        "abstain": 0,
+        "weighted_yes": 5,
+        "weighted_no": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "proposal",
+      "title": "Agent Task Mapping",
+      "description": "מיפוי משימות ראשוני לכל 4 הסוכנים",
+      "status": "approved",
+      "created_by": "8789977826",
+      "created_at": "2026-08-13T16:28:33.748255+00:00",
+      "votes": {
+        "yes": 1,
+        "no": 0,
+        "abstain": 0,
+        "weighted_yes": 5,
+        "weighted_no": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "proposal",
+      "title": "Release Closure — Final User Path",
+      "description": "",
+      "status": "open",
+      "created_by": "8789977826",
+      "created_at": "2026-08-14T00:24:43.235148+00:00",
+      "votes": {
+        "yes": 0,
+        "no": 0,
+        "abstain": 0,
+        "weighted_yes": 0,
+        "weighted_no": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "proposal",
+      "title": "Release Closure: approve the audited SLH OS user path and freeze the current release baseline",
+      "description": "",
+      "status": "open",
+      "created_by": "8789977826",
+      "created_at": "2026-08-14T00:24:51.129891+00:00",
+      "votes": {
+        "yes": 0,
+        "no": 0,
+        "abstain": 0,
+        "weighted_yes": 0,
+        "weighted_no": 0
+      }
+    }
+  ],
+  "votes": {},
+  "sessions": [],
+  "task_map": [],
+  "rules": {
+    "vote_weights": {
+      "owner": 5,
+      "developer": 3,
+      "teacher": 2,
+      "student": 1,
+      "agent": 1
+    },
+    "pass_threshold": 0.6,
+    "agent_creation_requires_owner": true,
+    "agent_execution_requires_vote": true
+  },
+  "source_of_truth": "state/db.json",
+  "individual_votes": {
+    "p1_8789977826": {
+      "proposal_id": 1,
+      "voter": "8789977826",
+      "choice": "yes",
+      "weight": 5,
+      "timestamp": "2026-08-13T16:26:59.542093+00:00"
+    },
+    "p2_8789977826": {
+      "proposal_id": 2,
+      "voter": "8789977826",
+      "choice": "yes",
+      "weight": 5,
+      "timestamp": "2026-08-13T16:46:51.516116+00:00"
+    }
+  }
+}
+>>>>>>> origin/main

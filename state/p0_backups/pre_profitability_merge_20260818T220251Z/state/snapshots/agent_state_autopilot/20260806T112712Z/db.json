@@ -1,0 +1,79 @@
+{
+  "users": {
+    "8789977826": {
+      "name": "O",
+      "role": "OWNER",
+      "phone": "!972000000001",
+      "permissions": [
+        "admin",
+        "exec",
+        "deploy",
+        "restart"
+      ],
+      "wallet": {
+        "credits": 1000,
+        "token_balance": 26332.94228
+      }
+    },
+    "224223270": {
+      "role": "USER",
+      "permissions": [
+        "restart"
+      ],
+      "wallet": {
+        "credits": 0
+      }
+    }
+  },
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "state": "active"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "state": "active"
+    },
+    "3": {
+      "name": "SyncAgent",
+      "state": "active"
+    },
+    "4": {
+      "name": "TokenAgent",
+      "state": "idle"
+    }
+  },
+  "tasks": {
+    "task_1": {
+      "title": "צפה בשיעור 1: מה זה ביטקוין",
+      "reward": 50,
+      "done_by": []
+    },
+    "task_2": {
+      "title": "הזמן חבר לאימפריה",
+      "reward": 100,
+      "done_by": []
+    },
+    "task_3": {
+      "title": "השלם פרופיל",
+      "reward": 25,
+      "done_by": []
+    }
+  },
+  "memory": {},
+  "devices": {},
+  "students": {
+    "8789977826": {
+      "name": "O",
+      "role": "OWNER",
+      "credits": 1000,
+      "joined": "2026-07-29"
+    },
+    "224223270": {
+      "name": "?",
+      "role": "USER",
+      "credits": 0
+    }
+  },
+  "votes": []
+}

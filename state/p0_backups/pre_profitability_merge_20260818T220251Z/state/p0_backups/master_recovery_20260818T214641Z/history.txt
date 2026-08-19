@@ -1,0 +1,112 @@
+* fbc158a (HEAD -> integration/main-sync-20260818, recovery/master-20260818T214641Z, p0-money-authority-safety-20260818-233351, main, backup/pre-integration-local-20260818) restore canonical SLH Empire admin UI
+| * 749464b (refs/stash) On main: WIP unrelated admin_menu and course loader changes
+|/| 
+| * 5187b53 index on main: edafd14 add community group link and fix Groq model
+|/  
+* edafd14 (backup-local-20260818-1740, backup-20260818-1739) add community group link and fix Groq model
+* 9ac909c feat: add /devsetup command for new contributor onboarding
+* e37d2bc docs: add dev onboarding script and session status for new contributors
+* 134d497 fix: register 14 orphaned command handlers (roadmap, doctor, tutorial, etc)
+* afe2e28 chore: restore admin_menu.sh, add draft audit tool
+* 9da3632 feat: add project audit tool for visibility
+* 6ccb2cc fix: repair mojibake emojis in admin_extras.py
+*   42933c2 merge economy core freeze into main
+|\  
+| * 22da1c1 (economy-core-freeze-20260814) chore: remove obsolete backup files, update .gitignore
+| *   4b24f21 (origin/economy-core-freeze-20260814) Merge branch 'main' of github.com:osifeu-prog/slh-bot into economy-core-freeze-20260814
+| |\  
+| |/  
+|/|   
+| * b443770 (origin/backup-main-local-work) fix: prevent WhatsApp bridge auto-creating users
+| * 3f48da7 feat: add WhatsApp store bridge
+| * e1ffcbd chore: ignore temporary local artifacts
+| * 4a706a0 feat: complete authoritative SLH public launch mission
+| | * b62c225 (tag: alpha-wallet-baseline-20260817, origin/main, origin/HEAD, backup/pre-integration-remote-20260818) fix: restore economy_service authority
+| | * 706b144 (origin/ops/rotate-secrets-YYYYMMDD, origin/fix/ask-local-credits) fix: groq model and credits intent router
+| | * e7a8052 fix: ask credits intent and Groq model, economy authority
+| | * 9aca82a fix: restore economy_service.py from history, fix Groq model reference
+| | * 0920f38 fix: finalize money authority remediation
+| | | * 5aa2d90 (origin/remediation/money-authority-mainline) fix: finalize money authority remediation
+| | | * 1fa4747 fix: route wallet credits locally without LLM
+| | |/  
+| | * dc70d8a chore: remove untracked build.sh and finalize release
+| | * 6fdfd4f (origin/feature/release-fix) release: current clean state
+| | * 608bf74 (origin/remediation/money-authority) fix: route wallet credits locally without LLM
+| | * fe4e2aa chore: freeze pre-production baseline
+| | * 0fd1351 audit: freeze pre-remediation money authority baseline
+| |/  
+|/|   
+* | ae49008 (tag: alpha-security-baseline-20260814, origin/stable-exec-v1-backup) Add local identity and status intents to /ask
+* | 45cd472 (tag: stable-exec-v1) Add text-based exec approval fallback
+* | 9e6ff63 Unify firewall RBAC with security.permissions
+* | 6f0e47b Add staked to wallet handler
+* | 82a7425 checkpoint: stable bot gateway boot with modular handlers
+* | 87a0e9c Add identity defaults for new users
+* | a0885f0 Add staked and token_balance to wallet API
+* | 0a724d6 Fix bridge: resolve agent name from ID
+* |   1648e9c Merge mission runtime contract
+|\ \  
+| * | 09cd535 (origin/audit/mission-runtime-contract) Add mission runtime command
+| * | 93fc056 Add runtime.execute and mission runtime bridge
+|/ /  
+* | 97537fd fix: firewall file path
+* | f77c056 fix: firewall file path
+* | 0988071 fix: firewall file path
+* | c9ab411 fix: firewall file path
+* | e74a8ed fix: firewall path
+* | b912ae6 feat: firewall
+* | b47a9f8 feat: commit bridge via exec
+* | 4eca859 cleanup: establish single command authority
+* | 47d1ee6 feat: owner broadcast command
+* | 5f84aa2 add runtime authority contract
+* | bb6d54a checkpoint runtime authority audit
+* | 7e7e30d feat: synchronize governance agent registry
+* | 07644a9 (tag: v0.1.0-governance-foundation) feat: full governance commands
+* | 87e5362 fix: convert governance handler to telebot
+* | a0bc88e chore: remove local backups from repository
+* | e007714 chore: ignore local backups and lock files
+* | d0db5be SLH economy layer: reward engine governance integration
+* | 2a164ea feat: local system report and counts for /ask without LLM
+* | b22cb41 fix: remove duplicate /buy from legacy market handler
+* | a7f2b41 fix: add windows state locking fallback and tighten rbac audit
+* | 832c8db feat: connect store purchases to economy grants and ledger
+* | 0a9b241 tools: add RBAC audit utility
+* | bd2a216 security: migrate join registration to profile manager RBAC
+* | 3948494 security: enforce default deny for unknown users
+* | 3616e18 fix: graceful AI fallback for rate limits
+|/  
+* e2594a0 add store engine and handler to git
+* 9be50ce connect store handler and add spend alias
+* b447da8 revert broken AI fallback patch to restore bot
+* a11e4a3 fix: graceful AI fallback for rate limits/quota errors
+* ab6340c feat: RBAC dev management + exec approval workflow, fix Python deploy
+* d229fe3 fix: restore UTF-8 emoji in wallet display
+* d47f91a fix: atomic DB updates to prevent race conditions in balance/TON crediting
+* 49d98d4 fix: remove duplicate market and buy handlers
+* d15a287 close all remaining tasks for release readiness
+* 841b1f8 complete Bitcoin Mastery course (all 12 stages)
+* b8ae201 update logo with owner ID and current date
+* 479609e update logo with owner ID and current date
+* 1d9ca12 restore full SLH SYSTEM logo
+* c7dd9f2 Fix owner identity UTF8 and clean user name
+* 17313f8 fix owner name for start and mini-app
+* 7c47928 restore personalized SLH logo
+* 5147160 restore styled help menu from v2
+* 0678a80 fix: dynamic help menu and clean Hebrew
+* 22736c2 Fix mini-app Hebrew encoding and clean layout
+* 7d6b5d7 reset ai circuit breaker
+* 07f6c18 Add retry and Gemini fallback
+* e90fe4c Fix Hebrew encoding to UTF-8 no BOM
+* 60cf4c1 (tag: PRE_RELEASE_CHECK) chore: normalize user identity state
+* bb89d8e (tag: SLH-v1.0-production) Release verification snapshot RC1
+* afe4c8d Archive release cleanup backups
+* d1d9cf3 Release snapshot: SLH OS stable candidate
+* 4c7f9c2 Release cleanup: remove temporary agents and update audit
+* a694bb9 fix: remove marketplace utf8 bom
+* 9c0a611 feat: add marketplace plugin purchases
+* 5e4fdf1 fix: update gemini model for fallback
+* 26cc05e fix: add gemini fallback on groq quota
+* 22c206f fix: improve groq quota error message
+* a9ca3fc fix: narrow role intent routing
+* 3e44756 Activate /os control center
+* 29ecee6 Enable real staking, fix mini-app charset

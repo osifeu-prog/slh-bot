@@ -1,0 +1,96 @@
+On branch integration/main-sync-20260818
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+	new file:   .nixpacks/Dockerfile
+	new file:   .nixpacks/nixpkgs-bc8f8d1be58e8c8383e683a06e1e1e57893fff87.nix
+	new file:   core/economy_service.py
+	new file:   state/agents.json.snapshot_1786631973
+	new file:   state/db.json.pre_alpha_1786660597
+	new file:   state/db.json.pre_alpha_1786661017
+	new file:   state/db.json.pre_alpha_1786661117
+	new file:   state/db.json.pre_alpha_1786661599
+	new file:   state/db.json.pre_alpha_1786703705
+	new file:   state/db.json.pre_alpha_1786704286
+	new file:   state/db.json.pre_alpha_1786704756
+	new file:   state/db.json.pre_alpha_1786843704
+	new file:   state/db.json.pre_delta_1786703746
+	new file:   state/db.json.pre_delta_1786704036
+	new file:   state/db.json.pre_delta_1786704100
+	new file:   state/db.json.pre_delta_1786704435
+	new file:   state/db.json.pre_delta_1786708033
+	new file:   state/db.json.pre_delta_1786708688
+	new file:   state/db.json.pre_onboarding_1786714715
+	new file:   state/db.json.snapshot_1786631972
+	new file:   state/db_BEFORE_AUDIT_1786472955.json
+	new file:   state/db_PROD_BEFORE_SYNC_1786444044.json
+	new file:   state/governance.json.pre_alpha_1786703707
+	new file:   state/governance.json.pre_delta_1786703747
+	new file:   state/governance.json.pre_delta_1786704038
+	new file:   state/governance.json.pre_delta_1786704440
+	new file:   state/journals/8789977826.jsonl
+	new file:   state/journals/8791275334.jsonl
+	new file:   state/missions/1.json
+	new file:   state/missions/results/mission-2-20260814T132236Z.json
+	new file:   state/missions/results/mission-3-20260814T132912Z.json
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/core/academy_manager.py
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/course_handlers.py
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/courses.json
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/handlers/academy_handler.py
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/handlers/loader.py
+	new file:   state/p0_backups/academy_final_verified_20260815_145114/state/db.json
+	new file:   state/p0_backups/academy_regression_pass_20260815_144725/course_handlers.py
+	new file:   state/p0_backups/academy_regression_pass_20260815_144725/courses.json
+	new file:   state/p0_backups/academy_regression_pass_20260815_144725/handlers/loader.py
+	new file:   state/p0_backups/academy_verified_20260815_142852/course_handlers.py
+	new file:   state/p0_backups/academy_verified_20260815_142852/courses.json
+	new file:   state/p0_backups/academy_verified_20260815_142852/loader.py
+	new file:   state/p0_backups/course_handlers.py.modern_import_20260815_140133.py
+	new file:   state/p0_backups/learning_path_encoding_repair_20260815_151332/learning_path.py
+	new file:   state/p0_backups/learning_path_encoding_repair_verified_20260815_151528/learning_path.py
+	new file:   state/p0_backups/slh_eligibility_gate_20260815_150829/learning_path.py
+	new file:   state/p0_backups/slh_eligibility_gate_apply_20260815_151008/learning_path.py
+	new file:   state/p0_backups/test_user_cleanup_20260815_141213.json
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both added:      .gitignore
+	both added:      admin_menu.sh
+	both added:      core/ask_debug.py
+	both added:      core/economy_bridge.py
+	both added:      core/reward_engine.py
+	both added:      econ_handler.py
+	both added:      handlers/firewall_handler.py
+	both added:      handlers/llm_handler.py
+	both added:      learning_path.py
+	both added:      state/ai_health.json
+	both added:      state/audit.jsonl
+	both added:      state/devices.json
+	both added:      state/governance.json
+	both added:      state/marketplace.json
+	both added:      state/missions/board.json
+	both added:      state/rewards_ledger.json
+	both added:      state/system_memory.json
+	both added:      state/takeover/manifest.json
+	both added:      state/takeover/runtime_command_registration_audit.json
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   core/firewall.py
+	modified:   handlers/autoexec_handler.py
+	modified:   handlers/exec_handler.py
+	modified:   security/policies.json
+	modified:   state/db.json
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	state/p0_backups/auth_authority_20260818T213101Z/
+	state/p0_backups/auth_authority_20260818T213415Z_firewall_before_delegate.py
+	state/p0_backups/auth_authority_20260818T213456Z_policies_before_exec.json
+	state/p0_backups/auth_authority_20260818T213630Z_exec_handlers_before_rbac/
+	state/p0_backups/git_pre_money_resolution_20260818_233713/
+	state/p0_backups/master_recovery_20260818T214641Z/
+
