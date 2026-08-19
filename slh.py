@@ -16,8 +16,6 @@ def cmd_users():
 def cmd_agents():
     db=load_db()
     for aid,a in db.get("agents",{}).items(): print(f"{aid} | {a['name']} | {a['state']}")
-def cmd_credits():
-    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
 def main():
     J.log("SLH vNEXT STARTED")
     while True:
@@ -25,7 +23,6 @@ def main():
         if choice=="1": cmd_status()
         elif choice=="2": cmd_users()
         elif choice=="3": cmd_agents()
-        elif choice=="4": cmd_credits()
         elif choice=="5": os.system("pkill -f bot_stable.py && nohup python3 bot_stable.py > bot.log 2>&1 &")
         elif choice=="6": break
         else: print("פקודה לא ידועה")

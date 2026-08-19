@@ -4,15 +4,8 @@ from datetime import datetime, timezone
 import state_manager
 
 DB_PATH = Path("state/db.json")
-LEDGER_PATH = Path("state/ledger.json")
 
 
-def _load_ledger():
-    if not LEDGER_PATH.exists():
-        return []
-    return json.loads(
-        LEDGER_PATH.read_text(encoding="utf-8")
-    )
 
 
 def get_balance_safe(uid):
@@ -52,7 +45,7 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
 
         wallet["credits"] = after
 
-        ledger = _load_ledger()
+        ledger = db.setdefault("ledger", [])
 
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
@@ -63,15 +56,6 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
             "reason": reason,
             "meta": meta,
         })
-
-        LEDGER_PATH.write_text(
-            json.dumps(
-                ledger,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
 
         return after
 
@@ -145,7 +129,7 @@ def record_ton_deposit(
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
 
-        ledger = _load_ledger()
+        ledger = db.setdefault("ledger", [])
 
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
@@ -161,15 +145,126 @@ def record_ton_deposit(
             },
         })
 
-        LEDGER_PATH.write_text(
-            json.dumps(
-                ledger,
-                indent=2,
-                ensure_ascii=False
-            ),
-            encoding="utf-8"
-        )
-
         return after
+
+    return state_manager.atomic_update(mutate)
+def stake_credits(uid, amount, meta=None):
+    """
+    Atomically move credits into staking.
+
+    Money invariant:
+        credits decreases by amount
+        staked increases by amount
+
+    Both mutations and the ledger entry are committed together.
+    """
+    if not isinstance(amount, (int, float)):
+        raise TypeError("amount must be numeric")
+
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+
+    meta = meta or {}
+
+    def mutate(db):
+        users = db.setdefault("users", {})
+        user = users.get(str(uid))
+
+        if user is None:
+            raise ValueError("user not found")
+
+        wallet = user.setdefault("wallet", {})
+
+        before_credits = wallet.get("credits", 0)
+        before_staked = wallet.get("staked", 0)
+
+        if before_credits < amount:
+            raise ValueError("insufficient credits")
+
+        after_credits = before_credits - amount
+        after_staked = before_staked + amount
+
+        wallet["credits"] = after_credits
+        wallet["staked"] = after_staked
+
+        db.setdefault("ledger", []).append({
+            "time": datetime.now(timezone.utc).isoformat(),
+            "uid": str(uid),
+            "before": before_credits,
+            "amount": -amount,
+            "after": after_credits,
+            "reason": "staking:stake",
+            "meta": {
+                **meta,
+                "staked_before": before_staked,
+                "staked_after": after_staked,
+            },
+        })
+
+        return {
+            "credits": after_credits,
+            "staked": after_staked,
+        }
+
+    return state_manager.atomic_update(mutate)
+
+
+def unstake_credits(uid, amount, meta=None):
+    """
+    Atomically return staked credits to the available balance.
+
+    Money invariant:
+        staked decreases by amount
+        credits increases by amount
+
+    Both mutations and the ledger entry are committed together.
+    """
+    if not isinstance(amount, (int, float)):
+        raise TypeError("amount must be numeric")
+
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+
+    meta = meta or {}
+
+    def mutate(db):
+        users = db.setdefault("users", {})
+        user = users.get(str(uid))
+
+        if user is None:
+            raise ValueError("user not found")
+
+        wallet = user.setdefault("wallet", {})
+
+        before_credits = wallet.get("credits", 0)
+        before_staked = wallet.get("staked", 0)
+
+        if before_staked < amount:
+            raise ValueError("insufficient staked balance")
+
+        after_staked = before_staked - amount
+        after_credits = before_credits + amount
+
+        wallet["staked"] = after_staked
+        wallet["credits"] = after_credits
+
+        db.setdefault("ledger", []).append({
+            "time": datetime.now(timezone.utc).isoformat(),
+            "uid": str(uid),
+            "before": before_credits,
+            "amount": amount,
+            "after": after_credits,
+            "reason": "staking:unstake",
+            "meta": {
+                **meta,
+                "staked_before": before_staked,
+                "staked_after": after_staked,
+            },
+        })
+
+        return {
+            "credits": after_credits,
+            "staked": after_staked,
+        }
 
     return state_manager.atomic_update(mutate)

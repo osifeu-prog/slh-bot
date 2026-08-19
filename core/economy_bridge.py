@@ -12,7 +12,7 @@ def add_credits(uid, amount, reason="bridge:add_credits", meta=None):
 
     IMPORTANT:
     All credit mutations are delegated to economy_service.record_transaction().
-    This keeps db.json and state/ledger.json synchronized.
+    The economy ledger is persisted atomically inside db.json.
     """
     return economy_service.record_transaction(
         uid=uid,

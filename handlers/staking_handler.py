@@ -1,39 +1,52 @@
-import json, os
+from core import economy_service
+
 
 def register(bot):
-    @bot.message_handler(commands=['stake'])
-    def stake_cmd(msg):
+    @bot.message_handler(commands=["stake"])
+    def stake(msg):
         try:
             amount = int(msg.text.split()[-1])
-            with open('state/db.json', encoding='utf-8') as f:
-                db = json.load(f)
-            user = db['users'].setdefault(str(msg.from_user.id), {}).setdefault('wallet', {})
-            if user.get('credits', 0) < amount:
-                bot.reply_to(msg, f"אין מספיק קרדיטים ({user.get('credits', 0)})")
-                return
-            user['credits'] -= amount
-            user.setdefault('staked', 0)
-            user['staked'] += amount
-            with open('state/db.json', 'w', encoding='utf-8') as f:
-                json.dump(db, f, ensure_ascii=False, indent=2)
-            bot.reply_to(msg, f"✅ {amount} credits הועברו לסטייקינג")
+            uid = str(msg.from_user.id)
+
+            result = economy_service.stake_credits(
+                uid,
+                amount,
+                meta={"source": "telegram", "command": "stake"},
+            )
+
+            bot.reply_to(
+                msg,
+                f"✅ {amount} credits הועברו לסטייקינג\n"
+                f"💰 יתרה: {result["credits"]}\n"
+                f"🔒 סטייק: {result["staked"]}"
+            )
+
+        except ValueError as e:
+            bot.reply_to(msg, f"❌ {e}")
         except Exception as e:
             bot.reply_to(msg, f"❌ {e}")
 
-    @bot.message_handler(commands=['unstake'])
-    def unstake_cmd(msg):
+
+    @bot.message_handler(commands=["unstake"])
+    def unstake(msg):
         try:
             amount = int(msg.text.split()[-1])
-            with open('state/db.json', encoding='utf-8') as f:
-                db = json.load(f)
-            user = db['users'].setdefault(str(msg.from_user.id), {}).setdefault('wallet', {})
-            if user.get('staked', 0) < amount:
-                bot.reply_to(msg, f"אין מספיק סטייק ({user.get('staked', 0)})")
-                return
-            user['staked'] -= amount
-            user['credits'] += amount
-            with open('state/db.json', 'w', encoding='utf-8') as f:
-                json.dump(db, f, ensure_ascii=False, indent=2)
-            bot.reply_to(msg, f"✅ {amount} credits הוחזרו מהסטייקינג")
+            uid = str(msg.from_user.id)
+
+            result = economy_service.unstake_credits(
+                uid,
+                amount,
+                meta={"source": "telegram", "command": "unstake"},
+            )
+
+            bot.reply_to(
+                msg,
+                f"✅ {amount} credits הוחזרו מהסטייקינג\n"
+                f"💰 יתרה: {result["credits"]}\n"
+                f"🔒 סטייק: {result["staked"]}"
+            )
+
+        except ValueError as e:
+            bot.reply_to(msg, f"❌ {e}")
         except Exception as e:
             bot.reply_to(msg, f"❌ {e}")
