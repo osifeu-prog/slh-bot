@@ -17,8 +17,8 @@ def register(bot):
             bot.reply_to(
                 msg,
                 f"✅ {amount} credits הועברו לסטייקינג\n"
-                f"💰 יתרה: {result["credits"]}\n"
-                f"🔒 סטייק: {result["staked"]}"
+                f"💰 יתרה: {result['credits']}\n"
+                f"🔒 סטייק: {result['staked']}"
             )
 
         except ValueError as e:
@@ -42,8 +42,8 @@ def register(bot):
             bot.reply_to(
                 msg,
                 f"✅ {amount} credits הוחזרו מהסטייקינג\n"
-                f"💰 יתרה: {result["credits"]}\n"
-                f"🔒 סטייק: {result["staked"]}"
+                f"💰 יתרה: {result['credits']}\n"
+                f"🔒 סטייק: {result['staked']}"
             )
 
         except ValueError as e:

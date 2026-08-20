@@ -37,7 +37,7 @@ def register(bot):
     def firewall_cmd(m):
 
         uid = str(m.from_user.id)
-        print(f"[FIREWALL DEBUG] uid={uid} first_name={getattr(m.from_user, "first_name", "")} username={getattr(m.from_user, "username", "")}")
+        print(f"[FIREWALL DEBUG] uid={uid} first_name={getattr(m.from_user, 'first_name', '')} username={getattr(m.from_user, 'username', '')}")
 
         if not _can_view_firewall(uid):
             log_deny(
