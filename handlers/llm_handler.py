@@ -209,10 +209,10 @@ def query_llm_with_context(question, uid=None):
         # SYSTEM IDENTITY
 
         if any(x in q for x in [
-            "׳׳™ ׳׳×׳”",
+            "מי אתה",
             "what are you",
             "who are you",
-            "׳׳” ׳׳×׳”"
+            "מה אתה"
         ]):
             return "׳׳ ׳™ SLH OS AI assistant. ׳׳ ׳™ ׳”׳׳¢׳¨׳›׳× ׳”׳—׳›׳׳” ׳©׳ SLH OS."
 
@@ -238,26 +238,26 @@ def query_llm_with_context(question, uid=None):
         if any(x in q for x in [
             "name",
             "my name",
-            "׳׳” ׳”׳©׳ ׳©׳׳™",
-            "׳׳™׳ ׳§׳•׳¨׳׳™׳ ׳׳™"
+            "מה השם שלי",
+            "איך קוראים לי"
         ]):
 
-            return f"׳”׳©׳ ׳©׳׳ ׳”׳•׳: {user.get('name','unknown')}"
+            return f"השם שלך הוא: {user.get('name','unknown')}"
 
 
         # ROLE
 
         if any(x in q for x in [
-            "׳׳” ׳”׳×׳₪׳§׳™׳“ ׳©׳׳™",
-            "׳׳” ׳×׳₪׳§׳™׳“׳™",
-            "׳׳” ׳”׳×׳₪׳§׳™׳“ ׳©׳׳™ ׳‘׳׳¢׳¨׳›׳×",
+            "מה התפקיד שלי",
+            "מה תפקידי",
+            "מה התפקיד שלי במערכת",
             "what is my role",
             "my role",
             "my permission",
-            "׳”׳¨׳©׳׳” ׳©׳׳™"
+            "מה ההרשאה שלי"
         ]):
 
-            return f"׳”׳×׳₪׳§׳™׳“ ׳©׳׳ ׳”׳•׳: {user.get('role','unknown')}"
+            return f"התפקיד שלך הוא: {user.get('role','unknown')}"
 
 
         # WALLET — LOCAL ANSWER, NO LLM
@@ -287,7 +287,7 @@ def query_llm_with_context(question, uid=None):
         if any(x in q for x in [
             "agent",
             "agents",
-            "׳¡׳•׳›׳",
+            "סוכן",
             "׳¡׳•׳›׳ ׳™׳"
         ]):
 
