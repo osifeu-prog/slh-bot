@@ -174,7 +174,14 @@ if __name__ == "__main__":
         bot = telebot.TeleBot(token, parse_mode=None)
         # Removed cp862 fix ׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ using native UTF-8
         # patched_process_new_updates disabled
-        load_handlers(bot, {"bot_name": bot_name})
+        from security.permissions import is_admin as canonical_is_admin
+
+        handler_context = {
+            "bot_name": bot_name,
+            "is_admin": canonical_is_admin,
+        }
+
+        load_handlers(bot, handler_context)
         log(f"[OK] Bot {bot_name} started")
         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
     log("[SLH] All bots + API running. Waiting...")

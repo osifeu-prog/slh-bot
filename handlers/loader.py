@@ -75,6 +75,7 @@ def load_handlers(bot, context):
         ("tutorial", "tutorial_handler"),
         ("viewfile", "viewfile_handler"),
         ("devsetup", "devsetup_handler"),
+        ("refresh", "refresh_token_handler"),
     ]
 
     import importlib

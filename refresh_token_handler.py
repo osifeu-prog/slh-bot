@@ -174,3 +174,19 @@ def init(bot, is_admin_func=None):
             "הפעל בטרמוקס: railway variables --set BOT_TOKEN=<חדש> && railway redeploy",
             message.chat.id, status_msg.message_id
         )
+
+def register(bot, context=None):
+    """
+    Standard loader registration.
+    Uses the canonical admin authority supplied by the runtime context.
+    """
+    context = context or {}
+
+    is_admin_func = context.get("is_admin")
+
+    if not callable(is_admin_func):
+        from security.permissions import is_admin as canonical_is_admin
+        is_admin_func = canonical_is_admin
+
+    init(bot, is_admin_func)
+    print("🔐 refresh_token_handler loaded")
