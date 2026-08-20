@@ -1,5 +1,6 @@
 import json
 from core import profile_manager
+from core.identity import OWNER_TELEGRAM_ID
 
 user_states = {}
 
@@ -8,6 +9,10 @@ def register(bot):
     @bot.message_handler(commands=['join'])
     def join_start(msg):
         uid = str(msg.from_user.id)
+
+        if int(uid) == int(OWNER_TELEGRAM_ID):
+            bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
+            return
 
         user_states[uid] = {"step": "name"}
         bot.reply_to(msg, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
@@ -18,6 +23,12 @@ def register(bot):
     )
     def join_steps(msg):
         uid = str(msg.from_user.id)
+
+        if int(uid) == int(OWNER_TELEGRAM_ID):
+            user_states.pop(uid, None)
+            bot.reply_to(msg, "👑 OWNER — אין הרשמה פעילה.")
+            return
+
         state = user_states[uid]
         step = state["step"]
 
