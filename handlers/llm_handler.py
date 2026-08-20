@@ -297,7 +297,7 @@ def query_llm_with_context(question, uid=None):
             ]
 
             return (
-                f"׳¡׳•׳›׳ ׳™׳ ׳₪׳¢׳™׳׳™׳: {len(agents)}\n"
+                f"׳¡׳•׳›׳ ׳™׳ פעילים: {len(agents)}\n"
                 + ", ".join(names)
             )
 
