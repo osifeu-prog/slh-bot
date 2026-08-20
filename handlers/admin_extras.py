@@ -8,9 +8,9 @@ def register(bot, context):
                 d = json.load(f)
             users = len(d.get('users', {}))
             agents = len(d.get('agents', {}))
-            bot.reply_to(m, f"ג… Health OK ג€“ Users: {users}, Agents: {agents}")
+            bot.reply_to(m, f"✅ Health OK – Users: {users}, Agents: {agents}")
         except:
-            bot.reply_to(m, "ג DB check failed")
+            bot.reply_to(m, "❌ DB check failed")
 
     @bot.message_handler(commands=['status'])
     def status(m):
@@ -35,7 +35,7 @@ def register(bot, context):
             with open('state/db.json', 'rb') as f:
                 bot.send_document(m.chat.id, f, visible_file_name='db_backup.json')
         except Exception as e:
-            bot.reply_to(m, f"ג Backup failed: {e}")
+            bot.reply_to(m, f"❌ Backup failed: {e}")
 
     @bot.message_handler(commands=['clean'])
     def clean(m):
@@ -57,5 +57,5 @@ def register(bot, context):
     def results(m):
         bot.reply_to(m, "🗳 No active vote. (voting engine not connected)")
 
-    print("ג… admin_extras loaded")
+    print("✅ admin_extras loaded")
 
