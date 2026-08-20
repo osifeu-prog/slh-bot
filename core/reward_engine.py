@@ -5,6 +5,7 @@ Single reward gateway
 
 from datetime import datetime
 from core import economy_bridge
+from core import profile_manager
 import json
 from pathlib import Path
 
