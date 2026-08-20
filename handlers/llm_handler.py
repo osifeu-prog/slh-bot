@@ -214,7 +214,7 @@ def query_llm_with_context(question, uid=None):
             "who are you",
             "מה אתה"
         ]):
-            return "׳׳ ׳™ SLH OS AI assistant. ׳׳ ׳™ ׳”׳׳¢׳¨׳›׳× ׳”׳—׳›׳׳” ׳©׳ SLH OS."
+            return "אני SLH OS AI assistant. אני המערכת החכמה של SLH OS."
 
 
         # OWNER IDENTITY
@@ -288,7 +288,7 @@ def query_llm_with_context(question, uid=None):
             "agent",
             "agents",
             "סוכן",
-            "׳¡׳•׳›׳ ׳™׳"
+            "סוכנים"
         ]):
 
             names = [
@@ -297,7 +297,7 @@ def query_llm_with_context(question, uid=None):
             ]
 
             return (
-                f"׳¡׳•׳›׳ ׳™׳ פעילים: {len(agents)}\n"
+                f"סוכנים פעילים: {len(agents)}\n"
                 + ", ".join(names)
             )
 
