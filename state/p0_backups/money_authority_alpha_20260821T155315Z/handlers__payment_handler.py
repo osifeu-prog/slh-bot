@@ -1,7 +1,8 @@
-import os
 import state_manager
 from core import profile_manager
+from core import reward_engine
 from telebot.types import LabeledPrice, PreCheckoutQuery
+from datetime import datetime
 
 PROVIDER_TOKEN = ""  # Telegram Stars native (XTR)
 
@@ -74,91 +75,82 @@ def register_payment_handlers(bot):
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
         uid = str(m.from_user.id)
-        payment = m.successful_payment
-
-        payload = payment.invoice_payload
+        charge_id = m.successful_payment.telegram_payment_charge_id
+        print(f"[PAY] Successful payment from {uid}, payload={m.successful_payment.invoice_payload}, charge_id={charge_id}")
+        payload = m.successful_payment.invoice_payload
         parts = payload.split("_")
-
         if len(parts) != 3 or parts[0] != "credits":
-            bot.send_message(
-                m.chat.id,
-                "❌ Invalid payment payload."
-            )
+            bot.send_message(m.chat.id, "❌ Invalid payment payload.")
             return
-
         try:
             credits = int(parts[1])
-        except Exception:
-            bot.send_message(
-                m.chat.id,
-                "❌ Error parsing credits."
-            )
+        except:
+            bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
 
-        try:
-            db = state_manager.load_db()
-            referrer_uid = db.get(
-                "referred_by",
-                {}
-            ).get(uid)
+        db = state_manager.load_db()
 
-            from core import economy_service
+        existing_charge_ids = {t.get("telegram_payment_charge_id") for t in db.get("transactions", [])}
+        if charge_id in existing_charge_ids:
+            print(f"[PAY] DUPLICATE payment ignored, charge_id={charge_id}, uid={uid}")
+            bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
+            return
 
-            result = economy_service.record_stars_payment(
-                uid=uid,
-                credits=credits,
-                stars_paid=payment.total_amount,
-                currency=payment.currency,
-                telegram_payment_charge_id=(
-                    payment.telegram_payment_charge_id
-                ),
-                provider_payment_charge_id=(
-                    payment.provider_payment_charge_id
-                ),
-                referrer_uid=referrer_uid,
-                meta={
-                    "source": "telegram_successful_payment",
-                    "invoice_payload": payload,
-                },
+        reward_engine.grant(
+            uid,
+            "payment_purchase",
+            credits=credits
+        )
+
+        # Referrer commission
+        referrer_uid = db.get("referred_by", {}).get(uid)
+        if referrer_uid:
+            commission = round(credits * 0.85, 2)
+            reward_engine.grant(
+                referrer_uid,
+                "referral_commission",
+                credits=commission
             )
-
-            if result["status"] == "duplicate":
+            db.setdefault("commissions", {}).setdefault(referrer_uid, 0)
+            db["commissions"][referrer_uid] += commission
+            print(f"[PAY] Commission {commission} to referrer {referrer_uid}")
+            try:
                 bot.send_message(
-                    m.chat.id,
-                    "ℹ️ This payment was already processed."
+                    int(referrer_uid),
+                    f"🎉 Your friend just purchased credits! You earned {commission} credits."
                 )
-                return
+            except Exception as e:
+                print(f"[PAY] Failed to notify referrer {referrer_uid}: {e}")
 
-            bot.send_message(
-                m.chat.id,
-                f"✅ Payment received! {credits} credits added.\n"
-                f"Your balance: {result['credits']} credits."
-            )
+        trans = {
+            "uid": uid,
+            "credits": credits,
+            "stars_paid": m.successful_payment.total_amount,
+            "currency": m.successful_payment.currency,
+            "telegram_payment_charge_id": charge_id,
+            "provider_payment_charge_id": m.successful_payment.provider_payment_charge_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db.setdefault("transactions", []).append(trans)
 
-            print(
-                f"[PAY] {credits} credits added to {uid}, "
-                f"charge_id={result['charge_id']}"
-            )
-
+        try:
+            state_manager.save_db(db)
         except Exception as e:
-            print(f"[PAY] Atomic payment failed: {e}")
-            bot.send_message(
-                m.chat.id,
-                "⚠️ Payment processing failed safely. "
-                "Please contact /paysupport."
-            )
+            print(f"[PAY] CRITICAL: save_db failed AFTER payment charged! uid={uid}, charge_id={charge_id}, credits={credits}, error={e}")
+            bot.send_message(m.chat.id, "⚠️ Payment received but there was an error saving your credits. Please contact support with this reference: " + charge_id)
+            try:
+                bot.send_message(8789977826, f"🚨 PAYMENT SAVE FAILED uid={uid} charge_id={charge_id} credits={credits} error={e}")
+            except Exception:
+                pass
+            return
 
-    @bot.message_handler(commands=['paysupport'])
-    def paysupport(m):
         bot.send_message(
             m.chat.id,
-            "💳 SLH Payment Support\n"
-            "For a payment issue, please send:\n"
-            "• payment date/time\n"
-            "• amount of Stars\n"
-            "• payment reference if available\n\n"
-            "We will review the transaction and assist."
+            f"✅ Payment received! {credits} credits added.\n"
+            f"Your balance: {profile_manager.get_balance(uid)} credits.\n"
+            "Use /buy to unlock features like /ask or premium agents."
         )
+        print(f"[PAY] {credits} credits added to {uid}, new balance {profile_manager.get_balance(uid)}")
 
     @bot.message_handler(commands=['history'])
     def history(m):
@@ -175,10 +167,7 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['revenue'])
     def revenue(m):
-        from admin_utils import is_admin
-        if not is_admin(m):
-            return
-
+        # Admin only? We'll keep open but can protect with is_admin if needed
         db = state_manager.load_db()
         txs = db.get("transactions", [])
         total_stars = sum(tx.get("stars_paid", 0) for tx in txs)
@@ -195,42 +184,21 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['fakepay'])
     def fakepay(m):
+        # Admin only
         from admin_utils import is_admin
         if not is_admin(m):
             return
-
-        if os.getenv("SLH_ALPHA_TEST_MODE", "0") != "1":
-            bot.send_message(
-                m.chat.id,
-                "⛔ Fake payments are disabled in Alpha."
-            )
-            return
-
         uid = str(m.from_user.id)
-
-        try:
-            from core import economy_service
-
-            balance = economy_service.record_transaction(
-                uid=uid,
-                amount=100,
-                reason="admin:test_payment",
-                meta={
-                    "source": "fakepay",
-                },
-            )
-
-            bot.send_message(
-                m.chat.id,
-                f"💰 100 test credits added. Balance: {balance}"
-            )
-
-        except Exception as e:
-            bot.send_message(
-                m.chat.id,
-                "❌ Test payment failed safely."
-            )
-            print(f"[PAY] fakepay error: {e}")
+        db = state_manager.load_db()
+        user = profile_manager.get_user(uid)
+        reward_engine.grant(
+            uid,
+            "fake_admin_payment",
+            credits=100
+        )
+        state_manager.save_db(db)
+        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: {profile_manager.get_balance(uid)}")
+        print(f"[FAKEPAY] 100 credits added to {uid}")
 
 
 def register(bot):

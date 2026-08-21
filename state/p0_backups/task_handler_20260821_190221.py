@@ -64,8 +64,6 @@ def task(message, bot):
 
 def task_done(message, bot):
 
-    from core import economy_service
-
     args = message.text.split()
 
     if len(args) < 2:
@@ -75,61 +73,58 @@ def task_done(message, bot):
         )
         return
 
+
     task_id = args[1]
+
+    db = load_db()
+
+    tasks = db.get("tasks", {})
+
+
+    if task_id not in tasks:
+        bot.send_message(
+            message.chat.id,
+            "❌ משימה לא קיימת"
+        )
+        return
+
+
+    task = tasks[task_id]
+
+
     uid = message.from_user.id
 
-    try:
-        result = economy_service.complete_task(
-            uid=uid,
-            task_id=task_id,
-            meta={
-                "source": "task_handler",
-                "telegram_user_id": str(uid),
-            },
-        )
 
-    except ValueError as e:
-
-        reason = str(e)
-
-        if reason == "TASK_NOT_FOUND":
-            bot.send_message(
-                message.chat.id,
-                "❌ משימה לא קיימת"
-            )
-            return
-
-        if reason == "TASK_ALREADY_COMPLETED":
-            bot.send_message(
-                message.chat.id,
-                "כבר השלמת משימה זו"
-            )
-            return
-
-        if reason == "USER_NOT_FOUND":
-            bot.send_message(
-                message.chat.id,
-                "❌ המשתמש אינו רשום. יש לבצע /join."
-            )
-            return
+    if uid in task.get("done_by", []):
 
         bot.send_message(
             message.chat.id,
-            "❌ השלמת המשימה נחסמה."
+            "כבר השלמת משימה זו"
         )
-        print(f"[TASK] task_done blocked: {e}")
         return
 
-    except Exception as e:
 
-        bot.send_message(
-            message.chat.id,
-            "❌ השלמת המשימה נכשלה בבטחה."
-        )
-        print(f"[TASK] task_done error: {e}")
-        return
+    reward = task.get(
+        "reward",
+        0
+    )
 
-    reward = result.get("reward", 0)
+
+    task.setdefault(
+        "done_by",
+        []
+    ).append(uid)
+
+
+    save_db(db)
+
+
+    reward_engine.grant(
+        uid,
+        "task_completed",
+        credits=reward
+    )
+
 
     bot.send_message(
         message.chat.id,

@@ -1,6 +1,8 @@
+from datetime import datetime
 import json
 import os
-from datetime import datetime
+
+import state_manager
 
 
 DB_PATH = "state/db.json"
@@ -15,14 +17,19 @@ def load_db():
             "votes": {}
         }
 
-    with open(DB_PATH,"r",encoding="utf-8") as f:
+    with open(DB_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def save_db(db):
-    os.makedirs("state",exist_ok=True)
+    """
+    Compatibility writer.
 
-    with open(DB_PATH,"w",encoding="utf-8") as f:
+    New mutation code should prefer state_manager.atomic_update().
+    """
+    os.makedirs("state", exist_ok=True)
+
+    with open(DB_PATH, "w", encoding="utf-8") as f:
         json.dump(
             db,
             f,
@@ -32,122 +39,102 @@ def save_db(db):
 
 
 def deep_merge(target, source):
-
-    for k,v in source.items():
-
+    for k, v in source.items():
         if (
-            isinstance(v,dict)
-            and isinstance(target.get(k),dict)
+            isinstance(v, dict)
+            and isinstance(target.get(k), dict)
         ):
-            deep_merge(
-                target[k],
-                v
-            )
-
+            deep_merge(target[k], v)
         else:
-            target[k]=v
+            target[k] = v
 
     return target
 
 
-
 def user_exists(uid):
-    """Read-only existence check. Never creates or saves a user."""
     uid = str(uid)
-    db = load_db()
+    db = state_manager.load_db()
     return uid in db.get("users", {})
 
 
-def get_user(uid):
-
-    uid=str(uid)
-
-    db=load_db()
-
-    users=db.setdefault("users",{})
-
-    if uid not in users:
-
-        users[uid]={
-            "name": f"User{uid}",
-            "display_name": f"User{uid}",
-            "telegram_name": f"User{uid}",
-            "role": "student",
-            "joined": False,
-            "permissions": [],
-            "profile":{
-                "created":datetime.utcnow().isoformat()
-            },
-            "wallet":{
-                "credits":0,
-                "staked":0,
-                "token_balance":0
-            },
-            "academy":{
-                "courses":{}
-            },
-            "gamification":{
-                "points":0,
-                "level":1
-            },
-            "referral":{
-                "code":None,
-                "count":0,
-                "commission":0
-            }
+def _default_user(uid):
+    return {
+        "name": f"User{uid}",
+        "display_name": f"User{uid}",
+        "telegram_name": f"User{uid}",
+        "role": "student",
+        "joined": False,
+        "permissions": [],
+        "profile": {
+            "created": datetime.utcnow().isoformat()
+        },
+        "wallet": {
+            "credits": 0,
+            "staked": 0,
+            "token_balance": 0
+        },
+        "academy": {
+            "courses": {}
+        },
+        "gamification": {
+            "points": 0,
+            "level": 1
+        },
+        "referral": {
+            "code": None,
+            "count": 0,
+            "commission": 0
         }
-
-        save_db(db)
-
-    return users[uid]
+    }
 
 
+def get_user(uid):
+    uid = str(uid)
 
-def update_user(uid,data):
+    db = state_manager.load_db()
+    users = db.get("users", {})
 
-    uid=str(uid)
+    if uid in users:
+        return users[uid]
 
-    db=load_db()
+    def create_user(db):
+        users = db.setdefault("users", {})
 
-    user=db.setdefault(
-        "users",
-        {}
-    ).setdefault(
-        uid,
-        {}
-    )
+        if uid not in users:
+            users[uid] = _default_user(uid)
 
-    deep_merge(
-        user,
-        data
-    )
+        return users[uid]
 
-    save_db(db)
+    return state_manager.atomic_update(create_user)
 
-    return user
 
+def update_user(uid, data):
+    uid = str(uid)
+
+    def mutate(db):
+        user = (
+            db.setdefault("users", {})
+              .setdefault(uid, _default_user(uid))
+        )
+
+        deep_merge(user, data)
+        return user
+
+    return state_manager.atomic_update(mutate)
 
 
 def get_balance(uid):
+    uid = str(uid)
+    db = state_manager.load_db()
+    user = db.get("users", {}).get(uid)
 
-    user=get_user(uid)
+    if not user:
+        return 0
 
-    return user.get(
-        "wallet",
-        {}
-    ).get(
-        "credits",
-        0
-    )
-
+    return user.get("wallet", {}).get("credits", 0)
 
 
 def add_balance(uid, amount):
-    """
-    Compatibility wrapper.
-
-    Credits must always pass through the global money authority.
-    """
     from core.economy_bridge import add_credits, spend_credits
 
     if amount >= 0:
@@ -164,87 +151,65 @@ def add_balance(uid, amount):
     )
 
 
+def add_points(uid, points):
+    uid = str(uid)
 
-def add_points(uid,points):
+    def mutate(db):
+        user = (
+            db.setdefault("users", {})
+              .setdefault(uid, _default_user(uid))
+        )
 
-    uid=str(uid)
+        game = user.setdefault("gamification", {})
+        game["points"] = game.get("points", 0) + points
+        game["level"] = (game["points"] // 100) + 1
 
-    db=load_db()
+        return dict(game)
 
-    user=db.setdefault(
-        "users",
-        {}
-    ).setdefault(
-        uid,
-        {}
-    )
-
-    game=user.setdefault(
-        "gamification",
-        {}
-    )
-
-    game["points"]=game.get(
-        "points",
-        0
-    )+points
-
-    game["level"]=(
-        game["points"]//100
-    )+1
-
-    save_db(db)
-
-    return game
+    return state_manager.atomic_update(mutate)
 
 
+def complete_course_stage(uid, course, stage):
+    uid = str(uid)
 
-def complete_course_stage(uid,course,stage):
+    def mutate(db):
+        user = (
+            db.setdefault("users", {})
+              .setdefault(uid, _default_user(uid))
+        )
 
-    uid=str(uid)
+        courses = (
+            user.setdefault("academy", {})
+                .setdefault("courses", {})
+        )
 
-    user=get_user(uid)
-
-    courses=user.setdefault(
-        "academy",
-        {}
-    ).setdefault(
-        "courses",
-        {}
-    )
-
-    c=courses.setdefault(
-        course,
-        {
-            "stage":0,
-            "completed":[]
-        }
-    )
-
-    if stage not in c["completed"]:
-        c["completed"].append(stage)
-
-    c["stage"]=max(
-        c["stage"],
-        stage
-    )
-
-    update_user(
-        uid,
-        {
-            "academy":{
-                "courses":courses
+        c = courses.setdefault(
+            course,
+            {
+                "stage": 0,
+                "completed": []
             }
-        }
-    )
+        )
 
-    return c
+        if stage not in c["completed"]:
+            c["completed"].append(stage)
 
+        c["stage"] = max(
+            c["stage"],
+            stage
+        )
+
+        return dict(c)
+
+    return state_manager.atomic_update(mutate)
 
 
 def get_progress(uid):
+    db = state_manager.load_db()
 
-    return get_user(uid).get(
-        "academy",
-        {}
+    return (
+        db.get("users", {})
+          .get(str(uid), {})
+          .get("academy", {})
+          .get("courses", {})
     )

@@ -63,34 +63,18 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
 
     execution_result = runtime.execute(event)
 
-    semantic_ok = (
-        isinstance(execution_result, dict)
-        and execution_result.get("type") == "agent"
-        and execution_result.get("data")
-        and isinstance(execution_result.get("data"), dict)
-        and execution_result["data"].get("execution_status") == "success"
-        and execution_result["data"].get("mission_id") == str(mission_id)
-    )
-
-    if semantic_ok:
+    if isinstance(execution_result, dict) and execution_result.get("type") == "agent":
         if status == "assigned":
             lifecycle.execute_mission(mission_id=mission_id)
-
-        completion = lifecycle.complete_mission(
-            mission_id=mission_id
-        )
-
+        lifecycle.complete_mission(mission_id=mission_id)
         lifecycle_result = {
-            "status": completion.get("status"),
+            "status": "completed",
             "mission_id": str(mission_id),
-            "completion": completion,
         }
     else:
         lifecycle_result = {
             "status": "execution_failed",
             "mission_id": str(mission_id),
-            "reason": "runtime_execution_semantics_not_verified",
-            "execution_result": execution_result,
         }
 
     return {

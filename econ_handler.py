@@ -1,64 +1,144 @@
+import os
 import state_manager
 from core import economy_bridge
+from core import economy_service
+from core import profile_manager
+
 
 def register_econ_handlers(bot):
+
     @bot.message_handler(commands=['balance'])
     def balance(m):
         uid = str(m.from_user.id)
-        db = state_manager.load_db()
         bal = profile_manager.get_balance(uid)
-        bot.send_message(m.chat.id, f"💰 Your balance: {bal} credits")
+        bot.send_message(
+            m.chat.id,
+            f"💰 Your balance: {bal} credits"
+        )
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith("buy_"))
+    @bot.callback_query_handler(
+        func=lambda call: call.data.startswith("buy_")
+    )
     def buy_callback(call):
+
         item = call.data.split("_", 1)[1]
         uid = str(call.from_user.id)
-        db = state_manager.load_db()
-        user = db.get("users", {}).get(uid)
-        if not user:
-            bot.answer_callback_query(call.id, "Please /join first.")
-            return
-        balance = profile_manager.get_balance(uid)
-        prices = {"ask_credit": 10, "premium_agent": 50}
-        price = prices.get(item, 0)
-        if price == 0:
-            bot.answer_callback_query(call.id, "Unknown item.")
-            return
-        if balance < price:
-            bot.answer_callback_query(call.id, f"Not enough credits. Need {price}, have {balance}.")
-            return
-        economy_bridge.spend_credits(uid, price)
-        if item == "ask_credit":
-            user.setdefault("ask_credits", 0)
-            user["ask_credits"] += 1
-        elif item == "premium_agent":
-            user["premium"] = True
-        referrer_uid = db.get("referred_by", {}).get(uid)
-        if referrer_uid:
-            commission = round(price * 0.85, 2)
-            economy_bridge.add_credits(referrer_uid, commission)
 
-        state_manager.save_db(db)
-        bot.answer_callback_query(call.id, f"✅ Purchased {item}! Remaining: {profile_manager.get_balance(uid)} credits")
-        bot.edit_message_text(
-            chat_id=call.message.chat.id,
-            message_id=call.message.message_id,
-            text=f"✅ Purchased {item} for {price} credits.\nRemaining: {profile_manager.get_balance(uid)} credits."
-        )
+        prices = {
+            "ask_credit": 10,
+            "premium_agent": 50,
+        }
+
+        price = prices.get(item)
+
+        if price is None:
+            bot.answer_callback_query(
+                call.id,
+                "Unknown item."
+            )
+            return
+
+        try:
+            db = state_manager.load_db()
+
+            if uid not in db.get("users", {}):
+                bot.answer_callback_query(
+                    call.id,
+                    "Please /join first."
+                )
+                return
+
+            referrer_uid = (
+                db.get("referred_by", {}).get(uid)
+            )
+
+            result = economy_service.purchase_item(
+                uid=uid,
+                item=item,
+                price=price,
+                referrer_uid=referrer_uid,
+                meta={
+                    "source": "telegram_buy",
+                },
+            )
+
+            bot.answer_callback_query(
+                call.id,
+                f"✅ Purchased {item}! "
+                f"Remaining: {result['credits']} credits"
+            )
+
+            bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=(
+                    f"✅ Purchased {item} for {price} credits.\n"
+                    f"Remaining: {result['credits']} credits."
+                )
+            )
+
+        except ValueError as e:
+            if str(e) == "INSUFFICIENT_CREDITS":
+                balance_now = profile_manager.get_balance(uid)
+                bot.answer_callback_query(
+                    call.id,
+                    (
+                        f"Not enough credits. "
+                        f"Need {price}, have {balance_now}."
+                    )
+                )
+                return
+
+            bot.answer_callback_query(
+                call.id,
+                f"Purchase blocked: {e}"
+            )
+
+        except Exception as e:
+            bot.answer_callback_query(
+                call.id,
+                "Purchase failed safely."
+            )
+            print(f"[ECON] purchase error: {e}")
 
     @bot.message_handler(commands=['giveme'])
     def giveme(m):
         from admin_utils import is_admin
+
         if not is_admin(m):
             return
+
+        if os.getenv("SLH_ALPHA_TEST_MODE", "0") != "1":
+            bot.send_message(
+                m.chat.id,
+                "⛔ Test credit grants are disabled in Alpha."
+            )
+            return
+
         uid = str(m.from_user.id)
-        db = state_manager.load_db()
-        economy_bridge.add_credits(uid, 50)
-        state_manager.save_db(db)
-        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: {profile_manager.get_balance(uid)} credits")
+
+        try:
+            balance = economy_service.record_transaction(
+                uid=uid,
+                amount=50,
+                reason="admin:test_grant",
+                meta={
+                    "source": "giveme",
+                },
+            )
+
+            bot.send_message(
+                m.chat.id,
+                f"💰 50 test credits added. Balance: {balance}"
+            )
+
+        except Exception as e:
+            bot.send_message(
+                m.chat.id,
+                "❌ Test credit grant failed safely."
+            )
+            print(f"[ECON] giveme error: {e}")
 
 
 def register(bot):
     register_econ_handlers(bot)
-
-

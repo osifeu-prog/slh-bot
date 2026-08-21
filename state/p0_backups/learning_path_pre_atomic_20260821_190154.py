@@ -46,107 +46,112 @@ def register_learning_path(bot):
 
     @bot.message_handler(commands=['agent_submit'])
     def agent_submit(m):
-        from core import economy_service
-
         uid = str(m.from_user.id)
         parts = m.text.split(maxsplit=1)
-
         if len(parts) < 2:
-            bot.send_message(
-                m.chat.id,
-                "Usage: /agent_submit <agent_name>"
-            )
+            bot.send_message(m.chat.id, "Usage: /agent_submit <agent_name> â ×××© ××ª ××¡××× ×©×× ××ª ××©××§!")
             return
-
         agent_name = parts[1].strip()
+        def mutate(db):
+            submissions = db.setdefault("agent_submissions", [])
+            submissions.append({
+                "uid": uid,
+                "agent_name": agent_name,
+                "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+            })
+            return submissions[-1]
 
         try:
-            result = economy_service.submit_agent(
-                uid=uid,
-                agent_name=agent_name,
-                reward=10,
+            state_manager.atomic_update(mutate)
+
+            economy_bridge.add_credits(
+                uid,
+                10,
+                reason="agent_submission",
                 meta={
                     "source": "learning_path",
-                    "telegram_user_id": uid,
+                    "agent_name": agent_name,
                 },
             )
-
-            bot.send_message(
-                m.chat.id,
-                f"✅ Agent '{agent_name}' submitted!\n"
-                f"💰 +{result['reward']} Credits"
-            )
-
-            bot.send_message(
-                8789977826,
-                f"📦 Submission from {uid}: {agent_name}"
-            )
-
         except Exception as e:
             bot.send_message(
                 m.chat.id,
-                "❌ Submission failed safely."
+                "❌ Submission/reward failed safely."
             )
-            print(
-                f"[LEARNING_PATH] agent_submit error: {e}"
-            )
+            print(f"[LEARNING_PATH] agent_submit error: {e}")
+            return
+        bot.send_message(m.chat.id, f"ð ××¡××× '{agent_name}' ××××©!\n×§××××ª 10 Credits ×¢× ××××©×.\n×× ××××©×¨, ×ª×§×× ×¢×× 40 Credits ×××× ×××¤××¢ ×-/market.")
+        bot.send_message(8789977826, f"ð¢ Submission from {uid}: {agent_name}")
 
     # 4. Admin: Approve/Reject submissions
     @bot.message_handler(commands=['agent_approve'])
     def agent_approve(m):
         from admin_utils import is_admin
-        from core import economy_service
-
         if not is_admin(m):
-            bot.reply_to(m, "⛔ Admin only")
+            bot.reply_to(m, "âï¸ Admin only")
             return
-
         parts = m.text.split(maxsplit=1)
-
         if len(parts) < 2:
-            bot.reply_to(
-                m,
-                "Usage: /agent_approve <submission_id>"
-            )
+            bot.reply_to(m, "Usage: /agent_approve <submission_id>")
             return
-
         try:
             sub_id = int(parts[1])
-        except Exception:
+        except:
             bot.reply_to(m, "Invalid ID.")
             return
+        db = state_manager.load_db()
+        submissions = db.get("agent_submissions", [])
+
+        if sub_id < 0 or sub_id >= len(submissions):
+            bot.reply_to(m, "Submission not found.")
+            return
+
+        sub = submissions[sub_id]
+        creator_uid = str(sub["uid"])
+
+        def mutate(db):
+            submissions = db.setdefault("agent_submissions", [])
+
+            if sub_id < 0 or sub_id >= len(submissions):
+                raise ValueError("SUBMISSION_NOT_FOUND")
+
+            current = submissions[sub_id]
+
+            if str(current.get("uid")) != creator_uid:
+                raise ValueError("SUBMISSION_CHANGED")
+
+            marketplace = db.setdefault("marketplace", [])
+            marketplace.append({
+                "name": current["agent_name"],
+                "creator": creator_uid,
+                "approved_at": __import__("datetime").datetime.utcnow().isoformat(),
+            })
+
+            del submissions[sub_id]
+
+            return current
 
         try:
-            result = economy_service.approve_agent_submission(
-                submission_id=sub_id,
-                reward=40,
+            approved = state_manager.atomic_update(mutate)
+
+            economy_bridge.add_credits(
+                creator_uid,
+                40,
+                reason="agent_approval",
                 meta={
                     "source": "learning_path",
-                    "approved_by": str(m.from_user.id),
+                    "agent_name": approved["agent_name"],
                 },
             )
-
-            bot.reply_to(
-                m,
-                f"✅ Agent '{result['agent_name']}' approved "
-                f"and added to /market!\n"
-                f"💰 Creator received +{result['reward']} Credits."
-            )
-
-            bot.send_message(
-                result["creator_uid"],
-                f"🎉 Agent '{result['agent_name']}' approved!\n"
-                f"💰 +{result['reward']} Credits"
-            )
-
         except Exception as e:
             bot.reply_to(
                 m,
-                "❌ Approval failed safely."
+                "❌ Approval/reward failed safely."
             )
-            print(
-                f"[LEARNING_PATH] agent_approve error: {e}"
-            )
+            print(f"[LEARNING_PATH] agent_approve error: {e}")
+            return
+        bot.reply_to(m, f"â Agent '{sub['agent_name']}' approved and added to /market! Creator received 40 Credits.")
+        bot.send_message(sub["uid"], f"ð ××¡××× '{sub['agent_name']}' ×××©×¨! ×§××××ª 40 Credits × ××¡×¤××. ××× ×××× ×¢××©×× ×-/market.")
 
     @bot.message_handler(commands=['agent_reject'])
     def agent_reject(m):
