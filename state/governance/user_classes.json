@@ -1,0 +1,3 @@
+git add state/governance/user_classes.json
+git commit -m "Add alpha user governance classification"
+git push
