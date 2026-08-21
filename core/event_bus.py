@@ -5,6 +5,7 @@ class EventBus:
     _pending = []
 
     def __init__(self, workers=2):
+        self.bus = self
         self.handlers = {}
         self.running = False
         self.workers = workers
