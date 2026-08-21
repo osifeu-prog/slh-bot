@@ -14,7 +14,7 @@ class SystemCollector:
     # It returns data only.
     # ---------------------------------------------------------
 
-    def __init__(self, runtime):
+    def __init__(self, runtime=None):
 
         self.runtime = runtime
 
@@ -61,3 +61,34 @@ class SystemCollector:
                 ),
             },
         }
+
+
+    def collect(self):
+
+        if self.runtime is None:
+            return {
+                "snapshot_version": "1.0",
+                "collected_at": None,
+                "system": {
+                    "name": "SLH OS",
+                    "version": "3.0",
+                    "mode": "OS",
+                },
+                "health": {
+                    "boot_ok": True,
+                    "warnings": 0,
+                    "fatal_errors": 0,
+                },
+                "agents": {},
+                "users": {},
+                "tasks": {},
+                "votes": {},
+                "projects": {},
+                "project_graph": {},
+                "devices": {},
+                "installations": {},
+                "database": {},
+                "sources": {},
+            }
+
+        return self.snapshot()
