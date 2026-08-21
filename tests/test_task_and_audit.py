@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Test Task creation + Audit logging"""
 import sys, os, time, json
 
@@ -11,10 +11,10 @@ FAIL = 0
 def test(name, condition):
     global PASS, FAIL
     if condition:
-        print(f"✅ {name}")
+        print(f"ג… {name}")
         PASS += 1
     else:
-        print(f"❌ {name}")
+        print(f"ג {name}")
         FAIL += 1
 
 # 1. Test audit_logger
@@ -76,6 +76,7 @@ except Exception as e:
     test("Task list handler works", False)
 
 print(f"\n{'='*40}")
-print(f"✅ PASSED: {PASS}  ❌ FAILED: {FAIL}")
+print(f"ג… PASSED: {PASS}  ג FAILED: {FAIL}")
 print(f"{'='*40}")
-sys.exit(0 if FAIL == 0 else 1)
+if __name__ == "__main__":
+    sys.exit(0 if FAIL == 0 else 1)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Agent OS Unit Tests"""
 import json, os, time, sys
 
@@ -8,10 +8,10 @@ FAIL = 0
 def test(name, condition):
     global PASS, FAIL
     if condition:
-        print(f"✅ {name}")
+        print(f"ג… {name}")
         PASS += 1
     else:
-        print(f"❌ {name}")
+        print(f"ג {name}")
         FAIL += 1
 
 # 1. Simulate agent creation
@@ -23,7 +23,7 @@ test("Agent created in dict", aid in agents)
 
 # 2. Change state
 agents[aid]["state"] = "busy"
-agents[aid]["history"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "action": "state→busy"})
+agents[aid]["history"].append({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "action": "stateג†’busy"})
 test("State changed", agents[aid]["state"] == "busy")
 test("History recorded", len(agents[aid]["history"]) > 0)
 
@@ -46,6 +46,7 @@ os.remove(path)
 test("Permissions exist", "read" in agents[aid]["permissions"])
 
 print(f"\n{'='*40}")
-print(f"✅ PASSED: {PASS}  ❌ FAILED: {FAIL}")
+print(f"ג… PASSED: {PASS}  ג FAILED: {FAIL}")
 print(f"{'='*40}")
-sys.exit(0 if FAIL == 0 else 1)
+if __name__ == "__main__":
+    sys.exit(0 if FAIL == 0 else 1)

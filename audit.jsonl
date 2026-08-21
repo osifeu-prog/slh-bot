@@ -60,3 +60,6 @@
 {"time": "2026-07-23 08:12:55", "user": "system", "action": "end_of_day", "details": "System closed successfully"}
 {"time": "2026-07-23 08:23:28", "user": "system", "action": "evening_close", "details": "ESP32 online, system stable"}
 {"time": "2026-07-27 12:02:28", "user": "test_user", "action": "test_action", "details": "test_details"}
+{"time": "2026-08-21 19:44:43", "user": "test_user", "action": "test_action", "details": "test_details"}
+{"time": "2026-08-21 19:44:58", "user": "test_user", "action": "test_action", "details": "test_details"}
+{"time": "2026-08-21 19:46:03", "user": "test_user", "action": "test_action", "details": "test_details"}
