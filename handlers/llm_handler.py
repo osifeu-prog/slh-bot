@@ -94,7 +94,8 @@ def ask_groq(prompt):
                     "content": prompt
                 }
             ],
-            max_tokens=500
+            max_tokens=2000,
+            reasoning_effort="low"
         )
 
         return resp.choices[0].message.content
