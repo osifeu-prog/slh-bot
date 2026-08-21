@@ -1,3 +1,25 @@
-git add state/governance/user_classes.json
-git commit -m "Add alpha user governance classification"
-git push
+﻿{
+  "owner": [
+    "8789977826"
+  ],
+  "alpha_students": [
+    "224223270",
+    "5010371391"
+  ],
+  "core_developers": [
+    "7757102350",
+    "8791275334",
+    "1518680802"
+  ],
+  "internal_system": [
+    "123456789",
+    "ECON_TEST_USER",
+    "TEST_AUTHORITY"
+  ],
+  "review": [
+    "6332323773",
+    "8847192372",
+    "12345",
+    "972500000001"
+  ]
+}
