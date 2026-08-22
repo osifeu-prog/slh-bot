@@ -45,6 +45,7 @@ def load_handlers(bot, context):
         ("system", "handlers.system_handler"),
         ("user", "handlers.user_handler"),
         ("services", "handlers.services_handler"),
+        ("services", "handlers.services_handler"),
         ("voting", "handlers.ai_voting_handler"),
         ("governance", "handlers.governance_handler"),
         ("broadcast", "handlers.broadcast_handler"),
