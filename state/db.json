@@ -6,7 +6,7 @@
         "joined": "2026-08-07T22:43:47.559294"
       },
       "wallet": {
-        "credits": 1316,
+        "credits": 11815,
         "staked": 136,
         "token_balance": 0
       },
@@ -62,145 +62,6 @@
         "device_count": 3,
         "verified_devices": 3
       }
-    },
-    "8791275334": {
-      "profile": {
-        "created": "2026-08-13T16:08:03.161333"
-      },
-      "wallet": {
-        "credits": 10449,
-        "staked": 50,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {
-          "bitcoin_mastery": {
-            "stage": 12,
-            "completed": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10,
-              11,
-              12
-            ],
-            "total_stages": 12
-          }
-        },
-        "active_course": "bitcoin_mastery"
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "name": "גיא גולדשטיין",
-      "display_name": "גיא גולדשטיין",
-      "telegram_name": "גיא גולדשטיין",
-      "role": "developer",
-      "joined": true,
-      "permissions": [
-        "agent_builder",
-        "agent_create",
-        "course_graduate",
-        "dev",
-        "read",
-        "staking",
-        "test",
-        "ui_ux"
-      ],
-      "group": "Bitcoin Masters",
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
-    },
-    "5010371391": {
-      "profile": {
-        "created": "2026-08-13T18:34:17.515767"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "name": "צביקה קאופמן",
-      "display_name": "User5010371391",
-      "telegram_name": "User5010371391",
-      "role": "student",
-      "joined": true,
-      "permissions": [],
-      "group": "לא החלטתי",
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
-    },
-    "1518680802": {
-      "name": "עידן מנור",
-      "display_name": "User1518680802",
-      "telegram_name": "User1518680802",
-      "role": "developer",
-      "joined": true,
-      "permissions": [
-        "db_read",
-        "exec_request",
-        "read_logs"
-      ],
-      "profile": {
-        "created": "2026-08-17T08:30:14.282146"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {},
-        "active_course": "bitcoin_mastery"
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "group": "DevOps / AI Builders",
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
     }
   },
   "students": {
@@ -208,121 +69,50 @@
       "status": "active"
     }
   },
-  "tasks": {},
-  "votes": {
-    "1": {
-      "text": "\"האם להוסיף קורס AI?\" – הצעה.",
-      "by": "8789977826",
-      "time": 1786232582.536529,
-      "yes": 1,
-      "no": 1,
-      "voters": {
-        "8789977826": "yes",
-        "7757102350": "no"
-      },
-      "status": "approved",
-      "result": "add AI course"
+  "tasks": {
+    "alpha_identity": {
+      "title": "Alpha Identity",
+      "status": "done",
+      "progress": 100
     },
-    "2": {
-      "text": "\"האם לאשר את פריסת ערוצי התשלום וה־Mini App בגרסת הייצור?\" – הצעה מנוהלת.",
-      "by": "8789977826",
-      "time": 1786384994.461242,
-      "yes": 1,
-      "no": 0,
-      "voters": {
-        "8789977826": "yes"
-      },
-      "status": "approved",
-      "result": "deploy payment channels & Mini App"
+    "alpha_wallet": {
+      "title": "Alpha Wallet",
+      "status": "done",
+      "progress": 80
+    },
+    "alpha_agents": {
+      "title": "Alpha Agents",
+      "status": "active",
+      "progress": 30
+    },
+    "alpha_academy": {
+      "title": "Alpha Academy",
+      "status": "active",
+      "progress": 40
+    },
+    "alpha_economy": {
+      "title": "Alpha Economy",
+      "status": "active",
+      "progress": 0
+    },
+    "alpha_store": {
+      "title": "Alpha Store",
+      "status": "active",
+      "progress": 45
+    },
+    "alpha_user_journey": {
+      "title": "Alpha User Journey",
+      "status": "active",
+      "progress": 35
+    },
+    "alpha_exchange": {
+      "title": "Alpha Exchange (Binance)",
+      "status": "planned",
+      "progress": 0
     }
   },
+  "votes": {},
   "agents": {
-    "1": {
-      "name": "SystemGuard",
-      "state": "active",
-      "id": "1",
-      "role": "security",
-      "owner_id": "8789977826",
-      "inbox": [
-        "אתה מוזמן לשאול אותי שאלות על המערכת דרך /ask SystemGuard",
-        "אתה מוזמן לשאול אותי שאלות על המערכת דרך /ask SystemGuard (למפתח 7757102350)"
-      ],
-      "history": [],
-      "permissions": [
-        "monitor",
-        "audit"
-      ],
-      "created": "2026-08-07T22:43:47",
-      "runtime_class": "SystemGuardAgent",
-      "agent_type": "system",
-      "visibility": "owner_only"
-    },
-    "2": {
-      "name": "DoctorAgent",
-      "state": "active",
-      "id": "2",
-      "role": "doctor",
-      "owner_id": "8789977826",
-      "inbox": [],
-      "history": [],
-      "permissions": [
-        "diagnose",
-        "heal"
-      ],
-      "created": "2026-08-07T22:43:47",
-      "agent_type": "system",
-      "visibility": "owner_only"
-    },
-    "3": {
-      "name": "SyncAgent",
-      "state": "active",
-      "id": "3",
-      "role": "sync",
-      "owner_id": "8789977826",
-      "inbox": [],
-      "history": [],
-      "permissions": [
-        "sync_data",
-        "update"
-      ],
-      "created": "2026-08-07T22:43:47",
-      "agent_type": "system",
-      "visibility": "owner_only"
-    },
-    "4": {
-      "name": "TokenAgent",
-      "state": "active",
-      "id": "4",
-      "role": "token",
-      "owner_id": "8789977826",
-      "inbox": [],
-      "history": [],
-      "permissions": [
-        "manage_tokens",
-        "send"
-      ],
-      "created": "2026-08-07T22:43:47",
-      "agent_type": "system",
-      "visibility": "owner_only"
-    },
-    "5": {
-      "name": "GuyTamagotchi",
-      "state": "active",
-      "id": "5",
-      "role": "personal_assistant",
-      "owner_id": "8791275334",
-      "inbox": [],
-      "history": [],
-      "permissions": [
-        "journal",
-        "tasks",
-        "assist",
-        "reminders"
-      ],
-      "created": "2026-08-15T17:04:34",
-      "agent_type": "personal",
-      "visibility": "owner_and_self"
-    },
     "6": {
       "id": "6",
       "name": "Osif-Agent",
@@ -331,23 +121,20 @@
       "owner_id": "8789977826",
       "inbox": [],
       "history": [],
-      "permissions": [],
+      "permissions": [
+        "assist_owner",
+        "system_read",
+        "system_control"
+      ],
       "created": "2026-08-17T17:29:27.939742",
       "agent_type": "personal",
-      "visibility": "owner_only"
-    },
-    "9": {
-      "id": "9",
-      "name": "גיא גולדשטיין-Agent",
-      "state": "idle",
-      "role": "agent",
-      "owner_id": "8791275334",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-08-22T11:17:12.441211",
-      "agent_type": "personal",
-      "visibility": "owner_and_self"
+      "visibility": "owner_only",
+      "system_services": [
+        "SystemGuard",
+        "DoctorAgent",
+        "SyncAgent",
+        "TokenAgent"
+      ]
     }
   },
   "products": {
@@ -823,109 +610,230 @@
       "meta": {}
     },
     {
-      "time": "2026-08-21T17:01:45.554796+00:00",
-      "uid": "ECON_TEST_USER",
-      "before": 850,
-      "amount": 100,
-      "after": 950,
-      "reason": "railway_authority_test",
-      "meta": {}
-    },
-    {
-      "time": "2026-08-21T17:01:45.556275+00:00",
-      "uid": "ECON_TEST_USER",
-      "before": 950,
-      "amount": -40,
-      "after": 910,
-      "reason": "staking:stake",
-      "meta": {
-        "staked_before": 200,
-        "staked_after": 240
+      "time": "2026-08-22T16:12:41.978584+00:00",
+      "type": "alpha_consolidate",
+      "from": "8791275334",
+      "to": "8789977826",
+      "credits": 10449,
+      "staked_moved": 50,
+      "reason": "OWNER_ONLY_CREDITS_POLICY"
+    }
+  ],
+  "users_archive": {
+    "8791275334": {
+      "profile": {
+        "created": "2026-08-13T16:08:03.161333"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 12,
+            "completed": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "total_stages": 12
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "name": "גיא גולדשטיין",
+      "display_name": "גיא גולדשטיין",
+      "telegram_name": "גיא גולדשטיין",
+      "role": "developer",
+      "joined": true,
+      "permissions": [
+        "agent_builder",
+        "agent_create",
+        "course_graduate",
+        "dev",
+        "read",
+        "staking",
+        "test",
+        "ui_ux"
+      ],
+      "group": "Bitcoin Masters",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
       }
     },
-    {
-      "time": "2026-08-21T17:02:13.672920+00:00",
-      "uid": "ECON_TEST_USER",
-      "before": 910,
-      "amount": 100,
-      "after": 1010,
-      "reason": "railway_authority_test",
-      "meta": {}
-    },
-    {
-      "time": "2026-08-21T17:02:13.675836+00:00",
-      "uid": "ECON_TEST_USER",
-      "before": 1010,
-      "amount": -40,
-      "after": 970,
-      "reason": "staking:stake",
-      "meta": {
-        "staked_before": 240,
-        "staked_after": 280
+    "5010371391": {
+      "profile": {
+        "created": "2026-08-13T18:34:17.515767"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "name": "צביקה קאופמן",
+      "display_name": "User5010371391",
+      "telegram_name": "User5010371391",
+      "role": "student",
+      "joined": true,
+      "permissions": [],
+      "group": "לא החלטתי",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
       }
     },
-    {
-      "time": "2026-08-21T18:22:12.036641+00:00",
-      "uid": "P0_RUNTIME_TEST_USER",
-      "before": 0,
-      "amount": 10,
-      "after": 10,
-      "reason": "P0_TEST",
-      "meta": {}
-    },
-    {
-      "time": "2026-08-21T21:34:32.755460+00:00",
-      "uid": "P0_RUNTIME_TEST_USER",
-      "before": 10,
-      "amount": -1,
-      "after": 9,
-      "reason": "staking:stake",
-      "meta": {
-        "source": "controlled_test",
-        "staked_before": 0,
-        "staked_after": 1
-      }
-    },
-    {
-      "time": "2026-08-21T21:34:32.757511+00:00",
-      "uid": "P0_RUNTIME_TEST_USER",
-      "before": 9,
-      "amount": 1,
-      "after": 10,
-      "reason": "staking:unstake",
-      "meta": {
-        "source": "controlled_cleanup",
-        "staked_before": 1,
-        "staked_after": 0
-      }
-    },
-    {
-      "time": "2026-08-22T11:40:48.738155+00:00",
-      "uid": "123456789",
-      "before": 9999,
-      "amount": -1,
-      "after": 9998,
-      "reason": "staking:stake",
-      "meta": {
-        "source": "P0_RUNTIME_AUDIT",
-        "test": "staking_round_trip",
-        "staked_before": 0,
-        "staked_after": 1
-      }
-    },
-    {
-      "time": "2026-08-22T11:40:48.739510+00:00",
-      "uid": "123456789",
-      "before": 9998,
-      "amount": 1,
-      "after": 9999,
-      "reason": "staking:unstake",
-      "meta": {
-        "source": "P0_RUNTIME_AUDIT",
-        "test": "staking_round_trip",
-        "staked_before": 1,
-        "staked_after": 0
+    "1518680802": {
+      "name": "עידן מנור",
+      "display_name": "User1518680802",
+      "telegram_name": "User1518680802",
+      "role": "developer",
+      "joined": true,
+      "permissions": [
+        "db_read",
+        "exec_request",
+        "read_logs"
+      ],
+      "profile": {
+        "created": "2026-08-17T08:30:14.282146"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {},
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "group": "DevOps / AI Builders",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
       }
     }
-  ]
+  },
+  "agents_archive": {
+    "5": {
+      "name": "GuyTamagotchi",
+      "state": "active",
+      "id": "5",
+      "role": "personal_assistant",
+      "owner_id": "8791275334",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "journal",
+        "tasks",
+        "assist",
+        "reminders"
+      ],
+      "created": "2026-08-15T17:04:34",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    },
+    "9": {
+      "id": "9",
+      "name": "גיא גולדשטיין-Agent",
+      "state": "idle",
+      "role": "agent",
+      "owner_id": "8791275334",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-22T11:17:12.441211",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    }
+  },
+  "ton_settings": {
+    "wallet": "UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj",
+    "rate": 100,
+    "testnet": false
+  },
+  "system_services": {
+    "SystemGuard": {
+      "legacy_id": "1",
+      "role": "security",
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "status": "active"
+    },
+    "DoctorAgent": {
+      "legacy_id": "2",
+      "role": "doctor",
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "status": "active"
+    },
+    "SyncAgent": {
+      "legacy_id": "3",
+      "role": "sync",
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "status": "active"
+    },
+    "TokenAgent": {
+      "legacy_id": "4",
+      "role": "token",
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "status": "active"
+    }
+  }
 }

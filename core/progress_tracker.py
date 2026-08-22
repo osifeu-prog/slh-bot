@@ -1,32 +1,50 @@
-import json, time
+import json
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 DB_PATH = Path("state/db.json")
 WORK_LOG_PATH = Path("state/work_log.json")
+
+TASK_CATEGORY_MAP = {
+    "alpha_identity": "Identity",
+    "alpha_wallet": "Wallet",
+    "alpha_agents": "AI Agents",
+    "alpha_academy": "Academy",
+    "alpha_economy": "Economy authority",
+    "alpha_store": "Store",
+    "alpha_user_journey": "Real user journey",
+    "alpha_exchange": "Exchange (Binance)",
+}
 
 def _load_db():
     return json.loads(DB_PATH.read_text(encoding="utf-8"))
 
 def get_progress():
     db = _load_db()
-    users = len(db.get("users", {}))
-    agents = len(db.get("agents", {}))
-    tasks = len(db.get("tasks", {}))
-    ledger = len(db.get("ledger", []))
+    tasks = db.get("tasks", {})
+    services = db.get("system_services", {})
+    users = db.get("users", {})
+    ledger = db.get("ledger", [])
+    agents = db.get("agents", {})
 
-    checks = [
-        ("Infrastructure", 90 if DB_PATH.exists() else 0),
-        ("Runtime", 90 if Path("bot_gateway.py").exists() else 0),
-        ("Identity", 80 if users >= 1 else 0),
-        ("Wallet", 80 if users > 0 else 0),
-        ("Economy authority", 70 if ledger > 0 else 0),
-        ("Store", 45 if Path("handlers/store_handler.py").exists() else 0),
-        ("Real user journey", 35 if users > 0 and agents > 0 else 0),
-        ("AI Agents", 75 if agents >= 4 else 0),
-        ("Security", 85 if Path("handlers/firewall_handler.py").exists() else 0),
-        ("Ledger Integrity", 100 if ledger > 0 else 0),
-    ]
+    checks = []
+
+    # Infrastructure / Runtime / Security are foundation
+    checks.append(("Infrastructure", 90 if DB_PATH.exists() else 0))
+    checks.append(("Runtime", 90 if Path("bot_gateway.py").exists() else 0))
+    checks.append(("Security", 85 if Path("handlers/firewall_handler.py").exists() else 0))
+
+    # Category progress from tasks
+    for task_id, label in TASK_CATEGORY_MAP.items():
+        task = tasks.get(task_id, {})
+        progress = task.get("progress", 0)
+        checks.append((label, progress))
+
+    # Ledger integrity
+    checks.append(("Ledger Integrity", 100 if ledger else 0))
+
+    # sort to keep stable order
     return checks
 
 def _load_work_log():
@@ -42,7 +60,7 @@ def start_work(task_name, user_id):
     log.append({
         "task": task_name,
         "user": str(user_id),
-        "start": datetime.now(timezone.utc).isoformat(),
+        "start": datetime.now(ZoneInfo("Asia/Jerusalem")).isoformat(),
         "stop": None
     })
     WORK_LOG_PATH.write_text(json.dumps(log, indent=2, ensure_ascii=False))
@@ -50,7 +68,7 @@ def start_work(task_name, user_id):
 
 def stop_work(task_name, user_id):
     log = _load_work_log()
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(ZoneInfo("Asia/Jerusalem")).isoformat()
     updated = False
     for entry in reversed(log):
         if entry.get("task") == task_name and entry.get("user") == str(user_id) and entry.get("stop") is None:
@@ -73,5 +91,9 @@ def progress_report():
         bar = "█" * filled + "░" * (10 - filled)
         lines.append(f"{name:20} {bar} {pct}%")
     lines.append("")
-    lines.append(f"🕒 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    try:
+        now_il = datetime.now(ZoneInfo("Asia/Jerusalem"))
+    except Exception:
+        now_il = datetime.now()
+    lines.append(f"🕒 {now_il.strftime('%Y-%m-%d %H:%M:%S')}")
     return "\n".join(lines)

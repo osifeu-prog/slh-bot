@@ -1,4 +1,5 @@
 from handlers.llm_handler import query_llm_with_context
+from core.keyboard_detector import normalize_keyboard_text
 
 
 def _safe_clip(value, limit=3500):
@@ -21,7 +22,7 @@ def register_ask_handler(bot):
 
         text = msg.text or ""
         parts = text.split(maxsplit=1)
-        question = parts[1].strip() if len(parts) > 1 else ""
+        question = normalize_keyboard_text(parts[1].strip()) if len(parts) > 1 else ""
 
         if not question:
             bot.reply_to(msg, "Usage: /ask [question]")

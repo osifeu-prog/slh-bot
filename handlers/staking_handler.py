@@ -4,8 +4,12 @@ from core import economy_service
 def register(bot):
     @bot.message_handler(commands=["stake"])
     def stake(msg):
+        parts = msg.text.split()
+        if len(parts) < 2:
+            bot.reply_to(msg, "Usage: /stake <amount>")
+            return
         try:
-            amount = int(msg.text.split()[-1])
+            amount = int(parts[1])
             uid = str(msg.from_user.id)
 
             result = economy_service.stake_credits(
@@ -29,8 +33,12 @@ def register(bot):
 
     @bot.message_handler(commands=["unstake"])
     def unstake(msg):
+        parts = msg.text.split()
+        if len(parts) < 2:
+            bot.reply_to(msg, "Usage: /stake <amount>")
+            return
         try:
-            amount = int(msg.text.split()[-1])
+            amount = int(parts[1])
             uid = str(msg.from_user.id)
 
             result = economy_service.unstake_credits(
