@@ -1,5 +1,6 @@
 import subprocess
 import os
+from core.progress_tracker import progress_report
 
 def register(bot, context):
     ADMIN_IDS = {int(os.getenv("ADMIN_ID", "8789977826"))}
@@ -7,7 +8,7 @@ def register(bot, context):
     @bot.message_handler(commands=["exec"])
     def exec_cmd(m):
         if m.from_user.id not in ADMIN_IDS:
-            bot.reply_to(m, "⛔ Admin only.")
+            bot.reply_to(m, "⛔️ Admin only.")
             return
 
         parts = m.text.split(maxsplit=1)
@@ -29,12 +30,16 @@ def register(bot, context):
             output = result.stdout + result.stderr
 
             if len(output) > 4000:
-                output = output[:4000] + "\n... truncated"
+                output = output[:4000] + "
+... truncated"
 
             bot.reply_to(
                 m,
-                f"```\n{output}\n```",
-                parse_mode="Markdown"
+                f"
+{output}
+" + "
+
+" + progress_report()
             )
 
         except Exception as e:
