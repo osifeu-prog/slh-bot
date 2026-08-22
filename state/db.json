@@ -1,0 +1,1146 @@
+{
+  "users": {
+    "8789977826": {
+      "profile": {
+        "created": "2026-08-07T22:43:47.559294",
+        "joined": "2026-08-07T22:43:47.559294"
+      },
+      "wallet": {
+        "credits": 1316,
+        "staked": 136,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 12,
+            "completed": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 75,
+        "level": 1
+      },
+      "referral": {
+        "code": "ADMIN2026",
+        "count": 0,
+        "commission": 0
+      },
+      "name": "Osif",
+      "role": "OWNER",
+      "joined": true,
+      "test_field": null,
+      "group": "",
+      "permissions": [],
+      "telegram_name": "Osif",
+      "display_name": "Osif",
+      "payment_addresses": {
+        "ton_usdt": "UQCJ0UuC6RYsZ1Jwj2zFevsjQ8Q5hg3ml80xqH54nqltq7Nh"
+      },
+      "devices": [
+        "DEV_ESP_NEW_1786177919",
+        "DEV_TEST_DEVICE_1786363970",
+        "esp32_01"
+      ],
+      "hardware_profile": {
+        "has_esp": true,
+        "device_count": 3,
+        "verified_devices": 3
+      }
+    },
+    "224223270": {
+      "role": "student",
+      "permissions": [],
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "name": "אוסיף בדיקות",
+      "display_name": "User",
+      "telegram_name": "User",
+      "group": "Ai",
+      "joined": true,
+      "academy": {
+        "active_course": "bitcoin_mastery"
+      },
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "7757102350": {
+      "profile": {
+        "created": "2026-08-13T11:38:59.288059"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "name": "בג",
+      "display_name": "מפתח אלפא",
+      "telegram_name": "User7757102350",
+      "role": "student",
+      "joined": true,
+      "permissions": [],
+      "group": "בג",
+      "created": "2026-08-14T20:29:17.219032",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "8791275334": {
+      "profile": {
+        "created": "2026-08-13T16:08:03.161333"
+      },
+      "wallet": {
+        "credits": 10449,
+        "staked": 50,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 12,
+            "completed": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "total_stages": 12
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "name": "גיא גולדשטיין",
+      "display_name": "גיא גולדשטיין",
+      "telegram_name": "גיא גולדשטיין",
+      "role": "developer",
+      "joined": true,
+      "permissions": [
+        "agent_builder",
+        "agent_create",
+        "course_graduate",
+        "dev",
+        "read",
+        "staking",
+        "test",
+        "ui_ux"
+      ],
+      "group": "Bitcoin Masters",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "5010371391": {
+      "profile": {
+        "created": "2026-08-13T18:34:17.515767"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "name": "צביקה קאופמן",
+      "display_name": "User5010371391",
+      "telegram_name": "User5010371391",
+      "role": "student",
+      "joined": true,
+      "permissions": [],
+      "group": "לא החלטתי",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "123456789": {
+      "display_name": "dev_helper",
+      "role": "developer",
+      "wallet": {
+        "credits": 9999,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "joined": "2026-08-15 16:49:46",
+      "permissions": [
+        "dev",
+        "read",
+        "test"
+      ],
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "1518680802": {
+      "name": "עידן מנור",
+      "display_name": "User1518680802",
+      "telegram_name": "User1518680802",
+      "role": "developer",
+      "joined": true,
+      "permissions": [
+        "db_read",
+        "exec_request",
+        "read_logs"
+      ],
+      "profile": {
+        "created": "2026-08-17T08:30:14.282146"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {},
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "group": "DevOps / AI Builders",
+      "devices": [],
+      "hardware_profile": {
+        "has_esp": false,
+        "device_count": 0,
+        "verified_devices": 0
+      }
+    },
+    "6332323773": {
+      "name": "User6332323773",
+      "display_name": "User6332323773",
+      "telegram_name": "User6332323773",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-17T18:00:18.182166"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    },
+    "8847192372": {
+      "name": "User8847192372",
+      "display_name": "User8847192372",
+      "telegram_name": "User8847192372",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-19T11:05:24.887970"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    },
+    "972500000001": {
+      "name": "User972500000001",
+      "display_name": "User972500000001",
+      "telegram_name": "User972500000001",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-20T14:18:00.000048"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
+    }
+  },
+  "students": {
+    "224223270": {
+      "status": "active"
+    }
+  },
+  "tasks": {
+    "ux_1_1786813474": {
+      "title": "מיפוי מסכי Mini App ורישום פערים",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.0824258
+    },
+    "ux_2_1786813474": {
+      "title": "עיצוב זרימת Onboarding למשתמש חדש",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.0824277
+    },
+    "ux_3_1786813474": {
+      "title": "בדיקת UX של פקודות הבוט והצעת שיפורים",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.0824285
+    },
+    "ux_4_1786813474": {
+      "title": "בניית דף בית ל-Dashboard",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.082429
+    },
+    "ux_5_1786813474": {
+      "title": "הגדרת מערכת צבעים וטיפוגרפיה",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.0824316
+    },
+    "ux_6_1786813474": {
+      "title": "שיפור נגישות והתאמה למובייל",
+      "assignee": "8791275334",
+      "status": "open",
+      "created_at": 1786813474.082432
+    }
+  },
+  "votes": {
+    "1": {
+      "text": "\"האם להוסיף קורס AI?\" – הצעה.",
+      "by": "8789977826",
+      "time": 1786232582.536529,
+      "yes": 1,
+      "no": 1,
+      "voters": {
+        "8789977826": "yes",
+        "7757102350": "no"
+      },
+      "status": "approved",
+      "result": "add AI course"
+    },
+    "2": {
+      "text": "\"האם לאשר את פריסת ערוצי התשלום וה־Mini App בגרסת הייצור?\" – הצעה מנוהלת.",
+      "by": "8789977826",
+      "time": 1786384994.461242,
+      "yes": 1,
+      "no": 0,
+      "voters": {
+        "8789977826": "yes"
+      },
+      "status": "approved",
+      "result": "deploy payment channels & Mini App"
+    },
+    "3": {
+      "text": "SLH production voting test",
+      "by": "8789977826",
+      "time": 1786463008.0480983,
+      "yes": 0,
+      "no": 0,
+      "voters": {}
+    },
+    "4": {
+      "text": "<title>|<description>|<payload> → יוצר proposal (role-checked)\n/vote <proposal_id> yes|no|abstain → רושם הצבעה\n/tally <proposal_id> → מחשב תוצאה (RBAC: only SystemGuard/Admin)\n/proposal_status <id> → סטטוס ותוצאות\nFallback UI: עד לתיקון inline buttons — השתמש בפקודות טקסטיות בלבד.\nAudit & Journal: כל הצבעה/תוצאה נרשמת ב־state/audit.jsonl עם חתימת agent ו‑timestamp.\n6. Mission Control ו‑Agent Task Mapping (מבנה נתונים + API)\nMission (task) schema suggestion:\njson\n{\n \"id\": \"mission_001\",\n \"title\": \"Complete Bitcoin course\",\n \"description\": \"...\",\n \"owner_agent\": \"TokenAgent\",\n \"preconditions\": [\"onboarded\", \"wallet_credits>=10\"],\n \"reward\": {\"credits\": 100, \"tokens\": 0},\n \"difficulty\": \"medium\",\n \"status\": \"open|assigned|executing|completed|verified\",\n \"assigned_to\": null,\n \"created_at\": \"...\",\n \"audit\": []\n}\nHandlers / APIs:\n/mission_list — רשימת משימות פתוחות/סגורות\n/mission_propose — הצעת משימה חדשה (מפתחת/agent)\n/mission_assign <id> <agent> — הקצאה\n/mission_execute <id> — סימון ביצוע\n/mission_verify <id> — אימות ותשלום reward\nIntegration: כל שינוי במשימה כותב לאירוע ב־state/audit.jsonl וגורם ל־core/mission_lifecycle לעדכן ledger.\n7. Mini App / Frontend Sync (קריטי לפני Alpha)\nבעיות שזוהו: frontend לא קורא staked ו־token_balance; cache של Telegram WebApp; frontend עשוי להצביע ל‑API ישן.\nצעדים:\nAPI contract audit: /api/wallet/<uid> חייב להחזיר { credits, staked, token_balance, treasury }.\nFrontend update: dashboard.html לקרוא לכל השדות; להוסיף refresh button; cache busting headers.\nEnd‑to‑End test: curl ה‑API מה‑Railway/public URL והשווה לנתונים במיני‑אפ. אם API נכון וה‑UI לא — זה cache/frontend.\nVerify Telegram WebApp initData mapping → האם Telegram שולח owner flag? האם ה‑Mini App מפענח אותו נכון?\n8. Agent Lifecycle ו‑Second‑Gen Agents (3–7 ימים)\nמטרות: סוכנים שיכולים להציע משימות, להצביע, לבצע וללמוד.\nרעיונות:\nAgent profile: { id, name, role, weight, state, history }\nPromotion rules: ביצועים (verified missions), uptime, audit score → יכולות חדשות/הרשאות.\nAgent training loop: אחרי כל משימה, Agent יוצר דוח ביצוע; SyncAgent מרכז; אפשר ליצור agent‑forks (2nd gen) עם משימות אוטומטיות.\n9. ניטור, בדיקות ו‑Alpha rollout\nMonitoring & Alerts:\nHealth checks: /health, /mini-app, /api/wallet, /ask (local).\nAI health: state/ai_health.json + env checks.\nLogs: centralized state/audit.jsonl + Railway logs.\nControlled Alpha rollout:\nGate GO → 2–5 internal testers (Osif + 2 friends + 2 test users).\nTest plan for each tester (onboarding path list you already drafted).\nCollect feedback: where stuck, broken buttons, unclear flows.\nIterate fixes (only small, targeted patches), re‑snapshot state, expand to Developer Alpha.\n10. מה לעשות מחר בבוקר — סדר פעולות מומלץ (Actionable)\nAuthority Gate (read‑only): /firewall, /gov_status, /agent_status, /exec python3 -c \"import json; print(len(json.load(open('state/db.json')).get('users',{})))\".\nMini App check: /exec curl -s http://127.0.0.1:8080/api/wallet/8789977826 | jq . — השווה ל‑Mini App.\nAsk coverage quick patch (safe): הוסף intents מקומיים ל־core/ask_debug.py עבור מה השם שלי ו־status (שורה או שתיים) — הרץ smoke tests.\nGovernance audit: export proposals/votes; reconcile ledgers.\nBackup snapshot: /exec cp state/db.json state/db.json.pre_alpha_$(date +%s) — ודא נוצר.\nאם הכל ירוק → בנה /missioncontrol דרך CommitBridge.\nהמלצות סיכום ומסקנות מהירות\nזה לא \"המנוע התחרבש\" — זה מקרה של coverage gap ב‑Ask routing: חלק מהשאילתות (credits) מטופלות מקומית; אחרות (name/status) נופלות ל‑LLM → fallback. הפתרון: הרחבת intents מקומיים לפני כל ניסיון להחליף מפתחות או להעמיס על ספקי LLM.\nMini App = Release Gate. אל תכניס משתמשים נוספים עד ש־frontend↔️backend↔️state יוכחו.\nעבוד בעיקר דרך Telegram/CommitBridge עד ש‑Windows יסונכרן; אל תריץ git pull בלי בדיקה של git diff על קבצים מקומיים לא מוסברים.\nאל תבצע mutations גדולים הלילה. בצע מדידות, גיבוי, ואז תיקונים קטנים ומבוקרים.\nאם תרצה — אני יכול עכשיו:\nלייצר טבלת בדיקות Smoke מוכנה לשליחה לבודקי Alpha (קצרה, עם פקודות מדויקות).",
+      "by": "8789977826",
+      "time": 1786663968.5449193,
+      "yes": 0,
+      "no": 0,
+      "voters": {}
+    },
+    "5": {
+      "text": "\"לשדרג את מערכת התשלומים\"",
+      "by": "8789977826",
+      "time": 1786742962.4489858,
+      "yes": 0,
+      "no": 0,
+      "voters": {}
+    }
+  },
+  "agents": {
+    "1": {
+      "name": "SystemGuard",
+      "state": "active",
+      "id": "1",
+      "role": "security",
+      "owner_id": "8789977826",
+      "inbox": [
+        "אתה מוזמן לשאול אותי שאלות על המערכת דרך /ask SystemGuard",
+        "אתה מוזמן לשאול אותי שאלות על המערכת דרך /ask SystemGuard (למפתח 7757102350)"
+      ],
+      "history": [],
+      "permissions": [
+        "monitor",
+        "audit"
+      ],
+      "created": "2026-08-07T22:43:47",
+      "runtime_class": "SystemGuardAgent",
+      "agent_type": "system",
+      "visibility": "owner_only"
+    },
+    "2": {
+      "name": "DoctorAgent",
+      "state": "active",
+      "id": "2",
+      "role": "doctor",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "diagnose",
+        "heal"
+      ],
+      "created": "2026-08-07T22:43:47",
+      "agent_type": "system",
+      "visibility": "owner_only"
+    },
+    "3": {
+      "name": "SyncAgent",
+      "state": "active",
+      "id": "3",
+      "role": "sync",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "sync_data",
+        "update"
+      ],
+      "created": "2026-08-07T22:43:47",
+      "agent_type": "system",
+      "visibility": "owner_only"
+    },
+    "4": {
+      "name": "TokenAgent",
+      "state": "active",
+      "id": "4",
+      "role": "token",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "manage_tokens",
+        "send"
+      ],
+      "created": "2026-08-07T22:43:47",
+      "agent_type": "system",
+      "visibility": "owner_only"
+    },
+    "5": {
+      "name": "GuyTamagotchi",
+      "state": "active",
+      "id": "5",
+      "role": "personal_assistant",
+      "owner_id": "8791275334",
+      "inbox": [],
+      "history": [],
+      "permissions": [
+        "journal",
+        "tasks",
+        "assist",
+        "reminders"
+      ],
+      "created": "2026-08-15T17:04:34",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    },
+    "6": {
+      "id": "6",
+      "name": "Osif-Agent",
+      "state": "idle",
+      "role": "agent",
+      "owner_id": "8789977826",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-17T17:29:27.939742",
+      "agent_type": "personal",
+      "visibility": "owner_only"
+    },
+    "7": {
+      "id": "7",
+      "name": "User6332323773-Agent",
+      "state": "idle",
+      "role": "agent",
+      "owner_id": "6332323773",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-17T18:00:23.871329",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    },
+    "8": {
+      "id": "8",
+      "name": "User8847192372-Agent",
+      "state": "idle",
+      "role": "agent",
+      "owner_id": "8847192372",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-19T11:07:25.685461",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    },
+    "9": {
+      "id": "9",
+      "name": "גיא גולדשטיין-Agent",
+      "state": "idle",
+      "role": "agent",
+      "owner_id": "8791275334",
+      "inbox": [],
+      "history": [],
+      "permissions": [],
+      "created": "2026-08-22T11:17:12.441211",
+      "agent_type": "personal",
+      "visibility": "owner_and_self"
+    }
+  },
+  "products": {
+    "basic": {
+      "name": "Basic 100 Credits",
+      "price_usd": 5,
+      "credits": 100
+    },
+    "pro": {
+      "name": "Pro 500 Credits",
+      "price_usd": 20,
+      "credits": 500
+    }
+  },
+  "system": {
+    "bot_name": "OSIF CORE",
+    "owner": "Osif",
+    "description": "המערכת החכמה של SLH OS"
+  },
+  "pending_exec": {
+    "7cfcf12e": {
+      "id": "7cfcf12e",
+      "uid": "224223270",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1786620125.1366355
+    },
+    "74d00a9f": {
+      "id": "74d00a9f",
+      "uid": "8789977826",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1786620180.82774
+    },
+    "68cf9ccc": {
+      "id": "68cf9ccc",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786716588.6138606
+    },
+    "85d04231": {
+      "id": "85d04231",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786716919.356887
+    },
+    "b5650462": {
+      "id": "b5650462",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786717025.4031363
+    },
+    "d9807a0a": {
+      "id": "d9807a0a",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786718419.6120882
+    },
+    "9a3bafb3": {
+      "id": "9a3bafb3",
+      "uid": "224223270",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786718445.252596
+    },
+    "14877dff": {
+      "id": "14877dff",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786718799.3967977,
+      "decided_by": "8789977826",
+      "decided_at": 1786718823.1730204
+    },
+    "bb778e3b": {
+      "id": "bb778e3b",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "rejected",
+      "created_at": 1786718852.3985267,
+      "decided_by": "8789977826",
+      "decided_at": 1786718873.9961252
+    },
+    "5be0ac1e": {
+      "id": "5be0ac1e",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786718886.3044312,
+      "decided_by": "8789977826",
+      "decided_at": 1786718903.2045264
+    },
+    "0818b115": {
+      "id": "0818b115",
+      "uid": "224223270",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786719180.6171756,
+      "decided_by": "8789977826",
+      "decided_at": 1786719216.952757
+    },
+    "ff1dcb98": {
+      "id": "ff1dcb98",
+      "uid": "8789977826",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1786719804.994986
+    },
+    "7e7f62f5": {
+      "id": "7e7f62f5",
+      "uid": "8789977826",
+      "command": "python --version",
+      "status": "pending",
+      "created_at": 1786719827.5280979
+    },
+    "0e1a1f68": {
+      "id": "0e1a1f68",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "pending",
+      "created_at": 1786719839.9426143
+    },
+    "c2af74f2": {
+      "id": "c2af74f2",
+      "uid": "8789977826",
+      "command": "כן. עכשיו התמונה הרבה יותר ברורה — ויש כאן שתי בעיות שונות, וחשוב לא לערבב ביניהן.\n1. הבעיה בשם שלך — זו בעיית Identity Resolution\nהמערכת החזירה:\nOsif / OWNER\nאבל אתה מדגיש שהשם הנכון הוא אוסיף.\nכלומר כרגע יש לפחות שני מושגים שהמערכת מערבבת:\nTelegram identity\n        ↓\nTelegram user ID\n        ↓\nSLH internal user/PID\n        ↓\nprofile.name\n        ↓\ndisplay name\nהעובדה שיש לך כמה מזהים/מספרים חיצוניים לא אומרת שצריך להכניס אותם כ\"שם\". צריך לבנות מיפוי זהויות מסודר.\nוהכי חשוב: לא נתקן את זה עכשיו. בזמן FREEZE אנחנו רק מתעדים את הפער.\n2. ה־PID הוא כנראה המקום שבו ה־Router חשף בעיה חמורה יותר\nכשהקלדת:\nPID\nPID ID\nid=\n-\n* 1\n* 2\n...\nהמערכת פתאום החליטה:\nPID = Proposal ID\nזה בדיוק סוג ההתנהגות שאסור לנו לקבל ב־Control Plane.\nכי מבחינת המערכת:\nPID\nיכול להיות למשל:\nProcess ID\nProduct ID\nProfile ID\nPerson/User ID\nProposal ID\nAgent ID\nאבל המערכת בחרה משמעות בלי להוכיח מה הייתה הכוונה.\nוזה מתחבר ישירות לבעיה שכבר זיהינו:\nUSER INPUT\n    ↓\nNatural Language Router\n    ↓\nLLM / fallback\n    ↓\nguess\nבמקום:\nUSER INPUT\n    ↓\nDeterministic Intent Resolver\n    ↓\nKNOWN COMMAND / ENTITY / ID\n    ↓\nonly if unresolved → LLM\n🚨 לכן אני משנה דבר אחד בתוכנית האודיט\nלא מתחילים מ־Mission.\nלא מתחילים מ־LLM.\nלא מתחילים מ־Groq.\nולא מתחילים מתיקון /ask.\nקודם אנחנו צריכים לזהות את ה־Identity & Control Plane.\nהסדר הנכון עכשיו:\n00 IDENTITY\n01 AUTHORIZATION\n02 MONEY\n03 PAYMENT\n04 ENTITLEMENT\n05 PRODUCT\n06 DATA\n07 COMMAND ROUTING\n08 RUNTIME\n09 LLM\n10 INTEGRATIONS\n11 SECURITY\n12 OPERATIONS\n13 LAUNCH GATES\nכי אם המערכת לא יודעת בוודאות:\nWHO am I?\nWHAT ID am I?\nWHAT ROLE do I have?\nWHAT command did I send?\nWHAT resource does that ID refer to?\nאין טעם לבדוק אם מסלול התשלום עובד.\nוה־1434 credits לא מוכיחים הכנסה\nגם כאן צריך להיות קשוחים.\nכרגע אנחנו יודעים רק שהמערכת מדווחת:\ncredits = 1434\nstaked = 16\nrole = OWNER\nזה לא מוכיח:\ncash received\npayment confirmed\ntransaction recorded\nentitlement granted\ncustomer provisioned\nלכן באודיט:\n1434 credits\n      ≠\n₪ revenue\nוזה יהיה אחד מה־P0 checks.\nדבר נוסף שחשוב מאוד\nהפלטים שהבאת מוכיחים שה־AI fallback עדיין אינו Control Plane אמין.\nהמערכת יודעת להגיב:\nAI busy\nאבל כשהמשתמש שולח קלט קצר כמו:\nPID\nID\n=\n-\nהיא צריכה לא לנחש.\nהתגובה הנכונה מבחינה ארכיטקטונית היא משהו בסגנון:\nלא זוהתה כוונה חד-משמעית.\n\nPID יכול להיות:\n1. Process ID\n2. Proposal ID\n3. User/Profile ID\n4. Product ID\n\nבחר אפשרות.\nאו, אם יש context חד-משמעי:\nPID → Process ID\nבלי LLM בכלל.\n🛑 לכן כרגע אני לא רוצה שתפעיל את שלושת הסקריפטים הקודמים\nהם מכילים גם הנחות שכבר ראינו שאינן בהכרח אמת, למשל:\n/pay exists\n/fakepay exists\nTelegram Payments not activated\nMission assignment broken\nאלה טענות audit, לא ראיות audit.\nאנחנו לא רוצים שהאודיט יתחיל מ\"המערכת אמרה\".\nאנחנו רוצים:\nOBSERVE\n  ↓\nMEASURE\n  ↓\nCORRELATE\n  ↓\nPROVE\n  ↓\nCLASSIFY\nמצב הבסיס שאני רושם כרגע\nתחום\nמצב\nCore\n🟡 פעיל לפי דיווח\nOWNER recognition\n🟢 עובד\nDisplay name\n🟡 לא מדויק\nIdentity model\n🔴 לא מאומת\nPID semantics\n🔴 לא מוגדר/לא חד-משמעי\nCommand routing\n🔴 מנחש במקרים מסוימים\nLLM availability\n🟡 degraded\nLocal fallback\n🟢 קיים, אבל צריך audit\nCredits\n🟢 קיימים\nReal revenue\n❓ לא הוכח\nReal payment\n❓ לא הוכח\nEntitlement\n❓ לא הוכח\nProvisioning\n❓ לא הוכח\nLaunch\n🔴 NO-GO עד הוכחה\nוהכי חשוב:\nזה לא אומר שה־SLH חלש.\nלהפך — עכשיו אנחנו מתחילים לראות איפה צריך להפוך אותו מ\"מערכת שיש בה הרבה יכולות\" ל־מערכת שיודעת בוודאות מה היא עושה בכל קלט ובכל מסלול כסף.\nוה־PID incident הוא ראיה מצוינת לזה.\nFREEZE נשאר. אין patch. אין restart. אין deploy.\nהצעד הבא צריך להיות Audit אחד, read-only, שממפה את כל הזהויות וה־IDs במערכת + מי מפרש אותם + מי מורשה לשנות אותם, ורק אחריו ניכנס למסלול הכסף.",
+      "status": "pending",
+      "created_at": 1786746528.7765338
+    },
+    "18d587fa": {
+      "id": "18d587fa",
+      "uid": "8789977826",
+      "command": "↓\npending_exec\n   ↓\nOWNER approval\n   ↓\nexecution\n   ↓\nexec_audit\nויש עוד ממצא שאני לא רוצה שנפספס\nהקוד הזה:\nslh.py:20\ndb[\"users\"][\"8789977826\"][\"credits\"]=1000\nהוא לא קשור ל־economy_service, ולכן האמירה הקודמת ש\"סמכות הכסף מרוכזת\" הייתה חזקה מדי.\neconomy_service.record_transaction() הוא authority טוב יותר, אבל האודיט שלך כבר הוכיח שיש לפחות write ישיר נוסף ל־credits.\nלכן אחרי שנייצב את /exec, הייתי עושה:\nP0\n│\n├── Execution Authority\n│   ├── identity\n│   ├── authorization\n│   ├── executor\n│   └── audit\n│\n├── Economy Authority\n│   ├── all credit writes\n│   ├── ledger\n│   └── reconciliation\n│\n└── Encoding\n    ├── onboarding\n    └── LLM responses\nבסדר הזה.\nכי כרגע ה־/exec הוא למעשה מערכת העצבים שמאפשרת לך לבדוק ולתחזק את כל השאר מרחוק. קודם מחזירים אותו ל־מצב העבודה הישן והמבוקר, ורק אז משתמשים בו כדי להתקדם.",
+      "status": "approved",
+      "created_at": 1787142763.252599,
+      "decided_by": "8789977826",
+      "decided_at": 1787143108.4530668
+    },
+    "4019486a": {
+      "id": "4019486a",
+      "uid": "8789977826",
+      "command": "python - <<'PY'\nimport core.profile_manager as pm\nprint(dir(pm))\nPY",
+      "status": "pending",
+      "created_at": 1787235324.5563252
+    },
+    "056d3ef8": {
+      "id": "056d3ef8",
+      "uid": "8789977826",
+      "command": "git status --short",
+      "status": "approved",
+      "created_at": 1787319360.8123796,
+      "decided_by": "8789977826",
+      "decided_at": 1787319363.3991745
+    },
+    "d7eca52c": {
+      "id": "d7eca52c",
+      "uid": "8789977826",
+      "command": "git status --short → fatal: not a git repository (or any of the parent directories): .git",
+      "status": "pending",
+      "created_at": 1787320546.2013333
+    },
+    "c61d9854": {
+      "id": "c61d9854",
+      "uid": "8789977826",
+      "command": "cd C:\\Users\\USER\\slh-bot-clean\npython -m py_compile handlers\\llm_handler.py",
+      "status": "approved",
+      "created_at": 1787405274.5845287,
+      "decided_by": "8789977826",
+      "decided_at": 1787405277.0079985
+    }
+  },
+  "tasks_archive": {
+    "1": {
+      "title": "השלם קורס Bitcoin",
+      "progress": 100,
+      "reward": 100,
+      "done_by": [
+        8789977826
+      ],
+      "agent": "DoctorAgent",
+      "status": "closed",
+      "closed_at": 1786810640.797108
+    },
+    "2": {
+      "title": "SLH OS Full Production Launch & Voting Integration",
+      "progress": 100,
+      "reward": 200,
+      "agent": "SystemGuard",
+      "status": "closed",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "3": {
+      "title": "השלמת פריסה ישירה של SLH OS",
+      "progress": 100,
+      "reward": 50,
+      "agent": "SyncAgent",
+      "status": "closed",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "4": {
+      "title": "Security audit",
+      "description": "בדיקת אבטחה מלאה של המערכת",
+      "progress": 100,
+      "reward": 80,
+      "agent": "SystemGuard",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646213Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "5": {
+      "title": "Payment test",
+      "description": "בדיקת זרימת תשלומים ומוצרים",
+      "progress": 100,
+      "reward": 60,
+      "agent": "TokenAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646224Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "6": {
+      "title": "User onboarding test",
+      "description": "בדיקת תהליך הצטרפות משתמש חדש",
+      "progress": 100,
+      "reward": 40,
+      "agent": "SyncAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646227Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "7": {
+      "title": "Academy complete flow",
+      "description": "בדיקת זרימה מלאה של האקדמיה",
+      "progress": 100,
+      "reward": 70,
+      "agent": "DoctorAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646228Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "8": {
+      "title": "Agent assignment system",
+      "description": "בדיקת מערכת שיוך סוכנים למטלות",
+      "progress": 100,
+      "reward": 50,
+      "agent": "SystemGuard",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646230Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "9": {
+      "title": "Marketplace test",
+      "description": "בדיקת marketplace ומוצרים",
+      "progress": 100,
+      "reward": 50,
+      "agent": "TokenAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646232Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "10": {
+      "title": "Voting flow test",
+      "description": "בדיקת זרימת הצבעות מקצה לקצה",
+      "progress": 100,
+      "reward": 40,
+      "agent": "SyncAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646233Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "11": {
+      "title": "Backup restore test",
+      "description": "בדיקת גיבוי ושחזור של db.json",
+      "progress": 100,
+      "reward": 90,
+      "agent": "SystemGuard",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646235Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "12": {
+      "title": "LLM fallback test",
+      "description": "בדיקת fallback של ה-LLM",
+      "progress": 100,
+      "reward": 60,
+      "agent": "DoctorAgent",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646237Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    },
+    "13": {
+      "title": "Public documentation",
+      "description": "כתיבת תיעוד ציבורי למערכת",
+      "progress": 100,
+      "reward": 100,
+      "agent": "SystemGuard",
+      "status": "closed",
+      "created_at": "2026-08-11T12:55:27.646238Z",
+      "done_by": [
+        8789977826
+      ],
+      "closed_at": 1786810640.797108
+    }
+  },
+  "exec_audit": [
+    {
+      "id": "14877dff",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786718799.3967977,
+      "decided_by": "8789977826",
+      "decided_at": 1786718823.1730204
+    },
+    {
+      "id": "bb778e3b",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "rejected",
+      "created_at": 1786718852.3985267,
+      "decided_by": "8789977826",
+      "decided_at": 1786718873.9961252
+    },
+    {
+      "id": "5be0ac1e",
+      "uid": "8789977826",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786718886.3044312,
+      "decided_by": "8789977826",
+      "decided_at": 1786718903.2045264
+    },
+    {
+      "id": "0818b115",
+      "uid": "224223270",
+      "command": "whoami",
+      "status": "approved",
+      "created_at": 1786719180.6171756,
+      "decided_by": "8789977826",
+      "decided_at": 1786719216.952757
+    },
+    {
+      "id": "18d587fa",
+      "uid": "8789977826",
+      "command": "↓\npending_exec\n   ↓\nOWNER approval\n   ↓\nexecution\n   ↓\nexec_audit\nויש עוד ממצא שאני לא רוצה שנפספס\nהקוד הזה:\nslh.py:20\ndb[\"users\"][\"8789977826\"][\"credits\"]=1000\nהוא לא קשור ל־economy_service, ולכן האמירה הקודמת ש\"סמכות הכסף מרוכזת\" הייתה חזקה מדי.\neconomy_service.record_transaction() הוא authority טוב יותר, אבל האודיט שלך כבר הוכיח שיש לפחות write ישיר נוסף ל־credits.\nלכן אחרי שנייצב את /exec, הייתי עושה:\nP0\n│\n├── Execution Authority\n│   ├── identity\n│   ├── authorization\n│   ├── executor\n│   └── audit\n│\n├── Economy Authority\n│   ├── all credit writes\n│   ├── ledger\n│   └── reconciliation\n│\n└── Encoding\n    ├── onboarding\n    └── LLM responses\nבסדר הזה.\nכי כרגע ה־/exec הוא למעשה מערכת העצבים שמאפשרת לך לבדוק ולתחזק את כל השאר מרחוק. קודם מחזירים אותו ל־מצב העבודה הישן והמבוקר, ורק אז משתמשים בו כדי להתקדם.",
+      "status": "approved",
+      "created_at": 1787142763.252599,
+      "decided_by": "8789977826",
+      "decided_at": 1787143108.4530668
+    },
+    {
+      "id": "056d3ef8",
+      "uid": "8789977826",
+      "command": "git status --short",
+      "status": "approved",
+      "created_at": 1787319360.8123796,
+      "decided_by": "8789977826",
+      "decided_at": 1787319363.3991745
+    },
+    {
+      "id": "c61d9854",
+      "uid": "8789977826",
+      "command": "cd C:\\Users\\USER\\slh-bot-clean\npython -m py_compile handlers\\llm_handler.py",
+      "status": "approved",
+      "created_at": 1787405274.5845287,
+      "decided_by": "8789977826",
+      "decided_at": 1787405277.0079985
+    }
+  ],
+  "transactions": [
+    {
+      "uid": "8791275334",
+      "credits": 9999,
+      "reason": "academy_pilot_developer_access",
+      "timestamp": "2026-08-15 16:57:34"
+    },
+    {
+      "uid": "8791275334",
+      "credits": 500,
+      "reason": "bitcoin_mastery_completion_reward",
+      "timestamp": "2026-08-15 17:04:34"
+    }
+  ],
+  "ledger": [
+    {
+      "time": "2026-08-20T14:18:40.628968+00:00",
+      "uid": "8789977826",
+      "before": 1314,
+      "amount": 1,
+      "after": 1315,
+      "reason": "P0_AUTHORITY_VERIFY",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-20T14:18:59.208393+00:00",
+      "uid": "8789977826",
+      "before": 1315,
+      "amount": 1,
+      "after": 1316,
+      "reason": "P0_AUTHORITY_VERIFY",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-21T17:01:45.554796+00:00",
+      "uid": "ECON_TEST_USER",
+      "before": 850,
+      "amount": 100,
+      "after": 950,
+      "reason": "railway_authority_test",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-21T17:01:45.556275+00:00",
+      "uid": "ECON_TEST_USER",
+      "before": 950,
+      "amount": -40,
+      "after": 910,
+      "reason": "staking:stake",
+      "meta": {
+        "staked_before": 200,
+        "staked_after": 240
+      }
+    },
+    {
+      "time": "2026-08-21T17:02:13.672920+00:00",
+      "uid": "ECON_TEST_USER",
+      "before": 910,
+      "amount": 100,
+      "after": 1010,
+      "reason": "railway_authority_test",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-21T17:02:13.675836+00:00",
+      "uid": "ECON_TEST_USER",
+      "before": 1010,
+      "amount": -40,
+      "after": 970,
+      "reason": "staking:stake",
+      "meta": {
+        "staked_before": 240,
+        "staked_after": 280
+      }
+    },
+    {
+      "time": "2026-08-21T18:22:12.036641+00:00",
+      "uid": "P0_RUNTIME_TEST_USER",
+      "before": 0,
+      "amount": 10,
+      "after": 10,
+      "reason": "P0_TEST",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-21T21:34:32.755460+00:00",
+      "uid": "P0_RUNTIME_TEST_USER",
+      "before": 10,
+      "amount": -1,
+      "after": 9,
+      "reason": "staking:stake",
+      "meta": {
+        "source": "controlled_test",
+        "staked_before": 0,
+        "staked_after": 1
+      }
+    },
+    {
+      "time": "2026-08-21T21:34:32.757511+00:00",
+      "uid": "P0_RUNTIME_TEST_USER",
+      "before": 9,
+      "amount": 1,
+      "after": 10,
+      "reason": "staking:unstake",
+      "meta": {
+        "source": "controlled_cleanup",
+        "staked_before": 1,
+        "staked_after": 0
+      }
+    },
+    {
+      "time": "2026-08-22T11:40:48.738155+00:00",
+      "uid": "123456789",
+      "before": 9999,
+      "amount": -1,
+      "after": 9998,
+      "reason": "staking:stake",
+      "meta": {
+        "source": "P0_RUNTIME_AUDIT",
+        "test": "staking_round_trip",
+        "staked_before": 0,
+        "staked_after": 1
+      }
+    },
+    {
+      "time": "2026-08-22T11:40:48.739510+00:00",
+      "uid": "123456789",
+      "before": 9998,
+      "amount": 1,
+      "after": 9999,
+      "reason": "staking:unstake",
+      "meta": {
+        "source": "P0_RUNTIME_AUDIT",
+        "test": "staking_round_trip",
+        "staked_before": 1,
+        "staked_after": 0
+      }
+    }
+  ]
+}
