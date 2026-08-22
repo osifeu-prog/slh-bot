@@ -24,6 +24,7 @@ def load_handlers(bot, context):
         ("device", "handlers.device_handler"),
         ("feedback", "handlers.feedback_handler"),
         ("gateway", "handlers.gateway_handler"),
+        ("file", "handlers.file_handler"),
         ("help", "handlers.help_handler"),
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
