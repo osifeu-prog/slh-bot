@@ -29,7 +29,7 @@ def register(bot):
         )
 
 
-    @bot.message_handler(commands=['progress'])
+    @bot.message_handler(commands=['academy_progress'])
     def progress(m):
 
         uid=str(m.from_user.id)
