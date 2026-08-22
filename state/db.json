@@ -63,65 +63,6 @@
         "verified_devices": 3
       }
     },
-    "224223270": {
-      "role": "student",
-      "permissions": [],
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "name": "אוסיף בדיקות",
-      "display_name": "User",
-      "telegram_name": "User",
-      "group": "Ai",
-      "joined": true,
-      "academy": {
-        "active_course": "bitcoin_mastery"
-      },
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
-    },
-    "7757102350": {
-      "profile": {
-        "created": "2026-08-13T11:38:59.288059"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "name": "בג",
-      "display_name": "מפתח אלפא",
-      "telegram_name": "User7757102350",
-      "role": "student",
-      "joined": true,
-      "permissions": [],
-      "group": "בג",
-      "created": "2026-08-14T20:29:17.219032",
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
-    },
     "8791275334": {
       "profile": {
         "created": "2026-08-13T16:08:03.161333"
@@ -221,27 +162,6 @@
         "verified_devices": 0
       }
     },
-    "123456789": {
-      "display_name": "dev_helper",
-      "role": "developer",
-      "wallet": {
-        "credits": 9999,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "joined": "2026-08-15 16:49:46",
-      "permissions": [
-        "dev",
-        "read",
-        "test"
-      ],
-      "devices": [],
-      "hardware_profile": {
-        "has_esp": false,
-        "device_count": 0,
-        "verified_devices": 0
-      }
-    },
     "1518680802": {
       "name": "עידן מנור",
       "display_name": "User1518680802",
@@ -281,90 +201,6 @@
         "device_count": 0,
         "verified_devices": 0
       }
-    },
-    "6332323773": {
-      "name": "User6332323773",
-      "display_name": "User6332323773",
-      "telegram_name": "User6332323773",
-      "role": "student",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-17T18:00:18.182166"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      }
-    },
-    "8847192372": {
-      "name": "User8847192372",
-      "display_name": "User8847192372",
-      "telegram_name": "User8847192372",
-      "role": "student",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-19T11:05:24.887970"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      }
-    },
-    "972500000001": {
-      "name": "User972500000001",
-      "display_name": "User972500000001",
-      "telegram_name": "User972500000001",
-      "role": "student",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-20T14:18:00.000048"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      }
     }
   },
   "students": {
@@ -372,44 +208,7 @@
       "status": "active"
     }
   },
-  "tasks": {
-    "ux_1_1786813474": {
-      "title": "מיפוי מסכי Mini App ורישום פערים",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.0824258
-    },
-    "ux_2_1786813474": {
-      "title": "עיצוב זרימת Onboarding למשתמש חדש",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.0824277
-    },
-    "ux_3_1786813474": {
-      "title": "בדיקת UX של פקודות הבוט והצעת שיפורים",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.0824285
-    },
-    "ux_4_1786813474": {
-      "title": "בניית דף בית ל-Dashboard",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.082429
-    },
-    "ux_5_1786813474": {
-      "title": "הגדרת מערכת צבעים וטיפוגרפיה",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.0824316
-    },
-    "ux_6_1786813474": {
-      "title": "שיפור נגישות והתאמה למובייל",
-      "assignee": "8791275334",
-      "status": "open",
-      "created_at": 1786813474.082432
-    }
-  },
+  "tasks": {},
   "votes": {
     "1": {
       "text": "\"האם להוסיף קורס AI?\" – הצעה.",
@@ -435,30 +234,6 @@
       },
       "status": "approved",
       "result": "deploy payment channels & Mini App"
-    },
-    "3": {
-      "text": "SLH production voting test",
-      "by": "8789977826",
-      "time": 1786463008.0480983,
-      "yes": 0,
-      "no": 0,
-      "voters": {}
-    },
-    "4": {
-      "text": "<title>|<description>|<payload> → יוצר proposal (role-checked)\n/vote <proposal_id> yes|no|abstain → רושם הצבעה\n/tally <proposal_id> → מחשב תוצאה (RBAC: only SystemGuard/Admin)\n/proposal_status <id> → סטטוס ותוצאות\nFallback UI: עד לתיקון inline buttons — השתמש בפקודות טקסטיות בלבד.\nAudit & Journal: כל הצבעה/תוצאה נרשמת ב־state/audit.jsonl עם חתימת agent ו‑timestamp.\n6. Mission Control ו‑Agent Task Mapping (מבנה נתונים + API)\nMission (task) schema suggestion:\njson\n{\n \"id\": \"mission_001\",\n \"title\": \"Complete Bitcoin course\",\n \"description\": \"...\",\n \"owner_agent\": \"TokenAgent\",\n \"preconditions\": [\"onboarded\", \"wallet_credits>=10\"],\n \"reward\": {\"credits\": 100, \"tokens\": 0},\n \"difficulty\": \"medium\",\n \"status\": \"open|assigned|executing|completed|verified\",\n \"assigned_to\": null,\n \"created_at\": \"...\",\n \"audit\": []\n}\nHandlers / APIs:\n/mission_list — רשימת משימות פתוחות/סגורות\n/mission_propose — הצעת משימה חדשה (מפתחת/agent)\n/mission_assign <id> <agent> — הקצאה\n/mission_execute <id> — סימון ביצוע\n/mission_verify <id> — אימות ותשלום reward\nIntegration: כל שינוי במשימה כותב לאירוע ב־state/audit.jsonl וגורם ל־core/mission_lifecycle לעדכן ledger.\n7. Mini App / Frontend Sync (קריטי לפני Alpha)\nבעיות שזוהו: frontend לא קורא staked ו־token_balance; cache של Telegram WebApp; frontend עשוי להצביע ל‑API ישן.\nצעדים:\nAPI contract audit: /api/wallet/<uid> חייב להחזיר { credits, staked, token_balance, treasury }.\nFrontend update: dashboard.html לקרוא לכל השדות; להוסיף refresh button; cache busting headers.\nEnd‑to‑End test: curl ה‑API מה‑Railway/public URL והשווה לנתונים במיני‑אפ. אם API נכון וה‑UI לא — זה cache/frontend.\nVerify Telegram WebApp initData mapping → האם Telegram שולח owner flag? האם ה‑Mini App מפענח אותו נכון?\n8. Agent Lifecycle ו‑Second‑Gen Agents (3–7 ימים)\nמטרות: סוכנים שיכולים להציע משימות, להצביע, לבצע וללמוד.\nרעיונות:\nAgent profile: { id, name, role, weight, state, history }\nPromotion rules: ביצועים (verified missions), uptime, audit score → יכולות חדשות/הרשאות.\nAgent training loop: אחרי כל משימה, Agent יוצר דוח ביצוע; SyncAgent מרכז; אפשר ליצור agent‑forks (2nd gen) עם משימות אוטומטיות.\n9. ניטור, בדיקות ו‑Alpha rollout\nMonitoring & Alerts:\nHealth checks: /health, /mini-app, /api/wallet, /ask (local).\nAI health: state/ai_health.json + env checks.\nLogs: centralized state/audit.jsonl + Railway logs.\nControlled Alpha rollout:\nGate GO → 2–5 internal testers (Osif + 2 friends + 2 test users).\nTest plan for each tester (onboarding path list you already drafted).\nCollect feedback: where stuck, broken buttons, unclear flows.\nIterate fixes (only small, targeted patches), re‑snapshot state, expand to Developer Alpha.\n10. מה לעשות מחר בבוקר — סדר פעולות מומלץ (Actionable)\nAuthority Gate (read‑only): /firewall, /gov_status, /agent_status, /exec python3 -c \"import json; print(len(json.load(open('state/db.json')).get('users',{})))\".\nMini App check: /exec curl -s http://127.0.0.1:8080/api/wallet/8789977826 | jq . — השווה ל‑Mini App.\nAsk coverage quick patch (safe): הוסף intents מקומיים ל־core/ask_debug.py עבור מה השם שלי ו־status (שורה או שתיים) — הרץ smoke tests.\nGovernance audit: export proposals/votes; reconcile ledgers.\nBackup snapshot: /exec cp state/db.json state/db.json.pre_alpha_$(date +%s) — ודא נוצר.\nאם הכל ירוק → בנה /missioncontrol דרך CommitBridge.\nהמלצות סיכום ומסקנות מהירות\nזה לא \"המנוע התחרבש\" — זה מקרה של coverage gap ב‑Ask routing: חלק מהשאילתות (credits) מטופלות מקומית; אחרות (name/status) נופלות ל‑LLM → fallback. הפתרון: הרחבת intents מקומיים לפני כל ניסיון להחליף מפתחות או להעמיס על ספקי LLM.\nMini App = Release Gate. אל תכניס משתמשים נוספים עד ש־frontend↔️backend↔️state יוכחו.\nעבוד בעיקר דרך Telegram/CommitBridge עד ש‑Windows יסונכרן; אל תריץ git pull בלי בדיקה של git diff על קבצים מקומיים לא מוסברים.\nאל תבצע mutations גדולים הלילה. בצע מדידות, גיבוי, ואז תיקונים קטנים ומבוקרים.\nאם תרצה — אני יכול עכשיו:\nלייצר טבלת בדיקות Smoke מוכנה לשליחה לבודקי Alpha (קצרה, עם פקודות מדויקות).",
-      "by": "8789977826",
-      "time": 1786663968.5449193,
-      "yes": 0,
-      "no": 0,
-      "voters": {}
-    },
-    "5": {
-      "text": "\"לשדרג את מערכת התשלומים\"",
-      "by": "8789977826",
-      "time": 1786742962.4489858,
-      "yes": 0,
-      "no": 0,
-      "voters": {}
     }
   },
   "agents": {
@@ -560,32 +335,6 @@
       "created": "2026-08-17T17:29:27.939742",
       "agent_type": "personal",
       "visibility": "owner_only"
-    },
-    "7": {
-      "id": "7",
-      "name": "User6332323773-Agent",
-      "state": "idle",
-      "role": "agent",
-      "owner_id": "6332323773",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-08-17T18:00:23.871329",
-      "agent_type": "personal",
-      "visibility": "owner_and_self"
-    },
-    "8": {
-      "id": "8",
-      "name": "User8847192372-Agent",
-      "state": "idle",
-      "role": "agent",
-      "owner_id": "8847192372",
-      "inbox": [],
-      "history": [],
-      "permissions": [],
-      "created": "2026-08-19T11:07:25.685461",
-      "agent_type": "personal",
-      "visibility": "owner_and_self"
     },
     "9": {
       "id": "9",
@@ -937,6 +686,42 @@
         8789977826
       ],
       "closed_at": 1786810640.797108
+    },
+    "ux_1_1786813474": {
+      "title": "מיפוי מסכי Mini App ורישום פערים",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.0824258
+    },
+    "ux_2_1786813474": {
+      "title": "עיצוב זרימת Onboarding למשתמש חדש",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.0824277
+    },
+    "ux_3_1786813474": {
+      "title": "בדיקת UX של פקודות הבוט והצעת שיפורים",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.0824285
+    },
+    "ux_4_1786813474": {
+      "title": "בניית דף בית ל-Dashboard",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.082429
+    },
+    "ux_5_1786813474": {
+      "title": "הגדרת מערכת צבעים וטיפוגרפיה",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.0824316
+    },
+    "ux_6_1786813474": {
+      "title": "שיפור נגישות והתאמה למובייל",
+      "assignee": "8791275334",
+      "status": "completed",
+      "created_at": 1786813474.082432
     }
   },
   "exec_audit": [
