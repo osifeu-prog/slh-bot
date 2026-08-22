@@ -43,6 +43,7 @@ def load_handlers(bot, context):
         ("ownership_transfer", "handlers.ownership_transfer_handler"),
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
+        ("progress", "handlers.progress_handler"),
         ("user", "handlers.user_handler"),
         ("services", "handlers.services_handler"),
         ("services", "handlers.services_handler"),
@@ -70,7 +71,7 @@ def load_handlers(bot, context):
         ("diagnostic", "diagnostic_handler"),
         ("guide", "guide_handler"),
         ("junk", "junk_handler"),
-        ("myprogress", "myprogress_handler"),
+
         ("report", "report_handler"),
         ("roadmap", "roadmap_handler"),
         ("sandbox", "sandbox_handler"),
