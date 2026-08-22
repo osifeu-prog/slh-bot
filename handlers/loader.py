@@ -44,6 +44,7 @@ def load_handlers(bot, context):
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
         ("progress", "handlers.progress_handler"),
+        ("health_monitor", "handlers.health_monitor_handler"),
         ("user", "handlers.user_handler"),
         ("services", "handlers.services_handler"),
         ("services", "handlers.services_handler"),
