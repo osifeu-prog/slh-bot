@@ -30,6 +30,29 @@ def register_ask_handler(bot):
 
         question = question[:2000]
 
+        # צירוף פלט exec אחרון להקשר
+        try:
+            import json
+            db_path = Path("state/db.json")
+            db = json.loads(db_path.read_text(encoding="utf-8"))
+            last_exec = db.get("last_exec_output")
+            if last_exec:
+                question = (
+                    question
+                    + "
+
+[LAST_EXEC_COMMAND]
+"
+                    + last_exec.get("command", "")
+                    + "
+
+[LAST_EXEC_OUTPUT]
+"
+                    + last_exec.get("output", "")[:2500]
+                )
+        except Exception:
+            pass
+
         try:
             answer = query_llm_with_context(
                 question,
