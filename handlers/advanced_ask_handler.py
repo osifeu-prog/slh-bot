@@ -33,23 +33,22 @@ def register_ask_handler(bot):
         # צירוף פלט exec אחרון להקשר
         try:
             import json
+            from pathlib import Path
+
             db_path = Path("state/db.json")
             db = json.loads(db_path.read_text(encoding="utf-8"))
+
             last_exec = db.get("last_exec_output")
+
             if last_exec:
                 question = (
                     question
-                    + "
-
-[LAST_EXEC_COMMAND]
-"
+                    + "\n\n[LAST_EXEC_COMMAND]\n"
                     + last_exec.get("command", "")
-                    + "
-
-[LAST_EXEC_OUTPUT]
-"
+                    + "\n\n[LAST_EXEC_OUTPUT]\n"
                     + last_exec.get("output", "")[:2500]
                 )
+
         except Exception:
             pass
 
