@@ -144,7 +144,7 @@ def query_llm_with_context(question, uid=None):
             name = get_display_name(uid) if uid else (user.get('display_name') or user.get('name') or 'לא ידוע')
             role = user.get('role','unknown')
             return f"👤 השם שלך הוא: {name}\n🎯 תפקיד: {role}"
-        if any(x in q for x in ["status", "סטטוס", "מצב מערכת", "דוח מערכת"]):
+        if any(x in q for x in ["מצב מערכת", "דוח מערכת"]):
             users_count = len(db.get("users", {}))
             tasks_count = len(db.get("tasks", {}))
             agents = db.get("agents", {})
