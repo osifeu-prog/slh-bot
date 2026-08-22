@@ -77,11 +77,28 @@ def register(bot, context):
                 db_path = Path("state/db.json")
                 db = json.loads(db_path.read_text(encoding="utf-8"))
 
-                db["last_exec_output"] = {
+                record = {
                     "command": cmd,
                     "output": output,
+                    "exit_code": result.returncode,
                     "ts": datetime.now().isoformat()
                 }
+
+                db["last_exec_output"] = record
+
+                if result.returncode != 0:
+                    db["last_error"] = record
+
+                lower_cmd = cmd.lower()
+
+                if "py_compile" in lower_cmd or "pytest" in lower_cmd or "test" in lower_cmd:
+                    db["last_test"] = record
+
+                if "deploy" in lower_cmd or "railway" in lower_cmd:
+                    db["last_deploy"] = record
+
+                if "commit" in lower_cmd or "git" in lower_cmd:
+                    db["last_commit"] = record
 
                 db_path.write_text(
                     json.dumps(db, ensure_ascii=False, indent=2),
