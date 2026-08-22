@@ -65,3 +65,30 @@ Open for next session:
 - Legacy save_db() duplicates (bot_stable.py etc.) — dead code, low priority
 
 Tag: ALPHA_CORE_SMOKE_PASS_20260822
+
+## Checkpoint 2026-08-22T14:59:16.120368+00:00
+
+### Verified
+- Runtime: bot_gateway.py (PID 1)
+- Procfile: web: /opt/venv/bin/python3 -B bot_gateway.py
+- /start handler: handlers/onboarding_v2.py:116
+- Loader: handlers.loader
+- Economy authority: core/economy_bridge.py -> economy_service.record_transaction()
+- Identity: OWNER_ID=8789977826; no get_role/get_permissions in core.identity yet
+- Agents: 9 in state/db.json; no agent_type/visibility fields
+- Devices: state/devices.json, all offline; no agent_id link
+- Crypto: TON wallet/handler exist; Binance/BSC/BNB/Web3 absent
+- LLM router: /ask status no longer triggers system report
+- Health: /health returns ok
+- Smoke: all 16 commands passed
+
+### Decision
+- Freeze Alpha Core; no new feature work tonight.
+- Next priorities:
+  1. Agent Scope/Visibility
+  2. Authority Gate
+  3. optional Binance module
+
+### Notes
+- bot_stable.py is legacy, not production entrypoint.
+- Several audit scripts are read-only or legacy; no production impact.
