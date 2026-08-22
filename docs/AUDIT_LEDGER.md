@@ -45,3 +45,23 @@
 - [ ] למפות את כל הפקודות מול התפריטים
 - [ ] להגדיר schema מוצע ל־Agent Taxonomy
 - [ ] לבדוק האם יש צורך ב־backfill של שדה `agent_type` לסוכנים קיימים
+
+## Checkpoint — 2026-08-22 17:49 UTC — ALPHA_CORE_SMOKE_PASS
+
+Full 16-command smoke test: 16/16 PASS.
+- Runtime: bot_gateway.py stable, PID 1
+- Economy authority: verified locked (bridge → economy_service)
+- LLM intent routing: fixed — "status" alone → LLM, "מה מצב המערכת" → canonical report (intended)
+- Identity: OWNER consistent across /me, /wallet, /ask
+- Agents: 9 registered, 1/9 with real runtime_class (SystemGuard)
+- Devices: 5 registered, all offline, no agent↔️device link
+- Binance/BSC/BNB: confirmed absent — no code, no env vars. Not a bug.
+
+Open for next session:
+- Agent taxonomy (system/personal/user scope) — design only, no code yet
+- core/authority.py Gate — not created
+- Windows local repo (C:\Users\USER\slh-bot-clean) still far behind origin/main — needs separate backup+sync session
+- learning_path.py / plugins/task.py mojibake — not fixed
+- Legacy save_db() duplicates (bot_stable.py etc.) — dead code, low priority
+
+Tag: ALPHA_CORE_SMOKE_PASS_20260822
