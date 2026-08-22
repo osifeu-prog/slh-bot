@@ -24,7 +24,7 @@ def register(bot):
 
         query = """
         mutation {
-          serviceInstanceRedeploy(
+          serviceInstanceDeploy(
             serviceId: "13d97581-0199-4f6a-80d1-885c9304ffc5",
             environmentId: "661caa13-83cb-4197-8825-943bebf96c5a"
           )
