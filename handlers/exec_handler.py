@@ -1,5 +1,8 @@
 ﻿import subprocess
 import os
+import json
+from pathlib import Path
+from datetime import datetime
 from core.progress_tracker import progress_report
 
 def register(bot, context):
@@ -32,6 +35,25 @@ def register(bot, context):
 
             if len(output) > 4000:
                 output = output[:4000] + "\n... truncated"
+
+            # שמירת EXEC אחרון לזיכרון תפעולי
+            try:
+                db_path = Path("state/db.json")
+                db = json.loads(db_path.read_text(encoding="utf-8"))
+
+                db["last_exec_output"] = {
+                    "command": cmd,
+                    "output": output,
+                    "ts": datetime.now().isoformat()
+                }
+
+                db_path.write_text(
+                    json.dumps(db, ensure_ascii=False, indent=2),
+                    encoding="utf-8"
+                )
+
+            except Exception as e:
+                print("SAVE_EXEC_OUTPUT_ERROR:", e)
 
             bot.reply_to(
                 m,
