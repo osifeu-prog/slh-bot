@@ -29,6 +29,24 @@ def register(bot, context):
                 print("EXEC_LOG_ERROR:", e)
             # --- END LOGGING ---
 
+            
+            # --- EXEC LOGGING ---
+            try:
+                import json, time
+                log_path = Path("state/exec_log.json")
+                logs = []
+                if log_path.exists():
+                    logs = json.loads(log_path.read_text(encoding="utf-8"))
+                logs.append({
+                    "cmd": cmd,
+                    "output": output,
+                    "ts": time.time()
+                })
+                log_path.write_text(json.dumps(logs, indent=2, ensure_ascii=False), encoding="utf-8")
+            except Exception as e:
+                print("EXEC_LOG_ERROR:", e)
+            # --- END LOGGING ---
+
             bot.reply_to(m, "⛔ Admin only.")
             return
 
