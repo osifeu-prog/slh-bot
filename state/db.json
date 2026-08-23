@@ -42,7 +42,7 @@
         "commission": 0
       },
       "name": "Osif",
-      "role": "SUPER_ADMIN",
+      "role": "OWNER",
       "joined": true,
       "test_field": null,
       "group": "",
@@ -61,8 +61,7 @@
         "has_esp": true,
         "device_count": 3,
         "verified_devices": 3
-      },
-      "title": "Super Admin"
+      }
     }
   },
   "students": {
@@ -618,34 +617,6 @@
       "credits": 10449,
       "staked_moved": 50,
       "reason": "OWNER_ONLY_CREDITS_POLICY"
-    },
-    {
-      "time": "2026-08-22T19:05:23.632341+00:00",
-      "uid": "8789977826",
-      "before": 11815,
-      "amount": -10,
-      "after": 11805,
-      "reason": "staking:stake",
-      "meta": {
-        "source": "telegram",
-        "command": "stake",
-        "staked_before": 136,
-        "staked_after": 146
-      }
-    },
-    {
-      "time": "2026-08-22T19:05:34.338080+00:00",
-      "uid": "8789977826",
-      "before": 11805,
-      "amount": 10,
-      "after": 11815,
-      "reason": "staking:unstake",
-      "meta": {
-        "source": "telegram",
-        "command": "unstake",
-        "staked_before": 146,
-        "staked_after": 136
-      }
     }
   ],
   "users_archive": {
