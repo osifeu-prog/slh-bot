@@ -1,6 +1,8 @@
 import json
 from core import profile_manager
 from core.identity import OWNER_TELEGRAM_ID
+from core.profile_manager import get_user
+from core.invite_gate import can_start_onboarding
 
 user_states = {}
 
@@ -12,6 +14,19 @@ def register(bot):
 
         if int(uid) == int(OWNER_TELEGRAM_ID):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
+            return
+
+        existing_user = get_user(uid)
+
+        if not can_start_onboarding(
+            is_owner=False,
+            is_existing_user=existing_user is not None,
+        ):
+            bot.reply_to(
+                msg,
+                "🚧 ההצטרפות לאלפא סגורה כרגע.\n"
+                "נדרש Invite כדי להצטרף."
+            )
             return
 
         user_states[uid] = {"step": "name"}

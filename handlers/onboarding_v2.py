@@ -6,6 +6,7 @@ from core.message_utils import safe_clip
 from core.profile_manager import get_user, update_user
 from core.agent_registry import create_agent
 from core.identity_resolver import get_display_name
+from core.invite_gate import can_start_onboarding
 
 
 def register(bot):
@@ -136,6 +137,17 @@ def register(bot):
             )
         )
 
+        if not can_start_onboarding(
+            is_owner=is_owner,
+            is_existing_user=not is_new,
+        ):
+            bot.send_message(
+                m.chat.id,
+                "🚧 ההצטרפות לאלפא סגורה כרגע.\n"
+                "נדרש Invite כדי להצטרף."
+            )
+            return
+
         if is_owner:
             text = (
                 f"\u05d1\u05e8\u05d5\u05da \u05e9\u05d5\u05d1\u05da, {user_name}!\n\n"
@@ -219,9 +231,22 @@ def register(bot):
 
         try:
 
-            get_user(
+            existing_user = get_user(
                 user_id
             )
+
+            is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
+
+            if not can_start_onboarding(
+                is_owner=is_owner,
+                is_existing_user=existing_user is not None,
+            ):
+                bot.answer_callback_query(
+                    call.id,
+                    "🚧 ההצטרפות לאלפא סגורה כרגע."
+                )
+                return
+
 
             user_name = get_display_name(
                 call.from_user.id,
