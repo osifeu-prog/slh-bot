@@ -8,7 +8,7 @@ def register(bot, context=None):
         brief = get_morning_brief(uid)
         bot.reply_to(m, brief, parse_mode=None)
 
-        @bot.message_handler(commands=["valuation"])
+    @bot.message_handler(commands=["valuation"])
     def valuation_cmd(m):
         from core.ton_lab import valuation_report
         bot.reply_to(m, valuation_report(), parse_mode=None)

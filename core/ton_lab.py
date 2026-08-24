@@ -1,5 +1,5 @@
 """
-SLH TON Lab v1
+SLH TON Lab v2
 Reads TON wallets, records experiments, estimates valuation.
 No private keys. No transaction broadcasting.
 """
@@ -54,9 +54,9 @@ def estimate_valuation(hourly_rate_usd=80):
         for u in users.values()
     )
     tasks = db.get("tasks", {})
-    total_progress = sum(t.get("progress", 0) for t in tasks.values())
-    progress = int(total_progress / task_count) if task_count else 0
     task_count = len(tasks)
+    total_progress = sum(t.get("progress", 0) for t in tasks.values()) if tasks else 0
+    progress = int(total_progress / task_count) if task_count else 0
 
     experiments = db.get("experiments", [])
     experiments_count = len(experiments)
@@ -64,11 +64,10 @@ def estimate_valuation(hourly_rate_usd=80):
     bsc = db.get("bsc_settings", {})
     ton = db.get("ton_settings", {})
 
-    # Rough valuation: time invested + economic activity + infra
-    dev_value = dev_count * 40 * hourly_rate_usd  # 40h/week baseline
+    dev_value = dev_count * 40 * hourly_rate_usd
     economic_value = total_credits * 0.01 + total_staked * 0.05
-    infra_value = 5000  # baseline for working OS + bot + DB + onchain monitors
-    experiment_value = experiments_count * 25  # each experiment adds knowledge
+    infra_value = 5000
+    experiment_value = experiments_count * 25
 
     total_estimated = dev_value + economic_value + infra_value + experiment_value
 
