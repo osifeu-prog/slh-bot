@@ -1,4 +1,5 @@
 from core import economy_service
+from core.profile_manager import get_user
 
 
 def register(bot):
@@ -11,6 +12,12 @@ def register(bot):
         try:
             amount = int(parts[1])
             uid = str(msg.from_user.id)
+
+            user = get_user(uid) or {}
+            course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
+            if not course or course.get("stage", 0) < 1:
+                bot.reply_to(msg, "❌ קודם סיים את קורס Bitcoin.")
+                return
 
             result = economy_service.stake_credits(
                 uid,
@@ -40,6 +47,12 @@ def register(bot):
         try:
             amount = int(parts[1])
             uid = str(msg.from_user.id)
+
+            user = get_user(uid) or {}
+            course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
+            if not course or course.get("stage", 0) < 1:
+                bot.reply_to(msg, "❌ קודם סיים את קורס Bitcoin.")
+                return
 
             result = economy_service.unstake_credits(
                 uid,
