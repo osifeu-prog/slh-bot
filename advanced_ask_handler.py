@@ -1,16 +1,10 @@
-import json
-from handlers.llm_handler import query_llm_with_context
+﻿# DEPRECATED
+# Canonical /ask handler:
+# handlers.advanced_ask_handler.register_ask_handler(bot)
+#
+# Runtime loading is owned by handlers.loader.py.
+# This module intentionally registers NO Telegram handlers.
 
 def register_ask_handler(bot):
-    @bot.message_handler(commands=['ask'])
-    def ask(msg):
-        question = msg.text.replace('/ask','').strip()
-        if not question:
-            bot.reply_to(msg, "Usage: /ask <שאלה>")
-            return
-        user_id = str(msg.from_user.id)
-        try:
-            answer = query_llm_with_context(question, user_id)
-        except Exception as e:
-            answer = f"שיאה: {e}"
-        bot.reply_to(msg, answer)
+    print("ℹ️ root advanced_ask_handler deprecated - canonical handler is handlers.advanced_ask_handler")
+    return None

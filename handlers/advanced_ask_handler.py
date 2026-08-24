@@ -1,4 +1,5 @@
-from handlers.llm_handler import query_llm_with_context
+﻿from handlers.llm_handler import query_llm_with_context
+from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
 
 
@@ -53,11 +54,27 @@ def register_ask_handler(bot):
             pass
 
         try:
-            answer = query_llm_with_context(
+            local_answer = route(
                 question,
                 str(msg.from_user.id)
             )
 
+            if local_answer is not None:
+                bot.send_message(
+                    msg.chat.id,
+                    _safe_clip(local_answer),
+                    parse_mode=None
+                )
+                return
+
+        except Exception:
+            pass
+
+        try:
+            answer = query_llm_with_context(
+                question,
+                str(msg.from_user.id)
+            )
         except Exception:
             answer = (
                 "❌ תקלה פנימית במנוע AI.\n"
