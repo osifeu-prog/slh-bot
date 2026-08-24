@@ -100,3 +100,9 @@ if __name__ == "__main__":
         port=8080
     )
 
+
+@app.route("/api/onchain/status")
+def onchain_status():
+    from core.deposit_monitor import get_onchain_status
+    return jsonify(get_onchain_status())
+
