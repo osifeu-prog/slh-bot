@@ -54,7 +54,8 @@ def estimate_valuation(hourly_rate_usd=80):
         for u in users.values()
     )
     tasks = db.get("tasks", {})
-    progress = sum(t.get("progress", 0) for t in tasks.values())
+    total_progress = sum(t.get("progress", 0) for t in tasks.values())
+    progress = int(total_progress / task_count) if task_count else 0
     task_count = len(tasks)
 
     experiments = db.get("experiments", [])
@@ -78,6 +79,7 @@ def estimate_valuation(hourly_rate_usd=80):
         "total_credits": total_credits,
         "total_staked": total_staked,
         "task_progress": progress,
+        "task_total_progress": total_progress,
         "task_count": task_count,
         "experiments": experiments_count,
         "bsc_treasury": bsc.get("treasury_wallet"),
