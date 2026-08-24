@@ -49,10 +49,12 @@ def task(message, bot):
 
         status = "✅" if done else "⬜"
 
+        progress = t.get("progress", 0)
+        task_status = t.get("status", "active")
         txt += (
             f"{status} {key}: "
             f"{t['title']} "
-            f"(+{t.get('reward', 0)})\n"
+            f"[{task_status}] {progress}%\n"
         )
 
 
