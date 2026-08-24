@@ -53,3 +53,4 @@ state/db.json.bak_*
 .nixpacks/build.sh
 state/takeover/*.json
 state/*backup*.json
+state/*pre_bot_control*.json
