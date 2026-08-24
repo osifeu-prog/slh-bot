@@ -5,6 +5,7 @@ No private keys. No transaction broadcasting.
 """
 import json
 import time
+import requests
 from pathlib import Path
 
 DB = Path("state/db.json")
@@ -103,3 +104,23 @@ def valuation_report():
         f"💵 Estimated Value: ${v['estimated_value_usd']:,.2f}",
     ]
     return "\n".join(lines)
+
+
+def get_ton_balance(address):
+    url = "https://toncenter.com/api/v2/getAddressInformation"
+    try:
+        r = requests.get(url, params={"address": address}, timeout=10)
+        data = r.json()
+        if data.get("ok") and "result" in data:
+            return int(data["result"].get("balance", 0)) / 1e9
+    except Exception:
+        pass
+    return None
+
+
+def ton_balances():
+    wallets = get_wallets()
+    out = []
+    for w in wallets.get("all", []):
+        out.append({"address": w, "balance_ton": get_ton_balance(w)})
+    return out
