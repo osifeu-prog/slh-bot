@@ -92,7 +92,13 @@ def route(text, uid=None):
             from core.mission_lifecycle import MissionLifecycleService
             service = MissionLifecycleService()
             board, _ = service.load_state()
-            missions = board.get("missions", [])
+
+            missions = (
+                board.get("missions")
+                or board.get("tasks")
+                or []
+            )
+
             return "📋 משימות:\n" + str(missions)
         except Exception:
             return "📋 אין משימות פעילות כרגע."
