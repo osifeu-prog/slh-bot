@@ -67,9 +67,13 @@
       "name": "User5010371391",
       "display_name": "User5010371391",
       "telegram_name": "User5010371391",
-      "role": "student",
+      "role": "developer",
       "joined": false,
-      "permissions": [],
+      "permissions": [
+        "exec_request",
+        "read_logs",
+        "db_read"
+      ],
       "profile": {
         "created": "2026-08-24T11:57:54.967332"
       },
