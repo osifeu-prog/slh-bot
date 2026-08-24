@@ -1,4 +1,4 @@
-﻿from core.ask_guard import guard
+from core.ask_guard import guard
 from core.context_builder import get_context
 from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
@@ -7,6 +7,9 @@ from core.economy_service import get_balance_safe
 # ===== ASK Router v2 – Deterministic + LLM fallback =====
 
 INTENTS = {
+    "missions": ["משימות","המשימות","tasks","missions"],
+    "progress": ["התקדמות","מצב התקדמות","progress"],
+    "rewards": ["פרסים","תגמולים","rewards"],
     "wallet": [
         "קרדיטים",
         "קרדיט",
@@ -45,6 +48,9 @@ INTENTS = {
 
 PRIORITY = [
     "wallet",
+    "missions",
+    "progress",
+    "rewards",
     "system",
     "agents",
     "courses",
