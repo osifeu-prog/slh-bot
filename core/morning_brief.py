@@ -5,6 +5,7 @@ Source of truth: state/db.json + daily_plan.json + onchain
 import json
 from pathlib import Path
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 def _load_db():
@@ -44,8 +45,10 @@ def get_morning_brief(uid):
         onchain = {"error": str(e)}
 
     lines = [
+        "בס״ד",
+        "",
         "🌅 דוח פתיחת יום SLH",
-        f"🕒 {datetime.now().isoformat()}",
+        f"🕒 {datetime.now(ZoneInfo("Asia/Jerusalem")).isoformat()}",
         f"👤 {user.get('name') or 'User'}",
         f"💰 Credits: {wallet.get('credits', 0)}",
         f"🔒 Staked: {wallet.get('staked', 0)}",
