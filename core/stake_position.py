@@ -61,6 +61,9 @@ def unlock_position(position_id):
     if pos.get("status") == "unlocked":
         return pos
 
+    if time.time() < float(pos.get("unlocks_at", 0)):
+        raise ValueError("still locked")
+
     pos["status"] = "unlocked"
     pos["unlocked_at"] = time.time()
     _save(db)
