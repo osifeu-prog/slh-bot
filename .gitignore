@@ -52,3 +52,4 @@ state/db.json.bak_*
 *.lock
 .nixpacks/build.sh
 state/takeover/*.json
+state/*backup*.json
