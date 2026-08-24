@@ -67,13 +67,9 @@
       "name": "User5010371391",
       "display_name": "User5010371391",
       "telegram_name": "User5010371391",
-      "role": "developer",
+      "role": "disabled",
       "joined": false,
-      "permissions": [
-        "exec_request",
-        "read_logs",
-        "db_read"
-      ],
+      "permissions": [],
       "profile": {
         "created": "2026-08-24T11:57:54.967332"
       },
@@ -96,7 +92,8 @@
       },
       "active_tasks": [
         "ALPHA_TEST_001"
-      ]
+      ],
+      "status": "disabled"
     },
     "DEV_TELEGRAM_ID": {
       "name": "UserDEV_TELEGRAM_ID",
@@ -124,7 +121,8 @@
         "code": null,
         "count": 0,
         "commission": 0
-      }
+      },
+      "status": "disabled"
     },
     "PUT_DEV_ID_HERE": {
       "name": "UserPUT_DEV_ID_HERE",
@@ -152,7 +150,8 @@
         "code": null,
         "count": 0,
         "commission": 0
-      }
+      },
+      "status": "disabled"
     }
   },
   "students": {
