@@ -62,6 +62,38 @@
         "device_count": 3,
         "verified_devices": 3
       }
+    },
+    "DEV_TELEGRAM_ID": {
+      "name": "UserDEV_TELEGRAM_ID",
+      "display_name": "UserDEV_TELEGRAM_ID",
+      "telegram_name": "UserDEV_TELEGRAM_ID",
+      "role": "developer",
+      "joined": false,
+      "permissions": [
+        "db_read",
+        "exec_request",
+        "read_logs"
+      ],
+      "profile": {
+        "created": "2026-08-24T11:55:11.481321"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      }
     }
   },
   "students": {
@@ -152,7 +184,8 @@
   "system": {
     "bot_name": "OSIF CORE",
     "owner": "Osif",
-    "description": "המערכת החכמה של SLH OS"
+    "description": "המערכת החכמה של SLH OS",
+    "alpha_open": true
   },
   "pending_exec": {
     "7cfcf12e": {
