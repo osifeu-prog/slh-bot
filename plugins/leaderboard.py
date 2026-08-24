@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 
@@ -19,7 +19,7 @@ class LeaderboardPlugin:
 
         ranked = sorted(
             users.items(),
-            key=lambda x: x[1].get("credits", 0),
+            key=lambda x: x[1].get("wallet", {}).get("credits", 0),
             reverse=True
         )
 
