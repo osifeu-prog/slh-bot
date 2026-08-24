@@ -11,7 +11,13 @@ ERC20_ABI = [
 ]
 
 def get_onchain_status():
+    import json
     cfg = get_bsc_config()
+    try:
+        db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+        cfg = {**cfg, **db.get("bsc_settings", {})}
+    except Exception:
+        pass
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
     treasury = w3.to_checksum_address(cfg["treasury_wallet"])
     contract = w3.eth.contract(
