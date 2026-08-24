@@ -40,3 +40,33 @@ def get_onchain_status():
         "symbol": "SLH",
         "network": cfg.get("network", "bsc"),
     }
+
+
+def verify_bnb_deposit(tx_hash):
+    import json
+    from web3 import Web3
+    cfg = get_bsc_config()
+    with open("state/db.json", encoding="utf-8") as f:
+        db = json.load(f)
+    cfg = {**cfg, **db.get("bsc_settings", {})}
+    w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
+    try:
+        tx = w3.eth.get_transaction(tx_hash)
+        receipt = w3.eth.get_transaction_receipt(tx_hash)
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+    if not receipt or receipt.get("status") != 1:
+        return {"ok": False, "status": receipt.get("status") if receipt else None}
+    treasury = w3.to_checksum_address(cfg["treasury_wallet"])
+    to_addr = tx.get("to")
+    if to_addr is None or str(to_addr).lower() != str(treasury).lower():
+        return {"ok": False, "to": str(to_addr), "treasury": str(treasury)}
+    amount = w3.from_wei(tx.get("value", 0), "ether")
+    return {
+        "ok": True,
+        "from": str(tx.get("from")),
+        "to": str(to_addr),
+        "amount_bnb": float(amount),
+        "block": int(receipt.get("blockNumber", 0)),
+        "tx_hash": str(tx_hash),
+    }
