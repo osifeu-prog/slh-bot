@@ -6,3 +6,4 @@ python-dotenv==1.0.1
 openai>=1.0.0
 groq
 paho-mqtt
+web3==7.16.0
