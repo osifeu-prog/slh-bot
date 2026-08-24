@@ -1,30 +1,30 @@
 """
 SLH Onchain Deposit Monitor v1
-Reads BSC treasury balances from RPC.
 """
+import json
+from pathlib import Path
 from web3 import Web3
 from core.binance_connector import get_bsc_config
+
 
 ERC20_ABI = [
     {"constant": True, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "type": "function"},
     {"constant": True, "inputs": [], "name": "decimals", "outputs": [{"name": "", "type": "uint8"}], "type": "function"},
 ]
 
+
 def get_onchain_status():
-    import json
     cfg = get_bsc_config()
-    try:
-        db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
-        cfg = {**cfg, **db.get("bsc_settings", {})}
-    except Exception:
-        pass
+    db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+    if "bsc_settings" in db:
+        cfg = {**cfg, **db["bsc_settings"]}
+
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
     treasury = w3.to_checksum_address(cfg["treasury_wallet"])
     contract = w3.eth.contract(
         address=Web3.to_checksum_address(cfg["token_contract"]),
         abi=ERC20_ABI,
     )
-
     slh_raw = contract.functions.balanceOf(treasury).call()
     dec = contract.functions.decimals().call()
     slh = slh_raw / (10 ** dec)
@@ -38,5 +38,5 @@ def get_onchain_status():
         "treasury_bnb": float(bnb),
         "treasury_slh": float(slh),
         "symbol": "SLH",
-        "network": cfg["network"],
+        "network": cfg.get("network", "bsc"),
     }
