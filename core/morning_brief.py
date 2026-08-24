@@ -48,7 +48,7 @@ def get_morning_brief(uid):
         "בס״ד",
         "",
         "🌅 דוח פתיחת יום SLH",
-        f"🕒 {datetime.now(ZoneInfo("Asia/Jerusalem")).isoformat()}",
+        f"🕒 {datetime.now(ZoneInfo('Asia/Jerusalem')).isoformat()}",
         f"👤 {user.get('name') or 'User'}",
         f"💰 Credits: {wallet.get('credits', 0)}",
         f"🔒 Staked: {wallet.get('staked', 0)}",
