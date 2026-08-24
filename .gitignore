@@ -54,3 +54,5 @@ state/db.json.bak_*
 state/takeover/*.json
 state/*backup*.json
 state/*pre_bot_control*.json
+railway_baseline_*.txt
+railway_logs_baseline_*.txt
