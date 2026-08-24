@@ -103,6 +103,11 @@ def valuation_report():
         "",
         f"💵 Estimated Value: ${v['estimated_value_usd']:,.2f}",
     ]
+    for b in ton_balances():
+        addr = str(b.get("address", ""))
+        bal = b.get("balance_ton", 0.0)
+        short = addr[:12] + "..." if addr else "unknown"
+        lines.append(f"💎 TON {short}: {bal} TON")
     return "\n".join(lines)
 
 
