@@ -13,4 +13,12 @@ def register(bot, context=None):
         from core.ton_lab import valuation_report
         bot.reply_to(m, valuation_report(), parse_mode=None)
 
+    @bot.message_handler(commands=["onchain"])
+    def onchain_cmd(m):
+        from core.deposit_monitor import get_onchain_status
+        import json
+        status = get_onchain_status()
+        text = json.dumps(status, ensure_ascii=False, indent=2)
+        bot.reply_to(m, text, parse_mode=None)
+
     print("✅ brief_handler loaded")
