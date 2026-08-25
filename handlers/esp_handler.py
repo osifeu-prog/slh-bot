@@ -141,6 +141,29 @@ def register_esp_handler(bot):
         except Exception as e:
             bot.reply_to(msg, f"❌ {e}")
 
+    @bot.message_handler(commands=["esp_start"])
+    def esp_start(msg):
+        parts = msg.text.split()
+        device_id = parts[1] if len(parts) > 1 else "DEV_ESP_NEW_1786177919"
+        import subprocess
+        log_path = f"/tmp/virtual_esp_{device_id}.log"
+        with open(log_path, "a") as log_file:
+            subprocess.Popen(
+                ["python3", "core/virtual_esp.py", device_id],
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        bot.reply_to(msg, f"🟢 {device_id} הופעל")
+
+    @bot.message_handler(commands=["esp_stop"])
+    def esp_stop(msg):
+        parts = msg.text.split()
+        device_id = parts[1] if len(parts) > 1 else "DEV_ESP_NEW_1786177919"
+        import subprocess
+        subprocess.run(["pkill", "-f", f"virtual_esp.py {device_id}"])
+        bot.reply_to(msg, f"🔴 {device_id} הופסק")
+
     @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])
     def esp_status(msg):
         devices = load_devices()
