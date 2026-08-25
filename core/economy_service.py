@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 from datetime import datetime, timezone
 import state_manager
@@ -725,6 +725,11 @@ def complete_task(
             raise ValueError("INVALID_TASK_REWARD")
 
         done_by.append(uid)
+
+        task["status"] = "completed"
+        task["progress"] = 100
+        task["completed_at"] = datetime.now(timezone.utc).isoformat()
+        task["completed_by"] = str(uid)
 
         result = {
             "status": "completed",
