@@ -122,7 +122,26 @@ def register_esp_handler(bot):
         dev["last_heartbeat"] = datetime.now(timezone.utc).isoformat()
         save_devices(devices)
         bot.reply_to(msg, f"❤️ heartbeat: {device_id}")
-    @bot.message_handler(commands=["esp_status"])
+
+
+    @bot.message_handler(commands=["esp_progress"])
+    def esp_progress(msg):
+        parts = msg.text.split()
+        if len(parts) < 2:
+            bot.reply_to(msg, "שימוש: /esp_progress <device_id>")
+            return
+        device_id = parts[1]
+        try:
+            from core.esp_display import publish_progress
+            ok, result = publish_progress(device_id)
+            if ok:
+                bot.reply_to(msg, f"📊 נשלח ל־{device_id}\n{result}")
+            else:
+                bot.reply_to(msg, f"❌ {result}")
+        except Exception as e:
+            bot.reply_to(msg, f"❌ {e}")
+
+    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])
     def esp_status(msg):
         devices = load_devices()
 
