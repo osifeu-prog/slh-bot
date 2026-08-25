@@ -89,6 +89,39 @@ def register_esp_handler(bot):
 
         bot.reply_to(msg, f"ESP32 {device_id}: {reply}")
 
+
+
+    @bot.message_handler(commands=["esp_activate"])
+    def esp_activate(msg):
+        parts = msg.text.split()
+        if len(parts) < 2:
+            bot.reply_to(msg, "שימוש: /esp_activate <device_id>")
+            return
+        device_id = parts[1]
+        devices = load_devices()
+        dev = devices.get(device_id)
+        if not dev:
+            bot.reply_to(msg, "מכשיר לא נמצא")
+            return
+        dev["status"] = "active"
+        dev["verified"] = True
+        dev["activated_at"] = datetime.now(timezone.utc).isoformat()
+        save_devices(devices)
+        bot.reply_to(msg, f"✅ {device_id} הופעל")
+
+    @bot.message_handler(commands=["esp_heartbeat"])
+    def esp_heartbeat(msg):
+        parts = msg.text.split()
+        device_id = parts[1] if len(parts) > 1 else "esp32_01"
+        devices = load_devices()
+        dev = devices.get(device_id)
+        if not dev:
+            bot.reply_to(msg, "מכשיר לא נמצא")
+            return
+        dev["status"] = "online"
+        dev["last_heartbeat"] = datetime.now(timezone.utc).isoformat()
+        save_devices(devices)
+        bot.reply_to(msg, f"❤️ heartbeat: {device_id}")
     @bot.message_handler(commands=["esp_status"])
     def esp_status(msg):
         devices = load_devices()
