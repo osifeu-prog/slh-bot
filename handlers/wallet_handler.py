@@ -1,4 +1,4 @@
-from core import profile_manager
+﻿from core import profile_manager
 
 
 def register(bot):
@@ -21,6 +21,14 @@ def register(bot):
             f"🔒 Staked: {staked}\n"
             f"🪙 Token Balance: {token_balance}\n"
         )
+
+        try:
+            with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as f:
+                logo = f.read().strip()
+        except Exception:
+            logo = ""
+        if logo:
+            text = logo + "\n\n" + text
 
         bot.reply_to(msg, text)
 
