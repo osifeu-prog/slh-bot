@@ -2,6 +2,7 @@ import json
 import time
 from pathlib import Path
 from core import profile_manager
+from core.esp_license import issue_license
 
 
 def apply_grant(uid, grant):
@@ -80,11 +81,15 @@ def apply_grant(uid, grant):
 
         db_path.write_text(json.dumps(db, ensure_ascii=False, indent=2), encoding="utf-8")
 
+        license_result = issue_license(device_id, str(uid), duration_days=365)
+        license_data = license_result.get("license") if license_result.get("ok") else None
+
         return {
             "type": "hardware",
             "device_id": device_id,
             "wallet": address,
-            "agent_id": "7"
+            "agent_id": "7",
+            "license": license_data
         }
 
     return None
