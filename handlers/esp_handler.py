@@ -7,6 +7,14 @@ MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 
 
+def load_db():
+    try:
+        with open("state/db.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 def load_devices():
     try:
         with open("state/devices.json", "r", encoding="utf-8") as f:
@@ -89,10 +97,24 @@ def register_esp_handler(bot):
             bot.reply_to(msg, "No devices registered.")
             return
 
-        lines = [
-            f"{did}: {d.get('status', '?')} | last: {d.get('last_heartbeat', d.get('last_seen', 'never'))}"
-            for did, d in devices.items()
-        ]
+        db = load_db()
+        device_wallets = db.get("device_wallets", {})
+        device_agent_map = db.get("device_agent_map", {})
+        lines = []
+        for did, d in devices.items():
+            if d.get("type") != "esp32":
+                continue
+            status = d.get("status", "?")
+            wallet = device_wallets.get(did, {})
+            address = d.get("wallet_address") or wallet.get("address", "-")
+            agent_id = d.get("agent_id") or device_agent_map.get(did, "-")
+            lines.append(
+                f"{d.get('name', did)} [{status}]\n"
+                f"🆔 {did}\n"
+                f"💳 Wallet: {address}\n"
+                f"🤖 Agent: {agent_id}\n"
+                "──────────────"
+            )
 
         try:
             with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as f:
