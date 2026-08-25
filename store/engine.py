@@ -1,7 +1,6 @@
-"""SLH Store Engine - isolated store catalog + inventory display"""
+"""SLH Store Engine - catalog + inventory display"""
 import json
 from pathlib import Path
-
 
 ITEMS_FILE = Path(file).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
