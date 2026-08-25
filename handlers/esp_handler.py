@@ -164,7 +164,17 @@ def register_esp_handler(bot):
         subprocess.run(["pkill", "-f", f"virtual_esp.py {device_id}"])
         bot.reply_to(msg, f"🔴 {device_id} הופסק")
 
-    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])
+
+    @bot.message_handler(commands=["esp_broadcast_progress"])
+    def esp_broadcast_progress(msg):
+        try:
+            from core.esp_broadcast import broadcast_progress
+            result = broadcast_progress()
+            bot.reply_to(msg, result)
+        except Exception as e:
+            bot.reply_to(msg, f"❌ {e}")
+
+    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])
     def esp_status(msg):
         devices = load_devices()
 
