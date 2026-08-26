@@ -50,7 +50,6 @@ def load_handlers(bot, context):
         ("exec_log", "handlers.exec_log_handler"),
         ("user", "handlers.user_handler"),
         ("services", "handlers.services_handler"),
-        ("services", "handlers.services_handler"),
         ("voting", "handlers.ai_voting_handler"),
         ("governance", "handlers.governance_handler"),
         ("broadcast", "handlers.broadcast_handler"),

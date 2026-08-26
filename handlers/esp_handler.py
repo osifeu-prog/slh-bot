@@ -174,7 +174,7 @@ def register_esp_handler(bot):
         except Exception as e:
             bot.reply_to(msg, f"❌ {e}")
 
-    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])    @bot.message_handler(commands=["esp_status"])
+    @bot.message_handler(commands=["esp_status"])
     def esp_status(msg):
         devices = load_devices()
 
