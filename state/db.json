@@ -298,6 +298,30 @@
       },
       "permissions": [],
       "onboarding_completed": false
+    },
+    "9999999996": {
+      "name": "TermsTest",
+      "display_name": "TermsTest",
+      "telegram_name": "TermsTest",
+      "role": "student",
+      "joined": false,
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "profile": {
+        "created": "2026-08-26T21:10:00"
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "permissions": [],
+      "onboarding_completed": false
     }
   },
   "students": {
@@ -352,8 +376,8 @@
     },
     "p0_security_exec": {
       "title": "אבטחת /e ו /execr",
-      "progress": 50,
-      "status": "active"
+      "progress": 100,
+      "status": "done"
     },
     "p0_onboarding_e2e": {
       "title": "E2E משתמש חדש",
