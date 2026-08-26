@@ -6,7 +6,7 @@
         "joined": "2026-08-07T22:43:47.559294"
       },
       "wallet": {
-        "credits": 11815,
+        "credits": 10819.0,
         "staked": 136,
         "token_balance": 0
       },
@@ -61,7 +61,9 @@
         "has_esp": true,
         "device_count": 3,
         "verified_devices": 3
-      }
+      },
+      "onboarding_completed": false,
+      "active_course": "bitcoin_mastery"
     },
     "5010371391": {
       "name": "User5010371391",
@@ -93,7 +95,8 @@
       "active_tasks": [
         "ALPHA_TEST_001"
       ],
-      "status": "disabled"
+      "status": "disabled",
+      "onboarding_completed": false
     },
     "DEV_TELEGRAM_ID": {
       "name": "UserDEV_TELEGRAM_ID",
@@ -122,7 +125,8 @@
         "count": 0,
         "commission": 0
       },
-      "status": "disabled"
+      "status": "disabled",
+      "onboarding_completed": false
     },
     "PUT_DEV_ID_HERE": {
       "name": "UserPUT_DEV_ID_HERE",
@@ -151,7 +155,190 @@
         "count": 0,
         "commission": 0
       },
-      "status": "disabled"
+      "status": "disabled",
+      "onboarding_completed": false
+    },
+    "1518680802": {
+      "name": "User1518680802",
+      "display_name": "User1518680802",
+      "telegram_name": "User1518680802",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-26T08:35:53.292704"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastety": {
+            "stage": 1,
+            "completed": [
+              1
+            ]
+          },
+          "bitcoin_mastery": {
+            "stage": 5,
+            "completed": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding_completed": false
+    },
+    "1087968824": {
+      "name": "User1087968824",
+      "display_name": "User1087968824",
+      "telegram_name": "User1087968824",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-26T09:28:07.789752"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding_completed": false
+    },
+    "224223270": {
+      "name": "User224223270",
+      "display_name": "User224223270",
+      "telegram_name": "User224223270",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-26T09:50:54.616027"
+      },
+      "wallet": {
+        "credits": 60,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 3,
+            "completed": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        "active_course": "bitcoin_mastery"
+      },
+      "gamification": {
+        "points": 105,
+        "level": 2
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding_completed": false
+    },
+    "<__main__.M object at 0x7fa73c1a3b50>": {
+      "name": "User<__main__.M object at 0x7fa73c1a3b50>",
+      "display_name": "User<__main__.M object at 0x7fa73c1a3b50>",
+      "telegram_name": "User<__main__.M object at 0x7fa73c1a3b50>",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-26T11:06:04.601984"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding_completed": false
+    },
+    "7757102350": {
+      "name": "User7757102350",
+      "display_name": "User7757102350",
+      "telegram_name": "User7757102350",
+      "role": "student",
+      "joined": false,
+      "permissions": [],
+      "profile": {
+        "created": "2026-08-26T11:48:09.401875"
+      },
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "academy": {
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 3,
+            "completed": [
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "referral": {
+        "code": null,
+        "count": 0,
+        "commission": 0
+      },
+      "onboarding_completed": false
     }
   },
   "students": {
@@ -168,32 +355,36 @@
     "alpha_wallet": {
       "title": "Alpha Wallet",
       "status": "done",
-      "progress": 80
+      "progress": 100,
+      "reward": 100,
+      "done_by": [
+        8789977826
+      ]
     },
     "alpha_agents": {
       "title": "Alpha Agents",
       "status": "active",
-      "progress": 30
+      "progress": 70
     },
     "alpha_academy": {
       "title": "Alpha Academy",
       "status": "active",
-      "progress": 40
+      "progress": 80
     },
     "alpha_economy": {
       "title": "Alpha Economy",
       "status": "active",
-      "progress": 0
+      "progress": 85
     },
     "alpha_store": {
       "title": "Alpha Store",
       "status": "active",
-      "progress": 45
+      "progress": 90
     },
     "alpha_user_journey": {
       "title": "Alpha User Journey",
       "status": "active",
-      "progress": 35
+      "progress": 75
     },
     "alpha_exchange": {
       "title": "Alpha Exchange (Binance)",
@@ -225,6 +416,22 @@
         "SyncAgent",
         "TokenAgent"
       ]
+    },
+    "7": {
+      "id": "7",
+      "name": "Osif-ESP-Agent",
+      "role": "device",
+      "agent_type": "device",
+      "owner_id": "8789977826",
+      "state": "idle",
+      "status": "active",
+      "visibility": "owner_only",
+      "permissions": [
+        "device_read",
+        "wallet_sign",
+        "telemetry"
+      ],
+      "created": "2026-08-25T17:36:19.024776+00:00"
     }
   },
   "products": {
@@ -237,6 +444,20 @@
       "name": "Pro 500 Credits",
       "price_usd": 20,
       "credits": 500
+    },
+    "esp32_pro": {
+      "name": "ESP32 Pro Device",
+      "price_usd": 888,
+      "currency": "ILS",
+      "type": "hardware",
+      "inventory": 500
+    },
+    "esp32_standard": {
+      "name": "ESP32 Standard Device",
+      "price_usd": 444,
+      "currency": "ILS",
+      "type": "hardware",
+      "inventory": 498
     }
   },
   "system": {
@@ -399,6 +620,128 @@
       "created_at": 1787405274.5845287,
       "decided_by": "8789977826",
       "decided_at": 1787405277.0079985
+    },
+    "5f290957": {
+      "id": "5f290957",
+      "uid": "8789977826",
+      "command": "cd /app && python3 - <<'PY'\nfrom pathlib import Path\n\np = Path(\"core/reconciler.py\")\ns = p.read_text()\n\nold1 = 'if name == \"main\":'\nold2 = \"if name == 'main':\"\n\ns = s.replace(old1, 'if name == \"main\":')\ns = s.replace(old2, 'if name == \"main\":')\n\np.write_text(s)\n\nprint(\"FIXED_REAL_MAIN_GUARD\")\nPY",
+      "status": "pending",
+      "created_at": 1787672893.8043532
+    },
+    "55f0dd4f": {
+      "id": "55f0dd4f",
+      "uid": "8789977826",
+      "command": "cd /app && grep -n \"def save_db\" -A60 state_manager.py",
+      "status": "approved",
+      "created_at": 1787689781.329732,
+      "decided_by": "8789977826",
+      "decided_at": 1787689787.8122146
+    },
+    "2ea52634": {
+      "id": "2ea52634",
+      "uid": "8789977826",
+      "command": "כן. עכשיו כבר אפשר להסיק משהו משמעותי: יש לכם חלק גדול ממנוע האוטונומיה — אבל הוא לא מחובר כרגע ללולאת עבודה רציפה.\nהראיות:\nmission_runner.py הוא כרגע בעיקר runner/test (execute_sync_test, main).\nMissionOrchestrator קיים בתוך core/.\ninternal_agent.py כבר מכיל agent_worker() ו־start_agent_thread().\nslh_daemon.sh לא מפעיל אף אחד מהם. הוא מפעיל Bot/API/Dashboard בלבד.\nכלומר כרגע אין לנו הוכחה ל־overnight autonomous loop.\nאבל לפני שנוגעים בקוד — כמו שביקשת — בודקים את החיבורים הקיימים.\n1. מה באמת יודע ה־MissionOrchestrator לעשות\n/exec cd /app && grep -nE \"^[[:space:]]+(def |async def )\" core/mission_orchestrator.py\n2. מה agent_worker() באמת עושה\n/exec cd /app && sed -n '45,100p' internal_agent.py\n3. האם ה־Mission Runner הוא רק TEST או יכול להריץ Mission אמיתי\n/exec cd /app && sed -n '60,125p' mission_runner.py\n4. האם יש כבר loop/queue בתוך ה־Mission system\n/exec cd /app && grep -RniE \"while[ (]|queue|pending|poll|sleep|run_once|run_mission|execute_mission\" core mission_runner.py internal_agent.py --include=\"*.py\" | head -120\n5. ועכשיו כסף — לא dump. מחלקים את הבדיקה לשלושה חלקים\nTON / deposits:\n/exec cd /app && grep -RniE \"record_ton_deposit|ton_amount|tx_hash|deposit\" core handlers services --include=\"*.py\" | head -80\nStars / Telegram payments:\n/exec cd /app && grep -RniE \"stars|pre_checkout|successful_payment|invoice\" core handlers services --include=\"*.py\" | head -100\nמוצרים / Store / checkout:\n/exec cd /app && grep -RniE \"purchase_item|product|store|checkout|payment\" core handlers services --include=\"*.py\" | head -120\n6. והבדיקה הכי חשובה: האם יש בכלל מסלול מלקוח → כסף → fulfillment\n/exec cd /app && grep -RniE \"purchase_item|record_ton_deposit|record_stars_payment|add_credits|complete_task|submit_agent|approve_agent_submission\" handlers core services --include=\"*.py\" | head -180\nעד כאן בלבד. לא לשנות שום קובץ.\nאחרי הפלט הזה אני אוכל למפות לך בצורה מאוד חדה:\nלקוח → מוצר/שירות → תשלום → אימות → Wallet/Ledger → fulfillment → reward/commission → agent → mission → execution → audit\nואז נדע אם חסרים לנו 2–3 חיבורים, או שיש פער אמיתי גדול.\nוהערה חשובה: ה־reward_engine שראינו הוא כרגע לא Money Authority טהור, כי הוא בעצמו כותב rewards_ledger.json, בעוד שהכסף עובר דרך economy_bridge. זה בדיוק מסוג הדברים שכדאי לסגור לפני שמכניסים אוטונומיה שתתחיל לבצע פעולות בלילה.",
+      "status": "rejected",
+      "created_at": 1787692226.5413492,
+      "decided_by": "8789977826",
+      "decided_at": 1787692229.5930936
+    },
+    "2811a83e": {
+      "id": "2811a83e",
+      "uid": "8789977826",
+      "command": "echo \"SLH_ECOSYSTEM path check\" && find / -maxdepth 3 -iname \"*SLH_ECOSYSTEM*\" 2>/dev/null",
+      "status": "approved",
+      "created_at": 1787732425.0241363,
+      "decided_by": "8789977826",
+      "decided_at": 1787732449.9394429
+    },
+    "966f07b7": {
+      "id": "966f07b7",
+      "uid": "8789977826",
+      "command": "unlock_lesson bitcoin_mastery 5 USER_ID",
+      "status": "approved",
+      "created_at": 1787736737.4824653,
+      "decided_by": "8789977826",
+      "decided_at": 1787736740.1936707
+    },
+    "b0ca8339": {
+      "id": "b0ca8339",
+      "uid": "8789977826",
+      "command": "pwd",
+      "status": "pending",
+      "created_at": 1787736851.163947
+    },
+    "76a13a0f": {
+      "id": "76a13a0f",
+      "uid": "224223270",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787736897.9504576,
+      "decided_by": "8789977826",
+      "decided_at": 1787736904.3019922
+    },
+    "7d9583d6": {
+      "id": "7d9583d6",
+      "uid": "224223270",
+      "command": "ls -la",
+      "status": "approved",
+      "created_at": 1787736920.7311268,
+      "decided_by": "8789977826",
+      "decided_at": 1787736963.008808
+    },
+    "3370fb6b": {
+      "id": "3370fb6b",
+      "uid": "224223270",
+      "command": "find . -name \"*bitcoin*\" -o -name \"*lesson*\" -o -name \"*progress*\" -o -name \"*unlock*\" 2>/dev/null | head -20",
+      "status": "approved",
+      "created_at": 1787736926.970449,
+      "decided_by": "8789977826",
+      "decided_at": 1787736961.3044465
+    },
+    "8f324619": {
+      "id": "8f324619",
+      "uid": "224223270",
+      "command": "which python3 || which python",
+      "status": "approved",
+      "created_at": 1787736933.2080724,
+      "decided_by": "8789977826",
+      "decided_at": 1787736959.625681
+    },
+    "51209587": {
+      "id": "51209587",
+      "uid": "224223270",
+      "command": "which node",
+      "status": "approved",
+      "created_at": 1787736934.7660468,
+      "decided_by": "8789977826",
+      "decided_at": 1787736957.846084
+    },
+    "66afd6f0": {
+      "id": "66afd6f0",
+      "uid": "224223270",
+      "command": "python3 -c \"import sys; print(sys.path)\"",
+      "status": "approved",
+      "created_at": 1787736940.4882393,
+      "decided_by": "8789977826",
+      "decided_at": 1787736956.3981712
+    },
+    "06c0f70f": {
+      "id": "06c0f70f",
+      "uid": "1518680802",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787737397.9531302,
+      "decided_by": "8789977826",
+      "decided_at": 1787737409.023823
+    },
+    "25aa1be5": {
+      "id": "25aa1be5",
+      "uid": "5010371391",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787737427.0251262,
+      "decided_by": "8789977826",
+      "decided_at": 1787737429.9443243
     }
   },
   "tasks_archive": {
@@ -665,6 +1008,114 @@
       "created_at": 1787405274.5845287,
       "decided_by": "8789977826",
       "decided_at": 1787405277.0079985
+    },
+    {
+      "id": "55f0dd4f",
+      "uid": "8789977826",
+      "command": "cd /app && grep -n \"def save_db\" -A60 state_manager.py",
+      "status": "approved",
+      "created_at": 1787689781.329732,
+      "decided_by": "8789977826",
+      "decided_at": 1787689787.8122146
+    },
+    {
+      "id": "2ea52634",
+      "uid": "8789977826",
+      "command": "כן. עכשיו כבר אפשר להסיק משהו משמעותי: יש לכם חלק גדול ממנוע האוטונומיה — אבל הוא לא מחובר כרגע ללולאת עבודה רציפה.\nהראיות:\nmission_runner.py הוא כרגע בעיקר runner/test (execute_sync_test, main).\nMissionOrchestrator קיים בתוך core/.\ninternal_agent.py כבר מכיל agent_worker() ו־start_agent_thread().\nslh_daemon.sh לא מפעיל אף אחד מהם. הוא מפעיל Bot/API/Dashboard בלבד.\nכלומר כרגע אין לנו הוכחה ל־overnight autonomous loop.\nאבל לפני שנוגעים בקוד — כמו שביקשת — בודקים את החיבורים הקיימים.\n1. מה באמת יודע ה־MissionOrchestrator לעשות\n/exec cd /app && grep -nE \"^[[:space:]]+(def |async def )\" core/mission_orchestrator.py\n2. מה agent_worker() באמת עושה\n/exec cd /app && sed -n '45,100p' internal_agent.py\n3. האם ה־Mission Runner הוא רק TEST או יכול להריץ Mission אמיתי\n/exec cd /app && sed -n '60,125p' mission_runner.py\n4. האם יש כבר loop/queue בתוך ה־Mission system\n/exec cd /app && grep -RniE \"while[ (]|queue|pending|poll|sleep|run_once|run_mission|execute_mission\" core mission_runner.py internal_agent.py --include=\"*.py\" | head -120\n5. ועכשיו כסף — לא dump. מחלקים את הבדיקה לשלושה חלקים\nTON / deposits:\n/exec cd /app && grep -RniE \"record_ton_deposit|ton_amount|tx_hash|deposit\" core handlers services --include=\"*.py\" | head -80\nStars / Telegram payments:\n/exec cd /app && grep -RniE \"stars|pre_checkout|successful_payment|invoice\" core handlers services --include=\"*.py\" | head -100\nמוצרים / Store / checkout:\n/exec cd /app && grep -RniE \"purchase_item|product|store|checkout|payment\" core handlers services --include=\"*.py\" | head -120\n6. והבדיקה הכי חשובה: האם יש בכלל מסלול מלקוח → כסף → fulfillment\n/exec cd /app && grep -RniE \"purchase_item|record_ton_deposit|record_stars_payment|add_credits|complete_task|submit_agent|approve_agent_submission\" handlers core services --include=\"*.py\" | head -180\nעד כאן בלבד. לא לשנות שום קובץ.\nאחרי הפלט הזה אני אוכל למפות לך בצורה מאוד חדה:\nלקוח → מוצר/שירות → תשלום → אימות → Wallet/Ledger → fulfillment → reward/commission → agent → mission → execution → audit\nואז נדע אם חסרים לנו 2–3 חיבורים, או שיש פער אמיתי גדול.\nוהערה חשובה: ה־reward_engine שראינו הוא כרגע לא Money Authority טהור, כי הוא בעצמו כותב rewards_ledger.json, בעוד שהכסף עובר דרך economy_bridge. זה בדיוק מסוג הדברים שכדאי לסגור לפני שמכניסים אוטונומיה שתתחיל לבצע פעולות בלילה.",
+      "status": "rejected",
+      "created_at": 1787692226.5413492,
+      "decided_by": "8789977826",
+      "decided_at": 1787692229.5930936
+    },
+    {
+      "id": "2811a83e",
+      "uid": "8789977826",
+      "command": "echo \"SLH_ECOSYSTEM path check\" && find / -maxdepth 3 -iname \"*SLH_ECOSYSTEM*\" 2>/dev/null",
+      "status": "approved",
+      "created_at": 1787732425.0241363,
+      "decided_by": "8789977826",
+      "decided_at": 1787732449.9394429
+    },
+    {
+      "id": "966f07b7",
+      "uid": "8789977826",
+      "command": "unlock_lesson bitcoin_mastery 5 USER_ID",
+      "status": "approved",
+      "created_at": 1787736737.4824653,
+      "decided_by": "8789977826",
+      "decided_at": 1787736740.1936707
+    },
+    {
+      "id": "76a13a0f",
+      "uid": "224223270",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787736897.9504576,
+      "decided_by": "8789977826",
+      "decided_at": 1787736904.3019922
+    },
+    {
+      "id": "66afd6f0",
+      "uid": "224223270",
+      "command": "python3 -c \"import sys; print(sys.path)\"",
+      "status": "approved",
+      "created_at": 1787736940.4882393,
+      "decided_by": "8789977826",
+      "decided_at": 1787736956.3981712
+    },
+    {
+      "id": "51209587",
+      "uid": "224223270",
+      "command": "which node",
+      "status": "approved",
+      "created_at": 1787736934.7660468,
+      "decided_by": "8789977826",
+      "decided_at": 1787736957.846084
+    },
+    {
+      "id": "8f324619",
+      "uid": "224223270",
+      "command": "which python3 || which python",
+      "status": "approved",
+      "created_at": 1787736933.2080724,
+      "decided_by": "8789977826",
+      "decided_at": 1787736959.625681
+    },
+    {
+      "id": "3370fb6b",
+      "uid": "224223270",
+      "command": "find . -name \"*bitcoin*\" -o -name \"*lesson*\" -o -name \"*progress*\" -o -name \"*unlock*\" 2>/dev/null | head -20",
+      "status": "approved",
+      "created_at": 1787736926.970449,
+      "decided_by": "8789977826",
+      "decided_at": 1787736961.3044465
+    },
+    {
+      "id": "7d9583d6",
+      "uid": "224223270",
+      "command": "ls -la",
+      "status": "approved",
+      "created_at": 1787736920.7311268,
+      "decided_by": "8789977826",
+      "decided_at": 1787736963.008808
+    },
+    {
+      "id": "06c0f70f",
+      "uid": "1518680802",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787737397.9531302,
+      "decided_by": "8789977826",
+      "decided_at": 1787737409.023823
+    },
+    {
+      "id": "25aa1be5",
+      "uid": "5010371391",
+      "command": "pwd",
+      "status": "approved",
+      "created_at": 1787737427.0251262,
+      "decided_by": "8789977826",
+      "decided_at": 1787737429.9443243
     }
   ],
   "transactions": [
@@ -679,6 +1130,24 @@
       "credits": 500,
       "reason": "bitcoin_mastery_completion_reward",
       "timestamp": "2026-08-15 17:04:34"
+    },
+    {
+      "uid": "8789977826",
+      "credits": 100.0,
+      "stars_paid": 100,
+      "currency": "XTR",
+      "telegram_payment_charge_id": "test",
+      "provider_payment_charge_id": "test",
+      "timestamp": "2026-08-26T12:49:32.661819+00:00"
+    },
+    {
+      "uid": "8789977826",
+      "credits": 10.0,
+      "stars_paid": 10,
+      "currency": "XTR",
+      "telegram_payment_charge_id": "test2",
+      "provider_payment_charge_id": "test2",
+      "timestamp": "2026-08-26T12:51:05.872180+00:00"
     }
   ],
   "ledger": [
@@ -708,6 +1177,255 @@
       "credits": 10449,
       "staked_moved": 50,
       "reason": "OWNER_ONLY_CREDITS_POLICY"
+    },
+    {
+      "time": "2026-08-25T14:20:44.705458+00:00",
+      "uid": "8789977826",
+      "before": 11815,
+      "amount": -100,
+      "after": 11715,
+      "reason": "staking:stake",
+      "meta": {
+        "source": "telegram",
+        "command": "stake",
+        "staked_before": 136,
+        "staked_after": 236
+      }
+    },
+    {
+      "time": "2026-08-25T14:20:52.454805+00:00",
+      "uid": "8789977826",
+      "before": 11715,
+      "amount": 100,
+      "after": 11815,
+      "reason": "staking:unstake",
+      "meta": {
+        "source": "telegram",
+        "command": "unstake",
+        "staked_before": 236,
+        "staked_after": 136
+      }
+    },
+    {
+      "time": "2026-08-25T14:25:19.215915+00:00",
+      "uid": "8789977826",
+      "before": 11815,
+      "amount": 100,
+      "after": 11915,
+      "reason": "task:completion_reward",
+      "meta": {
+        "source": "task_handler",
+        "telegram_user_id": "8789977826",
+        "task_id": "alpha_wallet"
+      }
+    },
+    {
+      "time": "2026-08-25T14:27:56.591095+00:00",
+      "uid": "8789977826",
+      "before": 11915,
+      "amount": 25,
+      "after": 11940,
+      "reason": "task:completion_reward",
+      "meta": {
+        "source": "task_handler",
+        "telegram_user_id": "8789977826",
+        "task_id": "test_reward_task"
+      }
+    },
+    {
+      "time": "2026-08-25T14:28:47.841236+00:00",
+      "uid": "8789977826",
+      "before": 11940,
+      "amount": 25,
+      "after": 11965,
+      "reason": "task:completion_reward",
+      "meta": {
+        "source": "task_handler",
+        "telegram_user_id": "8789977826",
+        "task_id": "test_reward_task_2"
+      }
+    },
+    {
+      "time": "2026-08-25T14:35:10.994070+00:00",
+      "uid": "8789977826",
+      "before": 11965,
+      "amount": 10,
+      "after": 11975,
+      "reason": "task:completion_reward",
+      "meta": {
+        "source": "direct_test",
+        "task_id": "direct_lifecycle_test"
+      }
+    },
+    {
+      "time": "2026-08-25T14:37:11.496788+00:00",
+      "uid": "8789977826",
+      "before": 11975,
+      "amount": 10,
+      "after": 11985,
+      "reason": "task:completion_reward",
+      "meta": {
+        "debug": true,
+        "task_id": "direct_lifecycle_test_3"
+      }
+    },
+    {
+      "time": "2026-08-25T14:38:41.969017+00:00",
+      "uid": "8789977826",
+      "before": 11985,
+      "amount": 25,
+      "after": 12010,
+      "reason": "task:completion_reward",
+      "meta": {
+        "source": "task_handler",
+        "telegram_user_id": "8789977826",
+        "task_id": "telegram_lifecycle_test"
+      }
+    },
+    {
+      "time": "2026-08-25T14:39:13.094547+00:00",
+      "uid": "8789977826",
+      "before": 12010,
+      "amount": 5,
+      "after": 12015,
+      "reason": "task:completion_reward",
+      "meta": {
+        "task_id": "final_reward_test"
+      }
+    },
+    {
+      "time": "2026-08-25T17:52:53.886943+00:00",
+      "uid": "8789977826",
+      "before": 12015,
+      "amount": -444,
+      "after": 11571,
+      "reason": "bridge:spend",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-25T17:55:17.579890+00:00",
+      "uid": "8789977826",
+      "before": 11571,
+      "amount": -444,
+      "after": 11127,
+      "reason": "bridge:spend",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-25T18:36:54.572573+00:00",
+      "uid": "8789977826",
+      "before": 11127,
+      "amount": -444,
+      "after": 10683,
+      "reason": "bridge:spend",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-25T19:37:28.404478+00:00",
+      "uid": "8789977826",
+      "before": 10683,
+      "amount": 25,
+      "after": 10708,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-25T20:43:43.480666+00:00",
+      "uid": "8789977826",
+      "before": 10708,
+      "amount": 1,
+      "after": 10709,
+      "reason": "p0_persistence_test",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:03:44.275108+00:00",
+      "uid": "224223270",
+      "before": 0,
+      "amount": 10,
+      "after": 10,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:04:31.792218+00:00",
+      "uid": "224223270",
+      "before": 10,
+      "amount": 10,
+      "after": 20,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:06:24.923339+00:00",
+      "uid": "224223270",
+      "before": 20,
+      "amount": 10,
+      "after": 30,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:07:19.032101+00:00",
+      "uid": "224223270",
+      "before": 30,
+      "amount": 10,
+      "after": 40,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:07:53.337487+00:00",
+      "uid": "224223270",
+      "before": 40,
+      "amount": 10,
+      "after": 50,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T10:08:16.006086+00:00",
+      "uid": "224223270",
+      "before": 50,
+      "amount": 10,
+      "after": 60,
+      "reason": "bridge:add_credits",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T12:43:30.332809+00:00",
+      "uid": "8789977826",
+      "before": 10709,
+      "amount": 0,
+      "after": 10709,
+      "reason": "bridge:spend",
+      "meta": {}
+    },
+    {
+      "time": "2026-08-26T12:49:32.661819+00:00",
+      "uid": "8789977826",
+      "before": 10709,
+      "amount": 100.0,
+      "after": 10809.0,
+      "reason": "payment:telegram_stars",
+      "meta": {
+        "charge_id": "test",
+        "stars_paid": 100,
+        "currency": "XTR"
+      }
+    },
+    {
+      "time": "2026-08-26T12:51:05.872180+00:00",
+      "uid": "8789977826",
+      "before": 10809.0,
+      "amount": 10.0,
+      "after": 10819.0,
+      "reason": "payment:telegram_stars",
+      "meta": {
+        "charge_id": "test2",
+        "stars_paid": 10,
+        "currency": "XTR"
+      }
     }
   ],
   "users_archive": {
@@ -925,6 +1643,70 @@
         "send"
       ],
       "status": "active"
+    }
+  },
+  "device_wallets": {
+    "DEV_ESP_NEW_1786177919": {
+      "address": "SLH_ESP_DEV_ESP_NEW_1786177919",
+      "credits": 0,
+      "staked": 0,
+      "token_balance": 0,
+      "owner": "8789977826"
+    },
+    "DEV_TEST_DEVICE_1786363970": {
+      "address": "SLH_ESP_DEV_TEST_DEVICE_1786363970",
+      "credits": 0,
+      "staked": 0,
+      "token_balance": 0,
+      "owner": "8789977826"
+    },
+    "ESP_1787680517": {
+      "address": "SLH_ESP_ESP_1787680517",
+      "credits": 0,
+      "staked": 0,
+      "token_balance": 0,
+      "owner": "8789977826"
+    },
+    "ESP_1787683014": {
+      "address": "SLH_ESP_ESP_1787683014",
+      "credits": 0,
+      "staked": 0,
+      "token_balance": 0,
+      "owner": "8789977826"
+    }
+  },
+  "device_agent_map": {
+    "DEV_ESP_NEW_1786177919": "7",
+    "DEV_TEST_DEVICE_1786363970": "7",
+    "ESP_1787680517": "7",
+    "ESP_1787683014": "7"
+  },
+  "esp_licenses": {
+    "SLH-LIC-88F528BFC6B7": {
+      "license_id": "SLH-LIC-88F528BFC6B7",
+      "device_id": "ESP_1787680517",
+      "owner_id": "8789977826",
+      "activation_code": "SLH-ACT-25A5A254",
+      "status": "activated",
+      "issued_at": "2026-08-25T19:41:01.435850+00:00",
+      "expires_at": "2027-08-25T19:41:01.435850+00:00",
+      "activated_at": "2026-08-25T19:42:03.182977+00:00",
+      "mqtt_username": "esp_esp_1787680517",
+      "mqtt_password": "1f801a3bc0d7a9cb",
+      "duration_days": 365
+    }
+  },
+  "devices": {
+    "ESP_1787680517": {
+      "device_id": "ESP_1787680517",
+      "owner_id": "8789977826",
+      "type": "esp32",
+      "status": "online",
+      "mqtt_topics": {
+        "progress": "slh/esp/ESP_1787680517/progress",
+        "logo": "slh/esp/ESP_1787680517/logo",
+        "telemetry": "slh/esp/ESP_1787680517/telemetry"
+      }
     }
   }
 }
