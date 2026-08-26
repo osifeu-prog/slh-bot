@@ -4,7 +4,7 @@
       "name": "ESP_New",
       "description": "\"חדר שינה\"",
       "type": "esp32",
-      "status": "online",
+      "status": "offline",
       "capabilities": [
         "sensor",
         "wallet",
@@ -17,19 +17,12 @@
         "receive_tasks",
         "report_status"
       ],
-      "last_heartbeat": "2026-08-25T19:04:00.784377+00:00",
-      "wallet_address": "SLH_ESP_DEV_ESP_NEW_1786177919",
-      "agent_id": "7",
-      "verified": true,
-      "mqtt_topics": {
-        "progress": "slh/device/DEV_ESP_NEW_1786177919/progress"
-      },
-      "last_message": "{\"overall\": 35, \"tasks\": {\"alpha_identity\": 100, \"alpha_wallet\": 80, \"alpha_agents\": 30, \"alpha_academy\": 40, \"alpha_economy\": 0, \"alpha_store\": 45, \"alpha_user_journey\": 35, \"alpha_exchange\": 0, \"test_reward_task\": 0, \"test_reward_task_2\": 0, \"direct_lifecycle_test\": 0, \"direct_lifecycle_test_2\": 0, \"direct_lifecycle_test_3\": 100, \"telegram_lifecycle_test\": 0, \"final_reward_test\": 100}}"
+      "last_heartbeat": "2026-08-10T14:51:16.218400+00:00"
     },
     "PC_Osif2": {
       "name": "PC_Osif2",
       "type": "pc",
-      "status": "online",
+      "status": "offline",
       "capabilities": [
         "compute",
         "network",
@@ -45,13 +38,12 @@
         "uuid": "4C4C4544-0058-5A10-8038-C3C04F4E5632",
         "disk": "NVMe PC401 SK hy ACE4_2E00_9512_0B1C"
       },
-      "last_heartbeat": "2026-08-25T19:04:00.784377+00:00",
-      "owner": "8789977826"
+      "last_heartbeat": "2026-08-12T09:43:59.947305+00:00"
     },
     "PC_SELHA_MAIN": {
       "name": "PC_Selha",
       "type": "pc",
-      "status": "online",
+      "status": "offline",
       "capabilities": [
         "compute",
         "network",
@@ -66,14 +58,13 @@
         "os": "Windows 10 Pro 2009",
         "user": "Giga Store"
       },
-      "last_heartbeat": "2026-08-25T19:04:00.784377+00:00",
-      "owner": "8789977826"
+      "last_heartbeat": "2026-08-12T09:44:07.026747+00:00"
     },
     "DEV_TEST_DEVICE_1786363970": {
       "name": "TEST_DEVICE",
       "description": "ESP32 Device",
       "type": "esp32",
-      "status": "online",
+      "status": "offline",
       "capabilities": [
         "sensor",
         "wallet",
@@ -85,53 +76,35 @@
       "permissions": [
         "receive_tasks",
         "report_status"
-      ],
-      "wallet_address": "SLH_ESP_DEV_TEST_DEVICE_1786363970",
-      "agent_id": "7",
-      "verified": true,
-      "mqtt_topics": {
-        "progress": "slh/device/DEV_TEST_DEVICE_1786363970/progress"
-      },
-      "last_message": "{\"overall\": 35, \"tasks\": {\"alpha_identity\": 100, \"alpha_wallet\": 80, \"alpha_agents\": 30, \"alpha_academy\": 40, \"alpha_economy\": 0, \"alpha_store\": 45, \"alpha_user_journey\": 35, \"alpha_exchange\": 0, \"test_reward_task\": 0, \"test_reward_task_2\": 0, \"direct_lifecycle_test\": 0, \"direct_lifecycle_test_2\": 0, \"direct_lifecycle_test_3\": 100, \"telegram_lifecycle_test\": 0, \"final_reward_test\": 100}}",
-      "last_heartbeat": "2026-08-25T19:11:48.692452+00:00"
+      ]
     },
-    "ESP_1787680517": {
-      "name": "ESP_1787680517",
-      "type": "esp32",
+    "BRIDGE_PC_OSIF2_1787683561": {
+      "name": "PC_Osif2",
+      "type": "pc",
       "status": "online",
-      "owner": "8789977826",
-      "verified": false,
-      "wallet_address": "SLH_ESP_ESP_1787680517",
-      "agent_id": "7",
       "capabilities": [
-        "sensor",
-        "wallet",
-        "signing"
+        "compute",
+        "network",
+        "storage",
+        "ai"
       ],
-      "registered": 1787680517.5811293,
-      "mqtt_topics": {
-        "progress": "slh/device/ESP_1787680517/progress"
-      },
-      "last_heartbeat": "2026-08-25T19:04:00.784377+00:00"
+      "registered": 1787683561.4378269,
+      "last_seen": 1787684121.751884,
+      "bridge": true
     },
-    "ESP_1787683014": {
-      "name": "ESP_1787683014",
-      "type": "esp32",
+    "BRIDGE_PC_OSIF2_1787684133": {
+      "name": "PC_Osif2",
+      "type": "pc",
       "status": "online",
-      "owner": "8789977826",
-      "verified": false,
-      "wallet_address": "SLH_ESP_ESP_1787683014",
-      "agent_id": "7",
       "capabilities": [
-        "sensor",
-        "wallet",
-        "signing"
+        "compute",
+        "network",
+        "storage",
+        "ai"
       ],
-      "registered": 1787683014.5737653,
-      "last_heartbeat": "2026-08-25T19:04:00.784377+00:00",
-      "mqtt_topics": {
-        "progress": "slh/device/ESP_1787683014/progress"
-      }
+      "registered": 1787684133.3966043,
+      "last_seen": 1787746914.605477,
+      "bridge": true
     }
   }
 }
