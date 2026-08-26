@@ -768,3 +768,13 @@ def complete_task(
         return result
 
     return state_manager.atomic_update(mutate)
+
+
+def get_staked_safe(uid):
+    import json
+    from pathlib import Path
+    db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+    user = db.get("users", {}).get(str(uid))
+    if not user:
+        return 0
+    return user.get("wallet", {}).get("staked", 0)

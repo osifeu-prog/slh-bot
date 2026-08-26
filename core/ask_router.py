@@ -81,6 +81,13 @@ def route(text, uid=None):
     intent = detect_intent(text)
 
     if intent == "staking":
+        if uid:
+            try:
+                from core import economy_service
+                staked = economy_service.get_staked_safe(uid)
+                return f"🔒 הסטייקינג שלך: {staked} credits\n\nכרגע קיים staking פנימי בלבד."
+            except Exception:
+                pass
         return (
             "🔒 סטייקינג SLH\n\n"
             "כרגע קיים staking פנימי של credits.\n"

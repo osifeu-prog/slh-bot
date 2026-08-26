@@ -1,8 +1,12 @@
 import subprocess
+from core.identity import OWNER_TELEGRAM_ID
 
 def register(bot):
     @bot.message_handler(commands=["e"])
     def e_cmd(msg):
+        if str(msg.from_user.id) != OWNER_TELEGRAM_ID:
+            bot.reply_to(msg, "⛔️ OWNER only")
+            return
         parts = msg.text.split(maxsplit=1)
         if len(parts) < 2:
             bot.reply_to(msg, "Usage: /e <command>")

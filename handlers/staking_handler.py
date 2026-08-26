@@ -25,6 +25,12 @@ def register(bot):
                 amount,
                 meta={"source": "telegram", "command": "stake"},
             )
+            from core.stake_position import create_position
+            create_position(
+                uid=uid,
+                amount=amount,
+                lock_days=30,
+            )
 
             bot.reply_to(
                 msg,

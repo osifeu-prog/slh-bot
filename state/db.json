@@ -6,8 +6,8 @@
         "joined": "2026-08-07T22:43:47.559294"
       },
       "wallet": {
-        "credits": 10819.0,
-        "staked": 136,
+        "credits": 10839.0,
+        "staked": 166,
         "token_balance": 0
       },
       "academy": {
@@ -95,66 +95,6 @@
       "active_tasks": [
         "ALPHA_TEST_001"
       ],
-      "status": "disabled",
-      "onboarding_completed": false
-    },
-    "DEV_TELEGRAM_ID": {
-      "name": "UserDEV_TELEGRAM_ID",
-      "display_name": "UserDEV_TELEGRAM_ID",
-      "telegram_name": "UserDEV_TELEGRAM_ID",
-      "role": "disabled",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-24T12:06:18.946036"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "status": "disabled",
-      "onboarding_completed": false
-    },
-    "PUT_DEV_ID_HERE": {
-      "name": "UserPUT_DEV_ID_HERE",
-      "display_name": "UserPUT_DEV_ID_HERE",
-      "telegram_name": "UserPUT_DEV_ID_HERE",
-      "role": "disabled",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-24T12:06:18.959955"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
       "status": "disabled",
       "onboarding_completed": false
     },
@@ -265,35 +205,6 @@
       "gamification": {
         "points": 105,
         "level": 2
-      },
-      "referral": {
-        "code": null,
-        "count": 0,
-        "commission": 0
-      },
-      "onboarding_completed": false
-    },
-    "<__main__.M object at 0x7fa73c1a3b50>": {
-      "name": "User<__main__.M object at 0x7fa73c1a3b50>",
-      "display_name": "User<__main__.M object at 0x7fa73c1a3b50>",
-      "telegram_name": "User<__main__.M object at 0x7fa73c1a3b50>",
-      "role": "student",
-      "joined": false,
-      "permissions": [],
-      "profile": {
-        "created": "2026-08-26T11:06:04.601984"
-      },
-      "wallet": {
-        "credits": 0,
-        "staked": 0,
-        "token_balance": 0
-      },
-      "academy": {
-        "courses": {}
-      },
-      "gamification": {
-        "points": 0,
-        "level": 1
       },
       "referral": {
         "code": null,
@@ -1148,6 +1059,15 @@
       "telegram_payment_charge_id": "test2",
       "provider_payment_charge_id": "test2",
       "timestamp": "2026-08-26T12:51:05.872180+00:00"
+    },
+    {
+      "uid": "8789977826",
+      "credits": 50.0,
+      "stars_paid": 50,
+      "currency": "XTR",
+      "telegram_payment_charge_id": "fakepay_8789977826",
+      "provider_payment_charge_id": "fakepay_8789977826",
+      "timestamp": "2026-08-26T13:16:11.507370+00:00"
     }
   ],
   "ledger": [
@@ -1425,6 +1345,45 @@
         "charge_id": "test2",
         "stars_paid": 10,
         "currency": "XTR"
+      }
+    },
+    {
+      "time": "2026-08-26T13:16:11.507370+00:00",
+      "uid": "8789977826",
+      "before": 10819.0,
+      "amount": 50.0,
+      "after": 10869.0,
+      "reason": "payment:telegram_stars",
+      "meta": {
+        "charge_id": "fakepay_8789977826",
+        "stars_paid": 50,
+        "currency": "XTR"
+      }
+    },
+    {
+      "time": "2026-08-26T13:30:06.484269+00:00",
+      "uid": "8789977826",
+      "before": 10869.0,
+      "amount": -10,
+      "after": 10859.0,
+      "reason": "staking:stake",
+      "meta": {
+        "source": "admin_test",
+        "staked_before": 136,
+        "staked_after": 146
+      }
+    },
+    {
+      "time": "2026-08-26T13:36:41.127713+00:00",
+      "uid": "8789977826",
+      "before": 10859.0,
+      "amount": -20,
+      "after": 10839.0,
+      "reason": "staking:stake",
+      "meta": {
+        "source": "test",
+        "staked_before": 146,
+        "staked_after": 166
       }
     }
   ],

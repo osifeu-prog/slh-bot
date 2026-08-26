@@ -23,7 +23,7 @@ def register(bot):
             bot.reply_to(msg, f"❌ ההפקדה לא אומתה: {res}")
             return
         amount_ton = res["amount_ton"]
-        credits = int(amount_ton * 1000)
+        credits = int(amount_ton * db.get('ton_settings', {}).get('rate', 1000))
         if credits <= 0:
             bot.reply_to(msg, "❌ סכום הפקדה לא תקין.")
             return
