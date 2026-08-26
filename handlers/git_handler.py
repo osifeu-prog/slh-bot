@@ -140,7 +140,8 @@ def register(bot):
             'tree': new_tree_sha,
             'parents': [last_commit_sha]
         }
-        r = requests.post(commit_url, json=commit_data, headers=headers)
+        create_commit_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/commits'
+        r = requests.post(create_commit_url, json=commit_data, headers=headers)
         if r.status_code != 201:
             bot.reply_to(msg, f'❌ Commit failed: {r.text[:100]}')
             return
