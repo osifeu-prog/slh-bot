@@ -4,7 +4,7 @@ from core.identity import OWNER_TELEGRAM_ID
 def register(bot):
     @bot.message_handler(commands=["e"])
     def e_cmd(msg):
-        if str(msg.from_user.id) != OWNER_TELEGRAM_ID:
+        if int(msg.from_user.id) != int(OWNER_TELEGRAM_ID):
             bot.reply_to(msg, "⛔️ OWNER only")
             return
         parts = msg.text.split(maxsplit=1)
