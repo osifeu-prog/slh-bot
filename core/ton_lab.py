@@ -129,3 +129,29 @@ def ton_balances():
     for w in wallets.get("all", []):
         out.append({"address": w, "balance_ton": get_ton_balance(w)})
     return out
+
+
+def verify_ton_deposit(tx_hash):
+    import requests, json
+    db = json.load(open("state/db.json", encoding="utf-8"))
+    wallet = db.get("ton_settings", {}).get("wallet")
+    if not wallet:
+        return {"ok": False, "error": "TON wallet not configured"}
+    url = "https://toncenter.com/api/v2/getTransactions"
+    params = {"address": wallet, "limit": 20, "to_lt": 0, "archival": False}
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        data = r.json()
+        if not data.get("ok"):
+            return {"ok": False, "error": "toncenter error"}
+        for tx in data.get("result", []):
+            tx_hash_api = tx.get("transaction_id", {}).get("hash", "")
+            if tx_hash_api.lower() == tx_hash.lower():
+                in_msg = tx.get("in_msg", {})
+                value = int(in_msg.get("value", 0))
+                source = in_msg.get("source", "")
+                amount_ton = value / 1e9
+                return {"ok": True, "from": source, "amount_ton": amount_ton, "tx_hash": tx_hash}
+        return {"ok": False, "error": "tx not found"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}

@@ -23,6 +23,7 @@ def load_handlers(bot, context):
         ("revenue", "handlers.revenue_handler"),
         ("ton_address", "handlers.ton_address_handler"),
         ("ton_balance", "handlers.ton_balance_handler"),
+        ("ton_claim", "handlers.ton_claim_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
         ("academy", "handlers.academy_handler"),
