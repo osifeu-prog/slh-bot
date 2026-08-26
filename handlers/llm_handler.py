@@ -124,15 +124,27 @@ def register_llm_handler(bot):
 
 
 def query_llm_with_context(question, uid=None):
-
     q = str(question).lower()
 
     try:
-
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
-
         user = db.get("users", {}).get(str(uid), {})
+        wallet = user.get("wallet", {})
+        credits = wallet.get("credits", 0)
+        staked = wallet.get("staked", 0)
+        name = user.get("display_name") or user.get("name") or uid
+
+        # Build system context string
+        context_lines = [
+            f"User: {name}",
+            f"Credits: {credits}",
+            f"Staked: {staked}",
+            f"Role: {user.get('role','unknown')}",
+            "System: SLH OS internal economy, credits are internal points, not cryptocurrency.",
+        ]
+        context = "\n".join(context_lines)
+
         agents = db.get("agents", {})
         tasks = dict(list(db.get("tasks", {}).items())[-5:])
         votes_raw = db.get("votes", {})
@@ -364,14 +376,14 @@ USER QUESTION:
 
 
     try:
-        return ask_groq(prompt)
+        return ask_groq(context + "\n\nUser question: " + prompt)
     except Exception:
         time.sleep(1)
         try:
-            return ask_groq(prompt)
+            return ask_groq(context + "\n\nUser question: " + prompt)
         except Exception:
             try:
-                return ask_gemini(prompt)
+                return ask_gemini(context + "\n\nUser question: " + prompt)
             except Exception:
                 return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
 
