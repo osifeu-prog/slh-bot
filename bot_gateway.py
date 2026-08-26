@@ -129,9 +129,7 @@ def log(msg):
 
 try:
     from handlers.loader import load_handlers
-    log("import loader
-
- OK")
+    log("import loader OK")
 except Exception as e:
     log(f"FATAL: import loader failed: {traceback.format_exc()}")
     sys.exit(1)
