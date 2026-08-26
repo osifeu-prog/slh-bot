@@ -274,6 +274,30 @@
       },
       "permissions": [],
       "onboarding_completed": false
+    },
+    "9999999998": {
+      "name": "TestUser",
+      "display_name": "TestUser",
+      "telegram_name": "TestUser",
+      "role": "student",
+      "joined": false,
+      "wallet": {
+        "credits": 0,
+        "staked": 0,
+        "token_balance": 0
+      },
+      "profile": {
+        "created": "2026-08-26T21:00:00"
+      },
+      "academy": {
+        "courses": {}
+      },
+      "gamification": {
+        "points": 0,
+        "level": 1
+      },
+      "permissions": [],
+      "onboarding_completed": false
     }
   },
   "students": {
@@ -333,8 +357,8 @@
     },
     "p0_onboarding_e2e": {
       "title": "E2E משתמש חדש",
-      "progress": 0,
-      "status": "active"
+      "progress": 100,
+      "status": "done"
     },
     "p0_ton_claim": {
       "title": "בדיקת TON claim אמיתי",
@@ -343,8 +367,8 @@
     },
     "p0_terms": {
       "title": "תנאי שימוש ופרטיות",
-      "progress": 0,
-      "status": "active"
+      "progress": 100,
+      "status": "done"
     },
     "p0_backup": {
       "title": "גיבוי DB ושחזור",
