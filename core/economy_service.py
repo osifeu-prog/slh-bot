@@ -334,6 +334,7 @@ def purchase_item(
 
         commission = 0
 
+        referrer_uid = db.get("referred_by", {}).get(uid)
         if referrer_uid:
             referrer_uid = str(referrer_uid)
 
