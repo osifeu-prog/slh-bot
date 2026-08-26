@@ -5,7 +5,7 @@ REPO_OWNER = 'osifeu-prog'
 REPO_NAME = 'slh-bot'
 BRANCH = 'main'
 BASE_DIR = '/app'
-WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive'}
+WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive', 'store'}
 WHITELIST_FILES = {'bot_gateway.py', 'dashboard.html', 'courses.json', 'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'}
 ALLOWED_EXTENSIONS = {'.py', '.html', '.json', '.txt', '.md', '.yml', '.yaml', '.cfg', '.ini'}
 

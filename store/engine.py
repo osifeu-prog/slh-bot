@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-ITEMS_FILE = Path(file).resolve().parent / "items.json"
+ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 
 

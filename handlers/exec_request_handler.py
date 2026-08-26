@@ -75,11 +75,7 @@ def register(bot):
     @bot.message_handler(commands=['execr'])
     def execr(m):
         uid = str(m.from_user.id)
-        from security.permissions import has_permission
-        if not has_permission(uid, 'exec_request'):
-            bot.reply_to(m, "⛔ אין לך הרשאת exec_request")
-            return
-
+        
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /execr <command>")
