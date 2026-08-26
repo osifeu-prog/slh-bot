@@ -314,14 +314,23 @@
         "created": "2026-08-26T21:10:00"
       },
       "academy": {
-        "courses": {}
+        "courses": {
+          "bitcoin_mastery": {
+            "stage": 1,
+            "completed": []
+          }
+        }
       },
       "gamification": {
         "points": 0,
         "level": 1
       },
       "permissions": [],
-      "onboarding_completed": false
+      "onboarding_completed": false,
+      "share": {
+        "groups": 0,
+        "users": 0
+      }
     }
   },
   "students": {
@@ -366,8 +375,8 @@
     },
     "alpha_user_journey": {
       "title": "Alpha User Journey",
-      "status": "active",
-      "progress": 75
+      "status": "done",
+      "progress": 100
     },
     "alpha_exchange": {
       "title": "Alpha Exchange (Binance)",
@@ -386,8 +395,8 @@
     },
     "p0_ton_claim": {
       "title": "בדיקת TON claim אמיתי",
-      "progress": 20,
-      "status": "active"
+      "progress": 100,
+      "status": "done"
     },
     "p0_terms": {
       "title": "תנאי שימוש ופרטיות",
@@ -398,6 +407,11 @@
       "title": "גיבוי DB ושחזור",
       "progress": 100,
       "status": "done"
+    },
+    "p0_user_journey": {
+      "name": "User Journey Enforcement",
+      "status": "done",
+      "progress": 100
     }
   },
   "votes": {},
@@ -405,7 +419,7 @@
     "6": {
       "id": "6",
       "name": "Osif-Agent",
-      "state": "idle",
+      "state": "audit",
       "role": "agent",
       "owner_id": "8789977826",
       "inbox": [],
@@ -431,7 +445,7 @@
       "role": "device",
       "agent_type": "device",
       "owner_id": "8789977826",
-      "state": "idle",
+      "state": "audit",
       "status": "active",
       "visibility": "owner_only",
       "permissions": [
@@ -1666,9 +1680,8 @@
     }
   },
   "ton_settings": {
-    "wallet": "UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj",
-    "rate": 100,
-    "testnet": false
+    "wallet": "YOUR_TON_WALLET_ADDRESS",
+    "rate": 1000
   },
   "system_services": {
     "SystemGuard": {

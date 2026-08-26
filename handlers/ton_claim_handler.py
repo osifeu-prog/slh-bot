@@ -1,3 +1,16 @@
+
+def audit_ton_claim(uid, tx_hash, amount_ton, credits):
+    import json, time
+    log = json.load(open("state/ton_audit.json"))
+    log.append({
+        "uid": uid,
+        "tx_hash": tx_hash,
+        "amount_ton": amount_ton,
+        "credits": credits,
+        "time": time.time()
+    })
+    open("state/ton_audit.json","w").write(json.dumps(log,indent=2))
+
 import json
 import time
 from pathlib import Path
