@@ -131,19 +131,6 @@ try:
     from handlers.loader import load_handlers
     log("import loader
 
-# === AUTO RECONCILE THREAD ===
-import threading, time
-from core.reconciler import reconcile
-
-def auto_reconcile_loop():
-    while True:
-        try:
-            reconcile()
-        except Exception as e:
-            print("AUTO_RECONCILE_ERROR:", e)
-        time.sleep(600)  # 10 דקות
-
-threading.Thread(target=auto_reconcile_loop, daemon=True).start()
  OK")
 except Exception as e:
     log(f"FATAL: import loader failed: {traceback.format_exc()}")
