@@ -193,7 +193,7 @@ def register_payment_handlers(bot):
             f"Total commissions paid: {total_commissions}"
         )
 
-    @bot.message_handler(commands=['fakepay'])
+    @bot.message_handler(commands=['fakepay_disabled'])
     def fakepay(m):
         from admin_utils import is_admin
         if not is_admin(m):
