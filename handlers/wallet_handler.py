@@ -15,6 +15,7 @@ def register(bot):
         token_balance = wallet.get("token_balance", 0)
 
         text = (
+            "[בס\"ד]\n\n"
             "💰 SLH Wallet\n\n"
             f"👤 User: {uid}\n"
             f"💳 Credits: {credits}\n"

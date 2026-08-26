@@ -31,6 +31,7 @@ def register(bot):
             joined = _clip(user.get("joined", "לא ידוע"), 40)
 
             txt = (
+                "[בס\"ד]\n\n"
                 "👤 פרופיל SLH\n"
                 f"• ID: {uid}\n"
                 f"• שם: {name}\n"

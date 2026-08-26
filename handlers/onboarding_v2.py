@@ -212,6 +212,7 @@ def register(bot):
                 )
             )
 
+        text = "[בס\"ד]\n\n" + text
         bot.send_message(
         m.chat.id,
         safe_clip(text),
