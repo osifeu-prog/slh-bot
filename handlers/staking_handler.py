@@ -163,3 +163,18 @@ def register(bot):
             bot.reply_to(msg, f"✅ שוחררו {pos.get('amount')} credits.\n💰 יתרה: {res.get('credits')}\n🔒 סטייק: {res.get('staked')}")
         except Exception as e:
             bot.reply_to(msg, f"❌ {e}")
+
+    @bot.message_handler(commands=["staking"])
+    def staking_help(msg):
+        bot.reply_to(
+            msg,
+            "💰 סטייקינג SLH\n\n"
+            "פקודות:\n"
+            "/stake <amount> - סטייק credits\n"
+            "/unstake <amount> - שחרר credits\n"
+            "/stake_lock <amount> <days> - סטייק לתקופה\n"
+            "/unstake_lock <position_id> - שחרר פוזיציה\n"
+            "/positions - צפה בפוזיציות\n"
+            "/rewards - צפה בתגמולים\n\n"
+            "כרגע סטייקינג הוא פנימי (credits), לא on-chain."
+        )

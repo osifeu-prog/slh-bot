@@ -21,9 +21,13 @@ INTENTS = {
         "כמה יש לי",
         "ארנק",
         "wallet",
-        "staked",
+    ],
+    "staking": [
         "סטייקינג",
-        "סטייק",
+        "stake",
+        "staked",
+        "נעל",
+        "נעלתי",
         "כמה סטייק",
     ],
     "onboarding": ["הרשמה", "להצטרף", "רישום", "איך מתחילים", "איך משתמשים", "מה עושים", "/join"],
@@ -47,6 +51,7 @@ INTENTS = {
 }
 
 PRIORITY = [
+    "staking",
     "wallet",
     "missions",
     "progress",
@@ -74,6 +79,13 @@ def detect_intent(text):
 
 def route(text, uid=None):
     intent = detect_intent(text)
+
+    if intent == "staking":
+        return (
+            "🔒 סטייקינג SLH\n\n"
+            "כרגע קיים staking פנימי של credits.\n"
+            "SLH on-chain staking עדיין לא מחובר."
+        )
 
     if intent == "wallet":
         if uid is None:
