@@ -364,27 +364,27 @@
     "alpha_agents": {
       "title": "Alpha Agents",
       "status": "active",
-      "progress": 80
+      "progress": 100
     },
     "alpha_academy": {
       "title": "Alpha Academy",
       "status": "active",
-      "progress": 90
+      "progress": 100
     },
     "alpha_economy": {
       "title": "Alpha Economy",
       "status": "active",
-      "progress": 95
+      "progress": 100
     },
     "alpha_store": {
       "title": "Alpha Store",
       "status": "active",
-      "progress": 95
+      "progress": 100
     },
     "alpha_user_journey": {
       "title": "Alpha User Journey",
       "status": "active",
-      "progress": 85
+      "progress": 100
     },
     "alpha_exchange": {
       "title": "Alpha Exchange (Binance)",
