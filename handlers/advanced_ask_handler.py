@@ -54,23 +54,6 @@ def register_ask_handler(bot):
             pass
 
         try:
-            local_answer = route(
-                question,
-                str(msg.from_user.id)
-            )
-
-            if local_answer is not None:
-                bot.send_message(
-                    msg.chat.id,
-                    _safe_clip(local_answer),
-                    parse_mode=None
-                )
-                return
-
-        except Exception:
-            pass
-
-        try:
             answer = query_llm_with_context(
                 question,
                 str(msg.from_user.id)
