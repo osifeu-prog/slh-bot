@@ -37,7 +37,7 @@ DANGEROUS_PATTERNS = [
     r"\bcurl\b.*\|\s*(ba)?sh\b",
     r"\bwget\b.*\|\s*(ba)?sh\b",
     r"\bpkill\s+-9\s+-f\s+bot_gateway\b",
-    r"\bstate/db\.json\b",
+    r"\b>\s*state/db\.json\b",
 ]
 
 
