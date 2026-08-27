@@ -30,8 +30,8 @@ def register(bot):
             try:
                 bot.send_message(uid, message_text)
                 sent += 1
-            except Exception:
-                failed.append(str(uid))
+            except Exception as e:
+                failed.append(f"{uid}: {type(e).name} - {e}")
 
         bot.reply_to(
             m,

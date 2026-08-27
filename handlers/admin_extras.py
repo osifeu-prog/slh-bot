@@ -1,8 +1,12 @@
+from core.identity import OWNER_TELEGRAM_ID
 import json, os, subprocess, glob, tempfile, time
 
 def register(bot, context):
     @bot.message_handler(commands=['health'])
     def health(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔️ OWNER only")
+            return
         try:
             with open('state/db.json') as f:
                 d = json.load(f)
@@ -19,6 +23,9 @@ def register(bot, context):
 
     @bot.message_handler(commands=['megadiag'])
     def megadiag(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔️ OWNER only")
+            return
         lines = ["📊 MEGA DIAGNOSTICS", ""]
         lines.append("Disk usage:")
         try:
@@ -31,6 +38,9 @@ def register(bot, context):
 
     @bot.message_handler(commands=['backup'])
     def backup(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔️ OWNER only")
+            return
         try:
             with open('state/db.json', 'rb') as f:
                 bot.send_document(m.chat.id, f, visible_file_name='db_backup.json')
@@ -39,6 +49,9 @@ def register(bot, context):
 
     @bot.message_handler(commands=['clean'])
     def clean(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔️ OWNER only")
+            return
         patterns = ['*.pyc', '__pycache__']
         count = 0
         for pattern in patterns:
@@ -55,6 +68,9 @@ def register(bot, context):
 
     @bot.message_handler(commands=['results'])
     def results(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔️ OWNER only")
+            return
         bot.reply_to(m, "🗳 No active vote. (voting engine not connected)")
 
     print("✅ admin_extras loaded")

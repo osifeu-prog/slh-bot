@@ -1,6 +1,10 @@
+from core.identity import OWNER_TELEGRAM_ID
 def init(bot):
     @bot.message_handler(commands=['admin'])
     def admin_panel(message):
+        if int(message.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(message, "⛔️ OWNER only")
+            return
         msg = "🔧 **ADMIN CONTROL PANEL**\n\n"
         msg += "📊 DIAGNOSTICS:\n"
         msg += "/diagnose — System diagnostic\n"
