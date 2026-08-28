@@ -23,7 +23,8 @@ def register(bot, context=None):
         try:
             answer = query_llm_with_context(
                 user_text,
-                str(msg.from_user.id)
+                str(msg.from_user.id),
+                skip_checks=True
             )
             answer = str(answer or "").strip()
 

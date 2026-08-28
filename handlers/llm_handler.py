@@ -123,7 +123,7 @@ def register_llm_handler(bot):
     print("LLM core loaded (ask handled by advanced_ask_handler)")
 
 
-def query_llm_with_context(question, uid=None):
+def query_llm_with_context(question, uid=None, skip_checks=False):
     q = str(question).lower()
 
     try:
@@ -151,168 +151,169 @@ def query_llm_with_context(question, uid=None):
         votes = list(votes_raw.items())[-10:] if isinstance(votes_raw, dict) else votes_raw[-10:]
 
 
-        if any(x in q for x in ["מה השם", "שם שלי", "מי אני", "what is my name", "who am i"]):
-            from core.identity_resolver import get_display_name
-            name = get_display_name(uid) if uid else (user.get('display_name') or user.get('name') or 'לא ידוע')
-            role = user.get('role','unknown')
-            return f"👤 השם שלך הוא: {name}\n🎯 תפקיד: {role}"
-        if any(x in q for x in ["מצב מערכת", "דוח מערכת"]):
-            users_count = len(db.get("users", {}))
-            tasks_count = len(db.get("tasks", {}))
-            agents = db.get("agents", {})
-            agents_count = len(agents)
-            votes_count = len(db.get("votes", {}))
-            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
-            wallet = user.get("wallet", {})
-            return (
-                "🛡 דוח מערכת SLH OS\n\n"
-                f"👤 משתמש: {user.get('display_name') or user.get('name') or 'לא ידוע'}\n"
-                f"🎯 תפקיד: {user.get('role','unknown')}\n"
-                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
-                f"🔒 staked: {wallet.get('staked',0)}\n"
-                f"👥 משתמשים: {users_count}\n"
-                f"🤖 סוכנים: {agents_count}\n"
-                f"📋 משימות פעילות: {tasks_count}\n"
-                f"🗳 הצבעות: {votes_count}\n"
-                f"🤖 סוכנים פעילים: {agent_names}\n\n"
-                "✅ ליבה פעילה\n"
-                "🟡 AI חיצוני: fallback מקומי פעיל"
-            )
-        # LOCAL SYSTEM ANSWERS — no LLM required
-        if any(x in q for x in ["דוח מערכת", "מצב המערכת", "סטטוס מערכת", "system report", "system status", "מה מצב המערכת", "מה קורה במערכת"]):
-            users_count = len(db.get("users", {}))
-            tasks_count = len(db.get("tasks", {}))
-            agents = db.get("agents", {})
-            agents_count = len(agents)
-            votes_count = len(db.get("votes", {}))
-            agent_names = ", ".join(a.get("name", "?") for a in agents.values())
-            wallet = user.get("wallet", {})
-            return (
-                "🛡️ דוח מערכת SLH OS\n\n"
-                f"👤 משתמש: {user.get('name','לא ידוע')}\n"
-                f"🎯 תפקיד: {user.get('role','unknown')}\n"
-                f"💰 יתרה: {wallet.get('credits',0)} credits\n"
-                f"🔒 staked: {wallet.get('staked',0)}\n"
-                f"👥 משתמשים: {users_count}\n"
-                f"🤖 סוכנים: {agents_count}\n"
-                f"📋 משימות: {tasks_count}\n"
-                f"🗳️ הצבעות: {votes_count}\n"
-                f"🤖 סוכנים פעילים: {agent_names}\n\n"
-                "✅ ליבה פעילה\n"
-                "🟡 AI חיצוני: fallback מקומי פעיל"
-            )
+        if not skip_checks:
+            if any(x in q for x in ["מה השם", "שם שלי", "מי אני", "what is my name", "who am i"]):
+                from core.identity_resolver import get_display_name
+                name = get_display_name(uid) if uid else (user.get('display_name') or user.get('name') or 'לא ידוע')
+                role = user.get('role','unknown')
+                return f"👤 השם שלך הוא: {name}\n🎯 תפקיד: {role}"
+            if any(x in q for x in ["מצב מערכת", "דוח מערכת"]):
+                users_count = len(db.get("users", {}))
+                tasks_count = len(db.get("tasks", {}))
+                agents = db.get("agents", {})
+                agents_count = len(agents)
+                votes_count = len(db.get("votes", {}))
+                agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+                wallet = user.get("wallet", {})
+                return (
+                    "🛡 דוח מערכת SLH OS\n\n"
+                    f"👤 משתמש: {user.get('display_name') or user.get('name') or 'לא ידוע'}\n"
+                    f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                    f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                    f"🔒 staked: {wallet.get('staked',0)}\n"
+                    f"👥 משתמשים: {users_count}\n"
+                    f"🤖 סוכנים: {agents_count}\n"
+                    f"📋 משימות פעילות: {tasks_count}\n"
+                    f"🗳 הצבעות: {votes_count}\n"
+                    f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                    "✅ ליבה פעילה\n"
+                    "🟡 AI חיצוני: fallback מקומי פעיל"
+                )
+            # LOCAL SYSTEM ANSWERS — no LLM required
+            if any(x in q for x in ["דוח מערכת", "מצב המערכת", "סטטוס מערכת", "system report", "system status", "מה מצב המערכת", "מה קורה במערכת"]):
+                users_count = len(db.get("users", {}))
+                tasks_count = len(db.get("tasks", {}))
+                agents = db.get("agents", {})
+                agents_count = len(agents)
+                votes_count = len(db.get("votes", {}))
+                agent_names = ", ".join(a.get("name", "?") for a in agents.values())
+                wallet = user.get("wallet", {})
+                return (
+                    "🛡️ דוח מערכת SLH OS\n\n"
+                    f"👤 משתמש: {user.get('name','לא ידוע')}\n"
+                    f"🎯 תפקיד: {user.get('role','unknown')}\n"
+                    f"💰 יתרה: {wallet.get('credits',0)} credits\n"
+                    f"🔒 staked: {wallet.get('staked',0)}\n"
+                    f"👥 משתמשים: {users_count}\n"
+                    f"🤖 סוכנים: {agents_count}\n"
+                    f"📋 משימות: {tasks_count}\n"
+                    f"🗳️ הצבעות: {votes_count}\n"
+                    f"🤖 סוכנים פעילים: {agent_names}\n\n"
+                    "✅ ליבה פעילה\n"
+                    "🟡 AI חיצוני: fallback מקומי פעיל"
+                )
 
-        if any(x in q for x in ["כמה משתמשים", "כמה ארנקים", "user count"]):
-            return f"👥 משתמשים רשומים: {len(db.get('users', {}))}"
+            if any(x in q for x in ["כמה משתמשים", "כמה ארנקים", "user count"]):
+                return f"👥 משתמשים רשומים: {len(db.get('users', {}))}"
 
-        if any(x in q for x in ["כמה סוכנים", "איזה סוכנים", "agents count", "list agents"]):
-            names = ", ".join(a.get("name", "?") for a in db.get("agents", {}).values())
-            return f"🤖 סוכנים פעילים: {len(db.get('agents', {}))}\n{names}"
+            if any(x in q for x in ["כמה סוכנים", "איזה סוכנים", "agents count", "list agents"]):
+                names = ", ".join(a.get("name", "?") for a in db.get("agents", {}).values())
+                return f"🤖 סוכנים פעילים: {len(db.get('agents', {}))}\n{names}"
 
-        if any(x in q for x in ["מקור הנתונים", "data source", "מאיפה הנתונים"]):
-            return "📁 מקור הנתונים: state/db.json + state/agents.json (Railway volume)"
+            if any(x in q for x in ["מקור הנתונים", "data source", "מאיפה הנתונים"]):
+                return "📁 מקור הנתונים: state/db.json + state/agents.json (Railway volume)"
 
-        if any(x in q for x in ["כמה משימות", "task count"]):
-            return f"📋 משימות: {len(db.get('tasks', {}))}"
+            if any(x in q for x in ["כמה משימות", "task count"]):
+                return f"📋 משימות: {len(db.get('tasks', {}))}"
 
-        if any(x in q for x in ["כמה הצבעות", "vote count"]):
-            return f"🗳️ הצבעות: {len(db.get('votes', {}))}"
-
-
-        # SYSTEM IDENTITY
-
-        if any(x in q for x in [
-            "מי אתה",
-            "what are you",
-            "who are you",
-            "מה אתה"
-        ]):
-            return "אני SLH OS AI assistant. אני המערכת החכמה של SLH OS."
+            if any(x in q for x in ["כמה הצבעות", "vote count"]):
+                return f"🗳️ הצבעות: {len(db.get('votes', {}))}"
 
 
-        # OWNER IDENTITY
+            # SYSTEM IDENTITY
 
-        if any(x in q for x in [
-            "\u05de\u05d9 \u05d0\u05e0\u05d9",
-            "who am i",
-            "my identity",
-            "identity"
-        ]):
-
-            if user.get("role") == "OWNER":
-                return f"\u05d0\u05ea\u05d4 {user.get('name')} - OWNER \u05e9\u05dc SLH OS."
-
-            return f"\u05d0\u05ea\u05d4 {user.get('name','unknown')}"
+            if any(x in q for x in [
+                "מי אתה",
+                "what are you",
+                "who are you",
+                "מה אתה"
+            ]):
+                return "אני SLH OS AI assistant. אני המערכת החכמה של SLH OS."
 
 
+            # OWNER IDENTITY
 
-        # NAME
+            if any(x in q for x in [
+                "\u05de\u05d9 \u05d0\u05e0\u05d9",
+                "who am i",
+                "my identity",
+                "identity"
+            ]):
 
-        if any(x in q for x in [
-            "name",
-            "my name",
-            "מה השם שלי",
-            "איך קוראים לי"
-        ]):
+                if user.get("role") == "OWNER":
+                    return f"\u05d0\u05ea\u05d4 {user.get('name')} - OWNER \u05e9\u05dc SLH OS."
 
-            return f"השם שלך הוא: {user.get('name','unknown')}"
-
-
-        # ROLE
-
-        if any(x in q for x in [
-            "מה התפקיד שלי",
-            "מה תפקידי",
-            "מה התפקיד שלי במערכת",
-            "what is my role",
-            "my role",
-            "my permission",
-            "מה ההרשאה שלי"
-        ]):
-
-            return f"התפקיד שלך הוא: {user.get('role','unknown')}"
+                return f"\u05d0\u05ea\u05d4 {user.get('name','unknown')}"
 
 
-        # WALLET — LOCAL ANSWER, NO LLM
-        if any(x in q for x in [
-            "credit",
-            "credits",
-            "wallet",
-            "balance",
-            "קרדיט",
-            "קרדיטים",
-            "יתרה",
-            "כמה כסף",
-            "כמה קרדיטים"
-        ]):
-            try:
-                from core.profile_manager import get_balance
-                if not uid:
-                    return "לא ניתן לזהות את המשתמש לצורך בדיקת היתרה."
-                balance = get_balance(str(uid))
-                return f"הקרדיטים שלך: {balance}"
-            except Exception:
-                return "לא ניתן לקרוא כרגע את יתרת הקרדיטים."
+
+            # NAME
+
+            if any(x in q for x in [
+                "name",
+                "my name",
+                "מה השם שלי",
+                "איך קוראים לי"
+            ]):
+
+                return f"השם שלך הוא: {user.get('name','unknown')}"
 
 
-        # AGENTS
+            # ROLE
 
-        if any(x in q for x in [
-            "agent",
-            "agents",
-            "סוכן",
-            "סוכנים"
-        ]):
+            if any(x in q for x in [
+                "מה התפקיד שלי",
+                "מה תפקידי",
+                "מה התפקיד שלי במערכת",
+                "what is my role",
+                "my role",
+                "my permission",
+                "מה ההרשאה שלי"
+            ]):
 
-            names = [
-                a.get("name","?")
-                for a in agents.values()
-            ]
+                return f"התפקיד שלך הוא: {user.get('role','unknown')}"
 
-            return (
-                f"סוכנים פעילים: {len(agents)}\n"
-                + ", ".join(names)
-            )
+
+            # WALLET — LOCAL ANSWER, NO LLM
+            if any(x in q for x in [
+                "credit",
+                "credits",
+                "wallet",
+                "balance",
+                "קרדיט",
+                "קרדיטים",
+                "יתרה",
+                "כמה כסף",
+                "כמה קרדיטים"
+            ]):
+                try:
+                    from core.profile_manager import get_balance
+                    if not uid:
+                        return "לא ניתן לזהות את המשתמש לצורך בדיקת היתרה."
+                    balance = get_balance(str(uid))
+                    return f"הקרדיטים שלך: {balance}"
+                except Exception:
+                    return "לא ניתן לקרוא כרגע את יתרת הקרדיטים."
+
+
+            # AGENTS
+
+            if any(x in q for x in [
+                "agent",
+                "agents",
+                "סוכן",
+                "סוכנים"
+            ]):
+
+                names = [
+                    a.get("name","?")
+                    for a in agents.values()
+                ]
+
+                return (
+                    f"סוכנים פעילים: {len(agents)}\n"
+                    + ", ".join(names)
+                )
 
 
         context = f"""
