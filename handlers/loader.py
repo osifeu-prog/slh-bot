@@ -41,7 +41,7 @@ def load_handlers(bot, context):
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
         # DISABLED llm_handler,
-        # DISABLED natural_chat,
+        ("natural_chat", "handlers.natural_chat"),
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
         ("me", "handlers.me_handler"),
