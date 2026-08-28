@@ -97,10 +97,12 @@ def register_payment_handlers(bot):
 
         try:
             db = state_manager.load_db()
-            referrer_uid = db.get(
-                "referred_by",
-                {}
-            ).get(uid)
+            referrer_uid = (
+                db.get("users", {})
+                  .get(uid, {})
+                  .get("referral", {})
+                  .get("referred_by")
+            )
 
             from core import economy_service
 

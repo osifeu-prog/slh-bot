@@ -1,4 +1,4 @@
-﻿from handlers.llm_handler import query_llm_with_context
+from handlers.llm_handler import query_llm_with_context
 from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
 
@@ -54,15 +54,16 @@ def register_ask_handler(bot):
             pass
 
         try:
+            answer = route(question, str(msg.from_user.id))
+            if not answer:
+                raise ValueError("no route answer")
+        except Exception:
             answer = query_llm_with_context(
                 question,
                 str(msg.from_user.id)
             )
-        except Exception:
-            answer = (
-                "❌ תקלה פנימית במנוע AI.\n"
-                "המערכת נשמרה ללא חשיפת פרטי debug."
-            )
+        if not answer:
+            answer = "⚠️ אין תשובה זמינה כרגע."
 
         bot.send_message(
             msg.chat.id,

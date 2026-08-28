@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 from datetime import datetime, timezone
 import state_manager
@@ -334,7 +334,12 @@ def purchase_item(
 
         commission = 0
 
-        referrer_uid = db.get("referred_by", {}).get(uid)
+        referrer_uid = (
+                db.get("users", {})
+                  .get(uid, {})
+                  .get("referral", {})
+                  .get("referred_by")
+            )
         if referrer_uid:
             referrer_uid = str(referrer_uid)
 
@@ -477,7 +482,12 @@ def record_stars_payment(
 
         commission = 0
 
-        referrer_uid = db.get("referred_by", {}).get(uid)
+        referrer_uid = (
+                db.get("users", {})
+                  .get(uid, {})
+                  .get("referral", {})
+                  .get("referred_by")
+            )
         if referrer_uid:
             referrer_uid = str(referrer_uid)
 
