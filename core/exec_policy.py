@@ -1,4 +1,4 @@
-﻿import json
+import json
 import os
 import re
 import subprocess
@@ -16,11 +16,9 @@ _LAST_EXEC = {}
 
 def rate_limit_ok(user_id, min_interval_seconds=2):
     now = time.time()
-
     if user_id in _LAST_EXEC:
         if now - _LAST_EXEC[user_id] < min_interval_seconds:
             return False
-
     _LAST_EXEC[user_id] = now
     return True
 
@@ -38,14 +36,19 @@ DANGEROUS_PATTERNS = [
     r"\bwget\b.*\|\s*(ba)?sh\b",
     r"\bpkill\s+-9\s+-f\s+bot_gateway\b",
     r"\b>\s*state/db\.json\b",
+    r">>?\s*state[/\\]",
+    r"open\(\s*f?[\"'][^\"']*state[/\\][^\"']*[\"']\s*,\s*[\"'][waxc]",
+    r"(?=.*state[/\\])(?=.*\.write_text\()",
+    r"(?=.*state[/\\])(?=.*\.write_bytes\()",
+    r"(?=.*state[/\\])(?=.*\bjson\.dump\()",
+    r"\brm\s+.*state[/\\]",
+    r"\bmv\s+.*state[/\\]",
+    r"\bshutil\.(move|copy|rmtree)\(.*state[/\\]",
 ]
 
 
 def is_dangerous(cmd):
-    return any(
-        re.search(pattern, cmd, re.IGNORECASE)
-        for pattern in DANGEROUS_PATTERNS
-    )
+    return any(re.search(p, cmd, re.IGNORECASE) for p in DANGEROUS_PATTERNS)
 
 
 SECRET_PATTERNS = [
@@ -57,7 +60,6 @@ SECRET_PATTERNS = [
 def redact_secrets(text):
     for pattern in SECRET_PATTERNS:
         text = pattern.sub("[REDACTED]", text)
-
     return text
 
 
@@ -71,76 +73,29 @@ def audit(user_id, cmd, source, result):
                 logs = json.load(f)
         except Exception:
             logs = []
-
-        logs.append({
-            "user": str(user_id),
-            "cmd": cmd,
-            "source": source,
-            "result": result,
-            "time": time.time()
-        })
-
-        os.makedirs(
-            os.path.dirname(AUDIT_PATH),
-            exist_ok=True
-        )
-
+        logs.append({"user": str(user_id), "cmd": cmd, "source": source, "result": result, "time": time.time()})
+        os.makedirs(os.path.dirname(AUDIT_PATH), exist_ok=True)
         with open(AUDIT_PATH, "w", encoding="utf-8") as f:
-            json.dump(
-                logs,
-                f,
-                indent=2,
-                ensure_ascii=False
-            )
-
+            json.dump(logs, f, indent=2, ensure_ascii=False)
     except Exception:
         pass
 
 
 def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000):
-
     if not is_owner(user_id):
-        return False, "⛔ Owner only."
-
+        return False, "Owner only."
     if not rate_limit_ok(user_id):
-        return False, "⏳ Too fast."
-
+        return False, "Too fast."
     if is_dangerous(cmd):
         audit(user_id, cmd, source, "blocked")
-        return False, "⛔ Command blocked."
-
+        return False, "Command blocked."
     try:
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout
-        )
-
-        output = redact_secrets(
-            (result.stdout or "") +
-            (result.stderr or "")
-        )
-
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        output = redact_secrets((result.stdout or "") + (result.stderr or ""))
         if len(output) > max_output:
             output = output[:max_output] + "\n... truncated"
-
-        audit(
-            user_id,
-            cmd,
-            source,
-            f"exit_{result.returncode}"
-        )
-
+        audit(user_id, cmd, source, f"exit_{result.returncode}")
         return True, output or "(no output)"
-
     except Exception as e:
-        audit(
-            user_id,
-            cmd,
-            source,
-            f"error_{type(e).__name__}"
-        )
-
-        return False, f"❌ Error: {e}"
+        audit(user_id, cmd, source, f"error_{type(e)}")
+        return False, f"Error: {e}"
