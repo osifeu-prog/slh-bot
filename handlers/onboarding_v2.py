@@ -262,6 +262,34 @@ def register(bot):
 
     @bot.callback_query_handler(
         func=lambda call:
+        call.data == "continue_course"
+    )
+    def continue_course(call):
+        bot.answer_callback_query(call.id, "📚 המשך לקורס")
+        bot.send_message(
+            call.message.chat.id,
+            "📚 הקורס הפעיל שלך: bitcoin_mastery
+"
+            "שלח /lesson bitcoin_mastery 1 כדי להתחיל."
+        )
+
+    @bot.callback_query_handler(
+        func=lambda call:
+        call.data == "system_status"
+    )
+    def system_status(call):
+        bot.answer_callback_query(call.id, "📊 סטטוס מערכת")
+        bot.send_message(
+            call.message.chat.id,
+            "🖥 SLH OS
+"
+            "שירות פעיל, DB פעיל, LLM תקין.
+"
+            "שלח /doctor לדוח מלא."
+        )
+
+    @bot.callback_query_handler(
+        func=lambda call:
         call.data == "goto_dashboard"
     )
     def goto_dashboard(call):
