@@ -38,5 +38,29 @@
     "grant": {
       "hardware": "esp32_standard"
     }
+  },
+  "emoji_bitcoin": {
+    "name": "חבילת אימוג'י ביטקוין",
+    "price": 25,
+    "type": "digital",
+    "grant": {
+      "digital": "emoji_bitcoin"
+    }
+  },
+  "emoji_slh": {
+    "name": "חבילת אימוג'י SLH OS",
+    "price": 50,
+    "type": "digital",
+    "grant": {
+      "digital": "emoji_slh"
+    }
+  },
+  "emoji_vip": {
+    "name": "חבילת אימוג'י VIP זהוב",
+    "price": 100,
+    "type": "digital",
+    "grant": {
+      "digital": "emoji_vip"
+    }
   }
 }

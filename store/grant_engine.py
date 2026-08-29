@@ -92,4 +92,20 @@ def apply_grant(uid, grant):
             "license": license_data
         }
 
+    if "digital" in grant:
+        inventory = user.get("inventory", {})
+        digital_items = inventory.setdefault("digital", [])
+
+        if grant["digital"] not in digital_items:
+            digital_items.append(grant["digital"])
+
+        profile_manager.update_user(uid, {
+            "inventory": inventory
+        })
+
+        return {
+            "type": "digital",
+            "value": grant["digital"]
+        }
+
     return None
