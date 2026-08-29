@@ -52,6 +52,8 @@ def get_tasks(uid):
     result = []
 
     for tid, task in tasks.items():
+        if str(task.get('owner_id', '')) not in ('', str(uid)):
+            continue
         done_by = task.get("done_by", [])
 
         result.append({

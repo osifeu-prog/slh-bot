@@ -104,7 +104,7 @@ def api_stats():
             db = json.load(f)
         users = len(db.get("users", {}))
         tasks = len(db.get("tasks", {}))
-        agents = len(state_manager.get_agents())
+        agents = sum(1 for a in state_manager.get_agents().values() if a.get("state") != "archived")
         owner = db.get("users", {}).get("8789977826", {})
         credits = owner.get("wallet", {}).get("credits", 0)
         return jsonify({
