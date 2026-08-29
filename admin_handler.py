@@ -1,41 +1,69 @@
 from core.identity import OWNER_TELEGRAM_ID
+
 def init(bot):
     @bot.message_handler(commands=['admin'])
     def admin_panel(message):
         if int(message.from_user.id) != int(OWNER_TELEGRAM_ID):
             bot.reply_to(message, "⛔️ OWNER only")
             return
-        msg = "🔧 **ADMIN CONTROL PANEL**\n\n"
-        msg += "📊 DIAGNOSTICS:\n"
-        msg += "/diagnose — System diagnostic\n"
-        msg += "/megadiag — Full mega diagnostic\n"
-        msg += "/status — System status\n"
-        msg += "/health — Health check\n\n"
-        msg += "🤖 AGENTS:\n"
-        msg += "/agents — List all agents\n"
-        msg += "/agent_create [name] — Create new agent\n\n"
-        msg += "🗳️ VOTING:\n"
-        msg += "/vote — Create vote\n"
-        msg += "/results — See results\n\n"
-        msg += "💰 REVENUE:\n"
-        msg += "/revenue — Revenue status\n\n"
-        msg += "🔄 SYSTEM:\n"
-        msg += "/backup — Git backup now\n"
-        msg += "/restart — Restart bot\n"
-        msg += "/logs N — Last N log lines\n"
-        msg += "/clean — Clean temp files\n\n"
-        msg += "📈 ANALYTICS:\n"
-        msg += "/audit — Audit log\n"
-        msg += "/memory — Memory status\n"
-        msg += "/debug — Container debug info\n"
-        msg += "/termux — Show Termux status\n"
-        msg += "/deploy — Trigger Railway deploy\n"
-        msg += "/errors — Show recent errors\n"
-        msg += "/plugin list — List plugins\n"
-        msg += "/goal add/list — Manage goals\n"
-        msg += "/exec CMD — Run shell command (admin)\n"
-        msg += "/termlog — Show Termux logs (admin)\n"
-        msg += "/rlogs — Railway logs (admin)\n"
-        msg += "/disk — Disk usage\n"
-        msg += "/sysinfo — System resources"
-        bot.reply_to(message, msg)
+        text = """🔧 ADMIN CONTROL PANEL**
+
+🩺 **DIAGNOSTICS
+/doctor – Full health report
+/megadiag – Mega diagnostics
+/status – System status
+/health – Health check
+/diagnose – Diagnostic
+
+💰 ECONOMY
+/balance – Check balance
+/pay – Buy credits
+/revenue – Revenue status
+/stake – Stake credits
+/unstake – Unstake credits
+/airdrop – Send airdrop
+/claim – Claim BNB deposit
+
+🗳 GOVERNANCE
+/propose – Create proposal
+/vote – Vote yes/no
+/tally – Show proposal result
+/gov_status – Governance status
+/session_new – New session
+/session_close – Close session
+
+🎯 MISSIONS & PROGRESS
+/mission – Mission control
+/task – Manage tasks
+/progress – Your progress
+/worklog – Work log
+
+🤖 AGENTS & AI
+/agents – List agents
+/agent_create – Create agent
+/register_ai – Register AI agents
+/sendagent – Send to agent
+/inbox – Agent inbox
+
+🛠 SYSTEM & DEV
+/deploy – Trigger Railway deploy
+/git commit – Git commit
+/backup – Backup DB
+/exec – Execute command
+/execr – Request approval
+/autoexec – Batch execute
+/logs – Recent logs
+/clean – Clean temp
+/sysinfo – System resources
+/disk – Disk usage
+
+🌐 UI & NAVIGATION
+/miniapp – Open Mini App
+/dashboard – Dashboard
+/help – Help menu
+
+📌 עקרונות
+כל פעולה רגישה עוברת דרך core.exec_policy.run_gated.
+אין גישה ישירה ל-state או subprocess.
+"""
+        bot.reply_to(message, text, parse_mode="Markdown")
