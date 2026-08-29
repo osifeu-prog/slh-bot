@@ -303,3 +303,18 @@ def register_esp_handler(bot):
         if logo:
             text = logo + "\n\n" + text
         bot.reply_to(msg, text)
+
+    @bot.message_handler(commands=["esp"])
+    def esp_menu(msg):
+        bot.reply_to(
+            msg,
+            "📡 ESP Commands:\n"
+            "/esp_status - מצב מכשירי ESP\n"
+            "/esp_ping - בדיקת חיבור\n"
+            "/esp_activate - הפעלת רישיון\n"
+            "/esp_start - התחלת משימה\n"
+            "/esp_stop - עצירת משימה\n"
+            "/esp_progress - דיווח התקדמות\n"
+            "/esp_heartbeat - דופק\n"
+            "/esp_broadcast_progress - שידור התקדמות"
+        )
