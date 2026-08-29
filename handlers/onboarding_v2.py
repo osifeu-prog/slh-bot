@@ -268,8 +268,7 @@ def register(bot):
         bot.answer_callback_query(call.id, "📚 המשך לקורס")
         bot.send_message(
             call.message.chat.id,
-            "📚 הקורס הפעיל שלך: bitcoin_mastery
-"
+            "📚 הקורס הפעיל שלך: bitcoin_mastery\n"
             "שלח /lesson bitcoin_mastery 1 כדי להתחיל."
         )
 
