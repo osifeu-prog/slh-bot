@@ -217,14 +217,12 @@ def register_esp_handler(bot):
             bot.reply_to(msg, "Device not registered")
             return
 
-        log_path = f"/tmp/virtual_esp_{device_id}.log"
-        with open(log_path, "a") as log_file:
-            subprocess.Popen(
-                ["python3", "core/virtual_esp.py", device_id],
-                stdout=log_file,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
-            )
+        from core.exec_policy import run_gated
+        cmd = f"nohup python3 core/virtual_esp.py {device_id} >> /tmp/virtual_esp_{device_id}.log 2>&1 &"
+        ok, result = run_gated(OWNER_TELEGRAM_ID, cmd, source="esp_start", timeout=5)
+        if not ok:
+            bot.reply_to(msg, f"Failed: {result}")
+            return
         bot.reply_to(msg, f"{device_id} הופעל")
 
     @bot.message_handler(commands=["esp_stop"])
@@ -249,12 +247,9 @@ def register_esp_handler(bot):
             bot.reply_to(msg, "Device not registered")
             return
 
-        subprocess.run(
-            ["pkill", "-f", f"virtual_esp.py {device_id}"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
+        from core.exec_policy import run_gated
+        cmd = f"pkill -f 'virtual_esp.py {device_id}'"
+        ok, result = run_gated(OWNER_TELEGRAM_ID, cmd, source="esp_stop", timeout=5)
         bot.reply_to(msg, f"{device_id} הופסק")
 
 
