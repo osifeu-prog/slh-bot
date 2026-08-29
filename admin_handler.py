@@ -66,4 +66,4 @@ def init(bot):
 כל פעולה רגישה עוברת דרך core.exec_policy.run_gated.
 אין גישה ישירה ל-state או subprocess.
 """
-        bot.reply_to(message, text, parse_mode="Markdown")
+        bot.reply_to(message, text)
