@@ -1,3 +1,4 @@
+import state_manager
 """
 SLH Agent Runtime Factory
 
@@ -112,7 +113,7 @@ def load_agents_into_kernel(kernel, db=None):
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
 
-    agents = db.get("agents", {})
+    agents = state_manager.get_agents()
 
     report = {
         "loaded": [],

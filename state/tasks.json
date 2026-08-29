@@ -1,0 +1,76 @@
+﻿{
+    "alpha_identity":  {
+                           "title":  "Alpha Identity",
+                           "status":  "done",
+                           "progress":  100
+                       },
+    "alpha_wallet":  {
+                         "title":  "Alpha Wallet",
+                         "status":  "done",
+                         "progress":  100,
+                         "reward":  100,
+                         "done_by":  [
+                                         8789977826
+                                     ]
+                     },
+    "alpha_agents":  {
+                         "title":  "Alpha Agents",
+                         "status":  "active",
+                         "progress":  70
+                     },
+    "alpha_academy":  {
+                          "title":  "Alpha Academy",
+                          "status":  "active",
+                          "progress":  85
+                      },
+    "alpha_economy":  {
+                          "title":  "Alpha Economy",
+                          "status":  "active",
+                          "progress":  80
+                      },
+    "alpha_store":  {
+                        "title":  "Alpha Store",
+                        "status":  "active",
+                        "progress":  90
+                    },
+    "alpha_user_journey":  {
+                               "title":  "Alpha User Journey",
+                               "status":  "done",
+                               "progress":  100
+                           },
+    "alpha_exchange":  {
+                           "title":  "Alpha Exchange (Binance)",
+                           "status":  "planned",
+                           "progress":  20
+                       },
+    "p0_security_exec":  {
+                             "title":  "׳׳‘׳˜׳—׳× /e ׳• /execr",
+                             "progress":  100,
+                             "status":  "done"
+                         },
+    "p0_onboarding_e2e":  {
+                              "title":  "E2E ׳׳©׳×׳׳© ׳—׳“׳©",
+                              "progress":  100,
+                              "status":  "done"
+                          },
+    "p0_ton_claim":  {
+                         "title":  "׳‘׳“׳™׳§׳× TON claim ׳׳׳™׳×׳™",
+                         "progress":  100,
+                         "status":  "done"
+                     },
+    "p0_terms":  {
+                     "title":  "׳×׳ ׳׳™ ׳©׳™׳׳•׳© ׳•׳₪׳¨׳˜׳™׳•׳×",
+                     "progress":  100,
+                     "status":  "done"
+                 },
+    "p0_backup":  {
+                      "title":  "׳’׳™׳‘׳•׳™ DB ׳•׳©׳—׳–׳•׳¨",
+                      "progress":  100,
+                      "status":  "done"
+                  },
+    "p0_user_journey":  {
+                            "name":  "User Journey Enforcement",
+                            "status":  "done",
+                            "progress":  100
+                        }
+}

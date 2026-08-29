@@ -1,3 +1,4 @@
+import state_manager
 from dotenv import load_dotenv
 load_dotenv('.env')
 import os, json, time, threading, traceback, sys
@@ -103,7 +104,7 @@ def api_stats():
             db = json.load(f)
         users = len(db.get("users", {}))
         tasks = len(db.get("tasks", {}))
-        agents = len(db.get("agents", {}))
+        agents = len(state_manager.get_agents())
         owner = db.get("users", {}).get("8789977826", {})
         credits = owner.get("wallet", {}).get("credits", 0)
         return jsonify({

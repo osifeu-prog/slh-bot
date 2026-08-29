@@ -1,3 +1,4 @@
+import state_manager
 #!/usr/bin/env python3
 """
 SLH OS Advanced System Diagnostics Framework
@@ -49,7 +50,7 @@ class SystemDiagnostics:
             with open("state/db.json", encoding="utf-8") as f:
                 db = json.load(f)
             users = len(db.get("users", {}))
-            agents = len(db.get("agents", {}))
+            agents = len(state_manager.get_agents())
             transactions = len(db.get("transactions", []))
             return f"✅ DB OK | Users: {users}, Agents: {agents}, Transactions: {transactions}"
         except Exception as e:

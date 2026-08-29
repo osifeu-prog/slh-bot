@@ -1,3 +1,4 @@
+import state_manager
 import time, subprocess, json, os
 J = type('J', (), {'log': lambda self, msg: print(f"[JOURNAL] {msg}")})()
 E = type('E', (), {'run': lambda self, cmd: subprocess.getoutput(cmd)})()
@@ -15,7 +16,7 @@ def cmd_users():
     for uid,u in db.get("users",{}).items(): print(f"{uid} | {u.get('name','?')} | {u.get('role')} | {u.get('credits',0)} Credits")
 def cmd_agents():
     db=load_db()
-    for aid,a in db.get("agents",{}).items(): print(f"{aid} | {a['name']} | {a['state']}")
+    for aid,a in state_manager.get_agents().items(): print(f"{aid} | {a['name']} | {a['state']}")
 def main():
     J.log("SLH vNEXT STARTED")
     while True:

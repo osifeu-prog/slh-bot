@@ -1,3 +1,4 @@
+import state_manager
 import json, os, subprocess, datetime
 
 JOURNAL_FILE = "journal.json"
@@ -83,7 +84,7 @@ def init(bot):
             with open("state/db.json", encoding="utf-8") as f:
                 db = json.load(f)
             students = len(db.get("students",{}))
-            agents = len(db.get("agents",{}))
+            agents = len(state_manager.get_agents())
             report = (
                 f"🌙 **Evening Report** – {datetime.date.today()}\n"
                 f"👥 תלמידים: {students} | 🤖 סוכנים: {agents}\n"

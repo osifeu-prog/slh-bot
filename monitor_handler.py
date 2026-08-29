@@ -1,3 +1,4 @@
+import state_manager
 import subprocess, json, os
 
 def init(bot):
@@ -52,7 +53,7 @@ def init(bot):
         try:
             with open("db.json") as f:
                 db = json.load(f)
-            agents = db.get("agents", {})
+            agents = state_manager.get_agents()
             if agents:
                 lines.append("**🔹 Agents:**")
                 for name, data in agents.items():

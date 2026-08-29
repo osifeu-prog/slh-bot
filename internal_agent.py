@@ -58,7 +58,7 @@ def agent_worker():
             with open("db.json") as f:
                 db = json.load(f)
             changed = False
-            for name, data in db.get("agents", {}).items():
+            for name, data in state_manager.get_agents().items():
                 inbox = data.get("inbox", [])
                 if not inbox:
                     continue

@@ -210,7 +210,7 @@ def sync_command(m):
         try:
             db = load_db()
             users = len(db.get("users", {}))
-            agents = len(db.get("agents", {}))
+            agents = len(state_manager.get_agents())
             tasks = len(db.get("tasks", {}))
             memory = len(db.get("memory", {}))
         except:
@@ -425,7 +425,7 @@ def test_agents(m):
     try:
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
-        agents = db.get("agents", {})
+        agents = state_manager.get_agents()
     except:
         agents = {}
     if not agents:

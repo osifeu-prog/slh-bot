@@ -1,3 +1,4 @@
+import state_manager
 from pathlib import Path
 
 p = Path("bot_stable.py")
@@ -36,7 +37,7 @@ def sync_command(m):
         try:
             db = load_db()
             users = len(db.get("users", {}))
-            agents = len(db.get("agents", {}))
+            agents = len(state_manager.get_agents())
             tasks = len(db.get("tasks", {}))
             memory = len(db.get("memory", {}))
         except:

@@ -1,3 +1,4 @@
+import state_manager
 import json
 import shutil
 import datetime
@@ -33,7 +34,7 @@ with open(DB,encoding="utf8") as f:
     db=json.load(f)
 
 
-agents=db.get("agents",{})
+agents=state_manager.get_agents()
 
 
 # normalize

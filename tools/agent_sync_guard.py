@@ -1,3 +1,4 @@
+import state_manager
 import json
 import shutil
 import datetime
@@ -17,7 +18,7 @@ shutil.copy2(
 
 db=json.load(open(DB,encoding="utf8"))
 
-agents=db.get("agents",{})
+agents=state_manager.get_agents()
 
 for name,a in agents.items():
 

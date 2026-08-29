@@ -1,3 +1,4 @@
+import state_manager
 import os
 import json
 import subprocess
@@ -109,7 +110,7 @@ section("AGENTS")
 
 try:
 
-    agents=db.get("agents",{})
+    agents=state_manager.get_agents()
 
     missing={}
 

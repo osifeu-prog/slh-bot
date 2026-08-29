@@ -1,4 +1,5 @@
-﻿from openai import OpenAI
+import state_manager
+from openai import OpenAI
 import os
 import json
 import requests
@@ -85,7 +86,7 @@ User: {user.get('name', uid)}
 Role: {user.get('role', 'unknown')}
 Credits: {wallet.get('credits', 0)}
 Staked: {wallet.get('staked', 0)}
-Agents: {len(db.get('agents', {}))}
+Agents: {len(state_manager.get_agents())}
 Tasks: {len(db.get('tasks', {}))}
 Votes: {len(db.get('votes', {}))}
 """

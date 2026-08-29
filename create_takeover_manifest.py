@@ -1,3 +1,4 @@
+import state_manager
 from pathlib import Path
 import json
 import hashlib
@@ -51,7 +52,7 @@ audit_module_path = ROOT / "core" / "audit.py"
 
 
 db = load_json(db_path, {})
-agents = db.get("agents", {}) if isinstance(db, dict) else {}
+agents = state_manager.get_agents() if isinstance(db, dict) else {}
 
 board = load_json(board_path, {"missions": []})
 missions = board.get("missions", []) if isinstance(board, dict) else []

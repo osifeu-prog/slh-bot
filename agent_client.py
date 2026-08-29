@@ -1,3 +1,4 @@
+import state_manager
 import json, os, time, subprocess, datetime
 
 DB_PATH = "state/db.json"
@@ -94,7 +95,7 @@ def save_db(db):
 
 def process_inbox():
     db = load_db()
-    agent_data = db.get("agents", {}).get(AGENT_PREFIX)
+    agent_data = state_manager.get_agents().get(AGENT_PREFIX)
     if not agent_data:
         return
     inbox = agent_data.get("inbox", [])

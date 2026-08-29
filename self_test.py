@@ -1,3 +1,4 @@
+import state_manager
 import subprocess, json, os, time
 
 def run(cmd):
@@ -30,7 +31,7 @@ def test_all():
             with open("db.json","w") as f: json.dump(db, f)
             time.sleep(3)  # wait for agent worker
             with open("db.json") as f: db = json.load(f)
-            out = db.get("agents",{}).get("mytermux",{}).get("outbox",[])
+            out = state_manager.get_agents().get("mytermux",{}).get("outbox",[])
             if out and "u0_a364" in out[-1]:
                 agent_ok = True
     except: pass

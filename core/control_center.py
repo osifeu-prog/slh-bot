@@ -1,3 +1,4 @@
+import state_manager
 import json
 import os
 import subprocess
@@ -44,7 +45,7 @@ def get_system_snapshot():
         {}
     )
 
-    agents = db.get("agents", {})
+    agents = state_manager.get_agents()
     users = db.get("users", {})
 
     return {

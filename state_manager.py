@@ -1,3 +1,4 @@
+import state_manager
 import json, os
 
 try:
@@ -26,7 +27,7 @@ AGENTS_FILE = "state/db.json"
 def get_agents():
     try:
         db = load_db()
-        return db.get("agents", {})
+        return state_manager.get_agents()
     except Exception as e:
         print("Could not load agents:", e)
         return {}
@@ -83,3 +84,9 @@ def atomic_update(mutate_fn):
         finally:
             if HAS_FCNTL:
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
+
+
+def get_agents():
+    from core.agent_state_store import AgentStateStore
+    store = AgentStateStore()
+    return store.get_all()

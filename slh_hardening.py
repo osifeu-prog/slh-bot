@@ -1,3 +1,4 @@
+import state_manager
 import os
 import json
 import shutil
@@ -64,7 +65,7 @@ with open(agents_file,encoding="utf8") as f:
     db=json.load(f)
 
 
-agents=db.get("agents",{})
+agents=state_manager.get_agents()
 
 now=datetime.datetime.now().isoformat()
 

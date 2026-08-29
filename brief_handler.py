@@ -29,7 +29,7 @@ def init(bot):
         try:
             db = state_manager.load_db()
             users = len(db.get("students", {}))
-            agents = len(db.get("agents", {}))
+            agents = len(state_manager.get_agents())
             tasks = len(db.get("tasks", {}))
             lines.append(f"\n📊 Status: Users {users}, Agents {agents}, Tasks {tasks}")
         except Exception as e:

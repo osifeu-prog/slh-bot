@@ -1,3 +1,4 @@
+import state_manager
 import os, json, subprocess, sys
 from datetime import datetime, timezone
 
@@ -19,7 +20,7 @@ def check_db():
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
         users = len(db.get("users", {}))
-        agents = len(db.get("agents", {}))
+        agents = len(state_manager.get_agents())
         txs = len(db.get("transactions", []))
         return f"✅ DB: {users} users, {agents} agents, {txs} transactions"
     except:

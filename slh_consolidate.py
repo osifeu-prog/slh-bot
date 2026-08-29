@@ -1,3 +1,4 @@
+import state_manager
 import json
 import shutil
 import datetime
@@ -35,7 +36,7 @@ with open(db_file,encoding="utf8") as f:
     db=json.load(f)
 
 
-db_agents=db.get("agents",{})
+db_agents=state_manager.get_agents()
 
 
 # write agents mirror

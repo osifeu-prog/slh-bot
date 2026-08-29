@@ -1,3 +1,4 @@
+import state_manager
 import os
 import json
 import sys
@@ -84,7 +85,7 @@ except Exception as e:
 section("AGENTS")
 
 try:
-    agents=db.get("agents",{})
+    agents=state_manager.get_agents()
 
     ok("Agents count",len(agents))
 
