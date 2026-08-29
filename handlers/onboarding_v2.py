@@ -280,10 +280,8 @@ def register(bot):
         bot.answer_callback_query(call.id, "📊 סטטוס מערכת")
         bot.send_message(
             call.message.chat.id,
-            "🖥 SLH OS
-"
-            "שירות פעיל, DB פעיל, LLM תקין.
-"
+            "🖥 SLH OS\n"
+            "שירות פעיל, DB פעיל, LLM תקין.\n"
             "שלח /doctor לדוח מלא."
         )
 
