@@ -24,6 +24,13 @@
     <div class="card">
         <div>💰 Credits</div>
         <div id="credits" class="value">0</div>
+        <div>🔒 Staked: <span id="staked">0</span></div>
+        <div>🪙 Token Balance: <span id="token_balance">0</span></div>
+        <div>👛 TON Wallet: <span id="ton_wallet">-</span></div>
+    </div>
+    <div class="card">
+        <h2>📊 System Stats</h2>
+        <div id="stats">Loading...</div>
     </div>
     <div class="card">
         <h2>📋 Tasks</h2>
@@ -47,6 +54,22 @@
             const data = await res.json();
             nameEl.textContent = data.name || uid;
             creditsEl.textContent = data.credits ?? 0;
+        }
+
+        async function loadStats() {
+            const statsEl = document.getElementById("stats");
+            try {
+                const res = await fetch("/api/stats");
+                const s = await res.json();
+                statsEl.innerHTML = `
+                    <div>👥 Users: ${s.users}</div>
+                    <div>🤖 Agents: ${s.agents}</div>
+                    <div>📋 Tasks: ${s.tasks}</div>
+                    <div>💰 Total Credits: ${s.credits}</div>
+                `;
+            } catch(e) {
+                statsEl.textContent = "Unavailable";
+            }
         }
 
         async function loadTasks() {
@@ -81,6 +104,7 @@
         }
 
         loadWallet();
+        loadStats();
         loadTasks();
         loadLeaderboard();
     </script>
