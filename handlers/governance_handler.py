@@ -254,12 +254,30 @@ def register(bot, context=None):
         if ratio >= threshold:
             proposal["status"] = "approved"
             _save_gov(gov)
+
+            # Bridge: create a developer mission automatically
+            try:
+                from core.mission_lifecycle import MissionLifecycleService
+                service = MissionLifecycleService()
+                mission_id = f"gov_{proposal['id']}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+                mission_description = proposal.get("title") or proposal.get("description") or f"Proposal {proposal['id']}"
+                mission_result = service.create_mission(
+                    mission_id,
+                    mission_description,
+                    reward=0
+                )
+                mission_status = mission_result.get("status") or "unknown"
+                mission_msg = f"\n🎯 משימה נוצרה: {mission_id} [{mission_status}]"
+            except Exception as e:
+                mission_msg = f"\n⚠️ לא ניתן ליצור משימה: {e}"
+
             bot.reply_to(
                 m,
                 f"✅ הצעה #{pid} אושרה\n"
                 f"כן: {weighted_yes}\n"
                 f"לא: {weighted_no}\n"
                 f"יחס: {ratio:.2f}"
+                + mission_msg
             )
         else:
             proposal["status"] = "rejected"
