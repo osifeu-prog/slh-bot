@@ -59,7 +59,7 @@ def generate_health_report(bot):
 
     try:
         import state_manager
-        agents = state_manager.get_agents()
+        agents = [a for a in state_manager.get_agents().values() if a.get("state") != "archived"]
         checks["Agents"] = f"🟢 {len(agents)} agents"
     except Exception as e:
         checks["Agents"] = f"🔴 {e}"
