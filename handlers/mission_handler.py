@@ -93,7 +93,7 @@ def register(bot, context=None):
                     icon = "🟢" if MissionStateNormalizer.is_completed(t.get('status')) else "🔴" if t['status'] == 'open' else "🟡"
                     agent = t['assigned_to'] or "לא שויך"
                     msg += f"{icon} #{t['id']}: {t['desc']}\n   ↳ אחראי: {agent} | שכר: {t['reward']} SLH\n\n"
-                bot.reply_to(m, msg, parse_mode='Markdown')
+                bot.reply_to(m, msg)
 
         elif action == 'assign':
 
@@ -238,7 +238,7 @@ def register(bot, context=None):
                 msg = "💰 **תמולים**\n\n"
                 for entry in ledger[-10:]:
                     msg += f"👤 {entry['agent']}: {entry['amount']} SLH (משימה #{entry['mission_id']})\n"
-                bot.reply_to(m, msg, parse_mode='Markdown')
+                bot.reply_to(m, msg)
 
         else:
             bot.reply_to(m, "פעולה לא מוכרת.")
