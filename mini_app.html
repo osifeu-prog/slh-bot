@@ -49,11 +49,17 @@
         async function loadWallet() {
             const nameEl = document.getElementById("name");
             const creditsEl = document.getElementById("credits");
+            const stakedEl = document.getElementById("staked");
+            const tokenBalEl = document.getElementById("token_balance");
+            const tonWalletEl = document.getElementById("ton_wallet");
             if (!uid) { nameEl.textContent = "Telegram user"; creditsEl.textContent = "0"; return; }
             const res = await fetch("/api/wallet/" + encodeURIComponent(uid));
             const data = await res.json();
             nameEl.textContent = data.name || uid;
             creditsEl.textContent = data.credits ?? 0;
+                stakedEl.textContent = data.staked ?? 0;
+                tokenBalEl.textContent = data.token_balance ?? 0;
+                tonWalletEl.textContent = data.ton_wallet || "Not linked";
         }
 
         async function loadStats() {
