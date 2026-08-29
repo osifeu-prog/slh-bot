@@ -14,33 +14,49 @@ ERC20_ABI = [
 
 
 def get_onchain_status():
-    cfg = get_bsc_config()
-    db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
-    if "bsc_settings" in db:
-        cfg = {**cfg, **db["bsc_settings"]}
+    try:
+        cfg = get_bsc_config()
+        db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+        if "bsc_settings" in db:
+            cfg = {cfg, **db["bsc_settings"]}
 
-    w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
-    treasury = w3.to_checksum_address(cfg["treasury_wallet"])
-    contract = w3.eth.contract(
-        address=Web3.to_checksum_address(cfg["token_contract"]),
-        abi=ERC20_ABI,
-    )
-    slh_raw = contract.functions.balanceOf(treasury).call()
-    dec = contract.functions.decimals().call()
-    slh = slh_raw / (10 ** dec)
-    bnb = w3.from_wei(w3.eth.get_balance(treasury), "ether")
+        if not cfg.get("treasury_wallet") or not cfg.get("token_contract"):
+            return {
+                "ok": False,
+                "error": "onchain not configured",
+                "treasury_wallet": None,
+                "token_contract": None,
+                "treasury_bnb": 0,
+                "treasury_slh": 0,
+            }
 
-    return {
-        "chain_id": w3.eth.chain_id,
-        "block": w3.eth.block_number,
-        "treasury_wallet": cfg["treasury_wallet"],
-        "token_contract": cfg["token_contract"],
-        "treasury_bnb": float(bnb),
-        "treasury_slh": float(slh),
-        "symbol": "SLH",
-        "network": cfg.get("network", "bsc"),
-    }
+        w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
+        treasury = w3.to_checksum_address(cfg["treasury_wallet"])
+        contract = w3.eth.contract(
+            address=Web3.to_checksum_address(cfg["token_contract"]),
+            abi=ERC20_ABI,
+        )
+        slh_raw = contract.functions.balanceOf(treasury).call()
+        dec = contract.functions.decimals().call()
+        slh = slh_raw / (10  dec)
+        bnb = w3.from_wei(w3.eth.get_balance(treasury), "ether")
 
+        return {
+            "ok": True,
+            "chain_id": w3.eth.chain_id,
+            "block": w3.eth.block_number,
+            "treasury_wallet": cfg["treasury_wallet"],
+            "token_contract": cfg["token_contract"],
+            "treasury_bnb": float(bnb),
+            "treasury_slh": float(slh),
+            "symbol": "SLH",
+            "network": cfg.get("network", "bsc"),
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": str(e),
+        }
 
 def verify_bnb_deposit(tx_hash):
     import json
