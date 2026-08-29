@@ -35,18 +35,16 @@ def register(bot):
                 bot.reply_to(call_or_msg, msg_text)
 
             try:
-                result = subprocess.run(
-                    pending['command'],
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=15
-                )
-                output = ((result.stdout or "") + (result.stderr or "")).strip()
-                if not output:
-                    output = "(no output)"
-                if len(output) > 4000:
-                    output = output[:4000] + "\n... truncated"
+                from core.exec_policy import run_gated
+                ok, output = run_gated(OWNER_TELEGRAM_ID, pending['command'], source="execr_approved", timeout=15)
+                if not ok:
+                    output = f"❌ {output}"
+                else:
+                    output = output.strip()
+                    if not output:
+                        output = "(no output)"
+                    if len(output) > 4000:
+                        output = output[:4000] + "\n... truncated"
 
                 bot.send_message(
                     pending['uid'],
