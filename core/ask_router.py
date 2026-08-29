@@ -30,10 +30,26 @@ PRIORITY = ["staking","wallet","missions","progress","rewards","system","agents"
 
 def detect_intent(text):
     text_lower = text.strip().lower()
+
+    # Greeting is valid only when the entire message is a greeting.
+    # This prevents questions containing a greeting from being swallowed.
+    greeting_exact = {
+        kw.strip().lower()
+        for kw in INTENTS.get("greeting", [])
+        if kw.strip()
+    }
+
+    if text_lower in greeting_exact:
+        return "greeting"
+
     for intent in PRIORITY:
+        if intent == "greeting":
+            continue
+
         for kw in INTENTS[intent]:
-            if kw in text_lower:
+            if kw and kw.lower() in text_lower:
                 return intent
+
     return "general"
 
 def route(text, uid=None):
