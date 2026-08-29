@@ -6,7 +6,7 @@ REPO_NAME = 'slh-bot'
 BRANCH = 'main'
 BASE_DIR = '/app'
 WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive', 'store'}
-WHITELIST_FILES = {'bot_gateway.py', 'doctor_handler.py', 'mini_app.html', 'webapp.py', 'dashboard.html', 'courses.json', 'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'}
+WHITELIST_FILES = {'bot_gateway.py', 'doctor_handler.py', 'admin_handler.py', 'mini_app.html', 'webapp.py', 'dashboard.html', 'courses.json', 'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'}
 ALLOWED_EXTENSIONS = {'.py', '.html', '.json', '.txt', '.md', '.yml', '.yaml', '.cfg', '.ini'}
 
 def compute_blob_sha(content: bytes) -> str:
