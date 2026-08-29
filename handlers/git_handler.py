@@ -42,7 +42,8 @@ def get_local_files():
 def register(bot):
     @bot.message_handler(commands=['git'])
     def git_cmd(msg):
-        if str(msg.from_user.id) != os.getenv('ADMIN_ID', '8789977826'):
+        from core.identity import OWNER_TELEGRAM_ID
+        if str(msg.from_user.id) != str(OWNER_TELEGRAM_ID):
             bot.reply_to(msg, '⛔ Admin only')
             return
         parts = msg.text.split(maxsplit=2)
