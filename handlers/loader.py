@@ -76,6 +76,7 @@ def load_handlers(bot, context):
     ("recovery_verify", "handlers.recovery_verify_handler"),
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),
+        ("airdrop", "handlers.airdrop_handler"),
         ("git", "handlers.git_handler"),
         ("ton", "ton_handler"),
         ("brief", "brief_handler"),

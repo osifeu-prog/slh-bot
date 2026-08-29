@@ -18,7 +18,7 @@ def get_onchain_status():
         cfg = get_bsc_config()
         db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
         if "bsc_settings" in db:
-            cfg = {cfg, **db["bsc_settings"]}
+            cfg = {**cfg, **db["bsc_settings"]}
 
         if not cfg.get("treasury_wallet") or not cfg.get("token_contract"):
             return {
@@ -38,7 +38,7 @@ def get_onchain_status():
         )
         slh_raw = contract.functions.balanceOf(treasury).call()
         dec = contract.functions.decimals().call()
-        slh = slh_raw / (10  dec)
+        slh = slh_raw / (10**dec)
         bnb = w3.from_wei(w3.eth.get_balance(treasury), "ether")
 
         return {
