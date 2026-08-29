@@ -51,6 +51,7 @@ def load_handlers(bot, context):
         ("brief", "handlers.brief_handler"),
         ("claim", "handlers.claim_handler"),
         ("morning", "handlers.morning_handler"),
+        ("morning_check", "handlers.morning_check_handler"),
         ("ownership_transfer", "handlers.ownership_transfer_handler"),
         ("repeat", "handlers.repeat_handler"),
         ("system", "handlers.system_handler"),
