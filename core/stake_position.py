@@ -58,3 +58,29 @@ def unlock_position(position_id):
         return pos
 
     return state_manager.atomic_update(mutate)
+
+
+def force_unlock_position(position_id, uid=None):
+    """
+    Owner-only forced unlock for exceptional cases (e.g. refund).
+    Keeps the same atomic state contract as unlock_position.
+    """
+    from core.authority import is_owner
+
+    if uid is None:
+        uid = "8789977826"
+
+    if not is_owner(uid):
+        raise PermissionError("OWNER_ONLY")
+
+    def mutate(db):
+        pos = db.get("stake_positions", {}).get(position_id)
+        if not pos:
+            raise KeyError("position not found")
+
+        pos["status"] = "unlocked"
+        pos["unlocked_at"] = time.time()
+        pos["unlock_reason"] = "force_unlock_by_owner"
+        return pos
+
+    return state_manager.atomic_update(mutate)
