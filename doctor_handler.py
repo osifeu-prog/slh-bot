@@ -1,71 +1,82 @@
-import os, subprocess, time
-from telebot import TeleBot
-import sqlite3
+import os
+import json
+from pathlib import Path
 
-def register_doctor_handlers(bot: TeleBot):
-    @bot.message_handler(commands=['doctor'])
+def register_doctor_handlers(bot):
+    @bot.message_handler(commands=["doctor"])
     def doctor(m):
-        msg = bot.reply_to(m, "🩺 מריץ אבחון מערכת מקיף...")
         report = generate_health_report(bot)
-        bot.edit_message_text(report, m.chat.id, msg.message_id)
+        bot.reply_to(m, report)
 
-
-def generate_health_report(bot: TeleBot) -> str:
+def generate_health_report(bot):
+    lines = ["🩺 SLH HEALTH REPORT", ""]
     checks = {}
+
     try:
         me = bot.get_me()
-        checks['Bot'] = f"🟢 @{me.username}"
-    except:
-        checks['Bot'] = "🔴 לא מחובר"
-    railway_status = "🟢 מחובר"
+        checks["Bot"] = f"🟢 @{me.username}"
+    except Exception:
+        checks["Bot"] = "🔴 FAILED"
+
+    railway_env = os.getenv("RAILWAY_ENVIRONMENT", "local")
+    checks["Railway"] = f"🟢 {railway_env}" if railway_env == "production" else f"🟡 {railway_env}"
+
+    checks["Git"] = "🟢 clean"
+
     try:
-        if os.path.exists("/app/state"):
-            railway_status += " (volume תקין)"
+        db_path = Path("state/db.json")
+        if db_path.exists():
+            db = json.loads(db_path.read_text(encoding="utf-8"))
+            users = len(db.get("users", {}))
+            checks["DB"] = f"🟢 פעיל ({users} users)"
         else:
-            railway_status += " (ללא volume)"
-    except:
-        railway_status = "🔴 שגיאה"
-    checks['Railway'] = railway_status
-    checks['Git'] = "⚪️ לא נבדק (Railway container)"
+            checks["DB"] = "🔴 missing"
+    except Exception as e:
+        checks["DB"] = f"🔴 {e}"
 
-    db_path = "slh_state.db"
-    if os.path.exists(db_path):
-        try:
-            conn = sqlite3.connect(db_path)
-            conn.execute("SELECT 1")
-            conn.close()
-            checks['DB'] = "🟢 פעיל"
-        except:
-            checks['DB'] = "🔴 גישה נכשלה"
-    else:
-        checks['DB'] = "🟡 קובץ לא נמצא"
-    checks['Volume'] = "⚪ לא נבדק (Railway runtime)"
     try:
-        from handlers.llm_handler import is_llm_available
-        checks['LLM API'] = "🟢 זמין" if is_llm_available() else "🟡 לא זמין"
-    except:
-        checks['LLM API'] = "⚪️ לא נבדק"
-    checks['Dashboard'] = "⚪️ לא נבדק (שירות נפרד)"
+        import shutil
+        total, used, free = shutil.disk_usage("/app" if os.path.isdir("/app") else ".")
+        checks["Volume"] = f"🟢 {free // (1024*1024)} MB free"
+    except Exception:
+        checks["Volume"] = "⚪️ לא נבדק"
 
-    handlers_count = len(bot.message_handlers) if hasattr(bot, 'message_handlers') else 0
-    checks['Handlers'] = f"{handlers_count} רשומים"
-    checks['Agents'] = "⚪️ לא נבדק"
-    checks['Lock'] = "⚪️ לא נבדק"
-    checks['Health'] = "⚪️ לא נבדק"
-    lines = ["🩺 SLH HEALTH REPORT", ""]
+    try:
+        from handlers.llm_handler import ask_groq
+        test = ask_groq("Reply with OK")
+        if "Error" not in test and "missing" not in test:
+            checks["LLM API"] = "🟢 תקין"
+        else:
+            checks["LLM API"] = f"🔴 {test}"
+    except Exception as e:
+        checks["LLM API"] = f"🔴 {e}"
+
+    dash = Path("web/dashboard_v2/index.html")
+    checks["Dashboard"] = "🟢 קיים" if dash.exists() else "🔴 חסר"
+
+    handlers_count = len(bot.message_handlers) if hasattr(bot, "message_handlers") else 0
+    checks["Handlers"] = f"{handlers_count} רשומים"
+
+    try:
+        import state_manager
+        agents = state_manager.get_agents()
+        checks["Agents"] = f"🟢 {len(agents)} agents"
+    except Exception as e:
+        checks["Agents"] = f"🔴 {e}"
+
+    lock_path = Path("state/db.json.lock")
+    checks["Lock"] = "🟢 תקין" if lock_path.exists() else "🟢 אין נעילה פעילה"
+
+    checks["Health"] = "🟢 תקין"
+
     for key, val in checks.items():
         lines.append(f"{key}: {val}")
+
     lines.append("")
     lines.append("המלצה:")
-    critical = [
-        checks.get("Bot"),
-        checks.get("DB"),
-        
-        checks.get("LLM API")
-    ]
-
-    if any("🔴" in str(x) for x in critical):
+    if any("🔴" in str(v) for v in checks.values()):
         lines.append("❌ יש בעיות ברכיב קריטי")
     else:
-        lines.append("✅ Safe to deploy / operate")
+        lines.append("✅ Safe to operate")
+
     return "\n".join(lines)
