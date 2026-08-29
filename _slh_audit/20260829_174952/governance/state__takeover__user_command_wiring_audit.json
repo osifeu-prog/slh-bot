@@ -1,0 +1,869 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-08-24T12:18:58.393236+00:00",
+  "total_commands": 13,
+  "results": [
+    {
+      "command": "/start",
+      "status": "WIRED_CANDIDATE",
+      "active_entrypoints": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        }
+      ],
+      "handlers": [
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\join_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\ux_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [
+        {
+          "file": "bot_core.py",
+          "class": "LEGACY_OR_CORE"
+        }
+      ],
+      "all_mentions": [
+        {
+          "file": "bot_core.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\join_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\ux_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.clean.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.merged_candidate.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.nobom.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\encoding_repair_20260819_162658\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\guard_contract_fix_20260819_180308\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\promotion_20260819_20260819T140752Z\\ask_router.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/help",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "language_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_20260821_190026.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_pre_atomic_20260821_190154.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_20260815_151332\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_verified_20260815_151528\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_20260815_150829\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_apply_20260815_151008\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.clean.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.merged_candidate.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.nobom.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\encoding_repair_20260819_162658\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\guard_contract_fix_20260819_180308\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\promotion_20260819_20260819T140752Z\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\actionscript.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\business.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\_qlik_builtins.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/join",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\me_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\payment_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\task_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "econ_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "join_fix.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "myprogress_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "report_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "tutorial_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\me_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\payment_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\task_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\p0_backups\\course_handlers.py.modern_import_20260815_140133.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_20260821_190026.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_pre_atomic_20260821_190154.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_final_verified_20260815_145114\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_regression_pass_20260815_144725\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_verified_20260815_142852\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_20260815_151332\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_verified_20260815_151528\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155315Z\\econ_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155315Z\\handlers__payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155412Z\\econ_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155412Z\\handlers__payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_referral_fix_20260820_125800\\payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_20260815_150829\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_apply_20260815_151008\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.clean.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.merged_candidate.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.nobom.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\encoding_repair_20260819_162658\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\guard_contract_fix_20260819_180308\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\promotion_20260819_20260819T140752Z\\ask_router.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/register",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/user",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\apdlexer.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/progress",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\academy_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_final_verified_20260815_145114\\handlers\\academy_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\academy_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\custom_handlers_disabled\\token_wizard.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\course_handlers.py.modern_import_20260815_140133.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_final_verified_20260815_145114\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_regression_pass_20260815_144725\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_verified_20260815_142852\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_final_verified_20260815_145114\\handlers\\academy_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/report",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/market",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "webapp.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_20260821_190026.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_pre_atomic_20260821_190154.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_20260815_151332\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\learning_path_encoding_repair_verified_20260815_151528\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_20260815_150829\\learning_path.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\slh_eligibility_gate_apply_20260815_151008\\learning_path.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/balance",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\endday_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        }
+      ]
+    },
+    {
+      "command": "/token",
+      "status": "ENTRYPOINT_ONLY",
+      "active_entrypoints": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        }
+      ],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "bot_stable.py",
+          "class": "ACTIVE_ENTRYPOINT"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\custom_handlers_disabled\\token_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\custom_handlers_disabled\\token_wizard.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/course",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": "course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\course_handlers.py.modern_import_20260815_140133.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_final_verified_20260815_145114\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_regression_pass_20260815_144725\\course_handlers.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\academy_verified_20260815_142852\\course_handlers.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/learn",
+      "status": "NOT_FOUND",
+      "active_entrypoints": [],
+      "handlers": [],
+      "legacy_or_core": [],
+      "all_mentions": [
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\basic.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\dax.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\dotnet.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\foxpro.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\graphics.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\kusto.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\minecraft.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pygments\\lexers\\shell.py",
+          "class": "OTHER"
+        },
+        {
+          "file": ".test-venv\\Lib\\site-packages\\pip\\_vendor\\platformdirs\\windows.py",
+          "class": "OTHER"
+        }
+      ]
+    },
+    {
+      "command": "/ask",
+      "status": "HANDLER_ONLY",
+      "active_entrypoints": [],
+      "handlers": [
+        {
+          "file": "handlers\\advanced_ask_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\payment_handler.py",
+          "class": "HANDLER"
+        }
+      ],
+      "legacy_or_core": [
+        {
+          "file": "advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        }
+      ],
+      "all_mentions": [
+        {
+          "file": "advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "ask_test.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "help_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "tutorial_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "handlers\\advanced_ask_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\help_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\os_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "handlers\\payment_handler.py",
+          "class": "HANDLER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155315Z\\handlers__payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_alpha_20260821T155412Z\\handlers__payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\money_authority_referral_fix_20260820_125800\\payment_handler.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.clean.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.merged_candidate.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.nobom.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\.slh_recovery_20260819\\ask_router.recovered.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\encoding_repair_20260819_162658\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\guard_contract_fix_20260819_180308\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\advanced_ask_handler.py",
+          "class": "LEGACY_OR_CORE"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\layer_baseline_20260819_180731\\ask_router.py",
+          "class": "OTHER"
+        },
+        {
+          "file": "state\\p0_backups\\session_cleanup_20260819\\promotion_20260819_20260819T140752Z\\ask_router.py",
+          "class": "OTHER"
+        }
+      ]
+    }
+  ],
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

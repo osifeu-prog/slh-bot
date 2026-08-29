@@ -1,0 +1,20 @@
+﻿
+core\academy_manager.py:30:    user = profile_manager.get_user(uid)
+core\academy_manager.py:49:    profile_manager.update_user(
+core\academy_manager.py:64:    result = profile_manager.complete_course_stage(
+core\academy_manager.py:87:    return profile_manager.get_progress(uid)
+core\economy_bridge.py:5:    return profile_manager.get_balance(uid)
+core\economy_bridge.py:9:    return profile_manager.add_balance(uid, amount)
+core\economy_bridge.py:13:    current = profile_manager.get_balance(uid)
+core\economy_bridge.py:18:    return profile_manager.add_balance(uid, -amount)
+core\economy_bridge.py:25:        result["credits"] = profile_manager.add_balance(
+core\economy_bridge.py:31:        result["points"] = profile_manager.add_points(
+core\lesson_engine.py:42:    user = profile_manager.get_user(uid)
+core\lesson_engine.py:82:    user = profile_manager.get_user(uid)
+core\migration.py:8:    db=profile_manager.load_db()
+core\migration.py:61:        profile_manager.save_db(db)
+core\migration.py:70:    db=profile_manager.load_db()
+handlers\ownership_transfer_handler.py:40:        user = profile_manager.get_user(uid)
+handlers\ownership_transfer_handler.py:75:        profile_manager.update_user(
+
+

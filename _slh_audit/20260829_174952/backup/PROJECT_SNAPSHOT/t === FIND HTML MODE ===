@@ -1,0 +1,41 @@
+[35madmin_handler.py.bak_before_fix[m[36m:[m        bot.reply_to(message, msg, [1;31mparse_mode[m="Markdown")
+[35madvanced_ask_handler.py.bak_2124[m[36m:[m            bot.reply_to(msg, f"📄 **{path}**\n\n{content}", [1;31mparse_mode[m="Markdown")
+[35madvanced_ask_handler.py.bak_2131[m[36m:[m            bot.reply_to(msg, f"📄 **{path}**\n\n{content}", [1;31mparse_mode[m="Markdown")
+[35mbot_gateway.py[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+[35mbot_gateway.py.bak_before_namefix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+[35mbot_gateway.py.before_fix[m[36m:[m        bot = telebot.TeleBot(token, [1;31mparse_mode[m="HTML")
+[35mcourse_handlers.py[m[36m:[m            bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mcourse_handlers.py[m[36m:[m                bot.reply_to(m, f"```python\n{code[:3000]}\n```", [1;31mparse_mode[m="Markdown")
+[35mhandlers/askdebug_handler.py[m[36m:[m            bot.reply_to(message, '<pre>' + json.dumps(result, indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')
+[35mhandlers/dashboard_handler.py[m[36m:[m        bot.send_message(m.chat.id, text, reply_markup=markup, [1;31mparse_mode[m='Markdown')
+[35mhandlers/device_handler.py[m[36m:[m    bot.reply_to(m, "\n".join(lines), [1;31mparse_mode[m="Markdown")
+[35mhandlers/device_handler.py[m[36m:[m    bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mhandlers/logo_handler.py[m[36m:[m            bot.reply_to(msg, f"<pre>{f.read()}</pre>", [1;31mparse_mode[m="HTML")
+[35mhandlers/me_handler.py[m[36m:[m            bot.reply_to(message, txt, [1;31mparse_mode[m='Markdown')
+[35mhandlers/mission_handler.py[m[36m:[m                bot.reply_to(m, msg, [1;31mparse_mode[m='Markdown')
+[35mhandlers/mission_handler.py[m[36m:[m                bot.reply_to(m, msg, [1;31mparse_mode[m='Markdown')
+[35mhandlers/monitor_handler.py[m[36m:[m    bot.reply_to(m, "\n".join(lines), [1;31mparse_mode[m="Markdown")
+[35mhandlers/monitor_handler.py[m[36m:[m    bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mhandlers/monitor_handler.py[m[36m:[m    bot.reply_to(m, "📋 **Logs for " + did + "**:\n" + "\n".join(logs), [1;31mparse_mode[m="Markdown")
+[35mjunk_handler.py[m[36m:[m            bot.reply_to(m, f"📁 **Top 10 large files in home:**\n```\n{result[:3000]}\n```", [1;31mparse_mode[m="Markdown")
+[35mjunk_handler.py[m[36m:[m            bot.reply_to(m, f"📁 **הקבצים הכי גדולים שלך:**\n```\n{result[:2000]}\n```", [1;31mparse_mode[m="Markdown")
+[35mlearn_handlers.py.disabled[m[36m:[m        bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mlearning_path.py[m[36m:[m        bot.send_message(m.chat.id, "📚 **SLH OS Basics** – בחר שיעור:", reply_markup=markup, [1;31mparse_mode[m="Markdown")
+[35mlearning_path.py[m[36m:[m            [1;31mparse_mode[m="Markdown"
+[35mmonitor_handler.py[m[36m:[m        bot.reply_to(m, "\n".join(lines), [1;31mparse_mode[m="Markdown")
+[35mproject_commands.py[m[36m:[m                bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mslh_all_in_one.sh[m[36m:[m            bot.reply_to(msg, f"<pre>{f.read()}</pre>", [1;31mparse_mode[m="HTML")
+[35mslh_full_system_audit.sh[m[36m:[mgrep -R "[1;31mparse_mode[m" *.py handlers core 2>/dev/null
+[35mslh_recovery_check.sh[m[36m:[mgrep -R "[1;31mparse_mode[m" -n . \
+[35mstate/custom_handlers/start_buttons.py.disabled[m[36m:[m            bot.send_message(msg.chat.id, f"```\n{logo}\n```", [1;31mparse_mode[m="Markdown")
+[35mstate/startup.py[m[36m:[m            bot.reply_to(m, txt, [1;31mparse_mode[m='Markdown')
+[35mstate/startup.py[m[36m:[m        bot.reply_to(m, '<pre>' + json.dumps(debug_ask(text), indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')
+[35mstate/takeover/runtime_state_dependency_map.json[m[36m:[m          "code": "bot.reply_to(message, '<pre>' + json.dumps(result, indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')"
+[35mstate/takeover/state_migration_queue.json[m[36m:[m          "code": "bot.reply_to(message, '<pre>' + json.dumps(result, indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')"
+[35mstate/takeover/state_migration_queue.json[m[36m:[m          "code": "bot.reply_to(message, '<pre>' + json.dumps(result, indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')"
+[35mstate/takeover/state_migration_queue.json[m[36m:[m          "code": "bot.reply_to(m, '<pre>' + json.dumps(debug_ask(text), indent=2, ensure_ascii=False) + '</pre>', [1;31mparse_mode[m='HTML')"
+[35mtest_handler.py[m[36m:[m        bot.reply_to(m, msg, [1;31mparse_mode[m="Markdown")
+[35mton_handler.py[m[36m:[m        bot.send_message(m.chat.id, msg, [1;31mparse_mode[m="Markdown")
+[35mtutorial_handler.py[m[36m:[m        bot.reply_to(m, text, [1;31mparse_mode[m="Markdown")
+[35mviewfile_handler.py[m[36m:[m                bot.send_message(m.chat.id, f"[{idx}/{len(chunks)}]\n```\n{chunk}\n```", [1;31mparse_mode[m="Markdown")
+[35mwelcome_handler.py.disabled[m[36m:[m        bot.reply_to(message, msg, [1;31mparse_mode[m="Markdown")

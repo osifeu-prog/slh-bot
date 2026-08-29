@@ -1,0 +1,3 @@
+﻿ handlers/llm_handler.py  | 350 +++++++----------------------------------------
+ handlers/natural_chat.py |  26 ++--
+ 2 files changed, 64 insertions(+), 312 deletions(-)

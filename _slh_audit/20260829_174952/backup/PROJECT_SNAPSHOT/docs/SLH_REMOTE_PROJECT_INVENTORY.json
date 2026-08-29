@@ -1,0 +1,186 @@
+﻿{
+    "schema_version":  "1.0",
+    "captured_at":  "2026-08-09T15:30:10.1766679+03:00",
+    "source":  "PowerShell + Railway CLI",
+    "purpose":  "SLH OS remote project recovery and integration inventory",
+    "secrets_policy":  {
+                           "raw_tokens_logged":  false,
+                           "token_values_in_repository":  "must_not_be_stored",
+                           "raw_tokens_stored":  false,
+                           "fingerprints_allowed":  true
+                       },
+    "primary_project":  {
+                            "current_issue":  "Telegram 409 Conflict caused by another getUpdates poller",
+                            "service":  "web",
+                            "environment":  "production",
+                            "role":  "PRIMARY_SLH_RUNTIME",
+                            "run_bot":  "1",
+                            "status":  "ONLINE",
+                            "project":  "endearing-amazement"
+                        },
+    "remote_projects":  [
+                            {
+                                "bot_token_status":  "PRESENT",
+                                "polling_signal":  "409_CONFLICT",
+                                "project":  "endearing-amazement",
+                                "services":  [
+                                                 "web"
+                                             ],
+                                "role":  "PRIMARY"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT",
+                                "polling_signal":  "NONE_FOUND_IN_RECENT_LOGS",
+                                "project":  "slh-cloud-bot",
+                                "services":  [
+                                                 "slh-enterprise-bot"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT",
+                                "polling_signal":  "UNAUTHORIZED_ON_slh-bot",
+                                "project":  "SLH_investor_wallet_bot",
+                                "services":  [
+                                                 "Postgres",
+                                                 "slh-bot"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT",
+                                "polling_signal":  "NO_RECENT_LOGS",
+                                "project":  "nifti-bot",
+                                "services":  [
+                                                 "bot"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "UNKNOWN",
+                                "polling_signal":  "NO_SERVICE_DATA",
+                                "project":  "resilient-love",
+                                "services":  [
+
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT_ON_Telegram_bot",
+                                "polling_signal":  "NONE_FOUND_IN_RECENT_LOGS",
+                                "project":  "TELEGRAM-BOT",
+                                "services":  [
+                                                 "grafana",
+                                                 "Postgres",
+                                                 "prometheus",
+                                                 "Redis",
+                                                 "Telegram_bot"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT_ON_MULTIPLE_SERVICES",
+                                "polling_signal":  "TON-MNH-bot_ACTIVE_GETUPDATES",
+                                "project":  "diligent-radiance",
+                                "services":  [
+                                                 "monitor.slh",
+                                                 "Osifs_Factory_bot",
+                                                 "Postgres",
+                                                 "Redis",
+                                                 "slh-AI-bot",
+                                                 "slh-fastapi",
+                                                 "SLH.co.il",
+                                                 "TON-MNH-bot"
+                                             ],
+                                "role":  "RECOVERY_PRIORITY"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT_ON_gardian",
+                                "polling_signal":  "infinity_polling_SIGNAL",
+                                "project":  "slh-guardian",
+                                "services":  [
+                                                 "gardian",
+                                                 "Postgres",
+                                                 "Redis"
+                                             ],
+                                "role":  "RECOVERY_PRIORITY"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT_ON_Tax_Free_world_bot",
+                                "polling_signal":  "NONE_FOUND_IN_RECENT_LOGS",
+                                "project":  "Tax_Free_world_bot",
+                                "services":  [
+                                                 "Postgres",
+                                                 "Redis",
+                                                 "Tax_Free_world_bot"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "MISSING",
+                                "polling_signal":  "NONE_FOUND",
+                                "project":  "slh.co.il",
+                                "services":  [
+                                                 "SLH.co.il"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "MISSING",
+                                "polling_signal":  "NONE_FOUND",
+                                "project":  "slh-api",
+                                "services":  [
+                                                 "Postgres",
+                                                 "Redis",
+                                                 "slh-api"
+                                             ],
+                                "role":  "INFRASTRUCTURE_CANDIDATE"
+                            },
+                            {
+                                "bot_token_status":  "PRESENT_ON_MULTIPLE_SERVICES",
+                                "polling_signal":  "NONE_FOUND_IN_RECENT_LOGS",
+                                "project":  "dazzling-unity",
+                                "services":  [
+                                                 "glorious-caring",
+                                                 "Postgres",
+                                                 "Redis",
+                                                 "SLH_PROJECT_V2"
+                                             ],
+                                "role":  "RECOVERY_CANDIDATE"
+                            }
+                        ],
+    "confirmed_findings":  [
+                               "Primary SLH Railway service is online.",
+                               "Primary SLH deployment uses bot_gateway.py.",
+                               "RUN_BOT=1 on primary service.",
+                               "Primary gateway launches Telegram polling in a background thread.",
+                               "Primary runtime has a confirmed Telegram 409 Conflict.",
+                               "At least one other remote Railway service is actively polling Telegram.",
+                               "At least one historical/active service has Telegram Unauthorized errors.",
+                               "At least one service exposes polling activity through infinity_polling.",
+                               "One Telegram API URL containing a raw bot token appeared in collected logs; token must not be persisted."
+                           ],
+    "architecture_direction":  {
+                                   "objective":  "Central SLH control plane for recovery, lifecycle control, audit and future integration of legacy projects.",
+                                   "principles":  [
+                                                      "PowerShell remains operational source of truth.",
+                                                      "No raw secrets in source control.",
+                                                      "No raw secrets in audit artifacts.",
+                                                      "Token fingerprints may be used for identity matching.",
+                                                      "Every discovered project/service becomes recoverable inventory.",
+                                                      "Do not activate multiple pollers for the same Telegram bot.",
+                                                      "Separate infrastructure services from bot runtimes.",
+                                                      "Future integration must preserve existing project state before migration."
+                                                  ]
+                               },
+    "next_phase":  [
+                       "Document complete remote inventory.",
+                       "Identify exact duplicate Telegram pollers.",
+                       "Determine which poller owns the primary bot token.",
+                       "Stop only the conflicting duplicate runtime.",
+                       "Re-test primary Telegram polling.",
+                       "Run local SLH validation.",
+                       "Run Railway deployment validation.",
+                       "Only afterward design controlled recovery of legacy projects."
+                   ]
+}

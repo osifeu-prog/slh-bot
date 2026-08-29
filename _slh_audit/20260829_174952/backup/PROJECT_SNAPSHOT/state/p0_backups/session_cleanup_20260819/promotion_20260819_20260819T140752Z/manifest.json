@@ -1,0 +1,9 @@
+{
+  "created_at_utc": "20260819T140752Z",
+  "live_router": "core\\ask_router.py",
+  "live_llm": "handlers\\llm_handler.py",
+  "backup_router": "state\\p0_backups\\promotion_20260819_20260819T140752Z\\ask_router.py",
+  "backup_llm": "state\\p0_backups\\promotion_20260819_20260819T140752Z\\llm_handler.py",
+  "live_router_sha256": "ca7febe5f3e57522c32a898d9c64bf286317e8dcc8dd96b9fcb9a8312faf6644",
+  "live_llm_sha256": "84e2b682d3cc4f45865376fe035d4b2832ed6c1a14c66988b33995677190b2d8"
+}

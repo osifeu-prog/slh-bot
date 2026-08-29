@@ -1,0 +1,24 @@
+﻿[
+    {
+        "task_id":  "TASK-001",
+        "workstream":  "ACADEMY",
+        "priority":  "P0",
+        "action":  "Map actual Academy files, data structures, handlers and runtime entrypoints.",
+        "status":  "READY",
+        "safety":  "READ_ONLY",
+        "depends_on":  [
+
+                       ]
+    },
+    {
+        "task_id":  "TASK-002",
+        "workstream":  "DEVELOPER_ACTIVATION",
+        "priority":  "P0",
+        "action":  "Map actual developer/agent identities, roles, permissions, middleware and activation paths.",
+        "status":  "READY",
+        "safety":  "READ_ONLY",
+        "depends_on":  [
+
+                       ]
+    }
+]

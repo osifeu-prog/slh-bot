@@ -1,0 +1,110 @@
+﻿[
+    {
+        "file":  "bot_stable.py",
+        "exists":  true,
+        "bytes":  21705,
+        "lines":  748,
+        "has_os_walk":  false,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  false,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "slhdna.py",
+        "exists":  true,
+        "bytes":  13520,
+        "lines":  462,
+        "has_os_walk":  false,
+        "has_rglob":  false,
+        "has_copy":  true,
+        "mentions_backup":  false,
+        "mentions_map":  true,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "slh_dna_scan.py",
+        "exists":  true,
+        "bytes":  11662,
+        "lines":  495,
+        "has_os_walk":  true,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  true,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "slh_fix_bom.py",
+        "exists":  true,
+        "bytes":  2193,
+        "lines":  97,
+        "has_os_walk":  true,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  true,
+        "mentions_map":  true,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "slh_authority_audit.py",
+        "exists":  true,
+        "bytes":  5224,
+        "lines":  175,
+        "has_os_walk":  false,
+        "has_rglob":  true,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  true,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "slh_clean_inventory.py",
+        "exists":  true,
+        "bytes":  1586,
+        "lines":  77,
+        "has_os_walk":  true,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  true,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "fix_dna_entrypoints.py",
+        "exists":  true,
+        "bytes":  493,
+        "lines":  24,
+        "has_os_walk":  false,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  false,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "report_handler.py.before_authority_cleanup_20260813",
+        "exists":  true,
+        "bytes":  5516,
+        "lines":  127,
+        "has_os_walk":  false,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  false,
+        "mentions_delete":  false
+    },
+    {
+        "file":  "bot_stable.py.before_authority_cleanup_20260813",
+        "exists":  true,
+        "bytes":  22564,
+        "lines":  775,
+        "has_os_walk":  false,
+        "has_rglob":  false,
+        "has_copy":  false,
+        "mentions_backup":  false,
+        "mentions_map":  false,
+        "mentions_delete":  false
+    }
+]

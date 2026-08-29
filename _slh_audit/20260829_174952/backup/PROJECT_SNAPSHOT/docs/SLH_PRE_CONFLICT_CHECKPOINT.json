@@ -1,0 +1,19 @@
+﻿{
+    "schema_version":  "1.0",
+    "captured_at":  "2026-08-09T15:30:53.9904814+03:00",
+    "checkpoint_type":  "PRE_TELEGRAM_409_CONFLICT_RESOLUTION",
+    "source":  "PowerShell + Railway CLI",
+    "primary_project":  "endearing-amazement",
+    "primary_service":  "web",
+    "primary_status":  "ONLINE",
+    "primary_issue":  "TELEGRAM_409_CONFLICT",
+    "confirmed_external_pollers":  [
+                                       "diligent-radiance/TON-MNH-bot",
+                                       "slh-guardian/gardian"
+                                   ],
+    "unauthorized_service":  "SLH_investor_wallet_bot/slh-bot",
+    "legacy_projects_preserved":  true,
+    "raw_secrets_stored":  false,
+    "raw_secrets_logged":  false,
+    "next_action":  "Identify exact Telegram token ownership before stopping any runtime"
+}

@@ -1,0 +1,2167 @@
+﻿[
+    {
+        "File":  "ACTIVE_MARKDOWN.txt",
+        "Line":  3,
+        "Match":  "course_handlers.py:            bot.reply_to(m, msg, parse_mode=\"Markdown\")"
+    },
+    {
+        "File":  "add_sync_patch.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "add_visibility_report.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "admin_menu.txt",
+        "Line":  7,
+        "Match":  "admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote"
+    },
+    {
+        "File":  "advanced_ask_handler.py",
+        "Line":  6,
+        "Match":  "# This module intentionally registers NO Telegram handlers."
+    },
+    {
+        "File":  "agent_client.py",
+        "Line":  3,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "assignment_approval.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "assignment_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "assignment_preview.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "AUDIT_DEEP.md",
+        "Line":  27,
+        "Match":  "| Modules loaded centrally | ? | ? |"
+    },
+    {
+        "File":  "audit_logger.py",
+        "Line":  19,
+        "Match":  "if not os.path.exists(AUDIT_FILE):"
+    },
+    {
+        "File":  "AUDIT_OUTPUT.txt",
+        "Line":  4,
+        "Match":  "+ python slh_audit.py 2\u003e\u00261 | Tee-Object -FilePath AUDIT_OUTPUT.txt"
+    },
+    {
+        "File":  "BALANCE_WRITES.txt",
+        "Line":  19,
+        "Match":  "learning_path.py:58:        user[\"balance\"] = user.get(\"balance\", 0) + 10"
+    },
+    {
+        "File":  "bot_core.py",
+        "Line":  17,
+        "Match":  "if not os.path.exists(\"plugins\"):"
+    },
+    {
+        "File":  "bot_gateway.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  83,
+        "Match":  "custom_dir = os.path.join(os.path.dirname(__file__), \"state\", \"custom_handlers\")"
+    },
+    {
+        "File":  "bridged_runtime.txt",
+        "Line":  22,
+        "Match":  "course"
+    },
+    {
+        "File":  "broadcast_script.txt",
+        "Line":  9,
+        "Match":  "/courses"
+    },
+    {
+        "File":  "checkpoint_manager.py",
+        "Line":  23,
+        "Match":  "path=f\"{OUT}/checkpoint_{now}.json\""
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  2,
+        "Match":  "100644 blob f5ba31c7af539bc0052106272e36cbb7388c44de\t.env.example"
+    },
+    {
+        "File":  "command_audit.py",
+        "Line":  13,
+        "Match":  "path=os.path.join(root,f)"
+    },
+    {
+        "File":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Line":  3,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "config.json",
+        "Line":  7,
+        "Match":  "\"DB_PATH\": \"state/db.json\","
+    },
+    {
+        "File":  "core_engine.py",
+        "Line":  5,
+        "Match":  "PROGRESS = \"state/progress.json\""
+    },
+    {
+        "File":  "courses.json",
+        "Line":  2,
+        "Match":  "\"bitcoin_mastery\": {"
+    },
+    {
+        "File":  "course_handlers.py",
+        "Line":  3,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "create_takeover_manifest.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "DEVELOPER_GUIDE.md",
+        "Line":  11,
+        "Match":  "- handlers/loader.py: Loads all modules"
+    },
+    {
+        "File":  "DEVELOPER_ONBOARDING.md",
+        "Line":  38,
+        "Match":  "5. All new modules register through loader.py."
+    },
+    {
+        "File":  "diagnostic_handler.py",
+        "Line":  3,
+        "Match":  "DIAG_SCRIPT = os.path.expanduser(\"~/slh_clean/diag_scan.sh\")"
+    },
+    {
+        "File":  "diag_fix_handlers.py",
+        "Line":  7,
+        "Match":  "cwd = os.path.expanduser(\"~/slh_clean\")"
+    },
+    {
+        "File":  "diag_handler.py",
+        "Line":  5,
+        "Match":  "cwd = os.path.expanduser(\"~/slh_clean\")"
+    },
+    {
+        "File":  "DIFF_TERMUX_WINDOWS.txt",
+        "Line":  6,
+        "Match":  "-a----         7/28/2026  12:55 PM           2382 academy_handler.py"
+    },
+    {
+        "File":  "dna_lock.py",
+        "Line":  7,
+        "Match":  "def _load(path):"
+    },
+    {
+        "File":  "doctor_handler.py",
+        "Line":  22,
+        "Match":  "if os.path.exists(\"/app/state\"):"
+    },
+    {
+        "File":  "economy_audit_after_p0.txt",
+        "Line":  29,
+        "Match":  "[OUTSIDE-AUTHORITY] learning_path.py:64: result = economy_service.submit_agent("
+    },
+    {
+        "File":  "economy_audit_balance.txt",
+        "Line":  66,
+        "Match":  "learning_path.py:17:            (\"כלכלה ותשלומים\", \"/pay – קניית Credits\\n/referral – הזמן חברים והרווח 85% עמלה\"),"
+    },
+    {
+        "File":  "economy_audit_dashboard.txt",
+        "Line":  64,
+        "Match":  "learning_path.py:15:            (\"פקודות בסיסיות\", \"/help – תפריט פקודות\\n/balance – יתרה\\n/buy – קניית כלים\"),"
+    },
+    {
+        "File":  "economy_audit_payment.txt",
+        "Line":  8,
+        "Match":  "course_handlers.py:9:def save_db(db):"
+    },
+    {
+        "File":  "economy_audit_profile.txt",
+        "Line":  19,
+        "Match":  "def complete_course_stage(uid,course,stage):"
+    },
+    {
+        "File":  "ECONOMY_WIRING_AUDIT.txt",
+        "Line":  2,
+        "Match":  "add_sync_patch.py:3:p = Path(\"bot_stable.py\")"
+    },
+    {
+        "File":  "encoding_damage_report.txt",
+        "Line":  6,
+        "Match":  "AUDIT_20260813_FULL/PHASE_1_RUNTIME/04_bootstrap_commands.txt:40:    print(f\"׳ ֲג€ֲ¦ Command modules loaded: {loaded}\")"
+    },
+    {
+        "File":  "exec_commit.py",
+        "Line":  16,
+        "Match":  "def api(method, path, data=None):"
+    },
+    {
+        "File":  "fix_dna_entrypoints.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "GIT_ADMIN_SEARCH.txt",
+        "Line":  96,
+        "Match":  "- Verified: marketplace.json path migration to state/, start_buttons.py"
+    },
+    {
+        "File":  "GIT_ASK_SEARCH.txt",
+        "Line":  210,
+        "Match":  "- Verified: marketplace.json path migration to state/, start_buttons.py"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  2,
+        "Match":  "100644 blob f5ba31c7af539bc0052106272e36cbb7388c44de\t.env.example"
+    },
+    {
+        "File":  "GIT_BOT_TOKEN_HISTORY.txt",
+        "Line":  35,
+        "Match":  "convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "GIT_DIFF_FIRST_TO_NOW.txt",
+        "Line":  6,
+        "Match":  "SLH_MODULES.py"
+    },
+    {
+        "File":  "GIT_ECON_PAY.txt",
+        "Line":  84,
+        "Match":  "- Verified: marketplace.json path migration to state/, start_buttons.py"
+    },
+    {
+        "File":  "GIT_EVENTBUS_HISTORY.txt",
+        "Line":  11,
+        "Match":  "convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "GIT_FIRST_TREE.txt",
+        "Line":  1,
+        "Match":  "100644 blob f5ba31c7af539bc0052106272e36cbb7388c44de\t.env.example"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  2,
+        "Match":  "100644 blob f5ba31c7af539bc0052106272e36cbb7388c44de\t.env.example"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  22,
+        "Match":  "* debcaf5 convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "GIT_JULY_TREE.txt",
+        "Line":  1,
+        "Match":  "100644 blob f5ba31c7af539bc0052106272e36cbb7388c44de\t.env.example"
+    },
+    {
+        "File":  "GIT_PROJECT_SEARCH.txt",
+        "Line":  30,
+        "Match":  "- Verified: marketplace.json path migration to state/, start_buttons.py"
+    },
+    {
+        "File":  "GIT_RAILWAY_HISTORY.txt",
+        "Line":  29,
+        "Match":  "convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "GIT_REMOVED_4d90da6.txt",
+        "Line":  27,
+        "Match":  "slh-bot/.env.example"
+    },
+    {
+        "File":  "GIT_STATE_ENGINE_HISTORY.txt",
+        "Line":  11,
+        "Match":  "convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "GIT_STATE_SEARCH.txt",
+        "Line":  65,
+        "Match":  "add missing academy/lesson handlers and core modules"
+    },
+    {
+        "File":  "guide_handler.py",
+        "Line":  12,
+        "Match":  "(\"📚 לימודים\", \"guide_courses\"),"
+    },
+    {
+        "File":  "HANDLER_LOADER_AUDIT.txt",
+        "Line":  10,
+        "Match":  "bot_core.py:23:            mod = importlib.import_module(f\"plugins.{name}\")"
+    },
+    {
+        "File":  "health_check.py",
+        "Line":  9,
+        "Match":  "results.append(ok(\"bot.py exists\", os.path.exists(\"bot.py\")))"
+    },
+    {
+        "File":  "HEALTH_OUTPUT.txt",
+        "Line":  3,
+        "Match":  "+ python system_health.py 2\u003e\u00261 | Tee-Object -FilePath HEALTH_OUTPUT.txt"
+    },
+    {
+        "File":  "help_handler.py",
+        "Line":  7,
+        "Match":  "/join – Register for learning"
+    },
+    {
+        "File":  "inspector.py",
+        "Line":  40,
+        "Match":  "report.append(f\"DB: {\u0027✅\u0027 if os.path.exists(\u0027db.json\u0027) else \u0027❌\u0027}\")"
+    },
+    {
+        "File":  "internal_agent.py",
+        "Line":  11,
+        "Match":  "return f\"db.json: {os.path.getsize(\u0027db.json\u0027)} bytes\" if os.path.exists(\"db.json\") else \"db.json not found\""
+    },
+    {
+        "File":  "join_fix.py",
+        "Line":  24,
+        "Match":  "\"courses\": {}"
+    },
+    {
+        "File":  "journal.json",
+        "Line":  28,
+        "Match":  "\"text\": \"SESSION 4-JUL-2026: Fixed slh_dashboard.sh token KeyError (options 1 and 2) - now falls back to BOT_TOKEN env var if db.json lacks token key, matches slh_daemon.sh pattern. Verified via live test + git push (2fb7af7). DISCOVERED RISK: dashboard health check uses pgrep -f python.*bot.py which never matches bot_stable.py, so it always reports Stopped and auto-triggers ./slh_daemon.sh - currently harmless because local bot_stable.py crashes immediately (ModuleNotFoundError: core.event_bus, plugins.task; No valid token found) but becomes a live 409-conflict generator if local deps ever get fixed. NEXT SESSION PRIORITY: fix dashboard pgrep pattern to match bot_stable.py, or remove auto-start entirely and just report status.\""
+    },
+    {
+        "File":  "junk_handler.py",
+        "Line":  3,
+        "Match":  "BACKUP_DIR = os.path.expanduser(\"~/slh_clean/backups/junk\")"
+    },
+    {
+        "File":  "KERNEL_RULES.md",
+        "Line":  6,
+        "Match":  "4. No module may access OS directly"
+    },
+    {
+        "File":  "LAUNCH_PLAN.json",
+        "Line":  7,
+        "Match":  "\"no_invented_progress\": true,"
+    },
+    {
+        "File":  "learning_path.py",
+        "Line":  5,
+        "Match":  "def register_learning_path(bot):"
+    },
+    {
+        "File":  "manifest.json",
+        "Line":  3,
+        "Match":  "\"modules\": {"
+    },
+    {
+        "File":  "MANIFEST_HANDLERS.txt",
+        "Line":  5,
+        "Match":  "SESSION_CLOSURE_MANIFEST.md:31:Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "master_agent.py",
+        "Line":  31,
+        "Match":  "report.append(f\"DB: {\u0027✅\u0027 if os.path.exists(\u0027db.json\u0027) else \u0027❌\u0027}\")"
+    },
+    {
+        "File":  "mission_assignment_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_completion_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_completion_commit_2.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_completion_gate.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_creation_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_execution_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_execution_gate.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_execution_preview.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_result_recorder.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_result_verifier.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "mission_runner.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "myprogress_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027myprogress\u0027])"
+    },
+    {
+        "File":  "onboarding_handler.py",
+        "Line":  5,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "onboarding_scan.txt",
+        "Line":  2,
+        "Match":  "handlers\\academy_handler.py:4:def register(bot):"
+    },
+    {
+        "File":  "PRE_ECONOMY_FULL_AUDIT.txt",
+        "Line":  85,
+        "Match":  "learning_path.py:15:            (\"פקודות בסיסיות\", \"/help – תפריט פקודות\\n/balance – יתרה\\n/buy – קניית כלים\"),"
+    },
+    {
+        "File":  "PROFILE_MANAGER_CALLS.txt",
+        "Line":  2,
+        "Match":  "core\\academy_manager.py:30:    user = profile_manager.get_user(uid)"
+    },
+    {
+        "File":  "project_commands.py",
+        "Line":  3,
+        "Match":  "PROJECTS_ROOT = os.path.expanduser(\"~/slh_clean/projects\")"
+    },
+    {
+        "File":  "railway_logs_baseline_20260824.txt",
+        "Line":  35,
+        "Match":  "✅ academy loaded"
+    },
+    {
+        "File":  "README.md",
+        "Line":  1,
+        "Match":  "# SLH OS – Smart Learning Hub"
+    },
+    {
+        "File":  "refresh_token_handler.py",
+        "Line":  14,
+        "Match":  "CONFIG_PATH = os.path.join(os.path.dirname(__file__), \"config.json\")"
+    },
+    {
+        "File":  "RELEASE_STATUS_2026_07_21.md",
+        "Line":  12,
+        "Match":  "✅ Payment module"
+    },
+    {
+        "File":  "report_handler.py",
+        "Line":  6,
+        "Match":  "if os.path.exists(JOURNAL_FILE):"
+    },
+    {
+        "File":  "REPUTATION_PLAN.md",
+        "Line":  13,
+        "Match":  "Learning:"
+    },
+    {
+        "File":  "responsibility_map.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  8,
+        "Match":  "- state_manager module"
+    },
+    {
+        "File":  "safe_progress.py",
+        "Line":  4,
+        "Match":  "STATE_FILE = \"state/progress.json\""
+    },
+    {
+        "File":  "SAVE_DB_USAGE.txt",
+        "Line":  11,
+        "Match":  "course_handlers.py:9:def save_db(db):"
+    },
+    {
+        "File":  "self_check.py",
+        "Line":  15,
+        "Match":  "print(f, \"✅\" if os.path.exists(f) else \"❌\")"
+    },
+    {
+        "File":  "self_model_audit.py",
+        "Line":  34,
+        "Match":  "print(\"=== BLOCKED FROM LEARNING ===\")"
+    },
+    {
+        "File":  "self_test.py",
+        "Line":  13,
+        "Match":  "db_exists = os.path.exists(\"db.json\")"
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  19,
+        "Match":  "\"test\": \"Static local-answer path scan\","
+    },
+    {
+        "File":  "SESSION_CLOSURE_MANIFEST.md",
+        "Line":  31,
+        "Match":  "Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "show_journal.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "slh.py",
+        "Line":  4,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "slhdna.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "SLH_AGENT_HANDOFF.md",
+        "Line":  28,
+        "Match":  "אושר: from groq import Groq ברמת המודול (שורה 2 של llm_handler.py) הוא מקור אזהרת \"No module named \u0027groq\u0027\" שנצפתה ב-bot.log בתחילת הסשן. לא טופל השבוע (מחוץ לתחום), נדרש pip install groq או תיקון requirements.txt."
+    },
+    {
+        "File":  "slh_audit.py",
+        "Line":  213,
+        "Match":  "if os.path.exists(f):"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  33,
+        "Match":  "Path"
+    },
+    {
+        "File":  "slh_authority_audit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "slh_autopilot.py",
+        "Line":  39,
+        "Match":  "def check_json(filepath):"
+    },
+    {
+        "File":  "slh_clean_inventory.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "SLH_COMMAND_MAP.txt",
+        "Line":  2,
+        "Match":  "Path                                                                        LineNumber Line"
+    },
+    {
+        "File":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Line":  31,
+        "Match":  "academy_handler.py"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  9,
+        "Match":  "Path"
+    },
+    {
+        "File":  "slh_dna_scan.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "slh_fix_bom.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "SLH_FULL_AUDIT_20260810_152243.txt",
+        "Line":  32,
+        "Match":  "[OK]   core\\academy_manager.py"
+    },
+    {
+        "File":  "slh_full_check.py",
+        "Line":  58,
+        "Match":  "if os.path.exists(f):"
+    },
+    {
+        "File":  "SLH_HANDLER_MAP.txt",
+        "Line":  2,
+        "Match":  "Path                                                 LineNumber Line"
+    },
+    {
+        "File":  "slh_hardening.py",
+        "Line":  28,
+        "Match":  "if os.path.exists(f):"
+    },
+    {
+        "File":  "SLH_KERNEL.py",
+        "Line":  1,
+        "Match":  "from SLH_MODULES import BaseModule, TelegramModule"
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  1,
+        "Match":  "Folder PATH listing"
+    },
+    {
+        "File":  "slh_lock.py",
+        "Line":  10,
+        "Match":  "\"/app\" if os.path.exists(\"/app\") else os.path.expanduser(\"~/slh-bot\")"
+    },
+    {
+        "File":  "SLH_MODULES.py",
+        "Line":  1,
+        "Match":  "class BaseModule:"
+    },
+    {
+        "File":  "SLH_PYTHON_FILES.txt",
+        "Line":  31,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\course_handlers.py"
+    },
+    {
+        "File":  "SLH_RELEASE_LOGS.txt",
+        "Line":  36,
+        "Match":  "? learning_path loaded"
+    },
+    {
+        "File":  "slh_snapshot.py",
+        "Line":  18,
+        "Match":  "if os.path.exists(f):"
+    },
+    {
+        "File":  "slh_state_audit.py",
+        "Line":  3,
+        "Match":  "def inspect(path, name):"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  83,
+        "Match":  "custom_dir = os.path.join(os.path.dirname(__file__), \"state\", \"custom_handlers\")"
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  1,
+        "Match":  "Folder PATH listing"
+    },
+    {
+        "File":  "slh_visibility_scan.py",
+        "Line":  17,
+        "Match":  "print(\"✅\",f) if os.path.exists(f) else print(\"❌\",f)"
+    },
+    {
+        "File":  "smart_leaderboard.py",
+        "Line":  3,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "SOURCE_OF_TRUTH.md",
+        "Line":  10,
+        "Match":  "- course_handlers.register_course_handlers(bot)"
+    },
+    {
+        "File":  "STABLE_STATUS_20260713.txt",
+        "Line":  26,
+        "Match":  "slh-clean-after-first-module-20260707"
+    },
+    {
+        "File":  "state_connection_map.txt",
+        "Line":  4,
+        "Match":  "agent_client.py:3:DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "state_engine.py",
+        "Line":  7,
+        "Match":  "if os.path.exists(STATE_FILE):"
+    },
+    {
+        "File":  "state_manager.py",
+        "Line":  11,
+        "Match":  "if not os.path.exists(DB_FILE):"
+    },
+    {
+        "File":  "STATE_USAGE_AUDIT.txt",
+        "Line":  4,
+        "Match":  "agent_client.py:3:DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "state_writers_report.txt",
+        "Line":  37,
+        "Match":  "MATCHES : DB_PATH, db.json"
+    },
+    {
+        "File":  "STATUS.md",
+        "Line":  1,
+        "Match":  "# SLH Learning System – Status"
+    },
+    {
+        "File":  "STUDENT_GUIDE.md",
+        "Line":  5,
+        "Match":  "4. Send: /courses (to see available courses)"
+    },
+    {
+        "File":  "system_diagnostics.py",
+        "Line":  20,
+        "Match":  "env_path = \"state/.env\""
+    },
+    {
+        "File":  "system_health.py",
+        "Line":  30,
+        "Match":  "missing = [f for f in required if not os.path.exists(f)]"
+    },
+    {
+        "File":  "SYSTEM_RULES.md",
+        "Line":  8,
+        "Match":  "- Learning and contribution are rewarded."
+    },
+    {
+        "File":  "takeover_controller.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "TERMUX_FULL.txt",
+        "Line":  9,
+        "Match":  "-a----          8/2/2026   1:33 PM           2382 academy_handler.py"
+    },
+    {
+        "File":  "TERMUX_HANDLERS.txt",
+        "Line":  9,
+        "Match":  "-a----          8/2/2026   1:33 PM           2382 academy_handler.py"
+    },
+    {
+        "File":  "test_assignment_commit_api.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_creation_api.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_marketplace.py",
+        "Line":  2,
+        "Match":  "sys.path.insert(0, \u0027.\u0027)"
+    },
+    {
+        "File":  "test_mission3_assignment_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission3_completion_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission3_completion_preview.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission3_execution_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission3_post_completion_regression.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission4_assignment_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission4_creation_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "test_mission4_execution_commit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "TOKEN_PLAN.md",
+        "Line":  10,
+        "Match":  "- Reward learning"
+    },
+    {
+        "File":  "TOMORROW_HANDOFF.md",
+        "Line":  29,
+        "Match":  "Choose ONE source of truth and verify all permission paths."
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  2,
+        "Match":  ".env.example"
+    },
+    {
+        "File":  "tutorial_handler.py",
+        "Line":  7,
+        "Match":  "2️⃣ **התחל קורס** – /courses → /start_course \u003cid\u003e"
+    },
+    {
+        "File":  "viewfile_handler.py",
+        "Line":  14,
+        "Match":  "bot.reply_to(m, \"Usage: /viewfile \u003cpath\u003e\\nExample: /viewfile bot_stable.py\")"
+    },
+    {
+        "File":  "WALLET_API_USAGE.txt",
+        "Line":  18,
+        "Match":  "core\\academy_manager.py:73:        credits=10,"
+    },
+    {
+        "File":  "webapp.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "whatsapp_handler_bridge.py",
+        "Line":  9,
+        "Match":  "Economy and store logic remain in their existing modules."
+    },
+    {
+        "File":  "WINDOWS_HANDLERS.txt",
+        "Line":  9,
+        "Match":  "-a----         7/28/2026  12:55 PM           2382 academy_handler.py"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  13,
+        "Match":  "d-----         7/28/2026  12:55 PM                courses"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Line":  40,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\core\\academy_manager.py                                           1353 8/13/2026 6:31:38 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\05_entrypoint_candidates.txt",
+        "Line":  16,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_loading_path_audit.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\06_loader_candidates.txt",
+        "Line":  19,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_loading_path_audit.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Line":  14,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\courses.json                                                                        1755 8/"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Line":  11,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\course_handlers.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\09_tests.txt",
+        "Line":  62,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\__pycache__\\test_learning_path_full_loader.cpython-313.pyc                 4835"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  31,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\courses\\registry\\README.md                                                  369 7/28/202..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  11,
+        "Match":  "courses                                             d-----         7/28/2026 12:55:11 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Line":  2,
+        "Match":  "Path                                                                     LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  2,
+        "Match":  "Path                                                                            LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\04_loader_authority.txt",
+        "Line":  2,
+        "Match":  "Path                                                                     LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Line":  2,
+        "Match":  "Path                                                                                      LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\06_core_runtime_references.txt",
+        "Line":  2,
+        "Match":  "Path                                            LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Line":  2,
+        "Match":  "Path                                                                        LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\01_bot_gateway.txt",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Line":  7,
+        "Match":  "modules = ["
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_bootstrap_commands.txt",
+        "Line":  7,
+        "Match":  "modules = ["
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_command_registry_loader.txt",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\05_imports.txt",
+        "Line":  4,
+        "Match":  "bot_gateway.py:4:from pathlib import Path"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Line":  4,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\academy_handler.py              2382 8/13/2026 1:40:21 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Line":  2,
+        "Match":  "Path                                                                                     LineNumber Line"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Line":  2,
+        "Match":  "Path                                                                                     LineNumber Line"
+    },
+    {
+        "File":  "core\\academy_manager.py",
+        "Line":  9,
+        "Match":  "COURSE_FILE = \"courses.json\""
+    },
+    {
+        "File":  "core\\agent_factory.py",
+        "Line":  74,
+        "Match":  "The DB name is NOT used as a Python import path."
+    },
+    {
+        "File":  "core\\agent_registry.py",
+        "Line":  77,
+        "Match":  "STORE.DB_PATH,"
+    },
+    {
+        "File":  "core\\agent_state_store.py",
+        "Line":  7,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\ai_guard.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\ask_router.py",
+        "Line":  9,
+        "Match":  "\"progress\": [\"התקדמות\",\"מצב התקדמות\",\"progress\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_greeting_fix_20260829_152053.py",
+        "Line":  9,
+        "Match":  "\"progress\": [\"התקדמות\",\"מצב התקדמות\",\"progress\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_greeting_fix_20260829_152241.py",
+        "Line":  9,
+        "Match":  "\"progress\": [\"התקדמות\",\"מצב התקדמות\",\"progress\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+        "Line":  10,
+        "Match":  "\"courses\": [\"קורס\", \"לימוד\", \"ביטקוין\", \"מאסטרי\", \"אקדמיה\", \"/courses\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+        "Line":  10,
+        "Match":  "\"courses\": [\"קורס\", \"לימוד\", \"ביטקוין\", \"מאסטרי\", \"אקדמיה\", \"/courses\"],"
+    },
+    {
+        "File":  "core\\audit.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\binance_connector.py",
+        "Line":  36,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\bootstrap_commands.py",
+        "Line":  7,
+        "Match":  "modules = ["
+    },
+    {
+        "File":  "core\\command_registry_loader.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\context_builder.py",
+        "Line":  5,
+        "Match":  "if not os.path.exists(board):"
+    },
+    {
+        "File":  "core\\control_center.py",
+        "Line":  7,
+        "Match":  "def _load_json(path, default):"
+    },
+    {
+        "File":  "core\\deposit_monitor.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\economy_service.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\esp_broadcast.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\esp_display.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\esp_license.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\event_store.py",
+        "Line":  4,
+        "Match":  "def __init__(self, db_path=\"events.db\"):"
+    },
+    {
+        "File":  "core\\exec_policy.py",
+        "Line":  66,
+        "Match":  "AUDIT_PATH = \"state/exec_audit.json\""
+    },
+    {
+        "File":  "core\\firewall.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\lesson_engine.py",
+        "Line":  3,
+        "Match":  "from core import academy_manager"
+    },
+    {
+        "File":  "core\\mission_lifecycle.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\mission_lock.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\mission_orchestrator.py",
+        "Line":  938,
+        "Match":  "\"MissionOrchestrator module loaded.\""
+    },
+    {
+        "File":  "core\\morning_brief.py",
+        "Line":  7,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\mqtt_device_listener.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\profile_manager.py",
+        "Line":  8,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "core\\progress_tracker.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\project_graph.py",
+        "Line":  27,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\project_registry.py",
+        "Line":  20,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\reconciler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\reward_engine.py",
+        "Line":  10,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\system_state_gateway.py",
+        "Line":  21,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\ton_lab.py",
+        "Line":  9,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "core\\virtual_esp.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "courses\\bitcoin_mastery\\lesson_proposals\\btc_security_409_identity_collision.json",
+        "Line":  2,
+        "Match":  "\"lesson_id\": \"btc_security_409_identity_collision\","
+    },
+    {
+        "File":  "courses\\registry\\README.md",
+        "Line":  1,
+        "Match":  "# SLH Course Registry"
+    },
+    {
+        "File":  "docs\\AUDIT_LEDGER.md",
+        "Line":  16,
+        "Match":  "- נמצאו כפילויות רבות: `start_course` x6, `next` x6, `course` x6, `activate` x6, `ton_*` x5, `ask` x4, `join` x3, `complete` x3, `status` x2, `diagnose` x2, `courses` x2, `progress` x2, `help` x2."
+    },
+    {
+        "File":  "docs\\SELF_MODEL.md",
+        "Line":  22,
+        "Match":  "## Learning Loop"
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Line":  28,
+        "Match":  "Known Railway projects examined:"
+    },
+    {
+        "File":  "docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Line":  12,
+        "Match":  "- Academy Economy Integration"
+    },
+    {
+        "File":  "docs\\launch\\DOCUMENTATION_INDEX.md",
+        "Line":  9,
+        "Match":  "The progress/ETA engine is:"
+    },
+    {
+        "File":  "docs\\launch\\G2_EVIDENCE.json",
+        "Line":  16,
+        "Match":  "\"path\": \"LAUNCH_PLAN.json\","
+    },
+    {
+        "File":  "docs\\launch\\SLH_BETA_READINESS.md",
+        "Line":  12,
+        "Match":  "Academy:"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Line":  23,
+        "Match":  "[X] Academy model documented"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Line":  14,
+        "Match":  "- SLH Academy"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_READY_STATE_20260713.md",
+        "Line":  14,
+        "Match":  "[X] Academy model documented"
+    },
+    {
+        "File":  "docs\\system_memory\\current_incident.txt",
+        "Line":  6,
+        "Match":  "SLH Academy microservices developer course planned."
+    },
+    {
+        "File":  "docs\\system_memory\\gateway_architecture_decision_20260713.md",
+        "Line":  24,
+        "Match":  "Modules"
+    },
+    {
+        "File":  "docs\\system_memory\\slh_academy_microservices_course.md",
+        "Line":  1,
+        "Match":  "# SLH Academy - Microservices Developer Track"
+    },
+    {
+        "File":  "docs\\system_memory\\slh_gateway_evolution_phase1_20260713.md",
+        "Line":  13,
+        "Match":  "Transform SLH Gateway into protected integration boundary for external services and SLH Academy developers."
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Line":  107,
+        "Match":  "Modules"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Line":  30,
+        "Match":  "Modules"
+    },
+    {
+        "File":  "docs\\system_memory\\telegram_polling_history.txt",
+        "Line":  5,
+        "Match":  "ed1644f stable: all modules loaded, none_stop polling, /test /admin working"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_assets\\01_public_broadcast_message.md",
+        "Line":  15,
+        "Match":  "- SLH Academy למפתחי Microservices"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_assets\\02_interested_developer_document.md",
+        "Line":  1,
+        "Match":  "# SLH Academy - Developer Information"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_assets\\03_candidate_application_form.md",
+        "Line":  1,
+        "Match":  "# SLH Academy Candidate Form"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_release\\01_SLH_PUBLIC_ANNOUNCEMENT.md",
+        "Line":  13,
+        "Match":  "- SLH Academy למפתחי Microservices"
+    },
+    {
+        "File":  "docs\\system_memory\\incidents\\slh_409_diag_output.txt",
+        "Line":  20,
+        "Match":  "{\"ok\":true,\"result\":{\"url\":\"\",\"has_custom_certificate\":false,\"pending_update_count\":3}}"
+    },
+    {
+        "File":  "handlers\\academy_handler.py",
+        "Line":  1,
+        "Match":  "from core import academy_manager"
+    },
+    {
+        "File":  "handlers\\academy_menu_handler.py",
+        "Line":  1,
+        "Match":  "from core import academy_manager"
+    },
+    {
+        "File":  "handlers\\admin_extras.py",
+        "Line":  33,
+        "Match":  "total, used, free = shutil.disk_usage(\"/app\" if os.path.isdir(\"/app\") else \".\")"
+    },
+    {
+        "File":  "handlers\\advanced_ask_handler.py",
+        "Line":  37,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\bot_identity_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\claim_handler.py",
+        "Line":  6,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\cleanup_handler.py",
+        "Line":  27,
+        "Match":  "if v.get(\u0027status\u0027) in (\u0027open\u0027, \u0027in_progress\u0027)"
+    },
+    {
+        "File":  "handlers\\dashboard_handler.py",
+        "Line":  19,
+        "Match":  "course = user.get(\"academy\", {}).get(\"active_course\", \"אין\")"
+    },
+    {
+        "File":  "handlers\\endday_handler.py",
+        "Line":  5,
+        "Match":  "bot.reply_to(msg, f\u0027🌙 סוף יום, {uid}!\\n\\n📚 /progress\\n🤖 /agents\\n💰 /balance\u0027)"
+    },
+    {
+        "File":  "handlers\\esp_handler.py",
+        "Line":  17,
+        "Match":  "_DEVICES_LOCK_PATH = DEVICES_FILE + \".lock\""
+    },
+    {
+        "File":  "handlers\\exec_log_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\file_handler.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\git_handler.py",
+        "Line":  9,
+        "Match":  "WHITELIST_FILES = {\u0027bot_gateway.py\u0027, \u0027dashboard.html\u0027, \u0027courses.json\u0027, \u0027railway.json\u0027, \u0027Procfile\u0027, \u0027requirements.txt\u0027, \u0027runtime.txt\u0027, \u0027.railwayignore\u0027}"
+    },
+    {
+        "File":  "handlers\\governance_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\health_monitor_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  12,
+        "Match":  "📚 Learning"
+    },
+    {
+        "File":  "handlers\\join_handler.py",
+        "Line":  79,
+        "Match":  "\"📚 /courses\\n\""
+    },
+    {
+        "File":  "handlers\\journal_handler.py",
+        "Line":  17,
+        "Match":  "path = os.path.join(JOURNAL_DIR, f\u0027{uid}.jsonl\u0027)"
+    },
+    {
+        "File":  "handlers\\leaderboard_handler.py",
+        "Line":  7,
+        "Match":  "def show_leaderboard(db_path=\"state/db.json\"):"
+    },
+    {
+        "File":  "handlers\\lesson_handler.py",
+        "Line":  1,
+        "Match":  "from core import lesson_engine"
+    },
+    {
+        "File":  "handlers\\llm_handler.py",
+        "Line":  139,
+        "Match":  "print(\"LLM MODULE LOADED FROM:\", __file__)"
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  7,
+        "Match":  "modules = ["
+    },
+    {
+        "File":  "handlers\\map_handler.py",
+        "Line":  6,
+        "Match":  "if os.path.exists(\u0027state/devices.json\u0027):"
+    },
+    {
+        "File":  "handlers\\market_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\onboarding_v2.py",
+        "Line":  51,
+        "Match":  "course = user.get("
+    },
+    {
+        "File":  "handlers\\ownership_transfer_handler.py",
+        "Line":  4,
+        "Match":  "from core import academy_manager"
+    },
+    {
+        "File":  "handlers\\progress_handler.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\recovery_handler.py",
+        "Line":  23,
+        "Match":  "(\"OK\" if os.path.exists(f) else \"MISSING\")"
+    },
+    {
+        "File":  "handlers\\recovery_verify_handler.py",
+        "Line":  28,
+        "Match":  "(\"OK\" if os.path.exists(f) else \"MISSING\")"
+    },
+    {
+        "File":  "handlers\\revenue_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\services_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\staking_handler.py",
+        "Line":  18,
+        "Match":  "course = user.get(\"academy\", {}).get(\"courses\", {}).get(\"bitcoin_mastery\")"
+    },
+    {
+        "File":  "handlers\\task_handler.py",
+        "Line":  52,
+        "Match":  "progress = t.get(\"progress\", 0)"
+    },
+    {
+        "File":  "handlers\\ton_address_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\ton_balance_handler.py",
+        "Line":  2,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\ton_claim_handler.py",
+        "Line":  16,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\ton_wallet.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "handlers\\user_handler.py",
+        "Line":  4,
+        "Match":  "DB_PATH = os.path.join(os.path.dirname(__file__), \u0027..\u0027, \u0027state\u0027, \u0027db.json\u0027)"
+    },
+    {
+        "File":  "handlers\\ux_handler.py",
+        "Line":  24,
+        "Match":  "\"📚 /academy – Academy view\","
+    },
+    {
+        "File":  "handlers\\voting_handler.py",
+        "Line":  1,
+        "Match":  "\"\"\"Voting module disabled - placeholder\"\"\""
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\10.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 10"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\11.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 11"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\12.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 12"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\4.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 4"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\5.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 5"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\6.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 6"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\7.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 7"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\8.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 8"
+    },
+    {
+        "File":  "lessons\\bitcoin_mastery\\9.txt",
+        "Line":  8,
+        "Match":  "/finish bitcoin_mastery 9"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\.env.example"
+    },
+    {
+        "File":  "mission_control\\git_history.txt",
+        "Line":  2,
+        "Match":  "* debcaf5 convert slh-bot from broken submodule to normal repository"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  2,
+        "Match":  "You have unmerged paths."
+    },
+    {
+        "File":  "mission_control\\handlers_list.txt",
+        "Line":  4,
+        "Match":  "academy_handler.py"
+    },
+    {
+        "File":  "mission_control\\railway_variables.txt",
+        "Line":  40,
+        "Match":  "Γץס RAILWAY_VOLUME_MOUNT_PATH Γפג /app/state                                       Γץס"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  8,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\core\\academy_manager.py"
+    },
+    {
+        "File":  "mission_control\\security_files_scan.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\.env.example"
+    },
+    {
+        "File":  "mission_control\\state_map.txt",
+        "Line":  10,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\courses                                                                            7/"
+    },
+    {
+        "File":  "plugins\\education.py",
+        "Line":  1,
+        "Match":  "class EducationPlugin:"
+    },
+    {
+        "File":  "plugins\\leaderboard.py",
+        "Line":  7,
+        "Match":  "def __init__(self, db_path=\"state/db.json\"):"
+    },
+    {
+        "File":  "plugins\\system.py",
+        "Line":  5,
+        "Match":  "send(chat_id, \"⚙️ SYSTEM MODULE OK\")"
+    },
+    {
+        "File":  "plugins\\voting.py",
+        "Line":  4,
+        "Match":  "def __init__(self, db_path=\"state/db.json\"):"
+    },
+    {
+        "File":  "plugins\\__init__.py",
+        "Line":  6,
+        "Match":  "from plugins import education, shop, task, admin, system"
+    },
+    {
+        "File":  "scripts\\slh_integrity_check.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "security\\permissions.py",
+        "Line":  7,
+        "Match":  "BASE_DIR = os.path.dirname(os.path.abspath(__file__))"
+    },
+    {
+        "File":  "security\\policies.json",
+        "Line":  12,
+        "Match":  "\"learning\": [\"owner\", \"admin\", \"teacher\", \"student\"],"
+    },
+    {
+        "File":  "security\\roles.json",
+        "Line":  6,
+        "Match":  "\"teacher\": [\"learning_manage\", \"read_logs\"],"
+    },
+    {
+        "File":  "services\\task_service.py",
+        "Line":  8,
+        "Match":  "if not os.path.exists(BOARD_FILE):"
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Line":  11,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  13,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Line":  13,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\db_BEFORE_AUDIT_1786472955.json",
+        "Line":  11,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  13,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\db_PROD_BEFORE_SYNC_1786444044.json",
+        "Line":  11,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  74,
+        "Match":  "\"title\": \"Release Closure — Final User Path\","
+    },
+    {
+        "File":  "state\\money_authority_audit_pre_token.txt",
+        "Line":  23,
+        "Match":  "[OUTSIDE-AUTHORITY] learning_path.py:59: economy_bridge.add_credits(str(uid), 10)"
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\staking_basic.py",
+        "Line":  3,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_handler.py",
+        "Line":  3,
+        "Match":  "DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_wizard.py",
+        "Line":  20,
+        "Match":  "\"6\": \"💸 Earn SLH by completing courses (/progress), staking (/stake_join), or receiving via /token send.\\n\\nType /token_wizard to return.\","
+    },
+    {
+        "File":  "state\\device_audit_20260820_154149\\location.txt",
+        "Line":  2,
+        "Match":  "Path"
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\chats.json",
+        "Line":  89,
+        "Match":  "\"text\": \"```\\n███████╗██╗     ██╗  ██╗\\n██╔════╝██║     ██║  ██║\\n███████╗██║     ███████║\\n╚════██║██║     ██╔══██║\\n███████║███████╗██║  ██║\\n╚══════╝╚══════╝╚═╝  ╚═╝\\n\\nSLH SYSTEM\\nSmart Layer Hub```\\n\\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\\n\\n🟢 **מצב מערכת**\\n• סטטוס מערכת — /status\\n• בריאות מערכת — /health\\n• אבחון מלא — /test\\n• אבחון סוכנים — /test_agents\\n\\n🤖 **סוכנים**\\n• רשימת סוכנים — /agents\\n• צור סוכן — /agent_create\\n• שלח הודעה — /sendagent\\n• תיבת סוכן — /inbox\\n\\n🧠 **AI \u0026 מודולים**\\n• רישום AI — /register_ai\\n• שאל AI — /ask\\n• יומן חכם — /journal_ask\\n• מודולים — /plugin list\\n\\n💰 **כלכלה**\\n• יתרה — /balance\\n• קנייה — /buy\\n• תשלום — /pay\\n• טוקן — /token balance\\n\\n📚 **למידה**\\n• קורסים — /courses\\n• התקדמות — /myprogress\\n• הפניות — /referral\\n\\n🔧 **אדמין**\\n• פאנל אדמין — /admin\\n• גיבוי — /backup\\n• ריסטארט — /restart\\n• לוגים — /logs 20\\n\\n👥 **בואו נבנה יחד!**\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\chats.json",
+        "Line":  89,
+        "Match":  "\"text\": \"```\\n███████╗██╗     ██╗  ██╗\\n██╔════╝██║     ██║  ██║\\n███████╗██║     ███████║\\n╚════██║██║     ██╔══██║\\n███████║███████╗██║  ██║\\n╚══════╝╚══════╝╚═╝  ╚═╝\\n\\nSLH SYSTEM\\nSmart Layer Hub```\\n\\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\\n\\n🟢 **מצב מערכת**\\n• סטטוס מערכת — /status\\n• בריאות מערכת — /health\\n• אבחון מלא — /test\\n• אבחון סוכנים — /test_agents\\n\\n🤖 **סוכנים**\\n• רשימת סוכנים — /agents\\n• צור סוכן — /agent_create\\n• שלח הודעה — /sendagent\\n• תיבת סוכן — /inbox\\n\\n🧠 **AI \u0026 מודולים**\\n• רישום AI — /register_ai\\n• שאל AI — /ask\\n• יומן חכם — /journal_ask\\n• מודולים — /plugin list\\n\\n💰 **כלכלה**\\n• יתרה — /balance\\n• קנייה — /buy\\n• תשלום — /pay\\n• טוקן — /token balance\\n\\n📚 **למידה**\\n• קורסים — /courses\\n• התקדמות — /myprogress\\n• הפניות — /referral\\n\\n🔧 **אדמין**\\n• פאנל אדמין — /admin\\n• גיבוי — /backup\\n• ריסטארט — /restart\\n• לוגים — /logs 20\\n\\n👥 **בואו נבנה יחד!**\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\chats.json",
+        "Line":  89,
+        "Match":  "\"text\": \"```\\n███████╗██╗     ██╗  ██╗\\n██╔════╝██║     ██║  ██║\\n███████╗██║     ███████║\\n╚════██║██║     ██╔══██║\\n███████║███████╗██║  ██║\\n╚══════╝╚══════╝╚═╝  ╚═╝\\n\\nSLH SYSTEM\\nSmart Layer Hub```\\n\\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\\n\\n🟢 **מצב מערכת**\\n• סטטוס מערכת — /status\\n• בריאות מערכת — /health\\n• אבחון מלא — /test\\n• אבחון סוכנים — /test_agents\\n\\n🤖 **סוכנים**\\n• רשימת סוכנים — /agents\\n• צור סוכן — /agent_create\\n• שלח הודעה — /sendagent\\n• תיבת סוכן — /inbox\\n\\n🧠 **AI \u0026 מודולים**\\n• רישום AI — /register_ai\\n• שאל AI — /ask\\n• יומן חכם — /journal_ask\\n• מודולים — /plugin list\\n\\n💰 **כלכלה**\\n• יתרה — /balance\\n• קנייה — /buy\\n• תשלום — /pay\\n• טוקן — /token balance\\n\\n📚 **למידה**\\n• קורסים — /courses\\n• התקדמות — /myprogress\\n• הפניות — /referral\\n\\n🔧 **אדמין**\\n• פאנל אדמין — /admin\\n• גיבוי — /backup\\n• ריסטארט — /restart\\n• לוגים — /logs 20\\n\\n👥 **בואו נבנה יחד!**\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\chats.json",
+        "Line":  89,
+        "Match":  "\"text\": \"```\\n███████╗██╗     ██╗  ██╗\\n██╔════╝██║     ██║  ██║\\n███████╗██║     ███████║\\n╚════██║██║     ██╔══██║\\n███████║███████╗██║  ██║\\n╚══════╝╚══════╝╚═╝  ╚═╝\\n\\nSLH SYSTEM\\nSmart Layer Hub```\\n\\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\\n\\n🟢 **מצב מערכת**\\n• סטטוס מערכת — /status\\n• בריאות מערכת — /health\\n• אבחון מלא — /test\\n• אבחון סוכנים — /test_agents\\n\\n🤖 **סוכנים**\\n• רשימת סוכנים — /agents\\n• צור סוכן — /agent_create\\n• שלח הודעה — /sendagent\\n• תיבת סוכן — /inbox\\n\\n🧠 **AI \u0026 מודולים**\\n• רישום AI — /register_ai\\n• שאל AI — /ask\\n• יומן חכם — /journal_ask\\n• מודולים — /plugin list\\n\\n💰 **כלכלה**\\n• יתרה — /balance\\n• קנייה — /buy\\n• תשלום — /pay\\n• טוקן — /token balance\\n\\n📚 **למידה**\\n• קורסים — /courses\\n• התקדמות — /myprogress\\n• הפניות — /referral\\n\\n🔧 **אדמין**\\n• פאנל אדמין — /admin\\n• גיבוי — /backup\\n• ריסטארט — /restart\\n• לוגים — /logs 20\\n\\n👥 **בואו נבנה יחד!**\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\chats.json",
+        "Line":  89,
+        "Match":  "\"text\": \"```\\n███████╗██╗     ██╗  ██╗\\n██╔════╝██║     ██║  ██║\\n███████╗██║     ███████║\\n╚════██║██║     ██╔══██║\\n███████║███████╗██║  ██║\\n╚══════╝╚══════╝╚═╝  ╚═╝\\n\\nSLH SYSTEM\\nSmart Layer Hub```\\n\\n🌟 **ברוכים הבאים ל-SLH OS Assistant!** 🚀\\n\\n🟢 **מצב מערכת**\\n• סטטוס מערכת — /status\\n• בריאות מערכת — /health\\n• אבחון מלא — /test\\n• אבחון סוכנים — /test_agents\\n\\n🤖 **סוכנים**\\n• רשימת סוכנים — /agents\\n• צור סוכן — /agent_create\\n• שלח הודעה — /sendagent\\n• תיבת סוכן — /inbox\\n\\n🧠 **AI \u0026 מודולים**\\n• רישום AI — /register_ai\\n• שאל AI — /ask\\n• יומן חכם — /journal_ask\\n• מודולים — /plugin list\\n\\n💰 **כלכלה**\\n• יתרה — /balance\\n• קנייה — /buy\\n• תשלום — /pay\\n• טוקן — /token balance\\n\\n📚 **למידה**\\n• קורסים — /courses\\n• התקדמות — /myprogress\\n• הפניות — /referral\\n\\n🔧 **אדמין**\\n• פאנל אדמין — /admin\\n• גיבוי — /backup\\n• ריסטארט — /restart\\n• לוגים — /logs 20\\n\\n👥 **בואו נבנה יחד!**\""
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Line":  75,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Line":  75,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Line":  75,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Line":  75,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  12,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Line":  82,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\takeover\\loader_registration_audit.json",
+        "Line":  7,
+        "Match":  "\"module\": \"handlers.logo_handler\","
+    },
+    {
+        "File":  "state\\takeover\\manifest.json",
+        "Line":  82,
+        "Match":  "\"audit_module\": {"
+    },
+    {
+        "File":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Line":  12,
+        "Match":  "\"academy\": {"
+    },
+    {
+        "File":  "state\\takeover\\runtime_command_registration_audit.json",
+        "Line":  9,
+        "Match":  "\"path\": \"DIRECT\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  14,
+        "Match":  "\"module\": \"doctor_handler\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_access_classification.json",
+        "Line":  8,
+        "Match":  "\"path\": \"bot_stable.py\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Line":  4,
+        "Match":  "\"total_modules\": 1222,"
+    },
+    {
+        "File":  "state\\takeover\\user_command_wiring_audit.json",
+        "Line":  143,
+        "Match":  "\"file\": \"learning_path.py\","
+    },
+    {
+        "File":  "store\\engine.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "store\\grant_engine.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "store\\items.json",
+        "Line":  2,
+        "Match":  "\"course_bitcoin_101\": {"
+    },
+    {
+        "File":  "tests\\system_check.py",
+        "Line":  16,
+        "Match":  "results.append(ok(\"Bot file exists\", os.path.exists(\"bot_stable.py\")))"
+    },
+    {
+        "File":  "tests\\test_agent.py",
+        "Line":  53,
+        "Match":  "path = \"test_agents.json\""
+    },
+    {
+        "File":  "tests\\test_task_and_audit.py",
+        "Line":  5,
+        "Match":  "# Add project root to path"
+    },
+    {
+        "File":  "tools\\active_loader_audit.py",
+        "Line":  13,
+        "Match":  "loader modules"
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\agent_state_autopilot.py",
+        "Line":  8,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\audit_state_access.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\build_state_migration_queue.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\connect_ask_guard.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\connect_llm_circuit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\create_ai_guard.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\create_ai_health_state.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\create_ask_guard.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\disable_botstable_ask.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\discover_projects.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\discover_termux_projects.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\fix_ask_guard_api.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\full_static_handler_audit.py",
+        "Line":  17,
+        "Match":  "8. dynamic loading paths"
+    },
+    {
+        "File":  "tools\\full_system_audit.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\live_vs_dead_audit.py",
+        "Line":  7,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\loader_registration_audit.py",
+        "Line":  8,
+        "Match":  "Analyzes handlers/loader.py and its directly imported modules."
+    },
+    {
+        "File":  "tools\\money_authority_audit.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\project_audit.py",
+        "Line":  8,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\rbac_audit.py",
+        "Line":  2,
+        "Match":  "sys.path.insert(0,\u0027.\u0027)"
+    },
+    {
+        "File":  "tools\\real_audit.py",
+        "Line":  27,
+        "Match":  "check(\"IDENTITY_MODULE_CONTENTS\", t_owner)"
+    },
+    {
+        "File":  "tools\\runtime_command_registration_audit.py",
+        "Line":  8,
+        "Match":  "Maps user-facing command registration through the three active paths:"
+    },
+    {
+        "File":  "tools\\runtime_loading_path_audit.py",
+        "Line":  4,
+        "Match":  "SLH RUNTIME LOADING PATH AUDIT v1"
+    },
+    {
+        "File":  "tools\\runtime_state_access_classification.py",
+        "Line":  6,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\runtime_state_dependency_map.py",
+        "Line":  6,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\session_closure_audit.py",
+        "Line":  7,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\slh_doctor.py",
+        "Line":  4,
+        "Match":  "ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))"
+    },
+    {
+        "File":  "tools\\slh_launch_check.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\slh_launch_control.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\slh_migrate.py",
+        "Line":  3,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\test_agent_state_full.py",
+        "Line":  6,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\test_learning_path_full_loader.py",
+        "Line":  85,
+        "Match":  "\"course_slh\": \"course_slh\" in commands,"
+    },
+    {
+        "File":  "tools\\test_learning_path_loader_execution.py",
+        "Line":  53,
+        "Match":  "print(\"LOADER_COURSE_SLH=\", \"course_slh\" in commands)"
+    },
+    {
+        "File":  "tools\\test_learning_path_runtime.py",
+        "Line":  2,
+        "Match":  "import learning_path"
+    },
+    {
+        "File":  "tools\\test_project_graph_contract.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\test_project_registry_contract.py",
+        "Line":  4,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\test_system_snapshot_contract.py",
+        "Line":  5,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\upgrade_ai_guard_persistent.py",
+        "Line":  1,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\user_acceptance_audit.py",
+        "Line":  20,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\user_command_audit.py",
+        "Line":  23,
+        "Match":  "from pathlib import Path"
+    },
+    {
+        "File":  "tools\\user_command_wiring_audit.py",
+        "Line":  16,
+        "Match":  "- import application modules for execution"
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Line":  18,
+        "Match":  "\"path\":  \"AUDIT_20260813_FULL/\","
+    },
+    {
+        "File":  "_slh_map\\control\\COMMANDS.json",
+        "Line":  35,
+        "Match":  "\"definition\":  \"     slh     Write-Host \\\"===== SLH JOURNAL =====\\\" -ForegroundColor Cyan     if(Test-Path \\\"state/journal.json\\\"){         Get-Content \\\"state/journal.json\\\"     }     else {         Write-Host \\\"No journal\\\"     } \""
+    },
+    {
+        "File":  "_slh_map\\control\\CONTROL_STATE.json",
+        "Line":  26,
+        "Match":  "\"investor_path\":  {"
+    },
+    {
+        "File":  "_slh_map\\control\\EVIDENCE_GATE.json",
+        "Line":  18,
+        "Match":  "\"investor_path\":  {"
+    },
+    {
+        "File":  "_slh_map\\control\\GIT_CHANGES.json",
+        "Line":  4,
+        "Match":  "\"path\":  \"core/identity_resolver.py\""
+    },
+    {
+        "File":  "_slh_map\\control\\LAUNCH.json",
+        "Line":  19,
+        "Match":  "\"investor_path\":  \"UNKNOWN\","
+    },
+    {
+        "File":  "_slh_map\\control\\LAUNCH_EVIDENCE.json",
+        "Line":  27,
+        "Match":  "\"investor_path\":  {"
+    },
+    {
+        "File":  "_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Line":  183,
+        "Match":  "\"File\":  \".env.example\","
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Line":  4,
+        "Match":  "\"relative_path\":  \"add_sync_patch.py\","
+    },
+    {
+        "File":  "_slh_map\\control\\RUNTIME.json",
+        "Line":  28,
+        "Match":  "\"file\":  \".env.example\","
+    },
+    {
+        "File":  "_slh_map\\control\\SCAN_POLICY.json",
+        "Line":  8,
+        "Match":  "\"node_modules\","
+    },
+    {
+        "File":  "_slh_map\\control\\UNTRACKED_CLASSIFICATION.json",
+        "Line":  3,
+        "Match":  "\"path\":  \"AUDIT_20260813_FULL/\","
+    },
+    {
+        "File":  "_slh_map\\control\\WORKTREE_EVIDENCE_V2.json",
+        "Line":  20,
+        "Match":  "\"path\":  \"core/identity_resolver.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Line":  7,
+        "Match":  "\"path\": \"bot_core.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\CURRENT.json",
+        "Line":  19,
+        "Match":  "\"path\": \"tools/slh_migrate.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Line":  23,
+        "Match":  "\"path\": \"tools/slh_migrate.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  9,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Line":  19,
+        "Match":  "\"path\": \"tools/slh_migrate.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  10,
+        "Match":  "\"path\": \"adapters/cli.py\","
+    }
+]

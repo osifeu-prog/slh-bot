@@ -1,0 +1,28 @@
+﻿{
+    "audit_id":  "20260829_174857",
+    "created_at":  "2026-08-29T17:49:03.4440463+03:00",
+    "project_root":  "C:\\Users\\USER\\slh-bot-clean",
+    "purpose":  "Permanent SLH Money / Asset Authority baseline",
+    "changes_to_application_code":  false,
+    "git_branch":  "main",
+    "git_head":  "2d92358464489e92fd0fe1fb177ea5621e4b0b64",
+    "audit_scope":  [
+                        "git_state",
+                        "active_file_inventory",
+                        "asset_reference_inventory",
+                        "money_asset_authority_candidates",
+                        "existing_audit_artifacts",
+                        "critical_file_sha256"
+                    ],
+    "excluded":  [
+                     ".git runtime contents",
+                     "venv",
+                     ".test-venv",
+                     "__pycache__",
+                     "archive",
+                     "_archive",
+                     "state/p0_backups",
+                     "_slh_audit"
+                 ],
+    "next_gate":  "WRITE_AUTHORITY_AUDIT"
+}

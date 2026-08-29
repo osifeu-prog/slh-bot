@@ -1,0 +1,28 @@
+{
+  "schema": "slh-os/launch-evidence/v1",
+  "gate": "G2",
+  "gate_name": "Canonical Launch Control",
+  "timestamp_utc": "2026-08-21T00:01:39.874153+00:00",
+  "status": "PASS",
+  "checks": {
+    "LAUNCH_PLAN.json": true,
+    "tools/slh_launch_control.py": true,
+    "docs/launch/DOCUMENTATION_INDEX.md": true,
+    "launch_meter_compiles": true,
+    "launch_meter_runs": true
+  },
+  "artifacts": {
+    "plan": {
+      "path": "LAUNCH_PLAN.json",
+      "sha256": "a7fe4440a067dff95093e8acc9515b28f47aa6051b8782b3daf2bcee778dfeb5"
+    },
+    "meter": {
+      "path": "tools/slh_launch_control.py",
+      "sha256": "8be55775cc9b98259ad32080cfc44e42dbb97fb859d470f27c9045539d12783e"
+    },
+    "documentation_index": {
+      "path": "docs/launch/DOCUMENTATION_INDEX.md",
+      "sha256": "9ccab7a90b6425b3ce0af0a6f7db69b375666c02ac5f9e30dde6c3e72d1fc920"
+    }
+  }
+}

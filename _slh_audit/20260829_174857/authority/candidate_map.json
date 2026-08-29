@@ -1,0 +1,86 @@
+﻿[
+    {
+        "File":  "core\\economy_service.py",
+        "Hits":  187
+    },
+    {
+        "File":  "state\\db.json",
+        "Hits":  149
+    },
+    {
+        "File":  "handlers\\staking_handler.py",
+        "Hits":  48
+    },
+    {
+        "File":  "handlers\\payment_handler.py",
+        "Hits":  42
+    },
+    {
+        "File":  "ton_handler.py",
+        "Hits":  40
+    },
+    {
+        "File":  "core\\ton_lab.py",
+        "Hits":  32
+    },
+    {
+        "File":  "handlers\\ton_claim_handler.py",
+        "Hits":  17
+    },
+    {
+        "File":  "store\\grant_engine.py",
+        "Hits":  16
+    },
+    {
+        "File":  "core\\deposit_monitor.py",
+        "Hits":  14
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Hits":  14
+    },
+    {
+        "File":  "handlers\\market_handler.py",
+        "Hits":  11
+    },
+    {
+        "File":  "handlers\\wallet_handler.py",
+        "Hits":  10
+    },
+    {
+        "File":  "store\\items.json",
+        "Hits":  10
+    },
+    {
+        "File":  "handlers\\ton_wallet.py",
+        "Hits":  8
+    },
+    {
+        "File":  "handlers\\ton_balance_handler.py",
+        "Hits":  8
+    },
+    {
+        "File":  "core\\binance_connector.py",
+        "Hits":  7
+    },
+    {
+        "File":  "state\\marketplace.json",
+        "Hits":  5
+    },
+    {
+        "File":  "core\\reconciler.py",
+        "Hits":  4
+    },
+    {
+        "File":  "marketplace.py",
+        "Hits":  3
+    },
+    {
+        "File":  "handlers\\ton_address_handler.py",
+        "Hits":  1
+    },
+    {
+        "File":  "core\\system_state_gateway.py",
+        "Hits":  0
+    }
+]

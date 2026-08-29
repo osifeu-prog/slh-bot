@@ -1,0 +1,1022 @@
+﻿[
+    {
+        "File":  "AGENT_RULES.md",
+        "Line":  10
+    },
+    {
+        "File":  "API_REFERENCE.md",
+        "Line":  5
+    },
+    {
+        "File":  "ARCHITECTURE.md",
+        "Line":  9
+    },
+    {
+        "File":  "assignment_preview.py",
+        "Line":  93
+    },
+    {
+        "File":  "AUDIT_DEEP.md",
+        "Line":  35
+    },
+    {
+        "File":  "bot_core.py",
+        "Line":  7
+    },
+    {
+        "File":  "bot_gateway.py",
+        "Line":  14
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  24
+    },
+    {
+        "File":  "bot_telegram.py",
+        "Line":  1
+    },
+    {
+        "File":  "checkpoint_manager.py",
+        "Line":  19
+    },
+    {
+        "File":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Line":  114
+    },
+    {
+        "File":  "config.json",
+        "Line":  2
+    },
+    {
+        "File":  "courses.json",
+        "Line":  2
+    },
+    {
+        "File":  "course_handlers.py",
+        "Line":  14
+    },
+    {
+        "File":  "create_takeover_manifest.py",
+        "Line":  42
+    },
+    {
+        "File":  "DEPLOYMENT_PLAN.md",
+        "Line":  15
+    },
+    {
+        "File":  "device_bridge.py",
+        "Line":  11
+    },
+    {
+        "File":  "econ_handler.py",
+        "Line":  10
+    },
+    {
+        "File":  "exec_commit.py",
+        "Line":  7
+    },
+    {
+        "File":  "guide_handler.py",
+        "Line":  11
+    },
+    {
+        "File":  "HANDOFF.md",
+        "Line":  8
+    },
+    {
+        "File":  "health_check.py",
+        "Line":  15
+    },
+    {
+        "File":  "help_handler.py",
+        "Line":  43
+    },
+    {
+        "File":  "internal_agent.py",
+        "Line":  107
+    },
+    {
+        "File":  "journal.json",
+        "Line":  4
+    },
+    {
+        "File":  "language_handler.py",
+        "Line":  6
+    },
+    {
+        "File":  "LAUNCH_PLAN.json",
+        "Line":  70
+    },
+    {
+        "File":  "learning_path.py",
+        "Line":  3
+    },
+    {
+        "File":  "marketplace.py",
+        "Line":  1
+    },
+    {
+        "File":  "myprogress_handler.py",
+        "Line":  20
+    },
+    {
+        "File":  "NEXT_STEPS.md",
+        "Line":  10
+    },
+    {
+        "File":  "onboarding_handler.py",
+        "Line":  60
+    },
+    {
+        "File":  "plugins.json",
+        "Line":  9
+    },
+    {
+        "File":  "plugins_store.json",
+        "Line":  5
+    },
+    {
+        "File":  "plugins_store.py",
+        "Line":  11
+    },
+    {
+        "File":  "README.md",
+        "Line":  14
+    },
+    {
+        "File":  "refresh_token_handler.py",
+        "Line":  2
+    },
+    {
+        "File":  "RELEASE_STATUS_2026_07_21.md",
+        "Line":  12
+    },
+    {
+        "File":  "report_handler.py",
+        "Line":  31
+    },
+    {
+        "File":  "REPUTATION_PLAN.md",
+        "Line":  4
+    },
+    {
+        "File":  "responsibility_map.py",
+        "Line":  61
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  15
+    },
+    {
+        "File":  "RUN_GUIDE.md",
+        "Line":  11
+    },
+    {
+        "File":  "self_check.py",
+        "Line":  9
+    },
+    {
+        "File":  "self_model_audit.py",
+        "Line":  45
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  41
+    },
+    {
+        "File":  "SESSION_CLOSURE_MANIFEST.md",
+        "Line":  88
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  9
+    },
+    {
+        "File":  "SLH_AGENT_HANDOFF.md",
+        "Line":  18
+    },
+    {
+        "File":  "slh_fix_bom.py",
+        "Line":  74
+    },
+    {
+        "File":  "SLH_RUNTIME_POLICY.md",
+        "Line":  17
+    },
+    {
+        "File":  "SLH_RUNTIME_SNAPSHOT_20260708.md",
+        "Line":  31
+    },
+    {
+        "File":  "slh_state_audit.py",
+        "Line":  15
+    },
+    {
+        "File":  "slh_visibility_scan.py",
+        "Line":  15
+    },
+    {
+        "File":  "state_engine.py",
+        "Line":  18
+    },
+    {
+        "File":  "subscriptions.py",
+        "Line":  4
+    },
+    {
+        "File":  "system_diagnostics.py",
+        "Line":  15
+    },
+    {
+        "File":  "system_health.py",
+        "Line":  5
+    },
+    {
+        "File":  "SYSTEM_RULES.md",
+        "Line":  7
+    },
+    {
+        "File":  "takeover_controller.py",
+        "Line":  186
+    },
+    {
+        "File":  "telegram_chat_audit.py",
+        "Line":  5
+    },
+    {
+        "File":  "test_creation_api.py",
+        "Line":  55
+    },
+    {
+        "File":  "test_marketplace.py",
+        "Line":  5
+    },
+    {
+        "File":  "test_mission4_creation_commit.py",
+        "Line":  55
+    },
+    {
+        "File":  "test_mission4_creation_preview.py",
+        "Line":  19
+    },
+    {
+        "File":  "TOKEN_PLAN.md",
+        "Line":  1
+    },
+    {
+        "File":  "TOMORROW_HANDOFF.md",
+        "Line":  23
+    },
+    {
+        "File":  "ton_handler.py",
+        "Line":  7
+    },
+    {
+        "File":  "UPDATE.md",
+        "Line":  111
+    },
+    {
+        "File":  "UX_COMMANDS.md",
+        "Line":  8
+    },
+    {
+        "File":  "webapp.py",
+        "Line":  20
+    },
+    {
+        "File":  "whatsapp_handler_bridge.py",
+        "Line":  15
+    },
+    {
+        "File":  "core\\academy_manager.py",
+        "Line":  6
+    },
+    {
+        "File":  "core\\ask_debug.py",
+        "Line":  3
+    },
+    {
+        "File":  "core\\ask_router.py",
+        "Line":  4
+    },
+    {
+        "File":  "core\\binance_connector.py",
+        "Line":  11
+    },
+    {
+        "File":  "core\\deposit_monitor.py",
+        "Line":  2
+    },
+    {
+        "File":  "core\\economy_bridge.py",
+        "Line":  5
+    },
+    {
+        "File":  "core\\economy_service.py",
+        "Line":  11
+    },
+    {
+        "File":  "core\\esp_license.py",
+        "Line":  19
+    },
+    {
+        "File":  "core\\event_bus.py",
+        "Line":  27
+    },
+    {
+        "File":  "core\\lesson_engine.py",
+        "Line":  56
+    },
+    {
+        "File":  "core\\migration.py",
+        "Line":  24
+    },
+    {
+        "File":  "core\\mission_lifecycle.py",
+        "Line":  611
+    },
+    {
+        "File":  "core\\mission_orchestrator.py",
+        "Line":  318
+    },
+    {
+        "File":  "core\\mission_state.py",
+        "Line":  42
+    },
+    {
+        "File":  "core\\morning_brief.py",
+        "Line":  55
+    },
+    {
+        "File":  "core\\profile_manager.py",
+        "Line":  71
+    },
+    {
+        "File":  "core\\reconciler.py",
+        "Line":  21
+    },
+    {
+        "File":  "core\\reward_engine.py",
+        "Line":  2
+    },
+    {
+        "File":  "core\\stake_position.py",
+        "Line":  2
+    },
+    {
+        "File":  "core\\system_state_gateway.py",
+        "Line":  49
+    },
+    {
+        "File":  "core\\ton_lab.py",
+        "Line":  2
+    },
+    {
+        "File":  "courses\\bitcoin_mastery\\lesson_proposals\\btc_security_409_identity_collision.json",
+        "Line":  2
+    },
+    {
+        "File":  "docs\\AUDIT_LEDGER.md",
+        "Line":  1
+    },
+    {
+        "File":  "docs\\SLH_PRE_CONFLICT_CHECKPOINT.json",
+        "Line":  11
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_INVENTORY.md",
+        "Line":  12
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_MAP.md",
+        "Line":  32
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_SNAPSHOT_20260708.md",
+        "Line":  28
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_PROJECT_INVENTORY.json",
+        "Line":  7
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Line":  32
+    },
+    {
+        "File":  "docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md",
+        "Line":  65
+    },
+    {
+        "File":  "docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Line":  8
+    },
+    {
+        "File":  "docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Line":  1
+    },
+    {
+        "File":  "docs\\financial\\SLH_STAKING_MODEL.md",
+        "Line":  14
+    },
+    {
+        "File":  "docs\\journal\\20260711_branding_restore.md",
+        "Line":  3
+    },
+    {
+        "File":  "docs\\journal\\20260711_dashboard_v2_stable.md",
+        "Line":  3
+    },
+    {
+        "File":  "docs\\launch\\DOCUMENTATION_INDEX.md",
+        "Line":  28
+    },
+    {
+        "File":  "docs\\launch\\SLH_BETA_READINESS.md",
+        "Line":  10
+    },
+    {
+        "File":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Line":  17
+    },
+    {
+        "File":  "docs\\SLH\\SLH_TELEGRAM_TOKEN_OWNERSHIP_MAP.json",
+        "Line":  5
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Line":  42
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Line":  56
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_READY_STATE_20260713.md",
+        "Line":  37
+    },
+    {
+        "File":  "docs\\system_memory\\slh_academy_microservices_course.md",
+        "Line":  9
+    },
+    {
+        "File":  "docs\\system_memory\\slh_gateway_evolution_phase1_20260713.md",
+        "Line":  64
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Line":  1
+    },
+    {
+        "File":  "handlers\\academy_handler.py",
+        "Line":  98
+    },
+    {
+        "File":  "handlers\\academy_menu_handler.py",
+        "Line":  3
+    },
+    {
+        "File":  "handlers\\brief_handler.py",
+        "Line":  13
+    },
+    {
+        "File":  "handlers\\claim_handler.py",
+        "Line":  2
+    },
+    {
+        "File":  "handlers\\dashboard_handler.py",
+        "Line":  18
+    },
+    {
+        "File":  "handlers\\deploy_handler.py",
+        "Line":  14
+    },
+    {
+        "File":  "handlers\\device_bridge.py",
+        "Line":  10
+    },
+    {
+        "File":  "handlers\\device_handler.py",
+        "Line":  37
+    },
+    {
+        "File":  "handlers\\endday_handler.py",
+        "Line":  5
+    },
+    {
+        "File":  "handlers\\esp_handler.py",
+        "Line":  278
+    },
+    {
+        "File":  "handlers\\exec_request_handler.py",
+        "Line":  102
+    },
+    {
+        "File":  "handlers\\fakepay_handler.py",
+        "Line":  10
+    },
+    {
+        "File":  "handlers\\firewall_handler.py",
+        "Line":  18
+    },
+    {
+        "File":  "handlers\\git_handler.py",
+        "Line":  3
+    },
+    {
+        "File":  "handlers\\health_monitor_handler.py",
+        "Line":  10
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  29
+    },
+    {
+        "File":  "handlers\\join_handler.py",
+        "Line":  58
+    },
+    {
+        "File":  "handlers\\leaderboard_handler.py",
+        "Line":  19
+    },
+    {
+        "File":  "handlers\\lesson_handler.py",
+        "Line":  14
+    },
+    {
+        "File":  "handlers\\llm_handler.py",
+        "Line":  59
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  10
+    },
+    {
+        "File":  "handlers\\market_handler.py",
+        "Line":  4
+    },
+    {
+        "File":  "handlers\\mission_handler.py",
+        "Line":  30
+    },
+    {
+        "File":  "handlers\\onboarding_v2.py",
+        "Line":  41
+    },
+    {
+        "File":  "handlers\\os_handler.py",
+        "Line":  25
+    },
+    {
+        "File":  "handlers\\ownership_transfer_handler.py",
+        "Line":  7
+    },
+    {
+        "File":  "handlers\\payment_handler.py",
+        "Line":  4
+    },
+    {
+        "File":  "handlers\\repeat_handler.py",
+        "Line":  2
+    },
+    {
+        "File":  "handlers\\revenue_handler.py",
+        "Line":  11
+    },
+    {
+        "File":  "handlers\\staking_handler.py",
+        "Line":  3
+    },
+    {
+        "File":  "handlers\\store_handler.py",
+        "Line":  4
+    },
+    {
+        "File":  "handlers\\task_handler.py",
+        "Line":  4
+    },
+    {
+        "File":  "handlers\\ton_address_handler.py",
+        "Line":  5
+    },
+    {
+        "File":  "handlers\\ton_balance_handler.py",
+        "Line":  3
+    },
+    {
+        "File":  "handlers\\ton_claim_handler.py",
+        "Line":  2
+    },
+    {
+        "File":  "handlers\\ton_wallet.py",
+        "Line":  7
+    },
+    {
+        "File":  "handlers\\user_handler.py",
+        "Line":  17
+    },
+    {
+        "File":  "handlers\\ux_handler.py",
+        "Line":  10
+    },
+    {
+        "File":  "handlers\\wallet_handler.py",
+        "Line":  6
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Line":  6
+    },
+    {
+        "File":  "logs\\SLH_NIGHTLY_20260707.md",
+        "Line":  38
+    },
+    {
+        "File":  "plugins\\leaderboard.py",
+        "Line":  22
+    },
+    {
+        "File":  "plugins\\shop.py",
+        "Line":  3
+    },
+    {
+        "File":  "scripts\\slh_integrity_check.py",
+        "Line":  6
+    },
+    {
+        "File":  "security\\policies.json",
+        "Line":  14
+    },
+    {
+        "File":  "services\\task_service.py",
+        "Line":  70
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Line":  14
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+        "Line":  20
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\agents.json",
+        "Line":  45
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Line":  8
+    },
+    {
+        "File":  "state\\agents.json",
+        "Line":  40
+    },
+    {
+        "File":  "state\\daily_plan.json",
+        "Line":  5
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  8
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  8
+    },
+    {
+        "File":  "state\\devices.json",
+        "Line":  10
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  31
+    },
+    {
+        "File":  "state\\marketplace.json",
+        "Line":  7
+    },
+    {
+        "File":  "state\\rewards_ledger.json",
+        "Line":  4
+    },
+    {
+        "File":  "state\\system_memory.json",
+        "Line":  1
+    },
+    {
+        "File":  "state\\system_services.json",
+        "Line":  26
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_161132.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_161201.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_162640.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163053.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163623.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163927.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163959.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_165130.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\staking_basic.py",
+        "Line":  14
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_handler.py",
+        "Line":  9
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_wizard.py",
+        "Line":  5
+    },
+    {
+        "File":  "state\\missions\\board.json",
+        "Line":  8
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\chats.json",
+        "Line":  39
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\chats.json",
+        "Line":  39
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\chats.json",
+        "Line":  39
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\chats.json",
+        "Line":  39
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\chats.json",
+        "Line":  39
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\agents.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\agents.json",
+        "Line":  28
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\agents.json",
+        "Line":  27
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\agents.json",
+        "Line":  21
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\db.json",
+        "Line":  13
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\agents.json",
+        "Line":  45
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  8
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\takeover\\loader_registration_audit.json",
+        "Line":  52
+    },
+    {
+        "File":  "state\\takeover\\manifest.json",
+        "Line":  42
+    },
+    {
+        "File":  "state\\takeover\\runtime_command_registration_audit.json",
+        "Line":  45
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  80
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_access_classification.json",
+        "Line":  105
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Line":  581
+    },
+    {
+        "File":  "state\\takeover\\user_command_wiring_audit.json",
+        "Line":  53
+    },
+    {
+        "File":  "store\\engine.py",
+        "Line":  24
+    },
+    {
+        "File":  "store\\grant_engine.py",
+        "Line":  8
+    },
+    {
+        "File":  "store\\handler.py",
+        "Line":  4
+    },
+    {
+        "File":  "store\\items.json",
+        "Line":  2
+    },
+    {
+        "File":  "store\\purchase_service.py",
+        "Line":  5
+    },
+    {
+        "File":  "tests\\system_check.py",
+        "Line":  23
+    },
+    {
+        "File":  "tools\\connect_llm_circuit.py",
+        "Line":  31
+    },
+    {
+        "File":  "tools\\full_static_handler_audit.py",
+        "Line":  282
+    },
+    {
+        "File":  "tools\\live_vs_dead_audit.py",
+        "Line":  50
+    },
+    {
+        "File":  "tools\\loader_registration_audit.py",
+        "Line":  48
+    },
+    {
+        "File":  "tools\\money_authority_audit.py",
+        "Line":  12
+    },
+    {
+        "File":  "tools\\rbac_audit.py",
+        "Line":  22
+    },
+    {
+        "File":  "tools\\runtime_command_registration_audit.py",
+        "Line":  44
+    },
+    {
+        "File":  "tools\\runtime_state_access_classification.py",
+        "Line":  121
+    },
+    {
+        "File":  "tools\\slh_migrate.py",
+        "Line":  279
+    },
+    {
+        "File":  "tools\\user_acceptance_audit.py",
+        "Line":  12
+    },
+    {
+        "File":  "tools\\user_command_audit.py",
+        "Line":  40
+    },
+    {
+        "File":  "tools\\user_command_wiring_audit.py",
+        "Line":  9
+    },
+    {
+        "File":  "_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Line":  43
+    },
+    {
+        "File":  "_slh_map\\control\\GIT_CHANGES.json",
+        "Line":  20
+    },
+    {
+        "File":  "_slh_map\\control\\LAUNCH.json",
+        "Line":  4
+    },
+    {
+        "File":  "_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Line":  31
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Line":  531
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_SYNTAX.json",
+        "Line":  27
+    },
+    {
+        "File":  "_slh_map\\control\\UNTRACKED_CLASSIFICATION.json",
+        "Line":  28
+    },
+    {
+        "File":  "_slh_map\\control\\WORKTREE_EVIDENCE_V2.json",
+        "Line":  48
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Line":  105
+    },
+    {
+        "File":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Line":  32
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Line":  28
+    }
+]

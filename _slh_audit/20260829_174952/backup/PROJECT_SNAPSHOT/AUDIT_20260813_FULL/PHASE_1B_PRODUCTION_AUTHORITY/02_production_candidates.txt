@@ -1,0 +1,85 @@
+﻿
+Path                                                                     LineNumber Line                               
+----                                                                     ---------- ----                               
+C:\Users\USER\slh-bot-clean\agent_client.py                                     130 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\assignment_approval.py                              241 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\assignment_commit.py                                201 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\assignment_preview.py                               251 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                        9 app = Flask(__name__)              
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                      118 def run_flask():                   
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                      120     app.run(host='0.0.0.0', port...
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                      149             bot.infinity_polling...
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                      154 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\bot_gateway.py                                      174         bot = telebot.TeleBot(to...
+C:\Users\USER\slh-bot-clean\bot_stable.py                                        71 bot = telebot.TeleBot(TOKEN)       
+C:\Users\USER\slh-bot-clean\bot_stable.py                                       746 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\device_bridge.py                                     89 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_assignment_commit.py                        322 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_assignment_preview.py                       189 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_completion_commit.py                        497 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_completion_commit_2.py                      509 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_completion_gate.py                          425 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_creation_commit.py                          247 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_creation_preview.py                         111 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_execution_commit.py                         465 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_execution_gate.py                           251 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_execution_preview.py                        300 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_lifecycle_preview.py                        124 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_result_recorder.py                          397 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_result_verifier.py                          420 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\mission_runner.py                                   305 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\responsibility_map.py                               373 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\self_test.py                                         49 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\slh.py                                               33 if __name__=="__main__": main()    
+C:\Users\USER\slh-bot-clean\SLH_MAIN.py                                         224 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\system_diagnostics.py                               197 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\system_health.py                                     63 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\takeover_controller.py                              437 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_assignment_api.py                              189 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_assignment_commit_api.py                       315 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_creation_api.py                                294 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_assignment_commit.py                  325 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_assignment_preview.py                 190 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_completion_commit.py                  511 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_completion_preview.py                 408 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_execution_commit.py                   539 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_execution_preview.py                  168 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission3_post_completion_regression.py         468 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_assignment_commit.py                  398 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_assignment_preview.py                 169 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_creation_commit.py                    354 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_creation_preview.py                   173 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_execution_commit.py                   388 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission4_execution_preview.py                  160 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\test_mission_orchestrator_preview.py                167 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\webapp.py                                             8 app = Flask(__name__)              
+C:\Users\USER\slh-bot-clean\webapp.py                                            95 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\webapp.py                                            96     app.run(                       
+C:\Users\USER\slh-bot-clean\core\agent_state_store.py                           402 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\core\mission_orchestrator.py                        935 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\core\project_graph.py                               421 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\core\project_registry.py                            297 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\core\system_state_gateway.py                        287 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tests\system_check.py                                43 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\active_loader_audit.py                        284 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\agent_state_autopilot.py                      335 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\audit_state_access.py                         402 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\build_state_migration_queue.py                300 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\discover_projects.py                          212 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\discover_termux_projects.py                   265 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\full_static_handler_audit.py                  836 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\loader_registration_audit.py                  360 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\runtime_command_registration_audit.py         577 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\runtime_loading_path_audit.py                 989 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\runtime_state_access_classification.py        572 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\runtime_state_dependency_map.py               462 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\slh_migrate.py                               1873 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\test_agent_state_full.py                      325 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\test_project_graph_contract.py                195 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\test_project_registry_contract.py             118 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\test_system_snapshot_contract.py              145 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\user_acceptance_audit.py                      368 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\user_command_audit.py                         251 if __name__ == "__main__":         
+C:\Users\USER\slh-bot-clean\tools\user_command_wiring_audit.py                  316 if __name__ == "__main__":         
+
+

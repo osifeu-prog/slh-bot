@@ -1,0 +1,228 @@
+﻿
+app.py:26:        c.execute("INSERT OR IGNORE INTO wallets VALUES (?,?,?)", (uid,0,cid)); conn.commit(); conn.close()
+app.py:27:        bot.reply_to(m, f"{LOGO}\nברוך הבא! /wallet /admin" + SIGN)
+app.py:29:    @bot.message_handler(commands=["wallet"])
+app.py:30:    def wallet(m):
+app.py:33:        c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", (uid,)); res=c.fetchone(); 
+conn.close()
+app.py:39:        conn=sqlite3.connect(DB_NAME); count=conn.cursor().execute("SELECT COUNT(*) FROM 
+wallets").fetchone()[0]; conn.close()
+app.py:47:    conn=sqlite3.connect(DB_NAME); count=conn.cursor().execute("SELECT COUNT(*) FROM 
+wallets").fetchone()[0]; conn.close()
+bot_stable.py:156:            "wallet": {
+bot_stable.py:157:                "credits": 10
+bot_stable.py:530:    bal = u.get('balance', 0)
+compare_wallets.py:6:def show_system_wallets():
+compare_wallets.py:9:    c.execute("SELECT user_id, wallet_balance FROM wallets ORDER BY wallet_balance DESC")
+compare_wallets.py:24:    c.execute("INSERT OR REPLACE INTO wallets VALUES (?,?)", (user_id, balance))
+compare_wallets.py:30:    show_system_wallets()
+database.py:7:    c.execute('''CREATE TABLE IF NOT EXISTS wallets
+database.py:8:                 (user_id TEXT PRIMARY KEY, wallet_balance INTEGER)''')
+database.py:15:    c.execute("INSERT OR IGNORE INTO wallets VALUES ('OWNER', 1000)")
+econ_handler.py:8:        bal = db.get("users", {}).get(uid, {}).get("balance", 0)
+econ_handler.py:9:        bot.send_message(m.chat.id, f"💰 Your balance: {bal} credits")
+econ_handler.py:32:        balance = user.get("balance", 0)
+econ_handler.py:39:            bot.send_message(m.chat.id, f"Not enough credits. Need {price}, have {balance}.")
+econ_handler.py:41:        user["balance"] = balance - price
+econ_handler.py:43:            user.setdefault("ask_credits", 0)
+econ_handler.py:44:            user["ask_credits"] += 1
+econ_handler.py:51:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:55:            f"✅ Purchased {item} for {price} credits.\n"
+econ_handler.py:56:            f"Remaining balance: {user['balance']} credits."
+econ_handler.py:68:        balance = user.get("balance", 0)
+econ_handler.py:75:            bot.answer_callback_query(call.id, f"Not enough credits. Need {price}, have {balance}.")
+econ_handler.py:77:        user["balance"] = balance - price
+econ_handler.py:79:            user.setdefault("ask_credits", 0)
+econ_handler.py:80:            user["ask_credits"] += 1
+econ_handler.py:87:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+econ_handler.py:89:        bot.answer_callback_query(call.id, f"✅ Purchased {item}! Remaining: {user['balance']} 
+credits")
+econ_handler.py:93:            text=f"✅ Purchased {item} for {price} credits.\nRemaining: {user['balance']} credits."
+econ_handler.py:103:        db.setdefault("users", {}).setdefault(uid, {})["balance"] = db.get("users", {}).get(uid, 
+{}).get("balance", 0) + 50
+econ_handler.py:105:        bot.send_message(m.chat.id, f"💰 50 credits added. Your balance: 
+{db['users'][uid]['balance']} credits")
+fix_db.py:4:c.execute('ALTER TABLE wallets ADD COLUMN chat_id INTEGER')
+fix_registration.py:11:    c.execute("INSERT OR IGNORE INTO wallets VALUES (?,0)", (str(message.from_user.id),))
+fix_registration.py:18:# מוסיף פקודת wallet אם אין
+fix_registration.py:19:if 'wallet_handler' not in content:
+fix_registration.py:20:    wallet_code = '''
+fix_registration.py:22:@bot.message_handler(commands=['wallet', 'יתרה'])
+fix_registration.py:23:def wallet_handler(message):
+fix_registration.py:26:    c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", 
+(str(message.from_user.id),))
+fix_registration.py:28:    balance = res[0] if res else 0
+fix_registration.py:32:    content += wallet_code
+fix_registration.py:37:print("תוקן: רישום אוטומטי + /wallet נוספו")
+help_handler.py:47:/token_wizard – Wallet setup guide
+help_handler.py:51:/buy – Purchase items/credits
+import_binance.py:15:        balance = contract.functions.balanceOf(w3.to_checksum_address(address)).call()
+import_binance.py:28:    for user_id, wallet in users_map.items():
+import_binance.py:29:        balance = get_slh_balance(wallet)
+import_binance.py:30:        c.execute("INSERT OR REPLACE INTO wallets VALUES (?,?)", (user_id, int(balance)))
+language_handler.py:13:        "balance": "Your balance: {balance} credits",
+language_handler.py:15:        "purchase_success": "✅ Purchased {item} for {price} credits. Remaining: {balance} 
+credits",
+learning_path.py:17:            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+learning_path.py:19:            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע 
+ב-/market!")
+learning_path.py:33:            ("כלכלה ותשלומים", "/pay – קניית Credits\n/referral – הזמן חברים והרווח 85% עמלה"),
+learning_path.py:35:            ("הגשה ושוק", "לאחר ההגשה, הסוכן שלך ייבדק.\nאם יאושר, תקבל 50 Credits והוא יופיע 
+ב-/market!")
+learning_path.py:58:        user["balance"] = user.get("balance", 0) + 10
+learning_path.py:60:        bot.send_message(m.chat.id, f"🎉 הסוכן '{agent_name}' הוגש!\nקיבלת 10 Credits על 
+ההגשה.\nאם יאושר, תקבל עוד 40 Credits והוא יופיע ב-/market.")
+learning_path.py:88:        # Award 40 credits to creator
+learning_path.py:90:        user["balance"] = user.get("balance", 0) + 40
+learning_path.py:94:        bot.reply_to(m, f"✅ Agent '{sub['agent_name']}' approved and added to /market! Creator 
+received 40 Credits.")
+learning_path.py:95:        bot.send_message(sub["uid"], f"🎉 הסוכן '{sub['agent_name']}' אושר! קיבלת 40 Credits 
+נוספים. הוא זמין עכשיו ב-/market.")
+onboarding_handler.py:109:💰 Wallet
+railway_bot.py:21:    c.execute("INSERT OR IGNORE INTO wallets VALUES (?,?,?)", (uid,0,cid)); conn.commit(); 
+conn.close()
+railway_bot.py:22:    bot.reply_to(m, f"{LOGO}\nברוך הבא! /wallet /admin" + SIGN)
+railway_bot.py:24:@bot.message_handler(commands=["wallet"])
+railway_bot.py:25:def wallet(m):
+railway_bot.py:28:    c.execute("SELECT wallet_balance FROM wallets WHERE user_id=?", (uid,)); res=c.fetchone(); 
+conn.close()
+railway_bot.py:34:    conn=sqlite3.connect(DB_NAME); count=conn.cursor().execute("SELECT COUNT(*) FROM 
+wallets").fetchone()[0]; conn.close()
+responsibility_map.py:63:            "wallet",
+responsibility_map.py:149:        or "wallet" in combined
+slh.py:11:    print("[1] Status [2] Users [3] Agents\n[4] Credits [5] Restart Bot [6] Exit\n"+"="*40)
+slh.py:15:    for uid,u in db.get("users",{}).items(): print(f"{uid} | {u.get('name','?')} | {u.get('role')} | 
+{u.get('credits',0)} Credits")
+slh.py:19:def cmd_credits():
+slh.py:20:    db=load_db(); db["users"]["8789977826"]["credits"]=1000; save_db(db); print("✅ עודכנו 1000 Credits ל-O")
+slh.py:28:        elif choice=="4": cmd_credits()
+staking_handler.py:30:        bot.send_message(m.chat.id, f"🏦 SLH STAKING\nStatus: {'Active' if amount else 'Not 
+active'}\nLocked: {amount} credits")
+staking_handler.py:39:        bot.send_message(m.chat.id, "✅ Joined SLH Staking\nInitial stake: 100 credits\nYour 
+rewards engine is active 🚀")
+staking_handler.py:51:        binance_balance = "N/A"
+staking_handler.py:53:            try: binance_balance = binance.get_asset_balance(asset='USDT')['free']
+ton_handler.py:6:DEFAULT_WALLET = "UQCd7XHWGj06cBLlWW_DZUN3TWMGr_oWoVy0G0LkC14gQklj"  # Real wallet set 2026-07-06
+ton_handler.py:7:DEFAULT_RATE = 100                             # 1 TON = 100 Credits
+ton_handler.py:15:            "wallet": DEFAULT_WALLET,
+ton_handler.py:28:        wallet = settings["wallet"]
+ton_handler.py:30:        if not wallet or wallet == "YOUR_WALLET_ADDRESS":
+ton_handler.py:32:            print(f"[TON] BLOCKED: wallet not configured, user={m.from_user.id}")
+ton_handler.py:36:            f"Send TON to this address:\n`{wallet}`\n"
+ton_handler.py:37:            f"Rate: 1 TON = {rate} Credits\n"
+ton_handler.py:38:            "After sending, use /ton_check <transaction_hash> to verify and get credits."
+ton_handler.py:51:        wallet = settings["wallet"]
+ton_handler.py:59:        # 1. Check transaction exists and is to our wallet
+ton_handler.py:61:            resp = requests.get(f"{api_url}/getTransactions?address={wallet}&limit=20&archival=true")
+ton_handler.py:83:        if tx["in_msg"]["source"] == wallet:  # outgoing – ignore
+ton_handler.py:99:        # 4. Calculate credits
+ton_handler.py:101:        credits = round(amount_ton * rate, 2)
+ton_handler.py:105:        user["balance"] = user.get("balance", 0) + credits
+ton_handler.py:114:            "credits": credits,
+ton_handler.py:124:            f"✅ TON deposit verified! {credits} credits added.\n"
+ton_handler.py:126:            f"Your balance: {user['balance']} credits."
+ton_handler.py:137:            bot.send_message(m.chat.id, f"Current rate: 1 TON = {settings['rate']} Credits.")
+ton_handler.py:144:            bot.send_message(m.chat.id, f"✅ TON rate updated: 1 TON = {new_rate} Credits.")
+ton_handler.py:148:    @bot.message_handler(commands=['ton_set_wallet'])
+ton_handler.py:149:    def ton_set_wallet(m):
+ton_handler.py:155:            bot.send_message(m.chat.id, "Usage: /ton_set_wallet <address>")
+ton_handler.py:157:        new_wallet = parts[1]
+ton_handler.py:159:        settings["wallet"] = new_wallet
+ton_handler.py:161:        bot.send_message(m.chat.id, f"✅ Wallet updated.")
+core\academy_manager.py:73:        credits=10,
+core\economy_bridge.py:8:def add_credits(uid, amount):
+core\economy_bridge.py:12:def spend_credits(uid, amount):
+core\economy_bridge.py:21:def reward(uid, credits=0, points=0):
+core\economy_bridge.py:24:    if credits:
+core\economy_bridge.py:25:        result["credits"] = profile_manager.add_balance(
+core\economy_bridge.py:27:            credits
+core\migration.py:24:    # old balance -> wallet
+core\migration.py:28:            "wallet",
+core\migration.py:32:        user["wallet"]["credits"] = user.pop(
+core\profile_manager.py:68:            "wallet":{
+core\profile_manager.py:69:                "credits":0
+core\profile_manager.py:121:        "wallet",
+core\profile_manager.py:124:        "credits",
+core\profile_manager.py:144:    wallet=user.setdefault(
+core\profile_manager.py:145:        "wallet",
+core\profile_manager.py:149:    wallet["credits"]=wallet.get(
+core\profile_manager.py:150:        "credits",
+core\profile_manager.py:156:    return wallet["credits"]
+handlers\academy_handler.py:107:            f"💰 קרדיטים: {result['reward']['credits']}"
+handlers\dashboard_handler.py:14:        balance = user.get('balance', 0)
+handlers\device_handler.py:37:        "capabilities": ["sensor", "wallet", "signing"],
+handlers\help_handler.py:47:/token_wizard – Wallet setup guide
+handlers\help_handler.py:51:/buy – Purchase items/credits
+handlers\leaderboard_handler.py:9:        credits = data.get("credits", 0)
+handlers\leaderboard_handler.py:10:        text += f"{i}. {name} - {credits} SLH\n"
+handlers\lesson_handler.py:117:            f"💰 קרדיטים: {reward['credits']}"
+handlers\llm_handler.py:115:credits={user.get("credits",0)}
+handlers\onboarding_v2.py:37:        wallet = user.get(
+handlers\onboarding_v2.py:38:            "wallet",
+handlers\onboarding_v2.py:42:        credits = wallet.get(
+handlers\onboarding_v2.py:43:            "credits",
+handlers\onboarding_v2.py:72:            f"💰 Credits: {credits}\n"
+handlers\payment_handler.py:8:    "100credits": (100, 100, "100 Credits"),
+handlers\payment_handler.py:9:    "500credits": (500, 450, "500 Credits (10% off)"),
+handlers\payment_handler.py:10:    "1000credits": (1000, 800, "1000 Credits (20% off)"),
+handlers\payment_handler.py:23:        # Explain what you can buy with credits
+handlers\payment_handler.py:26:            "💎 Credits unlock: AI asks (/ask), premium agents, and more.\n"
+handlers\payment_handler.py:32:        for pack_id, (stars, credits, label) in STARS_PACKS.items():
+handlers\payment_handler.py:34:                text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+handlers\payment_handler.py:37:        bot.send_message(m.chat.id, "💰 Select a credits package:", reply_markup=markup)
+handlers\payment_handler.py:45:        stars, credits, label = STARS_PACKS[pack_id]
+handlers\payment_handler.py:50:                title="SLH Credits",
+handlers\payment_handler.py:51:                description=f"Add {credits} credits to your SLH account",
+handlers\payment_handler.py:52:                invoice_payload=f"credits_{credits}_{call.from_user.id}",
+handlers\payment_handler.py:56:                start_parameter=f"credits_{credits}",
+handlers\payment_handler.py:80:        if len(parts) != 3 or parts[0] != "credits":
+handlers\payment_handler.py:84:            credits = int(parts[1])
+handlers\payment_handler.py:86:            bot.send_message(m.chat.id, "❌ Error parsing credits.")
+handlers\payment_handler.py:98:        user["balance"] = user.get("balance", 0) + credits
+handlers\payment_handler.py:103:            commission = round(credits * 0.85, 2)
+handlers\payment_handler.py:105:            ref_user["balance"] = ref_user.get("balance", 0) + commission
+handlers\payment_handler.py:112:                    f"🎉 Your friend just purchased credits! You earned {commission} 
+credits."
+handlers\payment_handler.py:119:            "credits": credits,
+handlers\payment_handler.py:131:            print(f"[PAY] CRITICAL: save_db failed AFTER payment charged! uid={uid}, 
+charge_id={charge_id}, credits={credits}, error={e}")
+handlers\payment_handler.py:132:            bot.send_message(m.chat.id, "⚠️ Payment received but there was an error 
+saving your credits. Please contact support with this reference: " + charge_id)
+handlers\payment_handler.py:134:                bot.send_message(8789977826, f"🚨 PAYMENT SAVE FAILED uid={uid} 
+charge_id={charge_id} credits={credits} error={e}")
+handlers\payment_handler.py:141:            f"✅ Payment received! {credits} credits added.\n"
+handlers\payment_handler.py:142:            f"Your balance: {user['balance']} credits.\n"
+handlers\payment_handler.py:145:        print(f"[PAY] {credits} credits added to {uid}, new balance {user['balance']}")
+handlers\payment_handler.py:157:            msg += f"▫️ {tx['credits']} credits — {tx['timestamp'][:10]}\n"
+handlers\payment_handler.py:166:        total_credits = sum(tx.get("credits", 0) for tx in txs)
+handlers\payment_handler.py:173:            f"Total credits issued: {total_credits}\n"
+handlers\payment_handler.py:186:        user["balance"] = user.get("balance", 0) + 100
+handlers\payment_handler.py:188:        bot.send_message(m.chat.id, f"💰 (Fake) 100 credits added. Balance: 
+{user['balance']}")
+handlers\payment_handler.py:189:        print(f"[FAKEPAY] 100 credits added to {uid}")
+handlers\user_handler.py:16:        wallet = user.get('wallet', {})
+handlers\user_handler.py:20:        credits = wallet.get('credits', 0)
+handlers\user_handler.py:28:        text += f'💰 חואיוה: {credits}\n'
+handlers\ux_handler.py:25:            "💰 /wallet – Wallet view",
+plugins\leaderboard.py:22:            key=lambda x: x[1].get("credits", 0),
+state\token_loader.py:19:    """Return user balance in credits"""
+state\token_loader.py:24:        return db.get('users', {}).get(str(uid), {}).get('wallet', {}).get('credits', 0)
+state\token_loader.py:29:    """Return total credits in circulation"""
+state\token_loader.py:34:        return sum(u.get('wallet', {}).get('credits', 0) for u in db.get('users', 
+{}).values())
+state\custom_handlers\developer.py:42:            'wallet': None
+state\custom_handlers\dynamic_leaderboard.py:20:        balances = token.get("balances", {})
+state\custom_handlers\token_handler.py:9:def get_balance(wallet):
+state\custom_handlers\token_handler.py:13:        return db.get("token", {}).get("balances", {}).get(wallet, 0)
+state\custom_handlers\token_handler.py:37:                "Options: /token supply | /token balance [wallet]"
+state\custom_handlers\token_handler.py:51:            wallet = parts[2] if len(parts) > 2 else str(m.from_user.id)
+state\custom_handlers\token_handler.py:53:            bal = get_balance(wallet)
+state\custom_handlers\token_handler.py:65:                "Options: /token supply | /token balance [wallet]"
+state\custom_handlers\token_wizard.py:6:        "I'll guide you through setting up your wallet and interacting with 
+the SLH token.\n"
+state\custom_handlers\token_wizard.py:9:        "2️⃣ Create a wallet (MetaMask)\n"
+state\custom_handlers\token_wizard.py:12:        "5️⃣ Add SLH token to wallet\n"
+state\custom_handlers\token_wizard.py:16:    "2": "🦊 Create a MetaMask wallet:\n1. Install MetaMask...\n\nType 
+/token_wizard to return.",
+
+

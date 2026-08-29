@@ -1,0 +1,70 @@
+{
+  "audit_version": "1.0",
+  "generated_at": "2026-08-24T12:18:58.935671+00:00",
+  "loader": "handlers\\loader.py",
+  "imported_handlers": [
+    {
+      "module": "handlers.logo_handler",
+      "name": "register_logo_handler",
+      "alias": null,
+      "type": "from_import"
+    },
+    {
+      "module": "doctor_handler",
+      "name": "register_doctor_handlers",
+      "alias": null,
+      "type": "from_import"
+    },
+    {
+      "module": "language_handler",
+      "name": "register_language",
+      "alias": null,
+      "type": "from_import"
+    },
+    {
+      "module": "handlers.esp_handler",
+      "name": "register_esp_handler",
+      "alias": null,
+      "type": "from_import"
+    },
+    {
+      "module": "handlers.advanced_ask_handler",
+      "name": "register_ask_handler",
+      "alias": null,
+      "type": "from_import"
+    }
+  ],
+  "registration_calls": [
+    "register_ask_handler",
+    "register_doctor_handlers",
+    "register_esp_handler",
+    "register_handlers",
+    "register_help",
+    "register_language",
+    "register_learning_path",
+    "register_llm_handler",
+    "register_logo_handler",
+    "register_repeat_handler"
+  ],
+  "command_mentions": {
+    "/start": false,
+    "/report": false,
+    "/market": false,
+    "/user": false,
+    "/register": false,
+    "/help": false,
+    "/balance": false,
+    "/token": false,
+    "/course": false,
+    "/ask": false,
+    "/learn": false,
+    "/join": false,
+    "/progress": false
+  },
+  "safety": {
+    "read_only": true,
+    "bot_started": false,
+    "restart_performed": false,
+    "runtime_state_modified": false
+  }
+}

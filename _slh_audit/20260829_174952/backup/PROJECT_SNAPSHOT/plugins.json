@@ -1,0 +1,26 @@
+{
+  "installed": {},
+  "available": [
+    {
+      "id": "health_check",
+      "name": "Health Check",
+      "description": "Adds /health command",
+      "url": "https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/health.py",
+      "price": 0
+    },
+    {
+      "id": "task_plugin",
+      "name": "Task Plugin",
+      "description": "Adds /task create/list",
+      "url": "https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/task.py",
+      "price": 0
+    },
+    {
+      "id": "agent_os",
+      "name": "Agent OS",
+      "description": "Full agent management system",
+      "url": "https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/agent_os.py",
+      "price": 0
+    }
+  ]
+}

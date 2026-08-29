@@ -1,0 +1,12 @@
+{"timestamp": "2026-08-07T22:43:47.566926+00:00", "event": "agent.created", "target": "1", "details": {"name": "O-Agent", "role": "agent"}}
+{"timestamp": "2026-08-08T18:25:47.898694+00:00", "event": "agent.created", "target": "2", "details": {"name": "-", "role": "agent"}}
+{"timestamp": "2026-08-08T21:53:44.934966+00:00", "event": "agent.created", "target": "3", "details": {"name": "TestAgent", "role": "agent"}}
+{"timestamp": "2026-08-08T23:15:10.281257+00:00", "event": "agent.deleted", "target": "3", "details": {"name": "TestAgent"}}
+{"timestamp": "2026-08-08T23:42:06.716641+00:00", "event": "agent.created", "target": "2", "details": {"name": "למחוק", "role": "agent"}}
+{"timestamp": "2026-08-08T23:42:23.540803+00:00", "event": "agent.updated", "target": "2", "details": {"updates": {"state": "working"}}}
+{"timestamp": "2026-08-08T23:42:32.915634+00:00", "event": "agent.message_sent", "target": "2", "details": {"message_length": 27}}
+{"time": 1786384947.5555854, "actor": "8789977826", "action": "mission_create", "mission_id": "1"}
+{"time": 1786385184.2355912, "actor": "8789977826", "action": "manual_exec_snapshot", "note": "post-task-registration check"}
+{"timestamp": 1786386355.2762785, "users": 1, "tasks": 2, "votes": 2, "missions": 0, "status": "pre_release_snapshot"}
+{"timestamp": "2026-08-10T23:09:47.087227+00:00", "event": "agent.created", "target": "5", "details": {"name": "TempTester", "role": "test"}}
+{"timestamp": "2026-08-16T12:23:57.844315+00:00", "event": "economy.record_transaction", "actor": "TEST_USER2", "details": {"amount": 5, "tx": {"credits": 15}, "meta": {"test": 1, "ts": "2026-08-16T12:23:57.843055"}}}

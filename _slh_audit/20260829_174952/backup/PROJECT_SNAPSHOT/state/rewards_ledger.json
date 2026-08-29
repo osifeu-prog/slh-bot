@@ -1,0 +1,16 @@
+[
+  {
+    "user": "TEST_USER2",
+    "reason": "test:grant",
+    "credits": 10,
+    "points": 0,
+    "timestamp": "2026-08-16T12:23:57.842926"
+  },
+  {
+    "user": "TEST_USER2",
+    "reason": "test:bridge",
+    "credits": 5,
+    "points": 0,
+    "timestamp": "2026-08-16T12:23:57.843918"
+  }
+]

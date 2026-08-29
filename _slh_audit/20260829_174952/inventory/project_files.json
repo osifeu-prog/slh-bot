@@ -1,0 +1,5858 @@
+﻿[
+    {
+        "RelativePath":  ".dockerignore",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511349)\/",
+        "Extension":  ".dockerignore"
+    },
+    {
+        "RelativePath":  ".env",
+        "Length":  34,
+        "LastWriteTime":  "\/Date(1787237797142)\/",
+        "Extension":  ".env"
+    },
+    {
+        "RelativePath":  ".env.example",
+        "Length":  109,
+        "LastWriteTime":  "\/Date(1785232511351)\/",
+        "Extension":  ".example"
+    },
+    {
+        "RelativePath":  ".gitignore",
+        "Length":  932,
+        "LastWriteTime":  "\/Date(1787577230411)\/",
+        "Extension":  ".gitignore"
+    },
+    {
+        "RelativePath":  ".nixpacks\\Dockerfile",
+        "Length":  3251,
+        "LastWriteTime":  "\/Date(1786914441251)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  ".nixpacks\\nixpkgs-bc8f8d1be58e8c8383e683a06e1e1e57893fff87.nix",
+        "Length":  752,
+        "LastWriteTime":  "\/Date(1786914441253)\/",
+        "Extension":  ".nix"
+    },
+    {
+        "RelativePath":  ".pytest_cache\\.gitignore",
+        "Length":  37,
+        "LastWriteTime":  "\/Date(1786836500850)\/",
+        "Extension":  ".gitignore"
+    },
+    {
+        "RelativePath":  ".pytest_cache\\CACHEDIR.TAG",
+        "Length":  191,
+        "LastWriteTime":  "\/Date(1786836500850)\/",
+        "Extension":  ".TAG"
+    },
+    {
+        "RelativePath":  ".pytest_cache\\README.md",
+        "Length":  302,
+        "LastWriteTime":  "\/Date(1786836500848)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  ".pytest_cache\\v\\cache\\lastfailed",
+        "Length":  140,
+        "LastWriteTime":  "\/Date(1787353491309)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  ".pytest_cache\\v\\cache\\nodeids",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1787572369959)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  ".railway_bust",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1785232511355)\/",
+        "Extension":  ".railway_bust"
+    },
+    {
+        "RelativePath":  ".railwayignore",
+        "Length":  191,
+        "LastWriteTime":  "\/Date(1785798706988)\/",
+        "Extension":  ".railwayignore"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Length":  4263,
+        "LastWriteTime":  "\/Date(1786648802438)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\COMMANDS.json",
+        "Length":  2009,
+        "LastWriteTime":  "\/Date(1786648441770)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\CONTROL_STATE.json",
+        "Length":  1596,
+        "LastWriteTime":  "\/Date(1786648447720)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\ENTRYPOINTS.json",
+        "Length":  2975,
+        "LastWriteTime":  "\/Date(1786648445820)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\EVIDENCE_GATE.json",
+        "Length":  1021,
+        "LastWriteTime":  "\/Date(1786648554979)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\GIT_CHANGES.json",
+        "Length":  1530,
+        "LastWriteTime":  "\/Date(1786648441384)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\HEALTH.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786648349693)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\INVESTOR.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348218)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\JOURNAL.jsonl",
+        "Length":  518,
+        "LastWriteTime":  "\/Date(1786648448976)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\LAUNCH.json",
+        "Length":  886,
+        "LastWriteTime":  "\/Date(1786648350059)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\LAUNCH_EVIDENCE.json",
+        "Length":  1518,
+        "LastWriteTime":  "\/Date(1786648398015)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Length":  12515,
+        "LastWriteTime":  "\/Date(1786648398256)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Length":  43854,
+        "LastWriteTime":  "\/Date(1786648550079)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\PYTHON_SYNTAX.json",
+        "Length":  1105,
+        "LastWriteTime":  "\/Date(1786648554465)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\RAILWAY.json",
+        "Length":  1815,
+        "LastWriteTime":  "\/Date(1786648445317)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\RAILWAY_STATUS.txt",
+        "Length":  862,
+        "LastWriteTime":  "\/Date(1786648552655)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\RUNTIME.json",
+        "Length":  1343,
+        "LastWriteTime":  "\/Date(1786648442141)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\SCAN_POLICY.json",
+        "Length":  622,
+        "LastWriteTime":  "\/Date(1786648348963)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\slh-control.ps1",
+        "Length":  2941,
+        "LastWriteTime":  "\/Date(1786648448162)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\STATUS.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348209)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\TASKS.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348215)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\TRACKED_CHANGES.diff",
+        "Length":  9435,
+        "LastWriteTime":  "\/Date(1786648801685)\/",
+        "Extension":  ".diff"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\UNTRACKED_CLASSIFICATION.json",
+        "Length":  1892,
+        "LastWriteTime":  "\/Date(1786648802091)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\control\\WORKTREE_EVIDENCE_V2.json",
+        "Length":  5518,
+        "LastWriteTime":  "\/Date(1786648766186)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\AUTHORITY.json",
+        "Length":  156,
+        "LastWriteTime":  "\/Date(1786647284599)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Length":  10329,
+        "LastWriteTime":  "\/Date(1786728407910)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\CURRENT.json",
+        "Length":  7226,
+        "LastWriteTime":  "\/Date(1786648012363)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\DECISIONS.json",
+        "Length":  60,
+        "LastWriteTime":  "\/Date(1786647284601)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\DNA.json",
+        "Length":  768,
+        "LastWriteTime":  "\/Date(1786648012364)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\FINDINGS.json",
+        "Length":  58,
+        "LastWriteTime":  "\/Date(1786647284602)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\HISTORY.jsonl",
+        "Length":  6083,
+        "LastWriteTime":  "\/Date(1786648017521)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Length":  9250,
+        "LastWriteTime":  "\/Date(1786647782229)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\RISKS.json",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1786647284603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\dna\\TODO.json",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786647284604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\summary.json",
+        "Length":  240,
+        "LastWriteTime":  "\/Date(1786647285586)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Length":  497047,
+        "LastWriteTime":  "\/Date(1786647285586)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647507166)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Length":  528153,
+        "LastWriteTime":  "\/Date(1786647507165)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647734445)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647734444)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647746493)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647746492)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647821933)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647821932)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786648012308)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Length":  515282,
+        "LastWriteTime":  "\/Date(1786648012308)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\AUTHORITY.json",
+        "Length":  156,
+        "LastWriteTime":  "\/Date(1786647284599)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Length":  7219,
+        "LastWriteTime":  "\/Date(1786647597609)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\DECISIONS.json",
+        "Length":  60,
+        "LastWriteTime":  "\/Date(1786647284601)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\DNA.json",
+        "Length":  768,
+        "LastWriteTime":  "\/Date(1786647597610)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\FINDINGS.json",
+        "Length":  58,
+        "LastWriteTime":  "\/Date(1786647284602)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\HISTORY.jsonl",
+        "Length":  2730,
+        "LastWriteTime":  "\/Date(1786647597649)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\RISKS.json",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1786647284603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647507166)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Length":  528153,
+        "LastWriteTime":  "\/Date(1786647507165)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\TODO.json",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786647284604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786648012308)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "_slh_map\\system_map.json",
+        "Length":  515282,
+        "LastWriteTime":  "\/Date(1786648012308)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "ACTIVE_MARKDOWN.txt",
+        "Length":  4394,
+        "LastWriteTime":  "\/Date(1785926836577)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "adapters\\cli.py",
+        "Length":  616,
+        "LastWriteTime":  "\/Date(1785232511386)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "add_sync_patch.py",
+        "Length":  1601,
+        "LastWriteTime":  "\/Date(1786574422108)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "add_timeline_mode.sh",
+        "Length":  1604,
+        "LastWriteTime":  "\/Date(1785232511386)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "add_visibility_report.py",
+        "Length":  1210,
+        "LastWriteTime":  "\/Date(1786574422108)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "admin_handler.py",
+        "Length":  1874,
+        "LastWriteTime":  "\/Date(1787868122866)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "admin_menu.sh",
+        "Length":  1658,
+        "LastWriteTime":  "\/Date(1786914441255)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "admin_menu.txt",
+        "Length":  1127,
+        "LastWriteTime":  "\/Date(1785701578180)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "admin_utils.py",
+        "Length":  253,
+        "LastWriteTime":  "\/Date(1786574422114)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "advanced_ask_handler.py",
+        "Length":  371,
+        "LastWriteTime":  "\/Date(1787569688690)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "agent_client.py",
+        "Length":  4920,
+        "LastWriteTime":  "\/Date(1786574422122)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "agent_client_pc.py",
+        "Length":  625,
+        "LastWriteTime":  "\/Date(1786574422128)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "AGENT_RULES.md",
+        "Length":  808,
+        "LastWriteTime":  "\/Date(1785232511359)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "agents\\echo.py",
+        "Length":  160,
+        "LastWriteTime":  "\/Date(1785232511393)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "agents\\echo_agent.py",
+        "Length":  92,
+        "LastWriteTime":  "\/Date(1785232511394)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "agents\\system_guard.py",
+        "Length":  1762,
+        "LastWriteTime":  "\/Date(1787328277010)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "allowed_ids.json",
+        "Length":  98,
+        "LastWriteTime":  "\/Date(1785701578183)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "alpha_tree.txt",
+        "Length":  66,
+        "LastWriteTime":  "\/Date(1787579828211)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "API_REFERENCE.md",
+        "Length":  447,
+        "LastWriteTime":  "\/Date(1785232511361)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "ARCHITECTURE.md",
+        "Length":  534,
+        "LastWriteTime":  "\/Date(1785232511363)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "ask_handler.py",
+        "Length":  222,
+        "LastWriteTime":  "\/Date(1786574422128)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "ask_test.py",
+        "Length":  556,
+        "LastWriteTime":  "\/Date(1786574422130)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "assets\\termux_logo.txt",
+        "Length":  415,
+        "LastWriteTime":  "\/Date(1786914441257)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "assignment_approval.py",
+        "Length":  4088,
+        "LastWriteTime":  "\/Date(1786574422132)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "assignment_commit.py",
+        "Length":  3898,
+        "LastWriteTime":  "\/Date(1786574422132)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "assignment_preview.py",
+        "Length":  5232,
+        "LastWriteTime":  "\/Date(1786574422134)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\01_identity.txt",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786646361782)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\02_git_diff_stat.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1786646362073)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\02_git_history.txt",
+        "Length":  2304,
+        "LastWriteTime":  "\/Date(1786646362029)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\02_git_status.txt",
+        "Length":  314,
+        "LastWriteTime":  "\/Date(1786646361931)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\03_deployment.txt",
+        "Length":  1246,
+        "LastWriteTime":  "\/Date(1786646362364)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Length":  83020,
+        "LastWriteTime":  "\/Date(1786646362599)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\05_entrypoint_candidates.txt",
+        "Length":  3254,
+        "LastWriteTime":  "\/Date(1786646362918)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\06_loader_candidates.txt",
+        "Length":  4154,
+        "LastWriteTime":  "\/Date(1786646363163)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Length":  37040,
+        "LastWriteTime":  "\/Date(1786646363520)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Length":  17668,
+        "LastWriteTime":  "\/Date(1786646363778)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\09_tests.txt",
+        "Length":  16804,
+        "LastWriteTime":  "\/Date(1786646364084)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\10_legacy_backup.txt",
+        "Length":  24456,
+        "LastWriteTime":  "\/Date(1786646364389)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Length":  51076,
+        "LastWriteTime":  "\/Date(1786646364709)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\12_sha256.csv",
+        "Length":  115366,
+        "LastWriteTime":  "\/Date(1786646366399)\/",
+        "Extension":  ".csv"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\01_bot_gateway.txt",
+        "Length":  5898,
+        "LastWriteTime":  "\/Date(1786646497787)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Length":  4583,
+        "LastWriteTime":  "\/Date(1786646497904)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\03_core_runtime.txt",
+        "Length":  4702,
+        "LastWriteTime":  "\/Date(1786646498030)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_bootstrap_commands.txt",
+        "Length":  1184,
+        "LastWriteTime":  "\/Date(1786646498200)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_command_registry_loader.txt",
+        "Length":  478,
+        "LastWriteTime":  "\/Date(1786646498149)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\05_imports.txt",
+        "Length":  986,
+        "LastWriteTime":  "\/Date(1786646498348)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Length":  5865,
+        "LastWriteTime":  "\/Date(1786646498470)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Length":  80017,
+        "LastWriteTime":  "\/Date(1786646498915)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Length":  30269,
+        "LastWriteTime":  "\/Date(1786646499359)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_Procfile.txt",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786646594924)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_railway.json.txt",
+        "Length":  319,
+        "LastWriteTime":  "\/Date(1786646594929)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_requirements.txt.txt",
+        "Length":  136,
+        "LastWriteTime":  "\/Date(1786646594936)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Length":  41514,
+        "LastWriteTime":  "\/Date(1786646594862)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_runtime.txt.txt",
+        "Length":  21,
+        "LastWriteTime":  "\/Date(1786646594945)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Length":  9931,
+        "LastWriteTime":  "\/Date(1786646595320)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Length":  773796,
+        "LastWriteTime":  "\/Date(1786646597268)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\04_loader_authority.txt",
+        "Length":  3401,
+        "LastWriteTime":  "\/Date(1786646597522)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Length":  34131,
+        "LastWriteTime":  "\/Date(1786646597864)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\06_core_runtime_references.txt",
+        "Length":  695,
+        "LastWriteTime":  "\/Date(1786646598192)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Length":  52893,
+        "LastWriteTime":  "\/Date(1786646598540)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_DEEP.md",
+        "Length":  1279,
+        "LastWriteTime":  "\/Date(1785232511363)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "audit_logger.py",
+        "Length":  662,
+        "LastWriteTime":  "\/Date(1786574422136)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "AUDIT_MISSION_RUNTIME.txt",
+        "Length":  10006,
+        "LastWriteTime":  "\/Date(1786711010637)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "AUDIT_OUTPUT.txt",
+        "Length":  1716,
+        "LastWriteTime":  "\/Date(1785837195040)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "BALANCE_WRITES.txt",
+        "Length":  1734,
+        "LastWriteTime":  "\/Date(1786006300208)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "bot.log.old",
+        "Length":  644,
+        "LastWriteTime":  "\/Date(1785232511399)\/",
+        "Extension":  ".old"
+    },
+    {
+        "RelativePath":  "bot.py.legacy_disabled",
+        "Length":  1867,
+        "LastWriteTime":  "\/Date(1785701578184)\/",
+        "Extension":  ".legacy_disabled"
+    },
+    {
+        "RelativePath":  "bot_core.py",
+        "Length":  2027,
+        "LastWriteTime":  "\/Date(1786574422138)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "bot_gateway.py",
+        "Length":  6066,
+        "LastWriteTime":  "\/Date(1787746216553)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "bot_gateway.py.pre_dotenv_fix.bak",
+        "Length":  4031,
+        "LastWriteTime":  "\/Date(1786277373763)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "bot_gateway.py.pre_dotenv_force_fix.bak",
+        "Length":  4031,
+        "LastWriteTime":  "\/Date(1786277403975)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "bot_gateway.py.pre_envsafe_fix.bak",
+        "Length":  4006,
+        "LastWriteTime":  "\/Date(1786274436740)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "bot_stable.py",
+        "Length":  21705,
+        "LastWriteTime":  "\/Date(1786643275674)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "bot_stable.py.backup_before_market_cleanup",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/",
+        "Extension":  ".backup_before_market_cleanup"
+    },
+    {
+        "RelativePath":  "bot_stable.py.backup_market_fix",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/",
+        "Extension":  ".backup_market_fix"
+    },
+    {
+        "RelativePath":  "bot_stable.py.pre_context_import_fix",
+        "Length":  31466,
+        "LastWriteTime":  "\/Date(1786199131976)\/",
+        "Extension":  ".pre_context_import_fix"
+    },
+    {
+        "RelativePath":  "bot_stable.py.pre_eventbus_fix",
+        "Length":  31497,
+        "LastWriteTime":  "\/Date(1786199131978)\/",
+        "Extension":  ".pre_eventbus_fix"
+    },
+    {
+        "RelativePath":  "bot_stable.py.pre_mission_import_fix",
+        "Length":  31466,
+        "LastWriteTime":  "\/Date(1786199131978)\/",
+        "Extension":  ".pre_mission_import_fix"
+    },
+    {
+        "RelativePath":  "bot_telegram.py",
+        "Length":  697,
+        "LastWriteTime":  "\/Date(1786574422142)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "branding\\favicon.svg",
+        "Length":  241,
+        "LastWriteTime":  "\/Date(1786460765901)\/",
+        "Extension":  ".svg"
+    },
+    {
+        "RelativePath":  "branding\\SLH_LOGO.txt",
+        "Length":  510,
+        "LastWriteTime":  "\/Date(1786580182609)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "branding\\slh-logo.svg",
+        "Length":  423,
+        "LastWriteTime":  "\/Date(1786460765818)\/",
+        "Extension":  ".svg"
+    },
+    {
+        "RelativePath":  "bridged_runtime.txt",
+        "Length":  1001,
+        "LastWriteTime":  "\/Date(1785232511404)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "brief_handler.py",
+        "Length":  1628,
+        "LastWriteTime":  "\/Date(1786574422146)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "broadcast_script.txt",
+        "Length":  121,
+        "LastWriteTime":  "\/Date(1785232511405)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "build.sh",
+        "Length":  41,
+        "LastWriteTime":  "\/Date(1785964680095)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "c",
+        "Length":  252,
+        "LastWriteTime":  "\/Date(1785352366618)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "check_api_start.sh",
+        "Length":  239,
+        "LastWriteTime":  "\/Date(1785232511406)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "check_Dockerfile",
+        "Length":  2600,
+        "LastWriteTime":  "\/Date(1785873609580)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "checkpoint_manager.py",
+        "Length":  565,
+        "LastWriteTime":  "\/Date(1786574422166)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "CLEAN_CURRENT_TREE.txt",
+        "Length":  93486,
+        "LastWriteTime":  "\/Date(1785842587327)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "command_audit.py",
+        "Length":  1082,
+        "LastWriteTime":  "\/Date(1786574422166)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Length":  22225,
+        "LastWriteTime":  "\/Date(1785232511364)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "complete_handler.py",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1786574422168)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "config.json",
+        "Length":  228,
+        "LastWriteTime":  "\/Date(1786028168644)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "config.json.broken",
+        "Length":  226,
+        "LastWriteTime":  "\/Date(1786199131980)\/",
+        "Extension":  ".broken"
+    },
+    {
+        "RelativePath":  "config.tmp",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511409)\/",
+        "Extension":  ".tmp"
+    },
+    {
+        "RelativePath":  "config.txt",
+        "Length":  47,
+        "LastWriteTime":  "\/Date(1785858181772)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "CONTROL_CENTER_FORENSIC_20260726_095133.txt.gz",
+        "Length":  7664,
+        "LastWriteTime":  "\/Date(1785232511365)\/",
+        "Extension":  ".gz"
+    },
+    {
+        "RelativePath":  "control_layer.py",
+        "Length":  1881,
+        "LastWriteTime":  "\/Date(1786574422170)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\academy_manager.py",
+        "Length":  1353,
+        "LastWriteTime":  "\/Date(1786635098738)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\agent_factory.py",
+        "Length":  7563,
+        "LastWriteTime":  "\/Date(1785232511411)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\agent_registry.py",
+        "Length":  4521,
+        "LastWriteTime":  "\/Date(1785232511411)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\agent_registry.py.pre_state_store_20260726T193953Z",
+        "Length":  4506,
+        "LastWriteTime":  "\/Date(1786199131980)\/",
+        "Extension":  ".pre_state_store_20260726T193953Z"
+    },
+    {
+        "RelativePath":  "core\\agent_state_store.py",
+        "Length":  9740,
+        "LastWriteTime":  "\/Date(1785232511412)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ai_guard.py",
+        "Length":  2339,
+        "LastWriteTime":  "\/Date(1785232511413)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_debug.py",
+        "Length":  774,
+        "LastWriteTime":  "\/Date(1786983351577)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_guard.py",
+        "Length":  622,
+        "LastWriteTime":  "\/Date(1785232511413)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py",
+        "Length":  6461,
+        "LastWriteTime":  "\/Date(1788006161890)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py.bak2",
+        "Length":  3748,
+        "LastWriteTime":  "\/Date(1786199131980)\/",
+        "Extension":  ".bak2"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py.before_greeting_fix_20260829_152053.py",
+        "Length":  6042,
+        "LastWriteTime":  "\/Date(1787925882623)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py.before_greeting_fix_20260829_152241.py",
+        "Length":  6042,
+        "LastWriteTime":  "\/Date(1788006161890)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+        "Length":  2622,
+        "LastWriteTime":  "\/Date(1787568291490)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+        "Length":  2777,
+        "LastWriteTime":  "\/Date(1787568459897)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\audit.py",
+        "Length":  2205,
+        "LastWriteTime":  "\/Date(1785232511415)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\authority.py",
+        "Length":  1350,
+        "LastWriteTime":  "\/Date(1787422050308)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\binance_connector.py",
+        "Length":  1300,
+        "LastWriteTime":  "\/Date(1787665427140)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\bootstrap_commands.py",
+        "Length":  1103,
+        "LastWriteTime":  "\/Date(1785232511416)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\command_registry_loader.py",
+        "Length":  473,
+        "LastWriteTime":  "\/Date(1785232511416)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\command_router.py",
+        "Length":  518,
+        "LastWriteTime":  "\/Date(1785232511417)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\context_builder.py",
+        "Length":  1616,
+        "LastWriteTime":  "\/Date(1785232511418)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\control_center.py",
+        "Length":  1496,
+        "LastWriteTime":  "\/Date(1786446091436)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\control_center_api.py",
+        "Length":  254,
+        "LastWriteTime":  "\/Date(1786446091437)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\deposit_monitor.py",
+        "Length":  2615,
+        "LastWriteTime":  "\/Date(1787665427141)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\dispatcher.py",
+        "Length":  769,
+        "LastWriteTime":  "\/Date(1785232511418)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\economy_bridge.py",
+        "Length":  2149,
+        "LastWriteTime":  "\/Date(1787238552309)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\economy_bridge.py.pre_transaction_authority.bak",
+        "Length":  2142,
+        "LastWriteTime":  "\/Date(1786905855846)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "core\\economy_service.py",
+        "Length":  21278,
+        "LastWriteTime":  "\/Date(1787937273742)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\economy_service.py.backup",
+        "Length":  20430,
+        "LastWriteTime":  "\/Date(1787328180357)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "core\\economy_service.py.before_lifecycle_sync",
+        "Length":  20430,
+        "LastWriteTime":  "\/Date(1787328180357)\/",
+        "Extension":  ".before_lifecycle_sync"
+    },
+    {
+        "RelativePath":  "core\\esp_broadcast.py",
+        "Length":  1279,
+        "LastWriteTime":  "\/Date(1787745852722)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\esp_display.py",
+        "Length":  1202,
+        "LastWriteTime":  "\/Date(1787745852723)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\esp_license.py",
+        "Length":  3447,
+        "LastWriteTime":  "\/Date(1787745852725)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\event_bus.py",
+        "Length":  1249,
+        "LastWriteTime":  "\/Date(1787353028576)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\event_store.py",
+        "Length":  1687,
+        "LastWriteTime":  "\/Date(1785232511420)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\exec_policy.py",
+        "Length":  2999,
+        "LastWriteTime":  "\/Date(1787925882624)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\firewall.py",
+        "Length":  1606,
+        "LastWriteTime":  "\/Date(1786717805402)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\identity.py",
+        "Length":  247,
+        "LastWriteTime":  "\/Date(1785232511420)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\identity_resolver.py",
+        "Length":  671,
+        "LastWriteTime":  "\/Date(1786661427633)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\invite_gate.py",
+        "Length":  284,
+        "LastWriteTime":  "\/Date(1787531891004)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\kernel.py",
+        "Length":  1731,
+        "LastWriteTime":  "\/Date(1785232511421)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\keyboard_detector.py",
+        "Length":  1538,
+        "LastWriteTime":  "\/Date(1786661427634)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\lesson_engine.py",
+        "Length":  1927,
+        "LastWriteTime":  "\/Date(1785232511421)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\message_utils.py",
+        "Length":  203,
+        "LastWriteTime":  "\/Date(1786661427635)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\migration.py",
+        "Length":  1183,
+        "LastWriteTime":  "\/Date(1785232511422)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mission_lifecycle.py",
+        "Length":  46798,
+        "LastWriteTime":  "\/Date(1785232511423)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mission_lock.py",
+        "Length":  1908,
+        "LastWriteTime":  "\/Date(1786398262679)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mission_orchestrator.py",
+        "Length":  19332,
+        "LastWriteTime":  "\/Date(1785232511424)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mission_runtime_bridge.py",
+        "Length":  3274,
+        "LastWriteTime":  "\/Date(1787328267015)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mission_state.py",
+        "Length":  2057,
+        "LastWriteTime":  "\/Date(1785232511424)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\morning_brief.py",
+        "Length":  2792,
+        "LastWriteTime":  "\/Date(1787665427142)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\mqtt_device_listener.py",
+        "Length":  1151,
+        "LastWriteTime":  "\/Date(1787745852726)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\profile_manager.py",
+        "Length":  4518,
+        "LastWriteTime":  "\/Date(1787327922060)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\progress_tracker.py",
+        "Length":  2401,
+        "LastWriteTime":  "\/Date(1787522898724)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\project_graph.py",
+        "Length":  9444,
+        "LastWriteTime":  "\/Date(1785232511425)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\project_registry.py",
+        "Length":  6968,
+        "LastWriteTime":  "\/Date(1785232511426)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\reconciler.py",
+        "Length":  1207,
+        "LastWriteTime":  "\/Date(1787760867919)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\reward_engine.py",
+        "Length":  2257,
+        "LastWriteTime":  "\/Date(1787665427143)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\runtime.py",
+        "Length":  5094,
+        "LastWriteTime":  "\/Date(1786713382209)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\stake_position.py",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\stake_position.py.bak_20260829_142108",
+        "Length":  1716,
+        "LastWriteTime":  "\/Date(1787665427144)\/",
+        "Extension":  ".bak_20260829_142108"
+    },
+    {
+        "RelativePath":  "core\\stake_position.py.bak_20260829_143509",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/",
+        "Extension":  ".bak_20260829_143509"
+    },
+    {
+        "RelativePath":  "core\\stake_position.py.bak_20260829_143527",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/",
+        "Extension":  ".bak_20260829_143527"
+    },
+    {
+        "RelativePath":  "core\\system_collector.py",
+        "Length":  2484,
+        "LastWriteTime":  "\/Date(1787334009655)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\system_collector.py.bak",
+        "Length":  1609,
+        "LastWriteTime":  "\/Date(1785798706994)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "core\\system_state_gateway.py",
+        "Length":  6423,
+        "LastWriteTime":  "\/Date(1785232511428)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\telegram_router_bridge.py",
+        "Length":  778,
+        "LastWriteTime":  "\/Date(1785232511428)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\ton_lab.py",
+        "Length":  5278,
+        "LastWriteTime":  "\/Date(1787760867920)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core\\virtual_esp.py",
+        "Length":  1179,
+        "LastWriteTime":  "\/Date(1787745852728)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "core_engine.py",
+        "Length":  1819,
+        "LastWriteTime":  "\/Date(1786574422172)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "course_handlers.py",
+        "Length":  6353,
+        "LastWriteTime":  "\/Date(1786574422172)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "courses.json",
+        "Length":  1755,
+        "LastWriteTime":  "\/Date(1786235666006)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "courses\\bitcoin_mastery\\lesson_proposals\\btc_security_409_identity_collision.json",
+        "Length":  732,
+        "LastWriteTime":  "\/Date(1785232511431)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "courses\\registry\\README.md",
+        "Length":  369,
+        "LastWriteTime":  "\/Date(1785232511432)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "create_takeover_manifest.py",
+        "Length":  10812,
+        "LastWriteTime":  "\/Date(1786574422177)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "CURRENT_HANDLERS.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785837203613)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "current_url.txt",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1785352366629)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "daily_check.sh",
+        "Length":  3795,
+        "LastWriteTime":  "\/Date(1785232511433)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "dashboard.html",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1786268197411)\/",
+        "Extension":  ".html"
+    },
+    {
+        "RelativePath":  "deep_diagnostic.sh",
+        "Length":  2695,
+        "LastWriteTime":  "\/Date(1785232511435)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "deep_recovery.sh.disabled",
+        "Length":  2026,
+        "LastWriteTime":  "\/Date(1785232511435)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "demo_handlers.py",
+        "Length":  1779,
+        "LastWriteTime":  "\/Date(1786574422179)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "DEPLOYMENT_PLAN.md",
+        "Length":  489,
+        "LastWriteTime":  "\/Date(1785232511365)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "DEVELOPER_GUIDE.md",
+        "Length":  965,
+        "LastWriteTime":  "\/Date(1785806247897)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "DEVELOPER_ONBOARDING.md",
+        "Length":  697,
+        "LastWriteTime":  "\/Date(1786633837509)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "device_bridge.py",
+        "Length":  4582,
+        "LastWriteTime":  "\/Date(1786574422179)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "devsetup_handler.py",
+        "Length":  929,
+        "LastWriteTime":  "\/Date(1786914441258)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "diag_fix_handlers.py",
+        "Length":  2750,
+        "LastWriteTime":  "\/Date(1786574422183)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "diag_handler.py",
+        "Length":  1816,
+        "LastWriteTime":  "\/Date(1786574422186)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "diag_scan.sh",
+        "Length":  880,
+        "LastWriteTime":  "\/Date(1785232511437)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "diagnose_all.sh",
+        "Length":  3195,
+        "LastWriteTime":  "\/Date(1785232511438)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "diagnose_deploy.sh",
+        "Length":  1580,
+        "LastWriteTime":  "\/Date(1785232511438)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "diagnose_railway.sh",
+        "Length":  567,
+        "LastWriteTime":  "\/Date(1785232511439)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "diagnostic_handler.py",
+        "Length":  738,
+        "LastWriteTime":  "\/Date(1786574422181)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "DIFF_TERMUX_WINDOWS.txt",
+        "Length":  23488,
+        "LastWriteTime":  "\/Date(1785841405650)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "DIFF_WINDOWS_GIT.txt",
+        "Length":  38,
+        "LastWriteTime":  "\/Date(1785841405459)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "dna_lock.py",
+        "Length":  960,
+        "LastWriteTime":  "\/Date(1786574422188)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "DO_NOT_RUN_LOCALLY.md",
+        "Length":  378,
+        "LastWriteTime":  "\/Date(1785232511366)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\architecture\\SLH_OS_RUNTIME_ARCHITECTURE.md",
+        "Length":  294,
+        "LastWriteTime":  "\/Date(1785232511444)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\AUDIT_LEDGER.md",
+        "Length":  4361,
+        "LastWriteTime":  "\/Date(1787422050311)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Length":  831,
+        "LastWriteTime":  "\/Date(1786309450058)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Length":  1312,
+        "LastWriteTime":  "\/Date(1786309919263)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\financial\\SLH_STAKING_MODEL.md",
+        "Length":  1087,
+        "LastWriteTime":  "\/Date(1786309829993)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\journal\\20260711_branding_restore.md",
+        "Length":  563,
+        "LastWriteTime":  "\/Date(1785232511444)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\journal\\20260711_dashboard_v2_stable.md",
+        "Length":  917,
+        "LastWriteTime":  "\/Date(1785232511445)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\launch\\DOCUMENTATION_INDEX.md",
+        "Length":  1389,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\launch\\G2_EVIDENCE.json",
+        "Length":  889,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "docs\\launch\\SLH_BETA_READINESS.md",
+        "Length":  562,
+        "LastWriteTime":  "\/Date(1786309146731)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Length":  561,
+        "LastWriteTime":  "\/Date(1785232511446)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SELF_MODEL.md",
+        "Length":  651,
+        "LastWriteTime":  "\/Date(1785232511441)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH\\SLH_TELEGRAM_TOKEN_OWNERSHIP_MAP.json",
+        "Length":  9952,
+        "LastWriteTime":  "\/Date(1786278858375)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "docs\\SLH_OPERATIONS_MANUAL.md",
+        "Length":  1199,
+        "LastWriteTime":  "\/Date(1785232511441)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_PRE_CONFLICT_CHECKPOINT.json",
+        "Length":  849,
+        "LastWriteTime":  "\/Date(1786278654061)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "docs\\SLH_RAILWAY_INVENTORY.md",
+        "Length":  617,
+        "LastWriteTime":  "\/Date(1785232511442)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_RAILWAY_MAP.md",
+        "Length":  682,
+        "LastWriteTime":  "\/Date(1785232511442)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_RAILWAY_SNAPSHOT_20260708.md",
+        "Length":  766,
+        "LastWriteTime":  "\/Date(1785232511443)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_REMOTE_PROJECT_INVENTORY.json",
+        "Length":  11018,
+        "LastWriteTime":  "\/Date(1786278610321)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Length":  3924,
+        "LastWriteTime":  "\/Date(1786280022619)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md",
+        "Length":  1011,
+        "LastWriteTime":  "\/Date(1785232511443)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\SLH_SOURCE_OF_TRUTH.md",
+        "Length":  356,
+        "LastWriteTime":  "\/Date(1786110556975)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Length":  1083,
+        "LastWriteTime":  "\/Date(1785232511447)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_assets\\01_public_broadcast_message.md",
+        "Length":  901,
+        "LastWriteTime":  "\/Date(1785232511450)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_assets\\02_interested_developer_document.md",
+        "Length":  918,
+        "LastWriteTime":  "\/Date(1785232511451)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_assets\\03_candidate_application_form.md",
+        "Length":  619,
+        "LastWriteTime":  "\/Date(1785232511451)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Length":  2305,
+        "LastWriteTime":  "\/Date(1785232511447)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\BROADCAST_READY_STATE_20260713.md",
+        "Length":  818,
+        "LastWriteTime":  "\/Date(1785232511448)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_release\\01_SLH_PUBLIC_ANNOUNCEMENT.md",
+        "Length":  994,
+        "LastWriteTime":  "\/Date(1785232511452)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_release\\02_SLH_DEVELOPER_INVITATION.md",
+        "Length":  803,
+        "LastWriteTime":  "\/Date(1785232511453)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\broadcast_release\\03_SLH_PARTNER_ONE_PAGER.md",
+        "Length":  528,
+        "LastWriteTime":  "\/Date(1785232511453)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\current_incident.txt",
+        "Length":  505,
+        "LastWriteTime":  "\/Date(1785232511454)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\gateway_architecture_decision_20260713.md",
+        "Length":  1014,
+        "LastWriteTime":  "\/Date(1785232511454)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\incidents\\slh_409_diag_output.txt",
+        "Length":  7878,
+        "LastWriteTime":  "\/Date(1785232511455)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\incidents\\slh_409_full_diag.sh",
+        "Length":  2165,
+        "LastWriteTime":  "\/Date(1785232511456)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\slh_academy_microservices_course.md",
+        "Length":  914,
+        "LastWriteTime":  "\/Date(1785232511456)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\slh_gateway_evolution_phase1_20260713.md",
+        "Length":  1712,
+        "LastWriteTime":  "\/Date(1785232511457)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\SLH_LOAD_TEST_PROTOCOL.md",
+        "Length":  578,
+        "LastWriteTime":  "\/Date(1785232511448)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Length":  2356,
+        "LastWriteTime":  "\/Date(1785232511448)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\SLH_RUNTIME_WORK_PROTOCOL.md",
+        "Length":  1068,
+        "LastWriteTime":  "\/Date(1785232511449)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Length":  565,
+        "LastWriteTime":  "\/Date(1785232511449)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "docs\\system_memory\\telegram_polling_history.txt",
+        "Length":  653,
+        "LastWriteTime":  "\/Date(1785232511457)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "doctor_handler.py",
+        "Length":  2498,
+        "LastWriteTime":  "\/Date(1786574422190)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "e_mode",
+        "Length":  5480,
+        "LastWriteTime":  "\/Date(1785888770390)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "econ_handler.py",
+        "Length":  3973,
+        "LastWriteTime":  "\/Date(1787327671142)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "econ_handler.py.backup_before_buy_cleanup",
+        "Length":  4529,
+        "LastWriteTime":  "\/Date(1786574422195)\/",
+        "Extension":  ".backup_before_buy_cleanup"
+    },
+    {
+        "RelativePath":  "economy_audit_after_p0.txt",
+        "Length":  8360,
+        "LastWriteTime":  "\/Date(1787332570578)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "economy_audit_balance.txt",
+        "Length":  17298,
+        "LastWriteTime":  "\/Date(1785974314450)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "economy_audit_dashboard.txt",
+        "Length":  18678,
+        "LastWriteTime":  "\/Date(1785974315222)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "economy_audit_payment.txt",
+        "Length":  5849,
+        "LastWriteTime":  "\/Date(1785974314718)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "economy_audit_profile.txt",
+        "Length":  501,
+        "LastWriteTime":  "\/Date(1785974314800)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "ECONOMY_PATCH_PLAN.txt",
+        "Length":  489,
+        "LastWriteTime":  "\/Date(1786005721185)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "ECONOMY_WIRING_AUDIT.txt",
+        "Length":  15266,
+        "LastWriteTime":  "\/Date(1786006603190)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "encoding_damage_report.txt",
+        "Length":  34332,
+        "LastWriteTime":  "\/Date(1787153857369)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "ENTRYPOINT_AUDIT.txt",
+        "Length":  978,
+        "LastWriteTime":  "\/Date(1786014514930)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "esp_test.py",
+        "Length":  859,
+        "LastWriteTime":  "\/Date(1786574422195)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "events.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511459)\/",
+        "Extension":  ".db"
+    },
+    {
+        "RelativePath":  "exec_commit.py",
+        "Length":  2405,
+        "LastWriteTime":  "\/Date(1786661428467)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "expose_slh_state.sh",
+        "Length":  2192,
+        "LastWriteTime":  "\/Date(1785232511459)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "file.py",
+        "Length":  5,
+        "LastWriteTime":  "\/Date(1786574422197)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "final_fix.sh.disabled",
+        "Length":  3100,
+        "LastWriteTime":  "\/Date(1785232511461)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "final_verification.sh",
+        "Length":  6755,
+        "LastWriteTime":  "\/Date(1785232511461)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "fix_dna_entrypoints.py",
+        "Length":  493,
+        "LastWriteTime":  "\/Date(1786647989195)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "full_diag.sh",
+        "Length":  1116,
+        "LastWriteTime":  "\/Date(1785232511462)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "full_diagnostic.sh",
+        "Length":  2970,
+        "LastWriteTime":  "\/Date(1785232511462)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "full_logs.txt",
+        "Length":  310,
+        "LastWriteTime":  "\/Date(1785846047049)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "full_sync_check.sh",
+        "Length":  1588,
+        "LastWriteTime":  "\/Date(1785232511463)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "FULL_SYSTEM_AUDIT.json",
+        "Length":  878,
+        "LastWriteTime":  "\/Date(1787576517662)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "GIT_ADMIN_SEARCH.txt",
+        "Length":  7640,
+        "LastWriteTime":  "\/Date(1785841375440)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_ASK_SEARCH.txt",
+        "Length":  15870,
+        "LastWriteTime":  "\/Date(1785841387509)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_AUG_TREE.txt",
+        "Length":  86912,
+        "LastWriteTime":  "\/Date(1785841398713)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_BOT_TOKEN_HISTORY.txt",
+        "Length":  29232,
+        "LastWriteTime":  "\/Date(1786199131935)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_COMMISSION_SEARCH.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785841384980)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_CONTROL_SEARCH.txt",
+        "Length":  328,
+        "LastWriteTime":  "\/Date(1785841390462)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_DIFF_FIRST_TO_NOW.txt",
+        "Length":  15766,
+        "LastWriteTime":  "\/Date(1785837187068)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_DIFF_STABLE_TO_HEAD.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842671900)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_DISABLED_AND_BACKUPS.txt",
+        "Length":  1046,
+        "LastWriteTime":  "\/Date(1785842673265)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_ECON_BALANCE.txt",
+        "Length":  5366,
+        "LastWriteTime":  "\/Date(1785841378699)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_ECON_BUY.txt",
+        "Length":  1078,
+        "LastWriteTime":  "\/Date(1785841378806)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_ECON_PAY.txt",
+        "Length":  7014,
+        "LastWriteTime":  "\/Date(1785841378941)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_ECON_REVENUE.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785841378978)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_EVENTBUS_HISTORY.txt",
+        "Length":  23084,
+        "LastWriteTime":  "\/Date(1785842671092)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_FIRST_TREE.txt",
+        "Length":  15254,
+        "LastWriteTime":  "\/Date(1785841392934)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_FULL_TREE.txt",
+        "Length":  93486,
+        "LastWriteTime":  "\/Date(1785842673109)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_HISTORY_GRAPH.txt",
+        "Length":  118778,
+        "LastWriteTime":  "\/Date(1785842668670)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_JULY_TREE.txt",
+        "Length":  48124,
+        "LastWriteTime":  "\/Date(1785841395798)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_LLM_SEARCH.txt",
+        "Length":  5698,
+        "LastWriteTime":  "\/Date(1785841387645)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_PROJECT_SEARCH.txt",
+        "Length":  3534,
+        "LastWriteTime":  "\/Date(1785841382118)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_RAILWAY_HISTORY.txt",
+        "Length":  28624,
+        "LastWriteTime":  "\/Date(1785842670348)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_REFERRAL_SEARCH.txt",
+        "Length":  378,
+        "LastWriteTime":  "\/Date(1785841384934)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_REMOVED_4d90da6.txt",
+        "Length":  80280,
+        "LastWriteTime":  "\/Date(1785841370796)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_SLH_BOT_TREE.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842672933)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_STATE_ENGINE_HISTORY.txt",
+        "Length":  1070,
+        "LastWriteTime":  "\/Date(1785842671611)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_STATE_SEARCH.txt",
+        "Length":  6146,
+        "LastWriteTime":  "\/Date(1785841390332)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "GIT_SUBMODULE_STATUS.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842672010)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "guide_handler.py",
+        "Length":  2434,
+        "LastWriteTime":  "\/Date(1786574422199)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "HANDLER_LOADER_AUDIT.txt",
+        "Length":  58026,
+        "LastWriteTime":  "\/Date(1786014515735)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "handlers\\academy_handler.py",
+        "Length":  2390,
+        "LastWriteTime":  "\/Date(1787522898724)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\academy_menu_handler.py",
+        "Length":  2499,
+        "LastWriteTime":  "\/Date(1786574421946)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\admin_extras.py",
+        "Length":  2952,
+        "LastWriteTime":  "\/Date(1787868122868)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\advanced_ask_handler.py",
+        "Length":  2135,
+        "LastWriteTime":  "\/Date(1787937861500)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\agents_handler.py",
+        "Length":  5273,
+        "LastWriteTime":  "\/Date(1786574421948)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ai_voting_handler.py",
+        "Length":  5164,
+        "LastWriteTime":  "\/Date(1786574421950)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ai_voting_handler.py.backup_20260811_183953",
+        "Length":  3409,
+        "LastWriteTime":  "\/Date(1785701578225)\/",
+        "Extension":  ".backup_20260811_183953"
+    },
+    {
+        "RelativePath":  "handlers\\askdebug_handler.py",
+        "Length":  464,
+        "LastWriteTime":  "\/Date(1786574421952)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\audit_handler.py",
+        "Length":  2548,
+        "LastWriteTime":  "\/Date(1786574421954)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\audit_handler.py.bak",
+        "Length":  2462,
+        "LastWriteTime":  "\/Date(1785232511468)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\autoexec_handler.py",
+        "Length":  2537,
+        "LastWriteTime":  "\/Date(1786574421956)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\bot_identity_handler.py",
+        "Length":  1777,
+        "LastWriteTime":  "\/Date(1786574421970)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\brief_handler.py",
+        "Length":  823,
+        "LastWriteTime":  "\/Date(1787665427145)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\broadcast_handler.py",
+        "Length":  1124,
+        "LastWriteTime":  "\/Date(1787868122870)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\claim_handler.py",
+        "Length":  2459,
+        "LastWriteTime":  "\/Date(1787665427145)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\cleanup_handler.py",
+        "Length":  1850,
+        "LastWriteTime":  "\/Date(1786574421976)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\dashboard_handler.py",
+        "Length":  1635,
+        "LastWriteTime":  "\/Date(1786574421978)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\dashboard_handler.py.bak",
+        "Length":  1236,
+        "LastWriteTime":  "\/Date(1786101895163)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\deploy_handler.py",
+        "Length":  1183,
+        "LastWriteTime":  "\/Date(1787522898740)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\deploy_handler.py.backup",
+        "Length":  1040,
+        "LastWriteTime":  "\/Date(1786358155861)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "handlers\\dev_admin.py",
+        "Length":  3569,
+        "LastWriteTime":  "\/Date(1786622139272)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\dev_handler.py",
+        "Length":  770,
+        "LastWriteTime":  "\/Date(1786574421988)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\device_bridge.py",
+        "Length":  600,
+        "LastWriteTime":  "\/Date(1786574421984)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\device_handler.py",
+        "Length":  4883,
+        "LastWriteTime":  "\/Date(1786574421986)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\e_handler.py",
+        "Length":  833,
+        "LastWriteTime":  "\/Date(1787760867921)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\endday_handler.py",
+        "Length":  227,
+        "LastWriteTime":  "\/Date(1786574421988)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\esp_handler.py",
+        "Length":  9915,
+        "LastWriteTime":  "\/Date(1787925882625)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\esp_handler.py.backup",
+        "Length":  2010,
+        "LastWriteTime":  "\/Date(1786130869692)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "handlers\\exec_handler.py",
+        "Length":  572,
+        "LastWriteTime":  "\/Date(1787868203668)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\exec_log_handler.py",
+        "Length":  854,
+        "LastWriteTime":  "\/Date(1787522898740)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\exec_request_handler.py",
+        "Length":  5750,
+        "LastWriteTime":  "\/Date(1787745852730)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\fakepay_handler.py",
+        "Length":  771,
+        "LastWriteTime":  "\/Date(1787760867922)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\feedback_handler.py",
+        "Length":  916,
+        "LastWriteTime":  "\/Date(1786574421999)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\file_handler.py",
+        "Length":  1577,
+        "LastWriteTime":  "\/Date(1787422050313)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\firewall_handler.py",
+        "Length":  1844,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\gateway_handler.py",
+        "Length":  1241,
+        "LastWriteTime":  "\/Date(1786574422013)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\git_handler.py",
+        "Length":  6275,
+        "LastWriteTime":  "\/Date(1788003670386)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\git_handler.py.bak_20260829_143509",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/",
+        "Extension":  ".bak_20260829_143509"
+    },
+    {
+        "RelativePath":  "handlers\\git_handler.py.bak_20260829_143527",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/",
+        "Extension":  ".bak_20260829_143527"
+    },
+    {
+        "RelativePath":  "handlers\\git_handler.py.bak_20260829_143754",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/",
+        "Extension":  ".bak_20260829_143754"
+    },
+    {
+        "RelativePath":  "handlers\\governance_handler.py",
+        "Length":  10232,
+        "LastWriteTime":  "\/Date(1786638166148)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\health_monitor_handler.py",
+        "Length":  867,
+        "LastWriteTime":  "\/Date(1787522898740)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\help_handler.py",
+        "Length":  1483,
+        "LastWriteTime":  "\/Date(1786577918094)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\join_handler.py",
+        "Length":  2942,
+        "LastWriteTime":  "\/Date(1787531891006)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\join_handler.py.backup_rbac_fix",
+        "Length":  2940,
+        "LastWriteTime":  "\/Date(1786627933421)\/",
+        "Extension":  ".backup_rbac_fix"
+    },
+    {
+        "RelativePath":  "handlers\\join_handler.py.bak",
+        "Length":  2054,
+        "LastWriteTime":  "\/Date(1786631058860)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\journal_handler.py",
+        "Length":  1403,
+        "LastWriteTime":  "\/Date(1786574422025)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\kb_handler.py",
+        "Length":  706,
+        "LastWriteTime":  "\/Date(1786574422026)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\leaderboard_handler.py",
+        "Length":  716,
+        "LastWriteTime":  "\/Date(1786574422028)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\lesson_handler.py",
+        "Length":  2564,
+        "LastWriteTime":  "\/Date(1786574422030)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py",
+        "Length":  3166,
+        "LastWriteTime":  "\/Date(1788013722907)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup",
+        "Length":  4149,
+        "LastWriteTime":  "\/Date(1786305156244)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup_20260813_021507",
+        "Length":  7099,
+        "LastWriteTime":  "\/Date(1786574428323)\/",
+        "Extension":  ".backup_20260813_021507"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup_20260813_021603",
+        "Length":  7099,
+        "LastWriteTime":  "\/Date(1786574428323)\/",
+        "Extension":  ".backup_20260813_021603"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup_20260813_022653",
+        "Length":  7129,
+        "LastWriteTime":  "\/Date(1786576746365)\/",
+        "Extension":  ".backup_20260813_022653"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup_20260822",
+        "Length":  11786,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".backup_20260822"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.backup2",
+        "Length":  4149,
+        "LastWriteTime":  "\/Date(1786305156244)\/",
+        "Extension":  ".backup2"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.bak",
+        "Length":  12072,
+        "LastWriteTime":  "\/Date(1787148648081)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.bak_20260829_143509",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/",
+        "Extension":  ".bak_20260829_143509"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.bak_20260829_143527",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/",
+        "Extension":  ".bak_20260829_143527"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.bak_20260829_143754",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/",
+        "Extension":  ".bak_20260829_143754"
+    },
+    {
+        "RelativePath":  "handlers\\llm_handler.py.before_encoding_fix_20260829_172842.bak",
+        "Length":  13009,
+        "LastWriteTime":  "\/Date(1788003475361)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\loader.py",
+        "Length":  6412,
+        "LastWriteTime":  "\/Date(1787938597590)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\loader.py.pre_signature_fix",
+        "Length":  913,
+        "LastWriteTime":  "\/Date(1786199131993)\/",
+        "Extension":  ".pre_signature_fix"
+    },
+    {
+        "RelativePath":  "handlers\\logo_handler.py",
+        "Length":  260,
+        "LastWriteTime":  "\/Date(1786574422038)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\map_handler.py",
+        "Length":  434,
+        "LastWriteTime":  "\/Date(1786574422040)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\market_handler.py",
+        "Length":  2857,
+        "LastWriteTime":  "\/Date(1787238552316)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\market_handler.py.bak",
+        "Length":  850,
+        "LastWriteTime":  "\/Date(1786527526035)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\me_handler.py",
+        "Length":  1681,
+        "LastWriteTime":  "\/Date(1787868122874)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\mission_handler.py",
+        "Length":  6871,
+        "LastWriteTime":  "\/Date(1786713382211)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\monitor_handler.py",
+        "Length":  3035,
+        "LastWriteTime":  "\/Date(1786574422052)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\morning_handler.py",
+        "Length":  468,
+        "LastWriteTime":  "\/Date(1786574422054)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\natural_chat.py",
+        "Length":  1293,
+        "LastWriteTime":  "\/Date(1788012842080)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\natural_chat.py.before_ask_unification_20260829_171359.bak",
+        "Length":  1212,
+        "LastWriteTime":  "\/Date(1787938935720)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\onboarding_v2.py",
+        "Length":  10402,
+        "LastWriteTime":  "\/Date(1787868122876)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\onboarding_v2.py.bak",
+        "Length":  10289,
+        "LastWriteTime":  "\/Date(1786639849383)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\os_handler.py",
+        "Length":  1611,
+        "LastWriteTime":  "\/Date(1786574422058)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ownership_transfer_handler.py",
+        "Length":  2374,
+        "LastWriteTime":  "\/Date(1786574422060)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\payment_handler.py",
+        "Length":  8393,
+        "LastWriteTime":  "\/Date(1787937273709)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\progress_handler.py",
+        "Length":  1813,
+        "LastWriteTime":  "\/Date(1787422050315)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\reconcile_handler.py",
+        "Length":  180,
+        "LastWriteTime":  "\/Date(1787745852733)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\recovery_handler.py",
+        "Length":  1636,
+        "LastWriteTime":  "\/Date(1786574422079)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\recovery_verify_handler.py",
+        "Length":  2621,
+        "LastWriteTime":  "\/Date(1786574422081)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\repeat_handler.py",
+        "Length":  1254,
+        "LastWriteTime":  "\/Date(1786574422082)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\revenue_handler.py",
+        "Length":  1007,
+        "LastWriteTime":  "\/Date(1787760867927)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\services_handler.py",
+        "Length":  823,
+        "LastWriteTime":  "\/Date(1787522898740)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\staking_handler.py",
+        "Length":  6898,
+        "LastWriteTime":  "\/Date(1787925882625)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\store_handler.py",
+        "Length":  982,
+        "LastWriteTime":  "\/Date(1786629675001)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\system_handler.py",
+        "Length":  452,
+        "LastWriteTime":  "\/Date(1786574422085)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\task_handler.py",
+        "Length":  3949,
+        "LastWriteTime":  "\/Date(1787665427149)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\task_handler.py.bak",
+        "Length":  1518,
+        "LastWriteTime":  "\/Date(1785232511479)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "handlers\\terms_handler.py",
+        "Length":  770,
+        "LastWriteTime":  "\/Date(1787868122877)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\termux_handler.py",
+        "Length":  443,
+        "LastWriteTime":  "\/Date(1786574422087)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ton_address_handler.py",
+        "Length":  446,
+        "LastWriteTime":  "\/Date(1787760867929)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ton_balance_handler.py",
+        "Length":  543,
+        "LastWriteTime":  "\/Date(1787760867929)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ton_claim_handler.py",
+        "Length":  2274,
+        "LastWriteTime":  "\/Date(1787868122878)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ton_wallet.py",
+        "Length":  1315,
+        "LastWriteTime":  "\/Date(1786574422089)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\user_handler.py",
+        "Length":  1385,
+        "LastWriteTime":  "\/Date(1786574422091)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\ux_handler.py",
+        "Length":  1190,
+        "LastWriteTime":  "\/Date(1786574422093)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\voting_handler.py",
+        "Length":  157,
+        "LastWriteTime":  "\/Date(1786574422093)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\wallet_handler.py",
+        "Length":  985,
+        "LastWriteTime":  "\/Date(1787868122878)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "handlers\\withdraw_request_handler.py",
+        "Length":  2458,
+        "LastWriteTime":  "\/Date(1787760867932)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "HANDOFF.md",
+        "Length":  1372,
+        "LastWriteTime":  "\/Date(1785232511367)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "health_check.py",
+        "Length":  805,
+        "LastWriteTime":  "\/Date(1786574422199)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "health_check.sh",
+        "Length":  337,
+        "LastWriteTime":  "\/Date(1785232511480)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "HEALTH_OUTPUT.txt",
+        "Length":  2152,
+        "LastWriteTime":  "\/Date(1785837195740)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "healthcheck.sh",
+        "Length":  171,
+        "LastWriteTime":  "\/Date(1785232511482)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "heb_convert.py",
+        "Length":  791,
+        "LastWriteTime":  "\/Date(1786574422201)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "help_handler.py",
+        "Length":  2011,
+        "LastWriteTime":  "\/Date(1786574422203)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "how 1070542bf --stat",
+        "Length":  2622,
+        "LastWriteTime":  "\/Date(1786301028727)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "init_router.py",
+        "Length":  251,
+        "LastWriteTime":  "\/Date(1786574422203)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "inspect_slh.sh",
+        "Length":  745,
+        "LastWriteTime":  "\/Date(1785232511484)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "inspector.py",
+        "Length":  2291,
+        "LastWriteTime":  "\/Date(1786574422205)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "internal_agent.py",
+        "Length":  6494,
+        "LastWriteTime":  "\/Date(1786574422207)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "join_fix.py",
+        "Length":  1756,
+        "LastWriteTime":  "\/Date(1786574422207)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "journal.json",
+        "Length":  14368,
+        "LastWriteTime":  "\/Date(1785232511486)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "JUNK_FILES.txt",
+        "Length":  2574,
+        "LastWriteTime":  "\/Date(1785837207395)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "junk_handler.py",
+        "Length":  3945,
+        "LastWriteTime":  "\/Date(1786574422209)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "KERNEL_RULES.md",
+        "Length":  334,
+        "LastWriteTime":  "\/Date(1785232511368)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "keys.secure",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1785352366648)\/",
+        "Extension":  ".secure"
+    },
+    {
+        "RelativePath":  "language_handler.py",
+        "Length":  1571,
+        "LastWriteTime":  "\/Date(1786574422211)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "LAUNCH_PLAN.json",
+        "Length":  3956,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "learn_handlers.py.disabled",
+        "Length":  3173,
+        "LastWriteTime":  "\/Date(1785232511488)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "learning_path.py",
+        "Length":  9407,
+        "LastWriteTime":  "\/Date(1787328114914)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "learning_path.py.prepatch_20260815_215717.bak",
+        "Length":  9276,
+        "LastWriteTime":  "\/Date(1786574422213)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\1.txt",
+        "Length":  152,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\10.txt",
+        "Length":  198,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\11.txt",
+        "Length":  206,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\12.txt",
+        "Length":  190,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\2.txt",
+        "Length":  155,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\3.txt",
+        "Length":  148,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\4.txt",
+        "Length":  178,
+        "LastWriteTime":  "\/Date(1786235666008)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\5.txt",
+        "Length":  174,
+        "LastWriteTime":  "\/Date(1786235666016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\6.txt",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1786235666016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\7.txt",
+        "Length":  166,
+        "LastWriteTime":  "\/Date(1786235666016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\8.txt",
+        "Length":  162,
+        "LastWriteTime":  "\/Date(1786235666016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "lessons\\bitcoin_mastery\\9.txt",
+        "Length":  170,
+        "LastWriteTime":  "\/Date(1786235666016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "LLM_AUDIT.txt",
+        "Length":  11728,
+        "LastWriteTime":  "\/Date(1786014515965)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "load_keys.sh",
+        "Length":  568,
+        "LastWriteTime":  "\/Date(1785352366650)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "logger_handler.py",
+        "Length":  12,
+        "LastWriteTime":  "\/Date(1786574422213)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "logo.txt",
+        "Length":  510,
+        "LastWriteTime":  "\/Date(1786580182610)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "logs\\bot_startup.log",
+        "Length":  13409,
+        "LastWriteTime":  "\/Date(1787576640189)\/",
+        "Extension":  ".log"
+    },
+    {
+        "RelativePath":  "logs\\SLH_NIGHTLY_20260707.md",
+        "Length":  693,
+        "LastWriteTime":  "\/Date(1785232511493)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "main",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511494)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "manifest.json",
+        "Length":  352,
+        "LastWriteTime":  "\/Date(1785232511495)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "MANIFEST_HANDLERS.txt",
+        "Length":  1340,
+        "LastWriteTime":  "\/Date(1785837204306)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "marketplace.py",
+        "Length":  760,
+        "LastWriteTime":  "\/Date(1786574422223)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "master_agent.py",
+        "Length":  2640,
+        "LastWriteTime":  "\/Date(1786574422225)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "memory.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511496)\/",
+        "Extension":  ".db"
+    },
+    {
+        "RelativePath":  "mini_app.html",
+        "Length":  3404,
+        "LastWriteTime":  "\/Date(1786576491323)\/",
+        "Extension":  ".html"
+    },
+    {
+        "RelativePath":  "mission_assignment_commit.py",
+        "Length":  5187,
+        "LastWriteTime":  "\/Date(1786574422231)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_assignment_preview.py",
+        "Length":  3264,
+        "LastWriteTime":  "\/Date(1786574422233)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_completion_commit.py",
+        "Length":  8547,
+        "LastWriteTime":  "\/Date(1786574422235)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_completion_commit_2.py",
+        "Length":  8607,
+        "LastWriteTime":  "\/Date(1786574422237)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_completion_gate.py",
+        "Length":  7187,
+        "LastWriteTime":  "\/Date(1786574422237)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_control\\branches.txt",
+        "Length":  350,
+        "LastWriteTime":  "\/Date(1785695408583)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\filesystem_map.txt",
+        "Length":  409236,
+        "LastWriteTime":  "\/Date(1785695417463)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\git_history.txt",
+        "Length":  2108,
+        "LastWriteTime":  "\/Date(1785695407919)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\git_status.txt",
+        "Length":  10914,
+        "LastWriteTime":  "\/Date(1785695407807)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\handlers_list.txt",
+        "Length":  2742,
+        "LastWriteTime":  "\/Date(1785695424579)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\merge_conflicts.txt",
+        "Length":  120,
+        "LastWriteTime":  "\/Date(1785695413601)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\python_files_count.txt",
+        "Length":  184,
+        "LastWriteTime":  "\/Date(1785695420900)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\railway_variables.txt",
+        "Length":  20124,
+        "LastWriteTime":  "\/Date(1785695450624)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\runtime_files.txt",
+        "Length":  193054,
+        "LastWriteTime":  "\/Date(1785695434153)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\security_files_scan.txt",
+        "Length":  5726,
+        "LastWriteTime":  "\/Date(1785695441150)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_control\\state_map.txt",
+        "Length":  28328,
+        "LastWriteTime":  "\/Date(1785695437739)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "mission_creation_commit.py",
+        "Length":  3867,
+        "LastWriteTime":  "\/Date(1786574422239)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_creation_preview.py",
+        "Length":  1935,
+        "LastWriteTime":  "\/Date(1786574422241)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_execution_commit.py",
+        "Length":  7532,
+        "LastWriteTime":  "\/Date(1786574422241)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_execution_gate.py",
+        "Length":  4410,
+        "LastWriteTime":  "\/Date(1786574422243)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_execution_preview.py",
+        "Length":  4567,
+        "LastWriteTime":  "\/Date(1786574422246)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_lifecycle_preview.py",
+        "Length":  2008,
+        "LastWriteTime":  "\/Date(1786574422248)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_result_recorder.py",
+        "Length":  6791,
+        "LastWriteTime":  "\/Date(1786574422250)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_result_verifier.py",
+        "Length":  7016,
+        "LastWriteTime":  "\/Date(1786574422252)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "mission_runner.py",
+        "Length":  5139,
+        "LastWriteTime":  "\/Date(1786574422254)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "monitor.sh",
+        "Length":  210,
+        "LastWriteTime":  "\/Date(1785352366650)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "monitor_handler.py",
+        "Length":  3362,
+        "LastWriteTime":  "\/Date(1786574422254)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "myprogress_handler.py",
+        "Length":  1421,
+        "LastWriteTime":  "\/Date(1786574422256)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "N",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511368)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "NEXT_STEPS.md",
+        "Length":  245,
+        "LastWriteTime":  "\/Date(1785232511369)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "onboarding_handler.py",
+        "Length":  2584,
+        "LastWriteTime":  "\/Date(1786574422258)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "onboarding_scan.txt",
+        "Length":  28310,
+        "LastWriteTime":  "\/Date(1785695945517)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "payment_safety_check.sh",
+        "Length":  2038,
+        "LastWriteTime":  "\/Date(1785232511508)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "plugins.json",
+        "Length":  745,
+        "LastWriteTime":  "\/Date(1787572368772)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "plugins\\__init__.py",
+        "Length":  504,
+        "LastWriteTime":  "\/Date(1785352366653)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\admin.py",
+        "Length":  186,
+        "LastWriteTime":  "\/Date(1785232511509)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\core\\echo.py",
+        "Length":  85,
+        "LastWriteTime":  "\/Date(1785232511510)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\education.py",
+        "Length":  326,
+        "LastWriteTime":  "\/Date(1785352366657)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\leaderboard.py",
+        "Length":  633,
+        "LastWriteTime":  "\/Date(1787578493031)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\shop.py",
+        "Length":  313,
+        "LastWriteTime":  "\/Date(1785352366658)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\system.py",
+        "Length":  184,
+        "LastWriteTime":  "\/Date(1785232511511)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\task.py",
+        "Length":  929,
+        "LastWriteTime":  "\/Date(1785232511511)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins\\voting.py",
+        "Length":  692,
+        "LastWriteTime":  "\/Date(1785352366658)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "plugins_store.json",
+        "Length":  383,
+        "LastWriteTime":  "\/Date(1785232511512)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "plugins_store.py",
+        "Length":  2273,
+        "LastWriteTime":  "\/Date(1786574422260)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "pre_change_audit.sh",
+        "Length":  1570,
+        "LastWriteTime":  "\/Date(1785232511513)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "pre_change_check.sh",
+        "Length":  1497,
+        "LastWriteTime":  "\/Date(1785232511514)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "pre_change_diag.sh",
+        "Length":  2249,
+        "LastWriteTime":  "\/Date(1785232511514)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "PRE_ECONOMY_FULL_AUDIT.txt",
+        "Length":  22100,
+        "LastWriteTime":  "\/Date(1785974440484)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "pre_push_check.sh",
+        "Length":  629,
+        "LastWriteTime":  "\/Date(1787665427150)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "Procfile",
+        "Length":  46,
+        "LastWriteTime":  "\/Date(1786033879012)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "Procfile.backup",
+        "Length":  32,
+        "LastWriteTime":  "\/Date(1785880394909)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "Procfile.disabled",
+        "Length":  89,
+        "LastWriteTime":  "\/Date(1785232511370)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "Procfile.disabled_runtime",
+        "Length":  28,
+        "LastWriteTime":  "\/Date(1785232511370)\/",
+        "Extension":  ".disabled_runtime"
+    },
+    {
+        "RelativePath":  "PROFILE_MANAGER_CALLS.txt",
+        "Length":  1229,
+        "LastWriteTime":  "\/Date(1786006348148)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "project_commands.py",
+        "Length":  6697,
+        "LastWriteTime":  "\/Date(1786574422260)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "railway.json",
+        "Length":  314,
+        "LastWriteTime":  "\/Date(1786179723342)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "railway.json.backup",
+        "Length":  204,
+        "LastWriteTime":  "\/Date(1785874197993)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "railway.json.check",
+        "Length":  153,
+        "LastWriteTime":  "\/Date(1785874075889)\/",
+        "Extension":  ".check"
+    },
+    {
+        "RelativePath":  "railway.toml.bak.check",
+        "Length":  88,
+        "LastWriteTime":  "\/Date(1786199131998)\/",
+        "Extension":  ".check"
+    },
+    {
+        "RelativePath":  "railway_baseline_20260824.txt",
+        "Length":  1512,
+        "LastWriteTime":  "\/Date(1787577207254)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "railway_bot_gateway.py.disabled",
+        "Length":  1002,
+        "LastWriteTime":  "\/Date(1786305156245)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "railway_config.json",
+        "Length":  148,
+        "LastWriteTime":  "\/Date(1785846911526)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "railway_db_snapshot.txt",
+        "Length":  2966,
+        "LastWriteTime":  "\/Date(1786443785181)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "railway_Dockerfile",
+        "Length":  2600,
+        "LastWriteTime":  "\/Date(1785873337747)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "railway_loader.py.OLD_UNUSED",
+        "Length":  3599,
+        "LastWriteTime":  "\/Date(1785876913427)\/",
+        "Extension":  ".OLD_UNUSED"
+    },
+    {
+        "RelativePath":  "railway_logs_baseline_20260824.txt",
+        "Length":  5702,
+        "LastWriteTime":  "\/Date(1787577209698)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "railway_pre_fix_check.sh",
+        "Length":  759,
+        "LastWriteTime":  "\/Date(1785232511516)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "railway_Procfile",
+        "Length":  36,
+        "LastWriteTime":  "\/Date(1785846906884)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "railway_trigger.txt",
+        "Length":  27,
+        "LastWriteTime":  "\/Date(1786094660161)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "README.md",
+        "Length":  716,
+        "LastWriteTime":  "\/Date(1785232511371)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "recovery\\README.txt",
+        "Length":  149,
+        "LastWriteTime":  "\/Date(1785694880737)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "refresh_token_handler.py",
+        "Length":  7247,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "RELEASE_AUDIT_20260810.txt",
+        "Length":  188,
+        "LastWriteTime":  "\/Date(1786362995396)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "RELEASE_STATUS.txt",
+        "Length":  86,
+        "LastWriteTime":  "\/Date(1786362916104)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "RELEASE_STATUS_2026_07_21.md",
+        "Length":  490,
+        "LastWriteTime":  "\/Date(1785232511371)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "REPORT_20260723_225642\\critical_findings.md",
+        "Length":  471,
+        "LastWriteTime":  "\/Date(1785232511373)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "REPORT_20260723_225642\\devices.json",
+        "Length":  486,
+        "LastWriteTime":  "\/Date(1785232511373)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "REPORT_20260723_225642\\SUMMARY.md",
+        "Length":  1047,
+        "LastWriteTime":  "\/Date(1785232511372)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "REPORT_20260723_225642\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511374)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "report_handler.py",
+        "Length":  4247,
+        "LastWriteTime":  "\/Date(1786644001253)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "REPUTATION_PLAN.md",
+        "Length":  713,
+        "LastWriteTime":  "\/Date(1785232511374)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "requirements.txt",
+        "Length":  145,
+        "LastWriteTime":  "\/Date(1787595930229)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "responsibility_map.py",
+        "Length":  6586,
+        "LastWriteTime":  "\/Date(1786574422268)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "ROADMAP.md",
+        "Length":  7840,
+        "LastWriteTime":  "\/Date(1785232511375)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "roadmap_handler.py",
+        "Length":  428,
+        "LastWriteTime":  "\/Date(1786574422280)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "run_bot.sh",
+        "Length":  197,
+        "LastWriteTime":  "\/Date(1785232511519)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "RUN_GUIDE.md",
+        "Length":  300,
+        "LastWriteTime":  "\/Date(1785232511375)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "run_tests.sh",
+        "Length":  2484,
+        "LastWriteTime":  "\/Date(1785232511520)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "runtime.txt",
+        "Length":  16,
+        "LastWriteTime":  "\/Date(1787323657620)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "runtime_test.py",
+        "Length":  517,
+        "LastWriteTime":  "\/Date(1786574422282)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "safe_progress.py",
+        "Length":  797,
+        "LastWriteTime":  "\/Date(1786574422288)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "sandbox_handler.py",
+        "Length":  1323,
+        "LastWriteTime":  "\/Date(1786574422292)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SAVE_DB_USAGE.txt",
+        "Length":  2036,
+        "LastWriteTime":  "\/Date(1786006306497)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "scripts\\slh_integrity_check.py",
+        "Length":  479,
+        "LastWriteTime":  "\/Date(1785232511523)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "security\\permissions.py",
+        "Length":  2236,
+        "LastWriteTime":  "\/Date(1786627456673)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "security\\policies.json",
+        "Length":  594,
+        "LastWriteTime":  "\/Date(1786622139281)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "security\\roles.json",
+        "Length":  321,
+        "LastWriteTime":  "\/Date(1786622139284)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "self_check.py",
+        "Length":  467,
+        "LastWriteTime":  "\/Date(1786574422294)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "self_model_audit.py",
+        "Length":  884,
+        "LastWriteTime":  "\/Date(1786574422296)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "self_test.py",
+        "Length":  1949,
+        "LastWriteTime":  "\/Date(1786574422296)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "services\\task_service.py",
+        "Length":  3880,
+        "LastWriteTime":  "\/Date(1785232511527)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SESSION_CLOSURE_AUDIT.json",
+        "Length":  17371,
+        "LastWriteTime":  "\/Date(1785798706990)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "SESSION_CLOSURE_MANIFEST.md",
+        "Length":  3823,
+        "LastWriteTime":  "\/Date(1785701578177)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "SESSION_STATUS.md",
+        "Length":  1325,
+        "LastWriteTime":  "\/Date(1786914441254)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "setup_dev_env.sh",
+        "Length":  1107,
+        "LastWriteTime":  "\/Date(1786914441262)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "show_dashboard.py",
+        "Length":  278,
+        "LastWriteTime":  "\/Date(1786574422298)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "show_journal.py",
+        "Length":  683,
+        "LastWriteTime":  "\/Date(1786574422298)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh.py",
+        "Length":  1412,
+        "LastWriteTime":  "\/Date(1787238552318)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_AGENT_HANDOFF.md",
+        "Length":  5837,
+        "LastWriteTime":  "\/Date(1785232511378)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "slh_all_in_one.sh",
+        "Length":  4589,
+        "LastWriteTime":  "\/Date(1785232511529)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_audit.py",
+        "Length":  4028,
+        "LastWriteTime":  "\/Date(1786574422302)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_AUDIT_20260813_201938.txt",
+        "Length":  1375142,
+        "LastWriteTime":  "\/Date(1786983397396)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_audit_report.json",
+        "Length":  645,
+        "LastWriteTime":  "\/Date(1787238552319)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "slh_authority_audit.py",
+        "Length":  5224,
+        "LastWriteTime":  "\/Date(1786647660632)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_auto_audit.ps1",
+        "Length":  895,
+        "LastWriteTime":  "\/Date(1785926821595)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "slh_autopilot.py",
+        "Length":  3625,
+        "LastWriteTime":  "\/Date(1786574422302)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_BOT_ADAPTER.py",
+        "Length":  740,
+        "LastWriteTime":  "\/Date(1786574422304)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_broadcast_ready_check.sh",
+        "Length":  2328,
+        "LastWriteTime":  "\/Date(1785232511532)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_clean_inventory.py",
+        "Length":  1586,
+        "LastWriteTime":  "\/Date(1786647896825)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_close_day.sh",
+        "Length":  1579,
+        "LastWriteTime":  "\/Date(1785232511532)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_command_map.sh",
+        "Length":  742,
+        "LastWriteTime":  "\/Date(1785232511533)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_COMMAND_MAP.txt",
+        "Length":  41638,
+        "LastWriteTime":  "\/Date(1786199131942)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_consolidate.py",
+        "Length":  1750,
+        "LastWriteTime":  "\/Date(1786574422304)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_control.ps1",
+        "Length":  1685,
+        "LastWriteTime":  "\/Date(1787854390170)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "slh_control.ps1.bak",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785704251844)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "slh_control_v1.ps1",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785704251844)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "slh_daemon.sh",
+        "Length":  2082,
+        "LastWriteTime":  "\/Date(1785232511534)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Length":  4856,
+        "LastWriteTime":  "\/Date(1786459347943)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\branding\\favicon.svg",
+        "Length":  238,
+        "LastWriteTime":  "\/Date(1785232511403)\/",
+        "Extension":  ".svg"
+    },
+    {
+        "RelativePath":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\branding\\slh-logo.svg",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1785232511403)\/",
+        "Extension":  ".svg"
+    },
+    {
+        "RelativePath":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\dashboard.html",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1786268197411)\/",
+        "Extension":  ".html"
+    },
+    {
+        "RelativePath":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+        "Length":  2246,
+        "LastWriteTime":  "\/Date(1786647400968)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Length":  2210,
+        "LastWriteTime":  "\/Date(1786633775179)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Length":  2478484,
+        "LastWriteTime":  "\/Date(1786199131958)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_dna_scan.py",
+        "Length":  11662,
+        "LastWriteTime":  "\/Date(1786647989323)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_doctor.sh",
+        "Length":  1813,
+        "LastWriteTime":  "\/Date(1785232511534)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_empire.db",
+        "Length":  32768,
+        "LastWriteTime":  "\/Date(1785701578217)\/",
+        "Extension":  ".db"
+    },
+    {
+        "RelativePath":  "slh_fix_and_push.sh",
+        "Length":  1511,
+        "LastWriteTime":  "\/Date(1785232511535)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_fix_bom.py",
+        "Length":  2193,
+        "LastWriteTime":  "\/Date(1786647438237)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_freeze.sh",
+        "Length":  596,
+        "LastWriteTime":  "\/Date(1785232511535)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_FULL_AUDIT_20260810_152243.txt",
+        "Length":  389432,
+        "LastWriteTime":  "\/Date(1786364571217)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_full_check.py",
+        "Length":  3948,
+        "LastWriteTime":  "\/Date(1786574422306)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_full_diag.sh",
+        "Length":  2511,
+        "LastWriteTime":  "\/Date(1785232511536)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_full_doctor.sh",
+        "Length":  5402,
+        "LastWriteTime":  "\/Date(1785232511537)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_full_system_audit.sh",
+        "Length":  2157,
+        "LastWriteTime":  "\/Date(1785232511537)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_GATEWAY.py",
+        "Length":  447,
+        "LastWriteTime":  "\/Date(1786574422306)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_git_diag_20260804_020650.txt",
+        "Length":  4236,
+        "LastWriteTime":  "\/Date(1786199131998)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_handler_inventory.sh",
+        "Length":  1437,
+        "LastWriteTime":  "\/Date(1785232511538)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_HANDLER_MAP.txt",
+        "Length":  69952,
+        "LastWriteTime":  "\/Date(1786199131961)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_hardening.py",
+        "Length":  2952,
+        "LastWriteTime":  "\/Date(1786574422308)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_KERNEL.py",
+        "Length":  1099,
+        "LastWriteTime":  "\/Date(1786574422310)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_launch_guard.sh",
+        "Length":  1423,
+        "LastWriteTime":  "\/Date(1785232511539)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_light_20260702_0118.txt",
+        "Length":  4764,
+        "LastWriteTime":  "\/Date(1786199131998)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "SLH_LOCAL_TREE.txt",
+        "Length":  39104,
+        "LastWriteTime":  "\/Date(1786199131961)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_lock.py",
+        "Length":  3561,
+        "LastWriteTime":  "\/Date(1786574422310)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_MAIN.py",
+        "Length":  4347,
+        "LastWriteTime":  "\/Date(1786574422312)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_MODULES.py",
+        "Length":  394,
+        "LastWriteTime":  "\/Date(1786574422312)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_morning.sh",
+        "Length":  117,
+        "LastWriteTime":  "\/Date(1785232511541)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_plan_20260702.txt",
+        "Length":  1515,
+        "LastWriteTime":  "\/Date(1786199131998)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_pre_broadcast_audit.sh",
+        "Length":  1784,
+        "LastWriteTime":  "\/Date(1785232511542)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_prelaunch_check.sh",
+        "Length":  1694,
+        "LastWriteTime":  "\/Date(1785232511543)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_PYTHON_FILES.txt",
+        "Length":  54512,
+        "LastWriteTime":  "\/Date(1786199131964)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "slh_recovery_check.sh",
+        "Length":  1964,
+        "LastWriteTime":  "\/Date(1785232511543)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_RECOVERY_PROTOCOL.md",
+        "Length":  300,
+        "LastWriteTime":  "\/Date(1785694777596)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "SLH_RELEASE_LOGS.txt",
+        "Length":  4922,
+        "LastWriteTime":  "\/Date(1786552675680)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "SLH_RELEASE_VERIFY.json",
+        "Length":  133,
+        "LastWriteTime":  "\/Date(1786554108461)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "slh_runtime_audit.sh",
+        "Length":  2461,
+        "LastWriteTime":  "\/Date(1785232511544)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_RUNTIME_AUTHORITY.json",
+        "Length":  260,
+        "LastWriteTime":  "\/Date(1786642330398)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "slh_runtime_handler_test.sh",
+        "Length":  526,
+        "LastWriteTime":  "\/Date(1785232511544)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SLH_RUNTIME_POLICY.md",
+        "Length":  673,
+        "LastWriteTime":  "\/Date(1786009688941)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "SLH_RUNTIME_SNAPSHOT_20260708.md",
+        "Length":  607,
+        "LastWriteTime":  "\/Date(1785232511381)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "slh_safe_diag.sh",
+        "Length":  1370,
+        "LastWriteTime":  "\/Date(1785232511545)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_safe_fix.sh",
+        "Length":  3944,
+        "LastWriteTime":  "\/Date(1785232511545)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_snapshot.py",
+        "Length":  441,
+        "LastWriteTime":  "\/Date(1786574422314)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_state.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511546)\/",
+        "Extension":  ".db"
+    },
+    {
+        "RelativePath":  "slh_state_audit.py",
+        "Length":  590,
+        "LastWriteTime":  "\/Date(1786574422316)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_STATE_BACKUP_20260812_201902\\agents.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786553431199)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "SLH_STATE_BACKUP_20260812_201902\\ai_health.json",
+        "Length":  66,
+        "LastWriteTime":  "\/Date(1786305156247)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Length":  7334,
+        "LastWriteTime":  "\/Date(1786553513245)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh_status.sh",
+        "Length":  572,
+        "LastWriteTime":  "\/Date(1785232511547)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "slh_sync_fix.py",
+        "Length":  1851,
+        "LastWriteTime":  "\/Date(1786574422316)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "SLH_TREE.txt",
+        "Length":  83144,
+        "LastWriteTime":  "\/Date(1786317513758)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "SLH_V1.2_FEATURE1.1.md",
+        "Length":  363,
+        "LastWriteTime":  "\/Date(1786305156239)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "SLH_V1.2_FEATURE1.md",
+        "Length":  320,
+        "LastWriteTime":  "\/Date(1786305156240)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "SLH_V1.2_ROADMAP.md",
+        "Length":  207,
+        "LastWriteTime":  "\/Date(1786305156240)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "slh_visibility_scan.py",
+        "Length":  1864,
+        "LastWriteTime":  "\/Date(1786574422346)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slhdna.bat",
+        "Length":  38,
+        "LastWriteTime":  "\/Date(1786647284459)\/",
+        "Extension":  ".bat"
+    },
+    {
+        "RelativePath":  "slhdna.py",
+        "Length":  13520,
+        "LastWriteTime":  "\/Date(1786647400930)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "slh-phase2-ready-20260712",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511528)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "slh-workflow.ps1",
+        "Length":  3618,
+        "LastWriteTime":  "\/Date(1786272968196)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "slh-workflow\\.ps1",
+        "Length":  3618,
+        "LastWriteTime":  "\/Date(1786273037621)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "smart_leaderboard.py",
+        "Length":  897,
+        "LastWriteTime":  "\/Date(1786574422348)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "snapshot.sh",
+        "Length":  343,
+        "LastWriteTime":  "\/Date(1785232511549)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "SOURCE_OF_TRUTH.md",
+        "Length":  1441,
+        "LastWriteTime":  "\/Date(1785232511382)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "stable_checkpoint_20260712.sh",
+        "Length":  1015,
+        "LastWriteTime":  "\/Date(1785232511550)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "STABLE_STATE_20260711.md",
+        "Length":  599,
+        "LastWriteTime":  "\/Date(1785232511382)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "STABLE_STATUS_20260713.txt",
+        "Length":  2354,
+        "LastWriteTime":  "\/Date(1785232511382)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "start.sh",
+        "Length":  452,
+        "LastWriteTime":  "\/Date(1785860641867)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_full.sh",
+        "Length":  851,
+        "LastWriteTime":  "\/Date(1785860641877)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_railway.sh",
+        "Length":  177,
+        "LastWriteTime":  "\/Date(1785701578225)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_safe.sh",
+        "Length":  1053,
+        "LastWriteTime":  "\/Date(1785232511552)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_secure.sh",
+        "Length":  790,
+        "LastWriteTime":  "\/Date(1785232511553)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_server.sh",
+        "Length":  313,
+        "LastWriteTime":  "\/Date(1785860642585)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "start_slh.sh",
+        "Length":  264,
+        "LastWriteTime":  "\/Date(1785232511553)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "startup_stderr.log",
+        "Length":  271,
+        "LastWriteTime":  "\/Date(1786277321144)\/",
+        "Extension":  ".log"
+    },
+    {
+        "RelativePath":  "startup_stdout.log",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1786277321134)\/",
+        "Extension":  ".log"
+    },
+    {
+        "RelativePath":  "state\\agents.json",
+        "Length":  984,
+        "LastWriteTime":  "\/Date(1786908480228)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\agents.json.before_gateway_fix",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786104885822)\/",
+        "Extension":  ".before_gateway_fix"
+    },
+    {
+        "RelativePath":  "state\\agents.json.snapshot_1786631973",
+        "Length":  1355,
+        "LastWriteTime":  "\/Date(1786914441263)\/",
+        "Extension":  ".snapshot_1786631973"
+    },
+    {
+        "RelativePath":  "state\\ai_health.json",
+        "Length":  62,
+        "LastWriteTime":  "\/Date(1786914441264)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\audit.jsonl",
+        "Length":  1668,
+        "LastWriteTime":  "\/Date(1786914441265)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_161132.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786108288762)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_161201.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786108317844)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_162640.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109198480)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_163053.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109308603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_163623.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109702084)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_163927.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109783446)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_163959.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109967500)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\backups\\agents_mirror_20260807_165130.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109999575)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\control\\sync_state.json",
+        "Length":  363,
+        "LastWriteTime":  "\/Date(1787579960924)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\control\\system_map.json",
+        "Length":  274,
+        "LastWriteTime":  "\/Date(1787579964109)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\custom_handlers\\ai_voting_handler.py.backup",
+        "Length":  3409,
+        "LastWriteTime":  "\/Date(1785701578225)\/",
+        "Extension":  ".backup"
+    },
+    {
+        "RelativePath":  "state\\custom_handlers_disabled\\staking_basic.py",
+        "Length":  2524,
+        "LastWriteTime":  "\/Date(1785232511568)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "state\\custom_handlers_disabled\\token_handler.py",
+        "Length":  1844,
+        "LastWriteTime":  "\/Date(1786009206942)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "state\\custom_handlers_disabled\\token_wizard.py",
+        "Length":  1728,
+        "LastWriteTime":  "\/Date(1785232511571)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "state\\daily_plan.json",
+        "Length":  237,
+        "LastWriteTime":  "\/Date(1787665427150)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db.json",
+        "Length":  60664,
+        "LastWriteTime":  "\/Date(1787868122881)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db.json.backup_token_import_20260806_123319",
+        "Length":  1429,
+        "LastWriteTime":  "\/Date(1786008549690)\/",
+        "Extension":  ".backup_token_import_20260806_123319"
+    },
+    {
+        "RelativePath":  "state\\db.json.before_gateway_fix",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/",
+        "Extension":  ".before_gateway_fix"
+    },
+    {
+        "RelativePath":  "state\\db.json.lock",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1787573178947)\/",
+        "Extension":  ".lock"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786660597",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441267)\/",
+        "Extension":  ".pre_alpha_1786660597"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786661017",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441269)\/",
+        "Extension":  ".pre_alpha_1786661017"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786661117",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441270)\/",
+        "Extension":  ".pre_alpha_1786661117"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786661599",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441271)\/",
+        "Extension":  ".pre_alpha_1786661599"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786703705",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441272)\/",
+        "Extension":  ".pre_alpha_1786703705"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786704286",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441273)\/",
+        "Extension":  ".pre_alpha_1786704286"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786704756",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441274)\/",
+        "Extension":  ".pre_alpha_1786704756"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_alpha_1786843704",
+        "Length":  28808,
+        "LastWriteTime":  "\/Date(1786914441276)\/",
+        "Extension":  ".pre_alpha_1786843704"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786703746",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441276)\/",
+        "Extension":  ".pre_delta_1786703746"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786704036",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441277)\/",
+        "Extension":  ".pre_delta_1786704036"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786704100",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441278)\/",
+        "Extension":  ".pre_delta_1786704100"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786704435",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441278)\/",
+        "Extension":  ".pre_delta_1786704435"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786708033",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441279)\/",
+        "Extension":  ".pre_delta_1786708033"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_delta_1786708688",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441281)\/",
+        "Extension":  ".pre_delta_1786708688"
+    },
+    {
+        "RelativePath":  "state\\db.json.pre_onboarding_1786714715",
+        "Length":  14968,
+        "LastWriteTime":  "\/Date(1786914441282)\/",
+        "Extension":  ".pre_onboarding_1786714715"
+    },
+    {
+        "RelativePath":  "state\\db.json.snapshot_1786631972",
+        "Length":  8866,
+        "LastWriteTime":  "\/Date(1786914441283)\/",
+        "Extension":  ".snapshot_1786631972"
+    },
+    {
+        "RelativePath":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Length":  31209,
+        "LastWriteTime":  "\/Date(1787573641607)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db_BEFORE_AUDIT_1786472955.json",
+        "Length":  8310,
+        "LastWriteTime":  "\/Date(1786914441286)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db_local_backup_before_sync.json",
+        "Length":  1525,
+        "LastWriteTime":  "\/Date(1786404223211)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Length":  31209,
+        "LastWriteTime":  "\/Date(1787573506560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\db_PROD_BEFORE_SYNC_1786444044.json",
+        "Length":  3500,
+        "LastWriteTime":  "\/Date(1786914441287)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\desired_state.json",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1787760977819)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\device_audit_20260820_154149\\devices.txt",
+        "Length":  218,
+        "LastWriteTime":  "\/Date(1787238552320)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state\\device_audit_20260820_154149\\git_status.txt",
+        "Length":  384,
+        "LastWriteTime":  "\/Date(1787238552321)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state\\device_audit_20260820_154149\\location.txt",
+        "Length":  188,
+        "LastWriteTime":  "\/Date(1787238552321)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state\\device_audit_20260820_154149\\pio_version.txt",
+        "Length":  68,
+        "LastWriteTime":  "\/Date(1787238552323)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state\\devices.json",
+        "Length":  2744,
+        "LastWriteTime":  "\/Date(1787761024074)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\governance.json",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441289)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\governance.json.pre_alpha_1786703707",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441290)\/",
+        "Extension":  ".pre_alpha_1786703707"
+    },
+    {
+        "RelativePath":  "state\\governance.json.pre_delta_1786703747",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441290)\/",
+        "Extension":  ".pre_delta_1786703747"
+    },
+    {
+        "RelativePath":  "state\\governance.json.pre_delta_1786704038",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441291)\/",
+        "Extension":  ".pre_delta_1786704038"
+    },
+    {
+        "RelativePath":  "state\\governance.json.pre_delta_1786704440",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441292)\/",
+        "Extension":  ".pre_delta_1786704440"
+    },
+    {
+        "RelativePath":  "state\\governance\\genesis_registry.json",
+        "Length":  1679,
+        "LastWriteTime":  "\/Date(1787336024059)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\governance\\user_classes.json",
+        "Length":  359,
+        "LastWriteTime":  "\/Date(1787335456432)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\journals\\8789977826.jsonl",
+        "Length":  3385,
+        "LastWriteTime":  "\/Date(1786914441293)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "state\\journals\\8791275334.jsonl",
+        "Length":  125,
+        "LastWriteTime":  "\/Date(1786914441294)\/",
+        "Extension":  ".jsonl"
+    },
+    {
+        "RelativePath":  "state\\marketplace.json",
+        "Length":  944,
+        "LastWriteTime":  "\/Date(1786914441295)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\missions\\.mission_lifecycle.lock",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1786980074009)\/",
+        "Extension":  ".lock"
+    },
+    {
+        "RelativePath":  "state\\missions\\1.json",
+        "Length":  161,
+        "LastWriteTime":  "\/Date(1786914441296)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\missions\\board.json",
+        "Length":  7449,
+        "LastWriteTime":  "\/Date(1786983397400)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\missions\\results\\mission-2-20260814T132236Z.json",
+        "Length":  475,
+        "LastWriteTime":  "\/Date(1786914441299)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\missions\\results\\mission-3-20260814T132912Z.json",
+        "Length":  475,
+        "LastWriteTime":  "\/Date(1786914441302)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\money_authority_audit_pre_token.txt",
+        "Length":  6918,
+        "LastWriteTime":  "\/Date(1787238552324)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state\\rewards_ledger.json",
+        "Length":  307,
+        "LastWriteTime":  "\/Date(1786914441320)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_171952\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_171952\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_171952\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_171952\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_171952\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172422\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172422\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172422\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172422\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172422\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172507\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172507\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172507\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172507\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_172507\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_173832\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_173832\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_173832\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_173832\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_173832\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_174602\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_174602\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_174602\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_174602\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\20260807_174602\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\agents.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786015632701)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\agents.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786104885822)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786108292303)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\agents.json",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1786108428421)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\db.json",
+        "Length":  1470,
+        "LastWriteTime":  "\/Date(1786108428416)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\agents.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786553431199)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Length":  26359,
+        "LastWriteTime":  "\/Date(1786907408207)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Length":  4636,
+        "LastWriteTime":  "\/Date(1786901735245)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\system_memory.json",
+        "Length":  120,
+        "LastWriteTime":  "\/Date(1786914441320)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\system_services.json",
+        "Length":  551,
+        "LastWriteTime":  "\/Date(1787522898751)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\backups\\board_before_api_assignment_20260817T152114Z.json",
+        "Length":  7449,
+        "LastWriteTime":  "\/Date(1786914441298)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\backups\\board_before_api_creation_20260811T140726Z.json",
+        "Length":  2864,
+        "LastWriteTime":  "\/Date(1785232511580)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\backups\\board_before_api_execution_20260817T152114Z.json",
+        "Length":  7510,
+        "LastWriteTime":  "\/Date(1786980074020)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\loader_registration_audit.json",
+        "Length":  1669,
+        "LastWriteTime":  "\/Date(1787573938922)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\manifest.json",
+        "Length":  4636,
+        "LastWriteTime":  "\/Date(1786914441330)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Length":  26405,
+        "LastWriteTime":  "\/Date(1787160639670)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\runtime_command_registration_audit.json",
+        "Length":  13975,
+        "LastWriteTime":  "\/Date(1786914441330)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Length":  78252,
+        "LastWriteTime":  "\/Date(1787573938818)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\runtime_state_access_classification.json",
+        "Length":  8227,
+        "LastWriteTime":  "\/Date(1787573926110)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Length":  23206,
+        "LastWriteTime":  "\/Date(1787573925975)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\user_acceptance_audit.json",
+        "Length":  1909,
+        "LastWriteTime":  "\/Date(1787335203508)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state\\takeover\\user_command_wiring_audit.json",
+        "Length":  25996,
+        "LastWriteTime":  "\/Date(1787573938380)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "state_connection_map.txt",
+        "Length":  73970,
+        "LastWriteTime":  "\/Date(1785696620016)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state_engine.py",
+        "Length":  545,
+        "LastWriteTime":  "\/Date(1786574422348)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "state_manager.py",
+        "Length":  2006,
+        "LastWriteTime":  "\/Date(1786628826832)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "STATE_USAGE_AUDIT.txt",
+        "Length":  37870,
+        "LastWriteTime":  "\/Date(1786014515390)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "state_writers_report.txt",
+        "Length":  255606,
+        "LastWriteTime":  "\/Date(1786105373231)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "STATUS.md",
+        "Length":  812,
+        "LastWriteTime":  "\/Date(1785232511383)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "status_agents.txt",
+        "Length":  46,
+        "LastWriteTime":  "\/Date(1786104884670)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "store\\engine.py",
+        "Length":  1871,
+        "LastWriteTime":  "\/Date(1787745852738)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "store\\grant_engine.py",
+        "Length":  2936,
+        "LastWriteTime":  "\/Date(1787745852740)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "store\\handler.py",
+        "Length":  619,
+        "LastWriteTime":  "\/Date(1786626671993)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "store\\items.json",
+        "Length":  810,
+        "LastWriteTime":  "\/Date(1787745852741)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "store\\items.json.backup_marketplace_v1",
+        "Length":  252,
+        "LastWriteTime":  "\/Date(1785352366683)\/",
+        "Extension":  ".backup_marketplace_v1"
+    },
+    {
+        "RelativePath":  "store\\purchase_service.py",
+        "Length":  1382,
+        "LastWriteTime":  "\/Date(1786661427642)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "STUDENT_GUIDE.md",
+        "Length":  306,
+        "LastWriteTime":  "\/Date(1785806248218)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "subscriptions.json",
+        "Length":  4,
+        "LastWriteTime":  "\/Date(1785232511632)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "subscriptions.py",
+        "Length":  1269,
+        "LastWriteTime":  "\/Date(1786574422351)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "sync.sh",
+        "Length":  177,
+        "LastWriteTime":  "\/Date(1785232511633)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "system_diagnostics.py",
+        "Length":  8718,
+        "LastWriteTime":  "\/Date(1786574767866)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "system_health.py",
+        "Length":  2634,
+        "LastWriteTime":  "\/Date(1786574422355)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "system_profile.json",
+        "Length":  328,
+        "LastWriteTime":  "\/Date(1785232511635)\/",
+        "Extension":  ".json"
+    },
+    {
+        "RelativePath":  "SYSTEM_RULES.md",
+        "Length":  567,
+        "LastWriteTime":  "\/Date(1785232511383)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "system_scan.sh",
+        "Length":  1165,
+        "LastWriteTime":  "\/Date(1785232511636)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "system_test.sh",
+        "Length":  11118,
+        "LastWriteTime":  "\/Date(1785232511637)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "system_verification.sh",
+        "Length":  6642,
+        "LastWriteTime":  "\/Date(1785232511637)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "t === ADMIN TEXT CHECK ===",
+        "Length":  6610,
+        "LastWriteTime":  "\/Date(1785927033670)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "t === FIND HTML MODE ===",
+        "Length":  5378,
+        "LastWriteTime":  "\/Date(1785927646341)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "takeover_controller.py",
+        "Length":  8494,
+        "LastWriteTime":  "\/Date(1786574422355)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "TASK_SNAPSHOT.txt",
+        "Length":  151,
+        "LastWriteTime":  "\/Date(1786553758944)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "TELEBOT_AUDIT.txt",
+        "Length":  746,
+        "LastWriteTime":  "\/Date(1786014515071)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "telegram_chat_audit.py",
+        "Length":  1008,
+        "LastWriteTime":  "\/Date(1786574422357)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "telegram_owner_check.sh",
+        "Length":  759,
+        "LastWriteTime":  "\/Date(1785232511639)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "TERMUX_FULL.txt",
+        "Length":  13430,
+        "LastWriteTime":  "\/Date(1785841408595)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "TERMUX_HANDLERS.txt",
+        "Length":  13430,
+        "LastWriteTime":  "\/Date(1785841405541)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "test_assignment_api.py",
+        "Length":  3195,
+        "LastWriteTime":  "\/Date(1786574422359)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_assignment_commit_api.py",
+        "Length":  5243,
+        "LastWriteTime":  "\/Date(1786574422361)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_creation_api.py",
+        "Length":  4972,
+        "LastWriteTime":  "\/Date(1786574422361)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_handler.py",
+        "Length":  426,
+        "LastWriteTime":  "\/Date(1786574422363)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_marketplace.py",
+        "Length":  1195,
+        "LastWriteTime":  "\/Date(1786574422363)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission_orchestrator_preview.py",
+        "Length":  3214,
+        "LastWriteTime":  "\/Date(1786574422407)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_assignment_commit.py",
+        "Length":  5492,
+        "LastWriteTime":  "\/Date(1786574422365)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_assignment_preview.py",
+        "Length":  3214,
+        "LastWriteTime":  "\/Date(1786574422367)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_completion_commit.py",
+        "Length":  8748,
+        "LastWriteTime":  "\/Date(1786574422369)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_completion_preview.py",
+        "Length":  6627,
+        "LastWriteTime":  "\/Date(1786574422371)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_execution_commit.py",
+        "Length":  9478,
+        "LastWriteTime":  "\/Date(1786574422371)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_execution_preview.py",
+        "Length":  2765,
+        "LastWriteTime":  "\/Date(1786574422373)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission3_post_completion_regression.py",
+        "Length":  8236,
+        "LastWriteTime":  "\/Date(1786574422375)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_assignment_commit.py",
+        "Length":  6783,
+        "LastWriteTime":  "\/Date(1786574422377)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_assignment_preview.py",
+        "Length":  2963,
+        "LastWriteTime":  "\/Date(1786574422377)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_creation_commit.py",
+        "Length":  6050,
+        "LastWriteTime":  "\/Date(1786574422395)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_creation_preview.py",
+        "Length":  2986,
+        "LastWriteTime":  "\/Date(1786574422402)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_execution_commit.py",
+        "Length":  6680,
+        "LastWriteTime":  "\/Date(1786574422404)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_mission4_execution_preview.py",
+        "Length":  2754,
+        "LastWriteTime":  "\/Date(1786574422404)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "test_runtime.sh",
+        "Length":  180,
+        "LastWriteTime":  "\/Date(1785694051180)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "tests\\system_check.py",
+        "Length":  1315,
+        "LastWriteTime":  "\/Date(1785232511651)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tests\\test_agent.py",
+        "Length":  1954,
+        "LastWriteTime":  "\/Date(1787337009086)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tests\\test_agent.py.bak",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785232511652)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "tests\\test_agent.py.bak_before_refactor",
+        "Length":  1686,
+        "LastWriteTime":  "\/Date(1787330682972)\/",
+        "Extension":  ".bak_before_refactor"
+    },
+    {
+        "RelativePath":  "tests\\test_task_and_audit.py",
+        "Length":  2356,
+        "LastWriteTime":  "\/Date(1787353533325)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tests\\test_task_and_audit.py.bak",
+        "Length":  2795,
+        "LastWriteTime":  "\/Date(1785232511652)\/",
+        "Extension":  ".bak"
+    },
+    {
+        "RelativePath":  "TOKEN_PLAN.md",
+        "Length":  383,
+        "LastWriteTime":  "\/Date(1785232511383)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "token_sync.sh",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1785232511653)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "TOMORROW_HANDOFF.md",
+        "Length":  1812,
+        "LastWriteTime":  "\/Date(1785232511384)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "ton_handler.py",
+        "Length":  5935,
+        "LastWriteTime":  "\/Date(1787238552357)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\active_loader_audit.py",
+        "Length":  4910,
+        "LastWriteTime":  "\/Date(1785232511655)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\admin_authority_audit.py",
+        "Length":  1086,
+        "LastWriteTime":  "\/Date(1787238552358)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\agent_state_autopilot.py",
+        "Length":  8024,
+        "LastWriteTime":  "\/Date(1785232511656)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\agent_sync_guard.py",
+        "Length":  813,
+        "LastWriteTime":  "\/Date(1786015729055)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\audit_state_access.py",
+        "Length":  8649,
+        "LastWriteTime":  "\/Date(1785232511657)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\build_state_migration_queue.py",
+        "Length":  6061,
+        "LastWriteTime":  "\/Date(1785232511657)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\connect_ask_guard.py",
+        "Length":  977,
+        "LastWriteTime":  "\/Date(1786015729059)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\connect_llm_circuit.py",
+        "Length":  2004,
+        "LastWriteTime":  "\/Date(1786015729062)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\create_ai_guard.py",
+        "Length":  975,
+        "LastWriteTime":  "\/Date(1786015729065)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\create_ai_health_state.py",
+        "Length":  393,
+        "LastWriteTime":  "\/Date(1786015729067)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\create_ask_guard.py",
+        "Length":  721,
+        "LastWriteTime":  "\/Date(1786015729076)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\disable_botstable_ask.py",
+        "Length":  977,
+        "LastWriteTime":  "\/Date(1786015729079)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\discover_projects.py",
+        "Length":  3886,
+        "LastWriteTime":  "\/Date(1785232511661)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\discover_termux_projects.py",
+        "Length":  4814,
+        "LastWriteTime":  "\/Date(1785232511662)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\fix_ask_guard_api.py",
+        "Length":  321,
+        "LastWriteTime":  "\/Date(1786015729082)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\full_static_handler_audit.py",
+        "Length":  16746,
+        "LastWriteTime":  "\/Date(1785232511663)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\full_system_audit.py",
+        "Length":  2821,
+        "LastWriteTime":  "\/Date(1786109061687)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\live_vs_dead_audit.py",
+        "Length":  2091,
+        "LastWriteTime":  "\/Date(1786914441334)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\loader_registration_audit.py",
+        "Length":  6395,
+        "LastWriteTime":  "\/Date(1785232511665)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\money_authority_audit.py",
+        "Length":  1830,
+        "LastWriteTime":  "\/Date(1787238552358)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\project_audit.py",
+        "Length":  3681,
+        "LastWriteTime":  "\/Date(1786914441336)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\rbac_audit.py",
+        "Length":  998,
+        "LastWriteTime":  "\/Date(1786628484283)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\real_audit.py",
+        "Length":  3026,
+        "LastWriteTime":  "\/Date(1785232511665)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\runtime_command_registration_audit.py",
+        "Length":  11939,
+        "LastWriteTime":  "\/Date(1785232511666)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\runtime_loading_path_audit.py",
+        "Length":  19224,
+        "LastWriteTime":  "\/Date(1785232511667)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\runtime_state_access_classification.py",
+        "Length":  10306,
+        "LastWriteTime":  "\/Date(1785232511667)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\runtime_state_dependency_map.py",
+        "Length":  8278,
+        "LastWriteTime":  "\/Date(1785232511668)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\session_closure_audit.py",
+        "Length":  8519,
+        "LastWriteTime":  "\/Date(1785232511668)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\slh_doctor.py",
+        "Length":  1168,
+        "LastWriteTime":  "\/Date(1786015729088)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\slh_launch_check.py",
+        "Length":  1528,
+        "LastWriteTime":  "\/Date(1786661427643)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\slh_launch_control.py",
+        "Length":  5150,
+        "LastWriteTime":  "\/Date(1787323657636)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\slh_migrate.py",
+        "Length":  37804,
+        "LastWriteTime":  "\/Date(1785232511669)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\SLH-Control.ps1",
+        "Length":  1604,
+        "LastWriteTime":  "\/Date(1785232511654)\/",
+        "Extension":  ".ps1"
+    },
+    {
+        "RelativePath":  "tools\\test_agent_state_full.py",
+        "Length":  6808,
+        "LastWriteTime":  "\/Date(1785232511670)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_learning_path_full_loader.py",
+        "Length":  2713,
+        "LastWriteTime":  "\/Date(1786446091459)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_learning_path_loader_execution.py",
+        "Length":  1788,
+        "LastWriteTime":  "\/Date(1786446091461)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_learning_path_runtime.py",
+        "Length":  2404,
+        "LastWriteTime":  "\/Date(1786446091462)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_project_graph_contract.py",
+        "Length":  3362,
+        "LastWriteTime":  "\/Date(1785232511670)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_project_registry_contract.py",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1785232511671)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\test_system_snapshot_contract.py",
+        "Length":  2392,
+        "LastWriteTime":  "\/Date(1785232511671)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\upgrade_ai_guard_persistent.py",
+        "Length":  1966,
+        "LastWriteTime":  "\/Date(1786015729093)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\user_acceptance_audit.py",
+        "Length":  7617,
+        "LastWriteTime":  "\/Date(1785232511672)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\user_command_audit.py",
+        "Length":  4273,
+        "LastWriteTime":  "\/Date(1785232511673)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tools\\user_command_wiring_audit.py",
+        "Length":  5717,
+        "LastWriteTime":  "\/Date(1785232511673)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "tory {",
+        "Length":  16465,
+        "LastWriteTime":  "\/Date(1786026296546)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "TRACKED_FILES.txt",
+        "Length":  31314,
+        "LastWriteTime":  "\/Date(1785940143098)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "tutorial_handler.py",
+        "Length":  598,
+        "LastWriteTime":  "\/Date(1786574422409)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "UPDATE.md",
+        "Length":  4874,
+        "LastWriteTime":  "\/Date(1785232511384)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "update_token.sh",
+        "Length":  1161,
+        "LastWriteTime":  "\/Date(1785232511675)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "UX_COMMANDS.md",
+        "Length":  272,
+        "LastWriteTime":  "\/Date(1785806248047)\/",
+        "Extension":  ".md"
+    },
+    {
+        "RelativePath":  "viewfile_handler.py",
+        "Length":  1740,
+        "LastWriteTime":  "\/Date(1786574422411)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "virtual_esp_local.py",
+        "Length":  1452,
+        "LastWriteTime":  "\/Date(1786574422413)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "WALLET_API_USAGE.txt",
+        "Length":  16250,
+        "LastWriteTime":  "\/Date(1786006303402)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "watchdog.sh",
+        "Length":  206,
+        "LastWriteTime":  "\/Date(1785232511676)\/",
+        "Extension":  ".sh"
+    },
+    {
+        "RelativePath":  "web\\dashboard_v2\\app.js",
+        "Length":  976,
+        "LastWriteTime":  "\/Date(1786460765549)\/",
+        "Extension":  ".js"
+    },
+    {
+        "RelativePath":  "web\\dashboard_v2\\index.html",
+        "Length":  1425,
+        "LastWriteTime":  "\/Date(1786460765457)\/",
+        "Extension":  ".html"
+    },
+    {
+        "RelativePath":  "web\\dashboard_v2\\style.css",
+        "Length":  682,
+        "LastWriteTime":  "\/Date(1786460765635)\/",
+        "Extension":  ".css"
+    },
+    {
+        "RelativePath":  "webapp.py",
+        "Length":  2687,
+        "LastWriteTime":  "\/Date(1787665427151)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "welcome_handler.py.disabled",
+        "Length":  3451,
+        "LastWriteTime":  "\/Date(1785232511682)\/",
+        "Extension":  ".disabled"
+    },
+    {
+        "RelativePath":  "whatsapp_bot.js",
+        "Length":  1141,
+        "LastWriteTime":  "\/Date(1785364465952)\/",
+        "Extension":  ".js"
+    },
+    {
+        "RelativePath":  "whatsapp_handler_bridge.py",
+        "Length":  1938,
+        "LastWriteTime":  "\/Date(1786914441337)\/",
+        "Extension":  ".py"
+    },
+    {
+        "RelativePath":  "WINDOWS_HANDLERS.txt",
+        "Length":  10296,
+        "LastWriteTime":  "\/Date(1785841405603)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "WINDOWS_TREE.txt",
+        "Length":  403212,
+        "LastWriteTime":  "\/Date(1785841402025)\/",
+        "Extension":  ".txt"
+    },
+    {
+        "RelativePath":  "כל",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366688)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "כסף,",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366689)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "פאנל",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366689)\/",
+        "Extension":  ""
+    },
+    {
+        "RelativePath":  "קופה",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366690)\/",
+        "Extension":  ""
+    }
+]

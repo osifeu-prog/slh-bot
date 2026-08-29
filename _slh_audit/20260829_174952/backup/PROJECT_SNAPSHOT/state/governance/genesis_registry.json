@@ -1,0 +1,85 @@
+{
+  "version": "1.0",
+  "created_at": "2026-08-21T18:06:18.811564+00:00",
+  "source": "railway_runtime",
+  "users": [
+    {
+      "id": "8789977826",
+      "name": "Osif",
+      "role": "OWNER",
+      "joined": true
+    },
+    {
+      "id": "224223270",
+      "name": "אוסיף בדיקות",
+      "role": "student",
+      "joined": true
+    },
+    {
+      "id": "7757102350",
+      "name": "מפתח אלפא",
+      "role": "developer",
+      "joined": true
+    },
+    {
+      "id": "8791275334",
+      "name": "גיא גולדשטיין",
+      "role": "developer",
+      "joined": true
+    },
+    {
+      "id": "5010371391",
+      "name": "צביקה קאופמן",
+      "role": "student",
+      "joined": true
+    },
+    {
+      "id": "123456789",
+      "name": "dev_helper",
+      "role": "developer",
+      "joined": "2026-08-15 16:49:46"
+    },
+    {
+      "id": "1518680802",
+      "name": "עידן מנור",
+      "role": "developer",
+      "joined": true
+    },
+    {
+      "id": "6332323773",
+      "name": "User6332323773",
+      "role": "student",
+      "joined": false
+    },
+    {
+      "id": "8847192372",
+      "name": "User8847192372",
+      "role": "student",
+      "joined": false
+    },
+    {
+      "id": "ECON_TEST_USER",
+      "name": null,
+      "role": null,
+      "joined": null
+    },
+    {
+      "id": "12345",
+      "name": "User12345",
+      "role": "student",
+      "joined": false
+    },
+    {
+      "id": "TEST_AUTHORITY",
+      "name": "UserTEST_AUTHORITY",
+      "role": "student",
+      "joined": false
+    },
+    {
+      "id": "972500000001",
+      "name": "User972500000001",
+      "role": "student",
+      "joined": false
+    }
+  ]
+}

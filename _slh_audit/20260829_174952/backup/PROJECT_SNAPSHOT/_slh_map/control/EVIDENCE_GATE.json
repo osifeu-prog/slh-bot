@@ -1,0 +1,31 @@
+﻿{
+    "schema":  "slh-os/evidence-gate/v1",
+    "generated_at_utc":  "2026-08-13T19:15:48.6936121Z",
+    "worktree":  {
+                     "total_changes":  0,
+                     "modified":  0,
+                     "untracked":  0
+                 },
+    "python":  {
+                   "root_python_files":  135,
+                   "probable_entrypoints":  58,
+                   "syntax_failures":  0
+               },
+    "railway":  {
+                    "cli_available":  true,
+                    "status_captured":  true
+                },
+    "investor_path":  {
+                          "verified":  false,
+                          "reason":  "Not tested yet"
+                      },
+    "user_path":  {
+                      "verified":  false,
+                      "reason":  "Not tested yet"
+                  },
+    "launch":  {
+                   "readiness":  0,
+                   "target":  null,
+                   "state":  "EVIDENCE_GATE"
+               }
+}

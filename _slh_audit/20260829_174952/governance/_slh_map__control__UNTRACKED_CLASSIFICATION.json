@@ -1,0 +1,79 @@
+﻿[
+    {
+        "path":  "AUDIT_20260813_FULL/",
+        "exists":  true,
+        "type":  "directory",
+        "bytes":  0,
+        "category":  "AUDIT_ARTIFACT"
+    },
+    {
+        "path":  "_slh_map/",
+        "exists":  true,
+        "type":  "directory",
+        "bytes":  0,
+        "category":  "CONTROL_EVIDENCE"
+    },
+    {
+        "path":  "bot_stable.py.before_authority_cleanup_20260813",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  22564,
+        "category":  "UNKNOWN"
+    },
+    {
+        "path":  "fix_dna_entrypoints.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  493,
+        "category":  "REPAIR_TOOL"
+    },
+    {
+        "path":  "report_handler.py.before_authority_cleanup_20260813",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  5516,
+        "category":  "BACKUP"
+    },
+    {
+        "path":  "slh_authority_audit.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  5224,
+        "category":  "AUDIT_TOOL"
+    },
+    {
+        "path":  "slh_clean_inventory.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  1586,
+        "category":  "AUDIT_TOOL"
+    },
+    {
+        "path":  "slh_dna_scan.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  11662,
+        "category":  "AUDIT_TOOL"
+    },
+    {
+        "path":  "slh_fix_bom.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  2193,
+        "category":  "AUDIT_TOOL"
+    },
+    {
+        "path":  "slhdna.bat",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  38,
+        "category":  "DNA_TOOL"
+    },
+    {
+        "path":  "slhdna.py",
+        "exists":  true,
+        "type":  "file",
+        "bytes":  13520,
+        "category":  "DNA_TOOL"
+    }
+]

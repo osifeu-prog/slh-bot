@@ -1,0 +1,39 @@
+﻿{
+    "audit_id":  "20260829_174952",
+    "created_at":  "2026-08-29T17:50:17.3488813+03:00",
+    "purpose":  "Permanent SLH control, academy, developer, command and ESP audit",
+    "application_code_modified":  false,
+    "protected_business_domains":  [
+                                       "business_logic",
+                                       "money",
+                                       "wallet",
+                                       "database",
+                                       "deployment",
+                                       "financial_authority",
+                                       "payment_authority"
+                                   ],
+    "audit_domains":  [
+                          "project_inventory",
+                          "academy",
+                          "developer_activation",
+                          "agent_governance",
+                          "execution_commands",
+                          "superadmin",
+                          "esp",
+                          "governance",
+                          "full_local_snapshot"
+                      ],
+    "artifacts":  [
+                      "inventory\\project_files.json",
+                      "academy\\academy_references.json",
+                      "developers\\developer_activation_references.json",
+                      "commands\\execution_commands.json",
+                      "superadmin\\superadmin_references.json",
+                      "esp\\esp_references.json",
+                      "tasks\\MASTER_WORK_PLAN.json",
+                      "journal\\AUDIT_JOURNAL_ENTRY.md",
+                      "backup\\snapshot_sha256.json"
+                  ],
+    "next_gate":  "REVIEW_GENERATED_AUDIT",
+    "final_gate":  "FULL_ESP_ACTIVATION"
+}

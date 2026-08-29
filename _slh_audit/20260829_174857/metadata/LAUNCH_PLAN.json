@@ -1,0 +1,145 @@
+{
+  "schema": "slh-os/launch-plan/v1",
+  "project": "SLH",
+  "created_at_utc": "2026-08-21T00:00:02.594229+00:00",
+  "source_of_truth": "LAUNCH_PLAN.json",
+  "policy": {
+    "no_invented_progress": true,
+    "progress_requires_evidence": true,
+    "eta_is_estimate": true,
+    "blocked_gate_stops_alpha": true
+  },
+  "gates": [
+    {
+      "id": "G0",
+      "name": "Discovery",
+      "status": "DONE",
+      "estimate_hours": 1,
+      "tasks": [
+        "Repository discovery",
+        "Roadmap/control inventory",
+        "Railway status verification"
+      ]
+    },
+    {
+      "id": "G1",
+      "name": "Evidence",
+      "status": "DONE",
+      "estimate_hours": 2,
+      "tasks": [
+        "Git/version proof",
+        "Runtime proof",
+        "Handler import proof",
+        "Launch-control evidence audit"
+      ]
+    },
+    {
+      "id": "G2",
+      "name": "Canonical Launch Control",
+      "status": "DONE",
+      "estimate_hours": 2,
+      "tasks": [
+        "Create single source of truth",
+        "Normalize launch gates",
+        "Create progress meter",
+        "Create ETA model",
+        "Separate historical documents from active plan"
+      ],
+      "evidence": {
+        "plan_exists": true,
+        "progress_meter_exists": true,
+        "documentation_index_exists": true,
+        "policy_no_invented_progress": true,
+        "policy_progress_requires_evidence": true
+      },
+      "verification": {
+        "LAUNCH_PLAN.json": true,
+        "tools/slh_launch_control.py": true,
+        "docs/launch/DOCUMENTATION_INDEX.md": true,
+        "launch_meter_compiles": true,
+        "launch_meter_runs": true
+      }
+    },
+    {
+      "id": "G3",
+      "name": "Economy / Money Authority",
+      "status": "TODO",
+      "estimate_hours": 5,
+      "tasks": [
+        "Verify single money authority",
+        "Audit all balance/credit writes",
+        "Freeze development credit paths",
+        "Verify payment accounting",
+        "Verify transaction audit trail"
+      ]
+    },
+    {
+      "id": "G4",
+      "name": "Wallet / TON",
+      "status": "TODO",
+      "estimate_hours": 10,
+      "tasks": [
+        "Telegram identity mapping",
+        "SLH profile mapping",
+        "TON wallet identity",
+        "NONE/CONNECTED/VERIFIED states",
+        "Wallet verification",
+        "Payment verification",
+        "End-to-end wallet accounting"
+      ]
+    },
+    {
+      "id": "G5",
+      "name": "End-to-End User Journey",
+      "status": "TODO",
+      "estimate_hours": 6,
+      "tasks": [
+        "Fresh user onboarding",
+        "Profile creation",
+        "Wallet connection",
+        "Earn credits",
+        "Spend credits",
+        "Marketplace flow",
+        "Learning flow",
+        "Failure/recovery paths"
+      ]
+    },
+    {
+      "id": "G6",
+      "name": "Production Acceptance / Security",
+      "status": "TODO",
+      "estimate_hours": 8,
+      "tasks": [
+        "Production runtime audit",
+        "Authorization audit",
+        "Token/secret audit",
+        "State persistence audit",
+        "Deployment reproducibility",
+        "Rollback verification",
+        "Critical-path smoke tests"
+      ]
+    },
+    {
+      "id": "G7",
+      "name": "Full Alpha",
+      "status": "TODO",
+      "estimate_hours": 12,
+      "tasks": [
+        "Alpha release candidate",
+        "Fresh-user acceptance test",
+        "Operational monitoring",
+        "Invite first users",
+        "First-user feedback loop",
+        "Stabilization",
+        "First-100-user readiness"
+      ]
+    }
+  ],
+  "canonicality": {
+    "active_plan": "LAUNCH_PLAN.json",
+    "progress_engine": "tools/slh_launch_control.py",
+    "historical_documents_are_non_authoritative": true,
+    "last_control_update_utc": "2026-08-21T00:01:39.511268+00:00"
+  },
+  "g2_evidence": "docs/launch/G2_EVIDENCE.json"
+}

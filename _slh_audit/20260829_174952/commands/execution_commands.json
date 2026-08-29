@@ -1,0 +1,1852 @@
+﻿[
+    {
+        "File":  "ACTIVE_MARKDOWN.txt",
+        "Line":  23,
+        "Match":  "project_commands.py:                bot.reply_to(m, msg, parse_mode=\"Markdown\")"
+    },
+    {
+        "File":  "add_sync_patch.py",
+        "Line":  6,
+        "Match":  "marker = \"@bot.message_handler(commands=[\u0027system_visibility\u0027])\""
+    },
+    {
+        "File":  "add_visibility_report.py",
+        "Line":  11,
+        "Match":  "marker=\"@bot.message_handler(commands=[\u0027status\u0027])\""
+    },
+    {
+        "File":  "admin_handler.py",
+        "Line":  3,
+        "Match":  "@bot.message_handler(commands=[\u0027admin\u0027])"
+    },
+    {
+        "File":  "admin_menu.txt",
+        "Line":  1,
+        "Match":  "📋 **SLH Command Center (105 commands)**"
+    },
+    {
+        "File":  "agent_client.py",
+        "Line":  41,
+        "Match":  "log_file = os.path.expanduser(\"~/slh_clean/logs/error.log\")"
+    },
+    {
+        "File":  "ARCHITECTURE.md",
+        "Line":  4,
+        "Match":  "1. Telegram Bot – 45+ commands, Admin panel"
+    },
+    {
+        "File":  "AUDIT_MISSION_RUNTIME.txt",
+        "Line":  79,
+        "Match":  "if action == \"execute\":"
+    },
+    {
+        "File":  "AUDIT_OUTPUT.txt",
+        "Line":  7,
+        "Match":  "+ FullyQualifiedErrorId : NativeCommandError"
+    },
+    {
+        "File":  "bot_core.py",
+        "Line":  65,
+        "Match":  "# CORE COMMANDS"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  100,
+        "Match":  "# payment/econ/staking loaded through handlers.loader.py"
+    },
+    {
+        "File":  "bot_telegram.py",
+        "Line":  2,
+        "Match":  "from telegram.ext import Application, CommandHandler"
+    },
+    {
+        "File":  "brief_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027brief\u0027])"
+    },
+    {
+        "File":  "checkpoint_manager.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  12,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "command_audit.py",
+        "Line":  5,
+        "Match":  "commands = defaultdict(list)"
+    },
+    {
+        "File":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Line":  2,
+        "Match":  "\"commands\": {"
+    },
+    {
+        "File":  "complete_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027complete\u0027])"
+    },
+    {
+        "File":  "control_layer.py",
+        "Line":  13,
+        "Match":  "self.commands = {}"
+    },
+    {
+        "File":  "course_handlers.py",
+        "Line":  16,
+        "Match":  "@bot.message_handler(commands=[\u0027activate\u0027])"
+    },
+    {
+        "File":  "demo_handlers.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027demo\u0027])"
+    },
+    {
+        "File":  "DEVELOPER_GUIDE.md",
+        "Line":  12,
+        "Match":  "- handlers/*.py: Individual command handlers"
+    },
+    {
+        "File":  "DEVELOPER_ONBOARDING.md",
+        "Line":  50,
+        "Match":  "- Connect governance commands"
+    },
+    {
+        "File":  "device_bridge.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "devsetup_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027devsetup\u0027])"
+    },
+    {
+        "File":  "diagnostic_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027diagnostic\u0027])"
+    },
+    {
+        "File":  "diag_fix_handlers.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027diagnose\u0027])"
+    },
+    {
+        "File":  "diag_handler.py",
+        "Line":  26,
+        "Match":  "if f\"commands=[\u0027{cmd}\u0027]\" in code:"
+    },
+    {
+        "File":  "doctor_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027doctor\u0027])"
+    },
+    {
+        "File":  "DO_NOT_RUN_LOCALLY.md",
+        "Line":  3,
+        "Match":  "לניהול יומיומי: השתמש בפקודות הטלגרם (/admin, /exec, /deploy, /rlogs)."
+    },
+    {
+        "File":  "economy_audit_after_p0.txt",
+        "Line":  49,
+        "Match":  "[OUTSIDE-AUTHORITY] tools\\money_authority_audit.py:38: Path(\"core/economy_service.py\"),"
+    },
+    {
+        "File":  "economy_audit_balance.txt",
+        "Line":  2,
+        "Match":  "app.py:26:        c.execute(\"INSERT OR IGNORE INTO wallets VALUES (?,?,?)\", (uid,0,cid)); conn.commit(); conn.close()"
+    },
+    {
+        "File":  "economy_audit_dashboard.txt",
+        "Line":  2,
+        "Match":  "app.py:33:        c.execute(\"SELECT wallet_balance FROM wallets WHERE user_id=?\", (uid,)); res=c.fetchone();"
+    },
+    {
+        "File":  "economy_audit_payment.txt",
+        "Line":  5,
+        "Match":  "bot_stable.py:101:# payment/econ/staking loaded through handlers.loader.py"
+    },
+    {
+        "File":  "ECONOMY_WIRING_AUDIT.txt",
+        "Line":  18,
+        "Match":  "bot_stable.py:101:# payment/econ/staking loaded through handlers.loader.py"
+    },
+    {
+        "File":  "econ_handler.py",
+        "Line":  10,
+        "Match":  "@bot.message_handler(commands=[\u0027balance\u0027])"
+    },
+    {
+        "File":  "encoding_damage_report.txt",
+        "Line":  2,
+        "Match":  "AUDIT_20260813_FULL/PHASE_1_RUNTIME/04_bootstrap_commands.txt:23:            # ׳³ֲ¨׳³ג€™׳³ג„¢׳³ֲ - Telegram decorators"
+    },
+    {
+        "File":  "esp_test.py",
+        "Line":  7,
+        "Match":  "CMD_TOPIC = f\"slh/esp/{DEVICE_ID}/command\""
+    },
+    {
+        "File":  "FULL_SYSTEM_AUDIT.json",
+        "Line":  20,
+        "Match":  "\"test\": \"04_COMMANDS\","
+    },
+    {
+        "File":  "GIT_ADMIN_SEARCH.txt",
+        "Line":  17,
+        "Match":  "Final recovery: implement missing admin commands, fix dashboard profile"
+    },
+    {
+        "File":  "GIT_ASK_SEARCH.txt",
+        "Line":  197,
+        "Match":  "Add task_add admin command"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  10,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "GIT_BOT_TOKEN_HISTORY.txt",
+        "Line":  181,
+        "Match":  "disable, and /start command all confirmed working live on Railway."
+    },
+    {
+        "File":  "GIT_DIFF_FIRST_TO_NOW.txt",
+        "Line":  39,
+        "Match":  "agents/echo.py"
+    },
+    {
+        "File":  "GIT_ECON_BALANCE.txt",
+        "Line":  53,
+        "Match":  "Remove duplicate /economy handler"
+    },
+    {
+        "File":  "GIT_ECON_PAY.txt",
+        "Line":  85,
+        "Match":  "disable, and /start command all confirmed working live on Railway."
+    },
+    {
+        "File":  "GIT_EVENTBUS_HISTORY.txt",
+        "Line":  95,
+        "Match":  "complete emergency_handler with all commands"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  12,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  11,
+        "Match":  "* e82f9a7 Final recovery: implement missing admin commands, fix dashboard profile"
+    },
+    {
+        "File":  "GIT_JULY_TREE.txt",
+        "Line":  35,
+        "Match":  "100644 blob 93569d01a84172b97db6e05508a22a45185d7a07\tagents/echo.py"
+    },
+    {
+        "File":  "GIT_LLM_SEARCH.txt",
+        "Line":  95,
+        "Match":  "feat: wire LLM handler (/ask via Groq) with safe try/except guard, remove hardcoded API key fallback"
+    },
+    {
+        "File":  "GIT_PROJECT_SEARCH.txt",
+        "Line":  31,
+        "Match":  "disable, and /start command all confirmed working live on Railway."
+    },
+    {
+        "File":  "GIT_RAILWAY_HISTORY.txt",
+        "Line":  193,
+        "Match":  "disable, and /start command all confirmed working live on Railway."
+    },
+    {
+        "File":  "GIT_REMOVED_4d90da6.txt",
+        "Line":  35,
+        "Match":  "slh-bot/COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "guide_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027guide\u0027])"
+    },
+    {
+        "File":  "HANDLER_LOADER_AUDIT.txt",
+        "Line":  23,
+        "Match":  "bot_stable.py:101:# payment/econ/staking loaded through handlers.loader.py"
+    },
+    {
+        "File":  "HANDOFF.md",
+        "Line":  6,
+        "Match":  "1. **Menus**: `/admin` \u0026 `/help` restructured, full command coverage, no duplicates."
+    },
+    {
+        "File":  "HEALTH_OUTPUT.txt",
+        "Line":  6,
+        "Match":  "+ FullyQualifiedErrorId : NativeCommandError"
+    },
+    {
+        "File":  "help_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027help\u0027])"
+    },
+    {
+        "File":  "init_router.py",
+        "Line":  1,
+        "Match":  "from core.bootstrap_commands import init as init_commands"
+    },
+    {
+        "File":  "internal_agent.py",
+        "Line":  6,
+        "Match":  "def run_command(cmd, msg):"
+    },
+    {
+        "File":  "join_fix.py",
+        "Line":  7,
+        "Match":  "if \"@bot.message_handler(commands=[\u0027join\u0027])\" in content:"
+    },
+    {
+        "File":  "journal.json",
+        "Line":  16,
+        "Match":  "\"text\": \"SESSION 3-JUL-2026: Final stabilization. DONE: journal_read fixed (removed smart_reply), Dockerfile cleaned (ENV BOT_TOKEN removed), .gitignore expanded, old backup folders ignored, git status clean, /agent_create works in memory. OPEN: agents not persisted to db.json (volatile), /agents command hangs, start_agent_thread blocks import of bot_stable. NEXT SESSION PRIORITY: fix agent persistence to db.json, unblock /agents command, test full agent lifecycle. READY: Railway Online, Users:2, Deploy passes, security OK.\""
+    },
+    {
+        "File":  "junk_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027scan_junk\u0027])"
+    },
+    {
+        "File":  "KERNEL_RULES.md",
+        "Line":  5,
+        "Match":  "3. All execution passes kernel.route()"
+    },
+    {
+        "File":  "language_handler.py",
+        "Line":  21,
+        "Match":  "@bot.message_handler(commands=[\u0027language\u0027])"
+    },
+    {
+        "File":  "learning_path.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027course_slh\u0027])"
+    },
+    {
+        "File":  "MANIFEST_HANDLERS.txt",
+        "Line":  5,
+        "Match":  "SESSION_CLOSURE_MANIFEST.md:31:Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "marketplace.py",
+        "Line":  13,
+        "Match":  "{\"id\": \"health_check\", \"name\": \"Health Check\", \"desc\": \"Adds /health command\", \"price\": 0, \"installs\": 0},"
+    },
+    {
+        "File":  "mission_completion_commit.py",
+        "Line":  243,
+        "Match":  "\"execution status == success\","
+    },
+    {
+        "File":  "mission_completion_commit_2.py",
+        "Line":  234,
+        "Match":  "\"execution status == success\","
+    },
+    {
+        "File":  "mission_completion_gate.py",
+        "Line":  283,
+        "Match":  "\"execution status == success\","
+    },
+    {
+        "File":  "mission_execution_commit.py",
+        "Line":  127,
+        "Match":  "\"execution_status\""
+    },
+    {
+        "File":  "mission_execution_gate.py",
+        "Line":  62,
+        "Match":  "print(\"              SLH EXECUTION GATE\")"
+    },
+    {
+        "File":  "mission_execution_preview.py",
+        "Line":  78,
+        "Match":  "print(\"           SLH MISSION EXECUTION PREVIEW\")"
+    },
+    {
+        "File":  "mission_lifecycle_preview.py",
+        "Line":  18,
+        "Match":  "print(\"[EXECUTION PREVIEW]\")"
+    },
+    {
+        "File":  "mission_result_recorder.py",
+        "Line":  207,
+        "Match":  "\"execution_status\": \"success\","
+    },
+    {
+        "File":  "mission_result_verifier.py",
+        "Line":  252,
+        "Match":  "\"Execution Status:\","
+    },
+    {
+        "File":  "mission_runner.py",
+        "Line":  65,
+        "Match":  "def execute_sync_test(mission, agent):"
+    },
+    {
+        "File":  "monitor_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027monitor\u0027])"
+    },
+    {
+        "File":  "myprogress_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027myprogress\u0027])"
+    },
+    {
+        "File":  "onboarding_scan.txt",
+        "Line":  42,
+        "Match":  "handlers\\device_handler.py:121:    @bot.message_handler(commands=[\u0027device_register\u0027])"
+    },
+    {
+        "File":  "plugins.json",
+        "Line":  7,
+        "Match":  "\"description\": \"Adds /health command\","
+    },
+    {
+        "File":  "plugins_store.py",
+        "Line":  11,
+        "Match":  "{\"id\": \"health_check\", \"name\": \"Health Check\", \"description\": \"Adds /health command\", \"url\": \"https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/health.py\", \"price\": 0},"
+    },
+    {
+        "File":  "PRE_ECONOMY_FULL_AUDIT.txt",
+        "Line":  2,
+        "Match":  "app.py:26:        c.execute(\"INSERT OR IGNORE INTO wallets VALUES (?,?,?)\", (uid,0,cid)); conn.commit(); conn.close()"
+    },
+    {
+        "File":  "project_commands.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027project\u0027])"
+    },
+    {
+        "File":  "railway.json",
+        "Line":  7,
+        "Match":  "\"startCommand\":  \"/opt/venv/bin/python3 -B bot_gateway.py\","
+    },
+    {
+        "File":  "railway_logs_baseline_20260824.txt",
+        "Line":  91,
+        "Match":  "✅ exec_request loaded"
+    },
+    {
+        "File":  "refresh_token_handler.py",
+        "Line":  82,
+        "Match":  "@bot.message_handler(commands=[\"refreshtoken\"])"
+    },
+    {
+        "File":  "report_handler.py",
+        "Line":  20,
+        "Match":  "@bot.message_handler(commands=[\u0027myreport\u0027])"
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  6,
+        "Match":  "- /exec Python runner"
+    },
+    {
+        "File":  "roadmap_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027roadmap\u0027])"
+    },
+    {
+        "File":  "RUN_GUIDE.md",
+        "Line":  3,
+        "Match":  "## 1. Code execution only:"
+    },
+    {
+        "File":  "sandbox_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027sandbox\u0027])"
+    },
+    {
+        "File":  "self_test.py",
+        "Line":  22,
+        "Match":  "# Agent – send test command and wait for outbox"
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  41,
+        "Match":  "\"output\": \"advanced_ask_handler.backup_2026-07-21_1632.py\\nadvanced_ask_handler.py\\nask_handler.py\\nbackups/end_of_day_20260721_0016/bot_stable.py\\nbackups/loader_after_task_fix.py\\nbackups/loader_before_economy_cleanup.py\\nbackups/loader_before_economy_first_remove.py\\nbackups/loader_before_fix.py\\nbackups/loader_before_mission_cleanup.py\\nbackups/loader_before_mission_cleanup_retry.py\\nbackups/phase_map_20260723/handlers/advanced_ask_handler.py\\nbackups/phase_map_20260723/handlers/askdebug_handler.py\\nbackups/phase_map_20260723/handlers/help_handler.py\\nbackups/phase_map_20260723/handlers/llm_handler.py\\nbackups/phase_map_20260723/handlers/loader.py\\nbackups/pre_governance_phase/bot_stable.py\\nbackups/pre_governance_phase/loader.py\\nbackups/pre_phase95_governance/bot_stable.py\\nbackups/pre_phase95_governance/loader.py\\nbackups/stable_2026_07_20/bot_stable.py\\nbackups/stable_2026_07_20/loader.py\\nbot_stable.py\\ncore/ask_router.py\\nguide_handler.py\\nhandlers/advanced_ask_handler.py\\nhandlers/askdebug_handler.py\\nhandlers/help_handler.py\\nhandlers/llm_handler.py\\nhandlers/loader.py\\nhelp_handler.py\\npayment_handler.py\\nslh_audit.py\\nslh_full_check.py\\nslh_hardening.py\\nstate/snapshots/ask_router_stable_20260726_104012/advanced_ask_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/llm_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/loader.py\\nstate/startup.py\\ntools/connect_ask_guard.py\\ntools/create_ask_guard.py\\ntools/disable_botstable_ask.py\\ntools/fix_ask_guard_api.py\\ntools/loader_registration_audit.py\\ntools/patch_ask_router.py\\ntools/runtime_command_registration_audit.py\\ntools/session_closure_audit.py\\ntools/user_command_audit.py\\ntools/user_command_wiring_audit.py\\ntutorial_handler.py\""
+    },
+    {
+        "File":  "SESSION_CLOSURE_MANIFEST.md",
+        "Line":  31,
+        "Match":  "Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  6,
+        "Match":  "- 14 command handlers שהיו רשומים בקוד אך לא נטענים בפועל"
+    },
+    {
+        "File":  "slhdna.py",
+        "Line":  80,
+        "Match":  "\"canonical_commands\": [],"
+    },
+    {
+        "File":  "slh_audit.py",
+        "Line":  140,
+        "Match":  "commands=[]"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  208,
+        "Match":  "-a---- 1082    8/13/2026 1:40:22 AM  command_audit.py"
+    },
+    {
+        "File":  "slh_authority_audit.py",
+        "Line":  76,
+        "Match":  "\"register_command\","
+    },
+    {
+        "File":  "slh_autopilot.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "SLH_BOT_ADAPTER.py",
+        "Line":  15,
+        "Match":  "if msg in [\"/exit\", \"exit\", \"quit\"]:"
+    },
+    {
+        "File":  "SLH_COMMAND_MAP.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\add_sync_patch.py                                       14 @bot.message_handler(commands..."
+    },
+    {
+        "File":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Line":  51,
+        "Match":  "exec_request_handler.py"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  26,
+        "Match":  "new file:   Guardian Executor Online"
+    },
+    {
+        "File":  "slh_dna_scan.py",
+        "Line":  212,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "SLH_FULL_AUDIT_20260810_152243.txt",
+        "Line":  7,
+        "Match":  "M handlers/esp_handler.py"
+    },
+    {
+        "File":  "slh_full_check.py",
+        "Line":  175,
+        "Match":  "for c in h[\"filters\"].get(\"commands\",[]):"
+    },
+    {
+        "File":  "slh_git_diag_20260804_020650.txt",
+        "Line":  55,
+        "Match":  "startCommand = \"python3 -B bot_gateway.py\""
+    },
+    {
+        "File":  "SLH_HANDLER_MAP.txt",
+        "Line":  4,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\add_sync_patch.py                 6 marker = \"@bot.message_handler(commands=[\u0027system_vis..."
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  51,
+        "Match":  "|   command_audit.py"
+    },
+    {
+        "File":  "SLH_PYTHON_FILES.txt",
+        "Line":  26,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\command_audit.py"
+    },
+    {
+        "File":  "SLH_RUNTIME_AUTHORITY.json",
+        "Line":  6,
+        "Match":  "\"local_bot_execution\": false,"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  100,
+        "Match":  "# payment/econ/staking loaded through handlers.loader.py"
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  72,
+        "Match":  "|   command_audit.py"
+    },
+    {
+        "File":  "slh_visibility_scan.py",
+        "Line":  43,
+        "Match":  "tables=cur.execute("
+    },
+    {
+        "File":  "smart_leaderboard.py",
+        "Line":  10,
+        "Match":  "@bot.message_handler(commands=[\u0027leaderboard\u0027])"
+    },
+    {
+        "File":  "SOURCE_OF_TRUTH.md",
+        "Line":  12,
+        "Match":  "- project_commands.register(bot)"
+    },
+    {
+        "File":  "state_connection_map.txt",
+        "Line":  35,
+        "Match":  "project_commands.py:61:            db = json.load(open(\"state/db.json\"))"
+    },
+    {
+        "File":  "STATE_USAGE_AUDIT.txt",
+        "Line":  58,
+        "Match":  "project_commands.py:61:            db = json.load(open(\"state/db.json\"))"
+    },
+    {
+        "File":  "state_writers_report.txt",
+        "Line":  485,
+        "Match":  "command_audit.py:16"
+    },
+    {
+        "File":  "STATUS.md",
+        "Line":  5,
+        "Match":  "- **Modules**: learn_handlers, project_commands, smart_leaderboard, welcome_handler (inline)"
+    },
+    {
+        "File":  "STUDENT_GUIDE.md",
+        "Line":  8,
+        "Match":  "## Useful Commands"
+    },
+    {
+        "File":  "system_diagnostics.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "test_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027self_test\u0027])"
+    },
+    {
+        "File":  "test_mission3_assignment_commit.py",
+        "Line":  319,
+        "Match":  "\"STATUS: READY FOR EXECUTION PREVIEW\""
+    },
+    {
+        "File":  "test_mission3_completion_commit.py",
+        "Line":  131,
+        "Match":  "\"mission status == executed\","
+    },
+    {
+        "File":  "test_mission3_completion_preview.py",
+        "Line":  129,
+        "Match":  "print(\"[EXECUTION RESULT DISCOVERY]\")"
+    },
+    {
+        "File":  "test_mission3_execution_commit.py",
+        "Line":  82,
+        "Match":  "print(\"       SLH MISSION #3 EXECUTION COMMIT\")"
+    },
+    {
+        "File":  "test_mission3_execution_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #3 EXECUTION PREVIEW\")"
+    },
+    {
+        "File":  "test_mission3_post_completion_regression.py",
+        "Line":  123,
+        "Match":  "print(\"[RE-EXECUTION PREVIEW]\")"
+    },
+    {
+        "File":  "test_mission4_assignment_commit.py",
+        "Line":  392,
+        "Match":  "\"NEXT: EXECUTION PREVIEW\""
+    },
+    {
+        "File":  "test_mission4_execution_commit.py",
+        "Line":  45,
+        "Match":  "print(\"       SLH MISSION #4 EXECUTION COMMIT\")"
+    },
+    {
+        "File":  "test_mission4_execution_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #4 EXECUTION PREVIEW\")"
+    },
+    {
+        "File":  "test_mission_orchestrator_preview.py",
+        "Line":  74,
+        "Match":  "\"only one stage executed\","
+    },
+    {
+        "File":  "TOMORROW_HANDOFF.md",
+        "Line":  46,
+        "Match":  "5. COMMAND REGISTRY"
+    },
+    {
+        "File":  "ton_handler.py",
+        "Line":  27,
+        "Match":  "@bot.message_handler(commands=[\u0027ton\u0027])"
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  12,
+        "Match":  "COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "tutorial_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027tutorial\u0027])"
+    },
+    {
+        "File":  "UPDATE.md",
+        "Line":  10,
+        "Match":  "| **Kernel** (`core/event_bus.py`) | EventBus + TaskPlugin | ✅ |"
+    },
+    {
+        "File":  "UX_COMMANDS.md",
+        "Line":  1,
+        "Match":  "# SLH OS UX Developer Commands"
+    },
+    {
+        "File":  "viewfile_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027viewfile\u0027])"
+    },
+    {
+        "File":  "virtual_esp_local.py",
+        "Line":  7,
+        "Match":  "COMMAND_TOPIC = f\"slh/esp/{DEVICE_ID}/command\""
+    },
+    {
+        "File":  "WALLET_API_USAGE.txt",
+        "Line":  2,
+        "Match":  "app.py:26:        c.execute(\"INSERT OR IGNORE INTO wallets VALUES (?,?,?)\", (uid,0,cid)); conn.commit(); conn.close()"
+    },
+    {
+        "File":  "whatsapp_handler_bridge.py",
+        "Line":  30,
+        "Match":  "print(\"ERROR: missing UID or command\", file=sys.stderr)"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  83,
+        "Match":  "-a----         7/28/2026  12:55 PM           1082 command_audit.py"
+    },
+    {
+        "File":  ".pytest_cache\\README.md",
+        "Line":  8,
+        "Match":  "See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information."
+    },
+    {
+        "File":  "agents\\system_guard.py",
+        "Line":  12,
+        "Match":  "- Never execute shell commands"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\02_git_history.txt",
+        "Line":  1,
+        "Match":  "4eca859 (HEAD -\u003e main, origin/main, origin/HEAD) cleanup: establish single command authority"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\03_deployment.txt",
+        "Line":  9,
+        "Match":  "\"startCommand\":  \"/opt/venv/bin/python3 -B bot_gateway.py\","
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Line":  37,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\command_audit.py                                                  1082 8/13/2026 1:40:22 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\05_entrypoint_candidates.txt",
+        "Line":  15,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_command_registration_audit.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\06_loader_candidates.txt",
+        "Line":  5,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\core\\bootstrap_commands.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Line":  12,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json                                                       22225 7/"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Line":  37,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\exec_request_handler.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\09_tests.txt",
+        "Line":  18,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\__pycache__\\test_mission3_execution_commit.cpython-313.pyc                       9176"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\10_legacy_backup.txt",
+        "Line":  70,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\railway.json.before_startcommand.backup                                       214 8/8/20..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  165,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\SLH_COMMAND_MAP.txt                                                       41638 8/8/2026..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_railway.json.txt",
+        "Line":  7,
+        "Match":  "\"startCommand\":  \"/opt/venv/bin/python3 -B bot_gateway.py\","
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  106,
+        "Match":  "command_audit.py                                    -a---- 1082    8/13/2026 1:40:22 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Line":  24,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_commit.py                         465 if __name__ == \"__main__\":"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  14,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py                                              100 # payment/econ/staking lo..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\04_loader_authority.txt",
+        "Line":  7,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py                                       100 # payment/econ/staking loaded th..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Line":  83,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\project_commands.py                                                    6     @bot.messag..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Line":  81,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_commit.py                             47     return json.loads("
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Line":  57,
+        "Match":  "(\"exec_request\", \"handlers.exec_request_handler\"),"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_bootstrap_commands.txt",
+        "Line":  1,
+        "Match":  "from core.command_router import register_command, HANDLERS"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_command_registry_loader.txt",
+        "Line":  4,
+        "Match":  "REG_PATH = Path(\"state/commands_registry.json\")"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Line":  25,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\exec_request_handler.py         4047 8/13/2026 2:55:39 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Line":  113,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_commit.py                                          47     return json...."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Line":  56,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_commit.py                                         465 if __name__ == \"..."
+    },
+    {
+        "File":  "core\\agent_state_store.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "core\\bootstrap_commands.py",
+        "Line":  1,
+        "Match":  "from core.command_router import register_command, HANDLERS"
+    },
+    {
+        "File":  "core\\command_registry_loader.py",
+        "Line":  4,
+        "Match":  "REG_PATH = Path(\"state/commands_registry.json\")"
+    },
+    {
+        "File":  "core\\command_router.py",
+        "Line":  1,
+        "Match":  "from core.command_registry_loader import load_commands_registry"
+    },
+    {
+        "File":  "core\\economy_bridge.py",
+        "Line":  84,
+        "Match":  "Compatibility alias used by store/engine.py."
+    },
+    {
+        "File":  "core\\event_store.py",
+        "Line":  11,
+        "Match":  "cur.execute(\"\"\""
+    },
+    {
+        "File":  "core\\exec_policy.py",
+        "Line":  66,
+        "Match":  "AUDIT_PATH = \"state/exec_audit.json\""
+    },
+    {
+        "File":  "core\\firewall.py",
+        "Line":  29,
+        "Match":  "def log_deny(uid, command, reason):"
+    },
+    {
+        "File":  "core\\keyboard_detector.py",
+        "Line":  14,
+        "Match":  "def looks_like_command(text):"
+    },
+    {
+        "File":  "core\\mission_lifecycle.py",
+        "Line":  1137,
+        "Match":  "def preview_execution("
+    },
+    {
+        "File":  "core\\mission_orchestrator.py",
+        "Line":  228,
+        "Match":  "\"execute\","
+    },
+    {
+        "File":  "core\\mission_runtime_bridge.py",
+        "Line":  8,
+        "Match":  "def execute_mission_via_runtime(mission_id, root=\".\", runtime=None, kernel=None):"
+    },
+    {
+        "File":  "core\\mission_state.py",
+        "Line":  12,
+        "Match":  "EXECUTED = \"executed\""
+    },
+    {
+        "File":  "core\\project_graph.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "core\\project_registry.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "core\\runtime.py",
+        "Line":  113,
+        "Match":  "def execute(self, event):"
+    },
+    {
+        "File":  "core\\system_state_gateway.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "core\\telegram_router_bridge.py",
+        "Line":  1,
+        "Match":  "from core.command_router import register_command"
+    },
+    {
+        "File":  "docs\\AUDIT_LEDGER.md",
+        "Line":  15,
+        "Match":  "### Command Registry"
+    },
+    {
+        "File":  "docs\\SLH_OPERATIONS_MANUAL.md",
+        "Line":  16,
+        "Match":  "- גיבוי ידני: cp state/*.json backups/eod_$(date +%Y%m%d_%H%M)/"
+    },
+    {
+        "File":  "docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Line":  79,
+        "Match":  "- administrator/event source"
+    },
+    {
+        "File":  "docs\\launch\\DOCUMENTATION_INDEX.md",
+        "Line":  9,
+        "Match":  "The progress/ETA engine is:"
+    },
+    {
+        "File":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Line":  24,
+        "Match":  "## Verified Commands"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Line":  39,
+        "Match":  "- Commands"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_WORK_PROTOCOL.md",
+        "Line":  5,
+        "Match":  "- **BOT EXECUTION ENVIRONMENT** (via `/exec` on Railway) – runtime checks, state verification, logs."
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Line":  13,
+        "Match":  "[X] Gateway commands verified"
+    },
+    {
+        "File":  "docs\\system_memory\\telegram_polling_history.txt",
+        "Line":  1,
+        "Match":  "d552ea5 fix: add snapshot/endday/report before polling, restore from known good base"
+    },
+    {
+        "File":  "docs\\system_memory\\incidents\\slh_409_diag_output.txt",
+        "Line":  24,
+        "Match":  "\"message\":{\"message_id\":19123,\"from\":{\"id\":8789977826,\"is_bot\":false,\"first_name\":\"O\",\"last_name\":\"U\",\"language_code\":\"en\"},\"chat\":{\"id\":8789977826,\"first_name\":\"O\",\"last_name\":\"U\",\"type\":\"private\"},\"date\":1783893646,\"text\":\"/ask\",\"entities\":[{\"offset\":0,\"length\":4,\"type\":\"bot_command\"}]}},{\"update_id\":36788763,"
+    },
+    {
+        "File":  "handlers\\academy_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027courses\u0027])"
+    },
+    {
+        "File":  "handlers\\academy_menu_handler.py",
+        "Line":  8,
+        "Match":  "@bot.message_handler(commands=[\u0027academy\u0027])"
+    },
+    {
+        "File":  "handlers\\admin_extras.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027health\u0027])"
+    },
+    {
+        "File":  "handlers\\advanced_ask_handler.py",
+        "Line":  18,
+        "Match":  "@bot.message_handler(commands=[\"ask\"])"
+    },
+    {
+        "File":  "handlers\\agents_handler.py",
+        "Line":  14,
+        "Match":  "@bot.message_handler(commands=[\"agent_create\"])"
+    },
+    {
+        "File":  "handlers\\ai_voting_handler.py",
+        "Line":  52,
+        "Match":  "@bot.message_handler(commands=[\"register_ai\"])"
+    },
+    {
+        "File":  "handlers\\askdebug_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027askdebug\u0027])"
+    },
+    {
+        "File":  "handlers\\audit_handler.py",
+        "Line":  68,
+        "Match":  "@bot.message_handler(commands=[\"audit\", \"logs\"])"
+    },
+    {
+        "File":  "handlers\\autoexec_handler.py",
+        "Line":  9,
+        "Match":  "@bot.message_handler(commands=[\"autoexec\"])"
+    },
+    {
+        "File":  "handlers\\bot_identity_handler.py",
+        "Line":  25,
+        "Match":  "@bot.message_handler(commands=[\"botname\"])"
+    },
+    {
+        "File":  "handlers\\brief_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"brief\"])"
+    },
+    {
+        "File":  "handlers\\broadcast_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"broadcast\"])"
+    },
+    {
+        "File":  "handlers\\claim_handler.py",
+        "Line":  20,
+        "Match":  "@bot.message_handler(commands=[\"deposit_address\"])"
+    },
+    {
+        "File":  "handlers\\cleanup_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\u0027cleanup\u0027])"
+    },
+    {
+        "File":  "handlers\\dashboard_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\"dashboard\"])"
+    },
+    {
+        "File":  "handlers\\deploy_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027deploy\u0027])"
+    },
+    {
+        "File":  "handlers\\device_handler.py",
+        "Line":  121,
+        "Match":  "@bot.message_handler(commands=[\u0027device_register\u0027])"
+    },
+    {
+        "File":  "handlers\\dev_admin.py",
+        "Line":  8,
+        "Match":  "@bot.message_handler(commands=[\u0027dev_add\u0027])"
+    },
+    {
+        "File":  "handlers\\dev_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027dev\u0027])"
+    },
+    {
+        "File":  "handlers\\endday_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027endday\u0027])"
+    },
+    {
+        "File":  "handlers\\esp_handler.py",
+        "Line":  64,
+        "Match":  "@bot.message_handler(commands=[\"esp_ping\"])"
+    },
+    {
+        "File":  "handlers\\exec_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"exec\"])"
+    },
+    {
+        "File":  "handlers\\exec_log_handler.py",
+        "Line":  4,
+        "Match":  "LOG_PATH = Path(\"state/exec_log.json\")"
+    },
+    {
+        "File":  "handlers\\exec_request_handler.py",
+        "Line":  12,
+        "Match":  "def _finish_exec_request(call_or_msg, request_id, action, is_callback=False):"
+    },
+    {
+        "File":  "handlers\\e_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"e\"])"
+    },
+    {
+        "File":  "handlers\\fakepay_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\"fakepay\"])"
+    },
+    {
+        "File":  "handlers\\feedback_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027feedback\u0027])"
+    },
+    {
+        "File":  "handlers\\firewall_handler.py",
+        "Line":  7,
+        "Match":  "Firewall visibility is separate from privileged command execution."
+    },
+    {
+        "File":  "handlers\\gateway_handler.py",
+        "Line":  8,
+        "Match":  "@bot.message_handler(commands=[\"gateway\"])"
+    },
+    {
+        "File":  "handlers\\git_handler.py",
+        "Line":  43,
+        "Match":  "@bot.message_handler(commands=[\u0027git\u0027])"
+    },
+    {
+        "File":  "handlers\\governance_handler.py",
+        "Line":  37,
+        "Match":  "@bot.message_handler(commands=[\"agent_status\"])"
+    },
+    {
+        "File":  "handlers\\health_monitor_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"health_monitor\"])"
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027help\u0027])"
+    },
+    {
+        "File":  "handlers\\join_handler.py",
+        "Line":  11,
+        "Match":  "@bot.message_handler(commands=[\u0027join\u0027])"
+    },
+    {
+        "File":  "handlers\\journal_handler.py",
+        "Line":  9,
+        "Match":  "@bot.message_handler(commands=[\u0027journal\u0027])"
+    },
+    {
+        "File":  "handlers\\kb_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027fixkb\u0027])"
+    },
+    {
+        "File":  "handlers\\leaderboard_handler.py",
+        "Line":  33,
+        "Match":  "@bot.message_handler(commands=[\u0027top\u0027])"
+    },
+    {
+        "File":  "handlers\\lesson_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027lesson\u0027])"
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  74,
+        "Match":  "(\"exec_request\", \"handlers.exec_request_handler\"),"
+    },
+    {
+        "File":  "handlers\\logo_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027logo\u0027, \u0027brand\u0027])"
+    },
+    {
+        "File":  "handlers\\map_handler.py",
+        "Line":  3,
+        "Match":  "@bot.message_handler(commands=[\u0027map\u0027])"
+    },
+    {
+        "File":  "handlers\\market_handler.py",
+        "Line":  29,
+        "Match":  "@bot.message_handler(commands=[\"market\", \"marketplace\", \"store\"])"
+    },
+    {
+        "File":  "handlers\\me_handler.py",
+        "Line":  11,
+        "Match":  "@bot.message_handler(commands=[\"me\"])"
+    },
+    {
+        "File":  "handlers\\mission_handler.py",
+        "Line":  10,
+        "Match":  "from core.mission_runtime_bridge import execute_mission_via_runtime"
+    },
+    {
+        "File":  "handlers\\monitor_handler.py",
+        "Line":  73,
+        "Match":  "@bot.message_handler(commands=[\u0027monitor_list\u0027])"
+    },
+    {
+        "File":  "handlers\\morning_handler.py",
+        "Line":  3,
+        "Match":  "COMMANDS = {}"
+    },
+    {
+        "File":  "handlers\\onboarding_v2.py",
+        "Line":  115,
+        "Match":  "commands=[\"start\"]"
+    },
+    {
+        "File":  "handlers\\os_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"os\"])"
+    },
+    {
+        "File":  "handlers\\ownership_transfer_handler.py",
+        "Line":  15,
+        "Match":  "@bot.message_handler(commands=[\"graduate\"])"
+    },
+    {
+        "File":  "handlers\\payment_handler.py",
+        "Line":  16,
+        "Match":  "@bot.message_handler(commands=[\u0027pay\u0027])"
+    },
+    {
+        "File":  "handlers\\progress_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"progress\"])"
+    },
+    {
+        "File":  "handlers\\reconcile_handler.py",
+        "Line":  4,
+        "Match":  "@bot.message_handler(commands=[\"reconcile\"])"
+    },
+    {
+        "File":  "handlers\\recovery_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\u0027recovery\u0027])"
+    },
+    {
+        "File":  "handlers\\recovery_verify_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027recovery_verify\u0027])"
+    },
+    {
+        "File":  "handlers\\revenue_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"revenue\"])"
+    },
+    {
+        "File":  "handlers\\services_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"services\"])"
+    },
+    {
+        "File":  "handlers\\staking_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\"stake\"])"
+    },
+    {
+        "File":  "handlers\\store_handler.py",
+        "Line":  7,
+        "Match":  "@bot.message_handler(commands=[\u0027shop\u0027])"
+    },
+    {
+        "File":  "handlers\\system_handler.py",
+        "Line":  1,
+        "Match":  "COMMANDS = {}"
+    },
+    {
+        "File":  "handlers\\task_handler.py",
+        "Line":  7,
+        "Match":  "COMMANDS = {}"
+    },
+    {
+        "File":  "handlers\\terms_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027terms\u0027])"
+    },
+    {
+        "File":  "handlers\\termux_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\u0027termux\u0027])"
+    },
+    {
+        "File":  "handlers\\ton_address_handler.py",
+        "Line":  5,
+        "Match":  "@bot.message_handler(commands=[\"ton_address\"])"
+    },
+    {
+        "File":  "handlers\\ton_balance_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"ton_balance\"])"
+    },
+    {
+        "File":  "handlers\\ton_claim_handler.py",
+        "Line":  21,
+        "Match":  "@bot.message_handler(commands=[\"claim_ton\"])"
+    },
+    {
+        "File":  "handlers\\user_handler.py",
+        "Line":  11,
+        "Match":  "@bot.message_handler(commands=[\u0027profile\u0027])"
+    },
+    {
+        "File":  "handlers\\ux_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027ux\u0027])"
+    },
+    {
+        "File":  "handlers\\wallet_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"wallet\"])"
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Line":  6,
+        "Match":  "@bot.message_handler(commands=[\"withdraw\"])"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  48,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\bot_executor.py"
+    },
+    {
+        "File":  "mission_control\\git_history.txt",
+        "Line":  19,
+        "Match":  "* 98d46c6 feat: command center + exec api connected to bot"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  11,
+        "Match":  "new file:   Guardian Executor Online"
+    },
+    {
+        "File":  "mission_control\\railway_variables.txt",
+        "Line":  49,
+        "Match":  "Γץס START_COMMAND             Γפג gunicorn -w 1 -b 0.0.0.0:$PORT api_server:app    Γץס"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  17,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\core\\bootstrap_commands.py"
+    },
+    {
+        "File":  "mission_control\\state_map.txt",
+        "Line":  23,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\commands_registry.json                                                      2623   7/"
+    },
+    {
+        "File":  "plugins\\admin.py",
+        "Line":  3,
+        "Match":  "def on_command(text, chat_id, send):"
+    },
+    {
+        "File":  "plugins\\system.py",
+        "Line":  3,
+        "Match":  "def on_command(text, chat_id, send):"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\critical_findings.md",
+        "Line":  2,
+        "Match":  "REPORT_20260723_225642/encoding_scan.txt:handlers/advanced_ask_handler.py:9:        except Exception as e: ans = f\"שגיאה: {e}\""
+    },
+    {
+        "File":  "security\\policies.json",
+        "Line":  3,
+        "Match":  "\"system_commands\": \"owner\","
+    },
+    {
+        "File":  "security\\roles.json",
+        "Line":  5,
+        "Match":  "\"developer\": [\"exec_request\", \"read_logs\", \"db_read\"],"
+    },
+    {
+        "File":  "services\\task_service.py",
+        "Line":  165,
+        "Match":  "execute_mission()"
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  387,
+        "Match":  "\"title\": \"אבטחת /e ו /execr\","
+    },
+    {
+        "File":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Line":  73,
+        "Match":  "\"exec_request\","
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  73,
+        "Match":  "\"exec_request\","
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  117,
+        "Match":  "\"agent_execution_requires_vote\": true"
+    },
+    {
+        "File":  "state\\marketplace.json",
+        "Line":  6,
+        "Match":  "\"desc\": \"Adds /health command\","
+    },
+    {
+        "File":  "state\\money_authority_audit_pre_token.txt",
+        "Line":  40,
+        "Match":  "[OUTSIDE-AUTHORITY] tools\\money_authority_audit.py:38: Path(\"core/economy_service.py\"),"
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\staking_basic.py",
+        "Line":  14,
+        "Match":  "@bot.message_handler(commands=[\u0027stake_deposit\u0027])"
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_handler.py",
+        "Line":  45,
+        "Match":  "@bot.message_handler(commands=[\u0027token\u0027])"
+    },
+    {
+        "File":  "state\\custom_handlers_disabled\\token_wizard.py",
+        "Line":  24,
+        "Match":  "@bot.message_handler(commands=[\u0027token_wizard\u0027])"
+    },
+    {
+        "File":  "state\\missions\\board.json",
+        "Line":  19,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "state\\missions\\results\\mission-2-20260814T132236Z.json",
+        "Line":  5,
+        "Match":  "\"execution_status\": \"success\","
+    },
+    {
+        "File":  "state\\missions\\results\\mission-3-20260814T132912Z.json",
+        "Line":  5,
+        "Match":  "\"execution_status\": \"success\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  100,
+        "Match":  "\"exec_request\","
+    },
+    {
+        "File":  "state\\takeover\\loader_registration_audit.json",
+        "Line":  49,
+        "Match":  "\"command_mentions\": {"
+    },
+    {
+        "File":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Line":  100,
+        "Match":  "\"exec_request\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_command_registration_audit.json",
+        "Line":  8,
+        "Match":  "\"command\": \"/user\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  428,
+        "Match":  "\"registered_commands\": ["
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_access_classification.json",
+        "Line":  152,
+        "Match":  "\"path\": \"core\\\\command_registry_loader.py\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Line":  289,
+        "Match":  "\"module\": \"core.command_registry_loader\","
+    },
+    {
+        "File":  "state\\takeover\\user_command_wiring_audit.json",
+        "Line":  4,
+        "Match":  "\"total_commands\": 13,"
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_assignment_20260817T152114Z.json",
+        "Line":  19,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_creation_20260811T140726Z.json",
+        "Line":  28,
+        "Match":  "\"execution_started_at\": \"2026-07-26T09:05:26.666789+00:00\","
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_execution_20260817T152114Z.json",
+        "Line":  20,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "tests\\test_agent.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tests\\test_task_and_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\active_loader_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\agent_state_autopilot.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\audit_state_access.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\build_state_migration_queue.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\disable_botstable_ask.py",
+        "Line":  6,
+        "Match":  "old = \u0027\u0027\u0027@bot.message_handler(commands=[\u0027ask\u0027])"
+    },
+    {
+        "File":  "tools\\discover_projects.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\discover_termux_projects.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\full_static_handler_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\full_system_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\live_vs_dead_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\loader_registration_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\money_authority_audit.py",
+        "Line":  38,
+        "Match":  "Path(\"core/economy_service.py\"),"
+    },
+    {
+        "File":  "tools\\project_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\rbac_audit.py",
+        "Line":  8,
+        "Match":  "\"system_commands\": True,"
+    },
+    {
+        "File":  "tools\\real_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\runtime_command_registration_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\runtime_loading_path_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\runtime_state_access_classification.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\runtime_state_dependency_map.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\session_closure_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\slh_launch_control.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\slh_migrate.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\test_agent_state_full.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\test_learning_path_full_loader.py",
+        "Line":  15,
+        "Match":  "\"commands\": kwargs.get(\"commands\"),"
+    },
+    {
+        "File":  "tools\\test_learning_path_loader_execution.py",
+        "Line":  12,
+        "Match":  "\"commands\": kwargs.get(\"commands\"),"
+    },
+    {
+        "File":  "tools\\test_learning_path_runtime.py",
+        "Line":  14,
+        "Match":  "\"commands\": kwargs.get(\"commands\"),"
+    },
+    {
+        "File":  "tools\\test_project_graph_contract.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\test_project_registry_contract.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\test_system_snapshot_contract.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\user_acceptance_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\user_command_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "tools\\user_command_wiring_audit.py",
+        "Line":  1,
+        "Match":  "#!/usr/bin/env python3"
+    },
+    {
+        "File":  "_slh_map\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\control\\COMMANDS.json",
+        "Line":  3,
+        "Match":  "\"command\":  \"slh\","
+    },
+    {
+        "File":  "_slh_map\\control\\CONTROL_STATE.json",
+        "Line":  16,
+        "Match":  "\"command_surface\":  {"
+    },
+    {
+        "File":  "_slh_map\\control\\EVIDENCE_GATE.json",
+        "Line":  2,
+        "Match":  "\"schema\":  \"slh-os/evidence-gate/v1\","
+    },
+    {
+        "File":  "_slh_map\\control\\LAUNCH.json",
+        "Line":  15,
+        "Match":  "\"commands\":  \"UNKNOWN\","
+    },
+    {
+        "File":  "_slh_map\\control\\LAUNCH_EVIDENCE.json",
+        "Line":  15,
+        "Match":  "\"command_surface\":  {"
+    },
+    {
+        "File":  "_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Line":  85,
+        "Match":  "\"commands\":  ["
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Line":  212,
+        "Match":  "\"file\":  \"command_audit.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY.json",
+        "Line":  4,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Line":  116,
+        "Match":  "\"sync_command\","
+    },
+    {
+        "File":  "_slh_map\\dna\\CURRENT.json",
+        "Line":  13,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\dna\\DNA.json",
+        "Line":  21,
+        "Match":  "\"canonical_commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Line":  17,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\summary.json",
+        "Line":  7,
+        "Match":  "\"command_candidates\": 20,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  21,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\AUTHORITY.json",
+        "Line":  4,
+        "Match":  "\"commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Line":  13,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\DNA.json",
+        "Line":  21,
+        "Match":  "\"canonical_commands\": [],"
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\summary.json",
+        "Line":  8,
+        "Match":  "\"command_candidates\": 21,"
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  22,
+        "Match":  "\"commands\": [],"
+    }
+]

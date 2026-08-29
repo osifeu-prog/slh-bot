@@ -1,0 +1,2517 @@
+﻿[
+    {
+        "File":  "ACTIVE_MARKDOWN.txt",
+        "Line":  2,
+        "Match":  "admin_handler.py:        bot.reply_to(message, msg, parse_mode=\"Markdown\")"
+    },
+    {
+        "File":  "add_sync_patch.py",
+        "Line":  24,
+        "Match":  "if uid != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "add_visibility_report.py",
+        "Line":  34,
+        "Match":  "👑 OWNER:"
+    },
+    {
+        "File":  "admin_handler.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "admin_menu.txt",
+        "Line":  4,
+        "Match":  "activate /backup /backup_junk /broadcast /clean /clean_junk /deploy /disk /endday /exec /grep /health /kernellog /kernelstatus /logs /master /monitor /morning /my_junk /plugin /reload /restart /rlogs /rollback /scan_junk /slh /snapshot /start /status /sysinfo /termlog /termux /test /testcmd /update"
+    },
+    {
+        "File":  "admin_utils.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "agent_client.py",
+        "Line":  4,
+        "Match":  "AGENT_PREFIX = \"mytermux\"   # חייב להיות זהה לזה שמופיע ב-/agent_create"
+    },
+    {
+        "File":  "agent_client_pc.py",
+        "Line":  3,
+        "Match":  "DEVICE = \"PC_MAIN_001\""
+    },
+    {
+        "File":  "AGENT_RULES.md",
+        "Line":  1,
+        "Match":  "# AGENT RULES - SLH OS"
+    },
+    {
+        "File":  "allowed_ids.json",
+        "Line":  2,
+        "Match":  "\"admin\": 8789977826,"
+    },
+    {
+        "File":  "API_REFERENCE.md",
+        "Line":  10,
+        "Match":  "| `/agents` | GET/POST | List/Create agents |"
+    },
+    {
+        "File":  "ARCHITECTURE.md",
+        "Line":  4,
+        "Match":  "1. Telegram Bot – 45+ commands, Admin panel"
+    },
+    {
+        "File":  "assignment_approval.py",
+        "Line":  30,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "assignment_commit.py",
+        "Line":  25,
+        "Match":  "print(\"              SLH ASSIGNMENT COMMIT\")"
+    },
+    {
+        "File":  "assignment_preview.py",
+        "Line":  32,
+        "Match":  "print(\"              SLH ASSIGNMENT PREVIEW\")"
+    },
+    {
+        "File":  "AUDIT_DEEP.md",
+        "Line":  34,
+        "Match":  "| Add new Agent (estimate) | ? changes | ? changes |"
+    },
+    {
+        "File":  "AUDIT_MISSION_RUNTIME.txt",
+        "Line":  15,
+        "Match":  "agent_id=None,"
+    },
+    {
+        "File":  "bot_gateway.py",
+        "Line":  38,
+        "Match":  "@app.route(\u0027/api/agents\u0027)"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  26,
+        "Match":  "from security import permissions"
+    },
+    {
+        "File":  "bridged_runtime.txt",
+        "Line":  1,
+        "Match":  "activate"
+    },
+    {
+        "File":  "brief_handler.py",
+        "Line":  32,
+        "Match":  "agents = len(db.get(\"agents\", {}))"
+    },
+    {
+        "File":  "broadcast_script.txt",
+        "Line":  7,
+        "Match":  "/agents"
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  6,
+        "Match":  "100644 blob 358179bf90fd5f3e9b3955f229ce6857636e5b71\tAGENT_RULES.md"
+    },
+    {
+        "File":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Line":  5,
+        "Match":  "\"owners\": ["
+    },
+    {
+        "File":  "complete_handler.py",
+        "Line":  1,
+        "Match":  "from internal_agent import complete_task as agent_complete"
+    },
+    {
+        "File":  "config.json",
+        "Line":  3,
+        "Match":  "\"OWNER_ID\": 8789977826,"
+    },
+    {
+        "File":  "control_layer.py",
+        "Line":  19,
+        "Match":  "def register(self, name, fn, admin_only=False):"
+    },
+    {
+        "File":  "course_handlers.py",
+        "Line":  16,
+        "Match":  "@bot.message_handler(commands=[\u0027activate\u0027])"
+    },
+    {
+        "File":  "create_takeover_manifest.py",
+        "Line":  46,
+        "Match":  "task_service_path = ROOT / \"services\" / \"task_service.py\""
+    },
+    {
+        "File":  "demo_handlers.py",
+        "Line":  4,
+        "Match":  "def register(bot, agents_dict):"
+    },
+    {
+        "File":  "DEPLOYMENT_PLAN.md",
+        "Line":  18,
+        "Match":  "- Enable:"
+    },
+    {
+        "File":  "DEVELOPER_GUIDE.md",
+        "Line":  1,
+        "Match":  "# SLH OS Developer Guide"
+    },
+    {
+        "File":  "DEVELOPER_ONBOARDING.md",
+        "Line":  1,
+        "Match":  "SLH OS DEVELOPER QUICK START"
+    },
+    {
+        "File":  "device_bridge.py",
+        "Line":  3,
+        "Match":  "SLH Device Bridge"
+    },
+    {
+        "File":  "devsetup_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027devsetup\u0027])"
+    },
+    {
+        "File":  "diagnostic_handler.py",
+        "Line":  9,
+        "Match":  "bot.reply_to(m, \"❌ Admin only\")"
+    },
+    {
+        "File":  "DIFF_TERMUX_WINDOWS.txt",
+        "Line":  8,
+        "Match":  "-a----          8/4/2026   3:02 AM           2684 admin_extras.py"
+    },
+    {
+        "File":  "doctor_handler.py",
+        "Line":  52,
+        "Match":  "checks[\u0027Agents\u0027] = \"⚪️ לא נבדק\""
+    },
+    {
+        "File":  "DO_NOT_RUN_LOCALLY.md",
+        "Line":  3,
+        "Match":  "לניהול יומיומי: השתמש בפקודות הטלגרם (/admin, /exec, /deploy, /rlogs)."
+    },
+    {
+        "File":  "economy_audit_after_p0.txt",
+        "Line":  29,
+        "Match":  "[OUTSIDE-AUTHORITY] learning_path.py:64: result = economy_service.submit_agent("
+    },
+    {
+        "File":  "economy_audit_balance.txt",
+        "Line":  3,
+        "Match":  "app.py:27:        bot.reply_to(m, f\"{LOGO}\\nברוך הבא! /wallet /admin\" + SIGN)"
+    },
+    {
+        "File":  "economy_audit_dashboard.txt",
+        "Line":  49,
+        "Match":  "import_binance.py:10:SLH_ABI = [{\"constant\":True,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outp"
+    },
+    {
+        "File":  "economy_audit_payment.txt",
+        "Line":  2,
+        "Match":  "agent_client.py:90:def save_db(db):"
+    },
+    {
+        "File":  "ECONOMY_WIRING_AUDIT.txt",
+        "Line":  6,
+        "Match":  "agent_client_termux.py:65:    bot.register_next_step_handler(m, get_new_secret)"
+    },
+    {
+        "File":  "econ_handler.py",
+        "Line":  29,
+        "Match":  "\"premium_agent\": 50,"
+    },
+    {
+        "File":  "encoding_damage_report.txt",
+        "Line":  16,
+        "Match":  "SLH_AUDIT_20260813_201938.txt:1101:core\\ask_router.py:12:     \"agents\": [\"׳¡׳•׳›׳\", \"׳¡׳•׳›׳ ׳™׳\", \"agent\", \"׳¦׳•׳¨ ׳¡׳•׳›׳\", \"/agents\", \"כמה סוכנים\"],"
+    },
+    {
+        "File":  "ENTRYPOINT_AUDIT.txt",
+        "Line":  2,
+        "Match":  "agent_client_termux.py:79:bot.polling(none_stop=True)"
+    },
+    {
+        "File":  "esp_test.py",
+        "Line":  6,
+        "Match":  "DEVICE_ID = \"DEV_ESP_NEW_1786177919\""
+    },
+    {
+        "File":  "exec_commit.py",
+        "Line":  4,
+        "Match":  "OWNER = os.environ.get(\"RAILWAY_GIT_REPO_OWNER\") or \"osifeu-prog\""
+    },
+    {
+        "File":  "FULL_SYSTEM_AUDIT.json",
+        "Line":  7,
+        "Match":  "\"data\": \"TG:8789977826 PHONE:972500000001 ADMIN:True\""
+    },
+    {
+        "File":  "GIT_ADMIN_SEARCH.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_ASK_SEARCH.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  6,
+        "Match":  "100644 blob 358179bf90fd5f3e9b3955f229ce6857636e5b71\tAGENT_RULES.md"
+    },
+    {
+        "File":  "GIT_BOT_TOKEN_HISTORY.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_CONTROL_SEARCH.txt",
+        "Line":  5,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_DIFF_FIRST_TO_NOW.txt",
+        "Line":  9,
+        "Match":  "SLH_V4_AGENTS.py"
+    },
+    {
+        "File":  "GIT_DISABLED_AND_BACKUPS.txt",
+        "Line":  1,
+        "Match":  "Procfile.disabled"
+    },
+    {
+        "File":  "GIT_ECON_BALANCE.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_ECON_PAY.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_EVENTBUS_HISTORY.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_FIRST_TREE.txt",
+        "Line":  16,
+        "Match":  "100644 blob 0e1666b782da5378dd74148ee64aa4bb23191358\tSLH_V4_AGENTS.py"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  6,
+        "Match":  "100644 blob 358179bf90fd5f3e9b3955f229ce6857636e5b71\tAGENT_RULES.md"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  6,
+        "Match":  "* db4fe1a Add UX/DEV handlers + fix journal display"
+    },
+    {
+        "File":  "GIT_JULY_TREE.txt",
+        "Line":  3,
+        "Match":  "100644 blob 358179bf90fd5f3e9b3955f229ce6857636e5b71\tAGENT_RULES.md"
+    },
+    {
+        "File":  "GIT_LLM_SEARCH.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_RAILWAY_HISTORY.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_REMOVED_4d90da6.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_STATE_ENGINE_HISTORY.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "GIT_STATE_SEARCH.txt",
+        "Line":  2,
+        "Match":  "Author: OsifDev \u003cosif.erez.ungar@gmail.com\u003e"
+    },
+    {
+        "File":  "guide_handler.py",
+        "Line":  13,
+        "Match":  "(\"🤖 AI Agents\", \"guide_agents\"),"
+    },
+    {
+        "File":  "HANDLER_LOADER_AUDIT.txt",
+        "Line":  4,
+        "Match":  "agent_client_termux.py:65:    bot.register_next_step_handler(m, get_new_secret)"
+    },
+    {
+        "File":  "HANDOFF.md",
+        "Line":  1,
+        "Match":  "# SLH OS Session Handoff – 5 Jul 2026"
+    },
+    {
+        "File":  "help_handler.py",
+        "Line":  27,
+        "Match":  "🛠 Projects \u0026 Tasks"
+    },
+    {
+        "File":  "inspector.py",
+        "Line":  3,
+        "Match":  "class InspectorAgent:"
+    },
+    {
+        "File":  "internal_agent.py",
+        "Line":  33,
+        "Match":  "return \"Usage: /sendagent mytermux ask \u003cquestion\u003e\""
+    },
+    {
+        "File":  "journal.json",
+        "Line":  4,
+        "Match":  "\"text\": \"SESSION 2-JUL-2026: Architecture review. System assessment: bot_stable.py online, EventBus workers mismatch identified, duplicate polling resolved. Priority: STABLE CORE - single entrypoint, clean init, zero 409 by design. OPEN: create AGENT_RULES.md, populate journal, clean .bak files, verify bot.py dependencies, Dockerfile warnings, /refreshtoken decision, student onboarding.\""
+    },
+    {
+        "File":  "JUNK_FILES.txt",
+        "Line":  7,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\custom_handlers\\start_buttons.py.disabled"
+    },
+    {
+        "File":  "junk_handler.py",
+        "Line":  6,
+        "Match":  "# ----- סריקת זיכרון (Admin) -----"
+    },
+    {
+        "File":  "KERNEL_RULES.md",
+        "Line":  5,
+        "Match":  "3. All execution passes kernel.route()"
+    },
+    {
+        "File":  "LAUNCH_PLAN.json",
+        "Line":  18,
+        "Match":  "\"tasks\": ["
+    },
+    {
+        "File":  "learning_path.py",
+        "Line":  17,
+        "Match":  "(\"×¡××× ×× ×××××\", \"/agent_create \u003cname\u003e â ×¦××¨ ×¡×××\\n/agents â ×¨×©×××ª ×¡××× ××\"),"
+    },
+    {
+        "File":  "LLM_AUDIT.txt",
+        "Line":  51,
+        "Match":  "state\\custom_handlers\\ai_voting_handler.py:23:            (\"GroqAgent\", \"Groq-powered AI agent\"),"
+    },
+    {
+        "File":  "logger_handler.py",
+        "Line":  1,
+        "Match":  "# disabled"
+    },
+    {
+        "File":  "manifest.json",
+        "Line":  11,
+        "Match":  "\"agents\","
+    },
+    {
+        "File":  "MANIFEST_HANDLERS.txt",
+        "Line":  5,
+        "Match":  "SESSION_CLOSURE_MANIFEST.md:31:Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "marketplace.py",
+        "Line":  14,
+        "Match":  "{\"id\": \"task_plugin\", \"name\": \"Task Plugin\", \"desc\": \"Adds /task create/list\", \"price\": 0, \"installs\": 0},"
+    },
+    {
+        "File":  "master_agent.py",
+        "Line":  3,
+        "Match":  "class MasterAgent:"
+    },
+    {
+        "File":  "mission_assignment_commit.py",
+        "Line":  69,
+        "Match":  "def find_agent("
+    },
+    {
+        "File":  "mission_assignment_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION ASSIGNMENT PREVIEW\")"
+    },
+    {
+        "File":  "mission_completion_commit.py",
+        "Line":  55,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_completion_commit_2.py",
+        "Line":  220,
+        "Match":  "\"result agent matches assignment\","
+    },
+    {
+        "File":  "mission_completion_gate.py",
+        "Line":  53,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_creation_commit.py",
+        "Line":  230,
+        "Match":  "\"✅ AGENTS NOT MODIFIED\""
+    },
+    {
+        "File":  "mission_creation_preview.py",
+        "Line":  91,
+        "Match":  "\"⚪ AGENT MODIFICATION: NO\""
+    },
+    {
+        "File":  "mission_execution_commit.py",
+        "Line":  84,
+        "Match":  "def find_agent("
+    },
+    {
+        "File":  "mission_execution_gate.py",
+        "Line":  40,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_execution_preview.py",
+        "Line":  55,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_lifecycle_preview.py",
+        "Line":  18,
+        "Match":  "print(\"[EXECUTION PREVIEW]\")"
+    },
+    {
+        "File":  "mission_result_recorder.py",
+        "Line":  55,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_result_verifier.py",
+        "Line":  53,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "mission_runner.py",
+        "Line":  45,
+        "Match":  "def find_agent(manifest, agent_id):"
+    },
+    {
+        "File":  "monitor_handler.py",
+        "Line":  6,
+        "Match":  "if str(m.chat.id) != \"8789977826\":  # admin only"
+    },
+    {
+        "File":  "onboarding_handler.py",
+        "Line":  28,
+        "Match":  "\"role\": \"user\","
+    },
+    {
+        "File":  "onboarding_scan.txt",
+        "Line":  8,
+        "Match":  "handlers\\admin_guard.py:7:def register_admin_guard(bot, ADMIN_ID):"
+    },
+    {
+        "File":  "plugins.json",
+        "Line":  12,
+        "Match":  "\"id\": \"task_plugin\","
+    },
+    {
+        "File":  "plugins_store.json",
+        "Line":  4,
+        "Match":  "\"description\": \"\\u05e1\\u05d5\\u05e8\\u05e7 \\u05d5\\u05de\\u05e0\\u05e7\\u05d4 \\u05e7\\u05d1\\u05e6\\u05d9\\u05dd \\u05db\\u05d1\\u05d3\\u05d9\\u05dd \\u05de\\u05d8\\u05e8\\u05de\\u05d5\\u05e7\\u05e1 (Admin)\","
+    },
+    {
+        "File":  "plugins_store.py",
+        "Line":  12,
+        "Match":  "{\"id\": \"task_plugin\", \"name\": \"Task Plugin\", \"description\": \"Adds /task create/list\", \"url\": \"https://raw.githubusercontent.com/osifeu-prog/slh-bot/main/plugins/task.py\", \"price\": 0},"
+    },
+    {
+        "File":  "PRE_ECONOMY_FULL_AUDIT.txt",
+        "Line":  3,
+        "Match":  "app.py:27:        bot.reply_to(m, f\"{LOGO}\\nברוך הבא! /wallet /admin\" + SIGN)"
+    },
+    {
+        "File":  "PROFILE_MANAGER_CALLS.txt",
+        "Line":  17,
+        "Match":  "handlers\\ownership_transfer_handler.py:40:        user = profile_manager.get_user(uid)"
+    },
+    {
+        "File":  "project_commands.py",
+        "Line":  10,
+        "Match":  "bot.reply_to(m, \"Usage: /project create/list/open/status/roadmap/task/agent/backup\")"
+    },
+    {
+        "File":  "railway_db_snapshot.txt",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "railway_logs_baseline_20260824.txt",
+        "Line":  3,
+        "Match":  "\u001b[31m\u001b[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.\u001b[0m"
+    },
+    {
+        "File":  "README.md",
+        "Line":  16,
+        "Match":  "- `/admin` – פאנל ניהול"
+    },
+    {
+        "File":  "refresh_token_handler.py",
+        "Line":  77,
+        "Match":  "def init(bot, is_admin_func=None):"
+    },
+    {
+        "File":  "RELEASE_STATUS_2026_07_21.md",
+        "Line":  11,
+        "Match":  "✅ Agent storage"
+    },
+    {
+        "File":  "report_handler.py",
+        "Line":  37,
+        "Match":  "completed = student.get(\"completed_tasks\", [])"
+    },
+    {
+        "File":  "REPUTATION_PLAN.md",
+        "Line":  35,
+        "Match":  "- Agents verify important actions."
+    },
+    {
+        "File":  "responsibility_map.py",
+        "Line":  119,
+        "Match":  "def agent_capability(agent):"
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  4,
+        "Match":  "- Agent CRUD (create, list, send, inbox, state)"
+    },
+    {
+        "File":  "RUN_GUIDE.md",
+        "Line":  3,
+        "Match":  "## 1. Code execution only:"
+    },
+    {
+        "File":  "SAVE_DB_USAGE.txt",
+        "Line":  2,
+        "Match":  "agent_client.py:90:def save_db(db):"
+    },
+    {
+        "File":  "self_model_audit.py",
+        "Line":  16,
+        "Match":  "\"AGENT_RULES.md\""
+    },
+    {
+        "File":  "self_test.py",
+        "Line":  22,
+        "Match":  "# Agent – send test command and wait for outbox"
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  41,
+        "Match":  "\"output\": \"advanced_ask_handler.backup_2026-07-21_1632.py\\nadvanced_ask_handler.py\\nask_handler.py\\nbackups/end_of_day_20260721_0016/bot_stable.py\\nbackups/loader_after_task_fix.py\\nbackups/loader_before_economy_cleanup.py\\nbackups/loader_before_economy_first_remove.py\\nbackups/loader_before_fix.py\\nbackups/loader_before_mission_cleanup.py\\nbackups/loader_before_mission_cleanup_retry.py\\nbackups/phase_map_20260723/handlers/advanced_ask_handler.py\\nbackups/phase_map_20260723/handlers/askdebug_handler.py\\nbackups/phase_map_20260723/handlers/help_handler.py\\nbackups/phase_map_20260723/handlers/llm_handler.py\\nbackups/phase_map_20260723/handlers/loader.py\\nbackups/pre_governance_phase/bot_stable.py\\nbackups/pre_governance_phase/loader.py\\nbackups/pre_phase95_governance/bot_stable.py\\nbackups/pre_phase95_governance/loader.py\\nbackups/stable_2026_07_20/bot_stable.py\\nbackups/stable_2026_07_20/loader.py\\nbot_stable.py\\ncore/ask_router.py\\nguide_handler.py\\nhandlers/advanced_ask_handler.py\\nhandlers/askdebug_handler.py\\nhandlers/help_handler.py\\nhandlers/llm_handler.py\\nhandlers/loader.py\\nhelp_handler.py\\npayment_handler.py\\nslh_audit.py\\nslh_full_check.py\\nslh_hardening.py\\nstate/snapshots/ask_router_stable_20260726_104012/advanced_ask_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/llm_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/loader.py\\nstate/startup.py\\ntools/connect_ask_guard.py\\ntools/create_ask_guard.py\\ntools/disable_botstable_ask.py\\ntools/fix_ask_guard_api.py\\ntools/loader_registration_audit.py\\ntools/patch_ask_router.py\\ntools/runtime_command_registration_audit.py\\ntools/session_closure_audit.py\\ntools/user_command_audit.py\\ntools/user_command_wiring_audit.py\\ntutorial_handler.py\""
+    },
+    {
+        "File":  "SESSION_CLOSURE_MANIFEST.md",
+        "Line":  31,
+        "Match":  "Identify the actual registered handler and runtime execution path."
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  4,
+        "Match":  "- קידוד mojibake ב-admin_extras.py (4 שורות אימוג\u0027ים)"
+    },
+    {
+        "File":  "show_dashboard.py",
+        "Line":  5,
+        "Match":  "agents = len(d.get(\u0027agents\u0027, {}))"
+    },
+    {
+        "File":  "slh.py",
+        "Line":  10,
+        "Match":  "print(\"\\n\"+\"=\"*40+\"\\n SLH vNEXT - ADMIN PANEL ASCII\\n\"+\"=\"*40)"
+    },
+    {
+        "File":  "SLH_AGENT_HANDOFF.md",
+        "Line":  10,
+        "Match":  "נקראו AGENT_RULES.md, KERNEL_RULES.md, SYSTEM_RULES.md, SOURCE_OF_TRUTH.md, DO_NOT_RUN_LOCALLY.md, SLH_AGENT_HANDOFF.md (הגרסה הקודמת)."
+    },
+    {
+        "File":  "slh_audit.py",
+        "Line":  68,
+        "Match":  "\"agents\","
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  109,
+        "Match":  "d-----         8/7/2026 3:44:57 PM   agents"
+    },
+    {
+        "File":  "slh_audit_report.json",
+        "Line":  10,
+        "Match":  "\"state/agents.json\": {"
+    },
+    {
+        "File":  "slh_autopilot.py",
+        "Line":  106,
+        "Match":  "check_json(\"state/agents.json\")"
+    },
+    {
+        "File":  "SLH_COMMAND_MAP.txt",
+        "Line":  9,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py                                         2     @bot.message_handler(comm..."
+    },
+    {
+        "File":  "slh_consolidate.py",
+        "Line":  13,
+        "Match":  "agents_file=\"state/agents.json\""
+    },
+    {
+        "File":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Line":  2,
+        "Match":  "SLH OS DEVELOPER ONBOARDING REPORT"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  26,
+        "Match":  "new file:   Guardian Executor Online"
+    },
+    {
+        "File":  "slh_fix_bom.py",
+        "Line":  54,
+        "Match":  "except (OSError, PermissionError) as e:"
+    },
+    {
+        "File":  "SLH_FULL_AUDIT_20260810_152243.txt",
+        "Line":  28,
+        "Match":  "[OK]   core\\agent_registry.py"
+    },
+    {
+        "File":  "slh_full_check.py",
+        "Line":  54,
+        "Match":  "\"state/agents.json\","
+    },
+    {
+        "File":  "slh_git_diag_20260804_020650.txt",
+        "Line":  8,
+        "Match":  "remotes/origin/development"
+    },
+    {
+        "File":  "SLH_HANDLER_MAP.txt",
+        "Line":  9,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py                  2     @bot.message_handler(commands=[\u0027admin\u0027])"
+    },
+    {
+        "File":  "slh_hardening.py",
+        "Line":  24,
+        "Match":  "\"state/agents.json\","
+    },
+    {
+        "File":  "slh_light_20260702_0118.txt",
+        "Line":  47,
+        "Match":  "task(*args, **kwargs)"
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  12,
+        "Match":  "|   admin_handler.py"
+    },
+    {
+        "File":  "SLH_MAIN.py",
+        "Line":  3,
+        "Match":  "from core.agent_factory import load_agents_into_kernel"
+    },
+    {
+        "File":  "slh_plan_20260702.txt",
+        "Line":  32,
+        "Match":  "- load TaskPlugin safely"
+    },
+    {
+        "File":  "SLH_PYTHON_FILES.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py"
+    },
+    {
+        "File":  "SLH_RELEASE_LOGS.txt",
+        "Line":  16,
+        "Match":  "\u001b[31m\u001b[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.\u001b[0m"
+    },
+    {
+        "File":  "SLH_RELEASE_VERIFY.json",
+        "Line":  4,
+        "Match":  "\"agents\": 4,"
+    },
+    {
+        "File":  "SLH_RUNTIME_AUTHORITY.json",
+        "Line":  6,
+        "Match":  "\"local_bot_execution\": false,"
+    },
+    {
+        "File":  "SLH_RUNTIME_POLICY.md",
+        "Line":  10,
+        "Match":  "- Railway remains the single Telegram polling owner."
+    },
+    {
+        "File":  "SLH_RUNTIME_SNAPSHOT_20260708.md",
+        "Line":  45,
+        "Match":  "Rebuild task queue"
+    },
+    {
+        "File":  "slh_snapshot.py",
+        "Line":  13,
+        "Match":  "\"state/agents.json\","
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  26,
+        "Match":  "from security import permissions"
+    },
+    {
+        "File":  "slh_sync_fix.py",
+        "Line":  14,
+        "Match":  "AGENTS=\"state/agents.json\""
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  14,
+        "Match":  "|   admin_handler.py"
+    },
+    {
+        "File":  "SLH_V1.2_FEATURE1.md",
+        "Line":  15,
+        "Match":  "- agents"
+    },
+    {
+        "File":  "SLH_V1.2_ROADMAP.md",
+        "Line":  11,
+        "Match":  "Feature development started"
+    },
+    {
+        "File":  "SOURCE_OF_TRUTH.md",
+        "Line":  14,
+        "Match":  "- logger_handler — מושבת בכוונה (# disabled)"
+    },
+    {
+        "File":  "STABLE_STATE_20260711.md",
+        "Line":  47,
+        "Match":  "Dashboard V2 was merged from dashboard-v2-development"
+    },
+    {
+        "File":  "STABLE_STATUS_20260713.txt",
+        "Line":  20,
+        "Match":  "slh-agents-handler-migrated-20260707"
+    },
+    {
+        "File":  "state_connection_map.txt",
+        "Line":  3,
+        "Match":  "admin_handler.py:22:        msg += \"/backup — Send db.json backup\\n\""
+    },
+    {
+        "File":  "state_manager.py",
+        "Line":  13,
+        "Match":  "\"users\": {}, \"students\": {}, \"courses\": {}, \"admins\": [],"
+    },
+    {
+        "File":  "STATE_USAGE_AUDIT.txt",
+        "Line":  4,
+        "Match":  "agent_client.py:3:DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "state_writers_report.txt",
+        "Line":  35,
+        "Match":  "agent_client.py:3"
+    },
+    {
+        "File":  "STATUS.md",
+        "Line":  9,
+        "Match":  "- /courses, /task, /submit, /myprogress – Course management"
+    },
+    {
+        "File":  "status_agents.txt",
+        "Line":  1,
+        "Match":  "?? status_agents.txt"
+    },
+    {
+        "File":  "subscriptions.py",
+        "Line":  4,
+        "Match":  "\"free\": {\"name\": \"Free\", \"price\": 0, \"agents\": 5, \"tasks\": 50, \"plugins\": 2},"
+    },
+    {
+        "File":  "system_diagnostics.py",
+        "Line":  52,
+        "Match":  "agents = len(db.get(\"agents\", {}))"
+    },
+    {
+        "File":  "system_health.py",
+        "Line":  22,
+        "Match":  "agents = len(db.get(\"agents\", {}))"
+    },
+    {
+        "File":  "system_profile.json",
+        "Line":  7,
+        "Match":  "\"agents\": true,"
+    },
+    {
+        "File":  "SYSTEM_RULES.md",
+        "Line":  19,
+        "Match":  "## Agents"
+    },
+    {
+        "File":  "takeover_controller.py",
+        "Line":  85,
+        "Match":  "# AGENTS"
+    },
+    {
+        "File":  "TASK_SNAPSHOT.txt",
+        "Line":  4,
+        "Match":  "\"agents\": 4,"
+    },
+    {
+        "File":  "TELEBOT_AUDIT.txt",
+        "Line":  2,
+        "Match":  "agent_client_termux.py:15:bot = telebot.TeleBot(TOKEN)"
+    },
+    {
+        "File":  "TERMUX_FULL.txt",
+        "Line":  11,
+        "Match":  "-a----          8/2/2026   1:33 PM            690 admin_guard.py"
+    },
+    {
+        "File":  "TERMUX_HANDLERS.txt",
+        "Line":  11,
+        "Match":  "-a----          8/2/2026   1:33 PM            690 admin_guard.py"
+    },
+    {
+        "File":  "test_assignment_api.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH ASSIGNMENT API TEST\")"
+    },
+    {
+        "File":  "test_assignment_commit_api.py",
+        "Line":  45,
+        "Match":  "print(\"       SLH ASSIGNMENT API COMMIT TEST\")"
+    },
+    {
+        "File":  "test_creation_api.py",
+        "Line":  288,
+        "Match":  "\"STATUS: READY FOR MISSION #3 ASSIGNMENT PREVIEW\""
+    },
+    {
+        "File":  "test_handler.py",
+        "Line":  7,
+        "Match":  "bot.reply_to(m, \"❌ Admin only\")"
+    },
+    {
+        "File":  "test_marketplace.py",
+        "Line":  28,
+        "Match":  "results = search_plugins(\"task\")"
+    },
+    {
+        "File":  "test_mission3_assignment_commit.py",
+        "Line":  45,
+        "Match":  "print(\"       SLH MISSION #3 ASSIGNMENT COMMIT\")"
+    },
+    {
+        "File":  "test_mission3_assignment_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #3 ASSIGNMENT PREVIEW\")"
+    },
+    {
+        "File":  "test_mission3_completion_commit.py",
+        "Line":  287,
+        "Match":  "\"Agent ID:\","
+    },
+    {
+        "File":  "test_mission3_completion_preview.py",
+        "Line":  129,
+        "Match":  "print(\"[EXECUTION RESULT DISCOVERY]\")"
+    },
+    {
+        "File":  "test_mission3_execution_commit.py",
+        "Line":  82,
+        "Match":  "print(\"       SLH MISSION #3 EXECUTION COMMIT\")"
+    },
+    {
+        "File":  "test_mission3_execution_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #3 EXECUTION PREVIEW\")"
+    },
+    {
+        "File":  "test_mission3_post_completion_regression.py",
+        "Line":  123,
+        "Match":  "print(\"[RE-EXECUTION PREVIEW]\")"
+    },
+    {
+        "File":  "test_mission4_assignment_commit.py",
+        "Line":  45,
+        "Match":  "print(\"       SLH MISSION #4 ASSIGNMENT COMMIT\")"
+    },
+    {
+        "File":  "test_mission4_assignment_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #4 ASSIGNMENT PREVIEW\")"
+    },
+    {
+        "File":  "test_mission4_creation_commit.py",
+        "Line":  348,
+        "Match":  "\"NEXT: ASSIGNMENT PREVIEW\""
+    },
+    {
+        "File":  "test_mission4_execution_commit.py",
+        "Line":  45,
+        "Match":  "print(\"       SLH MISSION #4 EXECUTION COMMIT\")"
+    },
+    {
+        "File":  "test_mission4_execution_preview.py",
+        "Line":  9,
+        "Match":  "print(\"       SLH MISSION #4 EXECUTION PREVIEW\")"
+    },
+    {
+        "File":  "test_mission_orchestrator_preview.py",
+        "Line":  16,
+        "Match":  "agent_id = \"3\""
+    },
+    {
+        "File":  "TOKEN_PLAN.md",
+        "Line":  24,
+        "Match":  "- Agent upgrades"
+    },
+    {
+        "File":  "TOMORROW_HANDOFF.md",
+        "Line":  1,
+        "Match":  "# SLH OS — TOMORROW HANDOFF"
+    },
+    {
+        "File":  "ton_handler.py",
+        "Line":  33,
+        "Match":  "bot.send_message(m.chat.id, \"⚠️ TON payments are not configured yet. Please contact the admin.\")"
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  6,
+        "Match":  "AGENT_RULES.md"
+    },
+    {
+        "File":  "tutorial_handler.py",
+        "Line":  8,
+        "Match":  "3️⃣ **צור סוכן** – /agent_create \u003cשם\u003e"
+    },
+    {
+        "File":  "UPDATE.md",
+        "Line":  8,
+        "Match":  "| **API** (`web/api/app.py`) | `/api/health`, `/api/stats`, `/api/logs`, `/api/agents`, `/api/tasks` | ✅ |"
+    },
+    {
+        "File":  "UX_COMMANDS.md",
+        "Line":  1,
+        "Match":  "# SLH OS UX Developer Commands"
+    },
+    {
+        "File":  "viewfile_handler.py",
+        "Line":  2,
+        "Match":  "from admin_utils import is_admin"
+    },
+    {
+        "File":  "virtual_esp_local.py",
+        "Line":  6,
+        "Match":  "DEVICE_ID = \"DEV_ESP_NEW_1786177919\""
+    },
+    {
+        "File":  "WALLET_API_USAGE.txt",
+        "Line":  3,
+        "Match":  "app.py:27:        bot.reply_to(m, f\"{LOGO}\\nברוך הבא! /wallet /admin\" + SIGN)"
+    },
+    {
+        "File":  "webapp.py",
+        "Line":  47,
+        "Match":  "@app.route(\"/api/tasks/\u003cuid\u003e\")"
+    },
+    {
+        "File":  "WINDOWS_HANDLERS.txt",
+        "Line":  11,
+        "Match":  "-a----          8/4/2026   3:02 AM           2684 admin_extras.py"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  10,
+        "Match":  "d-----          8/4/2026   1:53 AM                agents"
+    },
+    {
+        "File":  "agents\\echo.py",
+        "Line":  1,
+        "Match":  "class EchoAgent:"
+    },
+    {
+        "File":  "agents\\echo_agent.py",
+        "Line":  1,
+        "Match":  "class EchoAgent:"
+    },
+    {
+        "File":  "agents\\system_guard.py",
+        "Line":  2,
+        "Match":  "SLH SystemGuardAgent"
+    },
+    {
+        "File":  "assets\\termux_logo.txt",
+        "Line":  7,
+        "Match":  "SLH EMPIRE ADMIN v3.0"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\02_git_history.txt",
+        "Line":  2,
+        "Match":  "47d1ee6 feat: owner broadcast command"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Line":  8,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py                                                  1688 8/13/2026 1:40:22 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\06_loader_candidates.txt",
+        "Line":  23,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_learning_path_loader_execution.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Line":  12,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json                                                       22225 7/"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Line":  5,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\09_tests.txt",
+        "Line":  8,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\__pycache__\\test_assignment_api.cpython-313.pyc                                  3071"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\10_legacy_backup.txt",
+        "Line":  7,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py.bak_before_fix                                              1715 8/8/20..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.txt                                                             1127 8/2/2026..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  6,
+        "Match":  "agents                                              d-----         8/7/2026 3:44:57 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Line":  4,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\agent_client.py                                     130 if __name__ == \"__main__\":"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  65,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json                                18         \"bot_stable.py:21..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\04_loader_authority.txt",
+        "Line":  26,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_learning_path_loader_execution.py          1 import handlers.loader"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Line":  9,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py                                                       2     @bot.messag..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\agent_client.py                                          3 DB_PATH = \"state/db.json\""
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\01_bot_gateway.txt",
+        "Line":  38,
+        "Match":  "@app.route(\u0027/api/agents\u0027)"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Line":  12,
+        "Match":  "(\"agents\", \"handlers.agents_handler\"),"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\03_core_runtime.txt",
+        "Line":  76,
+        "Match":  "\"agents\": list("
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_bootstrap_commands.txt",
+        "Line":  9,
+        "Match":  "\"admin_handler\","
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\05_imports.txt",
+        "Line":  10,
+        "Match":  "bot_gateway.py:41:        from core.agent_registry import STORE"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\admin_extras.py                 2299 8/13/2026 1:40:21 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Line":  7,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\agent_client.py                                                       3 DB_PATH = \"state..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Line":  5,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\agent_client.py                                                     130 if __name__ == \"..."
+    },
+    {
+        "File":  "core\\agent_factory.py",
+        "Line":  2,
+        "Match":  "SLH Agent Runtime Factory"
+    },
+    {
+        "File":  "core\\agent_registry.py",
+        "Line":  4,
+        "Match":  "from core.agent_state_store import AgentStateStore"
+    },
+    {
+        "File":  "core\\agent_state_store.py",
+        "Line":  11,
+        "Match":  "class AgentStateStore:"
+    },
+    {
+        "File":  "core\\ask_debug.py",
+        "Line":  6,
+        "Match":  "return {\"intent\": \"agent_count\", \"need_llm\": False}"
+    },
+    {
+        "File":  "core\\ask_router.py",
+        "Line":  8,
+        "Match":  "\"missions\": [\"משימות\",\"המשימות\",\"tasks\",\"missions\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_greeting_fix_20260829_152053.py",
+        "Line":  8,
+        "Match":  "\"missions\": [\"משימות\",\"המשימות\",\"tasks\",\"missions\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_greeting_fix_20260829_152241.py",
+        "Line":  8,
+        "Match":  "\"missions\": [\"משימות\",\"המשימות\",\"tasks\",\"missions\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_guard_bool_20260824_134739.py",
+        "Line":  12,
+        "Match":  "\"agents\": [\"סוכן\", \"סוכנים\", \"agent\", \"צור סוכן\", \"/agents\", \"כמה סוכנים\"],"
+    },
+    {
+        "File":  "core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+        "Line":  12,
+        "Match":  "\"agents\": [\"סוכן\", \"סוכנים\", \"agent\", \"צור סוכן\", \"/agents\", \"כמה סוכנים\"],"
+    },
+    {
+        "File":  "core\\authority.py",
+        "Line":  3,
+        "Match":  "OWNER_ID = \"8789977826\""
+    },
+    {
+        "File":  "core\\bootstrap_commands.py",
+        "Line":  9,
+        "Match":  "\"admin_handler\","
+    },
+    {
+        "File":  "core\\context_builder.py",
+        "Line":  16,
+        "Match":  "agent = m.get(\"assigned_to\") or \"לא שויך\""
+    },
+    {
+        "File":  "core\\control_center.py",
+        "Line":  47,
+        "Match":  "agents = db.get(\"agents\", {})"
+    },
+    {
+        "File":  "core\\deposit_monitor.py",
+        "Line":  11,
+        "Match":  "{\"constant\": True, \"inputs\": [{\"name\": \"_owner\", \"type\": \"address\"}], \"name\": \"balanceOf\", \"outputs\": [{\"name\": \"balance\", \"type\": \"uint256\"}], \"type\": \"function\"},"
+    },
+    {
+        "File":  "core\\dispatcher.py",
+        "Line":  20,
+        "Match":  "if cmd == \"agents\":"
+    },
+    {
+        "File":  "core\\economy_service.py",
+        "Line":  317,
+        "Match":  "elif item == \"premium_agent\":"
+    },
+    {
+        "File":  "core\\esp_broadcast.py",
+        "Line":  9,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\esp_display.py",
+        "Line":  10,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\esp_license.py",
+        "Line":  7,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\exec_policy.py",
+        "Line":  7,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "core\\firewall.py",
+        "Line":  19,
+        "Match":  "def is_owner(uid):"
+    },
+    {
+        "File":  "core\\identity.py",
+        "Line":  2,
+        "Match":  "OWNER_TELEGRAM_ID = 8789977826  # אתה - אדמין טלגרם"
+    },
+    {
+        "File":  "core\\invite_gate.py",
+        "Line":  4,
+        "Match":  "def invite_gate_enabled():"
+    },
+    {
+        "File":  "core\\kernel.py",
+        "Line":  3,
+        "Match":  "self.agents = {}"
+    },
+    {
+        "File":  "core\\mission_lifecycle.py",
+        "Line":  395,
+        "Match":  "agents = manifest.get("
+    },
+    {
+        "File":  "core\\mission_orchestrator.py",
+        "Line":  65,
+        "Match":  "agent_id,"
+    },
+    {
+        "File":  "core\\mission_runtime_bridge.py",
+        "Line":  4,
+        "Match":  "from core.agent_factory import load_agents_into_kernel"
+    },
+    {
+        "File":  "core\\mqtt_device_listener.py",
+        "Line":  8,
+        "Match":  "DEVICES_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\profile_manager.py",
+        "Line":  16,
+        "Match":  "\"tasks\": {},"
+    },
+    {
+        "File":  "core\\progress_tracker.py",
+        "Line":  14,
+        "Match":  "tasks = db.get(\"tasks\", {})"
+    },
+    {
+        "File":  "core\\project_graph.py",
+        "Line":  15,
+        "Match":  "DEVICE"
+    },
+    {
+        "File":  "core\\project_registry.py",
+        "Line":  134,
+        "Match":  "\"devices\": project.get("
+    },
+    {
+        "File":  "core\\reconciler.py",
+        "Line":  14,
+        "Match":  "# ניקוי test tasks"
+    },
+    {
+        "File":  "core\\runtime.py",
+        "Line":  76,
+        "Match":  "\"agents\": list("
+    },
+    {
+        "File":  "core\\system_collector.py",
+        "Line":  82,
+        "Match":  "\"agents\": {},"
+    },
+    {
+        "File":  "core\\system_state_gateway.py",
+        "Line":  24,
+        "Match":  "from core.agent_state_store import AgentStateStore"
+    },
+    {
+        "File":  "core\\ton_lab.py",
+        "Line":  45,
+        "Match":  "dev_count = sum("
+    },
+    {
+        "File":  "core\\virtual_esp.py",
+        "Line":  8,
+        "Match":  "DEVICES_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "courses\\bitcoin_mastery\\lesson_proposals\\btc_security_409_identity_collision.json",
+        "Line":  10,
+        "Match":  "\"devops\""
+    },
+    {
+        "File":  "docs\\AUDIT_LEDGER.md",
+        "Line":  16,
+        "Match":  "- נמצאו כפילויות רבות: `start_course` x6, `next` x6, `course` x6, `activate` x6, `ton_*` x5, `ask` x4, `join` x3, `complete` x3, `status` x2, `diagnose` x2, `courses` x2, `progress` x2, `help` x2."
+    },
+    {
+        "File":  "docs\\SELF_MODEL.md",
+        "Line":  4,
+        "Match":  "מערכת SLH היא מערכת AI-Agent מבוזרת."
+    },
+    {
+        "File":  "docs\\SLH_OPERATIONS_MANUAL.md",
+        "Line":  5,
+        "Match":  "2. שלח /status – וודא Users \u003e 0, Agents \u003e 0."
+    },
+    {
+        "File":  "docs\\SLH_PRE_CONFLICT_CHECKPOINT.json",
+        "Line":  18,
+        "Match":  "\"next_action\":  \"Identify exact Telegram token ownership before stopping any runtime\""
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_INVENTORY.md",
+        "Line":  6,
+        "Match":  "| Project | Role | Status |"
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_MAP.md",
+        "Line":  9,
+        "Match":  "- Role: Main Telegram Runtime"
+    },
+    {
+        "File":  "docs\\SLH_RAILWAY_SNAPSHOT_20260708.md",
+        "Line":  15,
+        "Match":  "Role:"
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_PROJECT_INVENTORY.json",
+        "Line":  16,
+        "Match":  "\"role\":  \"PRIMARY_SLH_RUNTIME\","
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Line":  87,
+        "Match":  "4. controlled activation"
+    },
+    {
+        "File":  "docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md",
+        "Line":  1,
+        "Match":  "# SLH Service Ownership Map"
+    },
+    {
+        "File":  "docs\\SLH_SOURCE_OF_TRUTH.md",
+        "Line":  15,
+        "Match":  "Agent mirror:"
+    },
+    {
+        "File":  "docs\\architecture\\SLH_OS_RUNTIME_ARCHITECTURE.md",
+        "Line":  3,
+        "Match":  "## State Ownership"
+    },
+    {
+        "File":  "docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Line":  31,
+        "Match":  "Required before activation:"
+    },
+    {
+        "File":  "docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Line":  79,
+        "Match":  "- administrator/event source"
+    },
+    {
+        "File":  "docs\\financial\\SLH_STAKING_MODEL.md",
+        "Line":  84,
+        "Match":  "## Future Development"
+    },
+    {
+        "File":  "docs\\journal\\20260711_branding_restore.md",
+        "Line":  28,
+        "Match":  "## Development State"
+    },
+    {
+        "File":  "docs\\journal\\20260711_dashboard_v2_stable.md",
+        "Line":  13,
+        "Match":  "✅ Old development branch removed"
+    },
+    {
+        "File":  "docs\\launch\\SLH_BETA_READINESS.md",
+        "Line":  7,
+        "Match":  "OWNER_ID verified"
+    },
+    {
+        "File":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Line":  21,
+        "Match":  "✅ Admin Panel"
+    },
+    {
+        "File":  "docs\\SLH\\SLH_TELEGRAM_TOKEN_OWNERSHIP_MAP.json",
+        "Line":  5,
+        "Match":  "\"purpose\":  \"Exact Telegram BOT_TOKEN ownership identification\","
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Line":  24,
+        "Match":  "[X] Developer boundaries documented"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Line":  15,
+        "Match":  "- Developer integrations"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_READY_STATE_20260713.md",
+        "Line":  24,
+        "Match":  "External developers connect through:"
+    },
+    {
+        "File":  "docs\\system_memory\\current_incident.txt",
+        "Line":  6,
+        "Match":  "SLH Academy microservices developer course planned."
+    },
+    {
+        "File":  "docs\\system_memory\\gateway_architecture_decision_20260713.md",
+        "Line":  44,
+        "Match":  "No external developer connects directly to:"
+    },
+    {
+        "File":  "docs\\system_memory\\slh_academy_microservices_course.md",
+        "Line":  1,
+        "Match":  "# SLH Academy - Microservices Developer Track"
+    },
+    {
+        "File":  "docs\\system_memory\\slh_gateway_evolution_phase1_20260713.md",
+        "Line":  13,
+        "Match":  "Transform SLH Gateway into protected integration boundary for external services and SLH Academy developers."
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_LOAD_TEST_PROTOCOL.md",
+        "Line":  4,
+        "Match":  "- `/health`, `/testagents`"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Line":  10,
+        "Match":  "Define system ownership boundaries before SLH ecosystem broadcast."
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_WORK_PROTOCOL.md",
+        "Line":  4,
+        "Match":  "- **TERMUX DEVELOPMENT ENVIRONMENT** (`~/slh_clean`) – code editing, git, scripts, snapshots."
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Line":  33,
+        "Match":  "Development rule:"
+    },
+    {
+        "File":  "docs\\system_memory\\telegram_polling_history.txt",
+        "Line":  5,
+        "Match":  "ed1644f stable: all modules loaded, none_stop polling, /test /admin working"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_assets\\02_interested_developer_document.md",
+        "Line":  1,
+        "Match":  "# SLH Academy - Developer Information"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_assets\\03_candidate_application_form.md",
+        "Line":  22,
+        "Match":  "[ ] Web Development"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_release\\02_SLH_DEVELOPER_INVITATION.md",
+        "Line":  1,
+        "Match":  "# SLH Developer Invitation"
+    },
+    {
+        "File":  "docs\\system_memory\\broadcast_release\\03_SLH_PARTNER_ONE_PAGER.md",
+        "Line":  5,
+        "Match":  "SLH builds technology ecosystems that enable collaboration between businesses, developers and digital services."
+    },
+    {
+        "File":  "docs\\system_memory\\incidents\\slh_409_diag_output.txt",
+        "Line":  17,
+        "Match":  "{\"ok\":true,\"result\":{\"id\":8737037440,\"is_bot\":true,\"first_name\":\"Me\",\"username\":\"Me_ad_main_bot\",\"can_join_groups\":true,\"can_read_all_group_messages\":false,\"supports_inline_queries\":false,\"supports_guest_queries\":false,\"can_connect_to_business\":false,\"has_main_web_app\":false,\"has_topics_enabled\":false,\"allows_users_to_create_topics\":false,\"can_manage_bots\":false,\"supports_join_request_queries\":false}}"
+    },
+    {
+        "File":  "handlers\\admin_extras.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\agents_handler.py",
+        "Line":  1,
+        "Match":  "from core.agent_registry import ("
+    },
+    {
+        "File":  "handlers\\ai_voting_handler.py",
+        "Line":  57,
+        "Match":  "bot.reply_to(m, \"Only owner can register AI agents\")"
+    },
+    {
+        "File":  "handlers\\autoexec_handler.py",
+        "Line":  7,
+        "Match":  "ADMIN_IDS = {int(os.getenv(\"ADMIN_ID\", \"8789977826\"))}"
+    },
+    {
+        "File":  "handlers\\bot_identity_handler.py",
+        "Line":  17,
+        "Match":  "def is_owner(uid):"
+    },
+    {
+        "File":  "handlers\\broadcast_handler.py",
+        "Line":  2,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\cleanup_handler.py",
+        "Line":  10,
+        "Match":  "agents = d.get(\u0027agents\u0027, {})"
+    },
+    {
+        "File":  "handlers\\dashboard_handler.py",
+        "Line":  20,
+        "Match":  "agent_count = len(d.get(\"agents\", {}))"
+    },
+    {
+        "File":  "handlers\\deploy_handler.py",
+        "Line":  10,
+        "Match":  "if str(msg.from_user.id) != os.getenv(\u0027ADMIN_ID\u0027, \u00278789977826\u0027):"
+    },
+    {
+        "File":  "handlers\\device_bridge.py",
+        "Line":  1,
+        "Match":  "\"\"\"Placeholder for device bridge API\"\"\""
+    },
+    {
+        "File":  "handlers\\device_handler.py",
+        "Line":  3,
+        "Match":  "def load_devices():"
+    },
+    {
+        "File":  "handlers\\dev_admin.py",
+        "Line":  2,
+        "Match":  "from security.permissions import get_role, get_permissions, has_permission"
+    },
+    {
+        "File":  "handlers\\dev_handler.py",
+        "Line":  2,
+        "Match":  "@bot.message_handler(commands=[\u0027dev\u0027])"
+    },
+    {
+        "File":  "handlers\\endday_handler.py",
+        "Line":  5,
+        "Match":  "bot.reply_to(msg, f\u0027🌙 סוף יום, {uid}!\\n\\n📚 /progress\\n🤖 /agents\\n💰 /balance\u0027)"
+    },
+    {
+        "File":  "handlers\\esp_handler.py",
+        "Line":  16,
+        "Match":  "DEVICES_FILE = \"state/devices.json\""
+    },
+    {
+        "File":  "handlers\\exec_handler.py",
+        "Line":  1,
+        "Match":  "from core.exec_policy import is_owner, run_gated"
+    },
+    {
+        "File":  "handlers\\exec_request_handler.py",
+        "Line":  7,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\e_handler.py",
+        "Line":  2,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\fakepay_handler.py",
+        "Line":  7,
+        "Match":  "bot.reply_to(msg, \"⛔️ Admin only\")"
+    },
+    {
+        "File":  "handlers\\firewall_handler.py",
+        "Line":  2,
+        "Match":  "from security import permissions"
+    },
+    {
+        "File":  "handlers\\git_handler.py",
+        "Line":  4,
+        "Match":  "REPO_OWNER = \u0027osifeu-prog\u0027"
+    },
+    {
+        "File":  "handlers\\governance_handler.py",
+        "Line":  25,
+        "Match":  "def _get_role(uid):"
+    },
+    {
+        "File":  "handlers\\health_monitor_handler.py",
+        "Line":  13,
+        "Match":  "checks.append((\"Tasks\", \"✅\" if len(db.get(\"tasks\", {})) \u003e= 8 else \"❌\"))"
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  20,
+        "Match":  "🤖 Agents"
+    },
+    {
+        "File":  "handlers\\join_handler.py",
+        "Line":  3,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\llm_handler.py",
+        "Line":  55,
+        "Match":  "\"role\": \"user\","
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  12,
+        "Match":  "(\"agents\", \"handlers.agents_handler\"),"
+    },
+    {
+        "File":  "handlers\\map_handler.py",
+        "Line":  5,
+        "Match":  "devices = {}"
+    },
+    {
+        "File":  "handlers\\me_handler.py",
+        "Line":  30,
+        "Match":  "role = _clip(user.get(\"role\", \"user\"), 40)"
+    },
+    {
+        "File":  "handlers\\mission_handler.py",
+        "Line":  30,
+        "Match":  "bot.reply_to(m, \"שימוש: /mission add \u003cתיאור\u003e | list | assign \u003cid\u003e \u003cagent\u003e | done \u003cid\u003e | rewards\")"
+    },
+    {
+        "File":  "handlers\\monitor_handler.py",
+        "Line":  33,
+        "Match":  "bot.reply_to(m, \"Usage: /monitor_status \u003cdevice_id\u003e\")"
+    },
+    {
+        "File":  "handlers\\onboarding_v2.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\os_handler.py",
+        "Line":  13,
+        "Match":  "from core.agent_registry import STORE"
+    },
+    {
+        "File":  "handlers\\ownership_transfer_handler.py",
+        "Line":  96,
+        "Match":  "print(\"✅ ownership_transfer_handler loaded\")"
+    },
+    {
+        "File":  "handlers\\payment_handler.py",
+        "Line":  27,
+        "Match":  "\"💎 Credits unlock: AI asks (/ask), premium agents, and more.\\n\""
+    },
+    {
+        "File":  "handlers\\progress_handler.py",
+        "Line":  15,
+        "Match":  "task_name = parts[1].strip()"
+    },
+    {
+        "File":  "handlers\\recovery_handler.py",
+        "Line":  18,
+        "Match":  "\"state/agents.json\","
+    },
+    {
+        "File":  "handlers\\recovery_verify_handler.py",
+        "Line":  21,
+        "Match":  "\"state/agents.json\","
+    },
+    {
+        "File":  "handlers\\repeat_handler.py",
+        "Line":  31,
+        "Match":  "# bot.send_message wrapper disabled - parse mode recovery"
+    },
+    {
+        "File":  "handlers\\revenue_handler.py",
+        "Line":  8,
+        "Match":  "bot.reply_to(msg, \"⛔️ Admin only\")"
+    },
+    {
+        "File":  "handlers\\services_handler.py",
+        "Line":  15,
+        "Match":  "role = info.get(\"role\", \"unknown\")"
+    },
+    {
+        "File":  "handlers\\system_handler.py",
+        "Line":  8,
+        "Match":  "\"/task - ניהול משימות\\n\""
+    },
+    {
+        "File":  "handlers\\task_handler.py",
+        "Line":  1,
+        "Match":  "from services import task_service"
+    },
+    {
+        "File":  "handlers\\termux_handler.py",
+        "Line":  2,
+        "Match":  "from admin_utils import is_admin"
+    },
+    {
+        "File":  "handlers\\ux_handler.py",
+        "Line":  23,
+        "Match":  "\"📊 /dashboard – Admin dashboard\","
+    },
+    {
+        "File":  "handlers\\voting_handler.py",
+        "Line":  1,
+        "Match":  "\"\"\"Voting module disabled - placeholder\"\"\""
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Line":  41,
+        "Match":  "bot.reply_to(msg, \"⛔️ OWNER only\")"
+    },
+    {
+        "File":  "logs\\SLH_NIGHTLY_20260707.md",
+        "Line":  12,
+        "Match":  "- Agents handlers extracted from bot_stable.py"
+    },
+    {
+        "File":  "mission_control\\branches.txt",
+        "Line":  4,
+        "Match":  "remotes/origin/development"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  14,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  11,
+        "Match":  "new file:   Guardian Executor Online"
+    },
+    {
+        "File":  "mission_control\\handlers_list.txt",
+        "Line":  6,
+        "Match":  "admin_guard.py"
+    },
+    {
+        "File":  "mission_control\\railway_variables.txt",
+        "Line":  2,
+        "Match":  "Γץס ADMIN_ID                  Γפג 8789977826                                       Γץס"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  5,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\agents\\echo.py"
+    },
+    {
+        "File":  "mission_control\\state_map.txt",
+        "Line":  14,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\tasks                                                                              7/"
+    },
+    {
+        "File":  "plugins\\admin.py",
+        "Line":  4,
+        "Match":  "if text == \"/admin\":"
+    },
+    {
+        "File":  "plugins\\task.py",
+        "Line":  1,
+        "Match":  "class TaskPlugin:"
+    },
+    {
+        "File":  "plugins\\__init__.py",
+        "Line":  6,
+        "Match":  "from plugins import education, shop, task, admin, system"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\critical_findings.md",
+        "Line":  6,
+        "Match":  "REPORT_20260723_225642/loader_analysis.txt:    print(\"device_bridge error:\", e)"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\devices.json",
+        "Line":  2,
+        "Match":  "\"devices\": {"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\SUMMARY.md",
+        "Line":  4,
+        "Match":  "- Railway: SLH ONLINE: 090e11a sync: register termux + add device API"
+    },
+    {
+        "File":  "security\\permissions.py",
+        "Line":  4,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "security\\policies.json",
+        "Line":  3,
+        "Match":  "\"system_commands\": \"owner\","
+    },
+    {
+        "File":  "security\\roles.json",
+        "Line":  2,
+        "Match":  "\"roles\": {"
+    },
+    {
+        "File":  "services\\task_service.py",
+        "Line":  20,
+        "Match":  "def list_tasks():"
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Line":  38,
+        "Match":  "@app.route(\u0027/api/agents\u0027)"
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+        "Line":  43,
+        "Match":  "@app.route(\"/api/tasks/\u003cuid\u003e\")"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\agents.json",
+        "Line":  6,
+        "Match":  "\"role\": \"security\","
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Line":  28,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"security\","
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  40,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Line":  40,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\db_BEFORE_AUDIT_1786472955.json",
+        "Line":  28,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\db_local_backup_before_sync.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  40,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\db_PROD_BEFORE_SYNC_1786444044.json",
+        "Line":  28,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\devices.json",
+        "Line":  2,
+        "Match":  "\"devices\": {"
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  4,
+        "Match":  "\"agents_registry\": {"
+    },
+    {
+        "File":  "state\\marketplace.json",
+        "Line":  11,
+        "Match":  "\"id\": \"task_plugin\","
+    },
+    {
+        "File":  "state\\money_authority_audit_pre_token.txt",
+        "Line":  43,
+        "Match":  "[OUTSIDE-AUTHORITY] archive\\web3_disabled\\staking_handler.py:23: def stake(m):"
+    },
+    {
+        "File":  "state\\system_services.json",
+        "Line":  3,
+        "Match":  "\"role\": \"security\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_161132.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_161201.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_162640.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163053.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163623.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163927.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_163959.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\backups\\agents_mirror_20260807_165130.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\control\\sync_state.json",
+        "Line":  8,
+        "Match":  "\"devices\": \"state/devices.json\""
+    },
+    {
+        "File":  "state\\control\\system_map.json",
+        "Line":  8,
+        "Match":  "\"agents\": \"active\","
+    },
+    {
+        "File":  "state\\device_audit_20260820_154149\\git_status.txt",
+        "Line":  2,
+        "Match":  "?? state/device_audit_20260820_154149/"
+    },
+    {
+        "File":  "state\\governance\\genesis_registry.json",
+        "Line":  9,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\governance\\user_classes.json",
+        "Line":  2,
+        "Match":  "\"owner\": ["
+    },
+    {
+        "File":  "state\\missions\\1.json",
+        "Line":  4,
+        "Match":  "\"owner\": \"8789977826\","
+    },
+    {
+        "File":  "state\\missions\\board.json",
+        "Line":  19,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "state\\missions\\results\\mission-2-20260814T132236Z.json",
+        "Line":  4,
+        "Match":  "\"agent_id\": \"1\","
+    },
+    {
+        "File":  "state\\missions\\results\\mission-3-20260814T132912Z.json",
+        "Line":  4,
+        "Match":  "\"agent_id\": \"1\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\chats.json",
+        "Line":  9,
+        "Match":  "\"text\": \"🤖 נסה /agents לרשימת הסוכנים.\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\chats.json",
+        "Line":  9,
+        "Match":  "\"text\": \"🤖 נסה /agents לרשימת הסוכנים.\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\chats.json",
+        "Line":  9,
+        "Match":  "\"text\": \"🤖 נסה /agents לרשימת הסוכנים.\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\chats.json",
+        "Line":  9,
+        "Match":  "\"text\": \"🤖 נסה /agents לרשימת הסוכנים.\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\chats.json",
+        "Line":  9,
+        "Match":  "\"text\": \"🤖 נסה /agents לרשימת הסוכנים.\""
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\agents.json",
+        "Line":  5,
+        "Match":  "\"role\": \"agent\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\agents.json",
+        "Line":  6,
+        "Match":  "\"role\": \"agent\""
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\agents.json",
+        "Line":  6,
+        "Match":  "\"role\": \"security\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  39,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\takeover\\manifest.json",
+        "Line":  9,
+        "Match":  "\"agents\": {"
+    },
+    {
+        "File":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Line":  39,
+        "Match":  "\"code\": \"ADMIN2026\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  99,
+        "Match":  "\"permissions\""
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_access_classification.json",
+        "Line":  4,
+        "Match":  "\"source_of_truth\": \"core.agent_state_store.AgentStateStore\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Line":  114,
+        "Match":  "\"module\": \"core.agent_factory\","
+    },
+    {
+        "File":  "state\\takeover\\user_command_wiring_audit.json",
+        "Line":  254,
+        "Match":  "\"file\": \"handlers\\\\task_handler.py\","
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_assignment_20260817T152114Z.json",
+        "Line":  19,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_creation_20260811T140726Z.json",
+        "Line":  28,
+        "Match":  "\"execution_started_at\": \"2026-07-26T09:05:26.666789+00:00\","
+    },
+    {
+        "File":  "state\\takeover\\backups\\board_before_api_execution_20260817T152114Z.json",
+        "Line":  20,
+        "Match":  "\"execution_started_at\": \"2026-08-14T13:22:36.609594+00:00\","
+    },
+    {
+        "File":  "store\\grant_engine.py",
+        "Line":  11,
+        "Match":  "if \"permission\" in grant:"
+    },
+    {
+        "File":  "store\\handler.py",
+        "Line":  13,
+        "Match":  "return \"שימוש: /buy item_id\\nדוגמה: /buy role_vip\""
+    },
+    {
+        "File":  "store\\items.json",
+        "Line":  10,
+        "Match":  "\"role_vip\": {"
+    },
+    {
+        "File":  "tests\\system_check.py",
+        "Line":  24,
+        "Match":  "results.append(ok(\"Admin set\", cfg.get(\"SUPER_ADMIN\") == 8789977826))"
+    },
+    {
+        "File":  "tests\\test_agent.py",
+        "Line":  2,
+        "Match":  "\"\"\"Agent OS Unit Tests — pytest-safe\"\"\""
+    },
+    {
+        "File":  "tests\\test_task_and_audit.py",
+        "Line":  2,
+        "Match":  "\"\"\"Test Task creation + Audit logging\"\"\""
+    },
+    {
+        "File":  "tools\\active_loader_audit.py",
+        "Line":  17,
+        "Match":  "No execution."
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  6,
+        "Match":  "\"SUPER_ADMIN\","
+    },
+    {
+        "File":  "tools\\agent_state_autopilot.py",
+        "Line":  13,
+        "Match":  "SNAPSHOT = ROOT / \"state\" / \"agents.json\""
+    },
+    {
+        "File":  "tools\\agent_sync_guard.py",
+        "Line":  7,
+        "Match":  "AGENTS=\"state/agents.json\""
+    },
+    {
+        "File":  "tools\\audit_state_access.py",
+        "Line":  20,
+        "Match":  "\"agents.json\","
+    },
+    {
+        "File":  "tools\\build_state_migration_queue.py",
+        "Line":  31,
+        "Match":  "r\"open\\([^)]*agents\\.json\","
+    },
+    {
+        "File":  "tools\\connect_llm_circuit.py",
+        "Line":  23,
+        "Match":  "\"role\": \"system\","
+    },
+    {
+        "File":  "tools\\disable_botstable_ask.py",
+        "Line":  26,
+        "Match":  "\"# DISABLED: ASK moved to advanced_ask_handler.py\\n# @bot.message_handler(commands=[\u0027ask\u0027])\","
+    },
+    {
+        "File":  "tools\\discover_projects.py",
+        "Line":  102,
+        "Match":  "\"devices\": [],"
+    },
+    {
+        "File":  "tools\\discover_termux_projects.py",
+        "Line":  168,
+        "Match":  "\"devices\": [],"
+    },
+    {
+        "File":  "tools\\full_static_handler_audit.py",
+        "Line":  18,
+        "Match":  "9. command ownership"
+    },
+    {
+        "File":  "tools\\full_system_audit.py",
+        "Line":  23,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID, OWNER_VIRTUAL_PHONE, OWNER_ID"
+    },
+    {
+        "File":  "tools\\loader_registration_audit.py",
+        "Line":  16,
+        "Match":  "No execution."
+    },
+    {
+        "File":  "tools\\project_audit.py",
+        "Line":  28,
+        "Match":  "\"\"\"פקודות שמופיעות בטקסט של /help או /admin\"\"\""
+    },
+    {
+        "File":  "tools\\rbac_audit.py",
+        "Line":  4,
+        "Match":  "from security.permissions import has_permission"
+    },
+    {
+        "File":  "tools\\real_audit.py",
+        "Line":  22,
+        "Match":  "# 2. OWNER - לא לנחש שמות, לבדוק מה באמת קיים"
+    },
+    {
+        "File":  "tools\\runtime_command_registration_audit.py",
+        "Line":  14,
+        "Match":  "No execution."
+    },
+    {
+        "File":  "tools\\runtime_loading_path_audit.py",
+        "Line":  21,
+        "Match":  "NO EXECUTION."
+    },
+    {
+        "File":  "tools\\runtime_state_access_classification.py",
+        "Line":  67,
+        "Match":  "# AGENT STATE"
+    },
+    {
+        "File":  "tools\\runtime_state_dependency_map.py",
+        "Line":  37,
+        "Match":  "\"core/agent_state_store.py\","
+    },
+    {
+        "File":  "tools\\session_closure_audit.py",
+        "Line":  81,
+        "Match":  "\"agents\","
+    },
+    {
+        "File":  "tools\\slh_launch_check.py",
+        "Line":  31,
+        "Match":  "import core.agent_registry"
+    },
+    {
+        "File":  "tools\\slh_launch_control.py",
+        "Line":  29,
+        "Match":  "stderr=subprocess.DEVNULL"
+    },
+    {
+        "File":  "tools\\slh_migrate.py",
+        "Line":  33,
+        "Match":  "ROOT / \"services\" / \"task_service.py\","
+    },
+    {
+        "File":  "tools\\test_agent_state_full.py",
+        "Line":  16,
+        "Match":  "import core.agent_registry as registry"
+    },
+    {
+        "File":  "tools\\test_learning_path_full_loader.py",
+        "Line":  86,
+        "Match":  "\"agent_submit\": \"agent_submit\" in commands,"
+    },
+    {
+        "File":  "tools\\test_learning_path_loader_execution.py",
+        "Line":  54,
+        "Match":  "print(\"LOADER_AGENT_SUBMIT=\", \"agent_submit\" in commands)"
+    },
+    {
+        "File":  "tools\\test_learning_path_runtime.py",
+        "Line":  54,
+        "Match":  "print(\"DIRECT_AGENT_SUBMIT_REGISTERED=\", \"agent_submit\" in commands)"
+    },
+    {
+        "File":  "tools\\test_project_registry_contract.py",
+        "Line":  24,
+        "Match":  "\"devices\","
+    },
+    {
+        "File":  "tools\\test_system_snapshot_contract.py",
+        "Line":  23,
+        "Match":  "\"agents\","
+    },
+    {
+        "File":  "tools\\user_acceptance_audit.py",
+        "Line":  167,
+        "Match":  "\"agents\","
+    },
+    {
+        "File":  "tools\\user_command_wiring_audit.py",
+        "Line":  16,
+        "Match":  "- import application modules for execution"
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Line":  2,
+        "Match":  "\"schema\":  \"slh-os/change-ownership-evidence/v1\","
+    },
+    {
+        "File":  "_slh_map\\control\\COMMANDS.json",
+        "Line":  38,
+        "Match":  "\"command\":  \"slhtasks\","
+    },
+    {
+        "File":  "_slh_map\\control\\CONTROL_STATE.json",
+        "Line":  37,
+        "Match":  "\"countdown_enabled\":  false,"
+    },
+    {
+        "File":  "_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Line":  60,
+        "Match":  "\"File\":  \"TASKS.json\","
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Line":  25,
+        "Match":  "\"file\":  \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Line":  40,
+        "Match":  "\"api_agents\","
+    },
+    {
+        "File":  "_slh_map\\dna\\CURRENT.json",
+        "Line":  88,
+        "Match":  "\"path\": \"tools/agent_state_autopilot.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Line":  99,
+        "Match":  "\"path\": \"tools/agent_state_autopilot.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  96,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Line":  95,
+        "Match":  "\"path\": \"tools/agent_state_autopilot.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  97,
+        "Match":  "\"path\": \"admin_handler.py\","
+    }
+]

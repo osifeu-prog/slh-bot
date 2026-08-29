@@ -1,0 +1,289 @@
+﻿{
+    "plan_id":  "SLH-STRUCTURED-CONTROL-20260829",
+    "audit_id":  "20260829_174952",
+    "generated_at":  "2026-08-29T17:53:09.6392708+03:00",
+    "source":  "READ_ONLY_AUDIT_EVIDENCE",
+    "application_code_modified":  false,
+    "current_gate":  "GENERATE_STRUCTURED_TASKS",
+    "next_gate":  "ACADEMY_RUNTIME_MAPPING",
+    "final_gate":  "FULL_ESP_ACTIVATION",
+    "safety":  {
+                   "mode":  "READ_ONLY_UNTIL_EXPLICIT_GATE",
+                   "prohibited_changes":  [
+                                              "business_logic",
+                                              "money",
+                                              "wallet",
+                                              "database",
+                                              "deployment",
+                                              "financial_authority",
+                                              "payment_authority"
+                                          ],
+                   "current_phase":  "AUDIT_TO_STRUCTURED_PLAN",
+                   "allowed_now":  [
+                                       "read files",
+                                       "inspect source",
+                                       "map architecture",
+                                       "compare governance artifacts",
+                                       "generate reports",
+                                       "generate task plans",
+                                       "verify hashes",
+                                       "inspect git state"
+                                   ],
+                   "not_allowed_now":  [
+                                           "activate ESP",
+                                           "change payment authority",
+                                           "change financial authority",
+                                           "modify wallet logic",
+                                           "modify database",
+                                           "modify deployment",
+                                           "modify business logic",
+                                           "change production command routing"
+                                       ]
+               },
+    "workstreams":  [
+                        {
+                            "id":  "WS-01",
+                            "name":  "ACADEMY",
+                            "objective":  "Identify and reconstruct the actual Academy architecture and runtime entrypoints.",
+                            "evidence":  "academy\\REAL_ACADEMY_REVIEW.json",
+                            "reference_count":  8498,
+                            "modification_policy":  "AUDIT_FIRST",
+                            "depends_on":  [
+
+                                           ],
+                            "completion_gate":  "ACADEMY_RUNTIME_PATH_CONFIRMED"
+                        },
+                        {
+                            "id":  "WS-02",
+                            "name":  "DEVELOPER_ACTIVATION",
+                            "objective":  "Identify actual developer, agent, role, permission and activation structures.",
+                            "evidence":  "developers\\REAL_RBAC_DEVELOPER_REVIEW.json",
+                            "reference_count":  12579,
+                            "modification_policy":  "AUDIT_FIRST",
+                            "depends_on":  [
+
+                                           ],
+                            "completion_gate":  "DEVELOPER_AUTHORITY_CHAIN_CONFIRMED"
+                        },
+                        {
+                            "id":  "WS-03",
+                            "name":  "COMMAND_EXECUTION",
+                            "objective":  "Determine the real /e /exec /execr registration, routing, authorization and execution chain.",
+                            "evidence":  "commands\\REAL_ENTRYPOINT_REVIEW.json",
+                            "reference_count":  1733,
+                            "modification_policy":  "AUDIT_FIRST",
+                            "depends_on":  [
+                                               "WS-02"
+                                           ],
+                            "completion_gate":  "COMMAND_CHAIN_CONFIRMED"
+                        },
+                        {
+                            "id":  "WS-04",
+                            "name":  "SUPERADMIN_MENU",
+                            "objective":  "Reconstruct the actual Super Admin control surface and authority boundaries.",
+                            "evidence":  "superadmin\\REAL_SUPERADMIN_REVIEW.json",
+                            "reference_count":  71,
+                            "modification_policy":  "AUDIT_FIRST",
+                            "depends_on":  [
+                                               "WS-02",
+                                               "WS-03"
+                                           ],
+                            "completion_gate":  "SUPERADMIN_CONTROL_SURFACE_CONFIRMED"
+                        },
+                        {
+                            "id":  "WS-05",
+                            "name":  "ESP",
+                            "objective":  "Trace the complete ESP activation chain from identity/ownership through entitlement, provisioning and runtime activation.",
+                            "evidence":  "esp\\REAL_ESP_CHAIN_REVIEW.json",
+                            "reference_count":  1526,
+                            "candidate_files":  20,
+                            "modification_policy":  "AUDIT_FIRST",
+                            "depends_on":  [
+                                               "WS-01",
+                                               "WS-02",
+                                               "WS-03",
+                                               "WS-04"
+                                           ],
+                            "completion_gate":  "ESP_ACTIVATION_CHAIN_CONFIRMED"
+                        }
+                    ],
+    "tasks":  [
+                  {
+                      "task_id":  "TASK-001",
+                      "workstream":  "ACADEMY",
+                      "priority":  "P0",
+                      "action":  "Map actual Academy files, data structures, handlers and runtime entrypoints.",
+                      "status":  "READY",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-002",
+                      "workstream":  "DEVELOPER_ACTIVATION",
+                      "priority":  "P0",
+                      "action":  "Map actual developer/agent identities, roles, permissions, middleware and activation paths.",
+                      "status":  "READY",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-003",
+                      "workstream":  "COMMAND_EXECUTION",
+                      "priority":  "P0",
+                      "action":  "Trace /e, /exec and /execr from registration through router, authorization and executor.",
+                      "status":  "BLOCKED_BY_TASK-002",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+                                         "TASK-002"
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-004",
+                      "workstream":  "SUPERADMIN_MENU",
+                      "priority":  "P0",
+                      "action":  "Identify the real Super Admin menu, handlers, authorization checks and control actions.",
+                      "status":  "BLOCKED_BY_TASK-002",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+                                         "TASK-002",
+                                         "TASK-003"
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-005",
+                      "workstream":  "ESP",
+                      "priority":  "P0",
+                      "action":  "Trace ESP ownership, license, entitlement, device, provisioning, feature activation and runtime paths.",
+                      "status":  "BLOCKED_BY_TASK-001",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+                                         "TASK-001",
+                                         "TASK-002",
+                                         "TASK-003",
+                                         "TASK-004"
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-006",
+                      "workstream":  "GOVERNANCE",
+                      "priority":  "P0",
+                      "action":  "Reconcile discovered runtime authority with existing takeover/governance artifacts.",
+                      "status":  "BLOCKED_BY_TASK-001",
+                      "safety":  "READ_ONLY",
+                      "depends_on":  [
+                                         "TASK-001",
+                                         "TASK-002",
+                                         "TASK-003",
+                                         "TASK-004",
+                                         "TASK-005"
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-007",
+                      "workstream":  "COMMAND_CONTROL",
+                      "priority":  "P1",
+                      "action":  "Prepare the evidence-based return to Telegram command control.",
+                      "status":  "BLOCKED_UNTIL_REVIEW",
+                      "safety":  "NO_RUNTIME_CHANGE",
+                      "depends_on":  [
+                                         "TASK-006"
+                                     ]
+                  },
+                  {
+                      "task_id":  "TASK-008",
+                      "workstream":  "ESP",
+                      "priority":  "FINAL",
+                      "action":  "Full ESP activation only after every preceding authority, command and governance gate is proven.",
+                      "status":  "FINAL_COMPLETION_GATE",
+                      "safety":  "SEPARATE_APPROVAL_REQUIRED",
+                      "depends_on":  [
+                                         "TASK-007"
+                                     ]
+                  }
+              ],
+    "gates":  [
+                  {
+                      "gate":  "GATE-01",
+                      "name":  "Permanent baseline",
+                      "status":  "PASSED"
+                  },
+                  {
+                      "gate":  "GATE-02",
+                      "name":  "Audit review",
+                      "status":  "PASSED"
+                  },
+                  {
+                      "gate":  "GATE-03",
+                      "name":  "Structured task generation",
+                      "status":  "PASSED"
+                  },
+                  {
+                      "gate":  "GATE-04",
+                      "name":  "Academy runtime mapping",
+                      "status":  "NEXT"
+                  },
+                  {
+                      "gate":  "GATE-05",
+                      "name":  "Developer / agent authority mapping",
+                      "status":  "PENDING"
+                  },
+                  {
+                      "gate":  "GATE-06",
+                      "name":  "Command execution chain",
+                      "status":  "PENDING"
+                  },
+                  {
+                      "gate":  "GATE-07",
+                      "name":  "Super Admin control surface",
+                      "status":  "PENDING"
+                  },
+                  {
+                      "gate":  "GATE-08",
+                      "name":  "ESP activation chain",
+                      "status":  "PENDING"
+                  },
+                  {
+                      "gate":  "GATE-09",
+                      "name":  "Governance reconciliation",
+                      "status":  "PENDING"
+                  },
+                  {
+                      "gate":  "GATE-10",
+                      "name":  "Return to Telegram command control",
+                      "status":  "BLOCKED_UNTIL_GATES_04_TO_09"
+                  },
+                  {
+                      "gate":  "GATE-11",
+                      "name":  "FULL ESP ACTIVATION",
+                      "status":  "FINAL_COMPLETION_GATE"
+                  }
+              ],
+    "evidence":  {
+                     "command_references":  [
+                                                1733
+                                            ],
+                     "developer_rbac_references":  [
+                                                       12579
+                                                   ],
+                     "academy_references":  [
+                                                8498
+                                            ],
+                     "superadmin_references":  [
+                                                   71
+                                               ],
+                     "esp_references":  [
+                                            1526
+                                        ],
+                     "esp_candidate_files":  [
+                                                 20
+                                             ]
+                 },
+    "protected_files_unchanged":  true,
+    "missing_audit_artifacts":  [
+
+                                ]
+}

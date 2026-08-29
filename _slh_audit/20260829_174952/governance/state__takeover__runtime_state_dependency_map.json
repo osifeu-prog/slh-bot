@@ -1,0 +1,894 @@
+{
+  "generated_at": "2026-08-24T12:18:45.979719+00:00",
+  "entrypoint": "bot_stable.py",
+  "total_modules": 1222,
+  "reachable_modules": 68,
+  "runtime_state_access": [
+    {
+      "module": "audit_logger",
+      "path": "audit_logger.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 16,
+          "pattern": "json\\.dump",
+          "code": "f.write(json.dumps(entry) + \"\\n\")"
+        },
+        {
+          "line": 23,
+          "pattern": "json\\.load",
+          "code": "return [json.loads(line) for line in lines[-n:]]"
+        }
+      ]
+    },
+    {
+      "module": "bot_stable",
+      "path": "bot_stable.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 49,
+          "pattern": "json\\.load",
+          "code": "cfg = json.load(f)"
+        },
+        {
+          "line": 65,
+          "pattern": "json\\.load",
+          "code": "cfg = json.load(f)"
+        },
+        {
+          "line": 69,
+          "pattern": "state/db\\.json",
+          "code": "DB_FILE = cfg.get(\"DB_FILE\", \"state/db.json\")"
+        },
+        {
+          "line": 133,
+          "pattern": "json\\.load",
+          "code": "db = json.load(f)"
+        },
+        {
+          "line": 142,
+          "pattern": "json\\.dump",
+          "code": "json.dump(db, f, indent=2)"
+        },
+        {
+          "line": 261,
+          "pattern": "state/db\\.json",
+          "code": "users=json.load(open(\"state/db.json\", encoding=\"utf-8\")).get(\"users\", {})"
+        },
+        {
+          "line": 262,
+          "pattern": "json\\.load",
+          "code": "allowed=json.load(open(\"allowed_ids.json\"))"
+        },
+        {
+          "line": 363,
+          "pattern": "json\\.load",
+          "code": "goals = json.load(open(path)) if os.path.exists(path) else []"
+        },
+        {
+          "line": 365,
+          "pattern": "json\\.dump",
+          "code": "json.dump(goals, open(path, \"w\"))"
+        },
+        {
+          "line": 368,
+          "pattern": "json\\.load",
+          "code": "goals = json.load(open(path)) if os.path.exists(path) else []"
+        },
+        {
+          "line": 426,
+          "pattern": "state/db\\.json",
+          "code": "with open(\"state/db.json\", encoding=\"utf-8\") as f:"
+        },
+        {
+          "line": 427,
+          "pattern": "json\\.load",
+          "code": "db = json.load(f)"
+        },
+        {
+          "line": 501,
+          "pattern": "json\\.load",
+          "code": "data = json.loads(resp.read())"
+        },
+        {
+          "line": 715,
+          "pattern": "state/db\\.json",
+          "code": "DB: state/db.json\"\"\""
+        }
+      ]
+    },
+    {
+      "module": "core.academy_manager",
+      "path": "core\\academy_manager.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 21,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        }
+      ]
+    },
+    {
+      "module": "core.agent_factory",
+      "path": "core\\agent_factory.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 8,
+          "pattern": "state/db\\.json",
+          "code": "It does NOT dynamically import arbitrary names from state/db.json."
+        },
+        {
+          "line": 112,
+          "pattern": "state/db\\.json",
+          "code": "with open(\"state/db.json\", encoding=\"utf-8\") as f:"
+        },
+        {
+          "line": 113,
+          "pattern": "json\\.load",
+          "code": "db = json.load(f)"
+        }
+      ]
+    },
+    {
+      "module": "core.agent_registry",
+      "path": "core\\agent_registry.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 77,
+          "pattern": "DB_PATH",
+          "code": "STORE.DB_PATH,"
+        },
+        {
+          "line": 120,
+          "pattern": "DB_PATH",
+          "code": "STORE.DB_PATH,"
+        },
+        {
+          "line": 159,
+          "pattern": "DB_PATH",
+          "code": "STORE.DB_PATH,"
+        },
+        {
+          "line": 201,
+          "pattern": "DB_PATH",
+          "code": "STORE.DB_PATH,"
+        }
+      ]
+    },
+    {
+      "module": "core.agent_state_store",
+      "path": "core\\agent_state_store.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 15,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH = ROOT / \"state\" / \"db.json\""
+        },
+        {
+          "line": 16,
+          "pattern": "SNAPSHOT_PATH",
+          "code": "SNAPSHOT_PATH = ROOT / \"state\" / \"agents.json\""
+        },
+        {
+          "line": 27,
+          "pattern": "DB_PATH",
+          "code": "self.DB_PATH.parent.mkdir("
+        },
+        {
+          "line": 43,
+          "pattern": "DB_PATH",
+          "code": "if not self.DB_PATH.exists():"
+        },
+        {
+          "line": 45,
+          "pattern": "DB_PATH",
+          "code": "f\"DB not found: {self.DB_PATH}\""
+        },
+        {
+          "line": 48,
+          "pattern": "DB_PATH",
+          "code": "with self.DB_PATH.open("
+        },
+        {
+          "line": 53,
+          "pattern": "json\\.load",
+          "code": "data = json.load(f)"
+        },
+        {
+          "line": 89,
+          "pattern": "json\\.dump",
+          "code": "json.dump("
+        },
+        {
+          "line": 261,
+          "pattern": "DB_PATH",
+          "code": "self.DB_PATH,"
+        },
+        {
+          "line": 312,
+          "pattern": "SNAPSHOT_PATH",
+          "code": "self.SNAPSHOT_PATH,"
+        },
+        {
+          "line": 330,
+          "pattern": "SNAPSHOT_PATH",
+          "code": "if self.SNAPSHOT_PATH.exists():"
+        },
+        {
+          "line": 332,
+          "pattern": "SNAPSHOT_PATH",
+          "code": "with self.SNAPSHOT_PATH.open("
+        },
+        {
+          "line": 337,
+          "pattern": "json\\.load",
+          "code": "loaded = json.load(f)"
+        },
+        {
+          "line": 411,
+          "pattern": "DB_PATH",
+          "code": "print(\"DB:\", store.DB_PATH)"
+        },
+        {
+          "line": 412,
+          "pattern": "SNAPSHOT_PATH",
+          "code": "print(\"SNAPSHOT:\", store.SNAPSHOT_PATH)"
+        },
+        {
+          "line": 431,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.ai_guard",
+      "path": "core\\ai_guard.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 23,
+          "pattern": "json\\.load",
+          "code": "return json.loads("
+        },
+        {
+          "line": 39,
+          "pattern": "\\.write_text",
+          "code": "STATE_FILE.write_text("
+        },
+        {
+          "line": 40,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.audit",
+      "path": "core\\audit.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 44,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 84,
+          "pattern": "json\\.load",
+          "code": "events.append(json.loads(line))"
+        }
+      ]
+    },
+    {
+      "module": "core.command_registry_loader",
+      "path": "core\\command_registry_loader.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 10,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        }
+      ]
+    },
+    {
+      "module": "core.context_builder",
+      "path": "core\\context_builder.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 9,
+          "pattern": "json\\.load",
+          "code": "data = json.load(f)"
+        },
+        {
+          "line": 27,
+          "pattern": "json\\.load",
+          "code": "data = json.load(f)"
+        },
+        {
+          "line": 46,
+          "pattern": "state/db\\.json",
+          "code": "ctx[\"users\"] = _count_from_file(\"state/db.json\", \"users\")"
+        },
+        {
+          "line": 47,
+          "pattern": "state/db\\.json",
+          "code": "ctx[\"tasks\"] = _count_from_file(\"state/db.json\", \"tasks\")"
+        },
+        {
+          "line": 48,
+          "pattern": "state/db\\.json",
+          "code": "ctx[\"agents\"] = _count_from_file(\"state/db.json\", \"agents\")"
+        }
+      ]
+    },
+    {
+      "module": "core.control_center",
+      "path": "core\\control_center.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 10,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        },
+        {
+          "line": 38,
+          "pattern": "state/db\\.json",
+          "code": "\"state/db.json\","
+        }
+      ]
+    },
+    {
+      "module": "core.economy_service",
+      "path": "core\\economy_service.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 6,
+          "pattern": "state/db\\.json",
+          "code": "DB_PATH = Path(\"state/db.json\")"
+        }
+      ]
+    },
+    {
+      "module": "core.event_store",
+      "path": "core\\event_store.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 27,
+          "pattern": "json\\.dump",
+          "code": "(event, json.dumps(payload), time.time())"
+        }
+      ]
+    },
+    {
+      "module": "core.firewall",
+      "path": "core\\firewall.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 6,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH = BASE_DIR / \"state\" / \"db.json\""
+        },
+        {
+          "line": 11,
+          "pattern": "DB_PATH",
+          "code": "return json.loads(DB_PATH.read_text(encoding=\"utf-8-sig\"))"
+        },
+        {
+          "line": 32,
+          "pattern": "json\\.dump",
+          "code": "f.write(json.dumps({"
+        }
+      ]
+    },
+    {
+      "module": "core.mission_lifecycle",
+      "path": "core\\mission_lifecycle.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 109,
+          "pattern": "json\\.load",
+          "code": "return json.loads("
+        },
+        {
+          "line": 812,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1102,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1528,
+          "pattern": "json\\.dump",
+          "code": "canonical = json.dumps("
+        },
+        {
+          "line": 1549,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1558,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1702,
+          "pattern": "json\\.load",
+          "code": "result = json.loads("
+        },
+        {
+          "line": 1731,
+          "pattern": "json\\.dump",
+          "code": "canonical = json.dumps("
+        },
+        {
+          "line": 1874,
+          "pattern": "json\\.dump",
+          "code": "canonical = json.dumps("
+        },
+        {
+          "line": 1890,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1899,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        },
+        {
+          "line": 1994,
+          "pattern": "json\\.load",
+          "code": "result = json.loads("
+        },
+        {
+          "line": 2023,
+          "pattern": "json\\.dump",
+          "code": "canonical = json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.profile_manager",
+      "path": "core\\profile_manager.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 8,
+          "pattern": "state/db\\.json",
+          "code": "DB_PATH = \"state/db.json\""
+        },
+        {
+          "line": 12,
+          "pattern": "DB_PATH",
+          "code": "if not os.path.exists(DB_PATH):"
+        },
+        {
+          "line": 20,
+          "pattern": "DB_PATH",
+          "code": "with open(DB_PATH, \"r\", encoding=\"utf-8\") as f:"
+        },
+        {
+          "line": 21,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        },
+        {
+          "line": 32,
+          "pattern": "DB_PATH",
+          "code": "with open(DB_PATH, \"w\", encoding=\"utf-8\") as f:"
+        },
+        {
+          "line": 33,
+          "pattern": "json\\.dump",
+          "code": "json.dump("
+        }
+      ]
+    },
+    {
+      "module": "core.progress_tracker",
+      "path": "core\\progress_tracker.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 6,
+          "pattern": "state/db\\.json",
+          "code": "DB_PATH = Path(\"state/db.json\")"
+        },
+        {
+          "line": 10,
+          "pattern": "DB_PATH",
+          "code": "return json.loads(DB_PATH.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "line": 24,
+          "pattern": "json\\.load",
+          "code": "return json.loads(WORK_LOG_PATH.read_text(encoding=\"utf-8\"))"
+        },
+        {
+          "line": 36,
+          "pattern": "json\\.dump",
+          "code": "WORK_LOG_PATH.write_text(json.dumps(log, indent=2, ensure_ascii=False))"
+        },
+        {
+          "line": 48,
+          "pattern": "json\\.dump",
+          "code": "WORK_LOG_PATH.write_text(json.dumps(log, indent=2, ensure_ascii=False))"
+        }
+      ]
+    },
+    {
+      "module": "core.project_graph",
+      "path": "core\\project_graph.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 63,
+          "pattern": "json\\.load",
+          "code": "data = json.loads("
+        },
+        {
+          "line": 409,
+          "pattern": "\\.write_text",
+          "code": "GRAPH_FILE.write_text("
+        },
+        {
+          "line": 410,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.project_registry",
+      "path": "core\\project_registry.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 56,
+          "pattern": "json\\.load",
+          "code": "data = json.loads("
+        },
+        {
+          "line": 280,
+          "pattern": "\\.write_text",
+          "code": "REGISTRY_FILE.write_text("
+        },
+        {
+          "line": 281,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.reward_engine",
+      "path": "core\\reward_engine.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 21,
+          "pattern": "json\\.load",
+          "code": "return json.loads("
+        },
+        {
+          "line": 31,
+          "pattern": "\\.write_text",
+          "code": "LEDGER.write_text("
+        },
+        {
+          "line": 32,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "core.system_state_gateway",
+      "path": "core\\system_state_gateway.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 29,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH = ROOT / \"state\" / \"db.json\""
+        },
+        {
+          "line": 66,
+          "pattern": "json\\.load",
+          "code": "data = json.load(f)"
+        },
+        {
+          "line": 133,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH"
+        },
+        {
+          "line": 166,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 176,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH"
+        },
+        {
+          "line": 188,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 195,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 200,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 210,
+          "pattern": "DB_PATH",
+          "code": "DB_PATH"
+        },
+        {
+          "line": 222,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 229,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 234,
+          "pattern": "state/db\\.json",
+          "code": "\"source\": \"state/db.json\","
+        },
+        {
+          "line": 276,
+          "pattern": "state/db\\.json",
+          "code": "\"state/db.json\""
+        },
+        {
+          "line": 290,
+          "pattern": "json\\.dump",
+          "code": "json.dumps("
+        }
+      ]
+    },
+    {
+      "module": "handlers.advanced_ask_handler",
+      "path": "handlers\\advanced_ask_handler.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 39,
+          "pattern": "state/db\\.json",
+          "code": "db_path = Path(\"state/db.json\")"
+        },
+        {
+          "line": 40,
+          "pattern": "json\\.load",
+          "code": "db = json.loads(db_path.read_text(encoding=\"utf-8\"))"
+        }
+      ]
+    },
+    {
+      "module": "handlers.esp_handler",
+      "path": "handlers\\esp_handler.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 12,
+          "pattern": "json\\.load",
+          "code": "return json.load(f).get(\"devices\", {})"
+        },
+        {
+          "line": 19,
+          "pattern": "json\\.load",
+          "code": "data = json.load(f)"
+        },
+        {
+          "line": 24,
+          "pattern": "json\\.dump",
+          "code": "json.dump(data, f, indent=2, ensure_ascii=False)"
+        }
+      ]
+    },
+    {
+      "module": "handlers.llm_handler",
+      "path": "handlers\\llm_handler.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 132,
+          "pattern": "state/db\\.json",
+          "code": "with open(\"state/db.json\", encoding=\"utf-8\") as f:"
+        },
+        {
+          "line": 133,
+          "pattern": "json\\.load",
+          "code": "db = json.load(f)"
+        },
+        {
+          "line": 201,
+          "pattern": "state/db\\.json",
+          "code": "return \"📁 מקור הנתונים: state/db.json + state/agents.json (Railway volume)\""
+        }
+      ]
+    },
+    {
+      "module": "marketplace",
+      "path": "marketplace.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 9,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        },
+        {
+          "line": 22,
+          "pattern": "json\\.dump",
+          "code": "json.dump(data, f, indent=2)"
+        }
+      ]
+    },
+    {
+      "module": "refresh_token_handler",
+      "path": "refresh_token_handler.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 21,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        },
+        {
+          "line": 35,
+          "pattern": "json\\.dump",
+          "code": "json.dump(_load_config(), f, indent=2, ensure_ascii=False)"
+        },
+        {
+          "line": 40,
+          "pattern": "json\\.dump",
+          "code": "json.dump(cfg, f, indent=2, ensure_ascii=False)"
+        }
+      ]
+    },
+    {
+      "module": "security.permissions",
+      "path": "security\\permissions.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 15,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        }
+      ]
+    },
+    {
+      "module": "state_manager",
+      "path": "state_manager.py",
+      "is_gateway": false,
+      "findings": [
+        {
+          "line": 5,
+          "pattern": "json\\.load",
+          "code": "cfg = json.load(f)"
+        },
+        {
+          "line": 8,
+          "pattern": "state/db\\.json",
+          "code": "DB_FILE = cfg.get(\"DB_FILE\", \"state/db.json\")"
+        },
+        {
+          "line": 17,
+          "pattern": "json\\.load",
+          "code": "return json.load(f)"
+        },
+        {
+          "line": 21,
+          "pattern": "json\\.dump",
+          "code": "json.dump(db, f, indent=2, ensure_ascii=False)"
+        },
+        {
+          "line": 23,
+          "pattern": "state/db\\.json",
+          "code": "AGENTS_FILE = \"state/db.json\""
+        }
+      ]
+    }
+  ],
+  "reachable_modules_list": [
+    "admin_utils",
+    "agents.echo",
+    "agents.system_guard",
+    "audit_logger",
+    "bot_stable",
+    "core.academy_manager",
+    "core.agent_factory",
+    "core.agent_registry",
+    "core.agent_state_store",
+    "core.ai_guard",
+    "core.ask_debug",
+    "core.ask_guard",
+    "core.ask_router",
+    "core.ask_router.py.before_guard_bool_20260824_134739",
+    "core.ask_router.py.before_guard_semantics_20260824_134931",
+    "core.audit",
+    "core.authority",
+    "core.bootstrap_commands",
+    "core.command_registry_loader",
+    "core.command_router",
+    "core.context_builder",
+    "core.control_center",
+    "core.control_center_api",
+    "core.dispatcher",
+    "core.economy_bridge",
+    "core.economy_service",
+    "core.event_bus",
+    "core.event_store",
+    "core.firewall",
+    "core.identity",
+    "core.identity_resolver",
+    "core.invite_gate",
+    "core.kernel",
+    "core.keyboard_detector",
+    "core.lesson_engine",
+    "core.message_utils",
+    "core.migration",
+    "core.mission_lifecycle",
+    "core.mission_lock",
+    "core.mission_orchestrator",
+    "core.mission_runtime_bridge",
+    "core.mission_state",
+    "core.profile_manager",
+    "core.progress_tracker",
+    "core.project_graph",
+    "core.project_registry",
+    "core.reward_engine",
+    "core.runtime",
+    "core.system_collector",
+    "core.system_state_gateway",
+    "core.telegram_router_bridge",
+    "doctor_handler",
+    "handlers.advanced_ask_handler",
+    "handlers.esp_handler",
+    "handlers.llm_handler",
+    "handlers.loader",
+    "handlers.logo_handler",
+    "handlers.payment_handler",
+    "heb_convert",
+    "language_handler",
+    "marketplace",
+    "plugins.task",
+    "refresh_token_handler",
+    "security.permissions",
+    "slh_lock",
+    "state_manager",
+    "tutorial_handler",
+    "viewfile_handler"
+  ]
+}

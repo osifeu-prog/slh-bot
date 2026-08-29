@@ -1,0 +1,4882 @@
+﻿[
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.dockerignore",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511349)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.env",
+        "Length":  34,
+        "LastWriteTime":  "\/Date(1787237797142)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.env.example",
+        "Length":  109,
+        "LastWriteTime":  "\/Date(1785232511351)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.gitignore",
+        "Length":  932,
+        "LastWriteTime":  "\/Date(1787577230411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.railwayignore",
+        "Length":  191,
+        "LastWriteTime":  "\/Date(1785798706988)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.railway_bust",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1785232511355)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ACTIVE_MARKDOWN.txt",
+        "Length":  4394,
+        "LastWriteTime":  "\/Date(1785926836577)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\add_sync_patch.py",
+        "Length":  1601,
+        "LastWriteTime":  "\/Date(1786574422108)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\add_timeline_mode.sh",
+        "Length":  1604,
+        "LastWriteTime":  "\/Date(1785232511386)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\add_visibility_report.py",
+        "Length":  1210,
+        "LastWriteTime":  "\/Date(1786574422108)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\admin_handler.py",
+        "Length":  1874,
+        "LastWriteTime":  "\/Date(1787868122866)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh",
+        "Length":  1658,
+        "LastWriteTime":  "\/Date(1786914441255)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.txt",
+        "Length":  1127,
+        "LastWriteTime":  "\/Date(1785701578180)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\admin_utils.py",
+        "Length":  253,
+        "LastWriteTime":  "\/Date(1786574422114)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\advanced_ask_handler.py",
+        "Length":  371,
+        "LastWriteTime":  "\/Date(1787569688690)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\agent_client.py",
+        "Length":  4920,
+        "LastWriteTime":  "\/Date(1786574422122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\agent_client_pc.py",
+        "Length":  625,
+        "LastWriteTime":  "\/Date(1786574422128)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AGENT_RULES.md",
+        "Length":  808,
+        "LastWriteTime":  "\/Date(1785232511359)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\allowed_ids.json",
+        "Length":  98,
+        "LastWriteTime":  "\/Date(1785701578183)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\alpha_tree.txt",
+        "Length":  66,
+        "LastWriteTime":  "\/Date(1787579828211)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\API_REFERENCE.md",
+        "Length":  447,
+        "LastWriteTime":  "\/Date(1785232511361)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ARCHITECTURE.md",
+        "Length":  534,
+        "LastWriteTime":  "\/Date(1785232511363)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ask_handler.py",
+        "Length":  222,
+        "LastWriteTime":  "\/Date(1786574422128)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ask_test.py",
+        "Length":  556,
+        "LastWriteTime":  "\/Date(1786574422130)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\assignment_approval.py",
+        "Length":  4088,
+        "LastWriteTime":  "\/Date(1786574422132)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\assignment_commit.py",
+        "Length":  3898,
+        "LastWriteTime":  "\/Date(1786574422132)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\assignment_preview.py",
+        "Length":  5232,
+        "LastWriteTime":  "\/Date(1786574422134)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_DEEP.md",
+        "Length":  1279,
+        "LastWriteTime":  "\/Date(1785232511363)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\audit_logger.py",
+        "Length":  662,
+        "LastWriteTime":  "\/Date(1786574422136)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_MISSION_RUNTIME.txt",
+        "Length":  10006,
+        "LastWriteTime":  "\/Date(1786711010637)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_OUTPUT.txt",
+        "Length":  1716,
+        "LastWriteTime":  "\/Date(1785837195040)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\BALANCE_WRITES.txt",
+        "Length":  1734,
+        "LastWriteTime":  "\/Date(1786006300208)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot.log.old",
+        "Length":  644,
+        "LastWriteTime":  "\/Date(1785232511399)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot.py.legacy_disabled",
+        "Length":  1867,
+        "LastWriteTime":  "\/Date(1785701578184)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_core.py",
+        "Length":  2027,
+        "LastWriteTime":  "\/Date(1786574422138)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_gateway.py",
+        "Length":  6066,
+        "LastWriteTime":  "\/Date(1787746216553)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_gateway.py.pre_dotenv_fix.bak",
+        "Length":  4031,
+        "LastWriteTime":  "\/Date(1786277373763)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_gateway.py.pre_dotenv_force_fix.bak",
+        "Length":  4031,
+        "LastWriteTime":  "\/Date(1786277403975)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_gateway.py.pre_envsafe_fix.bak",
+        "Length":  4006,
+        "LastWriteTime":  "\/Date(1786274436740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py",
+        "Length":  21705,
+        "LastWriteTime":  "\/Date(1786643275674)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py.backup_before_market_cleanup",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py.backup_market_fix",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py.pre_context_import_fix",
+        "Length":  31466,
+        "LastWriteTime":  "\/Date(1786199131976)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py.pre_eventbus_fix",
+        "Length":  31497,
+        "LastWriteTime":  "\/Date(1786199131978)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_stable.py.pre_mission_import_fix",
+        "Length":  31466,
+        "LastWriteTime":  "\/Date(1786199131978)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bot_telegram.py",
+        "Length":  697,
+        "LastWriteTime":  "\/Date(1786574422142)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\bridged_runtime.txt",
+        "Length":  1001,
+        "LastWriteTime":  "\/Date(1785232511404)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\brief_handler.py",
+        "Length":  1628,
+        "LastWriteTime":  "\/Date(1786574422146)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\broadcast_script.txt",
+        "Length":  121,
+        "LastWriteTime":  "\/Date(1785232511405)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\build.sh",
+        "Length":  41,
+        "LastWriteTime":  "\/Date(1785964680095)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\c",
+        "Length":  252,
+        "LastWriteTime":  "\/Date(1785352366618)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\checkpoint_manager.py",
+        "Length":  565,
+        "LastWriteTime":  "\/Date(1786574422166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\check_api_start.sh",
+        "Length":  239,
+        "LastWriteTime":  "\/Date(1785232511406)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\check_Dockerfile",
+        "Length":  2600,
+        "LastWriteTime":  "\/Date(1785873609580)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\CLEAN_CURRENT_TREE.txt",
+        "Length":  93486,
+        "LastWriteTime":  "\/Date(1785842587327)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\command_audit.py",
+        "Length":  1082,
+        "LastWriteTime":  "\/Date(1786574422166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json",
+        "Length":  22225,
+        "LastWriteTime":  "\/Date(1785232511364)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\complete_handler.py",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1786574422168)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\config.json",
+        "Length":  228,
+        "LastWriteTime":  "\/Date(1786028168644)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\config.json.broken",
+        "Length":  226,
+        "LastWriteTime":  "\/Date(1786199131980)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\config.tmp",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511409)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\config.txt",
+        "Length":  47,
+        "LastWriteTime":  "\/Date(1785858181772)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\CONTROL_CENTER_FORENSIC_20260726_095133.txt.gz",
+        "Length":  7664,
+        "LastWriteTime":  "\/Date(1785232511365)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\control_layer.py",
+        "Length":  1881,
+        "LastWriteTime":  "\/Date(1786574422170)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core_engine.py",
+        "Length":  1819,
+        "LastWriteTime":  "\/Date(1786574422172)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\courses.json",
+        "Length":  1755,
+        "LastWriteTime":  "\/Date(1786235666006)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\course_handlers.py",
+        "Length":  6353,
+        "LastWriteTime":  "\/Date(1786574422172)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\create_takeover_manifest.py",
+        "Length":  10812,
+        "LastWriteTime":  "\/Date(1786574422177)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\CURRENT_HANDLERS.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785837203613)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\current_url.txt",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1785352366629)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\daily_check.sh",
+        "Length":  3795,
+        "LastWriteTime":  "\/Date(1785232511433)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\dashboard.html",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1786268197411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\deep_diagnostic.sh",
+        "Length":  2695,
+        "LastWriteTime":  "\/Date(1785232511435)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\deep_recovery.sh.disabled",
+        "Length":  2026,
+        "LastWriteTime":  "\/Date(1785232511435)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\demo_handlers.py",
+        "Length":  1779,
+        "LastWriteTime":  "\/Date(1786574422179)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DEPLOYMENT_PLAN.md",
+        "Length":  489,
+        "LastWriteTime":  "\/Date(1785232511365)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DEVELOPER_GUIDE.md",
+        "Length":  965,
+        "LastWriteTime":  "\/Date(1785806247897)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DEVELOPER_ONBOARDING.md",
+        "Length":  697,
+        "LastWriteTime":  "\/Date(1786633837509)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py",
+        "Length":  4582,
+        "LastWriteTime":  "\/Date(1786574422179)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\devsetup_handler.py",
+        "Length":  929,
+        "LastWriteTime":  "\/Date(1786914441258)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diagnose_all.sh",
+        "Length":  3195,
+        "LastWriteTime":  "\/Date(1785232511438)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diagnose_deploy.sh",
+        "Length":  1580,
+        "LastWriteTime":  "\/Date(1785232511438)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diagnose_railway.sh",
+        "Length":  567,
+        "LastWriteTime":  "\/Date(1785232511439)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diagnostic_handler.py",
+        "Length":  738,
+        "LastWriteTime":  "\/Date(1786574422181)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diag_fix_handlers.py",
+        "Length":  2750,
+        "LastWriteTime":  "\/Date(1786574422183)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diag_handler.py",
+        "Length":  1816,
+        "LastWriteTime":  "\/Date(1786574422186)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\diag_scan.sh",
+        "Length":  880,
+        "LastWriteTime":  "\/Date(1785232511437)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DIFF_TERMUX_WINDOWS.txt",
+        "Length":  23488,
+        "LastWriteTime":  "\/Date(1785841405650)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DIFF_WINDOWS_GIT.txt",
+        "Length":  38,
+        "LastWriteTime":  "\/Date(1785841405459)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\dna_lock.py",
+        "Length":  960,
+        "LastWriteTime":  "\/Date(1786574422188)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\doctor_handler.py",
+        "Length":  2498,
+        "LastWriteTime":  "\/Date(1786574422190)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\DO_NOT_RUN_LOCALLY.md",
+        "Length":  378,
+        "LastWriteTime":  "\/Date(1785232511366)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\economy_audit_after_p0.txt",
+        "Length":  8360,
+        "LastWriteTime":  "\/Date(1787332570578)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\economy_audit_balance.txt",
+        "Length":  17298,
+        "LastWriteTime":  "\/Date(1785974314450)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\economy_audit_dashboard.txt",
+        "Length":  18678,
+        "LastWriteTime":  "\/Date(1785974315222)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\economy_audit_payment.txt",
+        "Length":  5849,
+        "LastWriteTime":  "\/Date(1785974314718)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\economy_audit_profile.txt",
+        "Length":  501,
+        "LastWriteTime":  "\/Date(1785974314800)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ECONOMY_PATCH_PLAN.txt",
+        "Length":  489,
+        "LastWriteTime":  "\/Date(1786005721185)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ECONOMY_WIRING_AUDIT.txt",
+        "Length":  15266,
+        "LastWriteTime":  "\/Date(1786006603190)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\econ_handler.py",
+        "Length":  3973,
+        "LastWriteTime":  "\/Date(1787327671142)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\econ_handler.py.backup_before_buy_cleanup",
+        "Length":  4529,
+        "LastWriteTime":  "\/Date(1786574422195)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\encoding_damage_report.txt",
+        "Length":  34332,
+        "LastWriteTime":  "\/Date(1787153857369)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ENTRYPOINT_AUDIT.txt",
+        "Length":  978,
+        "LastWriteTime":  "\/Date(1786014514930)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\esp_test.py",
+        "Length":  859,
+        "LastWriteTime":  "\/Date(1786574422195)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\events.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511459)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\exec_commit.py",
+        "Length":  2405,
+        "LastWriteTime":  "\/Date(1786661428467)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\expose_slh_state.sh",
+        "Length":  2192,
+        "LastWriteTime":  "\/Date(1785232511459)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\e_mode",
+        "Length":  5480,
+        "LastWriteTime":  "\/Date(1785888770390)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\file.py",
+        "Length":  5,
+        "LastWriteTime":  "\/Date(1786574422197)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\final_fix.sh.disabled",
+        "Length":  3100,
+        "LastWriteTime":  "\/Date(1785232511461)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\final_verification.sh",
+        "Length":  6755,
+        "LastWriteTime":  "\/Date(1785232511461)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\fix_dna_entrypoints.py",
+        "Length":  493,
+        "LastWriteTime":  "\/Date(1786647989195)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\full_diag.sh",
+        "Length":  1116,
+        "LastWriteTime":  "\/Date(1785232511462)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\full_diagnostic.sh",
+        "Length":  2970,
+        "LastWriteTime":  "\/Date(1785232511462)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\full_logs.txt",
+        "Length":  310,
+        "LastWriteTime":  "\/Date(1785846047049)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\full_sync_check.sh",
+        "Length":  1588,
+        "LastWriteTime":  "\/Date(1785232511463)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\FULL_SYSTEM_AUDIT.json",
+        "Length":  878,
+        "LastWriteTime":  "\/Date(1787576517662)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ADMIN_SEARCH.txt",
+        "Length":  7640,
+        "LastWriteTime":  "\/Date(1785841375440)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ASK_SEARCH.txt",
+        "Length":  15870,
+        "LastWriteTime":  "\/Date(1785841387509)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_AUG_TREE.txt",
+        "Length":  86912,
+        "LastWriteTime":  "\/Date(1785841398713)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_BOT_TOKEN_HISTORY.txt",
+        "Length":  29232,
+        "LastWriteTime":  "\/Date(1786199131935)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_COMMISSION_SEARCH.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785841384980)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_CONTROL_SEARCH.txt",
+        "Length":  328,
+        "LastWriteTime":  "\/Date(1785841390462)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_DIFF_FIRST_TO_NOW.txt",
+        "Length":  15766,
+        "LastWriteTime":  "\/Date(1785837187068)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_DIFF_STABLE_TO_HEAD.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842671900)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_DISABLED_AND_BACKUPS.txt",
+        "Length":  1046,
+        "LastWriteTime":  "\/Date(1785842673265)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ECON_BALANCE.txt",
+        "Length":  5366,
+        "LastWriteTime":  "\/Date(1785841378699)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ECON_BUY.txt",
+        "Length":  1078,
+        "LastWriteTime":  "\/Date(1785841378806)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ECON_PAY.txt",
+        "Length":  7014,
+        "LastWriteTime":  "\/Date(1785841378941)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_ECON_REVENUE.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785841378978)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_EVENTBUS_HISTORY.txt",
+        "Length":  23084,
+        "LastWriteTime":  "\/Date(1785842671092)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_FIRST_TREE.txt",
+        "Length":  15254,
+        "LastWriteTime":  "\/Date(1785841392934)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_FULL_TREE.txt",
+        "Length":  93486,
+        "LastWriteTime":  "\/Date(1785842673109)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_HISTORY_GRAPH.txt",
+        "Length":  118778,
+        "LastWriteTime":  "\/Date(1785842668670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_JULY_TREE.txt",
+        "Length":  48124,
+        "LastWriteTime":  "\/Date(1785841395798)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_LLM_SEARCH.txt",
+        "Length":  5698,
+        "LastWriteTime":  "\/Date(1785841387645)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_PROJECT_SEARCH.txt",
+        "Length":  3534,
+        "LastWriteTime":  "\/Date(1785841382118)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_RAILWAY_HISTORY.txt",
+        "Length":  28624,
+        "LastWriteTime":  "\/Date(1785842670348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_REFERRAL_SEARCH.txt",
+        "Length":  378,
+        "LastWriteTime":  "\/Date(1785841384934)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_REMOVED_4d90da6.txt",
+        "Length":  80280,
+        "LastWriteTime":  "\/Date(1785841370796)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_SLH_BOT_TREE.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842672933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_STATE_ENGINE_HISTORY.txt",
+        "Length":  1070,
+        "LastWriteTime":  "\/Date(1785842671611)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_STATE_SEARCH.txt",
+        "Length":  6146,
+        "LastWriteTime":  "\/Date(1785841390332)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\GIT_SUBMODULE_STATUS.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785842672010)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\guide_handler.py",
+        "Length":  2434,
+        "LastWriteTime":  "\/Date(1786574422199)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\HANDLER_LOADER_AUDIT.txt",
+        "Length":  58026,
+        "LastWriteTime":  "\/Date(1786014515735)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\HANDOFF.md",
+        "Length":  1372,
+        "LastWriteTime":  "\/Date(1785232511367)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\healthcheck.sh",
+        "Length":  171,
+        "LastWriteTime":  "\/Date(1785232511482)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\health_check.py",
+        "Length":  805,
+        "LastWriteTime":  "\/Date(1786574422199)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\health_check.sh",
+        "Length":  337,
+        "LastWriteTime":  "\/Date(1785232511480)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\HEALTH_OUTPUT.txt",
+        "Length":  2152,
+        "LastWriteTime":  "\/Date(1785837195740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\heb_convert.py",
+        "Length":  791,
+        "LastWriteTime":  "\/Date(1786574422201)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\help_handler.py",
+        "Length":  2011,
+        "LastWriteTime":  "\/Date(1786574422203)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\how 1070542bf --stat",
+        "Length":  2622,
+        "LastWriteTime":  "\/Date(1786301028727)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\init_router.py",
+        "Length":  251,
+        "LastWriteTime":  "\/Date(1786574422203)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\inspector.py",
+        "Length":  2291,
+        "LastWriteTime":  "\/Date(1786574422205)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\inspect_slh.sh",
+        "Length":  745,
+        "LastWriteTime":  "\/Date(1785232511484)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\internal_agent.py",
+        "Length":  6494,
+        "LastWriteTime":  "\/Date(1786574422207)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\join_fix.py",
+        "Length":  1756,
+        "LastWriteTime":  "\/Date(1786574422207)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\journal.json",
+        "Length":  14368,
+        "LastWriteTime":  "\/Date(1785232511486)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\JUNK_FILES.txt",
+        "Length":  2574,
+        "LastWriteTime":  "\/Date(1785837207395)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\junk_handler.py",
+        "Length":  3945,
+        "LastWriteTime":  "\/Date(1786574422209)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\KERNEL_RULES.md",
+        "Length":  334,
+        "LastWriteTime":  "\/Date(1785232511368)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\keys.secure",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1785352366648)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\language_handler.py",
+        "Length":  1571,
+        "LastWriteTime":  "\/Date(1786574422211)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\LAUNCH_PLAN.json",
+        "Length":  3956,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\learning_path.py",
+        "Length":  9407,
+        "LastWriteTime":  "\/Date(1787328114914)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\learning_path.py.prepatch_20260815_215717.bak",
+        "Length":  9276,
+        "LastWriteTime":  "\/Date(1786574422213)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\learn_handlers.py.disabled",
+        "Length":  3173,
+        "LastWriteTime":  "\/Date(1785232511488)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\LLM_AUDIT.txt",
+        "Length":  11728,
+        "LastWriteTime":  "\/Date(1786014515965)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\load_keys.sh",
+        "Length":  568,
+        "LastWriteTime":  "\/Date(1785352366650)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\logger_handler.py",
+        "Length":  12,
+        "LastWriteTime":  "\/Date(1786574422213)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\logo.txt",
+        "Length":  510,
+        "LastWriteTime":  "\/Date(1786580182610)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\main",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511494)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\manifest.json",
+        "Length":  352,
+        "LastWriteTime":  "\/Date(1785232511495)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\MANIFEST_HANDLERS.txt",
+        "Length":  1340,
+        "LastWriteTime":  "\/Date(1785837204306)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\marketplace.py",
+        "Length":  760,
+        "LastWriteTime":  "\/Date(1786574422223)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\master_agent.py",
+        "Length":  2640,
+        "LastWriteTime":  "\/Date(1786574422225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\memory.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511496)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mini_app.html",
+        "Length":  3404,
+        "LastWriteTime":  "\/Date(1786576491323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_assignment_commit.py",
+        "Length":  5187,
+        "LastWriteTime":  "\/Date(1786574422231)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_assignment_preview.py",
+        "Length":  3264,
+        "LastWriteTime":  "\/Date(1786574422233)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_completion_commit.py",
+        "Length":  8547,
+        "LastWriteTime":  "\/Date(1786574422235)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_completion_commit_2.py",
+        "Length":  8607,
+        "LastWriteTime":  "\/Date(1786574422237)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_completion_gate.py",
+        "Length":  7187,
+        "LastWriteTime":  "\/Date(1786574422237)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_creation_commit.py",
+        "Length":  3867,
+        "LastWriteTime":  "\/Date(1786574422239)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_creation_preview.py",
+        "Length":  1935,
+        "LastWriteTime":  "\/Date(1786574422241)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_commit.py",
+        "Length":  7532,
+        "LastWriteTime":  "\/Date(1786574422241)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_gate.py",
+        "Length":  4410,
+        "LastWriteTime":  "\/Date(1786574422243)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_execution_preview.py",
+        "Length":  4567,
+        "LastWriteTime":  "\/Date(1786574422246)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_lifecycle_preview.py",
+        "Length":  2008,
+        "LastWriteTime":  "\/Date(1786574422248)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_result_recorder.py",
+        "Length":  6791,
+        "LastWriteTime":  "\/Date(1786574422250)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_result_verifier.py",
+        "Length":  7016,
+        "LastWriteTime":  "\/Date(1786574422252)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_runner.py",
+        "Length":  5139,
+        "LastWriteTime":  "\/Date(1786574422254)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\monitor.sh",
+        "Length":  210,
+        "LastWriteTime":  "\/Date(1785352366650)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\monitor_handler.py",
+        "Length":  3362,
+        "LastWriteTime":  "\/Date(1786574422254)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\myprogress_handler.py",
+        "Length":  1421,
+        "LastWriteTime":  "\/Date(1786574422256)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\N",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511368)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\NEXT_STEPS.md",
+        "Length":  245,
+        "LastWriteTime":  "\/Date(1785232511369)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\onboarding_handler.py",
+        "Length":  2584,
+        "LastWriteTime":  "\/Date(1786574422258)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\onboarding_scan.txt",
+        "Length":  28310,
+        "LastWriteTime":  "\/Date(1785695945517)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\payment_safety_check.sh",
+        "Length":  2038,
+        "LastWriteTime":  "\/Date(1785232511508)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins.json",
+        "Length":  745,
+        "LastWriteTime":  "\/Date(1787572368772)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins_store.json",
+        "Length":  383,
+        "LastWriteTime":  "\/Date(1785232511512)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins_store.py",
+        "Length":  2273,
+        "LastWriteTime":  "\/Date(1786574422260)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\pre_change_audit.sh",
+        "Length":  1570,
+        "LastWriteTime":  "\/Date(1785232511513)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\pre_change_check.sh",
+        "Length":  1497,
+        "LastWriteTime":  "\/Date(1785232511514)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\pre_change_diag.sh",
+        "Length":  2249,
+        "LastWriteTime":  "\/Date(1785232511514)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\PRE_ECONOMY_FULL_AUDIT.txt",
+        "Length":  22100,
+        "LastWriteTime":  "\/Date(1785974440484)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\pre_push_check.sh",
+        "Length":  629,
+        "LastWriteTime":  "\/Date(1787665427150)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\Procfile",
+        "Length":  46,
+        "LastWriteTime":  "\/Date(1786033879012)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\Procfile.backup",
+        "Length":  32,
+        "LastWriteTime":  "\/Date(1785880394909)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\Procfile.disabled",
+        "Length":  89,
+        "LastWriteTime":  "\/Date(1785232511370)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\Procfile.disabled_runtime",
+        "Length":  28,
+        "LastWriteTime":  "\/Date(1785232511370)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\PROFILE_MANAGER_CALLS.txt",
+        "Length":  1229,
+        "LastWriteTime":  "\/Date(1786006348148)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\project_commands.py",
+        "Length":  6697,
+        "LastWriteTime":  "\/Date(1786574422260)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway.json",
+        "Length":  314,
+        "LastWriteTime":  "\/Date(1786179723342)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway.json.backup",
+        "Length":  204,
+        "LastWriteTime":  "\/Date(1785874197993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway.json.check",
+        "Length":  153,
+        "LastWriteTime":  "\/Date(1785874075889)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway.toml.bak.check",
+        "Length":  88,
+        "LastWriteTime":  "\/Date(1786199131998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_baseline_20260824.txt",
+        "Length":  1512,
+        "LastWriteTime":  "\/Date(1787577207254)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_bot_gateway.py.disabled",
+        "Length":  1002,
+        "LastWriteTime":  "\/Date(1786305156245)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_config.json",
+        "Length":  148,
+        "LastWriteTime":  "\/Date(1785846911526)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_db_snapshot.txt",
+        "Length":  2966,
+        "LastWriteTime":  "\/Date(1786443785181)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_Dockerfile",
+        "Length":  2600,
+        "LastWriteTime":  "\/Date(1785873337747)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_loader.py.OLD_UNUSED",
+        "Length":  3599,
+        "LastWriteTime":  "\/Date(1785876913427)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_logs_baseline_20260824.txt",
+        "Length":  5702,
+        "LastWriteTime":  "\/Date(1787577209698)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_pre_fix_check.sh",
+        "Length":  759,
+        "LastWriteTime":  "\/Date(1785232511516)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_Procfile",
+        "Length":  36,
+        "LastWriteTime":  "\/Date(1785846906884)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\railway_trigger.txt",
+        "Length":  27,
+        "LastWriteTime":  "\/Date(1786094660161)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\README.md",
+        "Length":  716,
+        "LastWriteTime":  "\/Date(1785232511371)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\refresh_token_handler.py",
+        "Length":  7247,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\RELEASE_AUDIT_20260810.txt",
+        "Length":  188,
+        "LastWriteTime":  "\/Date(1786362995396)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\RELEASE_STATUS.txt",
+        "Length":  86,
+        "LastWriteTime":  "\/Date(1786362916104)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\RELEASE_STATUS_2026_07_21.md",
+        "Length":  490,
+        "LastWriteTime":  "\/Date(1785232511371)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\report_handler.py",
+        "Length":  4247,
+        "LastWriteTime":  "\/Date(1786644001253)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\REPUTATION_PLAN.md",
+        "Length":  713,
+        "LastWriteTime":  "\/Date(1785232511374)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\requirements.txt",
+        "Length":  145,
+        "LastWriteTime":  "\/Date(1787595930229)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\responsibility_map.py",
+        "Length":  6586,
+        "LastWriteTime":  "\/Date(1786574422268)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ROADMAP.md",
+        "Length":  7840,
+        "LastWriteTime":  "\/Date(1785232511375)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\roadmap_handler.py",
+        "Length":  428,
+        "LastWriteTime":  "\/Date(1786574422280)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\runtime.txt",
+        "Length":  16,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\runtime_test.py",
+        "Length":  517,
+        "LastWriteTime":  "\/Date(1786574422282)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\run_bot.sh",
+        "Length":  197,
+        "LastWriteTime":  "\/Date(1785232511519)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\RUN_GUIDE.md",
+        "Length":  300,
+        "LastWriteTime":  "\/Date(1785232511375)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\run_tests.sh",
+        "Length":  2484,
+        "LastWriteTime":  "\/Date(1785232511520)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\safe_progress.py",
+        "Length":  797,
+        "LastWriteTime":  "\/Date(1786574422288)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\sandbox_handler.py",
+        "Length":  1323,
+        "LastWriteTime":  "\/Date(1786574422292)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SAVE_DB_USAGE.txt",
+        "Length":  2036,
+        "LastWriteTime":  "\/Date(1786006306497)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\self_check.py",
+        "Length":  467,
+        "LastWriteTime":  "\/Date(1786574422294)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\self_model_audit.py",
+        "Length":  884,
+        "LastWriteTime":  "\/Date(1786574422296)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\self_test.py",
+        "Length":  1949,
+        "LastWriteTime":  "\/Date(1786574422296)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SESSION_CLOSURE_AUDIT.json",
+        "Length":  17371,
+        "LastWriteTime":  "\/Date(1785798706990)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SESSION_CLOSURE_MANIFEST.md",
+        "Length":  3823,
+        "LastWriteTime":  "\/Date(1785701578177)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SESSION_STATUS.md",
+        "Length":  1325,
+        "LastWriteTime":  "\/Date(1786914441254)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\setup_dev_env.sh",
+        "Length":  1107,
+        "LastWriteTime":  "\/Date(1786914441262)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\show_dashboard.py",
+        "Length":  278,
+        "LastWriteTime":  "\/Date(1786574422298)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\show_journal.py",
+        "Length":  683,
+        "LastWriteTime":  "\/Date(1786574422298)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh-phase2-ready-20260712",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785232511528)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh-workflow.ps1",
+        "Length":  3618,
+        "LastWriteTime":  "\/Date(1786272968196)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh.py",
+        "Length":  1412,
+        "LastWriteTime":  "\/Date(1787238552318)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slhdna.bat",
+        "Length":  38,
+        "LastWriteTime":  "\/Date(1786647284459)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slhdna.py",
+        "Length":  13520,
+        "LastWriteTime":  "\/Date(1786647400930)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_AGENT_HANDOFF.md",
+        "Length":  5837,
+        "LastWriteTime":  "\/Date(1785232511378)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_all_in_one.sh",
+        "Length":  4589,
+        "LastWriteTime":  "\/Date(1785232511529)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_audit.py",
+        "Length":  4028,
+        "LastWriteTime":  "\/Date(1786574422302)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_AUDIT_20260813_201938.txt",
+        "Length":  1375142,
+        "LastWriteTime":  "\/Date(1786983397396)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_audit_report.json",
+        "Length":  645,
+        "LastWriteTime":  "\/Date(1787238552319)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_authority_audit.py",
+        "Length":  5224,
+        "LastWriteTime":  "\/Date(1786647660632)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_autopilot.py",
+        "Length":  3625,
+        "LastWriteTime":  "\/Date(1786574422302)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_auto_audit.ps1",
+        "Length":  895,
+        "LastWriteTime":  "\/Date(1785926821595)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_BOT_ADAPTER.py",
+        "Length":  740,
+        "LastWriteTime":  "\/Date(1786574422304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_broadcast_ready_check.sh",
+        "Length":  2328,
+        "LastWriteTime":  "\/Date(1785232511532)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_clean_inventory.py",
+        "Length":  1586,
+        "LastWriteTime":  "\/Date(1786647896825)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_close_day.sh",
+        "Length":  1579,
+        "LastWriteTime":  "\/Date(1785232511532)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_command_map.sh",
+        "Length":  742,
+        "LastWriteTime":  "\/Date(1785232511533)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_COMMAND_MAP.txt",
+        "Length":  41638,
+        "LastWriteTime":  "\/Date(1786199131942)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_consolidate.py",
+        "Length":  1750,
+        "LastWriteTime":  "\/Date(1786574422304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_control.ps1",
+        "Length":  1685,
+        "LastWriteTime":  "\/Date(1787854390170)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_control.ps1.bak",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785704251844)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_control_v1.ps1",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785704251844)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_daemon.sh",
+        "Length":  2082,
+        "LastWriteTime":  "\/Date(1785232511534)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Length":  2210,
+        "LastWriteTime":  "\/Date(1786633775179)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DISCOVERY_20260802_211429.txt",
+        "Length":  2478484,
+        "LastWriteTime":  "\/Date(1786199131958)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_dna_scan.py",
+        "Length":  11662,
+        "LastWriteTime":  "\/Date(1786647989323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_doctor.sh",
+        "Length":  1813,
+        "LastWriteTime":  "\/Date(1785232511534)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_empire.db",
+        "Length":  32768,
+        "LastWriteTime":  "\/Date(1785701578217)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_fix_and_push.sh",
+        "Length":  1511,
+        "LastWriteTime":  "\/Date(1785232511535)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_fix_bom.py",
+        "Length":  2193,
+        "LastWriteTime":  "\/Date(1786647438237)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_freeze.sh",
+        "Length":  596,
+        "LastWriteTime":  "\/Date(1785232511535)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_FULL_AUDIT_20260810_152243.txt",
+        "Length":  389432,
+        "LastWriteTime":  "\/Date(1786364571217)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_full_check.py",
+        "Length":  3948,
+        "LastWriteTime":  "\/Date(1786574422306)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_full_diag.sh",
+        "Length":  2511,
+        "LastWriteTime":  "\/Date(1785232511536)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_full_doctor.sh",
+        "Length":  5402,
+        "LastWriteTime":  "\/Date(1785232511537)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_full_system_audit.sh",
+        "Length":  2157,
+        "LastWriteTime":  "\/Date(1785232511537)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_GATEWAY.py",
+        "Length":  447,
+        "LastWriteTime":  "\/Date(1786574422306)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_git_diag_20260804_020650.txt",
+        "Length":  4236,
+        "LastWriteTime":  "\/Date(1786199131998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_handler_inventory.sh",
+        "Length":  1437,
+        "LastWriteTime":  "\/Date(1785232511538)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_HANDLER_MAP.txt",
+        "Length":  69952,
+        "LastWriteTime":  "\/Date(1786199131961)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_hardening.py",
+        "Length":  2952,
+        "LastWriteTime":  "\/Date(1786574422308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_KERNEL.py",
+        "Length":  1099,
+        "LastWriteTime":  "\/Date(1786574422310)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_launch_guard.sh",
+        "Length":  1423,
+        "LastWriteTime":  "\/Date(1785232511539)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_light_20260702_0118.txt",
+        "Length":  4764,
+        "LastWriteTime":  "\/Date(1786199131998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_LOCAL_TREE.txt",
+        "Length":  39104,
+        "LastWriteTime":  "\/Date(1786199131961)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_lock.py",
+        "Length":  3561,
+        "LastWriteTime":  "\/Date(1786574422310)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_MAIN.py",
+        "Length":  4347,
+        "LastWriteTime":  "\/Date(1786574422312)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_MODULES.py",
+        "Length":  394,
+        "LastWriteTime":  "\/Date(1786574422312)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_morning.sh",
+        "Length":  117,
+        "LastWriteTime":  "\/Date(1785232511541)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_plan_20260702.txt",
+        "Length":  1515,
+        "LastWriteTime":  "\/Date(1786199131998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_prelaunch_check.sh",
+        "Length":  1694,
+        "LastWriteTime":  "\/Date(1785232511543)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_pre_broadcast_audit.sh",
+        "Length":  1784,
+        "LastWriteTime":  "\/Date(1785232511542)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_PYTHON_FILES.txt",
+        "Length":  54512,
+        "LastWriteTime":  "\/Date(1786199131964)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_recovery_check.sh",
+        "Length":  1964,
+        "LastWriteTime":  "\/Date(1785232511543)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RECOVERY_PROTOCOL.md",
+        "Length":  300,
+        "LastWriteTime":  "\/Date(1785694777596)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RELEASE_LOGS.txt",
+        "Length":  4922,
+        "LastWriteTime":  "\/Date(1786552675680)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RELEASE_VERIFY.json",
+        "Length":  133,
+        "LastWriteTime":  "\/Date(1786554108461)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_runtime_audit.sh",
+        "Length":  2461,
+        "LastWriteTime":  "\/Date(1785232511544)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RUNTIME_AUTHORITY.json",
+        "Length":  260,
+        "LastWriteTime":  "\/Date(1786642330398)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_runtime_handler_test.sh",
+        "Length":  526,
+        "LastWriteTime":  "\/Date(1785232511544)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RUNTIME_POLICY.md",
+        "Length":  673,
+        "LastWriteTime":  "\/Date(1786009688941)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_RUNTIME_SNAPSHOT_20260708.md",
+        "Length":  607,
+        "LastWriteTime":  "\/Date(1785232511381)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_safe_diag.sh",
+        "Length":  1370,
+        "LastWriteTime":  "\/Date(1785232511545)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_safe_fix.sh",
+        "Length":  3944,
+        "LastWriteTime":  "\/Date(1785232511545)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_snapshot.py",
+        "Length":  441,
+        "LastWriteTime":  "\/Date(1786574422314)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_state.db",
+        "Length":  12288,
+        "LastWriteTime":  "\/Date(1785232511546)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_state_audit.py",
+        "Length":  590,
+        "LastWriteTime":  "\/Date(1786574422316)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Length":  26290,
+        "LastWriteTime":  "\/Date(1786574422140)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_status.sh",
+        "Length":  572,
+        "LastWriteTime":  "\/Date(1785232511547)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_sync_fix.py",
+        "Length":  1851,
+        "LastWriteTime":  "\/Date(1786574422316)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_TREE.txt",
+        "Length":  83144,
+        "LastWriteTime":  "\/Date(1786317513758)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_V1.2_FEATURE1.1.md",
+        "Length":  363,
+        "LastWriteTime":  "\/Date(1786305156239)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_V1.2_FEATURE1.md",
+        "Length":  320,
+        "LastWriteTime":  "\/Date(1786305156240)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_V1.2_ROADMAP.md",
+        "Length":  207,
+        "LastWriteTime":  "\/Date(1786305156240)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh_visibility_scan.py",
+        "Length":  1864,
+        "LastWriteTime":  "\/Date(1786574422346)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\smart_leaderboard.py",
+        "Length":  897,
+        "LastWriteTime":  "\/Date(1786574422348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\snapshot.sh",
+        "Length":  343,
+        "LastWriteTime":  "\/Date(1785232511549)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SOURCE_OF_TRUTH.md",
+        "Length":  1441,
+        "LastWriteTime":  "\/Date(1785232511382)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\stable_checkpoint_20260712.sh",
+        "Length":  1015,
+        "LastWriteTime":  "\/Date(1785232511550)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\STABLE_STATE_20260711.md",
+        "Length":  599,
+        "LastWriteTime":  "\/Date(1785232511382)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\STABLE_STATUS_20260713.txt",
+        "Length":  2354,
+        "LastWriteTime":  "\/Date(1785232511382)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start.sh",
+        "Length":  452,
+        "LastWriteTime":  "\/Date(1785860641867)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\startup_stderr.log",
+        "Length":  271,
+        "LastWriteTime":  "\/Date(1786277321144)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\startup_stdout.log",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1786277321134)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_full.sh",
+        "Length":  851,
+        "LastWriteTime":  "\/Date(1785860641877)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_railway.sh",
+        "Length":  177,
+        "LastWriteTime":  "\/Date(1785701578225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_safe.sh",
+        "Length":  1053,
+        "LastWriteTime":  "\/Date(1785232511552)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_secure.sh",
+        "Length":  790,
+        "LastWriteTime":  "\/Date(1785232511553)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_server.sh",
+        "Length":  313,
+        "LastWriteTime":  "\/Date(1785860642585)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\start_slh.sh",
+        "Length":  264,
+        "LastWriteTime":  "\/Date(1785232511553)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state_connection_map.txt",
+        "Length":  73970,
+        "LastWriteTime":  "\/Date(1785696620016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state_engine.py",
+        "Length":  545,
+        "LastWriteTime":  "\/Date(1786574422348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state_manager.py",
+        "Length":  2006,
+        "LastWriteTime":  "\/Date(1786628826832)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\STATE_USAGE_AUDIT.txt",
+        "Length":  37870,
+        "LastWriteTime":  "\/Date(1786014515390)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state_writers_report.txt",
+        "Length":  255606,
+        "LastWriteTime":  "\/Date(1786105373231)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\STATUS.md",
+        "Length":  812,
+        "LastWriteTime":  "\/Date(1785232511383)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\status_agents.txt",
+        "Length":  46,
+        "LastWriteTime":  "\/Date(1786104884670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\STUDENT_GUIDE.md",
+        "Length":  306,
+        "LastWriteTime":  "\/Date(1785806248218)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\subscriptions.json",
+        "Length":  4,
+        "LastWriteTime":  "\/Date(1785232511632)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\subscriptions.py",
+        "Length":  1269,
+        "LastWriteTime":  "\/Date(1786574422351)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\sync.sh",
+        "Length":  177,
+        "LastWriteTime":  "\/Date(1785232511633)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_diagnostics.py",
+        "Length":  8718,
+        "LastWriteTime":  "\/Date(1786574767866)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_health.py",
+        "Length":  2634,
+        "LastWriteTime":  "\/Date(1786574422355)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_profile.json",
+        "Length":  328,
+        "LastWriteTime":  "\/Date(1785232511635)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SYSTEM_RULES.md",
+        "Length":  567,
+        "LastWriteTime":  "\/Date(1785232511383)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_scan.sh",
+        "Length":  1165,
+        "LastWriteTime":  "\/Date(1785232511636)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_test.sh",
+        "Length":  11118,
+        "LastWriteTime":  "\/Date(1785232511637)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\system_verification.sh",
+        "Length":  6642,
+        "LastWriteTime":  "\/Date(1785232511637)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\t === ADMIN TEXT CHECK ===",
+        "Length":  6610,
+        "LastWriteTime":  "\/Date(1785927033670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\t === FIND HTML MODE ===",
+        "Length":  5378,
+        "LastWriteTime":  "\/Date(1785927646341)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\takeover_controller.py",
+        "Length":  8494,
+        "LastWriteTime":  "\/Date(1786574422355)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TASK_SNAPSHOT.txt",
+        "Length":  151,
+        "LastWriteTime":  "\/Date(1786553758944)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TELEBOT_AUDIT.txt",
+        "Length":  746,
+        "LastWriteTime":  "\/Date(1786014515071)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\telegram_chat_audit.py",
+        "Length":  1008,
+        "LastWriteTime":  "\/Date(1786574422357)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\telegram_owner_check.sh",
+        "Length":  759,
+        "LastWriteTime":  "\/Date(1785232511639)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TERMUX_FULL.txt",
+        "Length":  13430,
+        "LastWriteTime":  "\/Date(1785841408595)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TERMUX_HANDLERS.txt",
+        "Length":  13430,
+        "LastWriteTime":  "\/Date(1785841405541)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_assignment_api.py",
+        "Length":  3195,
+        "LastWriteTime":  "\/Date(1786574422359)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_assignment_commit_api.py",
+        "Length":  5243,
+        "LastWriteTime":  "\/Date(1786574422361)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_creation_api.py",
+        "Length":  4972,
+        "LastWriteTime":  "\/Date(1786574422361)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_handler.py",
+        "Length":  426,
+        "LastWriteTime":  "\/Date(1786574422363)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_marketplace.py",
+        "Length":  1195,
+        "LastWriteTime":  "\/Date(1786574422363)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_assignment_commit.py",
+        "Length":  5492,
+        "LastWriteTime":  "\/Date(1786574422365)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_assignment_preview.py",
+        "Length":  3214,
+        "LastWriteTime":  "\/Date(1786574422367)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_completion_commit.py",
+        "Length":  8748,
+        "LastWriteTime":  "\/Date(1786574422369)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_completion_preview.py",
+        "Length":  6627,
+        "LastWriteTime":  "\/Date(1786574422371)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_execution_commit.py",
+        "Length":  9478,
+        "LastWriteTime":  "\/Date(1786574422371)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_execution_preview.py",
+        "Length":  2765,
+        "LastWriteTime":  "\/Date(1786574422373)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission3_post_completion_regression.py",
+        "Length":  8236,
+        "LastWriteTime":  "\/Date(1786574422375)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_assignment_commit.py",
+        "Length":  6783,
+        "LastWriteTime":  "\/Date(1786574422377)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_assignment_preview.py",
+        "Length":  2963,
+        "LastWriteTime":  "\/Date(1786574422377)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_creation_commit.py",
+        "Length":  6050,
+        "LastWriteTime":  "\/Date(1786574422395)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_creation_preview.py",
+        "Length":  2986,
+        "LastWriteTime":  "\/Date(1786574422402)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_execution_commit.py",
+        "Length":  6680,
+        "LastWriteTime":  "\/Date(1786574422404)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission4_execution_preview.py",
+        "Length":  2754,
+        "LastWriteTime":  "\/Date(1786574422404)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_mission_orchestrator_preview.py",
+        "Length":  3214,
+        "LastWriteTime":  "\/Date(1786574422407)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\test_runtime.sh",
+        "Length":  180,
+        "LastWriteTime":  "\/Date(1785694051180)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TOKEN_PLAN.md",
+        "Length":  383,
+        "LastWriteTime":  "\/Date(1785232511383)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\token_sync.sh",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1785232511653)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TOMORROW_HANDOFF.md",
+        "Length":  1812,
+        "LastWriteTime":  "\/Date(1785232511384)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\ton_handler.py",
+        "Length":  5935,
+        "LastWriteTime":  "\/Date(1787238552357)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tory {",
+        "Length":  16465,
+        "LastWriteTime":  "\/Date(1786026296546)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\TRACKED_FILES.txt",
+        "Length":  31314,
+        "LastWriteTime":  "\/Date(1785940143098)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tutorial_handler.py",
+        "Length":  598,
+        "LastWriteTime":  "\/Date(1786574422409)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\UPDATE.md",
+        "Length":  4874,
+        "LastWriteTime":  "\/Date(1785232511384)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\update_token.sh",
+        "Length":  1161,
+        "LastWriteTime":  "\/Date(1785232511675)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\UX_COMMANDS.md",
+        "Length":  272,
+        "LastWriteTime":  "\/Date(1785806248047)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\viewfile_handler.py",
+        "Length":  1740,
+        "LastWriteTime":  "\/Date(1786574422411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\virtual_esp_local.py",
+        "Length":  1452,
+        "LastWriteTime":  "\/Date(1786574422413)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\WALLET_API_USAGE.txt",
+        "Length":  16250,
+        "LastWriteTime":  "\/Date(1786006303402)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\watchdog.sh",
+        "Length":  206,
+        "LastWriteTime":  "\/Date(1785232511676)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\webapp.py",
+        "Length":  2687,
+        "LastWriteTime":  "\/Date(1787665427151)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\welcome_handler.py.disabled",
+        "Length":  3451,
+        "LastWriteTime":  "\/Date(1785232511682)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\whatsapp_bot.js",
+        "Length":  1141,
+        "LastWriteTime":  "\/Date(1785364465952)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\whatsapp_handler_bridge.py",
+        "Length":  1938,
+        "LastWriteTime":  "\/Date(1786914441337)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\WINDOWS_HANDLERS.txt",
+        "Length":  10296,
+        "LastWriteTime":  "\/Date(1785841405603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\WINDOWS_TREE.txt",
+        "Length":  403212,
+        "LastWriteTime":  "\/Date(1785841402025)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\כל",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366688)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\כסף,",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366689)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\פאנל",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366689)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\קופה",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1785352366690)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.nixpacks\\Dockerfile",
+        "Length":  3251,
+        "LastWriteTime":  "\/Date(1786914441251)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.nixpacks\\nixpkgs-bc8f8d1be58e8c8383e683a06e1e1e57893fff87.nix",
+        "Length":  752,
+        "LastWriteTime":  "\/Date(1786914441253)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.pytest_cache\\.gitignore",
+        "Length":  37,
+        "LastWriteTime":  "\/Date(1786836500850)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.pytest_cache\\CACHEDIR.TAG",
+        "Length":  191,
+        "LastWriteTime":  "\/Date(1786836500850)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.pytest_cache\\README.md",
+        "Length":  302,
+        "LastWriteTime":  "\/Date(1786836500848)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.pytest_cache\\v\\cache\\lastfailed",
+        "Length":  140,
+        "LastWriteTime":  "\/Date(1787353491309)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\.pytest_cache\\v\\cache\\nodeids",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1787572369959)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\adapters\\cli.py",
+        "Length":  616,
+        "LastWriteTime":  "\/Date(1785232511386)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\agents\\echo.py",
+        "Length":  160,
+        "LastWriteTime":  "\/Date(1785232511393)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\agents\\echo_agent.py",
+        "Length":  92,
+        "LastWriteTime":  "\/Date(1785232511394)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\agents\\system_guard.py",
+        "Length":  1762,
+        "LastWriteTime":  "\/Date(1787328277010)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\assets\\termux_logo.txt",
+        "Length":  415,
+        "LastWriteTime":  "\/Date(1786914441257)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\01_identity.txt",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786646361782)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\02_git_diff_stat.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1786646362073)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\02_git_history.txt",
+        "Length":  2304,
+        "LastWriteTime":  "\/Date(1786646362029)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\02_git_status.txt",
+        "Length":  314,
+        "LastWriteTime":  "\/Date(1786646361931)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\03_deployment.txt",
+        "Length":  1246,
+        "LastWriteTime":  "\/Date(1786646362364)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Length":  83020,
+        "LastWriteTime":  "\/Date(1786646362599)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\05_entrypoint_candidates.txt",
+        "Length":  3254,
+        "LastWriteTime":  "\/Date(1786646362918)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\06_loader_candidates.txt",
+        "Length":  4154,
+        "LastWriteTime":  "\/Date(1786646363163)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Length":  37040,
+        "LastWriteTime":  "\/Date(1786646363520)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\08_handlers.txt",
+        "Length":  17668,
+        "LastWriteTime":  "\/Date(1786646363778)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\09_tests.txt",
+        "Length":  16804,
+        "LastWriteTime":  "\/Date(1786646364084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\10_legacy_backup.txt",
+        "Length":  24456,
+        "LastWriteTime":  "\/Date(1786646364389)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\11_documents.txt",
+        "Length":  51076,
+        "LastWriteTime":  "\/Date(1786646364709)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\12_sha256.csv",
+        "Length":  115366,
+        "LastWriteTime":  "\/Date(1786646366399)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_Procfile.txt",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786646594924)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_railway.json.txt",
+        "Length":  319,
+        "LastWriteTime":  "\/Date(1786646594929)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_requirements.txt.txt",
+        "Length":  136,
+        "LastWriteTime":  "\/Date(1786646594936)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Length":  41514,
+        "LastWriteTime":  "\/Date(1786646594862)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_runtime.txt.txt",
+        "Length":  21,
+        "LastWriteTime":  "\/Date(1786646594945)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Length":  9931,
+        "LastWriteTime":  "\/Date(1786646595320)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Length":  773796,
+        "LastWriteTime":  "\/Date(1786646597268)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\04_loader_authority.txt",
+        "Length":  3401,
+        "LastWriteTime":  "\/Date(1786646597522)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Length":  34131,
+        "LastWriteTime":  "\/Date(1786646597864)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\06_core_runtime_references.txt",
+        "Length":  695,
+        "LastWriteTime":  "\/Date(1786646598192)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Length":  52893,
+        "LastWriteTime":  "\/Date(1786646598540)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\01_bot_gateway.txt",
+        "Length":  5898,
+        "LastWriteTime":  "\/Date(1786646497787)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Length":  4583,
+        "LastWriteTime":  "\/Date(1786646497904)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\03_core_runtime.txt",
+        "Length":  4702,
+        "LastWriteTime":  "\/Date(1786646498030)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_bootstrap_commands.txt",
+        "Length":  1184,
+        "LastWriteTime":  "\/Date(1786646498200)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\04_command_registry_loader.txt",
+        "Length":  478,
+        "LastWriteTime":  "\/Date(1786646498149)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\05_imports.txt",
+        "Length":  986,
+        "LastWriteTime":  "\/Date(1786646498348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Length":  5865,
+        "LastWriteTime":  "\/Date(1786646498470)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Length":  80017,
+        "LastWriteTime":  "\/Date(1786646498915)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Length":  30269,
+        "LastWriteTime":  "\/Date(1786646499359)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\branding\\favicon.svg",
+        "Length":  241,
+        "LastWriteTime":  "\/Date(1786460765901)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\branding\\slh-logo.svg",
+        "Length":  423,
+        "LastWriteTime":  "\/Date(1786460765818)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\branding\\SLH_LOGO.txt",
+        "Length":  510,
+        "LastWriteTime":  "\/Date(1786580182609)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\academy_manager.py",
+        "Length":  1353,
+        "LastWriteTime":  "\/Date(1786635098738)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\agent_factory.py",
+        "Length":  7563,
+        "LastWriteTime":  "\/Date(1785232511411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\agent_registry.py",
+        "Length":  4521,
+        "LastWriteTime":  "\/Date(1785232511411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\agent_registry.py.pre_state_store_20260726T193953Z",
+        "Length":  4506,
+        "LastWriteTime":  "\/Date(1786199131980)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\agent_state_store.py",
+        "Length":  9740,
+        "LastWriteTime":  "\/Date(1785232511412)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ai_guard.py",
+        "Length":  2339,
+        "LastWriteTime":  "\/Date(1785232511413)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_debug.py",
+        "Length":  774,
+        "LastWriteTime":  "\/Date(1786983351577)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_guard.py",
+        "Length":  622,
+        "LastWriteTime":  "\/Date(1785232511413)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py",
+        "Length":  6461,
+        "LastWriteTime":  "\/Date(1788006161890)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py.bak2",
+        "Length":  3748,
+        "LastWriteTime":  "\/Date(1786199131980)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py.before_greeting_fix_20260829_152053.py",
+        "Length":  6042,
+        "LastWriteTime":  "\/Date(1787925882623)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py.before_greeting_fix_20260829_152241.py",
+        "Length":  6042,
+        "LastWriteTime":  "\/Date(1788006161890)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py.before_guard_bool_20260824_134739.py",
+        "Length":  2622,
+        "LastWriteTime":  "\/Date(1787568291490)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ask_router.py.before_guard_semantics_20260824_134931.py",
+        "Length":  2777,
+        "LastWriteTime":  "\/Date(1787568459897)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\audit.py",
+        "Length":  2205,
+        "LastWriteTime":  "\/Date(1785232511415)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\authority.py",
+        "Length":  1350,
+        "LastWriteTime":  "\/Date(1787422050308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\binance_connector.py",
+        "Length":  1300,
+        "LastWriteTime":  "\/Date(1787665427140)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\bootstrap_commands.py",
+        "Length":  1103,
+        "LastWriteTime":  "\/Date(1785232511416)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\command_registry_loader.py",
+        "Length":  473,
+        "LastWriteTime":  "\/Date(1785232511416)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\command_router.py",
+        "Length":  518,
+        "LastWriteTime":  "\/Date(1785232511417)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\context_builder.py",
+        "Length":  1616,
+        "LastWriteTime":  "\/Date(1785232511418)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\control_center.py",
+        "Length":  1496,
+        "LastWriteTime":  "\/Date(1786446091436)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\control_center_api.py",
+        "Length":  254,
+        "LastWriteTime":  "\/Date(1786446091437)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\deposit_monitor.py",
+        "Length":  2615,
+        "LastWriteTime":  "\/Date(1787665427141)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\dispatcher.py",
+        "Length":  769,
+        "LastWriteTime":  "\/Date(1785232511418)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\economy_bridge.py",
+        "Length":  2149,
+        "LastWriteTime":  "\/Date(1787238552309)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\economy_bridge.py.pre_transaction_authority.bak",
+        "Length":  2142,
+        "LastWriteTime":  "\/Date(1786905855846)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\economy_service.py",
+        "Length":  21278,
+        "LastWriteTime":  "\/Date(1787937273742)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\economy_service.py.backup",
+        "Length":  20430,
+        "LastWriteTime":  "\/Date(1787328180357)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\economy_service.py.before_lifecycle_sync",
+        "Length":  20430,
+        "LastWriteTime":  "\/Date(1787328180357)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\esp_broadcast.py",
+        "Length":  1279,
+        "LastWriteTime":  "\/Date(1787745852722)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\esp_display.py",
+        "Length":  1202,
+        "LastWriteTime":  "\/Date(1787745852723)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\esp_license.py",
+        "Length":  3447,
+        "LastWriteTime":  "\/Date(1787745852725)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\event_bus.py",
+        "Length":  1249,
+        "LastWriteTime":  "\/Date(1787353028576)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\event_store.py",
+        "Length":  1687,
+        "LastWriteTime":  "\/Date(1785232511420)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\exec_policy.py",
+        "Length":  2999,
+        "LastWriteTime":  "\/Date(1787925882624)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\firewall.py",
+        "Length":  1606,
+        "LastWriteTime":  "\/Date(1786717805402)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\identity.py",
+        "Length":  247,
+        "LastWriteTime":  "\/Date(1785232511420)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\identity_resolver.py",
+        "Length":  671,
+        "LastWriteTime":  "\/Date(1786661427633)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\invite_gate.py",
+        "Length":  284,
+        "LastWriteTime":  "\/Date(1787531891004)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\kernel.py",
+        "Length":  1731,
+        "LastWriteTime":  "\/Date(1785232511421)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\keyboard_detector.py",
+        "Length":  1538,
+        "LastWriteTime":  "\/Date(1786661427634)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\lesson_engine.py",
+        "Length":  1927,
+        "LastWriteTime":  "\/Date(1785232511421)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\message_utils.py",
+        "Length":  203,
+        "LastWriteTime":  "\/Date(1786661427635)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\migration.py",
+        "Length":  1183,
+        "LastWriteTime":  "\/Date(1785232511422)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mission_lifecycle.py",
+        "Length":  46798,
+        "LastWriteTime":  "\/Date(1785232511423)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mission_lock.py",
+        "Length":  1908,
+        "LastWriteTime":  "\/Date(1786398262679)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mission_orchestrator.py",
+        "Length":  19332,
+        "LastWriteTime":  "\/Date(1785232511424)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mission_runtime_bridge.py",
+        "Length":  3274,
+        "LastWriteTime":  "\/Date(1787328267015)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mission_state.py",
+        "Length":  2057,
+        "LastWriteTime":  "\/Date(1785232511424)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\morning_brief.py",
+        "Length":  2792,
+        "LastWriteTime":  "\/Date(1787665427142)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\mqtt_device_listener.py",
+        "Length":  1151,
+        "LastWriteTime":  "\/Date(1787745852726)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\profile_manager.py",
+        "Length":  4518,
+        "LastWriteTime":  "\/Date(1787327922060)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\progress_tracker.py",
+        "Length":  2401,
+        "LastWriteTime":  "\/Date(1787522898724)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\project_graph.py",
+        "Length":  9444,
+        "LastWriteTime":  "\/Date(1785232511425)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\project_registry.py",
+        "Length":  6968,
+        "LastWriteTime":  "\/Date(1785232511426)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\reconciler.py",
+        "Length":  1207,
+        "LastWriteTime":  "\/Date(1787760867919)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\reward_engine.py",
+        "Length":  2257,
+        "LastWriteTime":  "\/Date(1787665427143)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\runtime.py",
+        "Length":  5094,
+        "LastWriteTime":  "\/Date(1786713382209)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\stake_position.py",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\stake_position.py.bak_20260829_142108",
+        "Length":  1716,
+        "LastWriteTime":  "\/Date(1787665427144)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\stake_position.py.bak_20260829_143509",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\stake_position.py.bak_20260829_143527",
+        "Length":  1622,
+        "LastWriteTime":  "\/Date(1788002469191)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\system_collector.py",
+        "Length":  2484,
+        "LastWriteTime":  "\/Date(1787334009655)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\system_collector.py.bak",
+        "Length":  1609,
+        "LastWriteTime":  "\/Date(1785798706994)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\system_state_gateway.py",
+        "Length":  6423,
+        "LastWriteTime":  "\/Date(1785232511428)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\telegram_router_bridge.py",
+        "Length":  778,
+        "LastWriteTime":  "\/Date(1785232511428)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\ton_lab.py",
+        "Length":  5278,
+        "LastWriteTime":  "\/Date(1787760867920)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\core\\virtual_esp.py",
+        "Length":  1179,
+        "LastWriteTime":  "\/Date(1787745852728)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\courses\\bitcoin_mastery\\lesson_proposals\\btc_security_409_identity_collision.json",
+        "Length":  732,
+        "LastWriteTime":  "\/Date(1785232511431)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\courses\\registry\\README.md",
+        "Length":  369,
+        "LastWriteTime":  "\/Date(1785232511432)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\AUDIT_LEDGER.md",
+        "Length":  4361,
+        "LastWriteTime":  "\/Date(1787422050311)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SELF_MODEL.md",
+        "Length":  651,
+        "LastWriteTime":  "\/Date(1785232511441)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_OPERATIONS_MANUAL.md",
+        "Length":  1199,
+        "LastWriteTime":  "\/Date(1785232511441)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_PRE_CONFLICT_CHECKPOINT.json",
+        "Length":  849,
+        "LastWriteTime":  "\/Date(1786278654061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_RAILWAY_INVENTORY.md",
+        "Length":  617,
+        "LastWriteTime":  "\/Date(1785232511442)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_RAILWAY_MAP.md",
+        "Length":  682,
+        "LastWriteTime":  "\/Date(1785232511442)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_RAILWAY_SNAPSHOT_20260708.md",
+        "Length":  766,
+        "LastWriteTime":  "\/Date(1785232511443)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_REMOTE_PROJECT_INVENTORY.json",
+        "Length":  11018,
+        "LastWriteTime":  "\/Date(1786278610321)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Length":  3924,
+        "LastWriteTime":  "\/Date(1786280022619)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md",
+        "Length":  1011,
+        "LastWriteTime":  "\/Date(1785232511443)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_SOURCE_OF_TRUTH.md",
+        "Length":  356,
+        "LastWriteTime":  "\/Date(1786110556975)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\architecture\\SLH_OS_RUNTIME_ARCHITECTURE.md",
+        "Length":  294,
+        "LastWriteTime":  "\/Date(1785232511444)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Length":  831,
+        "LastWriteTime":  "\/Date(1786309450058)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Length":  1312,
+        "LastWriteTime":  "\/Date(1786309919263)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\financial\\SLH_STAKING_MODEL.md",
+        "Length":  1087,
+        "LastWriteTime":  "\/Date(1786309829993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\journal\\20260711_branding_restore.md",
+        "Length":  563,
+        "LastWriteTime":  "\/Date(1785232511444)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\journal\\20260711_dashboard_v2_stable.md",
+        "Length":  917,
+        "LastWriteTime":  "\/Date(1785232511445)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\launch\\DOCUMENTATION_INDEX.md",
+        "Length":  1389,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\launch\\G2_EVIDENCE.json",
+        "Length":  889,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\launch\\SLH_BETA_READINESS.md",
+        "Length":  562,
+        "LastWriteTime":  "\/Date(1786309146731)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Length":  561,
+        "LastWriteTime":  "\/Date(1785232511446)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH\\SLH_TELEGRAM_TOKEN_OWNERSHIP_MAP.json",
+        "Length":  9952,
+        "LastWriteTime":  "\/Date(1786278858375)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Length":  1083,
+        "LastWriteTime":  "\/Date(1785232511447)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Length":  2305,
+        "LastWriteTime":  "\/Date(1785232511447)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\BROADCAST_READY_STATE_20260713.md",
+        "Length":  818,
+        "LastWriteTime":  "\/Date(1785232511448)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\current_incident.txt",
+        "Length":  505,
+        "LastWriteTime":  "\/Date(1785232511454)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\gateway_architecture_decision_20260713.md",
+        "Length":  1014,
+        "LastWriteTime":  "\/Date(1785232511454)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\slh_academy_microservices_course.md",
+        "Length":  914,
+        "LastWriteTime":  "\/Date(1785232511456)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\slh_gateway_evolution_phase1_20260713.md",
+        "Length":  1712,
+        "LastWriteTime":  "\/Date(1785232511457)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\SLH_LOAD_TEST_PROTOCOL.md",
+        "Length":  578,
+        "LastWriteTime":  "\/Date(1785232511448)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Length":  2356,
+        "LastWriteTime":  "\/Date(1785232511448)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\SLH_RUNTIME_WORK_PROTOCOL.md",
+        "Length":  1068,
+        "LastWriteTime":  "\/Date(1785232511449)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\SLH_STABLE_GATEWAY_MILESTONE_20260713.md",
+        "Length":  565,
+        "LastWriteTime":  "\/Date(1785232511449)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\telegram_polling_history.txt",
+        "Length":  653,
+        "LastWriteTime":  "\/Date(1785232511457)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_assets\\01_public_broadcast_message.md",
+        "Length":  901,
+        "LastWriteTime":  "\/Date(1785232511450)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_assets\\02_interested_developer_document.md",
+        "Length":  918,
+        "LastWriteTime":  "\/Date(1785232511451)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_assets\\03_candidate_application_form.md",
+        "Length":  619,
+        "LastWriteTime":  "\/Date(1785232511451)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_release\\01_SLH_PUBLIC_ANNOUNCEMENT.md",
+        "Length":  994,
+        "LastWriteTime":  "\/Date(1785232511452)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_release\\02_SLH_DEVELOPER_INVITATION.md",
+        "Length":  803,
+        "LastWriteTime":  "\/Date(1785232511453)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\broadcast_release\\03_SLH_PARTNER_ONE_PAGER.md",
+        "Length":  528,
+        "LastWriteTime":  "\/Date(1785232511453)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\incidents\\slh_409_diag_output.txt",
+        "Length":  7878,
+        "LastWriteTime":  "\/Date(1785232511455)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\docs\\system_memory\\incidents\\slh_409_full_diag.sh",
+        "Length":  2165,
+        "LastWriteTime":  "\/Date(1785232511456)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\academy_handler.py",
+        "Length":  2390,
+        "LastWriteTime":  "\/Date(1787522898724)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\academy_menu_handler.py",
+        "Length":  2499,
+        "LastWriteTime":  "\/Date(1786574421946)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\admin_extras.py",
+        "Length":  2952,
+        "LastWriteTime":  "\/Date(1787868122868)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\advanced_ask_handler.py",
+        "Length":  2135,
+        "LastWriteTime":  "\/Date(1787937861500)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\agents_handler.py",
+        "Length":  5273,
+        "LastWriteTime":  "\/Date(1786574421948)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ai_voting_handler.py",
+        "Length":  5164,
+        "LastWriteTime":  "\/Date(1786574421950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ai_voting_handler.py.backup_20260811_183953",
+        "Length":  3409,
+        "LastWriteTime":  "\/Date(1785701578225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\askdebug_handler.py",
+        "Length":  464,
+        "LastWriteTime":  "\/Date(1786574421952)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\audit_handler.py",
+        "Length":  2548,
+        "LastWriteTime":  "\/Date(1786574421954)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\audit_handler.py.bak",
+        "Length":  2462,
+        "LastWriteTime":  "\/Date(1785232511468)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\autoexec_handler.py",
+        "Length":  2537,
+        "LastWriteTime":  "\/Date(1786574421956)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\bot_identity_handler.py",
+        "Length":  1777,
+        "LastWriteTime":  "\/Date(1786574421970)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\brief_handler.py",
+        "Length":  823,
+        "LastWriteTime":  "\/Date(1787665427145)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\broadcast_handler.py",
+        "Length":  1124,
+        "LastWriteTime":  "\/Date(1787868122870)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\claim_handler.py",
+        "Length":  2459,
+        "LastWriteTime":  "\/Date(1787665427145)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\cleanup_handler.py",
+        "Length":  1850,
+        "LastWriteTime":  "\/Date(1786574421976)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\dashboard_handler.py",
+        "Length":  1635,
+        "LastWriteTime":  "\/Date(1786574421978)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\dashboard_handler.py.bak",
+        "Length":  1236,
+        "LastWriteTime":  "\/Date(1786101895163)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\deploy_handler.py",
+        "Length":  1183,
+        "LastWriteTime":  "\/Date(1787522898740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\deploy_handler.py.backup",
+        "Length":  1040,
+        "LastWriteTime":  "\/Date(1786358155861)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_bridge.py",
+        "Length":  600,
+        "LastWriteTime":  "\/Date(1786574421984)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_handler.py",
+        "Length":  4883,
+        "LastWriteTime":  "\/Date(1786574421986)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\dev_admin.py",
+        "Length":  3569,
+        "LastWriteTime":  "\/Date(1786622139272)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\dev_handler.py",
+        "Length":  770,
+        "LastWriteTime":  "\/Date(1786574421988)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\endday_handler.py",
+        "Length":  227,
+        "LastWriteTime":  "\/Date(1786574421988)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\esp_handler.py",
+        "Length":  9915,
+        "LastWriteTime":  "\/Date(1787925882625)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\esp_handler.py.backup",
+        "Length":  2010,
+        "LastWriteTime":  "\/Date(1786130869692)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\exec_handler.py",
+        "Length":  572,
+        "LastWriteTime":  "\/Date(1787868203668)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\exec_log_handler.py",
+        "Length":  854,
+        "LastWriteTime":  "\/Date(1787522898740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\exec_request_handler.py",
+        "Length":  5750,
+        "LastWriteTime":  "\/Date(1787745852730)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\e_handler.py",
+        "Length":  833,
+        "LastWriteTime":  "\/Date(1787760867921)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\fakepay_handler.py",
+        "Length":  771,
+        "LastWriteTime":  "\/Date(1787760867922)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\feedback_handler.py",
+        "Length":  916,
+        "LastWriteTime":  "\/Date(1786574421999)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\file_handler.py",
+        "Length":  1577,
+        "LastWriteTime":  "\/Date(1787422050313)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\firewall_handler.py",
+        "Length":  1844,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\gateway_handler.py",
+        "Length":  1241,
+        "LastWriteTime":  "\/Date(1786574422013)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\git_handler.py",
+        "Length":  6275,
+        "LastWriteTime":  "\/Date(1788003670386)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\git_handler.py.bak_20260829_143509",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\git_handler.py.bak_20260829_143527",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\git_handler.py.bak_20260829_143754",
+        "Length":  6236,
+        "LastWriteTime":  "\/Date(1787745852731)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py",
+        "Length":  10232,
+        "LastWriteTime":  "\/Date(1786638166148)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\health_monitor_handler.py",
+        "Length":  867,
+        "LastWriteTime":  "\/Date(1787522898740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\help_handler.py",
+        "Length":  1483,
+        "LastWriteTime":  "\/Date(1786577918094)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\join_handler.py",
+        "Length":  2942,
+        "LastWriteTime":  "\/Date(1787531891006)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\join_handler.py.backup_rbac_fix",
+        "Length":  2940,
+        "LastWriteTime":  "\/Date(1786627933421)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\join_handler.py.bak",
+        "Length":  2054,
+        "LastWriteTime":  "\/Date(1786631058860)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\journal_handler.py",
+        "Length":  1403,
+        "LastWriteTime":  "\/Date(1786574422025)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\kb_handler.py",
+        "Length":  706,
+        "LastWriteTime":  "\/Date(1786574422026)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\leaderboard_handler.py",
+        "Length":  716,
+        "LastWriteTime":  "\/Date(1786574422028)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\lesson_handler.py",
+        "Length":  2564,
+        "LastWriteTime":  "\/Date(1786574422030)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py",
+        "Length":  3166,
+        "LastWriteTime":  "\/Date(1788013722907)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup",
+        "Length":  4149,
+        "LastWriteTime":  "\/Date(1786305156244)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup2",
+        "Length":  4149,
+        "LastWriteTime":  "\/Date(1786305156244)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup_20260813_021507",
+        "Length":  7099,
+        "LastWriteTime":  "\/Date(1786574428323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup_20260813_021603",
+        "Length":  7099,
+        "LastWriteTime":  "\/Date(1786574428323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup_20260813_022653",
+        "Length":  7129,
+        "LastWriteTime":  "\/Date(1786576746365)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.backup_20260822",
+        "Length":  11786,
+        "LastWriteTime":  "\/Date(1787323657620)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.bak",
+        "Length":  12072,
+        "LastWriteTime":  "\/Date(1787148648081)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.bak_20260829_143509",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.bak_20260829_143527",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.bak_20260829_143754",
+        "Length":  13008,
+        "LastWriteTime":  "\/Date(1787938935705)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\llm_handler.py.before_encoding_fix_20260829_172842.bak",
+        "Length":  13009,
+        "LastWriteTime":  "\/Date(1788003475361)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\loader.py",
+        "Length":  6412,
+        "LastWriteTime":  "\/Date(1787938597590)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\loader.py.pre_signature_fix",
+        "Length":  913,
+        "LastWriteTime":  "\/Date(1786199131993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\logo_handler.py",
+        "Length":  260,
+        "LastWriteTime":  "\/Date(1786574422038)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\map_handler.py",
+        "Length":  434,
+        "LastWriteTime":  "\/Date(1786574422040)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\market_handler.py",
+        "Length":  2857,
+        "LastWriteTime":  "\/Date(1787238552316)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\market_handler.py.bak",
+        "Length":  850,
+        "LastWriteTime":  "\/Date(1786527526035)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\me_handler.py",
+        "Length":  1681,
+        "LastWriteTime":  "\/Date(1787868122874)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\mission_handler.py",
+        "Length":  6871,
+        "LastWriteTime":  "\/Date(1786713382211)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\monitor_handler.py",
+        "Length":  3035,
+        "LastWriteTime":  "\/Date(1786574422052)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\morning_handler.py",
+        "Length":  468,
+        "LastWriteTime":  "\/Date(1786574422054)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\natural_chat.py",
+        "Length":  1293,
+        "LastWriteTime":  "\/Date(1788012842080)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\natural_chat.py.before_ask_unification_20260829_171359.bak",
+        "Length":  1212,
+        "LastWriteTime":  "\/Date(1787938935720)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\onboarding_v2.py",
+        "Length":  10402,
+        "LastWriteTime":  "\/Date(1787868122876)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\onboarding_v2.py.bak",
+        "Length":  10289,
+        "LastWriteTime":  "\/Date(1786639849383)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\os_handler.py",
+        "Length":  1611,
+        "LastWriteTime":  "\/Date(1786574422058)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ownership_transfer_handler.py",
+        "Length":  2374,
+        "LastWriteTime":  "\/Date(1786574422060)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\payment_handler.py",
+        "Length":  8393,
+        "LastWriteTime":  "\/Date(1787937273709)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\progress_handler.py",
+        "Length":  1813,
+        "LastWriteTime":  "\/Date(1787422050315)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\reconcile_handler.py",
+        "Length":  180,
+        "LastWriteTime":  "\/Date(1787745852733)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\recovery_handler.py",
+        "Length":  1636,
+        "LastWriteTime":  "\/Date(1786574422079)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\recovery_verify_handler.py",
+        "Length":  2621,
+        "LastWriteTime":  "\/Date(1786574422081)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\repeat_handler.py",
+        "Length":  1254,
+        "LastWriteTime":  "\/Date(1786574422082)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\revenue_handler.py",
+        "Length":  1007,
+        "LastWriteTime":  "\/Date(1787760867927)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\services_handler.py",
+        "Length":  823,
+        "LastWriteTime":  "\/Date(1787522898740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\staking_handler.py",
+        "Length":  6898,
+        "LastWriteTime":  "\/Date(1787925882625)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\store_handler.py",
+        "Length":  982,
+        "LastWriteTime":  "\/Date(1786629675001)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\system_handler.py",
+        "Length":  452,
+        "LastWriteTime":  "\/Date(1786574422085)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\task_handler.py",
+        "Length":  3949,
+        "LastWriteTime":  "\/Date(1787665427149)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\task_handler.py.bak",
+        "Length":  1518,
+        "LastWriteTime":  "\/Date(1785232511479)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\terms_handler.py",
+        "Length":  770,
+        "LastWriteTime":  "\/Date(1787868122877)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\termux_handler.py",
+        "Length":  443,
+        "LastWriteTime":  "\/Date(1786574422087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ton_address_handler.py",
+        "Length":  446,
+        "LastWriteTime":  "\/Date(1787760867929)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ton_balance_handler.py",
+        "Length":  543,
+        "LastWriteTime":  "\/Date(1787760867929)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ton_claim_handler.py",
+        "Length":  2274,
+        "LastWriteTime":  "\/Date(1787868122878)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ton_wallet.py",
+        "Length":  1315,
+        "LastWriteTime":  "\/Date(1786574422089)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\user_handler.py",
+        "Length":  1385,
+        "LastWriteTime":  "\/Date(1786574422091)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\ux_handler.py",
+        "Length":  1190,
+        "LastWriteTime":  "\/Date(1786574422093)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\voting_handler.py",
+        "Length":  157,
+        "LastWriteTime":  "\/Date(1786574422093)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\wallet_handler.py",
+        "Length":  985,
+        "LastWriteTime":  "\/Date(1787868122878)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\withdraw_request_handler.py",
+        "Length":  2458,
+        "LastWriteTime":  "\/Date(1787760867932)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\1.txt",
+        "Length":  152,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\10.txt",
+        "Length":  198,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\11.txt",
+        "Length":  206,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\12.txt",
+        "Length":  190,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\2.txt",
+        "Length":  155,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\3.txt",
+        "Length":  148,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\4.txt",
+        "Length":  178,
+        "LastWriteTime":  "\/Date(1786235666008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\5.txt",
+        "Length":  174,
+        "LastWriteTime":  "\/Date(1786235666016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\6.txt",
+        "Length":  182,
+        "LastWriteTime":  "\/Date(1786235666016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\7.txt",
+        "Length":  166,
+        "LastWriteTime":  "\/Date(1786235666016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\8.txt",
+        "Length":  162,
+        "LastWriteTime":  "\/Date(1786235666016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\lessons\\bitcoin_mastery\\9.txt",
+        "Length":  170,
+        "LastWriteTime":  "\/Date(1786235666016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\logs\\bot_startup.log",
+        "Length":  13409,
+        "LastWriteTime":  "\/Date(1787576640189)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\logs\\SLH_NIGHTLY_20260707.md",
+        "Length":  693,
+        "LastWriteTime":  "\/Date(1785232511493)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\branches.txt",
+        "Length":  350,
+        "LastWriteTime":  "\/Date(1785695408583)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\filesystem_map.txt",
+        "Length":  409236,
+        "LastWriteTime":  "\/Date(1785695417463)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\git_history.txt",
+        "Length":  2108,
+        "LastWriteTime":  "\/Date(1785695407919)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\git_status.txt",
+        "Length":  10914,
+        "LastWriteTime":  "\/Date(1785695407807)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\handlers_list.txt",
+        "Length":  2742,
+        "LastWriteTime":  "\/Date(1785695424579)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\merge_conflicts.txt",
+        "Length":  120,
+        "LastWriteTime":  "\/Date(1785695413601)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\python_files_count.txt",
+        "Length":  184,
+        "LastWriteTime":  "\/Date(1785695420900)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\railway_variables.txt",
+        "Length":  20124,
+        "LastWriteTime":  "\/Date(1785695450624)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\runtime_files.txt",
+        "Length":  193054,
+        "LastWriteTime":  "\/Date(1785695434153)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\security_files_scan.txt",
+        "Length":  5726,
+        "LastWriteTime":  "\/Date(1785695441150)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\mission_control\\state_map.txt",
+        "Length":  28328,
+        "LastWriteTime":  "\/Date(1785695437739)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\admin.py",
+        "Length":  186,
+        "LastWriteTime":  "\/Date(1785232511509)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\education.py",
+        "Length":  326,
+        "LastWriteTime":  "\/Date(1785352366657)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\leaderboard.py",
+        "Length":  633,
+        "LastWriteTime":  "\/Date(1787578493031)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\shop.py",
+        "Length":  313,
+        "LastWriteTime":  "\/Date(1785352366658)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\system.py",
+        "Length":  184,
+        "LastWriteTime":  "\/Date(1785232511511)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\task.py",
+        "Length":  929,
+        "LastWriteTime":  "\/Date(1785232511511)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\voting.py",
+        "Length":  692,
+        "LastWriteTime":  "\/Date(1785352366658)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\__init__.py",
+        "Length":  504,
+        "LastWriteTime":  "\/Date(1785352366653)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\plugins\\core\\echo.py",
+        "Length":  85,
+        "LastWriteTime":  "\/Date(1785232511510)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\recovery\\README.txt",
+        "Length":  149,
+        "LastWriteTime":  "\/Date(1785694880737)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\REPORT_20260723_225642\\critical_findings.md",
+        "Length":  471,
+        "LastWriteTime":  "\/Date(1785232511373)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\REPORT_20260723_225642\\devices.json",
+        "Length":  486,
+        "LastWriteTime":  "\/Date(1785232511373)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\REPORT_20260723_225642\\SUMMARY.md",
+        "Length":  1047,
+        "LastWriteTime":  "\/Date(1785232511372)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\REPORT_20260723_225642\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511374)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\scripts\\slh_integrity_check.py",
+        "Length":  479,
+        "LastWriteTime":  "\/Date(1785232511523)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\security\\permissions.py",
+        "Length":  2236,
+        "LastWriteTime":  "\/Date(1786627456673)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\security\\policies.json",
+        "Length":  594,
+        "LastWriteTime":  "\/Date(1786622139281)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\security\\roles.json",
+        "Length":  321,
+        "LastWriteTime":  "\/Date(1786622139284)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\services\\task_service.py",
+        "Length":  3880,
+        "LastWriteTime":  "\/Date(1785232511527)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\slh-workflow\\.ps1",
+        "Length":  3618,
+        "LastWriteTime":  "\/Date(1786273037621)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Length":  4856,
+        "LastWriteTime":  "\/Date(1786459347943)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\dashboard.html",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1786268197411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\webapp.py",
+        "Length":  2246,
+        "LastWriteTime":  "\/Date(1786647400968)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\branding\\favicon.svg",
+        "Length":  238,
+        "LastWriteTime":  "\/Date(1785232511403)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\branding\\slh-logo.svg",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1785232511403)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_STATE_BACKUP_20260812_201902\\agents.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786553431199)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_STATE_BACKUP_20260812_201902\\ai_health.json",
+        "Length":  66,
+        "LastWriteTime":  "\/Date(1786305156247)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Length":  7334,
+        "LastWriteTime":  "\/Date(1786553513245)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\agents.json",
+        "Length":  984,
+        "LastWriteTime":  "\/Date(1786908480228)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\agents.json.before_gateway_fix",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786104885822)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\agents.json.snapshot_1786631973",
+        "Length":  1355,
+        "LastWriteTime":  "\/Date(1786914441263)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\ai_health.json",
+        "Length":  62,
+        "LastWriteTime":  "\/Date(1786914441264)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\audit.jsonl",
+        "Length":  1668,
+        "LastWriteTime":  "\/Date(1786914441265)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\daily_plan.json",
+        "Length":  237,
+        "LastWriteTime":  "\/Date(1787665427150)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json",
+        "Length":  60664,
+        "LastWriteTime":  "\/Date(1787868122881)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.backup_token_import_20260806_123319",
+        "Length":  1429,
+        "LastWriteTime":  "\/Date(1786008549690)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.before_gateway_fix",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.lock",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1787573178947)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786660597",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441267)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786661017",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441269)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786661117",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441270)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786661599",
+        "Length":  9642,
+        "LastWriteTime":  "\/Date(1786914441271)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786703705",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441272)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786704286",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441273)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786704756",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441274)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_alpha_1786843704",
+        "Length":  28808,
+        "LastWriteTime":  "\/Date(1786914441276)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786703746",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441276)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786704036",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441277)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786704100",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441278)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786704435",
+        "Length":  14898,
+        "LastWriteTime":  "\/Date(1786914441278)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786708033",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441279)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_delta_1786708688",
+        "Length":  14922,
+        "LastWriteTime":  "\/Date(1786914441281)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.pre_onboarding_1786714715",
+        "Length":  14968,
+        "LastWriteTime":  "\/Date(1786914441282)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db.json.snapshot_1786631972",
+        "Length":  8866,
+        "LastWriteTime":  "\/Date(1786914441283)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db_alpha_reset_backup_20260824_151401.json",
+        "Length":  31209,
+        "LastWriteTime":  "\/Date(1787573641607)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db_BEFORE_AUDIT_1786472955.json",
+        "Length":  8310,
+        "LastWriteTime":  "\/Date(1786914441286)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db_local_backup_before_sync.json",
+        "Length":  1525,
+        "LastWriteTime":  "\/Date(1786404223211)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db_pre_bot_control_20260824_121146.json",
+        "Length":  31209,
+        "LastWriteTime":  "\/Date(1787573506560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\db_PROD_BEFORE_SYNC_1786444044.json",
+        "Length":  3500,
+        "LastWriteTime":  "\/Date(1786914441287)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\desired_state.json",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1787760977819)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\devices.json",
+        "Length":  2744,
+        "LastWriteTime":  "\/Date(1787761024074)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441289)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json.pre_alpha_1786703707",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441290)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json.pre_delta_1786703747",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441290)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json.pre_delta_1786704038",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441291)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json.pre_delta_1786704440",
+        "Length":  3326,
+        "LastWriteTime":  "\/Date(1786914441292)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\marketplace.json",
+        "Length":  944,
+        "LastWriteTime":  "\/Date(1786914441295)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\money_authority_audit_pre_token.txt",
+        "Length":  6918,
+        "LastWriteTime":  "\/Date(1787238552324)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\rewards_ledger.json",
+        "Length":  307,
+        "LastWriteTime":  "\/Date(1786914441320)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\system_memory.json",
+        "Length":  120,
+        "LastWriteTime":  "\/Date(1786914441320)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\system_services.json",
+        "Length":  551,
+        "LastWriteTime":  "\/Date(1787522898751)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_161132.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786108288762)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_161201.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786108317844)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_162640.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109198480)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_163053.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109308603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_163623.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786109702084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_163927.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109783446)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_163959.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109967500)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\backups\\agents_mirror_20260807_165130.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786109999575)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\control\\sync_state.json",
+        "Length":  363,
+        "LastWriteTime":  "\/Date(1787579960924)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\control\\system_map.json",
+        "Length":  274,
+        "LastWriteTime":  "\/Date(1787579964109)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\custom_handlers\\ai_voting_handler.py.backup",
+        "Length":  3409,
+        "LastWriteTime":  "\/Date(1785701578225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\custom_handlers_disabled\\staking_basic.py",
+        "Length":  2524,
+        "LastWriteTime":  "\/Date(1785232511568)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\custom_handlers_disabled\\token_handler.py",
+        "Length":  1844,
+        "LastWriteTime":  "\/Date(1786009206942)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\custom_handlers_disabled\\token_wizard.py",
+        "Length":  1728,
+        "LastWriteTime":  "\/Date(1785232511571)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\device_audit_20260820_154149\\devices.txt",
+        "Length":  218,
+        "LastWriteTime":  "\/Date(1787238552320)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\device_audit_20260820_154149\\git_status.txt",
+        "Length":  384,
+        "LastWriteTime":  "\/Date(1787238552321)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\device_audit_20260820_154149\\location.txt",
+        "Length":  188,
+        "LastWriteTime":  "\/Date(1787238552321)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\device_audit_20260820_154149\\pio_version.txt",
+        "Length":  68,
+        "LastWriteTime":  "\/Date(1787238552323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance\\genesis_registry.json",
+        "Length":  1679,
+        "LastWriteTime":  "\/Date(1787336024059)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance\\user_classes.json",
+        "Length":  359,
+        "LastWriteTime":  "\/Date(1787335456432)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\journals\\8789977826.jsonl",
+        "Length":  3385,
+        "LastWriteTime":  "\/Date(1786914441293)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\journals\\8791275334.jsonl",
+        "Length":  125,
+        "LastWriteTime":  "\/Date(1786914441294)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\missions\\.mission_lifecycle.lock",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1786980074009)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\missions\\1.json",
+        "Length":  161,
+        "LastWriteTime":  "\/Date(1786914441296)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\missions\\board.json",
+        "Length":  7449,
+        "LastWriteTime":  "\/Date(1786983397400)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\missions\\results\\mission-2-20260814T132236Z.json",
+        "Length":  475,
+        "LastWriteTime":  "\/Date(1786914441299)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\missions\\results\\mission-3-20260814T132912Z.json",
+        "Length":  475,
+        "LastWriteTime":  "\/Date(1786914441302)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_171952\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_171952\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_171952\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_171952\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_171952\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172422\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172422\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172422\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172422\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172422\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172507\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172507\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172507\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172507\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_172507\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_173832\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_173832\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_173832\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_173832\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_173832\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_174602\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786110690075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_174602\\ai_health.json",
+        "Length":  83,
+        "LastWriteTime":  "\/Date(1785232511560)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_174602\\chats.json",
+        "Length":  11871,
+        "LastWriteTime":  "\/Date(1785232511561)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_174602\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786109308604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\20260807_174602\\tasks.json",
+        "Length":  2,
+        "LastWriteTime":  "\/Date(1785232511627)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\agents.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786015632701)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\agents.json",
+        "Length":  586,
+        "LastWriteTime":  "\/Date(1786104885822)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\agents.json",
+        "Length":  602,
+        "LastWriteTime":  "\/Date(1786108292303)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\db.json",
+        "Length":  1468,
+        "LastWriteTime":  "\/Date(1786008845684)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\agents.json",
+        "Length":  420,
+        "LastWriteTime":  "\/Date(1786108428421)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\db.json",
+        "Length":  1470,
+        "LastWriteTime":  "\/Date(1786108428416)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Length":  4555,
+        "LastWriteTime":  "\/Date(1785232511603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\agents.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786553431199)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Length":  26359,
+        "LastWriteTime":  "\/Date(1786907408207)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Length":  4636,
+        "LastWriteTime":  "\/Date(1786901735245)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\loader_registration_audit.json",
+        "Length":  1669,
+        "LastWriteTime":  "\/Date(1787573938922)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\manifest.json",
+        "Length":  4636,
+        "LastWriteTime":  "\/Date(1786914441330)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\pre_alpha_users_backup.json",
+        "Length":  26405,
+        "LastWriteTime":  "\/Date(1787160639670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\runtime_command_registration_audit.json",
+        "Length":  13975,
+        "LastWriteTime":  "\/Date(1786914441330)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\runtime_loading_path_audit.json",
+        "Length":  78252,
+        "LastWriteTime":  "\/Date(1787573938818)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\runtime_state_access_classification.json",
+        "Length":  8227,
+        "LastWriteTime":  "\/Date(1787573926110)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\runtime_state_dependency_map.json",
+        "Length":  23206,
+        "LastWriteTime":  "\/Date(1787573925975)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\user_acceptance_audit.json",
+        "Length":  1909,
+        "LastWriteTime":  "\/Date(1787335203508)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\user_command_wiring_audit.json",
+        "Length":  25996,
+        "LastWriteTime":  "\/Date(1787573938380)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\backups\\board_before_api_assignment_20260817T152114Z.json",
+        "Length":  7449,
+        "LastWriteTime":  "\/Date(1786914441298)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\backups\\board_before_api_creation_20260811T140726Z.json",
+        "Length":  2864,
+        "LastWriteTime":  "\/Date(1785232511580)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\state\\takeover\\backups\\board_before_api_execution_20260817T152114Z.json",
+        "Length":  7510,
+        "LastWriteTime":  "\/Date(1786980074020)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\engine.py",
+        "Length":  1871,
+        "LastWriteTime":  "\/Date(1787745852738)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\grant_engine.py",
+        "Length":  2936,
+        "LastWriteTime":  "\/Date(1787745852740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\handler.py",
+        "Length":  619,
+        "LastWriteTime":  "\/Date(1786626671993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\items.json",
+        "Length":  810,
+        "LastWriteTime":  "\/Date(1787745852741)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\items.json.backup_marketplace_v1",
+        "Length":  252,
+        "LastWriteTime":  "\/Date(1785352366683)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\store\\purchase_service.py",
+        "Length":  1382,
+        "LastWriteTime":  "\/Date(1786661427642)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\system_check.py",
+        "Length":  1315,
+        "LastWriteTime":  "\/Date(1785232511651)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\test_agent.py",
+        "Length":  1954,
+        "LastWriteTime":  "\/Date(1787337009086)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\test_agent.py.bak",
+        "Length":  1633,
+        "LastWriteTime":  "\/Date(1785232511652)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\test_agent.py.bak_before_refactor",
+        "Length":  1686,
+        "LastWriteTime":  "\/Date(1787330682972)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\test_task_and_audit.py",
+        "Length":  2356,
+        "LastWriteTime":  "\/Date(1787353533325)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tests\\test_task_and_audit.py.bak",
+        "Length":  2795,
+        "LastWriteTime":  "\/Date(1785232511652)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\active_loader_audit.py",
+        "Length":  4910,
+        "LastWriteTime":  "\/Date(1785232511655)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\admin_authority_audit.py",
+        "Length":  1086,
+        "LastWriteTime":  "\/Date(1787238552358)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\agent_state_autopilot.py",
+        "Length":  8024,
+        "LastWriteTime":  "\/Date(1785232511656)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\agent_sync_guard.py",
+        "Length":  813,
+        "LastWriteTime":  "\/Date(1786015729055)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\audit_state_access.py",
+        "Length":  8649,
+        "LastWriteTime":  "\/Date(1785232511657)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\build_state_migration_queue.py",
+        "Length":  6061,
+        "LastWriteTime":  "\/Date(1785232511657)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\connect_ask_guard.py",
+        "Length":  977,
+        "LastWriteTime":  "\/Date(1786015729059)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\connect_llm_circuit.py",
+        "Length":  2004,
+        "LastWriteTime":  "\/Date(1786015729062)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\create_ai_guard.py",
+        "Length":  975,
+        "LastWriteTime":  "\/Date(1786015729065)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\create_ai_health_state.py",
+        "Length":  393,
+        "LastWriteTime":  "\/Date(1786015729067)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\create_ask_guard.py",
+        "Length":  721,
+        "LastWriteTime":  "\/Date(1786015729076)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\disable_botstable_ask.py",
+        "Length":  977,
+        "LastWriteTime":  "\/Date(1786015729079)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\discover_projects.py",
+        "Length":  3886,
+        "LastWriteTime":  "\/Date(1785232511661)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\discover_termux_projects.py",
+        "Length":  4814,
+        "LastWriteTime":  "\/Date(1785232511662)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\fix_ask_guard_api.py",
+        "Length":  321,
+        "LastWriteTime":  "\/Date(1786015729082)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\full_static_handler_audit.py",
+        "Length":  16746,
+        "LastWriteTime":  "\/Date(1785232511663)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\full_system_audit.py",
+        "Length":  2821,
+        "LastWriteTime":  "\/Date(1786109061687)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\live_vs_dead_audit.py",
+        "Length":  2091,
+        "LastWriteTime":  "\/Date(1786914441334)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\loader_registration_audit.py",
+        "Length":  6395,
+        "LastWriteTime":  "\/Date(1785232511665)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\money_authority_audit.py",
+        "Length":  1830,
+        "LastWriteTime":  "\/Date(1787238552358)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\project_audit.py",
+        "Length":  3681,
+        "LastWriteTime":  "\/Date(1786914441336)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\rbac_audit.py",
+        "Length":  998,
+        "LastWriteTime":  "\/Date(1786628484283)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\real_audit.py",
+        "Length":  3026,
+        "LastWriteTime":  "\/Date(1785232511665)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_command_registration_audit.py",
+        "Length":  11939,
+        "LastWriteTime":  "\/Date(1785232511666)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_loading_path_audit.py",
+        "Length":  19224,
+        "LastWriteTime":  "\/Date(1785232511667)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_state_access_classification.py",
+        "Length":  10306,
+        "LastWriteTime":  "\/Date(1785232511667)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\runtime_state_dependency_map.py",
+        "Length":  8278,
+        "LastWriteTime":  "\/Date(1785232511668)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\session_closure_audit.py",
+        "Length":  8519,
+        "LastWriteTime":  "\/Date(1785232511668)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\SLH-Control.ps1",
+        "Length":  1604,
+        "LastWriteTime":  "\/Date(1785232511654)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\slh_doctor.py",
+        "Length":  1168,
+        "LastWriteTime":  "\/Date(1786015729088)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\slh_launch_check.py",
+        "Length":  1528,
+        "LastWriteTime":  "\/Date(1786661427643)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\slh_launch_control.py",
+        "Length":  5150,
+        "LastWriteTime":  "\/Date(1787323657636)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\slh_migrate.py",
+        "Length":  37804,
+        "LastWriteTime":  "\/Date(1785232511669)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_agent_state_full.py",
+        "Length":  6808,
+        "LastWriteTime":  "\/Date(1785232511670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_learning_path_full_loader.py",
+        "Length":  2713,
+        "LastWriteTime":  "\/Date(1786446091459)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_learning_path_loader_execution.py",
+        "Length":  1788,
+        "LastWriteTime":  "\/Date(1786446091461)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_learning_path_runtime.py",
+        "Length":  2404,
+        "LastWriteTime":  "\/Date(1786446091462)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_project_graph_contract.py",
+        "Length":  3362,
+        "LastWriteTime":  "\/Date(1785232511670)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_project_registry_contract.py",
+        "Length":  2111,
+        "LastWriteTime":  "\/Date(1785232511671)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\test_system_snapshot_contract.py",
+        "Length":  2392,
+        "LastWriteTime":  "\/Date(1785232511671)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\upgrade_ai_guard_persistent.py",
+        "Length":  1966,
+        "LastWriteTime":  "\/Date(1786015729093)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\user_acceptance_audit.py",
+        "Length":  7617,
+        "LastWriteTime":  "\/Date(1785232511672)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\user_command_audit.py",
+        "Length":  4273,
+        "LastWriteTime":  "\/Date(1785232511673)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\tools\\user_command_wiring_audit.py",
+        "Length":  5717,
+        "LastWriteTime":  "\/Date(1785232511673)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\web\\dashboard_v2\\app.js",
+        "Length":  976,
+        "LastWriteTime":  "\/Date(1786460765549)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\web\\dashboard_v2\\index.html",
+        "Length":  1425,
+        "LastWriteTime":  "\/Date(1786460765457)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\web\\dashboard_v2\\style.css",
+        "Length":  682,
+        "LastWriteTime":  "\/Date(1786460765635)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786648012308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\system_map.json",
+        "Length":  515282,
+        "LastWriteTime":  "\/Date(1786648012308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Length":  4263,
+        "LastWriteTime":  "\/Date(1786648802438)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\COMMANDS.json",
+        "Length":  2009,
+        "LastWriteTime":  "\/Date(1786648441770)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\CONTROL_STATE.json",
+        "Length":  1596,
+        "LastWriteTime":  "\/Date(1786648447720)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\ENTRYPOINTS.json",
+        "Length":  2975,
+        "LastWriteTime":  "\/Date(1786648445820)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\EVIDENCE_GATE.json",
+        "Length":  1021,
+        "LastWriteTime":  "\/Date(1786648554979)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\GIT_CHANGES.json",
+        "Length":  1530,
+        "LastWriteTime":  "\/Date(1786648441384)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\HEALTH.json",
+        "Length":  1115,
+        "LastWriteTime":  "\/Date(1786648349693)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\INVESTOR.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348218)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\JOURNAL.jsonl",
+        "Length":  518,
+        "LastWriteTime":  "\/Date(1786648448976)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\LAUNCH.json",
+        "Length":  886,
+        "LastWriteTime":  "\/Date(1786648350059)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\LAUNCH_EVIDENCE.json",
+        "Length":  1518,
+        "LastWriteTime":  "\/Date(1786648398015)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\MASTER_DIAGNOSTIC.json",
+        "Length":  12515,
+        "LastWriteTime":  "\/Date(1786648398256)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Length":  43854,
+        "LastWriteTime":  "\/Date(1786648550079)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\PYTHON_SYNTAX.json",
+        "Length":  1105,
+        "LastWriteTime":  "\/Date(1786648554465)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\RAILWAY.json",
+        "Length":  1815,
+        "LastWriteTime":  "\/Date(1786648445317)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\RAILWAY_STATUS.txt",
+        "Length":  862,
+        "LastWriteTime":  "\/Date(1786648552655)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\RUNTIME.json",
+        "Length":  1343,
+        "LastWriteTime":  "\/Date(1786648442141)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\SCAN_POLICY.json",
+        "Length":  622,
+        "LastWriteTime":  "\/Date(1786648348963)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\slh-control.ps1",
+        "Length":  2941,
+        "LastWriteTime":  "\/Date(1786648448162)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\STATUS.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348209)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\TASKS.json",
+        "Length":  7,
+        "LastWriteTime":  "\/Date(1786648348215)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\TRACKED_CHANGES.diff",
+        "Length":  9435,
+        "LastWriteTime":  "\/Date(1786648801685)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\UNTRACKED_CLASSIFICATION.json",
+        "Length":  1892,
+        "LastWriteTime":  "\/Date(1786648802091)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\control\\WORKTREE_EVIDENCE_V2.json",
+        "Length":  5518,
+        "LastWriteTime":  "\/Date(1786648766186)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\AUTHORITY.json",
+        "Length":  156,
+        "LastWriteTime":  "\/Date(1786647284599)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Length":  10329,
+        "LastWriteTime":  "\/Date(1786728407910)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\CURRENT.json",
+        "Length":  7226,
+        "LastWriteTime":  "\/Date(1786648012363)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\DECISIONS.json",
+        "Length":  60,
+        "LastWriteTime":  "\/Date(1786647284601)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\DNA.json",
+        "Length":  768,
+        "LastWriteTime":  "\/Date(1786648012364)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\FINDINGS.json",
+        "Length":  58,
+        "LastWriteTime":  "\/Date(1786647284602)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\HISTORY.jsonl",
+        "Length":  6083,
+        "LastWriteTime":  "\/Date(1786648017521)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Length":  9250,
+        "LastWriteTime":  "\/Date(1786647782229)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\RISKS.json",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1786647284603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\dna\\TODO.json",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786647284604)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T185445_579625Z00\\summary.json",
+        "Length":  240,
+        "LastWriteTime":  "\/Date(1786647285586)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Length":  497047,
+        "LastWriteTime":  "\/Date(1786647285586)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T185827_160181Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647507166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Length":  528153,
+        "LastWriteTime":  "\/Date(1786647507165)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190214_435023Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647734445)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647734444)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190226_486126Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647746493)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647746492)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190341_924476Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647821933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Length":  530391,
+        "LastWriteTime":  "\/Date(1786647821932)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190652_301937Z00\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786648012308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Length":  515282,
+        "LastWriteTime":  "\/Date(1786648012308)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\AUTHORITY.json",
+        "Length":  156,
+        "LastWriteTime":  "\/Date(1786647284599)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Length":  7219,
+        "LastWriteTime":  "\/Date(1786647597609)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\DECISIONS.json",
+        "Length":  60,
+        "LastWriteTime":  "\/Date(1786647284601)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\DNA.json",
+        "Length":  768,
+        "LastWriteTime":  "\/Date(1786647597610)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\FINDINGS.json",
+        "Length":  58,
+        "LastWriteTime":  "\/Date(1786647284602)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\HISTORY.jsonl",
+        "Length":  2730,
+        "LastWriteTime":  "\/Date(1786647597649)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\RISKS.json",
+        "Length":  52,
+        "LastWriteTime":  "\/Date(1786647284603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\summary.json",
+        "Length":  281,
+        "LastWriteTime":  "\/Date(1786647507166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Length":  528153,
+        "LastWriteTime":  "\/Date(1786647507165)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\USER\\slh-bot-clean\\_slh_map\\scans\\DNA_EXPORT_20260813_215957\\TODO.json",
+        "Length":  51,
+        "LastWriteTime":  "\/Date(1786647284604)\/"
+    }
+]

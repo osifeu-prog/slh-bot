@@ -1,5 +1,5 @@
 from core import profile_manager
-from security.permissions import get_role, get_permissions, has_permission
+from security.permissions import get_role, get_permissions, has_permission\nfrom core.authority import is_owner\nfrom core.authority import is_owner\nfrom core.authority import is_owner
 import state_manager
 
 OWNER_TELEGRAM_ID = 8789977826
@@ -7,7 +7,7 @@ OWNER_TELEGRAM_ID = 8789977826
 def register(bot):
     @bot.message_handler(commands=['dev_add'])
     def dev_add(m):
-        if m.from_user.id != OWNER_TELEGRAM_ID:
+        if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
             return
         parts = m.text.split()
@@ -27,7 +27,7 @@ def register(bot):
 
     @bot.message_handler(commands=['dev_remove'])
     def dev_remove(m):
-        if m.from_user.id != OWNER_TELEGRAM_ID:
+        if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
             return
         parts = m.text.split()
@@ -40,7 +40,7 @@ def register(bot):
 
     @bot.message_handler(commands=['dev_list'])
     def dev_list(m):
-        if m.from_user.id != OWNER_TELEGRAM_ID:
+        if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
             return
         db = state_manager.load_db()
@@ -57,7 +57,7 @@ def register(bot):
 
     @bot.message_handler(commands=['dev_perm'])
     def dev_perm(m):
-        if m.from_user.id != OWNER_TELEGRAM_ID:
+        if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
             return
         parts = m.text.split()
@@ -78,7 +78,7 @@ def register(bot):
 
     @bot.message_handler(commands=['dev_role'])
     def dev_role(m):
-        if m.from_user.id != OWNER_TELEGRAM_ID:
+        if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
             return
         parts = m.text.split()

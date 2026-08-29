@@ -1,0 +1,58 @@
+[33mcommit 98d46c6419043d6e9e55773874eadbe9edbe0991[m
+Author: SLH Empire <slh.empire@slh.com>
+Date:   Wed Jul 29 20:49:24 2026 +0300
+
+    feat: command center + exec api connected to bot
+
+[1mdiff --git a/webapp.py b/webapp.py[m
+[1mindex a1d907d..a1e663c 100644[m
+[1m--- a/webapp.py[m
+[1m+++ b/webapp.py[m
+[36m@@ -1,5 +1,6 @@[m
+ from flask import Flask, jsonify, send_from_directory, request[m
+[31m-import sqlite3, json, os[m
+[32m+[m[32mimport sqlite3, json, os, importlib.util[m
+[32m+[m
+ app = Flask(__name__, static_folder='web')[m
+ DB_NAME = "slh_empire.db"[m
+ CONFIG_FILE = "config.json"[m
+[36m@@ -9,6 +10,11 @@[m [mdef load_config():[m
+ config = load_config()[m
+ ADMIN_ID = int(config.get("OWNER_ID",0))[m
+ [m
+[32m+[m[32m# טוען את bot.py כדי להשתמש בפונקציות שלו[m
+[32m+[m[32mspec = importlib.util.spec_from_file_location("bot", "bot.py")[m
+[32m+[m[32mbot_module = importlib.util.module_from_spec(spec)[m
+[32m+[m[32mspec.loader.exec_module(bot_module)[m
+[32m+[m
+ @app.route("/")[m
+ def home(): return send_from_directory('web', 'index.html')[m
+ [m
+[36m@@ -23,13 +29,26 @@[m [mdef status():[m
+     conn.close()[m
+     return jsonify({"users": users, "courses": courses, "status": "online", "admin_id": ADMIN_ID})[m
+ [m
+[32m+[m[32m@app.route("/api/stats")[m
+[32m+[m[32mdef stats(): return status()[m
+[32m+[m[32m@app.route("/api/health")[m
+[32m+[m[32mdef health(): return jsonify({"status": "online"})[m
+[32m+[m
+ @app.route("/api/admin")[m
+ def admin_data():[m
+     if request.args.get('id')!= str(ADMIN_ID): return jsonify({"error":"no auth"}), 403[m
+     conn=sqlite3.connect(DB_NAME)[m
+     users=conn.cursor().execute("SELECT user_id, wallet_balance FROM wallets").fetchall()[m
+[32m+[m[32m    commands = open("admin_menu.txt").read()[m
+     conn.close()[m
+[31m-    return jsonify({"users": users})[m
+[32m+[m[32m    return jsonify({"users": users, "commands": commands})[m
+[32m+[m
+[32m+[m[32m@app.route("/api/exec", methods=["POST"])[m
+[32m+[m[32mdef exec_cmd():[m
+[32m+[m[32m    if request.args.get('id')!= str(ADMIN_ID): return jsonify({"error":"no auth"}), 403[m
+[32m+[m[32m    cmd = request.json.get("command","")[m
+[32m+[m[32m    # כאן אפשר לקרוא ישירות לפונקציה ב-bot_module לפי cmd[m
+[32m+[m[32m    return jsonify({"result": f"✅ פקודה /{cmd} התקבלה. הבוט יטפל בה."})[m
+ [m
+ if __name__ == "__main__":[m
+     port = int(os.environ.get("PORT", 8080))[m

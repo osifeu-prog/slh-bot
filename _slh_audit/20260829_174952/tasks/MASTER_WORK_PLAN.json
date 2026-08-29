@@ -1,0 +1,67 @@
+﻿{
+    "plan_id":  "SLH-CONTROL-ACADEMY-ESP",
+    "created_at":  "2026-08-29T17:50:16.9945446+03:00",
+    "baseline":  "20260829_174952",
+    "hard_rule":  [
+                      "DO NOT MODIFY BUSINESS LOGIC",
+                      "DO NOT MODIFY MONEY LOGIC",
+                      "DO NOT MODIFY WALLET LOGIC",
+                      "DO NOT MODIFY DATABASE",
+                      "DO NOT MODIFY DEPLOYMENT",
+                      "DO NOT MODIFY FINANCIAL AUTHORITY",
+                      "DO NOT MODIFY PAYMENT AUTHORITY"
+                  ],
+    "gates":  [
+                  {
+                      "id":  "GATE-01",
+                      "name":  "Permanent baseline",
+                      "status":  "DONE"
+                  },
+                  {
+                      "id":  "GATE-02",
+                      "name":  "Control / command audit",
+                      "status":  "AUDITED"
+                  },
+                  {
+                      "id":  "GATE-03",
+                      "name":  "Academy audit",
+                      "status":  "AUDITED"
+                  },
+                  {
+                      "id":  "GATE-04",
+                      "name":  "Developer / agent activation audit",
+                      "status":  "AUDITED"
+                  },
+                  {
+                      "id":  "GATE-05",
+                      "name":  "Super Admin menu reconstruction audit",
+                      "status":  "AUDITED"
+                  },
+                  {
+                      "id":  "GATE-06",
+                      "name":  "ESP activation audit",
+                      "status":  "AUDITED"
+                  },
+                  {
+                      "id":  "GATE-07",
+                      "name":  "Return to Telegram command control",
+                      "status":  "BLOCKED_UNTIL_AUDIT_REVIEW"
+                  },
+                  {
+                      "id":  "GATE-08",
+                      "name":  "Full ESP activation",
+                      "status":  "FINAL_COMPLETION_GATE"
+                  }
+              ],
+    "workstreams":  [
+                        "ACADEMY",
+                        "DEVELOPER_ACTIVATION",
+                        "AGENT_GOVERNANCE",
+                        "COMMAND_EXECUTION",
+                        "SUPERADMIN_MENU",
+                        "ESP"
+                    ],
+    "structured_plan":  "tasks\\STRUCTURED_MASTER_PLAN.json",
+    "current_gate":  "ACADEMY_RUNTIME_MAPPING",
+    "task_queue":  "tasks\\CURRENT_TASK_QUEUE.json"
+}

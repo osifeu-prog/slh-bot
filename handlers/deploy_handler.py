@@ -1,5 +1,5 @@
 import os
-import requests
+import requests\nfrom core.authority import is_owner\nfrom core.authority import is_owner\nfrom core.authority import is_owner
 
 
 def register(bot):
@@ -7,7 +7,7 @@ def register(bot):
     @bot.message_handler(commands=['deploy'])
     def deploy_cmd(msg):
 
-        if str(msg.from_user.id) != os.getenv('ADMIN_ID', '8789977826'):
+        if not is_owner(msg):
             bot.reply_to(msg, '⛔ Admin only')
             return
 

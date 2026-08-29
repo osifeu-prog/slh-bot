@@ -1,0 +1,20 @@
+﻿{
+  "version": "1.0",
+  "authority": "SLH_CONTROL_PLANE",
+  "environment": "alpha",
+  "sources": {
+    "database": "state/db.json",
+    "journal": "state/journals/",
+    "devices": "state/devices.json"
+  },
+  "sync": {
+    "status": "initialized",
+    "last_sync": null,
+    "nodes": [
+      "PC",
+      "Railway",
+      "Telegram",
+      "ESP32"
+    ]
+  }
+}

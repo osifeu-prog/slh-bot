@@ -1,0 +1,34 @@
+{
+  "SystemGuard": {
+    "role": "security",
+    "status": "active",
+    "permissions": [
+      "monitor",
+      "audit"
+    ]
+  },
+  "DoctorAgent": {
+    "role": "doctor",
+    "status": "active",
+    "permissions": [
+      "diagnose",
+      "heal"
+    ]
+  },
+  "SyncAgent": {
+    "role": "sync",
+    "status": "active",
+    "permissions": [
+      "sync_data",
+      "update"
+    ]
+  },
+  "TokenAgent": {
+    "role": "token",
+    "status": "active",
+    "permissions": [
+      "manage_tokens",
+      "send"
+    ]
+  }
+}

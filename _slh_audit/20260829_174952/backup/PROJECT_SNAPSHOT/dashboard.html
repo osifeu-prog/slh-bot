@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLH Dashboard</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:24px; }
+  h1 { color:#58a6ff; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:16px; margin:24px 0; }
+  .card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; }
+  .label { color:#8b949e; font-size:14px; margin-bottom:8px; }
+  .value { font-size:32px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; margin-top:16px; }
+  th, td { padding:8px 12px; text-align:right; border-bottom:1px solid #30363d; }
+  th { color:#8b949e; }
+  .error { color:#f85149; }
+</style>
+</head>
+<body>
+  <h1>SLH Mission Control</h1>
+  <div class="grid">
+    <div class="card">
+      <div class="label">משתמשים</div>
+      <div class="value" id="users">-</div>
+    </div>
+    <div class="card">
+      <div class="label">סוכנים</div>
+      <div class="value" id="agents">-</div>
+    </div>
+    <div class="card">
+      <div class="label">משימות</div>
+      <div class="value" id="tasks">-</div>
+    </div>
+    <div class="card">
+      <div class="label">קרדיטים</div>
+      <div class="value" id="credits">-</div>
+    </div>
+  </div>
+  <p id="status">טוען נתונים...</p>
+<script>
+fetch('/api/stats')
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('users').textContent = d.users ?? 0;
+    document.getElementById('agents').textContent = d.agents ?? 0;
+    document.getElementById('tasks').textContent = d.tasks ?? 0;
+    document.getElementById('credits').textContent = d.credits ?? 0;
+    document.getElementById('status').textContent = 'עודכן זה עתה';
+  })
+  .catch(e => {
+    document.getElementById('status').textContent = 'שגיאה: ' + e.message;
+    document.getElementById('status').classList.add('error');
+  });
+</script>
+</body>
+</html>

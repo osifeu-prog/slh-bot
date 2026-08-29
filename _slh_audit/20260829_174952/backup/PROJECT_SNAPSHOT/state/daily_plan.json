@@ -1,0 +1,10 @@
+{
+  "date": "2026-08-25",
+  "focus": "Gasless onboarding + claim flow",
+  "goals": [
+    "לבנות /claim + /deposit_address",
+    "לחבר Surf Forecast API",
+    "לסיים audit + backup"
+  ],
+  "next_action": "/wallet"
+}

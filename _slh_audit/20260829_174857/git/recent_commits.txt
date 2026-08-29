@@ -1,0 +1,10 @@
+﻿2d92358 fix: prevent greeting from swallowing ask questions
+a344d23 fix: centralize owner auth and upgrade Groq model
+36f757b fix: groq model gpt-oss-120b, git_handler OWNER_TELEGRAM_ID, stake_position atomic_update
+d7440f1 Bypass intent checks in natural_chat (skip_checks)
+a34308b Enable natural_chat for free-text AI responses
+e863ba4 Fix fallback message encoding
+ae9769b Fix /ask routing and referral lookup
+405bf87 Merge P0 alpha security fixes: exec write-block, ask hallucination guard, staking course-gate, ESP ownership+atomic writes
+55a8de2 P0 alpha fixes: exec write-block, ask hallucination guard, staking course-gate stage>=3, ESP ownership+atomic writes
+5f18fbf fix exec policy state db read false positive

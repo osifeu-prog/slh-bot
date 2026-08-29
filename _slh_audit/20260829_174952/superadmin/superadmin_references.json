@@ -1,0 +1,337 @@
+﻿[
+    {
+        "File":  "add_sync_patch.py",
+        "Line":  24,
+        "Match":  "if uid != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "admin_handler.py",
+        "Line":  4,
+        "Match":  "def admin_panel(message):"
+    },
+    {
+        "File":  "ARCHITECTURE.md",
+        "Line":  4,
+        "Match":  "1. Telegram Bot – 45+ commands, Admin panel"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  68,
+        "Match":  "SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  71,
+        "Match":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "DEVELOPER_GUIDE.md",
+        "Line":  20,
+        "Match":  "- /admin: Admin panel"
+    },
+    {
+        "File":  "DEVELOPER_ONBOARDING.md",
+        "Line":  8,
+        "Match":  "- Governance layer"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  54,
+        "Match":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  71,
+        "Match":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  42,
+        "Match":  "* 5e7c9ad add referral + admin panel"
+    },
+    {
+        "File":  "GIT_RAILWAY_HISTORY.txt",
+        "Line":  450,
+        "Match":  "- Full system control via bot"
+    },
+    {
+        "File":  "help_handler.py",
+        "Line":  79,
+        "Match":  "Admins: use /admin for system controls."
+    },
+    {
+        "File":  "journal.json",
+        "Line":  44,
+        "Match":  "\"text\": \"SESSION 4-JUL-2026 PART 5 - Admin menu audit found 4 duplicate handlers in bot_stable.py (start, demo, logs, refreshtoken). Telebot only runs first-registered handler, rest were dead code. Removed dead start/demo/logs duplicates (76 lines), verified live via welcome_handler.py and demo_handlers.py. MAJOR FIX: refreshtoken handlers were re-registering every reconnect loop iteration inside while True - moved outside loop entirely, matches known risk flagged in prior session memory. CRITICAL BUG FOUND (pre-existing, unrelated to our changes): refresh_token_handler.py called is_admin(message.from_user.id) passing an int, but is_admin() expects full message object - caused silent AttributeError crash on every refreshtoken call, zero user feedback. Fixed to is_admin(message). Verified live - full confirm flow works now (yes/cancel, safe abort on interrupt). Commits: 5302fb6, 460db40, 245cddf.\""
+    },
+    {
+        "File":  "railway_logs_baseline_20260824.txt",
+        "Line":  77,
+        "Match":  "✅ governance loaded"
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  45,
+        "Match":  "- [ ] Rebuild /admin menu from real 81-command list (split into /admin + /help)"
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  41,
+        "Match":  "\"output\": \"advanced_ask_handler.backup_2026-07-21_1632.py\\nadvanced_ask_handler.py\\nask_handler.py\\nbackups/end_of_day_20260721_0016/bot_stable.py\\nbackups/loader_after_task_fix.py\\nbackups/loader_before_economy_cleanup.py\\nbackups/loader_before_economy_first_remove.py\\nbackups/loader_before_fix.py\\nbackups/loader_before_mission_cleanup.py\\nbackups/loader_before_mission_cleanup_retry.py\\nbackups/phase_map_20260723/handlers/advanced_ask_handler.py\\nbackups/phase_map_20260723/handlers/askdebug_handler.py\\nbackups/phase_map_20260723/handlers/help_handler.py\\nbackups/phase_map_20260723/handlers/llm_handler.py\\nbackups/phase_map_20260723/handlers/loader.py\\nbackups/pre_governance_phase/bot_stable.py\\nbackups/pre_governance_phase/loader.py\\nbackups/pre_phase95_governance/bot_stable.py\\nbackups/pre_phase95_governance/loader.py\\nbackups/stable_2026_07_20/bot_stable.py\\nbackups/stable_2026_07_20/loader.py\\nbot_stable.py\\ncore/ask_router.py\\nguide_handler.py\\nhandlers/advanced_ask_handler.py\\nhandlers/askdebug_handler.py\\nhandlers/help_handler.py\\nhandlers/llm_handler.py\\nhandlers/loader.py\\nhelp_handler.py\\npayment_handler.py\\nslh_audit.py\\nslh_full_check.py\\nslh_hardening.py\\nstate/snapshots/ask_router_stable_20260726_104012/advanced_ask_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/llm_handler.py\\nstate/snapshots/ask_router_stable_20260726_104012/loader.py\\nstate/startup.py\\ntools/connect_ask_guard.py\\ntools/create_ask_guard.py\\ntools/disable_botstable_ask.py\\ntools/fix_ask_guard_api.py\\ntools/loader_registration_audit.py\\ntools/patch_ask_router.py\\ntools/runtime_command_registration_audit.py\\ntools/session_closure_audit.py\\ntools/user_command_audit.py\\ntools/user_command_wiring_audit.py\\ntutorial_handler.py\""
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  8,
+        "Match":  "- admin_menu.sh שוחזר מארכיון (slh-bot-broken)"
+    },
+    {
+        "File":  "slh.py",
+        "Line":  10,
+        "Match":  "print(\"\\n\"+\"=\"*40+\"\\n SLH vNEXT - ADMIN PANEL ASCII\\n\"+\"=\"*40)"
+    },
+    {
+        "File":  "SLH_AGENT_HANDOFF.md",
+        "Line":  12,
+        "Match":  "גילוי: journal.json חסר תיעוד לתקופה 15-21 ביולי (רק שורה ריקה \"בדיקת SLH OS\" ל-15-Jul), למרות עדויות בתיקיית backups/ לעבודה משמעותית שכן קרתה (pre_governance_phase, pre_phase95_governance, stable_2026_07_20, end_of_day_20260721_0016). מסקנה: מישהו לא תיעד ביומן בהתאם לכלל 9 באחד הסשנים האחרונים - יש להקפיד על כך קדימה."
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  153,
+        "Match":  "-a---- 1127    8/2/2026 11:12:58 PM  admin_menu.txt"
+    },
+    {
+        "File":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Line":  15,
+        "Match":  "state/governance.json: MISSING"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  34,
+        "Match":  "new file:   admin_menu.sh"
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  13,
+        "Match":  "|   admin_menu.txt"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  68,
+        "Match":  "SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  19,
+        "Match":  "|   admin_menu.txt"
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  71,
+        "Match":  "admin_menu.txt"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  41,
+        "Match":  "-a----          8/2/2026  11:12 PM           1127 admin_menu.txt"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\02_git_history.txt",
+        "Line":  5,
+        "Match":  "7e7e30d feat: synchronize governance agent registry"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Line":  117,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py                                   10232 8/13/2026 7:22:46 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Line":  67,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\governance.json                                                               1224 8/"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Line":  41,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  6,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.txt                                                             1127 8/2/2026..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  52,
+        "Match":  "admin_menu.txt                                      -a---- 1127    8/2/2026 11:12:58 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  2852,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DISCOVERY_20260802_211429.txt                         5082 admin_menu.sh:      pytho..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Line":  169,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py                                        37     @bot.messag..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Line":  284,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py                          11     return json.loads(GOV_PAT..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Line":  47,
+        "Match":  "(\"governance\", \"handlers.governance_handler\"),"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Line":  29,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py          10232 8/13/2026 7:22:46 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Line":  448,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\governance_handler.py                                        7 DB_PATH = BASE_D..."
+    },
+    {
+        "File":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Line":  21,
+        "Match":  "✅ Admin Panel"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_WORK_PROTOCOL.md",
+        "Line":  26,
+        "Match":  "Incoming messages must be classified as: QUESTION, COMMAND, TASK_CREATION, DIAGNOSTIC, GOVERNANCE."
+    },
+    {
+        "File":  "handlers\\governance_handler.py",
+        "Line":  6,
+        "Match":  "GOV_PATH = BASE_DIR / \"state\" / \"governance.json\""
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  56,
+        "Match":  "/admin – Admin panel"
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  63,
+        "Match":  "(\"governance\", \"handlers.governance_handler\"),"
+    },
+    {
+        "File":  "handlers\\os_handler.py",
+        "Line":  20,
+        "Match":  "header = f\"\"\"🟢 SLH OS CONTROL CENTER"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  15,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  19,
+        "Match":  "new file:   admin_menu.sh"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  813,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh"
+    },
+    {
+        "File":  "plugins\\admin.py",
+        "Line":  5,
+        "Match":  "send(chat_id, \"🔧 ADMIN PANEL ACTIVE\")"
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  42,
+        "Match":  "\"title\": \"בדיקת Governance מלאה\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  256,
+        "Match":  "\"text\": \"\u003ctitle\u003e|\u003cdescription\u003e|\u003cpayload\u003e → יוצר proposal (role-checked)\\n/vote \u003cproposal_id\u003e yes|no|abstain → רושם הצבעה\\n/tally \u003cproposal_id\u003e → מחשב תוצאה (RBAC: only SystemGuard/Admin)\\n/proposal_status \u003cid\u003e → סטטוס ותוצאות\\nFallback UI: עד לתיקון inline buttons — השתמש בפקודות טקסטיות בלבד.\\nAudit \u0026 Journal: כל הצבעה/תוצאה נרשמת ב־state/audit.jsonl עם חתימת agent ו‑timestamp.\\n6. Mission Control ו‑Agent Task Mapping (מבנה נתונים + API)\\nMission (task) schema suggestion:\\njson\\n{\\n \\\"id\\\": \\\"mission_001\\\",\\n \\\"title\\\": \\\"Complete Bitcoin course\\\",\\n \\\"description\\\": \\\"...\\\",\\n \\\"owner_agent\\\": \\\"TokenAgent\\\",\\n \\\"preconditions\\\": [\\\"onboarded\\\", \\\"wallet_credits\u003e=10\\\"],\\n \\\"reward\\\": {\\\"credits\\\": 100, \\\"tokens\\\": 0},\\n \\\"difficulty\\\": \\\"medium\\\",\\n \\\"status\\\": \\\"open|assigned|executing|completed|verified\\\",\\n \\\"assigned_to\\\": null,\\n \\\"created_at\\\": \\\"...\\\",\\n \\\"audit\\\": []\\n}\\nHandlers / APIs:\\n/mission_list — רשימת משימות פתוחות/סגורות\\n/mission_propose — הצעת משימה חדשה (מפתחת/agent)\\n/mission_assign \u003cid\u003e \u003cagent\u003e — הקצאה\\n/mission_execute \u003cid\u003e — סימון ביצוע\\n/mission_verify \u003cid\u003e — אימות ותשלום reward\\nIntegration: כל שינוי במשימה כותב לאירוע ב־state/audit.jsonl וגורם ל־core/mission_lifecycle לעדכן ledger.\\n7. Mini App / Frontend Sync (קריטי לפני Alpha)\\nבעיות שזוהו: frontend לא קורא staked ו־token_balance; cache של Telegram WebApp; frontend עשוי להצביע ל‑API ישן.\\nצעדים:\\nAPI contract audit: /api/wallet/\u003cuid\u003e חייב להחזיר { credits, staked, token_balance, treasury }.\\nFrontend update: dashboard.html לקרוא לכל השדות; להוסיף refresh button; cache busting headers.\\nEnd‑to‑End test: curl ה‑API מה‑Railway/public URL והשווה לנתונים במיני‑אפ. אם API נכון וה‑UI לא — זה cache/frontend.\\nVerify Telegram WebApp initData mapping → האם Telegram שולח owner flag? האם ה‑Mini App מפענח אותו נכון?\\n8. Agent Lifecycle ו‑Second‑Gen Agents (3–7 ימים)\\nמטרות: סוכנים שיכולים להציע משימות, להצביע, לבצע וללמוד.\\nרעיונות:\\nAgent profile: { id, name, role, weight, state, history }\\nPromotion rules: ביצועים (verified missions), uptime, audit score → יכולות חדשות/הרשאות.\\nAgent training loop: אחרי כל משימה, Agent יוצר דוח ביצוע; SyncAgent מרכז; אפשר ליצור agent‑forks (2nd gen) עם משימות אוטומטיות.\\n9. ניטור, בדיקות ו‑Alpha rollout\\nMonitoring \u0026 Alerts:\\nHealth checks: /health, /mini-app, /api/wallet, /ask (local).\\nAI health: state/ai_health.json + env checks.\\nLogs: centralized state/audit.jsonl + Railway logs.\\nControlled Alpha rollout:\\nGate GO → 2–5 internal testers (Osif + 2 friends + 2 test users).\\nTest plan for each tester (onboarding path list you already drafted).\\nCollect feedback: where stuck, broken buttons, unclear flows.\\nIterate fixes (only small, targeted patches), re‑snapshot state, expand to Developer Alpha.\\n10. מה לעשות מחר בבוקר — סדר פעולות מומלץ (Actionable)\\nAuthority Gate (read‑only): /firewall, /gov_status, /agent_status, /exec python3 -c \\\"import json; print(len(json.load(open(\u0027state/db.json\u0027)).get(\u0027users\u0027,{})))\\\".\\nMini App check: /exec curl -s http://127.0.0.1:8080/api/wallet/8789977826 | jq . — השווה ל‑Mini App.\\nAsk coverage quick patch (safe): הוסף intents מקומיים ל־core/ask_debug.py עבור מה השם שלי ו־status (שורה או שתיים) — הרץ smoke tests.\\nGovernance audit: export proposals/votes; reconcile ledgers.\\nBackup snapshot: /exec cp state/db.json state/db.json.pre_alpha_$(date +%s) — ודא נוצר.\\nאם הכל ירוק → בנה /missioncontrol דרך CommitBridge.\\nהמלצות סיכום ומסקנות מהירות\\nזה לא \\\"המנוע התחרבש\\\" — זה מקרה של coverage gap ב‑Ask routing: חלק מהשאילתות (credits) מטופלות מקומית; אחרות (name/status) נופלות ל‑LLM → fallback. הפתרון: הרחבת intents מקומיים לפני כל ניסיון להחליף מפתחות או להעמיס על ספקי LLM.\\nMini App = Release Gate. אל תכניס משתמשים נוספים עד ש־frontend↔️backend↔️state יוכחו.\\nעבוד בעיקר דרך Telegram/CommitBridge עד ש‑Windows יסונכרן; אל תריץ git pull בלי בדיקה של git diff על קבצים מקומיים לא מוסברים.\\nאל תבצע mutations גדולים הלילה. בצע מדידות, גיבוי, ואז תיקונים קטנים ומבוקרים.\\nאם תרצה — אני יכול עכשיו:\\nלייצר טבלת בדיקות Smoke מוכנה לשליחה לבודקי Alpha (קצרה, עם פקודות מדויקות).\","
+    },
+    {
+        "File":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Line":  256,
+        "Match":  "\"text\": \"\u003ctitle\u003e|\u003cdescription\u003e|\u003cpayload\u003e → יוצר proposal (role-checked)\\n/vote \u003cproposal_id\u003e yes|no|abstain → רושם הצבעה\\n/tally \u003cproposal_id\u003e → מחשב תוצאה (RBAC: only SystemGuard/Admin)\\n/proposal_status \u003cid\u003e → סטטוס ותוצאות\\nFallback UI: עד לתיקון inline buttons — השתמש בפקודות טקסטיות בלבד.\\nAudit \u0026 Journal: כל הצבעה/תוצאה נרשמת ב־state/audit.jsonl עם חתימת agent ו‑timestamp.\\n6. Mission Control ו‑Agent Task Mapping (מבנה נתונים + API)\\nMission (task) schema suggestion:\\njson\\n{\\n \\\"id\\\": \\\"mission_001\\\",\\n \\\"title\\\": \\\"Complete Bitcoin course\\\",\\n \\\"description\\\": \\\"...\\\",\\n \\\"owner_agent\\\": \\\"TokenAgent\\\",\\n \\\"preconditions\\\": [\\\"onboarded\\\", \\\"wallet_credits\u003e=10\\\"],\\n \\\"reward\\\": {\\\"credits\\\": 100, \\\"tokens\\\": 0},\\n \\\"difficulty\\\": \\\"medium\\\",\\n \\\"status\\\": \\\"open|assigned|executing|completed|verified\\\",\\n \\\"assigned_to\\\": null,\\n \\\"created_at\\\": \\\"...\\\",\\n \\\"audit\\\": []\\n}\\nHandlers / APIs:\\n/mission_list — רשימת משימות פתוחות/סגורות\\n/mission_propose — הצעת משימה חדשה (מפתחת/agent)\\n/mission_assign \u003cid\u003e \u003cagent\u003e — הקצאה\\n/mission_execute \u003cid\u003e — סימון ביצוע\\n/mission_verify \u003cid\u003e — אימות ותשלום reward\\nIntegration: כל שינוי במשימה כותב לאירוע ב־state/audit.jsonl וגורם ל־core/mission_lifecycle לעדכן ledger.\\n7. Mini App / Frontend Sync (קריטי לפני Alpha)\\nבעיות שזוהו: frontend לא קורא staked ו־token_balance; cache של Telegram WebApp; frontend עשוי להצביע ל‑API ישן.\\nצעדים:\\nAPI contract audit: /api/wallet/\u003cuid\u003e חייב להחזיר { credits, staked, token_balance, treasury }.\\nFrontend update: dashboard.html לקרוא לכל השדות; להוסיף refresh button; cache busting headers.\\nEnd‑to‑End test: curl ה‑API מה‑Railway/public URL והשווה לנתונים במיני‑אפ. אם API נכון וה‑UI לא — זה cache/frontend.\\nVerify Telegram WebApp initData mapping → האם Telegram שולח owner flag? האם ה‑Mini App מפענח אותו נכון?\\n8. Agent Lifecycle ו‑Second‑Gen Agents (3–7 ימים)\\nמטרות: סוכנים שיכולים להציע משימות, להצביע, לבצע וללמוד.\\nרעיונות:\\nAgent profile: { id, name, role, weight, state, history }\\nPromotion rules: ביצועים (verified missions), uptime, audit score → יכולות חדשות/הרשאות.\\nAgent training loop: אחרי כל משימה, Agent יוצר דוח ביצוע; SyncAgent מרכז; אפשר ליצור agent‑forks (2nd gen) עם משימות אוטומטיות.\\n9. ניטור, בדיקות ו‑Alpha rollout\\nMonitoring \u0026 Alerts:\\nHealth checks: /health, /mini-app, /api/wallet, /ask (local).\\nAI health: state/ai_health.json + env checks.\\nLogs: centralized state/audit.jsonl + Railway logs.\\nControlled Alpha rollout:\\nGate GO → 2–5 internal testers (Osif + 2 friends + 2 test users).\\nTest plan for each tester (onboarding path list you already drafted).\\nCollect feedback: where stuck, broken buttons, unclear flows.\\nIterate fixes (only small, targeted patches), re‑snapshot state, expand to Developer Alpha.\\n10. מה לעשות מחר בבוקר — סדר פעולות מומלץ (Actionable)\\nAuthority Gate (read‑only): /firewall, /gov_status, /agent_status, /exec python3 -c \\\"import json; print(len(json.load(open(\u0027state/db.json\u0027)).get(\u0027users\u0027,{})))\\\".\\nMini App check: /exec curl -s http://127.0.0.1:8080/api/wallet/8789977826 | jq . — השווה ל‑Mini App.\\nAsk coverage quick patch (safe): הוסף intents מקומיים ל־core/ask_debug.py עבור מה השם שלי ו־status (שורה או שתיים) — הרץ smoke tests.\\nGovernance audit: export proposals/votes; reconcile ledgers.\\nBackup snapshot: /exec cp state/db.json state/db.json.pre_alpha_$(date +%s) — ודא נוצר.\\nאם הכל ירוק → בנה /missioncontrol דרך CommitBridge.\\nהמלצות סיכום ומסקנות מהירות\\nזה לא \\\"המנוע התחרבש\\\" — זה מקרה של coverage gap ב‑Ask routing: חלק מהשאילתות (credits) מטופלות מקומית; אחרות (name/status) נופלות ל‑LLM → fallback. הפתרון: הרחבת intents מקומיים לפני כל ניסיון להחליף מפתחות או להעמיס על ספקי LLM.\\nMini App = Release Gate. אל תכניס משתמשים נוספים עד ש־frontend↔️backend↔️state יוכחו.\\nעבוד בעיקר דרך Telegram/CommitBridge עד ש‑Windows יסונכרן; אל תריץ git pull בלי בדיקה של git diff על קבצים מקומיים לא מוסברים.\\nאל תבצע mutations גדולים הלילה. בצע מדידות, גיבוי, ואז תיקונים קטנים ומבוקרים.\\nאם תרצה — אני יכול עכשיו:\\nלייצר טבלת בדיקות Smoke מוכנה לשליחה לבודקי Alpha (קצרה, עם פקודות מדויקות).\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  1687,
+        "Match":  "\"file\": \"handlers\\\\governance_handler.py\","
+    },
+    {
+        "File":  "tests\\system_check.py",
+        "Line":  24,
+        "Match":  "results.append(ok(\"Admin set\", cfg.get(\"SUPER_ADMIN\") == 8789977826))"
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  6,
+        "Match":  "\"SUPER_ADMIN\","
+    },
+    {
+        "File":  "tools\\runtime_state_access_classification.py",
+        "Line":  514,
+        "Match":  "\"STATE GOVERNANCE MAP\""
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\dna\\CURRENT.json",
+        "Line":  79,
+        "Match":  "\"path\": \"handlers/governance_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\LAST_SNAPSHOT.json",
+        "Line":  90,
+        "Match":  "\"path\": \"handlers/governance_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  103,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\CURRENT.json",
+        "Line":  86,
+        "Match":  "\"path\": \"handlers/governance_handler.py\","
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  104,
+        "Match":  "\"admin_panel\""
+    }
+]

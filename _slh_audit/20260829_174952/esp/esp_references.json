@@ -1,0 +1,1157 @@
+﻿[
+    {
+        "File":  "ACTIVE_MARKDOWN.txt",
+        "Line":  6,
+        "Match":  "handlers/device_handler.py:    bot.reply_to(m, \"\\n\".join(lines), parse_mode=\"Markdown\")"
+    },
+    {
+        "File":  "add_visibility_report.py",
+        "Line":  34,
+        "Match":  "👑 OWNER:"
+    },
+    {
+        "File":  "admin_handler.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "admin_utils.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "agent_client_pc.py",
+        "Line":  3,
+        "Match":  "DEVICE = \"PC_MAIN_001\""
+    },
+    {
+        "File":  "AGENT_RULES.md",
+        "Line":  6,
+        "Match":  "2. Confirm plan with owner before writing code."
+    },
+    {
+        "File":  "assignment_preview.py",
+        "Line":  67,
+        "Match":  "# CURRENT RESPONSIBILITY MATCH"
+    },
+    {
+        "File":  "bot_gateway.py",
+        "Line":  48,
+        "Match":  "@app.route(\u0027/api/devices\u0027)"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  270,
+        "Match":  "👑 OWNER:"
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  12,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "COMMAND_OWNERSHIP_AUDIT.json",
+        "Line":  5,
+        "Match":  "\"owners\": ["
+    },
+    {
+        "File":  "config.json",
+        "Line":  3,
+        "Match":  "\"OWNER_ID\": 8789977826,"
+    },
+    {
+        "File":  "create_takeover_manifest.py",
+        "Line":  48,
+        "Match":  "ownership_path = ROOT / \"handlers\" / \"ownership_transfer_handler.py\""
+    },
+    {
+        "File":  "device_bridge.py",
+        "Line":  3,
+        "Match":  "SLH Device Bridge"
+    },
+    {
+        "File":  "DIFF_TERMUX_WINDOWS.txt",
+        "Line":  15,
+        "Match":  "-a----         7/28/2026  12:55 PM            600 device_bridge.py"
+    },
+    {
+        "File":  "economy_audit_balance.txt",
+        "Line":  21,
+        "Match":  "database.py:15:    c.execute(\"INSERT OR IGNORE INTO wallets VALUES (\u0027OWNER\u0027, 1000)\")"
+    },
+    {
+        "File":  "economy_audit_dashboard.txt",
+        "Line":  49,
+        "Match":  "import_binance.py:10:SLH_ABI = [{\"constant\":True,\"inputs\":[{\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outp"
+    },
+    {
+        "File":  "ECONOMY_WIRING_AUDIT.txt",
+        "Line":  36,
+        "Match":  "handlers\\esp_handler.py:18:def register_esp_handler(bot):"
+    },
+    {
+        "File":  "esp_test.py",
+        "Line":  6,
+        "Match":  "DEVICE_ID = \"DEV_ESP_NEW_1786177919\""
+    },
+    {
+        "File":  "exec_commit.py",
+        "Line":  4,
+        "Match":  "OWNER = os.environ.get(\"RAILWAY_GIT_REPO_OWNER\") or \"osifeu-prog\""
+    },
+    {
+        "File":  "GIT_ADMIN_SEARCH.txt",
+        "Line":  53,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_ASK_SEARCH.txt",
+        "Line":  77,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  10,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "GIT_BOT_TOKEN_HISTORY.txt",
+        "Line":  77,
+        "Match":  "SLH All-in-One: ensure logo, esp, loader, device"
+    },
+    {
+        "File":  "GIT_CONTROL_SEARCH.txt",
+        "Line":  5,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_DIFF_FIRST_TO_NOW.txt",
+        "Line":  104,
+        "Match":  "device_bridge.py"
+    },
+    {
+        "File":  "GIT_ECON_PAY.txt",
+        "Line":  35,
+        "Match":  "Auto-repair: ensure logo, esp handler, loader, device"
+    },
+    {
+        "File":  "GIT_EVENTBUS_HISTORY.txt",
+        "Line":  41,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  12,
+        "Match":  "100644 blob 0768c48209f3a9c25a1447c6215b157c57b0878f\tCOMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  67,
+        "Match":  "* 239fc3c Fix: esp_handler syntax error"
+    },
+    {
+        "File":  "GIT_JULY_TREE.txt",
+        "Line":  215,
+        "Match":  "100644 blob d98ea9c3553e0c2155a2c1cebafbd90a8245916c\tprojects/TzvikBot/owner.txt"
+    },
+    {
+        "File":  "GIT_LLM_SEARCH.txt",
+        "Line":  35,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_RAILWAY_HISTORY.txt",
+        "Line":  77,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_REMOVED_4d90da6.txt",
+        "Line":  35,
+        "Match":  "slh-bot/COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "GIT_STATE_ENGINE_HISTORY.txt",
+        "Line":  17,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "GIT_STATE_SEARCH.txt",
+        "Line":  23,
+        "Match":  "Remove hardcoded agent response"
+    },
+    {
+        "File":  "HANDLER_LOADER_AUDIT.txt",
+        "Line":  25,
+        "Match":  "bot_stable.py:342:# Ownership moved to state.custom_handlers.ai_voting_handler"
+    },
+    {
+        "File":  "inspector.py",
+        "Line":  13,
+        "Match":  "report.append(\"Bot: ✅ (responding)\")"
+    },
+    {
+        "File":  "journal.json",
+        "Line":  40,
+        "Match":  "\"text\": \"SESSION 4-JUL-2026 PART 4 - Join handler cleanup + critical bug fix: Removed dead /join code (start_join/process_name/process_group/process_goal, 58 lines) from learn_handlers.py - was unreachable since welcome_handler.init(bot) registers first in bot_stable.py load order, telebot only executes first-matching handler for a command. CRITICAL BUG FOUND during live testing: welcome_handler.py join handler used relative path db.json (not state/db.json), which does not exist on Railway (no symlink present there unlike Termux local setup) - caused silent FileNotFoundError crash on every /join call, no user-facing response at all. Not caused by our changes - pre-existing bug, only surfaced because we tested /join live for the first time this session. FIXED: changed all 3 db.json references in welcome_handler.py to state/db.json. Verified live - /join now correctly responds. NOTE: my_progress() function in learn_handlers.py also confirmed dead code (referenced in error messages but /myprogress command never registered) - pre-existing, not touched, flagged for future cleanup. NOTE: SyntaxWarning for invalid escape sequences in welcome_handler.py markdown text (\\\\_ \\\\\u003c) - cosmetic, not blocking, low priority.\""
+    },
+    {
+        "File":  "MANIFEST_HANDLERS.txt",
+        "Line":  9,
+        "Match":  "SESSION_CLOSURE_MANIFEST.md:146:Produce the actual active command list and identify the handler responsible for each"
+    },
+    {
+        "File":  "master_agent.py",
+        "Line":  15,
+        "Match":  "report.append(\"Bot: ✅ (responding)\")"
+    },
+    {
+        "File":  "onboarding_scan.txt",
+        "Line":  28,
+        "Match":  "handlers\\device_bridge.py:2:def register_api(app):"
+    },
+    {
+        "File":  "PRE_ECONOMY_FULL_AUDIT.txt",
+        "Line":  23,
+        "Match":  "database.py:15:    c.execute(\"INSERT OR IGNORE INTO wallets VALUES (\u0027OWNER\u0027, 1000)\")"
+    },
+    {
+        "File":  "PROFILE_MANAGER_CALLS.txt",
+        "Line":  17,
+        "Match":  "handlers\\ownership_transfer_handler.py:40:        user = profile_manager.get_user(uid)"
+    },
+    {
+        "File":  "project_commands.py",
+        "Line":  28,
+        "Match":  "with open(os.path.join(project_path, \u0027owner.txt\u0027), \u0027w\u0027) as f:"
+    },
+    {
+        "File":  "railway_db_snapshot.txt",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "railway_logs_baseline_20260824.txt",
+        "Line":  37,
+        "Match":  "📡 Device handler loaded"
+    },
+    {
+        "File":  "responsibility_map.py",
+        "Line":  217,
+        "Match":  "print(\"              SLH RESPONSIBILITY MAP\")"
+    },
+    {
+        "File":  "ROADMAP.md",
+        "Line":  125,
+        "Match":  "- [x] Added docs/ (Railway inventory/ownership maps), manifest.json, daily tooling scripts to git tracking"
+    },
+    {
+        "File":  "SESSION_CLOSURE_AUDIT.json",
+        "Line":  44,
+        "Match":  "\"claim\": \"006 OWNER IDENTITY\","
+    },
+    {
+        "File":  "SESSION_CLOSURE_MANIFEST.md",
+        "Line":  95,
+        "Match":  "## CLAIM 006 — OWNER IDENTITY"
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  16,
+        "Match":  "- קיימת תשתית ESP (handlers/esp_handler.py) טעונה ופעילה — לא נבדקה לעומק"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  209,
+        "Match":  "-a---- 22225   7/28/2026 12:55:11 PM COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "SLH_COMMAND_MAP.txt",
+        "Line":  110,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_handler.py                             121     @bot.message_handler(comm..."
+    },
+    {
+        "File":  "SLH_DEVELOPER_ONBOARDING_REPORT.txt",
+        "Line":  46,
+        "Match":  "device_bridge.py"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  65,
+        "Match":  "modified:   device_bridge.py"
+    },
+    {
+        "File":  "SLH_FULL_AUDIT_20260810_152243.txt",
+        "Line":  7,
+        "Match":  "M handlers/esp_handler.py"
+    },
+    {
+        "File":  "SLH_HANDLER_MAP.txt",
+        "Line":  47,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                 27     def register_device(self, name, device_type=\"pc\"..."
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  52,
+        "Match":  "|   COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "SLH_PYTHON_FILES.txt",
+        "Line":  35,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py"
+    },
+    {
+        "File":  "SLH_RELEASE_LOGS.txt",
+        "Line":  43,
+        "Match":  "≡ƒףí Device handler loaded"
+    },
+    {
+        "File":  "SLH_RUNTIME_AUTHORITY.json",
+        "Line":  7,
+        "Match":  "\"single_polling_owner\": \"railway\""
+    },
+    {
+        "File":  "SLH_RUNTIME_POLICY.md",
+        "Line":  10,
+        "Match":  "- Railway remains the single Telegram polling owner."
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  270,
+        "Match":  "👑 OWNER:"
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  73,
+        "Match":  "|   COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "state_connection_map.txt",
+        "Line":  118,
+        "Match":  "handlers\\esp_handler.py:23:        with open(\"state/db.json\",\"r\") as f:"
+    },
+    {
+        "File":  "STATE_USAGE_AUDIT.txt",
+        "Line":  33,
+        "Match":  "device_bridge.py:9:CONFIG_FILE = \"state/bridge_config.json\""
+    },
+    {
+        "File":  "state_writers_report.txt",
+        "Line":  333,
+        "Match":  "CODE    : with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:"
+    },
+    {
+        "File":  "system_diagnostics.py",
+        "Line":  37,
+        "Match":  "resp = requests.get(f\"https://api.telegram.org/bot{self.token}/getMe\", timeout=10)"
+    },
+    {
+        "File":  "system_health.py",
+        "Line":  12,
+        "Match":  "resp = requests.get(f\"https://api.telegram.org/bot{token}/getMe\")"
+    },
+    {
+        "File":  "takeover_controller.py",
+        "Line":  260,
+        "Match":  "# OWNERSHIP"
+    },
+    {
+        "File":  "TERMUX_FULL.txt",
+        "Line":  20,
+        "Match":  "-a----          8/2/2026   1:33 PM            600 device_bridge.py"
+    },
+    {
+        "File":  "TERMUX_HANDLERS.txt",
+        "Line":  20,
+        "Match":  "-a----          8/2/2026   1:33 PM            600 device_bridge.py"
+    },
+    {
+        "File":  "TOMORROW_HANDOFF.md",
+        "Line":  26,
+        "Match":  "1. OWNER IDENTITY"
+    },
+    {
+        "File":  "ton_handler.py",
+        "Line":  63,
+        "Match":  "resp = requests.get(f\"{api_url}/getTransactions?address={wallet}\u0026limit=20\u0026archival=true\")"
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  12,
+        "Match":  "COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "virtual_esp_local.py",
+        "Line":  6,
+        "Match":  "DEVICE_ID = \"DEV_ESP_NEW_1786177919\""
+    },
+    {
+        "File":  "WALLET_API_USAGE.txt",
+        "Line":  46,
+        "Match":  "database.py:15:    c.execute(\"INSERT OR IGNORE INTO wallets VALUES (\u0027OWNER\u0027, 1000)\")"
+    },
+    {
+        "File":  "webapp.py",
+        "Line":  29,
+        "Match":  "resp = send_from_directory(BASE_DIR, \"mini_app.html\")"
+    },
+    {
+        "File":  "WINDOWS_HANDLERS.txt",
+        "Line":  18,
+        "Match":  "-a----         7/28/2026  12:55 PM            600 device_bridge.py"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  84,
+        "Match":  "-a----         7/28/2026  12:55 PM          22225 COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "agents\\system_guard.py",
+        "Line":  7,
+        "Match":  "Responsibilities:"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\02_git_history.txt",
+        "Line":  2,
+        "Match":  "47d1ee6 feat: owner broadcast command"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\04_python_inventory.txt",
+        "Line":  82,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                                                  4582 8/13/2026 1:40:22 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\07_state_inventory.txt",
+        "Line":  12,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json                                                       22225 7/"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\08_handlers.txt",
+        "Line":  33,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_handler.py"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\09_tests.txt",
+        "Line":  5,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\__pycache__\\esp_test.cpython-313.pyc                                             1605"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\10_legacy_backup.txt",
+        "Line":  43,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\esp_handler.py.backup                                               2010 8/7/20..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  54,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md                                 1011 7/28/202..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  107,
+        "Match":  "COMMAND_OWNERSHIP_AUDIT.json                        -a---- 22225   7/28/2026 12:55:11 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\02_production_candidates.txt",
+        "Line":  16,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                                     89 if __name__ == \"__main__\":"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  65,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json                                18         \"bot_stable.py:21..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\05_command_authority.txt",
+        "Line":  147,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_handler.py                                           121     @bot.messag..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\07_production_state_access.txt",
+        "Line":  51,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                                        10 DEVICES_FILE = \"state/devices..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\01_bot_gateway.txt",
+        "Line":  48,
+        "Match":  "@app.route(\u0027/api/devices\u0027)"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\02_handlers_loader.txt",
+        "Line":  24,
+        "Match":  "(\"device\", \"handlers.device_handler\"),"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\05_imports.txt",
+        "Line":  16,
+        "Match":  "handlers\\loader.py:109:        from handlers.esp_handler import register_esp_handler"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\06_handlers_inventory.txt",
+        "Line":  20,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_bridge.py                 600 8/13/2026 1:40:21 AM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\07_state_access.txt",
+        "Line":  69,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                                                      9 CONFIG_FILE = \"s..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1_RUNTIME\\08_execution_authority.txt",
+        "Line":  37,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\device_bridge.py                                                     27     def register..."
+    },
+    {
+        "File":  "core\\agent_registry.py",
+        "Line":  35,
+        "Match":  "def create_agent(name, role=\"agent\", owner_id=None):"
+    },
+    {
+        "File":  "core\\authority.py",
+        "Line":  3,
+        "Match":  "OWNER_ID = \"8789977826\""
+    },
+    {
+        "File":  "core\\deposit_monitor.py",
+        "Line":  11,
+        "Match":  "{\"constant\": True, \"inputs\": [{\"name\": \"_owner\", \"type\": \"address\"}], \"name\": \"balanceOf\", \"outputs\": [{\"name\": \"balance\", \"type\": \"uint256\"}], \"type\": \"function\"},"
+    },
+    {
+        "File":  "core\\economy_service.py",
+        "Line":  286,
+        "Match":  "- entitlement mutation"
+    },
+    {
+        "File":  "core\\esp_broadcast.py",
+        "Line":  9,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\esp_display.py",
+        "Line":  10,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\esp_license.py",
+        "Line":  7,
+        "Match":  "DEV_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\exec_policy.py",
+        "Line":  7,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "core\\firewall.py",
+        "Line":  19,
+        "Match":  "def is_owner(uid):"
+    },
+    {
+        "File":  "core\\identity.py",
+        "Line":  2,
+        "Match":  "OWNER_TELEGRAM_ID = 8789977826  # אתה - אדמין טלגרם"
+    },
+    {
+        "File":  "core\\invite_gate.py",
+        "Line":  8,
+        "Match":  "def can_start_onboarding(*, is_owner, is_existing_user):"
+    },
+    {
+        "File":  "core\\mqtt_device_listener.py",
+        "Line":  8,
+        "Match":  "DEVICES_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "core\\project_graph.py",
+        "Line":  15,
+        "Match":  "DEVICE"
+    },
+    {
+        "File":  "core\\project_registry.py",
+        "Line":  12,
+        "Match":  "Read-only with respect to source data."
+    },
+    {
+        "File":  "core\\system_collector.py",
+        "Line":  88,
+        "Match":  "\"devices\": {},"
+    },
+    {
+        "File":  "core\\virtual_esp.py",
+        "Line":  8,
+        "Match":  "DEVICES_PATH = Path(\"state/devices.json\")"
+    },
+    {
+        "File":  "docs\\AUDIT_LEDGER.md",
+        "Line":  23,
+        "Match":  "- חסר שדה `agent_type` מפורש (`system` / `personal` / `device`)"
+    },
+    {
+        "File":  "docs\\SLH_OPERATIONS_MANUAL.md",
+        "Line":  30,
+        "Match":  "- Admin Device: PLACEHOLDER_DEVICE_ID (יש להזין ידנית)"
+    },
+    {
+        "File":  "docs\\SLH_PRE_CONFLICT_CHECKPOINT.json",
+        "Line":  18,
+        "Match":  "\"next_action\":  \"Identify exact Telegram token ownership before stopping any runtime\""
+    },
+    {
+        "File":  "docs\\SLH_REMOTE_RECOVERY_AUDIT_20260809_153009.md",
+        "Line":  87,
+        "Match":  "4. controlled activation"
+    },
+    {
+        "File":  "docs\\SLH_SERVICE_OWNERSHIP_MAP_20260708.md",
+        "Line":  1,
+        "Match":  "# SLH Service Ownership Map"
+    },
+    {
+        "File":  "docs\\architecture\\SLH_OS_RUNTIME_ARCHITECTURE.md",
+        "Line":  3,
+        "Match":  "## State Ownership"
+    },
+    {
+        "File":  "docs\\financial\\SLH_FINANCIAL_ARCHITECTURE.md",
+        "Line":  31,
+        "Match":  "Required before activation:"
+    },
+    {
+        "File":  "docs\\financial\\SLH_REWARD_ENGINE_SPEC.md",
+        "Line":  83,
+        "Match":  "Before activation:"
+    },
+    {
+        "File":  "docs\\financial\\SLH_STAKING_MODEL.md",
+        "Line":  86,
+        "Match":  "Before activation:"
+    },
+    {
+        "File":  "docs\\launch\\SLH_BETA_READINESS.md",
+        "Line":  7,
+        "Match":  "OWNER_ID verified"
+    },
+    {
+        "File":  "docs\\releases\\SLH-v2.0-dashboard-branding.md",
+        "Line":  48,
+        "Match":  "- Community activation"
+    },
+    {
+        "File":  "docs\\SLH\\SLH_TELEGRAM_TOKEN_OWNERSHIP_MAP.json",
+        "Line":  5,
+        "Match":  "\"purpose\":  \"Exact Telegram BOT_TOKEN ownership identification\","
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_APPROVAL_CHECKPOINT_20260713.md",
+        "Line":  52,
+        "Match":  "READY FOR OWNER RELEASE"
+    },
+    {
+        "File":  "docs\\system_memory\\BROADCAST_MESSAGE_PLAN_20260713.md",
+        "Line":  109,
+        "Match":  "## Response Tracking"
+    },
+    {
+        "File":  "docs\\system_memory\\SLH_RUNTIME_BOUNDARY_MAP_20260713.md",
+        "Line":  10,
+        "Match":  "Define system ownership boundaries before SLH ecosystem broadcast."
+    },
+    {
+        "File":  "handlers\\admin_extras.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\advanced_ask_handler.py",
+        "Line":  13,
+        "Match":  "return text or \"No response\""
+    },
+    {
+        "File":  "handlers\\ai_voting_handler.py",
+        "Line":  57,
+        "Match":  "bot.reply_to(m, \"Only owner can register AI agents\")"
+    },
+    {
+        "File":  "handlers\\bot_identity_handler.py",
+        "Line":  17,
+        "Match":  "def is_owner(uid):"
+    },
+    {
+        "File":  "handlers\\broadcast_handler.py",
+        "Line":  2,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\device_bridge.py",
+        "Line":  1,
+        "Match":  "\"\"\"Placeholder for device bridge API\"\"\""
+    },
+    {
+        "File":  "handlers\\device_handler.py",
+        "Line":  3,
+        "Match":  "def load_devices():"
+    },
+    {
+        "File":  "handlers\\dev_admin.py",
+        "Line":  5,
+        "Match":  "OWNER_TELEGRAM_ID = 8789977826"
+    },
+    {
+        "File":  "handlers\\esp_handler.py",
+        "Line":  16,
+        "Match":  "DEVICES_FILE = \"state/devices.json\""
+    },
+    {
+        "File":  "handlers\\exec_handler.py",
+        "Line":  1,
+        "Match":  "from core.exec_policy import is_owner, run_gated"
+    },
+    {
+        "File":  "handlers\\exec_request_handler.py",
+        "Line":  7,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\e_handler.py",
+        "Line":  2,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\firewall_handler.py",
+        "Line":  9,
+        "Match":  "OWNER:"
+    },
+    {
+        "File":  "handlers\\git_handler.py",
+        "Line":  4,
+        "Match":  "REPO_OWNER = \u0027osifeu-prog\u0027"
+    },
+    {
+        "File":  "handlers\\help_handler.py",
+        "Line":  45,
+        "Match":  "📡 Devices"
+    },
+    {
+        "File":  "handlers\\join_handler.py",
+        "Line":  3,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\llm_handler.py",
+        "Line":  51,
+        "Match":  "resp = client.chat.completions.create("
+    },
+    {
+        "File":  "handlers\\loader.py",
+        "Line":  33,
+        "Match":  "(\"device\", \"handlers.device_handler\"),"
+    },
+    {
+        "File":  "handlers\\map_handler.py",
+        "Line":  5,
+        "Match":  "devices = {}"
+    },
+    {
+        "File":  "handlers\\monitor_handler.py",
+        "Line":  33,
+        "Match":  "bot.reply_to(m, \"Usage: /monitor_status \u003cdevice_id\u003e\")"
+    },
+    {
+        "File":  "handlers\\onboarding_v2.py",
+        "Line":  1,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "handlers\\ownership_transfer_handler.py",
+        "Line":  96,
+        "Match":  "print(\"✅ ownership_transfer_handler loaded\")"
+    },
+    {
+        "File":  "handlers\\withdraw_request_handler.py",
+        "Line":  41,
+        "Match":  "bot.reply_to(msg, \"⛔️ OWNER only\")"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  67,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\COMMAND_OWNERSHIP_AUDIT.json"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  50,
+        "Match":  "modified:   device_bridge.py"
+    },
+    {
+        "File":  "mission_control\\handlers_list.txt",
+        "Line":  14,
+        "Match":  "device_bridge.py"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  51,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\handlers\\device_bridge.py"
+    },
+    {
+        "File":  "mission_control\\state_map.txt",
+        "Line":  35,
+        "Match":  "C:\\Users\\USER\\slh-bot-clean\\state\\devices.json                                                                486    7/"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\critical_findings.md",
+        "Line":  6,
+        "Match":  "REPORT_20260723_225642/loader_analysis.txt:    print(\"device_bridge error:\", e)"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\devices.json",
+        "Line":  2,
+        "Match":  "\"devices\": {"
+    },
+    {
+        "File":  "REPORT_20260723_225642\\SUMMARY.md",
+        "Line":  4,
+        "Match":  "- Railway: SLH ONLINE: 090e11a sync: register termux + add device API"
+    },
+    {
+        "File":  "security\\permissions.py",
+        "Line":  4,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID"
+    },
+    {
+        "File":  "security\\policies.json",
+        "Line":  3,
+        "Match":  "\"system_commands\": \"owner\","
+    },
+    {
+        "File":  "security\\roles.json",
+        "Line":  3,
+        "Match":  "\"owner\": [\"*\"],"
+    },
+    {
+        "File":  "services\\task_service.py",
+        "Line":  27,
+        "Match":  "owner = MissionLifecycleService("
+    },
+    {
+        "File":  "SLH_DASHBOARD_RECOVERY_BACKUP_20260811_180605\\bot_gateway.py",
+        "Line":  48,
+        "Match":  "@app.route(\u0027/api/devices\u0027)"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\agents.json",
+        "Line":  7,
+        "Match":  "\"owner_id\": \"8789977826\","
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_201902\\db.json",
+        "Line":  33,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  45,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Line":  45,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_BEFORE_AUDIT_1786472955.json",
+        "Line":  33,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_local_backup_before_sync.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  45,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\db_PROD_BEFORE_SYNC_1786444044.json",
+        "Line":  33,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\devices.json",
+        "Line":  2,
+        "Match":  "\"devices\": {"
+    },
+    {
+        "File":  "state\\governance.json",
+        "Line":  109,
+        "Match":  "\"owner\": 5,"
+    },
+    {
+        "File":  "state\\control\\sync_state.json",
+        "Line":  8,
+        "Match":  "\"devices\": \"state/devices.json\""
+    },
+    {
+        "File":  "state\\control\\system_map.json",
+        "Line":  11,
+        "Match":  "\"esp_sync\": \"pending\""
+    },
+    {
+        "File":  "state\\device_audit_20260820_154149\\git_status.txt",
+        "Line":  2,
+        "Match":  "?? state/device_audit_20260820_154149/"
+    },
+    {
+        "File":  "state\\governance\\genesis_registry.json",
+        "Line":  9,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\governance\\user_classes.json",
+        "Line":  2,
+        "Match":  "\"owner\": ["
+    },
+    {
+        "File":  "state\\missions\\1.json",
+        "Line":  4,
+        "Match":  "\"owner\": \"8789977826\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_171952\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172422\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_172507\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_173832\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\20260807_174602\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T121445Z\\manifest.json",
+        "Line":  87,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131128Z\\manifest.json",
+        "Line":  87,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T131157Z\\manifest.json",
+        "Line":  87,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\db.json",
+        "Line":  5,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260807T132638Z\\manifest.json",
+        "Line":  87,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\agents.json",
+        "Line":  7,
+        "Match":  "\"owner_id\": \"8789977826\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\db.json",
+        "Line":  44,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\snapshots\\agent_state_autopilot\\20260816T192800Z\\manifest.json",
+        "Line":  94,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\takeover\\loader_registration_audit.json",
+        "Line":  25,
+        "Match":  "\"module\": \"handlers.esp_handler\","
+    },
+    {
+        "File":  "state\\takeover\\manifest.json",
+        "Line":  94,
+        "Match":  "\"ownership\": {"
+    },
+    {
+        "File":  "state\\takeover\\pre_alpha_users_backup.json",
+        "Line":  44,
+        "Match":  "\"role\": \"OWNER\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_loading_path_audit.json",
+        "Line":  986,
+        "Match":  "\"OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_access_classification.json",
+        "Line":  344,
+        "Match":  "\"path\": \"handlers\\\\esp_handler.py\","
+    },
+    {
+        "File":  "state\\takeover\\runtime_state_dependency_map.json",
+        "Line":  92,
+        "Match":  "\"code\": \"data = json.loads(resp.read())\""
+    },
+    {
+        "File":  "store\\grant_engine.py",
+        "Line":  5,
+        "Match":  "from core.esp_license import issue_license"
+    },
+    {
+        "File":  "store\\handler.py",
+        "Line":  16,
+        "Match":  "success, response = buy_item(user_id, item_id, get_balance_func, spend_func)"
+    },
+    {
+        "File":  "store\\items.json",
+        "Line":  26,
+        "Match":  "\"esp32_pro\": {"
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  12,
+        "Match":  "\"OWNER_ID\","
+    },
+    {
+        "File":  "tools\\connect_llm_circuit.py",
+        "Line":  19,
+        "Match":  "response = client.chat.completions.create("
+    },
+    {
+        "File":  "tools\\discover_projects.py",
+        "Line":  24,
+        "Match":  "\"platformio.ini\": \"esp32_project\","
+    },
+    {
+        "File":  "tools\\discover_termux_projects.py",
+        "Line":  25,
+        "Match":  "\"platformio.ini\": \"esp32_project\","
+    },
+    {
+        "File":  "tools\\full_static_handler_audit.py",
+        "Line":  18,
+        "Match":  "9. command ownership"
+    },
+    {
+        "File":  "tools\\full_system_audit.py",
+        "Line":  23,
+        "Match":  "from core.identity import OWNER_TELEGRAM_ID, OWNER_VIRTUAL_PHONE, OWNER_ID"
+    },
+    {
+        "File":  "tools\\real_audit.py",
+        "Line":  22,
+        "Match":  "# 2. OWNER - לא לנחש שמות, לבדוק מה באמת קיים"
+    },
+    {
+        "File":  "tools\\session_closure_audit.py",
+        "Line":  166,
+        "Match":  "# CLAIM 006 — OWNER IDENTITY"
+    },
+    {
+        "File":  "tools\\slh_migrate.py",
+        "Line":  949,
+        "Match":  "owner,"
+    },
+    {
+        "File":  "tools\\test_project_registry_contract.py",
+        "Line":  24,
+        "Match":  "\"devices\","
+    },
+    {
+        "File":  "tools\\test_system_snapshot_contract.py",
+        "Line":  28,
+        "Match":  "\"devices\","
+    },
+    {
+        "File":  "tools\\user_acceptance_audit.py",
+        "Line":  172,
+        "Match":  "\"devices\","
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\control\\CHANGE_OWNERSHIP_EVIDENCE.json",
+        "Line":  2,
+        "Match":  "\"schema\":  \"slh-os/change-ownership-evidence/v1\","
+    },
+    {
+        "File":  "_slh_map\\control\\PYTHON_ENTRYPOINTS.json",
+        "Line":  289,
+        "Match":  "\"file\":  \"device_bridge.py\","
+    },
+    {
+        "File":  "_slh_map\\dna\\AUTHORITY_AUDIT.json",
+        "Line":  41,
+        "Match":  "\"api_devices\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  125,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  126,
+        "Match":  "\"core.identity.OWNER_TELEGRAM_ID\""
+    }
+]

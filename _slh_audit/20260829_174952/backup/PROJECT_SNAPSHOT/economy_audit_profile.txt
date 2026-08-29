@@ -1,0 +1,22 @@
+﻿
+def load_db():
+def save_db(db):
+def deep_merge(target, source):
+def get_user(uid):
+            "wallet":{
+                "credits":0
+def update_user(uid,data):
+def get_balance(uid):
+        "wallet",
+        "credits",
+def add_balance(uid,amount):
+    wallet=user.setdefault(
+        "wallet",
+    wallet["credits"]=wallet.get(
+        "credits",
+    return wallet["credits"]
+def add_points(uid,points):
+def complete_course_stage(uid,course,stage):
+def get_progress(uid):
+
+

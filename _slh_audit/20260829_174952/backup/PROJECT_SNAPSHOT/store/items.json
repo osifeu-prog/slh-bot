@@ -1,0 +1,42 @@
+{
+  "course_bitcoin_101": {
+    "name": "קורס ביטקוין",
+    "price": 0,
+    "type": "course",
+    "grant": {
+      "course": "bitcoin_mastery"
+    }
+  },
+  "role_vip": {
+    "name": "תפקיד VIP",
+    "price": 500,
+    "type": "role",
+    "grant": {
+      "permission": "vip_access"
+    }
+  },
+  "bot_signal": {
+    "name": "בוט סיגנלים",
+    "price": 1000,
+    "type": "bot",
+    "grant": {
+      "permission": "signal_bot"
+    }
+  },
+  "esp32_pro": {
+    "name": "ESP32 Pro Device",
+    "price": 888,
+    "type": "hardware",
+    "grant": {
+      "hardware": "esp32_pro"
+    }
+  },
+  "esp32_standard": {
+    "name": "ESP32 Standard Device",
+    "price": 444,
+    "type": "hardware",
+    "grant": {
+      "hardware": "esp32_standard"
+    }
+  }
+}

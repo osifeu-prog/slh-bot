@@ -1,0 +1,41 @@
+﻿{
+    "audit_id":  "20260829_174952",
+    "reviewed_at":  "2026-08-29T17:51:33.1932528+03:00",
+    "application_code_modified":  false,
+    "protected_domains":  [
+                              "business_logic",
+                              "money",
+                              "wallet",
+                              "database",
+                              "deployment",
+                              "financial_authority",
+                              "payment_authority"
+                          ],
+    "protected_files_unchanged":  true,
+    "missing_audit_artifacts":  [
+
+                                ],
+    "command_review":  {
+                           "references_found":  1733,
+                           "review_complete":  true
+                       },
+    "developer_review":  {
+                             "references_found":  12579,
+                             "review_complete":  true
+                         },
+    "academy_review":  {
+                           "references_found":  8498,
+                           "review_complete":  true
+                       },
+    "superadmin_review":  {
+                              "references_found":  71,
+                              "review_complete":  true
+                          },
+    "esp_review":  {
+                       "references_found":  1526,
+                       "candidate_files":  20,
+                       "review_complete":  true
+                   },
+    "next_gate":  "GENERATE_STRUCTURED_TASKS",
+    "final_gate":  "FULL_ESP_ACTIVATION"
+}

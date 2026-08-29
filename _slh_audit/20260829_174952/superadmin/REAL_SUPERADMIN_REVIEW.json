@@ -1,0 +1,357 @@
+﻿[
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\01_root_inventory.txt",
+        "Line":  52,
+        "Text":  "admin_menu.txt                                      -a---- 1127    8/2/2026 11:12:58 PM"
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\PHASE_1B_PRODUCTION_AUTHORITY\\03_boot_references.txt",
+        "Line":  2852,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\SLH_DISCOVERY_20260802_211429.txt                         5082 admin_menu.sh:      pytho..."
+    },
+    {
+        "File":  "AUDIT_20260813_FULL\\11_documents.txt",
+        "Line":  6,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.txt                                                             1127 8/2/2026..."
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  15,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  16,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh.bak_1785650725"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  17,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.txt"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  489,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\slh-bot\\admin_menu.txt"
+    },
+    {
+        "File":  "mission_control\\filesystem_map.txt",
+        "Line":  882,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\slh-bot\\slh-bot\\admin_menu.txt"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  19,
+        "Text":  "new file:   admin_menu.sh"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  20,
+        "Text":  "new file:   admin_menu.sh.bak_1785650725"
+    },
+    {
+        "File":  "mission_control\\git_status.txt",
+        "Line":  21,
+        "Text":  "modified:   admin_menu.txt"
+    },
+    {
+        "File":  "mission_control\\runtime_files.txt",
+        "Line":  813,
+        "Text":  "C:\\Users\\USER\\slh-bot-clean\\admin_menu.sh"
+    },
+    {
+        "File":  "state\\db.json",
+        "Line":  430,
+        "Text":  "\"system_control\""
+    },
+    {
+        "File":  "state\\db_alpha_reset_backup_20260824_151401.json",
+        "Line":  218,
+        "Text":  "\"system_control\""
+    },
+    {
+        "File":  "state\\db_pre_bot_control_20260824_121146.json",
+        "Line":  218,
+        "Text":  "\"system_control\""
+    },
+    {
+        "File":  "tests\\system_check.py",
+        "Line":  24,
+        "Text":  "results.append(ok(\"Admin set\", cfg.get(\"SUPER_ADMIN\") == 8789977826))"
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  6,
+        "Text":  "\"SUPER_ADMIN\","
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  7,
+        "Text":  "\"SUPERADMIN\","
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  8,
+        "Text":  "\"super_admin\","
+    },
+    {
+        "File":  "tools\\admin_authority_audit.py",
+        "Line":  9,
+        "Text":  "\"is_super_admin\","
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185445_579625Z00\\system_map.json",
+        "Line":  103,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T185827_160181Z00\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190214_435023Z00\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190226_486126Z00\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190341_924476Z00\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\2026-08-13T190652_301937Z00\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\scans\\DNA_EXPORT_20260813_215957\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "_slh_map\\system_map.json",
+        "Line":  104,
+        "Text":  "\"admin_panel\""
+    },
+    {
+        "File":  "add_sync_patch.py",
+        "Line":  24,
+        "Text":  "if uid != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "admin_handler.py",
+        "Line":  4,
+        "Text":  "def admin_panel(message):"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  68,
+        "Text":  "SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "bot_stable.py",
+        "Line":  198,
+        "Text":  "if uid != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "CLEAN_CURRENT_TREE.txt",
+        "Line":  71,
+        "Text":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "GIT_AUG_TREE.txt",
+        "Line":  54,
+        "Text":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "GIT_FULL_TREE.txt",
+        "Line":  71,
+        "Text":  "100644 blob 811a99540cd1d11b79ec863eabeac3f089509ac0\tadmin_menu.txt"
+    },
+    {
+        "File":  "GIT_HISTORY_GRAPH.txt",
+        "Line":  690,
+        "Text":  "* 8bd4d23 Fix critical bug: remove dead SUPER_ADMIN check crashing /exec, /rlogs, /termlog"
+    },
+    {
+        "File":  "SESSION_STATUS.md",
+        "Line":  8,
+        "Text":  "- admin_menu.sh שוחזר מארכיון (slh-bot-broken)"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  153,
+        "Text":  "-a---- 1127    8/2/2026 11:12:58 PM  admin_menu.txt"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  1249,
+        "Text":  "admin_menu.txt:7: admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  1557,
+        "Text":  "SLH_DISCOVERY_20260802_211429.txt:1675: slh-bot\\config.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\daily_check.sh:with open(\u0027config.json\u0027) as f: token = json.load(f)[\u0027BOT_TOKEN\u0027]"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  1558,
+        "Text":  "SLH_DISCOVERY_20260802_211429.txt:1704: slh-bot\\slh-bot\\config.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\slh-bot\\daily_check.sh:with open(\u0027config.json\u0027) as f: token = json.load(f)[\u0027BOT_TOKEN\u0027]"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  1562,
+        "Text":  "SLH_DISCOVERY_20260802_211429.txt:1794: slh-bot\\snapshots\\config_20260802_2035.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\stable_checkpoint_20260712.sh:TOKEN=$(grep -o \u0027\"BOT_TOKEN\": *\"[^\"]*\"\u0027 config.json | cut -d\u0027\"\u0027 -f4)"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  3731,
+        "Text":  "bot_stable.py:68: SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  3747,
+        "Text":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py:68: SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  3749,
+        "Text":  "archive\\legacy_clients\\agent_client_termux.py:9: SUPER_ADMIN = config.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  3779,
+        "Text":  "tests\\system_check.py:24: results.append(ok(\"Admin set\", cfg.get(\"SUPER_ADMIN\") == 8789977826))"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  3905,
+        "Text":  "admin_menu.txt:7: admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  5714,
+        "Text":  "SLH_AUDIT_20260813_201938.txt:1249: admin_menu.txt:7: admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote"
+    },
+    {
+        "File":  "SLH_AUDIT_20260813_201938.txt",
+        "Line":  6040,
+        "Text":  "SLH_AUDIT_20260813_201938.txt:3905: admin_menu.txt:7: admin /ask /audit /balance /brief /course /course_slh /courses /debug /debugcmd /demo /diagnose /echo /errors /evening_report /giveme /goal /help /history /inbox /join /journal /journal_read /language /leaderboard /llm_provider /memory /morning_report /myprogress /myreport /next /progress /project /register /report /results /roadmap /setname /start_course /task /user /vote"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  34,
+        "Text":  "new file:   admin_menu.sh"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  35,
+        "Text":  "new file:   admin_menu.sh.bak_1785650725"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  36,
+        "Text":  "modified:   admin_menu.txt"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  202,
+        "Text":  "new file:   admin_menu.sh"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  203,
+        "Text":  "new file:   admin_menu.sh.bak_1785650725"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  204,
+        "Text":  "modified:   admin_menu.txt"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  369,
+        "Text":  "admin_menu.sh                                  1658   8/2/2026 9:03:31 PM"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  370,
+        "Text":  "admin_menu.sh.bak_1785650725                   1331   8/2/2026 9:03:31 PM"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  371,
+        "Text":  "admin_menu.txt                                 666    8/2/2026 9:03:31 PM"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  1642,
+        "Text":  "config.json:{\"TELEGRAM_BOT_TOKEN\": \"8737037440:AAEJU4jK-UpuiAHHNz4RNobahi3rTUllDy0\", \"SUPER_ADMIN\": 8789977826}"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  1675,
+        "Text":  "slh-bot\\config.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\daily_check.sh:with open(\u0027config.json\u0027) as f: token = json.load(f)[\u0027BOT_TOKEN\u0027]"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  1704,
+        "Text":  "slh-bot\\slh-bot\\config.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\slh-bot\\daily_check.sh:with open(\u0027config.json\u0027) as f: token = json.load(f)[\u0027BOT_TOKEN\u0027]"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  1794,
+        "Text":  "slh-bot\\snapshots\\config_20260802_2035.json:{\"SUPER_ADMIN\": 8789977826, \"SITE_DIR\": \"/app\", \"DB_FILE\": \"state/db.json\", \"VERSION\": \"1.0-LOCAL\", \"DEMO_MODE\": true, \"BINANCE_API_KEY\": \"demo_key\", \"BINANCE_SECRET\": \"demo_secret\", \"BOT_TOKEN\": \"8737037440:AAG1ySCE_kWd9cgqyl8wgYYDUPQYqoAs5q8\"}slh-bot\\stable_checkpoint_20260712.sh:TOKEN=$(grep -o \u0027\"BOT_TOKEN\": *\"[^\"]*\"\u0027 config.json | cut -d\u0027\"\u0027 -f4)"
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  5082,
+        "Text":  "admin_menu.sh:      python3 -m py_compile bot_gateway.py handlers/*.py admin_handler.py payment_handler.py econ_handler.py 2\u003e\u00261 \u0026\u0026 echo \"Γ£ו ╫¢╫£ ╫פ╫º╫ס╫ª╫ש╫¥ ╫¬╫º╫ש╫á╫ש╫¥ ╫¬╫ק╫ס╫ש╫¿╫ש╫¬\""
+    },
+    {
+        "File":  "SLH_DISCOVERY_20260802_211429.txt",
+        "Line":  5646,
+        "Text":  "SESSION_CLOSURE_MANIFEST.md:- `python3 command_health_check.py` Γאפ ╫₧╫⌐╫ץ╫ץ╫פ admin_menu.txt ╫₧╫ץ╫£ handlers ╫ק╫ש╫ש╫¥, ╫ס╫ץ╫ף╫º HTML crash risk + ╫º╫ץ╫₧╫ñ╫ש╫£╫ª╫ש╫פ. ╫ע╫¥ ╫צ╫₧╫ש╫ƒ ╫¢╫נ╫ץ╫ñ╫ª╫ש╫פ [7] ╫ס-admin_menu.sh"
+    },
+    {
+        "File":  "SLH_LOCAL_TREE.txt",
+        "Line":  13,
+        "Text":  "|   admin_menu.txt"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  68,
+        "Text":  "SUPER_ADMIN = cfg.get(\"SUPER_ADMIN\", 8789977826)"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  198,
+        "Text":  "if uid != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "SLH_STATE_BACKUP_20260812_marketfix_bot_stable.py",
+        "Line":  801,
+        "Text":  "if str(m.chat.id) != str(SUPER_ADMIN):"
+    },
+    {
+        "File":  "SLH_TREE.txt",
+        "Line":  19,
+        "Text":  "|   admin_menu.txt"
+    },
+    {
+        "File":  "TRACKED_FILES.txt",
+        "Line":  71,
+        "Text":  "admin_menu.txt"
+    },
+    {
+        "File":  "WINDOWS_TREE.txt",
+        "Line":  41,
+        "Text":  "-a----          8/2/2026  11:12 PM           1127 admin_menu.txt"
+    }
+]

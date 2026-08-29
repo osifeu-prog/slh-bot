@@ -1,0 +1,25 @@
+{
+  "time": "2026-08-17 19:22:35.599190",
+  "checks": {
+    "python": "3.13.4 (tags/v3.13.4:8a526ec, Jun  3 2025, 17:46:04) [MSC v.1943 64 bit (AMD64)]",
+    "ram": 90.9,
+    "disk": 94.1,
+    "state/db.json": {
+      "exists": false
+    },
+    "state/agents.json": {
+      "exists": true,
+      "size": 984
+    },
+    "state/tasks.json": {
+      "exists": false
+    },
+    "handler_count": 172,
+    "duplicates": {
+      "viewfile": 2,
+      "complete": 2
+    },
+    "ask": "נ₪– ׳׳¡׳₪׳¨ ׳”׳¡׳•׳›׳ ׳™׳ ׳”׳¨׳©׳•׳׳™׳ ׳‘׳׳¢׳¨׳›׳×: 0",
+    "git": ""
+  }
+}

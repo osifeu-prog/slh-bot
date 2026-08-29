@@ -1,0 +1,13 @@
+﻿{
+  "name": "SLH OS",
+  "version": "alpha",
+  "components": {
+    "core": "active",
+    "ask_router": "active",
+    "wallet": "active",
+    "agents": "active",
+    "journal": "pending_control_plane",
+    "tasks": "pending_control_plane",
+    "esp_sync": "pending"
+  }
+}

@@ -1,0 +1,172 @@
+======================================
+ SLH 409 FULL DIAGNOSTIC
+ Mon Jul 13 01:01:36 IDT 2026
+======================================
+
+===== 1. LOCAL PYTHON PROCESSES =====
+u0_a364  17195  0.0  0.1 2167700 4232 pts/1    S+    1970   0:00 ./slh_409_full_diag.sh /data/data/com.termux/files/usr/bin/bash ./slh_409_full_diag.sh
+u0_a364  17196  1.0  0.1 2257176 4228 pts/1    S+    1970   0:00 tee /data/data/com.termux/files/usr/bin/tee slh_409_diag_output.txt
+u0_a364  26312  0.0  0.0 2234460 2704 pts/1    S     1970   0:01 python3 /data/data/com.termux/files/usr/bin/python3 web/api/app.py
+u0_a364  26314  0.0  0.0 2353096 2688 pts/1    S     1970   0:01 python3 /data/data/com.termux/files/usr/bin/python3 -m http.server 8000 -d web/dashboard
+u0_a364  29206  0.0  0.0 2278632 1992 pts/1    T     1970   0:00 git /data/data/com.termux/files/usr/bin/git diff bot_stable.py
+
+===== 2. LOCAL BOT FILE PROCESSES =====
+u0_a364  29206  0.0  0.0 2278632 1992 pts/1    T     1970   0:00 git /data/data/com.termux/files/usr/bin/git diff bot_stable.py
+
+===== 3. TELEGRAM TOKEN TEST =====
+{"ok":true,"result":{"id":8737037440,"is_bot":true,"first_name":"Me","username":"Me_ad_main_bot","can_join_groups":true,"can_read_all_group_messages":false,"supports_inline_queries":false,"supports_guest_queries":false,"can_connect_to_business":false,"has_main_web_app":false,"has_topics_enabled":false,"allows_users_to_create_topics":false,"can_manage_bots":false,"supports_join_request_queries":false}}
+
+===== 4. TELEGRAM WEBHOOK =====
+{"ok":true,"result":{"url":"","has_custom_certificate":false,"pending_update_count":3}}
+
+===== 5. TELEGRAM GETUPDATES TEST =====
+{"ok":true,"result":[{"update_id":36788762,
+"message":{"message_id":19123,"from":{"id":8789977826,"is_bot":false,"first_name":"O","last_name":"U","language_code":"en"},"chat":{"id":8789977826,"first_name":"O","last_name":"U","type":"private"},"date":1783893646,"text":"/ask","entities":[{"offset":0,"length":4,"type":"bot_command"}]}},{"update_id":36788763,
+"message":{"message_id":19124,"from":{"id":8789977826,"is_bot":false,"first_name":"O","last_name":"U","language_code":"en"},"chat":{"id":8789977826,"first_name":"O","last_name":"U","type":"private"},"date":1783893648,"text":"/ask","entities":[{"offset":0,"length":4,"type":"bot_command"}]}},{"update_id":36788764,
+"message":{"message_id":19125,"from":{"id":8789977826,"is_bot":false,"first_name":"O","last_name":"U","language_code":"en"},"chat":{"id":8789977826,"first_name":"O","last_name":"U","type":"private"},"date":1783893649,"text":"/ask","entities":[{"offset":0,"length":4,"type":"bot_command"}]}}]}
+
+===== 6. RAILWAY STATUS =====
+
+Workspace:       osifeu-prog's Projects
+
+Project:         endearing-amazement
+Project ID:      fd30fefb-3d35-48a5-a7cb-e05337e812c4
+
+Environment:     production
+Environment ID:  661caa13-83cb-4197-8825-943bebf96c5a
+
+Linked service
+
+web
+    status:        ● Crashed
+    repo:          osifeu-prog/slh-bot
+    url:           https://web-production-22f28.up.railway.app
+    volume:        web-volume · /app/state · 0.1 GB / 4.9 GB
+    region:        EU West
+    deployment ID: d8dd3d87-b26e-48ca-a7e8-a0fcd429b350
+    service ID:    13d97581-0199-4f6a-80d1-885c9304ffc5
+
+────────────────────────────────────────────────
+
+All resources
+
+    Services
+      - web: ● Crashed · https://web-production-22f28.up.railway.app · web-volume
+
+
+
+===== 7. RAILWAY DEPLOYMENTS =====
+Recent Deployments
+  d8dd3d87-b26e-48ca-a7e8-a0fcd429b350 | CRASHED | 2026-07-13 00:55:25 +03:00
+  d93cdf4c-ea78-4cb5-9a72-3860e27869cf | REMOVED | 2026-07-13 00:55:25 +03:00
+  98166f6d-d065-4f8c-bbdf-9b6c71e89e99 | REMOVED | 2026-07-13 00:47:27 +03:00
+  c4f85347-b773-454c-b9c3-a87d0e079b1c | REMOVED | 2026-07-13 00:23:32 +03:00
+  6d2e74d8-9712-4ceb-b12b-79532a5c1440 | REMOVED | 2026-07-13 00:12:10 +03:00
+  43310375-58e1-4198-8cf8-d7d633affad3 | REMOVED | 2026-07-13 00:12:06 +03:00
+  69a05fe1-b72f-4053-ba2a-dd978b5b723e | REMOVED | 2026-07-12 23:51:34 +03:00
+  22c6c411-9661-40e8-85e2-3b96506056ce | REMOVED | 2026-07-12 23:41:52 +03:00
+  bc9deb04-3355-4243-b562-8c5cb51ba8ec | REMOVED | 2026-07-12 23:29:16 +03:00
+  6e8bc642-96aa-4e55-afc9-a528008e7b0b | REMOVED | 2026-07-12 23:24:49 +03:00
+  0b8cfb10-8cfe-4b14-8381-cb589a2ff63e | REMOVED | 2026-07-12 23:24:49 +03:00
+  b21aaecb-139b-4a6b-a811-aca1b7e7d955 | REMOVED | 2026-07-12 23:23:45 +03:00
+  092b2498-be92-4f78-8fa7-19574382de7e | REMOVED | 2026-07-12 23:22:29 +03:00
+  6724f071-eaee-467a-863c-33aada230f40 | REMOVED | 2026-07-12 23:17:31 +03:00
+  4c0dcd63-32fb-4cb8-aacf-913932bf1f73 | REMOVED | 2026-07-12 23:17:01 +03:00
+  d78cf371-4089-4170-b87b-fa599e1eece3 | REMOVED | 2026-07-12 23:06:09 +03:00
+  c8e8aadd-a276-4edc-91b6-8fa9f64cd0c8 | REMOVED | 2026-07-12 18:31:51 +03:00
+  5a4a7b83-4c89-442c-a33a-21072b956537 | REMOVED | 2026-07-12 18:23:04 +03:00
+  4d3c66b8-6eca-4fd4-a22e-5e5f31dbce51 | REMOVED | 2026-07-12 18:23:04 +03:00
+
+
+===== 8. RAILWAY RECENT LOGS =====
+telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 409. Description: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+❌ BOT ALREADY RUNNING (PID 1)
+🔓 LOCK RELEASED
+🔓 LOCK RELEASED
+Traceback (most recent call last):
+✅ LOCK ACQUIRED (PID 1)
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+✅ LOCK ACQUIRED (PID 1)
+🔓 LOCK RELEASED
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+✅ LOCK ACQUIRED (PID 1)
+🚀 SLH SYSTEM RUNNING
+Traceback (most recent call last):
+🔓 LOCK RELEASED
+
+
+===== 9. DOCKER / RAILWAY START CONFIG =====
+--- Dockerfile ---
+15:ENTRYPOINT ["python3","-u","-B","/app/bot_stable.py"]
+--- railway.json ---
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "restartPolicyType": "ON_FAILURE",
+    "startCommand": null
+  }
+}
+
+
+===== 10. LOCK IMPLEMENTATION =====
+bot_stable.py:9:    slh_lock.acquire_lock()
+slh_lock.py:13:LOCK_FILE = os.path.join(BASE_DIR, ".bot.lock")
+slh_lock.py:16:class SLHLock:
+slh_lock.py:18:        self.lock_file = LOCK_FILE
+slh_lock.py:21:        atexit.register(self.release_lock)
+slh_lock.py:85:    def acquire_lock(self):
+slh_lock.py:110:    def release_lock(self):
+slh_lock.py:120:        self.release_lock()
+slh_lock.py:124:slh_lock = SLHLock()
+
+
+===== 11. TOKEN LOAD PATHS =====
+bot_stable.py:33:    env_token = os.getenv("BOT_TOKEN")
+bot_stable.py:37:        with open("config.json") as f:
+bot_stable.py:39:            token = cfg.get("BOT_TOKEN", "")
+bot_stable.py:53:    with open("config.json") as f:
+bot_stable.py:625:    token = os.getenv("RAILWAY_API_TOKEN", "")
+
+
+===== 12. GIT STATE =====
+ D .bot.lock
+ D runtime/bot.pid
+?? slh_409_diag_output.txt
+?? slh_409_full_diag.sh
+a1f6911 chore: runtime diagnostics and clean checkpoint
+
+======================================
+ END DIAGNOSTIC
+======================================

@@ -1,0 +1,18 @@
+{
+  "policies": {
+    "system_commands": "owner",
+    "exec_request": "developer",
+    "developer_management": "owner",
+    "read_logs": ["owner", "admin", "developer"],
+    "db_read": ["owner", "admin", "developer"],
+    "db_write": "owner",
+    "deploy": "owner",
+    "restart": "owner",
+    "git_push": "owner",
+    "learning": ["owner", "admin", "teacher", "student"],
+    "learning_manage": ["owner", "teacher"],
+    "market": ["owner", "admin", "student"],
+    "agent_management": ["owner", "admin", "system", "agent"],
+    "voting": ["owner", "admin", "student"]
+  }
+}

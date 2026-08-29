@@ -1,0 +1,52 @@
+﻿[
+    {
+        "Artifact":  "AUDIT_MANIFEST.json",
+        "Exists":  true,
+        "Size":  1805
+    },
+    {
+        "Artifact":  "tasks\\MASTER_WORK_PLAN.json",
+        "Exists":  true,
+        "Size":  2438
+    },
+    {
+        "Artifact":  "journal\\AUDIT_JOURNAL_ENTRY.md",
+        "Exists":  true,
+        "Size":  1087
+    },
+    {
+        "Artifact":  "inventory\\project_files.json",
+        "Exists":  true,
+        "Size":  180455
+    },
+    {
+        "Artifact":  "academy\\academy_references.json",
+        "Exists":  true,
+        "Size":  74751
+    },
+    {
+        "Artifact":  "developers\\developer_activation_references.json",
+        "Exists":  true,
+        "Size":  81375
+    },
+    {
+        "Artifact":  "commands\\execution_commands.json",
+        "Exists":  true,
+        "Size":  61383
+    },
+    {
+        "Artifact":  "superadmin\\superadmin_references.json",
+        "Exists":  true,
+        "Size":  24974
+    },
+    {
+        "Artifact":  "esp\\esp_references.json",
+        "Exists":  true,
+        "Size":  38072
+    },
+    {
+        "Artifact":  "backup\\snapshot_sha256.json",
+        "Exists":  true,
+        "Size":  297487
+    }
+]

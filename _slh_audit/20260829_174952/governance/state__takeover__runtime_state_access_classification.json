@@ -1,0 +1,355 @@
+{
+  "generated_at": "2026-08-24T12:18:46.120452+00:00",
+  "source_map": "state\\takeover\\runtime_state_dependency_map.json",
+  "source_of_truth": "core.agent_state_store.AgentStateStore",
+  "total_classified": 28,
+  "classifications": [
+    {
+      "path": "bot_stable.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "CONFIG",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 14
+    },
+    {
+      "path": "core\\agent_state_store.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 16
+    },
+    {
+      "path": "core\\firewall.py",
+      "domains": [
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 3
+    },
+    {
+      "path": "core\\profile_manager.py",
+      "domains": [
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 6
+    },
+    {
+      "path": "core\\progress_tracker.py",
+      "domains": [
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 5
+    },
+    {
+      "path": "core\\system_state_gateway.py",
+      "domains": [
+        "AGENT_STATE",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 14
+    },
+    {
+      "path": "state_manager.py",
+      "domains": [
+        "AGENT_STATE",
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "CRITICAL",
+      "finding_count": 5
+    },
+    {
+      "path": "core\\reward_engine.py",
+      "domains": [
+        "EVENT_SERIALIZATION",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "HIGH",
+      "finding_count": 3
+    },
+    {
+      "path": "refresh_token_handler.py",
+      "domains": [
+        "CONFIG",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "HIGH",
+      "finding_count": 3
+    },
+    {
+      "path": "core\\academy_manager.py",
+      "domains": [
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "core\\agent_factory.py",
+      "domains": [
+        "AGENT_STATE",
+        "GLOBAL_DB"
+      ],
+      "scope": "GLOBAL_DB",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 3
+    },
+    {
+      "path": "core\\command_registry_loader.py",
+      "domains": [
+        "UNKNOWN"
+      ],
+      "scope": "core\\command_registry_loader.py",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "core\\context_builder.py",
+      "domains": [
+        "ASK_CONTEXT",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 5
+    },
+    {
+      "path": "core\\control_center.py",
+      "domains": [
+        "AGENT_STATE",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 2
+    },
+    {
+      "path": "core\\economy_service.py",
+      "domains": [
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "handlers\\advanced_ask_handler.py",
+      "domains": [
+        "ASK_CONTEXT",
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB"
+      ],
+      "scope": "ASK",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 2
+    },
+    {
+      "path": "handlers\\llm_handler.py",
+      "domains": [
+        "AGENT_STATE",
+        "ASK_CONTEXT",
+        "CONFIG",
+        "GLOBAL_DB",
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 3
+    },
+    {
+      "path": "marketplace.py",
+      "domains": [
+        "UNKNOWN"
+      ],
+      "scope": "marketplace.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 2
+    },
+    {
+      "path": "security\\permissions.py",
+      "domains": [
+        "USER_STATE"
+      ],
+      "scope": "USERS",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "MEDIUM",
+      "finding_count": 1
+    },
+    {
+      "path": "audit_logger.py",
+      "domains": [
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 2
+    },
+    {
+      "path": "core\\agent_registry.py",
+      "domains": [
+        "AGENT_STATE",
+        "AUDIT_LOG",
+        "GLOBAL_DB"
+      ],
+      "scope": "AUDIT",
+      "access": "READ",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 4
+    },
+    {
+      "path": "core\\ai_guard.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core\\ai_guard.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 3
+    },
+    {
+      "path": "core\\audit.py",
+      "domains": [
+        "AUDIT_LOG",
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "AUDIT",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 2
+    },
+    {
+      "path": "core\\event_store.py",
+      "domains": [
+        "EVENT_SERIALIZATION",
+        "GLOBAL_DB"
+      ],
+      "scope": "GLOBAL_DB",
+      "access": "WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 1
+    },
+    {
+      "path": "core\\mission_lifecycle.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core\\mission_lifecycle.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 13
+    },
+    {
+      "path": "core\\project_graph.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core\\project_graph.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 3
+    },
+    {
+      "path": "core\\project_registry.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "core\\project_registry.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 3
+    },
+    {
+      "path": "handlers\\esp_handler.py",
+      "domains": [
+        "EVENT_SERIALIZATION"
+      ],
+      "scope": "handlers\\esp_handler.py",
+      "access": "READ_WRITE",
+      "is_gateway": false,
+      "priority": "LOW",
+      "finding_count": 3
+    }
+  ]
+}
