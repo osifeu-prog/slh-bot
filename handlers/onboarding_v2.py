@@ -111,9 +111,50 @@ def register(bot):
         )
 
 
-    @bot.message_handler(
-        commands=["start"]
-    )
+    @bot.message_handler(commands=["start"])
+    def start(m):
+        user_id = str(m.from_user.id)
+        user_name = get_display_name(user_id, m.from_user) or "חבר"
+        db = load_db()
+        is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
+        is_new = user_id not in db.get("users", {})
+
+        if not can_start_onboarding(is_owner=is_owner, is_existing_user=not is_new):
+            bot.send_message(m.chat.id, "🚧 ההצטרפות לאלפא סגורה כרגע.\nנדרש Invite כדי להצטרף.")
+            return
+
+        from datetime import datetime
+        now = datetime.now().strftime("%d/%m/%Y %H:%M")
+        user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
+        credits = user_wallet.get("credits", 0)
+        staked = user_wallet.get("staked", 0)
+
+        if is_owner:
+            text = (
+                f"ברוך שובך, {user_name}!\n\n"
+                f"📅 {now}\n"
+                f"👤 משתמש: {user_name}\n"
+                f"💰 יתרה: {credits}\n"
+                f"🔒 סטייקינג: {staked}\n\n"
+                "אני רובוטוש, העוזר האישי שלך.\n"
+                "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
+                "🚀 ה-Dashboard והמערכת האישית שלך מוכנים."
+            )
+        else:
+            text = (
+                f"ברוך הבא, {user_name}!\n\n"
+                f"📅 {now}\n"
+                f"👤 משתמש: {user_name}\n"
+                f"💰 יתרה: {credits}\n"
+                f"🔒 סטייקינג: {staked}\n\n"
+                "אני רובוטוש, העוזר האישי שלך.\n"
+                "כדי להתחיל, השתמש בפקודות הבאות:\n"
+                "/join – הרשמה\n"
+                "/dashboard – לוח אישי\n"
+                "/help – עזרה"
+            )
+
+        bot.send_message(m.chat.id, text)
     def start(m):
 
         user_id = str(
