@@ -1,8 +1,7 @@
-from core import profile_manager
-from security.permissions import get_role, get_permissions, has_permission\nfrom core.authority import is_owner\nfrom core.authority import is_owner\nfrom core.authority import is_owner
+﻿from core import profile_manager
+from security.permissions import get_role, get_permissions, has_permission
 import state_manager
-
-OWNER_TELEGRAM_ID = 8789977826
+from core.authority import is_owner
 
 def register(bot):
     @bot.message_handler(commands=['dev_add'])

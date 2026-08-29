@@ -1,27 +1,21 @@
-import os
-import requests\nfrom core.authority import is_owner\nfrom core.authority import is_owner\nfrom core.authority import is_owner
-
+﻿import os
+import requests
+from core.authority import is_owner
 
 def register(bot):
-
     @bot.message_handler(commands=['deploy'])
     def deploy_cmd(msg):
-
         if not is_owner(msg):
             bot.reply_to(msg, '⛔ Admin only')
             return
-
         token = os.getenv('RAILWAY_API_TOKEN')
-
         if not token:
             bot.reply_to(msg, '❌ RAILWAY_API_TOKEN not set')
             return
-
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
         }
-
         query = """
         mutation {
           serviceInstanceDeploy(
@@ -30,16 +24,9 @@ def register(bot):
           )
         }
         """
-
         url = "https://backboard.railway.app/graphql/v2"
-
-        r = requests.post(
-            url,
-            json={"query": query},
-            headers=headers
-        )
-
+        r = requests.post(url, json={"query": query}, headers=headers)
         if r.status_code == 200:
-            bot.reply_to(msg, "🚀 Redeploy request sent")
+            bot.reply_to(msg, "✅ Redeploy request sent")
         else:
             bot.reply_to(msg, f"❌ Failed ({r.status_code}): {r.text[:200]}")
