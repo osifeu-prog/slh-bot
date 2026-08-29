@@ -59,4 +59,13 @@ def register(bot, context=None):
 
         lines.append("")
         lines.append("✅ סיכום בוקר הושלם")
-        bot.send_message(m.chat.id, "\n".join(lines))
+
+        chat_id = None
+
+        if isinstance(m, dict):
+            chat_id = m.get("chat", {}).get("id")
+        elif hasattr(m, "chat"):
+            chat_id = m.chat.id
+
+        if chat_id:
+            bot.send_message(chat_id, "\n".join(lines))
