@@ -138,7 +138,9 @@ def register(bot):
                 f"🔒 סטייקינג: {staked}\n\n"
                 "אני רובוטוש, העוזר האישי שלך.\n"
                 "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
-                "🚀 ה-Dashboard והמערכת האישית שלך מוכנים."
+                "🚀 ה-Dashboard והמערכת האישית שלך מוכנים.\n\n"
+                "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
+                "https://t.me/+9VUA_6jMyQcxMGVk"
             )
         else:
             text = (
@@ -151,7 +153,9 @@ def register(bot):
                 "כדי להתחיל, השתמש בפקודות הבאות:\n"
                 "/join – הרשמה\n"
                 "/dashboard – לוח אישי\n"
-                "/help – עזרה"
+                "/help – עזרה\n\n"
+                "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
+                "https://t.me/+9VUA_6jMyQcxMGVk"
             )
 
         bot.send_message(m.chat.id, text)

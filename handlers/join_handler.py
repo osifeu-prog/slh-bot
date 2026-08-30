@@ -77,7 +77,9 @@ def register(bot):
                 f"קבוצה: {group}\n\n"
                 "מה תרצה לעשות עכשיו?\n"
                 "📚 /courses\n"
-                "💰 /wallet\n"
+                "💰 /wallet\n\n"
+                "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
+                "https://t.me/+9VUA_6jMyQcxMGVk"
                 "🏆 /leaderboard"
             )
 
