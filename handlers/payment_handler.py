@@ -15,6 +15,8 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
+        bot.send_message(m.chat.id, "⚠️ הפקדות מושבתות זמנית לצורך שדרוג מערכת התשלומים. נסה שוב בקרוב.")
+        return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         if uid not in db.get("users", {}):
