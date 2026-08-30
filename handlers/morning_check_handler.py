@@ -8,14 +8,19 @@ def register(bot, context=None):
         now = datetime.now().strftime("%d/%m/%Y %H:%M")
         lines = ["🌅 דוח פתיחת יום SLH", f"🕒 {now}", ""]
 
-        # 1. Doctor
+        # 1. Doctor (fallback בטוח)
         try:
-            from doctor_handler import generate_health_report
+            # ניסיון לטעון דוח בריאות אם קיים
+            from handlers.doctor_handler import generate_health_report
             doctor = generate_health_report(bot)
             lines.append("🩺 בריאות המערכת:")
-            lines.append(doctor)
-        except Exception as e:
-            lines.append(f"❌ doctor error: {e}")
+            lines.append(str(doctor)[:800])
+        except Exception:
+            try:
+                # fallback פשוט
+                lines.append("🩺 בריאות המערכת: /doctor זמין (לא נטען אוטומטית)")
+            except Exception as e:
+                lines.append(f"❌ doctor error: {e}")
 
         lines.append("")
 
@@ -25,13 +30,13 @@ def register(bot, context=None):
             service = MissionLifecycleService(".")
             board, _ = service.load_state()
             missions = board.get("missions", [])
-            open_missions = [m for m in missions if m.get("status") == "open"]
-            assigned_missions = [m for m in missions if m.get("assigned_to") not in (None, "")]
+            open_m = [x for x in missions if x.get("status") == "open"]
+            assigned_m = [x for x in missions if x.get("assigned_to") not in (None, "")]
             lines.append("📋 משימות:")
-            lines.append(f"   פתוחות: {len(open_missions)}")
-            lines.append(f"   משויכות: {len(assigned_missions)}")
-            for m in missions[:5]:
-                lines.append(f"   - {m.get('id')} [{m.get('status')}]")
+            lines.append(f"   פתוחות: {len(open_m)}")
+            lines.append(f"   משויכות: {len(assigned_m)}")
+            for miss in missions[:5]:
+                lines.append(f"   - {miss.get('id')} [{miss.get('status')}]")
         except Exception as e:
             lines.append(f"❌ missions error: {e}")
 
@@ -40,8 +45,9 @@ def register(bot, context=None):
         # 3. Balance
         try:
             from core import economy_service
-            bal = economy_service.get_balance_safe(str(m.from_user.id))
-            staked = economy_service.get_staked_safe(str(m.from_user.id))
+            uid = str(m.from_user.id)
+            bal = economy_service.get_balance_safe(uid)
+            staked = economy_service.get_staked_safe(uid)
             lines.append(f"💰 יתרה: {bal}")
             lines.append(f"🔒 סטייקינג: {staked}")
         except Exception as e:
@@ -51,21 +57,24 @@ def register(bot, context=None):
 
         # 4. Devices
         try:
-            devices = json.loads(Path("state/devices.json").read_text(encoding="utf-8")).get("devices", {})
-            online = sum(1 for d in devices.values() if d.get("status") == "online")
-            lines.append(f"📡 מכשירים: {len(devices)} ({online} online)")
+            dev_path = Path("state/devices.json")
+            if dev_path.exists():
+                devices = json.loads(dev_path.read_text(encoding="utf-8")).get("devices", {})
+                online = sum(1 for d in devices.values() if d.get("status") == "online")
+                lines.append(f"📡 מכשירים: {len(devices)} ({online} online)")
+            else:
+                lines.append("📡 מכשירים: אין קובץ devices.json")
         except Exception as e:
             lines.append(f"❌ devices error: {e}")
 
         lines.append("")
         lines.append("✅ סיכום בוקר הושלם")
 
-        chat_id = None
-
-        if isinstance(m, dict):
+        # שליחה בטוחה
+        chat_id = getattr(getattr(m, "chat", None), "id", None)
+        if chat_id is None and isinstance(m, dict):
             chat_id = m.get("chat", {}).get("id")
-        elif hasattr(m, "chat"):
-            chat_id = m.chat.id
-
         if chat_id:
             bot.send_message(chat_id, "\n".join(lines))
+        else:
+            bot.reply_to(m, "\n".join(lines))
