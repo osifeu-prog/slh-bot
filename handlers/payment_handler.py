@@ -15,7 +15,10 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
-        bot.send_message(m.chat.id, "⚠️ הפקדות מושבתות זמנית לצורך שדרוג מערכת התשלומים. נסה שוב בקרוב.")
+        bot.send_message(m.chat.id, "⚠️ הפקדות Stars מושבתות זמנית.
+אנא השתמש בהפקדות קריפטו:
+- /deposit_address (BNB)
+- /ton_address (TON)")
         return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
