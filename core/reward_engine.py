@@ -26,7 +26,7 @@ def _save(data):
     LEDGER.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def grant(uid, reason, credits=0, points=0):
+def grant(uid, reason, credits=0, points=0, idempotency_key=None):
     if not uid:
         raise ValueError("Reward requires user id")
     if not reason:
@@ -34,11 +34,17 @@ def grant(uid, reason, credits=0, points=0):
     if credits == 0 and points == 0:
         raise ValueError("Empty reward rejected")
 
+    key = idempotency_key or f"{uid}:{reason}"
+
     result = {}
     if credits:
-        result["credits"] = economy_bridge.add_credits(uid, credits)
+        result["credits"] = economy_bridge.add_credits(
+            uid, credits, reason=reason, meta={"idempotency_key": key}
+        )
     if points:
-        profile_manager.add_points(uid, points)
+        profile_manager.add_points(
+            uid, points, reason=reason, meta={"idempotency_key": key}
+        )
         result["points"] = points
 
     entry = {

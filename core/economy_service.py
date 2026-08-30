@@ -34,6 +34,14 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
 
+        ledger = db.setdefault("ledger", [])
+
+        idempotency_key = meta.get("idempotency_key")
+        if idempotency_key:
+            for entry in ledger:
+                if entry.get("meta", {}).get("idempotency_key") == idempotency_key:
+                    return entry["after"]
+
         user = users[uid]
         wallet = user.setdefault("wallet", {})
 
@@ -44,8 +52,6 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
             raise ValueError("INSUFFICIENT_CREDITS")
 
         wallet["credits"] = after
-
-        ledger = db.setdefault("ledger", [])
 
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),

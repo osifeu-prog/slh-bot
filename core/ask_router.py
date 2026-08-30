@@ -1,8 +1,19 @@
+import re
+
 from core.ask_guard import guard
 from core.context_builder import get_context
 from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
+
+
+def _kw_match(kw, text_lower):
+    kwl = kw.lower()
+    if not kwl:
+        return False
+    if re.match(r'^\w', kwl):
+        return bool(re.search(r'\b' + re.escape(kwl) + r'\b', text_lower))
+    return kwl in text_lower
 
 INTENTS = {
     "missions": ["משימות","המשימות","tasks","missions"],
@@ -47,7 +58,7 @@ def detect_intent(text):
             continue
 
         for kw in INTENTS[intent]:
-            if kw and kw.lower() in text_lower:
+            if kw and _kw_match(kw, text_lower):
                 return intent
 
     return "general"

@@ -151,8 +151,10 @@ def add_balance(uid, amount):
     )
 
 
-def add_points(uid, points):
+def add_points(uid, points, reason="unknown", meta=None):
     uid = str(uid)
+    meta = meta or {}
+    idempotency_key = meta.get("idempotency_key")
 
     def mutate(db):
         user = (
@@ -160,9 +162,26 @@ def add_points(uid, points):
               .setdefault(uid, _default_user(uid))
         )
 
+        points_ledger = user.setdefault("points_ledger", [])
+
+        if idempotency_key:
+            for entry in points_ledger:
+                if entry.get("meta", {}).get("idempotency_key") == idempotency_key:
+                    return dict(user.get("gamification", {}))
+
         game = user.setdefault("gamification", {})
-        game["points"] = game.get("points", 0) + points
+        before = game.get("points", 0)
+        game["points"] = before + points
         game["level"] = (game["points"] // 100) + 1
+
+        points_ledger.append({
+            "time": datetime.utcnow().isoformat(),
+            "before": before,
+            "amount": points,
+            "after": game["points"],
+            "reason": reason,
+            "meta": meta,
+        })
 
         return dict(game)
 
