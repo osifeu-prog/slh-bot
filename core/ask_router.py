@@ -35,7 +35,7 @@ FORBIDDEN_ASK_TOPICS = ["launch_state","launch","alpha_open","alpha","blocked","
 
 def is_system_state_question(text):
     text_lower = text.strip().lower()
-    return any(t in text_lower for t in FORBIDDEN_ASK_TOPICS)
+    return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
 PRIORITY = ["staking","wallet","missions","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis"]
 
