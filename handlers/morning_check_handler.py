@@ -8,19 +8,14 @@ def register(bot, context=None):
         now = datetime.now().strftime("%d/%m/%Y %H:%M")
         lines = ["🌅 דוח פתיחת יום SLH", f"🕒 {now}", ""]
 
-        # 1. Doctor (fallback בטוח)
+        # 1. Doctor
         try:
-            # ניסיון לטעון דוח בריאות אם קיים
             from handlers.doctor_handler import generate_health_report
             doctor = generate_health_report(bot)
             lines.append("🩺 בריאות המערכת:")
             lines.append(str(doctor)[:800])
         except Exception:
-            try:
-                # fallback פשוט
-                lines.append("🩺 בריאות המערכת: /doctor זמין (לא נטען אוטומטית)")
-            except Exception as e:
-                lines.append(f"❌ doctor error: {e}")
+            lines.append("🩺 בריאות המערכת: /doctor זמין")
 
         lines.append("")
 
@@ -70,7 +65,6 @@ def register(bot, context=None):
         lines.append("")
         lines.append("✅ סיכום בוקר הושלם")
 
-        # שליחה בטוחה
         chat_id = getattr(getattr(m, "chat", None), "id", None)
         if chat_id is None and isinstance(m, dict):
             chat_id = m.get("chat", {}).get("id")
