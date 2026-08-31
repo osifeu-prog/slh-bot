@@ -51,7 +51,7 @@ def purchase(uid, item_id):
         if referrer_uid and str(referrer_uid) != str(uid):
             referrer_uid = str(referrer_uid)
             if referrer_uid in users:
-                commission = round(price * 0.85, 2)
+                commission = round(price * 0.0, 2)
                 if commission > 0:
                     from core.economy_bridge import add_credits
                     add_credits(
