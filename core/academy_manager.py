@@ -69,10 +69,13 @@ def complete_stage(uid, course_id, stage):
     )
 
 
+    key = f"{uid}:lesson_complete:{course_id}:{stage}"
     reward = reward_engine.grant(
         uid,
+        reason=f"lesson_complete:{course_id}:{stage}",
         credits=10,
-        points=25
+        points=25,
+        idempotency_key=key
     )
 
 
