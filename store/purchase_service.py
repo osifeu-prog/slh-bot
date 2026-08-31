@@ -1,4 +1,4 @@
-﻿import json
+import json
 from datetime import datetime
 
 from store.engine import load_items
@@ -41,6 +41,29 @@ def purchase(uid, item_id):
     if result is False:
         return False, "PAYMENT_FAILED"
 
+    # --- Referral commission ---
+    commission = 0
+    try:
+        import state_manager
+        db = state_manager.load_db()
+        users = db.get("users", {})
+        referrer_uid = users.get(str(uid), {}).get("referral", {}).get("referred_by")
+        if referrer_uid and str(referrer_uid) != str(uid):
+            referrer_uid = str(referrer_uid)
+            if referrer_uid in users:
+                commission = round(price * 0.85, 2)
+                if commission > 0:
+                    from core.economy_bridge import add_credits
+                    add_credits(
+                        referrer_uid,
+                        commission,
+                        reason="referral:commission",
+                        meta={"source_uid": str(uid), "purchase_item": item_id}
+                    )
+    except Exception:
+        commission = 0
+    # -----------------------------
+
     grant_result = None
 
     if "grant" in item:
@@ -53,6 +76,7 @@ def purchase(uid, item_id):
         "item": item_id,
         "amount": price,
         "grant": grant_result,
+        "commission": commission,
         "timestamp": datetime.utcnow().isoformat()
     })
 
@@ -61,5 +85,6 @@ def purchase(uid, item_id):
     return True, {
         "item": item["name"],
         "paid": price,
-        "grant": grant_result
+        "grant": grant_result,
+        "commission": commission
     }

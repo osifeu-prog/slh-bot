@@ -63,5 +63,65 @@
         "lesson": "lessons/bitcoin_mastery/12.txt"
       }
     ]
+  },
+  "ethereum": {
+    "title": "Ethereum Mastery",
+    "stages": [
+      {
+        "id": 1,
+        "name": "מבוא לאתריום",
+        "lesson": "lessons/ethereum/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "חוזים חכמים",
+        "lesson": "lessons/ethereum/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "DeFi ו-Ethereum",
+        "lesson": "lessons/ethereum/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "Layer 2 ו-Scaling",
+        "lesson": "lessons/ethereum/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "השוואה לרשתות אחרות",
+        "lesson": "lessons/ethereum/5.txt"
+      }
+    ]
+  },
+  "slh_vs_eth_sol": {
+    "title": "SLH OS vs Ethereum & Solana",
+    "stages": [
+      {
+        "id": 1,
+        "name": "מה זה SLH OS",
+        "lesson": "lessons/slh_vs_eth_sol/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "אתריום: יתרונות וחסרונות",
+        "lesson": "lessons/slh_vs_eth_sol/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "סולנה: מהיר אך ריכוזי?",
+        "lesson": "lessons/slh_vs_eth_sol/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "מדוע להשקיע ב-SLH?",
+        "lesson": "lessons/slh_vs_eth_sol/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "השוואת עלויות וביצועים",
+        "lesson": "lessons/slh_vs_eth_sol/5.txt"
+      }
+    ]
   }
 }
