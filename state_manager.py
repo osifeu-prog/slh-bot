@@ -1,5 +1,6 @@
-import state_manager
-import json, os
+import json
+import os
+import fcntl
 
 try:
     with open("config.json") as f:
@@ -23,24 +24,15 @@ def save_db(db):
 
 AGENTS_FILE = "state/db.json"
 
-
 def get_agents():
-    try:
-        db = load_db()
-        return state_manager.get_agents()
-    except Exception as e:
-        print("Could not load agents:", e)
-        return {}
-
+    from core.agent_state_store import AgentStateStore
+    store = AgentStateStore()
+    return store.get_all()
 
 def set_agents(agents):
-    try:
-        db = load_db()
-        db["agents"] = agents
-        save_db(db)
-    except Exception as e:
-        print("Could not save agents:", e)
-
+    db = load_db()
+    db["agents"] = agents
+    save_db(db)
 
 def update_agent(prefix, data):
     agents = get_agents()
@@ -56,8 +48,6 @@ def delete_agent(prefix):
 def clear_agents():
     set_agents({})
 
-
-
 try:
     import fcntl
     HAS_FCNTL = True
@@ -65,7 +55,6 @@ except ImportError:
     HAS_FCNTL = False
 
 _LOCK_PATH = DB_FILE + ".lock"
-
 
 def atomic_update(mutate_fn):
     """
@@ -84,9 +73,3 @@ def atomic_update(mutate_fn):
         finally:
             if HAS_FCNTL:
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
-
-
-def get_agents():
-    from core.agent_state_store import AgentStateStore
-    store = AgentStateStore()
-    return store.get_all()
