@@ -123,6 +123,12 @@ def register(bot):
             bot.send_message(m.chat.id, "🚧 ההצטרפות לאלפא סגורה כרגע.\nנדרש Invite כדי להצטרף.")
             return
 
+        parts = (m.text or "").split(maxsplit=1)
+        if is_new and len(parts) > 1 and parts[1].startswith("ref_"):
+            ref_uid = parts[1][4:].strip()
+            if ref_uid and ref_uid != user_id:
+                update_user(user_id, {"referral": {"referred_by": ref_uid}})
+
         from datetime import datetime
         now = datetime.now().strftime("%d/%m/%Y %H:%M")
         user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
@@ -140,7 +146,9 @@ def register(bot):
                 "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
                 "🚀 ה-Dashboard והמערכת האישית שלך מוכנים.\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk"
+                "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
+                f"📎 קישור ההזמנה האישי שלך:\n"
+                f"https://t.me/Me_ad_main_bot?start=ref_{user_id}"
             )
         else:
             text = (
@@ -155,7 +163,9 @@ def register(bot):
                 "/dashboard – לוח אישי\n"
                 "/help – עזרה\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk"
+                "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
+                f"📎 קישור ההזמנה האישי שלך:\n"
+                f"https://t.me/Me_ad_main_bot?start=ref_{user_id}"
             )
 
         bot.send_message(m.chat.id, text)
