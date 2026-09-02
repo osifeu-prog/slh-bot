@@ -23,6 +23,12 @@ def register(bot, context=None):
     if lifecycle is None:
         lifecycle = MissionLifecycleService(".")
 
+    is_admin = (
+        context.get("is_admin")
+        if isinstance(context, dict)
+        else None
+    )
+
     @bot.message_handler(commands=['mission'])
     def mission_cmd(m):
         parts = m.text.split(' ', 2)
@@ -30,6 +36,11 @@ def register(bot, context=None):
             bot.reply_to(m, "שימוש: /mission add <תיאור> | list | assign <id> <agent> | done <id> | rewards")
             return
         action = parts[1].lower()
+
+        if action in {"add", "assign", "done", "run"}:
+            if not callable(is_admin) or not is_admin(m):
+                bot.reply_to(m, "❌ פעולה זו זמינה ל-Owner בלבד.")
+                return
 
         board, manifest = (
             lifecycle.load_state()

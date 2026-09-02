@@ -11,11 +11,13 @@ It does NOT dynamically import arbitrary names from state/db.json.
 
 from agents.echo import EchoAgent
 from agents.system_guard import SystemGuardAgent
+from agents.mission_executor import MissionExecutorAgent
 
 
 AGENT_CLASS_MAP = {
     "EchoAgent": EchoAgent,
     "SystemGuardAgent": SystemGuardAgent,
+    "MissionExecutorAgent": MissionExecutorAgent,
 }
 
 
@@ -174,6 +176,15 @@ def load_agents_into_kernel(kernel, db=None):
 
 
 RUNTIME_MANIFESTS = {
+    "MissionExecutorAgent": {
+        "name": "MissionExecutorAgent",
+        "version": "1.0",
+        "capabilities": ["mission_execution"],
+        "read_only": True,
+        "db_access": False,
+        "external_io": False,
+    },
+
     "EchoAgent": {
         "name": "EchoAgent",
         "version": "1.0",

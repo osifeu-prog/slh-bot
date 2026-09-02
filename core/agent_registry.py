@@ -43,8 +43,12 @@ def create_agent(name, role="agent", owner_id=None):
 
     agents = STORE.get_all()
 
-    for agent in agents.values():
+    for agent_id, agent in agents.items():
         if str(agent.get("name", "")).lower() == name.lower():
+            # אם הבעלים תואם – החזר קיים
+            if owner_id is not None and str(agent.get("owner_id", "")) == str(owner_id):
+                return str(agent.get("id", agent_id)), agent
+            # אחרת – חסום שם כפול
             raise ValueError(f"Agent '{name}' already exists")
 
     numeric_ids = []

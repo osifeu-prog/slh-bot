@@ -354,7 +354,7 @@ def register(bot):
 
             bot.send_message(
                 call.message.chat.id,
-                f"ג„¹ן¸ {e}"
+                f"⚠️ {e}"
             )
 
         except Exception as e:
