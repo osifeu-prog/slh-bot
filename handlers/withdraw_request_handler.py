@@ -2,6 +2,8 @@ import json
 import time
 from pathlib import Path
 
+from core.authority import is_owner, has_permission
+
 def register(bot):
     @bot.message_handler(commands=["withdraw"])
     def withdraw_cmd(msg):
@@ -37,9 +39,10 @@ def register(bot):
 
     @bot.message_handler(commands=["approve_withdraw"])
     def approve_withdraw_cmd(msg):
-        if str(msg.from_user.id) != "8789977826":
-            bot.reply_to(msg, "⛔️ OWNER only")
-            return
+        uid = str(msg.from_user.id)
+    if not (is_owner(uid) or has_permission(uid, "agents.manage")):
+        bot.reply_to(msg, "⛔️ Admin only")
+        return
         parts = msg.text.split()
         if len(parts) < 2:
             bot.reply_to(msg, "שימוש: /approve_withdraw <req_id>")

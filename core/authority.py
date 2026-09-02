@@ -8,7 +8,7 @@ OWNER/ADMIN lists.
 from core.identity import OWNER_TELEGRAM_ID
 
 OWNER_ID = str(OWNER_TELEGRAM_ID)
-ADMIN_IDS = {OWNER_ID}
+ADMIN_IDS = {OWNER_ID, "5010371391"}
 
 ROLES = {
     "OWNER": ["*"],
