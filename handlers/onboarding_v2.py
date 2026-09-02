@@ -14,13 +14,13 @@ from core.invite_gate import can_start_onboarding
 def load_branding():
     try:
         from datetime import datetime
-        import hdate
+        from hdate import HDate
 
         now = datetime.now()
         date_greg = now.strftime("%d/%m/%Y %H:%M")
 
         try:
-            h = hdate.HDate(now.date(), hebrew=True)
+            h = HDate(now.date(), hebrew=True)
             date_heb = h.render_hebrew_date()
         except Exception:
             date_heb = ""
