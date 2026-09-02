@@ -57,8 +57,7 @@ def ask_groq(prompt):
                     "content": str(prompt)
                 }
             ],
-            max_tokens=2000,
-            reasoning_effort="low"
+            max_tokens=2000
         )
 
         return str(resp.choices[0].message.content or "")
