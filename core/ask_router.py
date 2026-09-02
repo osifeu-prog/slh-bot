@@ -16,7 +16,7 @@ def _kw_match(kw, text_lower):
     return kwl in text_lower
 
 INTENTS = {
-    "missions": ["משימות","המשימות","tasks","missions"],
+    "missions": ["המשימות שלי","רשימת משימות","my tasks","show tasks","/task"],
     "progress": ["התקדמות","מצב התקדמות","progress"],
     "rewards": ["פרסים","תגמולים","rewards"],
     "wallet": ["קרדיטים","קרדיט","credits","credit","balance","יתרה","היתרה שלי","כמה יש לי","ארנק","wallet"],
@@ -26,7 +26,7 @@ INTENTS = {
     "courses": ["/courses","הקורס שלי","רשימת קורסים","אקדמיה"],
     "analysis": ["נתח","ניתוח","תנתח","שיפור","איך לשפר","המלצה","ארכיטקטורה","אסטרטגיה"],
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
-    "help": ["עזרה","פקודות","מה אפשר לעשות","/help"],
+    "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה"],
     "system": ["מהי המערכת","מצב המערכת","סטטוס המערכת","health","status"],
     "general": []
 }
@@ -37,7 +37,7 @@ def is_system_state_question(text):
     text_lower = text.strip().lower()
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
-PRIORITY = ["staking","wallet","missions","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis"]
+PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis","missions"]
 
 def detect_intent(text):
     text_lower = text.strip().lower()
@@ -52,6 +52,10 @@ def detect_intent(text):
 
     if text_lower in greeting_exact:
         return "greeting"
+
+    question_words = ["כיצד", "איך", "מה", "מדוע", "למה", "הסבר", "explain", "how", "what", "why"]
+    if any(word in text_lower for word in question_words):
+        return "general"
 
     for intent in PRIORITY:
         if intent == "greeting":
@@ -75,6 +79,13 @@ def route(text, uid=None):
         return msg
 
     intent = detect_intent(text)
+
+    # Educational / how-to questions should hit LLM, not rigid menus
+    _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
+    tl = text.strip().lower()
+    if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
+        intent = "general"
+
 
     if intent == "staking":
         base = "סטייקינג SLH\n\n1. קנה credits עם Stars: /pay\n2. נעל אותם: /stake <amount>\n\nסטייקינג פנימי בלבד, לא on-chain."
