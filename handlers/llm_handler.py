@@ -64,11 +64,6 @@ def ask_groq(prompt):
         return str(resp.choices[0].message.content or "")
 
     except Exception as e:
-        if "429" in str(e):
-            result = ask_gemini(prompt)
-            if result and not result.startswith("Gemini Error"):
-                return result
-
         return f"LLM Error: {e}"
 
 
@@ -112,17 +107,8 @@ USER QUESTION:
 
     try:
         result = ask_groq(prompt)
-
         if result and not result.startswith("LLM Error:"):
             return result
-
-        time.sleep(1)
-
-        result = ask_gemini(prompt)
-
-        if result and not result.startswith("Gemini Error"):
-            return result
-
         return result or "לא התקבלה תשובה כרגע."
 
     except Exception as e:
