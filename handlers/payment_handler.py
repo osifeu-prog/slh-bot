@@ -15,8 +15,6 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
-        bot.send_message(m.chat.id, "⚠️ הפקדות Stars מושבתות זמנית.\nאנא השתמש בהפקדות קריפטו:\n- /deposit_address (BNB)\n- /ton_address (TON)")
-        return
         uid = str(m.from_user.id)
         db = state_manager.load_db()
         if uid not in db.get("users", {}):
@@ -27,7 +25,7 @@ def register_payment_handlers(bot):
         bot.send_message(
             m.chat.id,
             "💎 Credits unlock: AI asks (/ask), premium agents, and more.\n"
-            "Choose a package below 👇"
+            "Choose a package below 👇\n\nמעדיף קריפטו? /deposit_address (BNB) או /ton_address (TON)"
         )
 
         from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
