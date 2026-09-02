@@ -64,7 +64,7 @@ def _load_db():
     return json.loads(Path("state/db.json").read_text(encoding="utf-8"))
 
 
-def calculate_reward(position_id, rate_per_day=0.0005):
+def calculate_reward(position_id, rate_per_day=0.001333):
     db = _load_db()
     pos = db.get("stake_positions", {}).get(position_id)
     if not pos:
@@ -74,7 +74,7 @@ def calculate_reward(position_id, rate_per_day=0.0005):
     return round(float(pos["amount"]) * days * rate_per_day, 6)
 
 
-def accrue(position_id, rate_per_day=0.0005):
+def accrue(position_id, rate_per_day=0.001333):
     reward = calculate_reward(position_id, rate_per_day)
     db = _load_db()
     pools = db.setdefault("reward_pools", {})
