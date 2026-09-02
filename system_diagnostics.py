@@ -156,9 +156,9 @@ class SystemDiagnostics:
 
     def check_logo_presence(self) -> str:
         """Ensure logo.txt exists."""
-        if os.path.exists("logo.txt"):
-            return "✅ logo.txt present"
-        return "❌ logo.txt missing (use cat > logo.txt ...)"
+        if os.path.exists("branding/SLH_LOGO.txt"):
+            return "✅ branding/SLH_LOGO.txt present"
+        return "❌ branding/SLH_LOGO.txt missing"
 
     def run_all(self):
         methods = [
@@ -185,7 +185,7 @@ class SystemDiagnostics:
         print("║     SLH OS System Diagnostics        ║")
         print("╚══════════════════════════════════════╝")
         print(f"Time: {datetime.now(timezone.utc).isoformat()}")
-        if os.path.exists("logo.txt"):
+        if os.path.exists("branding/SLH_LOGO.txt"):
             print(open("logo.txt").read())
         print("")
         self.run_all()
