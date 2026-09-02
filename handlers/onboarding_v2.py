@@ -14,17 +14,8 @@ from core.invite_gate import can_start_onboarding
 def load_branding():
     try:
         from datetime import datetime
-        from hdate import HDate
-
         now = datetime.now()
         date_greg = now.strftime("%d/%m/%Y %H:%M")
-
-        try:
-            h = HDate(now.date(), hebrew=True)
-            date_heb = h.render_hebrew_date()
-        except Exception:
-            date_heb = ""
-
         logo_lines = [
             'בס"ד',
             "███████╗██╗     ██╗  ██╗",
@@ -41,12 +32,10 @@ def load_branding():
             "🔗 BRIDGE: PC_Osif2 (online)",
             f"Updated: {date_greg}",
         ]
-        if date_heb:
-            logo_lines.append(f"תאריך עברי: {date_heb}")
-
         return "\n".join(logo_lines)
     except Exception:
         return ""
+
 
 def register(bot):
 
