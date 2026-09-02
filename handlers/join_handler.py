@@ -79,7 +79,7 @@ def register(bot):
                 "📚 /courses\n"
                 "💰 /wallet\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk"
+                "https://t.me/+9VUA_6jMyQcxMGVk\n"
                 "🏆 /leaderboard"
             )
 
