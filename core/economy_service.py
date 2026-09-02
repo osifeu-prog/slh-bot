@@ -811,7 +811,7 @@ def transfer_credits(
     import json
     from datetime import datetime, timezone
 
-    from core import state_manager
+    import state_manager
 
     sender_uid = str(sender_uid)
     recipient_uid = str(recipient_uid)
