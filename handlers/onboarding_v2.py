@@ -9,6 +9,15 @@ from core.identity_resolver import get_display_name
 from core.invite_gate import can_start_onboarding
 
 
+
+
+def load_branding():
+    try:
+        with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
 def register(bot):
 
     def load_db():
@@ -136,7 +145,9 @@ def register(bot):
         staked = user_wallet.get("staked", 0)
 
         if is_owner:
+            branding = load_branding()
             text = (
+                f"{branding}\n"
                 f"ברוך שובך, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
@@ -151,7 +162,9 @@ def register(bot):
                 f"https://t.me/Me_ad_main_bot?start=ref_{user_id}"
             )
         else:
+            branding = load_branding()
             text = (
+                f"{branding}\n"
                 f"ברוך הבא, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
