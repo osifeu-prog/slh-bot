@@ -794,3 +794,111 @@ def get_staked_safe(uid):
     if not user:
         return 0
     return user.get("wallet", {}).get("staked", 0)
+
+
+def transfer_credits(
+    sender_uid,
+    recipient_uid,
+    amount,
+    idempotency_key=None,
+    meta=None,
+):
+    """
+    P2P credit transfer between registered users.
+
+    Atomic, validated, and idempotent.
+    """
+    import json
+    from datetime import datetime, timezone
+
+    from core import state_manager
+
+    sender_uid = str(sender_uid)
+    recipient_uid = str(recipient_uid)
+    amount = float(amount)
+
+    if sender_uid == recipient_uid:
+        raise ValueError("SELF_TRANSFER")
+    if amount <= 0:
+        raise ValueError("INVALID_TRANSFER_AMOUNT")
+    if not idempotency_key:
+        raise ValueError("INVALID_IDEMPOTENCY_KEY")
+
+    def mutate(db):
+        users = db.setdefault("users", {})
+
+        sender = users.get(sender_uid)
+        if not sender:
+            raise ValueError("SENDER_NOT_FOUND")
+        recipient = users.get(recipient_uid)
+        if not recipient:
+            raise ValueError("RECIPIENT_NOT_FOUND")
+
+        sender_wallet = sender.setdefault("wallet", {})
+        recipient_wallet = recipient.setdefault("wallet", {})
+
+        sender_balance = float(sender_wallet.get("credits", 0))
+        if sender_balance < amount:
+            raise ValueError("INSUFFICIENT_CREDITS")
+
+        processed = db.setdefault("processed_transfers", {})
+        if idempotency_key in processed:
+            return {
+                "status": "duplicate",
+                "transfer_id": processed[idempotency_key],
+                "amount": amount,
+                "recipient_uid": recipient_uid,
+                "sender_balance": sender_balance,
+            }
+
+        transfer_id = f"TRANSFER-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
+
+        sender_wallet["credits"] = sender_balance - amount
+        recipient_balance = float(recipient_wallet.get("credits", 0))
+        recipient_wallet["credits"] = recipient_balance + amount
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        sender_meta = dict(meta or {})
+        sender_meta.update({
+            "transfer_id": transfer_id,
+            "recipient_uid": recipient_uid,
+        })
+
+        recipient_meta = dict(meta or {})
+        recipient_meta.update({
+            "transfer_id": transfer_id,
+            "sender_uid": sender_uid,
+        })
+
+        ledger = db.setdefault("ledger", [])
+        ledger.append({
+            "time": now,
+            "uid": sender_uid,
+            "before": sender_balance,
+            "amount": -amount,
+            "after": sender_balance - amount,
+            "reason": "p2p:transfer_sent",
+            "meta": sender_meta,
+        })
+        ledger.append({
+            "time": now,
+            "uid": recipient_uid,
+            "before": recipient_balance,
+            "amount": amount,
+            "after": recipient_balance + amount,
+            "reason": "p2p:transfer_received",
+            "meta": recipient_meta,
+        })
+
+        processed[idempotency_key] = transfer_id
+
+        return {
+            "status": "completed",
+            "transfer_id": transfer_id,
+            "amount": amount,
+            "recipient_uid": recipient_uid,
+            "sender_balance": sender_balance - amount,
+        }
+
+    return state_manager.atomic_update(mutate)
