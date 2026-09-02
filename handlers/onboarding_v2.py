@@ -13,8 +13,25 @@ from core.invite_gate import can_start_onboarding
 
 def load_branding():
     try:
-        with open("branding/SLH_LOGO.txt", "r", encoding="utf-8") as f:
-            return f.read()
+        from datetime import datetime
+        now = datetime.now()
+        date_str = now.strftime("%d/%m/%Y %H:%M")
+        logo = (
+            'בס"ד\n'
+            "███████╗██╗     ██╗  ██╗\n"
+            "██╔════╝██║     ██║  ██║\n"
+            "███████╗██║     ███████║\n"
+            "╚════██║██║     ██╔══██║\n"
+            "███████║███████╗██║  ██║\n"
+            "╚══════╝╚══════╝╚═╝  ╚═╝\n\n"
+            "SLH SYSTEM\n"
+            "Smart Layer Hub\n"
+            "🌟 רובוטוש\n"
+            "🆔 972500000001\n"
+            "🔗 BRIDGE: PC_Osif2 (online)\n"
+            f"Updated: {date_str}"
+        )
+        return logo
     except Exception:
         return ""
 
@@ -146,8 +163,11 @@ def register(bot):
 
         if is_owner:
             branding = load_branding()
+            try:
+                bot.send_message(m.chat.id, f"<pre>{branding}</pre>", parse_mode="HTML")
+            except Exception:
+                pass
             text = (
-                f"{branding}\n"
                 f"ברוך שובך, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
@@ -163,8 +183,11 @@ def register(bot):
             )
         else:
             branding = load_branding()
+            try:
+                bot.send_message(m.chat.id, f"<pre>{branding}</pre>", parse_mode="HTML")
+            except Exception:
+                pass
             text = (
-                f"{branding}\n"
                 f"ברוך הבא, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
