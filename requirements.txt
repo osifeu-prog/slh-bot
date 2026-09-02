@@ -8,3 +8,4 @@ groq
 paho-mqtt
 web3==7.16.0
 Pillow
+hdate

@@ -115,14 +115,26 @@ def route(text, uid=None):
             service = MissionLifecycleService()
             board, _ = service.load_state()
             missions = board.get("missions") or board.get("tasks") or []
-            return "משימות:\n" + str(missions)
+            if isinstance(missions, dict):
+                missions = list(missions.values())
+            lines = []
+            for m in missions:
+                if not isinstance(m, dict):
+                    lines.append(str(m))
+                    continue
+                status = m.get("status", "?")
+                desc = m.get("desc", m.get("description", "?"))
+                agent = m.get("assigned_to") or "לא שויך"
+                lines.append(f"#{m.get('id', '?')} [{status}] {desc} (אחראי: {agent})")
+            return "משימות:\n" + "\n".join(lines) if lines else "אין משימות פעילות כרגע."
         except Exception:
             return "אין משימות פעילות כרגע."
 
     elif intent == "progress":
         try:
             from core.profile_manager import get_progress
-            return "התקדמות:\n" + str(get_progress(uid))
+            from core.progress_tracker import progress_report
+            return progress_report()
         except Exception:
             return "לא ניתן לקרוא התקדמות כרגע."
 
@@ -130,7 +142,15 @@ def route(text, uid=None):
         try:
             from core.reward_engine import _load
             rewards = [r for r in _load() if str(r.get("user")) == str(uid)]
-            return "תגמולים:\n" + str(rewards)
+            if not rewards:
+                return "אין תגמולים זמינים כרגע."
+            lines = []
+            for r in rewards:
+                if isinstance(r, dict):
+                    lines.append(f"• {r.get('reason', 'תגמול')}: {r.get('credits', 0)} credits, {r.get('points', 0)} points")
+                else:
+                    lines.append(str(r))
+            return "תגמולים:\n" + "\n".join(lines)
         except Exception:
             return "אין תגמולים זמינים כרגע."
 

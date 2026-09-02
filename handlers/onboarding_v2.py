@@ -14,24 +14,37 @@ from core.invite_gate import can_start_onboarding
 def load_branding():
     try:
         from datetime import datetime
+        import hdate
+
         now = datetime.now()
-        date_str = now.strftime("%d/%m/%Y %H:%M")
-        logo = (
-            'בס"ד\n'
-            "███████╗██╗     ██╗  ██╗\n"
-            "██╔════╝██║     ██║  ██║\n"
-            "███████╗██║     ███████║\n"
-            "╚════██║██║     ██╔══██║\n"
-            "███████║███████╗██║  ██║\n"
-            "╚══════╝╚══════╝╚═╝  ╚═╝\n\n"
-            "SLH SYSTEM\n"
-            "Smart Layer Hub\n"
-            "🌟 רובוטוש\n"
-            "🆔 972500000001\n"
-            "🔗 BRIDGE: PC_Osif2 (online)\n"
-            f"Updated: {date_str}"
-        )
-        return logo
+        date_greg = now.strftime("%d/%m/%Y %H:%M")
+
+        try:
+            h = hdate.HDate(now.date(), hebrew=True)
+            date_heb = h.render_hebrew_date()
+        except Exception:
+            date_heb = ""
+
+        logo_lines = [
+            'בס"ד',
+            "███████╗██╗     ██╗  ██╗",
+            "██╔════╝██║     ██║  ██║",
+            "███████╗██║     ███████║",
+            "╚════██║██║     ██╔══██║",
+            "███████║███████╗██║  ██║",
+            "╚══════╝╚══════╝╚═╝  ╚═╝",
+            "",
+            "SLH SYSTEM",
+            "Smart Layer Hub",
+            "🌟 רובוטוש",
+            "🆔 972500000001",
+            "🔗 BRIDGE: PC_Osif2 (online)",
+            f"Updated: {date_greg}",
+        ]
+        if date_heb:
+            logo_lines.append(f"תאריך עברי: {date_heb}")
+
+        return "\n".join(logo_lines)
     except Exception:
         return ""
 
