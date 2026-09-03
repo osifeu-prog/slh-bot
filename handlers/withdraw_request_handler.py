@@ -40,9 +40,9 @@ def register(bot):
     @bot.message_handler(commands=["approve_withdraw"])
     def approve_withdraw_cmd(msg):
         uid = str(msg.from_user.id)
-    if not (is_owner(uid) or has_permission(uid, "agents.manage")):
-        bot.reply_to(msg, "⛔️ Admin only")
-        return
+        if not (is_owner(uid) or has_permission(uid, "agents.manage")):
+            bot.reply_to(msg, "⛔️ Admin only")
+            return
         parts = msg.text.split()
         if len(parts) < 2:
             bot.reply_to(msg, "שימוש: /approve_withdraw <req_id>")
