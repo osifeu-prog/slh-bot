@@ -70,6 +70,30 @@ def get_tasks(uid):
 
     return jsonify(result)
 
+@app.route("/api/stats")
+def stats():
+    db = load_db()
+    users = db.get("users", {})
+    agents = db.get("agents", {})
+    tasks = db.get("tasks", {})
+    total_credits = 0
+
+    if isinstance(users, dict):
+        for user in users.values():
+            if isinstance(user, dict):
+                wallet = user.get("wallet", {})
+                if isinstance(wallet, dict):
+                    credits = wallet.get("credits", 0)
+                    if isinstance(credits, (int, float)):
+                        total_credits += credits
+
+    return jsonify({
+        "users": len(users) if isinstance(users, dict) else 0,
+        "agents": len(agents) if isinstance(agents, dict) else 0,
+        "tasks": len(tasks) if isinstance(tasks, dict) else 0,
+        "credits": total_credits,
+    })
+
 @app.route("/api/leaderboard")
 def api_leaderboard():
     try:
@@ -107,4 +131,3 @@ if __name__ == "__main__":
 def onchain_status():
     from core.deposit_monitor import get_onchain_status
     return jsonify(get_onchain_status())
-
