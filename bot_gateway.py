@@ -97,24 +97,6 @@ def api_logs():
         return jsonify(lines[-n:]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-@app.route('/api/stats')
-def api_stats():
-    try:
-        with open("state/db.json", encoding="utf-8") as f:
-            db = json.load(f)
-        users = len(db.get("users", {}))
-        tasks = len(db.get("tasks", {}))
-        agents = sum(1 for a in state_manager.get_agents().values() if a.get("state") != "archived")
-        owner = db.get("users", {}).get("8789977826", {})
-        credits = owner.get("wallet", {}).get("credits", 0)
-        return jsonify({
-            "users": users,
-            "tasks": tasks,
-            "agents": agents,
-            "credits": credits
-        }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 def run_flask():
     port = int(os.getenv('PORT', 8080))
