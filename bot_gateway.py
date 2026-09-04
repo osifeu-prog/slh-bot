@@ -121,9 +121,24 @@ STATE_DIR = Path("state")
 STATE_DIR.mkdir(exist_ok=True)
 
 def load_bots():
-    if (STATE_DIR / "bots.json").exists():
-        return json.load(open(STATE_DIR / "bots.json", encoding="utf-8"))
-    return {"Me_ad_main": os.getenv("BOT_TOKEN")}
+    bots = {}
+
+    primary_token = os.getenv("BOT_TOKEN")
+    if primary_token:
+        bots["Me_ad_main"] = primary_token
+
+    bots_file = STATE_DIR / "bots.json"
+    if bots_file.exists():
+        try:
+            extra = json.load(open(bots_file, encoding="utf-8"))
+            if isinstance(extra, dict):
+                for bot_name, token in extra.items():
+                    if bot_name != "Me_ad_main" and token:
+                        bots[bot_name] = token
+        except Exception as e:
+            log(f"Failed to load bots.json: {type(e).__name__}")
+
+    return bots
 
 def run_bot(bot):
     while True:
