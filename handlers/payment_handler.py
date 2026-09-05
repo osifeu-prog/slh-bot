@@ -21,7 +21,6 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "❌ Please /join first.")
             return
 
-        # Explain what you can buy with credits
         bot.send_message(
             m.chat.id,
             "💎 Credits unlock: AI asks (/ask), premium agents, and more.\n"
@@ -39,7 +38,7 @@ def register_payment_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
-        pack_id = call.data.split("_")[1]
+        pack_id = call.data.split("_", 1)[1]
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
             return
@@ -69,6 +68,18 @@ def register_payment_handlers(bot):
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
         print(f"[PAY] Pre-checkout query from {query.from_user.id}, payload={query.invoice_payload}")
+        parts = str(query.invoice_payload or "").split("_")
+        if len(parts) != 3 or parts[0] != "credits" or parts[2] != str(query.from_user.id):
+            bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment recipient.")
+            return
+        try:
+            expected_credits = int(parts[1])
+        except Exception:
+            bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package.")
+            return
+        if expected_credits <= 0 or query.currency != "XTR" or not query.total_amount:
+            bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment details.")
+            return
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
@@ -79,20 +90,15 @@ def register_payment_handlers(bot):
         payload = payment.invoice_payload
         parts = payload.split("_")
 
-        if len(parts) != 3 or parts[0] != "credits":
-            bot.send_message(
-                m.chat.id,
-                "❌ Invalid payment payload."
-            )
+        if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
+            bot.send_message(m.chat.id, "❌ Invalid payment payload.")
+            print(f"[PAY] rejected payload recipient mismatch: uid={uid}")
             return
 
         try:
             credits = int(parts[1])
         except Exception:
-            bot.send_message(
-                m.chat.id,
-                "❌ Error parsing credits."
-            )
+            bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
 
         try:
@@ -111,12 +117,8 @@ def register_payment_handlers(bot):
                 credits=credits,
                 stars_paid=payment.total_amount,
                 currency=payment.currency,
-                telegram_payment_charge_id=(
-                    payment.telegram_payment_charge_id
-                ),
-                provider_payment_charge_id=(
-                    payment.provider_payment_charge_id
-                ),
+                telegram_payment_charge_id=payment.telegram_payment_charge_id,
+                provider_payment_charge_id=payment.provider_payment_charge_id,
                 referrer_uid=referrer_uid,
                 meta={
                     "source": "telegram_successful_payment",
@@ -125,10 +127,7 @@ def register_payment_handlers(bot):
             )
 
             if result["status"] == "duplicate":
-                bot.send_message(
-                    m.chat.id,
-                    "ℹ️ This payment was already processed."
-                )
+                bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
                 return
 
             bot.send_message(
@@ -146,8 +145,7 @@ def register_payment_handlers(bot):
             print(f"[PAY] Atomic payment failed: {e}")
             bot.send_message(
                 m.chat.id,
-                "⚠️ Payment processing failed safely. "
-                "Please contact /paysupport."
+                "⚠️ Payment processing failed safely. Please contact /paysupport."
             )
 
     @bot.message_handler(commands=['paysupport'])
@@ -171,7 +169,7 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "📜 No transactions yet.")
             return
         msg = "📜 **Your transactions:**\n"
-        for tx in txs[-10:]:  # show last 10
+        for tx in txs[-10:]:
             msg += f"▫️ {tx['credits']} credits — {tx['timestamp'][:10]}\n"
         bot.send_message(m.chat.id, msg.strip())
 
@@ -202,41 +200,23 @@ def register_payment_handlers(bot):
             return
 
         if os.getenv("SLH_ALPHA_TEST_MODE", "0") != "1":
-            bot.send_message(
-                m.chat.id,
-                "⛔ Fake payments are disabled in Alpha."
-            )
+            bot.send_message(m.chat.id, "⛔ Fake payments are disabled in Alpha.")
             return
 
         uid = str(m.from_user.id)
-
         try:
             from core import economy_service
-
             balance = economy_service.record_transaction(
                 uid=uid,
                 amount=100,
                 reason="admin:test_payment",
-                meta={
-                    "source": "fakepay",
-                },
+                meta={"source": "fakepay"},
             )
-
-            bot.send_message(
-                m.chat.id,
-                f"💰 100 test credits added. Balance: {balance}"
-            )
-
+            bot.send_message(m.chat.id, f"💰 100 test credits added. Balance: {balance}")
         except Exception as e:
-            bot.send_message(
-                m.chat.id,
-                "❌ Test payment failed safely."
-            )
+            bot.send_message(m.chat.id, "❌ Test payment failed safely.")
             print(f"[PAY] fakepay error: {e}")
 
 
 def register(bot):
     register_payment_handlers(bot)
-
-
-
