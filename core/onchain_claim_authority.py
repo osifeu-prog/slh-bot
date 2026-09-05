@@ -27,11 +27,28 @@ def record_bnb_deposit(uid, credits, amount_bnb, tx_hash, meta=None):
 
         claimed = db.setdefault("claimed_deposits", {})
         existing = claimed.get(tx_hash)
+
+        # Migration-safe idempotency: older versions could have credited the
+        # wallet/ledger before persisting claimed_deposits.
+        if existing is None:
+            for tx in db.get("transactions", []):
+                if str(tx.get("tx_hash", "")) == tx_hash and tx.get("type") == "bnb":
+                    existing = tx
+                    break
+        if existing is None:
+            for entry in db.get("ledger", []):
+                if (
+                    entry.get("reason") == "claim:bnb_deposit"
+                    and str(entry.get("meta", {}).get("tx_hash", "")) == tx_hash
+                ):
+                    existing = entry
+                    break
+
         if existing is not None:
             return {
                 "status": "duplicate",
                 "uid": existing.get("uid", uid),
-                "credits": existing.get("credits", 0),
+                "credits": existing.get("credits", existing.get("amount", 0)),
                 "balance": users[uid].get("wallet", {}).get("credits", 0),
                 "tx_hash": tx_hash,
             }
@@ -60,7 +77,6 @@ def record_bnb_deposit(uid, credits, amount_bnb, tx_hash, meta=None):
             "timestamp": now,
         })
 
-        ledger_meta = {**meta, "tx_hash": tx_hash, "amount_bnb": amount_bnb}
         db.setdefault("ledger", []).append({
             "time": now,
             "uid": uid,
@@ -68,7 +84,7 @@ def record_bnb_deposit(uid, credits, amount_bnb, tx_hash, meta=None):
             "amount": credits,
             "after": after,
             "reason": "claim:bnb_deposit",
-            "meta": ledger_meta,
+            "meta": {**meta, "tx_hash": tx_hash, "amount_bnb": amount_bnb},
         })
 
         return {
