@@ -12,7 +12,6 @@ app = Flask(__name__)
 from core.control_center_api import register_control_center
 register_control_center(app)
 
-# SLH Mini App / Market API
 try:
     from webapp import app as webapp_app
     for rule in webapp_app.url_map.iter_rules():
@@ -75,25 +74,20 @@ def dashboard_style_css():
 @app.route('/branding/<path:filename>')
 def dashboard_branding(filename):
     return send_from_directory('branding', filename)
+
 @app.route('/api/health')
 def api_health():
-    return jsonify({
-        "status": "ok",
-        "service": "SLH OS Dashboard API"
-    }), 200
+    return jsonify({"status": "ok", "service": "SLH OS Dashboard API"}), 200
 
 @app.route('/api/logs')
 def api_logs():
     try:
         n = request.args.get('n', 50, type=int)
         log_file = Path("logs/bot_startup.log")
-
         if not log_file.exists():
             return jsonify([]), 200
-
         with log_file.open("r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
-
         return jsonify(lines[-n:]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -120,26 +114,6 @@ except Exception as e:
 STATE_DIR = Path("state")
 STATE_DIR.mkdir(exist_ok=True)
 
-def load_bots():
-    bots = {}
-
-    primary_token = os.getenv("BOT_TOKEN")
-    if primary_token:
-        bots["Me_ad_main"] = primary_token
-
-    bots_file = STATE_DIR / "bots.json"
-    if bots_file.exists():
-        try:
-            extra = json.load(open(bots_file, encoding="utf-8"))
-            if isinstance(extra, dict):
-                for bot_name, token in extra.items():
-                    if bot_name != "Me_ad_main" and token:
-                        bots[bot_name] = token
-        except Exception as e:
-            log(f"Failed to load bots.json: {type(e).__name__}")
-
-    return bots
-
 def run_bot(bot):
     while True:
         try:
@@ -164,28 +138,44 @@ if __name__ == "__main__":
         while True:
             time.sleep(3600)
 
-    data = load_bots()
-    for bot_name, token in data.items():
-        if not token:
-            log(f"Skipping {bot_name}: no token")
-            continue
-        bot = telebot.TeleBot(token, parse_mode=None)
-        # Removed cp862 fix ׳³ג€™׳’ג€ֲ¬׳’ג‚¬ֲ using native UTF-8
-        # patched_process_new_updates disabled
-        from security.permissions import is_admin as canonical_is_admin
+    started_bots = {}
 
-        handler_context = {
-            "bot_name": bot_name,
-            "is_admin": canonical_is_admin,
-        }
+    primary_token = os.getenv("BOT_TOKEN")
+    if primary_token:
+        try:
+            bot = telebot.TeleBot(primary_token, parse_mode=None)
+            from security.permissions import is_admin as canonical_is_admin
+            handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
+            load_handlers(bot, handler_context)
+            log("[OK] Bot Me_ad_main started")
+            threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
+            started_bots["Me_ad_main"] = bot
+        except Exception as e:
+            log(f"[FAIL] Primary bot Me_ad_main failed: {type(e).__name__}: {e}")
+    else:
+        log("No BOT_TOKEN, primary bot not started")
 
-        load_handlers(bot, handler_context)
-        log(f"[OK] Bot {bot_name} started")
-        threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
-    log("[SLH] All bots + API running. Waiting...")
+    try:
+        bots_file = STATE_DIR / "bots.json"
+        if bots_file.exists():
+            extra = json.load(open(bots_file, encoding="utf-8"))
+            if isinstance(extra, dict):
+                for bot_name, token in extra.items():
+                    if bot_name == "Me_ad_main" or not token:
+                        continue
+                    try:
+                        bot = telebot.TeleBot(token, parse_mode=None)
+                        from security.permissions import is_admin as canonical_is_admin
+                        handler_context = {"bot_name": bot_name, "is_admin": canonical_is_admin}
+                        load_handlers(bot, handler_context)
+                        log(f"[OK] Bot {bot_name} started")
+                        threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
+                        started_bots[bot_name] = bot
+                    except Exception as e:
+                        log(f"[FAIL] Bot {bot_name} failed to start: {type(e).__name__}: {e}")
+    except Exception as e:
+        log(f"[FAIL] Failed to process state/bots.json: {type(e).__name__}: {e}")
+
+    log(f"[SLH] All bots + API running ({len(started_bots)} bots). Waiting...")
     while True:
         time.sleep(1)
-# deploy-marker 20260808_113100
-
-
-
