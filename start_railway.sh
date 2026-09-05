@@ -1,12 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting SLH Railway runtime"
-
-python3 -u web/api/app.py &
-API_PID=$!
-
-python3 -u -B bot_stable.py &
-BOT_PID=$!
-
-wait -n $API_PID $BOT_PID
+# Canonical Railway entrypoint: bot_gateway owns both API and Telegram polling.
+# Keep a single production process to avoid duplicate Telegram getUpdates polling.
+echo "Starting SLH Railway gateway"
+exec python3 -u -B bot_gateway.py
