@@ -10,7 +10,8 @@ _ADMIN_IDS = list(ADMIN_IDS)
 
 
 def is_admin(m):
-    return is_owner(m)
+    role = get_role(m)
+    return role in ("OWNER", "ADMIN")
 
 
 def get_owner():
