@@ -1,19 +1,12 @@
-"""
-SLH Claim + Deposit Address
-"""
+"""SLH Claim + Deposit Address"""
 import json
-import time
 from pathlib import Path
 from core.deposit_monitor import verify_bnb_deposit
-from core import economy_service
+from core.onchain_claim_authority import record_bnb_deposit
 
 
 def _load_db():
     return json.loads(Path("state/db.json").read_text(encoding="utf-8"))
-
-
-def _save_db(db):
-    Path("state/db.json").write_text(json.dumps(db, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def register(bot, context=None):
@@ -31,18 +24,10 @@ def register(bot, context=None):
             bot.reply_to(m, "שימוש: /claim <tx_hash>")
             return
 
-        tx_hash = parts[1]
+        tx_hash = parts[1].strip()
         uid = str(m.from_user.id)
 
-        db = _load_db()
-        claimed = db.setdefault("claimed_deposits", {})
-
-        if tx_hash in claimed:
-            bot.reply_to(m, "❌ הטרנזקציה כבר נזקפה בעבר.")
-            return
-
         res = verify_bnb_deposit(tx_hash)
-
         if not res.get("ok"):
             bot.reply_to(m, f"❌ ההפקדה לא אומתה: {res}")
             return
@@ -53,23 +38,22 @@ def register(bot, context=None):
             return
 
         try:
-            result = economy_service.record_transaction(
-                uid,
-                credits,
-                reason="claim:bnb_deposit",
-                meta={"tx_hash": tx_hash},
+            result = record_bnb_deposit(
+                uid=uid,
+                credits=credits,
+                amount_bnb=res["amount_bnb"],
+                tx_hash=tx_hash,
+                meta={"source": "telegram_claim", "block": res.get("block")},
             )
-            claimed[tx_hash] = {
-                "uid": uid,
-                "amount_bnb": res["amount_bnb"],
-                "credits": credits,
-                "claimed_at": time.time(),
-            }
-            _save_db(db)
+
+            if result["status"] == "duplicate":
+                bot.reply_to(m, "ℹ️ הטרנזקציה כבר נזקפה בעבר.")
+                return
+
             bot.reply_to(
                 m,
                 f"✅ נזקפו {credits} credits\n"
-                f"💰 יתרה: {result.get('after', result)}\n"
+                f"💰 יתרה: {result['balance']}\n"
                 f"📝 TX: {tx_hash}"
             )
         except Exception as e:
