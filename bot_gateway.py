@@ -119,9 +119,21 @@ def run_bot(bot):
         try:
             log("Starting polling...")
             bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
-        except Exception as e:
-            log(f"Polling crashed: {e}")
+        except telebot.apihelper.ApiTelegramException as e:
+            if getattr(e, "error_code", None) == 409:
+                log("FATAL: Telegram 409 Conflict; stopping this polling instance")
+                return
+            log(f"Polling crashed: {type(e).__name__}: {e}")
             time.sleep(10)
+        except Exception as e:
+            log(f"Polling crashed: {type(e).__name__}: {e}")
+            time.sleep(10)
+
+def token_in_use(token, started_tokens):
+    token = str(token or "").strip()
+    if not token:
+        return False
+    return any(token == existing for existing in started_tokens)
 
 if __name__ == "__main__":
     log("=== BOT + API GATEWAY STARTUP ===")
@@ -139,6 +151,7 @@ if __name__ == "__main__":
             time.sleep(3600)
 
     started_bots = {}
+    started_tokens = []
 
     primary_token = os.getenv("BOT_TOKEN")
     if primary_token:
@@ -150,6 +163,7 @@ if __name__ == "__main__":
             log("[OK] Bot Me_ad_main started")
             threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
             started_bots["Me_ad_main"] = bot
+            started_tokens.append(primary_token)
         except Exception as e:
             log(f"[FAIL] Primary bot Me_ad_main failed: {type(e).__name__}: {e}")
     else:
@@ -163,6 +177,9 @@ if __name__ == "__main__":
                 for bot_name, token in extra.items():
                     if bot_name == "Me_ad_main" or not token:
                         continue
+                    if token_in_use(token, started_tokens):
+                        log(f"[SKIP] Bot {bot_name}: duplicate token already in use")
+                        continue
                     try:
                         bot = telebot.TeleBot(token, parse_mode=None)
                         from security.permissions import is_admin as canonical_is_admin
@@ -171,6 +188,7 @@ if __name__ == "__main__":
                         log(f"[OK] Bot {bot_name} started")
                         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                         started_bots[bot_name] = bot
+                        started_tokens.append(token)
                     except Exception as e:
                         log(f"[FAIL] Bot {bot_name} failed to start: {type(e).__name__}: {e}")
     except Exception as e:
