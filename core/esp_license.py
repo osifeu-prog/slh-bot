@@ -6,20 +6,25 @@ from datetime import datetime, timezone, timedelta
 DB_PATH = Path("state/db.json")
 DEV_PATH = Path("state/devices.json")
 
+
 def _load_json(p, default):
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return default
 
+
 def _save_json(p, data):
     p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
 
 def generate_activation_code():
     return "SLH-ACT-" + secrets.token_hex(4).upper()
 
+
 def generate_license_key():
     return "SLH-LIC-" + secrets.token_hex(6).upper()
+
 
 def issue_license(device_id, owner_uid, duration_days=365):
     db = _load_json(DB_PATH, {})
@@ -29,7 +34,27 @@ def issue_license(device_id, owner_uid, duration_days=365):
     if device_id not in devices:
         return {"ok": False, "error": "DEVICE_NOT_FOUND"}
 
+    owner_uid = str(owner_uid)
+    device = devices[device_id]
+    existing_key = device.get("license_key")
     licenses = db.setdefault("esp_licenses", {})
+
+    if existing_key and existing_key in licenses:
+        existing = licenses[existing_key]
+        if str(existing.get("owner_id")) != owner_uid:
+            return {"ok": False, "error": "LICENSE_OWNER_MISMATCH"}
+        return {"ok": True, "license": existing, "already_exists": True}
+
+    for existing in licenses.values():
+        if existing.get("device_id") == device_id:
+            if str(existing.get("owner_id")) != owner_uid:
+                return {"ok": False, "error": "LICENSE_OWNER_MISMATCH"}
+            device["license_key"] = existing.get("license_id")
+            device["activation_code"] = existing.get("activation_code")
+            device["license_status"] = existing.get("status", "sold")
+            device["owner"] = owner_uid
+            _save_json(DEV_PATH, dev_data)
+            return {"ok": True, "license": existing, "already_exists": True}
 
     activation_code = generate_activation_code()
     license_key = generate_license_key()
@@ -40,7 +65,7 @@ def issue_license(device_id, owner_uid, duration_days=365):
     lic = {
         "license_id": license_key,
         "device_id": device_id,
-        "owner_id": str(owner_uid),
+        "owner_id": owner_uid,
         "activation_code": activation_code,
         "status": "sold",
         "issued_at": issued_at,
@@ -52,16 +77,15 @@ def issue_license(device_id, owner_uid, duration_days=365):
     }
 
     licenses[license_key] = lic
-
-    devices[device_id]["license_key"] = license_key
-    devices[device_id]["activation_code"] = activation_code
-    devices[device_id]["license_status"] = "sold"
-    devices[device_id]["owner"] = str(owner_uid)
+    device["license_key"] = license_key
+    device["activation_code"] = activation_code
+    device["license_status"] = "sold"
+    device["owner"] = owner_uid
 
     _save_json(DB_PATH, db)
     _save_json(DEV_PATH, dev_data)
-
     return {"ok": True, "license": lic}
+
 
 def activate_license(device_id, activation_code):
     db = _load_json(DB_PATH, {})
@@ -79,19 +103,15 @@ def activate_license(device_id, activation_code):
 
     if not lic:
         return {"ok": False, "error": "LICENSE_NOT_FOUND"}
-
     if activation_code != lic.get("activation_code"):
         return {"ok": False, "error": "INVALID_ACTIVATION_CODE"}
-
     if lic.get("status") == "activated":
         return {"ok": False, "error": "ALREADY_ACTIVATED"}
 
     now = datetime.now(timezone.utc)
     lic["status"] = "activated"
     lic["activated_at"] = now.isoformat()
-
     devices[device_id]["license_status"] = "activated"
-
     _save_json(DB_PATH, db)
     _save_json(DEV_PATH, dev_data)
 
@@ -102,6 +122,7 @@ def activate_license(device_id, activation_code):
         "mqtt_password": lic["mqtt_password"],
         "expires_at": lic["expires_at"],
     }
+
 
 def get_license(device_id):
     db = _load_json(DB_PATH, {})
