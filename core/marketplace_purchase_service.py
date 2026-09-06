@@ -1,14 +1,15 @@
 """Retry-safe marketplace purchase workflow.
 
-The credit debit is authoritative in state/db.json. Plugin installation is a
-separate filesystem side effect, so purchases are persisted as pending before
-external installation and finalized afterward.
+Marketplace fulfillment is a filesystem side effect, while credits are owned
+by EconomyService. The order is reserved first, the debit is idempotent, and
+fulfillment is finalized only after installation succeeds.
 """
 
 import time
 import uuid
 
 import state_manager
+from core import economy_service
 from plugins_store import install_plugin
 
 
@@ -25,40 +26,23 @@ def purchase_plugin(uid, plugin, request_id=None):
         return False, "INVALID_PRICE"
 
     def reserve(db):
-        users = db.setdefault("users", {})
-        user = users.get(uid)
-        if user is None:
+        if uid not in db.setdefault("users", {}):
             raise ValueError("USER_NOT_FOUND")
         orders = db.setdefault("marketplace_orders", {})
-        if purchase_key in orders:
-            return orders[purchase_key]
+        existing = orders.get(purchase_key)
+        if existing:
+            return existing
 
-        wallet = user.setdefault("wallet", {})
-        before = float(wallet.get("credits", 0) or 0)
-        if before < price:
-            raise ValueError("NOT_ENOUGH_CREDITS")
-
-        wallet["credits"] = before - price
-        now = time.time()
         order = {
             "order_id": f"MKT-{uuid.uuid4().hex}",
             "purchase_key": purchase_key,
             "uid": uid,
             "plugin_id": plugin_id,
             "price": price,
-            "status": "pending_fulfillment",
-            "created_at": now,
+            "status": "payment_pending",
+            "created_at": time.time(),
         }
         orders[purchase_key] = order
-        db.setdefault("ledger", []).append({
-            "time": now,
-            "uid": uid,
-            "before": before,
-            "amount": -price,
-            "after": before - price,
-            "reason": "marketplace:purchase",
-            "meta": {"idempotency_key": purchase_key, "plugin_id": plugin_id, "order_id": order["order_id"]},
-        })
         return order
 
     try:
@@ -66,8 +50,44 @@ def purchase_plugin(uid, plugin, request_id=None):
     except ValueError as exc:
         return False, str(exc)
     except Exception:
+        return False, "ORDER_FAILED"
+
+    if order.get("status") == "completed":
+        return True, order
+
+    try:
+        credits = economy_service.record_transaction(
+            uid,
+            -price,
+            reason="marketplace:purchase",
+            meta={
+                "idempotency_key": purchase_key,
+                "plugin_id": plugin_id,
+                "order_id": order["order_id"],
+            },
+        )
+    except Exception as exc:
+        def mark_payment_failed(db):
+            current = db.setdefault("marketplace_orders", {}).get(purchase_key)
+            if current and current.get("status") != "completed":
+                current["status"] = "payment_failed"
+                current["last_error"] = type(exc).__name__
+                current["last_attempt_at"] = time.time()
+            return current or {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
+
+        state_manager.atomic_update(mark_payment_failed)
         return False, "PAYMENT_FAILED"
 
+    def mark_fulfillment_pending(db):
+        current = db.setdefault("marketplace_orders", {}).get(purchase_key)
+        if not current:
+            return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
+        current["status"] = "pending_fulfillment"
+        current["debited_at"] = time.time()
+        current["balance_after"] = credits
+        return current
+
+    order = state_manager.atomic_update(mark_fulfillment_pending)
     if order.get("status") == "completed":
         return True, order
 
@@ -79,8 +99,7 @@ def purchase_plugin(uid, plugin, request_id=None):
     success = isinstance(install_result, str) and "installed successfully" in install_result.lower()
 
     def finalize(db):
-        orders = db.setdefault("marketplace_orders", {})
-        current = orders.get(purchase_key)
+        current = db.setdefault("marketplace_orders", {}).get(purchase_key)
         if not current:
             return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
         if current.get("status") == "completed":
