@@ -142,12 +142,6 @@ def purchase(uid, item_id, request_id=None):
     if order.get("status") == "completed":
         return True, order
 
-    latest = state_manager.load_db()
-    referrer_uid = latest.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
-    commission = 0.0
-    if referrer_uid and str(referrer_uid) != uid and str(referrer_uid) in latest.get("users", {}):
-        commission = 0.0
-
     def fulfill(db):
         current = db.setdefault("store_purchases", {}).get(purchase_key)
         if not current:
@@ -174,8 +168,11 @@ def purchase(uid, item_id, request_id=None):
                     current["status"] = "pending_fulfillment"
                 return current
 
-            # Only a paid order may reserve inventory for the first time.
-            if current.get("status") != "paid":
+            # The payment is already recorded before entering fulfillment.
+            # Both paid and pending states can reach this branch: pending may
+            # mean a previous attempt found no stock, so a later retry must
+            # re-check inventory rather than permanently freezing the order.
+            if current.get("status") not in {"paid", "pending_fulfillment"}:
                 return current
 
             hw_id = str(grant["hardware"])
