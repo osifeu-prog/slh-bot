@@ -43,7 +43,10 @@ def register(bot, context=None):
             bot.reply_to(m, "❌ Plugin not found.")
             return
 
-        ok, result = purchase_plugin(uid, plugin, request_id=str(getattr(m, "message_id", "")))
+        chat_id = getattr(getattr(m, "chat", None), "id", "unknown")
+        message_id = getattr(m, "message_id", "unknown")
+        request_id = f"chat:{chat_id}:message:{message_id}:plugin:{plugin_id}"
+        ok, result = purchase_plugin(uid, plugin, request_id=request_id)
         if not ok:
             bot.reply_to(m, f"❌ Purchase failed: {result}")
             return
