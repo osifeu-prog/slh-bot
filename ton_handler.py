@@ -118,8 +118,9 @@ def register_ton_handlers(bot):
 
     @bot.message_handler(commands=['ton_rate'])
     def ton_rate(m):
-        from admin_utils import is_admin
-        if not is_admin(m):
+        from core.authority import is_owner
+        if not is_owner(m):
+            bot.reply_to(m, "⛔️ Owner only")
             return
         parts = m.text.split()
         if len(parts) < 2:
@@ -128,17 +129,20 @@ def register_ton_handlers(bot):
             return
         try:
             new_rate = float(parts[1])
+            if new_rate <= 0:
+                raise ValueError
             settings = get_ton_settings()
             settings["rate"] = new_rate
             save_ton_settings(settings)
             bot.send_message(m.chat.id, f"✅ TON rate updated: 1 TON = {new_rate} Credits.")
-        except:
+        except ValueError:
             bot.send_message(m.chat.id, "Invalid rate.")
 
     @bot.message_handler(commands=['ton_set_wallet'])
     def ton_set_wallet(m):
-        from admin_utils import is_admin
-        if not is_admin(m):
+        from core.authority import is_owner
+        if not is_owner(m):
+            bot.reply_to(m, "⛔️ Owner only")
             return
         parts = m.text.split()
         if len(parts) < 2:
@@ -148,7 +152,7 @@ def register_ton_handlers(bot):
         settings = get_ton_settings()
         settings["wallet"] = new_wallet
         save_ton_settings(settings)
-        bot.send_message(m.chat.id, f"✅ Wallet updated.")
+        bot.send_message(m.chat.id, "✅ Wallet updated.")
 
 
 def register(bot):
