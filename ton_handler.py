@@ -1,5 +1,6 @@
 from core import economy_service
 from core import profile_manager
+from core.authority import has_permission
 import requests
 import state_manager
 from datetime import datetime
@@ -44,6 +45,9 @@ def register_ton_handlers(bot):
     @bot.message_handler(commands=['ton_check'])
     def ton_check(m):
         uid = str(m.from_user.id)
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.send_message(m.chat.id, "⛔ TON deposits are not available for this role.")
+            return
         parts = m.text.split()
         if len(parts) < 2:
             bot.send_message(m.chat.id, "Usage: /ton_check <transaction_hash>")
