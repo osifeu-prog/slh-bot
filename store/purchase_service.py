@@ -142,19 +142,9 @@ def purchase(uid, item_id, request_id=None):
     if order.get("status") == "completed":
         return True, order
 
-    # Preserve the existing referral economics. A referral commission rate
-    # must be an explicit product decision, not an incidental PR change.
     latest = state_manager.load_db()
-    referrer_uid = (
-        latest.get("users", {})
-        .get(uid, {})
-        .get("referral", {})
-        .get("referred_by")
-    )
+    referrer_uid = latest.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
     commission = 0.0
-
-    # Referral payout remains disabled until the canonical commission policy
-    # is explicitly configured. No new economic rate is introduced here.
     if referrer_uid and str(referrer_uid) != uid and str(referrer_uid) in latest.get("users", {}):
         commission = 0.0
 
@@ -164,14 +154,30 @@ def purchase(uid, item_id, request_id=None):
             return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
         if current.get("status") == "completed":
             return current
-        if current.get("status") != "paid":
-            return current
 
         grant = current.get("grant") or {}
         uid_local = current["user_id"]
         user = db["users"][uid_local]
 
         if "hardware" in grant:
+            # A previously-created hardware order means inventory was already
+            # reserved. Retry must not decrement inventory or create another
+            # hardware order.
+            existing_grant = current.get("grant_result") or {}
+            existing_order_id = existing_grant.get("order_id")
+            if existing_order_id:
+                hw_order = db.setdefault("hardware_orders", {}).get(existing_order_id)
+                if hw_order and hw_order.get("status") == "completed":
+                    current["status"] = "completed"
+                    current["completed_at"] = datetime.now(timezone.utc).isoformat()
+                else:
+                    current["status"] = "pending_fulfillment"
+                return current
+
+            # Only a paid order may reserve inventory for the first time.
+            if current.get("status") != "paid":
+                return current
+
             hw_id = str(grant["hardware"])
             product = db.setdefault("products", {}).get(hw_id)
             if not isinstance(product, dict):
@@ -197,6 +203,8 @@ def purchase(uid, item_id, request_id=None):
             current["status"] = "pending_fulfillment"
             return current
 
+        if current.get("status") != "paid":
+            return current
         current["grant_result"] = _apply_digital_grant(user, grant)
         current["status"] = "completed"
         current["completed_at"] = datetime.now(timezone.utc).isoformat()
