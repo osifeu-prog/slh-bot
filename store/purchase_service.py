@@ -142,9 +142,8 @@ def purchase(uid, item_id, request_id=None):
     if order.get("status") == "completed":
         return True, order
 
-    # Referral commission is its own authoritative, idempotent credit event.
-    # It is deliberately separate from the buyer debit because EconomyService
-    # owns wallet mutations and can safely retry the commission.
+    # Preserve the existing referral economics. A referral commission rate
+    # must be an explicit product decision, not an incidental PR change.
     latest = state_manager.load_db()
     referrer_uid = (
         latest.get("users", {})
@@ -153,27 +152,11 @@ def purchase(uid, item_id, request_id=None):
         .get("referred_by")
     )
     commission = 0.0
+
+    # Referral payout remains disabled until the canonical commission policy
+    # is explicitly configured. No new economic rate is introduced here.
     if referrer_uid and str(referrer_uid) != uid and str(referrer_uid) in latest.get("users", {}):
-        commission = round(price * 0.85, 2)
-        if commission > 0:
-            try:
-                economy_service.record_transaction(
-                    str(referrer_uid),
-                    commission,
-                    reason="referral:commission",
-                    meta={
-                        "idempotency_key": f"{purchase_key}:referral",
-                        "source_uid": uid,
-                        "purchase_item": item_id,
-                    },
-                )
-                state_manager.atomic_update(
-                    lambda db: _mark(db, referral_status="paid", referral_uid=str(referrer_uid), referral_amount=commission)
-                )
-            except Exception as exc:
-                state_manager.atomic_update(
-                    lambda db: _mark(db, referral_status="pending", referral_error=type(exc).__name__, referral_uid=str(referrer_uid), referral_amount=commission)
-                )
+        commission = 0.0
 
     def fulfill(db):
         current = db.setdefault("store_purchases", {}).get(purchase_key)
