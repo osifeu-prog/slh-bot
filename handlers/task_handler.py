@@ -1,28 +1,20 @@
-from services import task_service
 import json
-from core import economy_bridge
-from core import reward_engine
+from datetime import datetime, timezone
+
+import state_manager
 from core import task_completion_service
 
 
 COMMANDS = {}
-
 TASK_FILE = "state/db.json"
 
 
 def load_db():
-    with open(TASK_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return state_manager.load_db()
 
 
 def save_db(data):
-    with open(TASK_FILE, "w", encoding="utf-8") as f:
-        json.dump(
-            data,
-            f,
-            indent=2,
-            ensure_ascii=False
-        )
+    return state_manager.save_db(data)
 
 
 def task(message, bot):
@@ -35,7 +27,7 @@ def task(message, bot):
 
     txt = "📋 משימות:\n\n"
     for key, t in tasks.items():
-        done = message.from_user.id in t.get("done_by", [])
+        done = str(message.from_user.id) in [str(x) for x in t.get("done_by", [])]
         status = "✅" if done else "⬜"
         progress = t.get("progress", 0)
         task_status = t.get("status", "active")
@@ -115,11 +107,40 @@ def task_add(message, bot):
         bot.send_message(message.chat.id, "שימוש: /task_add <משימה>")
         return
 
-    task = task_service.add_task(args[1])
+    description = args[1].strip()
+    if not description:
+        bot.send_message(message.chat.id, "שימוש: /task_add <משימה>")
+        return
+
+    task_id = "task_" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
+
+    def mutate(db):
+        tasks = db.setdefault("tasks", {})
+        while task_id in tasks:
+            raise RuntimeError("TASK_ID_COLLISION")
+
+        tasks[task_id] = {
+            "id": task_id,
+            "title": description,
+            "desc": description,
+            "status": "active",
+            "progress": 0,
+            "reward": 0,
+            "done_by": [],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return dict(tasks[task_id])
+
+    try:
+        task_data = state_manager.atomic_update(mutate)
+    except Exception as e:
+        bot.send_message(message.chat.id, "❌ יצירת המשימה נכשלה.")
+        print(f"[TASK] task_add error: {e}")
+        return
 
     bot.send_message(
         message.chat.id,
-        f"✅ Task Added\nID: {task['id']}"
+        f"✅ Task Added\nID: {task_data['id']}"
     )
 
 
