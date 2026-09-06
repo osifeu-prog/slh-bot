@@ -1,4 +1,3 @@
-from core import economy_service
 from core.profile_manager import get_user
 from core.stake_position import get_positions
 from core.staking_service import stake_locked, unstake_locked
@@ -26,17 +25,13 @@ def register(bot):
 
     @bot.message_handler(commands=["unstake"])
     def unstake(msg):
-        parts = msg.text.split()
-        if len(parts) < 2:
-            bot.reply_to(msg, "Usage: /unstake <amount>")
-            return
-        try:
-            amount = int(parts[1])
-            uid = str(msg.from_user.id)
-            result = economy_service.unstake_credits(uid, amount, meta={"source": "telegram", "command": "unstake"})
-            bot.reply_to(msg, f"{amount} credits הוחזרו מהסטייקינג\nיתרה: {result['credits']}\nסטייק: {result['staked']}")
-        except Exception as e:
-            bot.reply_to(msg, f"{e}")
+        bot.reply_to(
+            msg,
+            "הסטייקינג החדש נעול לפי Position.\n"
+            "לשחרור לאחר תום התקופה השתמש ב:\n"
+            "/unstake_lock <position_id>\n\n"
+            "לא ניתן לעקוף את תקופת הנעילה באמצעות /unstake <amount>."
+        )
 
     @bot.message_handler(commands=["stake_lock"])
     def stake_lock(msg):
@@ -106,4 +101,4 @@ def register(bot):
 
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
-        bot.reply_to(msg, "סטייקינג SLH\n\nאיך מתחילים?\n1. רכוש credits באמצעות Stars:\n     /pay\n2. נעל credits:\n     /stake <amount>\n\nפקודות:\n/stake <amount>\n/unstake <amount>\n/stake_lock <amount> <days>\n/unstake_lock <position_id>\n/positions\n/rewards\n\nסטייקינג פנימי בלבד, לא on-chain.")
+        bot.reply_to(msg, "סטייקינג SLH\n\nאיך מתחילים?\n1. רכוש credits באמצעות Stars:\n     /pay\n2. נעל credits:\n     /stake <amount>\n\nפקודות:\n/stake <amount>\n/unstake <amount> — חסום עבור סטייק נעול\n/stake_lock <amount> <days>\n/unstake_lock <position_id>\n/positions\n/rewards\n\nסטייקינג פנימי בלבד, לא on-chain.")
