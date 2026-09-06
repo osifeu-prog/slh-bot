@@ -20,7 +20,10 @@ def register(bot):
             return
 
         item_id = parts[1].strip()
-        ok, result = purchase(uid, item_id, request_id=str(getattr(message, "message_id", "")))
+        chat_id = getattr(getattr(message, "chat", None), "id", "unknown")
+        message_id = getattr(message, "message_id", "unknown")
+        request_id = f"chat:{chat_id}:message:{message_id}:item:{item_id}"
+        ok, result = purchase(uid, item_id, request_id=request_id)
         if not ok:
             bot.reply_to(message, f"❌ הרכישה נכשלה: {result}")
             return
