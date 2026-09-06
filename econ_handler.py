@@ -3,6 +3,7 @@ import state_manager
 from core import economy_bridge
 from core import economy_service
 from core import profile_manager
+from core.authority import has_permission
 
 
 def register_econ_handlers(bot):
@@ -23,6 +24,13 @@ def register_econ_handlers(bot):
 
         item = call.data.split("_", 1)[1]
         uid = str(call.from_user.id)
+
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.answer_callback_query(
+                call.id,
+                "Purchases are not available for this role."
+            )
+            return
 
         prices = {
             "ask_credit": 10,
