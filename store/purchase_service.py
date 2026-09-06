@@ -78,6 +78,16 @@ def _reserve(db, uid, item_id, item, purchase_key):
     return order
 
 
+def _mark(db, purchase_key, **fields):
+    current = db.setdefault("store_purchases", {}).get(purchase_key)
+    if not current:
+        return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
+    if current.get("status") == "completed":
+        return current
+    current.update(fields)
+    return current
+
+
 def purchase(uid, item_id, request_id=None):
     uid = str(uid)
     item_id = str(item_id).strip()
@@ -105,43 +115,65 @@ def purchase(uid, item_id, request_id=None):
     if order.get("status") == "completed":
         return True, order
 
-    if order.get("status") != "paid":
+    if order.get("status") not in {"paid", "pending_fulfillment"}:
         try:
             balance_after = economy_service.record_transaction(
                 uid,
                 -price,
                 reason=f"purchase:{item_id}",
-                meta={
-                    "idempotency_key": purchase_key,
-                    "item_id": item_id,
-                },
+                meta={"idempotency_key": purchase_key, "item_id": item_id},
             )
         except Exception as exc:
-            def payment_failed(db):
-                current = db.setdefault("store_purchases", {}).get(purchase_key)
-                if current and current.get("status") != "completed":
-                    current["status"] = "payment_failed"
-                    current["last_error"] = type(exc).__name__
-                return current or {"status": "blocked"}
-
-            state_manager.atomic_update(payment_failed)
+            state_manager.atomic_update(
+                lambda db: _mark(db, purchase_key, status="payment_failed", last_error=type(exc).__name__)
+            )
             return False, "NOT_ENOUGH_SLH" if type(exc).__name__ == "ValueError" else "PAYMENT_FAILED"
 
-        def mark_paid(db):
-            current = db.setdefault("store_purchases", {}).get(purchase_key)
-            if not current:
-                return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
-            if current.get("status") == "completed":
-                return current
-            current["status"] = "paid"
-            current["paid_at"] = datetime.now(timezone.utc).isoformat()
-            current["balance_after"] = balance_after
-            return current
-
-        order = state_manager.atomic_update(mark_paid)
+        order = state_manager.atomic_update(
+            lambda db: _mark(
+                db,
+                purchase_key,
+                status="paid",
+                paid_at=datetime.now(timezone.utc).isoformat(),
+                balance_after=balance_after,
+            )
+        )
 
     if order.get("status") == "completed":
         return True, order
+
+    # Referral commission is its own authoritative, idempotent credit event.
+    # It is deliberately separate from the buyer debit because EconomyService
+    # owns wallet mutations and can safely retry the commission.
+    latest = state_manager.load_db()
+    referrer_uid = (
+        latest.get("users", {})
+        .get(uid, {})
+        .get("referral", {})
+        .get("referred_by")
+    )
+    commission = 0.0
+    if referrer_uid and str(referrer_uid) != uid and str(referrer_uid) in latest.get("users", {}):
+        commission = round(price * 0.85, 2)
+        if commission > 0:
+            try:
+                economy_service.record_transaction(
+                    str(referrer_uid),
+                    commission,
+                    reason="referral:commission",
+                    meta={
+                        "idempotency_key": f"{purchase_key}:referral",
+                        "source_uid": uid,
+                        "purchase_item": item_id,
+                    },
+                )
+                state_manager.atomic_update(
+                    lambda db: _mark(db, referral_status="paid", referral_uid=str(referrer_uid), referral_amount=commission)
+                )
+            except Exception as exc:
+                state_manager.atomic_update(
+                    lambda db: _mark(db, referral_status="pending", referral_error=type(exc).__name__, referral_uid=str(referrer_uid), referral_amount=commission)
+                )
 
     def fulfill(db):
         current = db.setdefault("store_purchases", {}).get(purchase_key)
