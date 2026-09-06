@@ -25,32 +25,27 @@ def _resolve_recipient(db, mission):
         if owner_id is not None and str(owner_id) in db.get("users", {}):
             return str(owner_id)
 
-    # Some deployments represent an agent itself as a wallet user.
     if str(agent_id) in db.get("users", {}):
         return str(agent_id)
 
     return None
 
 
-def issue_mission_reward(mission_id):
-    mission_id = str(mission_id)
+def issue_mission_reward(mission, mission_id=None):
+    if not isinstance(mission, dict):
+        raise ValueError("INVALID_MISSION")
+
+    mission_id = str(mission_id or mission.get("id") or "")
+    if not mission_id:
+        raise ValueError("INVALID_MISSION_ID")
+
+    reward = float(mission.get("reward", 0) or 0)
+    if reward < 0:
+        raise ValueError("INVALID_MISSION_REWARD")
+    if reward == 0:
+        return {"status": "no_reward", "mission_id": mission_id}
 
     def mutate(db):
-        missions = db.get("missions") or db.get("mission_board")
-        # The authoritative mission board is separate from db.json in the
-        # current lifecycle. Keep this function for deployments that mirror it
-        # into db.json, but do not silently manufacture a mission here.
-        if not missions:
-            return {"status": "pending", "reason": "MISSION_BOARD_EXTERNAL"}
-
-        mission = missions.get(mission_id) if isinstance(missions, dict) else None
-        if mission is None:
-            return {"status": "pending", "reason": "MISSION_NOT_IN_DB"}
-
-        reward = float(mission.get("reward", 0) or 0)
-        if reward <= 0:
-            return {"status": "no_reward", "mission_id": mission_id}
-
         ledger = db.setdefault("ledger", [])
         key = f"mission:{mission_id}:reward"
         for entry in ledger:
