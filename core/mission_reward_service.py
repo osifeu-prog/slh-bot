@@ -1,13 +1,12 @@
-"""Mission reward authority.
+"""Retry-safe mission reward adapter.
 
-Mission state and wallet state live in different stores, so completion and
-payment cannot be a single filesystem transaction. This service makes reward
-issuance retry-safe and refuses to guess a recipient.
+Mission lifecycle state and wallet state are separate concerns. Completion is
+owned by MissionLifecycleService; credit issuance is owned by EconomyService.
+The reward operation uses an idempotency key so a retry cannot pay twice.
 """
 
-from datetime import datetime, timezone
-
 import state_manager
+from core import economy_service
 
 
 def _resolve_recipient(db, mission):
@@ -45,48 +44,48 @@ def issue_mission_reward(mission, mission_id=None):
     if reward == 0:
         return {"status": "no_reward", "mission_id": mission_id}
 
-    def mutate(db):
-        ledger = db.setdefault("ledger", [])
-        key = f"mission:{mission_id}:reward"
-        for entry in ledger:
-            if entry.get("meta", {}).get("idempotency_key") == key:
-                return {"status": "duplicate", "mission_id": mission_id}
+    db = state_manager.load_db()
+    recipient = _resolve_recipient(db, mission)
+    if recipient is None:
+        return {
+            "status": "blocked",
+            "reason": "MISSION_REWARD_RECIPIENT_NOT_FOUND",
+            "mission_id": mission_id,
+        }
 
-        recipient = _resolve_recipient(db, mission)
-        if recipient is None:
-            return {
-                "status": "blocked",
-                "reason": "MISSION_REWARD_RECIPIENT_NOT_FOUND",
-                "mission_id": mission_id,
-            }
+    key = f"mission:{mission_id}:reward"
 
-        user = db["users"][recipient]
-        wallet = user.setdefault("wallet", {})
-        before = float(wallet.get("credits", 0) or 0)
-        after = before + reward
-        wallet["credits"] = after
-
-        now = datetime.now(timezone.utc).isoformat()
-        ledger.append({
-            "time": now,
-            "uid": recipient,
-            "before": before,
-            "amount": reward,
-            "after": after,
-            "reason": "mission:completion_reward",
-            "meta": {
+    try:
+        credits = economy_service.record_transaction(
+            recipient,
+            reward,
+            reason="mission:completion_reward",
+            meta={
                 "idempotency_key": key,
                 "mission_id": mission_id,
                 "agent_id": str(mission.get("assigned_to")),
             },
-        })
-
+        )
+    except Exception as exc:
         return {
-            "status": "paid",
+            "status": "blocked",
+            "reason": "MISSION_REWARD_FAILED",
+            "error": type(exc).__name__,
             "mission_id": mission_id,
             "uid": recipient,
-            "reward": reward,
-            "credits": after,
         }
 
-    return state_manager.atomic_update(mutate)
+    latest = state_manager.load_db()
+    ledger = latest.get("ledger", [])
+    duplicate = any(
+        entry.get("meta", {}).get("idempotency_key") == key
+        for entry in ledger
+    )
+
+    return {
+        "status": "paid" if duplicate else "blocked",
+        "mission_id": mission_id,
+        "uid": recipient,
+        "reward": reward if duplicate else 0,
+        "credits": credits if duplicate else None,
+    }
