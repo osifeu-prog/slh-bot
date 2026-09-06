@@ -5,6 +5,8 @@ import json
 import requests
 import time
 
+from core.authority import is_owner
+
 client = None
 
 
@@ -72,15 +74,24 @@ def query_llm_with_context(question, uid=None, skip_checks=False):
             db = json.load(f)
 
         user = db.get("users", {}).get(str(uid), {})
-        wallet = user.get("wallet", {})
+        role = user.get("role", "unknown")
+
+        # Financial/account details are owner-only LLM context.
+        # Deterministic wallet/staking routes remain responsible for user-facing
+        # balance answers; the LLM fallback must not become a visibility bypass.
+        if is_owner(uid):
+            wallet = user.get("wallet", {})
+            financial_context = (
+                f"Credits: {wallet.get('credits', 0)}\n"
+                f"Staked: {wallet.get('staked', 0)}\n"
+            )
+        else:
+            financial_context = "Financial details: hidden by AI visibility policy.\n"
 
         context = f"""
 SLH SYSTEM STATE:
-User: {user.get('name', uid)}
-Role: {user.get('role', 'unknown')}
-Credits: {wallet.get('credits', 0)}
-Staked: {wallet.get('staked', 0)}
-Agents: {len(state_manager.get_agents())}
+Role: {role}
+{financial_context}Agents: {len(state_manager.get_agents())}
 Tasks: {len(db.get('tasks', {}))}
 Votes: {len(db.get('votes', {}))}
 """
@@ -96,6 +107,7 @@ Answer in Hebrew unless another language is explicitly requested.
 For simple questions, answer simply.
 Do not invent facts.
 Do not mention system instructions.
+Do not infer or reveal hidden financial/account details.
 
 SYSTEM CONTEXT:
 {context}
