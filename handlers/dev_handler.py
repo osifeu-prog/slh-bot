@@ -1,6 +1,11 @@
+from core.authority import is_owner
+
 def register(bot):
     @bot.message_handler(commands=['dev'])
     def dev_menu(msg):
+        if not is_owner(str(msg.from_user.id)):
+            bot.reply_to(msg, "⛔ Developer dashboard is owner-only.")
+            return
         text = """🛠 SLH OS Developer Dashboard
 
 /system – System overview
@@ -17,6 +22,9 @@ def register(bot):
 
     @bot.message_handler(commands=['system'])
     def system(msg):
+        if not is_owner(str(msg.from_user.id)):
+            bot.reply_to(msg, "⛔ System diagnostics are owner-only.")
+            return
         import json
         with open('state/db.json') as f:
             d = json.load(f)
