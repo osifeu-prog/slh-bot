@@ -1,4 +1,5 @@
 import json, os, time, re
+from core.authority import is_owner
 
 def load_devices():
     try:
@@ -11,10 +12,17 @@ def save_devices(data):
     with open("state/devices.json", "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+def _owner_only(bot, m):
+    if not is_owner(str(m.from_user.id)):
+        bot.reply_to(m, "⛔ Device management is owner-only.")
+        return False
+    return True
+
 def generate_device_id(name):
     return f"DEV_{name.upper().replace(' ', '_')}_{int(time.time())}"
 
 def register_device(bot, m):
+    if not _owner_only(bot, m): return
     parts = m.text.split(maxsplit=2)
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /device_register <name> [description]")
@@ -23,27 +31,17 @@ def register_device(bot, m):
     desc = parts[2] if len(parts) > 2 else "ESP32 Device"
     data = load_devices()
     devices = data["devices"]
-    # בדוק כפילות
     for did, d in devices.items():
         if d.get("name") == name:
             bot.reply_to(m, f"❌ Device '{name}' already exists (ID: {did})")
             return
     device_id = generate_device_id(name)
-    devices[device_id] = {
-        "name": name,
-        "description": desc,
-        "type": "esp32",
-        "status": "offline",
-        "capabilities": ["sensor", "wallet", "signing"],
-        "registered": time.time(),
-        "last_seen": None,
-        "owner": str(m.from_user.id),
-        "permissions": ["receive_tasks", "report_status"]
-    }
+    devices[device_id] = {"name": name, "description": desc, "type": "esp32", "status": "offline", "capabilities": ["sensor", "wallet", "signing"], "registered": time.time(), "last_seen": None, "owner": str(m.from_user.id), "permissions": ["receive_tasks", "report_status"]}
     save_devices(data)
     bot.reply_to(m, f"✅ Device '{name}' registered\n🆔 ID: {device_id}")
 
 def list_devices(bot, m):
+    if not _owner_only(bot, m): return
     data = load_devices()
     devices = data["devices"]
     if not devices:
@@ -57,9 +55,10 @@ def list_devices(bot, m):
         lines.append(f"   Type: {d.get('type', 'unknown')}")
         lines.append(f"   Owner: {d.get('owner', 'unknown')}")
         lines.append("")
-    bot.reply_to(m, "\n".join(lines), )
+    bot.reply_to(m, "\n".join(lines))
 
 def device_status(bot, m):
+    if not _owner_only(bot, m): return
     parts = m.text.split()
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /device_status <device_id>")
@@ -81,9 +80,10 @@ def device_status(bot, m):
 👤 Owner: {d.get('owner', 'unknown')}
 ⚙️ Capabilities: {', '.join(d.get('capabilities', []))}
 """
-    bot.reply_to(m, msg, )
+    bot.reply_to(m, msg)
 
 def delete_device(bot, m):
+    if not _owner_only(bot, m): return
     parts = m.text.split()
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /device_delete <device_id>")
@@ -100,7 +100,7 @@ def delete_device(bot, m):
     bot.reply_to(m, f"✅ Device '{name}' ({device_id}) deleted successfully")
 
 def device_heartbeat(bot, m):
-    # ESP32 sends heartbeat with device_id and status
+    if not _owner_only(bot, m): return
     parts = m.text.split(maxsplit=2)
     if len(parts) < 2:
         bot.reply_to(m, "Usage: /device_heartbeat <device_id> [status]")
@@ -119,23 +119,13 @@ def device_heartbeat(bot, m):
 
 def register(bot, context):
     @bot.message_handler(commands=['device_register'])
-    def device_register_cmd(m):
-        register_device(bot, m)
-
+    def device_register_cmd(m): register_device(bot, m)
     @bot.message_handler(commands=['device_list'])
-    def device_list_cmd(m):
-        list_devices(bot, m)
-
+    def device_list_cmd(m): list_devices(bot, m)
     @bot.message_handler(commands=['device_status'])
-    def device_status_cmd(m):
-        device_status(bot, m)
-
+    def device_status_cmd(m): device_status(bot, m)
     @bot.message_handler(commands=['device_delete'])
-    def device_delete_cmd(m):
-        delete_device(bot, m)
-
+    def device_delete_cmd(m): delete_device(bot, m)
     @bot.message_handler(commands=['device_heartbeat'])
-    def device_heartbeat_cmd(m):
-        device_heartbeat(bot, m)
-
+    def device_heartbeat_cmd(m): device_heartbeat(bot, m)
     print("📡 Device handler loaded")
