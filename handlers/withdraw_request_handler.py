@@ -2,7 +2,8 @@ import json
 import time
 from pathlib import Path
 
-from core.authority import is_owner, has_permission
+from core.authority import is_owner
+
 
 def register(bot):
     @bot.message_handler(commands=["withdraw"])
@@ -40,8 +41,8 @@ def register(bot):
     @bot.message_handler(commands=["approve_withdraw"])
     def approve_withdraw_cmd(msg):
         uid = str(msg.from_user.id)
-        if not (is_owner(uid) or has_permission(uid, "agents.manage")):
-            bot.reply_to(msg, "⛔️ Admin only")
+        if not is_owner(uid):
+            bot.reply_to(msg, "⛔️ Owner only")
             return
         parts = msg.text.split()
         if len(parts) < 2:
