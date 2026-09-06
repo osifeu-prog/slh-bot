@@ -1,4 +1,5 @@
 from core import lesson_engine
+from core.authority import has_permission
 
 
 def register(bot):
@@ -68,6 +69,11 @@ def register(bot):
     @bot.message_handler(commands=['finish'])
     def finish(m):
 
+        uid = str(m.from_user.id)
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.reply_to(m, "⛔ Lesson completion is not available for this role.")
+            return
+
         parts = m.text.split()
 
         if len(parts) != 3:
@@ -77,8 +83,6 @@ def register(bot):
             )
             return
 
-
-        uid = str(m.from_user.id)
 
         course_id = parts[1]
 
