@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from core.deposit_monitor import verify_bnb_deposit
 from core.onchain_claim_authority import record_bnb_deposit
+from core.authority import has_permission
 
 
 def _load_db():
@@ -19,14 +20,16 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["claim"])
     def claim_cmd(m):
+        uid = str(m.from_user.id)
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.reply_to(m, "⛔ BNB claims are not available for this role.")
+            return
         parts = m.text.split()
         if len(parts) < 2:
             bot.reply_to(m, "שימוש: /claim <tx_hash>")
             return
 
         tx_hash = parts[1].strip()
-        uid = str(m.from_user.id)
-
         res = verify_bnb_deposit(tx_hash)
         if not res.get("ok"):
             bot.reply_to(m, f"❌ ההפקדה לא אומתה: {res}")
@@ -50,12 +53,7 @@ def register(bot, context=None):
                 bot.reply_to(m, "ℹ️ הטרנזקציה כבר נזקפה בעבר.")
                 return
 
-            bot.reply_to(
-                m,
-                f"✅ נזקפו {credits} credits\n"
-                f"💰 יתרה: {result['balance']}\n"
-                f"📝 TX: {tx_hash}"
-            )
+            bot.reply_to(m, f"✅ נזקפו {credits} credits\n💰 יתרה: {result['balance']}\n📝 TX: {tx_hash}")
         except Exception as e:
             bot.reply_to(m, f"❌ שגיאה בזיכוי: {e}")
 
