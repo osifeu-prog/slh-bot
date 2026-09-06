@@ -4,6 +4,7 @@ from pathlib import Path
 from core.profile_manager import get_balance
 from core.economy_bridge import spend_credits
 from plugins_store import install_plugin
+from core.authority import has_permission
 
 STORE_FILE = Path("state/marketplace.json")
 
@@ -50,6 +51,10 @@ def register(bot, context=None):
     @bot.message_handler(commands=["mktbuy"])
     def buy(m):
         uid = str(m.from_user.id)
+
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.reply_to(m, "⛔️ Marketplace purchase not available for this role.")
+            return
 
         parts = m.text.split()
 
