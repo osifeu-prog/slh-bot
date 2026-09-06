@@ -1,6 +1,7 @@
 from handlers.llm_handler import query_llm_with_context
 from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
+from core.authority import is_owner
 
 
 def _safe_clip(value, limit=3500):
@@ -31,27 +32,28 @@ def register_ask_handler(bot):
 
         question = question[:2000]
 
-        # צירוף פלט exec אחרון להקשר
-        try:
-            import json
-            from pathlib import Path
+        # Last EXEC output may contain privileged operational data.
+        # It is never injected into non-owner ASK context.
+        if is_owner(msg.from_user.id):
+            try:
+                import json
+                from pathlib import Path
 
-            db_path = Path("state/db.json")
-            db = json.loads(db_path.read_text(encoding="utf-8"))
+                db_path = Path("state/db.json")
+                db = json.loads(db_path.read_text(encoding="utf-8"))
+                last_exec = db.get("last_exec_output")
 
-            last_exec = db.get("last_exec_output")
+                if last_exec:
+                    question = (
+                        question
+                        + "\n\n[LAST_EXEC_COMMAND]\n"
+                        + last_exec.get("command", "")
+                        + "\n\n[LAST_EXEC_OUTPUT]\n"
+                        + last_exec.get("output", "")[:2500]
+                    )
 
-            if last_exec:
-                question = (
-                    question
-                    + "\n\n[LAST_EXEC_COMMAND]\n"
-                    + last_exec.get("command", "")
-                    + "\n\n[LAST_EXEC_OUTPUT]\n"
-                    + last_exec.get("output", "")[:2500]
-                )
-
-        except Exception:
-            pass
+            except Exception:
+                pass
 
         try:
             answer = route(question, str(msg.from_user.id))
