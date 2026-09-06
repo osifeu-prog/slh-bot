@@ -5,6 +5,7 @@ from core.context_builder import get_context
 from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
+from core.authority import get_role
 
 
 def _kw_match(kw, text_lower):
@@ -33,17 +34,18 @@ INTENTS = {
 
 FORBIDDEN_ASK_TOPICS = ["launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
 
+
 def is_system_state_question(text):
     text_lower = text.strip().lower()
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
+
 PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis","missions"]
+
 
 def detect_intent(text):
     text_lower = text.strip().lower()
 
-    # Greeting is valid only when the entire message is a greeting.
-    # This prevents questions containing a greeting from being swallowed.
     greeting_exact = {
         kw.strip().lower()
         for kw in INTENTS.get("greeting", [])
@@ -67,6 +69,7 @@ def detect_intent(text):
 
     return "general"
 
+
 def route(text, uid=None):
     guard_result = guard(text)
     if isinstance(guard_result, tuple):
@@ -78,14 +81,27 @@ def route(text, uid=None):
     if blocked:
         return msg
 
+    role = get_role(uid)
     intent = detect_intent(text)
+
+    # Partner Read-Only never enters personal-economy, internal-debug, or mutation-adjacent routes.
+    # Route approved informational questions to the role-aware LLM context instead.
+    if role == "PARTNER_READ_ONLY":
+        partner_blocked = {"wallet", "staking", "rewards", "progress", "missions", "system"}
+        if intent in partner_blocked or is_system_state_question(text):
+            return "המידע הזה אינו זמין במסגרת Partner Read-Only. ניתן לקבל מידע ציבורי/מאושר למשקיעים בלבד."
+        if intent == "agents":
+            return "ניתן לקבל רשימת סוכנים מאושרים דרך /agents."
+        try:
+            return query_llm_with_context(text, uid=str(uid) if uid is not None else None)
+        except Exception:
+            return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
 
     # Educational / how-to questions should hit LLM, not rigid menus
     _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
         intent = "general"
-
 
     if intent == "staking":
         base = "סטייקינג SLH\n\n1. קנה credits עם Stars: /pay\n2. נעל אותם: /stake <amount>\n\nסטייקינג פנימי בלבד, לא on-chain."
