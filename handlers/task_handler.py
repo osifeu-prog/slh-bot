@@ -1,4 +1,4 @@
-import json
+import uuid
 from datetime import datetime, timezone
 
 import state_manager
@@ -112,11 +112,11 @@ def task_add(message, bot):
         bot.send_message(message.chat.id, "שימוש: /task_add <משימה>")
         return
 
-    task_id = "task_" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
+    task_id = "task_" + uuid.uuid4().hex
 
     def mutate(db):
         tasks = db.setdefault("tasks", {})
-        while task_id in tasks:
+        if task_id in tasks:
             raise RuntimeError("TASK_ID_COLLISION")
 
         tasks[task_id] = {
