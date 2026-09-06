@@ -1,13 +1,13 @@
 import os
-from admin_utils import is_admin
+from core.authority import is_owner
 
 MAX_CHARS = 3800
 
 def register(bot):
     @bot.message_handler(commands=['viewfile'])
     def viewfile(m):
-        if not is_admin(m):
-            bot.reply_to(m, "❌ Admin only")
+        if not is_owner(str(m.from_user.id)):
+            bot.reply_to(m, "❌ Owner only")
             return
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
