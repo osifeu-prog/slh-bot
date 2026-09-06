@@ -32,6 +32,8 @@ def register(bot):
                 text = f"✅ נרכש: {result['item']}\n💰 שולם: {result['paid']} SLH"
         elif result == "RECOVERABLE":
             text = "⚠️ התשלום נשמר והרכישה דורשת השלמת אספקה. ניסיון חוזר לא יחייב שוב."
+        elif result == "IN_PROGRESS":
+            text = "⏳ הרכישה כבר נמצאת בתהליך אספקה. אין לבצע חיוב נוסף."
         else:
             text = result
 
