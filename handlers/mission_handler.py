@@ -1,4 +1,4 @@
-import json
+import state_manager
 
 from core.mission_state import MissionStateNormalizer
 from core.mission_runtime_bridge import execute_mission_via_runtime
@@ -84,7 +84,6 @@ def register(bot, context=None):
             mission_id = parts[2].strip()
             completion = lifecycle.complete_mission(mission_id)
             if completion.get("status") not in {"completed"}:
-                # A previous completion is still eligible for reward reconciliation.
                 if completion.get("reason") != "mission_already_completed":
                     bot.reply_to(m, "❌ השלמת המשימה נחסמה.\n" + str(completion.get("checks") or completion.get("reason", "unknown")))
                     return
@@ -116,10 +115,16 @@ def register(bot, context=None):
                 return
             lines = ["💰 **תגמולים**", ""]
             for entry in ledger[-10:]:
-                agent = entry.get("agent", entry.get("uid", "?"))
-                amount = entry.get("amount", entry.get("credits", 0))
-                mission_id = entry.get("mission_id", entry.get("meta", {}).get("mission_id", "?"))
-                lines.append(f"👤 {agent}: {amount} SLH (משימה #{mission_id})")
+                meta = entry.get("meta") or {}
+                mission_id = entry.get("mission_id", meta.get("mission_id"))
+                if not mission_id:
+                    continue
+                uid = entry.get("uid", "?")
+                amount = entry.get("amount", entry.get("credits", entry.get("delta", 0)))
+                lines.append(f"👤 {uid}: {amount} SLH (משימה #{mission_id})")
+            if len(lines) == 2:
+                bot.reply_to(m, "אין תגמולי משימות עדיין.")
+                return
             bot.reply_to(m, "\n".join(lines))
             return
 
@@ -128,7 +133,8 @@ def register(bot, context=None):
 
 def load_ledger():
     try:
-        with open("state/rewards_ledger.json", encoding="utf-8") as f:
-            return json.load(f)
+        db = state_manager.load_db()
+        ledger = db.get("ledger", [])
+        return ledger if isinstance(ledger, list) else []
     except Exception:
         return []
