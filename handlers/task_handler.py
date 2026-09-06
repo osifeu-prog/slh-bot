@@ -2,6 +2,7 @@ from services import task_service
 import json
 from core import economy_bridge
 from core import reward_engine
+from core import task_completion_service
 
 
 COMMANDS = {}
@@ -25,30 +26,17 @@ def save_db(data):
 
 
 def task(message, bot):
-
     db = load_db()
-
     tasks = db.get("tasks", {})
 
     if not tasks:
-        bot.send_message(
-            message.chat.id,
-            "אין משימות"
-        )
+        bot.send_message(message.chat.id, "אין משימות")
         return
 
-
     txt = "📋 משימות:\n\n"
-
     for key, t in tasks.items():
-
-        done = (
-            message.from_user.id
-            in t.get("done_by", [])
-        )
-
+        done = message.from_user.id in t.get("done_by", [])
         status = "✅" if done else "⬜"
-
         progress = t.get("progress", 0)
         task_status = t.get("status", "active")
         txt += (
@@ -57,31 +45,21 @@ def task(message, bot):
             f"[{task_status}] {progress}%\n"
         )
 
-
-    bot.send_message(
-        message.chat.id,
-        txt
-    )
+    bot.send_message(message.chat.id, txt)
 
 
 def task_done(message, bot):
-
-    from core import economy_service
-
     args = message.text.split()
 
     if len(args) < 2:
-        bot.send_message(
-            message.chat.id,
-            "שימוש: /task_done task_1"
-        )
+        bot.send_message(message.chat.id, "שימוש: /task_done task_1")
         return
 
     task_id = args[1]
     uid = message.from_user.id
 
     try:
-        result = economy_service.complete_task(
+        result = task_completion_service.complete_task(
             uid=uid,
             task_id=task_id,
             meta={
@@ -91,66 +69,51 @@ def task_done(message, bot):
         )
 
     except ValueError as e:
-
         reason = str(e)
 
         if reason == "TASK_NOT_FOUND":
-            bot.send_message(
-                message.chat.id,
-                "❌ משימה לא קיימת"
-            )
+            bot.send_message(message.chat.id, "❌ משימה לא קיימת")
             return
 
         if reason == "TASK_ALREADY_COMPLETED":
-            bot.send_message(
-                message.chat.id,
-                "כבר השלמת משימה זו"
-            )
+            bot.send_message(message.chat.id, "כבר השלמת משימה זו")
             return
 
         if reason == "USER_NOT_FOUND":
-            bot.send_message(
-                message.chat.id,
-                "❌ המשתמש אינו רשום. יש לבצע /join."
-            )
+            bot.send_message(message.chat.id, "❌ המשתמש אינו רשום. יש לבצע /join.")
             return
 
-        bot.send_message(
-            message.chat.id,
-            "❌ השלמת המשימה נחסמה."
-        )
+        bot.send_message(message.chat.id, "❌ השלמת המשימה נחסמה.")
         print(f"[TASK] task_done blocked: {e}")
         return
 
     except Exception as e:
-
-        bot.send_message(
-            message.chat.id,
-            "❌ השלמת המשימה נכשלה בבטחה."
-        )
+        bot.send_message(message.chat.id, "❌ השלמת המשימה נכשלה בבטחה.")
         print(f"[TASK] task_done error: {e}")
         return
 
     reward = result.get("reward", 0)
+    status = result.get("reward_status", "paid")
+
+    if status == "pending":
+        bot.send_message(
+            message.chat.id,
+            f"🎉 משימה הושלמה!\n+{reward} קרדיטים\n⚠️ התגמול ממתין לעיבוד חוזר."
+        )
+        return
 
     bot.send_message(
         message.chat.id,
-        f"🎉 משימה הושלמה!\n"
-        f"+{reward} קרדיטים"
+        f"🎉 משימה הושלמה!\n+{reward} קרדיטים"
     )
 
 
 def task_add(message, bot):
-
     args = message.text.split(maxsplit=1)
 
     if len(args) < 2:
-        bot.send_message(
-            message.chat.id,
-            "שימוש: /task_add <משימה>"
-        )
+        bot.send_message(message.chat.id, "שימוש: /task_add <משימה>")
         return
-
 
     task = task_service.add_task(args[1])
 
@@ -160,24 +123,15 @@ def task_add(message, bot):
     )
 
 
-
 def register(bot, context=None):
-
     COMMANDS["task"] = task
     COMMANDS["task_done"] = task_done
     COMMANDS["task_add"] = task_add
-
 
     @bot.message_handler(commands=["task"])
     def task_telegram(message):
         task(message, bot)
 
-
     @bot.message_handler(commands=["task_done"])
     def task_done_telegram(message):
         task_done(message, bot)
-
-
-    @bot.message_handler(commands=["task_add"])
-    def task_add_telegram(message):
-        task_add(message, bot)
