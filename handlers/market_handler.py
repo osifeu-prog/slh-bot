@@ -2,8 +2,7 @@ import json
 from pathlib import Path
 
 from core.profile_manager import get_balance
-from core.economy_bridge import spend_credits
-from plugins_store import install_plugin
+from core.marketplace_purchase_service import purchase_plugin
 
 STORE_FILE = Path("state/marketplace.json")
 
@@ -11,111 +10,59 @@ STORE_FILE = Path("state/marketplace.json")
 def load_store():
     if not STORE_FILE.exists():
         return {"plugins": [], "installed": []}
-
-    return json.loads(
-        STORE_FILE.read_text(encoding="utf-8")
-    )
+    return json.loads(STORE_FILE.read_text(encoding="utf-8"))
 
 
 def save_store(data):
-    STORE_FILE.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False),
-        encoding="utf-8"
-    )
+    STORE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def register(bot, context=None):
-
     @bot.message_handler(commands=["market", "marketplace", "store"])
     def market(m):
         store = load_store()
-
         plugins = store.get("plugins", [])
-
         if not plugins:
             bot.reply_to(m, "Marketplace empty.")
             return
-
-        lines = [
-            f"• {p['name']} ({p['id']}) - {p['price']} credits [{p['installs']} installs]"
-            for p in plugins
-        ]
-
-        bot.reply_to(
-            m,
-            "🛒 Marketplace:\n" + "\n".join(lines)
-        )
-
+        lines = [f"• {p['name']} ({p['id']}) - {p['price']} credits [{p['installs']} installs]" for p in plugins]
+        bot.reply_to(m, "🛒 Marketplace:\n" + "\n".join(lines))
 
     @bot.message_handler(commands=["mktbuy"])
     def buy(m):
         uid = str(m.from_user.id)
-
         parts = m.text.split()
-
         if len(parts) < 2:
-            bot.reply_to(
-                m,
-                "Usage: /buy <plugin_id>"
-            )
+            bot.reply_to(m, "Usage: /mktbuy <plugin_id>")
             return
 
         plugin_id = parts[1]
-
         store = load_store()
-
-        plugin = next(
-            (p for p in store.get("plugins", []) if p["id"] == plugin_id),
-            None
-        )
-
+        plugin = next((p for p in store.get("plugins", []) if p.get("id") == plugin_id), None)
         if not plugin:
-            bot.reply_to(
-                m,
-                "❌ Plugin not found."
-            )
+            bot.reply_to(m, "❌ Plugin not found.")
             return
 
-        price = plugin.get("price", 0)
-
-        balance = get_balance(uid)
-
-        if balance < price:
-            bot.reply_to(
-                m,
-                f"❌ Not enough credits.\nBalance: {balance}\nRequired: {price}"
-            )
+        ok, result = purchase_plugin(uid, plugin, request_id=str(getattr(m, "message_id", "")))
+        if not ok:
+            bot.reply_to(m, f"❌ Purchase failed: {result}")
             return
 
-        if price > 0:
-            result = spend_credits(
-                uid,
-                price,
-                reason="marketplace:purchase",
-                meta={
-                    "plugin_id": plugin_id,
-                    "price": price,
-                },
-            )
+        if result.get("status") == "pending_fulfillment":
+            bot.reply_to(m, f"🟡 Payment recorded: {plugin.get('name', plugin_id)}\n💳 Paid: {result.get('price', plugin.get('price', 0))} credits\n⏳ Plugin fulfillment is pending.")
+            return
 
-            if result is False:
-                bot.reply_to(
-                    m,
-                    "Not enough credits."
-                )
-                return
+        # The purchase authority has already charged the wallet and installed
+        # the plugin. The marketplace counter is non-financial telemetry.
+        try:
+            store = load_store()
+            current = next((p for p in store.get("plugins", []) if p.get("id") == plugin_id), None)
+            if current is not None:
+                current["installs"] = current.get("installs", 0) + 1
+                save_store(store)
+        except Exception:
+            pass
 
-        result = install_plugin(plugin_id)
-
-        plugin["installs"] = plugin.get("installs", 0) + 1
-        save_store(store)
-
-        bot.reply_to(
-            m,
-            f"{result}\n"
-            f"💳 Paid: {price} credits\n"
-            f"Balance: {get_balance(uid)}"
-        )
+        bot.reply_to(m, f"{result.get('message', 'Plugin installed')}\n💳 Paid: {result.get('price', plugin.get('price', 0))} credits\nBalance: {get_balance(uid)}")
 
     print("✅ market handler registered")
-
