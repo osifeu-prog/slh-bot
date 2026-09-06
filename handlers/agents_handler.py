@@ -2,7 +2,7 @@ from core.agent_registry import (
     list_agents, get_agent, create_agent, update_agent,
     delete_agent, send_message, get_inbox,
 )
-from core.authority import get_visible_agents, normalize_uid, is_owner
+from core.authority import get_visible_agents, normalize_uid, is_owner, has_permission
 
 
 def _check_access(uid, identifier):
@@ -15,16 +15,33 @@ def _check_access(uid, identifier):
     return agent_id, agent
 
 
+def _check_mutation(uid, identifier):
+    agent_id, agent = get_agent(identifier)
+    if agent is None:
+        return None, None
+    if is_owner(uid):
+        return agent_id, agent
+    if not has_permission(uid, "agents.modify_self"):
+        return None, None
+    if normalize_uid(agent.get("owner_id")) != normalize_uid(uid):
+        return None, None
+    return agent_id, agent
+
+
 def register(bot, context):
 
     @bot.message_handler(commands=["agent_create"])
     def agent_create_cmd(m):
+        uid = normalize_uid(m.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(m, "Agent creation is Owner-only.")
+            return
         parts = m.text.split()
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /agent_create <name>")
             return
         name = parts[1]
-        owner_id = normalize_uid(m.from_user.id)
+        owner_id = uid
         try:
             agent_id, agent = create_agent(name, owner_id=owner_id)
             bot.reply_to(m, "Agent '" + name + "' created\nID: " + agent_id)
@@ -53,7 +70,7 @@ def register(bot, context):
             bot.reply_to(m, "Usage: /agentstate <name> <state>")
             return
         uid = normalize_uid(m.from_user.id)
-        agent_id, agent = _check_access(uid, parts[1])
+        agent_id, agent = _check_mutation(uid, parts[1])
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
@@ -70,7 +87,7 @@ def register(bot, context):
             bot.reply_to(m, "Usage: /sendagent <name> <msg>")
             return
         uid = normalize_uid(m.from_user.id)
-        agent_id, agent = _check_access(uid, parts[1])
+        agent_id, agent = _check_mutation(uid, parts[1])
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
@@ -87,7 +104,7 @@ def register(bot, context):
             bot.reply_to(m, "Usage: /inbox <name>")
             return
         uid = normalize_uid(m.from_user.id)
-        agent_id, agent = _check_access(uid, parts[1])
+        agent_id, agent = _check_mutation(uid, parts[1])
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
@@ -108,6 +125,9 @@ def register(bot, context):
             bot.reply_to(m, "Usage: /agent_delete <name>")
             return
         uid = normalize_uid(m.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(m, "Agent deletion is Owner-only.")
+            return
         agent_id, agent = _check_access(uid, parts[1])
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
