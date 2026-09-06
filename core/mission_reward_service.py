@@ -1,30 +1,51 @@
-"""Retry-safe mission reward adapter.
-
-Mission lifecycle state and wallet state are separate concerns. Completion is
-owned by MissionLifecycleService; credit issuance is owned by EconomyService.
-The reward operation uses an idempotency key so a retry cannot pay twice.
-"""
+"""Retry-safe mission reward adapter."""
 
 import state_manager
 from core import economy_service
 
 
 def _resolve_recipient(db, mission):
+    users = db.get("users", {})
+    agents = db.get("agents", {})
+
     explicit = mission.get("reward_uid")
-    if explicit is not None and str(explicit) in db.get("users", {}):
+    if explicit is not None and str(explicit) in users:
         return str(explicit)
 
     agent_id = mission.get("assigned_to")
     if not agent_id:
         return None
 
-    agent = db.get("agents", {}).get(str(agent_id))
+    # Mission assignments originate from the takeover manifest, while the
+    # canonical owner mapping lives in AgentStateStore/state/db.json. Resolve
+    # by canonical id first, then by the manifest agent name when ids drift.
+    agent = agents.get(str(agent_id))
+    if not isinstance(agent, dict):
+        board_path = "state/missions/board.json"
+        manifest_path = "state/takeover/manifest.json"
+        try:
+            import json
+            with open(manifest_path, encoding="utf-8") as f:
+                manifest = json.load(f)
+            for candidate in manifest.get("agents", {}).get("items", []):
+                if str(candidate.get("id")) == str(agent_id):
+                    name = str(candidate.get("name", "")).strip().lower()
+                    if name:
+                        for canonical in agents.values():
+                            if isinstance(canonical, dict) and str(canonical.get("name", "")).strip().lower() == name:
+                                agent = canonical
+                                break
+                    break
+        except Exception:
+            agent = None
+
     if isinstance(agent, dict):
         owner_id = agent.get("owner_id")
-        if owner_id is not None and str(owner_id) in db.get("users", {}):
+        if owner_id is not None and str(owner_id) in users:
             return str(owner_id)
 
-    if str(agent_id) in db.get("users", {}):
+    # Explicit user assignment remains a valid legacy compatibility path.
+    if str(agent_id) in users:
         return str(agent_id)
 
     return None
@@ -47,45 +68,20 @@ def issue_mission_reward(mission, mission_id=None):
     db = state_manager.load_db()
     recipient = _resolve_recipient(db, mission)
     if recipient is None:
-        return {
-            "status": "blocked",
-            "reason": "MISSION_REWARD_RECIPIENT_NOT_FOUND",
-            "mission_id": mission_id,
-        }
+        return {"status": "blocked", "reason": "MISSION_REWARD_RECIPIENT_NOT_FOUND", "mission_id": mission_id}
 
     key = f"mission:{mission_id}:reward"
-
     try:
         credits = economy_service.record_transaction(
             recipient,
             reward,
             reason="mission:completion_reward",
-            meta={
-                "idempotency_key": key,
-                "mission_id": mission_id,
-                "agent_id": str(mission.get("assigned_to")),
-            },
+            meta={"idempotency_key": key, "mission_id": mission_id, "agent_id": str(mission.get("assigned_to"))},
         )
     except Exception as exc:
-        return {
-            "status": "blocked",
-            "reason": "MISSION_REWARD_FAILED",
-            "error": type(exc).__name__,
-            "mission_id": mission_id,
-            "uid": recipient,
-        }
+        return {"status": "blocked", "reason": "MISSION_REWARD_FAILED", "error": type(exc).__name__, "mission_id": mission_id, "uid": recipient}
 
     latest = state_manager.load_db()
     ledger = latest.get("ledger", [])
-    duplicate = any(
-        entry.get("meta", {}).get("idempotency_key") == key
-        for entry in ledger
-    )
-
-    return {
-        "status": "paid" if duplicate else "blocked",
-        "mission_id": mission_id,
-        "uid": recipient,
-        "reward": reward if duplicate else 0,
-        "credits": credits if duplicate else None,
-    }
+    paid = any(entry.get("meta", {}).get("idempotency_key") == key for entry in ledger)
+    return {"status": "paid" if paid else "blocked", "mission_id": mission_id, "uid": recipient, "reward": reward if paid else 0, "credits": credits if paid else None}
