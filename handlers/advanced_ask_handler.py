@@ -1,6 +1,7 @@
 from handlers.llm_handler import query_llm_with_context
 from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
+from core.authority import is_owner, get_role
 
 
 def _safe_clip(value, limit=3500):
@@ -29,38 +30,39 @@ def register_ask_handler(bot):
             bot.reply_to(msg, "Usage: /ask [question]")
             return
 
+        uid = str(msg.from_user.id)
         question = question[:2000]
 
-        # צירוף פלט exec אחרון להקשר
+        # Raw exec output may contain secrets, paths, diagnostics, or other users' data.
+        # It is never passed to AI for non-owners.
+        if is_owner(uid):
+            try:
+                import json
+                from pathlib import Path
+
+                db_path = Path("state/db.json")
+                db = json.loads(db_path.read_text(encoding="utf-8"))
+                last_exec = db.get("last_exec_output")
+
+                if last_exec:
+                    question = (
+                        question
+                        + "\n\n[LAST_EXEC_COMMAND]\n"
+                        + last_exec.get("command", "")
+                        + "\n\n[LAST_EXEC_OUTPUT]\n"
+                        + last_exec.get("output", "")[:2500]
+                    )
+            except Exception:
+                pass
+
         try:
-            import json
-            from pathlib import Path
-
-            db_path = Path("state/db.json")
-            db = json.loads(db_path.read_text(encoding="utf-8"))
-
-            last_exec = db.get("last_exec_output")
-
-            if last_exec:
-                question = (
-                    question
-                    + "\n\n[LAST_EXEC_COMMAND]\n"
-                    + last_exec.get("command", "")
-                    + "\n\n[LAST_EXEC_OUTPUT]\n"
-                    + last_exec.get("output", "")[:2500]
-                )
-
-        except Exception:
-            pass
-
-        try:
-            answer = route(question, str(msg.from_user.id))
+            answer = route(question, uid)
             if not answer:
                 raise ValueError("no route answer")
         except Exception:
             answer = query_llm_with_context(
                 question,
-                str(msg.from_user.id)
+                uid
             )
         if not answer:
             answer = "⚠️ אין תשובה זמינה כרגע."
