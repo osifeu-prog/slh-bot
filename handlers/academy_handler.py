@@ -1,4 +1,5 @@
 from core import academy_manager
+from core.authority import has_permission
 
 
 def register(bot):
@@ -11,7 +12,7 @@ def register(bot):
         if not courses:
             bot.reply_to(
                 m,
-                "📚 אין קורסים זמינים כרע"
+                "📚 אין קורסים זמינים כרגע"
             )
             return
 
@@ -72,6 +73,11 @@ def register(bot):
     @bot.message_handler(commands=['complete'])
     def complete(m):
 
+        uid = str(m.from_user.id)
+        if not has_permission(uid, "economy.mutate_self"):
+            bot.reply_to(m, "⛔ Course completion is not available for this role.")
+            return
+
         parts=m.text.split()
 
         if len(parts)!=2:
@@ -80,8 +86,6 @@ def register(bot):
                 "שימוש:\n/complete 1"
             )
             return
-
-        uid=str(m.from_user.id)
 
         try:
             stage=int(parts[1])
