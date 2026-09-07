@@ -53,8 +53,21 @@ def create_agent(name, role="agent", owner_id=None, runtime_class="EchoAgent"):
 
     for agent_id, agent in agents.items():
         if str(agent.get("name", "")).lower() == name.lower():
-            # אם הבעלים תואם – החזר קיים
+            # אם הבעלים תואם – החזר קיים; אם חסר runtime metadata, repair it safely.
             if owner_id is not None and str(agent.get("owner_id", "")) == str(owner_id):
+                if not agent.get("runtime_class"):
+                    db = STORE._load_db()
+                    existing = db.setdefault("agents", {}).get(str(agent_id))
+                    if existing is not None:
+                        existing["runtime_class"] = runtime_class
+                        STORE._atomic_write(STORE.DB_PATH, db)
+                        STORE.rebuild_snapshot(db=db)
+                        agent = existing
+                        log_event(
+                            "agent.runtime_repaired",
+                            target=str(agent_id),
+                            details={"runtime_class": runtime_class},
+                        )
                 return str(agent.get("id", agent_id)), agent
             # אחרת – חסום שם כפול
             raise ValueError(f"Agent '{name}' already exists")
