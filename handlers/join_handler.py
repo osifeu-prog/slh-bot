@@ -99,7 +99,7 @@ def register(bot):
                 f"קבוצה: {group}\n\n"
                 "הסוכן האישי שלך מוכן.\n\n"
                 "מה תרצה לעשות עכשיו?\n"
-                "📚 /courses\n"
+                "🎯 שתף וצבור נקודות: /start\n"
                 "💰 /wallet\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n"
