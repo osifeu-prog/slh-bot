@@ -6,6 +6,7 @@ OWNER/ADMIN lists.
 """
 
 from core.identity import OWNER_TELEGRAM_ID
+from core.profile_manager import get_user
 
 OWNER_ID = str(OWNER_TELEGRAM_ID)
 
@@ -71,7 +72,18 @@ def get_role(uid) -> str:
     if uid in ADMIN_IDS:
         return "ADMIN"
 
-    # Do not silently elevate an unrecognized identity to USER privileges.
+    # Ordinary registered users are represented by the profile registry.
+    # Only an explicit student role maps to USER; unknown identities remain
+    # UNKNOWN so a missing/invalid profile can never gain self-mutation rights.
+    user = get_user(uid)
+    profile_role = str(user.get("role", "")).strip().lower()
+
+    if profile_role == "student":
+        return "USER"
+
+    # Developer/operator identities are intentionally not mapped to USER here.
+    # Their operational permissions remain governed by the legacy permission
+    # system until that role is explicitly reconciled into the canonical matrix.
     return "UNKNOWN"
 
 
