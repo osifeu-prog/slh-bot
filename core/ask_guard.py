@@ -1,4 +1,3 @@
-
 import time
 import hashlib
 
@@ -7,14 +6,14 @@ _last_requests = {}
 COOLDOWN_SECONDS = 8
 
 
-def fingerprint(text):
+def fingerprint(text, uid):
     return hashlib.sha256(
-        text.strip().lower().encode("utf-8")
+        (text.strip().lower() + ":" + str(uid)).encode("utf-8")
     ).hexdigest()
 
 
-def allow_request(text):
-    key = fingerprint(text)
+def allow_request(text, uid):
+    key = fingerprint(text, uid)
     now = time.time()
 
     if key in _last_requests:
@@ -29,5 +28,5 @@ def guarded_message():
     return "⏳ הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
 
 
-def guard(text):
-    return allow_request(text)
+def guard(text, uid=None):
+    return allow_request(text, uid)
