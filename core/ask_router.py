@@ -1,4 +1,6 @@
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from core.ask_guard import guard
 from core.context_builder import get_context
@@ -28,6 +30,7 @@ INTENTS = {
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
     "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה"],
     "system": ["מהי המערכת","מצב המערכת","סטטוס המערכת","health","status"],
+    "time": ["מה השעה","מה הזמן","השעה","what time is it","what time"],
     "general": []
 }
 
@@ -37,13 +40,11 @@ def is_system_state_question(text):
     text_lower = text.strip().lower()
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
-PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis","missions"]
+PRIORITY = ["time","staking","wallet","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis","missions"]
 
 def detect_intent(text):
     text_lower = text.strip().lower()
 
-    # Greeting is valid only when the entire message is a greeting.
-    # This prevents questions containing a greeting from being swallowed.
     greeting_exact = {
         kw.strip().lower()
         for kw in INTENTS.get("greeting", [])
@@ -53,12 +54,17 @@ def detect_intent(text):
     if text_lower in greeting_exact:
         return "greeting"
 
+    # Deterministic time must win before generic question-word fallback.
+    for kw in INTENTS["time"]:
+        if kw and _kw_match(kw, text_lower):
+            return "time"
+
     question_words = ["כיצד", "איך", "מה", "מדוע", "למה", "הסבר", "explain", "how", "what", "why"]
     if any(word in text_lower for word in question_words):
         return "general"
 
     for intent in PRIORITY:
-        if intent == "greeting":
+        if intent in ("greeting", "time"):
             continue
 
         for kw in INTENTS[intent]:
@@ -80,12 +86,14 @@ def route(text, uid=None):
 
     intent = detect_intent(text)
 
-    # Educational / how-to questions should hit LLM, not rigid menus
     _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
         intent = "general"
 
+    if intent == "time":
+        now = datetime.now(ZoneInfo("Asia/Jerusalem"))
+        return f"השעה הנוכחית בישראל היא {now:%H:%M}"
 
     if intent == "staking":
         base = "סטייקינג SLH\n\n1. קנה credits עם Stars: /pay\n2. נעל אותם: /stake <amount>\n\nסטייקינג פנימי בלבד, לא on-chain."
