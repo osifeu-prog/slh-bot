@@ -110,7 +110,7 @@ def api_leaderboard():
             result.append({
                 "uid": str(uid),
                 "name": data.get("name", f"User{uid}"),
-                "credits": wallet.get("credits", 0)
+                "points": (data.get("gamification") or {}).get("points", 0)
             })
 
         return jsonify(result)

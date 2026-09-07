@@ -19,7 +19,7 @@ class LeaderboardPlugin:
 
         ranked = sorted(
             users.items(),
-            key=lambda x: x[1].get("wallet", {}).get("credits", 0),
+            key=lambda x: (x[1].get("gamification") or {}).get("points", 0),
             reverse=True
         )
 

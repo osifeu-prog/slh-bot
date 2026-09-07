@@ -16,9 +16,9 @@ def show_leaderboard(db_path="state/db.json"):
 
         name = data.get("name", f"User{uid}")
 
-        credits = data.get("wallet", {}).get("credits", 0)
+        points = (data.get("gamification") or {}).get("points", 0)
 
-        text += f"{i}. {name} - {credits} SLH\n"
+        text += f"{i}. {name} - {points} נקודות\n"
 
     return text
 
@@ -30,7 +30,7 @@ def register(bot):
 
 
 
-    @bot.message_handler(commands=['top'])
+    @bot.message_handler(commands=['top','leaderboard','points'])
 
     def top_handler(m):
 
