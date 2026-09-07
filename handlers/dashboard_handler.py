@@ -17,13 +17,21 @@ def register(bot):
 
         balance = profile_manager.get_balance(user_id)
         course = user.get("academy", {}).get("active_course", "אין")
-        agent_count = len(d.get("agents", {}))
+
+        # User-scoped count: never expose the system-wide agent total
+        # on a personal dashboard.
+        agent_count = sum(
+            1
+            for agent in d.get("agents", {}).values()
+            if isinstance(agent, dict)
+            and str(agent.get("owner_id", "")) == user_id
+        )
 
         text = (
             f"🌟 ה-Dashboard שלך\n\n"
             f"💰 יתרה: {balance} SLH\n"
             f"📚 קורס פעיל: {course}\n"
-            f"🤖 סוכנים במערכת: {agent_count}\n"
+            f"🤖 הסוכנים שלך: {agent_count}\n"
             f"🎯 משימה מומלצת: סיים שיעור 1 בביטקוין\n\n"
             f"מה תרצה לעשות?"
         )
