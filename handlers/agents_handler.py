@@ -63,11 +63,10 @@ def register(bot, context):
         except Exception as e:
             bot.reply_to(m, "State update failed: " + type(e).__name__)
 
-    @bot.message_handler(commands=["sendagent"])
-    def sendagent_cmd(m):
+    def deliver_agent_message(m):
         parts = m.text.split(maxsplit=2)
         if len(parts) < 3:
-            bot.reply_to(m, "Usage: /sendagent <name> <msg>")
+            bot.reply_to(m, "Usage: /agent <id|name> <msg>")
             return
         uid = normalize_uid(m.from_user.id)
         agent_id, agent = _check_access(uid, parts[1])
@@ -76,9 +75,17 @@ def register(bot, context):
             return
         try:
             send_message(agent_id, parts[2])
-            bot.reply_to(m, "Sent to agent " + agent_id)
+            bot.reply_to(m, "✅ ההודעה נמסרה לתיבת הסוכן " + agent_id)
         except Exception as e:
             bot.reply_to(m, "Message delivery failed: " + type(e).__name__)
+
+    @bot.message_handler(commands=["agent"])
+    def agent_cmd(m):
+        deliver_agent_message(m)
+
+    @bot.message_handler(commands=["sendagent"])
+    def sendagent_cmd(m):
+        deliver_agent_message(m)
 
     @bot.message_handler(commands=["inbox"])
     def inbox_cmd(m):
