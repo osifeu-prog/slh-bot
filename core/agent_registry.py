@@ -32,14 +32,22 @@ def get_agent(identifier):
     return str(agent.get("id", identifier)), agent
 
 
-def create_agent(name, role="agent", owner_id=None):
+def create_agent(name, role="agent", owner_id=None, runtime_class="EchoAgent"):
     """
-    Create a new agent in the canonical DB.
+    Create a new agent in the canonical DB with an explicit safe runtime class.
+
+    EchoAgent is the default personal/runtime-safe implementation currently
+    registered by core.agent_factory. Callers that need another manifested
+    runtime must pass it explicitly.
     """
     name = str(name).strip()
 
     if not name:
         raise ValueError("Agent name cannot be empty")
+
+    runtime_class = str(runtime_class).strip()
+    if not runtime_class:
+        raise ValueError("Agent runtime_class cannot be empty")
 
     agents = STORE.get_all()
 
@@ -69,6 +77,7 @@ def create_agent(name, role="agent", owner_id=None):
         "state": "idle",
         "role": role,
         "owner_id": str(owner_id) if owner_id is not None else None,
+        "runtime_class": runtime_class,
         "inbox": [],
         "history": [],
         "permissions": [],
@@ -92,6 +101,7 @@ def create_agent(name, role="agent", owner_id=None):
         details={
             "name": name,
             "role": role,
+            "runtime_class": runtime_class,
         },
     )
 
