@@ -81,6 +81,16 @@ def register(bot):
                 )
                 return
 
+            try:
+                from core.reward_engine import grant
+                _u = get_user(uid) or {}
+                _ref = (_u.get("referral") or {}).get("referred_by")
+                if _ref and str(_ref) != uid:
+                    grant(str(_ref), "referral", points=10,
+                          idempotency_key=f"ref:{uid}")
+            except Exception as e:
+                print("REFERRAL GRANT FAILED:", e)
+
             del user_states[uid]
 
             bot.reply_to(
