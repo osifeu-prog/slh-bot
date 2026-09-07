@@ -211,18 +211,13 @@ def register(bot, context=None):
                 f"{invite_line}"
             )
         else:
-            branding = load_branding()
-            try:
-                bot.send_message(m.chat.id, f"<pre>{branding}</pre>", parse_mode="HTML")
-            except Exception:
-                pass
             text = (
                 f"ברוך הבא, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
                 f"💰 יתרה: {credits}\n"
                 f"🔒 סטייקינג: {staked}\n\n"
-                "אני רובוטוש, העוזר האישי שלך.\n"
+                "ברוך הבא ל-SLH OS.\n"
                 "כדי להתחיל, השתמש בפקודות הבאות:\n"
                 "/join – הרשמה\n"
                 "/dashboard – לוח אישי\n"
