@@ -10,7 +10,6 @@ from core.invite_gate import can_start_onboarding
 
 
 
-
 def load_branding():
     try:
         from datetime import datetime
@@ -37,7 +36,25 @@ def load_branding():
         return ""
 
 
-def register(bot):
+def register(bot, context=None):
+    context = context or {}
+
+    def runtime_bot_username():
+        """Return this runtime bot's Telegram username without persisting identity."""
+        username = context.get("telegram_bot_username") or context.get("bot_username")
+        if username:
+            return str(username).lstrip("@").strip()
+        try:
+            me = bot.get_me()
+            return getattr(me, "username", None)
+        except Exception:
+            return None
+
+    def referral_link(user_id):
+        username = runtime_bot_username()
+        if not username:
+            return None
+        return f"https://t.me/{username}?start=ref_{user_id}"
 
     def load_db():
         try:
@@ -162,6 +179,17 @@ def register(bot):
         user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
         credits = user_wallet.get("credits", 0)
         staked = user_wallet.get("staked", 0)
+        invite_link = referral_link(user_id)
+        invite_text = (
+            f"https://t.me/{runtime_bot_username()}?start=ref_{user_id}"
+            if invite_link is None and runtime_bot_username()
+            else invite_link
+        )
+        invite_line = (
+            f"📎 קישור ההזמנה האישי שלך:\n{invite_text}"
+            if invite_text else
+            "📎 קישור ההזמנה האישי שלך: יופיע לאחר זיהוי הבוט"
+        )
 
         if is_owner:
             branding = load_branding()
@@ -180,8 +208,7 @@ def register(bot):
                 "🚀 ה-Dashboard והמערכת האישית שלך מוכנים.\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
-                f"📎 קישור ההזמנה האישי שלך:\n"
-                f"https://t.me/Me_ad_main_bot?start=ref_{user_id}"
+                f"{invite_line}"
             )
         else:
             branding = load_branding()
@@ -202,8 +229,7 @@ def register(bot):
                 "/help – עזרה\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
-                f"📎 קישור ההזמנה האישי שלך:\n"
-                f"https://t.me/Me_ad_main_bot?start=ref_{user_id}"
+                f"{invite_line}"
             )
 
         bot.send_message(m.chat.id, text)
@@ -406,4 +432,3 @@ def register(bot):
                 call.message.chat.id,
                 f"❌ Agent creation failed: {type(e).__name__}"
             )
-
