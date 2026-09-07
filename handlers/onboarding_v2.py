@@ -304,7 +304,7 @@ def register(bot, context=None):
             if not owned_agents:
 
                 create_agent(
-                    f"{get_display_name(call.from_user.id, call.from_user)}-Agent",
+                    f"user{user_id}-Agent",
                     owner_id=user_id
                 )
 
@@ -394,7 +394,7 @@ def register(bot, context=None):
         try:
 
             agent_id, agent = create_agent(
-                f"{get_display_name(call.from_user.id, call.from_user)}-Agent",
+                f"user{user_id}-Agent",
                 owner_id=user_id
             )
 

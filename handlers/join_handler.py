@@ -69,12 +69,25 @@ def register(bot):
                 "permissions": []
             })
 
+            try:
+                from core.agent_registry import create_agent
+                create_agent(f"user{uid}-Agent", owner_id=uid)
+            except Exception as e:
+                print("JOIN CREATE_AGENT FAILED:", e)
+                bot.reply_to(
+                    msg,
+                    "⚠️ הפרופיל נשמר, אבל יצירת הסוכן האישי נכשלה.\n"
+                    "ההרשמה תישאר סגורה עד לתיקון."
+                )
+                return
+
             del user_states[uid]
 
             bot.reply_to(
                 msg,
                 f"✅ נרשמת בהצלחה, {state['name']}!\n"
                 f"קבוצה: {group}\n\n"
+                "הסוכן האישי שלך מוכן.\n\n"
                 "מה תרצה לעשות עכשיו?\n"
                 "📚 /courses\n"
                 "💰 /wallet\n\n"

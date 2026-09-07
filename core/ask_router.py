@@ -68,7 +68,7 @@ def detect_intent(text):
     return "general"
 
 def route(text, uid=None):
-    guard_result = guard(text)
+    guard_result = guard(text, uid)
     if isinstance(guard_result, tuple):
         blocked, msg = guard_result
     else:
