@@ -60,7 +60,7 @@ def register(bot):
         if ok:
             bot.reply_to(
                 m,
-                f"✅ התחלת קורס:\n{course_id}\n\nהשתמש ב־/progress למעקב"
+                f"✅ התחלת קורס:\n{course_id}\n\nלהתחיל את השיעור הראשון:\n/lesson {course_id} 1\n\nבסיום כל שיעור: 25 נקודות"
             )
         else:
             bot.reply_to(
