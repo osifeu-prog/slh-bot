@@ -28,7 +28,12 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
         raise ValueError("TELEGRAM_INIT_DATA_MISSING")
 
     pairs = parse_qsl(init_data, keep_blank_values=True, strict_parsing=True)
-    data = dict(pairs)
+    data = {}
+    for key, value in pairs:
+        if key in data:
+            raise ValueError("TELEGRAM_INIT_DATA_DUPLICATE_KEY")
+        data[key] = value
+
     received_hash = data.pop("hash", "")
     if not received_hash:
         raise ValueError("TELEGRAM_INIT_DATA_HASH_MISSING")
