@@ -43,8 +43,10 @@
     <script>
         const tg = window.Telegram && window.Telegram.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
-        const uid = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
-            ? String(tg.initDataUnsafe.user.id) : null;
+        const initData = tg ? tg.initData : "";
+        const unsafeUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+        const uid = unsafeUser ? String(unsafeUser.id) : null;
+        const authHeaders = initData ? { "X-Telegram-Init-Data": initData } : {};
 
         async function loadWallet() {
             const nameEl = document.getElementById("name");
@@ -52,14 +54,15 @@
             const stakedEl = document.getElementById("staked");
             const tokenBalEl = document.getElementById("token_balance");
             const tonWalletEl = document.getElementById("ton_wallet");
-            if (!uid) { nameEl.textContent = "Telegram user"; creditsEl.textContent = "0"; return; }
-            const res = await fetch("/api/wallet/" + encodeURIComponent(uid));
+            if (!uid || !initData) { nameEl.textContent = "Open inside Telegram"; creditsEl.textContent = "-"; return; }
+            const res = await fetch("/api/wallet/" + encodeURIComponent(uid), { headers: authHeaders });
             const data = await res.json();
+            if (!res.ok) { nameEl.textContent = "Authentication unavailable"; creditsEl.textContent = "-"; return; }
             nameEl.textContent = data.name || uid;
             creditsEl.textContent = data.credits ?? 0;
-                stakedEl.textContent = data.staked ?? 0;
-                tokenBalEl.textContent = data.token_balance ?? 0;
-                tonWalletEl.textContent = data.ton_wallet || "Not linked";
+            stakedEl.textContent = data.staked ?? 0;
+            tokenBalEl.textContent = data.token_balance ?? 0;
+            tonWalletEl.textContent = data.ton_wallet || "Not linked";
         }
 
         async function loadStats() {
@@ -80,9 +83,10 @@
 
         async function loadTasks() {
             const tasksEl = document.getElementById("tasks");
-            if (!uid) { tasksEl.textContent = "Open this page inside Telegram."; return; }
-            const res = await fetch("/api/tasks/" + encodeURIComponent(uid));
+            if (!uid || !initData) { tasksEl.textContent = "Open this page inside Telegram."; return; }
+            const res = await fetch("/api/tasks/" + encodeURIComponent(uid), { headers: authHeaders });
             const items = await res.json();
+            if (!res.ok) { tasksEl.textContent = "Authentication unavailable"; return; }
             if (!items.length) { tasksEl.textContent = "No tasks yet."; return; }
             tasksEl.innerHTML = "";
             items.forEach(t => {
@@ -101,7 +105,7 @@
                 lb.innerHTML = "";
                 users.slice(0, 10).forEach(u => {
                     const li = document.createElement("li");
-                    li.textContent = u.name + " – " + u.credits + " credits";
+                    li.textContent = u.name + " – " + u.points + " points";
                     lb.appendChild(li);
                 });
             } catch (e) {
