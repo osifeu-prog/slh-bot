@@ -29,12 +29,20 @@
         <div>👛 TON Wallet: <span id="ton_wallet">-</span></div>
     </div>
     <div class="card">
-        <h2>📊 System Stats</h2>
-        <div id="stats">Loading...</div>
+        <h2>📚 Academy</h2>
+        <div id="academy">Loading...</div>
     </div>
     <div class="card">
-        <h2>📋 Tasks</h2>
+        <h2>📋 Personal Tasks</h2>
         <div id="tasks">Loading...</div>
+    </div>
+    <div class="card">
+        <h2>🏆 Points</h2>
+        <div id="points" class="value">0</div>
+    </div>
+    <div class="card">
+        <h2>📊 System Stats</h2>
+        <div id="stats">Loading...</div>
     </div>
     <div class="card">
         <h2>🏆 Leaderboard</h2>
@@ -43,23 +51,58 @@
     <script>
         const tg = window.Telegram && window.Telegram.WebApp;
         if (tg) { tg.ready(); tg.expand(); }
-        const uid = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
-            ? String(tg.initDataUnsafe.user.id) : null;
+        const initData = tg ? tg.initData : "";
+        const authHeaders = initData ? { "X-Telegram-Init-Data": initData } : {};
 
-        async function loadWallet() {
+        async function loadMe() {
             const nameEl = document.getElementById("name");
-            const creditsEl = document.getElementById("credits");
-            const stakedEl = document.getElementById("staked");
-            const tokenBalEl = document.getElementById("token_balance");
-            const tonWalletEl = document.getElementById("ton_wallet");
-            if (!uid) { nameEl.textContent = "Telegram user"; creditsEl.textContent = "0"; return; }
-            const res = await fetch("/api/wallet/" + encodeURIComponent(uid));
-            const data = await res.json();
-            nameEl.textContent = data.name || uid;
-            creditsEl.textContent = data.credits ?? 0;
-                stakedEl.textContent = data.staked ?? 0;
-                tokenBalEl.textContent = data.token_balance ?? 0;
-                tonWalletEl.textContent = data.ton_wallet || "Not linked";
+            if (!initData) {
+                nameEl.textContent = "Open inside Telegram";
+                return;
+            }
+            try {
+                const res = await fetch("/api/v1/me", { headers: authHeaders });
+                const data = await res.json();
+                if (!res.ok) {
+                    nameEl.textContent = res.status === 401 ? "Authentication unavailable" : "User unavailable";
+                    return;
+                }
+
+                const identity = data.identity || {};
+                const wallet = data.wallet || {};
+                const academy = data.academy || {};
+                const tasks = data.tasks || {};
+                const rewards = data.rewards || {};
+
+                nameEl.textContent = identity.display_name || "Telegram user";
+                document.getElementById("credits").textContent = wallet.credits ?? 0;
+                document.getElementById("staked").textContent = wallet.staked ?? 0;
+                document.getElementById("token_balance").textContent = wallet.token_balance ?? 0;
+                document.getElementById("ton_wallet").textContent = wallet.ton_wallet || "Not linked";
+                document.getElementById("points").textContent = rewards.points ?? 0;
+
+                const academyEl = document.getElementById("academy");
+                const enrolled = Array.isArray(academy.enrolled) ? academy.enrolled : [];
+                academyEl.textContent = enrolled.length
+                    ? "Enrolled: " + enrolled.join(", ")
+                    : "No courses enrolled yet.";
+
+                const tasksEl = document.getElementById("tasks");
+                const items = Array.isArray(tasks.personal) ? tasks.personal : [];
+                if (!items.length) {
+                    tasksEl.textContent = "No personal tasks yet.";
+                } else {
+                    tasksEl.innerHTML = "";
+                    items.forEach(t => {
+                        const div = document.createElement("div");
+                        div.className = "task" + (t.status === "done" ? " done" : "");
+                        div.textContent = (t.status === "done" ? "✅ " : "⬜ ") + t.title;
+                        tasksEl.appendChild(div);
+                    });
+                }
+            } catch (e) {
+                nameEl.textContent = "Unavailable";
+            }
         }
 
         async function loadStats() {
@@ -78,30 +121,16 @@
             }
         }
 
-        async function loadTasks() {
-            const tasksEl = document.getElementById("tasks");
-            if (!uid) { tasksEl.textContent = "Open this page inside Telegram."; return; }
-            const res = await fetch("/api/tasks/" + encodeURIComponent(uid));
-            const items = await res.json();
-            if (!items.length) { tasksEl.textContent = "No tasks yet."; return; }
-            tasksEl.innerHTML = "";
-            items.forEach(t => {
-                const div = document.createElement("div");
-                div.className = "task" + (t.status === "done" ? " done" : "");
-                div.textContent = (t.status === "done" ? "✅ " : "⬜ ") + t.title;
-                tasksEl.appendChild(div);
-            });
-        }
-
         async function loadLeaderboard() {
             const lb = document.getElementById("leaderboard");
             try {
-                const res = await fetch("/api/leaderboard");
+                const res = await fetch("/api/v1/leaderboard");
                 const users = await res.json();
+                if (!res.ok || !Array.isArray(users)) throw new Error("leaderboard unavailable");
                 lb.innerHTML = "";
                 users.slice(0, 10).forEach(u => {
                     const li = document.createElement("li");
-                    li.textContent = u.name + " – " + u.credits + " credits";
+                    li.textContent = (u.name || "User") + " – " + (u.points ?? 0) + " points";
                     lb.appendChild(li);
                 });
             } catch (e) {
@@ -109,9 +138,8 @@
             }
         }
 
-        loadWallet();
+        loadMe();
         loadStats();
-        loadTasks();
         loadLeaderboard();
     </script>
 </body>
