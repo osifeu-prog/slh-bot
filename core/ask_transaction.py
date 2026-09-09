@@ -8,8 +8,18 @@ from datetime import datetime, timezone
 import state_manager
 
 
+PROCESSING_LEASE_SECONDS = 120
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def _parse_time(value):
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except Exception:
+        return None
 
 
 def get_transaction(uid, request_id):
@@ -33,17 +43,58 @@ def begin_or_get(uid, request_id):
         if existing is not None:
             result["transaction"] = existing
             return
+        now = _now()
         tx = {
             "uid": str(uid),
             "request_id": str(request_id),
             "status": "PENDING",
             "answer": None,
-            "created_at": _now(),
-            "updated_at": _now(),
+            "created_at": now,
+            "updated_at": now,
         }
         rows[key] = tx
         result["transaction"] = tx
         result["created"] = True
+
+    state_manager.atomic_update(mutate)
+    return result
+
+
+def claim_processing(uid, request_id, lease_seconds=PROCESSING_LEASE_SECONDS):
+    """Atomically claim the LLM work so concurrent Telegram retries do not both call the provider."""
+    key = f"{uid}:{request_id}"
+    result = {"claimed": False, "transaction": None}
+    now = datetime.now(timezone.utc)
+
+    def mutate(db):
+        rows = db.setdefault("ask_transactions", {})
+        tx = rows.get(key)
+        if tx is None:
+            raise ValueError("ASK_TRANSACTION_NOT_FOUND")
+
+        status = tx.get("status")
+        if status in ("COMPLETED", "ANSWER_READY"):
+            result["transaction"] = tx
+            return
+
+        if status == "PROCESSING":
+            started = _parse_time(tx.get("processing_at") or tx.get("updated_at"))
+            if started is not None:
+                age = (now - started).total_seconds()
+                if age < max(1, int(lease_seconds)):
+                    result["transaction"] = tx
+                    return
+
+        if status not in ("PENDING", "FAILED", "PROCESSING"):
+            result["transaction"] = tx
+            return
+
+        tx["status"] = "PROCESSING"
+        tx["processing_at"] = now.isoformat()
+        tx["updated_at"] = now.isoformat()
+        tx.pop("error", None)
+        result["claimed"] = True
+        result["transaction"] = tx
 
     state_manager.atomic_update(mutate)
     return result
