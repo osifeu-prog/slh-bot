@@ -132,9 +132,9 @@ def register_payment_handlers(bot):
         try:
             from core import economy_service
 
-            # Referral credit inflation is intentionally disabled for the first
-            # Alpha revenue path. Attribution can be added later as a separately
-            # audited reward policy; payment settlement must remain 1:1 here.
+            # Referral commissions are explicitly disabled for the first Alpha
+            # revenue path. Keep the authority call 1:1 until attribution is
+            # implemented as a separately audited reward policy.
             result = economy_service.record_stars_payment(
                 uid=uid,
                 credits=credits,
@@ -143,11 +143,13 @@ def register_payment_handlers(bot):
                 telegram_payment_charge_id=payment.telegram_payment_charge_id,
                 provider_payment_charge_id=payment.provider_payment_charge_id,
                 referrer_uid=None,
+                commission_rate=0,
                 meta={
                     "source": "telegram_successful_payment",
                     "invoice_payload": payload,
                     "package_stars": expected[0],
                     "package_credits": expected[1],
+                    "referral_commission": "disabled_alpha",
                 },
             )
 
