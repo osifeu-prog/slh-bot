@@ -99,7 +99,7 @@ def complete(uid, request_id):
 
 
 def fail(uid, request_id, reason):
-    """Mark a failed request so it can be retried deliberately."""
+    """Mark a failed request, but preserve ANSWER_READY for settlement recovery."""
     key = f"{uid}:{request_id}"
 
     def mutate(db):
@@ -107,9 +107,10 @@ def fail(uid, request_id, reason):
         tx = rows.get(key)
         if tx is None:
             raise ValueError("ASK_TRANSACTION_NOT_FOUND")
-        if tx.get("status") != "COMPLETED":
-            tx["status"] = "FAILED"
-            tx["error"] = str(reason)
-            tx["updated_at"] = _now()
+        if tx.get("status") in ("COMPLETED", "ANSWER_READY"):
+            return
+        tx["status"] = "FAILED"
+        tx["error"] = str(reason)
+        tx["updated_at"] = _now()
 
     state_manager.atomic_update(mutate)
