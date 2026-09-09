@@ -4,6 +4,7 @@ from openai import OpenAI
 import json
 import requests
 from core.economy_bridge import spend_credits
+from core import ask_transaction
 
 client = None
 
@@ -76,12 +77,6 @@ def _consume_paid_ask(uid, request_id):
     if request_id is None or not str(request_id).strip():
         return False
 
-    from core.economy_service import get_balance_safe
-
-    balance = get_balance_safe(str(uid))
-    if balance < ASK_CREDIT_COST:
-        return False
-
     idempotency_key = f"ask:{uid}:{request_id}"
     result = spend_credits(
         str(uid),
@@ -96,6 +91,14 @@ def _consume_paid_ask(uid, request_id):
     return bool(result is not False)
 
 
+def _settle_saved_answer(uid, request_id, answer):
+    """Settle an already persisted answer; safe to retry after a crash."""
+    if not _consume_paid_ask(uid, request_id):
+        return False
+    ask_transaction.complete(str(uid), str(request_id))
+    return True
+
+
 def query_llm_with_context(
     question,
     uid=None,
@@ -103,22 +106,44 @@ def query_llm_with_context(
     consume_credits=False,
     request_id=None,
 ):
+    tx = None
+    if consume_credits:
+        if not uid or not str(uid).strip():
+            return "⚠️ לא ניתן להפעיל בקשת AI בתשלום: מזהה משתמש חסר. נסה שוב."
+        if ASK_CREDIT_COST <= 0:
+            return "⚠️ מנגנון החיוב של AI אינו מוגדר. נסה שוב מאוחר יותר."
+        if request_id is None or not str(request_id).strip():
+            return "⚠️ לא ניתן לחייב את בקשת ה-AI: מזהה בקשה חסר. נסה שוב."
+
+        tx_result = ask_transaction.begin_or_get(str(uid), str(request_id))
+        tx = tx_result["transaction"] if tx_result else None
+        if tx is None:
+            return "⚠️ לא ניתן ליצור עסקת ASK. נסה שוב מאוחר יותר."
+
+        if tx.get("status") == "COMPLETED":
+            return tx.get("answer") or "לא נמצאה תשובת ASK שמורה."
+
+        if tx.get("status") == "ANSWER_READY":
+            answer = tx.get("answer") or ""
+            if _settle_saved_answer(str(uid), str(request_id), answer):
+                return answer
+            return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
+
+        # Only a genuinely new/pending request may invoke the LLM. This avoids
+        # charging the LLM provider again when Telegram retries the same request.
+        try:
+            from core.economy_service import get_balance_safe
+            if get_balance_safe(str(uid)) < ASK_CREDIT_COST:
+                return f"אין מספיק credits לבקשת AI. נדרש: {ASK_CREDIT_COST} credit(s)."
+        except Exception:
+            return "⚠️ לא ניתן לאמת את יתרת ה-credits. נסה שוב מאוחר יותר."
+
     try:
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
 
         user = db.get("users", {}).get(str(uid), {})
         wallet = user.get("wallet", {})
-
-        if consume_credits:
-            if not uid or not str(uid).strip():
-                return "⚠️ לא ניתן להפעיל בקשת AI בתשלום: מזהה משתמש חסר. נסה שוב."
-            if ASK_CREDIT_COST <= 0:
-                return "⚠️ מנגנון החיוב של AI אינו מוגדר. נסה שוב מאוחר יותר."
-            if request_id is None or not str(request_id).strip():
-                return "⚠️ לא ניתן לחייב את בקשת ה-AI: מזהה בקשה חסר. נסה שוב."
-            if wallet.get("credits", 0) < ASK_CREDIT_COST:
-                return f"אין מספיק credits לבקשת AI. נדרש: {ASK_CREDIT_COST} credit(s)."
 
         context = f"""
 SLH SYSTEM STATE:
@@ -154,13 +179,21 @@ USER QUESTION:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
             if consume_credits:
-                if not _consume_paid_ask(str(uid), request_id):
+                ask_transaction.save_answer(str(uid), str(request_id), result)
+                if not _settle_saved_answer(str(uid), str(request_id), result):
                     return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
             return result
 
+        if consume_credits:
+            ask_transaction.fail(str(uid), str(request_id), result or "LLM_EMPTY")
         return result or "לא התקבלה תשובה כרגע."
 
     except Exception as e:
+        if consume_credits:
+            try:
+                ask_transaction.fail(str(uid), str(request_id), str(e))
+            except Exception:
+                pass
         return f"LLM Error: {e}"
 
 
