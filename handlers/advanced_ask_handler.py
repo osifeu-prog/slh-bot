@@ -30,6 +30,7 @@ def register_ask_handler(bot):
             return
 
         question = question[:2000]
+        request_id = str(getattr(msg, "message_id", "unknown"))
 
         # צירוף פלט exec אחרון להקשר
         try:
@@ -54,13 +55,19 @@ def register_ask_handler(bot):
             pass
 
         try:
-            answer = route(question, str(msg.from_user.id))
+            answer = route(
+                question,
+                str(msg.from_user.id),
+                request_id=request_id,
+            )
             if not answer:
                 raise ValueError("no route answer")
         except Exception:
             answer = query_llm_with_context(
                 question,
-                str(msg.from_user.id)
+                str(msg.from_user.id),
+                consume_credits=True,
+                request_id=request_id,
             )
         if not answer:
             answer = "⚠️ אין תשובה זמינה כרגע."
