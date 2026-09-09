@@ -73,6 +73,9 @@ def _consume_paid_ask(uid, request_id):
     if not uid or ASK_CREDIT_COST <= 0:
         return True
 
+    if request_id is None or not str(request_id).strip():
+        return False
+
     from core.economy_service import get_balance_safe
 
     balance = get_balance_safe(str(uid))
@@ -108,6 +111,8 @@ def query_llm_with_context(
         wallet = user.get("wallet", {})
 
         if consume_credits and uid and ASK_CREDIT_COST > 0:
+            if request_id is None or not str(request_id).strip():
+                return "⚠️ לא ניתן לחייב את בקשת ה-AI: מזהה בקשה חסר. נסה שוב."
             if wallet.get("credits", 0) < ASK_CREDIT_COST:
                 return f"אין מספיק credits לבקשת AI. נדרש: {ASK_CREDIT_COST} credit(s)."
 
@@ -145,7 +150,7 @@ USER QUESTION:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
             if consume_credits and uid and ASK_CREDIT_COST > 0:
-                if not _consume_paid_ask(str(uid), request_id or "unknown"):
+                if not _consume_paid_ask(str(uid), request_id):
                     return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
             return result
 
