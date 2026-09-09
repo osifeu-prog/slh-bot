@@ -11,6 +11,7 @@ STARS_PACKS = {
     "1000credits": (1000, 800, "1000 Credits (20% off)"),
 }
 
+
 def register_payment_handlers(bot):
 
     @bot.message_handler(commands=['pay'])
@@ -78,9 +79,20 @@ def register_payment_handlers(bot):
         except Exception:
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package.")
             return
-        if expected_credits <= 0 or query.currency != "XTR" or not query.total_amount:
+
+        expected = next(
+            ((pack_stars, pack_credits) for pack_stars, pack_credits, _ in STARS_PACKS.values()
+             if pack_credits == expected_credits),
+            None,
+        )
+        if (
+            expected is None
+            or query.currency != "XTR"
+            or int(query.total_amount or 0) != expected[0]
+        ):
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment details.")
             return
+
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
@@ -89,7 +101,7 @@ def register_payment_handlers(bot):
         payment = m.successful_payment
 
         payload = payment.invoice_payload
-        parts = payload.split("_")
+        parts = str(payload or "").split("_")
 
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
@@ -102,17 +114,27 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
 
-        try:
-            db = state_manager.load_db()
-            referrer_uid = (
-                db.get("users", {})
-                  .get(uid, {})
-                  .get("referral", {})
-                  .get("referred_by")
-            )
+        expected = next(
+            ((pack_stars, pack_credits) for pack_stars, pack_credits, _ in STARS_PACKS.values()
+             if pack_credits == credits),
+            None,
+        )
+        if (
+            expected is None
+            or str(payment.currency) != "XTR"
+            or int(payment.total_amount or 0) != expected[0]
+            or not payment.telegram_payment_charge_id
+        ):
+            bot.send_message(m.chat.id, "❌ Invalid payment details.")
+            print(f"[PAY] rejected settlement details: uid={uid}, credits={credits}")
+            return
 
+        try:
             from core import economy_service
 
+            # Referral credit inflation is intentionally disabled for the first
+            # Alpha revenue path. Attribution can be added later as a separately
+            # audited reward policy; payment settlement must remain 1:1 here.
             result = economy_service.record_stars_payment(
                 uid=uid,
                 credits=credits,
@@ -120,10 +142,12 @@ def register_payment_handlers(bot):
                 currency=payment.currency,
                 telegram_payment_charge_id=payment.telegram_payment_charge_id,
                 provider_payment_charge_id=payment.provider_payment_charge_id,
-                referrer_uid=referrer_uid,
+                referrer_uid=None,
                 meta={
                     "source": "telegram_successful_payment",
                     "invoice_payload": payload,
+                    "package_stars": expected[0],
+                    "package_credits": expected[1],
                 },
             )
 
