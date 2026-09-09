@@ -1,7 +1,7 @@
 """Durable logical transaction state for paid ASK requests.
 
 The module deliberately uses the existing file-backed state_manager authority so
-ASK retries can recover a completed answer without invoking the LLM again.
+ASK retries can recover an answer without invoking the LLM again.
 """
 from datetime import datetime, timezone
 
@@ -49,8 +49,8 @@ def begin_or_get(uid, request_id):
     return result
 
 
-def complete(uid, request_id, answer):
-    """Persist the successful answer atomically with transaction state."""
+def save_answer(uid, request_id, answer):
+    """Persist an LLM answer before settlement so a crash cannot force a re-LLM."""
     key = f"{uid}:{request_id}"
     result = {"ok": False, "transaction": None}
 
@@ -63,8 +63,33 @@ def complete(uid, request_id, answer):
             result["ok"] = True
             result["transaction"] = tx
             return
+        tx["status"] = "ANSWER_READY"
+        tx["answer"] = str(answer)
+        tx["updated_at"] = _now()
+        result["ok"] = True
+        result["transaction"] = tx
+
+    state_manager.atomic_update(mutate)
+    return result
+
+
+def complete(uid, request_id):
+    """Mark an already-saved answer as settled/completed."""
+    key = f"{uid}:{request_id}"
+    result = {"ok": False, "transaction": None}
+
+    def mutate(db):
+        rows = db.setdefault("ask_transactions", {})
+        tx = rows.get(key)
+        if tx is None:
+            raise ValueError("ASK_TRANSACTION_NOT_FOUND")
+        if tx.get("status") == "COMPLETED":
+            result["ok"] = True
+            result["transaction"] = tx
+            return
+        if tx.get("status") != "ANSWER_READY":
+            raise ValueError("ASK_ANSWER_NOT_READY")
         tx["status"] = "COMPLETED"
-        tx["answer"] = answer
         tx["updated_at"] = _now()
         result["ok"] = True
         result["transaction"] = tx
