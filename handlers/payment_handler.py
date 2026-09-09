@@ -24,7 +24,8 @@ def register_payment_handlers(bot):
         bot.send_message(
             m.chat.id,
             "💎 Credits unlock: AI asks (/ask), premium agents, and more.\n"
-            "Choose a package below 👇\n\nמעדיף קריפטו? /deposit_address (BNB) או /ton_address (TON)"
+            "Choose a package below 👇\n\n"
+            "ℹ️ Crypto deposits are temporarily paused while secure user-binding is completed."
         )
 
         from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
