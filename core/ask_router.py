@@ -42,8 +42,6 @@ PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses",
 def detect_intent(text):
     text_lower = text.strip().lower()
 
-    # Greeting is valid only when the entire message is a greeting.
-    # This prevents questions containing a greeting from being swallowed.
     greeting_exact = {
         kw.strip().lower()
         for kw in INTENTS.get("greeting", [])
@@ -67,7 +65,7 @@ def detect_intent(text):
 
     return "general"
 
-def route(text, uid=None):
+def route(text, uid=None, request_id=None):
     guard_result = guard(text, uid)
     if isinstance(guard_result, tuple):
         blocked, msg = guard_result
@@ -80,12 +78,10 @@ def route(text, uid=None):
 
     intent = detect_intent(text)
 
-    # Educational / how-to questions should hit LLM, not rigid menus
     _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
         intent = "general"
-
 
     if intent == "staking":
         base = "סטייקינג SLH\n\n1. קנה credits עם Stars: /pay\n2. נעל אותם: /stake <amount>\n\nסטייקינג פנימי בלבד, לא on-chain."
@@ -183,6 +179,11 @@ def route(text, uid=None):
     if is_system_state_question(text):
         return "ask אינו מוסמך לענות על שאלות מצב מערכת. השתמש בפקודות בדיקה: e או exec (לקריאה) או בדיקות ידניות."
     try:
-        return query_llm_with_context(text, uid=str(uid) if uid is not None else None)
+        return query_llm_with_context(
+            text,
+            uid=str(uid) if uid is not None else None,
+            consume_credits=True,
+            request_id=request_id,
+        )
     except Exception:
         return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
