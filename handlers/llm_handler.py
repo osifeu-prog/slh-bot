@@ -129,13 +129,24 @@ def query_llm_with_context(
                 return answer
             return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
 
-        # Only a genuinely new/pending request may invoke the LLM. This avoids
-        # charging the LLM provider again when Telegram retries the same request.
+        claim = ask_transaction.claim_processing(str(uid), str(request_id))
+        claimed_tx = claim.get("transaction") if claim else None
+        if not claim or not claim.get("claimed"):
+            if claimed_tx and claimed_tx.get("status") == "COMPLETED":
+                return claimed_tx.get("answer") or "לא נמצאה תשובת ASK שמורה."
+            if claimed_tx and claimed_tx.get("status") == "ANSWER_READY":
+                answer = claimed_tx.get("answer") or ""
+                if _settle_saved_answer(str(uid), str(request_id), answer):
+                    return answer
+            return "⚠️ הבקשה כבר בעיבוד. נסה שוב בעוד רגע."
+
         try:
             from core.economy_service import get_balance_safe
             if get_balance_safe(str(uid)) < ASK_CREDIT_COST:
+                ask_transaction.fail(str(uid), str(request_id), "INSUFFICIENT_CREDITS")
                 return f"אין מספיק credits לבקשת AI. נדרש: {ASK_CREDIT_COST} credit(s)."
         except Exception:
+            ask_transaction.fail(str(uid), str(request_id), "BALANCE_CHECK_FAILED")
             return "⚠️ לא ניתן לאמת את יתרת ה-credits. נסה שוב מאוחר יותר."
 
     try:
