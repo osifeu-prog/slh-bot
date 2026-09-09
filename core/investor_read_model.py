@@ -82,12 +82,20 @@ def get_investor_snapshot(uid):
                 "agent": task.get("agent", "unassigned"),
             })
 
+    reward_credits = 0
+    reward_points = 0
     recent_rewards = []
     for entry in reversed(_load_reward_ledger()):
         if not isinstance(entry, dict) or str(entry.get("user")) != uid:
             continue
+
         credits = entry.get("credits", 0)
         points = entry.get("points", 0)
+        if isinstance(credits, (int, float)):
+            reward_credits += credits
+        if isinstance(points, (int, float)):
+            reward_points += points
+
         if credits == 0 and points == 0:
             continue
         recent_rewards.append({
@@ -102,13 +110,6 @@ def get_investor_snapshot(uid):
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
         gamification = {}
-
-    reward_credits = sum(
-        entry.get("credits", 0)
-        for entry in recent_rewards
-        if isinstance(entry.get("credits", 0), (int, float))
-        and entry.get("credits", 0) > 0
-    )
 
     return {
         "identity": {
