@@ -18,8 +18,8 @@ def convert_to_hebrew(text):
     return ''.join(EN_TO_HE.get(ch, ch) for ch in text)
 
 
-import hdate
+from hdate import HDate
 from datetime import datetime
 
 def get_hebrew_date():
-    return hdate.HDate(datetime.now(), hebrew=True).hebrew_date
+    return HDate(datetime.now(), hebrew=True).hebrew_date
