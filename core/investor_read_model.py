@@ -1,7 +1,7 @@
 """Canonical read-only investor view model.
 
 This module deliberately performs no writes. It composes existing canonical
-profile/economy/academy state for the Investor Mini App API.
+profile/economy/academy/task state for the Investor Mini App API.
 """
 
 import json
@@ -11,6 +11,7 @@ import state_manager
 
 
 COURSE_FILE = Path("courses.json")
+REWARD_LEDGER_FILE = Path("state/rewards_ledger.json")
 
 
 def _load_courses():
@@ -22,6 +23,17 @@ def _load_courses():
         return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def _load_reward_ledger():
+    if not REWARD_LEDGER_FILE.exists():
+        return []
+    try:
+        with REWARD_LEDGER_FILE.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
 
 
 def get_investor_snapshot(uid):
@@ -70,26 +82,33 @@ def get_investor_snapshot(uid):
                 "agent": task.get("agent", "unassigned"),
             })
 
-    ledger = db.get("ledger", [])
     recent_rewards = []
-    if isinstance(ledger, list):
-        for entry in reversed(ledger):
-            if not isinstance(entry, dict) or str(entry.get("uid")) != uid:
-                continue
-            amount = entry.get("amount", 0)
-            reason = str(entry.get("reason", "unknown"))
-            if amount > 0 or reason.startswith("reward") or "reward" in reason:
-                recent_rewards.append({
-                    "time": entry.get("time"),
-                    "amount": amount,
-                    "reason": reason,
-                })
-            if len(recent_rewards) >= 10:
-                break
+    for entry in reversed(_load_reward_ledger()):
+        if not isinstance(entry, dict) or str(entry.get("user")) != uid:
+            continue
+        credits = entry.get("credits", 0)
+        points = entry.get("points", 0)
+        if credits == 0 and points == 0:
+            continue
+        recent_rewards.append({
+            "time": entry.get("timestamp"),
+            "credits": credits,
+            "points": points,
+            "reason": str(entry.get("reason", "unknown")),
+        })
+        if len(recent_rewards) >= 10:
+            break
 
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
         gamification = {}
+
+    reward_credits = sum(
+        entry.get("credits", 0)
+        for entry in recent_rewards
+        if isinstance(entry.get("credits", 0), (int, float))
+        and entry.get("credits", 0) > 0
+    )
 
     return {
         "identity": {
@@ -114,12 +133,7 @@ def get_investor_snapshot(uid):
             "completed": sum(1 for task in personal_tasks if task["status"] == "done"),
         },
         "rewards": {
-            "credits": sum(
-                entry.get("amount", 0)
-                for entry in recent_rewards
-                if isinstance(entry.get("amount", 0), (int, float))
-                and entry.get("amount", 0) > 0
-            ),
+            "credits": reward_credits,
             "points": gamification.get("points", 0),
             "recent": recent_rewards,
         },
