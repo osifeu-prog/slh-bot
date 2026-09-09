@@ -71,7 +71,7 @@ def ask_groq(prompt):
 def _consume_paid_ask(uid, request_id):
     """Charge exactly once for this Telegram ASK request."""
     if not uid or ASK_CREDIT_COST <= 0:
-        return True
+        return False
 
     if request_id is None or not str(request_id).strip():
         return False
@@ -110,7 +110,11 @@ def query_llm_with_context(
         user = db.get("users", {}).get(str(uid), {})
         wallet = user.get("wallet", {})
 
-        if consume_credits and uid and ASK_CREDIT_COST > 0:
+        if consume_credits:
+            if not uid or not str(uid).strip():
+                return "⚠️ לא ניתן להפעיל בקשת AI בתשלום: מזהה משתמש חסר. נסה שוב."
+            if ASK_CREDIT_COST <= 0:
+                return "⚠️ מנגנון החיוב של AI אינו מוגדר. נסה שוב מאוחר יותר."
             if request_id is None or not str(request_id).strip():
                 return "⚠️ לא ניתן לחייב את בקשת ה-AI: מזהה בקשה חסר. נסה שוב."
             if wallet.get("credits", 0) < ASK_CREDIT_COST:
@@ -149,7 +153,7 @@ USER QUESTION:
     try:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
-            if consume_credits and uid and ASK_CREDIT_COST > 0:
+            if consume_credits:
                 if not _consume_paid_ask(str(uid), request_id):
                     return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
             return result
