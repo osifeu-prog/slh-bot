@@ -1,11 +1,14 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 import json
 from pathlib import Path
+
+from core.telegram_webapp_auth import validate_init_data
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
 
 app = Flask(__name__)
+
 
 def load_db():
     if not DB_PATH.exists():
@@ -13,9 +16,29 @@ def load_db():
     with DB_PATH.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+
+def authenticated_uid():
+    """Return the Telegram UID authenticated by server-validated initData."""
+    init_data = request.headers.get("X-Telegram-Init-Data", "")
+    try:
+        return validate_init_data(init_data)["uid"]
+    except (ValueError, RuntimeError):
+        return None
+
+
+def require_self(uid):
+    authenticated = authenticated_uid()
+    if authenticated is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    if str(uid) != authenticated:
+        return jsonify({"error": "FORBIDDEN_USER_MISMATCH"}), 403
+    return None
+
+
 @app.route("/health")
 def health():
     return "OK", 200
+
 
 @app.route("/market")
 def market():
@@ -24,14 +47,20 @@ def market():
         "time": "2026-08-11"
     }), 200
 
+
 @app.route("/mini-app")
 def mini_app():
     resp = send_from_directory(BASE_DIR, "mini_app.html")
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp
 
+
 @app.route("/api/wallet/<uid>")
 def get_wallet(uid):
+    denied = require_self(uid)
+    if denied:
+        return denied
+
     db = load_db()
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {})
@@ -44,8 +73,13 @@ def get_wallet(uid):
         "ton_wallet": user.get("ton_wallet")
     })
 
+
 @app.route("/api/tasks/<uid>")
 def get_tasks(uid):
+    denied = require_self(uid)
+    if denied:
+        return denied
+
     db = load_db()
     tasks = db.get("tasks", {})
 
@@ -69,6 +103,7 @@ def get_tasks(uid):
         })
 
     return jsonify(result)
+
 
 @app.route("/api/stats")
 def stats():
@@ -94,6 +129,7 @@ def stats():
         "credits": total_credits,
     })
 
+
 @app.route("/api/leaderboard")
 def api_leaderboard():
     try:
@@ -105,8 +141,6 @@ def api_leaderboard():
         result = []
 
         for uid, data in top:
-            wallet = data.get("wallet", {})
-
             result.append({
                 "uid": str(uid),
                 "name": data.get("name", f"User{uid}"),
@@ -120,14 +154,15 @@ def api_leaderboard():
             "error": str(e)
         }), 500
 
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=8080
-    )
-
 
 @app.route("/api/onchain/status")
 def onchain_status():
     from core.deposit_monitor import get_onchain_status
     return jsonify(get_onchain_status())
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=8080
+    )
