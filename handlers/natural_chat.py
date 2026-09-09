@@ -19,6 +19,8 @@ def register(bot, context=None):
         if not user_text:
             return
 
+        request_id = f"{msg.chat.id}:{msg.message_id}"
+
         try:
             bot.send_chat_action(msg.chat.id, "typing")
         except Exception:
@@ -27,7 +29,8 @@ def register(bot, context=None):
         try:
             answer = route(
                 user_text,
-                str(msg.from_user.id)
+                str(msg.from_user.id),
+                request_id=request_id,
             )
 
             answer = str(answer or "").strip()
