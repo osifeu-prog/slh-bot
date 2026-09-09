@@ -113,8 +113,6 @@ def _reconcile_pending_stars_payments():
 
 
 def register_payment_handlers(bot):
-    # Recover any payment that was durably staged but not fully settled before
-    # a process crash/restart. Idempotent settlement makes duplicate recovery safe.
     _reconcile_pending_stars_payments()
 
     @bot.message_handler(commands=['pay'])
@@ -245,8 +243,6 @@ def register_payment_handlers(bot):
         }
 
         try:
-            # Stage first. If settlement crashes after this point, startup
-            # reconciliation can safely retry using the Telegram charge ID.
             staged = _stage_stars_payment(record)
             result = _settle_staged_payment(staged)
 
@@ -266,8 +262,6 @@ def register_payment_handlers(bot):
             )
 
         except Exception as e:
-            # The durable pending record remains. Never claim the payment was
-            # lost; the next startup reconciliation will retry it idempotently.
             print(
                 f"[PAY] settlement deferred safely: "
                 f"charge_id={record['telegram_payment_charge_id']} error={e}"
@@ -321,30 +315,6 @@ def register_payment_handlers(bot):
             f"Total credits issued: {total_credits}\n"
             f"Total commissions paid: {total_commissions}"
         )
-
-    @bot.message_handler(commands=['fakepay_disabled'])
-    def fakepay(m):
-        from admin_utils import is_admin
-        if not is_admin(m):
-            return
-
-        if os.getenv("SLH_ALPHA_TEST_MODE", "0") != "1":
-            bot.send_message(m.chat.id, "⛔ Fake payments are disabled in Alpha.")
-            return
-
-        uid = str(m.from_user.id)
-        try:
-            from core import economy_service
-            balance = economy_service.record_transaction(
-                uid=uid,
-                amount=100,
-                reason="admin:test_payment",
-                meta={"source": "fakepay"},
-            )
-            bot.send_message(m.chat.id, f"💰 100 test credits added. Balance: {balance}")
-        except Exception as e:
-            bot.send_message(m.chat.id, "❌ Test payment failed safely.")
-            print(f"[PAY] fakepay error: {e}")
 
 
 def register(bot):
