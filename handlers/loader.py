@@ -20,7 +20,6 @@ def load_handlers(bot, context):
         ("store", "handlers.store_handler"),
         ("e", "handlers.e_handler"),
         ("reconcile", "handlers.reconcile_handler"),
-        ("fakepay", "handlers.fakepay_handler"),
         ("revenue", "handlers.revenue_handler"),
         ("ton_address", "handlers.ton_address_handler"),
         ("ton_balance", "handlers.ton_balance_handler"),
@@ -86,7 +85,6 @@ def load_handlers(bot, context):
         ("diagnostic", "diagnostic_handler"),
         ("guide", "guide_handler"),
         ("junk", "junk_handler"),
-
         ("report", "report_handler"),
         ("roadmap", "roadmap_handler"),
         ("sandbox", "sandbox_handler"),
