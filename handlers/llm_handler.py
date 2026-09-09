@@ -3,7 +3,6 @@ import state_manager
 from openai import OpenAI
 import json
 import requests
-import time
 from core.economy_bridge import spend_credits
 
 client = None
@@ -69,8 +68,8 @@ def ask_groq(prompt):
         return f"LLM Error: {e}"
 
 
-def _consume_paid_ask(uid, question):
-    """Charge exactly once after a successful LLM response."""
+def _consume_paid_ask(uid, request_id):
+    """Charge exactly once for this Telegram ASK request."""
     if not uid or ASK_CREDIT_COST <= 0:
         return True
 
@@ -80,10 +79,7 @@ def _consume_paid_ask(uid, question):
     if balance < ASK_CREDIT_COST:
         return False
 
-    import hashlib
-    key_material = f"ask:{uid}:{question}".encode("utf-8")
-    idempotency_key = "ask:" + hashlib.sha256(key_material).hexdigest()
-
+    idempotency_key = f"ask:{uid}:{request_id}"
     result = spend_credits(
         str(uid),
         ASK_CREDIT_COST,
@@ -91,12 +87,19 @@ def _consume_paid_ask(uid, question):
         meta={
             "source": "paid_ask",
             "idempotency_key": idempotency_key,
+            "request_id": str(request_id),
         },
     )
     return bool(result is not False)
 
 
-def query_llm_with_context(question, uid=None, skip_checks=False, consume_credits=False):
+def query_llm_with_context(
+    question,
+    uid=None,
+    skip_checks=False,
+    consume_credits=False,
+    request_id=None,
+):
     try:
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
@@ -142,8 +145,8 @@ USER QUESTION:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
             if consume_credits and uid and ASK_CREDIT_COST > 0:
-                if not _consume_paid_ask(str(uid), str(question)):
-                    return "⚠️ התשובה הופקה, אבל החיוב לא אושר ולכן היא לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
+                if not _consume_paid_ask(str(uid), request_id or "unknown"):
+                    return "⚠️ החיוב לא אושר ולכן התשובה לא נמסרה. ודא שיש לך מספיק credits ונסה שוב."
             return result
 
         return result or "לא התקבלה תשובה כרגע."
