@@ -30,7 +30,9 @@ def register_ask_handler(bot):
             return
 
         question = question[:2000]
-        request_id = str(getattr(msg, "message_id", "unknown"))
+        chat_id = getattr(getattr(msg, "chat", None), "id", "unknown")
+        message_id = getattr(msg, "message_id", "unknown")
+        request_id = f"{chat_id}:{message_id}"
 
         # צירוף פלט exec אחרון להקשר
         try:
@@ -60,15 +62,9 @@ def register_ask_handler(bot):
                 str(msg.from_user.id),
                 request_id=request_id,
             )
-            if not answer:
-                raise ValueError("no route answer")
         except Exception:
-            answer = query_llm_with_context(
-                question,
-                str(msg.from_user.id),
-                consume_credits=True,
-                request_id=request_id,
-            )
+            answer = "⚠️ מנוע ה-ASK לא זמין כרגע. נסה שוב מאוחר יותר."
+
         if not answer:
             answer = "⚠️ אין תשובה זמינה כרגע."
 
