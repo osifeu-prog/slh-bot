@@ -1,4 +1,5 @@
 ﻿from core import profile_manager
+from heb_convert import get_hebrew_date
 
 
 def register(bot):
@@ -18,6 +19,7 @@ def register(bot):
             "[בס\"ד]\n\n"
             "💰 SLH Wallet\n\n"
             f"👤 User: {uid}\n"
+            f"📅 {get_hebrew_date()}\n"
             f"💳 Credits: {credits}\n"
             f"🔒 Staked: {staked}\n"
             f"🪙 Token Balance: {token_balance}\n"

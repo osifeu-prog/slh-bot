@@ -14,7 +14,7 @@ def load_branding():
     try:
         from datetime import datetime
         now = datetime.now()
-        date_greg = now.strftime("%d/%m/%Y %H:%M")
+        date_heb = get_hebrew_date()
         logo_lines = [
             'בס"ד',
             "███████╗██╗     ██╗  ██╗",
@@ -175,7 +175,7 @@ def register(bot, context=None):
                 update_user(user_id, {"referral": {"referred_by": ref_uid}})
 
         from datetime import datetime
-        now = datetime.now().strftime("%d/%m/%Y %H:%M")
+        now = get_hebrew_date()
         user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
         credits = user_wallet.get("credits", 0)
         staked = user_wallet.get("staked", 0)
