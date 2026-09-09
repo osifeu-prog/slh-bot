@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timezone
+
 import state_manager
 from core import profile_manager
 from telebot.types import LabeledPrice, PreCheckoutQuery
@@ -12,7 +14,108 @@ STARS_PACKS = {
 }
 
 
+def _stage_stars_payment(payment_record):
+    """Durably stage a successful Telegram payment before credit settlement."""
+    charge_id = str(payment_record["telegram_payment_charge_id"])
+
+    def mutate(db):
+        pending = db.setdefault("pending_stars_payments", {})
+        existing = pending.get(charge_id)
+        if existing:
+            comparable = (
+                str(existing.get("uid")) == str(payment_record["uid"])
+                and int(existing.get("stars_paid", 0)) == int(payment_record["stars_paid"])
+                and int(existing.get("credits", 0)) == int(payment_record["credits"])
+                and str(existing.get("currency")) == str(payment_record["currency"])
+            )
+            if not comparable:
+                raise ValueError("PAYMENT_RECORD_CONFLICT")
+            return existing
+
+        record = {
+            **payment_record,
+            "status": "pending",
+            "staged_at": datetime.now(timezone.utc).isoformat(),
+        }
+        pending[charge_id] = record
+        return record
+
+    return state_manager.atomic_update(mutate)
+
+
+def _mark_stars_payment_applied(charge_id, result):
+    charge_id = str(charge_id)
+
+    def mutate(db):
+        pending = db.setdefault("pending_stars_payments", {})
+        record = pending.get(charge_id)
+        if not record:
+            return None
+        record["status"] = "applied"
+        record["applied_at"] = datetime.now(timezone.utc).isoformat()
+        record["settlement"] = {
+            "status": result.get("status"),
+            "credits": result.get("credits"),
+            "charge_id": result.get("charge_id"),
+        }
+        return record
+
+    return state_manager.atomic_update(mutate)
+
+
+def _settle_staged_payment(record):
+    from core import economy_service
+
+    result = economy_service.record_stars_payment(
+        uid=record["uid"],
+        credits=record["credits"],
+        stars_paid=record["stars_paid"],
+        currency=record["currency"],
+        telegram_payment_charge_id=record["telegram_payment_charge_id"],
+        provider_payment_charge_id=record.get("provider_payment_charge_id"),
+        referrer_uid=None,
+        commission_rate=0,
+        meta={
+            "source": "telegram_successful_payment",
+            "invoice_payload": record["invoice_payload"],
+            "package_stars": record["package_stars"],
+            "package_credits": record["package_credits"],
+            "referral_commission": "disabled_alpha",
+            "pending_payment_stage": "durable",
+        },
+    )
+    _mark_stars_payment_applied(record["telegram_payment_charge_id"], result)
+    return result
+
+
+def _reconcile_pending_stars_payments():
+    """Retry staged payments after a crash or transient settlement failure."""
+    db = state_manager.load_db()
+    pending = db.get("pending_stars_payments", {})
+    records = [
+        record for record in pending.values()
+        if record.get("status") == "pending"
+    ]
+
+    for record in records:
+        try:
+            result = _settle_staged_payment(record)
+            print(
+                f"[PAY] reconciled staged Stars payment "
+                f"charge_id={record.get('telegram_payment_charge_id')} "
+                f"status={result.get('status')}"
+            )
+        except Exception as e:
+            print(
+                f"[PAY] pending Stars reconciliation deferred: "
+                f"charge_id={record.get('telegram_payment_charge_id')} error={e}"
+            )
+
+
 def register_payment_handlers(bot):
+    # Recover any payment that was durably staged but not fully settled before
+    # a process crash/restart. Idempotent settlement makes duplicate recovery safe.
+    _reconcile_pending_stars_payments()
 
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
@@ -129,29 +232,23 @@ def register_payment_handlers(bot):
             print(f"[PAY] rejected settlement details: uid={uid}, credits={credits}")
             return
 
-        try:
-            from core import economy_service
+        record = {
+            "uid": uid,
+            "credits": credits,
+            "stars_paid": int(payment.total_amount),
+            "currency": str(payment.currency),
+            "telegram_payment_charge_id": str(payment.telegram_payment_charge_id),
+            "provider_payment_charge_id": payment.provider_payment_charge_id,
+            "invoice_payload": payload,
+            "package_stars": expected[0],
+            "package_credits": expected[1],
+        }
 
-            # Referral commissions are explicitly disabled for the first Alpha
-            # revenue path. Keep the authority call 1:1 until attribution is
-            # implemented as a separately audited reward policy.
-            result = economy_service.record_stars_payment(
-                uid=uid,
-                credits=credits,
-                stars_paid=payment.total_amount,
-                currency=payment.currency,
-                telegram_payment_charge_id=payment.telegram_payment_charge_id,
-                provider_payment_charge_id=payment.provider_payment_charge_id,
-                referrer_uid=None,
-                commission_rate=0,
-                meta={
-                    "source": "telegram_successful_payment",
-                    "invoice_payload": payload,
-                    "package_stars": expected[0],
-                    "package_credits": expected[1],
-                    "referral_commission": "disabled_alpha",
-                },
-            )
+        try:
+            # Stage first. If settlement crashes after this point, startup
+            # reconciliation can safely retry using the Telegram charge ID.
+            staged = _stage_stars_payment(record)
+            result = _settle_staged_payment(staged)
 
             if result["status"] == "duplicate":
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
@@ -169,10 +266,15 @@ def register_payment_handlers(bot):
             )
 
         except Exception as e:
-            print(f"[PAY] Atomic payment failed: {e}")
+            # The durable pending record remains. Never claim the payment was
+            # lost; the next startup reconciliation will retry it idempotently.
+            print(
+                f"[PAY] settlement deferred safely: "
+                f"charge_id={record['telegram_payment_charge_id']} error={e}"
+            )
             bot.send_message(
                 m.chat.id,
-                "⚠️ Payment processing failed safely. Please contact /paysupport."
+                "⚠️ Payment received but credit settlement is pending. Please try again later or contact /paysupport."
             )
 
     @bot.message_handler(commands=['paysupport'])
