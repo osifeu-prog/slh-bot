@@ -33,6 +33,7 @@ class InvestorReadModelTests(unittest.TestCase):
         reward_ledger.return_value = [
             {"user": "100", "reason": "task_reward", "credits": 10, "points": 5, "timestamp": "r1"},
             {"user": "100", "reason": "payment:telegram_stars", "credits": 1000, "points": 0, "timestamp": "r0"},
+            {"user": "100", "reason": "older_reward", "credits": 1, "points": 0, "timestamp": "r-1"},
             {"user": "200", "reason": "task_reward", "credits": 99, "points": 9, "timestamp": "r2"},
         ]
 
@@ -41,8 +42,9 @@ class InvestorReadModelTests(unittest.TestCase):
         self.assertEqual(snapshot["identity"]["uid"], "100")
         self.assertEqual(snapshot["wallet"]["credits"], 120)
         self.assertEqual(snapshot["rewards"]["points"], 55)
-        self.assertEqual(snapshot["rewards"]["credits"], 1010)
+        self.assertEqual(snapshot["rewards"]["credits"], 1011)
         self.assertEqual(snapshot["rewards"]["recent"][0]["reason"], "task_reward")
+        self.assertEqual(len(snapshot["rewards"]["recent"]), 3)
         self.assertEqual(snapshot["academy"]["enrolled"], ["academy-101"])
         self.assertEqual([t["id"] for t in snapshot["tasks"]["personal"]], ["mine"])
         self.assertEqual(snapshot["tasks"]["open"], 1)
