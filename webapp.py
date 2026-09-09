@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
+from core.investor_read_model import get_investor_snapshot
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -53,6 +54,21 @@ def mini_app():
     resp = send_from_directory(BASE_DIR, "mini_app.html")
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp
+
+
+@app.route("/api/v1/me")
+def investor_me():
+    """Return the read-only investor snapshot for the authenticated Telegram user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    try:
+        return jsonify(get_investor_snapshot(uid)), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        raise
 
 
 @app.route("/api/wallet/<uid>")
@@ -153,6 +169,11 @@ def api_leaderboard():
         return jsonify({
             "error": str(e)
         }), 500
+
+
+@app.route("/api/v1/leaderboard")
+def api_v1_leaderboard():
+    return api_leaderboard()
 
 
 @app.route("/api/onchain/status")
