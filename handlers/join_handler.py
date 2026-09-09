@@ -83,6 +83,18 @@ def register(bot):
 
             try:
                 from core.reward_engine import grant
+                grant(
+                    uid,
+                    "welcome_bonus",
+                    points=1000,
+                    idempotency_key=f"welcome:{uid}"
+                )
+                print(f"WELCOME BONUS GRANTED: {uid}")
+            except Exception as e:
+                print("WELCOME BONUS FAILED:", e)
+
+            try:
+                from core.reward_engine import grant
                 _u = get_user(uid) or {}
                 _ref = (_u.get("referral") or {}).get("referred_by")
                 if _ref and str(_ref) != uid:
