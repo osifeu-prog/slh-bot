@@ -1,10 +1,26 @@
-import json
 from core import profile_manager
 from core.identity import OWNER_TELEGRAM_ID
-from core.profile_manager import get_user
+from core.profile_manager import user_exists
 from core.invite_gate import can_start_onboarding
+import state_manager
 
 user_states = {}
+
+
+def _get_pending_referral(uid):
+    db = state_manager.load_db()
+    return (db.get("pending_referrals") or {}).get(str(uid))
+
+
+def _clear_pending_referral(uid):
+    uid = str(uid)
+
+    def mutate(db):
+        pending = db.setdefault("pending_referrals", {})
+        return pending.pop(uid, None)
+
+    return state_manager.atomic_update(mutate)
+
 
 def register(bot):
 
@@ -16,11 +32,18 @@ def register(bot):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
             return
 
-        existing_user = get_user(uid)
+        existing_user = user_exists(uid)
+        pending_referral = _get_pending_referral(uid)
+        has_valid_invite = bool(
+            pending_referral
+            and str(pending_referral) != uid
+            and user_exists(str(pending_referral))
+        )
 
         if not can_start_onboarding(
             is_owner=False,
-            is_existing_user=existing_user is not None,
+            is_existing_user=existing_user,
+            has_invite=has_valid_invite,
         ):
             bot.reply_to(
                 msg,
@@ -50,7 +73,6 @@ def register(bot):
         if step == "name":
             state["name"] = (msg.text or "").strip()
             state["step"] = "group"
-
             bot.reply_to(
                 msg,
                 f"נעים מאוד, {state['name']}!\n"
@@ -61,14 +83,6 @@ def register(bot):
         elif step == "group":
             group = (msg.text or "").strip()
 
-            profile_manager.update_user(uid, {
-                "name": state.get("name", ""),
-                "group": group,
-                "joined": True,
-                "role": "student",
-                "permissions": []
-            })
-
             try:
                 from core.agent_registry import create_agent
                 create_agent(f"user{uid}-Agent", owner_id=uid)
@@ -76,8 +90,25 @@ def register(bot):
                 print("JOIN CREATE_AGENT FAILED:", e)
                 bot.reply_to(
                     msg,
-                    "⚠️ הפרופיל נשמר, אבל יצירת הסוכן האישי נכשלה.\n"
-                    "ההרשמה תישאר סגורה עד לתיקון."
+                    "⚠️ יצירת הסוכן האישי נכשלה.\n"
+                    "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
+                )
+                return
+
+            try:
+                profile_manager.update_user(uid, {
+                    "name": state.get("name", ""),
+                    "group": group,
+                    "joined": True,
+                    "role": "student",
+                    "permissions": []
+                })
+            except Exception as e:
+                print("JOIN PROFILE UPDATE FAILED:", e)
+                bot.reply_to(
+                    msg,
+                    "⚠️ שמירת הפרופיל נכשלה.\n"
+                    "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
                 )
                 return
 
@@ -95,15 +126,19 @@ def register(bot):
 
             try:
                 from core.reward_engine import grant
-                _u = get_user(uid) or {}
-                _ref = (_u.get("referral") or {}).get("referred_by")
-                if _ref and str(_ref) != uid:
-                    grant(str(_ref), "referral", points=10,
-                          idempotency_key=f"ref:{uid}")
+                ref_uid = _get_pending_referral(uid)
+                if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
+                    grant(
+                        str(ref_uid),
+                        "referral",
+                        points=10,
+                        idempotency_key=f"ref:{uid}"
+                    )
+                    _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL GRANT FAILED:", e)
 
-            del user_states[uid]
+            user_states.pop(uid, None)
 
             bot.reply_to(
                 msg,
@@ -121,11 +156,11 @@ def register(bot):
     @bot.message_handler(commands=['cancel_join'])
     def join_cancel(msg):
         uid = str(msg.from_user.id)
-
         if uid in user_states:
             del user_states[uid]
             bot.reply_to(msg, "❌ ההרשמה בוטלה.")
         else:
             bot.reply_to(msg, "אין הרשמה פעילה.")
+
 
 print("join handler loaded")
