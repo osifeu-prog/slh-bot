@@ -11,6 +11,7 @@ from core.profile_manager import user_exists, get_user
 OWNER_ID = str(OWNER_TELEGRAM_ID)
 ADMIN_IDS = {OWNER_ID, "5010371391"}
 PARTNER_IDS = {"5010371391"}
+ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
     "OWNER": ["*"],
@@ -88,6 +89,10 @@ def get_role(uid) -> str:
 
 
 def has_permission(uid, permission: str) -> bool:
+    uid = normalize_uid(uid)
+    if permission == "alpha.distribute":
+        return uid in ALPHA_DISTRIBUTOR_IDS
+
     role = get_role(uid)
     permissions = ROLES.get(role, [])
 

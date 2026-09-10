@@ -80,6 +80,7 @@ def load_handlers(bot, context):
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),
         ("airdrop", "handlers.airdrop_handler"),
+        ("slh_air", "handlers.slh_air_handler"),
         ("git", "handlers.git_handler"),
         ("ton", "ton_handler"),
         ("brief", "brief_handler"),
@@ -168,4 +169,3 @@ def load_handlers(bot, context):
         print("ask skipped:", e)
 
     print("✅ ALL HANDLERS READY")
-
