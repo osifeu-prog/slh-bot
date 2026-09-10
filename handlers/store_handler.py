@@ -3,6 +3,11 @@ from store.engine import format_shop_message
 from store.purchase_service import purchase
 from core.economy_bridge import get_balance, spend
 
+# Hardware sales are temporarily blocked until the hardware grant path is atomic.
+# See: store/grant_engine.py (hardware branch) + core/esp_license.py
+HARDWARE_ITEMS = {"esp32_pro", "esp32_standard"}
+
+
 def register(bot):
     @bot.message_handler(commands=['shop'])
     def shop_cmd(message):
@@ -19,6 +24,15 @@ def register(bot):
             bot.reply_to(message, "שימוש: /buy item_id")
             return
         item_id = parts[1]
+
+        if item_id in HARDWARE_ITEMS:
+            bot.reply_to(
+                message,
+                "🚧 רכישת חומרה מושהית זמנית.\n"
+                "לטעינת קרדיטים: /pay"
+            )
+            return
+
         ok, result = purchase(uid, item_id)
 
         if ok:
