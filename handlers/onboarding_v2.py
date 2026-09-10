@@ -208,20 +208,21 @@ def register(bot, context=None):
                 "display_name": user_name,
             })
 
-            # Keep the alternate callback path consistent with /join:
-            # persist attribution, grant the same idempotent rewards, then clear pending.
+            # Referral rewards require successful persistence of the relationship.
+            # Pending/valid referral evidence alone is not sufficient.
             ref_uid = _get_pending_referral(user_id)
             if ref_uid and str(ref_uid) != user_id and user_exists(str(ref_uid)):
                 from handlers.join_handler import _persist_referral, _clear_pending_referral
-                _persist_referral(user_id, ref_uid)
+                persisted = _persist_referral(user_id, ref_uid)
                 try:
-                    from core.reward_engine import grant
-                    grant(
-                        str(ref_uid),
-                        "referral",
-                        points=10,
-                        idempotency_key=f"ref:{user_id}"
-                    )
+                    if persisted:
+                        from core.reward_engine import grant
+                        grant(
+                            str(ref_uid),
+                            "referral",
+                            points=10,
+                            idempotency_key=f"ref:{user_id}"
+                        )
                 finally:
                     _clear_pending_referral(user_id)
 
