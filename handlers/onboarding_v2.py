@@ -208,6 +208,34 @@ def register(bot, context=None):
                 "display_name": user_name,
             })
 
+            # Keep the alternate callback path consistent with /join:
+            # persist attribution, grant the same idempotent rewards, then clear pending.
+            ref_uid = _get_pending_referral(user_id)
+            if ref_uid and str(ref_uid) != user_id and user_exists(str(ref_uid)):
+                from handlers.join_handler import _persist_referral, _clear_pending_referral
+                _persist_referral(user_id, ref_uid)
+                try:
+                    from core.reward_engine import grant
+                    grant(
+                        str(ref_uid),
+                        "referral",
+                        points=10,
+                        idempotency_key=f"ref:{user_id}"
+                    )
+                finally:
+                    _clear_pending_referral(user_id)
+
+            try:
+                from core.reward_engine import grant
+                grant(
+                    user_id,
+                    "welcome_bonus",
+                    points=1000,
+                    idempotency_key=f"welcome:{user_id}"
+                )
+            except Exception as e:
+                print("ONBOARD WELCOME BONUS FAILED:", e)
+
             db = state_manager.load_db()
             owned_agents = [
                 agent for agent in db.get("agents", {}).values()
