@@ -79,6 +79,8 @@ def _alpha_preview(db, user, uid, courses, progress, personal_tasks):
             completed_courses += 1
 
     task_completed = sum(1 for task in personal_tasks if task["status"] == "done")
+    task_total = len(personal_tasks)
+    tasks_complete = task_total > 0 and task_completed == task_total
     onboarding_ok = bool(user.get("joined", False))
     identity_ok = bool(uid)
 
@@ -93,9 +95,9 @@ def _alpha_preview(db, user, uid, courses, progress, personal_tasks):
             "completed_stages": completed_stages,
         },
         "tasks": {
-            "status": "active" if personal_tasks else "none",
+            "status": "complete" if tasks_complete else ("active" if personal_tasks else "none"),
             "completed": task_completed,
-            "total": len(personal_tasks),
+            "total": task_total,
         },
         "referral": {
             "status": "verified" if referral_verified else "not_verified",
