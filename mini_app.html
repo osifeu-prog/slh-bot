@@ -12,6 +12,8 @@
         .value { font-size:28px; font-weight:bold; }
         .task { padding:10px 0; border-bottom:1px solid #444; }
         .done { opacity:0.55; }
+        .row { padding:6px 0; }
+        .muted { opacity:0.7; }
         ol { padding-left:25px; }
     </style>
 </head>
@@ -27,6 +29,10 @@
         <div>🔒 Staked: <span id="staked">0</span></div>
         <div>🪙 Token Balance: <span id="token_balance">0</span></div>
         <div>👛 TON Wallet: <span id="ton_wallet">-</span></div>
+    </div>
+    <div class="card">
+        <h2>🚀 Alpha</h2>
+        <div id="alpha">Loading...</div>
     </div>
     <div class="card">
         <h2>📚 Academy</h2>
@@ -54,6 +60,62 @@
         const initData = tg ? tg.initData : "";
         const authHeaders = initData ? { "X-Telegram-Init-Data": initData } : {};
 
+        function renderAlpha(alpha) {
+            const el = document.getElementById("alpha");
+            if (!alpha || typeof alpha !== "object") {
+                el.textContent = "Alpha status unavailable.";
+                return;
+            }
+
+            el.innerHTML = "";
+
+            const rows = [
+                ["Status", alpha.status || "unknown"],
+                ["Identity", (alpha.identity || {}).status || "unknown"],
+                ["Onboarding", (alpha.onboarding || {}).status || "unknown"],
+                ["Academy", (alpha.academy || {}).status || "unknown"],
+                ["Tasks", (alpha.tasks || {}).status || "unknown"],
+                ["Referral", (alpha.referral || {}).status || "unknown"],
+                ["Share", (alpha.share || {}).status || "unknown"]
+            ];
+
+            rows.forEach(([label, value]) => {
+                const row = document.createElement("div");
+                row.className = "row";
+                const strong = document.createElement("strong");
+                strong.textContent = label + ": ";
+                row.appendChild(strong);
+                row.appendChild(document.createTextNode(value));
+                el.appendChild(row);
+            });
+
+            const academy = alpha.academy || {};
+            if (academy.courses != null) {
+                const row = document.createElement("div");
+                row.className = "row muted";
+                row.textContent = `Academy progress: ${academy.completed_courses ?? 0}/${academy.courses ?? 0} courses, ${academy.completed_stages ?? 0} stages`;
+                el.appendChild(row);
+            }
+
+            const tasks = alpha.tasks || {};
+            if (tasks.total != null) {
+                const row = document.createElement("div");
+                row.className = "row muted";
+                row.textContent = `Task progress: ${tasks.completed ?? 0}/${tasks.total ?? 0}`;
+                el.appendChild(row);
+            }
+
+            const allocation = alpha.allocation || {};
+            const allocationRow = document.createElement("div");
+            allocationRow.className = "row muted";
+            if (allocation.status === "policy_missing") {
+                allocationRow.textContent = "Allocation: policy not defined — no amount is promised.";
+            } else {
+                allocationRow.textContent = "Allocation: " + (allocation.status || "unknown");
+            }
+            el.appendChild(allocationRow);
+        }
+
         async function loadMe() {
             const nameEl = document.getElementById("name");
             if (!initData) {
@@ -80,6 +142,7 @@
                 document.getElementById("token_balance").textContent = wallet.token_balance ?? 0;
                 document.getElementById("ton_wallet").textContent = wallet.ton_wallet || "Not linked";
                 document.getElementById("points").textContent = rewards.points ?? 0;
+                renderAlpha(data.alpha);
 
                 const academyEl = document.getElementById("academy");
                 const enrolled = Array.isArray(academy.enrolled) ? academy.enrolled : [];
