@@ -92,6 +92,7 @@ def has_permission(uid, permission: str) -> bool:
     uid = normalize_uid(uid)
     if permission == "alpha.distribute":
         return uid in ALPHA_DISTRIBUTOR_IDS
+
     role = get_role(uid)
     permissions = ROLES.get(role, [])
 
@@ -114,6 +115,7 @@ def get_visible_agents(uid, agents: dict) -> dict:
         return agents
 
     visible = {}
+
     for aid, agent in agents.items():
         visibility = agent.get("visibility", "owner_and_self")
         owner = str(agent.get("owner_id", ""))
