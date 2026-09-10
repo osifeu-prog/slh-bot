@@ -22,6 +22,36 @@ def _clear_pending_referral(uid):
     return state_manager.atomic_update(mutate)
 
 
+def _persist_referral(uid, ref_uid):
+    """Persist the successful referral relationship exactly once."""
+    uid = str(uid)
+    ref_uid = str(ref_uid)
+
+    if not ref_uid or ref_uid == uid:
+        return False
+
+    def mutate(db):
+        users = db.setdefault("users", {})
+        user = users.get(uid)
+        referrer = users.get(ref_uid)
+        if not user or not referrer:
+            return False
+
+        referral = user.setdefault("referral", {})
+        existing = referral.get("referred_by")
+        if existing:
+            return str(existing) == ref_uid
+
+        referral["referred_by"] = ref_uid
+        referral["referred_at"] = __import__("datetime").datetime.utcnow().isoformat()
+
+        ref_profile = referrer.setdefault("referral", {})
+        ref_profile["count"] = int(ref_profile.get("count", 0) or 0) + 1
+        return True
+
+    return state_manager.atomic_update(mutate)
+
+
 def register(bot):
 
     @bot.message_handler(commands=['join'])
@@ -128,6 +158,7 @@ def register(bot):
                 from core.reward_engine import grant
                 ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
+                    _persist_referral(uid, ref_uid)
                     grant(
                         str(ref_uid),
                         "referral",
