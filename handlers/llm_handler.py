@@ -57,7 +57,7 @@ def ask_groq(prompt):
                     "content": str(prompt)
                 }
             ],
-            max_tokens=2000
+            max_tokens=1000
         )
 
         return str(resp.choices[0].message.content or "")
@@ -109,7 +109,14 @@ USER QUESTION:
         if result and not result.startswith("LLM Error:"):
             return result
 
-        return result or "לא התקבלה תשובה כרגע."
+        # Groq can be temporarily rate-limited. Gemini is already configured
+        # in this module, so use it as the existing provider fallback instead
+        # of exposing a provider error to the user.
+        fallback = ask_gemini(prompt)
+        if fallback and not fallback.startswith("Gemini Error:") and fallback != "GEMINI_API_KEY missing":
+            return fallback
+
+        return "לא התקבלה תשובה כרגע. נסה שוב בעוד כמה רגעים."
 
     except Exception as e:
         return f"LLM Error: {e}"
