@@ -95,7 +95,7 @@ class InvestorReadModelTests(unittest.TestCase):
         self.assertEqual(alpha["academy"]["completed_courses"], 1)
         self.assertEqual(alpha["academy"]["courses"], 1)
         self.assertEqual(alpha["academy"]["completed_stages"], 2)
-        self.assertEqual(alpha["tasks"], {"status": "active", "completed": 1, "total": 1})
+        self.assertEqual(alpha["tasks"], {"status": "complete", "completed": 1, "total": 1})
         self.assertEqual(alpha["referral"], {"status": "verified", "referred_by": "200"})
         self.assertEqual(alpha["share"], {"status": "unverified"})
         self.assertEqual(
