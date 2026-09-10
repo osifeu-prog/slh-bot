@@ -158,13 +158,14 @@ def register(bot):
                 from core.reward_engine import grant
                 ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
-                    _persist_referral(uid, ref_uid)
-                    grant(
-                        str(ref_uid),
-                        "referral",
-                        points=10,
-                        idempotency_key=f"ref:{uid}"
-                    )
+                    persisted = _persist_referral(uid, ref_uid)
+                    if persisted:
+                        grant(
+                            str(ref_uid),
+                            "referral",
+                            points=10,
+                            idempotency_key=f"ref:{uid}"
+                        )
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL GRANT FAILED:", e)
