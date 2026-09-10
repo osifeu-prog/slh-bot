@@ -1,0 +1,2 @@
+Temporary remediation branch marker: onboarding/rewards audit 2026-09-10.
+Do not deploy this branch to production without explicit approval.
