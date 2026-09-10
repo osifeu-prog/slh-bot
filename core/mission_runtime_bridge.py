@@ -1,8 +1,25 @@
+import state_manager
+
 from core.mission_lifecycle import MissionLifecycleService
 from core.kernel import SLHKernel
 from core.runtime import Runtime
 from core.agent_factory import load_agents_into_kernel
 from core.mission_state import MissionStateNormalizer
+
+
+def _resolve_assigned_agent(assigned_agent_id, manifest):
+    """Prefer canonical DB identity; use the legacy manifest only as fallback."""
+    target_id = str(assigned_agent_id)
+
+    try:
+        db = state_manager.load_db()
+        record = (db.get("agents", {}) or {}).get(target_id)
+        if isinstance(record, dict):
+            return record
+    except Exception:
+        pass
+
+    return MissionLifecycleService(".").find_agent(manifest, target_id)
 
 
 def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None):
@@ -44,13 +61,22 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
             "reason": "no assigned_agent",
         }
 
-    agent = lifecycle.find_agent(manifest, assigned_agent_id)
+    agent = _resolve_assigned_agent(assigned_agent_id, manifest)
 
     if agent is None:
         return {
             "status": "blocked",
             "mission_id": str(mission_id),
-            "reason": "assigned agent not found in manifest",
+            "reason": "assigned agent not found in canonical DB or legacy manifest",
+        }
+
+    runtime_class = agent.get("runtime_class")
+    if not runtime_class:
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "assigned_agent_id": str(assigned_agent_id),
+            "reason": "assigned agent has no runtime_class",
         }
 
     agent_name = agent.get("name") or str(assigned_agent_id)
@@ -97,6 +123,7 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
         "mission_id": str(mission_id),
         "assigned_agent": agent_name,
         "assigned_agent_id": assigned_agent_id,
+        "runtime_class": runtime_class,
         "execution_result": execution_result,
         "lifecycle_result": lifecycle_result,
     }
