@@ -61,6 +61,50 @@ class InvestorReadModelTests(unittest.TestCase):
         load_db.assert_called_once()
         reward_ledger.assert_called_once()
 
+    @patch("core.investor_read_model._load_reward_ledger", return_value=[])
+    @patch(
+        "core.investor_read_model._load_courses",
+        return_value={"academy-101": {"stages": [{}, {}]}},
+    )
+    @patch("core.investor_read_model.state_manager.load_db")
+    def test_alpha_preview_is_present_and_read_only(self, load_db, _courses, _reward_ledger):
+        load_db.return_value = {
+            "users": {
+                "100": {
+                    "display_name": "Alice",
+                    "role": "student",
+                    "joined": True,
+                    "referral": {"referred_by": "200"},
+                    "academy": {"courses": {"academy-101": {"stage": 2, "completed": [1, 2]}}},
+                    "wallet": {"credits": 120, "staked": 30, "token_balance": 4},
+                },
+                "200": {"display_name": "Referrer"},
+            },
+            "tasks": {
+                "mine": {"owner_id": "100", "title": "My task", "reward": 10, "done_by": ["100"]},
+            },
+        }
+
+        snapshot = get_investor_snapshot("100")
+        alpha = snapshot["alpha"]
+
+        self.assertEqual(alpha["status"], "review")
+        self.assertEqual(alpha["identity"]["status"], "verified")
+        self.assertEqual(alpha["onboarding"]["status"], "complete")
+        self.assertEqual(alpha["academy"]["status"], "complete")
+        self.assertEqual(alpha["academy"]["completed_courses"], 1)
+        self.assertEqual(alpha["academy"]["courses"], 1)
+        self.assertEqual(alpha["academy"]["completed_stages"], 2)
+        self.assertEqual(alpha["tasks"], {"status": "active", "completed": 1, "total": 1})
+        self.assertEqual(alpha["referral"], {"status": "verified", "referred_by": "200"})
+        self.assertEqual(alpha["share"], {"status": "unverified"})
+        self.assertEqual(
+            alpha["allocation"],
+            {"status": "policy_missing", "amount": 0, "asset": "AIR"},
+        )
+        self.assertEqual(snapshot["wallet"]["credits"], 120)
+        self.assertEqual(snapshot["wallet"]["token_balance"], 4)
+
     @patch("core.investor_read_model.state_manager.load_db", return_value={"users": {}})
     def test_unknown_user_rejected(self, _load_db):
         with self.assertRaisesRegex(ValueError, "USER_NOT_FOUND"):
