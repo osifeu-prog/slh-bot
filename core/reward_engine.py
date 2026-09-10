@@ -1,14 +1,18 @@
-"""
-SLH Reward Engine
-Single reward gateway + staking reward calculator.
+"""SLH Reward Engine.
+
+Credits are issued through the Economy Authority. Reward-pool bookkeeping is
+kept lock-safe so a concurrent wallet update cannot be overwritten by a stale
+snapshot.
 """
 
 from datetime import datetime
-from core import economy_bridge
-from core import profile_manager
-import json, time
+import json
+import time
 from pathlib import Path
 
+import state_manager
+from core import economy_bridge
+from core import profile_manager
 
 LEDGER = Path("state/rewards_ledger.json")
 
@@ -35,16 +39,11 @@ def grant(uid, reason, credits=0, points=0, idempotency_key=None):
         raise ValueError("Empty reward rejected")
 
     key = idempotency_key or f"{uid}:{reason}"
-
     result = {}
     if credits:
-        result["credits"] = economy_bridge.add_credits(
-            uid, credits, reason=reason, meta={"idempotency_key": key}
-        )
+        result["credits"] = economy_bridge.add_credits(uid, credits, reason=reason, meta={"idempotency_key": key})
     if points:
-        profile_manager.add_points(
-            uid, points, reason=reason, meta={"idempotency_key": key}
-        )
+        profile_manager.add_points(uid, points, reason=reason, meta={"idempotency_key": key})
         result["points"] = points
 
     entry = {
@@ -53,15 +52,20 @@ def grant(uid, reason, credits=0, points=0, idempotency_key=None):
         "credits": credits,
         "points": points,
         "timestamp": datetime.utcnow().isoformat(),
+        "idempotency_key": key,
     }
     ledger = _load()
-    ledger.append(entry)
-    _save(ledger)
+    if not any(str(x.get("idempotency_key", "")) == key for x in ledger):
+        ledger.append(entry)
+        try:
+            _save(ledger)
+        except Exception as exc:
+            result["ledger_warning"] = type(exc).__name__
     return result
 
 
 def _load_db():
-    return json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+    return state_manager.load_db()
 
 
 def calculate_reward(position_id, rate_per_day=0.001333):
@@ -75,14 +79,20 @@ def calculate_reward(position_id, rate_per_day=0.001333):
 
 
 def accrue(position_id, rate_per_day=0.001333):
-    reward = calculate_reward(position_id, rate_per_day)
-    db = _load_db()
-    pools = db.setdefault("reward_pools", {})
-    pools[position_id] = {
-        "position_id": position_id,
-        "reward": reward,
-        "calculated_at": time.time(),
-        "status": "pending",
-    }
-    Path("state/db.json").write_text(json.dumps(db, ensure_ascii=False, indent=2), encoding="utf-8")
-    return reward
+    def mutate(db):
+        pos = db.get("stake_positions", {}).get(position_id)
+        if not pos:
+            raise KeyError("position not found")
+        created = pos.get("created_at", time.time())
+        days = max(0, (time.time() - created) / 86400)
+        reward = round(float(pos["amount"]) * days * rate_per_day, 6)
+        pools = db.setdefault("reward_pools", {})
+        pools[position_id] = {
+            "position_id": position_id,
+            "reward": reward,
+            "calculated_at": time.time(),
+            "status": "pending",
+        }
+        return reward
+
+    return state_manager.atomic_update(mutate)
