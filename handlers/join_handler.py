@@ -7,7 +7,12 @@ import state_manager
 user_states = {}
 
 
-def _consume_pending_referral(uid):
+def _get_pending_referral(uid):
+    db = state_manager.load_db()
+    return (db.get("pending_referrals") or {}).get(str(uid))
+
+
+def _clear_pending_referral(uid):
     uid = str(uid)
 
     def mutate(db):
@@ -27,8 +32,6 @@ def register(bot):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
             return
 
-        # Read-only existence check. get_user() creates missing users and must
-        # never be used to decide whether a new user is already registered.
         existing_user = user_exists(uid)
 
         if not can_start_onboarding(
@@ -73,17 +76,9 @@ def register(bot):
         elif step == "group":
             group = (msg.text or "").strip()
 
-            # The user is created only after the onboarding gate has already
-            # passed. This prevents /start and /join from manufacturing an
-            # "existing" user before registration is complete.
-            profile_manager.update_user(uid, {
-                "name": state.get("name", ""),
-                "group": group,
-                "joined": True,
-                "role": "student",
-                "permissions": []
-            })
-
+            # Create the agent first. update_user() creates the user record,
+            # so this ordering avoids leaving a registered user behind when
+            # agent creation fails.
             try:
                 from core.agent_registry import create_agent
                 create_agent(f"user{uid}-Agent", owner_id=uid)
@@ -91,8 +86,25 @@ def register(bot):
                 print("JOIN CREATE_AGENT FAILED:", e)
                 bot.reply_to(
                     msg,
-                    "⚠️ הפרופיל נשמר, אבל יצירת הסוכן האישי נכשלה.\n"
-                    "ההרשמה לא תושלם עד לתיקון."
+                    "⚠️ יצירת הסוכן האישי נכשלה.\n"
+                    "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
+                )
+                return
+
+            try:
+                profile_manager.update_user(uid, {
+                    "name": state.get("name", ""),
+                    "group": group,
+                    "joined": True,
+                    "role": "student",
+                    "permissions": []
+                })
+            except Exception as e:
+                print("JOIN PROFILE UPDATE FAILED:", e)
+                bot.reply_to(
+                    msg,
+                    "⚠️ שמירת הפרופיל נכשלה.\n"
+                    "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
                 )
                 return
 
@@ -108,9 +120,11 @@ def register(bot):
             except Exception as e:
                 print("WELCOME BONUS FAILED:", e)
 
+            # Keep referral attribution durable until the reward succeeds.
+            # The reward itself is idempotent, so retrying is safe.
             try:
                 from core.reward_engine import grant
-                ref_uid = _consume_pending_referral(uid)
+                ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid:
                     grant(
                         str(ref_uid),
@@ -118,10 +132,11 @@ def register(bot):
                         points=10,
                         idempotency_key=f"ref:{uid}"
                     )
+                    _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL GRANT FAILED:", e)
 
-            del user_states[uid]
+            user_states.pop(uid, None)
 
             bot.reply_to(
                 msg,
