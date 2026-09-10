@@ -57,6 +57,8 @@ def _reserve(db, uid, item_id, item, purchase_key):
     purchases = db.setdefault("store_purchases", {})
     existing = purchases.get(purchase_key)
     if existing:
+        if str(existing.get("item_id")) != item_id:
+            raise ValueError("PURCHASE_KEY_CONFLICT")
         return existing
 
     price = float(item.get("price", 0) or 0)
@@ -115,11 +117,15 @@ def purchase(uid, item_id, request_id=None):
     if order.get("status") == "completed":
         return True, order
 
+    charge_amount = float(order.get("amount", price) or 0)
+    if charge_amount < 0:
+        return False, "INVALID_PRICE"
+
     if order.get("status") not in {"paid", "pending_fulfillment"}:
         try:
             balance_after = economy_service.record_transaction(
                 uid,
-                -price,
+                -charge_amount,
                 reason=f"purchase:{item_id}",
                 meta={"idempotency_key": purchase_key, "item_id": item_id},
             )
