@@ -1,10 +1,21 @@
-import json
 from core import profile_manager
 from core.identity import OWNER_TELEGRAM_ID
-from core.profile_manager import get_user
+from core.profile_manager import user_exists
 from core.invite_gate import can_start_onboarding
+import state_manager
 
 user_states = {}
+
+
+def _consume_pending_referral(uid):
+    uid = str(uid)
+
+    def mutate(db):
+        pending = db.setdefault("pending_referrals", {})
+        return pending.pop(uid, None)
+
+    return state_manager.atomic_update(mutate)
+
 
 def register(bot):
 
@@ -16,11 +27,13 @@ def register(bot):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
             return
 
-        existing_user = get_user(uid)
+        # Read-only existence check. get_user() creates missing users and must
+        # never be used to decide whether a new user is already registered.
+        existing_user = user_exists(uid)
 
         if not can_start_onboarding(
             is_owner=False,
-            is_existing_user=existing_user is not None,
+            is_existing_user=existing_user,
         ):
             bot.reply_to(
                 msg,
@@ -50,7 +63,6 @@ def register(bot):
         if step == "name":
             state["name"] = (msg.text or "").strip()
             state["step"] = "group"
-
             bot.reply_to(
                 msg,
                 f"נעים מאוד, {state['name']}!\n"
@@ -61,6 +73,9 @@ def register(bot):
         elif step == "group":
             group = (msg.text or "").strip()
 
+            # The user is created only after the onboarding gate has already
+            # passed. This prevents /start and /join from manufacturing an
+            # "existing" user before registration is complete.
             profile_manager.update_user(uid, {
                 "name": state.get("name", ""),
                 "group": group,
@@ -77,7 +92,7 @@ def register(bot):
                 bot.reply_to(
                     msg,
                     "⚠️ הפרופיל נשמר, אבל יצירת הסוכן האישי נכשלה.\n"
-                    "ההרשמה תישאר סגורה עד לתיקון."
+                    "ההרשמה לא תושלם עד לתיקון."
                 )
                 return
 
@@ -95,11 +110,14 @@ def register(bot):
 
             try:
                 from core.reward_engine import grant
-                _u = get_user(uid) or {}
-                _ref = (_u.get("referral") or {}).get("referred_by")
-                if _ref and str(_ref) != uid:
-                    grant(str(_ref), "referral", points=10,
-                          idempotency_key=f"ref:{uid}")
+                ref_uid = _consume_pending_referral(uid)
+                if ref_uid and str(ref_uid) != uid:
+                    grant(
+                        str(ref_uid),
+                        "referral",
+                        points=10,
+                        idempotency_key=f"ref:{uid}"
+                    )
             except Exception as e:
                 print("REFERRAL GRANT FAILED:", e)
 
@@ -121,11 +139,11 @@ def register(bot):
     @bot.message_handler(commands=['cancel_join'])
     def join_cancel(msg):
         uid = str(msg.from_user.id)
-
         if uid in user_states:
             del user_states[uid]
             bot.reply_to(msg, "❌ ההרשמה בוטלה.")
         else:
             bot.reply_to(msg, "אין הרשמה פעילה.")
+
 
 print("join handler loaded")
