@@ -172,14 +172,13 @@ def get_investor_snapshot(uid):
 
         if credits == 0 and points == 0:
             continue
-        recent_rewards.append({
-            "time": entry.get("timestamp"),
-            "credits": credits,
-            "points": points,
-            "reason": str(entry.get("reason", "unknown")),
-        })
-        if len(recent_rewards) >= 10:
-            break
+        if len(recent_rewards) < 10:
+            recent_rewards.append({
+                "time": entry.get("timestamp"),
+                "credits": credits,
+                "points": points,
+                "reason": str(entry.get("reason", "unknown")),
+            })
 
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
