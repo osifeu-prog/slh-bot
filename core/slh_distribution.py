@@ -60,7 +60,7 @@ def distribute(*, distributor_uid, recipient_uid, amount, reason="alpha_air", ev
         recipient_balance = Decimal(str(recipient_wallet.get("token_balance", 0) or 0))
 
         if sender_balance < amount:
-            raise ValueError("INSUFFICIENT_S​​LH")
+            raise ValueError("INSUFFICIENT_SLH")
 
         sender_after = sender_balance - amount
         recipient_after = recipient_balance + amount
