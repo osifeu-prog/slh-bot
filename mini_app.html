@@ -170,9 +170,14 @@
 
         async function loadStats() {
             const statsEl = document.getElementById("stats");
+            if (!initData) {
+                statsEl.textContent = "Open inside Telegram";
+                return;
+            }
             try {
-                const res = await fetch("/api/stats");
+                const res = await fetch("/api/stats", { headers: authHeaders });
                 const s = await res.json();
+                if (!res.ok) throw new Error("stats unavailable");
                 statsEl.innerHTML = `
                     <div>👥 Users: ${s.users}</div>
                     <div>🤖 Agents: ${s.agents}</div>
@@ -186,8 +191,12 @@
 
         async function loadLeaderboard() {
             const lb = document.getElementById("leaderboard");
+            if (!initData) {
+                lb.innerHTML = "<li>Open inside Telegram</li>";
+                return;
+            }
             try {
-                const res = await fetch("/api/v1/leaderboard");
+                const res = await fetch("/api/v1/leaderboard", { headers: authHeaders });
                 const users = await res.json();
                 if (!res.ok || !Array.isArray(users)) throw new Error("leaderboard unavailable");
                 lb.innerHTML = "";

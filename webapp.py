@@ -27,6 +27,13 @@ def authenticated_uid():
         return None
 
 
+def require_auth():
+    """Require a valid Telegram Mini App identity for non-user-scoped APIs."""
+    if authenticated_uid() is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    return None
+
+
 def require_self(uid):
     authenticated = authenticated_uid()
     if authenticated is None:
@@ -123,6 +130,10 @@ def get_tasks(uid):
 
 @app.route("/api/stats")
 def stats():
+    denied = require_auth()
+    if denied:
+        return denied
+
     db = load_db()
     users = db.get("users", {})
     agents = db.get("agents", {})
@@ -148,6 +159,10 @@ def stats():
 
 @app.route("/api/leaderboard")
 def api_leaderboard():
+    denied = require_auth()
+    if denied:
+        return denied
+
     try:
         from plugins.leaderboard import LeaderboardPlugin
 
@@ -178,6 +193,10 @@ def api_v1_leaderboard():
 
 @app.route("/api/onchain/status")
 def onchain_status():
+    denied = require_auth()
+    if denied:
+        return denied
+
     from core.deposit_monitor import get_onchain_status
     return jsonify(get_onchain_status())
 
