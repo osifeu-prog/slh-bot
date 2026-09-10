@@ -1,6 +1,5 @@
 from core.identity import OWNER_TELEGRAM_ID
 from telebot import types
-import json
 import state_manager
 
 from core.message_utils import safe_clip
@@ -23,11 +22,24 @@ def _set_pending_referral(uid, ref_uid):
     return state_manager.atomic_update(mutate)
 
 
+def _get_pending_referral(uid):
+    db = state_manager.load_db()
+    return (db.get("pending_referrals") or {}).get(str(uid))
+
+
+def _has_valid_invite(uid):
+    ref_uid = _get_pending_referral(uid)
+    return bool(
+        ref_uid
+        and str(ref_uid) != str(uid)
+        and user_exists(str(ref_uid))
+    )
+
+
 def load_branding():
     try:
         from datetime import datetime
-        now = datetime.now()
-        date_greg = now.strftime("%Y-%m-%d")
+        date_greg = datetime.now().strftime("%Y-%m-%d")
         logo_lines = [
             'בס"ד',
             "███████╗██╗     ██╗  ██╗",
@@ -68,15 +80,8 @@ def register(bot, context=None):
             return None
         return f"https://t.me/{username}?start=ref_{user_id}"
 
-    def load_db():
-        try:
-            with open("state/db.json", "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {"users": {}, "agents": {}}
-
     def send_dashboard(chat_id, user_id):
-        db = load_db()
+        db = state_manager.load_db()
         user = db.get("users", {}).get(str(user_id), {})
         wallet = user.get("wallet", {})
         credits = wallet.get("credits", 0)
@@ -105,15 +110,18 @@ def register(bot, context=None):
         is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
         is_new = not user_exists(user_id)
 
-        # /start must never create a user. Preserve referral attribution separately
-        # until /join successfully passes the onboarding gate.
         parts = (m.text or "").split(maxsplit=1)
         if is_new and len(parts) > 1 and parts[1].startswith("ref_"):
             ref_uid = parts[1][4:].strip()
-            if ref_uid and ref_uid != user_id:
+            if ref_uid and ref_uid != user_id and user_exists(ref_uid):
                 _set_pending_referral(user_id, ref_uid)
 
-        if not can_start_onboarding(is_owner=is_owner, is_existing_user=not is_new):
+        has_valid_invite = _has_valid_invite(user_id)
+        if not can_start_onboarding(
+            is_owner=is_owner,
+            is_existing_user=not is_new,
+            has_invite=has_valid_invite,
+        ):
             bot.send_message(
                 m.chat.id,
                 "🚧 ההצטרפות לאלפא סגורה כרגע.\n"
@@ -124,7 +132,7 @@ def register(bot, context=None):
 
         from datetime import datetime
         now = datetime.now().strftime("%Y-%m-%d")
-        db = load_db()
+        db = state_manager.load_db()
         user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
         credits = user_wallet.get("credits", 0)
         staked = user_wallet.get("staked", 0)
@@ -179,10 +187,12 @@ def register(bot, context=None):
         try:
             is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
             is_existing = user_exists(user_id)
+            has_valid_invite = _has_valid_invite(user_id)
 
             if not can_start_onboarding(
                 is_owner=is_owner,
                 is_existing_user=is_existing,
+                has_invite=has_valid_invite,
             ):
                 bot.answer_callback_query(call.id, "🚧 ההצטרפות לאלפא סגורה כרגע.")
                 return
@@ -196,7 +206,7 @@ def register(bot, context=None):
                 "display_name": user_name,
             })
 
-            db = load_db()
+            db = state_manager.load_db()
             owned_agents = [
                 agent for agent in db.get("agents", {}).values()
                 if isinstance(agent, dict) and str(agent.get("owner_id", "")) == user_id
