@@ -1,146 +1,32 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLH OS</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { margin:0; padding:20px; font-family:Arial,sans-serif; background:#111; color:#fff; }
-        h1 { margin-top:0; }
-        .card { padding:16px; margin:12px 0; border-radius:14px; background:#222; }
-        .value { font-size:28px; font-weight:bold; }
-        .task { padding:10px 0; border-bottom:1px solid #444; }
-        .done { opacity:0.55; }
-        ol { padding-left:25px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLH OS</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body{margin:0;padding:20px;font-family:Arial,sans-serif;background:#111;color:#fff}h1{margin-top:0}.card{padding:16px;margin:12px 0;border-radius:14px;background:#222}.value{font-size:28px;font-weight:bold}.task{padding:10px 0;border-bottom:1px solid #444}.done{opacity:.55}ol{padding-left:25px}.alpha-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #444}.alpha-ok{font-weight:bold}.alpha-lock{font-weight:bold}
+</style>
 </head>
 <body>
-    <h1>🛡 SLH OS</h1>
-    <div class="card">
-        <div>👤 User</div>
-        <div id="name" class="value">Loading...</div>
-    </div>
-    <div class="card">
-        <div>💰 Credits</div>
-        <div id="credits" class="value">0</div>
-        <div>🔒 Staked: <span id="staked">0</span></div>
-        <div>🪙 Token Balance: <span id="token_balance">0</span></div>
-        <div>👛 TON Wallet: <span id="ton_wallet">-</span></div>
-    </div>
-    <div class="card">
-        <h2>📚 Academy</h2>
-        <div id="academy">Loading...</div>
-    </div>
-    <div class="card">
-        <h2>📋 Personal Tasks</h2>
-        <div id="tasks">Loading...</div>
-    </div>
-    <div class="card">
-        <h2>🏆 Points</h2>
-        <div id="points" class="value">0</div>
-    </div>
-    <div class="card">
-        <h2>📊 System Stats</h2>
-        <div id="stats">Loading...</div>
-    </div>
-    <div class="card">
-        <h2>🏆 Leaderboard</h2>
-        <ol id="leaderboard"><li>Loading...</li></ol>
-    </div>
-    <script>
-        const tg = window.Telegram && window.Telegram.WebApp;
-        if (tg) { tg.ready(); tg.expand(); }
-        const initData = tg ? tg.initData : "";
-        const authHeaders = initData ? { "X-Telegram-Init-Data": initData } : {};
-
-        async function loadMe() {
-            const nameEl = document.getElementById("name");
-            if (!initData) {
-                nameEl.textContent = "Open inside Telegram";
-                return;
-            }
-            try {
-                const res = await fetch("/api/v1/me", { headers: authHeaders });
-                const data = await res.json();
-                if (!res.ok) {
-                    nameEl.textContent = res.status === 401 ? "Authentication unavailable" : "User unavailable";
-                    return;
-                }
-
-                const identity = data.identity || {};
-                const wallet = data.wallet || {};
-                const academy = data.academy || {};
-                const tasks = data.tasks || {};
-                const rewards = data.rewards || {};
-
-                nameEl.textContent = identity.display_name || "Telegram user";
-                document.getElementById("credits").textContent = wallet.credits ?? 0;
-                document.getElementById("staked").textContent = wallet.staked ?? 0;
-                document.getElementById("token_balance").textContent = wallet.token_balance ?? 0;
-                document.getElementById("ton_wallet").textContent = wallet.ton_wallet || "Not linked";
-                document.getElementById("points").textContent = rewards.points ?? 0;
-
-                const academyEl = document.getElementById("academy");
-                const enrolled = Array.isArray(academy.enrolled) ? academy.enrolled : [];
-                academyEl.textContent = enrolled.length
-                    ? "Enrolled: " + enrolled.join(", ")
-                    : "No courses enrolled yet.";
-
-                const tasksEl = document.getElementById("tasks");
-                const items = Array.isArray(tasks.personal) ? tasks.personal : [];
-                if (!items.length) {
-                    tasksEl.textContent = "No personal tasks yet.";
-                } else {
-                    tasksEl.innerHTML = "";
-                    items.forEach(t => {
-                        const div = document.createElement("div");
-                        div.className = "task" + (t.status === "done" ? " done" : "");
-                        div.textContent = (t.status === "done" ? "✅ " : "⬜ ") + t.title;
-                        tasksEl.appendChild(div);
-                    });
-                }
-            } catch (e) {
-                nameEl.textContent = "Unavailable";
-            }
-        }
-
-        async function loadStats() {
-            const statsEl = document.getElementById("stats");
-            try {
-                const res = await fetch("/api/stats");
-                const s = await res.json();
-                statsEl.innerHTML = `
-                    <div>👥 Users: ${s.users}</div>
-                    <div>🤖 Agents: ${s.agents}</div>
-                    <div>📋 Tasks: ${s.tasks}</div>
-                    <div>💰 Total Credits: ${s.credits}</div>
-                `;
-            } catch(e) {
-                statsEl.textContent = "Unavailable";
-            }
-        }
-
-        async function loadLeaderboard() {
-            const lb = document.getElementById("leaderboard");
-            try {
-                const res = await fetch("/api/v1/leaderboard");
-                const users = await res.json();
-                if (!res.ok || !Array.isArray(users)) throw new Error("leaderboard unavailable");
-                lb.innerHTML = "";
-                users.slice(0, 10).forEach(u => {
-                    const li = document.createElement("li");
-                    li.textContent = (u.name || "User") + " – " + (u.points ?? 0) + " points";
-                    lb.appendChild(li);
-                });
-            } catch (e) {
-                lb.innerHTML = "<li>Unavailable</li>";
-            }
-        }
-
-        loadMe();
-        loadStats();
-        loadLeaderboard();
-    </script>
+<h1>🛡 SLH OS</h1>
+<div class="card"><div>👤 User</div><div id="name" class="value">Loading...</div></div>
+<div class="card"><div>💰 Credits</div><div id="credits" class="value">0</div><div>🔒 Staked: <span id="staked">0</span></div><div>🪙 Token Balance: <span id="token_balance">0</span></div><div>👛 TON Wallet: <span id="ton_wallet">-</span></div></div>
+<div class="card"><h2>⚡ Alpha Status</h2><div id="alpha">Loading...</div></div>
+<div class="card"><h2>📚 Academy</h2><div id="academy">Loading...</div></div>
+<div class="card"><h2>📋 Personal Tasks</h2><div id="tasks">Loading...</div></div>
+<div class="card"><h2>🏆 Points</h2><div id="points" class="value">0</div></div>
+<div class="card"><h2>📊 System Stats</h2><div id="stats">Loading...</div></div>
+<div class="card"><h2>🏆 Leaderboard</h2><ol id="leaderboard"><li>Loading...</li></ol></div>
+<script>
+const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const authHeaders=initData?{"X-Telegram-Init-Data":initData}:{};
+function esc(v){const d=document.createElement("div");d.textContent=String(v??"");return d.innerHTML}
+function renderAlpha(a){const e=document.getElementById("alpha");if(!a){e.textContent="Alpha preview unavailable.";return}const academy=a.academy||{},tasks=a.tasks||{},ref=a.referral||{},share=a.share||{},alloc=a.allocation||{};e.innerHTML=`<div class="alpha-row"><span>Identity</span><span class="alpha-ok">${a.identity?.status==="verified"?"✅ VERIFIED":"—"}</span></div><div class="alpha-row"><span>Onboarding</span><span>${a.onboarding?.status==="complete"?"✅ COMPLETE":"⏳ INCOMPLETE"}</span></div><div class="alpha-row"><span>Academy</span><span>${academy.completed_courses??0}/${academy.courses??0}</span></div><div class="alpha-row"><span>Tasks</span><span>${tasks.completed??0}/${tasks.total??0}</span></div><div class="alpha-row"><span>Referral</span><span>${esc(ref.status||"not_verified")}</span></div><div class="alpha-row"><span>Share evidence</span><span>${esc(share.status||"unverified")}</span></div><div class="alpha-row"><span>Allocation</span><span class="alpha-lock">🔒 ${alloc.status==="policy_missing"?"POLICY PENDING":"REVIEW"} · 0 AIR</span></div><div class="alpha-row"><span>Overall</span><span>${esc(a.status||"incomplete")}</span></div>`}
+async function loadMe(){const nameEl=document.getElementById("name");if(!initData){nameEl.textContent="Open inside Telegram";return}try{const res=await fetch("/api/v1/me",{headers:authHeaders});const data=await res.json();if(!res.ok){nameEl.textContent=res.status===401?"Authentication unavailable":"User unavailable";return}const identity=data.identity||{},wallet=data.wallet||{},academy=data.academy||{},tasks=data.tasks||{},rewards=data.rewards||{};nameEl.textContent=identity.display_name||"Telegram user";document.getElementById("credits").textContent=wallet.credits??0;document.getElementById("staked").textContent=wallet.staked??0;document.getElementById("token_balance").textContent=wallet.token_balance??0;document.getElementById("ton_wallet").textContent=wallet.ton_wallet||"Not linked";document.getElementById("points").textContent=rewards.points??0;renderAlpha(data.alpha);const academyEl=document.getElementById("academy"),enrolled=Array.isArray(academy.enrolled)?academy.enrolled:[];academyEl.textContent=enrolled.length?"Enrolled: "+enrolled.join(", "):"No courses enrolled yet.";const tasksEl=document.getElementById("tasks"),items=Array.isArray(tasks.personal)?tasks.personal:[];if(!items.length)tasksEl.textContent="No personal tasks yet.";else{tasksEl.innerHTML="";items.forEach(t=>{const div=document.createElement("div");div.className="task"+(t.status==="done"?" done":"");div.textContent=(t.status==="done"?"✅ ":"⬜ ")+t.title;tasksEl.appendChild(div)})}}catch(e){nameEl.textContent="Unavailable"}}
+async function loadStats(){const e=document.getElementById("stats");try{const r=await fetch("/api/stats"),s=await r.json();e.innerHTML=`<div>👥 Users: ${s.users}</div><div>🤖 Agents: ${s.agents}</div><div>📋 Tasks: ${s.tasks}</div><div>💰 Total Credits: ${s.credits}</div>`}catch(e){e.textContent="Unavailable"}}
+async function loadLeaderboard(){const lb=document.getElementById("leaderboard");try{const r=await fetch("/api/v1/leaderboard"),users=await r.json();if(!r.ok||!Array.isArray(users))throw Error();lb.innerHTML="";users.slice(0,10).forEach(u=>{const li=document.createElement("li");li.textContent=(u.name||"User")+" – "+(u.points??0)+" points";lb.appendChild(li)})}catch(e){lb.innerHTML="<li>Unavailable</li>"}}
+loadMe();loadStats();loadLeaderboard();
+</script>
 </body>
 </html>
