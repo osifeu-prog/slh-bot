@@ -50,7 +50,7 @@ def load_handlers(bot, context):
         ("monitor", "handlers.monitor_handler"),
         ("journal", "handlers.journal_handler"),
         ("endday", "handlers.endday_handler"),
-        ("brief", "brief_handler"),
+        ("brief", "handlers.brief_handler"),
         ("claim", "handlers.claim_handler"),
         ("morning", "handlers.morning_handler"),
         ("morning_check", "handlers.morning_check_handler"),
