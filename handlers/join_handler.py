@@ -33,10 +33,17 @@ def register(bot):
             return
 
         existing_user = user_exists(uid)
+        pending_referral = _get_pending_referral(uid)
+        has_valid_invite = bool(
+            pending_referral
+            and str(pending_referral) != uid
+            and user_exists(str(pending_referral))
+        )
 
         if not can_start_onboarding(
             is_owner=False,
             is_existing_user=existing_user,
+            has_invite=has_valid_invite,
         ):
             bot.reply_to(
                 msg,
@@ -76,9 +83,6 @@ def register(bot):
         elif step == "group":
             group = (msg.text or "").strip()
 
-            # Create the agent first. update_user() creates the user record,
-            # so this ordering avoids leaving a registered user behind when
-            # agent creation fails.
             try:
                 from core.agent_registry import create_agent
                 create_agent(f"user{uid}-Agent", owner_id=uid)
@@ -120,12 +124,10 @@ def register(bot):
             except Exception as e:
                 print("WELCOME BONUS FAILED:", e)
 
-            # Keep referral attribution durable until the reward succeeds.
-            # The reward itself is idempotent, so retrying is safe.
             try:
                 from core.reward_engine import grant
                 ref_uid = _get_pending_referral(uid)
-                if ref_uid and str(ref_uid) != uid:
+                if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
                     grant(
                         str(ref_uid),
                         "referral",
