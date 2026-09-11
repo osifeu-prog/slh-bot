@@ -54,11 +54,40 @@ def register(bot):
 
     @bot.message_handler(commands=["unstake"])
     def unstake(msg):
-        bot.reply_to(
-            msg,
-            "לסטייק נעול יש להשתמש ב-/unstake_lock <position_id> לאחר תום תקופת הנעילה.\n"
-            "בדיקת פוזיציות: /positions"
-        )
+        parts = msg.text.split()
+        if len(parts) < 2:
+            bot.reply_to(
+                msg,
+                "שימוש: /unstake <position_id>\n"
+                "השחרור מתבצע רק לאחר תום תקופת הנעילה.\n"
+                "בדיקת פוזיציות: /positions"
+            )
+            return
+
+        uid = str(msg.from_user.id)
+        pos_id = parts[1]
+        pos = get_position(pos_id)
+        if not pos or str(pos.get("uid")) != uid:
+            bot.reply_to(msg, "הפוזיציה לא נמצאה או לא שייכת לך.")
+            return
+
+        try:
+            res = staking_service.unstake_locked(
+                uid,
+                pos_id,
+                meta={"source": "telegram", "command": "unstake"},
+            )
+            if res.get("status") == "duplicate":
+                bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
+                return
+            bot.reply_to(
+                msg,
+                f"שוחררו {pos.get('amount')} credits.\n"
+                f"יתרה: {res.get('credits')}\n"
+                f"סטייק: {res.get('staked')}"
+            )
+        except Exception as e:
+            bot.reply_to(msg, f"{e}")
 
     @bot.message_handler(commands=["stake_lock"])
     def stake_lock(msg):
@@ -166,7 +195,8 @@ def register(bot):
             + "\n\nפקודות:\n"
             "/stake <amount> - נעילה ל-30 יום\n"
             "/stake_lock <amount> <days> - נעילה לתקופה\n"
-            "/unstake_lock <position_id> - שחרור לאחר תום הנעילה\n"
+            "/unstake <position_id> - שחרור לאחר תום הנעילה\n"
+            "/unstake_lock <position_id> - alias לשחרור\n"
             "/positions - הפוזיציות שלך\n"
             "/rewards - תגמולים\n\n"
             "סטייקינג פנימי בלבד, לא on-chain."
