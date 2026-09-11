@@ -59,10 +59,83 @@ def market():
 
 @app.route("/mini-app")
 def mini_app():
-    """Serve the Mini App with a tiny compatibility shim for guide buttons."""
+    """Serve the Mini App and inject the authenticated BNB ownership UI."""
     html_path = BASE_DIR / "mini_app.html"
     html = html_path.read_text(encoding="utf-8")
     shim = """
+<style>
+#slh-bnb-binding{margin-top:12px}
+#slh-bnb-binding .wallet-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+#slh-bnb-binding .wallet-actions button{background:#ffffff08;border:1px solid #ffffff12;color:#fff;border-radius:15px;padding:13px;text-align:right;min-height:64px}
+#slh-bnb-binding .wallet-actions .primary{background:linear-gradient(135deg,#7c5cff,#5b4bd8);border-color:transparent}
+#slh-bnb-binding .bnb-address{direction:ltr;text-align:left;font-family:monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+<script>
+(function(){
+  const tg=window.Telegram&&window.Telegram.WebApp;
+  const initData=tg?tg.initData:"";
+  const headers=initData?{"X-Telegram-Init-Data":initData,"Content-Type":"application/json"}:{"Content-Type":"application/json"};
+  const walletMarkup=`<div id="slh-bnb-binding" class="card"><div class="section-title" style="margin-top:0">🔐 BNB Wallet</div><div id="slh-bnb-status" class="muted">בודק מצב…</div><div id="slh-bnb-address" class="bnb-address" style="margin-top:7px"></div><div class="wallet-actions"><button id="slh-bnb-connect" class="primary"><b>🔗 חיבור ואימות</b><span>חבר ארנק BSC וחתום על הודעת בעלות</span></button><button id="slh-bnb-refresh"><b>↻ בדיקת סטטוס</b><span>בדיקת הארנק המאומת</span></button></div><details class="guide"><summary>📘 איך האימות עובד?</summary><p>המערכת יוצרת הודעת challenge חד־פעמית. הארנק חותם עליה בלבד; החתימה אינה מאשרת העברת כספים. לאחר אימות, /claim מקבל זיכוי רק עבור TX שהשולח שלו הוא אותו ארנק מאומת.</p></details></div>`;
+
+  function install(){
+    const wallet=document.getElementById('wallet');
+    if(!wallet || document.getElementById('slh-bnb-binding')) return !!wallet;
+    wallet.insertAdjacentHTML('beforeend',walletMarkup);
+    document.getElementById('slh-bnb-connect').addEventListener('click',connectAndVerify);
+    document.getElementById('slh-bnb-refresh').addEventListener('click',loadBinding);
+    loadBinding();
+    return true;
+  }
+
+  function status(text){const e=document.getElementById('slh-bnb-status');if(e)e.textContent=text}
+  function address(text){const e=document.getElementById('slh-bnb-address');if(e)e.textContent=text||''}
+  function ethereum(){return window.ethereum||null}
+  function short(a){return a?a.slice(0,8)+'…'+a.slice(-6):''}
+
+  async function loadBinding(){
+    if(!install()) return;
+    try{
+      const r=await fetch('/api/wallet/bnb',{headers});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.error||'BNB_STATUS_FAILED');
+      if(d.binding){status('✅ ארנק BNB מאומת');address(d.binding.address+' · '+short(d.binding.address));}
+      else {status('לא קיים ארנק BNB מאומת');address('');}
+    }catch(e){status('⚠️ לא ניתן לקרוא סטטוס BNB: '+e.message)}
+  }
+
+  async function connectAndVerify(){
+    const eth=ethereum();
+    if(!eth){status('הארנק אינו זמין בתוך ה־Mini App. פתח את ה־Mini App בסביבה עם EIP-1193 wallet, למשל ארנק התומך בחיבור DApp.');return}
+    const button=document.getElementById('slh-bnb-connect');
+    if(button) button.disabled=true;
+    try{
+      const accounts=await eth.request({method:'eth_requestAccounts'});
+      const addressValue=accounts&&accounts[0];
+      if(!addressValue) throw new Error('NO_WALLET_ACCOUNT');
+      status('יוצר הודעת אימות…');address(addressValue);
+      const challengeResponse=await fetch('/api/wallet/bnb/challenge',{method:'POST',headers,body:JSON.stringify({address:addressValue})});
+      const challenge=await challengeResponse.json();
+      if(!challengeResponse.ok) throw new Error(challenge.error||'CHALLENGE_FAILED');
+      status('חתום על הודעת הבעלות בארנק. אין כאן העברת כספים.');
+      let signature;
+      try{
+        signature=await eth.request({method:'personal_sign',params:[challenge.message,addressValue]});
+      }catch(signError){
+        signature=await eth.request({method:'personal_sign',params:[addressValue,challenge.message]});
+      }
+      status('מאמת חתימה…');
+      const verifyResponse=await fetch('/api/wallet/bnb/verify',{method:'POST',headers,body:JSON.stringify({address:addressValue,signature})});
+      const verified=await verifyResponse.json();
+      if(!verifyResponse.ok) throw new Error(verified.error||'VERIFY_FAILED');
+      status('✅ ארנק BNB אומת בהצלחה');
+      address(verified.binding&&verified.binding.address||addressValue);
+    }catch(e){status('⛔ אימות BNB נכשל: '+(e.message||e));}
+    finally{if(button)button.disabled=false;}
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install); else install();
+})();
+</script>
 <script>
 function showGuide(id){
   const el=document.getElementById(id);
@@ -74,7 +147,7 @@ function showGuide(id){
 }
 </script>
 """
-    if "function showGuide(" not in html:
+    if "id=\"slh-bnb-binding\"" not in html:
         html = html.replace("</body>", shim + "</body>")
     resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
