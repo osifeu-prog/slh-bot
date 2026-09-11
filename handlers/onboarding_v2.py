@@ -112,6 +112,13 @@ def register(bot, context=None):
 
         # /start must never create a user. Preserve referral attribution separately
         # until /join successfully passes the onboarding gate.
+        if is_new:
+            try:
+                from core.holiday_campaign import record_entry
+                record_entry(user_id)
+            except Exception as e:
+                print("HOLIDAY CAMPAIGN ENTRY FAILED:", e)
+
         parts = (m.text or "").split(maxsplit=1)
         if is_new and len(parts) > 1 and parts[1].startswith("ref_"):
             ref_uid = parts[1][4:].strip()
@@ -207,6 +214,12 @@ def register(bot, context=None):
                 "name": user_name,
                 "display_name": user_name,
             })
+
+            try:
+                from core.holiday_campaign import finalize_entry
+                finalize_entry(user_id)
+            except Exception as e:
+                print("HOLIDAY CAMPAIGN FINALIZE FAILED:", e)
 
             # Referral rewards require successful persistence of the relationship.
             # Pending/valid referral evidence alone is not sufficient.
