@@ -6,6 +6,8 @@ from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
+MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app"
+
 
 def _kw_match(kw, text_lower):
     kwl = kw.lower()
@@ -24,6 +26,7 @@ INTENTS = {
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
     "greeting": ["היי","שלום","בוקר טוב","ערב טוב","אהלן"],
     "courses": ["/courses","הקורס שלי","רשימת קורסים","אקדמיה"],
+    "dashboard": ["dashboard","לוח המחוונים","דשבורד"],
     "analysis": ["נתח","ניתוח","תנתח","שיפור","איך לשפר","המלצה","ארכיטקטורה","אסטרטגיה"],
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
     "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה"],
@@ -33,25 +36,32 @@ INTENTS = {
 
 FORBIDDEN_ASK_TOPICS = ["launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
 
+
 def is_system_state_question(text):
     text_lower = text.strip().lower()
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
-PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","help","onboarding","greeting","analysis","missions"]
+
+PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
+
 
 def detect_intent(text):
     text_lower = text.strip().lower()
-
-    # Greeting is valid only when the entire message is a greeting.
-    # This prevents questions containing a greeting from being swallowed.
     greeting_exact = {
         kw.strip().lower()
         for kw in INTENTS.get("greeting", [])
         if kw.strip()
     }
-
     if text_lower in greeting_exact:
         return "greeting"
+
+    # Ground common user-flow questions before the generic LLM path.
+    if any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")) and any(
+        x in text_lower for x in ("איך", "כיצד", "להשלים", "להתחיל", "where", "how")
+    ):
+        return "courses"
+    if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
+        return "dashboard"
 
     question_words = ["כיצד", "איך", "מה", "מדוע", "למה", "הסבר", "explain", "how", "what", "why"]
     if any(word in text_lower for word in question_words):
@@ -60,12 +70,11 @@ def detect_intent(text):
     for intent in PRIORITY:
         if intent == "greeting":
             continue
-
         for kw in INTENTS[intent]:
             if kw and _kw_match(kw, text_lower):
                 return intent
-
     return "general"
+
 
 def route(text, uid=None):
     guard_result = guard(text, uid)
@@ -79,16 +88,26 @@ def route(text, uid=None):
         return msg
 
     intent = detect_intent(text)
-
-    # Educational / how-to questions should hit LLM, not rigid menus
     _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
         intent = "general"
 
-
     if intent == "staking":
-        base = "סטייקינג SLH\n\n1. קנה credits עם Stars: /pay\n2. נעל אותם: /stake <amount>\n\nסטייקינג פנימי בלבד, לא on-chain."
+        base = (
+            "סטייקינג SLH\n\n"
+            "לפני /stake צריך להשלים לפחות 3 שיעורים בקורס Bitcoin.\n"
+            "אין צורך לחפש Dashboard נפרד.\n\n"
+            "מסלול מהיר:\n"
+            "1. /courses\n"
+            "2. /course_bitcoin_mastery\n"
+            "3. /lesson bitcoin_mastery 1\n"
+            "4. בסיום: /finish bitcoin_mastery 1\n"
+            "5. חזור על 3–4 עבור שיעורים 2 ו-3.\n"
+            "6. בדיקה: /academy_progress\n"
+            "7. לאחר Stage 3: /stake <amount>\n\n"
+            "סטייקינג פנימי בלבד, לא on-chain."
+        )
         if uid:
             try:
                 from core import economy_service
@@ -132,7 +151,6 @@ def route(text, uid=None):
 
     elif intent == "progress":
         try:
-            from core.profile_manager import get_progress
             from core.progress_tracker import progress_report
             return progress_report()
         except Exception:
@@ -161,7 +179,19 @@ def route(text, uid=None):
         return "שלום! איך אוכל לעזור?"
 
     elif intent == "courses":
-        return "קורסים זמינים:\n/course_bitcoin_mastery"
+        return (
+            "🎓 Academy – Bitcoin Mastery\n\n"
+            "כדי להשלים את 3 השיעורים הנדרשים ל-Staking:\n"
+            "1. /course_bitcoin_mastery\n"
+            "2. /lesson bitcoin_mastery 1\n"
+            "3. כשסיימת: /finish bitcoin_mastery 1\n"
+            "4. חזור על 2–3 עבור שיעורים 2 ו-3.\n"
+            "5. /academy_progress\n\n"
+            "לאחר השלמת Stage 3 ניתן להשתמש ב-/stake <amount>."
+        )
+
+    elif intent == "dashboard":
+        return f"📊 אין Dashboard נפרד למשתמשים. הממשק הקיים הוא SLH Market Mini App:\n{MINI_APP_URL}"
 
     elif intent == "analysis":
         pass
