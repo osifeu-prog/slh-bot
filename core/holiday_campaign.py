@@ -27,30 +27,42 @@ def is_active(now=None):
 
 
 def record_entry(uid, *, source="public_bot_link_inferred", now=None):
-    """Record first campaign-day entry evidence for a new user.
-
-    The current public CTA is a generic bot URL, so source is explicitly marked
-    as inferred rather than claiming cryptographic/source-level proof.
-    """
+    """Record first campaign-day entry evidence without creating a user."""
     uid = str(uid)
     now = now or _now()
     if not is_active(now):
         return False
 
     def mutate(db):
-        users = db.setdefault("users", {})
-        user = users.get(uid)
+        pending = db.setdefault("pending_campaign_entries", {})
+        if uid not in pending:
+            pending[uid] = {
+                "campaign_id": CAMPAIGN_ID,
+                "entered_at": now.isoformat(),
+                "source": source,
+                "attribution_confidence": "inferred",
+            }
+        return dict(pending[uid])
+
+    return state_manager.atomic_update(mutate)
+
+
+def finalize_entry(uid, now=None):
+    """Move pending campaign evidence onto a successfully onboarded user."""
+    uid = str(uid)
+    now = now or _now()
+
+    def mutate(db):
+        pending = db.setdefault("pending_campaign_entries", {})
+        evidence = pending.get(uid)
+        if not evidence:
+            return False
+        user = db.setdefault("users", {}).get(uid)
         if not user:
             return False
         campaigns = user.setdefault("campaigns", {})
-        entry = campaigns.get(CAMPAIGN_ID)
-        if entry:
-            return True
-        campaigns[CAMPAIGN_ID] = {
-            "entered_at": now.isoformat(),
-            "source": source,
-            "attribution_confidence": "inferred",
-        }
+        campaigns.setdefault(CAMPAIGN_ID, dict(evidence))
+        pending.pop(uid, None)
         return True
 
     return state_manager.atomic_update(mutate)
@@ -59,7 +71,6 @@ def record_entry(uid, *, source="public_bot_link_inferred", now=None):
 def eligibility(uid, now=None):
     """Return a read-only eligibility decision for the 100K SLH campaign."""
     uid = str(uid)
-    now = now or _now()
     db = state_manager.load_db()
     user = db.get("users", {}).get(uid)
     if not user:
