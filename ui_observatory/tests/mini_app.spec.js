@@ -3,13 +3,13 @@ const { test, expect } = require('@playwright/test');
 const { AxeBuilder } = require('@axe-core/playwright');
 
 const screens = [
-  ['home', '🏠 בית'],
-  ['wallet', '👛 ארנק'],
-  ['transfer', '💸 העברה'],
-  ['buy', '💳 קנייה'],
-  ['stake', '🔒 סטייקינג'],
-  ['alpha', '🚀 Alpha'],
-  ['academy', '🎓 Academy'],
+  ['home', 'nh'],
+  ['wallet', 'nw'],
+  ['transfer', 'nt'],
+  ['buy', 'nb'],
+  ['stake', 'ns'],
+  ['alpha', 'na'],
+  ['academy', 'nc'],
 ];
 
 async function mockBackend(page) {
@@ -40,6 +40,11 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
   }
 }
 
+async function clickScreen(page, id) {
+  await page.locator(`#${id}`).click();
+  await expect(page.locator(`#${id.replace(/^n/, '')}`)).toHaveClass(/active/);
+}
+
 test.beforeEach(async ({ page }) => {
   await mockBackend(page);
   await page.goto(process.env.SLH_UI_BASE_URL || '/mini-app');
@@ -48,8 +53,8 @@ test.beforeEach(async ({ page }) => {
 
 test('all primary screens are reachable', async ({ page }) => {
   const seen = [];
-  for (const [id, label] of screens) {
-    await page.getByRole('button', { name: label }).click();
+  for (const [id, buttonId] of screens) {
+    await page.locator(`#${buttonId}`).click();
     await expect(page.locator(`#${id}`)).toHaveClass(/active/);
     seen.push(id);
   }
@@ -70,7 +75,7 @@ test('interactive controls have usable names and form fields are labelled', asyn
   const unnamed = await page.locator('button').evaluateAll(buttons => buttons.filter(b => !(b.innerText || b.getAttribute('aria-label') || '').trim()).length);
   expect(unnamed).toBe(0);
 
-  await page.getByRole('button', { name: '💸 העברה' }).click();
+  await page.locator('#nt').click();
   await expect(page.locator('#recipient')).toHaveAttribute('id', 'recipient');
   await expect(page.locator('label[for="recipient"]')).toBeVisible();
   await expect(page.locator('label[for="amount"]')).toBeVisible();
@@ -83,36 +88,36 @@ test('accessibility audit has no serious or critical violations', async ({ page 
 });
 
 test('visual baseline: home', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🏠 בית' }).click();
+  await page.locator('#nh').click();
   await assertOrCreateScreenshot(page, testInfo, 'home.png');
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '👛 ארנק' }).click();
+  await page.locator('#nw').click();
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
 test('visual baseline: transfer', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '💸 העברה' }).click();
+  await page.locator('#nt').click();
   await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
 test('visual baseline: buy', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '💳 קנייה' }).click();
+  await page.locator('#nb').click();
   await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
 
 test('visual baseline: staking', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🔒 סטייקינג' }).click();
+  await page.locator('#ns').click();
   await assertOrCreateScreenshot(page, testInfo, 'stake.png');
 });
 
 test('visual baseline: alpha', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🚀 Alpha' }).click();
+  await page.locator('#na').click();
   await assertOrCreateScreenshot(page, testInfo, 'alpha.png');
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🎓 Academy' }).click();
+  await page.locator('#nc').click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
