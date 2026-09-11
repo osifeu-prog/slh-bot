@@ -1,0 +1,12 @@
+{
+  "name": "slh-ui-observatory",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test:ui": "playwright test tests/mini_app.spec.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.55.0"
+  }
+}
