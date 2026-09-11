@@ -68,21 +68,35 @@ def register(bot):
             bot.reply_to(msg, "Invalid amount or self-transfer")
             return
         sender = str(msg.from_user.id)
-        def transfer(db):
+        event_id = f"p2p_credits:{sender}:{msg.chat.id}:{msg.message_id}"
+
+        def transfer_credits(db):
             if sender not in db.get("users", {}) or recipient not in db.get("users", {}):
                 raise ValueError("USER_NOT_FOUND")
+            existing = [
+                x for x in db.get("ledger", [])
+                if x.get("meta", {}).get("event_id") == event_id
+            ]
+            if existing:
+                return "already_completed"
             s_bal = _bal(db, sender, "credits")
             if s_bal < amount:
                 raise ValueError("INSUFFICIENT_CREDITS")
             r_bal = _bal(db, recipient, "credits")
             _set(db, sender, "credits", s_bal - amount)
             _set(db, recipient, "credits", r_bal + amount)
-            _ledger(db, sender, s_bal, -amount, "p2p:credits_sent", {"recipient": recipient})
-            _ledger(db, recipient, r_bal, amount, "p2p:credits_received", {"sender": sender})
-            return True
+            meta_sent = {"recipient": recipient, "event_id": event_id}
+            meta_received = {"sender": sender, "event_id": event_id}
+            _ledger(db, sender, s_bal, -amount, "p2p:credits_sent", meta_sent)
+            _ledger(db, recipient, r_bal, amount, "p2p:credits_received", meta_received)
+            return "completed"
+
         try:
-            state_manager.atomic_update(transfer)
-            bot.reply_to(msg, f"Sent {amount} Credits to {recipient}")
+            result = state_manager.atomic_update(transfer_credits)
+            if result == "already_completed":
+                bot.reply_to(msg, f"ℹ️ Transfer already completed: {amount:g} Credits to {recipient}")
+            else:
+                bot.reply_to(msg, f"Sent {amount:g} Credits to {recipient}")
         except ValueError as e:
             bot.reply_to(msg, str(e))
         except Exception as e:
