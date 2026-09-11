@@ -38,7 +38,7 @@ def settle_bnb_deposit(uid, tx_hash):
     credits = amount_bnb * CREDITS_PER_BNB
     idempotency_key = f"bnb:deposit:{tx_hash.lower()}"
 
-    after = record_transaction(
+    recorded = record_transaction(
         uid,
         credits,
         reason="bnb:deposit",
@@ -51,6 +51,7 @@ def settle_bnb_deposit(uid, tx_hash):
             "block": verified.get("block"),
             "confirmations": verified.get("confirmations"),
         },
+        return_status=True,
     )
 
     return {
@@ -59,7 +60,7 @@ def settle_bnb_deposit(uid, tx_hash):
         "tx_hash": tx_hash,
         "amount_bnb": amount_bnb,
         "credits": credits,
-        "balance_after": after,
-        "idempotent": False,
+        "balance_after": recorded["after"],
+        "idempotent": bool(recorded["idempotent"]),
         "binding": bound,
     }
