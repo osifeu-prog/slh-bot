@@ -8,6 +8,9 @@ on:
       - "tests/**"
       - "requirements.txt"
       - ".github/workflows/python-tests.yml"
+      - "mini_app.html"
+      - "webapp.py"
+      - "ui_observatory/**"
   workflow_dispatch:
 
 jobs:
@@ -22,3 +25,46 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run unit tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+  ui-ux-observatory:
+    name: SLH UI UX Observatory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install UI test dependencies
+        working-directory: ui_observatory
+        run: npm install
+      - name: Install Playwright browser
+        working-directory: ui_observatory
+        run: npx playwright install --with-deps chromium
+      - name: Start Mini App server
+        run: |
+          nohup python -m flask --app webapp run --host 127.0.0.1 --port 8080 > /tmp/slh-ui.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8080/mini-app >/dev/null && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/mini-app >/dev/null
+      - name: Run UI/UX Observatory
+        working-directory: ui_observatory
+        env:
+          SLH_UI_BASE_URL: http://127.0.0.1:8080/mini-app
+        run: npm run test:ui -- --reporter=list
+      - name: Upload UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slh-ui-ux-observatory
+          path: |
+            ui_observatory/artifacts/**
+            ui_observatory/tests/**/*-snapshots/**
+            /tmp/slh-ui.log
+          if-no-files-found: warn
