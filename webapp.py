@@ -4,6 +4,7 @@ from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
+from core.wallet_binding import issue_challenge, verify_signature, get_binding
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -112,6 +113,40 @@ def get_wallet(uid):
         "token_balance": wallet.get("token_balance", 0),
         "ton_wallet": user.get("ton_wallet")
     })
+
+
+@app.route("/api/wallet/bnb/challenge", methods=["POST"])
+def bnb_wallet_challenge():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        result = issue_challenge(uid, payload.get("address"))
+        return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/bnb/verify", methods=["POST"])
+def bnb_wallet_verify():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        binding = verify_signature(uid, payload.get("address"), payload.get("signature"))
+        return jsonify({"status": "verified", "binding": binding}), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/bnb")
+def bnb_wallet_binding():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    return jsonify({"binding": get_binding(uid)}), 200
 
 
 @app.route("/api/tasks/<uid>")
