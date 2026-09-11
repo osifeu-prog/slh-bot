@@ -1,18 +1,20 @@
-"""Holiday Alpha campaign attribution and eligibility reporting.
+"""Holiday Alpha campaign attribution, eligibility, and settlement.
 
-This module is intentionally non-settling: it records campaign entry evidence
-and computes eligibility, but it never mutates SLH balances. Actual SLH
-transfers remain exclusively under core.slh_distribution.
+Campaign entry/finalization remain evidence-only. Once a user is eligible,
+settlement transfers existing SLH through the canonical distribution authority.
+No tokens are minted here.
 """
 
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 import state_manager
+from core.identity import OWNER_TELEGRAM_ID
 
 CAMPAIGN_ID = "holiday_referral_20260911"
 CAMPAIGN_TZ = ZoneInfo("Asia/Jerusalem")
 GRANT_AMOUNT = 100_000
+DISTRIBUTOR_UID = str(OWNER_TELEGRAM_ID)
 
 
 def _now():
@@ -82,8 +84,6 @@ def eligibility(uid, now=None):
     if not user.get("joined"):
         return {"eligible": False, "reason": "NOT_JOINED"}
 
-    # The campaign condition is fulfilled only when this user's own referral
-    # link has actually produced at least one successfully joined referral.
     referral_count = int((user.get("referral") or {}).get("count", 0) or 0)
     if referral_count < 1:
         return {"eligible": False, "reason": "NO_SUCCESSFUL_REFERRAL"}
@@ -96,6 +96,26 @@ def eligibility(uid, now=None):
         "entered_at": campaign.get("entered_at"),
         "successful_referrals": referral_count,
     }
+
+
+def settle(uid, now=None):
+    """Settle one eligible user exactly once through canonical SLH authority."""
+    uid = str(uid)
+    decision = eligibility(uid, now=now)
+    if not decision.get("eligible"):
+        return decision
+
+    from core.slh_distribution import distribute
+
+    event_id = f"{CAMPAIGN_ID}:{uid}"
+    result = distribute(
+        distributor_uid=DISTRIBUTOR_UID,
+        recipient_uid=uid,
+        amount=GRANT_AMOUNT,
+        reason="holiday_referral_grant",
+        event_id=event_id,
+    )
+    return {**decision, "settlement": result}
 
 
 def report(now=None):

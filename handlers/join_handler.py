@@ -58,6 +58,14 @@ def register(bot):
     def join_start(msg):
         uid = str(msg.from_user.id)
 
+        # Capture campaign-day entry on the actual /join path as well as /start.
+        # This is attribution bookkeeping only and never changes SLH balances.
+        try:
+            from core.holiday_campaign import record_entry
+            record_entry(uid, source="join_command")
+        except Exception as e:
+            print("HOLIDAY CAMPAIGN JOIN ENTRY FAILED:", e)
+
         if int(uid) == int(OWNER_TELEGRAM_ID):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
             return
@@ -175,6 +183,15 @@ def register(bot):
                             points=10,
                             idempotency_key=f"ref:{uid}"
                         )
+                        try:
+                            from core.holiday_campaign import settle
+                            settlement = settle(str(ref_uid))
+                            print(
+                                f"HOLIDAY CAMPAIGN SETTLEMENT: "
+                                f"{ref_uid} -> {settlement}"
+                            )
+                        except Exception as e:
+                            print("HOLIDAY CAMPAIGN SETTLEMENT FAILED:", e)
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL GRANT FAILED:", e)
