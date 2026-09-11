@@ -1,6 +1,7 @@
 import os
 import state_manager
 from core import profile_manager
+from core import stars_payment_authority
 from telebot.types import LabeledPrice, PreCheckoutQuery
 
 PROVIDER_TOKEN = ""
@@ -119,8 +120,7 @@ def register_payment_handlers(bot):
         try:
             db = state_manager.load_db()
             referrer_uid = db.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
-            from core import economy_service
-            result = economy_service.record_stars_payment(
+            result = stars_payment_authority.record_stars_payment(
                 uid=uid,
                 credits=package[2],
                 stars_paid=package[1],
