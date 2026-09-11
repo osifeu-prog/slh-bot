@@ -3,6 +3,7 @@ from core.agent_registry import (
     delete_agent, send_message, get_inbox,
 )
 from core.authority import get_visible_agents, normalize_uid, is_owner
+from core.runtime_service import execute_agent
 
 
 def _check_access(uid, identifier):
@@ -76,9 +77,14 @@ def register(bot, context):
             return
         try:
             send_message(agent_id, parts[2])
-            bot.reply_to(m, "Sent to agent " + agent_id)
+            result = execute_agent(
+                agent_id,
+                parts[2],
+                source=f"telegram:{uid}",
+            )
+            bot.reply_to(m, "Runtime result: " + str(result.get("data", result)))
         except Exception as e:
-            bot.reply_to(m, "Message delivery failed: " + type(e).__name__)
+            bot.reply_to(m, "Agent execution failed: " + type(e).__name__)
 
     @bot.message_handler(commands=["inbox"])
     def inbox_cmd(m):
