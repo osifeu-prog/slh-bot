@@ -114,6 +114,18 @@ except Exception as e:
 STATE_DIR = Path("state")
 STATE_DIR.mkdir(exist_ok=True)
 
+try:
+    from core.runtime_service import boot as boot_agent_runtime, boot_report
+    runtime_report = boot_agent_runtime()
+    log(
+        "[OK] Agent Runtime booted: "
+        f"loaded={len(runtime_report.get('loaded', []))}, "
+        f"skipped={len(runtime_report.get('skipped', []))}, "
+        f"errors={len(runtime_report.get('errors', []))}"
+    )
+except Exception as e:
+    log(f"[FAIL] Agent Runtime boot failed: {type(e).__name__}: {e}")
+
 def run_bot(bot):
     while True:
         try:
