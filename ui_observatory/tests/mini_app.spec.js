@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { test, expect } = require('@playwright/test');
-const { checkA11y, injectAxe } = require('@axe-core/playwright');
+const AxeBuilder = require('@axe-core/playwright').default;
 
 const screens = [
   ['home', '🏠 בית'],
@@ -42,7 +42,7 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 
 test.beforeEach(async ({ page }) => {
   await mockBackend(page);
-  await page.goto('/');
+  await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
 });
 
@@ -77,13 +77,9 @@ test('interactive controls have usable names and form fields are labelled', asyn
 });
 
 test('accessibility audit has no serious or critical violations', async ({ page }) => {
-  await injectAxe(page);
-  const results = await checkA11y(page, undefined, {
-    includedImpacts: ['serious', 'critical'],
-    detailedReport: true,
-    detailedReportOptions: { html: true },
-  });
-  expect(results.violations).toEqual([]);
+  const results = await new AxeBuilder({ page }).analyze();
+  const blocking = results.violations.filter(v => ['serious', 'critical'].includes(v.impact));
+  expect(blocking).toEqual([]);
 });
 
 test('visual baseline: home', async ({ page }, testInfo) => {
