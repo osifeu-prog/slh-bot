@@ -1,4 +1,6 @@
 import re
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from core.ask_guard import guard
 from core.context_builder import get_context
@@ -31,6 +33,7 @@ INTENTS = {
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
     "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה"],
     "system": ["מהי המערכת","מצב המערכת","סטטוס המערכת","health","status"],
+    "time": ["מה השעה","מה הזמן","השעה","what time is it","what time"],
     "general": []
 }
 
@@ -42,7 +45,7 @@ def is_system_state_question(text):
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
 
-PRIORITY = ["staking","wallet","progress","rewards","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
+PRIORITY = ["time","staking","wallet","progress","rewards","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
 
 
 def detect_intent(text):
@@ -51,13 +54,15 @@ def detect_intent(text):
     if text_lower in greeting_exact:
         return "greeting"
 
+    for kw in INTENTS["time"]:
+        if kw and _kw_match(kw, text_lower):
+            return "time"
+
     if any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")) and any(x in text_lower for x in ("איך", "כיצד", "להשלים", "להתחיל", "where", "how")):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
 
-    # Deterministic money/staking intents must win over generic question words.
-    # Otherwise natural questions such as "מה היתרה שלי?" fall through to LLM.
     for intent in ("staking", "wallet"):
         for kw in INTENTS[intent]:
             if kw and _kw_match(kw, text_lower):
@@ -68,7 +73,7 @@ def detect_intent(text):
         return "general"
 
     for intent in PRIORITY:
-        if intent in ("staking", "wallet", "greeting"):
+        if intent in ("staking", "wallet", "greeting", "time"):
             continue
         for kw in INTENTS[intent]:
             if kw and _kw_match(kw, text_lower):
@@ -92,6 +97,10 @@ def route(text, uid=None):
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
         intent = "general"
+
+    if intent == "time":
+        now = datetime.now(ZoneInfo("Asia/Jerusalem"))
+        return f"השעה הנוכחית בישראל היא {now:%H:%M}"
 
     if intent == "staking":
         base = ("סטייקינג SLH\n\n" "לפני /stake צריך להשלים לפחות 3 שיעורים בקורס Bitcoin.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "מסלול מהיר:\n" "1. /courses\n" "2. /course_bitcoin_mastery\n" "3. /lesson bitcoin_mastery 1\n" "4. בסיום: /finish bitcoin_mastery 1\n" "5. חזור על 3–4 עבור שיעורים 2 ו-3.\n" "6. בדיקה: /academy_progress\n" "7. לאחר Stage 3: /stake <amount>\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
