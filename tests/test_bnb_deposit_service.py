@@ -22,7 +22,11 @@ class BnbDepositServiceTests(unittest.TestCase):
             bnb_deposit_service.settle_bnb_deposit("u1", "0xtx")
         record.assert_not_called()
 
-    @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
+    @patch.object(
+        bnb_deposit_service,
+        "record_transaction",
+        return_value={"after": 1234, "idempotent": False},
+    )
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
     def test_settlement_credits_only_verified_sender(self, get_binding, verify, record):
@@ -38,7 +42,30 @@ class BnbDepositServiceTests(unittest.TestCase):
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertEqual(result["credits"], 2500)
         self.assertEqual(result["balance_after"], 1234)
+        self.assertFalse(result["idempotent"])
         record.assert_called_once()
+        self.assertTrue(record.call_args.kwargs["return_status"])
+
+    @patch.object(
+        bnb_deposit_service,
+        "record_transaction",
+        return_value={"after": 1234, "idempotent": True},
+    )
+    @patch.object(bnb_deposit_service, "verify_bnb_deposit")
+    @patch.object(bnb_deposit_service, "get_binding")
+    def test_replayed_transaction_reports_idempotent(self, get_binding, verify, record):
+        get_binding.return_value = {"uid": "u1", "address": "0xBound"}
+        verify.return_value = {
+            "ok": True,
+            "from": "0xBound",
+            "to": "0xTreasury",
+            "amount_bnb": 2.5,
+            "block": 100,
+            "confirmations": 20,
+        }
+        result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
+        self.assertTrue(result["idempotent"])
+        self.assertEqual(result["balance_after"], 1234)
 
     @patch.object(bnb_deposit_service, "record_transaction")
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
