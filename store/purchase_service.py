@@ -1,25 +1,18 @@
-"""Retry-safe store purchase workflow.
-
-Credits are always debited through EconomyService. Store fulfillment is a
-separate, retryable state transition so an external/hardware failure cannot
-silently turn a successful payment into a lost entitlement.
-"""
-
 import json
-import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import state_manager
-from core import economy_service
 from store.engine import load_items
+from core.economy_bridge import get_balance, spend
+from store.grant_engine import apply_grant
 
 LEDGER_FILE = "state/rewards_ledger.json"
+FULFILLMENT_STALE_SECONDS = 15 * 60
 
 
 def load_ledger():
     try:
-        with open(LEDGER_FILE, encoding="utf-8-sig") as f:
-            return json.load(f)
+        return json.load(open(LEDGER_FILE, encoding="utf-8-sig"))
     except Exception:
         return []
 
@@ -29,186 +22,187 @@ def save_ledger(data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def _apply_digital_grant(user, grant):
-    if "permission" in grant:
-        permissions = user.setdefault("permissions", [])
-        value = grant["permission"]
-        if value not in permissions:
-            permissions.append(value)
-        return {"type": "permission", "value": value}
-    if "course" in grant:
-        user.setdefault("academy", {})["active_course"] = grant["course"]
-        return {"type": "course", "value": grant["course"]}
-    if "digital" in grant:
-        inventory = user.setdefault("inventory", {})
-        items = inventory.setdefault("digital", [])
-        value = grant["digital"]
-        if value not in items:
-            items.append(value)
-        return {"type": "digital", "value": value}
+def _purchase_id(request_id):
+    return "purchase:" + str(request_id)
+
+
+def _validate_item(item):
+    price = item.get("price", 0)
+    if isinstance(price, bool) or not isinstance(price, (int, float)) or price < 0:
+        return "NEGATIVE_PRICE" if isinstance(price, (int, float)) and not isinstance(price, bool) and price < 0 else "INVALID_REQUEST"
+    grant = item.get("grant")
+    if not isinstance(grant, dict) or not grant:
+        return "UNSUPPORTED_GRANT"
+    if not any(key in grant for key in ("permission", "course", "digital", "hardware")):
+        return "UNSUPPORTED_GRANT"
     return None
 
 
-def _reserve(db, uid, item_id, item, purchase_key):
-    users = db.setdefault("users", {})
-    if uid not in users:
-        raise ValueError("USER_NOT_FOUND")
+def _get_or_create_purchase(uid, item_id, request_id, item):
+    error = _validate_item(item)
+    if error:
+        return None, error
+    price = item.get("price", 0)
+    purchase_id = _purchase_id(request_id)
 
-    purchases = db.setdefault("store_purchases", {})
-    existing = purchases.get(purchase_key)
-    if existing:
-        if str(existing.get("item_id")) != item_id:
-            raise ValueError("PURCHASE_KEY_CONFLICT")
-        return existing
+    def mutate(db):
+        purchases = db.setdefault("purchases", {})
+        existing = purchases.get(purchase_id)
+        if existing:
+            if str(existing.get("request_id")) != str(request_id) or str(existing.get("uid")) != str(uid) or existing.get("item_id") != item_id:
+                return None, "REQUEST_ID_CONFLICT"
+            return existing, None
 
-    price = float(item.get("price", 0) or 0)
-    if price < 0:
-        raise ValueError("INVALID_PRICE")
+        reservation = None
+        if item.get("type") == "hardware":
+            products = db.setdefault("products", {})
+            product = products.get(item_id)
+            inventory = int(product.get("inventory", 0)) if product else 0
+            if product is None or inventory <= 0:
+                return None, "OUT_OF_STOCK"
+            product["inventory"] = inventory - 1
+            reservation = {"item_id": item_id, "quantity": 1}
 
-    now = datetime.now(timezone.utc).isoformat()
-    order = {
-        "purchase_key": purchase_key,
-        "user_id": uid,
-        "item_id": item_id,
-        "item": item.get("name", item_id),
-        "amount": price,
-        "grant": item.get("grant") or {},
-        "status": "payment_pending",
-        "created_at": now,
-    }
-    purchases[purchase_key] = order
-    return order
+        purchase = {
+            "purchase_id": purchase_id,
+            "request_id": str(request_id),
+            "uid": str(uid),
+            "item_id": item_id,
+            "item_name": item.get("name", item_id),
+            "price": price,
+            "status": "CREATED",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "inventory_reservation": reservation,
+            "fulfillment": None,
+            "fulfillment_started_at": None,
+            "ledger_recorded": False,
+        }
+        purchases[purchase_id] = purchase
+        return purchase, None
+
+    return state_manager.atomic_update(mutate)
 
 
-def _mark(db, purchase_key, **fields):
-    current = db.setdefault("store_purchases", {}).get(purchase_key)
-    if not current:
-        return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
-    if current.get("status") == "completed":
-        return current
-    current.update(fields)
-    return current
+def _update_purchase(purchase_id, **changes):
+    def mutate(db):
+        purchase = db.setdefault("purchases", {}).get(purchase_id)
+        if not purchase:
+            raise KeyError("PURCHASE_NOT_FOUND")
+        purchase.update(changes)
+        return purchase
+    return state_manager.atomic_update(mutate)
+
+
+def _claim_fulfillment(purchase_id):
+    now = datetime.now(timezone.utc)
+    def mutate(db):
+        purchase = db.setdefault("purchases", {}).get(purchase_id)
+        if not purchase:
+            raise KeyError("PURCHASE_NOT_FOUND")
+        status = purchase.get("status")
+        if status == "FULFILLING":
+            started = purchase.get("fulfillment_started_at")
+            try:
+                started_at = datetime.fromisoformat(started) if started else None
+            except Exception:
+                started_at = None
+            if started_at and (now - started_at).total_seconds() < FULFILLMENT_STALE_SECONDS:
+                return None, "IN_PROGRESS"
+        if status not in ("CREATED", "CHARGED", "RECOVERABLE", "FULFILLING"):
+            return None, "INVALID_PURCHASE_STATE"
+        purchase["status"] = "FULFILLING"
+        purchase["fulfillment_started_at"] = now.isoformat()
+        return purchase, None
+    return state_manager.atomic_update(mutate)
+
+
+def _release_reservation(purchase_id):
+    def mutate(db):
+        purchase = db.setdefault("purchases", {}).get(purchase_id)
+        if not purchase or not purchase.get("inventory_reservation"):
+            return False
+        item_id = purchase["inventory_reservation"]["item_id"]
+        product = db.setdefault("products", {}).get(item_id)
+        if product is not None:
+            product["inventory"] = int(product.get("inventory", 0)) + 1
+        purchase["inventory_reservation"] = None
+        return True
+    return state_manager.atomic_update(mutate)
+
+
+def _record_compat_ledger(purchase, fulfillment):
+    if purchase.get("ledger_recorded"):
+        return
+    ledger = load_ledger()
+    if any(entry.get("purchase_id") == purchase["purchase_id"] for entry in ledger):
+        _update_purchase(purchase["purchase_id"], ledger_recorded=True)
+        return
+    ledger.append({
+        "purchase_id": purchase["purchase_id"],
+        "user_id": purchase["uid"],
+        "item": purchase["item_id"],
+        "amount": purchase["price"],
+        "grant": fulfillment,
+        "commission": 0,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    save_ledger(ledger)
+    _update_purchase(purchase["purchase_id"], ledger_recorded=True)
 
 
 def purchase(uid, item_id, request_id=None):
+    if request_id is None:
+        request_id = f"legacy:{uid}:{item_id}"
     uid = str(uid)
     item_id = str(item_id).strip()
-    request_id = str(request_id or uuid.uuid4().hex)
-    purchase_key = f"store:{uid}:{request_id}"
     items = load_items()
-
     if item_id not in items:
         return False, "ITEM_NOT_FOUND"
 
     item = items[item_id]
-    price = float(item.get("price", 0) or 0)
-    if price < 0:
-        return False, "INVALID_PRICE"
+    purchase_state, error = _get_or_create_purchase(uid, item_id, request_id, item)
+    if error:
+        return False, error
+    if purchase_state is None:
+        return False, "INVALID_REQUEST"
+
+    status = purchase_state.get("status")
+    if status == "FULFILLED":
+        return True, {"status": "ALREADY_COMPLETED", "item": purchase_state["item_name"], "paid": purchase_state["price"], "grant": purchase_state.get("fulfillment")}
+    if status == "REJECTED":
+        return False, purchase_state.get("error", "PURCHASE_REJECTED")
+
+    if status == "CREATED":
+        if get_balance(uid) < purchase_state["price"]:
+            _release_reservation(purchase_state["purchase_id"])
+            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="NOT_ENOUGH_SLH")
+            return False, "NOT_ENOUGH_SLH"
+        try:
+            result = spend(uid, purchase_state["price"], reason="store:purchase", meta={"idempotency_key": purchase_state["purchase_id"] + ":debit", "purchase_id": purchase_state["purchase_id"], "item_id": item_id})
+        except Exception:
+            _release_reservation(purchase_state["purchase_id"])
+            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
+            return False, "PAYMENT_FAILED"
+        if result is False:
+            _release_reservation(purchase_state["purchase_id"])
+            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
+            return False, "PAYMENT_FAILED"
+        purchase_state = _update_purchase(purchase_state["purchase_id"], status="CHARGED")
+
+    claim, claim_error = _claim_fulfillment(purchase_state["purchase_id"])
+    if claim_error:
+        if claim_error == "IN_PROGRESS":
+            return False, "IN_PROGRESS"
+        return False, claim_error
 
     try:
-        order = state_manager.atomic_update(
-            lambda db: _reserve(db, uid, item_id, item, purchase_key)
-        )
-    except ValueError as exc:
-        return False, str(exc)
-    except Exception:
-        return False, "ORDER_FAILED"
+        fulfillment = apply_grant(uid, item.get("grant", {}), purchase_id=claim["purchase_id"])
+        if not fulfillment or (isinstance(fulfillment, dict) and fulfillment.get("ok") is False):
+            raise RuntimeError("FULFILLMENT_FAILED")
+    except Exception as exc:
+        _update_purchase(claim["purchase_id"], status="RECOVERABLE", error=type(exc).__name__, fulfillment_started_at=None)
+        return False, "RECOVERABLE"
 
-    if order.get("status") == "completed":
-        return True, order
-
-    charge_amount = float(order.get("amount", price) or 0)
-    if charge_amount < 0:
-        return False, "INVALID_PRICE"
-
-    if order.get("status") not in {"paid", "pending_fulfillment"}:
-        try:
-            balance_after = economy_service.record_transaction(
-                uid,
-                -charge_amount,
-                reason=f"purchase:{item_id}",
-                meta={"idempotency_key": purchase_key, "item_id": item_id},
-            )
-        except Exception as exc:
-            state_manager.atomic_update(
-                lambda db: _mark(
-                    db, purchase_key,
-                    status="payment_failed",
-                    last_error=type(exc).__name__,
-                )
-            )
-            return False, "NOT_ENOUGH_SLH" if type(exc).__name__ == "ValueError" else "PAYMENT_FAILED"
-
-        order = state_manager.atomic_update(
-            lambda db: _mark(
-                db,
-                purchase_key,
-                status="paid",
-                paid_at=datetime.now(timezone.utc).isoformat(),
-                balance_after=balance_after,
-            )
-        )
-
-    if order.get("status") == "completed":
-        return True, order
-
-    def fulfill(db):
-        current = db.setdefault("store_purchases", {}).get(purchase_key)
-        if not current:
-            return {"status": "blocked", "reason": "ORDER_NOT_FOUND"}
-        if current.get("status") == "completed":
-            return current
-
-        grant = current.get("grant") or {}
-        uid_local = current["user_id"]
-        user = db["users"][uid_local]
-
-        if "hardware" in grant:
-            existing_grant = current.get("grant_result") or {}
-            existing_order_id = existing_grant.get("order_id")
-            if existing_order_id:
-                hw_order = db.setdefault("hardware_orders", {}).get(existing_order_id)
-                if hw_order and hw_order.get("status") == "completed":
-                    current["status"] = "completed"
-                    current["completed_at"] = datetime.now(timezone.utc).isoformat()
-                else:
-                    current["status"] = "pending_fulfillment"
-                return current
-
-            if current.get("status") not in {"paid", "pending_fulfillment"}:
-                return current
-
-            hw_id = str(grant["hardware"])
-            product = db.setdefault("products", {}).get(hw_id)
-            if not isinstance(product, dict):
-                current["status"] = "pending_fulfillment"
-                current["last_error"] = "HARDWARE_PRODUCT_NOT_FOUND"
-                return current
-            inventory = int(product.get("inventory", 0) or 0)
-            if inventory <= 0:
-                current["status"] = "pending_fulfillment"
-                current["last_error"] = "OUT_OF_STOCK"
-                return current
-            product["inventory"] = inventory - 1
-            order_id = f"HW-{uuid.uuid4().hex}"
-            db.setdefault("hardware_orders", {})[order_id] = {
-                "order_id": order_id,
-                "uid": uid_local,
-                "item_id": current["item_id"],
-                "hardware": hw_id,
-                "status": "pending_fulfillment",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-            current["grant_result"] = {"type": "hardware", "order_id": order_id, "status": "pending_fulfillment"}
-            current["status"] = "pending_fulfillment"
-            return current
-
-        if current.get("status") != "paid":
-            return current
-        current["grant_result"] = _apply_digital_grant(user, grant)
-        current["status"] = "completed"
-        current["completed_at"] = datetime.now(timezone.utc).isoformat()
-        return current
-
-    result = state_manager.atomic_update(fulfill)
-    return True, result
+    purchase_state = _update_purchase(claim["purchase_id"], status="FULFILLED", fulfillment=fulfillment, fulfilled_at=datetime.now(timezone.utc).isoformat(), fulfillment_started_at=None, error=None)
+    _record_compat_ledger(purchase_state, fulfillment)
+    return True, {"status": "SUCCESS", "item": purchase_state["item_name"], "paid": purchase_state["price"], "grant": fulfillment, "commission": 0}
