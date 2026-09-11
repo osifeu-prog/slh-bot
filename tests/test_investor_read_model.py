@@ -31,17 +31,17 @@ class InvestorReadModelTests(unittest.TestCase):
             ],
         }
         reward_ledger.return_value = [
-            {"user": "100", "reason": "reward_11", "credits": 1, "points": 0, "timestamp": "r11"},
-            {"user": "100", "reason": "reward_10", "credits": 1, "points": 0, "timestamp": "r10"},
-            {"user": "100", "reason": "reward_9", "credits": 1, "points": 0, "timestamp": "r9"},
-            {"user": "100", "reason": "reward_8", "credits": 1, "points": 0, "timestamp": "r8"},
-            {"user": "100", "reason": "reward_7", "credits": 1, "points": 0, "timestamp": "r7"},
-            {"user": "100", "reason": "reward_6", "credits": 1, "points": 0, "timestamp": "r6"},
-            {"user": "100", "reason": "reward_5", "credits": 1, "points": 0, "timestamp": "r5"},
-            {"user": "100", "reason": "reward_4", "credits": 1, "points": 0, "timestamp": "r4"},
-            {"user": "100", "reason": "reward_3", "credits": 1, "points": 0, "timestamp": "r3"},
-            {"user": "100", "reason": "reward_2", "credits": 1, "points": 0, "timestamp": "r2"},
             {"user": "100", "reason": "reward_1", "credits": 1, "points": 0, "timestamp": "r1"},
+            {"user": "100", "reason": "reward_2", "credits": 1, "points": 0, "timestamp": "r2"},
+            {"user": "100", "reason": "reward_3", "credits": 1, "points": 0, "timestamp": "r3"},
+            {"user": "100", "reason": "reward_4", "credits": 1, "points": 0, "timestamp": "r4"},
+            {"user": "100", "reason": "reward_5", "credits": 1, "points": 0, "timestamp": "r5"},
+            {"user": "100", "reason": "reward_6", "credits": 1, "points": 0, "timestamp": "r6"},
+            {"user": "100", "reason": "reward_7", "credits": 1, "points": 0, "timestamp": "r7"},
+            {"user": "100", "reason": "reward_8", "credits": 1, "points": 0, "timestamp": "r8"},
+            {"user": "100", "reason": "reward_9", "credits": 1, "points": 0, "timestamp": "r9"},
+            {"user": "100", "reason": "reward_10", "credits": 1, "points": 0, "timestamp": "r10"},
+            {"user": "100", "reason": "reward_11", "credits": 1, "points": 0, "timestamp": "r11"},
             {"user": "200", "reason": "task_reward", "credits": 99, "points": 9, "timestamp": "other"},
         ]
 
