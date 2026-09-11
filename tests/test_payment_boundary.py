@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, ".")
 
 from handlers.payment_handler import STARS_PACKS, _resolve_stars_package
+from core import stars_payment_authority
 
 
 def check(name, condition):
@@ -26,5 +27,43 @@ check("1000 credits at 801 Stars rejected", _resolve_stars_package(1000, 801) is
 check("unknown credits rejected", _resolve_stars_package(9999, 9999) is None)
 check("malformed credits rejected", _resolve_stars_package("abc", 100) is None)
 check("malformed Stars rejected", _resolve_stars_package(100, "abc") is None)
+
+# The payment-path authority must reject non-Telegram-Stars currency before
+# delegating to the atomic economy service.
+try:
+    stars_payment_authority.record_stars_payment(
+        uid="test-user",
+        credits=100,
+        stars_paid=100,
+        currency="USD",
+        telegram_payment_charge_id="boundary-test-usd",
+    )
+except ValueError as exc:
+    check("non-XTR authority rejection", str(exc) == "INVALID_PAYMENT_CURRENCY")
+else:
+    raise AssertionError("non-XTR authority rejection")
+
+# A valid XTR request must still delegate to the existing atomic economy
+# authority. Stub only the downstream call so this test has no DB side effect.
+called = {}
+original = stars_payment_authority.economy_service.record_stars_payment
+
+def fake_record(**kwargs):
+    called.update(kwargs)
+    return {"status": "applied", "uid": kwargs["uid"], "credits": 100, "charge_id": kwargs["telegram_payment_charge_id"]}
+
+stars_payment_authority.economy_service.record_stars_payment = fake_record
+try:
+    result = stars_payment_authority.record_stars_payment(
+        uid="test-user",
+        credits=100,
+        stars_paid=100,
+        currency="XTR",
+        telegram_payment_charge_id="boundary-test-xtr",
+    )
+finally:
+    stars_payment_authority.economy_service.record_stars_payment = original
+
+check("XTR authority delegates", called.get("currency") == "XTR" and result["status"] == "applied")
 
 print("PAYMENT BOUNDARY TESTS: PASS")
