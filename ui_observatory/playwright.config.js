@@ -12,6 +12,7 @@ module.exports = defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     ...devices['iPhone 13'],
+    browserName: 'chromium',
     locale: 'he-IL',
     timezoneId: 'Asia/Jerusalem'
   },
