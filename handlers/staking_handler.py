@@ -3,12 +3,25 @@ from core.stake_position import get_positions, get_position
 from core import staking_service
 
 
+COURSE_GUIDE = (
+    "יש להשלים לפחות 3 שיעורים בקורס Bitcoin לפני סטייקינג.\n\n"
+    "אין צורך לחפש Dashboard נפרד. המסלול הוא:\n"
+    "1. /courses\n"
+    "2. /course_bitcoin_mastery\n"
+    "3. /lesson bitcoin_mastery 1\n"
+    "4. בסיום: /finish bitcoin_mastery 1\n"
+    "5. חזור על /lesson ו-/finish עבור שיעורים 2 ו-3.\n"
+    "6. בדיקה: /academy_progress\n\n"
+    "לאחר Stage 3 אפשר לחזור ל-/stake <amount>."
+)
+
+
 def register(bot):
     @bot.message_handler(commands=["stake"])
     def stake(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(msg, "Usage: /stake <amount>")
+            bot.reply_to(msg, "Usage: /stake <amount>\n\n" + COURSE_GUIDE)
             return
         try:
             amount = int(parts[1])
@@ -17,7 +30,7 @@ def register(bot):
             user = get_user(uid) or {}
             course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
             if not course or course.get("stage", 0) < 3:
-                bot.reply_to(msg, "יש להשלים לפחות 3 שיעורים בקורס Bitcoin לפני סטייקינג.")
+                bot.reply_to(msg, COURSE_GUIDE)
                 return
 
             result = staking_service.stake_locked(
@@ -43,14 +56,15 @@ def register(bot):
     def unstake(msg):
         bot.reply_to(
             msg,
-            "לסטייק נעול יש להשתמש ב-/unstake_lock <position_id> לאחר תום תקופת הנעילה."
+            "לסטייק נעול יש להשתמש ב-/unstake_lock <position_id> לאחר תום תקופת הנעילה.\n"
+            "בדיקת פוזיציות: /positions"
         )
 
     @bot.message_handler(commands=["stake_lock"])
     def stake_lock(msg):
         parts = msg.text.split()
         if len(parts) < 3:
-            bot.reply_to(msg, "שימוש: /stake_lock <amount> <days>")
+            bot.reply_to(msg, "שימוש: /stake_lock <amount> <days>\n\n" + COURSE_GUIDE)
             return
         try:
             amount = int(parts[1])
@@ -60,7 +74,7 @@ def register(bot):
             user = get_user(uid) or {}
             course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
             if not course or course.get("stage", 0) < 3:
-                bot.reply_to(msg, "יש להשלים לפחות 3 שיעורים בקורס Bitcoin לפני סטייקינג.")
+                bot.reply_to(msg, COURSE_GUIDE)
                 return
 
             result = staking_service.stake_locked(
@@ -148,10 +162,8 @@ def register(bot):
         bot.reply_to(
             msg,
             "סטייקינג SLH\n\n"
-            "איך מתחילים?\n"
-            "1. רכוש credits באמצעות Stars: /pay\n"
-            "2. נעל credits: /stake <amount>\n\n"
-            "פקודות:\n"
+            + COURSE_GUIDE
+            + "\n\nפקודות:\n"
             "/stake <amount> - נעילה ל-30 יום\n"
             "/stake_lock <amount> <days> - נעילה לתקופה\n"
             "/unstake_lock <position_id> - שחרור לאחר תום הנעילה\n"
