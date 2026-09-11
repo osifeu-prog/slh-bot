@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory, request
+from flask import Flask, jsonify, send_from_directory, request, make_response
 import json
 from pathlib import Path
 
@@ -58,7 +58,24 @@ def market():
 
 @app.route("/mini-app")
 def mini_app():
-    resp = send_from_directory(BASE_DIR, "mini_app.html")
+    """Serve the Mini App with a tiny compatibility shim for guide buttons."""
+    html_path = BASE_DIR / "mini_app.html"
+    html = html_path.read_text(encoding="utf-8")
+    shim = """
+<script>
+function showGuide(id){
+  const el=document.getElementById(id);
+  if(!el){return;}
+  if(el.tagName.toLowerCase()==='details'){
+    el.open=true;
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+</script>
+"""
+    if "function showGuide(" not in html:
+        html = html.replace("</body>", shim + "</body>")
+    resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp
 
