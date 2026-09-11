@@ -142,6 +142,15 @@ def register(bot):
                 )
                 return
 
+            # Finalize the holiday campaign entry only after onboarding
+            # has successfully persisted joined=True.
+            try:
+                from core.holiday_campaign import finalize_entry
+                finalized = finalize_entry(uid)
+                print(f"HOLIDAY CAMPAIGN FINALIZE: {uid} -> {finalized}")
+            except Exception as e:
+                print("HOLIDAY CAMPAIGN FINALIZE FAILED:", e)
+
             try:
                 from core.reward_engine import grant
                 grant(
