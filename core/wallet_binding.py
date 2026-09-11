@@ -69,6 +69,19 @@ def issue_challenge(uid, address):
     return {"chain": CHAIN, "address": address, "message": message, "expires_at": _iso(expires_at)}
 
 
+def _signature_bytes(signature):
+    raw = str(signature).strip()
+    if raw.startswith(("0x", "0X")):
+        raw = raw[2:]
+    try:
+        value = bytes.fromhex(raw)
+    except ValueError as exc:
+        raise ValueError("INVALID_SIGNATURE") from exc
+    if len(value) != 65:
+        raise ValueError("INVALID_SIGNATURE")
+    return value
+
+
 def verify_signature(uid, address, signature):
     uid = str(uid)
     address = normalize_address(address)
@@ -91,8 +104,10 @@ def verify_signature(uid, address, signature):
         try:
             recovered = Account.recover_message(
                 encode_defunct(text=message),
-                signature=signature.strip(),
+                signature=_signature_bytes(signature),
             )
+        except ValueError:
+            raise
         except Exception as exc:
             raise ValueError("INVALID_SIGNATURE") from exc
 
