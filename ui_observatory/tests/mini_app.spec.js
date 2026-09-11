@@ -77,9 +77,7 @@ test('interactive controls have usable names and form fields are labelled', asyn
 });
 
 test('accessibility audit has no serious or critical violations', async ({ page }) => {
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag412'])
-    .analyze();
+  const results = await new AxeBuilder({ page }).analyze();
   const seriousOrCritical = results.violations.filter(v => ['serious', 'critical'].includes(v.impact));
   expect(seriousOrCritical).toEqual([]);
 });
