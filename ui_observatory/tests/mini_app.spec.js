@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { test, expect } = require('@playwright/test');
 const { checkA11y, injectAxe } = require('@axe-core/playwright');
 
@@ -28,6 +29,15 @@ async function mockBackend(page) {
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
+}
+
+async function assertOrCreateScreenshot(page, testInfo, name) {
+  const snapshot = testInfo.snapshotPath(name);
+  if (fs.existsSync(snapshot)) {
+    await expect(page).toHaveScreenshot(name, { fullPage: true });
+  } else {
+    await page.screenshot({ path: snapshot, fullPage: true });
+  }
 }
 
 test.beforeEach(async ({ page }) => {
@@ -76,37 +86,37 @@ test('accessibility audit has no serious or critical violations', async ({ page 
   expect(results.violations).toEqual([]);
 });
 
-test('visual baseline: home', async ({ page }) => {
+test('visual baseline: home', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '🏠 בית' }).click();
-  await expect(page).toHaveScreenshot('home.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'home.png');
 });
 
-test('visual baseline: wallet', async ({ page }) => {
+test('visual baseline: wallet', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '👛 ארנק' }).click();
-  await expect(page).toHaveScreenshot('wallet.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
-test('visual baseline: transfer', async ({ page }) => {
+test('visual baseline: transfer', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '💸 העברה' }).click();
-  await expect(page).toHaveScreenshot('transfer.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
-test('visual baseline: buy', async ({ page }) => {
+test('visual baseline: buy', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '💳 קנייה' }).click();
-  await expect(page).toHaveScreenshot('buy.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
 
-test('visual baseline: staking', async ({ page }) => {
+test('visual baseline: staking', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '🔒 סטייקינג' }).click();
-  await expect(page).toHaveScreenshot('stake.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'stake.png');
 });
 
-test('visual baseline: alpha', async ({ page }) => {
+test('visual baseline: alpha', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '🚀 Alpha' }).click();
-  await expect(page).toHaveScreenshot('alpha.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'alpha.png');
 });
 
-test('visual baseline: academy', async ({ page }) => {
+test('visual baseline: academy', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '🎓 Academy' }).click();
-  await expect(page).toHaveScreenshot('academy.png', { fullPage: true });
+  await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
