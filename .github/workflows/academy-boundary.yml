@@ -22,4 +22,6 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run Academy progression regression
+        env:
+          PYTHONPATH: .
         run: python3 tests/test_academy_progression.py
