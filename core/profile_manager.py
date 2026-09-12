@@ -202,21 +202,28 @@ def complete_course_stage(uid, course, stage):
                 .setdefault("courses", {})
         )
 
-        c = courses.setdefault(
-            course,
-            {
-                "stage": 0,
-                "completed": []
-            }
-        )
+        if course not in courses:
+            raise ValueError("course_not_started")
 
-        if stage not in c["completed"]:
-            c["completed"].append(stage)
+        c = courses[course]
+        completed = list(c.get("completed", []))
+        current_stage = int(c.get("stage", 0) or 0)
 
-        c["stage"] = max(
-            c["stage"],
-            stage
-        )
+        if stage in completed:
+            return dict(c)
+
+        if stage < 1:
+            raise ValueError("invalid_stage")
+
+        if current_stage == 0 and stage != 1:
+            raise ValueError("sequential_access")
+
+        if current_stage > 0 and stage != current_stage + 1:
+            raise ValueError("sequential_access")
+
+        completed.append(stage)
+        c["completed"] = completed
+        c["stage"] = stage
 
         return dict(c)
 
