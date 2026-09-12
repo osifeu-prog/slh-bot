@@ -11,7 +11,7 @@ def load_handlers(bot, context):
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
-    ("deploy", "handlers.deploy_handler"),
+        ("deploy", "handlers.deploy_handler"),
         ("termux", "handlers.termux_handler"),
         ("payment", "handlers.payment_handler"),
         ("p2p", "handlers.p2p_handler"),
@@ -21,6 +21,7 @@ def load_handlers(bot, context):
         ("wallet", "handlers.wallet_handler"),
         ("store", "handlers.store_handler"),
         ("e", "handlers.e_handler"),
+        ("alpha_control", "handlers.alpha_control_handler"),
         ("reconcile", "handlers.reconcile_handler"),
         ("revenue", "handlers.revenue_handler"),
         ("ton_address", "handlers.ton_address_handler"),
@@ -42,7 +43,6 @@ def load_handlers(bot, context):
         ("leaderboard", "handlers.leaderboard_handler"),
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
-        # DISABLED llm_handler,
         ("natural_chat", "handlers.natural_chat"),
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
@@ -76,14 +76,14 @@ def load_handlers(bot, context):
         ("exec", "handlers.exec_handler"),
         ("exec_request", "handlers.exec_request_handler"),
         ("recovery", "handlers.recovery_handler"),
-    ("recovery_verify", "handlers.recovery_verify_handler"),
+        ("recovery_verify", "handlers.recovery_verify_handler"),
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),
         ("airdrop", "handlers.airdrop_handler"),
         ("slh_air", "handlers.slh_air_handler"),
         ("git", "handlers.git_handler"),
         ("ton", "ton_handler"),
-        ("brief", "brief_handler"),
+        ("brief_legacy", "brief_handler"),
         ("complete", "complete_handler"),
         ("diagnostic", "diagnostic_handler"),
         ("guide", "guide_handler"),
@@ -104,39 +104,28 @@ def load_handlers(bot, context):
     for name, mod_path in modules:
         try:
             m = importlib.import_module(mod_path)
-
             if hasattr(m, "register"):
                 fn = m.register
                 params = inspect.signature(fn).parameters
-
                 if len(params) >= 2:
                     fn(bot, context)
                 else:
                     fn(bot)
-
             elif hasattr(m, "register_llm_handler"):
                 m.register_llm_handler(bot)
-
             elif hasattr(m, "register_help"):
                 m.register_help(bot)
-
             elif hasattr(m, "register_repeat_handler"):
                 m.register_repeat_handler(bot)
-
             elif hasattr(m, "init"):
                 m.init(bot)
-
             elif hasattr(m, "register_learning_path"):
                 m.register_learning_path(bot)
-
             elif hasattr(m, "register_handlers"):
                 m.register_handlers(bot, context)
-
             else:
                 raise Exception("No supported register function")
-
             print(f"✅ {name} loaded")
-
         except Exception as e:
             print(f"⚠️ {name} skipped:", str(e)[:120])
 
