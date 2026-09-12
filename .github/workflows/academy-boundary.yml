@@ -1,0 +1,25 @@
+name: SLH Academy Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'handlers/academy_handler.py'
+      - 'handlers/lesson_handler.py'
+      - 'core/academy_manager.py'
+      - 'core/lesson_engine.py'
+      - 'core/profile_manager.py'
+      - 'courses.json'
+      - 'tests/test_academy_progression.py'
+      - '.github/workflows/academy-boundary.yml'
+  workflow_dispatch:
+
+jobs:
+  academy-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run Academy progression regression
+        run: python3 tests/test_academy_progression.py
