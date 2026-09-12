@@ -1,0 +1,24 @@
+name: SLH Payment Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'handlers/payment_handler.py'
+      - 'core/stars_payment_authority.py'
+      - 'tests/test_payment_boundary.py'
+      - 'core/economy_service.py'
+      - 'requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  payment-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run payment boundary regression
+        run: python3 tests/test_payment_boundary.py

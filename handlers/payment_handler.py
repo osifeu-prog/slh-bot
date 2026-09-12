@@ -1,6 +1,7 @@
 import os
 import state_manager
 from core import profile_manager
+from core import stars_payment_authority
 from telebot.types import LabeledPrice, PreCheckoutQuery
 
 PROVIDER_TOKEN = ""
@@ -10,6 +11,20 @@ STARS_PACKS = {
     "500credits": (500, 450, "500 Credits (10% off)"),
     "1000credits": (1000, 800, "1000 Credits (20% off)"),
 }
+
+
+def _resolve_stars_package(credits, stars_paid):
+    """Return the canonical package for a credits/Stars pair or None."""
+    try:
+        credits = int(credits)
+        stars_paid = int(stars_paid)
+    except (TypeError, ValueError):
+        return None
+
+    for pack_id, (expected_stars, expected_credits, label) in STARS_PACKS.items():
+        if expected_credits == credits and expected_stars == stars_paid:
+            return pack_id, expected_stars, expected_credits, label
+    return None
 
 
 def _is_real_payment(tx):
@@ -72,16 +87,19 @@ def register_payment_handlers(bot):
         except Exception:
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package.")
             return
-        if expected_credits <= 0 or query.currency != "XTR" or not query.total_amount:
-            bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment details.")
+
+        package = _resolve_stars_package(expected_credits, query.total_amount)
+        if query.currency != "XTR" or package is None:
+            bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package or price.")
             return
+
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
         uid = str(m.from_user.id)
         payment = m.successful_payment
-        payload = payment.invoice_payload
+        payload = str(payment.invoice_payload or "")
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
@@ -92,25 +110,31 @@ def register_payment_handlers(bot):
         except Exception:
             bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
+
+        package = _resolve_stars_package(credits, payment.total_amount)
+        if payment.currency != "XTR" or package is None:
+            bot.send_message(m.chat.id, "❌ Invalid payment package or price.")
+            print(f"[PAY] rejected payment boundary: uid={uid}, currency={payment.currency!r}")
+            return
+
         try:
             db = state_manager.load_db()
             referrer_uid = db.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
-            from core import economy_service
-            result = economy_service.record_stars_payment(
+            result = stars_payment_authority.record_stars_payment(
                 uid=uid,
-                credits=credits,
-                stars_paid=payment.total_amount,
+                credits=package[2],
+                stars_paid=package[1],
                 currency=payment.currency,
                 telegram_payment_charge_id=payment.telegram_payment_charge_id,
                 provider_payment_charge_id=payment.provider_payment_charge_id,
                 referrer_uid=referrer_uid,
-                meta={"source": "telegram_successful_payment", "invoice_payload": payload},
+                meta={"source": "telegram_successful_payment", "invoice_payload": payload, "package_id": package[0]},
             )
             if result["status"] == "duplicate":
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
                 return
-            bot.send_message(m.chat.id, f"✅ Payment received! {credits} credits added.\nYour balance: {result['credits']} credits.")
-            print(f"[PAY] {credits} credits added, charge_id={result['charge_id']}")
+            bot.send_message(m.chat.id, f"✅ Payment received! {package[2]} credits added.\nYour balance: {result['credits']} credits.")
+            print(f"[PAY] {package[2]} credits added, charge_id={result['charge_id']}")
         except Exception as e:
             print(f"[PAY] Atomic payment failed: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ Payment processing failed safely. Please contact /paysupport.")
