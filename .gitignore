@@ -65,3 +65,6 @@ esp32_firmware_backup.bin
 firmware_strings.txt
 *.bak2
 *.bak_*
+# --- SLH audit directory (49MB, git bundle + snapshots) ---
+_slh_audit/
+*.bundle
