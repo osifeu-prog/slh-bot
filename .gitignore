@@ -56,9 +56,3 @@ state/*backup*.json
 state/*pre_bot_control*.json
 railway_baseline_*.txt
 railway_logs_baseline_*.txt
-.pio/
-*.bin
-nvs_strings.txt
-firmware_strings.txt
-*.bak2
-esp32-2432s028-slh/
