@@ -1,5 +1,6 @@
 from core import profile_manager
 from heb_convert import get_hebrew_date
+import state_manager
 
 
 def register(bot):
@@ -28,7 +29,11 @@ def register(bot):
         points = gamification.get("points", 0)
         level = gamification.get("level", 1)
         referral_count = referral.get("count", 0)
-        commission = referral.get("commission", 0)
+
+        # Canonical referral commission source of truth is the top-level
+        # commissions ledger, updated atomically by the economy service.
+        db = state_manager.load_db()
+        commission = db.get("commissions", {}).get(uid, 0)
         invite = referral_link(uid)
 
         text = (
