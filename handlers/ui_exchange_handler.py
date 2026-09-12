@@ -20,6 +20,23 @@ def _ledger(db, uid, before, amount, reason, meta=None):
     db.setdefault("ledger", []).append({"time": _now(), "uid": str(uid), "before": before, "amount": amount, "after": after, "reason": reason, "meta": meta or {}})
 
 def register(bot):
+    @bot.message_handler(commands=["exchange"])
+    def exchange(msg):
+        bot.reply_to(
+            msg,
+            "📊 SLH Exchange\n\n"
+            "🟢 Buy SLH:\n"
+            "/buy_slh <amount_slh> <max_price_in_credits>\n\n"
+            "🔴 Sell SLH:\n"
+            "/sell_slh <amount_slh> <price_in_credits>\n\n"
+            "📖 Open orders:\n"
+            "/orders\n\n"
+            "📈 Trades:\n"
+            "/trades\n\n"
+            "❌ Cancel order:\n"
+            "/cancel <order_id>"
+        )
+
     @bot.message_handler(commands=["p2p_slh"])
     def p2p_slh(msg):
         parts = msg.text.split()
