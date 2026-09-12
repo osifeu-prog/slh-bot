@@ -71,7 +71,7 @@ def register_esp_handler(bot):
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
         if str(dev.get("owner")) != str(msg.from_user.id):
-            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
+            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
         topic = dev.get("mqtt_topic", f"slh/esp/{device_id}")
@@ -117,20 +117,73 @@ def register_esp_handler(bot):
         bot.reply_to(msg, f"ESP32 {device_id}: {reply}")
 
 
+    @bot.message_handler(commands=["esp_ota"])
+    def esp_ota(msg):
+        parts = msg.text.split(maxsplit=2)
+        if len(parts) < 3:
+            bot.reply_to(msg, "Usage: /esp_ota <device_id> <url>")
+            return
+        device_id = parts[1]
+        url = parts[2].strip()
+        if not (url.startswith("http://") or url.startswith("https://")):
+            bot.reply_to(msg, "URL must start with http:// or https://")
+            return
+        devices = load_devices()
+        dev = devices.get(device_id)
+        if not dev:
+            bot.reply_to(msg, f"Device {device_id} not found.")
+            return
+        if str(dev.get("owner")) != str(msg.from_user.id):
+            bot.reply_to(msg, "not authorized")
+            return
+
+        topic = dev.get("mqtt_topic", f"slh/esp/{device_id}")
+        command_topic = topic + "/command"
+        response_topic = topic + "/response"
+
+        response = None
+
+        def on_connect(client, userdata, flags, rc):
+            client.subscribe(response_topic)
+
+        def on_message(client, userdata, msg):
+            nonlocal response
+            response = msg.payload.decode()
+            client.disconnect()
+
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        client.loop_start()
+        time.sleep(0.5)
+        client.publish(command_topic, "ota " + url)
+        time.sleep(3)
+        client.loop_stop()
+        client.disconnect()
+
+        if response is None:
+            bot.reply_to(msg, f"ESP32 {device_id}: No response (offline or busy)")
+        elif response == "ota: queued":
+            bot.reply_to(msg, f"ESP32 {device_id}: OTA queued. Device will download, flash, restart. Check /esp_ping in ~60s.")
+        else:
+            bot.reply_to(msg, f"ESP32 {device_id}: {response}")
+
+
     @bot.message_handler(commands=["esp_activate"])
     def esp_activate(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(msg, "שימוש: /esp_activate <device_id>")
+            bot.reply_to(msg, "׳©׳™׳׳•׳©: /esp_activate <device_id>")
             return
         device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "מכשיר לא נמצא")
+            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
         if str(dev.get("owner")) != str(msg.from_user.id):
-            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
+            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
         def _mutate(devices, device_id=device_id):
@@ -143,7 +196,7 @@ def register_esp_handler(bot):
             return True
 
         atomic_device_update(_mutate)
-        bot.reply_to(msg, f"{device_id} הופעל")
+        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¢׳")
 
     @bot.message_handler(commands=["esp_heartbeat"])
     def esp_heartbeat(msg):
@@ -152,10 +205,10 @@ def register_esp_handler(bot):
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "מכשיר לא נמצא")
+            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
         if str(dev.get("owner")) != str(msg.from_user.id):
-            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
+            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
         def _mutate(devices, device_id=device_id):
@@ -174,22 +227,22 @@ def register_esp_handler(bot):
     def esp_progress(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(msg, "שימוש: /esp_progress <device_id>")
+            bot.reply_to(msg, "׳©׳™׳׳•׳©: /esp_progress <device_id>")
             return
         device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "מכשיר לא נמצא")
+            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
         if str(dev.get("owner")) != str(msg.from_user.id):
-            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
+            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
         try:
             from core.esp_display import publish_progress
             ok, result = publish_progress(device_id)
             if ok:
-                bot.reply_to(msg, f"נשלח ל-{device_id}\n{result}")
+                bot.reply_to(msg, f"׳ ׳©׳׳— ׳-{device_id}\n{result}")
             else:
                 bot.reply_to(msg, f"{result}")
         except Exception as e:
@@ -223,7 +276,7 @@ def register_esp_handler(bot):
         if not ok:
             bot.reply_to(msg, f"Failed: {result}")
             return
-        bot.reply_to(msg, f"{device_id} הופעל")
+        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¢׳")
 
     @bot.message_handler(commands=["esp_stop"])
     def esp_stop(msg):
@@ -250,7 +303,7 @@ def register_esp_handler(bot):
         from core.exec_policy import run_gated
         cmd = f"pkill -f 'virtual_esp.py {device_id}'"
         ok, result = run_gated(OWNER_TELEGRAM_ID, cmd, source="esp_stop", timeout=5)
-        bot.reply_to(msg, f"{device_id} הופסק")
+        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¡׳§")
 
 
     @bot.message_handler(commands=["esp_broadcast_progress"])
@@ -303,13 +356,13 @@ def register_esp_handler(bot):
     def esp_menu(msg):
         bot.reply_to(
             msg,
-            "📡 ESP Commands:\n"
-            "/esp_status - מצב מכשירי ESP\n"
-            "/esp_ping - בדיקת חיבור\n"
-            "/esp_activate - הפעלת רישיון\n"
-            "/esp_start - התחלת משימה\n"
-            "/esp_stop - עצירת משימה\n"
-            "/esp_progress - דיווח התקדמות\n"
-            "/esp_heartbeat - דופק\n"
-            "/esp_broadcast_progress - שידור התקדמות"
+            "נ“¡ ESP Commands:\n"
+            "/esp_status - ׳׳¦׳‘ ׳׳›׳©׳™׳¨׳™ ESP\n"
+            "/esp_ping - ׳‘׳“׳™׳§׳× ׳—׳™׳‘׳•׳¨\n"
+            "/esp_activate - ׳”׳₪׳¢׳׳× ׳¨׳™׳©׳™׳•׳\n"
+            "/esp_start - ׳”׳×׳—׳׳× ׳׳©׳™׳׳”\n"
+            "/esp_stop - ׳¢׳¦׳™׳¨׳× ׳׳©׳™׳׳”\n"
+            "/esp_progress - ׳“׳™׳•׳•׳— ׳”׳×׳§׳“׳׳•׳×\n"
+            "/esp_heartbeat - ׳“׳•׳₪׳§\n"
+            "/esp_broadcast_progress - ׳©׳™׳“׳•׳¨ ׳”׳×׳§׳“׳׳•׳×"
         )
