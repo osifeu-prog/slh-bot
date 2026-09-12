@@ -27,11 +27,6 @@ def _resolve_stars_package(credits, stars_paid):
     return None
 
 
-def _is_real_payment(tx):
-    meta = tx.get("meta") or {}
-    return meta.get("source") != "fakepay" and not meta.get("test_mode")
-
-
 def register_payment_handlers(bot):
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
@@ -155,18 +150,6 @@ def register_payment_handlers(bot):
         for tx in txs[-10:]:
             msg += f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
         bot.send_message(m.chat.id, msg.strip())
-
-    @bot.message_handler(commands=['revenue'])
-    def revenue(m):
-        from admin_utils import is_admin
-        if not is_admin(m):
-            return
-        db = state_manager.load_db()
-        txs = [tx for tx in db.get("transactions", []) if _is_real_payment(tx)]
-        total_stars = sum(tx.get("stars_paid", 0) for tx in txs)
-        total_credits = sum(tx.get("credits", 0) for tx in txs if tx.get("reason") == "payment:telegram_stars")
-        total_commissions = sum(db.get("commissions", {}).values())
-        bot.send_message(m.chat.id, f"💰 Revenue\nTotal transactions: {len(txs)}\nTotal Stars received: {total_stars}\nTotal credits issued: {total_credits}\nTotal commissions paid: {total_commissions}")
 
     @bot.message_handler(commands=['fakepay_disabled'])
     def fakepay(m):
