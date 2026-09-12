@@ -1,5 +1,6 @@
 from core import academy_manager
 from core import lesson_engine
+from core import profile_manager
 
 
 def register(bot):
@@ -70,15 +71,11 @@ def register(bot):
         parts = m.text.split()
         uid = str(m.from_user.id)
 
-        # Compatibility command: /complete <stage> uses the user's
-        # active course, but still passes through the same lesson authority.
+        # Compatibility command: /complete <stage> uses the active course,
+        # but still passes through the same lesson authority as /finish.
         if len(parts) == 2:
-            course_id = (
-                academy_manager
-                .get_user(uid)
-                .get("academy", {})
-                .get("active_course")
-            )
+            user = profile_manager.get_user(uid)
+            course_id = user.get("academy", {}).get("active_course")
             stage_raw = parts[1]
         elif len(parts) == 3:
             course_id = parts[1]
@@ -115,6 +112,8 @@ def register(bot):
             error = result.get("error")
             if error == "sequential_access":
                 message = "🔒 השלב נעול. יש להשלים קודם את השלב הקודם."
+            elif error == "course_not_started":
+                message = "❌ הקורס עדיין לא התחיל. התחל דרך /courses"
             elif error == "course_not_found":
                 message = "❌ קורס לא נמצא"
             else:
