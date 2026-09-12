@@ -1,6 +1,6 @@
 """Atomic staking reward settlement helpers.
 
-Rewards are settled as Credits. The canonical DB is the source of truth:
+Alpha-ready Credits reward settlement. The canonical DB is the source of truth:
 reward-pool state, wallet mutation, and reward transaction ledger are committed
 in one state_manager.atomic_update.
 """
