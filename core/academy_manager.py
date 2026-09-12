@@ -2,7 +2,6 @@ import json
 import os
 
 from core import profile_manager
-from core import economy_bridge
 from core import reward_engine
 
 
@@ -41,6 +40,20 @@ def start_course(uid, course_id):
 
     if course_id not in courses:
         return False
+
+    existing = get_course(uid, course_id)
+
+    if existing:
+        # Starting an already-started course must never erase progress.
+        profile_manager.update_user(
+            uid,
+            {
+                "academy": {
+                    "active_course": course_id
+                }
+            }
+        )
+        return True
 
     profile_manager.update_user(
         uid,
@@ -100,6 +113,12 @@ def complete_stage(uid, course_id, stage):
                 "credits": 0,
                 "points": 0
             }
+        }
+
+    if not current:
+        return {
+            "ok": False,
+            "error": "course_not_started"
         }
 
     if current_stage == 0 and stage != 1:
