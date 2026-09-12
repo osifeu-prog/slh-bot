@@ -58,9 +58,8 @@ def get_onchain_status():
             "error": str(e),
         }
 
+
 def verify_bnb_deposit(tx_hash):
-    import json
-    from web3 import Web3
     cfg = get_bsc_config()
     with open("state/db.json", encoding="utf-8") as f:
         db = json.load(f)
@@ -71,18 +70,37 @@ def verify_bnb_deposit(tx_hash):
         receipt = w3.eth.get_transaction_receipt(tx_hash)
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
     if not receipt or receipt.get("status") != 1:
         return {"ok": False, "status": receipt.get("status") if receipt else None}
+
     treasury = w3.to_checksum_address(cfg["treasury_wallet"])
     to_addr = tx.get("to")
     if to_addr is None or str(to_addr).lower() != str(treasury).lower():
         return {"ok": False, "to": str(to_addr), "treasury": str(treasury)}
+
+    block = int(receipt.get("blockNumber", 0))
+    latest_block = int(w3.eth.block_number)
+    confirmations = max(0, latest_block - block + 1)
+    required_confirmations = int(cfg.get("confirmations", 15))
+    if confirmations < required_confirmations:
+        return {
+            "ok": False,
+            "error": "INSUFFICIENT_CONFIRMATIONS",
+            "confirmations": confirmations,
+            "required_confirmations": required_confirmations,
+            "block": block,
+            "tx_hash": str(tx_hash),
+        }
+
     amount = w3.from_wei(tx.get("value", 0), "ether")
     return {
         "ok": True,
         "from": str(tx.get("from")),
         "to": str(to_addr),
         "amount_bnb": float(amount),
-        "block": int(receipt.get("blockNumber", 0)),
+        "block": block,
+        "confirmations": confirmations,
+        "required_confirmations": required_confirmations,
         "tx_hash": str(tx_hash),
     }

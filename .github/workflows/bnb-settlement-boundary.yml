@@ -1,0 +1,23 @@
+name: SLH BNB Settlement Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'core/bnb_deposit_service.py'
+      - 'core/deposit_monitor.py'
+      - 'handlers/claim_handler.py'
+      - 'tests/test_bnb_deposit_service.py'
+      - '.github/workflows/bnb-settlement-boundary.yml'
+
+jobs:
+  bnb-settlement:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python3 -m unittest tests/test_bnb_deposit_service.py
