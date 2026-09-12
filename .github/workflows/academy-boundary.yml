@@ -10,6 +10,9 @@ on:
       - 'core/profile_manager.py'
       - 'courses.json'
       - 'tests/test_academy_progression.py'
+      - 'core/wallet_binding.py'
+      - 'tests/test_wallet_binding.py'
+      - 'webapp.py'
       - '.github/workflows/academy-boundary.yml'
   workflow_dispatch:
 
@@ -25,3 +28,9 @@ jobs:
         env:
           PYTHONPATH: .
         run: python3 tests/test_academy_progression.py
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run wallet binding regression
+        env:
+          PYTHONPATH: .
+        run: python3 -m unittest tests/test_wallet_binding.py
