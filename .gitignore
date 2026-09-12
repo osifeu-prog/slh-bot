@@ -56,3 +56,15 @@ state/*backup*.json
 state/*pre_bot_control*.json
 railway_baseline_*.txt
 railway_logs_baseline_*.txt
+# --- ESP artifacts caught in bot repo (2026-09-12) ---
+.pio/
+esp32-2432s028-slh/
+nvs.bin
+nvs_strings.txt
+esp32_firmware_backup.bin
+firmware_strings.txt
+*.bak2
+*.bak_*
+# --- SLH audit directory (49MB, git bundle + snapshots) ---
+_slh_audit/
+*.bundle
