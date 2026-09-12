@@ -1,11 +1,11 @@
 from core import academy_manager
+from core import lesson_engine
 
 
 def register(bot):
 
     @bot.message_handler(commands=['courses'])
     def courses(m):
-
         courses = academy_manager.get_courses()
 
         if not courses:
@@ -29,12 +29,30 @@ def register(bot):
     def progress(m):
         uid = str(m.from_user.id)
         data = academy_manager.progress(uid)
-        bot.reply_to(m, f"📊 ההתקדמות שלך:\n\n{data}")
+
+        if not data:
+            bot.reply_to(
+                m,
+                "📊 אין קורס פעיל עדיין.\n\n"
+                "התחל דרך /courses"
+            )
+            return
+
+        lines = ["📊 ההתקדמות שלך:", ""]
+        for course_id, state in data.items():
+            completed = state.get("completed", [])
+            lines.append(
+                f"📘 {course_id}: Stage {state.get('stage', 0)} "
+                f"| הושלמו: {len(completed)} "
+                f"| {'פעיל' if state.get('active') else 'לא פעיל'}"
+            )
+
+        bot.reply_to(m, "\n".join(lines))
 
     @bot.message_handler(func=lambda m: m.text and m.text.startswith("/course_"))
     def start_course(m):
         uid = str(m.from_user.id)
-        course_id = m.text.replace("/course_", "")
+        course_id = m.text.replace("/course_", "", 1).split()[0]
         ok = academy_manager.start_course(uid, course_id)
 
         if ok:
@@ -50,27 +68,64 @@ def register(bot):
     @bot.message_handler(commands=['complete'])
     def complete(m):
         parts = m.text.split()
-        if len(parts) != 2:
-            bot.reply_to(m, "שימוש:\n/complete 1")
+        uid = str(m.from_user.id)
+
+        # Compatibility command: /complete <stage> uses the user's
+        # active course, but still passes through the same lesson authority.
+        if len(parts) == 2:
+            course_id = (
+                academy_manager
+                .get_user(uid)
+                .get("academy", {})
+                .get("active_course")
+            )
+            stage_raw = parts[1]
+        elif len(parts) == 3:
+            course_id = parts[1]
+            stage_raw = parts[2]
+        else:
+            bot.reply_to(
+                m,
+                "שימוש:\n/complete <stage>\n"
+                "או\n/complete <course_id> <stage>"
+            )
             return
 
-        uid = str(m.from_user.id)
         try:
-            stage = int(parts[1])
+            stage = int(stage_raw)
         except (TypeError, ValueError):
             bot.reply_to(m, "מספר שלב לא תקין")
             return
 
-        result = academy_manager.complete_stage(
+        if not course_id:
+            bot.reply_to(m, "❌ אין קורס פעיל. התחל דרך /courses")
+            return
+
+        result = lesson_engine.complete_lesson(
             uid,
-            "bitcoin_mastery",
+            course_id,
             stage
         )
-        reward = result.get("reward") or {}
 
+        if result.get("already_completed"):
+            bot.reply_to(m, "ℹ️ כבר השלמת את השיעור הזה")
+            return
+
+        if not result.get("ok"):
+            error = result.get("error")
+            if error == "sequential_access":
+                message = "🔒 השלב נעול. יש להשלים קודם את השלב הקודם."
+            elif error == "course_not_found":
+                message = "❌ קורס לא נמצא"
+            else:
+                message = "❌ לא ניתן להשלים את השלב הזה"
+            bot.reply_to(m, message)
+            return
+
+        reward = result.get("reward", {})
         bot.reply_to(
             m,
-            f"🎉 שלב הושלם!\n\n"
+            "🎉 שלב הושלם!\n\n"
             f"⭐ נקודות: {reward.get('points', 0)}\n"
             f"💰 קרדיטים: {reward.get('credits', 0)}"
         )
