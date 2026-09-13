@@ -1,14 +1,13 @@
 """Canonical mission execution authority.
 
-Mission execution enters here, runs through the Runtime allowlist, persists only
-verified execution evidence, then completes and rewards the mission.
+Mission execution enters here, runs through the canonical Runtime allowlist,
+persists only verified execution evidence, then completes and rewards the
+mission.
 """
 
 import state_manager
 
-from core.kernel import SLHKernel
-from core.runtime import Runtime
-from core.agent_factory import load_agents_into_kernel
+from core import runtime_service
 from core.mission_lifecycle import MissionLifecycleService
 from core.mission_state import MissionStateNormalizer
 from core.mission_execution_persistence import persist_verified_execution
@@ -36,48 +35,74 @@ def execute_mission_authority(mission_id, root=".", runtime=None, kernel=None):
 
     status = MissionStateNormalizer.normalize(mission.get("status"))
     if status != "assigned":
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "mission_not_executable", "current_status": status}
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "mission_not_executable",
+            "current_status": status,
+        }
 
     if not mission.get("action_type") or not isinstance(mission.get("action_payload"), dict) or not mission.get("idempotency_key"):
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "mission_execution_contract_missing"}
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "mission_execution_contract_missing",
+        }
 
     assigned_id = mission.get("assigned_to")
     agent = _resolve_agent(assigned_id, manifest, root)
     if agent is None or not agent.get("runtime_class"):
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "assigned_agent_not_runtime_eligible"}
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "assigned_agent_not_runtime_eligible",
+        }
 
-    if kernel is None:
-        kernel = SLHKernel()
-        load_agents_into_kernel(kernel)
-    if runtime is None:
-        runtime = Runtime(kernel)
-
-    agent_name = agent.get("name") or str(assigned_id)
     event = {
-        "cmd": f"{agent_name}:execute_mission",
+        "cmd": f"{agent.get('name') or str(assigned_id)}:execute_mission",
         "mission_id": str(mission_id),
         "source": "mission_runtime_authority",
     }
-    runtime_result = runtime.execute(event)
-    data = runtime_result.get("data") if isinstance(runtime_result, dict) else None
 
+    if runtime is not None:
+        runtime_result = runtime.execute(event)
+    else:
+        # The production/default path uses the already-booted canonical runtime.
+        # kernel is retained only for test injection/backward compatibility.
+        if kernel is not None:
+            from core.runtime import Runtime
+            runtime_result = Runtime(kernel).execute(event)
+        else:
+            runtime_result = runtime_service.execute_agent_event(assigned_id, event)
+
+    data = runtime_result.get("data") if isinstance(runtime_result, dict) else None
     verified = (
         isinstance(data, dict)
         and runtime_result.get("type") == "agent"
         and data.get("execution_status") == "success"
         and data.get("verified") is True
         and data.get("mission_id") == str(mission_id)
-        and bool(data.get("action_type"))
-        and bool(data.get("idempotency_key"))
+        and data.get("action_type") == str(mission.get("action_type"))
+        and data.get("idempotency_key") == str(mission.get("idempotency_key"))
         and isinstance(data.get("evidence"), dict)
         and bool(data.get("evidence"))
     )
     if not verified:
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "runtime_result_not_verified", "runtime_result": runtime_result}
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "runtime_result_not_verified",
+            "runtime_result": runtime_result,
+        }
 
     persistence = persist_verified_execution(mission_id, data, root=root)
     if persistence.get("status") != "executed":
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "execution_persistence_failed", "persistence": persistence}
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "execution_persistence_failed",
+            "persistence": persistence,
+        }
 
     final_board, _ = lifecycle.load_state()
     final_mission = lifecycle.find_mission(final_board, mission_id)
