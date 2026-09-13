@@ -143,9 +143,6 @@ function showGuide(id){
         });
         const data=await res.json().catch(()=>({}));
         if(!res.ok){
-          if(res.status===403 && data.error==='STAKING_STAGE_REQUIRED'){
-            throw new Error('יש להשלים את Bitcoin Mastery עד Stage 3 לפני Staking.');
-          }
           if(data.error==='INSUFFICIENT_CREDITS') throw new Error('אין מספיק Credits זמינים.');
           if(res.status===401) throw new Error('יש לפתוח את הממשק מתוך Telegram.');
           throw new Error('לא ניתן ליצור Position כרגע.');
@@ -226,10 +223,6 @@ def create_staking_position():
     user = users.get(str(uid)) if isinstance(users, dict) else None
     if not isinstance(user, dict):
         return jsonify({"error": "USER_NOT_FOUND"}), 404
-
-    course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
-    if not course or int(course.get("stage", 0) or 0) < 3:
-        return jsonify({"error": "STAKING_STAGE_REQUIRED", "required_stage": 3}), 403
 
     try:
         result = staking_service.stake_locked(
