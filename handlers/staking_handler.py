@@ -56,12 +56,7 @@ def register(bot):
     def unstake(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(
-                msg,
-                "שימוש: /unstake <position_id>\n"
-                "השחרור מתבצע רק לאחר תום תקופת הנעילה.\n"
-                "בדיקת פוזיציות: /positions"
-            )
+            bot.reply_to(msg, "שימוש: /unstake <position_id>\nהשחרור מתבצע רק לאחר תום תקופת הנעילה.\nבדיקת פוזיציות: /positions")
             return
 
         uid = str(msg.from_user.id)
@@ -72,20 +67,11 @@ def register(bot):
             return
 
         try:
-            res = staking_service.unstake_locked(
-                uid,
-                pos_id,
-                meta={"source": "telegram", "command": "unstake"},
-            )
+            res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake"})
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
-            bot.reply_to(
-                msg,
-                f"שוחררו {pos.get('amount')} credits.\n"
-                f"יתרה: {res.get('credits')}\n"
-                f"סטייק: {res.get('staked')}"
-            )
+            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {res.get('credits')}\nסטייק: {res.get('staked')}")
         except Exception as e:
             bot.reply_to(msg, f"{e}")
 
@@ -99,29 +85,13 @@ def register(bot):
             amount = int(parts[1])
             days = int(parts[2])
             uid = str(msg.from_user.id)
-
             user = get_user(uid) or {}
             course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
             if not course or course.get("stage", 0) < 3:
                 bot.reply_to(msg, COURSE_GUIDE)
                 return
-
-            result = staking_service.stake_locked(
-                uid,
-                amount,
-                lock_days=days,
-                meta={"source": "telegram", "command": "stake_lock"},
-            )
-
-            bot.reply_to(
-                msg,
-                f"{amount} credits הועברו לסטייקינג נעול\n"
-                f"תקופה: {days} ימים\n"
-                f"יתרה: {result['credits']}\n"
-                f"סטייק: {result['staked']}\n"
-                f"Position: {result['position']['id']}"
-            )
-
+            result = staking_service.stake_locked(uid, amount, lock_days=days, meta={"source": "telegram", "command": "stake_lock"})
+            bot.reply_to(msg, f"{amount} credits הועברו לסטייקינג נעול\nתקופה: {days} ימים\nיתרה: {result['credits']}\nסטייק: {result['staked']}\nPosition: {result['position']['id']}")
         except Exception as e:
             bot.reply_to(msg, f"{e}")
 
@@ -134,15 +104,13 @@ def register(bot):
             return
         lines = ["הפוזיציות שלך:"]
         for pid, pos in positions.items():
-            lines.append(
-                f"{pos['amount']} credits | {pos['lock_days']} days | {pos['status']}"
-            )
+            lines.append(f"{pos['amount']} credits | {pos['lock_days']} days | {pos['status']}")
         bot.reply_to(msg, "\n".join(lines))
 
     @bot.message_handler(commands=["rewards"])
     def rewards_cmd(msg):
         uid = str(msg.from_user.id)
-        from core.reward_engine import calculate_reward, claim_reward
+        from core.reward_engine import calculate_reward, claim_reward, accrue
         positions = get_positions(uid)
         if not positions:
             bot.reply_to(msg, "אין פוזיציות.")
@@ -156,19 +124,16 @@ def register(bot):
                 bot.reply_to(msg, "הפוזיציה לא נמצאה או לא שייכת לך.")
                 return
             try:
-                result = claim_reward(
-                    pos_id,
-                    idempotency_key=f"staking-reward:{uid}:{pos_id}",
-                )
+                accrued = accrue(pos_id)
+                if accrued.get("status") == "closed":
+                    bot.reply_to(msg, "הפוזיציה כבר נסגרה.")
+                    return
+                result = claim_reward(pos_id, idempotency_key=f"staking-reward:{uid}:{pos_id}")
                 status = result.get("status")
-                if status == "already_paid" or status == "duplicate":
+                if status in {"already_paid", "duplicate"}:
                     bot.reply_to(msg, "התגמול כבר שולם.")
                     return
-                bot.reply_to(
-                    msg,
-                    f"תגמול שולם: {result.get('amount', 0)} credits\n"
-                    f"יתרה: {result.get('after', 'עודכנה')}"
-                )
+                bot.reply_to(msg, f"תגמול שולם: {result.get('amount', 0)} credits\nיתרה: {result.get('after', 'עודכנה')}")
             except Exception as e:
                 bot.reply_to(msg, f"{e}")
             return
@@ -195,36 +160,14 @@ def register(bot):
             bot.reply_to(msg, "הפוזיציה לא נמצאה או לא שייכת לך.")
             return
         try:
-            res = staking_service.unstake_locked(
-                uid,
-                pos_id,
-                meta={"source": "telegram", "command": "unstake_lock"},
-            )
+            res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake_lock"})
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
-            bot.reply_to(
-                msg,
-                f"שוחררו {pos.get('amount')} credits.\n"
-                f"יתרה: {res.get('credits')}\n"
-                f"סטייק: {res.get('staked')}"
-            )
+            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {res.get('credits')}\nסטייק: {res.get('staked')}")
         except Exception as e:
             bot.reply_to(msg, f"{e}")
 
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
-        bot.reply_to(
-            msg,
-            "סטייקינג SLH\n\n"
-            + COURSE_GUIDE
-            + "\n\nפקודות:\n"
-            "/stake <amount> - נעילה ל-30 יום\n"
-            "/stake_lock <amount> <days> - נעילה לתקופה\n"
-            "/unstake <position_id> - שחרור לאחר תום הנעילה\n"
-            "/unstake_lock <position_id> - alias לשחרור\n"
-            "/positions - הפוזיציות שלך\n"
-            "/rewards - תגמולים\n"
-            "/rewards claim <position_id> - מימוש תגמול פעם אחת\n\n"
-            "סטייקינג פנימי בלבד, לא on-chain."
-        )
+        bot.reply_to(msg, "סטייקינג SLH\n\n" + COURSE_GUIDE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/rewards - תגמולים\n" "/rewards claim <position_id> - מימוש תגמול פעם אחת\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
