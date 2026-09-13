@@ -8,6 +8,7 @@
 - `/alpha_open` — owner-only state transition; succeeds only when the evaluator returns `READY`.
 - `/alpha_state` — owner-only view of the persisted Alpha state.
 - `/exec alpha_status` and `/exec alpha_open` are supported aliases through the gated executor.
+- `/e alpha_status`, `/e alpha_state`, and `/e alpha_open` are supported aliases through the existing read/controlled-execution path.
 
 ## Rule
 
