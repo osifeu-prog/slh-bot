@@ -281,7 +281,7 @@ def purchase_item(
     item,
     price,
     referrer_uid=None,
-    commission_rate=0.85,
+    commission_rate=0.10,
     meta=None,
 ):
     """
@@ -402,7 +402,7 @@ def record_stars_payment(
     telegram_payment_charge_id,
     provider_payment_charge_id=None,
     referrer_uid=None,
-    commission_rate=0.85,
+    commission_rate=0.10,
     meta=None,
 ):
     """
