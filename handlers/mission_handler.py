@@ -1,3 +1,5 @@
+import json
+
 import state_manager
 
 from core.mission_state import MissionStateNormalizer
@@ -26,7 +28,7 @@ def register(bot, context=None):
     def mission_cmd(m):
         parts = (m.text or "").split(" ", 2)
         if len(parts) < 2:
-            bot.reply_to(m, "שימוש: /mission add <תיאור> | list | assign <id> <agent> | done <id> | run <id> | rewards")
+            bot.reply_to(m, "שימוש: /mission add <תיאור> | <action_type> | <JSON payload> | <idempotency_key> | list | assign <id> <agent> | done <id> | run <id> | rewards")
             return
 
         action = parts[1].lower()
@@ -39,17 +41,42 @@ def register(bot, context=None):
         missions = board.get("missions", [])
 
         if action == "add":
-            desc = parts[2] if len(parts) > 2 else "משימה ללא תיאור"
+            if len(parts) < 3:
+                bot.reply_to(m, "שימוש: /mission add <תיאור> | <action_type> | <JSON payload> | <idempotency_key>")
+                return
+
+            contract = [item.strip() for item in parts[2].split("|", 3)]
+            if len(contract) != 4 or not all(contract):
+                bot.reply_to(
+                    m,
+                    "❌ יצירת משימה חסומה: נדרש action contract מפורש. "
+                    "שימוש: /mission add <תיאור> | <action_type> | <JSON payload> | <idempotency_key>",
+                )
+                return
+
+            desc, action_type, payload_text, idempotency_key = contract
+            try:
+                action_payload = json.loads(payload_text)
+            except json.JSONDecodeError as exc:
+                bot.reply_to(m, f"❌ action_payload חייב להיות JSON תקין: {exc}")
+                return
+            if not isinstance(action_payload, dict) or not action_payload:
+                bot.reply_to(m, "❌ action_payload חייב להיות אובייקט JSON לא-ריק.")
+                return
+
             numeric_ids = [int(t.get("id")) for t in missions if str(t.get("id")).isdigit()]
             next_id = str(max(numeric_ids or [0]) + 1)
             try:
-                result = lifecycle.create_mission(mission_id=next_id, description=desc, reward=0)
-            except ValueError as exc:
-                bot.reply_to(
-                    m,
-                    "❌ יצירת משימה חסומה: משימות ניתנות להרצה חייבות action contract מפורש "
-                    f"(action_type/action_payload/idempotency_key). {exc}",
+                result = lifecycle.create_mission(
+                    mission_id=next_id,
+                    description=desc,
+                    reward=0,
+                    action_type=action_type,
+                    action_payload=action_payload,
+                    idempotency_key=idempotency_key,
                 )
+            except ValueError as exc:
+                bot.reply_to(m, "❌ יצירת המשימה נחסמה: " + str(exc))
                 return
             if result.get("status") != "created":
                 bot.reply_to(m, "❌ יצירת המשימה נחסמה: " + str(result.get("reason")))
