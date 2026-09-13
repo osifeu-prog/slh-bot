@@ -57,7 +57,8 @@ def persist_verified_execution(mission_id, execution_result, root="."):
     result["mission_completion"] = "pending"
 
     canonical = json.dumps(result, sort_keys=True, ensure_ascii=False)
-    result["result_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    result_sha256 = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    result["result_sha256"] = result_sha256
 
     result_path = results_dir / f"{result_id}.json"
     result_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -65,6 +66,8 @@ def persist_verified_execution(mission_id, execution_result, root="."):
     mission["status"] = "executed"
     mission["execution_started_at"] = execution_result.get("started_at") or completed_at
     mission["execution_completed_at"] = completed_at
+    mission["result_file"] = str(result_path.relative_to(root))
+    mission["execution_result_sha256"] = result_sha256
     board_path.write_text(json.dumps(board, indent=2, ensure_ascii=False), encoding="utf-8")
 
     return {
@@ -75,5 +78,6 @@ def persist_verified_execution(mission_id, execution_result, root="."):
         "action_type": execution_result.get("action_type"),
         "idempotency_key": execution_result.get("idempotency_key"),
         "verified": True,
+        "result_sha256": result_sha256,
         "write_performed": True,
     }
