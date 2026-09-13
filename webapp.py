@@ -6,6 +6,8 @@ from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
+from core.profile_manager import get_user
+from core import staking_service
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -21,7 +23,6 @@ def load_db():
 
 
 def authenticated_uid():
-    """Return the Telegram UID authenticated by server-validated initData."""
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     try:
         return validate_init_data(init_data)["uid"]
@@ -30,7 +31,6 @@ def authenticated_uid():
 
 
 def require_auth():
-    """Require a valid Telegram Mini App identity for non-user-scoped APIs."""
     if authenticated_uid() is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     return None
@@ -52,15 +52,11 @@ def health():
 
 @app.route("/market")
 def market():
-    return jsonify({
-        "status": "SLH Market UP",
-        "time": "2026-08-11"
-    }), 200
+    return jsonify({"status": "SLH Market UP", "time": "2026-08-11"}), 200
 
 
 @app.route("/mini-app")
 def mini_app():
-    """Serve the Mini App with a tiny compatibility shim for guide buttons."""
     html_path = BASE_DIR / "mini_app.html"
     html = html_path.read_text(encoding="utf-8")
     shim = """
@@ -84,11 +80,9 @@ function showGuide(id){
 
 @app.route("/api/v1/me")
 def investor_me():
-    """Return the read-only investor snapshot for the authenticated Telegram user."""
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-
     try:
         snapshot = get_investor_snapshot(uid)
         global_alpha = alpha_state()
@@ -106,23 +100,43 @@ def investor_me():
         raise
 
 
+@app.route("/api/v1/staking", methods=["POST"])
+def create_staking_position():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    raw_amount = payload.get("amount")
+    try:
+        if isinstance(raw_amount, bool):
+            raise ValueError("amount must be a positive integer")
+        amount = int(raw_amount)
+        if isinstance(raw_amount, float) and raw_amount != amount:
+            raise ValueError("amount must be a positive integer")
+        if amount <= 0:
+            raise ValueError("amount must be a positive integer")
+        user = get_user(str(uid)) or {}
+        course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
+        stage = int((course or {}).get("stage", 0) or 0)
+        if stage < 3:
+            return jsonify({"error": "STAKING_STAGE_REQUIRED", "required_stage": 3, "current_stage": stage}), 403
+        result = staking_service.stake_locked(str(uid), amount, lock_days=30, meta={"source": "miniapp", "endpoint": "/api/v1/staking"})
+        return jsonify({"status": "created", "amount": amount, "credits": result["credits"], "staked": result["staked"], "position": result["position"]}), 201
+    except (TypeError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/api/wallet/<uid>")
 def get_wallet(uid):
     denied = require_self(uid)
     if denied:
         return denied
-
     db = load_db()
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {})
-
-    return jsonify({
-        "name": user.get("name", str(uid)),
-        "credits": wallet.get("credits", 0),
-        "staked": wallet.get("staked", 0),
-        "token_balance": wallet.get("token_balance", 0),
-        "ton_wallet": user.get("ton_wallet")
-    })
+    return jsonify({"name": user.get("name", str(uid)), "credits": wallet.get("credits", 0), "staked": wallet.get("staked", 0), "token_balance": wallet.get("token_balance", 0), "ton_wallet": user.get("ton_wallet")})
 
 
 @app.route("/api/wallet/bnb/challenge", methods=["POST"])
@@ -164,29 +178,14 @@ def get_tasks(uid):
     denied = require_self(uid)
     if denied:
         return denied
-
     db = load_db()
     tasks = db.get("tasks", {})
-
     result = []
-
     for tid, task in tasks.items():
         if str(task.get('owner_id', '')) not in ('', str(uid)):
             continue
         done_by = task.get("done_by", [])
-
-        result.append({
-            "id": tid,
-            "title": task.get("title", "?"),
-            "reward": task.get("reward", 0),
-            "status": (
-                "done"
-                if str(uid) in [str(x) for x in done_by]
-                else task.get("status", "open")
-            ),
-            "agent": task.get("agent", "unassigned")
-        })
-
+        result.append({"id": tid, "title": task.get("title", "?"), "reward": task.get("reward", 0), "status": ("done" if str(uid) in [str(x) for x in done_by] else task.get("status", "open")), "agent": task.get("agent", "unassigned")})
     return jsonify(result)
 
 
@@ -195,13 +194,11 @@ def stats():
     denied = require_auth()
     if denied:
         return denied
-
     db = load_db()
     users = db.get("users", {})
     agents = db.get("agents", {})
     tasks = db.get("tasks", {})
     total_credits = 0
-
     if isinstance(users, dict):
         for user in users.values():
             if isinstance(user, dict):
@@ -210,13 +207,7 @@ def stats():
                     credits = wallet.get("credits", 0)
                     if isinstance(credits, (int, float)):
                         total_credits += credits
-
-    return jsonify({
-        "users": len(users) if isinstance(users, dict) else 0,
-        "agents": len(agents) if isinstance(agents, dict) else 0,
-        "tasks": len(tasks) if isinstance(tasks, dict) else 0,
-        "credits": total_credits,
-    })
+    return jsonify({"users": len(users) if isinstance(users, dict) else 0, "agents": len(agents) if isinstance(agents, dict) else 0, "tasks": len(tasks) if isinstance(tasks, dict) else 0, "credits": total_credits})
 
 
 @app.route("/api/leaderboard")
@@ -224,28 +215,16 @@ def api_leaderboard():
     denied = require_auth()
     if denied:
         return denied
-
     try:
         from plugins.leaderboard import LeaderboardPlugin
-
         lb = LeaderboardPlugin(str(DB_PATH))
         top = lb.get_top(10)
-
         result = []
-
         for uid, data in top:
-            result.append({
-                "uid": str(uid),
-                "name": data.get("name", f"User{uid}"),
-                "points": (data.get("gamification") or {}).get("points", 0)
-            })
-
+            result.append({"uid": str(uid), "name": data.get("name", f"User{uid}"), "points": (data.get("gamification") or {}).get("points", 0)})
         return jsonify(result)
-
     except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/v1/leaderboard")
@@ -258,13 +237,8 @@ def onchain_status():
     denied = require_auth()
     if denied:
         return denied
-
-    from core.deposit_monitor import get_onchain_status
-    return jsonify(get_onchain_status())
-
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=8080
-    )
+    try:
+        from core.onchain_status import get_onchain_status
+        return jsonify(get_onchain_status()), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
