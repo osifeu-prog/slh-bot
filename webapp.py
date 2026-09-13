@@ -4,6 +4,7 @@ from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
+from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -89,7 +90,11 @@ def investor_me():
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
 
     try:
-        return jsonify(get_investor_snapshot(uid)), 200
+        snapshot = get_investor_snapshot(uid)
+        snapshot["alpha_global"] = alpha_state()
+        if isinstance(snapshot.get("alpha"), dict):
+            snapshot["alpha"]["global_status"] = snapshot["alpha_global"].get("status", "CLOSED")
+        return jsonify(snapshot), 200
     except ValueError as exc:
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
@@ -118,143 +123,3 @@ def get_wallet(uid):
 @app.route("/api/wallet/bnb/challenge", methods=["POST"])
 def bnb_wallet_challenge():
     uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    try:
-        result = issue_challenge(uid, payload.get("address"))
-        return jsonify(result), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@app.route("/api/wallet/bnb/verify", methods=["POST"])
-def bnb_wallet_verify():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    try:
-        binding = verify_signature(uid, payload.get("address"), payload.get("signature"))
-        return jsonify({"status": "verified", "binding": binding}), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@app.route("/api/wallet/bnb")
-def bnb_wallet_binding():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    return jsonify({"binding": get_binding(uid)}), 200
-
-
-@app.route("/api/tasks/<uid>")
-def get_tasks(uid):
-    denied = require_self(uid)
-    if denied:
-        return denied
-
-    db = load_db()
-    tasks = db.get("tasks", {})
-
-    result = []
-
-    for tid, task in tasks.items():
-        if str(task.get('owner_id', '')) not in ('', str(uid)):
-            continue
-        done_by = task.get("done_by", [])
-
-        result.append({
-            "id": tid,
-            "title": task.get("title", "?"),
-            "reward": task.get("reward", 0),
-            "status": (
-                "done"
-                if str(uid) in [str(x) for x in done_by]
-                else task.get("status", "open")
-            ),
-            "agent": task.get("agent", "unassigned")
-        })
-
-    return jsonify(result)
-
-
-@app.route("/api/stats")
-def stats():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    db = load_db()
-    users = db.get("users", {})
-    agents = db.get("agents", {})
-    tasks = db.get("tasks", {})
-    total_credits = 0
-
-    if isinstance(users, dict):
-        for user in users.values():
-            if isinstance(user, dict):
-                wallet = user.get("wallet", {})
-                if isinstance(wallet, dict):
-                    credits = wallet.get("credits", 0)
-                    if isinstance(credits, (int, float)):
-                        total_credits += credits
-
-    return jsonify({
-        "users": len(users) if isinstance(users, dict) else 0,
-        "agents": len(agents) if isinstance(agents, dict) else 0,
-        "tasks": len(tasks) if isinstance(tasks, dict) else 0,
-        "credits": total_credits,
-    })
-
-
-@app.route("/api/leaderboard")
-def api_leaderboard():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    try:
-        from plugins.leaderboard import LeaderboardPlugin
-
-        lb = LeaderboardPlugin(str(DB_PATH))
-        top = lb.get_top(10)
-
-        result = []
-
-        for uid, data in top:
-            result.append({
-                "uid": str(uid),
-                "name": data.get("name", f"User{uid}"),
-                "points": (data.get("gamification") or {}).get("points", 0)
-            })
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
-
-
-@app.route("/api/v1/leaderboard")
-def api_v1_leaderboard():
-    return api_leaderboard()
-
-
-@app.route("/api/onchain/status")
-def onchain_status():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    from core.deposit_monitor import get_onchain_status
-    return jsonify(get_onchain_status())
-
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=8080
-    )
