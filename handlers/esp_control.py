@@ -100,22 +100,32 @@ def register(bot, context=None):
     register_sync(bot)
     print("ESP control commands loaded")
 def build_sync_payload(uid):
-    """Build the wallet state for a device."""
+    """Build the full wallet state for a device."""
     import json
     from pathlib import Path
     try:
         db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
     except Exception:
         return {"error": "db_unavailable"}
+
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {})
     credits = float(wallet.get("credits", 0) or 0)
     slh = float(wallet.get("token_balance", 0) or 0)
     staked = float(wallet.get("staked", 0) or 0)
 
-    active_course = user.get("active_course")
-    course = {"id": active_course, "stage": 0} if active_course else None
+    gamif = user.get("gamification", {})
+    points = int(gamif.get("points", 0) or 0)
+    level = int(gamif.get("level", 0) or 0)
 
+    addrs = user.get("payment_addresses", {})
+    ton_addr = addrs.get("ton_usdt", "-") or "-"
+    bnb_addr = addrs.get("bnb", "") or "not bound"
+
+    devices = user.get("devices", []) or []
+    devices_list = ", ".join([str(d) for d in devices[:3]]) if devices else "none"
+
+    active_course = user.get("active_course")
     referral = user.get("referral", {}) or {}
     has_referral = bool(referral.get("referred_by"))
 
@@ -132,7 +142,11 @@ def build_sync_payload(uid):
         "credits": round(credits, 2),
         "slh": round(slh, 2),
         "staked": round(staked, 2),
-        "course": course,
+        "points": points,
+        "level": level,
+        "ton": ton_addr,
+        "bnb": bnb_addr,
+        "devices_list": devices_list,
         "next_action": nba,
     }
 
