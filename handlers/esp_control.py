@@ -109,26 +109,33 @@ def build_sync_payload(uid):
         return {"error": "db_unavailable"}
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {})
-    stakes = user.get("stakes", [])
-    total_staked = sum(float(s.get("amount", 0)) for s in stakes if s.get("status") == "locked")
-    courses = user.get("course_progress", {})
-    active_course = None
-    for cid, cp in courses.items():
-        if isinstance(cp, dict) and cp.get("stage", 0) > 0:
-            active_course = {"id": cid, "stage": cp.get("stage", 0)}
-            break
-    nba = "ללמוד"
-    if float(wallet.get("credits", 0)) > 100:
-        nba = "להשקיע (stake)"
-    elif not user.get("referral", {}).get("referred_by"):
-        nba = "להזמין חבר"
+    credits = float(wallet.get("credits", 0) or 0)
+    slh = float(wallet.get("token_balance", 0) or 0)
+    staked = float(wallet.get("staked", 0) or 0)
+
+    active_course = user.get("active_course")
+    course = {"id": active_course, "stage": 0} if active_course else None
+
+    referral = user.get("referral", {}) or {}
+    has_referral = bool(referral.get("referred_by"))
+
+    if credits > 1000 and staked == 0:
+        nba = "Stake Now"
+    elif not has_referral:
+        nba = "Invite Friend"
+    elif active_course:
+        nba = "Continue Course"
+    else:
+        nba = "Explore Market"
+
     return {
-        "credits": round(float(wallet.get("credits", 0)), 2),
-        "slh": round(float(wallet.get("token_balance", 0)), 2),
-        "staked": round(total_staked, 2),
-        "course": active_course,
+        "credits": round(credits, 2),
+        "slh": round(slh, 2),
+        "staked": round(staked, 2),
+        "course": course,
         "next_action": nba,
     }
+
 
 def register_sync(bot):
     @bot.message_handler(commands=["esp_sync"])
@@ -144,4 +151,18 @@ def register_sync(bot):
         state = build_sync_payload(m.from_user.id)
         import json as _j
         r = _send_cmd(did, "sync " + _j.dumps(state, ensure_ascii=False))
-        bot.reply_to(m, f"{did}: {r or 'no response'}")
+
+        # Mirror: same data shown on the device, sent to Telegram
+        mirror = (
+            "\U0001F4CA *SLH Wallet Mirror*\n"
+            f"\U0001F4B0 Credits: `{state.get('credits', 0)}`\n"
+            f"\U0001F4B5 SLH: `{state.get('slh', 0)}`\n"
+            f"\U0001F512 Staked: `{state.get('staked', 0)}`\n"
+            f"\U0001F3AF Next: `{state.get('next_action', '-')}`\n"
+            f"\U0001F4F1 Device: `{did}`\n"
+            f"\U0001F4E1 Response: `{r or 'no response'}`"
+        )
+        try:
+            bot.send_message(m.chat.id, mirror, parse_mode="Markdown")
+        except Exception:
+            bot.send_message(m.chat.id, mirror)
