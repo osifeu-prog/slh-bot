@@ -156,15 +156,17 @@ def _start_action_listener(bot):
                             return
                         device_id = parts[2]
                         try:
-                            db = _j.loads(_P("state/db.json").read_text(encoding="utf-8"))
-                        except Exception:
+                            raw = _j.loads(_P("state/devices.json").read_text(encoding="utf-8"))
+                            dev = (raw.get("devices", {}) or {}).get(device_id)
+                        except Exception as e:
+                            print(f"[ESP_ACTION] read error: {e}")
                             return
-                        dev = (db.get("devices", {}) or {}).get("devices", {}).get(device_id)
                         if not dev:
                             print(f"[ESP_ACTION] unknown device {device_id}")
                             return
                         uid = str(dev.get("owner", ""))
                         if not uid:
+                            print(f"[ESP_ACTION] no owner on {device_id}")
                             return
                         _handle_action(bot, uid, device_id, payload)
                     except Exception as e:
