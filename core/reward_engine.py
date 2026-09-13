@@ -80,7 +80,10 @@ def calculate_reward(position_id, rate_per_day=0.001333):
         raise KeyError("position not found")
     created = pos.get("created_at", time.time())
     days = max(0, (time.time() - created) / 86400)
-    return round(float(pos["amount"]) * days * rate_per_day, 6)
+    gross = round(float(pos["amount"]) * days * rate_per_day, 6)
+    pool = db.get("reward_pools", {}).get(position_id, {})
+    settled_total = round(float(pool.get("settled_total", 0) or 0), 6)
+    return max(0, round(gross - settled_total, 6))
 
 
 def accrue(position_id, rate_per_day=0.001333):
