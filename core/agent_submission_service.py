@@ -46,3 +46,19 @@ def submit_agent(uid, agent_name, meta=None):
         }
 
     return state_manager.atomic_update(mutate)
+
+
+def approve_agent_submission(submission_id, meta=None):
+    """Approve one pending submission using the fixed policy reward."""
+    meta = meta or {}
+    submission_id = int(submission_id)
+
+    from core import economy_service
+
+    result = economy_service.approve_agent_submission(
+        submission_id=submission_id,
+        reward=APPROVAL_REWARD,
+        meta={**meta, "policy_reward": APPROVAL_REWARD},
+    )
+    result["reward"] = APPROVAL_REWARD
+    return result
