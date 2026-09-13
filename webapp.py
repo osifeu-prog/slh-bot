@@ -4,6 +4,7 @@ from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
+from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -89,7 +90,16 @@ def investor_me():
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
 
     try:
-        return jsonify(get_investor_snapshot(uid)), 200
+        snapshot = get_investor_snapshot(uid)
+        global_alpha = alpha_state()
+        if isinstance(snapshot.get("alpha"), dict):
+            alpha = snapshot["alpha"]
+            alpha["readiness_status"] = alpha.get("status", "review")
+            alpha["global_status"] = global_alpha.get("status", "CLOSED")
+            if alpha["global_status"] == "OPEN":
+                alpha["status"] = "OPEN"
+        snapshot["alpha_global"] = global_alpha
+        return jsonify(snapshot), 200
     except ValueError as exc:
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
