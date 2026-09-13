@@ -1,4 +1,4 @@
-import json, time, os
+import json, time, os, threading
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
@@ -98,7 +98,92 @@ def register(bot, context=None):
         bot.reply_to(m, f"{did}: {_send_cmd(did, f'color {hexval}') or 'no response'}")
 
     register_sync(bot)
+    _start_action_listener(bot)
     print("ESP control commands loaded")
+
+def _handle_action(bot, uid, device_id, payload):
+    """Handle an action triggered on the device."""
+    parts = payload.split(":", 2)
+    action = parts[0].strip().lower() if parts else ""
+    print(f"[ESP_ACTION] {device_id} uid={uid} action={action}")
+
+    if action == "sync":
+        state = build_sync_payload(uid)
+        import json as _j
+        _send_cmd(device_id, "sync " + _j.dumps(state, ensure_ascii=False))
+        return
+
+    if action == "stake":
+        amount = parts[1] if len(parts) > 1 else "100"
+        bot.send_message(uid, f"\U0001F4F1 Device requested: *stake {amount}*\nUse `/stake {amount}` in chat to confirm.", parse_mode="Markdown")
+        return
+
+    if action == "invite":
+        bot.send_message(uid, "\U0001F4F1 Device requested: *invite link*\nUse `/referral` to generate it.")
+        return
+
+    if action == "learn":
+        bot.send_message(uid, "\U0001F4F1 Device requested: *continue course*\nUse `/courses` to see your options.")
+        return
+
+    if action == "menu":
+        bot.send_message(uid, "\U0001F4F1 Device requested: *main menu*\nUse `/help`.")
+        return
+
+    bot.send_message(uid, f"\U0001F4F1 Device {device_id}: unknown action `{payload}`")
+
+
+def _start_action_listener(bot):
+    """Start a background MQTT listener for device actions."""
+    def worker():
+        import time as _t
+        while True:
+            try:
+                import paho.mqtt.client as mqtt
+                import json as _j
+                from pathlib import Path as _P
+
+                def on_connect(c, u, f, rc):
+                    c.subscribe("slh/esp/+/action")
+                    print("[ESP_ACTION] listener connected")
+
+                def on_message(c, u, msg):
+                    try:
+                        topic = msg.topic
+                        payload = msg.payload.decode("utf-8", "ignore")
+                        parts = topic.split("/")
+                        if len(parts) < 4 or parts[0] != "slh" or parts[1] != "esp" or parts[3] != "action":
+                            return
+                        device_id = parts[2]
+                        try:
+                            db = _j.loads(_P("state/db.json").read_text(encoding="utf-8"))
+                        except Exception:
+                            return
+                        dev = (db.get("devices", {}) or {}).get("devices", {}).get(device_id)
+                        if not dev:
+                            print(f"[ESP_ACTION] unknown device {device_id}")
+                            return
+                        uid = str(dev.get("owner", ""))
+                        if not uid:
+                            return
+                        _handle_action(bot, uid, device_id, payload)
+                    except Exception as e:
+                        print(f"[ESP_ACTION] handler error: {e}")
+
+                c = mqtt.Client()
+                c.on_connect = on_connect
+                c.on_message = on_message
+                c.connect("broker.hivemq.com", 1883, 60)
+                c.loop_forever()
+            except Exception as e:
+                print(f"[ESP_ACTION] listener died: {e}, restart in 10s")
+                _t.sleep(10)
+
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+    print("[ESP_ACTION] listener started")
+
+
 def build_sync_payload(uid):
     """Build the full wallet state for a device."""
     import json
