@@ -57,8 +57,16 @@ def evaluate():
     checks.append(_check("exchange", exchange.exists(), "exchange path present"))
     checks.append(_check("staking", (ROOT / "core" / "staking_service.py").exists(),
                          "staking service present"))
-    checks.append(_check("staking_reward_settlement", (ROOT / "core" / "reward_engine_v2.py").exists(),
-                         "reward settlement implementation present"))
+
+    settlement = ROOT / "core" / "staking_reward_settlement.py"
+    try:
+        from core.staking_reward_settlement import settle_position_reward
+        settlement_ok = settlement.exists() and callable(settle_position_reward)
+    except Exception:
+        settlement_ok = False
+    checks.append(_check("staking_reward_settlement", settlement_ok,
+                         "staking reward settlement authority present"))
+
     checks.append(_check("onboarding", (ROOT / "handlers" / "onboarding_v2.py").exists(),
                          "onboarding handler present"))
 
