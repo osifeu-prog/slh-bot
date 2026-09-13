@@ -210,13 +210,23 @@ def create_staking_position():
     try:
         if isinstance(raw_amount, bool) or raw_amount is None:
             raise ValueError("invalid amount")
-        amount = int(raw_amount)
+        if isinstance(raw_amount, int):
+            amount = raw_amount
+        elif isinstance(raw_amount, str) and raw_amount.strip().isdigit():
+            amount = int(raw_amount.strip())
+        else:
+            raise ValueError("invalid amount")
         if amount <= 0:
             raise ValueError("amount must be positive")
     except (TypeError, ValueError):
         return jsonify({"error": "INVALID_AMOUNT"}), 400
 
-    user = get_user(str(uid)) or {}
+    db = load_db()
+    users = db.get("users", {})
+    user = users.get(str(uid)) if isinstance(users, dict) else None
+    if not isinstance(user, dict):
+        return jsonify({"error": "USER_NOT_FOUND"}), 404
+
     course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
     if not course or int(course.get("stage", 0) or 0) < 3:
         return jsonify({"error": "STAKING_STAGE_REQUIRED", "required_stage": 3}), 403
