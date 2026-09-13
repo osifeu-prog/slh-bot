@@ -6,8 +6,6 @@ from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
-from core.profile_manager import get_user
-from core import staking_service
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -106,54 +104,6 @@ def investor_me():
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
         raise
-
-
-@app.route("/api/v1/staking", methods=["POST"])
-def create_staking_position():
-    """Create the authenticated user's default 30-day internal staking position."""
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-
-    payload = request.get_json(silent=True) or {}
-    raw_amount = payload.get("amount")
-
-    try:
-        if isinstance(raw_amount, bool):
-            raise ValueError("amount must be a positive integer")
-        amount = int(raw_amount)
-        if amount <= 0:
-            raise ValueError("amount must be a positive integer")
-        if isinstance(raw_amount, float) and raw_amount != amount:
-            raise ValueError("amount must be a positive integer")
-
-        user = get_user(str(uid)) or {}
-        course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
-        stage = int((course or {}).get("stage", 0) or 0)
-        if stage < 3:
-            return jsonify({
-                "error": "STAKING_STAGE_REQUIRED",
-                "required_stage": 3,
-                "current_stage": stage,
-            }), 403
-
-        result = staking_service.stake_locked(
-            str(uid),
-            amount,
-            lock_days=30,
-            meta={"source": "miniapp", "endpoint": "/api/v1/staking"},
-        )
-        return jsonify({
-            "status": "created",
-            "amount": amount,
-            "credits": result["credits"],
-            "staked": result["staked"],
-            "position": result["position"],
-        }), 201
-    except (TypeError, ValueError) as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 400
 
 
 @app.route("/api/wallet/<uid>")
@@ -308,3 +258,9 @@ def onchain_status():
     denied = require_auth()
     if denied:
         return denied
+
+    try:
+        from core.onchain_status import get_onchain_status
+        return jsonify(get_onchain_status()), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
