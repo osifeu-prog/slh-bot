@@ -97,4 +97,51 @@ def register(bot, context=None):
         if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
         bot.reply_to(m, f"{did}: {_send_cmd(did, f'color {hexval}') or 'no response'}")
 
+    register_sync(bot)
     print("ESP control commands loaded")
+def build_sync_payload(uid):
+    """Build the wallet state for a device."""
+    import json
+    from pathlib import Path
+    try:
+        db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+    except Exception:
+        return {"error": "db_unavailable"}
+    user = db.get("users", {}).get(str(uid), {})
+    wallet = user.get("wallet", {})
+    stakes = user.get("stakes", [])
+    total_staked = sum(float(s.get("amount", 0)) for s in stakes if s.get("status") == "locked")
+    courses = user.get("course_progress", {})
+    active_course = None
+    for cid, cp in courses.items():
+        if isinstance(cp, dict) and cp.get("stage", 0) > 0:
+            active_course = {"id": cid, "stage": cp.get("stage", 0)}
+            break
+    nba = "ללמוד"
+    if float(wallet.get("credits", 0)) > 100:
+        nba = "להשקיע (stake)"
+    elif not user.get("referral", {}).get("referred_by"):
+        nba = "להזמין חבר"
+    return {
+        "credits": round(float(wallet.get("credits", 0)), 2),
+        "slh": round(float(wallet.get("token_balance", 0)), 2),
+        "staked": round(total_staked, 2),
+        "course": active_course,
+        "next_action": nba,
+    }
+
+def register_sync(bot):
+    @bot.message_handler(commands=["esp_sync"])
+    def esp_sync(m):
+        parts = m.text.split()
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /esp_sync <device_id>")
+            return
+        did = parts[1]
+        dev = _load_devices().get(did)
+        if not dev: bot.reply_to(m, f"Device {did} not found"); return
+        if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
+        state = build_sync_payload(m.from_user.id)
+        import json as _j
+        r = _send_cmd(did, "sync " + _j.dumps(state, ensure_ascii=False))
+        bot.reply_to(m, f"{did}: {r or 'no response'}")
