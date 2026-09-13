@@ -12,6 +12,7 @@ from pathlib import Path
 import state_manager
 from core import economy_service
 from core import profile_manager
+from core.staking_reward_settlement import settle_position_reward
 
 LEDGER = Path("state/rewards_ledger.json")
 
@@ -109,32 +110,5 @@ def accrue(position_id, rate_per_day=0.001333):
 
 
 def settle(position_id, rate_per_day=0.001333):
-    """Settle all currently earned but unsettled reward for a stake position.
-
-    The Economy Authority performs the wallet mutation, idempotency check,
-    reward-pool update, and ledger append in one atomic DB transaction.
-    """
-    db = _load_db()
-    pos = db.get("stake_positions", {}).get(position_id)
-    if not pos:
-        raise KeyError("position not found")
-
-    uid = str(pos.get("uid"))
-    if not uid or uid == "None":
-        raise ValueError("position owner missing")
-
-    created = pos.get("created_at", time.time())
-    days = max(0, (time.time() - created) / 86400)
-    gross = round(float(pos["amount"]) * days * rate_per_day, 6)
-    pool = db.get("reward_pools", {}).get(position_id, {})
-    settled_total = round(float(pool.get("settled_total", 0) or 0), 6)
-    pending = max(0, round(gross - settled_total, 6))
-
-    return economy_service.settle_staking_reward(
-        uid=uid,
-        position_id=str(position_id),
-        amount=pending,
-        accrued_total=gross,
-        reason="staking:reward_settlement",
-        meta={"rate_per_day": rate_per_day},
-    )
+    """Settle the current earned reward through the staking settlement boundary."""
+    return settle_position_reward(position_id, rate_per_day=rate_per_day)
