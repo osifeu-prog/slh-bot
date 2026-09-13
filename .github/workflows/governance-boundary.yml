@@ -1,0 +1,28 @@
+name: SLH Governance Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'core/governance_store.py'
+      - 'handlers/governance_handler.py'
+      - 'handlers/governance_canonical_handler.py'
+      - 'handlers/loader.py'
+      - 'state_manager.py'
+      - 'tests/test_governance_store.py'
+      - '.github/workflows/governance-boundary.yml'
+  workflow_dispatch:
+
+jobs:
+  governance-boundary:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run Governance canonical-state regression
+        run: python3 -m unittest tests/test_governance_store.py
