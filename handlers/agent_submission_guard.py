@@ -14,7 +14,7 @@ def register(bot):
         agent_name = parts[1].strip()
 
         try:
-            result = agent_submission_service.submit_agent(
+            agent_submission_service.submit_agent(
                 uid=uid,
                 agent_name=agent_name,
                 meta={
@@ -41,3 +41,39 @@ def register(bot):
         except Exception as e:
             bot.send_message(m.chat.id, "❌ Submission failed safely.")
             print(f"[AGENT_SUBMISSION_GUARD] error: {e}")
+
+    @bot.message_handler(commands=["agent_approve"])
+    def agent_approve_guard(m):
+        from admin_utils import is_admin
+
+        if not is_admin(m):
+            bot.reply_to(m, "⛔ Admin only")
+            return
+
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /agent_approve <submission_id>")
+            return
+
+        try:
+            sub_id = int(parts[1])
+            result = agent_submission_service.approve_agent_submission(
+                sub_id,
+                meta={
+                    "source": "learning_path",
+                    "approved_by": str(m.from_user.id),
+                },
+            )
+            bot.reply_to(
+                m,
+                f"✅ Agent '{result['agent_name']}' approved and added to /market!\n"
+                f"💰 Creator received +{result['reward']} Credits.",
+            )
+            bot.send_message(
+                result["creator_uid"],
+                f"🎉 Agent '{result['agent_name']}' approved!\n"
+                f"💰 +{result['reward']} Credits",
+            )
+        except Exception as e:
+            bot.reply_to(m, "❌ Approval failed safely.")
+            print(f"[AGENT_SUBMISSION_GUARD] approval error: {e}")
