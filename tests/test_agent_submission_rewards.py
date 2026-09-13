@@ -1,0 +1,62 @@
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+import state_manager
+from core import economy_service
+
+
+class AgentSubmissionRewardTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db_path = Path(self.tmp.name) / "db.json"
+        self.db_path.write_text(
+            json.dumps({
+                "users": {"123": {"wallet": {"credits": 100}}},
+                "agent_submissions": [],
+                "ledger": [],
+                "marketplace": [],
+            }),
+            encoding="utf-8",
+        )
+        state_manager.DB_FILE = str(self.db_path)
+        state_manager._LOCK_PATH = str(self.db_path) + ".lock"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _db(self):
+        return json.loads(self.db_path.read_text(encoding="utf-8"))
+
+    def test_submission_does_not_pay_creator_before_approval(self):
+        result = economy_service.submit_agent("123", "demo-agent", reward=10)
+
+        self.assertEqual(result["reward"], 0)
+        db = self._db()
+        self.assertEqual(db["users"]["123"]["wallet"]["credits"], 100)
+        self.assertEqual(len(db["agent_submissions"]), 1)
+        self.assertEqual(db["ledger"], [])
+
+    def test_duplicate_pending_submission_is_rejected(self):
+        economy_service.submit_agent("123", "demo-agent", reward=10)
+
+        with self.assertRaises(ValueError):
+            economy_service.submit_agent("123", "demo-agent", reward=10)
+
+    def test_approval_pays_fixed_reward_once(self):
+        economy_service.submit_agent("123", "demo-agent", reward=10)
+
+        result = economy_service.approve_agent_submission(0, reward=999)
+
+        self.assertEqual(result["reward"], 40)
+        db = self._db()
+        self.assertEqual(db["users"]["123"]["wallet"]["credits"], 140)
+        self.assertEqual(len(db["marketplace"]), 1)
+        self.assertEqual(len(db["agent_submissions"]), 0)
+        self.assertEqual(len(db["ledger"]), 1)
+        self.assertEqual(db["ledger"][0]["amount"], 40)
+
+
+if __name__ == "__main__":
+    unittest.main()
