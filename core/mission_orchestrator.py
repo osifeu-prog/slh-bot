@@ -5,16 +5,11 @@ from typing import Any, Dict, List
 
 from core.mission_lifecycle import MissionLifecycleService
 from core.mission_state import MissionState, MissionStateNormalizer
-from core.mission_runtime_bridge import execute_mission_via_runtime
+from core.mission_runtime_authority import execute_mission_authority
 
 
 class MissionOrchestrator:
-    """Lifecycle router.
-
-    The orchestrator may create/assign/complete missions, but execution must
-    always pass through the canonical Mission Runtime authority. It must never
-    call MissionLifecycleService.execute_mission() directly.
-    """
+    """Lifecycle router; execution always uses the canonical authority."""
 
     def __init__(self, root="."):
         self.root = root
@@ -27,31 +22,18 @@ class MissionOrchestrator:
         return {"name": name, "status": status, "result": result, "timestamp": self._now()}
 
     def _blocked(self, mission_id, agent_id, stages, failed_stage, result):
-        return {
-            "status": "blocked",
-            "mission_id": str(mission_id),
-            "agent_id": str(agent_id) if agent_id is not None else None,
-            "failed_stage": failed_stage,
-            "stages": stages,
-            "result": result,
-        }
+        return {"status": "blocked", "mission_id": str(mission_id), "agent_id": str(agent_id) if agent_id is not None else None, "failed_stage": failed_stage, "stages": stages, "result": result}
 
     def get_mission_state(self, mission_id):
         board, _manifest = self.lifecycle.load_state()
         mission = self.lifecycle.find_mission(board, mission_id)
         if mission is None:
             return {"status": "missing", "mission_id": str(mission_id), "mission": None}
-        return {
-            "status": mission.get("status"),
-            "mission_id": str(mission_id),
-            "assigned_to": mission.get("assigned_to"),
-            "mission": mission,
-        }
+        return {"status": mission.get("status"), "mission_id": str(mission_id), "assigned_to": mission.get("assigned_to"), "mission": mission}
 
     def get_next_action(self, mission_id, agent_id=None):
         state = self.get_mission_state(mission_id)
         status = MissionStateNormalizer.normalize(state.get("status"))
-
         if status == "missing":
             return {"status": "ready", "mission_id": str(mission_id), "current_state": "missing", "next_action": "create", "requires_agent": False}
         if status == MissionState.OPEN.value:
@@ -64,13 +46,15 @@ class MissionOrchestrator:
             return {"status": "done", "mission_id": str(mission_id), "current_state": "completed", "next_action": None, "requires_agent": False, "agent_id": state.get("assigned_to")}
         return {"status": "blocked", "mission_id": str(mission_id), "current_state": status, "next_action": None, "reason": "Unknown mission state"}
 
-    def _execute_via_runtime(self, mission_id):
-        """Single execution entry point; never call lifecycle.execute_mission()."""
-        return execute_mission_via_runtime(mission_id=mission_id, root=self.root)
-
     def run_next_action(self, mission_id, agent_id=None, description=None, reward=0):
         next_action = self.get_next_action(mission_id=mission_id, agent_id=agent_id)
         action = next_action.get("next_action")
+
+        if action == "execute":
+            result = execute_mission_authority(mission_id=mission_id, root=self.root)
+            if result.get("status") == "completed":
+                return {"status": "completed", "action": "execute", "result": result}
+            return {"status": "blocked", "action": "execute", "result": result}
 
         if action == "complete":
             preview = self.lifecycle.preview_completion(mission_id=mission_id)
@@ -78,14 +62,6 @@ class MissionOrchestrator:
                 return {"status": "blocked", "action": "complete", "preview": preview}
             result = self.lifecycle.complete_mission(mission_id=mission_id)
             return {"status": "completed", "action": "complete", "result": result}
-
-        if action == "execute":
-            result = self._execute_via_runtime(mission_id)
-            if result.get("reward", {}).get("status") == "paid" or result.get("lifecycle_result", {}).get("status") == "completed":
-                return {"status": "completed", "action": "execute", "result": result}
-            if result.get("lifecycle_result", {}).get("status") == "execution_failed":
-                return {"status": "blocked", "action": "execute", "result": result}
-            return {"status": "executed", "action": "execute", "result": result}
 
         if action == "assign":
             if agent_id is None:
@@ -107,7 +83,6 @@ class MissionOrchestrator:
 
         if action is None and next_action.get("status") == "done":
             return {"status": "done", "action": None, "message": "Mission already completed"}
-
         return {"status": "blocked", "action": action, "reason": "Unknown or unsupported action", "router": next_action}
 
     def create_and_run(self, mission_id, description, agent_id=None, reward=0, max_steps=10):
