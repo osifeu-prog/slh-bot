@@ -1,7 +1,7 @@
 import state_manager
 
 from core.mission_state import MissionStateNormalizer
-from core.mission_runtime_bridge import execute_mission_via_runtime
+from core.mission_runtime_authority import execute_mission_authority
 from core.mission_lifecycle import MissionLifecycleService
 from core.mission_reward_service import issue_mission_reward
 
@@ -57,7 +57,7 @@ def register(bot, context=None):
             for t in missions:
                 status = t.get("status")
                 icon = "🟢" if MissionStateNormalizer.is_completed(status) else "🔴" if status == "open" else "🟡"
-                lines.append(f"{icon} #{t.get('id')}: {t.get('desc', '')}")
+                lines.append(f"🟢 #{t.get('id')}: {t.get('desc', '')}" if icon == "🟢" else f"{icon} #{t.get('id')}: {t.get('desc', '')}")
                 lines.append(f"   ↳ אחראי: {t.get('assigned_to') or 'לא שויך'} | שכר: {t.get('reward', 0)} SLH")
                 lines.append("")
             bot.reply_to(m, "\n".join(lines))
@@ -100,10 +100,7 @@ def register(bot, context=None):
                 return
             mission_id = parts[2].strip()
             try:
-                result = execute_mission_via_runtime(mission_id=mission_id)
-                lifecycle_result = result.get("lifecycle_result", {})
-                if lifecycle_result.get("status") == "completed":
-                    result["reward"] = reward_after_completion(mission_id)
+                result = execute_mission_authority(mission_id=mission_id)
                 bot.reply_to(m, "🔵 תוצאת הרצת משימה #" + mission_id + "\n" + str(result))
             except Exception as e:
                 bot.reply_to(m, "❌ שגיאה בהרצת משימה #" + mission_id + "\n" + str(e))
