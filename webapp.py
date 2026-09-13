@@ -62,7 +62,7 @@ def market():
 
 @app.route("/mini-app")
 def mini_app():
-    """Serve the Mini App with a tiny compatibility shim for guide buttons."""
+    """Serve the Mini App with a compatibility and staking UX shim."""
     html_path = BASE_DIR / "mini_app.html"
     html = html_path.read_text(encoding="utf-8")
     shim = """
@@ -75,6 +75,96 @@ function showGuide(id){
     el.scrollIntoView({behavior:'smooth',block:'center'});
   }
 }
+(function(){
+  function installStakingUi(){
+    const stake=document.getElementById('stake');
+    if(!stake || document.getElementById('miniapp-staking-box')) return;
+    const box=document.createElement('div');
+    box.id='miniapp-staking-box';
+    box.className='card';
+    box.innerHTML=`
+      <b>🔒 הפעלת Staking</b>
+      <p class="muted">Staking פנימי של Credits · נעילה ל־30 יום.</p>
+      <div class="wallet-row"><span class="muted">Credits זמינים</span><strong id="stakeAvailable">—</strong></div>
+      <label class="form-label" for="miniStakeAmount">סכום Credits לנעילה</label>
+      <input id="miniStakeAmount" class="form-input" inputmode="numeric" type="number" min="1" step="1" placeholder="לדוגמה: 250">
+      <div class="wallet-row"><span class="muted">לאחר הפעולה</span><span id="stakePreview">—</span></div>
+      <button id="miniStakeConfirm" class="action primary" style="width:100%;margin-top:10px;min-height:56px"><b>אישור נעילת 30 יום</b><span>יצירת Position בפועל</span></button>
+      <div id="miniStakeStatus" class="muted" style="margin-top:9px"></div>
+      <p class="muted" style="margin-top:10px">זהו מנגנון פנימי של SLH ואינו העברת נכס on-chain.</p>`;
+    stake.prepend(box);
+
+    const amountEl=document.getElementById('miniStakeAmount');
+    const availableEl=document.getElementById('stakeAvailable');
+    const previewEl=document.getElementById('stakePreview');
+    const statusEl=document.getElementById('miniStakeStatus');
+    const confirmEl=document.getElementById('miniStakeConfirm');
+
+    function currentCredits(){
+      const raw=(document.getElementById('credits')||{}).textContent || '';
+      const n=Number(String(raw).replace(/[^0-9.-]/g,''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    function renderPreview(){
+      const available=currentCredits();
+      const amount=Number(amountEl.value||0);
+      availableEl.textContent=available;
+      if(amount>0 && amount<=available){
+        previewEl.textContent=`Credits: ${available-amount} · Staked: +${amount}`;
+        confirmEl.disabled=false;
+      } else {
+        previewEl.textContent=amount>available ? 'אין מספיק Credits' : 'בחר סכום';
+        confirmEl.disabled=true;
+      }
+    }
+    amountEl.addEventListener('input',renderPreview);
+    confirmEl.addEventListener('click',async function(){
+      const amount=Number(amountEl.value||0);
+      const available=currentCredits();
+      if(!Number.isInteger(amount) || amount<=0){
+        statusEl.textContent='יש להזין סכום שלם וחיובי.';
+        return;
+      }
+      if(amount>available){
+        statusEl.textContent='אין מספיק Credits זמינים.';
+        return;
+      }
+      if(!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData){
+        statusEl.textContent='נדרשת פתיחה מתוך Telegram Mini App.';
+        return;
+      }
+      confirmEl.disabled=true;
+      statusEl.textContent='מאשר ומעדכן את ה־Position…';
+      try{
+        const res=await fetch('/api/v1/staking',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Telegram-Init-Data':Telegram.WebApp.initData},
+          body:JSON.stringify({amount})
+        });
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok){
+          if(res.status===403 && data.error==='STAKING_STAGE_REQUIRED'){
+            throw new Error('יש להשלים את Bitcoin Mastery עד Stage 3 לפני Staking.');
+          }
+          if(data.error==='INSUFFICIENT_CREDITS') throw new Error('אין מספיק Credits זמינים.');
+          if(res.status===401) throw new Error('יש לפתוח את הממשק מתוך Telegram.');
+          throw new Error('לא ניתן ליצור Position כרגע.');
+        }
+        statusEl.textContent=`✓ Staking פעיל · ${data.amount} Credits ננעלו · Position ${data.position.id}`;
+        amountEl.value='';
+        if(typeof refreshAll==='function') await refreshAll();
+        renderPreview();
+      }catch(err){
+        statusEl.textContent=err.message || 'אירעה שגיאה.';
+        confirmEl.disabled=false;
+      }
+    });
+    renderPreview();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',installStakingUi);
+  else installStakingUi();
+  window.installStakingUi=installStakingUi;
+})();
 </script>
 """
     if "function showGuide(" not in html:
