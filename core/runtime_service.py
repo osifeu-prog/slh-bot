@@ -43,6 +43,18 @@ def _ensure_loaded(identifier):
     return agent_id, record, name
 
 
+def execute_agent_event(identifier, event):
+    """Execute a fully-formed internal event through the canonical Runtime."""
+    if not isinstance(event, dict) or not event.get("cmd"):
+        raise ValueError("Runtime event must be a non-empty dictionary with cmd")
+    global _RUNTIME
+    _, record, _name = _ensure_loaded(identifier)
+    if not record.get("runtime_class"):
+        raise ValueError("Agent record has no runtime_class")
+    with _LOCK:
+        return _RUNTIME.execute(dict(event))
+
+
 def execute_agent(identifier, command, source=None):
     """Execute a validated DB agent through the canonical Runtime/Dispatcher."""
     global _RUNTIME
