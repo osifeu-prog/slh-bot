@@ -6,6 +6,8 @@ from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
+from core.profile_manager import get_user
+from core import staking_service
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -60,7 +62,7 @@ def market():
 
 @app.route("/mini-app")
 def mini_app():
-    """Serve the Mini App with a tiny compatibility shim for guide buttons."""
+    """Serve the Mini App with a compatibility and staking UX shim."""
     html_path = BASE_DIR / "mini_app.html"
     html = html_path.read_text(encoding="utf-8")
     shim = """
@@ -73,6 +75,96 @@ function showGuide(id){
     el.scrollIntoView({behavior:'smooth',block:'center'});
   }
 }
+(function(){
+  function installStakingUi(){
+    const stake=document.getElementById('stake');
+    if(!stake || document.getElementById('miniapp-staking-box')) return;
+    const box=document.createElement('div');
+    box.id='miniapp-staking-box';
+    box.className='card';
+    box.innerHTML=`
+      <b>🔒 הפעלת Staking</b>
+      <p class="muted">Staking פנימי של Credits · נעילה ל־30 יום.</p>
+      <div class="wallet-row"><span class="muted">Credits זמינים</span><strong id="stakeAvailable">—</strong></div>
+      <label class="form-label" for="miniStakeAmount">סכום Credits לנעילה</label>
+      <input id="miniStakeAmount" class="form-input" inputmode="numeric" type="number" min="1" step="1" placeholder="לדוגמה: 250">
+      <div class="wallet-row"><span class="muted">לאחר הפעולה</span><span id="stakePreview">—</span></div>
+      <button id="miniStakeConfirm" class="action primary" style="width:100%;margin-top:10px;min-height:56px"><b>אישור נעילת 30 יום</b><span>יצירת Position בפועל</span></button>
+      <div id="miniStakeStatus" class="muted" style="margin-top:9px"></div>
+      <p class="muted" style="margin-top:10px">זהו מנגנון פנימי של SLH ואינו העברת נכס on-chain.</p>`;
+    stake.prepend(box);
+
+    const amountEl=document.getElementById('miniStakeAmount');
+    const availableEl=document.getElementById('stakeAvailable');
+    const previewEl=document.getElementById('stakePreview');
+    const statusEl=document.getElementById('miniStakeStatus');
+    const confirmEl=document.getElementById('miniStakeConfirm');
+
+    function currentCredits(){
+      const raw=(document.getElementById('credits')||{}).textContent || '';
+      const n=Number(String(raw).replace(/[^0-9.-]/g,''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    function renderPreview(){
+      const available=currentCredits();
+      const amount=Number(amountEl.value||0);
+      availableEl.textContent=available;
+      if(amount>0 && amount<=available){
+        previewEl.textContent=`Credits: ${available-amount} · Staked: +${amount}`;
+        confirmEl.disabled=false;
+      } else {
+        previewEl.textContent=amount>available ? 'אין מספיק Credits' : 'בחר סכום';
+        confirmEl.disabled=true;
+      }
+    }
+    amountEl.addEventListener('input',renderPreview);
+    confirmEl.addEventListener('click',async function(){
+      const amount=Number(amountEl.value||0);
+      const available=currentCredits();
+      if(!Number.isInteger(amount) || amount<=0){
+        statusEl.textContent='יש להזין סכום שלם וחיובי.';
+        return;
+      }
+      if(amount>available){
+        statusEl.textContent='אין מספיק Credits זמינים.';
+        return;
+      }
+      if(!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData){
+        statusEl.textContent='נדרשת פתיחה מתוך Telegram Mini App.';
+        return;
+      }
+      confirmEl.disabled=true;
+      statusEl.textContent='מאשר ומעדכן את ה־Position…';
+      try{
+        const res=await fetch('/api/v1/staking',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','X-Telegram-Init-Data':Telegram.WebApp.initData},
+          body:JSON.stringify({amount})
+        });
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok){
+          if(res.status===403 && data.error==='STAKING_STAGE_REQUIRED'){
+            throw new Error('יש להשלים את Bitcoin Mastery עד Stage 3 לפני Staking.');
+          }
+          if(data.error==='INSUFFICIENT_CREDITS') throw new Error('אין מספיק Credits זמינים.');
+          if(res.status===401) throw new Error('יש לפתוח את הממשק מתוך Telegram.');
+          throw new Error('לא ניתן ליצור Position כרגע.');
+        }
+        statusEl.textContent=`✓ Staking פעיל · ${data.amount} Credits ננעלו · Position ${data.position.id}`;
+        amountEl.value='';
+        if(typeof refreshAll==='function') await refreshAll();
+        renderPreview();
+      }catch(err){
+        statusEl.textContent=err.message || 'אירעה שגיאה.';
+        confirmEl.disabled=false;
+      }
+    });
+    renderPreview();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',installStakingUi);
+  else installStakingUi();
+  window.installStakingUi=installStakingUi;
+})();
 </script>
 """
     if "function showGuide(" not in html:
@@ -104,6 +196,65 @@ def investor_me():
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
         raise
+
+
+@app.route("/api/v1/staking", methods=["POST"])
+def create_staking_position():
+    """Create a 30-day internal staking position for the authenticated user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    raw_amount = payload.get("amount")
+    try:
+        if isinstance(raw_amount, bool) or raw_amount is None:
+            raise ValueError("invalid amount")
+        if isinstance(raw_amount, int):
+            amount = raw_amount
+        elif isinstance(raw_amount, str) and raw_amount.strip().isdigit():
+            amount = int(raw_amount.strip())
+        else:
+            raise ValueError("invalid amount")
+        if amount <= 0:
+            raise ValueError("amount must be positive")
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_AMOUNT"}), 400
+
+    db = load_db()
+    users = db.get("users", {})
+    user = users.get(str(uid)) if isinstance(users, dict) else None
+    if not isinstance(user, dict):
+        return jsonify({"error": "USER_NOT_FOUND"}), 404
+
+    course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
+    if not course or int(course.get("stage", 0) or 0) < 3:
+        return jsonify({"error": "STAKING_STAGE_REQUIRED", "required_stage": 3}), 403
+
+    try:
+        result = staking_service.stake_locked(
+            str(uid),
+            amount,
+            lock_days=30,
+            meta={"source": "miniapp", "endpoint": "/api/v1/staking"},
+        )
+    except ValueError as exc:
+        message = str(exc)
+        if message == "insufficient credits":
+            return jsonify({"error": "INSUFFICIENT_CREDITS"}), 400
+        if message in {"amount must be positive", "lock_days must be positive"}:
+            return jsonify({"error": "INVALID_AMOUNT"}), 400
+        if message == "user not found":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": "STAKING_FAILED"}), 400
+
+    return jsonify({
+        "status": "created",
+        "amount": amount,
+        "credits": result["credits"],
+        "staked": result["staked"],
+        "position": result["position"],
+    }), 200
 
 
 @app.route("/api/wallet/<uid>")
