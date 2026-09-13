@@ -80,31 +80,17 @@ def settle_position_reward(position_id, rate_per_day=RATE_PER_DAY):
         if not current:
             raise KeyError("reward pool missing")
 
-        current_key = (
-            f"staking_reward:{position_id}:"
-            f"{current.get('calculated_at')}:{current.get('accrued_total')}"
-        )
-        if current_key != settlement_key:
-            # A newer accrual already exists. The wallet transaction above is
-            # still idempotent; do not overwrite the newer pool snapshot.
-            return {
-                "status": "applied_newer_pool",
-                "position_id": position_id,
-                "amount": pending,
-                "balance": balance_after,
-            }
-
-        settled_total = round(
-            float(current.get("settled_total", 0) or 0) + pending,
-            6,
-        )
+        current_accrued = round(float(current.get("accrued_total", 0) or 0), 6)
+        snapshot_accrued = round(float(pool.get("accrued_total", 0) or 0), 6)
+        settled_total = round(float(current.get("settled_total", 0) or 0), 6)
+        settled_total = max(settled_total, snapshot_accrued)
         current["settled_total"] = settled_total
-        current["reward"] = 0
-        current["status"] = "settled"
+        current["reward"] = max(0, round(current_accrued - settled_total, 6))
+        current["status"] = "pending" if current["reward"] > 0 else "settled"
         current["settled_at"] = time.time()
-        current["settlement_key"] = settlement_key
+        current["last_settlement_key"] = settlement_key
         return {
-            "status": "settled",
+            "status": "settled" if current["reward"] == 0 else "settled_partial",
             "position_id": position_id,
             "amount": pending,
             "balance": balance_after,
