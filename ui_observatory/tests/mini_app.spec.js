@@ -41,7 +41,7 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 }
 
 async function clickPrimaryNav(page, label) {
-  await page.locator('nav').getByRole('button', { name: label, exact: true }).click();
+  await page.locator('.nav').getByRole('button', { name: label, exact: true }).click();
 }
 
 test.beforeEach(async ({ page }) => {
