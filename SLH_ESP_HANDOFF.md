@@ -111,3 +111,61 @@ If agent stopped:
 If bot is silent:
 1. `railway logs --service web 2>&1 | Select-String "ESP" | Select-Object -Last 20`
 2. Restart from GitHub: `git push origin main` (Railway auto-deploys)
+---
+
+## Update — 2026-09-14 (Evening)
+
+### מה נסגר היום
+
+| רכיב | סטטוס |
+|---|---|
+| ESP32 + מסך + מגע | ✅ עובד |
+| WiFi + MQTT + NTP config | ✅ |
+| 4 טאבים + פעולות מגע | ✅ |
+| שומר מסך NEON HUD (עיניים + כובע + כתר) | ✅ נצרב |
+| `/esp_view`, `/esp_sync`, `/esp_msg`, `/esp_led` | ✅ |
+| סוכן מקומי ברקע (VBS Startup) | ✅ |
+| `/esp_flash`, `/esp_compile`, `/esp_ports`, `/esp_chipid`, `/agent_status` | ✅ |
+| HANDOFF ראשוני | ✅ fc1ed8c |
+
+### מה עוד פתוח
+
+**🔴 שעון לא מסונכרן**
+- ה-patch האחרון (`patch_ntp3.py`) **נכשל** עם `ANCHOR2_NOT_FOUND` — לא הוחל.
+- הצריבה שאחריו צרבה את אותה קושחה ללא שינוי.
+- **המשך טיפול:** לכתוב patch שלא תלוי בהתאמת רווחים מדויקת. למחוק כל שורת `configTime` ואז להוסיף מחדש מיד אחרי `connectWifi()` עם grep גמיש.
+
+**🟡 מצמוץ שומר מסך לא חלק**
+- הנצנוץ בין מצבי עיניים פקוחות/עצומות עדיין מורגש.
+- **המשך טיפול:** להקטין את אזור ה-`fillRect` סביב העיניים או להעביר את כל ה-screensaver ל-sprite קטן.
+
+**🟡 כפתורים איטיים (~1-2s תגובה)**
+- 3 גורמים: debounce 400ms + MQTT round-trip + `drawEyes` לפני כל פעולה.
+- **המשך טיפול:** debounce ל-150ms, ביטול ציור מלא לפני כל פעולה, אופציונלי: sprite לאזור הכפתור.
+
+**🟡 `/esp_state` טרם נבנה**
+- סנאפשוט מלא של ESP + סוכן + בוט בפקודה אחת.
+
+**🔴 `/agent_submit` — BLOCKER נפרד**
+- נמצא באודיט מקביל (לא קשור ל-ESP): משתמש רגיל יכול להנפיק +10 Credits דרך `/agent_submit` בלי approval/idempotency.
+- **המשך טיפול:** לסגור את ה-blocker בנפרד לפני עליה לפרודקשן.
+
+### לקחים מהסשן
+
+1. **patch לא מחזיר `PATCHED` → לא מריצים `pio run -t upload`.** בזבוז של 30 שניות לכל צריבה מיותרת.
+2. **לא להריץ קוד C++ ישירות ב-PowerShell.** PowerShell מריץ PowerShell, לא C++. שגיאות `CommandNotFoundException` הן סימן לכך.
+3. **`configTime` לפני `connectWifi` נכשל בשקט** — הוא מנסה DNS בלי רשת. תמיד להעביר אותו אחרי.
+4. **`serial.Serial` תופס COM9 לנצח** אם לא סוגרים — כל patch צריך `Get-Process python | Stop-Process -Force` לפני קריאה.
+5. **`pio monitor` רץ ברקע תופס COM9 גם הוא** — לסגור לפני עריכה.
+
+### זמני אמת (כיול)
+
+| בלוק | הערכתי | בפועל |
+|---|---|---|
+| פקודה פשוטה (git push, patch) | 2-3 דק' | 3-4 דק' |
+| פקודה + צריבה | 4-6 דק' | 6-8 דק' |
+| patch גדול + צריבה | 8-10 דק' | 10-15 דק' |
+| patch מורכב + צריבה + בדיקה | 15-20 דק' | 20-30 דק' |
+
+**מכאן והלאה:** אם patch לא מחזיר `PATCHED` — לעצור, לא לצרוב.
+
