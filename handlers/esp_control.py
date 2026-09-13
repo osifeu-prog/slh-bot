@@ -99,6 +99,7 @@ def register(bot, context=None):
 
     register_sync(bot)
     _start_action_listener(bot)
+    register_screen(bot)
     print("ESP control commands loaded")
 
 def _handle_action(bot, uid, device_id, payload):
@@ -200,6 +201,72 @@ def _start_action_listener(bot):
     print("[ESP_ACTION] listener started")
 
 
+
+
+_BAL_CACHE_FILE = "state/esp_balance_cache.json"
+
+
+def _get_balance_cache():
+    try:
+        with open(_BAL_CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_balance_cache(cache):
+    try:
+        with open(_BAL_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
+    except Exception:
+        pass
+
+
+def _fetch_ton_balance(address):
+    """Fetch TON balance from public API."""
+    if not address: return None
+    try:
+        import requests
+        r = requests.get("https://tonapi.io/v2/accounts/" + address, timeout=5)
+        if r.status_code == 200:
+            return round(float(r.json().get("balance", 0)) / 1e9, 4)
+    except Exception as e:
+        print(f"[BAL] ton error: {e}")
+    return None
+
+
+def _fetch_ton_usdt_balance(address):
+    """Fetch USDT (jetton) balance on TON."""
+    if not address: return None
+    try:
+        import requests
+        # USDT jetton master on TON
+        USDT_MASTER = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
+        url = f"https://tonapi.io/v2/accounts/{address}/jettons/{USDT_MASTER}"
+        r = requests.get(url, timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            bal = data.get("balance", 0)
+            decimals = int(data.get("jetton", {}).get("decimals", 6))
+            return round(float(bal) / (10 ** decimals), 4)
+    except Exception as e:
+        print(f"[BAL] usdt error: {e}")
+    return None
+
+
+def _fetch_bnb_balance(address):
+    """Fetch BNB balance via public BSC RPC."""
+    if not address: return None
+    try:
+        from web3 import Web3
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed.binance.org/"))
+        bal = w3.eth.get_balance(Web3.to_checksum_address(address))
+        return round(bal / 1e18, 6)
+    except Exception as e:
+        print(f"[BAL] bnb error: {e}")
+    return None
+
+
 def build_sync_payload(uid):
     """Build the full wallet state for a device."""
     import json
@@ -239,6 +306,22 @@ def build_sync_payload(uid):
     else:
         nba = "Explore Market"
 
+    # Fetch on-chain balances (cached to avoid slow responses)
+    now_ts = time.time()
+    cache_key = str(uid)
+    cache = _get_balance_cache()
+    if cache.get(cache_key) and now_ts - cache[cache_key].get("ts", 0) < 120:
+        cached = cache[cache_key]
+        ton_bal = cached.get("ton")
+        usdt_bal = cached.get("usdt")
+        bnb_bal = cached.get("bnb")
+    else:
+        ton_bal = _fetch_ton_balance(ton_addr) if ton_addr and ton_addr != "-" else None
+        usdt_bal = _fetch_ton_usdt_balance(ton_addr) if ton_addr and ton_addr != "-" else None
+        bnb_bal = _fetch_bnb_balance(bnb_addr) if bnb_addr and bnb_addr != "not bound" else None
+        cache[cache_key] = {"ts": now_ts, "ton": ton_bal, "usdt": usdt_bal, "bnb": bnb_bal}
+        _save_balance_cache(cache)
+
     return {
         "credits": round(credits, 2),
         "slh": round(slh, 2),
@@ -247,6 +330,11 @@ def build_sync_payload(uid):
         "level": level,
         "ton": ton_addr,
         "bnb": bnb_addr,
+        "ton_bal": ton_bal if ton_bal is not None else 0,
+        "usdt_bal": usdt_bal if usdt_bal is not None else 0,
+        "bnb_bal": bnb_bal if bnb_bal is not None else 0,
+        "eth_bal": 0,
+        "btc_bal": 0,
         "devices_list": devices_list,
         "next_action": nba,
     }
@@ -281,3 +369,119 @@ def register_sync(bot):
             bot.send_message(m.chat.id, mirror, parse_mode="Markdown")
         except Exception:
             bot.send_message(m.chat.id, mirror)
+
+
+def _ascii_wallet(state):
+    """Render wallet as ASCII art."""
+    t = state.get("tab", 0)
+    mode = state.get("mode", "active")
+    if mode == "screensaver":
+        return (
+            "```\n"
+            "+--------------------------------+\n"
+            "|  [*]                    [*]   |\n"
+            "|   o    o                      |\n"
+            "|        -                      |\n"
+            "|     = SLH =                   |\n"
+            "|   SECURE EDGE DEVICE          |\n"
+            "|   touch to wake               |\n"
+            "+--------------------------------+\n"
+            "```"
+        )
+    tab_names = ["Wallet", "Earn", "Devices", "Info"]
+    top = f"| {tab_names[0]:<7}|{tab_names[1]:<6}|{tab_names[2]:<8}|{tab_names[3]:<6}|"
+    sep = "+--------------------------------+"
+    if t == 0:
+        body = (
+            f"| SLH SYSTEM                     |\n"
+            f"| Credits  {state.get('credits', 0):>18} |\n"
+            f"| SLH      {state.get('slh', 0):>18} |\n"
+            f"| Staked   {state.get('staked', 0):>12} P:{state.get('points', 0):<3}L{state.get('level', 0)}|\n"
+            f"+--------------------------------+\n"
+            f"| OTHER ASSETS                   |\n"
+            f"| TON   {state.get('ton_bal', 0):<10} USDT  {state.get('usdt_bal', 0):<8}|\n"
+            f"| BNB   {state.get('bnb_bal', 0):<10} ETH   {state.get('eth_bal', 0):<8}|\n"
+            f"| BTC   {state.get('btc_bal', 0):<10}              |\n"
+            f"|                                |\n"
+            f"| [Next: {state.get('nba', '-'):<22}] |"
+        )
+    elif t == 1:
+        body = (
+            f"| EARN - Tap to act              |\n"
+            f"|   > Stake Credits              |\n"
+            f"|   > Invite Friend              |\n"
+            f"|   > Continue Course            |\n"
+            f"|   > Refresh Wallet             |\n"
+            f"|                                |\n"
+            f"| [Next: {state.get('nba', '-'):<22}] |"
+        )
+    elif t == 2:
+        body = (
+            f"| DEVICES                        |\n"
+            f"| This: ESP32_14335C6C32C0       |\n"
+            f"| IP:   {state.get('ip', '-'):<24} |\n"
+            f"| RSSI: {state.get('rssi', 0)} dBm                  |\n"
+            f"| Uptime: {state.get('uptime', 0)}s                    |"
+        )
+    else:
+        body = (
+            f"| INFO                           |\n"
+            f"| Firmware: SLH OS v0.5          |\n"
+            f"| IP: {state.get('ip', '-'):<27} |\n"
+            f"| RSSI: {state.get('rssi', 0)} dBm                  |\n"
+            f"| Uptime: {state.get('uptime', 0)}s                    |"
+        )
+    return f"```\n{sep}\n{top}\n{sep}\n{body}\n{sep}\n```"
+
+
+def register_screen(bot):
+    @bot.message_handler(commands=["esp_view"])
+    def esp_view(m):
+        parts = m.text.split()
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /esp_view <device_id>")
+            return
+        did = parts[1]
+        dev = _load_devices().get(did)
+        if not dev: bot.reply_to(m, f"Device {did} not found"); return
+        if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
+
+        # send screen command and wait for response
+        resp_topic = f"slh/esp/{did}/response"
+        cmd_topic = f"slh/esp/{did}/command"
+        import paho.mqtt.client as mqtt
+        import json as _j
+        result = {"data": None}
+        def on_connect(c, u, f, rc):
+            c.subscribe(resp_topic)
+        def on_message(c, u, msg):
+            try:
+                result["data"] = _j.loads(msg.payload.decode())
+            except Exception:
+                pass
+            try: c.disconnect()
+            except: pass
+        c = mqtt.Client()
+        c.on_connect = on_connect
+        c.on_message = on_message
+        c.connect("broker.hivemq.com", 1883, 60)
+        c.loop_start()
+        import time as _t
+        _t.sleep(0.5)
+        c.publish(cmd_topic, "screen")
+        for _ in range(12):
+            if result["data"] is not None: break
+            _t.sleep(0.5)
+        c.loop_stop()
+        try: c.disconnect()
+        except: pass
+        if result["data"] is None:
+            bot.reply_to(m, "No response from device")
+            return
+        ascii_art = _ascii_wallet(result["data"])
+        try:
+            bot.send_message(m.chat.id, f"*Screen on {did}*\n{ascii_art}", parse_mode="Markdown")
+        except Exception as e:
+            bot.send_message(m.chat.id, f"Screen on {did}\n{ascii_art}")
+
+
