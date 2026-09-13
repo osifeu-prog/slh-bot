@@ -29,3 +29,5 @@ jobs:
           tests/test_mission_execution_authority.py
           tests/test_mission_execution_persistence.py
           tests/test_mission_execution_routes.py
+          tests/test_mission_lifecycle_contract.py
+          tests/test_mission_lifecycle_retired.py
