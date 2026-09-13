@@ -49,7 +49,7 @@ test.beforeEach(async ({ page }) => {
 test('all primary screens are reachable', async ({ page }) => {
   const seen = [];
   for (const [id, label] of screens) {
-    await page.getByRole('button', { name: label }).click();
+    await page.getByRole('button', { name: label, exact: true }).click();
     await expect(page.locator(`#${id}`)).toHaveClass(/active/);
     seen.push(id);
   }
@@ -70,7 +70,7 @@ test('interactive controls have usable names and form fields are labelled', asyn
   const unnamed = await page.locator('button').evaluateAll(buttons => buttons.filter(b => !(b.innerText || b.getAttribute('aria-label') || '').trim()).length);
   expect(unnamed).toBe(0);
 
-  await page.getByRole('button', { name: '💸 העברה' }).click();
+  await page.getByRole('button', { name: '💸 העברה', exact: true }).click();
   await expect(page.locator('#recipient')).toHaveAttribute('id', 'recipient');
   await expect(page.locator('label[for="recipient"]')).toBeVisible();
   await expect(page.locator('label[for="amount"]')).toBeVisible();
@@ -83,36 +83,36 @@ test('accessibility audit has no serious or critical violations', async ({ page 
 });
 
 test('visual baseline: home', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🏠 בית' }).click();
+  await page.getByRole('button', { name: '🏠 בית', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'home.png');
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '👛 ארנק' }).click();
+  await page.getByRole('button', { name: '👛 ארנק', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
 test('visual baseline: transfer', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '💸 העברה' }).click();
+  await page.getByRole('button', { name: '💸 העברה', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
 test('visual baseline: buy', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '💳 קנייה' }).click();
+  await page.getByRole('button', { name: '💳 קנייה', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
 
 test('visual baseline: staking', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🔒 סטייקינג' }).click();
+  await page.getByRole('button', { name: '🔒 סטייקינג', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'stake.png');
 });
 
 test('visual baseline: alpha', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🚀 Alpha' }).click();
+  await page.getByRole('button', { name: '🚀 Alpha', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'alpha.png');
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: '🎓 Academy' }).click();
+  await page.getByRole('button', { name: '🎓 Academy', exact: true }).click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
