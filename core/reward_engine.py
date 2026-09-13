@@ -1,8 +1,7 @@
 """SLH Reward Engine.
 
 Credits are issued through the Economy Authority. Reward-pool bookkeeping is
-kept lock-safe so a concurrent wallet update cannot be overwritten by a stale
-snapshot.
+lock-safe and cumulative so a position can receive multiple reward settlements.
 """
 
 from datetime import datetime
@@ -41,9 +40,13 @@ def grant(uid, reason, credits=0, points=0, idempotency_key=None):
     key = idempotency_key or f"{uid}:{reason}"
     result = {}
     if credits:
-        result["credits"] = economy_bridge.add_credits(uid, credits, reason=reason, meta={"idempotency_key": key})
+        result["credits"] = economy_bridge.add_credits(
+            uid, credits, reason=reason, meta={"idempotency_key": key}
+        )
     if points:
-        profile_manager.add_points(uid, points, reason=reason, meta={"idempotency_key": key})
+        profile_manager.add_points(
+            uid, points, reason=reason, meta={"idempotency_key": key}
+        )
         result["points"] = points
 
     entry = {
@@ -77,7 +80,10 @@ def calculate_reward(position_id, rate_per_day=0.001333):
         return 0.0
     created = pos.get("created_at", time.time())
     days = max(0, (time.time() - created) / 86400)
-    return round(float(pos["amount"]) * days * rate_per_day, 6)
+    gross = round(float(pos["amount"]) * days * rate_per_day, 6)
+    pool = db.get("reward_pools", {}).get(position_id, {})
+    settled_total = round(float(pool.get("settled_total", 0) or 0), 6)
+    return max(0, round(gross - settled_total, 6))
 
 
 def accrue(position_id, rate_per_day=0.001333):
@@ -89,19 +95,21 @@ def accrue(position_id, rate_per_day=0.001333):
             return {"position_id": position_id, "reward": 0.0, "status": "closed"}
         created = pos.get("created_at", time.time())
         days = max(0, (time.time() - created) / 86400)
-        reward = round(float(pos["amount"]) * days * rate_per_day, 6)
+        gross = round(float(pos["amount"]) * days * rate_per_day, 6)
         pools = db.setdefault("reward_pools", {})
-        existing = pools.get(position_id)
-        if existing and existing.get("status") == "paid":
-            return dict(existing)
+        existing = pools.get(position_id, {})
+        settled_total = round(float(existing.get("settled_total", 0) or 0), 6)
+        reward = max(0, round(gross - settled_total, 6))
         entry = {
             "position_id": str(position_id),
             "uid": str(pos.get("uid")),
             "reward": reward,
+            "accrued_total": gross,
+            "settled_total": settled_total,
             "asset": "credits",
             "rate_per_day": float(rate_per_day),
             "calculated_at": time.time(),
-            "status": "pending",
+            "status": "pending" if reward > 0 else "settled",
         }
         pools[position_id] = entry
         return dict(entry)
@@ -110,81 +118,91 @@ def accrue(position_id, rate_per_day=0.001333):
 
 
 def claim_reward(position_id, idempotency_key=None):
-    """Settle one accrued staking reward through the Economy Authority.
+    """Settle one pending reward snapshot through the Economy Authority.
 
-    The wallet mutation is delegated to economy_bridge/economy_service, never
-    performed directly here. Settlement is intentionally two-phase because
-    economy_service owns its own atomic DB transaction: the deterministic
-    idempotency key makes retries safe if the process stops between the credit
-    and reward-pool bookkeeping phases.
+    The idempotency key is derived from the reward snapshot unless explicitly
+    supplied. Each new accrual therefore gets a new key, while retries of the
+    same snapshot remain safe.
     """
     position_id = str(position_id)
-    key = str(idempotency_key or f"staking-reward:{position_id}").strip()
-    if not key:
-        raise ValueError("idempotency_key required")
-
     db = state_manager.load_db()
     pos = db.get("stake_positions", {}).get(position_id)
     if not pos:
         raise KeyError("position not found")
+    if pos.get("status") == "unlocked":
+        return {"status": "closed", "position_id": position_id}
+
     pool = db.get("reward_pools", {}).get(position_id)
     if not pool:
         raise ValueError("reward not accrued")
-    if pool.get("status") == "paid":
+    if pool.get("status") == "paid" and not pool.get("reward"):
         return {"status": "already_paid", **pool}
-    if pool.get("status") != "pending":
+    if pool.get("status") not in {"pending", "paid"}:
         raise ValueError("reward is not claimable")
 
     amount = round(float(pool.get("reward", 0) or 0), 6)
     if amount <= 0:
-        raise ValueError("reward is zero")
-    uid = str(pos.get("uid"))
+        return {"status": "nothing_to_claim", **pool}
 
-    # Canonical wallet mutation. economy_service.record_transaction() is
-    # idempotent on this key, so a retry after a partial failure cannot double
-    # credit the user.
+    uid = str(pos.get("uid"))
+    if not uid or uid == "None":
+        raise ValueError("position owner missing")
+
+    key = str(idempotency_key or (
+        f"staking-reward:{position_id}:"
+        f"{pool.get('calculated_at')}:{pool.get('accrued_total')}"
+    )).strip()
+    if not key:
+        raise ValueError("idempotency_key required")
+
     after = economy_bridge.add_credits(
         uid,
         amount,
         reason="staking:reward_claim",
-        meta={"idempotency_key": key, "position_id": position_id, "asset": "credits"},
+        meta={
+            "idempotency_key": key,
+            "position_id": position_id,
+            "asset": "credits",
+            "accrued_total": pool.get("accrued_total"),
+        },
     )
 
     def finalize(db2):
         pools = db2.setdefault("reward_pools", {})
         current = pools.get(position_id)
-        if current and current.get("status") == "paid":
-            return {"status": "already_paid", **current}
+        if not current:
+            raise KeyError("reward pool missing")
+
+        current_settled = round(float(current.get("settled_total", 0) or 0), 6)
+        snapshot_total = round(float(pool.get("accrued_total", 0) or 0), 6)
+        current_settled = max(current_settled, snapshot_total)
+        current_accrued = round(float(current.get("accrued_total", 0) or 0), 6)
+        current["settled_total"] = current_settled
+        current["reward"] = max(0, round(current_accrued - current_settled, 6))
+        current["status"] = "pending" if current["reward"] > 0 else "settled"
+        current["paid_amount"] = amount
+        current["paid_at"] = datetime.utcnow().isoformat()
+        current["claim_idempotency_key"] = key
 
         transactions = db2.setdefault("reward_transactions", [])
-        for tx in transactions:
-            if str(tx.get("idempotency_key")) == key:
-                return {"status": "duplicate", **tx}
+        if not any(str(tx.get("idempotency_key")) == key for tx in transactions):
+            transactions.append({
+                "idempotency_key": key,
+                "position_id": position_id,
+                "uid": uid,
+                "asset": "credits",
+                "amount": amount,
+                "after": after,
+                "reason": "staking:reward_claim",
+                "timestamp": datetime.utcnow().isoformat(),
+            })
 
-        now = datetime.utcnow().isoformat()
-        tx = {
-            "idempotency_key": key,
+        return {
+            "status": "paid" if current["reward"] == 0 else "paid_partial",
             "position_id": position_id,
-            "uid": uid,
-            "asset": "credits",
             "amount": amount,
             "after": after,
-            "reason": "staking:reward_claim",
-            "timestamp": now,
         }
-        transactions.append(tx)
-        current = current or {
-            "position_id": position_id,
-            "uid": uid,
-            "reward": amount,
-            "asset": "credits",
-        }
-        current["status"] = "paid"
-        current["paid_at"] = now
-        current["paid_amount"] = amount
-        current["claim_idempotency_key"] = key
-        pools[position_id] = current
-        return {"status": "paid", **tx}
 
     return state_manager.atomic_update(finalize)
 
