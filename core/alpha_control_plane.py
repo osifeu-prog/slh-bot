@@ -12,6 +12,7 @@ import time
 from datetime import datetime, timezone
 
 import state_manager
+from core.exec_policy import is_owner
 
 ROOT = Path(__file__).resolve().parent.parent
 ALPHA_KEY = "alpha_control"
@@ -25,8 +26,12 @@ def evaluate():
     checks = []
     gateway = ROOT / "bot_gateway.py"
     checks.append(_check("runtime", gateway.exists(), "bot_gateway.py present"))
-    checks.append(_check("run_bot_enabled", str(os.getenv("RUN_BOT", "")).strip() == "1",
-                         "RUN_BOT=1 required in the active runtime"))
+
+    # RUN_BOT is an optional deployment hint. If explicitly configured it must be 1;
+    # absence must not falsely block an already-running gateway/runtime.
+    run_bot = str(os.getenv("RUN_BOT", "")).strip()
+    checks.append(_check("run_bot_config", run_bot in ("", "1"),
+                         "RUN_BOT unset or RUN_BOT=1"))
 
     db_path = ROOT / "state" / "db.json"
     try:
@@ -78,7 +83,10 @@ def alpha_state():
 
 
 def open_alpha(owner_id):
-    """Open Alpha only when the deterministic gate is READY."""
+    """Open Alpha only when the deterministic gate is READY and caller is owner."""
+    if not is_owner(owner_id):
+        raise PermissionError("Owner only.")
+
     result = evaluate()
     if result["status"] != "READY":
         raise RuntimeError(format_report(result))
