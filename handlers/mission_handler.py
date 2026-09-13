@@ -42,7 +42,15 @@ def register(bot, context=None):
             desc = parts[2] if len(parts) > 2 else "משימה ללא תיאור"
             numeric_ids = [int(t.get("id")) for t in missions if str(t.get("id")).isdigit()]
             next_id = str(max(numeric_ids or [0]) + 1)
-            result = lifecycle.create_mission(mission_id=next_id, description=desc, reward=0)
+            try:
+                result = lifecycle.create_mission(mission_id=next_id, description=desc, reward=0)
+            except ValueError as exc:
+                bot.reply_to(
+                    m,
+                    "❌ יצירת משימה חסומה: משימות ניתנות להרצה חייבות action contract מפורש "
+                    f"(action_type/action_payload/idempotency_key). {exc}",
+                )
+                return
             if result.get("status") != "created":
                 bot.reply_to(m, "❌ יצירת המשימה נחסמה: " + str(result.get("reason")))
                 return
@@ -57,7 +65,7 @@ def register(bot, context=None):
             for t in missions:
                 status = t.get("status")
                 icon = "🟢" if MissionStateNormalizer.is_completed(status) else "🔴" if status == "open" else "🟡"
-                lines.append(f"🟢 #{t.get('id')}: {t.get('desc', '')}" if icon == "🟢" else f"{icon} #{t.get('id')}: {t.get('desc', '')}")
+                lines.append(f"{icon} #{t.get('id')}: {t.get('desc', '')}")
                 lines.append(f"   ↳ אחראי: {t.get('assigned_to') or 'לא שויך'} | שכר: {t.get('reward', 0)} SLH")
                 lines.append("")
             bot.reply_to(m, "\n".join(lines))
@@ -84,7 +92,7 @@ def register(bot, context=None):
                 return
             mission_id = parts[2].strip()
             result = lifecycle.complete_mission(mission_id=mission_id)
-            if result.get("status") != "completed" and result.get("reason") != "mission_already_completed":
+            if result.get("status") != "completed":
                 bot.reply_to(m, "❌ השלמת המשימה נחסמה.\n" + str(result.get("checks") or result.get("reason", "unknown")))
                 return
             reward = reward_after_completion(mission_id)
