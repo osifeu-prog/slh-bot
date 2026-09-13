@@ -2,7 +2,7 @@ def load_handlers(bot, context):
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
-    print("📦 Loading modular handlers...")
+    print("נ“¦ Loading modular handlers...")
 
     modules = [
         ("dashboard", "handlers.dashboard_handler"),
@@ -136,37 +136,43 @@ def load_handlers(bot, context):
             else:
                 raise Exception("No supported register function")
 
-            print(f"✅ {name} loaded")
+            print(f"ג… {name} loaded")
 
         except Exception as e:
-            print(f"⚠️ {name} skipped:", str(e)[:120])
+            print(f"ג ן¸ {name} skipped:", str(e)[:120])
 
     try:
         from doctor_handler import register_doctor_handlers
         register_doctor_handlers(bot)
-        print("✅ doctor loaded")
+        print("ג… doctor loaded")
     except Exception as e:
         print("doctor skipped:", e)
 
     try:
         from language_handler import register_language
         register_language(bot)
-        print("✅ language loaded")
+        print("ג… language loaded")
     except Exception as e:
         print("language skipped:", e)
 
     try:
         from handlers.esp_handler import register_esp_handler
         register_esp_handler(bot)
-        print("📡 esp loaded")
+    try:
+        from handlers.esp_control import register as register_esp_control
+        register_esp_control(bot)
+        print("✅ esp_control loaded")
+    except Exception as e:
+        print("esp_control skipped:", e)
+        print("נ“¡ esp loaded")
     except Exception as e:
         print("esp skipped:", e)
 
     try:
         from handlers.advanced_ask_handler import register_ask_handler
         register_ask_handler(bot)
-        print("🧠 advanced ask loaded")
+        print("נ§  advanced ask loaded")
     except Exception as e:
         print("ask skipped:", e)
 
-    print("✅ ALL HANDLERS READY")
+    print("ג… ALL HANDLERS READY")
