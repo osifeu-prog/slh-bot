@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 import state_manager
-from core import economy_service
+from core import agent_submission_service
 
 
 class AgentSubmissionRewardTests(unittest.TestCase):
@@ -30,24 +30,25 @@ class AgentSubmissionRewardTests(unittest.TestCase):
         return json.loads(self.db_path.read_text(encoding="utf-8"))
 
     def test_submission_does_not_pay_creator_before_approval(self):
-        result = economy_service.submit_agent("123", "demo-agent", reward=10)
+        result = agent_submission_service.submit_agent("123", "demo-agent")
 
         self.assertEqual(result["reward"], 0)
         db = self._db()
         self.assertEqual(db["users"]["123"]["wallet"]["credits"], 100)
         self.assertEqual(len(db["agent_submissions"]), 1)
+        self.assertEqual(db["agent_submissions"][0]["status"], "pending")
         self.assertEqual(db["ledger"], [])
 
     def test_duplicate_pending_submission_is_rejected(self):
-        economy_service.submit_agent("123", "demo-agent", reward=10)
+        agent_submission_service.submit_agent("123", "demo-agent")
 
         with self.assertRaises(ValueError):
-            economy_service.submit_agent("123", "demo-agent", reward=10)
+            agent_submission_service.submit_agent("123", "DEMO-AGENT")
 
     def test_approval_pays_fixed_reward_once(self):
-        economy_service.submit_agent("123", "demo-agent", reward=10)
+        agent_submission_service.submit_agent("123", "demo-agent")
 
-        result = economy_service.approve_agent_submission(0, reward=999)
+        result = agent_submission_service.approve_agent_submission(0)
 
         self.assertEqual(result["reward"], 40)
         db = self._db()
