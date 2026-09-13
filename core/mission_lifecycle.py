@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Mission lifecycle state management.
 
-Execution is intentionally delegated to core.mission_runtime_authority.  This
+Execution is intentionally delegated to core.mission_runtime_authority. This
 module may create, assign, preview and complete missions, but it must never
 manufacture an execution result.
 """
@@ -289,17 +289,32 @@ class MissionLifecycleService:
             "result_exists": result is not None,
             "result_success": result is not None and result.get("execution_status") == "success",
             "result_verified": result is not None and result.get("verified") is True,
+            "completion_pending": result is not None and result.get("mission_completion") == "pending",
+            "result_hash_valid": self._result_hash_valid(result),
         }
         return {
             "status": "ready" if all(checks.values()) else "blocked",
             "mission_id": str(mission_id),
             "mission": mission,
             "agent": self.find_agent(manifest, mission.get("assigned_to")),
+            "result": result,
             "checks": checks,
             "proposed_status": "completed" if all(checks.values()) else None,
             "write_performed": False,
             "read_only": True,
         }
+
+    @staticmethod
+    def _result_hash_valid(result) -> bool:
+        if not isinstance(result, dict):
+            return False
+        stored_hash = result.get("result_sha256")
+        if not stored_hash:
+            return False
+        canonical_result = dict(result)
+        canonical_result.pop("result_sha256", None)
+        canonical = json.dumps(canonical_result, sort_keys=True, ensure_ascii=False)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest() == stored_hash
 
     def execute_mission(self, *args, **kwargs) -> dict:
         """Retired: execution must go through Mission Runtime Authority."""
@@ -329,11 +344,36 @@ class MissionLifecycleService:
                 return {"status": "blocked", "reason": "invalid_execution_result", "mission_id": str(mission_id), "write_performed": False}
             if result.get("execution_status") != "success" or result.get("verified") is not True:
                 return {"status": "blocked", "reason": "execution_result_not_verified", "mission_id": str(mission_id), "write_performed": False}
-            expected_sha = mission.get("execution_result_sha256")
-            if expected_sha and hashlib.sha256(result_path.read_bytes()).hexdigest() != expected_sha:
+            if result.get("mission_completion") != "pending":
+                return {"status": "blocked", "reason": "execution_result_not_pending", "mission_id": str(mission_id), "write_performed": False}
+            if not self._result_hash_valid(result):
                 return {"status": "blocked", "reason": "execution_result_integrity_failed", "mission_id": str(mission_id), "write_performed": False}
+            expected_sha = mission.get("execution_result_sha256")
+            if expected_sha and expected_sha != result.get("result_sha256"):
+                return {"status": "blocked", "reason": "mission_result_hash_mismatch", "mission_id": str(mission_id), "write_performed": False}
+
+            completed_at = self._now()
+            result["mission_completion"] = "completed"
+            result["completed_at"] = completed_at
+            result.pop("result_sha256", None)
+            canonical = json.dumps(result, sort_keys=True, ensure_ascii=False)
+            result["result_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            self._atomic_write_text(
+                result_path,
+                json.dumps(result, indent=2, ensure_ascii=False),
+            )
             mission["status"] = "completed"
-            mission["completed_at"] = self._now()
+            mission["completed_at"] = completed_at
             mission["mission_completion"] = "completed"
+            mission["execution_result_sha256"] = result["result_sha256"]
             self._save_board(board)
-            return {"status": "completed", "mission_id": str(mission_id), "agent_id": mission.get("assigned_to"), "completed_at": mission["completed_at"], "write_performed": True, "read_only": False}
+            return {
+                "status": "completed",
+                "mission_id": str(mission_id),
+                "agent_id": mission.get("assigned_to"),
+                "completed_at": completed_at,
+                "result_path": str(result_path),
+                "result_sha256": result["result_sha256"],
+                "write_performed": True,
+                "read_only": False,
+            }
