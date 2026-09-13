@@ -142,12 +142,38 @@ def register(bot):
     @bot.message_handler(commands=["rewards"])
     def rewards_cmd(msg):
         uid = str(msg.from_user.id)
-        from core.reward_engine import calculate_reward
+        from core.reward_engine import calculate_reward, claim_reward
         positions = get_positions(uid)
         if not positions:
             bot.reply_to(msg, "אין פוזיציות.")
             return
-        lines = ["תגמולים צפויים:"]
+
+        parts = msg.text.split()
+        if len(parts) >= 3 and parts[1].lower() == "claim":
+            pos_id = parts[2]
+            pos = get_position(pos_id)
+            if not pos or str(pos.get("uid")) != uid:
+                bot.reply_to(msg, "הפוזיציה לא נמצאה או לא שייכת לך.")
+                return
+            try:
+                result = claim_reward(
+                    pos_id,
+                    idempotency_key=f"staking-reward:{uid}:{pos_id}",
+                )
+                status = result.get("status")
+                if status == "already_paid" or status == "duplicate":
+                    bot.reply_to(msg, "התגמול כבר שולם.")
+                    return
+                bot.reply_to(
+                    msg,
+                    f"תגמול שולם: {result.get('amount', 0)} credits\n"
+                    f"יתרה: {result.get('after', 'עודכנה')}"
+                )
+            except Exception as e:
+                bot.reply_to(msg, f"{e}")
+            return
+
+        lines = ["תגמולים צפויים:", "למימוש: /rewards claim <position_id>"]
         for pid, pos in positions.items():
             try:
                 r = calculate_reward(pid)
@@ -198,6 +224,7 @@ def register(bot):
             "/unstake <position_id> - שחרור לאחר תום הנעילה\n"
             "/unstake_lock <position_id> - alias לשחרור\n"
             "/positions - הפוזיציות שלך\n"
-            "/rewards - תגמולים\n\n"
+            "/rewards - תגמולים\n"
+            "/rewards claim <position_id> - מימוש תגמול פעם אחת\n\n"
             "סטייקינג פנימי בלבד, לא on-chain."
         )
