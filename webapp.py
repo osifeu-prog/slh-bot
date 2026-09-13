@@ -92,9 +92,13 @@ def investor_me():
     try:
         snapshot = get_investor_snapshot(uid)
         global_alpha = alpha_state()
-        snapshot["alpha_global"] = global_alpha
         if isinstance(snapshot.get("alpha"), dict):
-            snapshot["alpha"]["global_status"] = global_alpha.get("status", "CLOSED")
+            alpha = snapshot["alpha"]
+            alpha["readiness_status"] = alpha.get("status", "review")
+            alpha["global_status"] = global_alpha.get("status", "CLOSED")
+            if alpha["global_status"] == "OPEN":
+                alpha["status"] = "OPEN"
+        snapshot["alpha_global"] = global_alpha
         return jsonify(snapshot), 200
     except ValueError as exc:
         if str(exc) == "USER_NOT_FOUND":
