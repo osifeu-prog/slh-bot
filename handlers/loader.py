@@ -36,6 +36,7 @@ def load_handlers(bot, context):
         ("academy_menu", "handlers.academy_menu_handler"),
         ("device", "handlers.device_handler"),
         ("esp_control", "handlers.esp_control"),
+        ("esp_agent_control", "handlers.esp_agent_control"),
         ("feedback", "handlers.feedback_handler"),
         ("gateway", "handlers.gateway_handler"),
         ("file", "handlers.file_handler"),
