@@ -110,7 +110,21 @@ def _handle_action(bot, uid, device_id, payload):
     if action == "sync":
         state = build_sync_payload(uid)
         import json as _j
-        _send_cmd(device_id, "sync " + _j.dumps(state, ensure_ascii=False))
+        r = _send_cmd(device_id, "sync " + _j.dumps(state, ensure_ascii=False))
+        mirror = (
+            "\U0001F4CA *SLH Wallet (via device)*\n"
+            f"\U0001F4B0 Credits: `{state.get('credits', 0)}`\n"
+            f"\U0001F4B5 SLH: `{state.get('slh', 0)}`\n"
+            f"\U0001F512 Staked: `{state.get('staked', 0)}`\n"
+            f"\U0001F3AE Points: `{state.get('points', 0)}` (L{state.get('level', 0)})\n"
+            f"\U0001F48E TON: `{state.get('ton', '-')}`\n"
+            f"\U0001F3AF Next: `{state.get('next_action', '-')}`\n"
+            f"\U0001F4E1 Response: `{r or 'no response'}`"
+        )
+        try:
+            bot.send_message(uid, mirror, parse_mode="Markdown")
+        except Exception:
+            bot.send_message(uid, mirror)
         return
 
     if action == "stake":
