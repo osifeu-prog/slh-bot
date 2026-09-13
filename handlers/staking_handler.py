@@ -128,10 +128,10 @@ def register(bot):
                 if accrued.get("status") == "closed":
                     bot.reply_to(msg, "הפוזיציה כבר נסגרה.")
                     return
-                result = claim_reward(pos_id, idempotency_key=f"staking-reward:{uid}:{pos_id}")
+                result = claim_reward(pos_id)
                 status = result.get("status")
-                if status in {"already_paid", "duplicate"}:
-                    bot.reply_to(msg, "התגמול כבר שולם.")
+                if status in {"already_paid", "duplicate", "nothing_to_claim"}:
+                    bot.reply_to(msg, "אין כרגע תגמול חדש למימוש.")
                     return
                 bot.reply_to(msg, f"תגמול שולם: {result.get('amount', 0)} credits\nיתרה: {result.get('after', 'עודכנה')}")
             except Exception as e:
@@ -170,4 +170,4 @@ def register(bot):
 
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
-        bot.reply_to(msg, "סטייקינג SLH\n\n" + COURSE_GUIDE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/rewards - תגמולים\n" "/rewards claim <position_id> - מימוש תגמול פעם אחת\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
+        bot.reply_to(msg, "סטייקינג SLH\n\n" + COURSE_GUIDE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/rewards - תגמולים\n" "/rewards claim <position_id> - מימוש תגמול חדש\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
