@@ -6,6 +6,8 @@ from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
+from core.profile_manager import get_user
+from core import staking_service
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -104,6 +106,55 @@ def investor_me():
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
         raise
+
+
+@app.route("/api/v1/staking", methods=["POST"])
+def create_staking_position():
+    """Create a 30-day internal staking position for the authenticated user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    raw_amount = payload.get("amount")
+    try:
+        if isinstance(raw_amount, bool) or raw_amount is None:
+            raise ValueError("invalid amount")
+        amount = int(raw_amount)
+        if amount <= 0:
+            raise ValueError("amount must be positive")
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_AMOUNT"}), 400
+
+    user = get_user(str(uid)) or {}
+    course = user.get("academy", {}).get("courses", {}).get("bitcoin_mastery")
+    if not course or int(course.get("stage", 0) or 0) < 3:
+        return jsonify({"error": "STAKING_STAGE_REQUIRED", "required_stage": 3}), 403
+
+    try:
+        result = staking_service.stake_locked(
+            str(uid),
+            amount,
+            lock_days=30,
+            meta={"source": "miniapp", "endpoint": "/api/v1/staking"},
+        )
+    except ValueError as exc:
+        message = str(exc)
+        if message == "insufficient credits":
+            return jsonify({"error": "INSUFFICIENT_CREDITS"}), 400
+        if message in {"amount must be positive", "lock_days must be positive"}:
+            return jsonify({"error": "INVALID_AMOUNT"}), 400
+        if message == "user not found":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": "STAKING_FAILED"}), 400
+
+    return jsonify({
+        "status": "created",
+        "amount": amount,
+        "credits": result["credits"],
+        "staked": result["staked"],
+        "position": result["position"],
+    }), 200
 
 
 @app.route("/api/wallet/<uid>")
