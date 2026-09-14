@@ -8,6 +8,9 @@ DB_PATH = Path("state/db.json")
 
 
 
+TREASURY_UID = "SLH_TREASURY"
+
+
 def get_balance_safe(uid):
     db = state_manager.load_db()
     uid = str(uid)
@@ -362,7 +365,24 @@ def purchase_item(
                     ref_before = ref_wallet.get("credits", 0)
                     ref_after = ref_before + commission
 
-                    ref_wallet["credits"] = ref_after
+                    _t = users.setdefault(TREASURY_UID, {"wallet": {"credits": 0.0}})
+                    _tw = _t.setdefault("wallet", {})
+                    _tb = float(_tw.get("credits", 0) or 0)
+                    if _tb < commission:
+                        commission = 0
+                    else:
+                        _tw["credits"] = round(_tb - commission, 2)
+                        ledger.append({
+                            "time": datetime.now(timezone.utc).isoformat(),
+                            "uid": TREASURY_UID,
+                            "before": _tb,
+                            "amount": -commission,
+                            "after": _tw["credits"],
+                            "reason": "referral:commission:debit",
+                            "meta": {"to_uid": referrer_uid, "source_uid": uid},
+                        })
+                        ref_after = ref_before + commission
+                        ref_wallet["credits"] = ref_after
 
                     ledger.append({
                         "time": datetime.now(timezone.utc).isoformat(),
@@ -510,7 +530,24 @@ def record_stars_payment(
                     ref_before = ref_wallet.get("credits", 0)
                     ref_after = ref_before + commission
 
-                    ref_wallet["credits"] = ref_after
+                    _t = users.setdefault(TREASURY_UID, {"wallet": {"credits": 0.0}})
+                    _tw = _t.setdefault("wallet", {})
+                    _tb = float(_tw.get("credits", 0) or 0)
+                    if _tb < commission:
+                        commission = 0
+                    else:
+                        _tw["credits"] = round(_tb - commission, 2)
+                        ledger.append({
+                            "time": datetime.now(timezone.utc).isoformat(),
+                            "uid": TREASURY_UID,
+                            "before": _tb,
+                            "amount": -commission,
+                            "after": _tw["credits"],
+                            "reason": "referral:commission:debit",
+                            "meta": {"to_uid": referrer_uid, "source_uid": uid},
+                        })
+                        ref_after = ref_before + commission
+                        ref_wallet["credits"] = ref_after
 
                     ledger.append({
                         "time": now,
