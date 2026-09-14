@@ -2,8 +2,10 @@ import json, time, os, threading
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_PORT = 1883
+from core.mqtt_config import BROKER as _MB
+MQTT_BROKER = _MB
+from core.mqtt_config import PORT as _MP
+MQTT_PORT = _MP
 
 def _send_cmd(device_id, payload, timeout=6):
     resp_topic = f"slh/esp/{device_id}/response"
@@ -20,6 +22,7 @@ def _send_cmd(device_id, payload, timeout=6):
     c = mqtt.Client()
     c.on_connect = on_connect
     c.on_message = on_message
+    __import__("core.mqtt_config",fromlist=["apply"]).apply(c)
     c.connect(MQTT_BROKER, MQTT_PORT, 60)
     c.loop_start()
     time.sleep(0.5)
@@ -190,7 +193,8 @@ def _start_action_listener(bot):
                 c = mqtt.Client()
                 c.on_connect = on_connect
                 c.on_message = on_message
-                c.connect("broker.hivemq.com", 1883, 60)
+                __import__("core.mqtt_config",fromlist=["apply"]).apply(c)
+                c.connect(_MB, _MP, 60)
                 c.loop_forever()
             except Exception as e:
                 print(f"[ESP_ACTION] listener died: {e}, restart in 10s")
@@ -464,7 +468,8 @@ def register_screen(bot):
         c = mqtt.Client()
         c.on_connect = on_connect
         c.on_message = on_message
-        c.connect("broker.hivemq.com", 1883, 60)
+        __import__("core.mqtt_config",fromlist=["apply"]).apply(c)
+        c.connect(_MB, _MP, 60)
         c.loop_start()
         import time as _t
         _t.sleep(0.5)
