@@ -74,7 +74,12 @@ def register_esp_handler(bot):
             bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
-        topic = dev.get("mqtt_topic", f"slh/esp/{device_id}")
+        _t = dev.get("mqtt_topics") or {}
+        _c = _t.get("command")
+        if _c:
+            topic = _c[:-len("/command")] if _c.endswith("/command") else _c
+        else:
+            topic = dev.get("mqtt_topic") or f"slh/device/{device_id}"
         command_topic = topic + "/command"
         response_topic = topic + "/response"
         response = None
@@ -137,7 +142,12 @@ def register_esp_handler(bot):
             bot.reply_to(msg, "not authorized")
             return
 
-        topic = dev.get("mqtt_topic", f"slh/esp/{device_id}")
+        _t = dev.get("mqtt_topics") or {}
+        _c = _t.get("command")
+        if _c:
+            topic = _c[:-len("/command")] if _c.endswith("/command") else _c
+        else:
+            topic = dev.get("mqtt_topic") or f"slh/device/{device_id}"
         command_topic = topic + "/command"
         response_topic = topic + "/response"
 
