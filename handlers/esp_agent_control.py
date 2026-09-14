@@ -5,8 +5,10 @@ import paho.mqtt.client as mqtt
 from core.authority import is_owner
 
 
-BROKER = "broker.hivemq.com"
-PORT = 1883
+from core.mqtt_config import BROKER as _MB
+BROKER = _MB
+from core.mqtt_config import PORT as _MP
+PORT = _MP
 DEFAULT_AGENT = "AGENT_OSIF2"
 
 
@@ -31,6 +33,7 @@ def _send_task(agent_id, action, timeout=300):
     c = mqtt.Client()
     c.on_connect = on_connect
     c.on_message = on_message
+    __import__("core.mqtt_config",fromlist=["apply"]).apply(c)
     c.connect(BROKER, PORT, 60)
     c.loop_start()
     time.sleep(0.8)
