@@ -14,7 +14,7 @@ def register(bot):
         agent_name = parts[1].strip()
 
         try:
-            agent_submission_service.submit_agent(
+            result = agent_submission_service.submit_agent(
                 uid=uid,
                 agent_name=agent_name,
                 meta={
@@ -25,11 +25,13 @@ def register(bot):
             bot.send_message(
                 m.chat.id,
                 f"✅ Agent '{agent_name}' submitted for review.\n"
+                f"🆔 Submission: {result['submission_id']}\n"
                 "💰 Credits are awarded only after approval.",
             )
             bot.send_message(
                 8789977826,
-                f"📦 Submission from {uid}: {agent_name}",
+                f"📦 Submission from {uid}: {agent_name}\n"
+                f"🆔 {result['submission_id']}",
             )
         except ValueError as e:
             if str(e) == "SUBMISSION_ALREADY_PENDING":
@@ -56,9 +58,8 @@ def register(bot):
             return
 
         try:
-            sub_id = int(parts[1])
             result = agent_submission_service.approve_agent_submission(
-                sub_id,
+                parts[1].strip(),
                 meta={
                     "source": "learning_path",
                     "approved_by": str(m.from_user.id),
@@ -74,6 +75,12 @@ def register(bot):
                 f"🎉 Agent '{result['agent_name']}' approved!\n"
                 f"💰 +{result['reward']} Credits",
             )
+        except ValueError as e:
+            if str(e) in {"SUBMISSION_NOT_FOUND", "SUBMISSION_NOT_PENDING", "AGENT_ALREADY_APPROVED"}:
+                bot.reply_to(m, f"❌ Approval rejected safely: {e}")
+            else:
+                bot.reply_to(m, "❌ Approval failed safely.")
+            print(f"[AGENT_SUBMISSION_GUARD] approval error: {e}")
         except Exception as e:
             bot.reply_to(m, "❌ Approval failed safely.")
             print(f"[AGENT_SUBMISSION_GUARD] approval error: {e}")
