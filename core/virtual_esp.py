@@ -3,8 +3,10 @@ import sys
 from pathlib import Path
 import paho.mqtt.client as mqtt
 
-BROKER = "broker.hivemq.com"
-PORT = 1883
+from core.mqtt_config import BROKER as _MB
+BROKER = _MB
+from core.mqtt_config import PORT as _MP
+PORT = _MP
 DEVICES_PATH = Path("state/devices.json")
 
 device_id = sys.argv[1] if len(sys.argv) > 1 else "DEV_ESP_NEW_1786177919"
@@ -32,5 +34,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+__import__("core.mqtt_config",fromlist=["apply"]).apply(client)
 client.connect(BROKER, PORT, 60)
 client.loop_forever()
