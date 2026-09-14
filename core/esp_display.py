@@ -3,8 +3,10 @@ import time
 from pathlib import Path
 import paho.mqtt.client as mqtt
 
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_PORT = 1883
+from core.mqtt_config import BROKER as _MB
+MQTT_BROKER = _MB
+from core.mqtt_config import PORT as _MP
+MQTT_PORT = _MP
 
 DB_PATH = Path("state/db.json")
 DEV_PATH = Path("state/devices.json")
@@ -31,6 +33,7 @@ def publish_progress(device_id):
     payload = json.dumps(get_progress(), ensure_ascii=False)
 
     client = mqtt.Client()
+    __import__("core.mqtt_config",fromlist=["apply"]).apply(client)
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     client.loop_start()
     time.sleep(0.5)
