@@ -10,8 +10,10 @@ try:
 except ImportError:
     HAS_FCNTL = False
 
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_PORT = 1883
+from core.mqtt_config import BROKER as _MB
+MQTT_BROKER = _MB
+from core.mqtt_config import PORT as _MP
+MQTT_PORT = _MP
 
 DEVICES_FILE = "state/devices.json"
 _DEVICES_LOCK_PATH = DEVICES_FILE + ".lock"
@@ -95,6 +97,7 @@ def register_esp_handler(bot):
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        __import__("core.mqtt_config",fromlist=["apply"]).apply(client)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.loop_start()
         time.sleep(0.5)
@@ -164,6 +167,7 @@ def register_esp_handler(bot):
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        __import__("core.mqtt_config",fromlist=["apply"]).apply(client)
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.loop_start()
         time.sleep(0.5)
