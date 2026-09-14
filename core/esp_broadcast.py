@@ -3,8 +3,10 @@ import time
 from pathlib import Path
 import paho.mqtt.client as mqtt
 
-BROKER = "broker.hivemq.com"
-PORT = 1883
+from core.mqtt_config import BROKER as _MB
+BROKER = _MB
+from core.mqtt_config import PORT as _MP
+PORT = _MP
 DB_PATH = Path("state/db.json")
 DEV_PATH = Path("state/devices.json")
 
@@ -25,6 +27,7 @@ def broadcast_progress():
     sent = []
 
     c = mqtt.Client()
+    __import__("core.mqtt_config",fromlist=["apply"]).apply(c)
     c.connect(BROKER, PORT, 60)
     c.loop_start()
     time.sleep(0.5)
