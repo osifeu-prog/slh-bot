@@ -3,8 +3,10 @@ import paho.mqtt.client as mqtt
 from pathlib import Path
 from datetime import datetime, timezone
 
-BROKER = "broker.hivemq.com"
-PORT = 1883
+from core.mqtt_config import BROKER as _MB
+BROKER = _MB
+from core.mqtt_config import PORT as _MP
+PORT = _MP
 DEVICES_PATH = Path("state/devices.json")
 
 
@@ -35,5 +37,6 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
+__import__("core.mqtt_config",fromlist=["apply"]).apply(client)
 client.connect(BROKER, PORT, 60)
 client.loop_forever()
