@@ -79,7 +79,7 @@ def register_esp_handler(bot):
         if _c:
             topic = _c[:-len("/command")] if _c.endswith("/command") else _c
         else:
-            topic = dev.get("mqtt_topic") or f"slh/device/{device_id}"
+            topic = dev.get("mqtt_topic") or f"slh/esp/{device_id}"
         command_topic = topic + "/command"
         response_topic = topic + "/response"
         response = None
@@ -147,7 +147,7 @@ def register_esp_handler(bot):
         if _c:
             topic = _c[:-len("/command")] if _c.endswith("/command") else _c
         else:
-            topic = dev.get("mqtt_topic") or f"slh/device/{device_id}"
+            topic = dev.get("mqtt_topic") or f"slh/esp/{device_id}"
         command_topic = topic + "/command"
         response_topic = topic + "/response"
 
