@@ -25,7 +25,7 @@ ROLES = {
     "ADMIN": [
         "agents.view_all",
         "agents.manage",
-        "exec.safe",
+        "exec.audit",
     ],
     "USER": [
         "public.view",
@@ -33,7 +33,6 @@ ROLES = {
         "economy.view_self",
         "economy.mutate_self",
         "agents.modify_self",
-        "exec.safe",
     ],
     "UNKNOWN": [
         "public.view",
@@ -70,10 +69,6 @@ def get_role(uid) -> str:
     if uid in ADMIN_IDS:
         return "ADMIN"
 
-    # The user registry is authoritative for ordinary users.  Check existence
-    # before get_user() because get_user() creates a default profile when one
-    # is missing; an unknown Telegram identity must never gain USER rights as a
-    # side effect of an authorization check.
     if not user_exists(uid):
         return "UNKNOWN"
 
@@ -82,9 +77,6 @@ def get_role(uid) -> str:
     if profile_role == "student":
         return "USER"
 
-    # Developer/operator identities are intentionally not mapped to USER here.
-    # Their operational permissions remain governed by the legacy permission
-    # system until that role is explicitly reconciled into this matrix.
     return "UNKNOWN"
 
 
@@ -126,19 +118,16 @@ def get_visible_agents(uid, agents: dict) -> dict:
         if role == "PARTNER_READ_ONLY":
             if agent.get("agent_type") == "system":
                 visible[aid] = {
-                    k: v
-                    for k, v in agent.items()
+                    k: v for k, v in agent.items()
                     if k not in ("inbox", "history", "permissions", "owner_id")
                 }
             continue
 
         if owner == uid:
             visible[aid] = agent
-
         elif agent.get("agent_type") == "system":
             visible[aid] = {
-                k: v
-                for k, v in agent.items()
+                k: v for k, v in agent.items()
                 if k not in ("inbox", "history", "permissions")
             }
 
