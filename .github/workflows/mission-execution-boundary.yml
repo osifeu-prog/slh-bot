@@ -19,6 +19,6 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
       - name: Run mission execution contract tests
         run: python3 -m pytest -q tests/test_mission_execution_contract.py
