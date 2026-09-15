@@ -161,7 +161,7 @@ def get_investor_snapshot(uid):
     reward_credits = 0
     reward_points = 0
     recent_rewards = []
-    for entry in reversed(_load_reward_ledger()):
+    for entry in _load_reward_ledger():
         if not isinstance(entry, dict) or str(entry.get("user")) != uid:
             continue
 
