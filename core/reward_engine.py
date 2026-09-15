@@ -93,8 +93,12 @@ def accrue(position_id, rate_per_day=0.001333):
             raise KeyError("position not found")
         if pos.get("status") == "unlocked":
             return {"position_id": position_id, "reward": 0.0, "status": "closed"}
-        created = pos.get("created_at", time.time())
-        days = max(0, (time.time() - created) / 86400)
+
+        now = time.time()
+        created = pos.get("created_at")
+        if created is None:
+            created = now
+        days = max(0, (now - created) / 86400)
         gross = round(float(pos["amount"]) * days * rate_per_day, 6)
         pools = db.setdefault("reward_pools", {})
         existing = pools.get(position_id, {})
@@ -108,7 +112,7 @@ def accrue(position_id, rate_per_day=0.001333):
             "settled_total": settled_total,
             "asset": "credits",
             "rate_per_day": float(rate_per_day),
-            "calculated_at": time.time(),
+            "calculated_at": now,
             "status": "pending" if reward > 0 else "settled",
         }
         pools[position_id] = entry
