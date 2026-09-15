@@ -1,3 +1,4 @@
+import inspect
 import json
 
 from agents.mission_executor import MissionExecutorAgent
@@ -15,6 +16,16 @@ def _write_state(tmp_path, mission, agent):
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     board_path.write_text(json.dumps({"missions": [mission]}), encoding="utf-8")
     manifest_path.write_text(json.dumps({"agents": {"items": [agent]}}), encoding="utf-8")
+
+
+def test_runtime_boundary_contains_no_generic_executor():
+    executor_source = inspect.getsource(MissionExecutorAgent)
+    orchestrator_source = inspect.getsource(MissionOrchestrator)
+    assert "subprocess" not in executor_source
+    assert "os.system" not in executor_source
+    assert "eval(" not in executor_source
+    assert "exec(" not in executor_source
+    assert "MissionExecutorAgent(" not in orchestrator_source
 
 
 def test_unsupported_capability_is_blocked():
@@ -61,7 +72,6 @@ def _runtime_fixture(tmp_path, monkeypatch):
 def test_authority_uses_kernel_runtime_and_commits_verified_result(tmp_path, monkeypatch):
     mission, runtime, calls = _runtime_fixture(tmp_path, monkeypatch)
     result = execute_mission_authority("m-runtime-1", root=tmp_path, runtime=runtime)
-
     assert result["status"] == "executed"
     data = result["runtime_result"]["data"]
     assert data["execution_status"] == "success"
@@ -70,7 +80,6 @@ def test_authority_uses_kernel_runtime_and_commits_verified_result(tmp_path, mon
     assert data["idempotency_key"] == mission["idempotency_key"]
     assert data["evidence"]["uid"] == "owner-1"
     assert calls == [("owner-1", "bitcoin_mastery", 1)]
-
     board = json.loads((tmp_path / "state" / "missions" / "board.json").read_text(encoding="utf-8"))
     assert board["missions"][0]["status"] == "executed"
     result_path = tmp_path / result["lifecycle_result"]["result_path"]
@@ -112,7 +121,6 @@ def test_orchestrator_routes_execute_to_authority(tmp_path, monkeypatch):
     calls = []
     import core.mission_orchestrator as orchestrator_module
     monkeypatch.setattr(orchestrator_module, "execute_mission_authority", lambda **kwargs: calls.append(kwargs) or {"status": "executed", "mission_id": "m-orch-1"})
-
     result = MissionOrchestrator(tmp_path).run_next_action("m-orch-1", "agent-1")
     assert result["status"] == "executed"
     assert result["action"] == "execute"
