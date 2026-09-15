@@ -403,12 +403,55 @@ class MissionOrchestrator:
 
                 }
 
+            from agents.mission_executor import MissionExecutorAgent
+
+            execution_result = MissionExecutorAgent().process({
+                "cmd": "Mission Executor:execute_mission",
+                "mission_id": str(mission_id),
+                "source": "mission_orchestrator",
+            })
+
+            if execution_result.get(
+                "execution_status"
+            ) == "blocked":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "execute",
+
+                    "result":
+                        execution_result,
+
+                }
+
             result = (
                 self.lifecycle
                 .execute_mission(
-                    mission_id=mission_id
+                    mission_id=mission_id,
+                    execution_result=execution_result
                 )
             )
+
+            if result.get(
+                "status"
+            ) != "executed":
+
+                return {
+
+                    "status":
+                        "blocked",
+
+                    "action":
+                        "execute",
+
+                    "result":
+                        result,
+
+                }
 
             return {
 
