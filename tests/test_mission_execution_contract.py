@@ -1,70 +1,58 @@
-import json
-
-from core.mission_lifecycle import MissionLifecycleService
+from agents.mission_executor import MissionExecutorAgent
 
 
-def _write_state(root):
-    board = {
-        "missions": [
-            {
-                "id": "TEST-EXEC-1",
-                "desc": "bounded execution contract test",
-                "status": "assigned",
-                "assigned_to": "agent-1",
-                "reward": 0,
-            }
-        ]
-    }
-    manifest = {
-        "agents": [
-            {
-                "id": "agent-1",
-                "name": "Mission Executor",
-                "state": "idle",
-                "runtime_class": "MissionExecutorAgent",
-            }
-        ]
-    }
-    board_path = root / "state" / "missions" / "board.json"
-    manifest_path = root / "state" / "takeover" / "manifest.json"
-    board_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    board_path.write_text(json.dumps(board), encoding="utf-8")
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+def test_execute_requires_real_result():
+    agent = MissionExecutorAgent()
 
+    result = agent.process(
+        {
+            "cmd": "Mission Executor:execute_mission",
+            "mission_id": "TEST-EXEC-1",
+        }
+    )
 
-def test_execute_requires_real_result(tmp_path):
-    _write_state(tmp_path)
-    service = MissionLifecycleService(tmp_path)
-
-    result = service.execute_mission("TEST-EXEC-1")
-
-    assert result["status"] == "blocked"
+    assert result["execution_status"] == "blocked"
     assert result["reason"] == "execution_result_required"
 
-    board = json.loads(
-        (tmp_path / "state" / "missions" / "board.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert board["missions"][0]["status"] == "assigned"
 
+def test_execute_requires_verified_evidence():
+    agent = MissionExecutorAgent()
 
-def test_completion_rejects_synthetic_success(tmp_path):
-    _write_state(tmp_path)
-    service = MissionLifecycleService(tmp_path)
-
-    result = service.execute_mission(
-        "TEST-EXEC-1",
-        execution_result={
-            "execution_status": "success",
-            "verified": True,
+    result = agent.process(
+        {
+            "cmd": "Mission Executor:execute_mission",
             "mission_id": "TEST-EXEC-1",
-            "result": {},
-        },
+            "execution_result": {
+                "execution_status": "success",
+                "verified": True,
+            },
+        }
     )
 
-    assert result["status"] == "executed"
+    assert result["execution_status"] == "blocked"
+    assert result["reason"] == "execution_evidence_required"
 
-    completion = service.complete_mission("TEST-EXEC-1")
-    assert completion["status"] == "completed"
+
+def test_verified_result_is_passed_through():
+    agent = MissionExecutorAgent()
+
+    execution_result = {
+        "execution_status": "success",
+        "verified": True,
+        "evidence": {"check": "passed"},
+    }
+
+    result = agent.process(
+        {
+            "cmd": "Mission Executor:execute_mission",
+            "mission_id": "TEST-EXEC-1",
+            "source": "test",
+            "execution_result": execution_result,
+        }
+    )
+
+    assert result["execution_status"] == "success"
+    assert result["verified"] is True
+    assert result["evidence"] == {"check": "passed"}
+    assert result["mission_id"] == "TEST-EXEC-1"
+    assert result["mission_completion"] == "pending"
