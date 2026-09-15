@@ -5,9 +5,15 @@ on:
     paths:
       - 'core/mission_lifecycle.py'
       - 'core/mission_orchestrator.py'
+      - 'core/mission_runtime_authority.py'
+      - 'core/mission_action_*.py'
+      - 'core/runtime_service.py'
       - 'agents/mission_executor.py'
       - 'tests/test_mission_execution_contract.py'
       - 'requirements.txt'
+  push:
+    branches:
+      - 'feat/mission-real-execution-contract'
   workflow_dispatch:
 
 jobs:
