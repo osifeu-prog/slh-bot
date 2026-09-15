@@ -5,12 +5,27 @@ authorization decisions. Runtime handlers must not maintain their own
 OWNER/ADMIN lists.
 """
 
+import os
+
 from core.identity import OWNER_TELEGRAM_ID
 from core.profile_manager import user_exists, get_user
 
 OWNER_ID = str(OWNER_TELEGRAM_ID)
 ADMIN_IDS = {OWNER_ID, "5010371391"}
 PARTNER_IDS = {"5010371391"}
+
+
+def _csv_ids(name):
+    return {
+        value.strip()
+        for value in os.getenv(name, "").split(",")
+        if value.strip().isdigit()
+    }
+
+
+# Developer IDs are configured through Railway/env rather than hard-coded.
+# This keeps access revocable without changing the authorization code.
+DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
@@ -25,6 +40,10 @@ ROLES = {
     "ADMIN": [
         "agents.view_all",
         "agents.manage",
+        "exec.audit",
+    ],
+    "DEVELOPER": [
+        "agents.view_all",
         "exec.audit",
     ],
     "USER": [
@@ -60,14 +79,19 @@ def is_owner(uid) -> bool:
 def get_role(uid) -> str:
     uid = normalize_uid(uid)
 
+    # Precedence is intentional: ADMIN must win over PARTNER so Zvika's
+    # existing partner/distributor capability does not mask admin access.
     if uid == OWNER_ID:
         return "OWNER"
 
-    if uid in PARTNER_IDS:
-        return "PARTNER_READ_ONLY"
-
     if uid in ADMIN_IDS:
         return "ADMIN"
+
+    if uid in DEVELOPER_IDS:
+        return "DEVELOPER"
+
+    if uid in PARTNER_IDS:
+        return "PARTNER_READ_ONLY"
 
     if not user_exists(uid):
         return "UNKNOWN"
