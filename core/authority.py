@@ -5,12 +5,28 @@ authorization decisions. Runtime handlers must not maintain their own
 OWNER/ADMIN lists.
 """
 
+import os
+
 from core.identity import OWNER_TELEGRAM_ID
 from core.profile_manager import user_exists, get_user
 
 OWNER_ID = str(OWNER_TELEGRAM_ID)
 ADMIN_IDS = {OWNER_ID, "5010371391"}
 PARTNER_IDS = {"5010371391"}
+
+
+def _csv_ids(name):
+    return {
+        value.strip()
+        for value in os.getenv(name, "").split(",")
+        if value.strip().isdigit()
+    }
+
+
+# Additional non-owner developers are configured by Telegram numeric ID via
+# SLH_DEVELOPER_IDS. Keep this separate from ADMIN_IDS so access can be
+# granted/revoked without changing the canonical admin identity list.
+DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
@@ -25,6 +41,10 @@ ROLES = {
     "ADMIN": [
         "agents.view_all",
         "agents.manage",
+        "exec.audit",
+    ],
+    "DEVELOPER": [
+        "agents.view_all",
         "exec.audit",
     ],
     "USER": [
@@ -63,11 +83,17 @@ def get_role(uid) -> str:
     if uid == OWNER_ID:
         return "OWNER"
 
-    if uid in PARTNER_IDS:
-        return "PARTNER_READ_ONLY"
-
+    # ADMIN must take precedence over PARTNER. Zvika is intentionally present
+    # in both sets so partner distribution permissions are preserved while his
+    # admin permissions are no longer shadowed by PARTNER_READ_ONLY.
     if uid in ADMIN_IDS:
         return "ADMIN"
+
+    if uid in DEVELOPER_IDS:
+        return "DEVELOPER"
+
+    if uid in PARTNER_IDS:
+        return "PARTNER_READ_ONLY"
 
     if not user_exists(uid):
         return "UNKNOWN"
@@ -117,6 +143,14 @@ def get_visible_agents(uid, agents: dict) -> dict:
 
         if role == "PARTNER_READ_ONLY":
             if agent.get("agent_type") == "system":
+                visible[aid] = {
+                    k: v for k, v in agent.items()
+                    if k not in ("inbox", "history", "permissions", "owner_id")
+                }
+            continue
+
+        if role in ("ADMIN", "DEVELOPER"):
+            if agent.get("agent_type") == "system" or owner == uid:
                 visible[aid] = {
                     k: v for k, v in agent.items()
                     if k not in ("inbox", "history", "permissions", "owner_id")
