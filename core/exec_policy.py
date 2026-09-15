@@ -4,11 +4,15 @@ import re
 import subprocess
 import time
 
-from core.authority import is_owner as authority_is_owner
+from core.authority import is_owner as authority_is_owner, has_permission
 
 
 def is_owner(user_id) -> bool:
     return authority_is_owner(user_id)
+
+
+def is_admin(user_id) -> bool:
+    return has_permission(user_id, "exec.audit")
 
 
 _LAST_EXEC = {}
@@ -24,31 +28,43 @@ def rate_limit_ok(user_id, min_interval_seconds=2):
 
 
 DANGEROUS_PATTERNS = [
-    r"\brm\s+-rf\b",
-    r"\brm\s+-fr\b",
-    r"\bmkfs\b",
-    r"\bdd\s+if=",
-    r"\bshutdown\b",
-    r"\breboot\b",
-    r"\bchmod\s+-R\s+777\b",
-    r"\bchown\s+-R\b",
-    r"\bcurl\b.*\|\s*(ba)?sh\b",
-    r"\bwget\b.*\|\s*(ba)?sh\b",
-    r"\bpkill\s+-9\s+-f\s+bot_gateway\b",
-    r"\b>\s*state/db\.json\b",
-    r">>?\s*state[/\\]",
-    r"open\(\s*f?[\"'][^\"']*state[/\\][^\"']*[\"']\s*,\s*[\"'][waxc]",
-    r"(?=.*state[/\\])(?=.*\.write_text\()",
-    r"(?=.*state[/\\])(?=.*\.write_bytes\()",
-    r"(?=.*state[/\\])(?=.*\bjson\.dump\()",
-    r"\brm\s+.*state[/\\]",
-    r"\bmv\s+.*state[/\\]",
-    r"\bshutil\.(move|copy|rmtree)\(.*state[/\\]",
+    r"\brm\s+-rf\b", r"\brm\s+-fr\b", r"\bmkfs\b", r"\bdd\s+if=",
+    r"\bshutdown\b", r"\breboot\b", r"\bchmod\s+-R\s+777\b", r"\bchown\s+-R\b",
+    r"\bcurl\b.*\|\s*(ba)?sh\b", r"\bwget\b.*\|\s*(ba)?sh\b",
+    r"\bpkill\s+-9\s+-f\s+bot_gateway\b", r"\b>\s*state/db\.json\b",
+    r">>?\s*state[/\\]", r"open\(\s*f?[\"'][^\"']*state[/\\][^\"']*[\"']\s*,\s*[\"'][waxc]",
+    r"(?=.*state[/\\])(?=.*\.write_text\()", r"(?=.*state[/\\])(?=.*\.write_bytes\()",
+    r"(?=.*state[/\\])(?=.*\bjson\.dump\()", r"\brm\s+.*state[/\\]",
+    r"\bmv\s+.*state[/\\]", r"\bshutil\.(move|copy|rmtree)\(.*state[/\\]",
 ]
 
 
 def is_dangerous(cmd):
     return any(re.search(p, cmd, re.IGNORECASE) for p in DANGEROUS_PATTERNS)
+
+
+# Audit commands are deliberately read-only.  This is narrower than arbitrary
+# shell execution and is available only to ADMIN/OWNER identities.
+AUDIT_COMMAND_PATTERNS = [
+    r"^grep\s+",
+    r"^grep\s+-",
+    r"^find\s+",
+    r"^head(?:\s+-n)?\s+",
+    r"^tail(?:\s+-n)?\s+",
+    r"^cat\s+",
+    r"^sed\s+-n\s+",
+    r"^awk\s+",
+    r"^python3\s+-c\s+",
+]
+
+
+def is_audit_command(cmd):
+    if any(re.search(p, cmd, re.IGNORECASE) for p in AUDIT_COMMAND_PATTERNS):
+        # No command chaining, redirection, command substitution or writes.
+        if re.search(r"[;&|`]", cmd) or re.search(r"\$\(", cmd):
+            return False
+        return not is_dangerous(cmd)
+    return False
 
 
 SECRET_PATTERNS = [
@@ -89,6 +105,21 @@ def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000):
     if is_dangerous(cmd):
         audit(user_id, cmd, source, "blocked")
         return False, "Command blocked."
+    return _run(cmd, user_id, source, timeout, max_output)
+
+
+def run_audit(user_id, cmd, source="audit", timeout=15, max_output=4000):
+    if not is_admin(user_id):
+        return False, "Admin only."
+    if not rate_limit_ok(user_id):
+        return False, "Too fast."
+    if not is_audit_command(cmd):
+        audit(user_id, cmd, source, "blocked_non_audit")
+        return False, "Read-only audit command required."
+    return _run(cmd, user_id, source, timeout, max_output)
+
+
+def _run(cmd, user_id, source, timeout, max_output):
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         output = redact_secrets((result.stdout or "") + (result.stderr or ""))
