@@ -43,9 +43,11 @@ def is_dangerous(cmd):
     return any(re.search(p, cmd, re.IGNORECASE) for p in DANGEROUS_PATTERNS)
 
 
-# Audit commands are deliberately read-only.  This is narrower than arbitrary
-# shell execution and is available only to ADMIN/OWNER identities.
+# Audit commands are deliberately read-only. This is narrower than arbitrary
+# shell execution and is available only to ADMIN/DEVELOPER/OWNER identities.
 AUDIT_COMMAND_PATTERNS = [
+    r"^whoami\s*$",
+    r"^pwd\s*$",
     r"^grep\s+",
     r"^grep\s+-",
     r"^find\s+",
