@@ -34,9 +34,11 @@ def ask_groq(prompt):
                 return "GROQ_API_KEY missing"
             client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
         resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=[{"role": "user", "content": str(prompt)}],
-            max_tokens=2000
+            max_tokens=2000,
+            tools=[],
+            tool_choice="none"
         )
         return str(resp.choices[0].message.content or "")
     except Exception as e:
@@ -96,16 +98,7 @@ USER QUESTION:
         print("[LLM] Gemini exception:", e)
 
     # Fallback: Groq
-    # Primary: Gemini (own AI model)
-    try:
-        result = ask_gemini(prompt)
-        if result and not result.startswith("Gemini Error:"):
-            return result
-        print("[LLM] Gemini failed, falling back to Groq:", result[:120])
-    except Exception as e:
-        print("[LLM] Gemini exception:", e)
-
-    # Fallback: Groq
+    # Groq only (Gemini key is invalid)
     try:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
