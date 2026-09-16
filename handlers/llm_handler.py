@@ -34,7 +34,7 @@ def ask_groq(prompt):
                 return "GROQ_API_KEY missing"
             client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
         resp = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": str(prompt)}],
             max_tokens=2000
         )
