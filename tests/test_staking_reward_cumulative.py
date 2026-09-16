@@ -10,7 +10,7 @@ def test_reward_claim_is_cumulative_and_idempotent(monkeypatch):
         "reward_pools": {},
         "ledger": [],
     }
-    now = iter([86400.0, 86400.0, 172800.0, 172800.0])
+    now = iter([86400.0, 172800.0])
     credits_calls = []
 
     def atomic_update(mutate):
