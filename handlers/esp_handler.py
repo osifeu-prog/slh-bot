@@ -367,6 +367,17 @@ def register_esp_handler(bot):
         bot.reply_to(msg, text)
 
     @bot.message_handler(commands=["esp"])
+    def esp_cmd(msg):
+        bot.reply_to(msg, """📡 *ESP Commands:*
+
+• /esp_status - מצב מכשירי ESP
+• /esp_ping - בדיקת חיבור
+• /esp_activate - הפעלת רישיון
+• /esp_start - התחלת משימה
+• /esp_stop - עצירת משימה
+• /esp_progress - דיווח התקדמות
+• /esp_heartbeat - דופק (Heartbeat)
+• /esp_broadcast_progress - שידור התקדמות""", parse_mode="Markdown")
     def esp_menu(msg):
         bot.reply_to(
             msg,

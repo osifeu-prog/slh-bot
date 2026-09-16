@@ -86,6 +86,26 @@ SYSTEM CONTEXT:
 USER QUESTION:
 {str(question)}
 """
+    # Primary: Gemini (own AI model)
+    try:
+        result = ask_gemini(prompt)
+        if result and not result.startswith("Gemini Error:"):
+            return result
+        print("[LLM] Gemini failed, falling back to Groq:", result[:120])
+    except Exception as e:
+        print("[LLM] Gemini exception:", e)
+
+    # Fallback: Groq
+    # Primary: Gemini (own AI model)
+    try:
+        result = ask_gemini(prompt)
+        if result and not result.startswith("Gemini Error:"):
+            return result
+        print("[LLM] Gemini failed, falling back to Groq:", result[:120])
+    except Exception as e:
+        print("[LLM] Gemini exception:", e)
+
+    # Fallback: Groq
     try:
         result = ask_groq(prompt)
         if result and not result.startswith("LLM Error:"):
