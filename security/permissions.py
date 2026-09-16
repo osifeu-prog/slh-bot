@@ -31,7 +31,9 @@ def get_permissions(uid):
 
 
 def is_admin(user_or_msg):
-    return is_owner(user_or_msg)
+    """Return whether the identity may use the bounded admin audit surface."""
+    role = _authority_get_role(_extract_uid(user_or_msg))
+    return role in ("OWNER", "ADMIN", "DEVELOPER")
 
 
 def has_permission(user_or_msg, permission):
