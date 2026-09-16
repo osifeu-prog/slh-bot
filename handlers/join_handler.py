@@ -52,6 +52,21 @@ def _persist_referral(uid, ref_uid):
     return state_manager.atomic_update(mutate)
 
 
+def _lesson_keyboard():
+    from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+    markup = InlineKeyboardMarkup()
+    markup.row(
+        InlineKeyboardButton(
+            "📖 פתח שיעור 1",
+            callback_data="slh_lesson_bitcoin_mastery_1"
+        )
+    )
+    markup.row(
+        InlineKeyboardButton("🎓 Academy", callback_data="slh_academy")
+    )
+    return markup
+
+
 def register(bot):
 
     @bot.message_handler(commands=['join'])
@@ -211,11 +226,12 @@ def register(bot):
                 f"קבוצה: {group}\n\n"
                 "🤖 הסוכן האישי שלך מוכן.\n"
                 "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\n\n"
-                "/lesson bitcoin_mastery 1\n\n"
+                "בחר למטה כדי לפתוח את שיעור 1.\n\n"
                 "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\n\n"
                 "🔗 קבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n"
-                "🏆 /leaderboard"
+                "🏆 /leaderboard",
+                reply_markup=_lesson_keyboard()
             )
 
     @bot.message_handler(commands=['cancel_join'])
