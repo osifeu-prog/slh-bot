@@ -27,7 +27,7 @@ def register(bot):
             bot.reply_to(
                 m,
                 "🔒 השיעור נעול\n\n"
-                "יש להשלים קודם את השיעור הקודם, או להתחיל את הקורס דרך /courses."
+                "יש להשלים קודם את השיעור הקודם, או להתחיל את הקורס דרך /academy."
             )
             return
 
@@ -78,7 +78,7 @@ def register(bot):
         if not result.get("ok"):
             error = result.get("error")
             if error == "course_not_started":
-                message = "❌ הקורס עדיין לא התחיל. התחל דרך /courses"
+                message = "❌ הקורס עדיין לא התחיל. התחל דרך /academy"
             elif error == "sequential_access":
                 message = "🔒 אי אפשר להשלים את השלב הזה עדיין. יש להשלים קודם את השלב הקודם."
             elif error == "course_not_found":
@@ -91,10 +91,22 @@ def register(bot):
             return
 
         reward = result.get("reward", {})
-        bot.reply_to(
-            m,
-            "🎉 שיעור הושלם!\n\n"
-            f"⭐ נקודות: {reward.get('points', 0)}\n"
-            f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
-            "📊 /academy_progress"
-        )
+        if stage == 1:
+            bot.reply_to(
+                m,
+                "🎉 שיעור 1 הושלם!\n\n"
+                f"⭐ נקודות: {reward.get('points', 0)}\n"
+                f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
+                "🔗 השלב הבא: שתף את קישור ה-Referral האישי שלך.\n"
+                "אחר כך אפשר לעבור ל-Credits דרך Telegram Stars.\n\n"
+                "📎 פתח /start כדי לראות את הקישור האישי.\n"
+                "💎 /pay — Credits דרך Telegram Stars"
+            )
+        else:
+            bot.reply_to(
+                m,
+                "🎉 שיעור הושלם!\n\n"
+                f"⭐ נקודות: {reward.get('points', 0)}\n"
+                f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
+                "📊 /academy_progress"
+            )
