@@ -58,8 +58,6 @@ def register(bot):
     def join_start(msg):
         uid = str(msg.from_user.id)
 
-        # Capture campaign-day entry on the actual /join path as well as /start.
-        # This is attribution bookkeeping only and never changes SLH balances.
         try:
             from core.holiday_campaign import record_entry
             record_entry(uid, source="join_command")
@@ -88,6 +86,10 @@ def register(bot):
                 "🚧 ההצטרפות לאלפא סגורה כרגע.\n"
                 "נדרש Invite כדי להצטרף."
             )
+            return
+
+        if existing_user:
+            bot.reply_to(msg, "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך.")
             return
 
         user_states[uid] = {"step": "name"}
@@ -150,8 +152,6 @@ def register(bot):
                 )
                 return
 
-            # Finalize the holiday campaign entry only after onboarding
-            # has successfully persisted joined=True.
             try:
                 from core.holiday_campaign import finalize_entry
                 finalized = finalize_entry(uid)
@@ -198,15 +198,22 @@ def register(bot):
 
             user_states.pop(uid, None)
 
+            # Start the canonical Academy course before presenting lesson 1.
+            try:
+                from core import academy_manager
+                academy_manager.start_course(uid, "bitcoin_mastery")
+            except Exception as e:
+                print("JOIN ACADEMY START FAILED:", e)
+
             bot.reply_to(
                 msg,
                 f"✅ נרשמת בהצלחה, {state['name']}!\n"
                 f"קבוצה: {group}\n\n"
-                "הסוכן האישי שלך מוכן.\n\n"
-                "מה תרצה לעשות עכשיו?\n"
-                "🎯 שתף וצבור נקודות: /start\n"
-                "💰 /wallet\n\n"
-                "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
+                "🤖 הסוכן האישי שלך מוכן.\n"
+                "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\n\n"
+                "/lesson bitcoin_mastery 1\n\n"
+                "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\n\n"
+                "🔗 קבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n"
                 "🏆 /leaderboard"
             )
