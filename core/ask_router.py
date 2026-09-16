@@ -37,7 +37,7 @@ INTENTS = {
     "general": []
 }
 
-FORBIDDEN_ASK_TOPICS = ["launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
+FORBIDDEN_ASK_TOPICS = ["p0", "משימות p0", "חסימה"] # "p0", "משימות p0", "חסימה"] # "launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
 
 
 def is_system_state_question(text):

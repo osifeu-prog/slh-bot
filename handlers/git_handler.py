@@ -1,6 +1,6 @@
 import os, requests, json, base64, hashlib
 
-GITHUB_TOKEN = os.getenv('GIT_TOKEN')
+GITHUB_TOKEN = os.getenv('GIT_TOKEN') or os.getenv('GITHUB_TOKEN')
 REPO_OWNER = 'osifeu-prog'
 REPO_NAME = 'slh-bot'
 BRANCH = 'main'
