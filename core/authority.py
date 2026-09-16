@@ -11,7 +11,9 @@ from core.identity import OWNER_TELEGRAM_ID
 from core.profile_manager import user_exists, get_user
 
 OWNER_ID = str(OWNER_TELEGRAM_ID)
-ADMIN_IDS = {OWNER_ID, "5010371391"}
+# ADMIN is intentionally reserved for the owner until an explicit future
+# admin policy is introduced. Developer access is a separate role.
+ADMIN_IDS = {OWNER_ID}
 PARTNER_IDS = {"5010371391"}
 
 
@@ -23,9 +25,9 @@ def _csv_ids(name):
     }
 
 
-# Additional non-owner developers are configured by Telegram numeric ID via
-# SLH_DEVELOPER_IDS. Keep this separate from ADMIN_IDS so access can be
-# granted/revoked without changing the canonical admin identity list.
+# Environment IDs remain a safe bootstrap/override mechanism. Normal
+# day-to-day developer grants are persisted on the user profile and can be
+# managed by the OWNER through handlers/dev_admin.py.
 DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
@@ -83,25 +85,32 @@ def get_role(uid) -> str:
     if uid == OWNER_ID:
         return "OWNER"
 
-    # ADMIN must take precedence over PARTNER. Zvika is intentionally present
-    # in both sets so partner distribution permissions are preserved while his
-    # admin permissions are no longer shadowed by PARTNER_READ_ONLY.
-    if uid in ADMIN_IDS:
-        return "ADMIN"
-
+    # Explicit developer grants take precedence over legacy admin/partner
+    # memberships. This lets a person such as Zvika retain alpha distribution
+    # through ALPHA_DISTRIBUTOR_IDS while having a single DEVELOPER role.
     if uid in DEVELOPER_IDS:
         return "DEVELOPER"
 
-    if uid in PARTNER_IDS:
-        return "PARTNER_READ_ONLY"
+    if uid in ADMIN_IDS:
+        return "ADMIN"
 
     if not user_exists(uid):
         return "UNKNOWN"
 
-    profile_role = str(get_user(uid).get("role", "")).strip().lower()
+    profile = get_user(uid) or {}
+    profile_role = str(profile.get("role", "")).strip().lower()
+
+    if profile_role == "developer":
+        return "DEVELOPER"
+
+    if profile_role == "admin":
+        return "ADMIN"
 
     if profile_role == "student":
         return "USER"
+
+    if uid in PARTNER_IDS:
+        return "PARTNER_READ_ONLY"
 
     return "UNKNOWN"
 
