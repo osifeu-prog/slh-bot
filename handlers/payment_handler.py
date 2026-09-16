@@ -89,7 +89,14 @@ def register_payment_handlers(bot):
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
         print(f"[PAY] Pre-checkout query from {query.from_user.id}, payload={query.invoice_payload}")
-        parts = str(query.invoice_payload or "").split("_")
+        raw = str(query.invoice_payload or "")
+        if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
+            if query.currency == "XTR" and query.total_amount > 0:
+                bot.answer_pre_checkout_query(query.id, ok=True)
+            else:
+                bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid currency.")
+            return
+        parts = raw.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != str(query.from_user.id):
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment recipient.")
             return
@@ -111,6 +118,19 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         payment = m.successful_payment
         payload = str(payment.invoice_payload or "")
+        if payload.startswith("item_") and payload.endswith("_" + uid):
+            item_id = payload[5:-(len(uid)+1)]
+            import json, datetime
+            rec = {"uid": uid, "item": item_id, "stars": payment.total_amount,
+                   "charge_id": payment.telegram_payment_charge_id,
+                   "time": datetime.datetime.utcnow().isoformat()}
+            try:
+                open("state/item_orders.jsonl","a").write(json.dumps(rec)+chr(10))
+            except Exception as e:
+                print("[PAY] order log failed:", e)
+            bot.send_message(m.chat.id, "Payment received for " + item_id + ". Ref: " + str(payment.telegram_payment_charge_id)[:12])
+            print("[PAY] ITEM ORDER", rec)
+            return
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
