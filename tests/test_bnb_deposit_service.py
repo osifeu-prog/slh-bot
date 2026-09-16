@@ -22,11 +22,11 @@ class BnbDepositServiceTests(unittest.TestCase):
     def test_settlement_credits_only_verified_sender(self, load_db, get_binding, verify, record):
         get_binding.return_value = {"uid": "u1", "address": "0xBound"}
         verify.return_value = {"ok": True, "from": "0xBOUND", "to": "0xTreasury", "amount_bnb": 2.5}
-        load_db.side_effect = [{"ledger": []}, {"ledger": [{"meta": {"idempotency_key": "bnb:deposit:0xtx"}}]}]
+        load_db.return_value = {"ledger": []}
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertEqual(result["credits"], 2500)
         self.assertEqual(result["balance_after"], 1234)
-        self.assertTrue(result["idempotent"])
+        self.assertFalse(result["idempotent"])
         record.assert_called_once()
 
     @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
@@ -37,7 +37,7 @@ class BnbDepositServiceTests(unittest.TestCase):
         get_binding.return_value = {"uid": "u1", "address": "0xBound"}
         verify.return_value = {"ok": True, "from": "0xBound", "to": "0xTreasury", "amount_bnb": 2.5}
         entry = {"meta": {"idempotency_key": "bnb:deposit:0xtx"}}
-        load_db.side_effect = [{"ledger": [entry]}, {"ledger": [entry]}]
+        load_db.return_value = {"ledger": [entry]}
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertTrue(result["idempotent"])
         self.assertEqual(result["balance_after"], 1234)

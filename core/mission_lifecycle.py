@@ -1264,7 +1264,8 @@ class MissionLifecycleService:
 
     def execute_mission(
         self,
-        mission_id
+        mission_id,
+        execution_result=None
     ):
 
         from datetime import datetime, timezone
@@ -1293,24 +1294,13 @@ class MissionLifecycleService:
             if mission is None:
 
                 return {
-
-                    "status":
-                        "blocked",
-
-                    "reason":
-                        "mission_not_found",
-
-                    "mission_id":
-                        str(mission_id),
-
-                    "write_performed":
-                        False,
-
+                    "status": "blocked",
+                    "reason": "mission_not_found",
+                    "mission_id": str(mission_id),
+                    "write_performed": False,
                 }
 
-            current_status = mission.get(
-                "status"
-            )
+            current_status = mission.get("status")
 
             if current_status in (
                 "executed",
@@ -1318,212 +1308,115 @@ class MissionLifecycleService:
             ):
 
                 return {
-
-                    "status":
-                        "blocked",
-
-                    "reason":
-                        "mission_already_executed",
-
-                    "mission_id":
-                        str(mission_id),
-
-                    "current_status":
-                        current_status,
-
-                    "write_performed":
-                        False,
-
-                    "read_only":
-                        True,
-
+                    "status": "blocked",
+                    "reason": "mission_already_executed",
+                    "mission_id": str(mission_id),
+                    "current_status": current_status,
+                    "write_performed": False,
+                    "read_only": True,
                 }
 
-            agent_id = mission.get(
-                "assigned_to"
-            )
-
-            agent = self.find_agent(
-                manifest,
-                agent_id
-            )
+            agent_id = mission.get("assigned_to")
+            agent = self.find_agent(manifest, agent_id)
 
             checks = {
-
-                "mission_exists":
-                    mission is not None,
-
-                "agent_exists":
-                    agent is not None,
-
-                "mission_status_assigned":
-                    mission.get(
-                        "status"
-                    )
-                    == "assigned",
-
-                "assignment_matches":
+                "mission_exists": mission is not None,
+                "agent_exists": agent is not None,
+                "mission_status_assigned": (
+                    mission.get("status") == "assigned"
+                ),
+                "assignment_matches": (
                     agent is not None
-                    and str(
-                        mission.get(
-                            "assigned_to"
-                        )
-                    )
-                    == str(
-                        agent.get(
-                            "id"
-                        )
-                    ),
-
-                "agent_state_eligible":
+                    and str(mission.get("assigned_to"))
+                    == str(agent.get("id"))
+                ),
+                "agent_state_eligible": (
                     agent is not None
-                    and agent.get(
-                        "state"
-                    )
-                    in (
-                        "idle",
-                        "active"
-                    ),
-
+                    and agent.get("state") in ("idle", "active")
+                ),
             }
 
-            if not all(
-                checks.values()
-            ):
-
+            if not all(checks.values()):
                 return {
-
-                    "status":
-                        "blocked",
-
-                    "mission_id":
-                        str(mission_id),
-
-                    "agent_id":
-                        str(agent_id),
-
-                    "checks":
-                        checks,
-
-                    "write_performed":
-                        False,
-
+                    "status": "blocked",
+                    "mission_id": str(mission_id),
+                    "agent_id": str(agent_id),
+                    "checks": checks,
+                    "write_performed": False,
                 }
 
-            now = datetime.now(
-                timezone.utc
-            )
+            if not isinstance(execution_result, dict):
+                return {
+                    "status": "blocked",
+                    "reason": "execution_result_required",
+                    "mission_id": str(mission_id),
+                    "agent_id": str(agent_id),
+                    "write_performed": False,
+                    "read_only": True,
+                }
 
-            timestamp = now.strftime(
-                "%Y%m%dT%H%M%SZ"
-            )
+            if execution_result.get("execution_status") != "success":
+                return {
+                    "status": "blocked",
+                    "reason": "execution_not_successful",
+                    "mission_id": str(mission_id),
+                    "agent_id": str(agent_id),
+                    "write_performed": False,
+                    "read_only": True,
+                }
 
-            root = Path(
-                self.root
-            )
+            if execution_result.get("verified") is not True:
+                return {
+                    "status": "blocked",
+                    "reason": "execution_not_verified",
+                    "mission_id": str(mission_id),
+                    "agent_id": str(agent_id),
+                    "write_performed": False,
+                    "read_only": True,
+                }
 
-            board_path = (
-                root
-                / "state"
-                / "missions"
-                / "board.json"
-            )
+            if not execution_result.get("evidence"):
+                return {
+                    "status": "blocked",
+                    "reason": "execution_evidence_required",
+                    "mission_id": str(mission_id),
+                    "agent_id": str(agent_id),
+                    "write_performed": False,
+                    "read_only": True,
+                }
 
-            results_dir = (
-                root
-                / "state"
-                / "missions"
-                / "results"
-            )
+            now = datetime.now(timezone.utc)
+            timestamp = now.strftime("%Y%m%dT%H%M%S%fZ")
 
-            backup_dir = (
-                root
-                / "state"
-                / "takeover"
-                / "backups"
-            )
+            root = Path(self.root)
+            board_path = root / "state" / "missions" / "board.json"
+            results_dir = root / "state" / "missions" / "results"
+            backup_dir = root / "state" / "takeover" / "backups"
 
-            results_dir.mkdir(
-                parents=True,
-                exist_ok=True
-            )
-
-            backup_dir.mkdir(
-                parents=True,
-                exist_ok=True
-            )
+            results_dir.mkdir(parents=True, exist_ok=True)
+            backup_dir.mkdir(parents=True, exist_ok=True)
 
             backup_path = (
                 backup_dir
                 / f"board_before_api_execution_{timestamp}.json"
             )
 
-            shutil.copy2(
-                board_path,
-                backup_path
-            )
+            shutil.copy2(board_path, backup_path)
 
-            execution_started_at = (
-                now.isoformat()
-            )
+            execution_started_at = now.isoformat()
+            execution_completed_at = datetime.now(timezone.utc).isoformat()
 
-            execution_completed_at = (
-                datetime.now(
-                    timezone.utc
-                ).isoformat()
-            )
+            mission["status"] = "executed"
+            mission["execution_started_at"] = execution_started_at
+            mission["execution_completed_at"] = execution_completed_at
 
-            mission["status"] = (
-                "executed"
-            )
-
-            mission[
-                "execution_started_at"
-            ] = execution_started_at
-
-            mission[
-                "execution_completed_at"
-            ] = execution_completed_at
-
-            result_id = (
-                f"mission-{mission_id}-{timestamp}"
-            )
-
-            result = {
-
-                "result_id":
-                    result_id,
-
-                "mission_id":
-                    str(mission_id),
-
-                "agent_id":
-                    str(agent_id),
-
-                "execution_status":
-                    "success",
-
-                "verified":
-                    True,
-
-                "mission_completion":
-                    "pending",
-
-                "result":
-                    {
-
-                        "synchronization_check":
-                            "passed",
-
-                        "execution_check":
-                            "passed",
-
-                    },
-
-                "recorded_at":
-                    execution_completed_at,
-
-            }
+            result_id = f"mission-{mission_id}-{timestamp}"
+            result = dict(execution_result)
+            result["result_id"] = result_id
+            result["mission_id"] = str(mission_id)
+            result["agent_id"] = str(agent_id)
+            result.setdefault("mission_completion", "pending")
+            result["recorded_at"] = execution_completed_at
 
             canonical = json.dumps(
                 result,
@@ -1531,18 +1424,11 @@ class MissionLifecycleService:
                 ensure_ascii=False
             )
 
-            result[
-                "result_sha256"
-            ] = hashlib.sha256(
-                canonical.encode(
-                    "utf-8"
-                )
+            result["result_sha256"] = hashlib.sha256(
+                canonical.encode("utf-8")
             ).hexdigest()
 
-            result_path = (
-                results_dir
-                / f"{result_id}.json"
-            )
+            result_path = results_dir / f"{result_id}.json"
 
             self._atomic_write_text(
                 result_path,
@@ -1563,34 +1449,15 @@ class MissionLifecycleService:
             )
 
             return {
-
-                "status":
-                    "executed",
-
-                "mission_id":
-                    str(mission_id),
-
-                "agent_id":
-                    str(agent_id),
-
-                "execution_status":
-                    "success",
-
-                "result_id":
-                    result_id,
-
-                "result_path":
-                    str(result_path),
-
-                "backup":
-                    str(backup_path),
-
-                "write_performed":
-                    True,
-
-                "read_only":
-                    False,
-
+                "status": "executed",
+                "mission_id": str(mission_id),
+                "agent_id": str(agent_id),
+                "execution_status": "success",
+                "result_id": result_id,
+                "result_path": str(result_path),
+                "backup": str(backup_path),
+                "write_performed": True,
+                "read_only": False,
             }
 
 

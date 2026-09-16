@@ -1,0 +1,26 @@
+name: SLH Full Regression
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - 'feat/mission-real-execution-contract'
+  workflow_dispatch:
+
+jobs:
+  full-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      - name: Compile Python modules
+        run: python3 -m compileall -q core agents handlers services
+      - name: Run full test suite
+        run: python3 -m pytest -q tests

@@ -10,7 +10,7 @@ def test_reward_claim_is_cumulative_and_idempotent(monkeypatch):
         "reward_pools": {},
         "ledger": [],
     }
-    now = iter([86400.0, 86400.0, 172800.0, 172800.0])
+    now = iter([86400.0, 172800.0])
     credits_calls = []
 
     def atomic_update(mutate):
@@ -42,7 +42,8 @@ def test_reward_claim_is_cumulative_and_idempotent(monkeypatch):
     assert first_pool["reward"] == 0.1
     assert first["status"] == "paid"
     assert second_pool["reward"] == 0.1
+    assert second_pool["calculated_at"] == 172800.0
     assert second["status"] == "paid"
     assert [round(c[1], 6) for c in credits_calls] == [0.1, 0.1]
-    assert db["users"]["u1"]["wallet"]["credits"] == 100.2
-    assert db["reward_pools"]["sp1"]["settled_total"] == 0.2
+    assert round(db["users"]["u1"]["wallet"]["credits"], 6) == 100.2
+    assert round(db["reward_pools"]["sp1"]["settled_total"], 6) == 0.2

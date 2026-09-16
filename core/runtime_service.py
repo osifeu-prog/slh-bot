@@ -20,7 +20,6 @@ def boot():
     with _LOCK:
         if _RUNTIME is not None and _RUNTIME.status().get("running"):
             return _BOOT_REPORT
-
         _KERNEL = SLHKernel()
         _BOOT_REPORT = load_agents_into_kernel(_KERNEL)
         _RUNTIME = Runtime(_KERNEL)
@@ -34,7 +33,6 @@ def _ensure_loaded(identifier):
     agent_id, record = get_agent(identifier)
     if record is None:
         raise KeyError(f"Agent '{identifier}' not found")
-
     name = str(record.get("name") or agent_id)
     with _LOCK:
         if name not in _KERNEL.agents:
@@ -49,13 +47,21 @@ def execute_agent(identifier, command, source=None):
     _, record, name = _ensure_loaded(identifier)
     if not record.get("runtime_class"):
         raise ValueError("Agent record has no runtime_class")
-
-    event = {
-        "cmd": f"{name}:{str(command)}",
-        "source": source,
-    }
+    event = {"cmd": f"{name}:{str(command)}", "source": source}
     with _LOCK:
         return _RUNTIME.execute(event)
+
+
+def execute_agent_event(identifier, event):
+    """Execute a structured internal event through the canonical Runtime."""
+    global _RUNTIME
+    if not isinstance(event, dict) or not event.get("cmd"):
+        raise ValueError("Runtime event must be a non-empty dictionary with cmd")
+    _, record, _name = _ensure_loaded(identifier)
+    if not record.get("runtime_class"):
+        raise ValueError("Agent record has no runtime_class")
+    with _LOCK:
+        return _RUNTIME.execute(dict(event))
 
 
 def status():

@@ -1,0 +1,30 @@
+name: SLH Mission Execution Boundary
+
+on:
+  pull_request:
+    paths:
+      - 'core/mission_lifecycle.py'
+      - 'core/mission_orchestrator.py'
+      - 'core/mission_runtime_authority.py'
+      - 'core/mission_action_*.py'
+      - 'core/runtime_service.py'
+      - 'agents/mission_executor.py'
+      - 'tests/test_mission_execution_contract.py'
+      - 'requirements.txt'
+  push:
+    branches:
+      - 'feat/mission-real-execution-contract'
+  workflow_dispatch:
+
+jobs:
+  mission-execution-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      - name: Run mission execution contract tests
+        run: python3 -m pytest -q tests/test_mission_execution_contract.py
