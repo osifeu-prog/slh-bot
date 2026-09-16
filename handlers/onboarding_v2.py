@@ -45,7 +45,7 @@ def load_branding():
             "███████╗██╗     ██╗  ██╗",
             "██╔════╝██║     ██║  ██║",
             "███████╗██║     ███████║",
-            "╚════██║██║     ██╔══██║",
+            "╚════██║██║     ██║  ██║",
             "███████║███████╗██║  ██║",
             "╚══════╝╚══════╝╚═╝  ╚═╝",
             "",
@@ -110,17 +110,12 @@ def register(bot, context=None):
         is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
         is_new = not user_exists(user_id)
 
-        # Record campaign-day entry for every /start during the active campaign,
-        # including existing users. This is attribution bookkeeping only and
-        # never creates users or mutates SLH balances.
         try:
             from core.holiday_campaign import record_entry
             record_entry(user_id)
         except Exception as e:
             print("HOLIDAY CAMPAIGN ENTRY FAILED:", e)
 
-        # /start must never create a user. Preserve referral attribution separately
-        # until /join successfully passes the onboarding gate.
         parts = (m.text or "").split(maxsplit=1)
         if is_new and len(parts) > 1 and parts[1].startswith("ref_"):
             ref_uid = parts[1][4:].strip()
@@ -174,24 +169,62 @@ def register(bot, context=None):
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
                 f"{invite_line}"
             )
-        else:
-            text = (
-                f"ברוך הבא, {user_name}!\n\n"
-                f"📅 {now}\n"
-                f"👤 משתמש: {user_name}\n"
-                f"💰 יתרה: {credits}\n"
-                f"🔒 סטייקינג: {staked}\n\n"
-                "ברוך הבא ל-SLH OS.\n"
-                "כדי להתחיל, השתמש בפקודות הבאות:\n"
-                "/join – הרשמה\n"
-                "/dashboard – לוח אישי\n"
-                "/help – עזרה\n\n"
-                "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
-                f"{invite_line}"
-            )
-        bot.send_message(m.chat.id, text)
+            bot.send_message(m.chat.id, text)
+            return
 
+        text = (
+            f"ברוך הבא, {user_name}!\n\n"
+            "ברוך הבא ל-SLH OS.\n"
+            "כדי להתחיל, הצטרף למסלול ה-Alpha:\n"
+            "1️⃣ הרשמה\n"
+            "2️⃣ פרופיל + Personal Agent\n"
+            "3️⃣ Academy + שיעור ראשון\n"
+            "4️⃣ נקודות + Referral\n"
+            "5️⃣ Credits דרך Telegram Stars\n\n"
+            "הצטרפות אינה מפעילה חשבון לפני השלמת /join."
+        )
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(types.InlineKeyboardButton("🚀 הצטרף ל-SLH", callback_data="start_join"))
+        markup.add(types.InlineKeyboardButton("📖 עזרה", callback_data="show_help"))
+        bot.send_message(m.chat.id, text, reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "start_join")
+    def start_join(call):
+        user_id = str(call.from_user.id)
+        is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
+        existing_user = user_exists(user_id)
+        has_valid_invite = _has_valid_invite(user_id)
+        if not can_start_onboarding(
+            is_owner=is_owner,
+            is_existing_user=existing_user,
+            has_invite=has_valid_invite,
+        ):
+            bot.answer_callback_query(call.id, "🚧 ההצטרפות לאלפא סגורה כרגע.")
+            return
+        if is_owner or existing_user:
+            bot.answer_callback_query(call.id, "החשבון כבר קיים")
+            bot.send_message(call.message.chat.id, "החשבון כבר קיים. פתח /dashboard")
+            return
+        from handlers.join_handler import user_states
+        user_states[user_id] = {"step": "name"}
+        bot.answer_callback_query(call.id, "🚀 מתחילים")
+        bot.send_message(call.message.chat.id, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "show_help")
+    def show_help(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(
+            call.message.chat.id,
+            "SLH Alpha\n\n"
+            "/join — הרשמה\n"
+            "/academy — Academy\n"
+            "/pay — Credits דרך Telegram Stars\n"
+            "/wallet — ארנק Credits\n"
+            "/stake <amount> — Staking פנימי\n"
+            "/dashboard — לוח אישי"
+        )
+
+    # Backward-compatible callback retained for existing keyboards/messages.
     @bot.callback_query_handler(func=lambda call: call.data == "onboard_start")
     def onboard_start(call):
         user_id = str(call.from_user.id)
@@ -199,7 +232,6 @@ def register(bot, context=None):
             is_owner = int(user_id) == int(OWNER_TELEGRAM_ID)
             is_existing = user_exists(user_id)
             has_valid_invite = _has_valid_invite(user_id)
-
             if not can_start_onboarding(
                 is_owner=is_owner,
                 is_existing_user=is_existing,
@@ -207,69 +239,17 @@ def register(bot, context=None):
             ):
                 bot.answer_callback_query(call.id, "🚧 ההצטרפות לאלפא סגורה כרגע.")
                 return
-
-            user_name = get_display_name(call.from_user.id, call.from_user)
-            update_user(user_id, {
-                "role": "student",
-                "joined": True,
-                "permissions": [],
-                "name": user_name,
-                "display_name": user_name,
-            })
-
-            try:
-                from core.holiday_campaign import finalize_entry
-                finalize_entry(user_id)
-            except Exception as e:
-                print("HOLIDAY CAMPAIGN FINALIZE FAILED:", e)
-
-            ref_uid = _get_pending_referral(user_id)
-            if ref_uid and str(ref_uid) != user_id and user_exists(str(ref_uid)):
-                from handlers.join_handler import _persist_referral, _clear_pending_referral
-                persisted = _persist_referral(user_id, ref_uid)
-                try:
-                    if persisted:
-                        from core.reward_engine import grant
-                        grant(
-                            str(ref_uid),
-                            "referral",
-                            points=10,
-                            idempotency_key=f"ref:{user_id}"
-                        )
-                finally:
-                    _clear_pending_referral(user_id)
-
-            try:
-                from core.reward_engine import grant
-                grant(
-                    user_id,
-                    "welcome_bonus",
-                    points=1000,
-                    idempotency_key=f"welcome:{user_id}"
-                )
-            except Exception as e:
-                print("ONBOARD WELCOME BONUS FAILED:", e)
-
-            db = state_manager.load_db()
-            owned_agents = [
-                agent for agent in db.get("agents", {}).values()
-                if isinstance(agent, dict) and str(agent.get("owner_id", "")) == user_id
-            ]
-            if not owned_agents:
-                create_agent(f"user{user_id}-Agent", owner_id=user_id)
-
-            bot.answer_callback_query(call.id, "✅ החשבון הופעל")
-            bot.send_message(
-                call.message.chat.id,
-                "✅ הפרופיל שלך הופעל!\n"
-                "הסוכן האישי שלך מוכן.\n\n"
-                "ברוך הבא ל-SLH OS."
-            )
-            send_dashboard(call.message.chat.id, user_id)
-
+            if is_existing or is_owner:
+                bot.answer_callback_query(call.id, "החשבון כבר קיים")
+                send_dashboard(call.message.chat.id, user_id)
+                return
+            from handlers.join_handler import user_states
+            user_states[user_id] = {"step": "name"}
+            bot.answer_callback_query(call.id, "🚀 מתחילים")
+            bot.send_message(call.message.chat.id, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
         except Exception as e:
-            bot.answer_callback_query(call.id, "❌ שגיאה בהפעלת החשבון")
-            bot.send_message(call.message.chat.id, f"❌ Onboarding failed: {type(e).__name__}")
+            bot.answer_callback_query(call.id, "❌ שגיאה")
+            bot.send_message(call.message.chat.id, f"❌ Onboarding start failed: {type(e).__name__}")
 
     @bot.callback_query_handler(func=lambda call: call.data == "continue_course")
     def continue_course(call):
