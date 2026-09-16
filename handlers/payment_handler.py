@@ -2,7 +2,7 @@ import os
 import state_manager
 from core import profile_manager
 from core import stars_payment_authority
-from telebot.types import LabeledPrice, PreCheckoutQuery
+from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
 
@@ -27,20 +27,36 @@ def _resolve_stars_package(credits, stars_paid):
     return None
 
 
+def _send_pay_menu(bot, chat_id, uid):
+    db = state_manager.load_db()
+    if uid not in db.get("users", {}):
+        bot.send_message(chat_id, "❌ Please /join first.")
+        return
+
+    markup = InlineKeyboardMarkup(row_width=1)
+    for pack_id, (stars, credits, label) in STARS_PACKS.items():
+        markup.add(
+            InlineKeyboardButton(
+                text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+                callback_data=f"pay_{pack_id}"
+            )
+        )
+    bot.send_message(
+        chat_id,
+        "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.",
+        reply_markup=markup
+    )
+
+
 def register_payment_handlers(bot):
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
-        uid = str(m.from_user.id)
-        db = state_manager.load_db()
-        if uid not in db.get("users", {}):
-            bot.send_message(m.chat.id, "❌ Please /join first.")
-            return
-        bot.send_message(m.chat.id, "💎 Credits unlock: AI asks (/ask), premium agents, and more.\nChoose a package below 👇")
-        from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-        markup = InlineKeyboardMarkup(row_width=1)
-        for pack_id, (stars, credits, label) in STARS_PACKS.items():
-            markup.add(InlineKeyboardButton(text=f"⭐ {stars} Stars → {credits} Credits ({label})", callback_data=f"pay_{pack_id}"))
-        bot.send_message(m.chat.id, "💰 Select a credits package:", reply_markup=markup)
+        _send_pay_menu(bot, m.chat.id, str(m.from_user.id))
+
+    @bot.callback_query_handler(func=lambda call: call.data == "slh_credits")
+    def credits_callback(call):
+        bot.answer_callback_query(call.id)
+        _send_pay_menu(bot, call.message.chat.id, str(call.from_user.id))
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
