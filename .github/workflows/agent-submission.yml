@@ -1,0 +1,25 @@
+name: Agent Submission Regression
+
+on:
+  pull_request:
+    paths:
+      - 'core/agent_submission_service.py'
+      - 'handlers/agent_submission_guard.py'
+      - 'tests/test_agent_submission_rewards.py'
+      - '.github/workflows/agent-submission.yml'
+  workflow_dispatch:
+
+jobs:
+  agent-submission-regression:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+      - name: Run agent submission regression
+        run: python3 -m unittest tests/test_agent_submission_rewards.py
