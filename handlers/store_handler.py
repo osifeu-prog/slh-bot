@@ -7,7 +7,7 @@ from core.economy_bridge import get_balance
 def register(bot):
     @bot.message_handler(commands=['shop'])
     def shop_cmd(message):
-        uid = message.from_user.id
+        uid = str(message.from_user.id)
         bal = get_balance(uid)
         bot.reply_to(message, format_shop_message(bal), parse_mode="Markdown")
 
