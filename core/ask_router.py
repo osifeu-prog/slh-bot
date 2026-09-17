@@ -63,10 +63,11 @@ def detect_intent(text):
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
 
-    for intent in ("staking", "wallet"):
-        for kw in INTENTS[intent]:
-            if kw and _kw_match(kw, text_lower):
-                return intent
+    if len(text_lower) <= 40:
+        for intent in ("staking", "wallet"):
+            for kw in INTENTS[intent]:
+                if kw and _kw_match(kw, text_lower):
+                    return intent
 
     question_words = ["כיצד", "איך", "מה", "מדוע", "למה", "הסבר", "explain", "how", "what", "why"]
     if any(word in text_lower for word in question_words):

@@ -1,4 +1,4 @@
-﻿from core.ask_router import route
+from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
 
 
