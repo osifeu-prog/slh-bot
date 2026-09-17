@@ -84,6 +84,8 @@ def detect_intent(text):
 
 
 def route(text, uid=None):
+    if re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", str(text or "")):
+        return "נראה שהודבק לוג שיחה. אני לא עונה על לוגים, כדי לא לענות בשם אחרים. שלח שאלה קצרה או פקודה."
     guard_result = guard(text, uid)
     if isinstance(guard_result, tuple):
         blocked, msg = guard_result
