@@ -44,10 +44,10 @@ def register(bot):
 
         # LLM API
         try:
-            from handlers.llm_handler import ask_groq
-            test = ask_groq("Reply with OK")
+            # DISABLED 2026-09-17 — /doctor no longer burns Groq
+            test = "SKIPPED"
             if "Error" not in test and "missing" not in test:
-                lines.append("LLM API: 🟢 תקין")
+                lines.append("LLM API: 🟢 SKIPPED")
             else:
                 lines.append(f"LLM API: 🔴 {test}")
         except Exception as e:
