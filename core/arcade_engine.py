@@ -43,6 +43,7 @@ def start_game(uid, now=None):
         "deadline": now + GAME_SECONDS,
         "score": 0,
         "answer": answer,
+        "question": question,
         "questions": 1,
     }
     return {
@@ -72,6 +73,7 @@ def answer_game(uid, answer, now=None):
 
     question, next_answer = new_question()
     game["answer"] = next_answer
+    game["question"] = question
     game["questions"] += 1
     return {
         "status": "answered",
