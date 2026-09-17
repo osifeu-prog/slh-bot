@@ -13,17 +13,10 @@ def register(bot):
         count=ref.get("count",0)
         commission=ref.get("commission",0)
         text=(
-            "🔗 ההזמנה האישית שלך
-
-"
-            f"{link}
-
-"
-            f"👥 הוזמנו: {count}
-"
-            f"💰 עמלות: {commission}
-
-"
+            "🔗 ההזמנה האישית שלך\n\n"
+            f"{link}\n\n"
+            f"👥 הוזמנו: {count}\n"
+            f"💰 עמלות: {commission}\n\n"
             "שתף עם חברים — כשהם קונים, אתה מרוויח."
         )
         bot.reply_to(msg,text)
