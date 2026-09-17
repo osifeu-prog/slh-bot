@@ -197,59 +197,11 @@ def investor_me():
 
 @app.route("/api/v1/staking", methods=["POST"])
 def create_staking_position():
-    """Create a 30-day internal staking position for the authenticated user."""
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-
-    payload = request.get_json(silent=True) or {}
-    raw_amount = payload.get("amount")
-    try:
-        if isinstance(raw_amount, bool) or raw_amount is None:
-            raise ValueError("invalid amount")
-        if isinstance(raw_amount, int):
-            amount = raw_amount
-        elif isinstance(raw_amount, str) and raw_amount.strip().isdigit():
-            amount = int(raw_amount.strip())
-        else:
-            raise ValueError("invalid amount")
-        if amount <= 0:
-            raise ValueError("amount must be positive")
-    except (TypeError, ValueError):
-        return jsonify({"error": "INVALID_AMOUNT"}), 400
-
-    db = load_db()
-    users = db.get("users", {})
-    user = users.get(str(uid)) if isinstance(users, dict) else None
-    if not isinstance(user, dict):
-        return jsonify({"error": "USER_NOT_FOUND"}), 404
-
-    try:
-        result = staking_service.stake_locked(
-            str(uid),
-            amount,
-            lock_days=30,
-            meta={"source": "miniapp", "endpoint": "/api/v1/staking"},
-        )
-    except ValueError as exc:
-        message = str(exc)
-        if message == "insufficient credits":
-            return jsonify({"error": "INSUFFICIENT_CREDITS"}), 400
-        if message in {"amount must be positive", "lock_days must be positive"}:
-            return jsonify({"error": "INVALID_AMOUNT"}), 400
-        if message == "user not found":
-            return jsonify({"error": "USER_NOT_FOUND"}), 404
-        return jsonify({"error": "STAKING_FAILED"}), 400
-
+    """Public Mini App staking mutation is disabled; expose read-only status only."""
     return jsonify({
-        "status": "created",
-        "amount": amount,
-        "credits": result["credits"],
-        "staked": result["staked"],
-        "position": result["position"],
-    }), 200
-
-
+        "error": "STAKING_MUTATION_DISABLED",
+        "message": "Staking actions are not enabled through the public Mini App.",
+    }), 403
 @app.route("/api/wallet/<uid>")
 def get_wallet(uid):
     denied = require_self(uid)
