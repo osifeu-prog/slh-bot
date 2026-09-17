@@ -1,0 +1,61 @@
+name: Auto-fix exchange public trade projection
+
+on:
+  push:
+    branches:
+      - automation/exchange-read-api
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !startsWith(github.event.head_commit.message, 'fix: hide exchange participant IDs') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: automation/exchange-read-api
+
+      - name: Patch public trade projection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('webapp.py')
+          text = p.read_text(encoding='utf-8')
+          old = '''@app.route("/api/v1/exchange/trades")
+def exchange_trades():
+    db = load_db()
+    raw = db.get("exchange_trades", [])
+    trades = raw if isinstance(raw, list) else []
+    return jsonify({"symbol": "SLH/CREDITS", "trades": trades[-100:]})
+'''
+          new = '''@app.route("/api/v1/exchange/trades")
+def exchange_trades():
+    db = load_db()
+    raw = db.get("exchange_trades", [])
+    trades = raw if isinstance(raw, list) else []
+    public_trades = []
+    for trade in trades[-100:]:
+        public_trades.append({
+            "slh_amount": trade.get("slh_amount"),
+            "price": trade.get("price"),
+            "credits_value": trade.get("credits_value"),
+            "timestamp": trade.get("timestamp"),
+        })
+    return jsonify({"symbol": "SLH/CREDITS", "trades": public_trades})
+'''
+          if old not in text:
+              raise SystemExit('expected exchange_trades block not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          python3 -m py_compile webapp.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add webapp.py
+          git diff --cached --check
+          git commit -m "fix: hide exchange participant IDs"
+          git push origin HEAD:automation/exchange-read-api
