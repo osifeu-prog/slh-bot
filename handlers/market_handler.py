@@ -56,7 +56,7 @@ def register(bot, context=None):
         if len(parts) < 2:
             bot.reply_to(
                 m,
-                "Usage: /buy <plugin_id>"
+                "Usage: /mktbuy <plugin_id>"
             )
             return
 
