@@ -47,7 +47,7 @@ def register(bot, context=None):
         )
 
 
-    @bot.message_handler(commands=["buy", "mktbuy"])
+    @bot.message_handler(commands=["mktbuy"])
     def buy(m):
         uid = str(m.from_user.id)
 
