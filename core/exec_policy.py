@@ -56,7 +56,6 @@ AUDIT_COMMAND_PATTERNS = [
     r"^cat\s+",
     r"^sed\s+-n\s+",
     r"^awk\s+",
-    r"^python3\s+-c\s+",
 ]
 
 

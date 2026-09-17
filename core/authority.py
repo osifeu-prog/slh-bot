@@ -14,7 +14,7 @@ OWNER_ID = str(OWNER_TELEGRAM_ID)
 # ADMIN is intentionally reserved for the owner until an explicit future
 # admin policy is introduced. Developer access is a separate role.
 ADMIN_IDS = {OWNER_ID}
-PARTNER_IDS = {"5010371391"}
+PARTNER_IDS = set()  # 5010371391 suspended pending accounting reconciliation
 
 
 def _csv_ids(name):

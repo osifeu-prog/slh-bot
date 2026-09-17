@@ -36,7 +36,12 @@ def register(bot):
 
             try:
                 from core.exec_policy import run_gated
-                ok, output = run_gated(OWNER_TELEGRAM_ID, pending['command'], source="execr_approved", timeout=15)
+                from core.exec_policy import is_owner, run_audit
+                _requester = pending['uid']
+                if is_owner(_requester):
+                    ok, output = run_gated(_requester, pending['command'], source="execr_approved", timeout=15)
+                else:
+                    ok, output = run_audit(_requester, pending['command'], source="execr_approved_audit", timeout=15)
                 if not ok:
                     output = f"❌ {output}"
                 else:
