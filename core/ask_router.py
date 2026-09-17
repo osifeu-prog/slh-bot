@@ -54,11 +54,12 @@ def detect_intent(text):
     if text_lower in greeting_exact:
         return "greeting"
 
-    for kw in INTENTS["time"]:
-        if kw and _kw_match(kw, text_lower):
-            return "time"
+    if len(text_lower) <= 40:
+        for kw in INTENTS["time"]:
+            if kw and _kw_match(kw, text_lower):
+                return "time"
 
-    if any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")) and any(x in text_lower for x in ("איך", "כיצד", "להשלים", "להתחיל", "where", "how")):
+    if len(text_lower) <= 40 and any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")) and any(x in text_lower for x in ("איך", "כיצד", "להשלים", "להתחיל", "where", "how")):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
