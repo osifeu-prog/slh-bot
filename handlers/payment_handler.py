@@ -2,6 +2,7 @@ import os
 import state_manager
 from core import profile_manager
 from core import stars_payment_authority
+from store.stars_purchase_service import STARS_PER_ITEM, purchase_item_with_stars
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
@@ -91,10 +92,12 @@ def register_payment_handlers(bot):
         print(f"[PAY] Pre-checkout query from {query.from_user.id}, payload={query.invoice_payload}")
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
-            if query.currency == "XTR" and query.total_amount > 0:
+            item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
+            expected_stars = STARS_PER_ITEM.get(item_id)
+            if query.currency == "XTR" and expected_stars == int(query.total_amount):
                 bot.answer_pre_checkout_query(query.id, ok=True)
             else:
-                bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid currency.")
+                bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid item price.")
             return
         parts = raw.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != str(query.from_user.id):
@@ -120,16 +123,30 @@ def register_payment_handlers(bot):
         payload = str(payment.invoice_payload or "")
         if payload.startswith("item_") and payload.endswith("_" + uid):
             item_id = payload[5:-(len(uid)+1)]
-            import json, datetime
-            rec = {"uid": uid, "item": item_id, "stars": payment.total_amount,
-                   "charge_id": payment.telegram_payment_charge_id,
-                   "time": datetime.datetime.utcnow().isoformat()}
             try:
-                open("state/item_orders.jsonl","a").write(json.dumps(rec)+chr(10))
+                result = purchase_item_with_stars(
+                    uid=uid,
+                    item_id=item_id,
+                    stars_paid=payment.total_amount,
+                    charge_id=payment.telegram_payment_charge_id,
+                )
+                if result["status"] == "DUPLICATE":
+                    bot.send_message(m.chat.id, "ℹ️ This item payment was already processed.")
+                    return
+                if result["status"] == "RECOVERABLE":
+                    bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
+                    return
+                bot.send_message(
+                    m.chat.id,
+                    "✅ Payment received and item fulfilled.\n"
+                    f"Item: {item_id}\n"
+                    f"Stars: {payment.total_amount}\n"
+                    f"Ref: {payment.telegram_payment_charge_id[:12]}",
+                )
+                print("[PAY] STAR ITEM FULFILLED", result)
             except Exception as e:
-                print("[PAY] order log failed:", e)
-            bot.send_message(m.chat.id, "Payment received for " + item_id + ". Ref: " + str(payment.telegram_payment_charge_id)[:12])
-            print("[PAY] ITEM ORDER", rec)
+                print(f"[PAY] STAR item fulfillment failed: {type(e).__name__}")
+                bot.send_message(m.chat.id, "⚠️ Payment was received but fulfillment failed safely. Please contact /paysupport.")
             return
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
