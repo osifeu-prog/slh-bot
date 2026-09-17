@@ -1,4 +1,4 @@
-from core.wallet_binding import issue_challenge, verify_signature
+from core import wallet_binding
 from core.legacy_wallet_migration import record_legacy_claim
 
 
@@ -12,7 +12,7 @@ def register(bot):
 
         address = parts[1].strip()
         try:
-            challenge = issue_challenge(str(msg.from_user.id), address)
+            challenge = wallet_binding.issue_challenge(str(msg.from_user.id), address)
         except ValueError as exc:
             bot.reply_to(msg, f"❌ {exc}")
             return
@@ -39,7 +39,7 @@ def register(bot):
         uid = str(msg.from_user.id)
 
         try:
-            binding = verify_signature(uid, address, signature)
+            binding = wallet_binding.verify_signature(uid, address, signature)
             result = record_legacy_claim(uid, address, 0)
         except ValueError as exc:
             bot.reply_to(msg, f"❌ {exc}")
