@@ -438,7 +438,15 @@ def exchange_trades():
     db = load_db()
     raw = db.get("exchange_trades", [])
     trades = raw if isinstance(raw, list) else []
-    return jsonify({"symbol": "SLH/CREDITS", "trades": trades[-100:]})
+    public_trades = []
+    for trade in trades[-100:]:
+        public_trades.append({
+            "slh_amount": trade.get("slh_amount"),
+            "price": trade.get("price"),
+            "credits_value": trade.get("credits_value"),
+            "timestamp": trade.get("timestamp"),
+        })
+    return jsonify({"symbol": "SLH/CREDITS", "trades": public_trades})
 
 
 @app.route("/api/v1/exchange/ticker")
