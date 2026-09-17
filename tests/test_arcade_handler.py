@@ -31,6 +31,9 @@ class Msg:
 
 
 class ArcadeHandlerTests(unittest.TestCase):
+    def setUp(self):
+        arcade_handler.arcade_engine.ACTIVE.clear()
+
     def test_arcade_start_uses_existing_engine(self):
         bot = FakeBot()
         arcade_handler.register(bot)
@@ -47,6 +50,7 @@ class ArcadeHandlerTests(unittest.TestCase):
     def test_active_answer_uses_existing_engine(self):
         bot = FakeBot()
         arcade_handler.register(bot)
+        arcade_handler.arcade_engine.ACTIVE["100"] = {"question": "2 + 2 = ?"}
         with patch.object(
             arcade_handler.arcade_engine,
             "answer_game",
