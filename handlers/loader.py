@@ -20,6 +20,7 @@ def load_handlers(bot, context):
         ("ui_exchange", "handlers.ui_exchange_handler"),
         ("econ", "econ_handler"),
         ("wallet", "handlers.wallet_handler"),
+        ("legacy_wallet", "handlers.legacy_wallet_handler"),
         ("store", "handlers.store_handler"),
         ("bot_factory", "handlers.bot_factory"),
         ("stars_store", "handlers.stars_store"),
