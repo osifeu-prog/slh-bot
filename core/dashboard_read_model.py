@@ -10,6 +10,7 @@ from pathlib import Path
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from store.engine import load_items
+from core.exchange_read_model import get_exchange_summary
 
 
 def _safe_call(fn, *args, **kwargs):
@@ -70,4 +71,5 @@ def get_dashboard(uid):
         "rewards": snapshot.get("rewards", {}),
         "airdrop": snapshot.get("airdrop", {}),
         "system": _system_health(),
+        "exchange": get_exchange_summary(),
     }
