@@ -39,7 +39,10 @@ def format_shop_message(user_balance=0):
 
     for item_id, data in items.items():
         price = data.get("price", 0)
-        price_text = "חינם" if price == 0 else f"{price} SLH"
+        if item_id in STARS_ITEMS:
+            price_text = f"{price} Stars"
+        else:
+            price_text = "חינם" if price == 0 else f"{price} Credits"
 
         inventory = None
         product = products.get(item_id)
