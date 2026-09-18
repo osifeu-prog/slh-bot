@@ -1,21 +1,30 @@
-from core.tokenomics import snapshot
-from core.holiday_campaign import GRANT_AMOUNT
+from core import profile_manager
+from core.holiday_campaign import GRANT_AMOUNT, eligibility
+
+def _points(uid):
+    user = profile_manager.get_user(str(uid)) or {}
+    return int((user.get("gamification") or {}).get("points", 0) or 0)
+
+def _referrals(uid):
+    user = profile_manager.get_user(str(uid)) or {}
+    return int((user.get("referral") or {}).get("count", 0) or 0)
 
 def register(bot):
     @bot.message_handler(commands=["rewards"])
-    def rewards_cmd(msg):
-        t = snapshot()
-        cr = t["CREDITS"]["pricing_examples"]
-        txt = (
+    def rewards(msg):
+        uid = str(msg.from_user.id)
+        campaign = eligibility(uid)
+        status = "זכאי" if campaign.get("eligible") else "לא זכאי"
+        text = (
             "🎁 תגמולים\n\n"
-            "הצטרפות חדשה:        1,000 points\n"
-            "השלמת שיעור:         25 points\n"
-            "השלמת קורס:          250 points\n"
-            "AirDrop SLH:         " + f"{GRANT_AMOUNT:,}" + " SLH (חד-פעמי)\n\n"
-            "Credits:\n"
-            "100 ⭐️ → " + str(cr["100_stars"]) + "\n"
-            "450 ⭐️ → " + str(cr["450_stars"]) + "\n"
-            "800 ⭐️ → " + str(cr["800_stars"]) + "\n\n"
-            "Staking: 30/60/90/180 ימים (credits)"
+            "מקורות תגמול פעילים:\n"
+            "• הצטרפות: 1,000 Points\n"
+            "• Referral מוצלח: 10 Points\n"
+            "• השלמת שיעור: 25 Points\n"
+            "• השלמת משימה: לפי המשימה\n"
+            f"• Holiday Referral: עד {GRANT_AMOUNT:,} SLH, בכפוף לזכאות\n\n"
+            f"Points שלך: {_points(uid):,}\n"
+            f"Referrals מוצלחים: {_referrals(uid)}\n"
+            f"Holiday Referral: {status}"
         )
-        bot.reply_to(msg, txt)
+        bot.reply_to(msg, text)
