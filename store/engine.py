@@ -35,8 +35,9 @@ def format_shop_message(user_balance=0):
 
     for item_id, data in items.items():
         price = data.get("price", 0)
+        stars_price = int(data.get("price_stars", 0) or 0)
         if item_id in stars_items:
-            price_text = f"{price} Stars"
+            price_text = f"{stars_price} Stars"
         else:
             price_text = "חינם" if price == 0 else f"{price} Credits"
 
