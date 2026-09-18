@@ -107,7 +107,7 @@ def route(text, uid=None):
         return f"השעה הנוכחית בישראל היא {now:%H:%M}"
 
     if intent == "staking":
-        base = ("סטייקינג SLH\n\n" "לפני /stake צריך להשלים לפחות 3 שיעורים בקורס Bitcoin.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "מסלול מהיר:\n" "1. /courses\n" "2. /course_bitcoin_mastery\n" "3. /lesson bitcoin_mastery 1\n" "4. בסיום: /finish bitcoin_mastery 1\n" "5. חזור על 3–4 עבור שיעורים 2 ו-3.\n" "6. בדיקה: /academy_progress\n" "7. לאחר Stage 3: /stake <amount>\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
+        base = ("סטייקינג SLH\n\n" "אין צורך להשלים קורס כדי לבצע Staking. זה מנגנון פנימי של Credits.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "מסלול מהיר:\n" "1. /courses\n" "2. /course_bitcoin_mastery\n" "3. /lesson bitcoin_mastery 1\n" "4. בסיום: /finish bitcoin_mastery 1\n" "5. חזור על 3–4 עבור שיעורים 2 ו-3.\n" "6. בדיקה: /academy_progress\n" "7. לאחר Stage 3: /stake <amount>\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
         if uid:
             try:
                 from core import economy_service
