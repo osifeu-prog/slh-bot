@@ -488,6 +488,42 @@ if __name__ == "__main__":
         port=8080
     )
 
+
+
+@app.route("/api/v1/tokenomics")
+def api_tokenomics():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.tokenomics import snapshot
+        from core.holiday_campaign import GRANT_AMOUNT, eligibility
+        from core import profile_manager
+
+        user = profile_manager.get_user(str(uid)) or {}
+        points = int((user.get("gamification") or {}).get("points", 0) or 0)
+        referrals = int((user.get("referral") or {}).get("count", 0) or 0)
+        campaign = eligibility(str(uid))
+        return jsonify({
+            "tokenomics": snapshot(),
+            "rewards": {
+                "join_bonus_points": 1000,
+                "referral_bonus_points": 10,
+                "lesson_complete_points": 25,
+                "task_rewards": "per_task",
+                "holiday_referral_slh": GRANT_AMOUNT,
+            },
+            "user": {
+                "points": points,
+                "successful_referrals": referrals,
+                "holiday_referral": campaign,
+            },
+            "source_of_truth": "core/tokenomics.py + canonical reward engines",
+            "read_only": True,
+        }), 200
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
 @app.route("/api/v1/dashboard")
 def api_dashboard():
     uid = authenticated_uid()
