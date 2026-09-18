@@ -5,16 +5,8 @@
     "type": "course",
     "grant": {
       "course": "bitcoin_mastery"
-    }
-  },
-  "role_vip": {
-    "name": "תפקיד VIP",
-    "price": 500,
-    "type": "role",
-    "grant": {
-      "permission": "vip_access"
     },
-    "price_stars": 500
+    "price_stars": 299
   },
   "esp32_pro": {
     "name": "ESP32 Pro Device",
@@ -55,5 +47,14 @@
     "grant": {
       "digital": "emoji_vip"
     }
+  },
+  "agent_os": {
+    "name": "Agent OS",
+    "price": 199,
+    "type": "plugin",
+    "grant": {
+      "plugin": "agent_os"
+    },
+    "price_stars": 199
   }
 }
