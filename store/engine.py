@@ -6,7 +6,7 @@ ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 
 # Items with a dedicated Telegram Stars checkout path.
-STARS_ITEMS = set()
+STARS_ITEMS = {item_id for item_id, item in load_items().items() if isinstance(item, dict) and int(item.get("price_stars", 0) or 0) > 0}
 
 
 def load_items():
@@ -35,7 +35,7 @@ def format_shop_message(user_balance=0):
     for item_id, data in items.items():
         price = data.get("price", 0)
         if item_id in STARS_ITEMS:
-            price_text = f"{price} Stars"
+            price_text = f"{int(data.get('price_stars', price))} Stars"
         else:
             price_text = "חינם" if price == 0 else f"{price} Credits"
 
