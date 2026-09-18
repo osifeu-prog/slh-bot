@@ -6,6 +6,7 @@ from core.telegram_webapp_auth import validate_init_data
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
+from core import slh_api_client
 from core.profile_manager import get_user
 from core import staking_service
 from handlers.unified_system_handler import get_unified_map
@@ -140,6 +141,34 @@ def get_wallet(uid):
         "staked": wallet.get("staked", 0),
         "token_balance": wallet.get("token_balance", 0),
         "ton_wallet": user.get("ton_wallet")
+    })
+
+
+@app.route("/api/v1/wallet/combined/<uid>")
+def combined_wallet(uid):
+    """Read-only presentation adapter: internal ledger + slh-api ledger."""
+    db = load_db()
+    user = db.get("users", {}).get(str(uid), {})
+    wallet = user.get("wallet", {}) if isinstance(user, dict) else {}
+
+    internal = {
+        "credits": wallet.get("credits", 0),
+        "staked": wallet.get("staked", 0),
+        "slh": wallet.get("token_balance", 0),
+        "ton_wallet": user.get("ton_wallet") if isinstance(user, dict) else None,
+    }
+
+    api_data = slh_api_client.get_balances(uid)
+
+    return jsonify({
+        "user_id": str(uid),
+        "internal_ledger": internal,
+        "api_ledger": api_data,
+        "sources": {
+            "internal": "state/db.json",
+            "api": "slh-api/Postgres",
+        },
+        "read_only": True,
     })
 
 
