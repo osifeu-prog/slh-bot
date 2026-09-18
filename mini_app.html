@@ -82,7 +82,33 @@ function openAction(cmd,label){sendCommand(cmd,label)}
 async function loadBook(){try{const t=await(await fetch('/api/v1/exchange/ticker')).json();setText("exPrice",t.has_data?fmt(t.last_price)+' Credits':'טרם בוצעו עסקאות');const b=await(await fetch('/api/v1/exchange/orderbook')).json();const rows=(b.orders||[]);setHTML("exBook",rows.length?rows.map(o=>`<div class="wallet-row"><span class="pill ${o.side==='buy'?'ok':''}">${o.side==='buy'?'קנייה':'מכירה'}</span><span>${fmt(o.amount)} SLH</span><strong>${fmt(o.price)}</strong></div>`).join(''):'<div class="muted">אין הזמנות פתוחות</div>');}catch(e){setHTML("exBook",'<div class="muted">לא ניתן לטעון</div>')}}
 function exTrade(side){const a=($("exAmount")?.value||'').trim(),pr=($("exPrice2")?.value||'').trim();if(!(Number(a)>0)||!(Number(pr)>0)){toast('מלא כמות ומחיר');return}const w=state.wallet||{};if(side==='buy'&&Number(w.credits||0)<Number(a)*Number(pr)){toast('אין מספיק Credits');show('buy');return}if(side==='sell'&&Number(w.token_balance||0)<Number(a)){toast('אין מספיק SLH');return}openAction(`/${side}_slh ${a} ${pr}`,'מסחר')}
 async function loadExchange(){try{const t=await(await fetch('/api/v1/exchange/ticker')).json();if($("exLast"))setText("exLast",t.has_data?fmt(t.last_price):'—');if($("exPrice"))setText("exPrice",t.has_data?fmt(t.last_price)+' Credits':'טרם בוצעו עסקאות');const b=await(await fetch('/api/v1/exchange/orderbook')).json();const rows=b.orders||[];const el=$("orderbook")||$("exBook");if(el)el.innerHTML=rows.length?rows.slice(0,20).map(o=>'<div class="wallet-row"><span class="pill '+(o.side==='buy'?'ok':'')+'">'+(o.side==='buy'?'קנייה':'מכירה')+'</span><span>'+fmt(o.amount)+' SLH</span><strong>'+fmt(o.price)+'</strong></div>').join(''):'<div class="muted">אין הזמנות פתוחות</div>'}catch(e){const el=$("orderbook")||$("exBook");if(el)el.innerHTML='<div class="muted">לא ניתן לטעון</div>'}}
-function submitOrder(side,aId,pId){const a=($(aId)?.value||'').trim(),p=($(pId)?.value||'').trim();if(!(Number(a)>0)||!(Number(p)>0)){toast('מלא כמות ומחיר');return}sendCommand('/'+side+' '+a+' '+p,side==='buy_slh'?'קנייה':'מכירה')}
+function submitOrder(side,aId,pId){
+  const a=($(aId)?.value||'').trim();
+  const p=($(pId)?.value||'').trim();
+  if(!(Number(a)>0)||!(Number(p)>0)){toast('מלא כמות ומחיר');return}
+  sendExchangeOrder(side.replace('_slh',''),a,p);
+}
+async function sendExchangeOrder(side,amount,price){
+  if(!initData){toast('פתח מתוך Telegram');return}
+  const reqId=(crypto&&crypto.randomUUID)?crypto.randomUUID():('x-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));
+  try{
+    const resp=await fetch('/api/v1/exchange/order',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:JSON.stringify({side:side,amount:amount,price:price,client_request_id:reqId})
+    });
+    const d=await resp.json().catch(()=>({}));
+    if(!resp.ok){
+      toast('❌ '+(d.error||('HTTP '+resp.status)));
+      return;
+    }
+    toast('✅ '+side+' '+amount+' SLH @ '+price+' C');
+    if(typeof loadBook==='function'){await loadBook()}
+    if(typeof loadMe==='function'){await loadMe()}
+  }catch(e){
+    toast('❌ שגיאה: '+(e.message||e));
+  }
+}
 function prepareTransfer(){const r=($("recipient")?.value||'').trim();const a=($("amount")?.value||'').trim();if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}const n=Number(a);if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}sendCommand(`/transfer ${r} ${a}`,'העברת Credits')}
 function nextAction(){const n=state.next||{};if(n.screen)show(n.screen);else show('wallet')}
 function statusText(v){const m={complete:'הושלם',active:'בתהליך',none:'לא התחיל',verified:'מאומת',not_verified:'טרם אומת',incomplete:'לא הושלם',review:'בבדיקה',policy_missing:'מדיניות הקצאה טרם הוגדרה'};return m[v]||v||'לא ידוע'}
