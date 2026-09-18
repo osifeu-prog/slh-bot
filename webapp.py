@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, send_from_directory, request, make_response
+import state_manager
 import hmac
 import json
 import os
@@ -540,6 +541,56 @@ def api_exchange_order():
 
         result = state_manager.atomic_update(mutate)
         return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
+
+@app.route("/api/v1/exchange/order/<order_id>", methods=["DELETE"])
+def api_exchange_cancel(order_id):
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    oid = str(order_id).strip()
+    if not oid:
+        return jsonify({"error": "MISSING_ORDER_ID"}), 400
+    try:
+        from handlers.exchange_handler import ORDERS_KEY, _wallet, _get, _set, _reserve, _set_reserve, _s, ZERO, _ledger, _assert_invariants
+
+        def mutate(db):
+            order = db.setdefault(ORDERS_KEY, {}).get(oid)
+            if not order or str(order.get("uid")) != str(uid) or order.get("status") != "open":
+                raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
+            wallet = _wallet(db, uid)
+            remaining = __import__("decimal").Decimal(str(order["remaining_amount"]))
+            if remaining <= ZERO:
+                raise ValueError("ORDER_NOT_OPEN")
+            if order["side"] == "sell":
+                reserve = __import__("decimal").Decimal(str(order["reserved_slh"]))
+                if reserve != remaining:
+                    raise ValueError("ORDER_RESERVE_MISMATCH")
+                _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserve)
+                before = _get(wallet, "token_balance")
+                _set(wallet, "token_balance", before + reserve)
+                _ledger(db, uid, before, reserve, "exchange:cancel_release_slh", {"order_id": oid, "source": "webapp"})
+                order["reserved_slh"] = _s(ZERO)
+            else:
+                reserve = __import__("decimal").Decimal(str(order["reserved_credits"]))
+                expected = remaining * __import__("decimal").Decimal(str(order["limit_price"]))
+                if reserve != expected:
+                    raise ValueError("ORDER_RESERVE_MISMATCH")
+                _set_reserve(wallet, "exchange_reserved_credits", _reserve(wallet, "exchange_reserved_credits") - reserve)
+                before = _get(wallet, "credits")
+                _set(wallet, "credits", before + reserve)
+                _ledger(db, uid, before, reserve, "exchange:cancel_release_credits", {"order_id": oid, "source": "webapp"})
+                order["reserved_credits"] = _s(ZERO)
+            order["remaining_amount"] = _s(ZERO)
+            order["status"] = "cancelled"
+            _assert_invariants(db)
+            return {"order_id": oid, "status": "cancelled"}
+
+        return jsonify(state_manager.atomic_update(mutate)), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
