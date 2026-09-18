@@ -7,6 +7,8 @@ import json
 from decimal import Decimal
 import state_manager
 
+ALLOWED_COMMANDS = {"/wallet","/pay","/shop","/orders","/courses","/academy","/share","/staking","/positions","/buy","/buystars","/order_esp32","/buy_shop","/ask"}
+
 
 def _payload(raw):
     raw = (raw or "").strip()
@@ -44,7 +46,11 @@ def register(bot, context=None):
                 _transfer(bot, chat_id, uid, parts[1], parts[2], message.message_id)
             elif action == "shop" and len(parts) == 1:
                 _shop(bot, chat_id)
-            else:
+            elif action in {x.lstrip("/") for x in ALLOWED_COMMANDS} and len(parts) <= 3:
+                message.text = cmd
+                message.content_type = "text"
+                bot.process_new_messages([message])
+        else:
                 bot.send_message(chat_id, "❌ פעולה זו אינה זמינה מה־Mini App")
         except Exception as exc:
             print("[WEBAPP_DATA] error:", type(exc).__name__, str(exc)[:160])
