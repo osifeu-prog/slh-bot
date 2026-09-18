@@ -2,20 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SLH Market</title><script src="https://telegram.org/js/telegram-web-app.js"><script>
-window.onerror=function(msg,src,ln,col,err){
-  var box=document.createElement("div");
-  box.style.cssText="position:fixed;top:0;left:0;right:0;background:#7f1d1d;color:#fff;padding:12px;font:11px monospace;direction:ltr;text-align:left;z-index:99999;white-space:pre-wrap;max-height:60vh;overflow:auto";
-  box.textContent="JS ERROR:\n"+msg+"\n"+src+":"+ln+":"+col;
-  document.body.appendChild(box);
-};
-window.addEventListener("unhandledrejection",function(e){
-  var box=document.createElement("div");
-  box.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#7c2d12;color:#fff;padding:12px;font:11px monospace;direction:ltr;text-align:left;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto";
-  box.textContent="PROMISE REJECT:\n"+(e.reason&&e.reason.stack||e.reason||e.message||e);
-  document.body.appendChild(box);
-});
-</script></script>
+<title>SLH Market</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{--bg:#070a12;--panel:#111827;--panel2:#0d1422;--line:#243047;--text:#f8fafc;--muted:#94a3b8;--accent:#7c5cff;--accent2:#20d3a7;--warn:#fbbf24;--danger:#fb7185;--r:20px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -10%,#2a1d62 0,#070a12 38%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;padding:16px 14px 88px}.app{max-width:720px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{display:flex;gap:10px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#14b8a6);display:grid;place-items:center;font-size:22px}.title{font-size:21px;font-weight:900}.subtitle,.muted{color:var(--muted);font-size:12px}.refresh,.ghost,.copy{background:#ffffff0c;color:#fff;border:1px solid #ffffff14;border-radius:11px;padding:9px 11px}.hero,.card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}.hero{background:linear-gradient(145deg,#17152d,#111827 60%);border-radius:24px}.hero-label{color:#b9a9ff;font-size:12px}.hero-balance{font-size:37px;font-weight:900;margin:4px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric-label{color:var(--muted);font-size:12px}.metric{font-size:21px;font-weight:800;margin-top:5px}.token{color:#d8ccff}.stake{color:#70e4c6}.section-title{font-size:15px;font-weight:900;margin:18px 2px 8px}.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.nav button{background:#ffffff09;color:#cbd5e1;border:1px solid #ffffff12;border-radius:13px;padding:10px 6px;font-size:12px}.nav button.active{background:#7c5cff22;color:#fff;border-color:#7c5cff66}.screen{display:none}.screen.active{display:block}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.action{background:#ffffff08;border:1px solid #ffffff12;color:#fff;border-radius:15px;padding:14px;text-align:right;min-height:76px}.action b{display:block;font-size:14px;margin-bottom:4px}.action span{font-size:11px;color:var(--muted)}.primary{background:linear-gradient(135deg,#7c5cff,#5b4bd8);border-color:transparent}.status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #ffffff0b}.status:last-child{border:0}.pill{border-radius:999px;padding:5px 9px;font-size:11px;background:#ffffff0b;color:#cbd5e1}.ok{color:#6ee7b7;background:#10b98118}.pending{color:#fcd34d;background:#f59e0b18}.progress{height:7px;background:#ffffff0b;border-radius:99px;overflow:hidden;margin:9px 0}.bar{height:100%;background:linear-gradient(90deg,#7c5cff,#20d3a7);border-radius:99px}.wallet-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff0b}.wallet-row:last-child{border:0}.address{direction:ltr;text-align:left;font-family:monospace;font-size:11px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guide{margin-top:10px;padding:12px;border:1px solid #ffffff10;border-radius:14px;background:#ffffff05}.guide summary{cursor:pointer;font-weight:800;font-size:13px}.guide p{color:#cbd5e1;font-size:12px;line-height:1.55}.next{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#20d3a710;border:1px solid #20d3a733;border-radius:15px;padding:13px}.ai{background:linear-gradient(145deg,#17152d,#0f1a27);border:1px solid #7c5cff44}.ai b{font-size:15px}.ai p{font-size:12px;line-height:1.55;color:#cbd5e1}.task{padding:9px 0;border-bottom:1px solid #ffffff0b;font-size:13px}.task:last-child{border:0}.done{opacity:.55}.form-label{display:block;font-size:12px;color:var(--muted);margin:8px 0 5px}.form-input{width:100%;background:#ffffff08;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:12px;font-size:14px;outline:none}.form-input:focus{border-color:#7c5cff88}.bottom{position:fixed;bottom:0;left:0;right:0;background:#090d16ee;backdrop-filter:blur(14px);border-top:1px solid #ffffff12;padding:8px max(10px,calc((100vw - 720px)/2 + 10px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;z-index:5}.bottom button{background:none;color:#94a3b8;font-size:11px;padding:7px}.bottom button.active{color:#fff}.toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%) translateY(20px);background:#182235;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:10px 14px;font-size:12px;opacity:0;transition:.2s;pointer-events:none;z-index:10}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:420px){.hero-balance{font-size:31px}}
 </style></head>
@@ -57,6 +44,35 @@ window.addEventListener("unhandledrejection",function(e){
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
 </main></div>
 <nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet')">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button></nav><div id="toast" class="toast"></div>
+<script>
+(function(){
+  function box(h,b,bg,pos){
+    try{
+      var d=document.createElement("div");
+      d.style.cssText="position:fixed;"+pos+":0;left:0;right:0;background:"+bg+";color:#fff;padding:12px;font:11px monospace;direction:ltr;text-align:left;z-index:99999;white-space:pre-wrap;max-height:60vh;overflow:auto";
+      d.textContent=h+"\n"+b;
+      (document.body||document.documentElement).appendChild(d);
+    }catch(e){}
+  }
+  window.onerror=function(m,src,ln,col){
+    box("JS ERROR","msg="+m+"\nsrc="+src+"\nline="+ln+"\ncol="+col,"#7f1d1d","top");
+    return false;
+  };
+  window.addEventListener("unhandledrejection",function(e){
+    var m=e&&e.reason?(e.reason.stack||e.reason.message||String(e.reason)):"unhandled rejection";
+    box("PROMISE REJECT",m,"#7c2d12","bottom");
+  });
+  window.addEventListener("DOMContentLoaded",function(){
+    setTimeout(function(){
+      var n=document.getElementById("name");
+      if(n && n.textContent.indexOf("מתחבר")>=0){
+        var id=(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData)||"";
+        box("STUCK","loadMe() never finished.\ninitData length: "+id.length,"#7c2d12","bottom");
+      }
+    },3000);
+  });
+})();
+</script>
 <script>
 const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const headers=initData?{"X-Telegram-Init-Data":initData}:{};const $=id=>document.getElementById(id);let state={};
 function toast(x){const e=$("toast");e.textContent=x;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
