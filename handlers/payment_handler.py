@@ -1,6 +1,5 @@
 import os
 import state_manager
-from core import profile_manager
 from core import stars_payment_authority
 from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -20,7 +19,6 @@ def _resolve_stars_package(credits, stars_paid):
         stars_paid = int(stars_paid)
     except (TypeError, ValueError):
         return None
-
     for pack_id, (expected_stars, expected_credits, label) in STARS_PACKS.items():
         if expected_credits == credits and expected_stars == stars_paid:
             return pack_id, expected_stars, expected_credits, label
@@ -32,10 +30,12 @@ def _send_pay_menu(bot, chat_id, uid):
     if uid not in db.get("users", {}):
         bot.send_message(chat_id, "❌ Please /join first.")
         return
-
     markup = InlineKeyboardMarkup(row_width=1)
     for pack_id, (stars, credits, label) in STARS_PACKS.items():
-        markup.add(InlineKeyboardButton(text=f"⭐ {stars} Stars → {credits} Credits ({label})", callback_data=f"pay_{pack_id}"))
+        markup.add(InlineKeyboardButton(
+            text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+            callback_data=f"pay_{pack_id}"
+        ))
     bot.send_message(chat_id, "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.", reply_markup=markup)
 
 
@@ -114,14 +114,26 @@ def register_payment_handlers(bot):
         payload = str(payment.invoice_payload or "")
         if payload.startswith("item_") and payload.endswith("_" + uid):
             item_id = payload[5:-(len(uid)+1)]
-            result = purchase_item_with_stars(uid=uid, item_id=item_id, stars_paid=payment.total_amount, charge_id=payment.telegram_payment_charge_id)
+            try:
+                result = purchase_item_with_stars(
+                    uid=uid,
+                    item_id=item_id,
+                    stars_paid=payment.total_amount,
+                    charge_id=payment.telegram_payment_charge_id,
+                )
+            except Exception as e:
+                print(f"[PAY] STAR item fulfillment failed: {type(e).__name__}")
+                bot.send_message(m.chat.id, "⚠️ Payment was received but fulfillment failed safely. Please contact /paysupport.")
+                return
             if result["status"] == "DUPLICATE":
                 bot.send_message(m.chat.id, "ℹ️ This item payment was already processed.")
                 return
             if result["status"] == "RECOVERABLE":
                 bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
                 return
-            bot.send_message(m.chat.id, "✅ Payment received and item fulfilled.\n" f"Item: {item_id}\nStars: {payment.total_amount}\nRef: {payment.telegram_payment_charge_id[:12]}")
+            bot.send_message(m.chat.id, "✅ Payment received and item fulfilled.\n"
+                              f"Item: {item_id}\nStars: {payment.total_amount}\n"
+                              f"Ref: {payment.telegram_payment_charge_id[:12]}")
             return
 
         parts = payload.split("_")
@@ -140,7 +152,16 @@ def register_payment_handlers(bot):
         try:
             db = state_manager.load_db()
             referrer_uid = db.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
-            result = stars_payment_authority.record_stars_payment(uid=uid, credits=package[2], stars_paid=package[1], currency=payment.currency, telegram_payment_charge_id=payment.telegram_payment_charge_id, provider_payment_charge_id=payment.provider_payment_charge_id, referrer_uid=referrer_uid, meta={"source": "telegram_successful_payment", "invoice_payload": payload, "package_id": package[0]})
+            result = stars_payment_authority.record_stars_payment(
+                uid=uid,
+                credits=package[2],
+                stars_paid=package[1],
+                currency=payment.currency,
+                telegram_payment_charge_id=payment.telegram_payment_charge_id,
+                provider_payment_charge_id=payment.provider_payment_charge_id,
+                referrer_uid=referrer_uid,
+                meta={"source": "telegram_successful_payment", "invoice_payload": payload, "package_id": package[0]},
+            )
             if result["status"] == "duplicate":
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
                 return
@@ -161,7 +182,10 @@ def register_payment_handlers(bot):
         if not txs:
             bot.send_message(m.chat.id, "📜 No transactions yet.")
             return
-        msg = "📜 Your transactions:\n" + "".join(f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n" for tx in txs[-10:])
+        msg = "📜 Your transactions:\n" + "".join(
+            f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
+            for tx in txs[-10:]
+        )
         bot.send_message(m.chat.id, msg.strip())
 
     @bot.message_handler(commands=['fakepay_disabled'])
@@ -175,11 +199,15 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         try:
             from core import economy_service
-            balance = economy_service.record_transaction(uid=uid, amount=100, reason="admin:test_payment", meta={"source": "fakepay", "test_mode": True})
+            balance = economy_service.record_transaction(
+                uid=uid, amount=100, reason="admin:test_payment",
+                meta={"source": "fakepay", "test_mode": True}
+            )
             bot.send_message(m.chat.id, f"💰 100 test credits added. Balance: {balance}")
         except Exception as e:
             bot.send_message(m.chat.id, "❌ Test payment failed safely.")
             print(f"[PAY] fakepay error: {type(e).__name__}")
 
-    def register(bot):
-        register_payment_handlers(bot)
+
+def register(bot):
+    register_payment_handlers(bot)
