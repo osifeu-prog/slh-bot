@@ -5,6 +5,14 @@ from pathlib import Path
 ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 
+# Items with a dedicated Telegram Stars checkout path.
+STARS_ITEMS = {
+    "esp32_pro",
+    "esp32_standard",
+    "role_vip",
+    "bot_signal",
+}
+
 
 def load_items():
     try:
@@ -26,6 +34,8 @@ def format_shop_message(user_balance=0):
     products = load_products()
 
     msg = "🏪 *חנות SLH EMPIRE*\n\n"
+    msg += "⭐ לרכישות הנתמכות ב-Telegram Stars השתמש ב-/buystars.\n"
+    msg += "💎 /buy נשאר מסלול רכישה פנימי ב-Credits עבור פריטים שתומכים בו.\n\n"
 
     for item_id, data in items.items():
         price = data.get("price", 0)
@@ -41,9 +51,13 @@ def format_shop_message(user_balance=0):
             inv_text = f" | במלאי: {int(inventory)}"
 
         msg += f"*{data.get('name', item_id)}* - {price_text}{inv_text}\n"
-        msg += f"`/buy {item_id}`\n\n"
+        if item_id in STARS_ITEMS:
+            msg += f"/buystars {item_id} — ⭐ Telegram Stars\n"
+        else:
+            msg += f"/buy {item_id} — Credits\n"
+        msg += "\n"
 
-    msg += f"💰 היתרה שלך: {user_balance} SLH"
+    msg += f"💰 היתרה שלך: {user_balance} Credits"
     return msg
 
 
@@ -57,10 +71,10 @@ def buy_item(user_id, item_id, get_balance_func, spend_func):
     balance = get_balance_func(user_id)
 
     if balance < price:
-        return False, f"אין מספיק SLH. צריך {price}"
+        return False, f"אין מספיק Credits. צריך {price}"
 
     success = spend_func(user_id, price, f"Buy: {item.get('name')}")
     if not success:
         return False, "שגיאה בחיוב"
 
-    return True, f"✅ נקנה: {item.get('name')}\nיתרה חדשה: {balance - price} SLH"
+    return True, f"✅ נקנה: {item.get('name')}\nיתרה חדשה: {balance - price} Credits"
