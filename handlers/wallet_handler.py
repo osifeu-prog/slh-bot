@@ -3,6 +3,21 @@ from heb_convert import get_hebrew_date
 import state_manager
 
 
+
+def _fetch_api_wallet(uid):
+    """Fetch on-chain + multi-token balances from slh-api. Non-fatal on error."""
+    try:
+        import requests
+        base = "https://slh-api-production.up.railway.app"
+        r = requests.get(base + "/api/wallet/" + str(uid) + "/balances", timeout=5)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception as e:
+        print("[WALLET] api fetch failed:", type(e).name)
+        return None
+
+
 def register(bot):
 
     def referral_link(uid):
@@ -47,6 +62,19 @@ def register(bot):
             f"👥 Referrals: {referral_count}\n"
             f"💎 Referral commission: {commission}\n\n"
         )
+
+        # On-chain / multi-token view from slh-api (separate ledger — never merged)
+        api_data = _fetch_api_wallet(uid)
+        if api_data and api_data.get("balances"):
+            b = api_data["balances"]
+            text += "━━━━━━━━━━━━━━\n"
+            text += "🌐 ארנק on-chain (slh-api):\n"
+            text += f"   SLH: {b.get('SLH', 0)}\n"
+            if b.get('ZVK'): text += f"   ZVK: {b.get('ZVK', 0)}\n"
+            if b.get('MNH'): text += f"   MNH: {b.get('MNH', 0)}\n"
+            if b.get('REP'): text += f"   REP: {b.get('REP', 0)}\n"
+            if b.get('ZUZ'): text += f"   ZUZ: {b.get('ZUZ', 0)}\n"
+            text += f"   ₪ סה\"כ: {api_data.get('total_value_ils', 0)}\n\n"
 
         if invite:
             text += f"🔗 קישור ההזמנה האישי שלך:\n{invite}\n\n"
