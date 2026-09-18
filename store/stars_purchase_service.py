@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import state_manager
 from store.engine import load_items
 from store.grant_engine import apply_grant
+from core import revenue_ledger
 
 
 def _now():
@@ -164,4 +165,12 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
         return current
 
     finalized = state_manager.atomic_update(finalize)
+    revenue_ledger.record(
+        source="telegram_stars_item",
+        amount=stars_paid,
+        currency="XTR",
+        reference=charge_id,
+        uid=uid,
+        meta={"kind": "telegram_stars_item", "item_id": item_id},
+    )
     return {"status": "SUCCESS", "order_id": order_id, "item_id": item_id, "stars": stars_paid, "fulfillment": finalized.get("fulfillment")}
