@@ -55,6 +55,7 @@ jobs:
           read_model = Path("core/exchange_read_model.py").read_text(encoding="utf-8")
           grant = Path("store/grant_engine.py").read_text(encoding="utf-8")
           academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
+          ask_router = Path("core/ask_router.py").read_text(encoding="utf-8")
 
           required_web_routes = [
               '@app.route("/api/v1/dashboard")',
@@ -121,6 +122,11 @@ jobs:
           ast.parse(read_model)
           ast.parse(grant)
           ast.parse(academy)
+          assert "אין צורך להשלים קורס כדי לבצע Staking" in ask_router, "staking intent must state no Academy prerequisite"
+          assert "לפני /stake צריך להשלים" not in ask_router, "stale staking Academy prerequisite remains"
+          assert "לאחר Stage 3: /stake" not in ask_router, "stale Stage 3 staking path remains"
+          ast.parse(ask_router)
+          print("Staking truth contract: OK")
           print("Integration contracts: OK")
           print("Academy entitlement contract: OK")
           PYEOF
