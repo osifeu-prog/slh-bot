@@ -497,7 +497,7 @@ def api_dashboard():
             return jsonify({"error": "USER_NOT_FOUND"}), 404
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).name}), 500
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
 
 
@@ -510,7 +510,7 @@ def api_exchange_summary():
         from core.exchange_read_model import get_exchange_summary
         return jsonify(get_exchange_summary()), 200
     except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).name}), 500
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
 
 
