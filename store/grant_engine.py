@@ -16,8 +16,26 @@ def apply_grant(uid, grant, purchase_id=None):
         return {"ok": True, "type": "permission", "value": grant["permission"], "purchase_id": purchase_id}
 
     if "course" in grant:
-        profile_manager.update_user(uid, {"active_course": grant["course"]})
-        return {"ok": True, "type": "course", "value": grant["course"], "purchase_id": purchase_id}
+        course_id = str(grant["course"]).strip()
+        if not course_id:
+            raise ValueError("COURSE_ID_REQUIRED")
+
+        # Academy is the canonical course-entitlement state. Keep the legacy
+        # top-level field for backward compatibility, but make fulfillment
+        # enroll the user through the Academy manager so purchase -> enrollment
+        # is one idempotent path and existing progress is never reset.
+        from core import academy_manager
+        if not academy_manager.start_course(uid, course_id):
+            raise ValueError("COURSE_NOT_FOUND")
+
+        profile_manager.update_user(uid, {"active_course": course_id})
+        return {
+            "ok": True,
+            "type": "course",
+            "value": course_id,
+            "purchase_id": purchase_id,
+            "academy_enrolled": True,
+        }
 
     if "digital" in grant:
         inventory = user.get("inventory", {})
