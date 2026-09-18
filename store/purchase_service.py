@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone, timedelta
 
 import state_manager
-from store.engine import load_items
+from store.engine import load_items, resolve_item_id
 from core.economy_bridge import get_balance, spend
 from store.grant_engine import apply_grant
 
@@ -155,9 +155,9 @@ def purchase(uid, item_id, request_id=None):
     if request_id is None:
         request_id = f"legacy:{uid}:{item_id}"
     uid = str(uid)
-    item_id = str(item_id).strip()
     items = load_items()
-    if item_id not in items:
+    item_id = resolve_item_id(item_id, items)
+    if item_id is None:
         return False, "ITEM_NOT_FOUND"
 
     item = items[item_id]
