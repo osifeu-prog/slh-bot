@@ -66,6 +66,7 @@ def market():
 
 
 @app.route("/mini-app")
+@app.route("/mini-app-v2")
 def mini_app():
     """Serve the Mini App with a compatibility and staking UX shim."""
     html_path = BASE_DIR / "mini_app.html"
