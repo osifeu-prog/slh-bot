@@ -673,27 +673,4 @@ def api_transfer():
 
 
 
-@app.route("/api/v1/tokenomics")
-def api_tokenomics():
-    from core.tokenomics import snapshot
-    from core.holiday_campaign import GRANT_AMOUNT
-    return jsonify({
-        "tokens": snapshot(),
-        "rewards": {
-            "join_points": 1000,
-            "lesson_complete_points": 25,
-            "course_complete_points": 250,
-            "airdrop_slh": GRANT_AMOUNT,
-        },
-        "credits_pricing": {
-            "100_stars_to_credits": 100,
-            "450_stars_to_credits": 500,
-            "800_stars_to_credits": 1000,
-        },
-        "staking": {
-            "tiers_days": [30, 60, 90, 180],
-            "asset": "credits",
-            "on_chain": False,
-        },
-    }), 200
 
