@@ -8,7 +8,7 @@ from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
-MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app"
+MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app?v=20260918-system"
 
 
 def _kw_match(kw, text_lower):
