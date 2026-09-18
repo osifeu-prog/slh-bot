@@ -27,6 +27,7 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
                 "role_vip": {
                     "name": "VIP",
                     "price": 500,
+                    "price_stars": 500,
                     "type": "role",
                     "grant": {"permission": "vip_access"},
                 }
