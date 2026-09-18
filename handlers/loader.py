@@ -80,6 +80,7 @@ def load_handlers(bot, context):
         ("broadcast", "handlers.broadcast_handler"),
         ("firewall", "handlers.firewall_handler"),
         ("staking", "handlers.staking_handler"),
+        ("staking_revenue", "handlers.staking_revenue_handler"),
         ("dev", "handlers.dev_handler"),
         ("dev_admin", "handlers.dev_admin"),
         ("ux", "handlers.ux_handler"),
