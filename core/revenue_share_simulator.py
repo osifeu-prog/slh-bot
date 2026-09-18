@@ -10,7 +10,7 @@ It does not accept funds, create positions, accrue balances, or settle claims.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_DOWN, InvalidOperation
+from decimal import Decimal, ROUND_DOWN, InvalidOperation, localcontext
 from typing import Iterable
 
 
@@ -142,9 +142,16 @@ def apply_annual_cap(
     if annual_cap < 0:
         raise ValueError("INVALID_ANNUAL_CAP")
 
-    years = D(elapsed_days) / Decimal("365")
-    cap = D(principal) * annual_cap * years
-    return money(min(D(allocation), cap))
+    # Isolate this calculation from Decimal context changes made by other
+    # imported application modules/tests. Financial simulation must be
+    # deterministic regardless of global precision/rounding state.
+    with localcontext() as ctx:
+        ctx.prec = 50
+        ctx.rounding = ROUND_DOWN
+        years = Decimal(elapsed_days) / Decimal("365")
+        cap = D(principal) * D(annual_cap) * years
+        capped = min(D(allocation), cap)
+        return capped.quantize(MONEY_QUANTUM, rounding=ROUND_DOWN)
 
 
 def capped_distribution(
