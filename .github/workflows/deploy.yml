@@ -56,6 +56,7 @@ jobs:
           grant = Path("store/grant_engine.py").read_text(encoding="utf-8")
           academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
           ask_router = Path("core/ask_router.py").read_text(encoding="utf-8")
+          tokenomics = Path("core/tokenomics.py").read_text(encoding="utf-8")
           virtual_esp = Path("core/virtual_esp.py").read_text(encoding="utf-8")
 
           required_web_routes = [
@@ -128,6 +129,13 @@ jobs:
           assert "לאחר Stage 3: /stake" not in ask_router, "stale Stage 3 staking path remains"
           assert "3 השיעורים הנדרשים ל-Staking" not in ask_router, "stale course prerequisite claim remains"
           ast.parse(ask_router)
+          assert '"SLH":' in tokenomics and '"CREDITS":' in tokenomics, "tokenomics source missing canonical assets"
+          assert '"supply_model": "existing_balances_only"' in tokenomics, "SLH must remain existing-balance only"
+          assert '"minting_supported": False' in tokenomics, "tokenomics must not advertise minting"
+          assert '@app.route("/api/v1/tokenomics")' in webapp, "missing tokenomics API route"
+          assert "join_bonus_points" in webapp and "referral_bonus_points" in webapp and "lesson_complete_points" in webapp, "missing rewards read model"
+          ast.parse(tokenomics)
+          print("Tokenomics/rewards contract: OK")
           assert '"mqtt_topics"') not in virtual_esp or "mqtt_topics" in virtual_esp, "virtual ESP topic schema check"
           assert "dev.get(\"mqtt_topics\")" in virtual_esp, "virtual ESP must honor registered MQTT topic schema"
           assert '"slh/esp/{device_id}/progress"' in virtual_esp, "virtual ESP fallback topic contract missing"
