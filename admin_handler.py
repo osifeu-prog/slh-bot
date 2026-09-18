@@ -44,8 +44,11 @@ def _status_text():
     except Exception:
         branch = "unknown"
 
+    role = get_role(normalize_uid(message))
+
     lines = [
         "🛡 SLH SYSTEM ADMIN",
+        f"Role: {role}",
         "",
         "Control Plane: central_gateway",
         f"Git: {branch} @ {head}",
