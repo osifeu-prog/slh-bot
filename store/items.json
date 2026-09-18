@@ -3,64 +3,52 @@
     "name": "קורס ביטקוין",
     "price": 0,
     "type": "course",
-    "grant": {
-      "course": "bitcoin_mastery"
-    }
+    "grant": {"course": "bitcoin_mastery"}
   },
   "role_vip": {
     "name": "תפקיד VIP",
     "price": 500,
+    "price_stars": 500,
     "type": "role",
-    "grant": {
-      "permission": "vip_access"
-    }
+    "grant": {"permission": "vip_access"}
   },
   "bot_signal": {
     "name": "בוט סיגנלים",
     "price": 1000,
+    "price_stars": 1000,
     "type": "bot",
-    "grant": {
-      "permission": "signal_bot"
-    }
+    "grant": {"permission": "signal_bot"}
   },
   "esp32_pro": {
     "name": "ESP32 Pro Device",
     "price": 888,
+    "price_stars": 888,
     "type": "hardware",
-    "grant": {
-      "hardware": "esp32_pro"
-    }
+    "grant": {"hardware": "esp32_pro"}
   },
   "esp32_standard": {
     "name": "ESP32 Standard Device",
     "price": 444,
+    "price_stars": 444,
     "type": "hardware",
-    "grant": {
-      "hardware": "esp32_standard"
-    }
+    "grant": {"hardware": "esp32_standard"}
   },
   "emoji_bitcoin": {
     "name": "חבילת אימוג'י ביטקוין",
     "price": 25,
     "type": "digital",
-    "grant": {
-      "digital": "emoji_bitcoin"
-    }
+    "grant": {"digital": "emoji_bitcoin"}
   },
   "emoji_slh": {
     "name": "חבילת אימוג'י SLH OS",
     "price": 50,
     "type": "digital",
-    "grant": {
-      "digital": "emoji_slh"
-    }
+    "grant": {"digital": "emoji_slh"}
   },
   "emoji_vip": {
     "name": "חבילת אימוג'י VIP זהוב",
     "price": 100,
     "type": "digital",
-    "grant": {
-      "digital": "emoji_vip"
-    }
+    "grant": {"digital": "emoji_vip"}
   }
 }

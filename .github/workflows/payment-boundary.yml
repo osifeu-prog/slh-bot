@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - 'handlers/payment_handler.py'
+      - 'handlers/stars_store.py'
+      - 'store/stars_purchase_service.py'
+      - 'store/purchase_service.py'
+      - 'store/items.json'
       - 'core/stars_payment_authority.py'
       - 'tests/test_payment_boundary.py'
       - 'core/economy_service.py'

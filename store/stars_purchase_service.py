@@ -5,16 +5,35 @@ import state_manager
 from store.engine import load_items
 from store.grant_engine import apply_grant
 
-STARS_PER_ITEM = {
-    "esp32_pro": 888,
-    "esp32_standard": 444,
-    "role_vip": 500,
-    "bot_signal": 1000,
-}
-
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def get_stars_price(item_id):
+    item = load_items().get(str(item_id).strip())
+    if not isinstance(item, dict):
+        return None
+    value = item.get("price_stars")
+    if isinstance(value, bool):
+        return None
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+def get_stars_items():
+    items = load_items()
+    return {
+        item_id: int(item["price_stars"])
+        for item_id, item in items.items()
+        if isinstance(item, dict)
+        and not isinstance(item.get("price_stars"), bool)
+        and str(item.get("price_stars", "")).isdigit()
+        and int(item["price_stars"]) > 0
+    }
 
 
 def _update_order(order_id, **changes):
@@ -28,6 +47,20 @@ def _update_order(order_id, **changes):
     return state_manager.atomic_update(mutate)
 
 
+def _release_reservation(order_id):
+    def mutate(db):
+        order = db.setdefault("star_item_orders", {}).get(order_id)
+        if not order or not order.get("inventory_reservation"):
+            return False
+        item_id = order["inventory_reservation"]["item_id"]
+        product = db.setdefault("products", {}).get(item_id)
+        if product is not None:
+            product["inventory"] = int(product.get("inventory", 0)) + int(order["inventory_reservation"].get("quantity", 1))
+        order["inventory_reservation"] = None
+        return True
+    return state_manager.atomic_update(mutate)
+
+
 def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
     uid = str(uid)
     item_id = str(item_id).strip()
@@ -35,13 +68,16 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
 
     if not charge_id:
         raise ValueError("INVALID_CHARGE_ID")
-    if item_id not in STARS_PER_ITEM:
+
+    expected_stars = get_stars_price(item_id)
+    if expected_stars is None:
         raise ValueError("ITEM_NOT_AVAILABLE_FOR_STARS")
+
     try:
         stars_paid = int(stars_paid)
     except (TypeError, ValueError) as exc:
         raise ValueError("INVALID_STARS_AMOUNT") from exc
-    if stars_paid != STARS_PER_ITEM[item_id]:
+    if stars_paid != expected_stars:
         raise ValueError("INVALID_STARS_AMOUNT")
 
     items = load_items()
@@ -95,17 +131,14 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
         if not fulfillment or fulfillment.get("ok") is False:
             raise RuntimeError("FULFILLMENT_FAILED")
     except Exception as exc:
+        _release_reservation(order_id)
         _update_order(
             order_id,
             status="RECOVERABLE",
             error=type(exc).__name__,
             fulfillment_error=True,
         )
-        return {
-            "status": "RECOVERABLE",
-            "order_id": order_id,
-            "item_id": item_id,
-        }
+        return {"status": "RECOVERABLE", "order_id": order_id, "item_id": item_id}
 
     def finalize(db):
         orders = db.setdefault("star_item_orders", {})
@@ -115,34 +148,20 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
         if current.get("status") == "FULFILLED":
             return current
 
-        current.update(
-            {
-                "status": "FULFILLED",
-                "fulfillment": fulfillment,
-                "fulfilled_at": _now(),
-                "error": None,
-            }
-        )
+        current.update({
+            "status": "FULFILLED",
+            "fulfillment": fulfillment,
+            "fulfilled_at": _now(),
+            "error": None,
+        })
 
-        revenue = db.setdefault(
-            "revenue",
-            {"stars_gross": 0, "items": {}, "orders": 0},
-        )
+        revenue = db.setdefault("revenue", {"stars_gross": 0, "items": {}, "orders": 0})
         revenue["stars_gross"] = int(revenue.get("stars_gross", 0)) + stars_paid
         revenue["orders"] = int(revenue.get("orders", 0)) + 1
-        item_revenue = revenue.setdefault("items", {}).setdefault(
-            item_id,
-            {"orders": 0, "stars": 0},
-        )
+        item_revenue = revenue.setdefault("items", {}).setdefault(item_id, {"orders": 0, "stars": 0})
         item_revenue["orders"] = int(item_revenue.get("orders", 0)) + 1
         item_revenue["stars"] = int(item_revenue.get("stars", 0)) + stars_paid
         return current
 
     finalized = state_manager.atomic_update(finalize)
-    return {
-        "status": "SUCCESS",
-        "order_id": order_id,
-        "item_id": item_id,
-        "stars": stars_paid,
-        "fulfillment": finalized.get("fulfillment"),
-    }
+    return {"status": "SUCCESS", "order_id": order_id, "item_id": item_id, "stars": stars_paid, "fulfillment": finalized.get("fulfillment")}

@@ -1,68 +1,93 @@
 def register(bot):
     @bot.message_handler(commands=['help'])
     def help_cmd(msg):
-        text = """📘 SLH Commands
+        text = """📘 SLH OS — מפת המערכת
 
-👤 Account
-/start – Welcome
-/join – Register
-/me – Your profile
-/profile – Detailed profile
+🏠 ACCOUNT
+/start – בית / התחלה
+/join – הרשמה
+/me – פרופיל קצר
+/profile – פרופיל וארנק
 
-📚 Learning
-/courses – List courses
-/course_slh – SLH course
-/lesson – Start lesson
-/finish – Finish lesson
-/progress – Your progress
-/map – Learning map
+🛍 MARKET & PRODUCTS
+/shop – קטלוג מוצרים
+/buy <item_id> – רכישה ב-Credits
+/buystars <item_id> – רכישת מוצר ב-Telegram Stars
+/pay – רכישת Credits ב-Telegram Stars
+/history – היסטוריית עסקאות
+/paysupport – תמיכה בתשלום
 
-🤖 Agents
-/agents – List agents
-/agent_create <name> – Create agent
-/agent_delete <id> – Delete agent
-/agentstate <prefix> <state> – Set state
-/sendagent <prefix> <msg> – Send message
-/inbox <prefix> – Check inbox
+👛 WALLET & MONEY
+/wallet – ארנק מלא
+/balance – יתרת Credits
+/transfer <uid> <amount> – העברת Credits
+/p2p_slh <uid> <amount> – העברת SLH
+/stake <amount> – Staking ל-30 יום
+/stake_lock <amount> <days> – Staking לתקופה
+/positions – פוזיציות
+/unstake <position_id> – שחרור
+/rewards – תגמולים
+/ton – סטטוס TON
+/claim – Claim BNB
 
-💰 Economy
-/balance – Check balance
-/pay – Make payment
-/buy – Purchase items
-/revenue – Revenue status
+🎮 EXPERIENCE
+/arcade – משחק
+/arcade_stop – עצירת משחק
+/top – טבלת מובילים
 
-📋 Tasks & Missions
-/task – Manage tasks
-/task_add – Add task
-/mission – Mission control
-/complete – Mark complete
+🎓 ACADEMY
+/academy – Academy
+/courses – קורסים
+/course_bitcoin_mastery – Bitcoin Mastery
+/lesson – שיעור
+/finish – סיום שיעור
+/progress – התקדמות
+/map – מפת למידה
 
-🗳 Voting
-/vote <id> <yes/no> – Vote
-/propose <text> – Create proposal
-/tally <id> – Show results
+🤖 AGENTS
+/agents – סוכנים
+/agent_create <name> – יצירת סוכן
+/agent_delete <id> – מחיקה
+/agentstate <prefix> <state> – מצב סוכן
+/sendagent <prefix> <msg> – שליחה לסוכן
+/inbox <prefix> – תיבת סוכן
 
-📡 Devices
-/device_register <name>
-/device_list
-/device_status <id>
-/device_delete <id>
-/device_heartbeat
+🎯 MISSIONS & GOVERNANCE
+/task – משימות
+/task_add – הוספת משימה
+/mission – משימות/מיסיות
+/complete – השלמת משימה
+/vote <id> <yes/no> – הצבעה
+/propose <text> – הצעה
+/tally <id> – תוצאות
+/gov_status – סטטוס Governance
 
-🏆 Leaderboard
-/top – Top learners
+🎁 SHARE & REFERRAL
+/share – קישור הזמנה וסטטוס
+/refer – קיצור ל-Share
+/invite – קיצור ל-Share
 
-🛠 Admin
-/admin – Admin panel
-/exec <cmd> – Shell (admin)
-/backup – Backup DB
-/megadiag – Full diagnostic
-/health – Health check
-/status – System status
-/deploy – Trigger deploy
+🔗 LEGACY WALLET
+/migrate <legacy_bnb_wallet> – חיבור ארנק ישן
+/migrate_verify <wallet> <signature> – אימות בעלות
 
-💬 Ask & Help
-/ask <question> – Ask AI
-/help – This menu
-"""
+🛠 TOOLS
+/miniapp – Mini App
+/dashboard – Dashboard
+/status – סטטוס
+/health – בדיקת בריאות
+/doctor – אבחון
+/megadiag – אבחון מלא
+/ask <question> – AI
+
+🔐 ADMIN
+/admin – Control Center
+/exec <cmd> – ביצוע פקודה
+/execr – בקשת ביצוע
+/autoexec – אוטומציה
+/backup – גיבוי
+/logs – לוגים
+/deploy – Deploy
+
+💡 טיפ: לממשק מלא פתח /miniapp. הפקודות נשארות זמינות למשתמשים מתקדמים ולאוטומציה."""
         bot.reply_to(msg, text)

@@ -1,8 +1,7 @@
 import os
 import state_manager
-from core import profile_manager
 from core import stars_payment_authority
-from store.stars_purchase_service import STARS_PER_ITEM, purchase_item_with_stars
+from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
@@ -15,13 +14,11 @@ STARS_PACKS = {
 
 
 def _resolve_stars_package(credits, stars_paid):
-    """Return the canonical package for a credits/Stars pair or None."""
     try:
         credits = int(credits)
         stars_paid = int(stars_paid)
     except (TypeError, ValueError):
         return None
-
     for pack_id, (expected_stars, expected_credits, label) in STARS_PACKS.items():
         if expected_credits == credits and expected_stars == stars_paid:
             return pack_id, expected_stars, expected_credits, label
@@ -33,20 +30,13 @@ def _send_pay_menu(bot, chat_id, uid):
     if uid not in db.get("users", {}):
         bot.send_message(chat_id, "❌ Please /join first.")
         return
-
     markup = InlineKeyboardMarkup(row_width=1)
     for pack_id, (stars, credits, label) in STARS_PACKS.items():
-        markup.add(
-            InlineKeyboardButton(
-                text=f"⭐ {stars} Stars → {credits} Credits ({label})",
-                callback_data=f"pay_{pack_id}"
-            )
-        )
-    bot.send_message(
-        chat_id,
-        "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.",
-        reply_markup=markup
-    )
+        markup.add(InlineKeyboardButton(
+            text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+            callback_data=f"pay_{pack_id}"
+        ))
+    bot.send_message(chat_id, "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.", reply_markup=markup)
 
 
 def register_payment_handlers(bot):
@@ -89,12 +79,15 @@ def register_payment_handlers(bot):
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
-        print(f"[PAY] Pre-checkout query from {query.from_user.id}, payload={query.invoice_payload}")
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
             item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
-            expected_stars = STARS_PER_ITEM.get(item_id)
-            if query.currency == "XTR" and expected_stars == int(query.total_amount):
+            expected_stars = get_stars_price(item_id)
+            try:
+                valid_amount = int(query.total_amount) == expected_stars
+            except (TypeError, ValueError):
+                valid_amount = False
+            if query.currency == "XTR" and valid_amount:
                 bot.answer_pre_checkout_query(query.id, ok=True)
             else:
                 bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid item price.")
@@ -108,12 +101,10 @@ def register_payment_handlers(bot):
         except Exception:
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package.")
             return
-
         package = _resolve_stars_package(expected_credits, query.total_amount)
         if query.currency != "XTR" or package is None:
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package or price.")
             return
-
         bot.answer_pre_checkout_query(query.id, ok=True)
 
     @bot.message_handler(content_types=['successful_payment'])
@@ -130,41 +121,34 @@ def register_payment_handlers(bot):
                     stars_paid=payment.total_amount,
                     charge_id=payment.telegram_payment_charge_id,
                 )
-                if result["status"] == "DUPLICATE":
-                    bot.send_message(m.chat.id, "ℹ️ This item payment was already processed.")
-                    return
-                if result["status"] == "RECOVERABLE":
-                    bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
-                    return
-                bot.send_message(
-                    m.chat.id,
-                    "✅ Payment received and item fulfilled.\n"
-                    f"Item: {item_id}\n"
-                    f"Stars: {payment.total_amount}\n"
-                    f"Ref: {payment.telegram_payment_charge_id[:12]}",
-                )
-                print("[PAY] STAR ITEM FULFILLED", result)
             except Exception as e:
                 print(f"[PAY] STAR item fulfillment failed: {type(e).__name__}")
                 bot.send_message(m.chat.id, "⚠️ Payment was received but fulfillment failed safely. Please contact /paysupport.")
+                return
+            if result["status"] == "DUPLICATE":
+                bot.send_message(m.chat.id, "ℹ️ This item payment was already processed.")
+                return
+            if result["status"] == "RECOVERABLE":
+                bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
+                return
+            bot.send_message(m.chat.id, "✅ Payment received and item fulfilled.\n"
+                              f"Item: {item_id}\nStars: {payment.total_amount}\n"
+                              f"Ref: {payment.telegram_payment_charge_id[:12]}")
             return
+
         parts = payload.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != uid:
             bot.send_message(m.chat.id, "❌ Invalid payment payload.")
-            print(f"[PAY] rejected payload recipient mismatch: uid={uid}")
             return
         try:
             credits = int(parts[1])
         except Exception:
             bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
-
         package = _resolve_stars_package(credits, payment.total_amount)
         if payment.currency != "XTR" or package is None:
             bot.send_message(m.chat.id, "❌ Invalid payment package or price.")
-            print(f"[PAY] rejected payment boundary: uid={uid}, currency={payment.currency!r}")
             return
-
         try:
             db = state_manager.load_db()
             referrer_uid = db.get("users", {}).get(uid, {}).get("referral", {}).get("referred_by")
@@ -182,7 +166,6 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
                 return
             bot.send_message(m.chat.id, f"✅ Payment received! {package[2]} credits added.\nYour balance: {result['credits']} credits.")
-            print(f"[PAY] {package[2]} credits added, charge_id={result['charge_id']}")
         except Exception as e:
             print(f"[PAY] Atomic payment failed: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ Payment processing failed safely. Please contact /paysupport.")
@@ -199,9 +182,10 @@ def register_payment_handlers(bot):
         if not txs:
             bot.send_message(m.chat.id, "📜 No transactions yet.")
             return
-        msg = "📜 Your transactions:\n"
-        for tx in txs[-10:]:
-            msg += f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
+        msg = "📜 Your transactions:\n" + "".join(
+            f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
+            for tx in txs[-10:]
+        )
         bot.send_message(m.chat.id, msg.strip())
 
     @bot.message_handler(commands=['fakepay_disabled'])
@@ -215,7 +199,10 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         try:
             from core import economy_service
-            balance = economy_service.record_transaction(uid=uid, amount=100, reason="admin:test_payment", meta={"source": "fakepay", "test_mode": True})
+            balance = economy_service.record_transaction(
+                uid=uid, amount=100, reason="admin:test_payment",
+                meta={"source": "fakepay", "test_mode": True}
+            )
             bot.send_message(m.chat.id, f"💰 100 test credits added. Balance: {balance}")
         except Exception as e:
             bot.send_message(m.chat.id, "❌ Test payment failed safely.")

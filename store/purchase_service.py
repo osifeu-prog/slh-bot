@@ -122,9 +122,10 @@ def _release_reservation(purchase_id):
         if not purchase or not purchase.get("inventory_reservation"):
             return False
         item_id = purchase["inventory_reservation"]["item_id"]
+        quantity = int(purchase["inventory_reservation"].get("quantity", 1))
         product = db.setdefault("products", {}).get(item_id)
         if product is not None:
-            product["inventory"] = int(product.get("inventory", 0)) + 1
+            product["inventory"] = int(product.get("inventory", 0)) + quantity
         purchase["inventory_reservation"] = None
         return True
     return state_manager.atomic_update(mutate)
@@ -200,6 +201,7 @@ def purchase(uid, item_id, request_id=None):
         if not fulfillment or (isinstance(fulfillment, dict) and fulfillment.get("ok") is False):
             raise RuntimeError("FULFILLMENT_FAILED")
     except Exception as exc:
+        _release_reservation(claim["purchase_id"])
         _update_purchase(claim["purchase_id"], status="RECOVERABLE", error=type(exc).__name__, fulfillment_started_at=None)
         return False, "RECOVERABLE"
 
