@@ -16,7 +16,7 @@ def _safe_call(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
     except Exception as e:
-        return {"error": f"{type(e).name}"}
+        return {"error": f"{type(e).__name__}"}
 
 
 def _onchain(uid):
@@ -26,7 +26,7 @@ def _onchain(uid):
         if isinstance(data, dict):
             return data
     except Exception as e:
-        return {"error": f"{type(e).name}"}
+        return {"error": f"{type(e).__name__}"}
     return {}
 
 
@@ -38,7 +38,7 @@ def _system_health():
         health["agents"] = len(db.get("agents", {}))
         health["tasks"] = len(db.get("tasks", {}))
     except Exception as e:
-        health["db_error"] = type(e).name
+        health["db_error"] = type(e).__name__
     try:
         items = load_items()
         health["store_items"] = len(items)
@@ -49,7 +49,7 @@ def _system_health():
             and v["price_stars"] > 0
         )
     except Exception as e:
-        health["store_error"] = type(e).name
+        health["store_error"] = type(e).__name__
     try:
         health["alpha"] = (alpha_state() or {}).get("status", "unknown")
     except Exception:
