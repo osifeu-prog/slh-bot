@@ -514,6 +514,38 @@ def api_exchange_summary():
 
 
 
+@app.route("/api/v1/exchange/order", methods=["POST"])
+def api_exchange_order():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    side = str(payload.get("side", "")).strip().lower()
+    request_id = str(payload.get("client_request_id", "")).strip()
+    if side not in {"buy", "sell"}:
+        return jsonify({"error": "INVALID_SIDE"}), 400
+    if not request_id:
+        return jsonify({"error": "MISSING_REQUEST_ID"}), 400
+    try:
+        from handlers.exchange_handler import _dec, _place, REQUESTS_KEY
+        amount = _dec(payload.get("amount"), "amount")
+        price = _dec(payload.get("price"), "price")
+        key = f"WEBAPP-EXCHANGE-{uid}-{request_id}"
+
+        def mutate(db):
+            old = db.setdefault(REQUESTS_KEY, {}).get(key)
+            if old is not None:
+                return old
+            return _place(db, str(uid), side, amount, price, key)
+
+        result = state_manager.atomic_update(mutate)
+        return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
+
 @app.route("/api/v1/transfer", methods=["POST"])
 def api_transfer():
     uid = authenticated_uid()
