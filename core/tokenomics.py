@@ -47,3 +47,18 @@ TOKENOMICS = {
 
 def snapshot():
     return {key: dict(value) for key, value in TOKENOMICS.items()}
+
+
+REWARDS = {
+    "join_points": 1000,
+    "referral_points": 10,
+    "lesson_complete_points": 25,
+    "course_complete_points": 250,
+}
+
+
+def rewards_snapshot():
+    from core.holiday_campaign import GRANT_AMOUNT
+    d = dict(REWARDS)
+    d["airdrop_slh"] = GRANT_AMOUNT
+    return d
