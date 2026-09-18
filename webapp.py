@@ -497,7 +497,7 @@ def api_dashboard():
             return jsonify({"error": "USER_NOT_FOUND"}), 404
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).name}), 500
 
 
 
@@ -509,6 +509,43 @@ def api_exchange_summary():
     try:
         from core.exchange_read_model import get_exchange_summary
         return jsonify(get_exchange_summary()), 200
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).name}), 500
+
+
+
+@app.route("/api/v1/transfer", methods=["POST"])
+def api_transfer():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    recipient = str(payload.get("recipient_uid", "")).strip()
+    amount_raw = payload.get("amount")
+    request_id = str(payload.get("client_request_id", "")).strip()
+    if not recipient:
+        return jsonify({"error": "MISSING_RECIPIENT"}), 400
+    if not request_id:
+        return jsonify({"error": "MISSING_REQUEST_ID"}), 400
+    try:
+        amount = float(amount_raw)
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_AMOUNT"}), 400
+    if amount <= 0:
+        return jsonify({"error": "INVALID_AMOUNT"}), 400
+    idempotency_key = f"WEBAPP-TRANSFER-{uid}-{request_id}"
+    try:
+        from core import economy_service
+        result = economy_service.transfer_credits(
+            sender_uid=uid,
+            recipient_uid=recipient,
+            amount=amount,
+            idempotency_key=idempotency_key,
+            meta={"source": "miniapp"},
+        )
+        return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
