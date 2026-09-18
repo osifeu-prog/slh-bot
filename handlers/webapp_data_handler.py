@@ -50,7 +50,7 @@ def register(bot, context=None):
                 message.text = cmd
                 message.content_type = "text"
                 bot.process_new_messages([message])
-        else:
+            else:
                 bot.send_message(chat_id, "❌ פעולה זו אינה זמינה מה־Mini App")
         except Exception as exc:
             print("[WEBAPP_DATA] error:", type(exc).__name__, str(exc)[:160])
