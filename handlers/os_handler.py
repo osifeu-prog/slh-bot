@@ -2,6 +2,8 @@ import os, json, subprocess
 from datetime import datetime
 from telebot import types
 
+MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app?v=20260918-system"
+
 def register(bot, context=None):
     @bot.message_handler(commands=["os"])
     def os_cmd(message):
@@ -30,7 +32,7 @@ def register(bot, context=None):
         markup = types.InlineKeyboardMarkup()
         btn = types.InlineKeyboardButton(
             text="🚀 פתח מיני-אפ",
-            web_app=types.WebAppInfo(url="https://web-production-22f28.up.railway.app/mini-app")
+            web_app=types.WebAppInfo(url=MINI_APP_URL)
         )
         markup.add(btn)
         bot.send_message(message.chat.id, "SLH OS Mini‑App", reply_markup=markup)
