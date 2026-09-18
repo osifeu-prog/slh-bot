@@ -20,15 +20,12 @@ def apply_grant(uid, grant, purchase_id=None):
         if not course_id:
             raise ValueError("COURSE_ID_REQUIRED")
 
-        # Academy is the canonical course-entitlement state. Keep the legacy
-        # top-level field for backward compatibility, but make fulfillment
-        # enroll the user through the Academy manager so purchase -> enrollment
-        # is one idempotent path and existing progress is never reset.
+        # Academy is the canonical course-entitlement state.
+        # start_course creates a new enrollment or preserves existing progress.
         from core import academy_manager
         if not academy_manager.start_course(uid, course_id):
             raise ValueError("COURSE_NOT_FOUND")
 
-        profile_manager.update_user(uid, {"active_course": course_id})
         return {
             "ok": True,
             "type": "course",
