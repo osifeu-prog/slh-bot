@@ -88,7 +88,12 @@ function showGuide(id){
     return resp
 
 
-@app.route("/api/v1/system/unified-map")\ndef unified_system_map():\n    return jsonify(get_unified_map()), 200\n\n\n@app.route("/api/v1/me")
+@app.route("/api/v1/system/unified-map")
+def unified_system_map():
+    return jsonify(get_unified_map()), 200
+
+
+@app.route("/api/v1/me")
 def investor_me():
     """Return the read-only investor snapshot for the authenticated Telegram user."""
     uid = authenticated_uid()
