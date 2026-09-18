@@ -496,7 +496,7 @@ def api_tokenomics():
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
-        from core.tokenomics import snapshot
+        from core.tokenomics import snapshot, rewards_snapshot
         from core.holiday_campaign import GRANT_AMOUNT, eligibility
         from core import profile_manager
 
@@ -507,11 +507,8 @@ def api_tokenomics():
         return jsonify({
             "tokenomics": snapshot(),
             "rewards": {
-                "join_bonus_points": 1000,
-                "referral_bonus_points": 10,
-                "lesson_complete_points": 25,
+                **rewards_snapshot(),
                 "task_rewards": "per_task",
-                "holiday_referral_slh": GRANT_AMOUNT,
             },
             "user": {
                 "points": points,
