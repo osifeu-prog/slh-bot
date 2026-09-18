@@ -10,7 +10,19 @@ PORT = _MP
 DEVICES_PATH = Path("state/devices.json")
 
 device_id = sys.argv[1] if len(sys.argv) > 1 else "DEV_ESP_NEW_1786177919"
-topic = f"slh/device/{device_id}/progress"
+def _progress_topic():
+    try:
+        data = json.loads(DEVICES_PATH.read_text(encoding="utf-8"))
+        dev = data.get("devices", {}).get(device_id, {})
+        topic = (dev.get("mqtt_topics") or {}).get("progress")
+        if topic:
+            return topic
+    except Exception:
+        pass
+    return f"slh/esp/{device_id}/progress"
+
+
+topic = _progress_topic()
 
 def on_connect(client, userdata, flags, rc):
     client.subscribe(topic)
