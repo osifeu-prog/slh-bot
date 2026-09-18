@@ -1,39 +1,30 @@
 """Stars checkout for the SLH store."""
-import json
-from pathlib import Path
 from telebot.types import LabeledPrice
+from store.engine import load_items
+from store.stars_purchase_service import get_stars_items, get_stars_price
 
-ITEMS_FILE = Path("store/items.json")
-STARS_PER_ITEM = {
-    "esp32_pro": 888,
-    "esp32_standard": 444,
-    "role_vip": 500,
-    "bot_signal": 1000,
-}
-
-def _items():
-    try:
-        return json.loads(ITEMS_FILE.read_text(encoding="utf-8-sig"))
-    except Exception:
-        return {}
 
 def register(bot):
     @bot.message_handler(commands=['buystars'])
     def buystars(m):
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
-            bot.reply_to(m, "usage: /buystars <item_id>\navailable: " + ", ".join(STARS_PER_ITEM))
+            bot.reply_to(m, "שימוש: /buystars <item_id>\nזמין ב-Stars: " + ", ".join(get_stars_items()))
             return
+
         item_id = parts[1].strip()
-        items = _items()
-        if item_id not in items:
-            bot.reply_to(m, "ITEMNOTFOUND")
+        items = load_items()
+        item = items.get(item_id)
+        if not isinstance(item, dict):
+            bot.reply_to(m, "❌ המוצר לא נמצא")
             return
-        stars = STARS_PER_ITEM.get(item_id)
-        if not stars:
-            bot.reply_to(m, "item not available for Stars")
+
+        stars = get_stars_price(item_id)
+        if stars is None:
+            bot.reply_to(m, "❌ המוצר אינו זמין לרכישה ב-Stars")
             return
-        name = items[item_id].get("name", item_id)
+
+        name = item.get("name", item_id)
         try:
             bot.send_invoice(
                 chat_id=m.chat.id,
@@ -47,4 +38,5 @@ def register(bot):
                 is_flexible=False,
             )
         except Exception as e:
-            bot.reply_to(m, "invoice failed: " + str(e))
+            bot.reply_to(m, "❌ יצירת חשבונית נכשלה. נסה שוב מאוחר יותר.")
+            print(f"[STARS_STORE] invoice error: {type(e).__name__}")
