@@ -125,6 +125,7 @@ jobs:
           assert "אין צורך להשלים קורס כדי לבצע Staking" in ask_router, "staking intent must state no Academy prerequisite"
           assert "לפני /stake צריך להשלים" not in ask_router, "stale staking Academy prerequisite remains"
           assert "לאחר Stage 3: /stake" not in ask_router, "stale Stage 3 staking path remains"
+          assert "3 השיעורים הנדרשים ל-Staking" not in ask_router, "stale course prerequisite claim remains"
           ast.parse(ask_router)
           print("Staking truth contract: OK")
           print("Integration contracts: OK")
