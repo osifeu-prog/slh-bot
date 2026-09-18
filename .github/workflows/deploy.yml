@@ -53,6 +53,8 @@ jobs:
           revenue = Path("core/revenue_ledger.py").read_text(encoding="utf-8")
           dashboard = Path("core/dashboard_read_model.py").read_text(encoding="utf-8")
           read_model = Path("core/exchange_read_model.py").read_text(encoding="utf-8")
+          grant = Path("store/grant_engine.py").read_text(encoding="utf-8")
+          academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
 
           required_web_routes = [
               '@app.route("/api/v1/dashboard")',
@@ -80,8 +82,7 @@ jobs:
           ]:
               assert f"def {symbol}" in stars, f"missing Stars service contract: {symbol}"
 
-          for symbol in ["record_stars_payment"]:
-              assert f"def {symbol}" in stars_authority, f"missing Stars authority: {symbol}"
+          assert "def record_stars_payment" in stars_authority, "missing Stars authority: record_stars_payment"
 
           for symbol in ["record", "summary"]:
               assert f"def {symbol}" in revenue, f"missing revenue ledger contract: {symbol}"
@@ -100,6 +101,16 @@ jobs:
               source = dashboard if symbol == "get_dashboard" else read_model
               assert f"def {symbol}" in source, f"missing Truth Layer contract: {symbol}"
 
+          # Academy fulfillment contract:
+          # course grants must use the canonical Academy manager, which creates
+          # academy.courses[course_id] and preserves existing progress.
+          assert "if \"course\" in grant:" in grant, "missing course grant branch"
+          assert "academy_manager.start_course(uid, course_id)" in grant, "course grant must call Academy start_course"
+          assert "COURSE_NOT_FOUND" in grant, "course grant must reject unknown courses"
+          assert "def start_course(uid, course_id):" in academy, "missing Academy start_course"
+          assert '"courses": {' in academy, "Academy start_course must create course progress state"
+          assert '"stage": 0' in academy and '"completed": []' in academy, "Academy initial progress contract missing"
+
           ast.parse(webapp)
           ast.parse(exchange)
           ast.parse(payment)
@@ -108,7 +119,10 @@ jobs:
           ast.parse(revenue)
           ast.parse(dashboard)
           ast.parse(read_model)
+          ast.parse(grant)
+          ast.parse(academy)
           print("Integration contracts: OK")
+          print("Academy entitlement contract: OK")
           PYEOF
 
       - name: Deployment handoff
