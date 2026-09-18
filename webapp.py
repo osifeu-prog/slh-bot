@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, send_from_directory, request, make_response
+import hmac
 import json
+import os
 from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
@@ -125,6 +127,58 @@ def create_staking_position():
         "error": "STAKING_MUTATION_DISABLED",
         "message": "Staking actions are not enabled through the public Mini App.",
     }), 403
+
+def _require_admin_api_key():
+    expected = os.getenv("ADMIN_API_KEY", "").strip()
+    supplied = request.headers.get("X-Admin-API-Key", "").strip()
+    if not expected:
+        return jsonify({"error": "ADMIN_API_NOT_CONFIGURED"}), 503
+    if not supplied or not hmac.compare_digest(supplied, expected):
+        return jsonify({"error": "FORBIDDEN"}), 403
+    return None
+
+
+@app.route("/api/v1/staking/revenue-share/status", methods=["GET"])
+def staking_revenue_share_status():
+    db = load_db()
+    pool = db.get("revenue_share_pool", {})
+    distributions = db.get("revenue_distributions", {})
+    positions = db.get("staking_positions", {})
+    active = sum(
+        1 for pos in positions.values()
+        if isinstance(pos, dict) and pos.get("status") == "active"
+    ) if isinstance(positions, dict) else 0
+    return jsonify({
+        "pool": pool if isinstance(pool, dict) else {},
+        "distribution_count": len(distributions) if isinstance(distributions, dict) else 0,
+        "active_positions": active,
+        "read_only": True,
+    }), 200
+
+
+@app.route("/api/v1/staking/revenue-share/distribute", methods=["POST"])
+def staking_revenue_share_distribute():
+    denied = _require_admin_api_key()
+    if denied:
+        return denied
+
+    data = request.get_json(silent=True) or {}
+    period_label = str(data.get("period_label", "")).strip()
+    if not period_label:
+        return jsonify({"error": "MISSING_PERIOD_LABEL"}), 400
+
+    try:
+        from core import staking_revenue_share as rs
+        result = rs.distribute_revenue(
+            data.get("gross_revenue", 0),
+            data.get("operating_costs", 0),
+            period_label,
+        )
+        return jsonify(result), 200
+    except (TypeError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        return jsonify({"error": "SERVER_ERROR"}), 500
 @app.route("/api/wallet/<uid>")
 def get_wallet(uid):
     denied = require_self(uid)
