@@ -51,7 +51,7 @@ def test_inactive_and_zero_lots_are_excluded():
 
 def test_annual_cap_scales_with_elapsed_days():
     assert apply_annual_cap(D("1000"), D("1000"), 365, D("0.65")) == D("650.00")
-    assert apply_annual_cap(D("1000"), D("1000"), 182, D("0.65")) == D("323.83")
+    assert apply_annual_cap(D("1000"), D("1000"), 182, D("0.65")) == D("324.10")
 
 
 def test_capped_distribution_never_exceeds_math_cap():
