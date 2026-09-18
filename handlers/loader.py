@@ -55,6 +55,7 @@ def load_handlers(bot, context):
         # KILLED_natural_chat
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
+        ("unified_system", "handlers.unified_system_handler"),
         ("me", "handlers.me_handler"),
         ("monitor", "handlers.monitor_handler"),
         ("journal", "handlers.journal_handler"),
