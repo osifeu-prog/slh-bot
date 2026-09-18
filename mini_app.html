@@ -98,7 +98,7 @@ async function sendTransferViaApi(){
   const a=($("amount")?.value||'').trim();
   if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}
   const n=Number(a);
-  if(!Number.isFinite(n)n<=0){toast('סכום Credits לא תקין');return}
+  if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}
   const reqId=(crypto&&crypto.randomUUID)?crypto.randomUUID():('t-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));
   try{
     const resp=await fetch('/api/v1/transfer',{
@@ -108,7 +108,7 @@ async function sendTransferViaApi(){
     });
     const d=await resp.json().catch(()=>({}));
     if(!resp.ok){
-      const err=d.error('HTTP '+resp.status);
+      const err=d.error||('HTTP '+resp.status);
       toast('❌ '+err);
       return;
     }
