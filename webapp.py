@@ -8,6 +8,7 @@ from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
 from core.profile_manager import get_user
 from core import staking_service
+from handlers.unified_system_handler import get_unified_map
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -87,7 +88,7 @@ function showGuide(id){
     return resp
 
 
-@app.route("/api/v1/me")
+@app.route("/api/v1/system/unified-map")\ndef unified_system_map():\n    return jsonify(get_unified_map()), 200\n\n\n@app.route("/api/v1/me")
 def investor_me():
     """Return the read-only investor snapshot for the authenticated Telegram user."""
     uid = authenticated_uid()
