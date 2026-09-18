@@ -251,7 +251,7 @@ def arcade_award():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        print("[ARCADE] error:", type(e).name, str(e)[:200])
+        print("[ARCADE] error:", type(e).__name__, str(e)[:200])
         return jsonify({"error": "SERVER_ERROR"}), 500
 
 
