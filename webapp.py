@@ -144,6 +144,63 @@ def get_wallet(uid):
     })
 
 
+@app.route("/api/v1/arcade/award", methods=["POST"])
+def arcade_award():
+    """Award Credits from arcade / skill-game play.
+
+    Requires a valid arcade secret (ARCADE_API_KEY). Credits are marked
+    with source="arcade" in the ledger meta so they can be distinguished
+    from purchased Credits. This endpoint does NOT bypass economy_service.
+    """
+    import os
+    expected = os.getenv("ARCADE_API_KEY", "").strip()
+    if not expected:
+        return jsonify({"error": "ARCADE_NOT_CONFIGURED"}), 503
+    if request.headers.get("X-Arcade-Key", "").strip() != expected:
+        return jsonify({"error": "FORBIDDEN"}), 403
+
+    data = request.get_json(silent=True) or {}
+    uid = str(data.get("uid", "")).strip()
+    amount = data.get("amount")
+    game_id = str(data.get("game_id", "")).strip()
+    event_id = str(data.get("event_id", "")).strip()
+
+    if not uid or not game_id or not event_id:
+        return jsonify({"error": "MISSING_FIELDS"}), 400
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_AMOUNT"}), 400
+    if amount <= 0 or amount > 10000:
+        return jsonify({"error": "AMOUNT_OUT_OF_RANGE"}), 400
+
+    from core import economy_service
+    try:
+        balance = economy_service.record_transaction(
+            uid,
+            amount,
+            reason="arcade:award",
+            meta={
+                "source": "arcade",
+                "game_id": game_id,
+                "event_id": event_id,
+                "idempotency_key": "arcade:" + game_id + ":" + event_id,
+            },
+        )
+        return jsonify({
+            "ok": True,
+            "uid": uid,
+            "awarded": amount,
+            "balance": balance,
+            "source": "arcade",
+        }), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        print("[ARCADE] error:", type(e).name, str(e)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
+
+
 @app.route("/api/v1/wallet/combined/<uid>")
 def combined_wallet(uid):
     """Read-only presentation adapter: internal ledger + slh-api ledger."""
