@@ -27,6 +27,19 @@ def apply_grant(uid, grant, purchase_id=None):
             profile_manager.update_user(uid, {"inventory": inventory})
         return {"ok": True, "type": "digital", "value": grant["digital"], "purchase_id": purchase_id}
 
+    if "plugin" in grant:
+        from plugins_store import install_plugin
+        plugin_id = str(grant["plugin"]).strip()
+        result = install_plugin(plugin_id)
+        if not str(result).startswith("✅"):
+            raise RuntimeError("PLUGIN_FULFILLMENT_FAILED")
+        inventory = user.get("inventory", {})
+        plugins = inventory.setdefault("plugins", [])
+        if plugin_id not in plugins:
+            plugins.append(plugin_id)
+            profile_manager.update_user(uid, {"inventory": inventory})
+        return {"ok": True, "type": "plugin", "value": plugin_id, "result": result, "purchase_id": purchase_id}
+
     if "hardware" in grant:
         if not purchase_id:
             raise ValueError("PURCHASE_ID_REQUIRED")
