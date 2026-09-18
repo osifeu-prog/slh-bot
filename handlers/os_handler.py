@@ -2,7 +2,7 @@ import os, json, subprocess
 from datetime import datetime
 from telebot import types
 
-MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app-v2"
+MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app-v4"
 
 def register(bot, context=None):
     @bot.message_handler(commands=["os"])
