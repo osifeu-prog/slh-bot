@@ -7,8 +7,6 @@ DB_PATH = Path("state/db.json")
 
 # Items with a dedicated Telegram Stars checkout path.
 STARS_ITEMS = {
-    "esp32_pro",
-    "esp32_standard",
     "role_vip",
     "bot_signal",
 }
