@@ -48,7 +48,10 @@ ROLES = {
     "DEVELOPER": [
         "agents.view_all",
         "exec.audit",
-    ],
+        "economy.view_self",
+        "economy.mutate_self",
+        "agents.modify_self",
+        "public.view",],
     "USER": [
         "public.view",
         "agents.view_self",
