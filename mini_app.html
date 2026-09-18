@@ -29,7 +29,7 @@
 </section>
 
 <section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card actions"><button class="action primary" onclick="show('market')"><b>🛍 Market</b><span>מוצרים ודרכי תשלום</span></button><button class="action" onclick="show('transfer')"><b>💸 העברת Credits</b><span>העברה למשתמש אחר</span></button><button class="action" onclick="openAction('/wallet','פתיחת Wallet')"><b>👛 Wallet</b><span>פתיחת פקודת הארנק</span></button></div><div class="card"><b>מה ההבדל?</b><p class="muted">Credits הם יתרה פנימית. SLH הוא נכס נפרד. מידע on-chain לא צריך להתערבב עם יתרות פנימיות.</p></div><details class="guide"><summary>📘 מדריך Wallet</summary><p>בדוק כאן יתרות וסטטוס. לפני כל פעולה כספית ודא שאתה מבין איזה נכס משתנה ומה הסכום.</p></details></section>
-<section id="transfer" class="screen"><div class="section-title">💸 העברת Credits</div><div class="card"><b>העברה פנימית למשתמש אחר</b><p class="muted">ההעברה הקיימת במערכת היא העברת Credits. הממשק מכין את הפקודה המדויקת; האישור והביצוע נשארים תחת סמכות הבוט.</p><label class="form-label" for="recipient">מזהה Telegram של המקבל</label><input id="recipient" class="form-input" inputmode="numeric" placeholder="לדוגמה: 5010371391"><label class="form-label" for="amount">סכום Credits</label><input id="amount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 100"><div class="actions" style="margin-top:10px"><button class="action primary" onclick="prepareTransfer()"><b>📤 הכנת העברה</b><span>בדיקת שדות והעתקת פקודה</span></button><button class="action" onclick="openAction('/transfer','העברה')"><b>ℹ️ פורמט הפקודה</b><span>/transfer &lt;recipient_uid&gt; &lt;amount&gt;</span></button></div></div><div class="card"><b>חשוב</b><p class="muted">אין כאן מסחר, מחיר שוק או העברת SLH on-chain. זהו מסלול Credits פנימי בלבד. אל תסתמך על צילום מסך במקום אישור ההעברה מהבוט.</p></div><details class="guide"><summary>📘 איך זה עובד?</summary><p>מזינים UID וסכום → הממשק בונה /transfer → מעתיקים ל־Telegram → הבוט מבצע את הבדיקה וההעברה דרך מנגנון הכלכלה הקיים.</p></details></section>
+<section id="transfer" class="screen"><div class="section-title">💸 העברת Credits</div><div class="card"><b>העברה פנימית למשתמש אחר</b><p class="muted">ההעברה הקיימת במערכת היא העברת Credits. הממשק מכין את הפקודה המדויקת; האישור והביצוע נשארים תחת סמכות הבוט.</p><label class="form-label" for="recipient">מזהה Telegram של המקבל</label><input id="recipient" class="form-input" inputmode="numeric" placeholder="לדוגמה: 5010371391"><label class="form-label" for="amount">סכום Credits</label><input id="amount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 100"><div class="actions" style="margin-top:10px"><button class="action primary" onclick="sendTransferViaApi()"><b>🚀 שלח עכשיו</b><span>העברה ישירה מהאפליקציה</span></button><button class="action primary" onclick="prepareTransfer()"><b>📤 הכנת העברה</b><span>בדיקת שדות והעתקת פקודה</span></button><button class="action" onclick="openAction('/transfer','העברה')"><b>ℹ️ פורמט הפקודה</b><span>/transfer &lt;recipient_uid&gt; &lt;amount&gt;</span></button></div></div><div class="card"><b>חשוב</b><p class="muted">אין כאן מסחר, מחיר שוק או העברת SLH on-chain. זהו מסלול Credits פנימי בלבד. אל תסתמך על צילום מסך במקום אישור ההעברה מהבוט.</p></div><details class="guide"><summary>📘 איך זה עובד?</summary><p>מזינים UID וסכום → הממשק בונה /transfer → מעתיקים ל־Telegram → הבוט מבצע את הבדיקה וההעברה דרך מנגנון הכלכלה הקיים.</p></details></section>
 <section id="buy" class="screen"><div class="section-title">💳 קניית Credits</div><div class="card"><b>רכישה דרך Telegram Stars</b><p class="muted">ה־Mini App מסביר את התהליך; התשלום עצמו נשאר תחת סמכות הבוט.</p><div class="actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>בחר חבילה</b><span>פתיחת תהליך הרכישה</span></button><button class="action" onclick="showGuide('buyguide')"><b>איך זה עובד?</b><span>מדריך קצר</span></button></div><details id="buyguide" class="guide"><summary>📘 מדריך קנייה</summary><p>בחר חבילה → בדוק מחיר וכמות → אשר תשלום ב־Telegram → המתן לאישור. אל תסתמך על צילום מסך כתחליף לאישור המערכת.</p></details></div></section>
 <section id="stake" class="screen"><div class="section-title">🔒 Staking</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking הוא מנגנון פנימי של Credits. אין דרישת Academy לביצוע Staking.</p><div class="actions"><button class="action primary" onclick="openAction('/staking','איך מתחילים')"><b>📘 תנאים ומסלול</b><span>פתיחת מדריך הסטייקינג</span></button><button class="action" onclick="openAction('/positions','הפוזיציות שלי')"><b>📊 פוזיציות</b><span>בדיקת פוזיציות קיימות</span></button></div><details class="guide"><summary>📘 מדריך Staking</summary><p>פתח /staking כדי לראות את התנאים. Academy הוא מסלול למידה נפרד ואינו תנאי לביצוע Staking.</p></details></div></section>
 <section id="alpha" class="screen"><div class="section-title">🚀 Alpha Readiness</div><div class="card" id="alphaBox">טוען…</div><details class="guide"><summary>📘 מה זה Alpha?</summary><p>המסך מציג ראיות מצב בלבד. זכאות והקצאה סופית תלויות במדיניות רשמית. כאשר המדיניות חסרה, לא מוצג סכום הקצאה.</p></details></section>
@@ -92,6 +92,38 @@ async function loadMe(){if(!initData){setText("name",'פתח בתוך Telegram')
 function setNext(d){const a=d.alpha||{},ac=a.academy||{},t=a.tasks||{};let n={screen:'wallet',title:'בדוק את הארנק',text:'ודא שהיתרות והסטטוס שלך נכונים'};if(a.status==='incomplete'){n={screen:'academy',title:'השלם את האונבורדינג',text:'המשך במסלול Academy והמשימות האישיות'}}else if(ac.status==='in_progress'){n={screen:'academy',title:'המשך ב־Academy',text:'יש עוד התקדמות להשלים'}}else if(t.status==='active'){n={screen:'academy',title:'השלם את המשימות',text:`${t.completed||0}/${t.total||0} הושלמו`}}else if(a.referral?.status==='not_verified'){n={screen:'alpha',title:'בדוק את Alpha',text:'Referral עדיין לא אומת'}}else if((a.allocation||{}).status==='policy_missing'){n={screen:'alpha',title:'Alpha מוכן לבדיקה',text:'הזכאות מוצגת; מדיניות הקצאה עדיין חסרה'}}state.next=n;setText("nextTitle",n.title);setText("nextText",n.text)}
 function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}show('home');loadMe();
 
+async function sendTransferViaApi(){
+  if(!initData){toast('פתח מתוך Telegram');return}
+  const r=($("recipient")?.value||'').trim();
+  const a=($("amount")?.value||'').trim();
+  if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}
+  const n=Number(a);
+  if(!Number.isFinite(n)n<=0){toast('סכום Credits לא תקין');return}
+  const reqId=(crypto&&crypto.randomUUID)?crypto.randomUUID():('t-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));
+  try{
+    const resp=await fetch('/api/v1/transfer',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:JSON.stringify({recipient_uid:r,amount:n,client_request_id:reqId})
+    });
+    const d=await resp.json().catch(()=>({}));
+    if(!resp.ok){
+      const err=d.error('HTTP '+resp.status);
+      toast('❌ '+err);
+      return;
+    }
+    if(d.status==='duplicate'){
+      toast('ℹ️ ההעברה כבר בוצעה');
+    }else{
+      toast('✅ הועבר '+n+' Credits');
+    }
+    $("recipient").value='';
+    $("amount").value='';
+    if(typeof loadMe==='function'){await loadMe()}
+  }catch(e){
+    toast('❌ שגיאה: '+(e.message||e));
+  }
+}
 async function loadSystem(){
   if(!initData)return;
   try{
