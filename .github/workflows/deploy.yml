@@ -56,6 +56,7 @@ jobs:
           grant = Path("store/grant_engine.py").read_text(encoding="utf-8")
           academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
           ask_router = Path("core/ask_router.py").read_text(encoding="utf-8")
+          virtual_esp = Path("core/virtual_esp.py").read_text(encoding="utf-8")
 
           required_web_routes = [
               '@app.route("/api/v1/dashboard")',
@@ -127,6 +128,11 @@ jobs:
           assert "לאחר Stage 3: /stake" not in ask_router, "stale Stage 3 staking path remains"
           assert "3 השיעורים הנדרשים ל-Staking" not in ask_router, "stale course prerequisite claim remains"
           ast.parse(ask_router)
+          assert '"mqtt_topics"') not in virtual_esp or "mqtt_topics" in virtual_esp, "virtual ESP topic schema check"
+          assert "dev.get(\"mqtt_topics\")" in virtual_esp, "virtual ESP must honor registered MQTT topic schema"
+          assert '"slh/esp/{device_id}/progress"' in virtual_esp, "virtual ESP fallback topic contract missing"
+          ast.parse(virtual_esp)
+          print("ESP topic contract: OK")
           print("Staking truth contract: OK")
           print("Integration contracts: OK")
           print("Academy entitlement contract: OK")
