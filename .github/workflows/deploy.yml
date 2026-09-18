@@ -1,4 +1,4 @@
-name: Deploy to Railway
+name: Validate and hand off to Railway
 
 on:
   push:
@@ -82,26 +82,8 @@ jobs:
           print("Integration contracts: OK")
           PYEOF
 
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SID: ${{ secrets.RAILWAY_SERVICE_ID }}
-          EID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+      - name: Deployment handoff
         run: |
-          set -euo pipefail
-          test -n "$RAILWAY_TOKEN"
-          test -n "$SID"
-          test -n "$EID"
-          response="$(curl -fsS -X POST https://backboard.railway.com/graphql/v2 \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data-binary @- <<EOF
-          {"query":"mutation { serviceInstanceRedeploy(serviceId: \"$SID\", environmentId: \"$EID\") }"}
-          EOF
-          )"
-          echo "$response"
-          if printf '%s' "$response" | grep -q '"errors"'; then
-            echo "Railway redeploy failed"
-            exit 1
-          fi
-          echo "Railway redeploy requested"
+          echo "Validation passed."
+          echo "Railway is connected to main and handles the production deployment for this service."
+          echo "No GitHub-side Railway secret/redeploy path is required."
