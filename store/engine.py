@@ -16,6 +16,20 @@ def load_items():
         return {}
 
 
+
+def resolve_item_id(item_id, items=None):
+    """Resolve canonical item IDs while accepting Telegram-friendly aliases."""
+    items = load_items() if items is None else items
+    raw = str(item_id or "").strip()
+    if raw in items:
+        return raw
+    key = raw.lower().replace("_", "").replace("-", "").replace(" ", "")
+    for canonical in items:
+        normalized = str(canonical).lower().replace("_", "").replace("-", "").replace(" ", "")
+        if normalized == key:
+            return canonical
+    return None
+
 def load_products():
     try:
         db = json.loads(DB_PATH.read_text(encoding="utf-8"))
