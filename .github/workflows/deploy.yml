@@ -1,0 +1,44 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Python syntax
+        run: |
+          find . -name '*.py' -not -path './_slh_audit/*' -not -path './_archive/*' -not -path './state/*' -not -path './_release_backup*/*' | while read f; do
+            python3 -m py_compile "$f" || { echo "FAIL: $f"; exit 1; }
+          done
+
+      - name: Validate mini_app.html
+        run: |
+          python3 - <<'PYEOF'
+          from pathlib import Path
+          s = Path("mini_app.html").read_text(encoding="utf-8")
+          bad = ["getElementById(id));", ".trim()));", "state.wallet{}", "return);"]
+          for b in bad:
+              if b in s:
+                  raise SystemExit(f"JS syntax error detected: {b}")
+          print("OK")
+          PYEOF
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          EID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+        run: |
+          curl -sS -X POST https://backboard.railway.com/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(serviceId: \\\"$SID\\\", environmentId: \\\"$EID\\\") }\"}"
