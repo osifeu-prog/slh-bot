@@ -1,0 +1,54 @@
+name: SLH CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile Python sources
+        shell: bash
+        run: |
+          set -e
+          find . -type f -name "*.py"             -not -path "./.git/*"             -not -path "./_slh_audit/*"             -not -path "./_archive/*"             -not -path "./state/*"             -print0 | xargs -0 -n1 python -m py_compile
+          echo "Python syntax: OK"
+
+      - name: Validate JSON catalogs/config
+        shell: bash
+        run: |
+          set -e
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          paths = [
+              Path("store/items.json"),
+          ]
+          for path in paths:
+              json.loads(path.read_text(encoding="utf-8-sig"))
+              print(f"JSON OK: {path}")
+          PY
+
+      - name: Verify critical store resolver
+        run: |
+          python - <<'PY'
+          from store.engine import resolve_item_id, load_items
+          items = load_items()
+          assert resolve_item_id("coursebitcoin101", items) == "course_bitcoin_101"
+          assert resolve_item_id("agentos", items) == "agent_os"
+          print("Store alias resolver: OK")
+          PY
