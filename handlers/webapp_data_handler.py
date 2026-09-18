@@ -1,81 +1,154 @@
-"""Receives commands from Telegram Mini App via tg.sendData()."""
+"""Telegram Mini App command bridge.
+
+Only allowlisted, user-scoped exchange actions are accepted from
+Telegram.WebApp.sendData(). Arbitrary bot commands are never executed.
+"""
 import json
+from decimal import Decimal
 import state_manager
+
+
+def _payload(raw):
+    raw = (raw or "").strip()
+    if not raw:
+        return {}
+    try:
+        value = json.loads(raw)
+        return value if isinstance(value, dict) else {"cmd": str(value)}
+    except (TypeError, ValueError):
+        return {"cmd": raw}
 
 
 def register(bot, context=None):
     @bot.message_handler(content_types=["web_app_data"])
-    def webapp_data(m):
-        raw = (m.web_app_data.data or "").strip()
-        uid = str(m.from_user.id)
-        chat_id = m.chat.id
-        try:
-            payload = json.loads(raw)
-            cmd = str(payload.get("cmd", "")).strip()
-        except (ValueError, TypeError):
-            cmd = raw
+    def webapp_data(message):
+        data = _payload(getattr(message.web_app_data, "data", ""))
+        cmd = str(data.get("cmd", "")).strip()
         if not cmd:
-            bot.send_message(chat_id, "❌ פקודה ריקה")
+            bot.send_message(message.chat.id, "❌ פעולה ריקה")
             return
+
         parts = cmd.split()
-        head = parts[0].lstrip("/")
+        action = parts[0].lstrip("/").lower()
+        uid = str(message.from_user.id)
+        chat_id = message.chat.id
+
         try:
-            if head in ("sell_slh", "buy_slh") and len(parts) == 3:
-                _exchange(bot, chat_id, uid, head, parts[1], parts[2])
-            elif head == "orders":
+            if action in ("buy_slh", "sell_slh") and len(parts) == 3:
+                _exchange_order(bot, chat_id, uid, action, parts[1], parts[2])
+            elif action == "orders" and len(parts) == 1:
                 _orders(bot, chat_id, uid)
-            elif head == "shop":
+            elif action == "cancel" and len(parts) == 2:
+                _cancel(bot, chat_id, uid, parts[1])
+            elif action == "shop" and len(parts) == 1:
                 _shop(bot, chat_id)
             else:
-                bot.send_message(chat_id, "❌ פקודה לא נתמכת: " + head)
-        except Exception as e:
-            bot.send_message(chat_id, "❌ שגיאה: " + str(e))
-            print("[WEBAPP_DATA] error: " + str(e))
+                bot.send_message(chat_id, "❌ פעולה זו אינה זמינה מה־Mini App")
+        except Exception as exc:
+            print("[WEBAPP_DATA] error:", type(exc).__name__, str(exc)[:160])
+            bot.send_message(chat_id, "❌ הפעולה נכשלה: " + str(exc)[:160])
 
 
-def _exchange(bot, chat_id, uid, side, amount_s, price_s):
-    from handlers.exchange_handler import _place, _dec
-    try:
-        amount = _dec(amount_s, "amount")
-        price = _dec(price_s, "price")
-    except ValueError as e:
-        bot.send_message(chat_id, "❌ " + str(e))
-        return
-    key = "webapp:" + uid + ":" + side + ":" + amount_s + ":" + price_s
+def _exchange_order(bot, chat_id, uid, action, amount_text, price_text):
+    from handlers.exchange_handler import _dec, _place
 
-    def mut(db):
-        old = db.setdefault("exchange_requests", {}).get(key)
-        if old is not None:
-            return old
-        return _place(db, uid, side, amount, price, key)
-    r = state_manager.atomic_update(mut)
-    bot.send_message(chat_id,
-                     "✅ " + side.upper() + " #" + r["order_id"] + "\n"
-                     "בוצע: " + r["filled"] + "\n"
-                     "פתוח: " + r["remaining"] + " SLH\n"
-                     "סטטוס: " + r["status"])
+    amount = _dec(amount_text, "amount")
+    price = _dec(price_text, "price")
+    side = "buy" if action == "buy_slh" else "sell"
+
+    # One logical Mini App action gets one idempotency key.
+    request_id = f"WEBAPP-EXCHANGE-{uid}-{side}-{amount_text}-{price_text}"
+
+    def mutate(db):
+        requests = db.setdefault("exchange_requests", {})
+        existing = requests.get(request_id)
+        if existing is not None:
+            return existing
+        return _place(db, uid, side, amount, price, request_id)
+
+    result = state_manager.atomic_update(mutate)
+    bot.send_message(
+        chat_id,
+        "✅ " + ("BUY" if side == "buy" else "SELL") +
+        f" #{result['order_id']}\n"
+        f"בוצע: {result['filled']} SLH\n"
+        f"פתוח: {result['remaining']} SLH\n"
+        f"סטטוס: {result['status']}"
+    )
 
 
 def _orders(bot, chat_id, uid):
     db = state_manager.load_db()
-    rows = [o for o in db.get("exchange_orders", {}).values()
-            if str(o.get("uid")) == uid and o.get("status") == "open"]
-    if not rows:
-        bot.send_message(chat_id, "אין הזמנות פתוחות")
+    orders = [
+        o for o in db.get("exchange_orders", {}).values()
+        if str(o.get("uid")) == uid and o.get("status") == "open"
+    ]
+    orders.sort(key=lambda o: int(o.get("sequence", 0)))
+    if not orders:
+        bot.send_message(chat_id, "📋 אין לך הוראות פתוחות")
         return
-    lines = ["📋 הזמנות פתוחות:"]
-    for o in rows:
-        lines.append(o["id"] + " | " + o["side"] + " | " +
-                     o["remaining_amount"] + " @ " + o["limit_price"])
+
+    lines = ["📋 ההוראות הפתוחות שלך:"]
+    for o in orders[:30]:
+        lines.append(
+            f"{o.get('id')} | {o.get('side')} | "
+            f"{o.get('remaining_amount')} SLH @ {o.get('limit_price')} C"
+        )
     bot.send_message(chat_id, "\n".join(lines))
 
 
+def _cancel(bot, chat_id, uid, order_id):
+    def mutate(db):
+        orders = db.setdefault("exchange_orders", {})
+        order = orders.get(order_id)
+        if not order or str(order.get("uid")) != uid or order.get("status") != "open":
+            raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
+
+        from handlers.exchange_handler import (
+            _wallet, _get, _set, _reserve, _set_reserve, _ledger,
+            _s, _assert_invariants, ZERO
+        )
+
+        wallet = _wallet(db, uid)
+        remaining = Decimal(str(order["remaining_amount"]))
+
+        if order["side"] == "sell":
+            reserved = Decimal(str(order["reserved_slh"]))
+            if reserved != remaining:
+                raise ValueError("ORDER_RESERVE_MISMATCH")
+            _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserved)
+            before = _get(wallet, "token_balance")
+            _set(wallet, "token_balance", before + reserved)
+            _ledger(db, uid, before, reserved, "exchange:cancel_release_slh", {"order_id": order_id})
+            order["reserved_slh"] = _s(ZERO)
+        else:
+            reserved = Decimal(str(order["reserved_credits"]))
+            expected = remaining * Decimal(str(order["limit_price"]))
+            if reserved != expected:
+                raise ValueError("ORDER_RESERVE_MISMATCH")
+            _set_reserve(wallet, "exchange_reserved_credits", _reserve(wallet, "exchange_reserved_credits") - reserved)
+            before = _get(wallet, "credits")
+            _set(wallet, "credits", before + reserved)
+            _ledger(db, uid, before, reserved, "exchange:cancel_release_credits", {"order_id": order_id})
+            order["reserved_credits"] = _s(ZERO)
+
+        order["remaining_amount"] = _s(ZERO)
+        order["status"] = "cancelled"
+        _assert_invariants(db)
+        return True
+
+    state_manager.atomic_update(mutate)
+    bot.send_message(chat_id, f"✅ הוראה #{order_id} בוטלה")
+
+
 def _shop(bot, chat_id):
-    bot.send_message(chat_id,
-                     "🛒 SLH Shop\n"
-                     "/buy_shop ai_course — ₪499\n"
-                     "/buy_shop vip_monthly — ₪199\n"
-                     "/buy_shop whatsapp_bot — ₪349")
+    bot.send_message(
+        chat_id,
+        "🛒 SLH Shop\n"
+        "/buy_shop ai_course — ₪499\n"
+        "/buy_shop vip_monthly — ₪199\n"
+        "/buy_shop whatsapp_bot — ₪349"
+    )
 
 
 print("webapp_data_handler loaded")
