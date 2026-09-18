@@ -107,7 +107,7 @@ def route(text, uid=None):
         return f"השעה הנוכחית בישראל היא {now:%H:%M}"
 
     if intent == "staking":
-        base = ("סטייקינג SLH\n\n" "אין צורך להשלים קורס כדי לבצע Staking. זה מנגנון פנימי של Credits.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "מסלול מהיר:\n" "1. /courses\n" "2. /course_bitcoin_mastery\n" "3. /lesson bitcoin_mastery 1\n" "4. בסיום: /finish bitcoin_mastery 1\n" "5. חזור על 3–4 עבור שיעורים 2 ו-3.\n" "6. בדיקה: /academy_progress\n" "7. לאחר Stage 3: /stake <amount>\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
+        base = ("סטייקינג SLH\n\n" "אין צורך להשלים קורס כדי לבצע Staking. זה מנגנון פנימי של Credits.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "הפעלת Staking: /stake <amount>\n" "צפייה בסטייקינג: /my_stake\n\n" "Academy הוא מסלול לימודי נפרד ואינו תנאי ל-Staking.\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
         if uid:
             try:
                 from core import economy_service
@@ -176,7 +176,7 @@ def route(text, uid=None):
     if intent == "greeting":
         return "שלום! איך אוכל לעזור?"
     if intent == "courses":
-        return ("🎓 Academy – Bitcoin Mastery\n\n" "כדי להשלים את 3 השיעורים הנדרשים ל-Staking:\n" "1. /course_bitcoin_mastery\n" "2. /lesson bitcoin_mastery 1\n" "3. כשסיימת: /finish bitcoin_mastery 1\n" "4. חזור על 2–3 עבור שיעורים 2 ו-3.\n" "5. /academy_progress\n\n" "לאחר השלמת Stage 3 ניתן להשתמש ב-/stake <amount>.")
+        return ("🎓 Academy – Bitcoin Mastery\n\n" "ה-Academy הוא מסלול לימודי נפרד. אין צורך להשלים קורס כדי לבצע Staking.\n\n" "1. /course_bitcoin_mastery\n" "2. /lesson bitcoin_mastery 1\n" "3. כשסיימת: /finish bitcoin_mastery 1\n" "4. חזור על 2–3 עבור שיעורים 2 ו-3.\n" "5. /academy_progress\n\n" "Staking זמין בנפרד דרך /stake <amount>.")
     if intent == "dashboard":
         return f"📊 אין Dashboard נפרד למשתמשים. הממשק הקיים הוא SLH Market Mini App:\n{MINI_APP_URL}"
     if intent == "agents":
