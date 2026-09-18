@@ -6,6 +6,9 @@ from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, 
 
 PROVIDER_TOKEN = ""
 
+VIP_MONTHLY_STARS = 499
+VIP_SUBSCRIPTION_PERIOD = 2592000
+
 STARS_PACKS = {
     "100credits": (100, 100, "100 Credits"),
     "500credits": (500, 450, "500 Credits (10% off)"),
@@ -40,6 +43,37 @@ def _send_pay_menu(bot, chat_id, uid):
 
 
 def register_payment_handlers(bot):
+
+    @bot.message_handler(commands=['vip'])
+    def vip_command(m):
+        uid = str(m.from_user.id)
+        db = state_manager.load_db()
+        user = db.get("users", {}).get(uid, {})
+        until = int(user.get("vip_access_until", 0) or 0)
+        import time
+        if until > int(time.time()):
+            bot.send_message(m.chat.id, f"⭐ VIP פעיל עד {time.strftime('%Y-%m-%d', time.gmtime(until))}.")
+            return
+        try:
+            bot.send_invoice(
+                chat_id=m.chat.id,
+                title="SLH VIP",
+                description="מנוי VIP חודשי ל-SLH OS",
+                invoice_payload=f"vip_monthly_{uid}",
+                provider_token="",
+                currency="XTR",
+                prices=[LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)],
+                start_parameter="slh-vip-monthly",
+                subscription_period=VIP_SUBSCRIPTION_PERIOD,
+                need_name=False,
+                need_phone_number=False,
+                need_email=False,
+                is_flexible=False,
+            )
+        except Exception as e:
+            print(f"[VIP] invoice error: {type(e).__name__}")
+            bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
+
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
         _send_pay_menu(bot, m.chat.id, str(m.from_user.id))
@@ -112,6 +146,54 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         payment = m.successful_payment
         payload = str(payment.invoice_payload or "")
+
+        if payload == f"vip_monthly_{uid}":
+            import time
+            charge_id = str(payment.telegram_payment_charge_id or "").strip()
+            if payment.currency != "XTR" or int(payment.total_amount) != VIP_MONTHLY_STARS or not charge_id:
+                bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
+                return
+
+            def activate_vip(db):
+                orders = db.setdefault("vip_subscriptions", {})
+                if charge_id in orders:
+                    return orders[charge_id]
+                now = int(time.time())
+                user = db.setdefault("users", {}).setdefault(uid, {})
+                previous = int(user.get("vip_access_until", 0) or 0)
+                start = max(now, previous)
+                until = start + VIP_SUBSCRIPTION_PERIOD
+                perms = user.setdefault("permissions", [])
+                if "vip_access" not in perms:
+                    perms.append("vip_access")
+                user["vip_access_until"] = until
+                record = {
+                    "charge_id": charge_id,
+                    "uid": uid,
+                    "stars_paid": VIP_MONTHLY_STARS,
+                    "started_at": now,
+                    "expires_at": until,
+                    "status": "ACTIVE",
+                    "recurring": bool(getattr(payment, "is_recurring", False)),
+                    "first_recurring": bool(getattr(payment, "is_first_recurring", False)),
+                }
+                orders[charge_id] = record
+                return record
+
+            result = state_manager.atomic_update(activate_vip)
+            if result.get("charge_id") == charge_id:
+                from core import revenue_ledger
+                revenue_ledger.record(
+                    source="telegram_stars_subscription",
+                    amount=VIP_MONTHLY_STARS,
+                    currency="XTR",
+                    reference=charge_id,
+                    uid=uid,
+                    meta={"kind":"vip_monthly","subscription_period":VIP_SUBSCRIPTION_PERIOD},
+                )
+            bot.send_message(m.chat.id, "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars.")
+            return
+
         if payload.startswith("item_") and payload.endswith("_" + uid):
             item_id = payload[5:-(len(uid)+1)]
             try:
