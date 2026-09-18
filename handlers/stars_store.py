@@ -1,6 +1,6 @@
-"""Stars checkout for the SLH store."""
+"""Stars checkout for the SLH store.""
 from telebot.types import LabeledPrice
-from store.engine import load_items
+from store.engine import load_items, resolve_item_id
 from store.stars_purchase_service import get_stars_items, get_stars_price
 
 
@@ -12,9 +12,9 @@ def register(bot):
             bot.reply_to(m, "שימוש: /buystars <item_id>\nזמין ב-Stars: " + ", ".join(get_stars_items()))
             return
 
-        item_id = parts[1].strip()
+        item_id = resolve_item_id(parts[1].strip())
         items = load_items()
-        item = items.get(item_id)
+        item = items.get(item_id) if item else None
         if not isinstance(item, dict):
             bot.reply_to(m, "❌ המוצר לא נמצא")
             return
