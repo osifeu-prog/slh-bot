@@ -56,6 +56,7 @@ def format_shop_message(user_balance=0):
             msg += f"/buy {item_id} — Credits\n"
         msg += "\n"
 
+    msg += "⭐ VIP חודשי — 499 Telegram Stars\n/vip — מנוי מתחדש חודשי\n\n"
     msg += f"💰 היתרה שלך: {user_balance} Credits"
     return msg
 
