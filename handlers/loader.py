@@ -27,6 +27,7 @@ def load_handlers(bot, context):
         ("bot_factory", "handlers.bot_factory"),
         ("stars_store", "handlers.stars_store"),
         ("webapp_data", "handlers.webapp_data_handler"),
+        ("webapp_data", "handlers.webapp_data_handler"),
         ("e", "handlers.e_handler"),
         ("alpha_control", "handlers.alpha_control_handler"),
         ("reconcile", "handlers.reconcile_handler"),
