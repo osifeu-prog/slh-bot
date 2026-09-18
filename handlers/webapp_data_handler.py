@@ -40,6 +40,8 @@ def register(bot, context=None):
                 _orders(bot, chat_id, uid)
             elif action == "cancel" and len(parts) == 2:
                 _cancel(bot, chat_id, uid, parts[1])
+            elif action == "transfer" and len(parts) == 3:
+                _transfer(bot, chat_id, uid, parts[1], parts[2], message.message_id)
             elif action == "shop" and len(parts) == 1:
                 _shop(bot, chat_id)
             else:
@@ -74,6 +76,34 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text):
         f"בוצע: {result['filled']} SLH\n"
         f"פתוח: {result['remaining']} SLH\n"
         f"סטטוס: {result['status']}"
+    )
+
+
+def _transfer(bot, chat_id, uid, recipient_uid, amount_text, message_id):
+    from core import economy_service
+
+    try:
+        amount = float(amount_text)
+    except (TypeError, ValueError):
+        raise ValueError("INVALID_TRANSFER_AMOUNT")
+
+    result = economy_service.transfer_credits(
+        sender_uid=uid,
+        recipient_uid=str(recipient_uid),
+        amount=amount,
+        idempotency_key=f"WEBAPP-TRANSFER-{uid}-{message_id}",
+        meta={"source": "telegram_webapp", "message_id": message_id},
+    )
+    if result.get("status") == "duplicate":
+        bot.send_message(chat_id, f"ℹ️ ההעברה כבר בוצעה. Transfer ID: {result.get('transfer_id')}")
+        return
+    bot.send_message(
+        chat_id,
+        "✅ ההעברה בוצעה\n"
+        f"📤 {result.get('amount')} Credits\n"
+        f"👤 למשתמש: {result.get('recipient_uid')}\n"
+        f"💰 יתרה: {result.get('sender_balance')} Credits\n"
+        f"🧾 {result.get('transfer_id')}"
     )
 
 
