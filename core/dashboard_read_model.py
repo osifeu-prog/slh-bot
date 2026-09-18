@@ -70,6 +70,6 @@ def get_dashboard(uid):
         "alpha": snapshot.get("alpha", {}),
         "rewards": snapshot.get("rewards", {}),
         "airdrop": snapshot.get("airdrop", {}),
-        "system": _system_health(),
         "exchange": get_exchange_summary(),
+        "system": _system_health(),
     }
