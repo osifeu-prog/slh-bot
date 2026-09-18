@@ -26,6 +26,18 @@ jobs:
             -print0 | xargs -0 -n1 python3 -m py_compile
           echo "Python syntax: OK"
 
+      - name: Validate mini app
+        run: |
+          python3 - <<'PYEOF'
+          from pathlib import Path
+          s = Path("mini_app.html").read_text(encoding="utf-8")
+          bad = ["getElementById(id));", ".trim()));", "state.wallet{}", "return);"]
+          for b in bad:
+              if b in s:
+                  raise SystemExit(f"JS syntax error detected: {b}")
+          print("Mini App validation: OK")
+          PYEOF
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
