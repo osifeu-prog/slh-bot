@@ -5,17 +5,9 @@ import state_manager
 
 
 def _fetch_api_wallet(uid):
-    """Fetch on-chain + multi-token balances from slh-api. Non-fatal on error."""
-    try:
-        import requests
-        base = "https://slh-api-production.up.railway.app"
-        r = requests.get(base + "/api/wallet/" + str(uid) + "/balances", timeout=5)
-        if r.status_code != 200:
-            return None
-        return r.json()
-    except Exception as e:
-        print("[WALLET] api fetch failed:", type(e).name)
-        return None
+    """Fetch on-chain + multi-token balances via shared slh_api_client."""
+    from core import slh_api_client
+    return slh_api_client.get_balances(uid)
 
 
 def register(bot):
