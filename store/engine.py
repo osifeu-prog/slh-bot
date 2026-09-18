@@ -6,9 +6,7 @@ ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 
 # Items with a dedicated Telegram Stars checkout path.
-STARS_ITEMS = {
-    "role_vip",
-}
+STARS_ITEMS = set()
 
 
 def load_items():
