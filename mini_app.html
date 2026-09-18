@@ -179,4 +179,4 @@ async function loadSystem(){
     setHTML('sysRewards',rr);
   }catch(e){setHTML('sysHealth','Error: '+esc(e.message||e));}
 }
-</script></body></html>
+</script><div id=slh-rewards-widget style="position:fixed;left:16px;bottom:16px;z-index:9999"><button onclick="fetch('/api/v1/tokenomics').then(r=>r.json()).then(d=>{document.getElementById('slh-rewards-body').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';document.getElementById('slh-rewards-modal').style.display='block'})">🎁 תגמולים</button><div id=slh-rewards-modal style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);padding:20px"><div style="background:#fff;padding:20px;border-radius:12px;max-width:520px;margin:40px auto"><button onclick="document.getElementById('slh-rewards-modal').style.display='none'">✕</button><div id=slh-rewards-body>טוען...</div></div></div></div></body></html>
