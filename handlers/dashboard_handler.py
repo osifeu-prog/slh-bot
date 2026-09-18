@@ -26,6 +26,7 @@ def register(bot):
         rewards = d.get("rewards", {})
         system = d.get("system", {})
         onchain = d.get("onchain", {})
+        exchange = d.get("exchange", {})
         balances = onchain.get("balances", {}) if isinstance(onchain, dict) else {}
 
         name = identity.get("display_name") or "משתמש"
@@ -33,6 +34,18 @@ def register(bot):
         completed = tasks.get("completed", 0)
         total = tasks.get("open", 0) + completed
         alpha_status = alpha.get("status", "unknown")
+
+        ex_status = exchange.get("status", {}) if isinstance(exchange, dict) else {}
+        ex_ticker = exchange.get("ticker", {}) if isinstance(exchange, dict) else {}
+        ex_book = exchange.get("orderbook", {}) if isinstance(exchange, dict) else {}
+        ex_last = ex_ticker.get("last_price")
+        ex_bid = ex_book.get("best_bid")
+        ex_ask = ex_book.get("best_ask")
+
+        if ex_last is None:
+            ex_last_text = "אין עסקה אחרונה"
+        else:
+            ex_last_text = str(ex_last)
 
         text = (
             f"🌟 ה-Dashboard שלך\n\n"
@@ -45,6 +58,11 @@ def register(bot):
             f"🎯 Tasks: {completed}/{total} completed\n"
             f"🏁 Alpha: {alpha_status}\n"
             f"🏆 Points: {rewards.get('points', 0)}\n\n"
+            f"🪙 Exchange: {'OPEN' if ex_status.get('open') else 'CLOSED'}\n"
+            f"   Ask: {ex_ask if ex_ask is not None else '—'}\n"
+            f"   Bid: {ex_bid if ex_bid is not None else '—'}\n"
+            f"   Last: {ex_last_text}\n"
+            f"   Orders: {ex_status.get('total_orders', 0)} · Trades: {ex_status.get('total_trades', 0)}\n\n"
             f"🖥️ System: Alpha {system.get('alpha', 'unknown')} · "
             f"{system.get('users', 0)} users · {system.get('agents', 0)} agents · "
             f"{system.get('store_items', 0)} store items\n\n"
