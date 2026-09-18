@@ -251,7 +251,7 @@ def arcade_award():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        print("[ARCADE] error:", type(e).name, str(e)[:200])
+        print("[ARCADE] error:", type(e).__name__, str(e)[:200])
         return jsonify({"error": "SERVER_ERROR"}), 500
 
 
@@ -421,61 +421,52 @@ def onchain_status():
     return jsonify(get_onchain_status())
 
 
-# Read-only adapter over the existing exchange state. No order placement or settlement.
+# Read-only exchange truth endpoint. Mutations remain in the Telegram exchange handler.
+@app.route("/api/v1/exchange")
+def exchange_snapshot():
+    try:
+        from core.exchange_read_model import get_exchange_snapshot
+        return jsonify(get_exchange_snapshot(load_db())), 200
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
+
 @app.route("/api/v1/exchange/markets")
 def exchange_markets():
-    return jsonify({"markets": [{"base": "SLH", "quote": "CREDITS", "symbol": "SLH/CREDITS"}]})
+    return jsonify({"markets": [{"base": "SLH", "quote": "CREDITS", "symbol": "SLH/CREDITS"}]}), 200
 
 
 @app.route("/api/v1/exchange/orderbook")
 def exchange_orderbook():
-    db = load_db()
-    raw = db.get("exchange_orders", {})
-    orders = list(raw.values()) if isinstance(raw, dict) else (raw if isinstance(raw, list) else [])
-    rows = []
-    for order in orders:
-        if not isinstance(order, dict) or order.get("status") != "open":
-            continue
-        rows.append({
-            "id": order.get("id"),
-            "side": order.get("side"),
-            "amount": order.get("remaining_amount", order.get("original_amount")),
-            "price": order.get("limit_price"),
-            "created_at": order.get("created_at"),
-        })
-    rows.sort(key=lambda x: (x.get("created_at") or ""))
-    return jsonify({"symbol": "SLH/CREDITS", "orders": rows})
+    from core.exchange_read_model import get_exchange_snapshot
+    snapshot = get_exchange_snapshot(load_db())
+    return jsonify({
+        "symbol": snapshot["symbol"],
+        "orderbook": snapshot["orderbook"],
+        "read_only": True,
+    }), 200
 
 
 @app.route("/api/v1/exchange/trades")
 def exchange_trades():
-    db = load_db()
-    raw = db.get("exchange_trades", [])
-    trades = raw if isinstance(raw, list) else []
-    public_trades = []
-    for trade in trades[-100:]:
-        public_trades.append({
-            "slh_amount": trade.get("slh_amount"),
-            "price": trade.get("price"),
-            "credits_value": trade.get("credits_value"),
-            "timestamp": trade.get("timestamp"),
-        })
-    return jsonify({"symbol": "SLH/CREDITS", "trades": public_trades})
+    from core.exchange_read_model import get_exchange_snapshot
+    snapshot = get_exchange_snapshot(load_db())
+    return jsonify({
+        "symbol": snapshot["symbol"],
+        "trades": snapshot["trades"],
+        "read_only": True,
+    }), 200
 
 
 @app.route("/api/v1/exchange/ticker")
 def exchange_ticker():
-    db = load_db()
-    raw = db.get("exchange_trades", [])
-    trades = raw if isinstance(raw, list) else []
-    if not trades:
-        return jsonify({"symbol": "SLH/CREDITS", "has_data": False, "last_price": None})
-    last = trades[-1]
+    from core.exchange_read_model import get_exchange_snapshot
+    snapshot = get_exchange_snapshot(load_db())
     return jsonify({
-        "symbol": "SLH/CREDITS",
-        "has_data": True,
-        "last_price": last.get("price"),
-    })
+        "symbol": snapshot["symbol"],
+        "ticker": snapshot["ticker"],
+        "read_only": True,
+    }), 200
 
 
 if __name__ == "__main__":
