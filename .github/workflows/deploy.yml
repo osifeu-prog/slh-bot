@@ -38,6 +38,50 @@ jobs:
           print("Mini App validation: OK")
           PYEOF
 
+      - name: Validate integration contracts
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          from pathlib import Path
+          import ast
+
+          webapp = Path("webapp.py").read_text(encoding="utf-8")
+          exchange = Path("handlers/exchange_handler.py").read_text(encoding="utf-8")
+          payment = Path("handlers/payment_handler.py").read_text(encoding="utf-8")
+          stars = Path("store/stars_purchase_service.py").read_text(encoding="utf-8")
+          dashboard = Path("core/dashboard_read_model.py").read_text(encoding="utf-8")
+          read_model = Path("core/exchange_read_model.py").read_text(encoding="utf-8")
+
+          required_web_routes = [
+              '@app.route("/api/v1/dashboard")',
+              '@app.route("/api/v1/exchange/summary")',
+              '@app.route("/api/v1/exchange/order", methods=["POST"])',
+              '@app.route("/api/v1/exchange/order/<order_id>", methods=["DELETE"])',
+              '@app.route("/api/v1/transfer", methods=["POST"])',
+          ]
+          for route in required_web_routes:
+              assert route in webapp, f"missing route contract: {route}"
+
+          for symbol in ["_place", "_match", "_assert_invariants", "_reserve", "_set_reserve"]:
+              assert f"def {symbol}" in exchange, f"missing exchange helper: {symbol}"
+
+          for symbol in ["pre_checkout", "successful_payment", "purchase_item_with_stars"]:
+              source = payment if symbol != "purchase_item_with_stars" else stars
+              assert symbol in source, f"missing Stars contract: {symbol}"
+
+          for symbol in ["get_dashboard", "get_exchange_summary"]:
+              source = dashboard if symbol == "get_dashboard" else read_model
+              assert f"def {symbol}" in source, f"missing Truth Layer contract: {symbol}"
+
+          ast.parse(webapp)
+          ast.parse(exchange)
+          ast.parse(payment)
+          ast.parse(stars)
+          ast.parse(dashboard)
+          ast.parse(read_model)
+          print("Integration contracts: OK")
+          PYEOF
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
