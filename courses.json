@@ -69,63 +69,28 @@
     "stages": [
       {
         "id": 1,
-        "name": "אתריום שלב 1",
+        "name": "מבוא ל-Ethereum",
         "lesson": "lessons/ethereum/1.txt"
       },
       {
         "id": 2,
-        "name": "אתריום שלב 2",
+        "name": "חשבונות, כתובות וחתימות",
         "lesson": "lessons/ethereum/2.txt"
       },
       {
         "id": 3,
-        "name": "אתריום שלב 3",
+        "name": "Smart Contracts ו-Gas",
         "lesson": "lessons/ethereum/3.txt"
       },
       {
         "id": 4,
-        "name": "אתריום שלב 4",
+        "name": "טוקנים ו-dApps",
         "lesson": "lessons/ethereum/4.txt"
       },
       {
         "id": 5,
-        "name": "אתריום שלב 5",
+        "name": "אבטחה וחשיבה ביקורתית",
         "lesson": "lessons/ethereum/5.txt"
-      },
-      {
-        "id": 6,
-        "name": "אתריום שלב 6",
-        "lesson": "lessons/ethereum/6.txt"
-      },
-      {
-        "id": 7,
-        "name": "אתריום שלב 7",
-        "lesson": "lessons/ethereum/7.txt"
-      },
-      {
-        "id": 8,
-        "name": "אתריום שלב 8",
-        "lesson": "lessons/ethereum/8.txt"
-      },
-      {
-        "id": 9,
-        "name": "אתריום שלב 9",
-        "lesson": "lessons/ethereum/9.txt"
-      },
-      {
-        "id": 10,
-        "name": "אתריום שלב 10",
-        "lesson": "lessons/ethereum/10.txt"
-      },
-      {
-        "id": 11,
-        "name": "אתריום שלב 11",
-        "lesson": "lessons/ethereum/11.txt"
-      },
-      {
-        "id": 12,
-        "name": "אתריום שלב 12",
-        "lesson": "lessons/ethereum/12.txt"
       }
     ]
   },
@@ -134,63 +99,28 @@
     "stages": [
       {
         "id": 1,
-        "name": "SLH vs ETH/SOL שלב 1",
+        "name": "שלוש שכבות שונות",
         "lesson": "lessons/slh_vs_eth_sol/1.txt"
       },
       {
         "id": 2,
-        "name": "SLH vs ETH/SOL שלב 2",
+        "name": "מודל חשבונאי",
         "lesson": "lessons/slh_vs_eth_sol/2.txt"
       },
       {
         "id": 3,
-        "name": "SLH vs ETH/SOL שלב 3",
+        "name": "ביצועים, עמלות וחוויית משתמש",
         "lesson": "lessons/slh_vs_eth_sol/3.txt"
       },
       {
         "id": 4,
-        "name": "SLH vs ETH/SOL שלב 4",
+        "name": "אבטחה, הרשאות ומשמורת",
         "lesson": "lessons/slh_vs_eth_sol/4.txt"
       },
       {
         "id": 5,
-        "name": "SLH vs ETH/SOL שלב 5",
+        "name": "איך משווים בלי שיווק",
         "lesson": "lessons/slh_vs_eth_sol/5.txt"
-      },
-      {
-        "id": 6,
-        "name": "SLH vs ETH/SOL שלב 6",
-        "lesson": "lessons/slh_vs_eth_sol/6.txt"
-      },
-      {
-        "id": 7,
-        "name": "SLH vs ETH/SOL שלב 7",
-        "lesson": "lessons/slh_vs_eth_sol/7.txt"
-      },
-      {
-        "id": 8,
-        "name": "SLH vs ETH/SOL שלב 8",
-        "lesson": "lessons/slh_vs_eth_sol/8.txt"
-      },
-      {
-        "id": 9,
-        "name": "SLH vs ETH/SOL שלב 9",
-        "lesson": "lessons/slh_vs_eth_sol/9.txt"
-      },
-      {
-        "id": 10,
-        "name": "SLH vs ETH/SOL שלב 10",
-        "lesson": "lessons/slh_vs_eth_sol/10.txt"
-      },
-      {
-        "id": 11,
-        "name": "SLH vs ETH/SOL שלב 11",
-        "lesson": "lessons/slh_vs_eth_sol/11.txt"
-      },
-      {
-        "id": 12,
-        "name": "SLH vs ETH/SOL שלב 12",
-        "lesson": "lessons/slh_vs_eth_sol/12.txt"
       }
     ]
   }
