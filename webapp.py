@@ -483,3 +483,19 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8080
     )
+
+@app.route("/api/v1/dashboard")
+def api_dashboard():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.dashboard_read_model import get_dashboard
+        return jsonify(get_dashboard(uid)), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).name}), 500
+
