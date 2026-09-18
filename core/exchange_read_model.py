@@ -23,6 +23,10 @@ def get_exchange_summary():
 
     open_orders = [o for o in orders.values() if isinstance(o, dict) and o.get("status") == "open"]
     open_orders.sort(key=lambda o: int(o.get("sequence", 0)))
+    bids = [o for o in open_orders if str(o.get("side", "")).lower() == "buy"]
+    asks = [o for o in open_orders if str(o.get("side", "")).lower() == "sell"]
+    bids.sort(key=lambda o: float(o.get("limit_price", 0)), reverse=True)
+    asks.sort(key=lambda o: float(o.get("limit_price", 0)))
     recent_trades = trades[-20:] if isinstance(trades, list) else []
 
     last_price = None
@@ -35,6 +39,8 @@ def get_exchange_summary():
             "has_data": last_price is not None,
         },
         "orderbook": {
+            "best_bid": bids[0].get("limit_price") if bids else None,
+            "best_ask": asks[0].get("limit_price") if asks else None,
             "orders": [
                 {
                     "id": o.get("id"),
