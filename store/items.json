@@ -7,14 +7,6 @@
       "course": "bitcoin_mastery"
     }
   },
-  "role_vip": {
-    "name": "תפקיד VIP",
-    "price": 500,
-    "type": "role",
-    "grant": {
-      "permission": "vip_access"
-    }
-  },
   "esp32_pro": {
     "name": "ESP32 Pro Device",
     "price": 888,
@@ -37,7 +29,8 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_bitcoin"
-    }
+    },
+    "price_stars": 25
   },
   "emoji_slh": {
     "name": "חבילת אימוג'י SLH OS",
@@ -45,7 +38,8 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_slh"
-    }
+    },
+    "price_stars": 50
   },
   "emoji_vip": {
     "name": "חבילת אימוג'י VIP זהוב",
@@ -53,6 +47,7 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_vip"
-    }
+    },
+    "price_stars": 100
   }
 }
