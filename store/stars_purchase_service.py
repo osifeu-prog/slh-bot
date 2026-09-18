@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 
 import state_manager
-from store.engine import load_items
+from store.engine import load_items, resolve_item_id
 from store.grant_engine import apply_grant
 from core import revenue_ledger
 
@@ -64,7 +64,10 @@ def _release_reservation(order_id):
 
 def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
     uid = str(uid)
-    item_id = str(item_id).strip()
+    items = load_items()
+    item_id = resolve_item_id(item_id, items)
+    if item_id is None:
+        raise ValueError("ITEM_NOT_FOUND")
     charge_id = str(charge_id or "").strip()
 
     if not charge_id:
