@@ -6,7 +6,7 @@ ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 
 # Items with a dedicated Telegram Stars checkout path.
-STARS_ITEMS = {item_id for item_id, item in load_items().items() if isinstance(item, dict) and int(item.get("price_stars", 0) or 0) > 0}
+STARS_ITEMS = set()
 
 
 def load_items():
@@ -27,6 +27,7 @@ def load_products():
 def format_shop_message(user_balance=0):
     items = load_items()
     products = load_products()
+    stars_items = {item_id for item_id, item in items.items() if isinstance(item, dict) and int(item.get("price_stars", 0) or 0) > 0}
 
     msg = "🏪 *חנות SLH EMPIRE*\n\n"
     msg += "⭐ לרכישות הנתמכות ב-Telegram Stars השתמש ב-/buystars.\n"
@@ -34,7 +35,7 @@ def format_shop_message(user_balance=0):
 
     for item_id, data in items.items():
         price = data.get("price", 0)
-        if item_id in STARS_ITEMS:
+        if item_id in stars_items:
             price_text = f"{int(data.get('price_stars', price))} Stars"
         else:
             price_text = "חינם" if price == 0 else f"{price} Credits"
@@ -49,7 +50,7 @@ def format_shop_message(user_balance=0):
             inv_text = f" | במלאי: {int(inventory)}"
 
         msg += f"*{data.get('name', item_id)}* - {price_text}{inv_text}\n"
-        if item_id in STARS_ITEMS:
+        if item_id in stars_items:
             msg += f"/buystars {item_id} — ⭐ Telegram Stars\n"
         else:
             msg += f"/buy {item_id} — Credits\n"
