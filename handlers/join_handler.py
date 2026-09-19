@@ -4,7 +4,7 @@ from core.profile_manager import user_exists
 from core.invite_gate import can_start_onboarding
 import state_manager
 
-user_states = {}
+user_states = {}\n\n\ndef _is_owner(uid):\n    """Safely compare Telegram owner IDs without crashing isolated tests."""\n    try:\n        return int(str(uid)) == int(str(OWNER_TELEGRAM_ID))\n    except (TypeError, ValueError):\n        return str(uid) == str(OWNER_TELEGRAM_ID)\n
 
 
 def _get_pending_referral(uid):
