@@ -87,6 +87,15 @@ def atomic_update(mutate_fn):
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
 
 
+
+def load_json(filename, default=None):
+    """Read a JSON state file without mutating it."""
+    path = filename if os.path.isabs(filename) else os.path.join("state", filename)
+    if not os.path.exists(path):
+        return default
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
 def atomic_json_update(filename, mutate_fn, default=None):
     """Atomically update a JSON file under state/ with its own lock."""
     path = filename if os.path.isabs(filename) else os.path.join("state", filename)
