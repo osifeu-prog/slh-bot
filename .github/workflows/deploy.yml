@@ -152,6 +152,51 @@ jobs:
           print("Academy entitlement contract: OK")
           PYEOF
 
+
+      - name: Validate Control Plane contracts
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import ast
+          import json
+          from pathlib import Path
+
+          registry = json.loads(Path("control_plane_registry.json").read_text(encoding="utf-8"))
+          canonical = registry["canonical"]
+          assert canonical["repo"] == "osifeu-prog/slh-bot"
+          assert canonical["railway_project"] == "endearing-amazement"
+          assert canonical["railway_service"] == "web"
+          assert canonical["railway_environment"] == "production"
+
+          projects = registry["railway_projects"]
+          assert len(projects) == 10
+          assert all(p.get("environment_id") for p in projects)
+
+          esp = Path("handlers/esp_handler.py").read_text(encoding="utf-8")
+          assert 'def register_esp_handler(bot):' in esp
+          assert '@bot.message_handler(commands=["esp"])' in esp
+          ast.parse(esp)
+
+          bot_factory = Path("handlers/bot_factory.py").read_text(encoding="utf-8")
+          assert 'commands=["projects"]' not in bot_factory
+          ast.parse(bot_factory)
+
+          git_handler = Path("handlers/git_handler.py").read_text(encoding="utf-8")
+          assert "mini_app.html" not in git_handler
+          ast.parse(git_handler)
+
+          deploy_handler = Path("handlers/deploy_handler.py").read_text(encoding="utf-8")
+          assert 'REGISTRY_FILE = "control_plane_registry.json"' in deploy_handler
+          assert "def _managed_targets()" in deploy_handler
+          ast.parse(deploy_handler)
+
+          print("Control Plane registry contract: OK")
+          print("ESP root command contract: OK")
+          print("Project command ownership: OK")
+          print("Git synchronization guard: OK")
+          print("Deployment registry contract: OK")
+          PYEOF
+
       - name: Deployment handoff
         run: |
           echo "Validation passed."
