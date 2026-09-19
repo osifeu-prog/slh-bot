@@ -65,7 +65,7 @@ def _chunk_text(text, max_length=MAX_MESSAGE_LENGTH):
 
 
 def register(bot, context):
-    @bot.message_handler(commands=["audit", "logs"])
+    @bot.message_handler(commands=["audit"])
     def logs_cmd(message):
 
         parts = message.text.split()
