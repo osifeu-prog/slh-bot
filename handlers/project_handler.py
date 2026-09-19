@@ -21,14 +21,16 @@ def _render(ctx):
         "",
         "Graph: AI session → agents → services → deployments → health → journal",
     ]
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 
 def register(bot, context=None):
     @bot.message_handler(commands=["project"])
     def project_cmd(m):
         uid = getattr(getattr(m, "from_user", None), "id", None)
+        if not has_permission(uid, "exec.audit"):
+            bot.reply_to(m, "Control Plane access denied.")
+            return
         try:
             bot.reply_to(m, _render(get_project_context(uid)))
         except Exception as exc:
