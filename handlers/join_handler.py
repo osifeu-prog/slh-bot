@@ -40,7 +40,8 @@ def _persist_referral(uid, ref_uid):
         referral = user.setdefault("referral", {})
         existing = referral.get("referred_by")
         if existing:
-            return str(existing) == ref_uid
+            # An already-persisted relationship must never trigger a second reward.
+            return False
 
         referral["referred_by"] = ref_uid
         referral["referred_at"] = __import__("datetime").datetime.utcnow().isoformat()
