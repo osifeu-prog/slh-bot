@@ -96,8 +96,8 @@ jobs:
               'source="telegram_stars_item"',
               'source="telegram_stars"',
               'reference=charge_id',
-              'status="RECOVERABLE"',
-              'status="FULFILLED"',
+              '"status": "RECOVERABLE"',
+              '"status": "FULFILLED"',
           ]:
               assert literal in stars + stars_authority + payment, f"missing payment invariant: {literal}"
 
