@@ -85,3 +85,31 @@ def atomic_update(mutate_fn):
         finally:
             if HAS_FCNTL:
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
+
+
+def atomic_json_update(filename, mutate_fn, default=None):
+    """Atomically update a JSON file under state/ with its own lock."""
+    path = filename if os.path.isabs(filename) else os.path.join("state", filename)
+    lock_path = path + ".lock"
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(lock_path, "a+", encoding="utf-8") as lockfile:
+        if HAS_FCNTL:
+            fcntl.flock(lockfile, fcntl.LOCK_EX)
+        try:
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    data = json.load(f)
+            else:
+                data = default if default is not None else {}
+            result = mutate_fn(data)
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, path)
+            return result
+        finally:
+            if HAS_FCNTL:
+                fcntl.flock(lockfile, fcntl.LOCK_UN)
+
