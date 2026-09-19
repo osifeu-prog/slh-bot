@@ -1,4 +1,4 @@
-from SLH_GATEWAY import SLHGateway
+from SLH_GATEWAY import SLHGateway\nfrom core.authority import has_permission
 
 gateway = SLHGateway()
 
