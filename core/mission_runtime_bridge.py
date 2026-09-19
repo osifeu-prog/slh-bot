@@ -1,76 +1,53 @@
-import state_manager
+"""Compatibility facade for the canonical mission runtime authority."""
 
 from core.mission_lifecycle import MissionLifecycleService
-from core.mission_reward_service import issue_mission_reward
-from core.kernel import SLHKernel
-from core.runtime import Runtime
-from core.agent_factory import load_agents_into_kernel
+from core.mission_runtime_authority import execute_mission_authority
 from core.mission_state import MissionStateNormalizer
-
-
-def _resolve_assigned_agent(assigned_agent_id, manifest):
-    """Prefer canonical DB identity; use the legacy manifest only as fallback."""
-    target_id = str(assigned_agent_id)
-    try:
-        db = state_manager.load_db()
-        record = (db.get("agents", {}) or {}).get(target_id)
-        if isinstance(record, dict):
-            return record
-    except Exception:
-        pass
-    return MissionLifecycleService(".").find_agent(manifest, target_id)
+from core.mission_reward_service import issue_mission_reward
 
 
 def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None):
-    if kernel is None:
-        kernel = SLHKernel()
-        load_agents_into_kernel(kernel)
-    if runtime is None:
-        runtime = Runtime(kernel)
+    """Keep legacy callers on the canonical Mission Runtime authority.
 
+    The bridge must not create a second Kernel/Runtime plane. Optional runtime
+    injection is retained only for isolated tests and is passed to the authority.
+    """
     lifecycle = MissionLifecycleService(root)
-    board, manifest = lifecycle.load_state()
+    board, _manifest = lifecycle.load_state()
     mission = lifecycle.find_mission(board, mission_id)
     if mission is None:
         return {"status": "missing", "mission_id": str(mission_id)}
 
     status = MissionStateNormalizer.normalize(mission.get("status"))
-    assigned_agent_id = mission.get("assigned_to")
-    if status == "open":
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "mission is open, assign an agent first"}
-    if status not in ("assigned", "executed"):
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": f"mission status is {status}, cannot execute"}
-    if not assigned_agent_id:
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "no assigned_agent"}
-
-    agent = _resolve_assigned_agent(assigned_agent_id, manifest)
-    if agent is None:
-        return {"status": "blocked", "mission_id": str(mission_id), "reason": "assigned agent not found in canonical DB or legacy manifest"}
-
-    runtime_class = agent.get("runtime_class")
-    if not runtime_class:
-        return {"status": "blocked", "mission_id": str(mission_id), "assigned_agent_id": str(assigned_agent_id), "reason": "assigned agent has no runtime_class"}
-
-    agent_name = agent.get("name") or str(assigned_agent_id)
-    event = {"cmd": f"{agent_name}:execute_mission", "mission_id": str(mission_id), "source": "mission_runtime_bridge"}
-    execution_result = runtime.execute(event)
-    data = execution_result.get("data") if isinstance(execution_result, dict) else None
-    semantic_ok = isinstance(data, dict) and execution_result.get("type") == "agent" and data.get("execution_status") == "success" and data.get("mission_id") == str(mission_id)
-
-    if not semantic_ok:
-        return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": {"status": "execution_failed", "reason": "runtime_execution_semantics_not_verified"}, "reward": {"status": "not_attempted"}}
-
+    execution = {"status": "already_executed"}
     if status == "assigned":
-        execution_state = lifecycle.execute_mission(mission_id=mission_id)
-        if execution_state.get("status") != "executed":
-            return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": execution_state, "reward": {"status": "not_attempted"}}
+        execution = execute_mission_authority(
+            mission_id=str(mission_id),
+            root=root,
+            runtime=runtime,
+        )
+        if execution.get("status") != "executed":
+            return execution
+    elif status != "executed":
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "reason": "mission_not_executable",
+            "current_status": status,
+        }
 
-    completion = lifecycle.complete_mission(mission_id=mission_id)
-    final_board, _ = lifecycle.load_state()
+    completion = lifecycle.complete_mission(mission_id=str(mission_id))
+    final_board, _manifest = lifecycle.load_state()
     final_mission = lifecycle.find_mission(final_board, mission_id)
+    reward = {"status": "not_attempted"}
     if completion.get("status") == "completed" or completion.get("reason") == "mission_already_completed":
-        reward = issue_mission_reward(final_mission, mission_id=mission_id) if final_mission else {"status": "blocked", "reason": "MISSION_NOT_FOUND"}
-    else:
-        reward = {"status": "not_attempted", "reason": completion.get("reason", "completion_failed")}
+        if final_mission is not None:
+            reward = issue_mission_reward(final_mission, mission_id=str(mission_id))
 
-    return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": {"status": completion.get("status"), "completion": completion}, "reward": reward}
+    return {
+        "status": "completed" if completion.get("status") == "completed" else "blocked",
+        "mission_id": str(mission_id),
+        "execution_result": execution,
+        "lifecycle_result": {"status": completion.get("status"), "completion": completion},
+        "reward": reward,
+    }
