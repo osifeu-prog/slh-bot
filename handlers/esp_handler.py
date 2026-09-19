@@ -121,7 +121,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
-        if str(dev.get("owner")) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id):
             bot.reply_to(msg, "not authorized")
             return
 
@@ -176,7 +176,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
-        if str(dev.get("owner")) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id):
             bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
@@ -201,7 +201,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
-        if str(dev.get("owner")) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id):
             bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
@@ -229,7 +229,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
             return
-        if str(dev.get("owner")) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id):
             bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
         try:
