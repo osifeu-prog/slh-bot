@@ -91,22 +91,24 @@ def register(bot):
             return
 
         reward = result.get("reward", {})
-        if stage == 1:
+        course_reward = result.get("course_reward", {})
+        lesson_points = int(reward.get("points", 0) or 0)
+        course_points = int(course_reward.get("points", 0) or 0)
+
+        if course_points:
             bot.reply_to(
                 m,
-                "🎉 שיעור 1 הושלם!\n\n"
-                f"⭐ נקודות: {reward.get('points', 0)}\n"
+                "🎉 הקורס הושלם!\n\n"
+                f"⭐ נקודות שיעור: {lesson_points}\n"
+                f"🏆 בונוס סיום קורס: {course_points} נקודות\n"
                 f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
-                "🔗 השלב הבא: שתף את קישור ה-Referral האישי שלך.\n"
-                "אחר כך אפשר לעבור ל-Credits דרך Telegram Stars.\n\n"
-                "📎 פתח /start כדי לראות את הקישור האישי.\n"
-                "💎 /pay — Credits דרך Telegram Stars"
+                "כל הנקודות נזקפו לחשבונך. אפשר להמשיך לקורס הבא דרך /academy."
             )
         else:
             bot.reply_to(
                 m,
                 "🎉 שיעור הושלם!\n\n"
-                f"⭐ נקודות: {reward.get('points', 0)}\n"
+                f"⭐ נקודות: {lesson_points}\n"
                 f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
                 "📊 /academy_progress"
             )
