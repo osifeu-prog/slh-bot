@@ -27,18 +27,27 @@ Updated: 2026-09-19
 - [ ] Map existing API/Postgres Device Registry.
 - [ ] Prove or implement canonical Agent↔Device binding.
 
-## Track D — Product release
+## Track D — Product release / integration
 
+- [ ] Promote the Mini App tokenomics authentication fix from `main` to production (Railway deployment currently `NEEDS_APPROVAL`).
 - [ ] Consolidate Website + Mini App + intake AI + Bot Factory entry points.
 - [ ] Verify public domains and production routing.
 - [ ] Build release checklist from the same canonical state.
 - [ ] Publish only features whose runtime, data path, and rollback are verified.
 
-## Current deployment blocker
+## Current deployment state
 
-The canonical `slh-cloud-bot` Railway service is connected to `osifeu-prog/slh-bot` / `main`, but its previous build watcher was `__NEVER_BUILD__/**`, which prevented Git-triggered builds. The watcher has been corrected to `**`.
+The old `slh-cloud-bot` watcher blocker was corrected; its watch patterns are no longer `__NEVER_BUILD__/**`. Do not create a duplicate service or rotate production secrets merely to bypass a deployment state.
 
-The service's latest historical deployment was `SKIPPED` without a build snapshot, so Railway's redeploy operation cannot copy it. A fresh Git-source deployment is still required to prove that the merged `main` commit is running in the existing service. Do not create a duplicate service or change production secrets merely to bypass this.
+The canonical `web` service currently has a pending Railway deployment for the Mini App auth fix. It has no snapshot yet and cannot be redeployed through the snapshot-based redeploy path while it remains `NEEDS_APPROVAL`.
+
+## Next exact actions
+
+1. Resolve the explicit Railway approval for the Mini App auth fix.
+2. Verify the resulting production deployment and Mini App `/api/v1/tokenomics` path.
+3. Map `slh-api` identity/device ownership against the canonical bot state.
+4. Identify the actual Website → AI intake → Bot Factory routing and ownership.
+5. Record the unified map and release readiness state in Control Plane docs.
 
 ## Rule
 
