@@ -44,18 +44,34 @@ def register(bot):
 
         academy_manager.start_course(uid, cid)
         progress = academy_manager.get_course(uid, cid)
-        current = int(progress.get("stage", 0) or 0) + 1
+        current = int(progress.get("stage", 0) or 0)
         total = len(course.get("stages", []))
-        if total:
-            current = min(current, total)
+        completed = set(progress.get("completed", []))
 
         bot.answer_callback_query(call.id)
+
+        if total and current >= total and total in completed:
+            bot.send_message(
+                call.message.chat.id,
+                f"🎓 {course['title']}\n\n"
+                "✅ הקורס הושלם במלואו!\n\n"
+                "כל נקודות הלימוד נזקפו לחשבונך. אפשר להמשיך לקורס הבא.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(
+                    "🎓 חזרה ל-Academy", callback_data="slh_academy"
+                )]])
+            )
+            return
+
+        next_stage = current + 1
+        if total:
+            next_stage = min(next_stage, total)
+
         bot.send_message(
             call.message.chat.id,
             f"📘 {course['title']}\n\n"
-            f"השיעור הבא שלך: שלב {current}\n\n"
+            f"השיעור הבא שלך: שלב {next_stage}\n\n"
             "לחץ על הכפתור כדי לפתוח את השיעור.",
-            reply_markup=_lesson_keyboard(cid, current)
+            reply_markup=_lesson_keyboard(cid, next_stage)
         )
 
     @bot.callback_query_handler(
