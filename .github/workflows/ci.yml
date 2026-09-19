@@ -123,3 +123,14 @@ jobs:
           assert "buildLogs" in deploy
           print("Control Plane Railway ops contract: OK")
           PY
+
+      - name: Verify economy mutation guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          policy = Path("core/exec_policy.py").read_text(encoding="utf-8")
+          assert 'token_balance' in policy
+          assert 'Raw wallet token balances may only be mutated by canonical application authorities.' in policy
+          assert 'def is_dangerous(cmd):' in policy
+          print("Direct token balance mutation guard: OK")
+          PY
