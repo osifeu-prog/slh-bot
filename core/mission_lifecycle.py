@@ -699,7 +699,9 @@ class MissionLifecycleService:
         mission_id,
         description,
         reward=0,
-        execution=None
+        action_type=None,
+        action_payload=None,
+        idempotency_key=None
     ):
 
         from datetime import datetime, timezone
@@ -799,7 +801,14 @@ class MissionLifecycleService:
                 "created_at":
                     now.isoformat(),
 
-                **({"execution": execution} if execution is not None else {}),
+                "action_type":
+                    action_type,
+
+                "action_payload":
+                    dict(action_payload or {}),
+
+                "idempotency_key":
+                    idempotency_key,
 
             }
 
@@ -841,8 +850,14 @@ class MissionLifecycleService:
                         "created_at"
                     ),
 
-                "execution":
-                    mission.get("execution"),
+                "action_type":
+                    mission.get("action_type"),
+
+                "action_payload":
+                    mission.get("action_payload"),
+
+                "idempotency_key":
+                    mission.get("idempotency_key"),
 
                 "backup":
                     str(backup_path),
