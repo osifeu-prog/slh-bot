@@ -52,3 +52,28 @@ jobs:
           assert resolve_item_id("agentos", items) == "agent_os"
           print("Store alias resolver: OK")
           PY
+
+
+      - name: Verify rewards and academy contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from core.tokenomics import rewards_snapshot
+
+          rewards = rewards_snapshot()
+          assert rewards["join_points"] == 1000
+          assert rewards["referral_points"] == 10
+          assert rewards["lesson_complete_points"] == 25
+          assert rewards["course_complete_points"] == 250
+          assert rewards["airdrop_slh"] == 100000
+
+          academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
+          assert "course_complete:" in academy
+          assert 'rewards_snapshot()["course_complete_points"]' in academy
+          assert 'idempotency_key=f"{uid}:course_complete:{course_id}"' in academy
+
+          add_points = Path("core/profile_manager.py").read_text(encoding="utf-8")
+          assert "points_ledger" in add_points
+          assert "idempotency_key" in add_points
+          print("Rewards + Academy contract: OK")
+          PY
