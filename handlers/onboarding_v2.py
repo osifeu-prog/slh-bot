@@ -122,6 +122,12 @@ def register(bot, context=None):
             if ref_uid and ref_uid != user_id and user_exists(ref_uid):
                 _set_pending_referral(user_id, ref_uid)
 
+        # Existing accounts should resume their personal system directly.
+        # Do this before the new-user Alpha onboarding card is rendered.
+        if not is_new and not is_owner:
+            send_dashboard(m.chat.id, user_id)
+            return
+
         has_valid_invite = _has_valid_invite(user_id)
         if not can_start_onboarding(
             is_owner=is_owner,
