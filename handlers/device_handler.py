@@ -18,40 +18,82 @@ def save_devices(data):
 def generate_device_id(name):
     return f"DEV_{name.upper().replace(' ', '_')}_{int(time.time())}"
 
+def _extract_hardware_uuid(text):
+    match = re.search(
+        r"(?i)(?:hardware_uuid=|uuid=)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+        text or "",
+    )
+    return match.group(1).upper() if match else None
+
 def register_device(bot, m):
     parts = m.text.split(maxsplit=2)
     if len(parts) < 2:
-        bot.reply_to(m, "Usage: /device_register <name> [description]")
+        bot.reply_to(m, "Usage: /device_register <name> [description] [hardware_uuid=UUID]")
         return
     name = parts[1]
-    desc = parts[2] if len(parts) > 2 else "ESP32 Device"
-    data = load_devices()
-    devices = data["devices"]
+    tail = parts[2] if len(parts) > 2 else ""
+    hardware_uuid = _extract_hardware_uuid(tail)
+    desc = re.sub(
+        r"(?i)(?:hardware_uuid=|uuid=)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        "",
+        tail,
+    ).strip() or "ESP32 Device"
     owner_id = str(m.from_user.id)
     normalized_name = name.strip().casefold()
-    for did, d in devices.items():
-        existing_owner = str(d.get("owner_id", d.get("owner", "")))
-        existing_name = str(d.get("name", "")).strip().casefold()
-        if existing_owner == owner_id and existing_name == normalized_name:
-            bot.reply_to(m, f"ℹ️ Device '{name}' already registered (ID: {did})")
-            return
-    # Stable identity: hardware UUID when available; legacy Telegram registration
-    # remains owner+name idempotent.
-    device_id = generate_device_id(name)
-    devices[device_id] = {
-        "name": name,
-        "description": desc,
-        "type": "esp32",
-        "status": "offline",
-        "capabilities": ["sensor", "wallet", "signing"],
-        "registered": time.time(),
-        "last_seen": None,
-        "owner": owner_id,
-        "owner_id": owner_id,
-        "device_id": device_id,
-        "permissions": ["receive_tasks", "report_status"]
-    }
-    save_devices(data)
+    result = {}
+
+    def mutate(data):
+        devices = data.setdefault("devices", {})
+        for did, d in devices.items():
+            existing_owner = str(d.get("owner_id", d.get("owner", "")))
+            existing_name = str(d.get("name", "")).strip().casefold()
+            existing_uuid = _extract_hardware_uuid(str(d.get("hardware_uuid", "")))
+            if hardware_uuid and existing_uuid == hardware_uuid:
+                if existing_owner and existing_owner != owner_id and not is_owner(owner_id):
+                    result["error"] = "❌ This hardware UUID is already registered to another owner"
+                    return
+                result["device_id"] = did
+                result["existing"] = True
+                return
+            if existing_owner == owner_id and existing_name == normalized_name:
+                result["device_id"] = did
+                result["existing"] = True
+                return
+
+        device_id = generate_device_id(name)
+        while device_id in devices:
+            device_id = generate_device_id(name)
+            time.sleep(0.001)
+        devices[device_id] = {
+            "name": name,
+            "description": desc,
+            "type": "esp32",
+            "status": "offline",
+            "capabilities": ["sensor", "wallet", "signing"],
+            "registered": time.time(),
+            "last_seen": None,
+            "owner": owner_id,
+            "owner_id": owner_id,
+            "device_id": device_id,
+            "permissions": ["receive_tasks", "report_status"],
+        }
+        if hardware_uuid:
+            devices[device_id]["hardware_uuid"] = hardware_uuid
+        result["device_id"] = device_id
+        result["existing"] = False
+
+    state_manager.atomic_json_update(
+        "devices.json",
+        mutate,
+        default={"devices": {}},
+    )
+    if result.get("error"):
+        bot.reply_to(m, result["error"])
+        return
+    device_id = result["device_id"]
+    if result.get("existing"):
+        bot.reply_to(m, f"ℹ️ Device '{name}' already registered (ID: {device_id})")
+        return
     bot.reply_to(m, f"✅ Device '{name}' registered\n🆔 ID: {device_id}")
 
 def list_devices(bot, m):
