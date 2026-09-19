@@ -7,7 +7,8 @@ import telebot
 from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 
-app = Flask(__name__)\n
+app = Flask(__name__)
+
 
 def control_plane_uid():
     init_data = request.headers.get("X-Telegram-Init-Data", "")
@@ -16,7 +17,8 @@ def control_plane_uid():
     except (ValueError, RuntimeError):
         return None
     return uid if has_permission(uid, "exec.audit") else None
-\n
+
+
 from core.control_center_api import register_control_center
 from core.telegram_webapp_auth import validate_init_data
 from core.authority import has_permission
@@ -117,7 +119,8 @@ LOG_FILE.parent.mkdir(exist_ok=True)
 
 def log(msg):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}
+")
     print(msg)
 
 try:
