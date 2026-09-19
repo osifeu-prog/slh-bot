@@ -22,7 +22,7 @@ def _owned_agents(owner_id=None):
     }
 
 
-def get_project_context(owner_id=None):
+def get_project_context(owner_id=None, project_id=None):
     """Return a safe, read-only project graph backed by existing authorities."""
     infra = get_infrastructure_snapshot()
     canonical = infra.get("canonical", {})
@@ -47,6 +47,7 @@ def get_project_context(owner_id=None):
             "railway_service": canonical.get("railway_service"),
         },
         "owner_id": str(owner_id) if owner_id is not None else None,
+        "project_id": project_id or "slh-canonical",
         "permissions": {
             "scope": "owner" if owner_id is None else "owner-scoped",
             "mutations": "not exposed by project context",
@@ -54,6 +55,7 @@ def get_project_context(owner_id=None):
         "ai_session": {
             "mode": "simple",
             "context_ready": True,
+            "project_id": project_id or "slh-canonical",
         },
         "agents": {
             "count": len(agents),
