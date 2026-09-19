@@ -1,5 +1,6 @@
 import json, os, time, re
 import state_manager
+from core.authority import is_owner
 
 def load_devices():
     try:
@@ -107,7 +108,7 @@ def delete_device(bot, m):
     device = devices[device_id]
     owner_id = str(device.get("owner_id", device.get("owner", "")))
     caller_id = str(m.from_user.id)
-    if owner_id and owner_id != caller_id and caller_id != "8789977826":
+    if owner_id and owner_id != caller_id and not is_owner(caller_id):
         bot.reply_to(m, "❌ You do not own this device")
         return
     name = device.get("name", device_id)
