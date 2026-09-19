@@ -48,26 +48,13 @@ def unlock_position(position_id):
 
 
 def force_unlock_position(position_id, uid=None):
+    """DEPRECATED - unsafe legacy forced-unlock path.
+
+    Forced unlocks must have a dedicated atomic refund/unlock authority that
+    updates the wallet, position and ledger together. This legacy function
+    only changed the position and is therefore disabled.
     """
-    Owner-only forced unlock for exceptional cases (e.g. refund).
-    Keeps the same atomic state contract as unlock_position.
-    """
-    from core.authority import is_owner
-
-    if uid is None:
-        uid = "8789977826"
-
-    if not is_owner(uid):
-        raise PermissionError("OWNER_ONLY")
-
-    def mutate(db):
-        pos = db.get("stake_positions", {}).get(position_id)
-        if not pos:
-            raise KeyError("position not found")
-
-        pos["status"] = "unlocked"
-        pos["unlocked_at"] = time.time()
-        pos["unlock_reason"] = "force_unlock_by_owner"
-        return pos
-
-    return state_manager.atomic_update(mutate)
+    raise RuntimeError(
+        "force_unlock_position is deprecated and unsafe: use a dedicated "
+        "atomic refund/unlock authority instead."
+    )
