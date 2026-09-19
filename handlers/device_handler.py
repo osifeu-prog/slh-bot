@@ -2,7 +2,7 @@ import json, os, time, re
 
 def load_devices():
     try:
-        data = state_manager.atomic_json_update("devices.json", lambda value: value, default={"devices": {}})
+        data = state_manager.load_json("devices.json", default={"devices": {}})
         return data if isinstance(data, dict) else {"devices": {}}
     except Exception:
         return {"devices": {}}
@@ -25,10 +25,13 @@ def register_device(bot, m):
     desc = parts[2] if len(parts) > 2 else "ESP32 Device"
     data = load_devices()
     devices = data["devices"]
-    # בדוק כפילות
+    owner_id = str(m.from_user.id)
+    normalized_name = name.strip().casefold()
     for did, d in devices.items():
-        if d.get("name") == name:
-            bot.reply_to(m, f"❌ Device '{name}' already exists (ID: {did})")
+        existing_owner = str(d.get("owner_id", d.get("owner", "")))
+        existing_name = str(d.get("name", "")).strip().casefold()
+        if existing_owner == owner_id and existing_name == normalized_name:
+            bot.reply_to(m, f"ℹ️ Device '{name}' already registered (ID: {did})")
             return
     device_id = generate_device_id(name)
     devices[device_id] = {
@@ -39,7 +42,9 @@ def register_device(bot, m):
         "capabilities": ["sensor", "wallet", "signing"],
         "registered": time.time(),
         "last_seen": None,
-        "owner": str(m.from_user.id),
+        "owner": owner_id,
+        "owner_id": owner_id,
+        "device_id": device_id,
         "permissions": ["receive_tasks", "report_status"]
     }
     save_devices(data)
@@ -96,7 +101,13 @@ def delete_device(bot, m):
     if device_id not in devices:
         bot.reply_to(m, f"❌ Device '{device_id}' not found")
         return
-    name = devices[device_id].get("name", device_id)
+    device = devices[device_id]
+    owner_id = str(device.get("owner_id", device.get("owner", "")))
+    caller_id = str(m.from_user.id)
+    if owner_id and owner_id != caller_id and caller_id != "8789977826":
+        bot.reply_to(m, "❌ You do not own this device")
+        return
+    name = device.get("name", device_id)
     del devices[device_id]
     save_devices(data)
     bot.reply_to(m, f"✅ Device '{name}' ({device_id}) deleted successfully")
@@ -114,8 +125,17 @@ def device_heartbeat(bot, m):
     if device_id not in devices:
         bot.reply_to(m, f"❌ Device '{device_id}' not found")
         return
-    devices[device_id]["status"] = status
-    devices[device_id]["last_seen"] = time.time()
+    device = devices[device_id]
+    owner_id = str(device.get("owner_id", device.get("owner", "")))
+    caller_id = str(m.from_user.id)
+    if owner_id and owner_id != caller_id and caller_id != "8789977826":
+        bot.reply_to(m, "❌ You do not own this device")
+        return
+    device.setdefault("device_id", device_id)
+    if owner_id:
+        device.setdefault("owner_id", owner_id)
+    device["status"] = status
+    device["last_seen"] = time.time()
     save_devices(data)
     bot.reply_to(m, f"✅ Device '{device_id}' heartbeat received. Status: {status}")
 
