@@ -1,6 +1,8 @@
 import json
 import sys
 from pathlib import Path
+
+from state_manager import atomic_json_update
 import paho.mqtt.client as mqtt
 
 from core.mqtt_config import BROKER as _MB
@@ -33,12 +35,12 @@ def on_message(client, userdata, msg):
     print("RX", msg.topic, payload, flush=True)
 
     try:
-        data = json.loads(DEVICES_PATH.read_text(encoding="utf-8"))
-        devices = data.setdefault("devices", {})
-        dev = devices.setdefault(device_id, {})
-        dev["status"] = "online"
-        dev["last_message"] = payload
-        DEVICES_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        def mutate(data):
+            devices = data.setdefault("devices", {})
+            dev = devices.setdefault(device_id, {})
+            dev["status"] = "online"
+            dev["last_message"] = payload
+        atomic_json_update("devices.json", mutate, default={"devices": {}})
         print("DEVICE_UPDATED", device_id, "online", flush=True)
     except Exception as e:
         print("UPDATE_ERR", e, flush=True)
