@@ -7,7 +7,6 @@ BRANCH = 'main'
 BASE_DIR = '/app'
 
 WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive', 'store'}
-# mini_app.html is intentionally excluded from automated git synchronization.
 WHITELIST_FILES = {
     'projects.json', 'bot_factory.py', 'bot_gateway.py', 'doctor_handler.py',
     'admin_handler.py', 'webapp.py', 'dashboard.html', 'courses.json',
