@@ -30,7 +30,7 @@ class FakeMessage:
 
 
 def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
-    uid = "join-isolated-991"
+    uid = "123456790"
     db = {"users": {}, "pending_referrals": {}}
     agents = []
     rewards = []
@@ -128,6 +128,6 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
     assert agents[0]["name"] == f"user{uid}-Agent"
 
     assert any(r["reason"] == "welcome_bonus" for r in rewards)
-    assert ("join-isolated-991", "bitcoin_mastery") in courses
+    assert ("123456790", "bitcoin_mastery") in courses
     assert "נרשמת בהצלחה" in group.replies[-1]["text"]
     assert "שיעור 1" in group.replies[-1]["text"]
