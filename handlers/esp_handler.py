@@ -1,22 +1,15 @@
 import json
-import os
 import time
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
-try:
-    import fcntl
-    HAS_FCNTL = True
-except ImportError:
-    HAS_FCNTL = False
 
 from core.mqtt_config import BROKER as _MB
 MQTT_BROKER = _MB
 from core.mqtt_config import PORT as _MP
 MQTT_PORT = _MP
+from core import state_manager
 
-DEVICES_FILE = "state/devices.json"
-_DEVICES_LOCK_PATH = DEVICES_FILE + ".lock"
 
 
 def load_db():
@@ -28,37 +21,20 @@ def load_db():
 
 
 def load_devices():
-    try:
-        with open(DEVICES_FILE, "r", encoding="utf-8") as f:
-            return json.load(f).get("devices", {})
-    except Exception:
-        return {}
-
-
-def save_devices(devices):
-    try:
-        with open(DEVICES_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except Exception:
-        data = {"devices": {}}
-    data["devices"] = devices
-    with open(DEVICES_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    data = state_manager.load_json("devices.json", default={"devices": {}})
+    return data.get("devices", {}) if isinstance(data, dict) else {}
 
 
 def atomic_device_update(mutate_fn):
-    os.makedirs("state", exist_ok=True)
-    with open(_DEVICES_LOCK_PATH, "w") as lockfile:
-        if HAS_FCNTL:
-            fcntl.flock(lockfile, fcntl.LOCK_EX)
-        try:
-            devices = load_devices()
-            result = mutate_fn(devices)
-            save_devices(devices)
-            return result
-        finally:
-            if HAS_FCNTL:
-                fcntl.flock(lockfile, fcntl.LOCK_UN)
+    def _mutate(data):
+        devices = data.setdefault("devices", {})
+        return mutate_fn(devices)
+
+    return state_manager.atomic_json_update(
+        "devices.json",
+        _mutate,
+        default={"devices": {}},
+    )
 
 
 def register_esp_handler(bot):
