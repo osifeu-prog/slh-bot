@@ -34,6 +34,8 @@ def register_device(bot, m):
         if existing_owner == owner_id and existing_name == normalized_name:
             bot.reply_to(m, f"ℹ️ Device '{name}' already registered (ID: {did})")
             return
+    # Stable identity: hardware UUID when available; legacy Telegram registration
+    # remains owner+name idempotent.
     device_id = generate_device_id(name)
     devices[device_id] = {
         "name": name,
