@@ -1,4 +1,4 @@
-from core.project_context import get_project_context
+from core.project_context import get_project_context\nfrom core.authority import has_permission
 
 
 def _render(ctx):
