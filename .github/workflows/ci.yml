@@ -109,3 +109,17 @@ jobs:
           assert "idempotency_key" in add_points
           print("Rewards + Academy contract: OK")
           PY
+      - name: Verify Control Plane Railway ops contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          deploy = Path("handlers/deploy_handler.py").read_text(encoding="utf-8")
+          assert '@bot.message_handler(commands=["deploy", "redeploy"])' in deploy
+          assert '@bot.message_handler(commands=["logs"])' in deploy
+          assert "serviceInstanceRedeploy" in deploy
+          assert "serviceInstanceDeployV2" in deploy
+          assert "deploymentLogs" in deploy
+          assert "buildLogs" in deploy
+          print("Control Plane Railway ops contract: OK")
+          PY
