@@ -119,8 +119,7 @@ LOG_FILE.parent.mkdir(exist_ok=True)
 
 def log(msg):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}
-")
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}\n")
     print(msg)
 
 try:
