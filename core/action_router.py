@@ -106,7 +106,7 @@ def dispatch(action_name: str, uid=None, **kwargs) -> Dict[str, Any]:
                 "active": ctx.get("agents", {}).get("active", 0),
             },
             "services_count": len(ctx.get("services", [])),
-            "health": result if False else ctx.get("health", {}),
+            "health": ctx.get("health", {}),
             "deployments": ctx.get("deployments", {}),
         }
 
