@@ -16,13 +16,25 @@ def load_db():
             "agents": {}, "tasks": {}, "memory": {}, "votes": {}
         }
     with open(DB_FILE, encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    if not isinstance(data, dict) or "users" not in data:
+        raise RuntimeError("load_db: db.json corrupt - refusing to continue")
+    return data
+
 
 def save_db(db):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
+    if not isinstance(db, dict) or "users" not in db:
+        raise ValueError("save_db refused: malformed db")
+    if not db["users"]:
+        raise ValueError("save_db refused: empty users - possible wipe")
+    os.makedirs(os.path.dirname(DB_FILE) or ".", exist_ok=True)
+    tmp = DB_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(db, f, indent=2, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, DB_FILE)
 
-AGENTS_FILE = "state/db.json"
 
 def get_agents():
     from core.agent_state_store import AgentStateStore
