@@ -4,7 +4,16 @@ from core.profile_manager import user_exists
 from core.invite_gate import can_start_onboarding
 import state_manager
 
-user_states = {}\n\n\ndef _is_owner(uid):\n    """Safely compare Telegram owner IDs without crashing isolated tests."""\n    try:\n        return int(str(uid)) == int(str(OWNER_TELEGRAM_ID))\n    except (TypeError, ValueError):\n        return str(uid) == str(OWNER_TELEGRAM_ID)\n
+user_states = {}
+
+
+def _is_owner(uid):
+    """Safely compare Telegram owner IDs without crashing isolated tests."""
+    try:
+        return int(str(uid)) == int(str(OWNER_TELEGRAM_ID))
+    except (TypeError, ValueError):
+        return str(uid) == str(OWNER_TELEGRAM_ID)
+
 
 
 def _get_pending_referral(uid):
