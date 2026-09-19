@@ -7,9 +7,19 @@ import telebot
 from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__)\n
 
+def control_plane_uid():
+    init_data = request.headers.get("X-Telegram-Init-Data", "")
+    try:
+        uid = validate_init_data(init_data)["uid"]
+    except (ValueError, RuntimeError):
+        return None
+    return uid if has_permission(uid, "exec.audit") else None
+\n
 from core.control_center_api import register_control_center
+from core.telegram_webapp_auth import validate_init_data
+from core.authority import has_permission
 register_control_center(app)
 
 try:
@@ -37,6 +47,8 @@ def health():
 
 @app.route('/api/agents')
 def api_agents():
+    if control_plane_uid() is None:
+        return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
     try:
         from core.agent_registry import STORE
         agents = STORE.get_all()
@@ -47,6 +59,8 @@ def api_agents():
 
 @app.route('/api/devices')
 def api_devices():
+    if control_plane_uid() is None:
+        return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
     try:
         import json
         with open("state/devices.json", encoding="utf-8") as f:
@@ -81,6 +95,8 @@ def api_health():
 
 @app.route('/api/logs')
 def api_logs():
+    if control_plane_uid() is None:
+        return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
     try:
         n = request.args.get('n', 50, type=int)
         log_file = Path("logs/bot_startup.log")
