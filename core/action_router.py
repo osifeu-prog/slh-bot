@@ -21,11 +21,11 @@ class Action:
 
 
 _ACTIONS = {
-    "project": Action("project", "read_only"),
+    "project": Action("project", "read_only", "exec.audit"),
     "status": Action("project", "read_only"),
-    "health": Action("health", "read_only"),
+    "health": Action("health", "read_only", "exec.audit"),
     "agents": Action("agents", "read_only", "agents.view_self"),
-    "services": Action("services", "read_only"),
+    "services": Action("services", "read_only", "exec.audit"),
     "deploy": Action("deploy", "mutation", "exec.audit"),
     "redeploy": Action("redeploy", "mutation", "exec.audit"),
 }
