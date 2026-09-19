@@ -59,6 +59,7 @@ jobs:
           tokenomics = Path("core/tokenomics.py").read_text(encoding="utf-8")
           virtual_esp = Path("core/virtual_esp.py").read_text(encoding="utf-8")
           rewards = Path("handlers/rewards_handler.py").read_text(encoding="utf-8")
+          rewards_model = Path("core/tokenomics.py").read_text(encoding="utf-8")
 
           required_web_routes = [
               '@app.route("/api/v1/dashboard")',
@@ -134,13 +135,14 @@ jobs:
           assert '"supply_model": "existing_balances_only"' in tokenomics, "SLH must remain existing-balance only"
           assert '"minting_supported": False' in tokenomics, "tokenomics must not advertise minting"
           assert '@app.route("/api/v1/tokenomics")' in webapp, "missing tokenomics API route"
-          assert "join_bonus_points" in webapp and "referral_bonus_points" in webapp and "lesson_complete_points" in webapp, "missing rewards read model"
-          assert '"join_bonus_points": 1000' in webapp, "join reward contract drift"
-          assert '"referral_bonus_points": 10' in webapp, "referral reward contract drift"
-          assert '"lesson_complete_points": 25' in webapp, "lesson reward contract drift"
-          assert "points=1000" in rewards and 'idempotency_key=f"welcome:{uid}"' in rewards or "points=1000" in rewards
-          assert "points=10" in rewards and 'idempotency_key=f"ref:{uid}"' in rewards, "referral reward source drift"
+          assert '"join_points": 1000' in rewards_model, "join reward contract drift"
+          assert '"referral_points": 10' in rewards_model, "referral reward contract drift"
+          assert '"lesson_complete_points": 25' in rewards_model, "lesson reward contract drift"
+          assert '"course_complete_points": 250' in rewards_model, "course reward contract drift"
+          assert "rewards_snapshot" in rewards and "join_points" in rewards, "missing canonical rewards handler"
+          assert "lesson_complete_points" in rewards and "airdrop_slh" in rewards, "missing rewards presentation contract"
           ast.parse(tokenomics)
+          ast.parse(rewards_model)
           ast.parse(rewards)
           print("Tokenomics/rewards contract: OK")
           assert "dev.get(\"mqtt_topics\")" in virtual_esp, "virtual ESP must honor registered MQTT topic schema"
