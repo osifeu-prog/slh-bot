@@ -161,8 +161,7 @@ def register(bot):
             lines.append(
                 f"• {name} -> {t['railway_project']}/{t['service']} [{t.get('class', 'unknown')}]"
             )
-        bot.reply_to(m, "
-".join(lines))
+        bot.reply_to(m, "\n".join(lines))
 
     @bot.message_handler(commands=["deploy", "redeploy"])
     def deploy_cmd(m):
@@ -185,8 +184,7 @@ def register(bot):
                     m,
                     "project/service not found: "
                     + (target_arg or "slh_main")
-                    + "
-Use /projects",
+                    + "\nUse /projects",
                 )
             return
 
@@ -297,8 +295,7 @@ Use /projects",
                 message = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", str(entry.get("message", ""))).strip()
                 for line in message.splitlines() or [""]:
                     lines.append(f"{ts} {sev} {line[:380]}")
-            text = "
-".join(lines)
+            text = "\n".join(lines)
             bot.reply_to(m, text[:3900])
         except Exception as exc:
             bot.reply_to(m, f"logs failed: {type(exc).__name__}: {str(exc)[:300]}")
