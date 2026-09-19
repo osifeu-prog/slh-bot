@@ -97,6 +97,13 @@ def route(text, uid=None):
         return msg
 
     intent = detect_intent(text)
+
+    # Build canonical project context for every AI session without exposing secrets.
+    try:
+        from core.project_context import get_project_context
+        project_context = get_project_context(uid, "slh-canonical")
+    except Exception:
+        project_context = None
     _explain = ("כיצד", "איך ", "how ", "explain", "what is", "מהו ", "מה היתרון", "תאר", "describe", "write a", "כתוב ")
     tl = text.strip().lower()
     if any(x in tl for x in _explain) and intent in ("missions", "help", "agents", "system", "rewards"):
@@ -194,6 +201,14 @@ def route(text, uid=None):
     if is_system_state_question(text):
         return "ask אינו מוסמך לענות על שאלות מצב מערכת. השתמש בפקודות בדיקה: e או exec (לקריאה) או בדיקות ידניות."
     try:
-        return query_llm_with_context(text, uid=str(uid) if uid is not None else None)
+        enriched = text
+        if project_context:
+            enriched += "\n\n[PROJECT_CONTEXT]\n" + str({
+                "project_id": project_context.get("project_id"),
+                "agents": project_context.get("agents", {}).get("count", 0),
+                "services": len(project_context.get("services", [])),
+                "runtime": project_context.get("runtime", {}).get("running", False),
+            })
+        return query_llm_with_context(enriched, uid=str(uid) if uid is not None else None)
     except Exception:
         return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
