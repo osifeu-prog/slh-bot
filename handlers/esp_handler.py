@@ -8,7 +8,7 @@ from core.mqtt_config import BROKER as _MB
 MQTT_BROKER = _MB
 from core.mqtt_config import PORT as _MP
 MQTT_PORT = _MP
-from core import state_manager
+import state_manager
 
 
 def _device_owner_id(device):
