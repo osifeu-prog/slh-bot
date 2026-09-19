@@ -51,6 +51,8 @@ ROLES = {
         "economy.view_self",
         "economy.mutate_self",
         "agents.modify_self",
+        "protection.view_self",
+        "protection.manage_self",
         "public.view",],
     "USER": [
         "public.view",
@@ -58,6 +60,8 @@ ROLES = {
         "economy.view_self",
         "economy.mutate_self",
         "agents.modify_self",
+        "protection.view_self",
+        "protection.manage_self",
     ],
     "UNKNOWN": [
         "public.view",
