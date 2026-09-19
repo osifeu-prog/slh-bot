@@ -224,7 +224,8 @@ def register(bot):
 
             # Start the canonical Academy course before presenting lesson 1.
             try:
-                from core import academy_manager
+                import importlib
+                academy_manager = importlib.import_module("core.academy_manager")
                 academy_manager.start_course(uid, "bitcoin_mastery")
             except Exception as e:
                 print("JOIN ACADEMY START FAILED:", e)
