@@ -35,7 +35,7 @@ def test_existing_user_start_opens_dashboard(monkeypatch):
     import handlers.onboarding_v2 as onboarding
     onboarding = importlib.reload(onboarding)
 
-    uid = "existing-user-123"
+    uid = "123456789"
     db = {
         "users": {
             uid: {
