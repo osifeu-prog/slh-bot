@@ -107,6 +107,13 @@ def unified_system_map():
     return jsonify(get_unified_map()), 200
 
 
+def _no_store(resp):
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
 @app.route("/api/v1/me")
 def investor_me():
     """Return the read-only investor snapshot for the authenticated Telegram user."""
@@ -124,7 +131,7 @@ def investor_me():
             if alpha["global_status"] == "OPEN":
                 alpha["status"] = "OPEN"
         snapshot["alpha_global"] = global_alpha
-        return jsonify(snapshot), 200
+        return _no_store(jsonify(snapshot)), 200
     except ValueError as exc:
         if str(exc) == "USER_NOT_FOUND":
             return jsonify({"error": "USER_NOT_FOUND"}), 404
@@ -200,13 +207,13 @@ def get_wallet(uid):
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {})
 
-    return jsonify({
+    return _no_store(jsonify({
         "name": user.get("name", str(uid)),
         "credits": wallet.get("credits", 0),
         "staked": wallet.get("staked", 0),
         "token_balance": wallet.get("token_balance", 0),
         "ton_wallet": user.get("ton_wallet")
-    })
+    }))
 
 
 @app.route("/api/v1/arcade/award", methods=["POST"])
