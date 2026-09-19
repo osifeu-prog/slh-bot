@@ -115,6 +115,15 @@ Order: Economy sanity → Alpha flag → smoke test → GO. User phrase: “פת
 ## ESP safety
 Historical firmware uses HTTPS against the canonical API for claim/heartbeat/wallet/commands. Physical firmware/device state in Sep 2026 is unknown. Never invoke OTA until hardware, firmware version and device identity are known.
 
+## Control Plane progress (2026-09-19)
+- Added `core/project_context.py` as a read-only composition layer over existing agent, runtime, Railway and deployment authorities; it does not create a second state authority.
+- Added `handlers/project_handler.py` and loaded it from `handlers/loader.py` as `/project` for an owner-scoped project graph.
+- `core/ask_router.py` now attaches a minimal safe canonical project context to AI sessions (`project_id`, agent count, service count, runtime state).
+- `SLH_GATEWAY.py` now routes read-only `status` through the canonical Project Context while retaining legacy module routing for compatibility.
+- `handlers/health_monitor_handler.py` no longer uses hard-coded user balances/service counts; it reads canonical DB/runtime/Control Plane signals.
+- Current latest code commit: `54885f8897e447341723db71d1c2bc8aea824948`.
+- Railway created deployments for these commits but the latest code deployment is `NEEDS_APPROVAL`; do not report these changes as production-live until a `SUCCESS` deployment is verified.
+
 ## Immediate execution queue
 ### P0 — restore usable free AI
 1. Establish canonical Telegram identity for the AI user intake.
