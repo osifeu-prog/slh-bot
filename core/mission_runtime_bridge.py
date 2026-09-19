@@ -2,10 +2,8 @@ import state_manager
 
 from core.mission_lifecycle import MissionLifecycleService
 from core.mission_reward_service import issue_mission_reward
-from core.kernel import SLHKernel
-from core.runtime import Runtime
-from core.agent_factory import load_agents_into_kernel
 from core.mission_state import MissionStateNormalizer
+from core.runtime_service import execute_agent_event
 
 
 def _resolve_assigned_agent(assigned_agent_id, manifest):
@@ -22,12 +20,11 @@ def _resolve_assigned_agent(assigned_agent_id, manifest):
 
 
 def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None):
-    if kernel is None:
-        kernel = SLHKernel()
-        load_agents_into_kernel(kernel)
-    if runtime is None:
-        runtime = Runtime(kernel)
+    """Execute an assigned mission through the canonical runtime service.
 
+    Legacy runtime/kernel injection is intentionally ignored for production
+    execution so missions cannot silently create a second runtime plane.
+    """
     lifecycle = MissionLifecycleService(root)
     board, manifest = lifecycle.load_state()
     mission = lifecycle.find_mission(board, mission_id)
@@ -51,19 +48,74 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
     if not runtime_class:
         return {"status": "blocked", "mission_id": str(mission_id), "assigned_agent_id": str(assigned_agent_id), "reason": "assigned agent has no runtime_class"}
 
+    execution = mission.get("execution")
+    if not isinstance(execution, dict):
+        return {
+            "status": "blocked",
+            "mission_id": str(mission_id),
+            "assigned_agent": agent.get("name") or str(assigned_agent_id),
+            "assigned_agent_id": str(assigned_agent_id),
+            "runtime_class": runtime_class,
+            "reason": "mission_execution_contract_missing",
+        }
+
+    action_type = execution.get("action_type")
+    action_payload = execution.get("action_payload")
+    owner_id = agent.get("owner_id")
+    if not action_type or not isinstance(action_payload, dict):
+        return {"status": "blocked", "mission_id": str(mission_id), "reason": "invalid_mission_execution_contract"}
+    if owner_id is None or str(owner_id).strip() == "":
+        return {"status": "blocked", "mission_id": str(mission_id), "reason": "trusted_owner_not_found"}
+
     agent_name = agent.get("name") or str(assigned_agent_id)
-    event = {"cmd": f"{agent_name}:execute_mission", "mission_id": str(mission_id), "source": "mission_runtime_bridge"}
-    execution_result = runtime.execute(event)
+    idempotency_key = execution.get("idempotency_key") or f"mission:{mission_id}:{action_type}"
+    event = {
+        "cmd": f"{agent_name}:execute_mission",
+        "mission_id": str(mission_id),
+        "owner_id": str(owner_id),
+        "capability": "mission_execution",
+        "action": "execute_mission",
+        "action_type": str(action_type),
+        "action_payload": dict(action_payload),
+        "idempotency_key": str(idempotency_key),
+        "source": "mission_runtime_bridge",
+    }
+    execution_result = execute_agent_event(str(assigned_agent_id), event)
     data = execution_result.get("data") if isinstance(execution_result, dict) else None
-    semantic_ok = isinstance(data, dict) and execution_result.get("type") == "agent" and data.get("execution_status") == "success" and data.get("mission_id") == str(mission_id)
+    semantic_ok = (
+        isinstance(data, dict)
+        and execution_result.get("type") == "agent"
+        and data.get("execution_status") == "success"
+        and data.get("mission_id") == str(mission_id)
+        and data.get("verified") is True
+        and bool(data.get("evidence"))
+    )
 
     if not semantic_ok:
-        return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": {"status": "execution_failed", "reason": "runtime_execution_semantics_not_verified"}, "reward": {"status": "not_attempted"}}
+        return {
+            "status": "execution_failed",
+            "mission_id": str(mission_id),
+            "assigned_agent": agent_name,
+            "assigned_agent_id": str(assigned_agent_id),
+            "runtime_class": runtime_class,
+            "execution_result": execution_result,
+            "lifecycle_result": {"status": "execution_failed", "reason": "runtime_execution_semantics_not_verified"},
+            "reward": {"status": "not_attempted"},
+        }
 
     if status == "assigned":
-        execution_state = lifecycle.execute_mission(mission_id=mission_id)
+        execution_state = lifecycle.execute_mission(mission_id=mission_id, execution_result=data)
         if execution_state.get("status") != "executed":
-            return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": execution_state, "reward": {"status": "not_attempted"}}
+            return {
+                "status": "execution_failed",
+                "mission_id": str(mission_id),
+                "assigned_agent": agent_name,
+                "assigned_agent_id": str(assigned_agent_id),
+                "runtime_class": runtime_class,
+                "execution_result": execution_result,
+                "lifecycle_result": execution_state,
+                "reward": {"status": "not_attempted"},
+            }
 
     completion = lifecycle.complete_mission(mission_id=mission_id)
     final_board, _ = lifecycle.load_state()
@@ -73,4 +125,13 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
     else:
         reward = {"status": "not_attempted", "reason": completion.get("reason", "completion_failed")}
 
-    return {"mission_id": str(mission_id), "assigned_agent": agent_name, "assigned_agent_id": assigned_agent_id, "runtime_class": runtime_class, "execution_result": execution_result, "lifecycle_result": {"status": completion.get("status"), "completion": completion}, "reward": reward}
+    return {
+        "status": "completed" if completion.get("status") == "completed" else "blocked",
+        "mission_id": str(mission_id),
+        "assigned_agent": agent_name,
+        "assigned_agent_id": assigned_agent_id,
+        "runtime_class": runtime_class,
+        "execution_result": execution_result,
+        "lifecycle_result": {"status": completion.get("status"), "completion": completion},
+        "reward": reward,
+    }
