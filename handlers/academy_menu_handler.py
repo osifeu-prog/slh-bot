@@ -63,12 +63,11 @@ def register(bot):
         func=lambda c: c.data.startswith("slh_lesson_")
     )
     def open_lesson(call):
-        parts = call.data.split("_")
-        if len(parts) != 4:
+        raw = call.data[len("slh_lesson_"):]
+        if "_" not in raw:
             bot.answer_callback_query(call.id, "שיעור לא תקין")
             return
-
-        _, _, course_id, stage_raw = parts
+        course_id, stage_raw = raw.rsplit("_", 1)
         try:
             stage = int(stage_raw)
         except ValueError:
@@ -110,12 +109,11 @@ def register(bot):
         func=lambda c: c.data.startswith("slh_finish_")
     )
     def finish_lesson_callback(call):
-        parts = call.data.split("_")
-        if len(parts) != 4:
+        raw = call.data[len("slh_lesson_"):]
+        if "_" not in raw:
             bot.answer_callback_query(call.id, "שיעור לא תקין")
             return
-
-        _, _, course_id, stage_raw = parts
+        course_id, stage_raw = raw.rsplit("_", 1)
         try:
             stage = int(stage_raw)
         except ValueError:
@@ -141,12 +139,6 @@ def register(bot):
                 callback_data="slh_academy"
             )
         )
-        markup.add(
-            InlineKeyboardButton(
-                "💎 Credits",
-                callback_data="slh_credits"
-            )
-        )
 
         bot.answer_callback_query(call.id, "השיעור הושלם ✓")
         bot.send_message(
@@ -154,7 +146,7 @@ def register(bot):
             "🎉 השיעור הושלם!\n\n"
             f"⭐ נקודות: {reward.get('points', 0)}\n"
             f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
-            "בחר את הצעד הבא:",
+            "הנקודות נזקפו לחשבונך. המשך ל-Academy כדי לפתוח את השיעור הבא:",
             reply_markup=markup
         )
 
