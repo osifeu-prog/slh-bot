@@ -3,6 +3,7 @@ import state_manager
 import hmac
 import json
 import os
+import time
 from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
@@ -19,6 +20,81 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
 
 app = Flask(__name__)
+
+
+_AI_RATE_STATE = {}
+_AI_RATE_WINDOW = 60
+_AI_RATE_LIMIT = 20
+_AI_ALLOWED_ORIGINS = {"https://slh.co.il", "https://slh-nft.com"}
+
+
+def _ai_cors_response(response):
+    origin = request.headers.get("Origin", "")
+    if origin in _AI_ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Telegram-Init-Data"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    return response
+
+
+def _ai_rate_limited(key):
+    now = time.monotonic()
+    bucket = _AI_RATE_STATE.get(key)
+    if bucket is None or now - bucket[0] >= _AI_RATE_WINDOW:
+        _AI_RATE_STATE[key] = [now, 1]
+        return False
+    if bucket[1] >= _AI_RATE_LIMIT:
+        return True
+    bucket[1] += 1
+    return False
+
+
+@app.route("/api/ai/chat", methods=["POST", "OPTIONS"])
+def canonical_ai_chat():
+    """Public AI intake backed by the canonical SLH OS ask router.
+
+    Telegram initData is optional for public website visitors. When supplied,
+    it is server-validated and becomes the only trusted account identity.
+    The JSON user_id field is never trusted for authorization.
+    """
+    if request.method == "OPTIONS":
+        return _ai_cors_response(jsonify({"ok": True})), 204
+
+    init_data = request.headers.get("X-Telegram-Init-Data", "").strip()
+    uid = None
+    if init_data:
+        try:
+            uid = validate_init_data(init_data)["uid"]
+        except (ValueError, RuntimeError):
+            return _ai_cors_response(jsonify({"error": "TELEGRAM_AUTH_INVALID"})), 401
+
+    payload = request.get_json(silent=True) or {}
+    message = str(payload.get("message", "")).strip()
+    lang = str(payload.get("lang", "he")).strip().lower()[:8]
+    if not message:
+        return _ai_cors_response(jsonify({"error": "MISSING_MESSAGE"})), 400
+    if len(message) > 2000:
+        return _ai_cors_response(jsonify({"error": "MESSAGE_TOO_LONG"})), 400
+
+    rate_key = f"uid:{uid}" if uid is not None else f"ip:{request.remote_addr or 'unknown'}"
+    if _ai_rate_limited(rate_key):
+        return _ai_cors_response(jsonify({"error": "RATE_LIMITED"})), 429
+
+    question = message
+    if lang and lang not in {"he", "iw"}:
+        question = f"{message}\\n\\n[LANGUAGE_REQUEST] Respond in language code: {lang}."
+
+    try:
+        from core.ask_router import route
+        reply = route(question, uid)
+        if not reply:
+            return _ai_cors_response(jsonify({"error": "AI_EMPTY_RESPONSE"})), 502
+        response = jsonify({"reply": str(reply), "user_id": uid, "authenticated": uid is not None})
+        return _ai_cors_response(response), 200
+    except Exception as exc:
+        print("[AI] canonical intake error:", type(exc).__name__, str(exc)[:200])
+        return _ai_cors_response(jsonify({"error": "AI_UNAVAILABLE"})), 503
 
 
 def load_db():
