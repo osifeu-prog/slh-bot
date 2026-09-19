@@ -8,24 +8,13 @@ import state_manager
 
 
 def create_position(uid, amount, lock_days=30):
-    if amount <= 0:
-        raise ValueError("amount must be positive")
-
-    pos = {
-        "id": f"sp_{int(time.time()*1000)}",
-        "uid": str(uid),
-        "amount": float(amount),
-        "lock_days": int(lock_days),
-        "created_at": time.time(),
-        "unlocks_at": time.time() + int(lock_days) * 86400,
-        "status": "locked",
-    }
-
-    def mutate(db):
-        db.setdefault("stake_positions", {})[pos["id"]] = pos
-        return pos
-
-    return state_manager.atomic_update(mutate)
+    """DEPRECATED - unsafe. Created positions without updating wallet["staked"]
+    or writing a ledger entry. Root cause of RECON-240-20260919.
+    Use core.staking_service.stake_locked() instead."""
+    raise RuntimeError(
+        "create_position is deprecated and unsafe: it does not update "
+        "wallet['staked'] or the ledger. Use staking_service.stake_locked()."
+    )
 
 
 def get_positions(uid=None):
