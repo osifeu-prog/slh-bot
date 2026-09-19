@@ -54,6 +54,32 @@ jobs:
           PY
 
 
+
+      - name: Verify Stars purchase contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          payment = Path("handlers/payment_handler.py").read_text(encoding="utf-8")
+          purchase = Path("store/stars_purchase_service.py").read_text(encoding="utf-8")
+          revenue = Path("core/revenue_ledger.py").read_text(encoding="utf-8")
+
+          assert 'currency="XTR"' in payment
+          assert "telegram_payment_charge_id" in payment
+          assert "_resolve_stars_package" in payment
+
+          assert 'order_id = "stars:" + charge_id' in purchase
+          assert "get_stars_price(item_id)" in purchase
+          assert "INVALID_STARS_AMOUNT" in purchase
+          assert 'status": "RECOVERABLE"' in purchase
+          assert 'status": "FULFILLED"' in purchase
+
+          assert 'source="telegram_stars_item"' in purchase
+          assert "reference=charge_id" in purchase
+          assert "reference" in revenue
+          print("Stars payment + fulfillment + revenue contracts: OK")
+          PY
+
       - name: Verify rewards and academy contracts
         run: |
           python - <<'PY'
