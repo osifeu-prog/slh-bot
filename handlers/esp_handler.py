@@ -11,6 +11,10 @@ MQTT_PORT = _MP
 from core import state_manager
 
 
+def _device_owner_id(device):
+    return str(device.get("owner_id", device.get("owner", "")))
+
+
 
 def load_db():
     try:
@@ -48,7 +52,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
-        if str(dev.get("owner")) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id):
             bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
             return
 
