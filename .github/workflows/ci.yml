@@ -109,6 +109,13 @@ jobs:
           assert "idempotency_key" in add_points
           print("Rewards + Academy contract: OK")
           PY
+      - name: Run mission execution contract tests
+        shell: bash
+        run: |
+          set -e
+          python -m unittest discover -s tests -p 'test_mission_execution_contract.py' -v
+          echo "Mission execution contract tests: OK"
+
       - name: Verify Control Plane Railway ops contract
         run: |
           python - <<'PY'
