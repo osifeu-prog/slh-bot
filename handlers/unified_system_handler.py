@@ -57,35 +57,44 @@ def get_unified_map():
     }
 
 
+def _render(m):
+    projects = m["systems"]
+    service_count = sum(len(p.get("services", [])) for p in projects)
+    unmapped = m["github_unmapped"]
+    canonical = m["control_plane"]
+
+    lines = [
+        "🗺 SLH UNIFIED CONTROL PLANE",
+        "",
+        f"Canonical repo: {canonical.get('repo', 'unknown')}",
+        f"Canonical Railway: {canonical.get('railway_project', 'unknown')} / {canonical.get('railway_service', 'unknown')}",
+        f"Managed Railway projects: {len(projects)}",
+        f"Managed Railway services: {service_count}",
+        f"GitHub repos without Railway mapping: {len(unmapped)}",
+        "",
+    ]
+
+    for p in projects:
+        services = p.get("services", [])
+        non_green = [s for s in services if s.get("status") not in (None, "SUCCESS")]
+        marker = "⚠️" if non_green else "✅"
+        lines.append(
+            f"{marker} {p['name']} — {p.get('role', 'external')} — {len(services)} services"
+        )
+        for s in services:
+            if s.get("class") != "infrastructure" and s.get("repo"):
+                lines.append(
+                    f"   └ {s.get('name', '?')} → {s.get('repo')} [{s.get('status', 'unknown')}]"
+                )
+
+    lines += ["", "GitHub-only/unmapped in this Railway workspace:"]
+    for r in unmapped:
+        lines.append("• " + r.get("repo", "unknown"))
+
+    return "\n".join(lines)
+
+
 def register(bot):
-    @bot.message_handler(commands=["unified_map"])
+    @bot.message_handler(commands=["unified_map", "control", "systems"])
     def unified_map(msg):
-        m = get_unified_map()
-        projects = m["systems"]
-        service_count = sum(len(p.get("services", [])) for p in projects)
-        unmapped = m["github_unmapped"]
-
-        canonical = m["control_plane"]
-        lines = [
-            "🗺 SLH UNIFIED CONTROL PLANE",
-            "",
-            f"Canonical repo: {canonical.get('repo', 'unknown')}",
-            f"Canonical Railway: {canonical.get('railway_project', 'unknown')} / {canonical.get('railway_service', 'unknown')}",
-            f"Managed Railway projects: {len(projects)}",
-            f"Managed Railway services: {service_count}",
-            f"GitHub repos without Railway mapping: {len(unmapped)}",
-            "",
-        ]
-
-        for p in projects:
-            svc = p.get("services", [])
-            bad = [x for x in svc if x.get("status") not in (None, "SUCCESS")]
-            marker = "⚠️" if bad else "✅"
-            lines.append(f"{marker} {p['name']} — {p.get('role', 'external')} — {len(svc)} services")
-
-        lines += ["", "GitHub-only/unmapped in this Railway workspace:"]
-        for r in unmapped:
-            lines.append("• " + r.get("repo", "unknown"))
-
-        lines += ["", "Use /system for the operational runtime snapshot."]
-        bot.reply_to(msg, "\n".join(lines))
+        bot.reply_to(msg, _render(get_unified_map()))

@@ -5,8 +5,14 @@ REPO_OWNER = 'osifeu-prog'
 REPO_NAME = 'slh-bot'
 BRANCH = 'main'
 BASE_DIR = '/app'
+
 WHITELIST_DIRS = {'handlers', 'core', 'adapters', 'archive', 'store'}
-WHITELIST_FILES = {'projects.json', 'bot_factory.py', 'bot_gateway.py', 'doctor_handler.py', 'admin_handler.py', 'mini_app.html', 'webapp.py', 'dashboard.html', 'courses.json', 'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'}
+# mini_app.html is intentionally excluded from automated git synchronization.
+WHITELIST_FILES = {
+    'projects.json', 'bot_factory.py', 'bot_gateway.py', 'doctor_handler.py',
+    'admin_handler.py', 'webapp.py', 'dashboard.html', 'courses.json',
+    'railway.json', 'Procfile', 'requirements.txt', 'runtime.txt', '.railwayignore'
+}
 ALLOWED_EXTENSIONS = {'.py', '.html', '.json', '.txt', '.md', '.yml', '.yaml', '.cfg', '.ini'}
 
 def compute_blob_sha(content: bytes) -> str:
@@ -26,17 +32,16 @@ def get_local_files():
                 continue
             if rel in WHITELIST_FILES:
                 pass
-            elif any(rel.startswith(d + '/') for d in WHITELIST_DIRS) and any(f.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+            elif any(rel.startswith(d + '/') for d in WHITELIST_DIRS) and any(
+                f.endswith(ext) for ext in ALLOWED_EXTENSIONS
+            ):
                 pass
             else:
                 continue
             path = os.path.join(root, f)
             with open(path, 'rb') as fh:
                 content = fh.read()
-            result[rel] = {
-                'content': content,
-                'sha': compute_blob_sha(content)
-            }
+            result[rel] = {'content': content, 'sha': compute_blob_sha(content)}
     return result
 
 def register(bot):
@@ -110,37 +115,22 @@ def register(bot):
         for path in changed:
             content = local_files[path]['content']
             blob_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/blobs'
-            blob_data = {
-                'content': base64.b64encode(content).decode('utf-8'),
-                'encoding': 'base64'
-            }
+            blob_data = {'content': base64.b64encode(content).decode('utf-8'), 'encoding': 'base64'}
             r = requests.post(blob_url, json=blob_data, headers=headers)
             if r.status_code != 201:
                 bot.reply_to(msg, f'❌ Blob failed for {path}: {r.text[:100]}')
                 return
-            new_tree_items.append({
-                'path': path,
-                'mode': '100644',
-                'type': 'blob',
-                'sha': r.json()['sha']
-            })
+            new_tree_items.append({'path': path, 'mode': '100644', 'type': 'blob', 'sha': r.json()['sha']})
 
         tree_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/trees'
-        tree_data = {
-            'base_tree': base_tree_sha,
-            'tree': new_tree_items
-        }
+        tree_data = {'base_tree': base_tree_sha, 'tree': new_tree_items}
         r = requests.post(tree_url, json=tree_data, headers=headers)
         if r.status_code != 201:
             bot.reply_to(msg, f'❌ Tree failed: {r.text[:100]}')
             return
         new_tree_sha = r.json()['sha']
 
-        commit_data = {
-            'message': message,
-            'tree': new_tree_sha,
-            'parents': [last_commit_sha]
-        }
+        commit_data = {'message': message, 'tree': new_tree_sha, 'parents': [last_commit_sha]}
         create_commit_url = f'https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/commits'
         r = requests.post(create_commit_url, json=commit_data, headers=headers)
         if r.status_code != 201:
