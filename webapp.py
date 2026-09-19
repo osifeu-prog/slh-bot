@@ -93,6 +93,9 @@ function showGuide(id){
         html = html.replace("</body>", shim + "</body>")
     resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
     return resp
 
 
