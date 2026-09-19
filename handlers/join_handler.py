@@ -79,7 +79,7 @@ def register(bot):
         except Exception as e:
             print("HOLIDAY CAMPAIGN JOIN ENTRY FAILED:", e)
 
-        if int(uid) == int(OWNER_TELEGRAM_ID):
+        if _is_owner(uid):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
             return
 
