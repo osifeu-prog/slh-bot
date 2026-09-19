@@ -2,14 +2,16 @@ import json, os, time, re
 
 def load_devices():
     try:
-        with open("state/devices.json", "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
+        data = state_manager.atomic_json_update("devices.json", lambda value: value, default={"devices": {}})
+        return data if isinstance(data, dict) else {"devices": {}}
+    except Exception:
         return {"devices": {}}
 
 def save_devices(data):
-    with open("state/devices.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    def mutate(target):
+        target.clear()
+        target.update(data)
+    return state_manager.atomic_json_update("devices.json", mutate, default={"devices": {}})
 
 def generate_device_id(name):
     return f"DEV_{name.upper().replace(' ', '_')}_{int(time.time())}"
