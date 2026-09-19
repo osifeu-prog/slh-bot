@@ -1,0 +1,372 @@
+{
+  "schema_version": "1.0",
+  "verified_date_utc": "2026-09-19",
+  "purpose": "Canonical Control Plane inventory snapshot for SLH and connected external projects.",
+  "canonical": {
+    "repo": "osifeu-prog/slh-bot",
+    "railway_project": "endearing-amazement",
+    "railway_project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
+    "railway_service": "web",
+    "railway_service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
+    "railway_environment": "production",
+    "railway_environment_id": "661caa13-83cb-4197-8825-943bebf96c5a"
+  },
+  "railway_projects": [
+    {
+      "name": "endearing-amazement",
+      "id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
+      "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
+      "role": "canonical_control_plane",
+      "services": [
+        {
+          "name": "web",
+          "id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
+          "repo": "osifeu-prog/slh-bot",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "primary"
+        }
+      ]
+    },
+    {
+      "name": "slh-cloud-bot",
+      "id": "b33cb8d5-e82c-4a74-b94b-b52eb8c3d3db",
+      "environment_id": "e82af387-87bb-40c9-b250-2e8a0b7fb41a",
+      "role": "duplicate_runtime_candidate",
+      "services": [
+        {
+          "name": "slh-cloud-bot",
+          "id": "48b829d9-7bec-4d6c-ac25-025c77ce2794",
+          "repo": "osifeu-prog/slh-bot",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "duplicate_candidate"
+        }
+      ]
+    },
+    {
+      "name": "nifti-bot",
+      "id": "67b0291a-3baa-4382-b707-72544fe86786",
+      "environment_id": "49fddb9e-3b27-4ba9-845e-76d33220caf8",
+      "role": "external_bot_stack",
+      "services": [
+        {
+          "name": "bot",
+          "id": "3b99eba3-32d8-4b5e-a774-5081b052ed6c",
+          "repo": "osifeu-prog/nifti-bot-",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "Postgres",
+          "id": "83cac741-cd9f-414e-87b9-6339a93c965a",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "d2b4be7b-d974-4b9b-9626-ecc4aef9d0cb",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "SLH_investor_wallet_bot",
+      "id": "b89a959c-e6ec-4e28-b7a9-818bc13307de",
+      "environment_id": "85a25d48-b61f-408a-8b03-c86d87ccf78f",
+      "role": "external_sl_h_client",
+      "services": [
+        {
+          "name": "slh-bot",
+          "id": "f17cc606-840a-49ff-aea0-dad051bd8fac",
+          "repo": "osifeu-prog/slh-master-bot",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "Postgres",
+          "id": "c3437a2c-7dd5-406c-8372-35b40b71de86",
+          "status": "FAILED",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "Tax_Free_world_bot",
+      "id": "8023b98a-8241-4b7a-8e53-f3e4ff32547a",
+      "environment_id": "e6c6b1bf-9903-4165-9fe3-010d9e187972",
+      "role": "external_bot_stack",
+      "services": [
+        {
+          "name": "Tax_Free_world_bot",
+          "id": "5c96141d-c07a-4b5c-80b3-72946893acc9",
+          "repo": "osifeu-prog/Tax_Free_world_bot",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "Redis",
+          "id": "0fa967a5-b6b9-4999-8f90-e2085e1709b6",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Postgres",
+          "id": "83bae0ec-1a31-4cce-bf04-9a399784d1a6",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "TELEGRAM-BOT",
+      "id": "89d74faf-fa5e-402e-a337-ca1365b04ba7",
+      "environment_id": "aab56e96-eba6-4069-bda9-40824ccee11e",
+      "role": "legacy_external_stack",
+      "services": [
+        {
+          "name": "Telegram_bot",
+          "id": "7f8ea87c-8b8b-4b22-9e2e-10525709eced",
+          "repo": "osifeu-prog/telegram-bot",
+          "branch": "main",
+          "status": "FAILED",
+          "class": "external_bot"
+        },
+        {
+          "name": "grafana",
+          "id": "f25e8a33-8ee2-43da-b3e5-6e1af87d9b3a",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "prometheus",
+          "id": "cacfb4ac-368b-483e-8491-2a9f142cb9b0",
+          "status": "FAILED",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "9240d3f8-02ef-431e-9f84-23672a59ba9c",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Postgres",
+          "id": "484f09ae-341c-4ea6-a195-0cc1c5203112",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "slh-guardian",
+      "id": "26808685-719a-47f1-9824-ea9f3b83aaa2",
+      "environment_id": "3ad49f6b-ab2d-477f-b626-05c1cddf13ff",
+      "role": "external_security_stack",
+      "services": [
+        {
+          "name": "gardian",
+          "id": "ab51bb1b-cdcf-43c4-8966-3e93d41a8a54",
+          "repo": "osifeu-prog/slh-guardian",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "security_service"
+        },
+        {
+          "name": "Postgres",
+          "id": "f6ffb29e-b628-402c-8539-405725cda6f7",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "4cbe788d-693b-482a-a1b0-eb47c20829be",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "diligent-radiance",
+      "id": "97070988-27f9-4e0f-b76c-a75b5a7c9673",
+      "environment_id": "e0a8a279-4dc2-4461-8ba6-d16594d6ceca",
+      "role": "legacy_multi_service_stack",
+      "services": [
+        {
+          "name": "Osifs_Factory_bot",
+          "id": "78503f9f-1db4-4d54-a74d-a005472dc7e3",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "TON-MNH-bot",
+          "id": "2bb6b78c-1a70-4831-ba18-8c4d99914777",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "slh-AI-bot",
+          "id": "06b914f7-3e5f-4d35-82b2-5efd80fdca6a",
+          "repo": "osifeu-prog/slh-claude-bot",
+          "branch": "main",
+          "status": "CRASHED",
+          "class": "external_bot"
+        },
+        {
+          "name": "monitor.slh",
+          "id": "3bd8c110-d71d-4bca-ac75-a9ea10de1e49",
+          "repo": "osifeu-prog/SLH.co.il",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "site_monitor"
+        },
+        {
+          "name": "SLH.co.il",
+          "id": "63471580-d05a-41fc-a7bb-d90ac488abfd",
+          "repo": "osifeu-prog/SLH.co.il",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "public_site"
+        },
+        {
+          "name": "slh-fastapi",
+          "id": "36269107-908a-449f-97ba-787871ba322f",
+          "status": "FAILED",
+          "class": "api_service"
+        },
+        {
+          "name": "Postgres",
+          "id": "ee103e9a-5fbc-40b4-9bb3-8a55fd9a2bef",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "be598709-b8c2-4775-9bc2-790296079202",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "slh-api",
+      "id": "96452076-6885-4e6d-9b26-9ef20d6c3cd7",
+      "environment_id": "82f92047-5350-4082-a11b-eb07c64cf0fd",
+      "role": "shared_api_legacy_stack",
+      "services": [
+        {
+          "name": "slh-air-bot",
+          "id": "33dc3f7c-e50b-4345-a78a-6132468fddf5",
+          "repo": "osifeu-prog/slh-api",
+          "branch": "master",
+          "status": "SUCCESS",
+          "class": "external_bot"
+        },
+        {
+          "name": "slh-api",
+          "id": "bcbb5f6a-f0a1-4547-a85b-b8462985cdce",
+          "repo": "osifeu-prog/slh-api",
+          "branch": "master",
+          "status": "SUCCESS",
+          "class": "shared_api"
+        },
+        {
+          "name": "Postgres",
+          "id": "d844c5d3-eddb-4a5d-b969-de44f4eb747e",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "6e605ef1-1c83-4edd-a969-e6a1f2095a1e",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    },
+    {
+      "name": "dazzling-unity",
+      "id": "e05a2fea-7667-4b10-a159-f6e8976a2931",
+      "environment_id": "d6f52e43-fc69-49e7-9405-ae2c0f8653ea",
+      "role": "legacy_project_v2_stack",
+      "services": [
+        {
+          "name": "SLH_PROJECT_V2",
+          "id": "46b50f17-0165-41f2-9fe7-bcac40e1681a",
+          "repo": "osifeu-prog/SLH_PROJECT_V2",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "external_app"
+        },
+        {
+          "name": "glorious-caring",
+          "id": "9c2fa5e0-4930-405f-8647-5f0ede06ff26",
+          "repo": "osifeu-prog/SLH_PROJECT_V2",
+          "branch": "main",
+          "status": "SUCCESS",
+          "class": "worker"
+        },
+        {
+          "name": "Postgres",
+          "id": "1eb0f0f3-028c-4c3b-9450-e3f64bdb5f35",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        },
+        {
+          "name": "Redis",
+          "id": "ceec8fbf-5076-4396-a9dc-ab31ef3dff56",
+          "status": "SUCCESS",
+          "class": "infrastructure"
+        }
+      ]
+    }
+  ],
+  "github_unmapped": [
+    {
+      "repo": "osifeu-prog.github.io",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/ME",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/investor-landing",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/GATE_BOTSHOP",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/SLH-Lab",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/SLHADMIN",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/slh-trading-bot",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/DAVIDANDFARID",
+      "status": "unmapped_in_current_railway_workspace"
+    },
+    {
+      "repo": "osifeu-prog/TECH",
+      "status": "unmapped_in_current_railway_workspace"
+    }
+  ],
+  "notes": [
+    "Statuses are latest Railway deployment statuses observed on 2026-09-19; they are not a live heartbeat.",
+    "Infrastructure services are tracked for ownership/visibility but are not treated as bots.",
+    "The two deployments sourced from osifeu-prog/slh-bot are both tracked; no automatic shutdown is performed.",
+    "Unmapped GitHub repositories have no matching Railway service in this snapshot; that does not prove they are not deployed elsewhere."
+  ]
+}
