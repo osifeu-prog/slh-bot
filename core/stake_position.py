@@ -34,19 +34,17 @@ def get_position(position_id):
 
 
 def unlock_position(position_id):
-    def mutate(db):
-        pos = db.get("stake_positions", {}).get(position_id)
-        if not pos:
-            raise KeyError("position not found")
-        if pos.get("status") == "unlocked":
-            return pos
-        if time.time() < float(pos.get("unlocks_at", 0)):
-            raise ValueError("still locked")
-        pos["status"] = "unlocked"
-        pos["unlocked_at"] = time.time()
-        return pos
+    """DEPRECATED - unsafe legacy unlock path.
 
-    return state_manager.atomic_update(mutate)
+    Do not use this function because it changes only the position and can
+    desynchronise wallet/ledger state.
+    Use core.staking_service.unstake_locked(uid, position_id) instead.
+    """
+    raise RuntimeError(
+        "unlock_position is deprecated and unsafe: it does not update "
+        "wallet['staked'], wallet['credits'], or the ledger. "
+        "Use staking_service.unstake_locked()."
+    )
 
 
 def force_unlock_position(position_id, uid=None):
