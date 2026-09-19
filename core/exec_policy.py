@@ -36,6 +36,10 @@ DANGEROUS_PATTERNS = [
     r"(?=.*state[/\\])(?=.*\.write_text\()", r"(?=.*state[/\\])(?=.*\.write_bytes\()",
     r"(?=.*state[/\\])(?=.*\bjson\.dump\()", r"\brm\s+.*state[/\\]",
     r"\bmv\s+.*state[/\\]", r"\bshutil\.(move|copy|rmtree)\(.*state[/\\]",
+    # Raw wallet token balances may only be mutated by canonical application authorities.
+    r"""(?:\[\s*["']token_balance["']\s*\]|\.token_balance\s*)\+?\s*=""",
+    r"""\.update\(\s*\{[^}]*["']token_balance["']""",
+    r"""\.setdefault\(\s*["']token_balance["']""",
 ]
 
 
