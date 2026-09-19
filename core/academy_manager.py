@@ -3,6 +3,7 @@ import os
 
 from core import profile_manager
 from core import reward_engine
+from core.tokenomics import rewards_snapshot
 
 
 COURSE_FILE = "courses.json"
@@ -144,15 +145,32 @@ def complete_stage(uid, course_id, stage):
         uid,
         reason=f"lesson_complete:{course_id}:{stage}",
         credits=0,
-        points=25,
+        points=rewards_snapshot()["lesson_complete_points"],
         idempotency_key=key
     )
+
+    course_reward = {"credits": 0, "points": 0}
+    stage_ids = [
+        int(item.get("id"))
+        for item in course.get("stages", [])
+        if item.get("id") is not None
+    ]
+    last_stage = max(stage_ids) if stage_ids else None
+    if stage == last_stage:
+        course_reward = reward_engine.grant(
+            uid,
+            reason=f"course_complete:{course_id}",
+            credits=0,
+            points=rewards_snapshot()["course_complete_points"],
+            idempotency_key=f"{uid}:course_complete:{course_id}"
+        )
 
     return {
         "ok": True,
         "already_completed": False,
         "progress": result,
-        "reward": reward
+        "reward": reward,
+        "course_reward": course_reward
     }
 
 
