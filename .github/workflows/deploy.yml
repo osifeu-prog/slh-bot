@@ -189,7 +189,7 @@ jobs:
 
           deploy_handler = Path("handlers/deploy_handler.py").read_text(encoding="utf-8")
           assert 'REGISTRY_FILE = "control_plane_registry.json"' in deploy_handler
-          assert "def _managed_targets()" in deploy_handler
+          assert "def _managed_targets(include_infrastructure=False)" in deploy_handler
           ast.parse(deploy_handler)
 
           print("Control Plane registry contract: OK")
