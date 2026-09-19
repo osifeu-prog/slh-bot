@@ -22,10 +22,8 @@ app = Flask(__name__)
 
 
 def load_db():
-    if not DB_PATH.exists():
-        return {}
-    with DB_PATH.open("r", encoding="utf-8") as f:
-        return json.load(f)
+    """Read from the canonical state authority used by the rest of SLH OS."""
+    return state_manager.load_db()
 
 
 def authenticated_uid():
