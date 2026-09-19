@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
+from core.authority import has_permission
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
@@ -97,6 +98,9 @@ function showGuide(id){
 
 @app.route("/api/v1/system/unified-map")
 def unified_system_map():
+    uid = authenticated_uid()
+    if uid is None or not has_permission(uid, "exec.audit"):
+        return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
     return jsonify(get_unified_map()), 200
 
 
