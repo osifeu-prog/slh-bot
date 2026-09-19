@@ -1,4 +1,5 @@
-from core.project_context import get_project_context\nfrom core.authority import has_permission
+from core.project_context import get_project_context
+from core.authority import has_permission
 
 
 def _render(ctx):
@@ -20,7 +21,8 @@ def _render(ctx):
         "",
         "Graph: AI session → agents → services → deployments → health → journal",
     ]
-    return "\n".join(lines)
+    return "
+".join(lines)
 
 
 def register(bot, context=None):
