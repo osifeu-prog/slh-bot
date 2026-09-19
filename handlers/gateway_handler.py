@@ -1,4 +1,5 @@
-from SLH_GATEWAY import SLHGateway\nfrom core.authority import has_permission
+from SLH_GATEWAY import SLHGateway
+from core.authority import has_permission
 
 gateway = SLHGateway()
 
@@ -18,7 +19,9 @@ def register(bot):
 
             bot.reply_to(
                 message,
-                f"🌐 SLH Gateway Status:\n\n{result}"
+                f"🌐 SLH Gateway Status:
+
+{result}"
             )
 
         except Exception as e:
