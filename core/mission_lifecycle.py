@@ -698,7 +698,8 @@ class MissionLifecycleService:
         self,
         mission_id,
         description,
-        reward=0
+        reward=0,
+        execution=None
     ):
 
         from datetime import datetime, timezone
@@ -798,6 +799,8 @@ class MissionLifecycleService:
                 "created_at":
                     now.isoformat(),
 
+                **({"execution": execution} if execution is not None else {}),
+
             }
 
             board.setdefault(
@@ -837,6 +840,9 @@ class MissionLifecycleService:
                     mission.get(
                         "created_at"
                     ),
+
+                "execution":
+                    mission.get("execution"),
 
                 "backup":
                     str(backup_path),
