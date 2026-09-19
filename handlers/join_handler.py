@@ -126,7 +126,7 @@ def register(bot):
     def join_steps(msg):
         uid = str(msg.from_user.id)
 
-        if int(uid) == int(OWNER_TELEGRAM_ID):
+        if _is_owner(uid):
             user_states.pop(uid, None)
             bot.reply_to(msg, "👑 OWNER — אין הרשמה פעילה.")
             return
