@@ -1,7 +1,7 @@
 import json
 import sys
 
-from core import state_manager
+import state_manager
 import paho.mqtt.client as mqtt
 
 from core.mqtt_config import BROKER as _MB
