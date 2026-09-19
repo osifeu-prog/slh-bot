@@ -42,7 +42,6 @@ def register(bot):
             bot.answer_callback_query(call.id, "קורס לא נמצא")
             return
 
-        # Starting an already-started course is idempotent and preserves progress.
         academy_manager.start_course(uid, cid)
         progress = academy_manager.get_course(uid, cid)
         current = int(progress.get("stage", 0) or 0) + 1
@@ -82,7 +81,7 @@ def register(bot):
 
         lesson = lesson_engine.get_lesson(course_id, stage)
         if not lesson:
-            bot.answer_callback_query(call.id, "שיעור לא נמצא")
+            bot.answer_callback_query(call.id, "השיעור לא נמצא")
             return
 
         markup = InlineKeyboardMarkup(row_width=1)
@@ -109,7 +108,7 @@ def register(bot):
         func=lambda c: c.data.startswith("slh_finish_")
     )
     def finish_lesson_callback(call):
-        raw = call.data[len("slh_lesson_"):]
+        raw = call.data[len("slh_finish_"):]
         if "_" not in raw:
             bot.answer_callback_query(call.id, "שיעור לא תקין")
             return
@@ -144,8 +143,7 @@ def register(bot):
         bot.send_message(
             call.message.chat.id,
             "🎉 השיעור הושלם!\n\n"
-            f"⭐ נקודות: {reward.get('points', 0)}\n"
-            f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
+            f"⭐ נקודות: {reward.get('points', 0)}\n\n"
             "הנקודות נזקפו לחשבונך. המשך ל-Academy כדי לפתוח את השיעור הבא:",
             reply_markup=markup
         )
