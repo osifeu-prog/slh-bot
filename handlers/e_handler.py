@@ -12,6 +12,26 @@ def register(bot):
             return
 
         cmd = parts[1].strip()
+        if cmd == "railway up" or cmd == "railway":
+            if not is_owner(uid):
+                bot.reply_to(msg, "⛔️ OWNER only for Railway control-plane actions")
+                return
+            try:
+                from core.railway_control import canonical_up
+                result = canonical_up()
+                bot.reply_to(
+                    msg,
+                    "🚀 RAILWAY DEPLOY TRIGGERED\\n"
+                    f"Project: {result['project']}\\n"
+                    f"Service: {result['service']}\\n"
+                    f"Environment: {result['environment']}\\n"
+                    f"Commit: {result['commit'][:12]}\\n"
+                    f"Deployment: {result['deployment_id']}",
+                )
+            except Exception as exc:
+                bot.reply_to(msg, f"❌ Railway control: {exc}")
+            return
+
         if cmd in ("alpha_status", "alpha_open", "alpha_state"):
             if not is_owner(uid):
                 bot.reply_to(msg, "⛔️ OWNER only for alpha control-plane actions")
