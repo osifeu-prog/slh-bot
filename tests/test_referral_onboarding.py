@@ -95,7 +95,7 @@ def test_referral_full_reward_path_is_idempotent():
         db = state_manager.load_db()
         assert db["users"]["100"]["gamification"]["points"] == 10
         point_entries = [
-            x for x in db["users"]["100"]["gamification"]["points_ledger"]
+            x for x in db["users"]["100"]["points_ledger"]
             if x.get("meta", {}).get("idempotency_key") == "ref:200"
         ]
         assert len(point_entries) == 1
