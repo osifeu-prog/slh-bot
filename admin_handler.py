@@ -189,6 +189,9 @@ def init(bot):
 
         action = str(call.data).split(":", 1)[1]
         if action == "status":
+            # Acknowledge immediately so Telegram never leaves the callback
+            # spinner running while the status edit is being processed.
+            bot.answer_callback_query(call.id, "✅ Status refreshed")
             try:
                 bot.edit_message_text(
                     _status_text(call.from_user),
