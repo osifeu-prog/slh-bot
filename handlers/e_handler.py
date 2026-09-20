@@ -41,11 +41,17 @@ def register(bot):
                     return
                 if len(args) == 3 and args[1] == "inspect":
                     project_id = args[2].strip()
-                    p = project(project_id)
+
+                    # Detailed project resolution can raise when the runtime
+                    # token can list workspace projects but lacks project-level
+                    # viewer access. Treat that exactly like a missing detail
+                    # response and fall back to the authoritative workspace list.
+                    try:
+                        p = project(project_id)
+                    except Exception:
+                        p = None
+
                     if not p:
-                        # Fall back to the same workspace listing used by
-                        # `railway projects`, avoiding false "not found"
-                        # when detailed project resolution is restricted.
                         ps = projects()
                         p = next(
                             (
@@ -55,6 +61,7 @@ def register(bot):
                             ),
                             None,
                         )
+
                     if not p:
                         bot.reply_to(msg, "❌ Railway project not found")
                         return
@@ -74,7 +81,6 @@ def register(bot):
             except Exception as exc:
                 bot.reply_to(msg, f"❌ Railway control: {exc}")
             return
-
 
             if not is_owner(uid):
                 bot.reply_to(msg, "⛔️ OWNER only for Railway control-plane actions")
