@@ -77,18 +77,17 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
                 "owner_id": "100",
             }
             with patch("store.grant_engine.issue_license", return_value={"ok": True, "license": license_payload}),                  patch("store.grant_engine.profile_manager.get_user", return_value={}):
-                with unittest.mock.patch("store.grant_engine.Path", side_effect=lambda p: Path(p)):
-                    import os
-                    old = os.getcwd()
-                    os.chdir(tmp)
-                    try:
-                        result = apply_grant(
-                            "100",
-                            {"hardware": "esp32_pro"},
-                            purchase_id="p4",
-                        )
-                    finally:
-                        os.chdir(old)
+                import os
+                old = os.getcwd()
+                os.chdir(tmp)
+                try:
+                    result = apply_grant(
+                        "100",
+                        {"hardware": "esp32_pro"},
+                        purchase_id="p4",
+                    )
+                finally:
+                    os.chdir(old)
 
             self.assertTrue(result["ok"])
             self.assertEqual(result["device_id"], "ESP_PURCHASE_p4")
