@@ -15,7 +15,7 @@ def _is_admin(message):
     return role in ("OWNER", "ADMIN", "DEVELOPER")
 
 
-def _status_text():
+def _status_text(message):
     checks = []
 
     checks.append(("Gateway", os.path.exists("bot_gateway.py")))
@@ -171,14 +171,14 @@ def init(bot):
         if not _is_admin(message):
             bot.reply_to(message, "⛔️ Admin access required")
             return
-        bot.reply_to(message, _status_text(), reply_markup=_menu_markup())
+        bot.reply_to(message, _status_text(message), reply_markup=_menu_markup())
 
     @bot.message_handler(commands=["admin_status"])
     def admin_status(message):
         if not _is_admin(message):
             bot.reply_to(message, "⛔️ Admin access required")
             return
-        bot.reply_to(message, _status_text(), reply_markup=_menu_markup())
+        bot.reply_to(message, _status_text(message), reply_markup=_menu_markup())
 
     @bot.callback_query_handler(func=lambda call: str(call.data or "").startswith("admin:"))
     def admin_callback(call):
@@ -189,7 +189,7 @@ def init(bot):
         action = str(call.data).split(":", 1)[1]
         if action == "status":
             bot.edit_message_text(
-                _status_text(),
+                _status_text(call.message),
                 call.message.chat.id,
                 call.message.message_id,
                 reply_markup=_menu_markup(),

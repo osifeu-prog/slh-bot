@@ -350,6 +350,10 @@ def arcade_award():
 @app.route("/api/v1/wallet/combined/<uid>")
 def combined_wallet(uid):
     """Read-only presentation adapter: internal ledger + slh-api ledger."""
+    denied = require_self(uid)
+    if denied:
+        return denied
+
     db = load_db()
     user = db.get("users", {}).get(str(uid), {})
     wallet = user.get("wallet", {}) if isinstance(user, dict) else {}
