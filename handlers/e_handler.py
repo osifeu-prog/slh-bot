@@ -39,6 +39,22 @@ def register(bot):
                         f"Deployment: {result['deployment_id']}",
                     )
                     return
+                if len(args) == 3 and args[1] == "up":
+                    commit_sha = args[2].strip()
+                    if len(commit_sha) != 40 or any(c not in "0123456789abcdefABCDEF" for c in commit_sha):
+                        bot.reply_to(msg, "❌ Invalid commit SHA. Use the full 40-character Git SHA.")
+                        return
+                    result = canonical_up(commit_sha=commit_sha)
+                    bot.reply_to(
+                        msg,
+                        "🚀 RAILWAY DEPLOY TRIGGERED\\n"
+                        f"Project: {result['project']}\\n"
+                        f"Service: {result['service']}\\n"
+                        f"Environment: {result['environment']}\\n"
+                        f"Commit: {result['commit'][:12]}\\n"
+                        f"Deployment: {result['deployment_id']}",
+                    )
+                    return
                 if len(args) == 3 and args[1] == "inspect":
                     project_id = args[2].strip()
 
