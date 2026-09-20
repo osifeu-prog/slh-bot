@@ -6,6 +6,7 @@ operations remain behind their existing command-specific authorization gates.
 
 import os
 import subprocess
+from telebot.apihelper import ApiTelegramException
 from core.authority import get_role, has_permission, normalize_uid
 
 
@@ -188,12 +189,18 @@ def init(bot):
 
         action = str(call.data).split(":", 1)[1]
         if action == "status":
-            bot.edit_message_text(
-                _status_text(call.from_user),
-                call.message.chat.id,
-                call.message.message_id,
-                reply_markup=_menu_markup(),
-            )
+            try:
+                bot.edit_message_text(
+                    _status_text(call.from_user),
+                    call.message.chat.id,
+                    call.message.message_id,
+                    reply_markup=_menu_markup(),
+                )
+            except ApiTelegramException as exc:
+                # Telegram returns 400 when the user presses Status while the
+                # message already contains the exact same text and markup.
+                if "message is not modified" not in str(exc):
+                    raise
         elif action in {"health", "railway", "github", "bots", "security", "work", "map", "dev", "help"}:
             from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
