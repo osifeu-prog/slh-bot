@@ -114,6 +114,11 @@ jobs:
           assert "idempotency_key" in add_points
           print("Rewards + Academy contract: OK")
           PY
+      - name: Verify deterministic Alpha readiness gate
+        run: |
+          set -e
+          python -m core.alpha_control_plane
+
       - name: Verify Control Plane Railway ops contract
         run: |
           python - <<'PY'
