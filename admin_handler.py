@@ -182,7 +182,7 @@ def init(bot):
 
     @bot.callback_query_handler(func=lambda call: str(call.data or "").startswith("admin:"))
     def admin_callback(call):
-        if not _is_admin(call.message):
+        if not _is_admin(call.from_user):
             bot.answer_callback_query(call.id, "⛔️ Access denied", show_alert=True)
             return
 
