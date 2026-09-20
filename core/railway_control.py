@@ -19,13 +19,13 @@ class RailwayControlError(RuntimeError):
 def _auth_headers():
     project_token = os.getenv("RAILWAY_PROJECT_TOKEN") or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
     if project_token:
-        return {"Project-Access-Token": project_token, "Content-Type": "application/json"}
+        return {            "Project-Access-Token": project_token,            "Content-Type": "application/json",            "Accept": "application/json",            "User-Agent": "SLH-Control-Plane/1.0",        }
     token = os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
     if not token:
         raise RailwayControlError(
             "Railway token is not configured. Add RAILWAY_API_TOKEN for account/workspace control."
         )
-    return {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
+    return {        "Authorization": "Bearer " + token,        "Content-Type": "application/json",        "Accept": "application/json",        "User-Agent": "SLH-Control-Plane/1.0",    }
 
 
 def graphql(query, variables=None):
@@ -56,7 +56,7 @@ def graphql(query, variables=None):
 
 
 def projects():
-    workspace_id = os.getenv("RAILWAY_WORKSPACE_ID") or os.getenv("RAILWAY_WORKSPACE_ID_SLH")
+    workspace_id = (        os.getenv("RAILWAY_WORKSPACE_ID")        or os.getenv("RAILWAY_WORKSPACE_ID_SLH")        or "e20e8242-57be-4ee3-9de8-c12684973570"    )
     if workspace_id:
         data = graphql("""
             query($id: String!) {
