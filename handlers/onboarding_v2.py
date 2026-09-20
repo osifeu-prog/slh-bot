@@ -170,12 +170,14 @@ def register(bot, context=None):
                 f"🔒 סטייקינג: {staked}\n\n"
                 "אני רובוטוש, העוזר האישי שלך.\n"
                 "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
-                "🚀 ה-Dashboard והמערכת האישית שלך מוכנים.\n\n"
+                "🚀 המערכת האישית שלך מוכנה.\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
                 f"{invite_line}"
             )
             bot.send_message(m.chat.id, text)
+            # Owners use the same canonical Dashboard surface as every existing account.
+            send_dashboard(m.chat.id, user_id)
             return
 
         text = (
