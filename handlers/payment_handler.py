@@ -154,10 +154,10 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
-            def activate_vip(db):
+            def activate_and_mark(db):
                 orders = db.setdefault("vip_subscriptions", {})
                 if charge_id in orders:
-                    return orders[charge_id]
+                    return orders[charge_id], False
                 now = int(time.time())
                 user = db.setdefault("users", {}).setdefault(uid, {})
                 previous = int(user.get("vip_access_until", 0) or 0)
@@ -166,7 +166,6 @@ def register_payment_handlers(bot):
                 perms = user.setdefault("permissions", [])
                 if "vip_access" not in perms:
                     perms.append("vip_access")
-                user["vip_access_until"] = until
                 record = {
                     "charge_id": charge_id,
                     "uid": uid,
@@ -178,10 +177,11 @@ def register_payment_handlers(bot):
                     "first_recurring": bool(getattr(payment, "is_first_recurring", False)),
                 }
                 orders[charge_id] = record
-                return record
+                user["vip_access_until"] = until
+                return record, True
 
-            result = state_manager.atomic_update(activate_vip)
-            if result.get("charge_id") == charge_id:
+            result, created = state_manager.atomic_update(activate_and_mark)
+            if created:
                 from core import revenue_ledger
                 revenue_ledger.record(
                     source="telegram_stars_subscription",
@@ -191,17 +191,26 @@ def register_payment_handlers(bot):
                     uid=uid,
                     meta={"kind":"vip_monthly","subscription_period":VIP_SUBSCRIPTION_PERIOD},
                 )
-            bot.send_message(m.chat.id, "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars.")
+            bot.send_message(m.chat.id, "ℹ️ VIP payment was already processed." if not created else "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars.")
             return
 
         if payload.startswith("item_") and payload.endswith("_" + uid):
             item_id = payload[5:-(len(uid)+1)]
+            charge_id = str(payment.telegram_payment_charge_id or "").strip()
+            expected_stars = get_stars_price(item_id)
+            try:
+                valid_amount = int(payment.total_amount) == expected_stars
+            except (TypeError, ValueError):
+                valid_amount = False
+            if payment.currency != "XTR" or not charge_id or not valid_amount:
+                bot.send_message(m.chat.id, "❌ Invalid Stars item payment.")
+                return
             try:
                 result = purchase_item_with_stars(
                     uid=uid,
                     item_id=item_id,
                     stars_paid=payment.total_amount,
-                    charge_id=payment.telegram_payment_charge_id,
+                    charge_id=charge_id,
                 )
             except Exception as e:
                 print(f"[PAY] STAR item fulfillment failed: {type(e).__name__}")
