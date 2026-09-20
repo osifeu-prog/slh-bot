@@ -121,3 +121,23 @@ def test_new_user_start_without_invite_stays_closed(monkeypatch):
     start(Message("200", "/start"))
 
     assert any("נדרש Invite" in msg[1] for msg in bot.messages)
+
+
+def test_owner_start_reaches_canonical_dashboard(monkeypatch):
+    db = {
+        "users": {"999": {"wallet": {"credits": 10, "staked": 2}, "active_course": "bitcoin_mastery"}},
+        "pending_referrals": {},
+        "agents": {},
+    }
+    onboarding = _load_onboarding(monkeypatch, db)
+
+    bot = FakeBot()
+    onboarding.register(bot)
+    start = next(
+        fn for kind, meta, fn in bot.handlers
+        if kind == "message" and meta.get("commands") == ["start"]
+    )
+    start(Message("999", "/start"))
+
+    assert any("המערכת מזהה אותך כבעלים" in msg[1] for msg in bot.messages)
+    assert any("🌟 ה-Dashboard שלך" in msg[1] for msg in bot.messages)
