@@ -12,8 +12,8 @@ def register(bot):
             bot.reply_to(m, "שימוש: /buystars <item_id>\nזמין ב-Stars: " + ", ".join(get_stars_items()))
             return
 
-        item_id = resolve_item_id(parts[1].strip())
         items = load_items()
+        item_id = resolve_item_id(parts[1].strip(), items)
         item = items.get(item_id) if item_id else None
         if not isinstance(item, dict):
             bot.reply_to(m, "❌ המוצר לא נמצא")
