@@ -42,29 +42,41 @@ def register(bot):
                 if len(args) == 3 and args[1] == "inspect":
                     project_id = args[2].strip()
 
-                    # Detailed project resolution can raise when the runtime
-                    # token can list workspace projects but lacks project-level
-                    # viewer access. Treat that exactly like a missing detail
-                    # response and fall back to the authoritative workspace list.
-                    try:
-                        p = project(project_id)
-                    except Exception:
-                        p = None
+                    # Resolve from the same authoritative workspace listing used
+                    # by /e railway projects. Do not call the detailed project()
+                    # resolver first: it can raise/return a different shape when
+                    # project-level permissions are restricted.
+                    ps = projects()
+                    p = next(
+                        (
+                            item for item in ps
+                            if str(item.get("id", "")).strip().lower()
+                            == project_id.lower()
+                        ),
+                        None,
+                    )
 
                     if not p:
-                        ps = projects()
-                        p = next(
-                            (
-                                item for item in ps
-                                if str(item.get("id", "")).strip().lower()
-                                == project_id.lower()
-                            ),
-                            None,
+                        visible = ", ".join(
+                            f"{item.get('name')}={item.get('id')}" for item in ps[:20]
                         )
-
-                    if not p:
-                        bot.reply_to(msg, "❌ Railway project not found")
+                        bot.reply_to(
+                            msg,
+                            f"❌ Railway project not found in workspace listing: {project_id}\n"
+                            f"Visible projects: {visible}",
+                        )
                         return
+
+                    # The workspace listing gives authoritative identity. Try
+                    # to enrich it with detailed metadata, but never let a
+                    # permission error turn a visible project into "not found".
+                    try:
+                        detail = project(project_id)
+                        if isinstance(detail, dict) and detail.get("environments"):
+                            p = detail
+                    except Exception:
+                        pass
+
                     envs = p.get("environments", {}).get("edges", [])
                     svcs = p.get("services", {}).get("edges", [])
                     lines = [f"🚂 {p['name']} ({p['id']})"]
