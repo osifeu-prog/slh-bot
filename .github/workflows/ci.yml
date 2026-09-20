@@ -86,6 +86,11 @@ jobs:
           print("Stars payment + fulfillment + revenue contracts: OK")
           PY
 
+      - name: Run store fulfillment tests
+        run: |
+          python -m unittest tests.test_stars_store_fulfillment tests.test_store_catalog_fulfillment
+          echo "Store fulfillment tests: OK"
+
       - name: Verify rewards and academy contracts
         run: |
           python - <<'PY'
