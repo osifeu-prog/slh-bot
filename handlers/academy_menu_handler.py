@@ -175,12 +175,35 @@ def _send_academy(bot, chat_id, uid):
     markup = InlineKeyboardMarkup(row_width=1)
 
     for cid, data in courses.items():
-        progress = academy_manager.get_course(uid, cid)
-        stage = progress.get("stage", 0)
-        text += (
-            f"📘 {data['title']}\n"
-            f"התקדמות: {stage}/{len(data['stages'])}\n\n"
-        )
+        stages = data.get("stages", [])
+        total = len(stages)
+
+        progress = academy_manager.get_course(uid, cid) or {}
+        current = int(progress.get("stage", 0) or 0)
+
+        completed = set()
+        for value in progress.get("completed", []) or []:
+            try:
+                completed.add(int(value))
+            except (TypeError, ValueError):
+                pass
+
+        stage_ids = []
+        for item in stages:
+            try:
+                stage_ids.append(int(item.get("id")))
+            except (TypeError, ValueError):
+                pass
+
+        remaining = [stage_id for stage_id in stage_ids if stage_id not in completed]
+
+        text += f"📘 {data['title']}\n"
+
+        if total and not remaining:
+            text += f"✅ הושלם: {total}/{total}\n\n"
+        else:
+            text += f"התקדמות: {current}/{total}\n\n"
+
         markup.add(
             InlineKeyboardButton(
                 f"📖 {data['title']}",
