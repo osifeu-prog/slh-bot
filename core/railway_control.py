@@ -108,7 +108,7 @@ def deploy(service_id, environment_id, commit_sha=None):
             serviceId: $serviceId
             environmentId: $environmentId
             commitSha: $commitSha
-          ) { id }
+          )
         }
     """
     data = graphql(query, {
@@ -116,7 +116,8 @@ def deploy(service_id, environment_id, commit_sha=None):
         "environmentId": environment_id,
         "commitSha": commit_sha,
     })
-    return data["serviceInstanceDeployV2"]
+    deployment = data["serviceInstanceDeployV2"]
+    return {"id": deployment}
 
 
 def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
