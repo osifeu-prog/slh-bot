@@ -5,9 +5,9 @@ operations remain behind their existing command-specific authorization gates.
 """
 
 import os
-import subprocess
 from telebot.apihelper import ApiTelegramException
 from core.authority import get_role, has_permission, normalize_uid
+from core.control_center import get_deployment_state
 
 
 def _is_admin(message):
@@ -25,25 +25,15 @@ def _status_text(message):
     checks.append(("WebApp", os.path.exists("webapp.py")))
     checks.append(("Unified map", os.path.exists("handlers/unified_system_handler.py")))
 
-    try:
-        head = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=3,
-        ).strip()
-    except Exception:
-        head = "unavailable"
+    deployment = get_deployment_state()
+    head = str(deployment.get("commit") or "unknown")
+    branch = str(deployment.get("branch") or "unknown")
+    deployment_id = str(deployment.get("deployment_id") or "unknown")
 
-    try:
-        branch = subprocess.check_output(
-            ["git", "branch", "--show-current"],
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=3,
-        ).strip() or "unknown"
-    except Exception:
-        branch = "unknown"
+    if len(head) > 8:
+        head = head[:8]
+    if len(deployment_id) > 8:
+        deployment_id = deployment_id[:8]
 
     role = get_role(normalize_uid(message))
 
@@ -53,6 +43,7 @@ def _status_text(message):
         "",
         "Control Plane: central_gateway",
         f"Git: {branch} @ {head}",
+        f"Deploy: {deployment_id}",
         "",
     ]
     for name, ok in checks:
