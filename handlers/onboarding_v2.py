@@ -156,13 +156,26 @@ def register(bot, context=None):
         )
 
         if is_owner:
+            # Owner /start is a single canonical surface: branding + personal summary + Dashboard.
+            # Do not emit separate Telegram messages for branding, welcome, and dashboard.
             branding = load_branding()
-            if branding:
-                try:
-                    bot.send_message(m.chat.id, f"<pre>{branding}</pre>", parse_mode="HTML")
-                except Exception:
-                    pass
-            text = (
+            dashboard_db = state_manager.load_db()
+            dashboard_user = dashboard_db.get("users", {}).get(user_id, {})
+            dashboard_wallet = dashboard_user.get("wallet", {})
+            dashboard_credits = dashboard_wallet.get("credits", credits)
+            dashboard_course = dashboard_user.get("active_course", "אין")
+            owned_agents = [
+                agent for agent in dashboard_db.get("agents", {}).values()
+                if isinstance(agent, dict) and str(agent.get("owner_id", "")) == str(user_id)
+            ]
+            dashboard_text = (
+                "🌟 ה-Dashboard שלך\n\n"
+                f"💰 Credits: {dashboard_credits}\n"
+                f"📚 קורס פעיל: {dashboard_course}\n"
+                f"🤖 הסוכנים שלך: {len(owned_agents)}\n\n"
+                "מה תרצה לעשות?"
+            )
+            owner_text = (
                 f"ברוך שובך, {user_name}!\n\n"
                 f"📅 {now}\n"
                 f"👤 משתמש: {user_name}\n"
@@ -175,9 +188,19 @@ def register(bot, context=None):
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
                 f"{invite_line}"
             )
-            bot.send_message(m.chat.id, text)
-            # Owners use the same canonical Dashboard surface as every existing account.
-            send_dashboard(m.chat.id, user_id)
+            combined_text = "\n\n".join(
+                part for part in (f"<pre>{branding}</pre>" if branding else "", owner_text, dashboard_text) if part
+            )
+            markup = types.InlineKeyboardMarkup(row_width=1)
+            markup.add(types.InlineKeyboardButton("📚 המשך לקורס", callback_data="continue_course"))
+            markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
+            markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
+            bot.send_message(
+                m.chat.id,
+                safe_clip(combined_text),
+                parse_mode="HTML" if branding else None,
+                reply_markup=markup,
+            )
             return
 
         text = (
