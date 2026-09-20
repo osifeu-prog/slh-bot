@@ -82,6 +82,36 @@ def projects():
 
 
 def project(project_id):
+    # Workspace-scoped tokens can list projects through the workspace even when
+    # the direct project resolver is unavailable to that token. Prefer that
+    # authoritative workspace path, then fall back to the direct resolver.
+    workspace_id = (
+        os.getenv("RAILWAY_WORKSPACE_ID")
+        or os.getenv("RAILWAY_WORKSPACE_ID_SLH")
+        or "e20e8242-57be-4ee3-9de8-c12684973570"
+    )
+    if workspace_id:
+        data = graphql("""
+            query($id: String!) {
+              workspace(workspaceId: $id) {
+                projects {
+                  edges {
+                    node {
+                      id
+                      name
+                      environments { edges { node { id name } } }
+                      services { edges { node { id name } } }
+                    }
+                  }
+                }
+              }
+            }
+        """, {"id": workspace_id})
+        for edge in (data.get("workspace") or {}).get("projects", {}).get("edges", []):
+            node = edge.get("node") or {}
+            if node.get("id") == project_id:
+                return node
+
     data = graphql("""
         query($id: String!) {
           project(id: $id) {
