@@ -81,6 +81,21 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
         self.assertEqual(grant.call_count, 1)
         self.assertEqual(self.load_db()["revenue"]["stars_gross"], 500)
 
+    def test_fulfilled_replay_reconciles_missing_revenue_ledger(self):
+        first = purchase_item_with_stars("100", "role_vip", 500, "charge-revenue-recovery")
+        self.assertEqual(first["status"], "SUCCESS")
+
+        db = self.load_db()
+        db.pop("revenue_ledger", None)
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+
+        second = purchase_item_with_stars("100", "role_vip", 500, "charge-revenue-recovery")
+        self.assertEqual(second["status"], "DUPLICATE")
+
+        repaired = self.load_db()
+        self.assertEqual(len(repaired["revenue_ledger"]), 1)
+        self.assertEqual(repaired["revenue_ledger"][0]["reference"], "charge-revenue-recovery")
+
     def test_real_catalog_course_purchase_uses_real_grant(self):
         item = self.catalog["course_bitcoin_101"]
         self.assertEqual(item["price_stars"], 299)
