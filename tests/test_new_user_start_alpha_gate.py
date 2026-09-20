@@ -1,7 +1,6 @@
 """Isolated regression coverage for new-user /start invite routing."""
 
 import importlib
-import sys
 import types
 
 
@@ -53,14 +52,10 @@ class Call:
         self.data = data
 
 
-def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
+def _load_onboarding(monkeypatch, db):
     import state_manager
-
-    db = {
-        "users": {"100": {"wallet": {"credits": 0, "staked": 0}}},
-        "pending_referrals": {},
-        "agents": {},
-    }
+    import core.profile_manager as profile_manager
+    import core.agent_registry as agent_registry
 
     monkeypatch.setattr(state_manager, "load_db", lambda: db)
     monkeypatch.setattr(
@@ -72,34 +67,33 @@ def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
     def exists(uid):
         return str(uid) in db["users"]
 
-    fake_profile = types.SimpleNamespace(
-        user_exists=exists,
-        update_user=lambda *args, **kwargs: None,
-    )
-    fake_identity = types.SimpleNamespace(OWNER_TELEGRAM_ID="999")
-    fake_agent = types.SimpleNamespace(create_agent=lambda *args, **kwargs: (1, {}))
-
-    monkeypatch.setitem(sys.modules, "core.profile_manager", fake_profile)
-    monkeypatch.setitem(sys.modules, "core.identity", fake_identity)
-    monkeypatch.setitem(sys.modules, "core.agent_registry", fake_agent)
+    monkeypatch.setattr(profile_manager, "user_exists", exists)
+    monkeypatch.setattr(profile_manager, "update_user", lambda *a, **k: None)
+    monkeypatch.setattr(agent_registry, "create_agent", lambda *a, **k: (1, {}))
 
     import handlers.onboarding_v2 as onboarding
     onboarding = importlib.reload(onboarding)
-
     monkeypatch.setattr(onboarding, "user_exists", exists)
     monkeypatch.setattr(onboarding, "get_display_name", lambda uid, user: "New User")
     monkeypatch.setattr(onboarding, "OWNER_TELEGRAM_ID", "999")
-    monkeypatch.setattr(onboarding, "record_entry", lambda *a, **k: True, raising=False)
+    return onboarding
+
+
+def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
+    db = {
+        "users": {"100": {"wallet": {"credits": 0, "staked": 0}}},
+        "pending_referrals": {},
+        "agents": {},
+    }
+    onboarding = _load_onboarding(monkeypatch, db)
 
     bot = FakeBot()
     onboarding.register(bot)
-
     start = next(
         fn for kind, meta, fn in bot.handlers
         if kind == "message" and meta.get("commands") == ["start"]
     )
 
-    # Referrer 100 exists, so this invite is valid and the new user may enter Alpha.
     start(Message("200", "/start ref_100"))
 
     assert db["pending_referrals"]["200"] == "100"
@@ -115,24 +109,8 @@ def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
 
 
 def test_new_user_start_without_invite_stays_closed(monkeypatch):
-    import state_manager
-
     db = {"users": {"100": {"wallet": {}}}, "pending_referrals": {}, "agents": {}}
-    monkeypatch.setattr(state_manager, "load_db", lambda: db)
-
-    def exists(uid):
-        return str(uid) in db["users"]
-
-    fake_profile = types.SimpleNamespace(user_exists=exists)
-    monkeypatch.setitem(sys.modules, "core.profile_manager", fake_profile)
-    monkeypatch.setitem(sys.modules, "core.identity", types.SimpleNamespace(OWNER_TELEGRAM_ID="999"))
-    monkeypatch.setitem(sys.modules, "core.agent_registry", types.SimpleNamespace(create_agent=lambda *a, **k: (1, {})))
-
-    import handlers.onboarding_v2 as onboarding
-    onboarding = importlib.reload(onboarding)
-    monkeypatch.setattr(onboarding, "user_exists", exists)
-    monkeypatch.setattr(onboarding, "get_display_name", lambda uid, user: "New User")
-    monkeypatch.setattr(onboarding, "OWNER_TELEGRAM_ID", "999")
+    onboarding = _load_onboarding(monkeypatch, db)
 
     bot = FakeBot()
     onboarding.register(bot)
