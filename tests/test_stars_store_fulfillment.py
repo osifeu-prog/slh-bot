@@ -103,9 +103,9 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
             "100", {"course": "bitcoin_mastery"}, purchase_id="stars:real-course-charge"
         )
 
-    def test_real_catalog_digital_purchase_uses_real_grant(self):
-        item = self.catalog["emoji_slh"]
-        self.assertEqual(item["price_stars"], 50)
+    def test_real_catalog_plugin_purchase_uses_real_grant(self):
+        item = self.catalog["agent_os"]
+        self.assertEqual(item["price_stars"], 199)
 
         with patch("store.stars_purchase_service.load_items", return_value=self.catalog),              patch(
                  "store.stars_purchase_service.apply_grant",
@@ -116,12 +116,12 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
                  },
              ) as grant:
             result = purchase_item_with_stars(
-                "100", "emoji_slh", 50, "real-digital-charge"
+                "100", "agent_os", 199, "real-plugin-charge"
             )
 
         self.assertEqual(result["status"], "SUCCESS")
         grant.assert_called_once_with(
-            "100", {"digital": "emoji_slh"}, purchase_id="stars:real-digital-charge"
+            "100", {"plugin": "agent_os"}, purchase_id="stars:real-plugin-charge"
         )
 
     def test_fulfillment_failure_is_recoverable_and_retry_can_fulfill(self):
