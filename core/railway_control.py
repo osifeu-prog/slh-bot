@@ -16,13 +16,16 @@ class RailwayControlError(RuntimeError):
     pass
 
 
-def _token():
+def _auth_headers():
+    project_token = os.getenv("RAILWAY_PROJECT_TOKEN") or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
+    if project_token:
+        return {"Project-Access-Token": project_token, "Content-Type": "application/json"}
     token = os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
     if not token:
         raise RailwayControlError(
-            "RAILWAY_API_TOKEN is not configured. Add an account/workspace Railway API token."
+            "Railway token is not configured. Add RAILWAY_API_TOKEN for account/workspace control."
         )
-    return token
+    return {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
 
 
 def graphql(query, variables=None):
@@ -30,17 +33,19 @@ def graphql(query, variables=None):
     req = urllib.request.Request(
         ENDPOINT,
         data=payload,
-        headers={
-            "Authorization": "Bearer " + _token(),
-            "Content-Type": "application/json",
-        },
+        headers=_auth_headers(),
         method="POST",
     )
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             data = json.loads(response.read().decode())
     except urllib.error.HTTPError as exc:
-        raise RailwayControlError(f"Railway API HTTP {exc.code}") from exc
+        try:
+            body = exc.read().decode("utf-8", errors="replace")[:500]
+        except Exception:
+            body = ""
+        detail = f": {body}" if body else ""
+        raise RailwayControlError(f"Railway API HTTP {exc.code}{detail}") from exc
     except Exception as exc:
         raise RailwayControlError(f"Railway API connection failed: {exc}") from exc
 
@@ -51,6 +56,19 @@ def graphql(query, variables=None):
 
 
 def projects():
+    workspace_id = os.getenv("RAILWAY_WORKSPACE_ID") or os.getenv("RAILWAY_WORKSPACE_ID_SLH")
+    if workspace_id:
+        data = graphql("""
+            query($id: String!) {
+              workspace(workspaceId: $id) {
+                id name
+                projects { edges { node { id name } } }
+              }
+            }
+        """, {"id": workspace_id})
+        workspace = data.get("workspace") or {}
+        return [x["node"] for x in workspace.get("projects", {}).get("edges", [])]
+
     data = graphql("""
         query {
           projects {
@@ -96,13 +114,21 @@ def deploy(service_id, environment_id, commit_sha=None):
 
 def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
     url = f"https://api.github.com/repos/{repo}/commits/{branch}"
-    req = urllib.request.Request(
-        url,
-        headers={"Accept": "application/vnd.github+json", "User-Agent": "SLH-Control-Plane"},
-    )
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "SLH-Control-Plane"}
+    github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN_SLH")
+    if github_token:
+        headers["Authorization"] = "Bearer " + github_token
+    req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=15) as response:
             return json.loads(response.read().decode())["sha"]
+    except urllib.error.HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")[:300]
+        except Exception:
+            body = ""
+        hint = " (private repo likely requires GITHUB_TOKEN)" if exc.code == 404 and not github_token else ""
+        raise RailwayControlError(f"GitHub HEAD lookup failed: HTTP {exc.code}{hint} {body}") from exc
     except Exception as exc:
         raise RailwayControlError(f"GitHub HEAD lookup failed: {exc}") from exc
 
