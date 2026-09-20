@@ -189,7 +189,7 @@ def init(bot):
         action = str(call.data).split(":", 1)[1]
         if action == "status":
             bot.edit_message_text(
-                _status_text(call.message),
+                _status_text(call.from_user),
                 call.message.chat.id,
                 call.message.message_id,
                 reply_markup=_menu_markup(),
