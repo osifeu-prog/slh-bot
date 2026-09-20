@@ -22,6 +22,32 @@ def _check(name, passed, detail=""):
     return {"name": name, "status": "PASS" if passed else "FAIL", "detail": detail}
 
 
+def _token_integrity(users, ledger):
+    """Validate SLH state without requiring a historical ledger for zero supply.
+
+    A ledger is mandatory once any wallet carries a non-zero SLH balance. A
+    fresh/legacy state with every token balance at zero is valid before the
+    first canonical distribution and must not be blocked solely because no
+    ledger entries exist yet. This never creates or changes token balances.
+    """
+    if isinstance(ledger, list):
+        return True, "SLH token ledger available"
+
+    nonzero = []
+    for uid, user in (users or {}).items():
+        wallet = user.get("wallet", {}) if isinstance(user, dict) else {}
+        try:
+            balance = float(wallet.get("token_balance", 0) or 0)
+        except (TypeError, ValueError):
+            return False, f"invalid token_balance for {uid}"
+        if balance != 0:
+            nonzero.append(str(uid))
+
+    if nonzero:
+        return False, "non-zero SLH balances require a token ledger"
+    return True, "zero SLH supply; ledger not yet required"
+
+
 def evaluate():
     checks = []
     gateway = ROOT / "bot_gateway.py"
@@ -45,7 +71,8 @@ def evaluate():
     users = db.get("users", {}) if isinstance(db, dict) else {}
     checks.append(_check("economy", isinstance(users, dict), "users wallet store available"))
     ledger = db.get("slh_token_ledger") if isinstance(db, dict) else None
-    checks.append(_check("slh_integrity", isinstance(ledger, list), "SLH token ledger available"))
+    token_ok, token_detail = _token_integrity(users, ledger)
+    checks.append(_check("slh_integrity", token_ok, token_detail))
     checks.append(_check("slh_transfer", (ROOT / "core" / "slh_distribution.py").exists(),
                          "SLH distribution authority present"))
     checks.append(_check("payments", (ROOT / "handlers" / "payment_handler.py").exists(),
