@@ -128,6 +128,17 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
 
     order = state_manager.atomic_update(create_order)
     if order.get("status") == "FULFILLED":
+        # Entitlement was already granted. Reconcile the revenue ledger on
+        # replay so a transient ledger failure cannot leave a permanently
+        # unrecorded payment after a successful fulfillment.
+        revenue_ledger.record(
+            source="telegram_stars_item",
+            amount=stars_paid,
+            currency="XTR",
+            reference=charge_id,
+            uid=uid,
+            meta={"kind": "telegram_stars_item", "item_id": item_id},
+        )
         return {"status": "DUPLICATE", "order_id": order_id, "item_id": item_id}
 
     try:
