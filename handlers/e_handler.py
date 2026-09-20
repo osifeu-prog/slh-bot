@@ -40,16 +40,34 @@ def register(bot):
                     )
                     return
                 if len(args) == 3 and args[1] == "inspect":
-                    p = project(args[2])
+                    project_id = args[2].strip()
+                    p = project(project_id)
+                    if not p:
+                        # Fall back to the same workspace listing used by
+                        # `railway projects`, avoiding false "not found"
+                        # when detailed project resolution is restricted.
+                        ps = projects()
+                        p = next(
+                            (
+                                item for item in ps
+                                if str(item.get("id", "")).strip().lower()
+                                == project_id.lower()
+                            ),
+                            None,
+                        )
                     if not p:
                         bot.reply_to(msg, "❌ Railway project not found")
                         return
                     envs = p.get("environments", {}).get("edges", [])
                     svcs = p.get("services", {}).get("edges", [])
-                    lines = [f"🚂 {p['name']} ({p['id']})", "Environments:"]
-                    lines += [f"• {x['node']['name']} — {x['node']['id']}" for x in envs]
-                    lines.append("Services:")
-                    lines += [f"• {x['node']['name']} — {x['node']['id']}" for x in svcs]
+                    lines = [f"🚂 {p['name']} ({p['id']})"]
+                    if envs or svcs:
+                        lines.append("Environments:")
+                        lines += [f"• {x['node']['name']} — {x['node']['id']}" for x in envs]
+                        lines.append("Services:")
+                        lines += [f"• {x['node']['name']} — {x['node']['id']}" for x in svcs]
+                    else:
+                        lines.append("⚠️ Project is visible in the workspace, but detailed environment/service metadata is not exposed to this runtime token.")
                     bot.reply_to(msg, "\\n".join(lines)[:4000])
                     return
                 bot.reply_to(msg, "Usage: /e railway | railway projects | railway inspect <project_id> | railway up")
