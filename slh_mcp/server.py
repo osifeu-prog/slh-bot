@@ -80,7 +80,7 @@ def build_mcp_app():
     routes = [
         Route("/health", health, methods=["GET"]),
         Mount(
-            "/mcp",
+            "/",
             app=mcp.streamable_http_app(
                 transport_security=_transport_security(),
             ),
