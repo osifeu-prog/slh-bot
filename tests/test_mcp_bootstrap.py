@@ -15,6 +15,24 @@ class MCPBootstrapTests(unittest.TestCase):
         paths = {getattr(route, "path", None) for route in app.routes}
         self.assertIn("/mcp", paths)
 
+    def test_resource_registration_uses_unique_uris(self):
+        from unittest.mock import MagicMock
+        from slh_mcp.resources import register_resources
+
+        uris = []
+
+        def resource(uri, **_kwargs):
+            uris.append(uri)
+            def decorator(fn):
+                return fn
+            return decorator
+
+        server = MagicMock()
+        server.resource.side_effect = resource
+        register_resources(server)
+
+        self.assertEqual(len(uris), len(set(uris)))
+
 
 if __name__ == "__main__":
     unittest.main()
