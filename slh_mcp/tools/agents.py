@@ -1,4 +1,4 @@
-"""Agent MCP tools backed by the live SLH Control Plane bridge."""
+"""Agent MCP tools backed by the canonical Control Plane bridge."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ def _resolve_principal(principal=None):
     if principal is not None:
         return principal
     from slh_mcp.auth import current_principal
-
     resolved = current_principal()
     if resolved is None:
         raise PermissionError("MCP authentication required")
@@ -30,34 +29,25 @@ def agents_get(principal, agent_id: str | None = None) -> dict:
     principal = _resolve_principal(principal)
     result = control_plane_client.agent(str(agent_id), principal.subject)
     agent = result.get("agent")
-    if not isinstance(agent, dict) or not agent:
+    if not isinstance(agent, dict):
         raise KeyError(str(agent_id))
-    return dict(agent)
+    return agent
 
 
 def agents_runtime_status(principal=None) -> dict:
     principal = _resolve_principal(principal)
-    return dict(control_plane_client.runtime_status(principal.subject))
+    result = control_plane_client.runtime_status(principal.subject)
+    return dict(result)
 
 
-def agents_execute(principal, agent_id: str | None = None, command: str | None = None) -> dict:
+def agents_execute(principal, agent_id: str, command: str) -> dict:
     principal = _resolve_principal(principal)
-    if agent_id is None or command is None:
-        raise ValueError("agent_id and command are required")
-
     command = str(command).strip()
     if not command:
         raise ValueError("command cannot be empty")
     if len(command) > _MAX_COMMAND_LENGTH:
         raise ValueError("command exceeds maximum length")
-
-    return dict(
-        control_plane_client.agent_execute(
-            str(agent_id),
-            command,
-            principal.subject,
-        )
-    )
+    return control_plane_client.agent_execute(str(agent_id), command, principal.subject)
 
 
 def _tool_agents_list():
