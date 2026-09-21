@@ -30,6 +30,23 @@ class CoreControlPlaneClientTests(unittest.TestCase):
         self.assertEqual(req.get_header("X-slh-principal-id"), "slh-mcp")
         self.assertEqual(result, {"ok": True})
 
+
+    def test_production_rejects_public_core_url(self):
+        from slh_mcp.core_client import configured_client
+
+        with patch.dict(
+            os.environ,
+            {
+                "RAILWAY_SERVICE_NAME": "slh-mcp",
+                "SLH_CORE_API_URL": "https://public.example.invalid",
+                "SLH_CORE_INTERNAL_KEY": "key",
+                "SLH_MCP_SERVICE_PRINCIPAL_ID": "slh-mcp",
+            },
+            clear=False,
+        ):
+            with self.assertRaises(RuntimeError):
+                configured_client()
+
     def test_configured_backend_is_detected(self):
         from slh_mcp.core_client import configured_client
 
