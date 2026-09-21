@@ -40,7 +40,7 @@ class MCPMQTTTests(unittest.TestCase):
     def test_status_does_not_connect(self):
         from slh_mcp.tools.mqtt import mqtt_status
 
-        with patch("slh_mcp.tools.mqtt_config.connect") as connect:
+        with patch("core.mqtt_config.connect") as connect:
             result = mqtt_status(self.owner)
         connect.assert_not_called()
         self.assertIn("broker", result)
