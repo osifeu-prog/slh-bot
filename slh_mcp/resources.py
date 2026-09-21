@@ -84,8 +84,8 @@ def _resource_agent(agent_id: str):
     return agent_resource(agent_id)
 
 
-def system_snapshot():
-    principal = _principal_or_raise()
+def system_snapshot(principal=None):
+    principal = _principal_or_raise(principal)
     from slh_mcp.tools.missions import missions_list
     agents = agents_resource(principal)
     missions = missions_list(principal)
