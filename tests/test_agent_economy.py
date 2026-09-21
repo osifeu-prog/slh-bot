@@ -94,6 +94,39 @@ class AgentEconomyTests(unittest.TestCase):
                 reason="collision", evidence={"event_id": "external-2"},
             )
 
+    def test_proposal_is_read_only(self):
+        result = self.economy.propose_transfer(
+            source_agent="agent-1",
+            target_agent="agent-2",
+            amount=10,
+            operation_id="proposal-1",
+            actor=str(OWNER_TELEGRAM_ID),
+            reason="work",
+        )
+        self.assertEqual(result["status"], "proposed")
+        self.assertEqual(self.economy.balance("agent-1"), 0)
+        self.assertEqual(self.economy.balance("agent-2"), 0)
+        self.assertEqual(self.economy.ledger(), [])
+
+    def test_reward_uses_treasury(self):
+        self.economy.record_revenue(
+            amount=50,
+            operation_id="revenue-1",
+            actor=str(OWNER_TELEGRAM_ID),
+            reason="verified_external_revenue",
+            evidence={"event_id": "external-1"},
+        )
+        result = self.economy.record_reward(
+            agent_id="agent-1",
+            amount=20,
+            operation_id="reward-1",
+            mission_id="m1",
+            actor=str(OWNER_TELEGRAM_ID),
+        )
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(self.economy.balance("agent-1"), 20)
+        self.assertEqual(self.economy.balance("AGENT_TREASURY"), 30)
+
     def test_revenue_requires_evidence(self):
         with self.assertRaises(ValueError):
             self.economy.record_revenue(
