@@ -3,6 +3,12 @@ from unittest.mock import patch
 
 
 class MCPCanonicalLedgerTests(unittest.TestCase):
+    def test_agent_economy_reads_use_economy_permission(self):
+        from slh_mcp.capabilities import get_capability
+
+        self.assertEqual(get_capability("economy.agent_balance").permission, "economy.view_self")
+        self.assertEqual(get_capability("economy.agent_ledger").permission, "economy.view_self")
+
     def test_economy_ledger_is_read_only_capability(self):
         from slh_mcp.capabilities import get_capability
 
@@ -58,3 +64,4 @@ class MCPCanonicalLedgerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
