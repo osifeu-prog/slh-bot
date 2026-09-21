@@ -173,15 +173,13 @@ def register_payment_handlers(bot):
                     "ℹ️ תשלום VIP כבר עובד. החבילה נשמרת כל עוד המנוי פעיל."
                     if result["status"] == "duplicate"
                     else (
-                        "✅ VIP הופעל לחודש.
-"
+                        "✅ VIP הופעל לחודש.\n"
                         + (
                             "🎁 חבילת ההשקה הופעלה: 300 Credits + Agent OS + אימוג'י VIP זהוב + עד 4 סוכנים."
                             if result.get("launch_offer_qualified") and result.get("fulfillment_status") == "completed"
                             else "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי."
                         )
-                        + "
-החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
+                        + "\nהחיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
                     )
                 ),
             )
