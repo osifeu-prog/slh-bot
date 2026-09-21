@@ -46,6 +46,16 @@ class MCPRailwayDeployTests(unittest.TestCase):
                 railway_deploy(self.owner, "p", "s", "e", "bad")
         deploy.assert_not_called()
 
+    def test_permission_comes_from_canonical_authority(self):
+        from slh_mcp.tools.railway_control import railway_deploy
+        os.environ["SLH_MCP_DEPLOY_ALLOWLIST"] = "p|s|e"
+        with patch(
+            "slh_mcp.tools.railway_control.has_permission",
+            return_value=False,
+        ):
+            with self.assertRaises(PermissionError):
+                railway_deploy(self.owner, "p", "s", "e", "a" * 40)
+
     def test_deploy_returns_verified_status(self):
         from slh_mcp.tools.railway_control import railway_deploy
 
