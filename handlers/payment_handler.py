@@ -178,7 +178,7 @@ def register_payment_handlers(bot):
                     apply_grant(uid, {"digital": "emoji_vip"}, purchase_id="vip:" + charge_id)
                     vip_gift_text = "\n\n🎁 קיבלת: " + str(VIP_MONTHLY_CREDITS) + " Credits, Agent OS וחבילת אימוג'י VIP זהוב."
                 except Exception as exc:
-                    print(f"[VIP] benefits grant failed: {type(exc).name}")
+                    print(f"[VIP] benefits grant failed: {type(exc).__name__}")
                     vip_gift_text = "\n\n⚠️ ההטבות יתווספו בקרוב. אם לא הופיעו, פנה ל-/paysupport."
             bot.send_message(
                 m.chat.id,
