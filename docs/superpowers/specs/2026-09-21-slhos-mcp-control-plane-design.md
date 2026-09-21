@@ -66,7 +66,7 @@ Railway project: endearing-amazement
   slh-mcp   -> standalone MCP HTTP service
 ```
 
-The MCP service imports the same 'core/' modules from the repository. It does not duplicate the state model.
+The MCP service uses the same repository code for protocol adapters, but canonical Agents, Missions, and Agent Economy state is owned by the 'web' service and accessed by an authenticated private Control Plane API. The MCP service does not duplicate canonical state.
 
 ## 4. MCP Transport and Service Boundary
 
@@ -75,7 +75,7 @@ The MCP service will be an independent ASGI application using the current MCP Py
 Requirements:
 - Dedicated service directory: 'mcp/'.
 - Dedicated entrypoint: 'mcp/server.py'.
-- Dedicated authentication module: 'mcp/auth.py'.
+- Dedicated authentication module: `slh_mcp/auth.py`.
 - Dedicated explicit capability registry: 'mcp/registry.py'.
 - Tool/resource modules under 'mcp/tools/' and 'mcp/resources/'.
 - No production dependency on packages installed ad hoc into a running container.
@@ -158,7 +158,7 @@ MCP credential
 
 Rules:
 1. 'core/authority.py' remains the final application-level permission source.
-2. MCP must not maintain a second OWNER/ADMIN list.
+2. MCP must not maintain a second OWNER/ADMIN list. Production uses a restricted `MCP_SERVICE` principal, not OWNER impersonation.
 3. Tool code must not mutate permissions directly.
 4. Privileged operations must have explicit capability gates.
 5. A read capability must not silently perform a write.
@@ -180,7 +180,7 @@ Each agent may have:
 - ledger reference
 - audit trail
 
-Agent execution continues through 'core/runtime_service.py'. MCP provides a controlled front door to that execution path; it does not instantiate arbitrary Python classes.
+Agent execution continues through 'core/runtime_service.py' on `web`. MCP provides a controlled front door through the private Control Plane API; it does not instantiate arbitrary Python classes.
 
 ## 9. Agent Economy
 
@@ -210,13 +210,14 @@ agent action
 
 Hard requirements:
 - no direct MCP writes to 'state/db.json'
+- no production Agent/Mission/Economy state is kept on the MCP service filesystem
 - no direct manipulation of existing user 'credits', 'token_balance', 'staked', or staking positions
 - no migration of existing financial state as part of MCP rollout
 - every monetary mutation is idempotent
 - every monetary mutation records source, actor, target, amount, and stable operation id
 - rejected operations do not partially mutate balances
 
-The implementation may reuse existing canonical ledger primitives where they are semantically compatible; otherwise an agent-specific ledger layer is added rather than changing historical user accounting.
+The implementation uses an agent-specific ledger in `core/agent_economy.py`, persisted with the existing `web` state volume. MCP never writes that file directly.
 
 ## 10. Mission Economy Flow
 
