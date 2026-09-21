@@ -71,6 +71,24 @@ class MCPCapabilityTests(unittest.TestCase):
             self.assertNotIn("permissions", row)
             self.assertNotIn("owner_id", row)
 
+    def test_tool_audit_contains_capability_only(self):
+        from slh_mcp.capabilities import Capability, guarded_handler
+        from unittest.mock import patch
+        capability = Capability("test.audit", "test", "public.view", False)
+        with patch(
+            "slh_mcp.capabilities.current_principal",
+            return_value=self.owner,
+        ), patch(
+            "slh_mcp.capabilities.audit_event",
+        ) as audit_event:
+            guarded_handler(capability, lambda secret="hidden": {"ok": True})(secret="hidden")
+        audit_event.assert_called_once_with(
+            self.owner.subject,
+            "mcp:test.audit",
+            "mcp",
+            "success",
+        )
+
     def test_privileged_capability_requires_canonical_permission(self):
         from mcp.server.mcpserver.exceptions import ToolError
         from slh_mcp.auth import Principal
