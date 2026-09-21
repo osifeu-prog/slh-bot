@@ -30,7 +30,7 @@ class MCPBridgeModeTests(unittest.TestCase):
         ):
             result = agents_list(Principal())
 
-        self.assertEqual(result, agents.values().__class__ if False else [{"id": "1", "name": "A", "state": "idle"}])
+        self.assertEqual(result, [{"id": "1", "name": "A", "state": "idle"}])
 
     def test_bridge_mode_uses_live_agent_source(self):
         from slh_mcp.tools.agents import agents_list
