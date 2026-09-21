@@ -19,7 +19,7 @@ class EconomicReadModelTests(unittest.TestCase):
         self.assertEqual(event["account_id"], "user-1")
         self.assertEqual(event["amount"], -2.5)
         self.assertEqual(event["currency"], "credits")
-        self.assertEqual(event["operation_ref"], "user:user-1:purchase:item")
+        self.assertEqual(event["operation_ref"], "user:user-1:2026-09-21T00:00:00+00:00:purchase:item:-2.5")
 
     def test_normalizes_revenue_event(self):
         from core.economic_read_model import normalize_revenue_event
