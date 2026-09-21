@@ -73,13 +73,25 @@ def complete_agent_mission(
     if reward < 0:
         raise ValueError("INVALID_MISSION_REWARD")
 
-    completion = lifecycle.complete_mission(mission_id)
-    if completion.get("status") == "blocked":
+    current_status = str(mission.get("status", "")).lower()
+    if current_status == "completed":
+        completion = {"status": "already_completed", "mission_id": mission_id}
+    elif current_status == "executed":
+        completion = lifecycle.complete_mission(mission_id)
+        if completion.get("status") == "blocked":
+            return {
+                "status": "blocked",
+                "mission_id": mission_id,
+                "agent_id": agent_id,
+                "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
+            }
+    else:
         return {
             "status": "blocked",
             "mission_id": mission_id,
             "agent_id": agent_id,
-            "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
+            "reason": "MISSION_NOT_READY_FOR_COMPLETION",
+            "current_status": current_status,
         }
 
     if reward == 0:
