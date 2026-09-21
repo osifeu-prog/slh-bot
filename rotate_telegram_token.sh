@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Secure Telegram BOT_TOKEN rotation.
-# - Reads the new token from hidden terminal input (never CLI args).
-# - Validates it with Telegram getMe before changing anything.
-# - Updates Railway's canonical BOT_TOKEN secret.
-# - Does not write tokens to Git, state/, config.json, or logs.
-# - Redeploy/verification is intentionally explicit so a failed deployment
-#   cannot silently leave the operator believing rotation completed.
+# Secure multi-bot Telegram token rotation.
+# The token is read from hidden terminal input only.
+# It is validated against the expected bot username before any Railway change.
+# No raw token is written to Git, state/, config, or logs.
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REGISTRY="$SCRIPT_DIR/core/telegram_token_registry.py"
 
 if ! command -v railway >/dev/null 2>&1; then
   echo "ERROR: Railway CLI is required."
@@ -19,71 +19,49 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 2
 fi
 
-read -r -s -p "New Telegram BOT_TOKEN: " NEW_TOKEN
-echo
-
-if [[ -z "${NEW_TOKEN}" ]]; then
-  echo "ERROR: empty token; nothing changed."
+ALIAS="${1:-}"
+if [[ -z "$ALIAS" ]]; then
+  echo "USAGE: $0 <main|air|claude|ton>"
   exit 3
 fi
 
-export NEW_TOKEN
-python3 - <<'PY'
-import json, os, sys, urllib.request
+TARGETS="$(python3 -c 'import sys; from importlib.util import spec_from_file_location,module_from_spec; spec=spec_from_file_location("slh_token_registry",sys.argv[1]); m=module_from_spec(spec); spec.loader.exec_module(m); b=m.get_bot(sys.argv[2]); print(b["username"]); [print("\t".join([t["project_id"],t["environment_id"],t["service_id"],t["variable"],t["project"],t["service"]])) for t in b["targets"]]' "$REGISTRY" "$ALIAS")"
+EXPECTED_USERNAME="$(printf "%s\n" "$TARGETS" | sed -n '1p')"
+TARGET_ROWS="$(printf "%s\n" "$TARGETS" | tail -n +2)"
 
-token = os.environ.get("NEW_TOKEN", "")
-url = "https://api.telegram.org/bot" + token + "/getMe"
-try:
-    with urllib.request.urlopen(url, timeout=10) as response:
-        data = json.load(response)
-except Exception as exc:
-    print("ERROR: Telegram validation failed; nothing changed.")
-    print(type(exc).__name__)
-    sys.exit(4)
-
-if not data.get("ok"):
-    print("ERROR: Telegram rejected token; nothing changed.")
-    sys.exit(4)
-
-bot = data.get("result", {})
-print("Telegram validation: OK")
-print("Bot identity:", "@" + str(bot.get("username", "unknown")))
-PY
-
-unset NEW_TOKEN
-
-# Ask for the token a second time so it is never retained in shell history or
-# command arguments. Railway receives it only through the CLI process stdin-free
-# argument construction below; the shell variable is cleared immediately after.
-read -r -s -p "Enter the validated token again to update Railway: " NEW_TOKEN
- echo
-if [[ -z "${NEW_TOKEN}" ]]; then
-  echo "ERROR: empty token; Railway was not changed."
+if [[ -z "$EXPECTED_USERNAME" || -z "$TARGET_ROWS" ]]; then
+  echo "ERROR: registry returned no valid targets."
   exit 5
 fi
 
-export NEW_TOKEN
-python3 - <<'PY'
-import json, os, sys, urllib.request
+echo "Target bot: @$EXPECTED_USERNAME"
+echo "Enter the new token. Input is hidden and is never stored in shell history."
+read -r -s -p "New Telegram token: " NEW_TOKEN
+echo
+if [[ -z "$NEW_TOKEN" ]]; then
+  echo "ERROR: empty token; nothing changed."
+  exit 6
+fi
 
-token = os.environ["NEW_TOKEN"]
-try:
-    with urllib.request.urlopen("https://api.telegram.org/bot" + token + "/getMe", timeout=10) as response:
-        data = json.load(response)
-except Exception:
-    print("ERROR: token re-validation failed; Railway was not changed.")
-    sys.exit(6)
-if not data.get("ok"):
-    print("ERROR: token re-validation failed; Railway was not changed.")
-    sys.exit(6)
-PY
+export NEW_TOKEN EXPECTED_USERNAME
+trap 'unset NEW_TOKEN EXPECTED_USERNAME' EXIT
 
-# Railway CLI needs the value as an argument. It is not printed by this script.
-# The shell history does not contain the command because this is an executable
-# invocation, not a command typed by the operator.
-railway variables --set "BOT_TOKEN=${NEW_TOKEN}"
-unset NEW_TOKEN
+python3 -c 'import json,os,sys,urllib.request; token=os.environ["NEW_TOKEN"]; expected=os.environ["EXPECTED_USERNAME"].lstrip("@"); r=urllib.request.urlopen("https://api.telegram.org/bot"+token+"/getMe",timeout=10); d=json.load(r); actual=str((d.get("result") or {}).get("username") or "").lstrip("@"); (sys.exit(7) if not d.get("ok") else None); (print("ERROR: token belongs to a different bot; nothing changed.") or print("Expected: @"+expected) or print("Received: @"+(actual or "unknown")) or sys.exit(8)) if actual != expected else print("Telegram validation: OK (@"+actual+")")'
 
-echo "Railway BOT_TOKEN updated successfully."
-echo "Next required step: railway redeploy"
-echo "Then verify the new deployment reaches SUCCESS and Telegram polling starts."
+while IFS=$'\t' read -r PROJECT_ID ENVIRONMENT_ID SERVICE_ID VARIABLE PROJECT SERVICE; do
+  [[ -z "$PROJECT_ID" ]] && continue
+  echo "Updating $PROJECT/$SERVICE -> $VARIABLE"
+  printf "%s" "$NEW_TOKEN" | railway variable set "$VARIABLE" --stdin \
+    --project "$PROJECT_ID" \
+    --service "$SERVICE_ID" \
+    --environment "$ENVIRONMENT_ID" \
+    --skip-deploys
+  echo "Redeploying $PROJECT/$SERVICE"
+  railway redeploy \
+    --project "$PROJECT_ID" \
+    --service "$SERVICE_ID" \
+    --environment "$ENVIRONMENT_ID" \
+    --yes
+done <<< "$TARGET_ROWS"
+
+echo "Telegram token rotation completed for @$EXPECTED_USERNAME."
