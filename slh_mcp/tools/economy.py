@@ -7,9 +7,9 @@ from decimal import Decimal, InvalidOperation
 from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 
-from slh_mcp.agent_economy import AgentEconomyService
+from slh_mcp.agent_economy_factory import get_agent_economy_service
 
-_SERVICE = AgentEconomyService()
+_SERVICE = get_agent_economy_service()
 
 
 def _principal(principal=None):
