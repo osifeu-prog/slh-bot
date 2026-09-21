@@ -141,20 +141,40 @@ def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
         raise RailwayControlError(f"GitHub HEAD lookup failed: {exc}") from exc
 
 
+def canonical_main_target():
+    """Resolve the main Railway project from the current workspace listing."""
+    name = "endearing-amazement"
+    rows = projects()
+    for row in rows:
+        if str(row.get("name")) == name:
+            return {
+                "project_id": str(row.get("id")),
+                "project": name,
+                "service": "web",
+                "service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
+                "environment": "production",
+                "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
+            }
+    visible = ", ".join(
+        f"{row.get('name')}={row.get('id')}" for row in rows
+    )
+    raise RailwayControlError(
+        f"Canonical Railway project not found: {name}. Visible projects: {visible}"
+    )
+
+
 def canonical_up(commit_sha=None):
-    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e812f4"
-    service_id = "13d97581-0199-4f6a-80d1-885c9304ffc5"
-    environment_id = "661caa13-83cb-4197-8825-943bebf96c5a"
+    target = canonical_main_target()
     sha = str(commit_sha or "").strip() or latest_github_commit()
-    deployment = deploy(service_id, environment_id, sha)
+    deployment = deploy(target["service_id"], target["environment_id"], sha)
     return {
-        "project": "endearing-amazement",
-        "service": "web",
-        "environment": "production",
+        "project": target["project"],
+        "project_id": target["project_id"],
+        "service": target["service"],
+        "environment": target["environment"],
         "commit": sha,
         "deployment_id": deployment.get("id"),
     }
-
 def deployment_status(deployment_id):
     deployment_id = str(deployment_id).strip()
     if not deployment_id:
