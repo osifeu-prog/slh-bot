@@ -58,7 +58,8 @@ class MCPProtocolTests(unittest.TestCase):
         from unittest.mock import patch
         from slh_mcp.resources import system_snapshot
 
-        with patch("slh_mcp.resources.agents_resource", return_value=[{}, {}]),              patch("slh_mcp.resources.missions_list", return_value=[{}]):
+        with patch("slh_mcp.resources.agents_resource", return_value=[{}, {}]), \
+             patch("slh_mcp.tools.missions.missions_list", return_value=[{}]):
             result = system_snapshot()
         self.assertEqual(result["agent_count"], 2)
         self.assertEqual(result["mission_count"], 1)
