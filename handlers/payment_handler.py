@@ -58,7 +58,7 @@ def register_payment_handlers(bot):
             bot.send_invoice(
                 chat_id=m.chat.id,
                 title="SLH VIP",
-                description="מנוי VIP חודשי ל-SLH OS",
+                description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
                 invoice_payload=f"vip_monthly_{uid}",
                 provider_token="",
                 currency="XTR",
@@ -167,12 +167,23 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
-            bot.send_message(
-                m.chat.id,
-                "ℹ️ VIP payment was already processed."
-                if result["status"] == "duplicate"
-                else "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars.",
-            )
+            if result["status"] == "duplicate":
+                message = (
+                    "ℹ️ תשלום VIP כבר עובד. החבילה נשמרת כל עוד המנוי פעיל."
+                )
+            elif result.get("launch_offer_qualified") and result.get("fulfillment_status") == "completed":
+                message = (
+                    "✅ VIP הופעל לחודש.\n"
+                    "🎁 חבילת ההשקה הופעלה: 300 Credits + Agent OS + אימוג'י VIP זהוב + עד 4 סוכנים.\n"
+                    "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
+                )
+            else:
+                message = (
+                    "✅ VIP הופעל לחודש.\n"
+                    "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי.\n"
+                    "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
+                )
+            bot.send_message(m.chat.id, message)
             return
             return
 
