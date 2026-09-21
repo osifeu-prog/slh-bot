@@ -15,6 +15,12 @@ class TelegramTokenRegistryTests(unittest.TestCase):
         self.assertNotIn("AAG", repr(bots))
         self.assertNotIn("1234567890:", repr(bots))
 
+    def test_main_points_to_canonical_railway_project(self):
+        target = targets_for("main")[0]
+        self.assertEqual(target["project_id"], "fd30fefb-3d35-48a5-a7cb-e05337e812f4")
+        self.assertEqual(target["environment_id"], "661caa13-83cb-4197-8825-943bebf96c5a")
+        self.assertEqual(target["service"], "web")
+
     def test_air_uses_dedicated_telegram_token_variable(self):
         targets = targets_for("air")
         self.assertEqual(len(targets), 1)
