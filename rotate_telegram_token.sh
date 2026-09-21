@@ -77,6 +77,7 @@ if [[ -z "${NEW_TOKEN}" ]]; then
 fi
 
 export NEW_TOKEN EXPECTED_USERNAME
+trap 'unset NEW_TOKEN EXPECTED_USERNAME' EXIT
 python3 <<'PY'
 import json
 import os
@@ -110,8 +111,6 @@ if actual != expected:
 
 print(f"Telegram validation: OK (@{actual})")
 PY
-unset EXPECTED_USERNAME
-
 while IFS=$'\t' read -r PROJECT_ID ENVIRONMENT_ID SERVICE_ID VARIABLE PROJECT SERVICE; do
   [[ -z "$PROJECT_ID" ]] && continue
 
@@ -129,7 +128,5 @@ while IFS=$'\t' read -r PROJECT_ID ENVIRONMENT_ID SERVICE_ID VARIABLE PROJECT SE
     --environment "$ENVIRONMENT_ID" \
     --yes
 done <<< "$TARGET_ROWS"
-
-unset NEW_TOKEN
 
 echo "Telegram token rotation completed for @$EXPECTED_USERNAME."
