@@ -19,11 +19,11 @@ def _principal(principal=None):
 
 def mqtt_status(principal=None) -> dict:
     _principal(principal)
-    broker = str(mqtt_config.BROKER)
-    port = int(mqtt_config.PORT)
-    tls = bool(mqtt_config.USE_TLS)
-    user_configured = bool(str(mqtt_config.USER or "").strip())
-    password_configured = bool(str(mqtt_config.PASSWORD or "").strip())
+    broker = str(os.getenv("MQTT_BROKER", "broker.hivemq.com"))
+    port = int(os.getenv("MQTT_PORT", "1883"))
+    tls = os.getenv("MQTT_TLS", "0") == "1"
+    user_configured = bool(str(os.getenv("MQTT_USER", "")).strip())
+    password_configured = bool(str(os.getenv("MQTT_PASSWORD", "")).strip())
     topic_root = str(os.getenv("MQTT_TOPIC_ROOT", "slh/device").strip("/") or "slh/device")
     return {
         "broker": broker,
