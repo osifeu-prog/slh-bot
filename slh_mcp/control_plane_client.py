@@ -74,6 +74,7 @@ def mission_complete(mission_id: str, principal=None):
     return _request(
         "/api/internal/mcp/missions/" + str(mission_id) + "/complete",
         method="POST",
+        principal=principal,
     )
 
 def authorize(permission: str, principal=None) -> bool:
