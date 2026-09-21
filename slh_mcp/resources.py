@@ -107,3 +107,30 @@ def _tool_system_health():
 
 def _tool_bots_registry():
     return bot_registry()
+
+def economy_resource(agent_id: str, principal=None):
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
+    return {
+        "balance": economy_agent_balance(principal, agent_id),
+        "ledger": economy_agent_ledger(principal, agent_id),
+    }
+
+
+def missions_resource(principal=None):
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.missions import missions_list
+    return missions_list(principal)
+
+
+def register_extended_resources(server) -> None:
+    server.resource(
+        "slh://agent/{agent_id}/economy",
+        name="agent_economy",
+        description="Isolated economy state for one visible agent.",
+    )(economy_resource)
+    server.resource(
+        "slh://missions",
+        name="missions",
+        description="Safe canonical SLH mission projection.",
+    )(missions_resource)
