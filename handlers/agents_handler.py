@@ -6,6 +6,41 @@ from core.authority import get_visible_agents, normalize_uid, is_owner
 from core.runtime_service import execute_agent
 
 
+def _agent_sort_key(item):
+    created = str(item[1].get("created", ""))
+    try:
+        numeric_id = int(item[0])
+    except (TypeError, ValueError):
+        numeric_id = 10**18
+    return (created, numeric_id, str(item[0]))
+
+
+def format_agent_list(uid, all_agents):
+    """Return per-user display numbering without changing canonical agent IDs."""
+    uid = normalize_uid(uid)
+    visible = get_visible_agents(uid, all_agents)
+
+    # /agents is a personal view. OWNER sees their own agents here; privileged
+    # Control Plane tools continue to expose canonical IDs separately.
+    if is_owner(uid):
+        visible = {
+            aid: agent
+            for aid, agent in all_agents.items()
+            if str(agent.get("owner_id", "")) == uid
+        }
+
+    ordered = sorted(visible.items(), key=_agent_sort_key)
+    mapping = {}
+    lines = ["הסוכנים שלך:"]
+    for index, (agent_id, data) in enumerate(ordered, start=1):
+        mapping[str(index)] = str(agent_id)
+        lines.append(
+            f"{index}. {data.get('name', agent_id)} "
+            f"[{data.get('state', 'unknown')}] - {data.get('role', 'agent')}"
+        )
+    return "\n".join(lines), mapping
+
+
 def _check_access(uid, identifier):
     agent_id, agent = get_agent(identifier)
     if agent is None:
@@ -38,14 +73,11 @@ def register(bot, context):
     def agents_list_cmd(m):
         uid = normalize_uid(m.from_user.id)
         all_agents = list_agents()
-        agents = get_visible_agents(uid, all_agents)
-        if not agents:
-            bot.reply_to(m, "No agents found")
+        text, _mapping = format_agent_list(uid, all_agents)
+        if text == "הסוכנים שלך:":
+            bot.reply_to(m, "אין לך סוכנים רשומים")
             return
-        lines = []
-        for aid, d in agents.items():
-            lines.append(aid + " - " + str(d.get("name", aid)) + " [" + str(d.get("state", "unknown")) + "] - " + str(d.get("role", "agent")))
-        bot.reply_to(m, "Agents:\n" + "\n".join(lines))
+        bot.reply_to(m, text)
 
     @bot.message_handler(commands=["agentstate"])
     def agentstate_cmd(m):

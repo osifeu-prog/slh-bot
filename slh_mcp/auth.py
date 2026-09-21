@@ -34,11 +34,11 @@ class Principal:
         if not expected or not subject:
             return None
 
-        authorization = ""
-        for key, value in headers.items():
-            if str(key).lower() == "authorization":
-                authorization = str(value).strip()
-                break
+        authorization = str(
+            headers.get("authorization")
+            or headers.get("Authorization")
+            or ""
+        ).strip()
 
         scheme, _, token = authorization.partition(" ")
         token = token.strip()
@@ -62,6 +62,17 @@ def principal_from_headers(headers: Mapping[str, str]) -> Principal | None:
         expected=os.getenv("SLH_MCP_BEARER_TOKEN"),
         subject=os.getenv("SLH_MCP_PRINCIPAL_ID", ""),
     )
+
+
+def principal_from_scope(scope) -> Principal | None:
+    raw_headers = {}
+    for key, value in scope.get("headers", []):
+        if isinstance(key, bytes):
+            key = key.decode("latin-1")
+        if isinstance(value, bytes):
+            value = value.decode("latin-1")
+        raw_headers[str(key).lower()] = str(value)
+    return principal_from_headers(raw_headers)
 
 
 def principal_from_request(request) -> Principal | None:
