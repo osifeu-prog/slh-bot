@@ -30,6 +30,7 @@ _READ_CAPABILITIES = (
     Capability("missions.list", "List canonical SLH missions.", "public.view", False),
     Capability("economy.agent_balance", "Read isolated agent-economy balance.", "agents.view_self", False),
     Capability("economy.agent_ledger", "Read isolated agent-economy ledger.", "agents.view_self", False),
+    Capability("economy.propose_transfer", "Validate an isolated agent-economy transfer without mutation.", "economy.mutate_self", False),
     Capability("railway.projects", "List Railway projects without environment values.", "exec.audit", False),
     Capability("railway.services", "List Railway services without environment values.", "exec.audit", False),
     Capability("railway.deployments", "List Railway deployment metadata without secrets.", "exec.audit", False),
