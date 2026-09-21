@@ -7,7 +7,7 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents, has_permission
 from core.mcp_bridge_auth import mcp_principal, require_mcp_bridge_token
 from core.mission_lifecycle import MissionLifecycleService
-from core.runtime_service import execute_agent
+from core.runtime_service import execute_agent, status as runtime_status
 
 
 _SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id", "wallet"}
@@ -82,7 +82,6 @@ def register_mcp_bridge(app):
             return denied
         if not has_permission(principal, "agents.view_self"):
             return jsonify({"error": "FORBIDDEN"}), 403
-        from core.runtime_service import status as runtime_status
         snapshot = runtime_status()
         return jsonify({
             "state": snapshot.get("state"),
@@ -135,8 +134,9 @@ def register_mcp_bridge(app):
             return jsonify({"status": "completed", "type": "agent"}), 200
         safe = {
             "status": result.get("status"),
-            "type": result.get("type"),
         }
+        if result.get("type") is not None:
+            safe["type"] = result.get("type")
         if result.get("data") is not None and isinstance(result.get("data"), dict):
             data = result["data"]
             safe["data"] = {
