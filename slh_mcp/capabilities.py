@@ -26,6 +26,7 @@ _READ_CAPABILITIES = (
     Capability("system.snapshot", "Return a safe SLH control-plane snapshot.", "public.view", False),
     Capability("agents.list", "List agents visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.get", "Get one agent visible to the authenticated SLH principal.", "agents.view_self", False),
+    Capability("agents.consistency", "Compare canonical agent DB state with its snapshot without mutating either.", "agents.view_self", False),
     Capability("agents.runtime_status", "Get canonical agent runtime status.", "agents.view_self", False),
     Capability("agents.execute", "Execute a validated command through the canonical agent runtime.", "agents.modify_self", True),
     Capability("missions.list", "List canonical SLH missions.", "public.view", False),
