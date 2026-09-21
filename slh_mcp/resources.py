@@ -1,21 +1,25 @@
-"""Safe read-only MCP resources backed by the canonical Control Plane bridge."""
+"""Safe read-only MCP resources for SLH OS."""
 
 from __future__ import annotations
 
 from core.telegram_token_registry import list_bots
+
 from slh_mcp import control_plane_client
-from slh_mcp.auth import current_principal
+from slh_mcp.auth import authorize, current_principal
 
 
-def _principal(principal=None):
-    value = principal or current_principal()
-    if value is None:
+_SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id"}
+
+
+def _principal_or_raise(principal=None):
+    resolved = principal or current_principal()
+    if resolved is None:
         raise PermissionError("MCP authentication required")
-    return value
+    return resolved
 
 
 def system_health(principal=None) -> dict:
-    principal = _principal(principal)
+    principal = _principal_or_raise(principal)
     result = control_plane_client.system(principal.subject)
     return {
         "status": result.get("status"),
@@ -26,22 +30,20 @@ def system_health(principal=None) -> dict:
 
 
 def agents_resource(principal=None) -> list[dict]:
-    principal = _principal(principal)
+    principal = _principal_or_raise(principal)
     result = control_plane_client.agents(principal.subject)
     return list(result.get("agents", []))
 
 
 def agent_resource(agent_id: str, principal=None) -> dict:
-    principal = _principal(principal)
+    principal = _principal_or_raise(principal)
     result = control_plane_client.agent(str(agent_id), principal.subject)
     agent = result.get("agent")
     if not isinstance(agent, dict):
         raise KeyError(str(agent_id))
     return agent
-
-
 def bot_registry(principal=None) -> list[dict]:
-    _principal(principal)
+    _principal_or_raise(principal)
     result = []
     for item in list_bots():
         result.append({
@@ -63,6 +65,53 @@ def bot_registry(principal=None) -> list[dict]:
     return result
 
 
+def _resource_system():
+    return system_health()
+
+
+def _resource_agents():
+    return agents_resource()
+
+
+def _resource_agent(agent_id: str):
+    return agent_resource(agent_id)
+
+
+def system_snapshot(principal=None):
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.missions import missions_list
+    agents = agents_resource(principal)
+    missions = missions_list(principal)
+    return {
+        "service": "SLH MCP",
+        "status": "ok",
+        "agent_count": len(agents),
+        "mission_count": len(missions),
+    }
+
+
+def _tool_system_snapshot():
+    return system_snapshot()
+
+
+def register_resources(server) -> None:
+    server.resource(
+        "slh://system",
+        name="system",
+        description="Safe SLH system metadata.",
+    )(_resource_system)
+    server.resource(
+        "slh://agents",
+        name="agents",
+        description="Agents visible to the authenticated principal.",
+    )(_resource_agents)
+    server.resource(
+        "slh://agent/{agent_id}",
+        name="agent",
+        description="One visible SLH agent.",
+    )(_resource_agent)
+
+
 def _tool_system_health():
     return system_health()
 
@@ -71,30 +120,74 @@ def _tool_bots_registry():
     return bot_registry()
 
 
-def _tool_system_snapshot():
-    principal = _principal()
-    result = control_plane_client.system(principal.subject)
+def economy_resource(agent_id: str):
+    principal = _principal_or_raise()
+    from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
     return {
-        "service": result.get("service"),
-        "status": result.get("status"),
-        "agent_count": result.get("agent_count"),
-        "mission_count": result.get("mission_count"),
+        "balance": economy_agent_balance(principal, agent_id),
+        "ledger": economy_agent_ledger(principal, agent_id),
     }
 
 
-def register_resources(server) -> None:
+def missions_resource():
+    principal = _principal_or_raise()
+    from slh_mcp.tools.missions import missions_list
+    return missions_list(principal)
+
+
+def register_extended_resources(server) -> None:
     server.resource(
-        "slh://system",
-        name="system",
-        description="Safe SLH system metadata.",
-    )(_tool_system_health)
+        "slh://agent/{agent_id}/economy",
+        name="agent_economy",
+        description="Isolated economy state for one visible agent.",
+    )(economy_resource)
     server.resource(
-        "slh://agents",
-        name="agents",
-        description="Agents visible to the authenticated principal.",
-    )(agents_resource)
+        "slh://missions",
+        name="missions",
+        description="Safe canonical SLH mission projection.",
+    )(missions_resource)
+
+
+def railway_resource():
+    principal = _principal_or_raise()
+    if not authorize(principal, "exec.audit"):
+        raise PermissionError("RAILWAY_RESOURCE_FORBIDDEN")
+    from slh_mcp.tools.integrations import railway_projects
+    return {"projects": railway_projects(principal)}
+
+
+def github_resource():
+    principal = _principal_or_raise()
+    if not authorize(principal, "exec.audit"):
+        raise PermissionError("GITHUB_RESOURCE_FORBIDDEN")
+    from slh_mcp.tools.integrations import github_repositories
+    return {"repositories": github_repositories(principal)}
+
+
+def register_infrastructure_resources(server) -> None:
     server.resource(
-        "slh://agent/{agent_id}",
-        name="agent",
-        description="One visible SLH agent.",
-    )(agent_resource)
+        "slh://railway",
+        name="railway",
+        description="Safe Railway project metadata.",
+    )(railway_resource)
+    server.resource(
+        "slh://github",
+        name="github",
+        description="Safe GitHub repository metadata.",
+    )(github_resource)
+
+
+def economic_resource():
+    principal = _principal_or_raise()
+    from slh_mcp.tools.economic_ledger import economic_ledger_summary
+    if not authorize(principal, "exec.audit"):
+        raise PermissionError("ECONOMIC_LEDGER_FORBIDDEN")
+    return economic_ledger_summary(principal)
+
+
+def register_economic_resources(server) -> None:
+    server.resource(
+        "slh://economy",
+        name="economy",
+        description="Canonical normalized SLH economic read model.",
+    )(economic_resource)
