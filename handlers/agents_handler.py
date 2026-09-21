@@ -4,10 +4,16 @@ from core.agent_registry import (
 )
 from core.authority import get_visible_agents, normalize_uid, is_owner
 from core.runtime_service import execute_agent
+from core.agent_display import format_numbered_agents, resolve_display_agent
 
 
 def _check_access(uid, identifier):
-    agent_id, agent = get_agent(identifier)
+    all_agents = list_agents()
+    try:
+        resolved = resolve_display_agent(uid, all_agents, identifier)
+    except KeyError:
+        resolved = str(identifier).strip()
+    agent_id, agent = get_agent(resolved)
     if agent is None:
         return None, None
     visible = get_visible_agents(uid, {agent_id: agent})
@@ -28,7 +34,13 @@ def register(bot, context):
         owner_id = normalize_uid(m.from_user.id)
         try:
             agent_id, agent = create_agent(name, owner_id=owner_id)
-            bot.reply_to(m, "Agent '" + name + "' created\nID: " + agent_id)
+            numbered = format_numbered_agents(owner_id, list_agents())
+            display_id = next((x["display_id"] for x in numbered if x["id"] == agent_id), None)
+            bot.reply_to(
+                m,
+                "Agent '" + name + "' created\n"
+                + "Number: " + str(display_id or "?")
+            )
         except ValueError as e:
             bot.reply_to(m, "Error: " + str(e))
         except Exception as e:
@@ -42,10 +54,19 @@ def register(bot, context):
         if not agents:
             bot.reply_to(m, "No agents found")
             return
+        personal = format_numbered_agents(uid, all_agents)
         lines = []
-        for aid, d in agents.items():
-            lines.append(aid + " - " + str(d.get("name", aid)) + " [" + str(d.get("state", "unknown")) + "] - " + str(d.get("role", "agent")))
-        bot.reply_to(m, "Agents:\n" + "\n".join(lines))
+        for d in personal:
+            lines.append(
+                str(d["display_id"]) + " - "
+                + str(d.get("name", d["id"]))
+                + " [" + str(d.get("state", "unknown")) + "] - "
+                + str(d.get("role", "agent"))
+            )
+        if not lines:
+            bot.reply_to(m, "No personal agents found")
+            return
+        bot.reply_to(m, "Your agents:\n" + "\n".join(lines))
 
     @bot.message_handler(commands=["agentstate"])
     def agentstate_cmd(m):
