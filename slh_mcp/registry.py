@@ -78,4 +78,6 @@ def register_capabilities(server):
     register_extended_resources(server)
     register_economic_resources(server)
     register_infrastructure_resources(server)
+    from slh_mcp.resources import register_mqtt_resources
+    register_mqtt_resources(server)
     return server
