@@ -142,7 +142,7 @@ def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
 
 
 def canonical_up(commit_sha=None):
-    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e8124c"
+    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e812f4"
     service_id = "13d97581-0199-4f6a-80d1-885c9304ffc5"
     environment_id = "661caa13-83cb-4197-8825-943bebf96c5a"
     sha = str(commit_sha or "").strip() or latest_github_commit()
