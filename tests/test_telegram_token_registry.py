@@ -6,11 +6,12 @@ from core.telegram_token_registry import get_bot, list_bots, targets_for
 class TelegramTokenRegistryTests(unittest.TestCase):
     def test_known_bot_registry_is_non_secret_and_complete(self):
         bots = {b["alias"]: b for b in list_bots()}
-        self.assertTrue({"main", "air", "claude", "ton"}.issubset(bots))
+        self.assertTrue({"main", "air", "claude", "ton", "taxfree"}.issubset(bots))
         self.assertEqual(bots["main"]["username"], "Me_ad_main_bot")
         self.assertEqual(bots["air"]["username"], "SLH_AIR_bot")
         self.assertEqual(bots["claude"]["username"], "SLH_Claude_bot")
         self.assertEqual(bots["ton"]["username"], "TON_MNH_bot")
+        self.assertEqual(bots["taxfree"]["username"], "Tax_Free_world_bot")
         self.assertNotIn("AAG", repr(bots))
         self.assertNotIn("1234567890:", repr(bots))
 
