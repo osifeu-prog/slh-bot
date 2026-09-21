@@ -163,6 +163,45 @@ class AgentEconomyTests(unittest.TestCase):
         self.assertNotIn("users", document)
         self.assertNotIn("wallet", document)
 
+    def test_proposal_is_consumed_by_matching_commit(self):
+        self.economy.record_revenue(
+            amount=30, operation_id="revenue-1", actor=str(OWNER_TELEGRAM_ID),
+            reason="verified_external_revenue", evidence={"event_id":"external-1"},
+        )
+        self.economy.treasury_fund(
+            agent_id="agent-1", amount=30, operation_id="fund-1",
+            actor=str(OWNER_TELEGRAM_ID), reason="bootstrap",
+        )
+        proposal = self.economy.propose_transfer(
+            source_agent="agent-1", target_agent="agent-2", amount=10,
+            operation_id="transfer-1", actor=str(OWNER_TELEGRAM_ID), reason="work",
+        )
+        self.assertEqual(proposal["status"], "proposed")
+        result = self.economy.transfer(
+            source_agent="agent-1", target_agent="agent-2", amount=10,
+            operation_id="transfer-1", actor=str(OWNER_TELEGRAM_ID), reason="work",
+        )
+        self.assertEqual(result["status"], "completed")
+
+    def test_proposal_id_cannot_be_reused_for_different_transfer(self):
+        self.economy.record_revenue(
+            amount=30, operation_id="revenue-1", actor=str(OWNER_TELEGRAM_ID),
+            reason="verified_external_revenue", evidence={"event_id":"external-1"},
+        )
+        self.economy.treasury_fund(
+            agent_id="agent-1", amount=30, operation_id="fund-1",
+            actor=str(OWNER_TELEGRAM_ID), reason="bootstrap",
+        )
+        self.economy.propose_transfer(
+            source_agent="agent-1", target_agent="agent-2", amount=10,
+            operation_id="transfer-1", actor=str(OWNER_TELEGRAM_ID), reason="work",
+        )
+        with self.assertRaises(ValueError):
+            self.economy.transfer(
+                source_agent="agent-1", target_agent="agent-2", amount=11,
+                operation_id="transfer-1", actor=str(OWNER_TELEGRAM_ID), reason="work",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
