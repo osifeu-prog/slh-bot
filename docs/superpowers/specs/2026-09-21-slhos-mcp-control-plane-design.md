@@ -216,7 +216,7 @@ Hard requirements:
 - every monetary mutation records source, actor, target, amount, and stable operation id
 - rejected operations do not partially mutate balances
 
-The implementation may reuse existing canonical ledger primitives where they are semantically compatible; otherwise an agent-specific ledger layer is added rather than changing historical user accounting.
+The implementation may reuse existing atomic/idempotency patterns, but Agent Economy storage remains separate. Existing user ledger functions that mutate `state/db.json` are not used for Agent Economy.
 
 ## 10. Mission Economy Flow
 
@@ -236,7 +236,13 @@ Mission
 
 Reward decisions must be deterministic or explicitly policy-driven and auditable. MCP itself is not the reward authority.
 
-## 11. Railway Integration
+## 11. Control Plane Bridge
+
+The `web` service owns live SLH user, agent, and mission state. `slh-mcp` communicates with it over authenticated HTTPS using `SLH_MCP_BRIDGE_TOKEN` and a principal identifier. Bridge routes are internal-only and must apply canonical `core.authority` checks before returning or mutating state.
+
+Initial bridge routes include system summary, authorization, runtime status, agent list/get/execute, and mission list/get/complete. The bridge returns redacted projections only.
+
+## 12. Railway Integration
 
 The MCP Railway capabilities may wrap 'core/railway_control.py' and/or a dedicated safe adapter.
 
@@ -250,7 +256,7 @@ The MCP surface must:
 
 Existing Railway token rotation must remain terminal-only unless a future explicit, separately authorized capability is designed.
 
-## 12. GitHub Integration
+## 13. GitHub Integration
 
 GitHub capabilities are intended for repository/status visibility and governed development workflows.
 
@@ -263,7 +269,7 @@ Initial MCP GitHub operations are read-only. Future write operations may be intr
 
 Every future write capability must preserve the existing GitHub permission model and require an explicit policy gate.
 
-## 13. Authentication and Security
+## 14. Authentication and Security
 
 Production MCP must:
 - run only over HTTPS
@@ -276,7 +282,7 @@ Production MCP must:
 
 Security incidents already identified in public SLH control surfaces are out of scope for this MVP design but should be tracked separately as a remediation workstream.
 
-## 14. Observability
+## 15. Observability
 
 MCP should emit structured events for:
 - authentication success/failure
@@ -298,7 +304,7 @@ Metrics should distinguish:
 
 No secret values are included in logs.
 
-## 15. Testing Strategy
+## 16. Testing Strategy
 
 Before production exposure:
 1. Unit tests for capability schemas and permission gates.
@@ -311,7 +317,7 @@ Before production exposure:
 8. Deployment smoke test against the live HTTPS endpoint.
 9. Regression check confirming existing Telegram economy/staking data is unchanged.
 
-## 16. Rollout
+## 17. Rollout
 
 Phase A — Foundation:
 - create 'mcp/'
@@ -339,7 +345,7 @@ Phase E — External client integration:
 
 No phase alters historical user financial state.
 
-## 17. Acceptance Criteria
+## 18. Acceptance Criteria
 
 The design is considered implemented only when all are true:
 - A persistent Railway 'slh-mcp' service exists and is independently deployable.
@@ -355,7 +361,7 @@ The design is considered implemented only when all are true:
 - Existing Telegram bot behavior remains green.
 - Existing financial-state regression checks remain green.
 
-## 18. Non-Goals
+## 19. Non-Goals
 
 This project does not:
 - auto-generate MCP tools from Telegram handlers
@@ -367,7 +373,7 @@ This project does not:
 - rotate secrets automatically as part of initial rollout
 - require ESP/device work for MCP Alpha readiness
 
-## 19. Open Implementation Decisions
+## 20. Open Implementation Decisions
 
 These are implementation details to resolve during the plan, not blockers to the architecture:
 - exact auth provider/mechanism for the first external MCP client
