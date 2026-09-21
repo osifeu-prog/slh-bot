@@ -14,7 +14,14 @@ _PUBLIC_FIELDS = {
     "id", "desc", "status", "assigned_to", "reward", "created_at",
     "assigned_at", "execution_started_at", "execution_completed_at", "completed_at",
 }
-_SERVICE = AgentEconomyService()
+_SERVICE = None
+
+
+def _local_service():
+    global _SERVICE
+    if _SERVICE is None:
+        _SERVICE = AgentEconomyService()
+    return _SERVICE
 
 
 def _resolve_principal(principal=None):
@@ -130,7 +137,7 @@ def complete_agent_mission(
         }
 
     try:
-        reward_result = _SERVICE.record_reward(
+        reward_result = _local_service().record_reward(
             agent_id=agent_id,
             amount=reward,
             operation_id=operation_id,
