@@ -46,21 +46,25 @@ class MCPRailwayDeployTests(unittest.TestCase):
                 railway_deploy(self.owner, "p", "s", "e", "bad")
         deploy.assert_not_called()
 
-    def test_permission_comes_from_canonical_authority(self):
+    def test_permission_comes_from_live_authority_bridge(self):
         from slh_mcp.tools.railway_control import railway_deploy
         os.environ["SLH_MCP_DEPLOY_ALLOWLIST"] = "p|s|e"
         with patch(
-            "slh_mcp.tools.railway_control.has_permission",
+            "slh_mcp.tools.railway_control.control_plane_client.authorize",
             return_value=False,
-        ):
+        ) as authorize:
             with self.assertRaises(PermissionError):
                 railway_deploy(self.owner, "p", "s", "e", "a" * 40)
+        authorize.assert_called_once_with("agents.manage", str(OWNER_TELEGRAM_ID))
 
     def test_deploy_returns_verified_status(self):
         from slh_mcp.tools.railway_control import railway_deploy
 
         os.environ["SLH_MCP_DEPLOY_ALLOWLIST"] = "p|s|e"
         with patch(
+            "slh_mcp.tools.railway_control.control_plane_client.authorize",
+            return_value=True,
+        ), patch(
             "slh_mcp.tools.railway_control.railway_control.deploy",
             return_value={"id": "dep-1"},
         ), patch(
@@ -68,6 +72,7 @@ class MCPRailwayDeployTests(unittest.TestCase):
             return_value={"id": "dep-1", "status": "SUCCESS"},
         ):
             result = railway_deploy(self.owner, "p", "s", "e", "a" * 40)
+        self.assertEqual(result["status"], "completed")
         self.assertEqual(result["deployment"]["status"], "SUCCESS")
 
 
