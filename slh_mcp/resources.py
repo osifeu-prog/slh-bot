@@ -1,4 +1,4 @@
-"""Safe read-only MCP resources for SLH OS."""
+"""Safe, read-only MCP resources for SLH OS."""
 
 from __future__ import annotations
 
@@ -6,14 +6,16 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
 
-from slh_mcp.auth import authorize, current_principal
-
 
 _SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id"}
 
 
 def _principal_or_raise(principal=None):
-    resolved = principal or current_principal()
+    if principal is not None:
+        return principal
+    from slh_mcp.auth import current_principal
+
+    resolved = current_principal()
     if resolved is None:
         raise PermissionError("MCP authentication required")
     return resolved
@@ -21,14 +23,22 @@ def _principal_or_raise(principal=None):
 
 def system_health(principal=None) -> dict:
     _principal_or_raise(principal)
-    return {"status": "ok", "service": "SLH MCP", "version": "0.1.0"}
+    return {
+        "status": "ok",
+        "service": "SLH MCP",
+        "version": "0.1.0",
+    }
 
 
 def agents_resource(principal=None) -> list[dict]:
     principal = _principal_or_raise(principal)
     visible = get_visible_agents(principal.subject, list_agents())
     return [
-        {key: value for key, value in item.items() if key not in _SENSITIVE_AGENT_FIELDS}
+        {
+            key: value
+            for key, value in item.items()
+            if key not in _SENSITIVE_AGENT_FIELDS
+        }
         for item in visible.values()
     ]
 
@@ -36,15 +46,12 @@ def agents_resource(principal=None) -> list[dict]:
 def agent_resource(agent_id: str, principal=None) -> dict:
     principal = _principal_or_raise(principal)
     visible = get_visible_agents(principal.subject, list_agents())
-    key = str(agent_id)
-    row = visible.get(key)
-    if row is None:
-        canonical_id, agent = get_agent(key)
-        if agent is None or canonical_id not in visible:
-            raise KeyError(key)
-        row = visible[canonical_id]
+    canonical_id, agent = get_agent(str(agent_id))
+    if agent is None or canonical_id not in visible:
+        raise KeyError(str(agent_id))
     return {
-        key: value for key, value in row.items()
+        key: value
+        for key, value in visible[canonical_id].items()
         if key not in _SENSITIVE_AGENT_FIELDS
     }
 
@@ -53,128 +60,37 @@ def bot_registry(principal=None) -> list[dict]:
     _principal_or_raise(principal)
     result = []
     for item in list_bots():
-        result.append({
-            "alias": item.get("alias"),
-            "username": item.get("username"),
-            "label": item.get("label"),
-            "targets": [
-                {
-                    "project": target.get("project"),
-                    "project_id": target.get("project_id"),
-                    "environment": target.get("environment"),
-                    "service": target.get("service"),
-                    "service_id": target.get("service_id"),
-                    "variable": target.get("variable"),
-                }
-                for target in item.get("targets", [])
-            ],
-        })
+        result.append(
+            {
+                "alias": item.get("alias"),
+                "username": item.get("username"),
+                "label": item.get("label"),
+                "targets": [
+                    {
+                        "project": target.get("project"),
+                        "project_id": target.get("project_id"),
+                        "environment": target.get("environment"),
+                        "service": target.get("service"),
+                        "service_id": target.get("service_id"),
+                        "variable": target.get("variable"),
+                    }
+                    for target in item.get("targets", [])
+                ],
+            }
+        )
     return result
 
 
-def _resource_system():
-    return system_health()
-
-
-def _resource_agents():
-    return agents_resource()
-
-
-def _resource_agent(agent_id: str):
-    return agent_resource(agent_id)
-
-
-def system_snapshot(principal=None):
+def system_snapshot(principal=None) -> dict:
     principal = _principal_or_raise(principal)
-    from slh_mcp.tools.missions import missions_list
+    missions = missions_resource(principal)
     agents = agents_resource(principal)
-    missions = missions_list(principal)
     return {
         "service": "SLH MCP",
         "status": "ok",
         "agent_count": len(agents),
         "mission_count": len(missions),
     }
-
-
-def _tool_system_snapshot():
-    return system_snapshot()
-
-
-def register_resources(server) -> None:
-    server.resource(
-        "slh://system",
-        name="system",
-        description="Safe SLH system metadata.",
-    )(_resource_system)
-    server.resource(
-        "slh://agents",
-        name="agents",
-        description="Agents visible to the authenticated principal.",
-    )(_resource_agents)
-    server.resource(
-        "slh://agent/{agent_id}",
-        name="agent",
-        description="One visible SLH agent.",
-    )(_resource_agent)
-    server.resource(
-        "slh://agent/{agent_id}/economy",
-        name="agent_economy",
-        description="Isolated economy state for one visible agent.",
-    )(agent_economy_resource)
-    server.resource(
-        "slh://missions",
-        name="missions",
-        description="Safe canonical SLH mission projection.",
-    )(missions_resource)
-    server.resource(
-        "slh://economy",
-        name="economy",
-        description="Safe isolated Agent Economy summary.",
-    )(economy_resource)
-    server.resource(
-        "slh://railway",
-        name="railway",
-        description="Safe Railway project metadata.",
-    )(railway_resource)
-    server.resource(
-        "slh://github",
-        name="github",
-        description="Safe GitHub repository metadata.",
-    )(github_resource)
-
-
-def _tool_system_health():
-    return system_health()
-
-
-def _tool_bots_registry():
-    return bot_registry()
-
-
-def economy_resource(agent_id: str):
-    principal = _principal_or_raise()
-    from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
-    return {
-        "balance": economy_agent_balance(principal, agent_id),
-        "ledger": economy_agent_ledger(principal, agent_id),
-    }
-
-
-def missions_resource():
-    principal = _principal_or_raise()
-    from slh_mcp.tools.missions import missions_list
-    return missions_list(principal)
-
-
-def register_extended_resources(server) -> None:
-    """Backward-compatible no-op; extended resources are registered centrally."""
-    return None
-
-
-def register_infrastructure_resources(server) -> None:
-    """Backward-compatible no-op; infrastructure resources are registered centrally."""
-    return None
 
 
 def agent_economy_resource(agent_id: str, principal=None) -> dict:
@@ -185,8 +101,13 @@ def agent_economy_resource(agent_id: str, principal=None) -> dict:
     canonical_id, agent = get_agent(str(agent_id))
     if agent is None or canonical_id not in visible:
         raise KeyError(str(agent_id))
+
     service = AgentEconomyService()
-    rows = [row for row in service.ledger() if row.get("account") == canonical_id]
+    rows = [
+        row
+        for row in service.ledger()
+        if row.get("account") == canonical_id
+    ]
     return {
         "agent_id": canonical_id,
         "currency": "agent_credits",
@@ -196,27 +117,131 @@ def agent_economy_resource(agent_id: str, principal=None) -> dict:
     }
 
 
-def missions_resource(principal=None) -> list[dict]:
-    from slh_mcp.tools.missions import missions_list
-    return missions_list(_principal_or_raise(principal))
-
-
 def economy_resource(principal=None) -> dict:
+    principal = _principal_or_raise(principal)
     from slh_mcp.agent_economy import AgentEconomyService
-    _principal_or_raise(principal)
+
     service = AgentEconomyService()
+    visible_agents = get_visible_agents(principal.subject, list_agents())
+    owned_ids = set(visible_agents)
+    agent_rows = [
+        row
+        for row in service.ledger()
+        if row.get("account") in owned_ids
+    ]
     return {
         "currency": "agent_credits",
         "treasury_balance": service.balance("AGENT_TREASURY"),
-        "ledger_count": len(service.ledger()),
+        "visible_agent_count": len(owned_ids),
+        "visible_ledger_count": len(agent_rows),
     }
 
 
-def railway_resource(principal=None):
-    _principal_or_raise(principal)
-    return {"status": "adapter_pending"}
+def missions_resource(principal=None) -> list[dict]:
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.missions import missions_list
+
+    return missions_list(principal)
 
 
-def github_resource(principal=None):
-    _principal_or_raise(principal)
-    return {"status": "adapter_pending"}
+def railway_resource(principal=None) -> dict:
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.integrations import railway_projects
+
+    return {
+        "projects": railway_projects(principal),
+    }
+
+
+def github_resource(principal=None) -> dict:
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.integrations import github_repositories
+
+    return {
+        "repositories": github_repositories(principal),
+    }
+
+
+def bots_federation_resource(principal=None) -> list[dict]:
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.bots import bots_federation
+
+    return bots_federation(principal)
+
+
+def register_resources(server) -> None:
+    registrations = (
+        (
+            "slh://system",
+            "system",
+            "Safe SLH system metadata.",
+            lambda: system_health(),
+        ),
+        (
+            "slh://agents",
+            "agents",
+            "Agents visible to the authenticated principal.",
+            lambda: agents_resource(),
+        ),
+        (
+            "slh://agent/{agent_id}",
+            "agent",
+            "One visible SLH agent.",
+            lambda agent_id: agent_resource(agent_id),
+        ),
+        (
+            "slh://agent/{agent_id}/economy",
+            "agent_economy",
+            "Isolated economy state for one visible agent.",
+            lambda agent_id: agent_economy_resource(agent_id),
+        ),
+        (
+            "slh://missions",
+            "missions",
+            "Safe canonical SLH mission projection.",
+            lambda: missions_resource(),
+        ),
+        (
+            "slh://economy",
+            "economy",
+            "Safe isolated Agent Economy summary.",
+            lambda: economy_resource(),
+        ),
+        (
+            "slh://railway",
+            "railway",
+            "Safe Railway project metadata.",
+            lambda: railway_resource(),
+        ),
+        (
+            "slh://github",
+            "github",
+            "Safe GitHub repository metadata.",
+            lambda: github_resource(),
+        ),
+        (
+            "slh://bots",
+            "bots",
+            "Federated SLH bot and deployment read model.",
+            lambda: bots_federation_resource(),
+        ),
+    )
+
+    for uri, name, description, handler in registrations:
+        server.resource(
+            uri,
+            name=name,
+            description=description,
+        )(handler)
+
+
+def _tool_system_health():
+    return system_health()
+
+
+def _tool_system_snapshot():
+    return system_snapshot()
+
+
+def _tool_bots_registry():
+    return bot_registry()
