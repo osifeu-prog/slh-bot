@@ -11,6 +11,7 @@ from slh_mcp.resources import (
     _tool_system_health,
     _tool_system_snapshot,
 )
+from slh_mcp.tools.bots import _tool_bots_federation
 from slh_mcp.tools.agents import (
     _tool_agents_execute,
     _tool_agents_get,
@@ -48,6 +49,7 @@ def register_capabilities(server):
         "economy.propose_transfer": _tool_economy_propose_transfer,
         "economy.commit_transfer": _tool_economy_commit_transfer,
         "bots.registry": _tool_bots_registry,
+        "bots.federation": _tool_bots_federation,
         "railway.projects": _tool_railway_projects,
         "railway.services": _tool_railway_services,
         "railway.deployments": _tool_railway_deployments,
