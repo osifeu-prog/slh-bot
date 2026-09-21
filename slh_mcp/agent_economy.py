@@ -97,7 +97,7 @@ class AgentEconomyService:
             return None, fingerprint
         if existing.get("fingerprint") != fingerprint:
             raise ValueError("OPERATION_ID_COLLISION")
-        return {"status": "duplicate", **existing.get("result", {})}, fingerprint
+        return {**existing.get("result", {}), "status": "duplicate"}, fingerprint
 
     def balance(self, account_id: str) -> float:
         account_id = str(account_id).strip()
