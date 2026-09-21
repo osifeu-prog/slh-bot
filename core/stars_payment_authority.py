@@ -1,16 +1,14 @@
-"""Telegram Stars payment authorities.
-
-Confirmed XTR payments are accounted through the existing user-economy
-authority. Revenue observability is reconciled on first processing and replay.
-VIP subscription activation is also idempotent on the Telegram charge id.
-"""
+"""Telegram Stars payment authorities."""
 
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import state_manager
 
 from core import economy_service
 from core import revenue_ledger
+from core.vip_fulfillment import apply_vip_benefits, is_launch_offer_open
 
 
 TELEGRAM_STARS_CURRENCY = "XTR"
@@ -49,6 +47,19 @@ def record_stars_payment(**kwargs):
     return result
 
 
+def _set_fulfillment_status(charge_id: str, status: str, bundle: dict | None = None):
+    def mutate(db):
+        record = db.setdefault("vip_subscriptions", {}).get(str(charge_id))
+        if record is None:
+            raise KeyError("VIP_SUBSCRIPTION_NOT_FOUND")
+        record["fulfillment_status"] = str(status)
+        if bundle is not None:
+            record["bundle"] = dict(bundle)
+        return dict(record)
+
+    return state_manager.atomic_update(mutate)
+
+
 def record_vip_subscription_payment(
     *,
     uid,
@@ -58,7 +69,7 @@ def record_vip_subscription_payment(
     first_recurring=False,
     now=None,
 ):
-    """Activate one VIP month and reconcile revenue on every safe replay."""
+    """Activate one VIP month and safely fulfill the launch bundle when eligible."""
     uid = str(uid).strip()
     charge_id = str(charge_id or "").strip()
     try:
@@ -74,6 +85,7 @@ def record_vip_subscription_payment(
         raise ValueError("INVALID_VIP_STARS_AMOUNT")
 
     now = int(time.time() if now is None else now)
+    now_dt = datetime.fromtimestamp(now, tz=ZoneInfo("Asia/Jerusalem"))
 
     def activate_and_mark(db):
         orders = db.setdefault("vip_subscriptions", {})
@@ -87,9 +99,18 @@ def record_vip_subscription_payment(
         start = max(now, previous)
         until = start + VIP_SUBSCRIPTION_PERIOD
 
+        already_qualified = bool(
+            user.get("vip_launch_offer_qualified")
+            or user.get("vip_bundle", {}).get("launch_offer_qualified")
+        )
+        launch_offer_qualified = already_qualified or is_launch_offer_open(now_dt)
+
         perms = user.setdefault("permissions", [])
         if "vip_access" not in perms:
             perms.append("vip_access")
+
+        if launch_offer_qualified:
+            user["vip_launch_offer_qualified"] = True
 
         record = {
             "charge_id": charge_id,
@@ -100,6 +121,8 @@ def record_vip_subscription_payment(
             "status": "ACTIVE",
             "recurring": bool(recurring),
             "first_recurring": bool(first_recurring),
+            "launch_offer_qualified": bool(launch_offer_qualified),
+            "fulfillment_status": "pending",
         }
         orders[charge_id] = record
         user["vip_access_until"] = until
@@ -107,18 +130,37 @@ def record_vip_subscription_payment(
 
     record, created = state_manager.atomic_update(activate_and_mark)
 
-    # Always reconcile the revenue ledger. Its own source+reference idempotency
-    # makes this safe for both first processing and replay.
     _record_revenue(
         source="telegram_stars_subscription",
         amount=stars_paid,
         reference=charge_id,
         uid=uid,
-        meta={"kind": "vip_monthly", "subscription_period": VIP_SUBSCRIPTION_PERIOD},
+        meta={
+            "kind": "vip_monthly",
+            "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+            "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
+        },
     )
+
+    bundle = apply_vip_benefits(
+        uid=uid,
+        charge_id=charge_id,
+        launch_offer_qualified=bool(record.get("launch_offer_qualified")),
+    )
+    fulfillment_status = str(bundle.get("status", "pending"))
+
+    try:
+        record = _set_fulfillment_status(charge_id, fulfillment_status, bundle)
+    except Exception:
+        # Payment and subscription are already safely recorded. A subsequent
+        # replay will retry bundle fulfillment without recharging.
+        fulfillment_status = "pending"
 
     return {
         "status": "applied" if created else "duplicate",
         "created": created,
         "record": record,
+        "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
+        "fulfillment_status": fulfillment_status,
+        "bundle": bundle,
     }
