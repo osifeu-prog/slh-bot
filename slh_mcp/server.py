@@ -5,7 +5,7 @@ from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
-from starlette.routing import Mount, Route
+from starlette.routing import Mount, Route, Middleware
 
 from slh_mcp.registry import register_capabilities
 
@@ -51,7 +51,34 @@ def build_mcp_app():
             ),
         ),
     ]
-    return Starlette(routes=routes, lifespan=lifespan)
+    return Starlette(routes=routes, lifespan=lifespan, middleware=[Middleware(MCPAuthMiddleware)])
 
 
 app = build_mcp_app()
+
+class MCPAuthMiddleware:
+    """Small ASGI middleware that keeps bearer enforcement outside MCP business logic."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path == "/mcp" or path.startswith("/mcp/"):
+                from starlette.datastructures import Headers
+                from slh_mcp.auth import principal_from_headers
+                headers = Headers(scope=scope)
+                principal = principal_from_headers(headers)
+                if principal is None:
+                    from starlette.responses import JSONResponse
+                    response = JSONResponse(
+                        {"error": "AUTH_REQUIRED"},
+                        status_code=401,
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                    await response(scope, receive, send)
+                    return
+                state = scope.setdefault("state", {})
+                state["slh_principal"] = principal
+        await self.app(scope, receive, send)
