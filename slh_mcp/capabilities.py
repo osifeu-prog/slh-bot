@@ -42,6 +42,7 @@ _READ_CAPABILITIES = (
     Capability("bots.registry", "Read the non-secret SLH bot ownership registry.", "exec.audit", False),
     Capability("bots.federation", "Cross-check registered bots against Railway service/deployment metadata.", "exec.audit", False),
     Capability("mqtt.status", "Read non-secret MQTT broker configuration and listener metadata.", "exec.audit", False),
+    Capability("mqtt.probe", "Perform a read-only MQTT broker CONNECT/Disconnect probe.", "exec.audit", False),
 )
 
 _MUTATING_CAPABILITIES = (
