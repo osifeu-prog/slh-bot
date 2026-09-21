@@ -5,6 +5,7 @@ from __future__ import annotations
 from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.runtime_service import execute_agent, status as runtime_status
+from slh_mcp.core_client import configured_client
 
 
 _SENSITIVE_FIELDS = {"inbox", "history", "permissions", "owner_id"}
@@ -27,6 +28,9 @@ def _public_agent(record: dict) -> dict:
 
 def agents_list(principal=None) -> list[dict]:
     principal = _resolve_principal(principal)
+    client = configured_client()
+    if client is not None:
+        return list(client.agents().get("agents", []))
     visible = get_visible_agents(principal.subject, list_agents())
     return [_public_agent(item) for item in visible.values()]
 
@@ -35,6 +39,10 @@ def agents_get(principal, agent_id: str | None = None) -> dict:
     if agent_id is None:
         agent_id, principal = principal, None
     principal = _resolve_principal(principal)
+    client = configured_client()
+    if client is not None:
+        response = client.agent(str(agent_id))
+        return _public_agent(response.get("agent") or {})
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, record = get_agent(str(agent_id))
     if record is None or canonical_id not in visible:
@@ -44,6 +52,9 @@ def agents_get(principal, agent_id: str | None = None) -> dict:
 
 def agents_runtime_status(principal=None) -> dict:
     principal = _resolve_principal(principal)
+    client = configured_client()
+    if client is not None:
+        return dict(client.runtime())
     get_visible_agents(principal.subject, list_agents())
     snapshot = runtime_status()
     return {
@@ -58,6 +69,7 @@ def agents_runtime_status(principal=None) -> dict:
 
 def agents_execute(principal, agent_id: str | None = None, command: str | None = None) -> dict:
     principal = _resolve_principal(principal)
+    client = configured_client()
     if agent_id is None or command is None:
         raise ValueError("agent_id and command are required")
     command = str(command).strip()
@@ -66,6 +78,8 @@ def agents_execute(principal, agent_id: str | None = None, command: str | None =
     if len(command) > _MAX_COMMAND_LENGTH:
         raise ValueError("command exceeds maximum length")
 
+    if client is not None:
+        return client.agent_execute(str(agent_id), command)
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, record = get_agent(str(agent_id))
     if record is None or canonical_id not in visible:
