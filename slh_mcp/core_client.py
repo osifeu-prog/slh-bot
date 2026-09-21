@@ -121,6 +121,17 @@ class CoreControlPlaneClient:
             },
         )
 
+    def economic_ledger(self, limit: int = 100, domain: str | None = None, account_id: str | None = None) -> dict:
+        params = {"limit": int(limit)}
+        if domain:
+            params["domain"] = str(domain)
+        if account_id:
+            params["account_id"] = str(account_id)
+        return self.get("/api/internal/control-plane/economy/ledger", params)
+
+    def economic_summary(self) -> dict:
+        return self.get("/api/internal/control-plane/economy/summary")
+
     def economy_reward(self, agent_id: str, amount, operation_id: str, mission_id: str) -> dict:
         return self.post(
             "/api/internal/control-plane/economy/reward",
