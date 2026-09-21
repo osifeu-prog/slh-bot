@@ -40,6 +40,7 @@ class MissionRewardTests(unittest.TestCase):
             "slh_mcp.tools.missions._SERVICE"
         ) as economy:
             lifecycle_cls.return_value.complete_mission.return_value = service_result
+            lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
             economy.balance.return_value = 10
             economy.record_reward.return_value = {
                 "status": "completed",
@@ -52,7 +53,6 @@ class MissionRewardTests(unittest.TestCase):
                 "1",
                 {"result": "ok"},
                 "reward-m1",
-                mission_override=mission,
             )
         economy.record_reward.assert_called_once_with(
             agent_id="1",
@@ -77,6 +77,7 @@ class MissionRewardTests(unittest.TestCase):
         ) as lifecycle_cls, patch(
             "slh_mcp.tools.missions._SERVICE"
         ) as economy:
+            lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
             lifecycle_cls.return_value.complete_mission.return_value = {
                 "status": "completed",
                 "mission_id": "m1",
@@ -90,7 +91,6 @@ class MissionRewardTests(unittest.TestCase):
                 "1",
                 {"result": "ok"},
                 "reward-m1",
-                mission_override=mission,
             )
         self.assertEqual(result["status"], "reward_pending")
         self.assertEqual(result["reason"], "INSUFFICIENT_AGENT_ECONOMY")
