@@ -1,19 +1,12 @@
-"""Mission MCP tools backed by canonical MissionLifecycleService."""
+"""Mission MCP tools backed by the canonical Control Plane bridge."""
 
 from __future__ import annotations
 
-from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents
-from core.mission_lifecycle import MissionLifecycleService
-
+from slh_mcp import control_plane_client
 from slh_mcp.agent_economy import AgentEconomyService
 
-
-_PUBLIC_FIELDS = {
-    "id", "desc", "status", "assigned_to", "reward", "created_at",
-    "assigned_at", "execution_started_at", "execution_completed_at", "completed_at",
-}
 _SERVICE = AgentEconomyService()
+_MAX_OPERATION_ID = 128
 
 
 def _resolve_principal(principal=None):
@@ -26,16 +19,10 @@ def _resolve_principal(principal=None):
     return resolved
 
 
-def _public_mission(mission: dict) -> dict:
-    return {key: mission.get(key) for key in _PUBLIC_FIELDS if key in mission}
-
-
 def missions_list(principal=None) -> list[dict]:
-    _resolve_principal(principal)
-    board, _manifest = MissionLifecycleService().load_state()
-    if not isinstance(board, dict) or board.get("__invalid_state__"):
-        raise RuntimeError("mission board unavailable")
-    return [_public_mission(m) for m in board.get("missions", []) if isinstance(m, dict)]
+    principal = _resolve_principal(principal)
+    result = control_plane_client.missions(principal.subject)
+    return list(result.get("missions", []))
 
 
 def complete_agent_mission(
@@ -49,49 +36,62 @@ def complete_agent_mission(
     mission_id = str(mission_id).strip()
     agent_id = str(agent_id).strip()
     operation_id = str(operation_id).strip()
+
     if not mission_id or not agent_id or not operation_id:
         raise ValueError("INVALID_MISSION_COMPLETION_INPUT")
+    if len(operation_id) > _MAX_OPERATION_ID:
+        raise ValueError("INVALID_OPERATION_ID")
+    expected_operation_id = f"mission:{mission_id}:agent_reward"
+    if operation_id != expected_operation_id:
+        raise ValueError("INVALID_MISSION_OPERATION_ID")
     if result is not None and not isinstance(result, dict):
         raise ValueError("MISSION_RESULT_INVALID")
 
-    visible = get_visible_agents(principal.subject, list_agents())
-    canonical_id, agent = get_agent(agent_id)
-    if agent is None or canonical_id not in visible:
-        raise PermissionError("AGENT_NOT_VISIBLE")
-    if str(principal.role) != "OWNER" and str(agent.get("owner_id")) != str(principal.subject):
-        raise PermissionError("AGENT_NOT_OWNED")
-
-    lifecycle = MissionLifecycleService()
-    board, _manifest = lifecycle.load_state()
-    mission = lifecycle.find_mission(board, mission_id)
-    if mission is None:
+    mission_result = control_plane_client.mission(
+        mission_id,
+        principal.subject,
+    )
+    mission = mission_result.get("mission") or {}
+    if not mission:
         raise KeyError(mission_id)
     if str(mission.get("assigned_to")) != agent_id:
         raise PermissionError("MISSION_ASSIGNMENT_MISMATCH")
+
+    status = str(mission.get("status", "")).lower()
+    if status == "completed":
+        return {
+            "status": "already_completed",
+            "mission_id": mission_id,
+            "agent_id": agent_id,
+            "reward_status": "already_recorded_or_pending_reconciliation",
+            "operation_id": operation_id,
+        }
+    if status != "executed":
+        return {
+            "status": "blocked",
+            "mission_id": mission_id,
+            "agent_id": agent_id,
+            "reason": "MISSION_NOT_EXECUTED",
+            "current_status": mission.get("status"),
+        }
 
     reward = float(mission.get("reward", 0) or 0)
     if reward < 0:
         raise ValueError("INVALID_MISSION_REWARD")
 
-    current_status = str(mission.get("status", "")).lower()
-    if current_status == "completed":
-        completion = {"status": "already_completed", "mission_id": mission_id}
-    elif current_status == "executed":
-        completion = lifecycle.complete_mission(mission_id)
-        if completion.get("status") == "blocked":
-            return {
-                "status": "blocked",
-                "mission_id": mission_id,
-                "agent_id": agent_id,
-                "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
-            }
-    else:
+    completion = control_plane_client.mission_complete(
+        mission_id,
+        principal.subject,
+    )
+    if completion.get("status") != "completed":
         return {
             "status": "blocked",
             "mission_id": mission_id,
             "agent_id": agent_id,
-            "reason": "MISSION_NOT_READY_FOR_COMPLETION",
-            "current_status": current_status,
+            "reason": completion.get(
+                "reason",
+                "MISSION_COMPLETION_FAILED",
+            ),
         }
 
     if reward == 0:
@@ -101,6 +101,7 @@ def complete_agent_mission(
             "agent_id": agent_id,
             "reward": 0,
             "reward_status": "no_reward",
+            "operation_id": operation_id,
         }
 
     try:
@@ -143,4 +144,10 @@ def _tool_complete_agent_mission(
     result: dict | None,
     operation_id: str,
 ):
-    return complete_agent_mission(None, mission_id, agent_id, result, operation_id)
+    return complete_agent_mission(
+        None,
+        mission_id,
+        agent_id,
+        result,
+        operation_id,
+    )
