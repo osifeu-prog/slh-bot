@@ -50,8 +50,8 @@ class MCPCanonicalLedgerTests(unittest.TestCase):
             role="OWNER",
             permissions=frozenset(),
         )
-        with patch("slh_mcp.tools.economic_ledger.economic_ledger_summary", return_value={"events": 3}):
-            result = economic_resource(principal)
+        with patch("slh_mcp.resources.current_principal", return_value=principal),              patch("slh_mcp.tools.economic_ledger.economic_ledger_summary", return_value={"events": 3}):
+            result = economic_resource()
         self.assertEqual(result, {"events": 3})
 
 
