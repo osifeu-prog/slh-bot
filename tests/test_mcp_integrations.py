@@ -26,12 +26,43 @@ class MCPIntegrationTests(unittest.TestCase):
 
     def test_railway_deployments_is_conservative_when_query_unavailable(self):
         from slh_mcp.tools.integrations import railway_deployments
+        project = {
+            "id": "project-1",
+            "name": "main",
+            "services": {
+                "edges": [{
+                    "node": {
+                        "id": "service-1",
+                        "name": "web",
+                        "serviceInstances": {
+                            "edges": [{
+                                "node": {
+                                    "latestDeployment": {
+                                        "id": "dep-1",
+                                        "status": "SUCCESS",
+                                        "createdAt": "2026-09-21T18:00:00Z",
+                                        "meta": {"secret": "never-return"},
+                                    }
+                                }
+                            }]
+                        },
+                    }
+                }]
+            },
+        }
         with patch(
             "slh_mcp.tools.integrations._safe_project",
-            return_value={"id": "project-1", "name": "main"},
+            return_value=project,
         ):
             result = railway_deployments(self.owner, "project-1", "service-1")
-        self.assertEqual(result, [])
+        self.assertEqual(result, [{
+            "service_id": "service-1",
+            "service_name": "web",
+            "id": "dep-1",
+            "status": "SUCCESS",
+            "created_at": "2026-09-21T18:00:00Z",
+        }])
+        self.assertNotIn("secret", repr(result))
 
     def test_github_ci_output_is_redacted_to_status_data(self):
         from slh_mcp.tools.integrations import github_ci_status
