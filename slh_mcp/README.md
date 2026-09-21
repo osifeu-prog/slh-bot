@@ -88,3 +88,7 @@ Required bridge configuration:
     SLH_MCP_BRIDGE_TOKEN
 
 The same bridge secret must be configured on the canonical web service and on `slh-mcp`. Never place it in source control.
+
+## MQTT diagnostics
+
+`mqtt.status` reports the configured broker without connecting. `mqtt.probe` performs a read-only MQTT CONNECT/Disconnect check and never publishes, subscribes, or writes device state.
