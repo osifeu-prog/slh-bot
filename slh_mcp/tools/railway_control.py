@@ -6,7 +6,8 @@ import os
 import re
 
 from core import railway_control
-from core.authority import has_permission
+
+from slh_mcp import control_plane_client
 
 
 _SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
@@ -33,10 +34,6 @@ def _targets() -> set[tuple[str, str, str]]:
     return result
 
 
-def _allowed(project_id: str, service_id: str, environment_id: str) -> bool:
-    return (str(project_id), str(service_id), str(environment_id)) in _targets()
-
-
 def railway_deploy(
     principal,
     project_id: str,
@@ -50,9 +47,9 @@ def railway_deploy(
     environment_id = str(environment_id).strip()
     commit_sha = str(commit_sha).strip()
 
-    if not has_permission(principal.subject, "agents.manage"):
+    if not control_plane_client.authorize("agents.manage", principal.subject):
         raise PermissionError("RAILWAY_DEPLOY_FORBIDDEN")
-    if not _allowed(project_id, service_id, environment_id):
+    if (project_id, service_id, environment_id) not in _targets():
         raise PermissionError("RAILWAY_TARGET_NOT_ALLOWLISTED")
     if not _SHA_RE.fullmatch(commit_sha):
         raise ValueError("INVALID_COMMIT_SHA")
@@ -67,7 +64,11 @@ def railway_deploy(
         raise RuntimeError("RAILWAY_DEPLOYMENT_ID_MISSING")
 
     status = railway_control.deployment_status(deployment_id)
+    status_value = str(status.get("status", "")).upper()
+    result_status = "completed" if status_value == "SUCCESS" else "pending"
+
     return {
+        "status": result_status,
         "project_id": project_id,
         "service_id": service_id,
         "environment_id": environment_id,
