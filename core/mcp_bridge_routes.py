@@ -61,6 +61,38 @@ def register_mcp_bridge(app):
             }
         )
 
+    @app.post("/api/internal/mcp/authorize")
+    def mcp_authorize():
+        principal, denied = _auth()
+        if denied:
+            return denied
+        payload = request.get_json(silent=True) or {}
+        permission = str(payload.get("permission", "")).strip()
+        if not permission or len(permission) > 128:
+            return jsonify({"error": "INVALID_PERMISSION"}), 400
+        return jsonify({
+            "authorized": bool(has_permission(principal, permission)),
+            "permission": permission,
+        }), 200
+
+    @app.get("/api/internal/mcp/runtime-status")
+    def mcp_runtime_status():
+        principal, denied = _auth()
+        if denied:
+            return denied
+        if not has_permission(principal, "agents.view_self"):
+            return jsonify({"error": "FORBIDDEN"}), 403
+        from core.runtime_service import status as runtime_status
+        snapshot = runtime_status()
+        return jsonify({
+            "state": snapshot.get("state"),
+            "running": snapshot.get("running"),
+            "boot_ok": snapshot.get("boot_ok"),
+            "queue_size": snapshot.get("queue_size"),
+            "thread_alive": snapshot.get("thread_alive"),
+            "agent_count": len(snapshot.get("agents", [])),
+        }), 200
+
     @app.get("/api/internal/mcp/agents")
     def mcp_agents():
         principal, denied = _auth()
