@@ -57,6 +57,14 @@ class MCPProtocolTests(unittest.TestCase):
             response = client.post("/mcp", headers={"Host": "localhost"})
         self.assertEqual(response.status_code, 401)
 
+    def test_mcp_transport_is_not_mounted_at_root(self):
+        from starlette.testclient import TestClient
+        from slh_mcp.server import build_mcp_app
+
+        with TestClient(build_mcp_app()) as client:
+            response = client.post("/", headers={"Host": "localhost"})
+        self.assertEqual(response.status_code, 404)
+
     def test_system_snapshot_is_safe(self):
         from slh_mcp.auth import Principal
         from slh_mcp.resources import system_snapshot
