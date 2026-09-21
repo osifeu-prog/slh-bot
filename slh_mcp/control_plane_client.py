@@ -74,3 +74,15 @@ def mission_complete(mission_id: str):
         "/api/internal/mcp/missions/" + str(mission_id) + "/complete",
         method="POST",
     )
+
+def authorize(permission: str) -> bool:
+    result = _request(
+        "/api/internal/mcp/authorize",
+        method="POST",
+        payload={"permission": str(permission)},
+    )
+    return bool(result.get("authorized"))
+
+
+def runtime_status():
+    return _request("/api/internal/mcp/runtime-status")
