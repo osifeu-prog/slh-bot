@@ -41,6 +41,7 @@ _READ_CAPABILITIES = (
     Capability("github.ci_status", "Read GitHub CI status for a commit.", "exec.audit", False),
     Capability("bots.registry", "Read the non-secret SLH bot ownership registry.", "exec.audit", False),
     Capability("bots.federation", "Cross-check registered bots against Railway service/deployment metadata.", "exec.audit", False),
+    Capability("mqtt.status", "Read non-secret MQTT broker configuration and listener metadata.", "exec.audit", False),
 )
 
 _MUTATING_CAPABILITIES = (
