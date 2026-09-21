@@ -44,6 +44,20 @@ class MCPAuthMiddleware:
                 reset_current_principal(token)
 
 
+def _validate_production_config():
+    if os.getenv("RAILWAY_SERVICE_NAME", "").strip() != "slh-mcp":
+        return
+    missing = [
+        name for name in ("SLH_MCP_BEARER_TOKEN", "SLH_CORE_API_URL", "SLH_CORE_INTERNAL_KEY")
+        if not os.getenv(name, "").strip()
+    ]
+    if missing:
+        raise RuntimeError("SLH_MCP_PRODUCTION_CONFIG_MISSING:" + ",".join(missing))
+
+
+_validate_production_config()
+
+
 mcp = MCPServer(
     "SLH OS",
     version=os.getenv("SLH_MCP_VERSION", "0.1.0"),
