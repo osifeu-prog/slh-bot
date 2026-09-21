@@ -87,17 +87,13 @@ def _resource_agent(agent_id: str):
 def system_snapshot():
     principal = _principal_or_raise()
     from slh_mcp.tools.missions import missions_list
-    from slh_mcp.tools.integrations import railway_projects
     agents = agents_resource(principal)
     missions = missions_list(principal)
-    bots = bot_registry(principal)
     return {
         "service": "SLH MCP",
         "status": "ok",
         "agent_count": len(agents),
         "mission_count": len(missions),
-        "bot_registry_count": len(bots),
-        "railway_project_count": len(railway_projects(principal)),
     }
 
 
