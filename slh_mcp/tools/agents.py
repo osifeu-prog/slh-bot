@@ -5,6 +5,13 @@ from __future__ import annotations
 from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.runtime_service import execute_agent, status as runtime_status
+from slh_mcp.control_plane_client import (
+    get_agents as bridge_get_agents,
+    get_agent as bridge_get_agent,
+    get_runtime as bridge_get_runtime,
+    execute_agent as bridge_execute_agent,
+    should_use_bridge,
+)
 
 
 _SENSITIVE_FIELDS = {"inbox", "history", "permissions", "owner_id"}
@@ -27,6 +34,8 @@ def _public_agent(record: dict) -> dict:
 
 def agents_list(principal=None) -> list[dict]:
     principal = _resolve_principal(principal)
+    if should_use_bridge():
+        return [_public_agent(item) for item in bridge_get_agents(principal.subject)]
     visible = get_visible_agents(principal.subject, list_agents())
     return [_public_agent(item) for item in visible.values()]
 
@@ -35,6 +44,11 @@ def agents_get(principal, agent_id: str | None = None) -> dict:
     if agent_id is None:
         agent_id, principal = principal, None
     principal = _resolve_principal(principal)
+    if should_use_bridge():
+        record = bridge_get_agent(principal.subject, str(agent_id))
+        if not record:
+            raise KeyError(str(agent_id))
+        return _public_agent(record)
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, record = get_agent(str(agent_id))
     if record is None or canonical_id not in visible:
@@ -44,6 +58,8 @@ def agents_get(principal, agent_id: str | None = None) -> dict:
 
 def agents_runtime_status(principal=None) -> dict:
     principal = _resolve_principal(principal)
+    if should_use_bridge():
+        return bridge_get_runtime(principal.subject)
     get_visible_agents(principal.subject, list_agents())
     snapshot = runtime_status()
     return {
@@ -66,6 +82,8 @@ def agents_execute(principal, agent_id: str | None = None, command: str | None =
     if len(command) > _MAX_COMMAND_LENGTH:
         raise ValueError("command exceeds maximum length")
 
+    if should_use_bridge():
+        return bridge_execute_agent(principal.subject, str(agent_id), command)
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, record = get_agent(str(agent_id))
     if record is None or canonical_id not in visible:
