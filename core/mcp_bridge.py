@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import hmac
 import os
-from functools import wraps
 
 from flask import Blueprint, jsonify, request
 
 from core.agent_registry import get_agent, list_agents
-from core.authority import get_role, get_visible_agents, has_permission
+from core.authority import get_visible_agents, has_permission
 from core.mission_lifecycle import MissionLifecycleService
 from core.runtime_service import execute_agent
 from core.runtime_service import status as runtime_status
@@ -58,8 +57,6 @@ def agents():
         return denied
     visible = get_visible_agents(_principal(), list_agents())
     return jsonify({
-        "principal": _principal(),
-        "role": get_role(_principal()),
         "agents": [_public_agent(item) for item in visible.values()],
     }), 200
 
@@ -138,3 +135,44 @@ def missions():
         if isinstance(mission, dict)
     ]
     return jsonify({"missions": rows}), 200
+
+@bridge.post("/missions/<mission_id>/complete")
+def mission_complete(mission_id):
+    denied = _require("agents.manage")
+    if denied:
+        return denied
+
+    payload = request.get_json(silent=True) or {}
+    agent_id = str(payload.get("agent_id", "")).strip()
+    if not agent_id:
+        return jsonify({"error": "AGENT_ID_REQUIRED"}), 400
+
+    visible = get_visible_agents(_principal(), list_agents())
+    canonical_id, agent = get_agent(agent_id)
+    if agent is None or canonical_id not in visible:
+        return jsonify({"error": "AGENT_NOT_VISIBLE"}), 404
+
+    lifecycle = MissionLifecycleService()
+    board, _manifest = lifecycle.load_state()
+    mission = lifecycle.find_mission(board, str(mission_id))
+    if not isinstance(mission, dict):
+        return jsonify({"error": "MISSION_NOT_FOUND"}), 404
+    if str(mission.get("assigned_to")) != canonical_id:
+        return jsonify({"error": "MISSION_ASSIGNMENT_MISMATCH"}), 403
+
+    status = str(mission.get("status", "")).lower()
+    if status == "completed":
+        return jsonify({"status": "already_completed", "mission_id": str(mission_id)}), 200
+    if status != "executed":
+        return jsonify({
+            "error": "MISSION_NOT_READY_FOR_COMPLETION",
+            "status": status,
+        }), 409
+
+    result = lifecycle.complete_mission(str(mission_id))
+    if result.get("status") == "blocked":
+        return jsonify({
+            "error": result.get("reason", "MISSION_COMPLETION_FAILED"),
+            "mission_id": str(mission_id),
+        }), 409
+    return jsonify(result), 200
