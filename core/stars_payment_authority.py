@@ -1,24 +1,31 @@
-"""Telegram Stars payment authority boundary.
+"""Telegram Stars payment authorities.
 
-Confirmed Stars payments update the canonical user economy. Revenue
-observability is reconciled on both first processing and safe replay.
+Confirmed XTR payments are accounted through the existing user-economy
+authority. Revenue observability is reconciled on first processing and replay.
+VIP subscription activation is also idempotent on the Telegram charge id.
 """
+
+import time
+
+import state_manager
 
 from core import economy_service
 from core import revenue_ledger
 
 
 TELEGRAM_STARS_CURRENCY = "XTR"
+VIP_MONTHLY_STARS = 499
+VIP_SUBSCRIPTION_PERIOD = 2592000
 
 
-def _record_revenue(kwargs):
+def _record_revenue(*, source: str, amount: int, reference: str, uid: str, meta: dict):
     revenue_ledger.record(
-        source="telegram_stars",
-        amount=int(kwargs.get("stars_paid", 0)),
+        source=source,
+        amount=int(amount),
         currency=TELEGRAM_STARS_CURRENCY,
-        reference=str(kwargs.get("telegram_payment_charge_id", "")),
-        uid=kwargs.get("uid"),
-        meta={"kind": "telegram_stars_gross"},
+        reference=str(reference),
+        uid=str(uid),
+        meta=dict(meta),
     )
 
 
@@ -30,9 +37,88 @@ def record_stars_payment(**kwargs):
 
     result = economy_service.record_stars_payment(**kwargs)
 
-    # Reconcile revenue after either first application or an idempotent
-    # replay. revenue_ledger.record() is itself idempotent by source+reference.
     if result.get("status") in {"applied", "duplicate"}:
-        _record_revenue(kwargs)
+        _record_revenue(
+            source="telegram_stars",
+            amount=int(kwargs.get("stars_paid", 0)),
+            reference=str(kwargs.get("telegram_payment_charge_id", "")),
+            uid=str(kwargs.get("uid", "")),
+            meta={"kind": "telegram_stars_gross"},
+        )
 
     return result
+
+
+def record_vip_subscription_payment(
+    *,
+    uid,
+    stars_paid,
+    charge_id,
+    recurring=False,
+    first_recurring=False,
+    now=None,
+):
+    """Activate one VIP month and reconcile revenue on every safe replay."""
+    uid = str(uid).strip()
+    charge_id = str(charge_id or "").strip()
+    try:
+        stars_paid = int(stars_paid)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("INVALID_VIP_STARS_AMOUNT") from exc
+
+    if not uid:
+        raise ValueError("INVALID_USER_ID")
+    if not charge_id:
+        raise ValueError("INVALID_CHARGE_ID")
+    if stars_paid != VIP_MONTHLY_STARS:
+        raise ValueError("INVALID_VIP_STARS_AMOUNT")
+
+    now = int(time.time() if now is None else now)
+
+    def activate_and_mark(db):
+        orders = db.setdefault("vip_subscriptions", {})
+        existing = orders.get(charge_id)
+        if existing is not None:
+            return existing, False
+
+        users = db.setdefault("users", {})
+        user = users.setdefault(uid, {})
+        previous = int(user.get("vip_access_until", 0) or 0)
+        start = max(now, previous)
+        until = start + VIP_SUBSCRIPTION_PERIOD
+
+        perms = user.setdefault("permissions", [])
+        if "vip_access" not in perms:
+            perms.append("vip_access")
+
+        record = {
+            "charge_id": charge_id,
+            "uid": uid,
+            "stars_paid": stars_paid,
+            "started_at": now,
+            "expires_at": until,
+            "status": "ACTIVE",
+            "recurring": bool(recurring),
+            "first_recurring": bool(first_recurring),
+        }
+        orders[charge_id] = record
+        user["vip_access_until"] = until
+        return record, True
+
+    record, created = state_manager.atomic_update(activate_and_mark)
+
+    # Always reconcile the revenue ledger. Its own source+reference idempotency
+    # makes this safe for both first processing and replay.
+    _record_revenue(
+        source="telegram_stars_subscription",
+        amount=stars_paid,
+        reference=charge_id,
+        uid=uid,
+        meta={"kind": "vip_monthly", "subscription_period": VIP_SUBSCRIPTION_PERIOD},
+    )
+
+    return {
+        "status": "applied" if created else "duplicate",
+        "created": created,
+        "record": record,
+    }
