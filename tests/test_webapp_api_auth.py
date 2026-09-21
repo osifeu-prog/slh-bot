@@ -24,6 +24,7 @@ class WebAppApiAuthTests(unittest.TestCase):
                     self.assertEqual(response.get_json(), {"error": "TELEGRAM_AUTH_REQUIRED"})
 
     def test_earnings_returns_read_model(self):
+        self.assertIn("/api/v1/earnings", {rule.rule for rule in webapp.app.url_map.iter_rules()})
         db = {
             "users": {
                 "1": {
