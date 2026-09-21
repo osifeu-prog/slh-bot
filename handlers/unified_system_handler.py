@@ -29,7 +29,9 @@ def _load_bot_registry():
     """Read the canonical Bot Factory registry without mutating runtime state."""
     try:
         db = load_db() or {}
-        bots = db.get("bots", [])
+        bots = db.get("bots", {})
+        if isinstance(bots, dict):
+            return list(bots.values())
         return bots if isinstance(bots, list) else []
     except Exception:
         return []
