@@ -32,6 +32,29 @@ class MCPBridgeRouteTests(unittest.TestCase):
         response = self.client.get("/internal/mcp/v1/agents")
         self.assertEqual(response.status_code, 401)
 
+    def test_client_cannot_override_configured_principal(self):
+        source = {
+            "1": {"id":"1","name":"A","owner_id":"owner","state":"idle"},
+        }
+        with patch(
+            "core.mcp_bridge_routes.list_agents", return_value=source
+        ), patch(
+            "core.mcp_bridge_routes.get_visible_agents",
+            return_value=source,
+        ) as visible, patch(
+            "core.mcp_bridge_routes.has_permission", return_value=True
+        ):
+            response = self.client.get(
+                "/internal/mcp/v1/agents",
+                headers={
+                    "Authorization": "Bearer bridge-test",
+                    "X-SLH-MCP-Subject": "attacker",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        visible.assert_called_once_with("owner", source)
+
     def test_agents_uses_canonical_visibility(self):
         source = {
             "1": {"id":"1","name":"A","owner_id":"owner","state":"idle","inbox":["secret"]},
