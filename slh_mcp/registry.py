@@ -29,7 +29,7 @@ from slh_mcp.tools.integrations import (
     _tool_railway_services,
 )
 from slh_mcp.tools.economic_ledger import _tool_economy_ledger
-from slh_mcp.tools.mqtt import _tool_mqtt_status
+from slh_mcp.tools.mqtt import _tool_mqtt_status, _tool_mqtt_probe
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
     _tool_economy_agent_ledger,
@@ -57,6 +57,7 @@ def register_capabilities(server):
         "bots.registry": _tool_bots_registry,
         "bots.federation": _tool_bots_federation,
         "mqtt.status": _tool_mqtt_status,
+        "mqtt.probe": _tool_mqtt_probe,
         "railway.projects": _tool_railway_projects,
         "railway.services": _tool_railway_services,
         "railway.deployments": _tool_railway_deployments,
