@@ -12,7 +12,7 @@ from core.control_plane_api import (
     authorize_internal, list_agents_control, get_agent_control, runtime_status_control,
     execute_agent_control, missions_list_control, mission_control, mission_complete_control,
     economy_balance_control, economy_ledger_control, economy_propose_control,
-    economy_transfer_control, economy_reward_control,
+    economy_transfer_control, economy_reward_control, economic_events_control, economic_summary_control,
 )
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
@@ -282,6 +282,35 @@ def internal_economy_transfer():
         return jsonify({"error": str(exc)}), 403
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/economy/ledger", methods=["GET"])
+def internal_economic_ledger():
+    denied = _internal_control_plane_guard("exec.audit")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        limit = int(request.args.get("limit", "100"))
+        domain = request.args.get("domain")
+        account_id = request.args.get("account_id")
+        return jsonify({
+            "events": economic_events_control(principal_id, limit, domain, account_id)
+        }), 200
+    except (PermissionError, ValueError) as exc:
+        return jsonify({"error": str(exc)}), 403 if isinstance(exc, PermissionError) else 400
+
+
+@app.route("/api/internal/control-plane/economy/summary", methods=["GET"])
+def internal_economic_summary():
+    denied = _internal_control_plane_guard("exec.audit")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        return jsonify(economic_summary_control(principal_id)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
 
 
 @app.route("/api/internal/control-plane/economy/reward", methods=["POST"])
