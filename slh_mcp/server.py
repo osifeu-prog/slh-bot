@@ -8,7 +8,43 @@ from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 from starlette.routing import Mount, Route
 
+from slh_mcp.auth import (
+    principal_from_headers,
+    reset_current_principal,
+    set_current_principal,
+)
 from slh_mcp.registry import register_capabilities
+
+
+class MCPAuthMiddleware:
+    """ASGI bearer gate that exposes the verified principal through ContextVar."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        token = None
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path == "/mcp" or path.startswith("/mcp/"):
+                from starlette.datastructures import Headers
+                headers = Headers(scope=scope)
+                principal = principal_from_headers(headers)
+                if principal is None:
+                    response = JSONResponse(
+                        {"error": "AUTH_REQUIRED"},
+                        status_code=401,
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                    await response(scope, receive, send)
+                    return
+                token = set_current_principal(principal)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            if token is not None:
+                reset_current_principal(token)
+
 
 mcp = MCPServer(
     "SLH OS",
@@ -52,34 +88,11 @@ def build_mcp_app():
             ),
         ),
     ]
-    return Starlette(routes=routes, lifespan=lifespan, middleware=[Middleware(MCPAuthMiddleware)])
+    return Starlette(
+        routes=routes,
+        lifespan=lifespan,
+        middleware=[Middleware(MCPAuthMiddleware)],
+    )
 
 
 app = build_mcp_app()
-
-class MCPAuthMiddleware:
-    """Small ASGI middleware that keeps bearer enforcement outside MCP business logic."""
-
-    def __init__(self, app):
-        self.app = app
-
-    async def __call__(self, scope, receive, send):
-        if scope.get("type") == "http":
-            path = scope.get("path", "")
-            if path == "/mcp" or path.startswith("/mcp/"):
-                from starlette.datastructures import Headers
-                from slh_mcp.auth import principal_from_headers
-                headers = Headers(scope=scope)
-                principal = principal_from_headers(headers)
-                if principal is None:
-                    from starlette.responses import JSONResponse
-                    response = JSONResponse(
-                        {"error": "AUTH_REQUIRED"},
-                        status_code=401,
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                    await response(scope, receive, send)
-                    return
-                state = scope.setdefault("state", {})
-                state["slh_principal"] = principal
-        await self.app(scope, receive, send)
