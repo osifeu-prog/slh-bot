@@ -127,12 +127,20 @@ class AgentEconomyService:
             return None, fingerprint
         if existing.get("fingerprint") != fingerprint:
             raise ValueError("OPERATION_ID_COLLISION")
-        result = dict(existing.get("result") or {})
-        result["status"] = "duplicate"
-        return result, fingerprint
+        return existing, fingerprint
 
-    def _record_operation(self, state: dict, operation_id: str, fingerprint: str, result: dict) -> None:
+    def _record_operation(
+        self,
+        state: dict,
+        operation_id: str,
+        fingerprint: str,
+        result: dict,
+        *,
+        kind: str,
+    ) -> None:
         state["operations"][operation_id] = {
+            "kind": kind,
+            "status": str(result.get("status", "completed")),
             "fingerprint": fingerprint,
             "result": dict(result),
             "recorded_at": self._now(),
@@ -206,9 +214,13 @@ class AgentEconomyService:
 
         with self._lock:
             state = self._load()
-            duplicate, fingerprint = self._lookup_operation(state, operation_id, payload)
-            if duplicate:
-                return duplicate
+            existing, fingerprint = self._lookup_operation(state, operation_id, payload)
+            if existing is not None:
+                if existing.get("kind") != "revenue" or existing.get("status") != "completed":
+                    raise ValueError("OPERATION_ID_COLLISION")
+                result = dict(existing.get("result") or {})
+                result["status"] = "duplicate"
+                return result
 
             before = float(state["accounts"].get(TREASURY_ACCOUNT, 0.0))
             after = before + amount
@@ -235,7 +247,7 @@ class AgentEconomyService:
                 "amount": amount,
                 "balance": after,
             }
-            self._record_operation(state, operation_id, fingerprint, result)
+            self._record_operation(state, operation_id, fingerprint, result, kind="revenue")
             self._write(state)
             return result
 
@@ -258,7 +270,7 @@ class AgentEconomyService:
             raise ValueError("SELF_TRANSFER")
 
         payload = {
-            "type": "proposal",
+            "type": "transfer",
             "source_agent": source_agent,
             "target_agent": target_agent,
             "amount": amount,
@@ -269,20 +281,30 @@ class AgentEconomyService:
 
         with self._lock:
             state = self._load()
-            if operation_id in state["operations"]:
+            existing, fingerprint = self._lookup_operation(state, operation_id, payload)
+            if existing is not None:
+                if existing.get("kind") == "transfer_proposal" and existing.get("status") == "proposed":
+                    result = dict(existing.get("result") or {})
+                    result["status"] = "already_proposed"
+                    return result
                 raise ValueError("OPERATION_ID_ALREADY_USED")
+
             source_balance = float(state["accounts"].get(source_agent, 0.0))
             if source_balance < amount:
                 raise ValueError("INSUFFICIENT_AGENT_ECONOMY")
-            return {
+
+            result = {
                 "status": "proposed",
                 "operation_id": operation_id,
                 "source_agent": source_agent,
                 "target_agent": target_agent,
                 "amount": amount,
                 "source_balance": source_balance,
-                "fingerprint": self._operation_fingerprint(payload),
+                "fingerprint": fingerprint,
             }
+            self._record_operation(state, operation_id, fingerprint, result, kind="transfer_proposal")
+            self._write(state)
+            return result
 
     def transfer(
         self,
@@ -314,9 +336,16 @@ class AgentEconomyService:
 
         with self._lock:
             state = self._load()
-            duplicate, fingerprint = self._lookup_operation(state, operation_id, payload)
-            if duplicate:
-                return duplicate
+            existing, fingerprint = self._lookup_operation(state, operation_id, payload)
+            if existing is not None:
+                kind = existing.get("kind")
+                status = existing.get("status")
+                if kind == "transfer" and status == "completed":
+                    result = dict(existing.get("result") or {})
+                    result["status"] = "duplicate"
+                    return result
+                if kind != "transfer_proposal" or status != "proposed":
+                    raise ValueError("OPERATION_ID_COLLISION")
 
             source_before = float(state["accounts"].get(source_agent, 0.0))
             if source_before < amount:
@@ -364,7 +393,7 @@ class AgentEconomyService:
                 "source_balance": source_after,
                 "target_balance": target_after,
             }
-            self._record_operation(state, operation_id, fingerprint, result)
+            self._record_operation(state, operation_id, fingerprint, result, kind="transfer")
             self._write(state)
             return result
 
