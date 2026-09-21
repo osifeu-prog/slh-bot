@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from core import revenue_reconciliation
 import state_manager
+from slh_mcp.auth import authorize, current_principal
 
 
 def income_reconciliation(principal=None) -> dict:
