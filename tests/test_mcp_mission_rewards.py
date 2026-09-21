@@ -38,7 +38,16 @@ class MissionRewardTests(unittest.TestCase):
             "slh_mcp.tools.missions.MissionLifecycleService"
         ) as lifecycle_cls, patch(
             "slh_mcp.tools.missions._SERVICE"
-        ) as economy:
+        ) as economy, patch(
+            "slh_mcp.tools.missions.list_agents",
+            return_value={"1": mission},
+        ), patch(
+            "slh_mcp.tools.missions.get_visible_agents",
+            return_value={"1": mission},
+        ), patch(
+            "slh_mcp.tools.missions.get_agent",
+            return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
+        ):
             lifecycle_cls.return_value.complete_mission.return_value = service_result
             lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
             economy.balance.return_value = 10
@@ -51,7 +60,7 @@ class MissionRewardTests(unittest.TestCase):
                 self.owner,
                 "m1",
                 "1",
-                {"result": "ok"},
+                None,
                 "reward-m1",
             )
         economy.record_reward.assert_called_once_with(
@@ -76,7 +85,16 @@ class MissionRewardTests(unittest.TestCase):
             "slh_mcp.tools.missions.MissionLifecycleService"
         ) as lifecycle_cls, patch(
             "slh_mcp.tools.missions._SERVICE"
-        ) as economy:
+        ) as economy, patch(
+            "slh_mcp.tools.missions.list_agents",
+            return_value={"1": mission},
+        ), patch(
+            "slh_mcp.tools.missions.get_visible_agents",
+            return_value={"1": mission},
+        ), patch(
+            "slh_mcp.tools.missions.get_agent",
+            return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
+        ):
             lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
             lifecycle_cls.return_value.complete_mission.return_value = {
                 "status": "completed",
@@ -89,7 +107,7 @@ class MissionRewardTests(unittest.TestCase):
                 self.owner,
                 "m1",
                 "1",
-                {"result": "ok"},
+                None,
                 "reward-m1",
             )
         self.assertEqual(result["status"], "reward_pending")
