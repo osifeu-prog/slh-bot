@@ -120,12 +120,12 @@ def register_resources(server) -> None:
     server.resource(
         "slh://agent/{agent_id}/economy",
         name="agent_economy",
-        description="Isolated economy projection for one visible SLH agent.",
+        description="Isolated economy state for one visible agent.",
     )(agent_economy_resource)
     server.resource(
         "slh://missions",
         name="missions",
-        description="Canonical SLH mission projection.",
+        description="Safe canonical SLH mission projection.",
     )(missions_resource)
     server.resource(
         "slh://economy",
@@ -135,12 +135,12 @@ def register_resources(server) -> None:
     server.resource(
         "slh://railway",
         name="railway",
-        description="Railway Control Plane resource placeholder.",
+        description="Safe Railway project metadata.",
     )(railway_resource)
     server.resource(
         "slh://github",
         name="github",
-        description="GitHub Control Plane resource placeholder.",
+        description="Safe GitHub repository metadata.",
     )(github_resource)
 
 
@@ -168,45 +168,14 @@ def missions_resource():
 
 
 def register_extended_resources(server) -> None:
-    server.resource(
-        "slh://agent/{agent_id}/economy",
-        name="agent_economy",
-        description="Isolated economy state for one visible agent.",
-    )(economy_resource)
-    server.resource(
-        "slh://missions",
-        name="missions",
-        description="Safe canonical SLH mission projection.",
-    )(missions_resource)
-
-
-def railway_resource():
-    principal = _principal_or_raise()
-    if not authorize(principal, "exec.audit"):
-        raise PermissionError("RAILWAY_RESOURCE_FORBIDDEN")
-    from slh_mcp.tools.integrations import railway_projects
-    return {"projects": railway_projects(principal)}
-
-
-def github_resource():
-    principal = _principal_or_raise()
-    if not authorize(principal, "exec.audit"):
-        raise PermissionError("GITHUB_RESOURCE_FORBIDDEN")
-    from slh_mcp.tools.integrations import github_repositories
-    return {"repositories": github_repositories(principal)}
+    """Backward-compatible no-op; extended resources are registered centrally."""
+    return None
 
 
 def register_infrastructure_resources(server) -> None:
-    server.resource(
-        "slh://railway",
-        name="railway",
-        description="Safe Railway project metadata.",
-    )(railway_resource)
-    server.resource(
-        "slh://github",
-        name="github",
-        description="Safe GitHub repository metadata.",
-    )(github_resource)
+    """Backward-compatible no-op; infrastructure resources are registered centrally."""
+    return None
+
 
 def agent_economy_resource(agent_id: str, principal=None) -> dict:
     principal = _principal_or_raise(principal)
