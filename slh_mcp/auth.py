@@ -34,11 +34,11 @@ class Principal:
         if not expected or not subject:
             return None
 
-        authorization = ""
-        for key, value in headers.items():
-            if str(key).lower() == "authorization":
-                authorization = str(value).strip()
-                break
+        authorization = str(
+            headers.get("authorization")
+            or headers.get("Authorization")
+            or ""
+        ).strip()
 
         scheme, _, token = authorization.partition(" ")
         token = token.strip()
