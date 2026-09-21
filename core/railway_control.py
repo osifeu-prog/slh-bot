@@ -154,3 +154,36 @@ def canonical_up(commit_sha=None):
         "commit": sha,
         "deployment_id": deployment.get("id"),
     }
+
+def deployment_status(deployment_id):
+    deployment_id = str(deployment_id).strip()
+    if not deployment_id:
+        raise RailwayControlError("INVALID_DEPLOYMENT_ID")
+    data = graphql(
+        """
+        query($id: String!) {
+          deployment(id: $id) {
+            id
+            status
+            createdAt
+            updatedAt
+            projectId
+            serviceId
+            environmentId
+          }
+        }
+        """,
+        {"id": deployment_id},
+    )
+    deployment = data.get("deployment")
+    if not isinstance(deployment, dict):
+        raise RailwayControlError("DEPLOYMENT_NOT_FOUND")
+    return {
+        "id": deployment.get("id"),
+        "status": deployment.get("status"),
+        "created_at": deployment.get("createdAt"),
+        "updated_at": deployment.get("updatedAt"),
+        "project_id": deployment.get("projectId"),
+        "service_id": deployment.get("serviceId"),
+        "environment_id": deployment.get("environmentId"),
+    }
