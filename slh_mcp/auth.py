@@ -5,11 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hmac
 import os
+from contextvars import ContextVar, Token
 from typing import Mapping
 
 from core.authority import ROLES, get_role, has_permission
 
 from slh_mcp.security import redact
+
+
+_CURRENT_PRINCIPAL: ContextVar[Principal | None] = ContextVar("slh_mcp_principal", default=None)
 
 
 @dataclass(frozen=True)
@@ -62,6 +66,18 @@ def principal_from_headers(headers: Mapping[str, str]) -> Principal | None:
 
 def principal_from_request(request) -> Principal | None:
     return principal_from_headers(request.headers)
+
+
+def set_current_principal(principal: Principal | None) -> Token:
+    return _CURRENT_PRINCIPAL.set(principal)
+
+
+def reset_current_principal(token: Token) -> None:
+    _CURRENT_PRINCIPAL.reset(token)
+
+
+def current_principal() -> Principal | None:
+    return _CURRENT_PRINCIPAL.get()
 
 
 def authorize(principal: Principal | None, permission: str) -> bool:
