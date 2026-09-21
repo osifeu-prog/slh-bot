@@ -1,9 +1,14 @@
-"""Explicit MCP capability catalog for SLH OS."""
+"""Explicit MCP capability catalog and binding metadata for SLH OS."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import wraps
 from typing import Any, Callable
+
+from mcp.server.mcpserver.exceptions import ToolError
+
+from slh_mcp.auth import authorize, current_principal
 
 
 @dataclass(frozen=True)
@@ -68,3 +73,21 @@ def bind_handler(name: str, handler: Callable[..., Any]) -> None:
         mutating=capability.mutating,
         handler=handler,
     )
+
+
+def require_capability(name: str):
+    capability = get_capability(name)
+    principal = current_principal()
+    if not authorize(principal, capability.permission):
+        raise ToolError(f"Capability denied: {name}")
+    return capability
+
+
+def guarded_handler(capability: Capability, handler: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(handler)
+    def guarded(*args, **kwargs):
+        principal = current_principal()
+        if not authorize(principal, capability.permission):
+            raise ToolError(f"Capability denied: {capability.name}")
+        return handler(*args, **kwargs)
+    return guarded
