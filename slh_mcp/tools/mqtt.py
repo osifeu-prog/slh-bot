@@ -55,9 +55,9 @@ def mqtt_probe(principal=None) -> dict:
     except Exception as exc:
         return {
             "reachable": False,
-            "broker": BROKER,
-            "port": PORT,
-            "tls": USE_TLS,
+            "broker": mqtt_config.BROKER,
+            "port": mqtt_config.PORT,
+            "tls": mqtt_config.USE_TLS,
             "error": type(exc).__name__,
         }
     finally:
