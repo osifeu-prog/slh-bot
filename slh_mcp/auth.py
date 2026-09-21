@@ -64,6 +64,13 @@ def principal_from_headers(headers: Mapping[str, str]) -> Principal | None:
     )
 
 
+def principal_from_scope(scope) -> Principal | None:
+    raw_headers = {}
+    for key, value in scope.get("headers", []):
+        raw_headers[str(key).lower()] = value.decode("latin-1")
+    return principal_from_headers(raw_headers)
+
+
 def principal_from_request(request) -> Principal | None:
     return principal_from_headers(request.headers)
 
