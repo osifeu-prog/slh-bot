@@ -7,6 +7,7 @@ from core.authority import get_visible_agents
 from core.mission_lifecycle import MissionLifecycleService
 
 from slh_mcp.agent_economy import AgentEconomyService
+from slh_mcp.core_client import configured_client
 
 
 _PUBLIC_FIELDS = {
@@ -46,11 +47,36 @@ def complete_agent_mission(
     operation_id: str,
 ) -> dict:
     principal = _resolve_principal(principal)
+    client = configured_client()
     mission_id = str(mission_id).strip()
     agent_id = str(agent_id).strip()
     operation_id = str(operation_id).strip()
     if not mission_id or not agent_id or not operation_id:
         raise ValueError("INVALID_MISSION_COMPLETION_INPUT")
+    if client is not None:
+        mission = client.mission(mission_id).get("mission") or {}
+        if not mission:
+            raise KeyError(mission_id)
+        if str(mission.get("assigned_to")) != agent_id:
+            raise PermissionError("MISSION_ASSIGNMENT_MISMATCH")
+        reward = float(mission.get("reward", 0) or 0)
+        status = str(mission.get("status", "")).lower()
+        if status == "completed":
+            return {"status":"already_completed","mission_id":mission_id,"agent_id":agent_id,"reward":reward,"operation_id":operation_id}
+        if status != "executed":
+            return {"status":"blocked","mission_id":mission_id,"agent_id":agent_id,"reason":"MISSION_NOT_READY_FOR_COMPLETION","current_status":status}
+        completion = client.mission_complete(mission_id)
+        if completion.get("status") != "completed":
+            return {"status":"blocked","mission_id":mission_id,"agent_id":agent_id,"reason":completion.get("reason","MISSION_COMPLETION_FAILED")}
+        if reward == 0:
+            return {"status":"completed","mission_id":mission_id,"agent_id":agent_id,"reward":0,"reward_status":"no_reward","operation_id":operation_id}
+        try:
+            reward_result = client.economy_reward(agent_id, reward, operation_id, mission_id)
+        except RuntimeError as exc:
+            if "INSUFFICIENT_AGENT_ECONOMY" in str(exc):
+                return {"status":"reward_pending","mission_id":mission_id,"agent_id":agent_id,"reward":reward,"reason":"INSUFFICIENT_AGENT_ECONOMY","operation_id":operation_id}
+            raise
+        return {"status":"completed","mission_id":mission_id,"agent_id":agent_id,"reward":reward,"reward_status":reward_result.get("status"),"operation_id":operation_id}
     if result is not None and not isinstance(result, dict):
         raise ValueError("MISSION_RESULT_INVALID")
 
