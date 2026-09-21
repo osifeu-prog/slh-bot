@@ -37,6 +37,12 @@ class MCPMQTTTests(unittest.TestCase):
         self.assertNotIn("secret", rendered)
         self.assertNotIn("password", rendered)
 
+    def test_probe_is_registered_as_read_only_capability(self):
+        from slh_mcp.capabilities import get_capability
+        capability = get_capability("mqtt.probe")
+        self.assertFalse(capability.mutating)
+        self.assertEqual(capability.permission, "exec.audit")
+
     def test_status_does_not_connect(self):
         from slh_mcp.tools.mqtt import mqtt_status
 

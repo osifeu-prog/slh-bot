@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+import paho.mqtt.client as mqtt
+
 from core import mqtt_config
 
 
@@ -37,3 +39,39 @@ def mqtt_status(principal=None) -> dict:
 
 def _tool_mqtt_status():
     return mqtt_status()
+
+def mqtt_probe(principal=None) -> dict:
+    _principal(principal)
+    client = create_probe_client()
+    try:
+        rc = client.connect(mqtt_config.BROKER, mqtt_config.PORT, keepalive=10)
+        return {
+            "reachable": rc == 0,
+            "connect_rc": int(rc),
+            "broker": mqtt_config.BROKER,
+            "port": mqtt_config.PORT,
+            "tls": mqtt_config.USE_TLS,
+        }
+    except Exception as exc:
+        return {
+            "reachable": False,
+            "broker": mqtt_config.BROKER,
+            "port": mqtt_config.PORT,
+            "tls": mqtt_config.USE_TLS,
+            "error": type(exc).__name__,
+        }
+    finally:
+        try:
+            client.disconnect()
+        except Exception:
+            pass
+
+
+def create_probe_client():
+    client = mqtt.Client(client_id="slh-mcp-probe")
+    mqtt_config.apply(client)
+    return client
+
+
+def _tool_mqtt_probe():
+    return mqtt_probe()
