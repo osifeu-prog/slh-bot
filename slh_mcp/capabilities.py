@@ -8,6 +8,7 @@ from typing import Any, Callable
 
 from mcp.server.mcpserver.exceptions import ToolError
 
+from core.exec_policy import audit as audit_event
 from slh_mcp.auth import authorize, current_principal
 
 
@@ -89,7 +90,15 @@ def guarded_handler(capability: Capability, handler: Callable[..., Any]) -> Call
     @wraps(handler)
     def guarded(*args, **kwargs):
         principal = current_principal()
+        subject = principal.subject if principal is not None else "anonymous"
         if not authorize(principal, capability.permission):
+            audit_event(subject, f"mcp:{capability.name}", "mcp", "denied")
             raise ToolError(f"Capability denied: {capability.name}")
-        return handler(*args, **kwargs)
+        try:
+            result = handler(*args, **kwargs)
+        except Exception as exc:
+            audit_event(subject, f"mcp:{capability.name}", "mcp", f"error_{type(exc).__name__}")
+            raise
+        audit_event(subject, f"mcp:{capability.name}", "mcp", "success")
+        return result
     return guarded
