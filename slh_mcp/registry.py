@@ -17,6 +17,7 @@ from slh_mcp.tools.agents import (
     _tool_agents_runtime_status,
 )
 from slh_mcp.tools.missions import _tool_complete_agent_mission, _tool_missions_list
+from slh_mcp.tools.railway_control import _tool_railway_deploy
 from slh_mcp.tools.integrations import (
     _tool_github_ci_status,
     _tool_github_repositories,
@@ -51,6 +52,7 @@ def register_capabilities(server):
         "railway.projects": _tool_railway_projects,
         "railway.services": _tool_railway_services,
         "railway.deployments": _tool_railway_deployments,
+        "railway.deploy": _tool_railway_deploy,
         "github.repositories": _tool_github_repositories,
         "github.ci_status": _tool_github_ci_status,
     }
