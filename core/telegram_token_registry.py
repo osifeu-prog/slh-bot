@@ -18,7 +18,7 @@ _BOT_REGISTRY = {
         "targets": [
             {
                 "project": "endearing-amazement",
-                "project_id": "fd30fefb-3d35-48a5-a7cb-e05337e8124c",
+                "project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812f4",
                 "environment": "production",
                 "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
                 "service": "web",
