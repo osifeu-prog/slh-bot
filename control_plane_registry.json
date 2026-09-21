@@ -32,6 +32,23 @@
             "healthcheck": "/health",
             "volume": "/app/state"
           }
+        },
+        {
+          "name": "slh-mcp",
+          "id": "97aaaea9-6ab3-4aad-960d-23d12e3c8b11",
+          "repo": "osifeu-prog/slh-bot",
+          "branch": "main",
+          "status": "DEPLOYING",
+          "class": "mcp_control_plane",
+          "domain": "slh-mcp-production.up.railway.app",
+          "runtime_policy": {
+            "start_command": "python -m uvicorn slh_mcp.server:app --host 0.0.0.0 --port 8080",
+            "healthcheck": "/health",
+            "restart_policy": "ALWAYS",
+            "replicas": 1,
+            "transport": "Streamable HTTP",
+            "endpoint": "/mcp"
+          }
         }
       ]
     },
@@ -378,6 +395,7 @@
     }
   ],
   "notes": [
+    "slh-mcp is a dedicated MCP control-plane service in endearing-amazement; deployment status is point-in-time and must be re-verified before treating MCP as live.",
     "Railway statuses above were reconciled live on 2026-09-21 via project environment/service status APIs; they are point-in-time deployment states, not continuous process heartbeats.",
     "Canonical production is endearing-amazement/web on osifeu-prog/slh-bot main. It is the only configured production polling gateway; start_railway.sh owns polling and the service is configured with one replica.",
     "slh-cloud-bot also sources osifeu-prog/slh-bot main, but its live service configuration has RUN_BOT=0 and restart policy NEVER; it is retained as a non-polling secondary runtime and must not be enabled automatically.",
