@@ -89,3 +89,12 @@ def get_system_snapshot():
         "deployment": get_deployment_state(),
         "infrastructure": get_infrastructure_snapshot(),
     }
+
+
+
+def get_full_system_map():
+    """Single read-only map used by the human-facing Control Plane."""
+    from core.system_check import run_system_checks
+    snapshot = get_system_snapshot()
+    snapshot["verification"] = run_system_checks()
+    return snapshot
