@@ -59,6 +59,22 @@ _BOT_REGISTRY = {
             }
         ],
     },
+    "taxfree": {
+        "alias": "taxfree",
+        "username": "Tax_Free_world_bot",
+        "label": "Tax Free World",
+        "targets": [
+            {
+                "project": "Tax_Free_world_bot",
+                "project_id": "8023b98a-8241-4b7a-8e53-f3e4ff32547a",
+                "environment": "production",
+                "environment_id": "e6c6b1bf-9903-4165-9fe3-010d9e187972",
+                "service": "Tax_Free_world_bot",
+                "service_id": "5c96141d-c07a-4b5c-80b3-72946893acc9",
+                "variable": "BOT_TOKEN",
+            }
+        ],
+    },
     "ton": {
         "alias": "ton",
         "username": "TON_MNH_bot",
