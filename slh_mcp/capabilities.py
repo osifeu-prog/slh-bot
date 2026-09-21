@@ -24,6 +24,7 @@ class Capability:
 _READ_CAPABILITIES = (
     Capability("system.health", "Return safe MCP service health metadata.", "public.view", False),
     Capability("system.snapshot", "Return a safe SLH control-plane snapshot.", "public.view", False),
+    Capability("income.status", "Report the canonical monetization-path status without financial secrets.", "public.view", False),
     Capability("agents.list", "List agents visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.get", "Get one agent visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.runtime_status", "Get canonical agent runtime status.", "agents.view_self", False),
