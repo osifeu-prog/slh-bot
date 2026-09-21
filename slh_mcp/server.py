@@ -9,7 +9,7 @@ from starlette.middleware import Middleware
 from starlette.routing import Mount, Route
 
 from slh_mcp.auth import (
-    principal_from_headers,
+    principal_from_scope,
     reset_current_principal,
     set_current_principal,
 )
@@ -27,9 +27,7 @@ class MCPAuthMiddleware:
         if scope.get("type") == "http":
             path = scope.get("path", "")
             if path == "/mcp" or path.startswith("/mcp/"):
-                from starlette.datastructures import Headers
-                headers = Headers(scope=scope)
-                principal = principal_from_headers(headers)
+                principal = principal_from_scope(scope)
                 if principal is None:
                     response = JSONResponse(
                         {"error": "AUTH_REQUIRED"},
