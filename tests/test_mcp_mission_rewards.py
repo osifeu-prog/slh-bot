@@ -1,6 +1,4 @@
-import tempfile
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from core.identity import OWNER_TELEGRAM_ID
@@ -14,173 +12,132 @@ class MissionRewardTests(unittest.TestCase):
             role="OWNER",
             permissions=frozenset(),
         )
-        self.tmp = tempfile.TemporaryDirectory()
 
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def _mission(self):
+    def _mission(self, status="executed"):
         return {
             "id": "m1",
-            "status": "assigned",
+            "status": status,
             "assigned_to": "1",
             "reward": 10,
         }
 
-    def test_reward_amount_comes_from_mission(self):
-        from slh_mcp.tools.missions import complete_agent_mission
-
-        mission = self._mission()
-        verified_result = {
-            "execution_status": "success",
-            "verified": True,
-            "evidence": {"proof": "ok"},
-            "mission_id": "m1",
-            "action_type": "test",
-            "idempotency_key": "mission-op-1",
-        }
-        lifecycle_result = {
-            "status": "executed",
-            "mission_id": "m1",
-            "agent_id": "1",
-        }
-
-        with patch(
-            "slh_mcp.tools.missions.MissionLifecycleService"
-        ) as lifecycle_cls, patch(
-            "slh_mcp.tools.missions._SERVICE"
-        ) as economy, patch(
+    def _patches(self, mission, economy):
+        lifecycle_patch = patch("slh_mcp.tools.missions.MissionLifecycleService")
+        economy_patch = patch("slh_mcp.tools.missions._SERVICE", economy)
+        agents_patch = patch(
             "slh_mcp.tools.missions.list_agents",
             return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
+        )
+        visible_patch = patch(
             "slh_mcp.tools.missions.get_visible_agents",
             return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
+        )
+        agent_patch = patch(
             "slh_mcp.tools.missions.get_agent",
             return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
-        ):
+        )
+        return lifecycle_patch, economy_patch, agents_patch, visible_patch, agent_patch
+
+    def test_reward_uses_canonical_completed_mission_record(self):
+        from slh_mcp.tools.missions import complete_agent_mission
+        from unittest.mock import MagicMock
+
+        mission = self._mission()
+        economy = MagicMock()
+        economy.record_reward.return_value = {
+            "status": "completed",
+            "operation_id": "mission:m1:agent_reward",
+            "amount": 10,
+        }
+
+        lifecycle_patch, economy_patch, agents_patch, visible_patch, agent_patch = self._patches(mission, economy)
+        with lifecycle_patch as lifecycle_cls, economy_patch, agents_patch, visible_patch, agent_patch:
             lifecycle = lifecycle_cls.return_value
             lifecycle.load_state.return_value = ({"missions": [mission]}, {})
             lifecycle.find_mission.return_value = mission
-            lifecycle.execute_mission.return_value = lifecycle_result
-            economy.record_reward.return_value = {
-                "status": "completed",
-                "operation_id": "reward-m1",
-                "amount": 10,
-            }
+            lifecycle.complete_mission.return_value = {"status": "completed"}
 
             result = complete_agent_mission(
                 self.owner,
                 "m1",
                 "1",
-                verified_result,
-                "reward-m1",
+                "mission:m1:agent_reward",
             )
 
-        lifecycle.execute_mission.assert_called_once_with(
-            "m1", execution_result=verified_result
-        )
+        lifecycle.complete_mission.assert_called_once_with("m1")
         economy.record_reward.assert_called_once_with(
             agent_id="1",
             amount=10.0,
-            operation_id="reward-m1",
+            operation_id="mission:m1:agent_reward",
             mission_id="m1",
             actor=str(OWNER_TELEGRAM_ID),
         )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["reward"], 10.0)
 
-    def test_already_executed_mission_can_retry_pending_reward(self):
+    def test_non_executed_mission_is_blocked(self):
         from slh_mcp.tools.missions import complete_agent_mission
+        from unittest.mock import MagicMock
 
-        mission = self._mission()
-        mission["status"] = "executed"
-        verified_result = {
-            "execution_status": "success",
-            "verified": True,
-            "evidence": {"proof": "ok"},
-            "mission_id": "m1",
-            "action_type": "test",
-            "idempotency_key": "mission-op-1",
-        }
-        with patch(
-            "slh_mcp.tools.missions.MissionLifecycleService"
-        ) as lifecycle_cls, patch(
-            "slh_mcp.tools.missions._SERVICE"
-        ) as economy, patch(
-            "slh_mcp.tools.missions.list_agents",
-            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
-            "slh_mcp.tools.missions.get_visible_agents",
-            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
-            "slh_mcp.tools.missions.get_agent",
-            return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
-        ):
+        mission = self._mission(status="assigned")
+        economy = MagicMock()
+
+        lifecycle_patch, economy_patch, agents_patch, visible_patch, agent_patch = self._patches(mission, economy)
+        with lifecycle_patch as lifecycle_cls, economy_patch, agents_patch, visible_patch, agent_patch:
             lifecycle = lifecycle_cls.return_value
             lifecycle.load_state.return_value = ({"missions": [mission]}, {})
             lifecycle.find_mission.return_value = mission
-            economy.record_reward.side_effect = [
-                ValueError("INSUFFICIENT_AGENT_ECONOMY"),
-                {"status": "completed", "operation_id": "reward-m1", "amount": 10},
-            ]
-
-            first = complete_agent_mission(
-                self.owner, "m1", "1", verified_result, "reward-m1"
-            )
-            second = complete_agent_mission(
-                self.owner, "m1", "1", verified_result, "reward-m1"
-            )
-
-        self.assertEqual(first["status"], "reward_pending")
-        self.assertEqual(second["status"], "completed")
-        self.assertEqual(economy.record_reward.call_count, 2)
-
-    def test_reward_failure_returns_pending_without_user_ledger(self):
-        from slh_mcp.tools.missions import complete_agent_mission
-
-        mission = self._mission()
-        verified_result = {
-            "execution_status": "success",
-            "verified": True,
-            "evidence": {"proof": "ok"},
-            "mission_id": "m1",
-            "action_type": "test",
-            "idempotency_key": "mission-op-1",
-        }
-
-        with patch(
-            "slh_mcp.tools.missions.MissionLifecycleService"
-        ) as lifecycle_cls, patch(
-            "slh_mcp.tools.missions._SERVICE"
-        ) as economy, patch(
-            "slh_mcp.tools.missions.list_agents",
-            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
-            "slh_mcp.tools.missions.get_visible_agents",
-            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
-        ), patch(
-            "slh_mcp.tools.missions.get_agent",
-            return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
-        ):
-            lifecycle = lifecycle_cls.return_value
-            lifecycle.load_state.return_value = ({"missions": [mission]}, {})
-            lifecycle.find_mission.return_value = mission
-            lifecycle.execute_mission.return_value = {
-                "status": "executed",
-                "mission_id": "m1",
-                "agent_id": "1",
-            }
-            economy.record_reward.side_effect = ValueError(
-                "INSUFFICIENT_AGENT_ECONOMY"
-            )
 
             result = complete_agent_mission(
                 self.owner,
                 "m1",
                 "1",
-                verified_result,
-                "reward-m1",
+                "mission:m1:agent_reward",
+            )
+
+        self.assertEqual(result["status"], "blocked")
+        self.assertEqual(result["reason"], "MISSION_NOT_EXECUTED")
+        economy.record_reward.assert_not_called()
+        lifecycle.complete_mission.assert_not_called()
+
+    def test_already_completed_mission_cannot_use_new_operation_id(self):
+        from slh_mcp.tools.missions import complete_agent_mission
+
+        mission = self._mission(status="completed")
+        lifecycle_patch, economy_patch, agents_patch, visible_patch, agent_patch = self._patches(mission, object())
+        with lifecycle_patch as lifecycle_cls, economy_patch, agents_patch, visible_patch, agent_patch:
+            lifecycle = lifecycle_cls.return_value
+            lifecycle.load_state.return_value = ({"missions": [mission]}, {})
+            lifecycle.find_mission.return_value = mission
+
+            with self.assertRaises(ValueError):
+                complete_agent_mission(
+                    self.owner,
+                    "m1",
+                    "1",
+                    "mission:m1:different",
+                )
+
+    def test_insufficient_treasury_returns_pending(self):
+        from slh_mcp.tools.missions import complete_agent_mission
+        from unittest.mock import MagicMock
+
+        mission = self._mission()
+        economy = MagicMock()
+        economy.record_reward.side_effect = ValueError("INSUFFICIENT_AGENT_ECONOMY")
+
+        lifecycle_patch, economy_patch, agents_patch, visible_patch, agent_patch = self._patches(mission, economy)
+        with lifecycle_patch as lifecycle_cls, economy_patch, agents_patch, visible_patch, agent_patch:
+            lifecycle = lifecycle_cls.return_value
+            lifecycle.load_state.return_value = ({"missions": [mission]}, {})
+            lifecycle.find_mission.return_value = mission
+            lifecycle.complete_mission.return_value = {"status": "completed"}
+
+            result = complete_agent_mission(
+                self.owner,
+                "m1",
+                "1",
+                "mission:m1:agent_reward",
             )
 
         self.assertEqual(result["status"], "reward_pending")
