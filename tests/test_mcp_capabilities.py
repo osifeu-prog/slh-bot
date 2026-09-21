@@ -60,6 +60,25 @@ class MCPCapabilityTests(unittest.TestCase):
         for row in result:
             self.assertNotIn("inbox", row)
             self.assertNotIn("history", row)
+            self.assertNotIn("permissions", row)
+
+    def test_privileged_capability_requires_canonical_permission(self):
+        from slh_mcp.auth import Principal
+        from slh_mcp.capabilities import get_capability, guarded_handler
+        from unittest.mock import patch
+
+        called = []
+        capability = get_capability("bots.registry")
+        handler = guarded_handler(capability, lambda: called.append(True))
+
+        with patch(
+            "slh_mcp.capabilities.current_principal",
+            return_value=Principal("1", "UNKNOWN", frozenset()),
+        ):
+            with self.assertRaises(Exception):
+                handler()
+        self.assertEqual(called, [])
+            self.assertNotIn("permissions", row)
 
 
 if __name__ == "__main__":
