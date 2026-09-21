@@ -9,7 +9,7 @@ import os
 import hmac
 
 from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents, has_permission
+from core.authority import get_role, get_visible_agents, has_permission
 from core.mission_lifecycle import MissionLifecycleService
 from core.runtime_service import execute_agent, status as runtime_status
 
@@ -108,7 +108,7 @@ def _owned_agent(principal_id: str, agent_id: str) -> bool:
     canonical_id, agent = get_agent(str(agent_id))
     if agent is None or canonical_id not in visible:
         return False
-    role = str(__import__("core.authority", fromlist=["get_role"]).get_role(principal_id))
+    role = str(get_role(principal_id))
     return role in {"OWNER", "MCP_SERVICE", "ADMIN", "DEVELOPER"} or str(agent.get("owner_id")) == str(principal_id)
 
 
