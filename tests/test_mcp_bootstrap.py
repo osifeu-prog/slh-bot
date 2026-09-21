@@ -8,12 +8,15 @@ class MCPBootstrapTests(unittest.TestCase):
         app = build_mcp_app()
         self.assertTrue(hasattr(app, "routes"))
 
-    def test_mcp_route_is_mounted_at_expected_path(self):
+    def test_mcp_host_mount_preserves_inner_mcp_endpoint(self):
         from slh_mcp.server import build_mcp_app
 
         app = build_mcp_app()
-        paths = {getattr(route, "path", None) for route in app.routes}
-        self.assertIn("/mcp", paths)
+        mounts = [route for route in app.routes if getattr(route, "path", None) == "/"]
+        self.assertTrue(mounts)
+        inner = mounts[0].app
+        inner_paths = {getattr(route, "path", None) for route in inner.routes}
+        self.assertIn("/mcp", inner_paths)
 
 
 if __name__ == "__main__":
