@@ -95,6 +95,21 @@ class AgentEconomyTests(unittest.TestCase):
             )
 
     def test_proposal_is_read_only(self):
+        self.economy.record_revenue(
+            amount=20,
+            operation_id="revenue-1",
+            actor=str(OWNER_TELEGRAM_ID),
+            reason="verified_external_revenue",
+            evidence={"event_id": "external-1"},
+        )
+        self.economy.treasury_fund(
+            agent_id="agent-1",
+            amount=20,
+            operation_id="fund-1",
+            actor=str(OWNER_TELEGRAM_ID),
+            reason="bootstrap",
+        )
+        ledger_before = list(self.economy.ledger())
         result = self.economy.propose_transfer(
             source_agent="agent-1",
             target_agent="agent-2",
@@ -104,9 +119,9 @@ class AgentEconomyTests(unittest.TestCase):
             reason="work",
         )
         self.assertEqual(result["status"], "proposed")
-        self.assertEqual(self.economy.balance("agent-1"), 0)
+        self.assertEqual(self.economy.balance("agent-1"), 20)
         self.assertEqual(self.economy.balance("agent-2"), 0)
-        self.assertEqual(self.economy.ledger(), [])
+        self.assertEqual(self.economy.ledger(), ledger_before)
 
     def test_reward_uses_treasury(self):
         self.economy.record_revenue(
