@@ -1,219 +1,91 @@
-"""Safe, read-only MCP resources for SLH OS."""
+"""Safe read-only MCP resources backed by the canonical Control Plane bridge."""
 
 from __future__ import annotations
 
 from core.telegram_token_registry import list_bots
 
+from slh_mcp import control_plane_client
+from slh_mcp.auth import current_principal
 
-def _principal_or_raise(principal=None):
-    if principal is not None:
-        return principal
-    from slh_mcp.auth import current_principal
 
-    resolved = current_principal()
-    if resolved is None:
+
+def _principal(principal=None):
+    value = principal or current_principal()
+    if value is None:
         raise PermissionError("MCP authentication required")
-    return resolved
+    return value
 
 
 def system_health(principal=None) -> dict:
-    _principal_or_raise(principal)
+    principal = _principal(principal)
+    result = control_plane_client._request("/api/internal/mcp/system", principal=principal.subject)
     return {
-        "status": "ok",
-        "service": "SLH MCP",
-        "version": "0.1.0",
+        "status": result.get("status"),
+        "service": result.get("service"),
+        "agent_count": result.get("agent_count"),
+        "mission_count": result.get("mission_count"),
     }
 
 
 def agents_resource(principal=None) -> list[dict]:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.agents import agents_list
-
-    return agents_list(principal)
+    principal = _principal(principal)
+    result = control_plane_client.agents(principal.subject)
+    return list(result.get("agents", []))
 
 
 def agent_resource(agent_id: str, principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.agents import agents_get
-
-    return agents_get(principal, str(agent_id))
+    principal = _principal(principal)
+    result = control_plane_client.agent(str(agent_id), principal.subject)
+    agent = result.get("agent")
+    if not isinstance(agent, dict):
+        raise KeyError(str(agent_id))
+    return agent
 
 
 def bot_registry(principal=None) -> list[dict]:
-    _principal_or_raise(principal)
+    _principal(principal)
     result = []
     for item in list_bots():
-        result.append(
-            {
-                "alias": item.get("alias"),
-                "username": item.get("username"),
-                "label": item.get("label"),
-                "targets": [
-                    {
-                        "project": target.get("project"),
-                        "project_id": target.get("project_id"),
-                        "environment": target.get("environment"),
-                        "service": target.get("service"),
-                        "service_id": target.get("service_id"),
-                        "variable": target.get("variable"),
-                    }
-                    for target in item.get("targets", [])
-                ],
-            }
-        )
+        result.append({
+            "alias": item.get("alias"),
+            "username": item.get("username"),
+            "label": item.get("label"),
+            "targets": [
+                {
+                    "project": target.get("project"),
+                    "project_id": target.get("project_id"),
+                    "environment": target.get("environment"),
+                    "service": target.get("service"),
+                    "service_id": target.get("service_id"),
+                    "variable": target.get("variable"),
+                }
+                for target in item.get("targets", [])
+            ],
+        })
     return result
-
-
-def system_snapshot(principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.agents import agents_list
-    from slh_mcp.tools.missions import missions_list
-
-    agents = agents_list(principal)
-    missions = missions_list(principal)
-    return {
-        "service": "SLH MCP",
-        "status": "ok",
-        "agent_count": len(agents),
-        "mission_count": len(missions),
-    }
-
-
-def agent_economy_resource(agent_id: str, principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
-
-    balance = economy_agent_balance(principal, agent_id)
-    ledger = economy_agent_ledger(principal, agent_id)
-    return {
-        "agent_id": balance["agent_id"],
-        "currency": balance["currency"],
-        "balance": balance["balance"],
-        "ledger_count": len(ledger),
-        "recent_ledger": ledger[-20:],
-    }
-
-
-def economy_resource(principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.agent_economy import AgentEconomyService
-    from slh_mcp.tools.agents import agents_list
-
-    service = AgentEconomyService()
-    owned_ids = {str(row.get("id")) for row in agents_list(principal)}
-    ledger = [
-        row for row in service.ledger()
-        if str(row.get("account")) in owned_ids
-    ]
-    return {
-        "currency": "agent_credits",
-        "treasury_balance": service.balance("AGENT_TREASURY"),
-        "visible_agent_count": len(owned_ids),
-        "visible_ledger_count": len(ledger),
-    }
-
-
-def missions_resource(principal=None) -> list[dict]:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.missions import missions_list
-
-    return missions_list(principal)
-
-
-def railway_resource(principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.integrations import railway_projects
-
-    return {"projects": railway_projects(principal)}
-
-
-def github_resource(principal=None) -> dict:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.integrations import github_repositories
-
-    return {"repositories": github_repositories(principal)}
-
-
-def bots_federation_resource(principal=None) -> list[dict]:
-    principal = _principal_or_raise(principal)
-    from slh_mcp.tools.bots import bots_federation
-
-    return bots_federation(principal)
-
-
-def register_resources(server) -> None:
-    registrations = (
-        (
-            "slh://system",
-            "system",
-            "Safe SLH system metadata.",
-            lambda: system_health(),
-        ),
-        (
-            "slh://agents",
-            "agents",
-            "Agents visible to the authenticated principal.",
-            lambda: agents_resource(),
-        ),
-        (
-            "slh://agent/{agent_id}",
-            "agent",
-            "One visible SLH agent.",
-            lambda agent_id: agent_resource(agent_id),
-        ),
-        (
-            "slh://agent/{agent_id}/economy",
-            "agent_economy",
-            "Isolated economy state for one visible agent.",
-            lambda agent_id: agent_economy_resource(agent_id),
-        ),
-        (
-            "slh://missions",
-            "missions",
-            "Safe canonical SLH mission projection.",
-            lambda: missions_resource(),
-        ),
-        (
-            "slh://economy",
-            "economy",
-            "Safe isolated Agent Economy summary.",
-            lambda: economy_resource(),
-        ),
-        (
-            "slh://railway",
-            "railway",
-            "Safe Railway project metadata.",
-            lambda: railway_resource(),
-        ),
-        (
-            "slh://github",
-            "github",
-            "Safe GitHub repository metadata.",
-            lambda: github_resource(),
-        ),
-        (
-            "slh://bots",
-            "bots",
-            "Federated SLH bot and deployment read model.",
-            lambda: bots_federation_resource(),
-        ),
-    )
-
-    for uri, name, description, handler in registrations:
-        server.resource(
-            uri,
-            name=name,
-            description=description,
-        )(handler)
 
 
 def _tool_system_health():
     return system_health()
 
 
-def _tool_system_snapshot():
-    return system_snapshot()
-
-
 def _tool_bots_registry():
     return bot_registry()
+
+
+def register_resources(server) -> None:
+    server.resource(
+        "slh://system",
+        name="system",
+        description="Safe SLH system metadata.",
+    )(_tool_system_health)
+    server.resource(
+        "slh://agents",
+        name="agents",
+        description="Agents visible to the authenticated principal.",
+    )(agents_resource)
+    server.resource(
+        "slh://agent/{agent_id}",
+        name="agent",
+        description="One visible SLH agent.",
+    )(agent_resource)
