@@ -12,9 +12,14 @@ Run:
 
     uvicorn slh_mcp.server:app --host 127.0.0.1 --port 8080
 
-Health:
+Liveness:
 
     GET /health
+
+Readiness:
+
+    GET /ready
+
 
 MCP endpoint:
 
@@ -26,6 +31,8 @@ MCP endpoint:
     SLH_MCP_PRINCIPAL_ID
     SLH_MCP_ALLOWED_HOSTS
     SLH_MCP_ALLOWED_ORIGINS
+    SLH_CONTROL_PLANE_URL
+    SLH_MCP_BRIDGE_TOKEN
 
 Railway deployment control additionally requires:
 
@@ -71,3 +78,13 @@ Controlled deployment configuration:
     SLH_MCP_DEPLOY_ALLOWLIST
 
 No Telegram bot token is required by `slh-mcp`.
+### Control Plane bridge
+
+The standalone MCP service does not read the live `state/db.json` from another Railway service. Agents and missions are resolved through the authenticated internal Control Plane bridge hosted by the canonical web service.
+
+Required bridge configuration:
+
+    SLH_CONTROL_PLANE_URL
+    SLH_MCP_BRIDGE_TOKEN
+
+The same bridge secret must be configured on the canonical web service and on `slh-mcp`. Never place it in source control.
