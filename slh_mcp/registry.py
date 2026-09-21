@@ -29,6 +29,7 @@ from slh_mcp.tools.integrations import (
     _tool_railway_services,
 )
 from slh_mcp.tools.economic_ledger import _tool_economy_ledger
+from slh_mcp.tools.income import _tool_income_reconciliation
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
     _tool_economy_agent_ledger,
@@ -51,6 +52,7 @@ def register_capabilities(server):
         "economy.agent_balance": _tool_economy_agent_balance,
         "economy.agent_ledger": _tool_economy_agent_ledger,
         "economy.ledger": _tool_economy_ledger,
+        "income.reconciliation": _tool_income_reconciliation,
         "economy.propose_transfer": _tool_economy_propose_transfer,
         "economy.commit_transfer": _tool_economy_commit_transfer,
         "bots.registry": _tool_bots_registry,
