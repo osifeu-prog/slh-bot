@@ -167,22 +167,23 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
-            bot.send_message(
-                m.chat.id,
-                (
+            if result["status"] == "duplicate":
+                message = (
                     "ℹ️ תשלום VIP כבר עובד. החבילה נשמרת כל עוד המנוי פעיל."
-                    if result["status"] == "duplicate"
-                    else (
-                        "✅ VIP הופעל לחודש.\n"
-                        + (
-                            "🎁 חבילת ההשקה הופעלה: 300 Credits + Agent OS + אימוג'י VIP זהוב + עד 4 סוכנים."
-                            if result.get("launch_offer_qualified") and result.get("fulfillment_status") == "completed"
-                            else "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי."
-                        )
-                        + "\nהחיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
-                    )
-                ),
-            )
+                )
+            elif result.get("launch_offer_qualified") and result.get("fulfillment_status") == "completed":
+                message = (
+                    "✅ VIP הופעל לחודש.\n"
+                    "🎁 חבילת ההשקה הופעלה: 300 Credits + Agent OS + אימוג'י VIP זהוב + עד 4 סוכנים.\n"
+                    "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
+                )
+            else:
+                message = (
+                    "✅ VIP הופעל לחודש.\n"
+                    "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי.\n"
+                    "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
+                )
+            bot.send_message(m.chat.id, message)
             return
             return
 
@@ -248,3 +249,49 @@ def register_payment_handlers(bot):
             if result["status"] == "duplicate":
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
                 return
+            bot.send_message(m.chat.id, f"✅ Payment received! {package[2]} credits added.\nYour balance: {result['credits']} credits.")
+        except Exception as e:
+            print(f"[PAY] Atomic payment failed: {type(e).__name__}")
+            bot.send_message(m.chat.id, "⚠️ Payment processing failed safely. Please contact /paysupport.")
+
+    @bot.message_handler(commands=['paysupport'])
+    def paysupport(m):
+        bot.send_message(m.chat.id, "💳 SLH Payment Support\nFor a payment issue, send the payment date/time, Stars amount, and payment reference if available.")
+
+    @bot.message_handler(commands=['history'])
+    def history(m):
+        uid = str(m.from_user.id)
+        db = state_manager.load_db()
+        txs = [t for t in db.get("transactions", []) if t.get("uid") == uid]
+        if not txs:
+            bot.send_message(m.chat.id, "📜 No transactions yet.")
+            return
+        msg = "📜 Your transactions:\n" + "".join(
+            f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
+            for tx in txs[-10:]
+        )
+        bot.send_message(m.chat.id, msg.strip())
+
+    @bot.message_handler(commands=['fakepay_disabled'])
+    def fakepay(m):
+        from admin_utils import is_admin
+        if not is_admin(m):
+            return
+        if os.getenv("SLH_ALPHA_TEST_MODE", "0") != "1":
+            bot.send_message(m.chat.id, "⛔ Fake payments are disabled in Alpha.")
+            return
+        uid = str(m.from_user.id)
+        try:
+            from core import economy_service
+            balance = economy_service.record_transaction(
+                uid=uid, amount=100, reason="admin:test_payment",
+                meta={"source": "fakepay", "test_mode": True}
+            )
+            bot.send_message(m.chat.id, f"💰 100 test credits added. Balance: {balance}")
+        except Exception as e:
+            bot.send_message(m.chat.id, "❌ Test payment failed safely.")
+            print(f"[PAY] fakepay error: {type(e).__name__}")
+
+
+def register(bot):
+    register_payment_handlers(bot)
