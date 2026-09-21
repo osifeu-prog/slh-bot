@@ -26,6 +26,8 @@ MCP endpoint:
     SLH_MCP_PRINCIPAL_ID
     SLH_MCP_ALLOWED_HOSTS
     SLH_MCP_ALLOWED_ORIGINS
+    SLH_AGENT_ECONOMY_BACKEND
+    SLH_AGENT_ECONOMY_DATABASE_URL
 
 Railway deployment control additionally requires:
 
@@ -49,11 +51,17 @@ Arbitrary shell execution is not an MCP capability.
 
 The service should run from repository root with Dockerfile `slh_mcp/Dockerfile`.
 
-Persistent storage:
+Agent Economy production storage:
 
-    Railway Volume -> /app/state
+    PostgreSQL service -> `SLH_AGENT_ECONOMY_DATABASE_URL`
 
-Start with one replica/worker. The agent economy is file-backed in this namespace; do not scale the MCP service horizontally until shared-state locking or a transactional datastore is introduced.
+    `SLH_AGENT_ECONOMY_BACKEND=postgres`
+
+The PostgreSQL database is the shared Agent Economy writer for both `web` and `slh-mcp`. Railway private networking keeps service-to-service traffic inside the project/environment. (https://docs.railway.com/networking/private-networking)
+
+The file backend (`SLH_AGENT_ECONOMY_BACKEND=file`) is for local tests/development only. Do not use it as the production Agent Economy source of truth.
+
+Start with one MCP replica/worker. The Postgres backend may support multiple application instances, but deployment should remain single-replica until production concurrency tests are complete.
 
 Required runtime configuration:
 
