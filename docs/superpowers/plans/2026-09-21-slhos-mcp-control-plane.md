@@ -20,8 +20,8 @@
 - "every monetary mutation is idempotent"
 - "Arbitrary command execution is explicitly outside the initial MCP surface."
 - "Production MCP must run only over HTTPS and use authenticated requests."
-- Pin the production MCP runtime to `mcp==2.2.0`; the current official Python SDK v2 stable line is 2.2.0 and requires Python 3.10+. citeturn995046search0turn995046search1
-- Use Streamable HTTP via `MCPServer.streamable_http_app()` and a top-level ASGI lifespan that enters `mcp.session_manager.run()`; deployed hostnames require explicit transport security allowlists. citeturn784467search0turn784467search3
+- Pin the production MCP runtime to `mcp==2.2.0`; the current official Python SDK v2 stable line is 2.2.0 and requires Python 3.10+ (https://pypi.org/project/mcp/).
+- Use Streamable HTTP via `MCPServer.streamable_http_app()` and a top-level ASGI lifespan that enters `mcp.session_manager.run()`; deployed hostnames require explicit transport security allowlists (https://py.sdk.modelcontextprotocol.io/run/asgi/).
 - No production package may be installed ad hoc into a running container.
 
 ## Review Focus
@@ -54,7 +54,7 @@
 ```python
 from unittest import TestCase
 
-from mcp.server import MCPServer
+from mcp.server.mcpserver import MCPServer
 
 from mcp.server import build_mcp_app
 
@@ -119,7 +119,7 @@ def build_mcp_app():
 app = build_mcp_app()
 ```
 
-The exact import path for `MCPServer` must be confirmed during implementation against the pinned SDK before commit; the v2 migration guide documents `MCPServer` as the replacement for v1 `FastMCP`. citeturn784467search3
+The v2 migration guide documents `MCPServer` as the replacement for v1 `FastMCP` (https://py.sdk.modelcontextprotocol.io/v2/migration/).
 
 - [ ] **Step 5: Add the service Dockerfile**
 
@@ -350,7 +350,7 @@ git commit -m "feat(mcp): connect agent and mission control"
 - Create: `core/agent_economy.py`
 - Create: `mcp/tools/economy.py`
 - Create: `tests/test_agent_economy.py`
-- Create or initialize: `state/agent_economy.json` with an empty schema only if the repository's state policy allows committing an empty catalog; otherwise create the file at first runtime through the atomic store.
+- Create: `state/agent_economy.json` with `{ "version": 1, "wallets": {}, "ledger": [], "operations": {} }`; this file contains only agent-economy state and no user wallet data.
 
 **Interfaces:**
 - `get_agent_balance(agent_id: str) -> Decimal`
@@ -417,14 +417,14 @@ git commit -m "feat(economy): add isolated idempotent agent ledger"
 - Create: `tests/test_mcp_mission_rewards.py`
 
 **Interfaces:**
-- `complete_mission(principal, mission_id: str, agent_id: str, result: dict, operation_id: str) -> dict`
+- `complete_agent_mission(principal, mission_id: str, agent_id: str, result: dict, operation_id: str) -> dict`
 
 - [ ] **Step 1: Write tests for reward verification and duplicate completion**
 
 ```python
 def test_duplicate_mission_completion_does_not_double_reward(self):
-    first = complete_mission(owner, "m-1", "a", {"result": "ok"}, "reward-m-1")
-    second = complete_mission(owner, "m-1", "a", {"result": "ok"}, "reward-m-1")
+    first = complete_agent_mission(owner, "m-1", "a", {"result": "ok"}, "reward-m-1")
+    second = complete_agent_mission(owner, "m-1", "a", {"result": "ok"}, "reward-m-1")
     self.assertEqual(first["operation_id"], second["operation_id"])
 ```
 
@@ -439,7 +439,7 @@ Require an existing mission, an eligible agent, a non-empty result object, and a
 
 - [ ] **Step 4: Commit reward through the agent ledger**
 
-Use `commit_transfer` or a dedicated reward entry in `core.agent_economy`; never mutate an existing user wallet. Record the mission id in the ledger metadata.
+Use a dedicated `record_reward(agent_id, amount, operation_id, mission_id, actor)` entry in `core.agent_economy`; never call `core.mission_reward_service.issue_mission_reward`, because that service writes to the existing user-credit ledger. Record the mission id in the agent ledger metadata.
 
 - [ ] **Step 5: Run the tests**
 
@@ -518,116 +518,3 @@ git commit -m "feat(mcp): expose governed infrastructure read capabilities"
 
 ```python
 def test_deploy_requires_permission(self):
-    with self.assertRaises(PermissionError):
-        railway_deploy(read_only_principal, project, service, environment, commit_sha)
-```
-
-- [ ] **Step 2: Verify it fails**
-
-Run: `python -m unittest tests.test_mcp_railway_deploy -v`
-Expected: FAIL because the mutation capability does not yet exist.
-
-- [ ] **Step 3: Implement target allowlisting**
-
-Allow deployment only to explicitly registered project/service/environment triples. Reject arbitrary service ids and reject missing 40-character commit SHAs.
-
-- [ ] **Step 4: Implement deploy + terminal-status verification**
-
-Trigger deployment through the existing Railway control path, poll the deployment id through the Railway adapter, and return `SUCCESS` only after observing terminal `SUCCESS`. `NEEDS_APPROVAL`, `BUILDING`, `DEPLOYING`, `FAILED`, and other non-success states must remain explicit results.
-
-- [ ] **Step 5: Configure the separate Railway service**
-
-Create service `slh-mcp` in `endearing-amazement`, production environment, using repository `osifeu-prog/slh-bot`, Dockerfile path `mcp/Dockerfile`, root directory `/`, and start command supplied by the Dockerfile. Add only the required secret/environment variables; never copy Telegram bot tokens into the MCP service.
-
-- [ ] **Step 6: Run the deployment capability tests**
-
-Run: `python -m unittest tests.test_mcp_railway_deploy -v`
-Expected: PASS.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add mcp/tools/railway.py tests/test_mcp_railway_deploy.py
-git commit -m "feat(mcp): add allowlisted Railway deployment control"
-```
-
-### Task 9: Production protocol tests, CI integration, deployment, and smoke verification
-
-**Files:**
-- Create: `tests/test_mcp_protocol.py`
-- Modify: `.github/workflows/ci.yml`
-- Modify: `.github/workflows/deploy.yml` only if the existing workflow does not already support the new service
-- Create: `mcp/README.md`
-
-**Interfaces:**
-- The production endpoint is `https://<slh-mcp-domain>/mcp`.
-- `/health` returns a minimal unauthenticated JSON health response; `/mcp` requires authentication.
-
-- [ ] **Step 1: Add protocol contract tests**
-
-Test discovery, one read tool, one denied mutation, one successful authenticated mutation against an isolated fixture, and Host allowlist rejection.
-
-- [ ] **Step 2: Add CI checks**
-
-Add to `.github/workflows/ci.yml`:
-
-```yaml
-- name: Verify MCP service
-  run: |
-    python -m unittest tests.test_mcp_bootstrap tests.test_mcp_auth tests.test_mcp_capabilities tests.test_mcp_agents tests.test_agent_economy tests.test_mcp_mission_rewards tests.test_mcp_integrations tests.test_mcp_railway_deploy tests.test_mcp_protocol
-    python -m py_compile mcp/server.py mcp/auth.py mcp/registry.py
-```
-
-- [ ] **Step 3: Document local run and production endpoint contract**
-
-Create `mcp/README.md` with:
-
-```text
-Local:
-  uvicorn mcp.server:app --host 127.0.0.1 --port 8080
-
-MCP endpoint:
-  /mcp
-
-Health:
-  /health
-
-Required environment:
-  SLH_MCP_BEARER_TOKEN
-  SLH_MCP_ALLOWED_HOSTS
-  SLH_MCP_ALLOWED_ORIGINS
-```
-
-Do not document or example any actual secret value.
-
-- [ ] **Step 4: Run CI-equivalent checks locally**
-
-Run: `python -m unittest tests.test_mcp_bootstrap tests.test_mcp_auth tests.test_mcp_capabilities tests.test_mcp_agents tests.test_agent_economy tests.test_mcp_mission_rewards tests.test_mcp_integrations tests.test_mcp_railway_deploy tests.test_mcp_protocol`
-Expected: PASS.
-
-- [ ] **Step 5: Commit the final CI/documentation changes**
-
-```bash
-git add .github/workflows/ci.yml mcp/README.md tests/test_mcp_protocol.py
-git commit -m "test(mcp): enforce protocol and regression contracts"
-```
-
-- [ ] **Step 6: Merge after review and green CI**
-
-Open the implementation PR, verify `validate`, `full-regression`, and security checks, then merge only after all required checks are green.
-
-- [ ] **Step 7: Deploy the new service and verify terminal success**
-
-Create/trigger the Railway `slh-mcp` deployment and inspect the newest deployment until its status is exactly `SUCCESS`. Do not report a queued/building deployment as live.
-
-- [ ] **Step 8: Smoke-test the live endpoint**
-
-Use an authenticated MCP client/Inspector against `/mcp`, verify capability discovery, call `system.health`, `agents.list`, and `economy.agent_balance`, then verify unauthorized access is rejected.
-
-- [ ] **Step 9: Run the financial regression check after deployment**
-
-Compare the existing user financial-state snapshot before and after smoke testing; assert no user `credits`, `token_balance`, `staked`, staking positions, or historical ledger rows changed.
-
-- [ ] **Step 10: Record final acceptance evidence**
-
-Record the final Git commit, CI checks, Railway deployment id/status, MCP endpoint, capability count, and financial regression result in the Control Plane journal without recording any credentials.
