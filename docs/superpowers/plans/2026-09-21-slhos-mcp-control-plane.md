@@ -38,11 +38,11 @@
 
 **Files:**
 - Create: `mcp/__init__.py`
-- Create: `mcp/server.py`
-- Create: `mcp/auth.py`
-- Create: `mcp/registry.py`
-- Create: `mcp/requirements.txt`
-- Create: `mcp/Dockerfile`
+- Create: `slh_mcp/server.py`
+- Create: `slh_mcp/auth.py`
+- Create: `slh_mcp/registry.py`
+- Create: `slh_mcp/requirements.txt`
+- Create: `slh_mcp/Dockerfile`
 - Create: `tests/test_mcp_bootstrap.py`
 
 **Interfaces:**
@@ -77,7 +77,7 @@ Expected: FAIL because the `mcp.server` module does not yet expose `build_mcp_ap
 
 - [ ] **Step 3: Add the production dependency manifest**
 
-Create `mcp/requirements.txt`:
+Create `slh_mcp/requirements.txt`:
 
 ```text
 mcp==2.2.0
@@ -86,7 +86,7 @@ uvicorn==0.35.0
 
 - [ ] **Step 4: Implement the minimal server factory**
 
-Create `mcp/server.py` with this shape:
+Create `slh_mcp/server.py` with this shape:
 
 ```python
 import contextlib
@@ -123,7 +123,7 @@ The v2 migration guide documents `MCPServer` as the replacement for v1 `FastMCP`
 
 - [ ] **Step 5: Add the service Dockerfile**
 
-Create `mcp/Dockerfile`:
+Create `slh_mcp/Dockerfile`:
 
 ```dockerfile
 FROM python:3.11-slim
@@ -132,10 +132,10 @@ COPY mcp/requirements.txt /tmp/mcp-requirements.txt
 RUN pip install --no-cache-dir -r /tmp/mcp-requirements.txt
 COPY . .
 ENV PYTHONUNBUFFERED=1
-CMD ["sh", "-c", "exec uvicorn mcp.server:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "exec uvicorn slh_mcp.server:app --host 0.0.0.0 --port ${PORT:-8080}"]
 ```
 
-Because the server imports shared `core/` code, Railway will build from repository root and select `mcp/Dockerfile`; the service root must not be changed to `mcp/` unless imports are adjusted to preserve access to `core/`.
+Because the server imports shared `core/` code, Railway will build from repository root and select `slh_mcp/Dockerfile`; the service root must not be changed to `slh_mcp/` unless imports are adjusted to preserve access to `core/`.
 
 - [ ] **Step 6: Run the bootstrap test to verify it passes**
 
@@ -145,14 +145,14 @@ Expected: PASS after the dependency environment contains `mcp==2.2.0`.
 - [ ] **Step 7: Commit the skeleton**
 
 ```bash
-git add mcp tests/test_mcp_bootstrap.py
+git add slh_mcp tests/test_mcp_bootstrap.py
 git commit -m "feat(mcp): add isolated control-plane service skeleton"
 ```
 
 ### Task 2: Implement authentication, principals, and redaction
 
 **Files:**
-- Modify: `mcp/auth.py`
+- Modify: `slh_mcp/auth.py`
 - Create: `mcp/security.py`
 - Create: `tests/test_mcp_auth.py`
 
@@ -219,14 +219,14 @@ Expected: PASS, including redaction and unauthorized-principal cases.
 - [ ] **Step 7: Commit the security layer**
 
 ```bash
-git add mcp/auth.py mcp/security.py tests/test_mcp_auth.py
+git add slh_mcp/auth.py mcp/security.py tests/test_mcp_auth.py
 git commit -m "feat(mcp): add governed authentication and redaction"
 ```
 
 ### Task 3: Build the explicit capability registry and read-only system resources
 
 **Files:**
-- Modify: `mcp/registry.py`
+- Modify: `slh_mcp/registry.py`
 - Create: `mcp/capabilities.py`
 - Create: `mcp/resources.py`
 - Create: `tests/test_mcp_capabilities.py`
@@ -281,7 +281,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add mcp/registry.py mcp/capabilities.py mcp/resources.py tests/test_mcp_capabilities.py
+git add slh_mcp/registry.py mcp/capabilities.py mcp/resources.py tests/test_mcp_capabilities.py
 git commit -m "feat(mcp): add explicit capabilities and safe resources"
 ```
 
@@ -340,7 +340,7 @@ Expected: PASS with execution routed through `core.runtime_service`.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add mcp/tools/agents.py mcp/tools/missions.py tests/test_mcp_agents.py
+git add slh_mcp/tools/agents.py mcp/tools/missions.py tests/test_mcp_agents.py
 git commit -m "feat(mcp): connect agent and mission control"
 ```
 
@@ -500,7 +500,7 @@ Expected: PASS against mocked adapters and live read-only connector checks where
 - [ ] **Step 6: Commit**
 
 ```bash
-git add mcp/tools/railway.py mcp/tools/github.py tests/test_mcp_integrations.py
+git add slh_mcp/tools/railway.py mcp/tools/github.py tests/test_mcp_integrations.py
 git commit -m "feat(mcp): expose governed infrastructure read capabilities"
 ```
 
