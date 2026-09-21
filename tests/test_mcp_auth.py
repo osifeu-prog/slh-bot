@@ -8,7 +8,7 @@ class MCPAuthTests(unittest.TestCase):
     def setUp(self):
         self._env = {
             "SLH_MCP_BEARER_TOKEN": os.environ.get("SLH_MCP_BEARER_TOKEN"),
-            "SLH_MCP_PRINCIPAL_ID": os.environ.get("SLH_MCP_PRINCIPAL_ID"),
+            "SLH_MCP_SERVICE_PRINCIPAL_ID": os.environ.get("SLH_MCP_SERVICE_PRINCIPAL_ID"),
         }
 
     def tearDown(self):
@@ -77,7 +77,7 @@ class MCPAuthTests(unittest.TestCase):
         from slh_mcp.auth import principal_from_scope
 
         os.environ["SLH_MCP_BEARER_TOKEN"] = "expected"
-        os.environ["SLH_MCP_PRINCIPAL_ID"] = str(OWNER_TELEGRAM_ID)
+        os.environ["SLH_MCP_SERVICE_PRINCIPAL_ID"] = "slh-mcp"
 
         scope = {
             "type": "http",
