@@ -8,7 +8,14 @@ from slh_mcp.auth import current_principal
 from slh_mcp.core_client import configured_client
 
 
-_MODEL = EconomicReadModel()
+_MODEL = None
+
+
+def _local_model():
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = EconomicReadModel()
+    return _MODEL
 
 
 def _principal(principal=None):
@@ -27,7 +34,7 @@ def economy_ledger(principal=None, limit: int = 100, domain: str | None = None, 
     client = configured_client()
     if client is not None:
         return client.economic_ledger(limit=limit, domain=domain, account_id=account_id).get("events", [])
-    return _MODEL.events(limit=limit, domain=domain, account_id=account_id)
+    return _local_model().events(limit=limit, domain=domain, account_id=account_id)
 
 
 def economic_ledger_summary(principal=None) -> dict:
@@ -39,7 +46,7 @@ def economic_ledger_summary(principal=None) -> dict:
     client = configured_client()
     if client is not None:
         return client.economic_summary()
-    return _MODEL.summary()
+    return _local_model().summary()
 
 
 def _tool_economy_ledger(
