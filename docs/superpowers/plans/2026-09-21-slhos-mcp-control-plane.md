@@ -273,15 +273,15 @@ def test_execution_delegates_to_runtime_service(self):
 
 - [ ] **Step 2: Implement agent reads through canonical registry/authority**
 
-Use `core.agent_registry.list_agents`, `get_agent`, and `core.authority.get_visible_agents`; do not expose raw STORE internals.
+Use the live Control Plane bridge for agent list/get/visibility; the bridge is the only live state boundary for `slh-mcp`.
 
 - [ ] **Step 3: Implement runtime status and execution**
 
-Use `core.runtime_service.status()` and `core.runtime_service.execute_agent(agent_id, command, source="mcp")`. Reject empty commands and commands longer than 2000 characters.
+Use the live Control Plane bridge, which delegates to `core.runtime_service.status()` and `core.runtime_service.execute_agent(agent_id, command, source="mcp")`. Reject empty commands and commands longer than 2000 characters.
 
 - [ ] **Step 4: Implement mission reads**
 
-Use `MissionLifecycleService(".").load_state()` and `MissionLifecycleService(".").find_mission()` over the canonical mission board. Do not read arbitrary state files.
+Use the live Control Plane bridge for Mission reads and completion. The bridge delegates to `MissionLifecycleService` inside the live `web` process.
 
 - [ ] **Step 5: Run tests and commit**
 
@@ -332,7 +332,7 @@ def test_negative_amount_is_rejected_without_write(self):
 
 - [ ] **Step 3: Implement atomic agent-only state mutation**
 
-Use the repository's atomic state writer under the new agent-economy namespace. A committed `operation_id` must return the stored result without applying another debit/credit.
+Use the isolated file-backed Agent Economy service in `slh-mcp`; the namespace is not shared with user state. A committed `operation_id` must return the stored result without applying another debit/credit.
 
 - [ ] **Step 4: Implement proposal and commit separation**
 
