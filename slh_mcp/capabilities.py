@@ -45,7 +45,6 @@ _MUTATING_CAPABILITIES = (
     Capability("missions.create", "Create an SLH mission.", "agents.manage", True),
     Capability("missions.assign", "Assign an SLH mission.", "agents.manage", True),
     Capability("missions.complete", "Complete an SLH mission and record an agent reward.", "agents.manage", True),
-    Capability("economy.propose_transfer", "Propose an isolated agent-economy transfer.", "economy.mutate_self", True),
     Capability("economy.commit_transfer", "Commit an isolated agent-economy transfer.", "economy.mutate_self", True),
     Capability("railway.deploy", "Deploy an allowlisted Railway target.", "agents.manage", True),
 )
