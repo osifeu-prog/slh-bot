@@ -8,6 +8,7 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 
 from slh_mcp.agent_economy import AgentEconomyService
+from slh_mcp.core_client import configured_client
 
 _SERVICE = AgentEconomyService()
 
@@ -42,6 +43,9 @@ def _owned(principal, agent_id: str) -> bool:
 
 def economy_agent_balance(principal, agent_id: str) -> dict:
     principal = _principal(principal)
+    client = configured_client()
+    if client is not None:
+        return dict(client.economy_balance(str(agent_id)))
     if not _owned(principal, str(agent_id)):
         raise PermissionError("AGENT_NOT_OWNED")
     return {
@@ -53,6 +57,9 @@ def economy_agent_balance(principal, agent_id: str) -> dict:
 
 def economy_agent_ledger(principal, agent_id: str, limit: int = 100) -> list[dict]:
     principal = _principal(principal)
+    client = configured_client()
+    if client is not None:
+        return list(client.economy_ledger(str(agent_id), limit).get("ledger", []))
     if not _owned(principal, str(agent_id)):
         raise PermissionError("AGENT_NOT_OWNED")
     limit = int(limit)
@@ -71,12 +78,15 @@ def economy_propose_transfer(
     reason: str = "agent_transfer",
 ) -> dict:
     principal = _principal(principal)
+    client = configured_client()
     source_agent = str(source_agent).strip()
     target_agent = str(target_agent).strip()
     operation_id = str(operation_id).strip()
     reason = str(reason).strip()
     if not source_agent or not target_agent or not operation_id or not reason:
         raise ValueError("INVALID_TRANSFER_INPUT")
+    if client is not None:
+        return client.economy_propose(source_agent, target_agent, _positive_amount(amount), operation_id, reason)
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
     return _SERVICE.propose_transfer(
@@ -98,12 +108,15 @@ def economy_commit_transfer(
     reason: str = "agent_transfer",
 ) -> dict:
     principal = _principal(principal)
+    client = configured_client()
     source_agent = str(source_agent).strip()
     target_agent = str(target_agent).strip()
     operation_id = str(operation_id).strip()
     reason = str(reason).strip()
     if not source_agent or not target_agent or not operation_id or not reason:
         raise ValueError("INVALID_TRANSFER_INPUT")
+    if client is not None:
+        return client.economy_transfer(source_agent, target_agent, _positive_amount(amount), operation_id, reason)
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
     return _SERVICE.transfer(
