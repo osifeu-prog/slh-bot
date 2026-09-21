@@ -8,6 +8,7 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 
 from slh_mcp.agent_economy import AgentEconomyService
+from slh_mcp import control_plane_client
 
 _SERVICE = AgentEconomyService()
 
@@ -33,6 +34,10 @@ def _positive_amount(value) -> float:
 
 
 def _owned(principal, agent_id: str) -> bool:
+    if control_plane_client.enabled():
+        result = control_plane_client.agent(str(agent_id))
+        record = result.get("agent")
+        return isinstance(record, dict) and bool(record)
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, record = get_agent(agent_id)
     if record is None or canonical_id not in visible:

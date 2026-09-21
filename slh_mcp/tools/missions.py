@@ -5,6 +5,7 @@ from __future__ import annotations
 from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.mission_lifecycle import MissionLifecycleService
+from slh_mcp import control_plane_client
 
 from slh_mcp.agent_economy import AgentEconomyService
 
@@ -31,7 +32,9 @@ def _public_mission(mission: dict) -> dict:
 
 
 def missions_list(principal=None) -> list[dict]:
-    _resolve_principal(principal)
+    principal = _resolve_principal(principal)
+    if control_plane_client.enabled():
+        return list(control_plane_client.missions().get("missions", []))
     board, _manifest = MissionLifecycleService().load_state()
     if not isinstance(board, dict) or board.get("__invalid_state__"):
         raise RuntimeError("mission board unavailable")
@@ -60,6 +63,73 @@ def complete_agent_mission(
         raise PermissionError("AGENT_NOT_VISIBLE")
     if str(principal.role) != "OWNER" and str(agent.get("owner_id")) != str(principal.subject):
         raise PermissionError("AGENT_NOT_OWNED")
+
+    if control_plane_client.enabled():
+        mission_result = control_plane_client.mission(mission_id)
+        mission = mission_result.get("mission") or {}
+        if not isinstance(mission, dict) or not mission:
+            raise KeyError(mission_id)
+        if str(mission.get("assigned_to")) != agent_id:
+            raise PermissionError("MISSION_ASSIGNMENT_MISMATCH")
+        reward = float(mission.get("reward", 0) or 0)
+        if reward < 0:
+            raise ValueError("INVALID_MISSION_REWARD")
+        status = str(mission.get("status", "")).lower()
+        if status == "completed":
+            completion = {"status": "already_completed"}
+        elif status == "executed":
+            completion = control_plane_client.mission_complete(mission_id)
+            if completion.get("status") != "completed":
+                return {
+                    "status": "blocked",
+                    "mission_id": mission_id,
+                    "agent_id": agent_id,
+                    "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
+                }
+        else:
+            return {
+                "status": "blocked",
+                "mission_id": mission_id,
+                "agent_id": agent_id,
+                "reason": "MISSION_NOT_READY_FOR_COMPLETION",
+                "current_status": mission.get("status"),
+            }
+        if reward == 0:
+            return {
+                "status": "completed",
+                "mission_id": mission_id,
+                "agent_id": agent_id,
+                "reward": 0,
+                "reward_status": "no_reward",
+                "operation_id": operation_id,
+            }
+        try:
+            reward_result = _SERVICE.record_reward(
+                agent_id=agent_id,
+                amount=reward,
+                operation_id=operation_id,
+                mission_id=mission_id,
+                actor=principal.subject,
+            )
+        except ValueError as exc:
+            if str(exc) == "INSUFFICIENT_AGENT_ECONOMY":
+                return {
+                    "status": "reward_pending",
+                    "mission_id": mission_id,
+                    "agent_id": agent_id,
+                    "reward": reward,
+                    "reason": str(exc),
+                    "operation_id": operation_id,
+                }
+            raise
+        return {
+            "status": "completed",
+            "mission_id": mission_id,
+            "agent_id": agent_id,
+            "reward": reward,
+            "reward_status": reward_result.get("status"),
+            "operation_id": operation_id,
+        }
 
     lifecycle = MissionLifecycleService()
     board, _manifest = lifecycle.load_state()
