@@ -38,7 +38,7 @@ def _status_text(message):
     role = get_role(normalize_uid(message))
 
     lines = [
-        "🛡 SLH SYSTEM ADMIN",
+        "🛡 SLH SUPER ADMIN CONTROL PLANE",
         f"Role: {role}",
         "",
         "Control Plane: central_gateway",
@@ -62,7 +62,11 @@ def _menu_markup():
 
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
+        InlineKeyboardButton("📊 Status", callback_data="admin:status"),
         InlineKeyboardButton("🩺 Health", callback_data="admin:health"),
+    )
+    kb.add(
+        InlineKeyboardButton("🗺 System Map", callback_data="admin:map"),
         InlineKeyboardButton("🚂 Railway", callback_data="admin:railway"),
     )
     kb.add(
@@ -70,16 +74,28 @@ def _menu_markup():
         InlineKeyboardButton("🤖 Bots", callback_data="admin:bots"),
     )
     kb.add(
+        InlineKeyboardButton("👥 Agents", callback_data="admin:agents"),
+        InlineKeyboardButton("🎯 Alpha", callback_data="admin:alpha"),
+    )
+    kb.add(
+        InlineKeyboardButton("💰 Economy", callback_data="admin:economy"),
+        InlineKeyboardButton("💎 Staking / Revenue", callback_data="admin:staking"),
+    )
+    kb.add(
+        InlineKeyboardButton("📱 Devices / ESP", callback_data="admin:devices"),
+        InlineKeyboardButton("🌐 WebApp", callback_data="admin:web"),
+    )
+    kb.add(
         InlineKeyboardButton("🔐 Security", callback_data="admin:security"),
+        InlineKeyboardButton("📋 Audit / Logs", callback_data="admin:audit"),
+    )
+    kb.add(
         InlineKeyboardButton("🐛 Bugs / Tasks", callback_data="admin:work"),
+        InlineKeyboardButton("⚙️ Dev / Exec", callback_data="admin:dev"),
     )
     kb.add(
-        InlineKeyboardButton("🗺 System Map", callback_data="admin:map"),
-        InlineKeyboardButton("📊 Status", callback_data="admin:status"),
-    )
-    kb.add(
-        InlineKeyboardButton("⚙️ Dev", callback_data="admin:dev"),
-        InlineKeyboardButton("❓ Help", callback_data="admin:help"),
+        InlineKeyboardButton("♻️ Recovery", callback_data="admin:recovery"),
+        InlineKeyboardButton("❓ Help / Commands", callback_data="admin:help"),
     )
     return kb
 
@@ -109,14 +125,85 @@ def _page(name):
         "bots": (
             "🤖 BOT CONTROL\n\n"
             "/status — gateway status\n"
+            "/services — service registry\n"
             "/unified_map — federation map\n"
+            "/project — project information\n"
             "/help — command catalog\n"
-            "/admin — this Control Plane"
+            "/admin — this Super Admin Control Plane"
+        ),
+        "agents": (
+            "👥 AGENTS\n\n"
+            "/agents — agent registry\n"
+            "/agent — agent control\n"
+            "/task — task management\n"
+            "/mission — mission control\n"
+            "/progress — progress\n"
+            "/monitor — monitoring"
+        ),
+        "alpha": (
+            "🎯 ALPHA CONTROL\n\n"
+            "/e alpha_status — canonical Alpha evaluation\n"
+            "/e alpha_state — current Alpha state\n"
+            "/e alpha_open — OWNER-only open transition\n"
+            "/alpha — Alpha control surface"
+        ),
+        "economy": (
+            "💰 ECONOMY / WALLET\n\n"
+            "/me — account read model\n"
+            "/wallet — wallet surface\n"
+            "/p2p — P2P transfers\n"
+            "/exchange — exchange surface\n"
+            "/claim — claim/deposit path\n"
+            "/withdraw — withdrawal requests\n"
+            "Sensitive mutations remain behind their canonical gates."
+        ),
+        "staking": (
+            "💎 STAKING / REVENUE\n\n"
+            "/stake — staking\n"
+            "/stake_lock — locked staking\n"
+            "/revenue — revenue-share surface\n"
+            "/ton_balance — TON balance\n"
+            "/ton_claim — TON claim\n"
+            "Read/modify actions remain permission-gated."
+        ),
+        "devices": (
+            "📱 DEVICES / ESP\n\n"
+            "/device — device control\n"
+            "/esp_start — ESP start\n"
+            "/esp_stop — ESP stop\n"
+            "/map — system/device map\n"
+            "PC_Osif2 live status is derived from the read-only heartbeat model."
+        ),
+        "web": (
+            "🌐 WEB / MINI APP\n\n"
+            "/project — project surface\n"
+            "/wallet — wallet UI\n"
+            "/join — onboarding\n"
+            "/me — account read model\n"
+            "/gateway — gateway/control-plane surface"
+        ),
+        "audit": (
+            "📋 AUDIT / LOGS\n\n"
+            "/logs — recent logs\n"
+            "/audit — audit surface\n"
+            "/exec_log — execution audit\n"
+            "/report — reports\n"
+            "/doctor — diagnostics\n"
+            "/diagnose — diagnostic"
+        ),
+        "recovery": (
+            "♻️ RECOVERY / MAINTENANCE\n\n"
+            "/recovery — recovery flow\n"
+            "/backup — database backup\n"
+            "/clean — cleanup\n"
+            "/refresh — refresh surface\n"
+            "/complete — completion checks"
         ),
         "security": (
             "🔐 SECURITY\n\n"
             "OWNER / ADMIN / DEVELOPER are resolved through core.authority.\n"
-            "Sensitive execution remains behind its command-specific gates.\n\n"
+            "Sensitive execution remains behind its command-specific gates.\n"
+            "No token/economy mutation is exposed by this menu itself.\n\n"
             "/dev_list — developer access\n"
             "/dev_role <uid> <role> — OWNER only\n"
             "/dev_perm <uid> <permission> — OWNER only"
@@ -134,24 +221,40 @@ def _page(name):
             "🗺 UNIFIED SYSTEM\n\n"
             "/unified_map — canonical architecture\n"
             "/map — system map\n"
-            "/services — registered services"
+            "/services — registered services\n"
+            "/project — project information\n"
+            "/monitor — monitoring\n"
+            "/health_monitor — health monitor"
         ),
         "dev": (
-            "⚙️ DEVELOPMENT\n\n"
+            "⚙️ DEVELOPMENT / EXECUTION\n\n"
+            "/e <command> — OWNER control-plane execution\n"
+            "/e railway — Railway projects\n"
+            "/e railway inspect <project_id> — inspect project\n"
+            "/e railway up [full_sha] — guarded deploy\n"
             "/exec — gated execution\n"
             "/execr — approval request\n"
             "/autoexec — gated batch execution\n"
             "/git commit <message> — guarded Git sync\n"
-            "/deploy — deployment control"
+            "/deploy — deployment control\n"
+            "/dev_list — developer access"
         ),
         "help": (
-            "❓ ADMIN HELP\n\n"
-            "/admin — interactive Control Plane\n"
+            "❓ SUPER ADMIN COMMAND INDEX\n\n"
+            "/admin — full Control Plane\n"
+            "/admin_status — refresh Control Plane\n"
+            "/e <command> — OWNER execution/audit gateway\n"
+            "/exec <command> — gated execution\n"
+            "/execr — approval request\n"
+            "/autoexec — gated batch execution\n"
             "/status — operational status\n"
-            "/unified_map — system federation\n"
+            "/health — health\n"
             "/doctor — diagnostics\n"
-            "/task — tasks\n"
-            "/roadmap — roadmap"
+            "/unified_map — system federation\n"
+            "/services — services\n"
+            "/task /mission /progress — work control\n"
+            "/dev_list /dev_role /dev_perm — developer authority\n"
+            "/backup /clean /recovery — maintenance"
         ),
     }
     return pages.get(name, "בחר רכיב ניהול.")
@@ -195,7 +298,7 @@ def init(bot):
                 # message already contains the exact same text and markup.
                 if "message is not modified" not in str(exc):
                     raise
-        elif action in {"health", "railway", "github", "bots", "security", "work", "map", "dev", "help"}:
+        elif action in {"health", "railway", "github", "bots", "agents", "alpha", "economy", "staking", "devices", "web", "security", "audit", "work", "map", "dev", "recovery", "help"}:
             from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
             kb = InlineKeyboardMarkup()
