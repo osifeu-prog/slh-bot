@@ -77,12 +77,6 @@ def apply_vip_benefits(
 
     qualified = bool(launch_offer_qualified) or _already_qualified(uid)
     if not qualified:
-        _mark_bundle_status(
-            uid,
-            charge_id,
-            launch_offer_qualified=False,
-            status="skipped",
-        )
         return {"status": "skipped", "launch_offer_qualified": False}
 
     steps = {}
