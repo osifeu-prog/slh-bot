@@ -7,6 +7,7 @@ from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, 
 PROVIDER_TOKEN = ""
 
 VIP_MONTHLY_STARS = 499
+VIP_MONTHLY_CREDITS = 300
 VIP_SUBSCRIPTION_PERIOD = 2592000
 
 STARS_PACKS = {
@@ -167,11 +168,23 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
+            vip_gift_text = ""
+            if result.get("status") != "duplicate":
+                try:
+                    from core.economy_bridge import add_credits
+                    from store.grant_engine import apply_grant
+                    add_credits(uid, VIP_MONTHLY_CREDITS, reason="vip:monthly_credits", meta={"charge_id": charge_id})
+                    apply_grant(uid, {"plugin": "agent_os"}, purchase_id="vip:" + charge_id)
+                    apply_grant(uid, {"digital": "emoji_vip"}, purchase_id="vip:" + charge_id)
+                    vip_gift_text = "\n\n🎁 קיבלת: " + str(VIP_MONTHLY_CREDITS) + " Credits, Agent OS וחבילת אימוג'י VIP זהוב."
+                except Exception as exc:
+                    print(f"[VIP] benefits grant failed: {type(exc).name}")
+                    vip_gift_text = "\n\n⚠️ ההטבות יתווספו בקרוב. אם לא הופיעו, פנה ל-/paysupport."
             bot.send_message(
                 m.chat.id,
                 "ℹ️ VIP payment was already processed."
                 if result["status"] == "duplicate"
-                else "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars.",
+                else "✅ VIP הופעל לחודש. החיוב יתחדש אוטומטית לפי מנוי Telegram Stars." + vip_gift_text,
             )
             return
             return
