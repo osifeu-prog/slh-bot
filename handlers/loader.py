@@ -15,6 +15,7 @@ def load_handlers(bot, context):
         ("deploy", "handlers.deploy_handler"),
         ("termux", "handlers.termux_handler"),
         ("payment", "handlers.payment_handler"),
+        ("stars_audit", "handlers.stars_audit_handler"),
         ("p2p", "handlers.p2p_handler"),
         ("exchange", "handlers.exchange_handler"),
         ("ui_exchange", "handlers.ui_exchange_handler"),
