@@ -13,6 +13,7 @@ from slh_mcp.resources import (
     _tool_system_snapshot,
 )
 from slh_mcp.tools.bots import _tool_bots_federation
+from slh_mcp.tools.agent_state import _tool_agents_consistency
 from slh_mcp.tools.agents import (
     _tool_agents_execute,
     _tool_agents_get,
@@ -43,6 +44,7 @@ def register_capabilities(server):
         "agents.list": _tool_agents_list,
         "agents.get": _tool_agents_get,
         "agents.runtime_status": _tool_agents_runtime_status,
+        "agents.consistency": _tool_agents_consistency,
         "agents.execute": _tool_agents_execute,
         "missions.list": _tool_missions_list,
         "missions.complete": _tool_complete_agent_mission,
