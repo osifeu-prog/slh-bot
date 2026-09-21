@@ -5,6 +5,7 @@ from __future__ import annotations
 from core.economic_read_model import EconomicReadModel
 
 from slh_mcp.auth import current_principal
+from slh_mcp.core_client import configured_client
 
 
 _MODEL = EconomicReadModel()
@@ -23,7 +24,9 @@ def economy_ledger(principal=None, limit: int = 100, domain: str | None = None, 
 
     if not authorize(principal, "exec.audit"):
         raise PermissionError("ECONOMIC_LEDGER_FORBIDDEN")
-
+    client = configured_client()
+    if client is not None:
+        return client.economic_ledger(limit=limit, domain=domain, account_id=account_id).get("events", [])
     return _MODEL.events(limit=limit, domain=domain, account_id=account_id)
 
 
@@ -33,7 +36,9 @@ def economic_ledger_summary(principal=None) -> dict:
 
     if not authorize(principal, "exec.audit"):
         raise PermissionError("ECONOMIC_LEDGER_FORBIDDEN")
-
+    client = configured_client()
+    if client is not None:
+        return client.economic_summary()
     return _MODEL.summary()
 
 
