@@ -8,6 +8,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from state_manager import load_db
+
 REGISTRY = Path("control_plane_registry.json")
 
 
@@ -23,9 +25,20 @@ def _load_registry():
         }
 
 
+def _load_bot_registry():
+    """Read the canonical Bot Factory registry without mutating runtime state."""
+    try:
+        db = load_db() or {}
+        bots = db.get("bots", [])
+        return bots if isinstance(bots, list) else []
+    except Exception:
+        return []
+
+
 def get_unified_map():
     registry = _load_registry()
     projects = registry.get("railway_projects", [])
+    bots = _load_bot_registry()
 
     systems = []
     for project in projects:
@@ -46,6 +59,7 @@ def get_unified_map():
         "canonical_repo": registry.get("canonical", {}).get("repo", "unknown"),
         "canonical_state": "state/db.json",
         "systems": systems,
+        "bot_factory": bots,
         "github_unmapped": registry.get("github_unmapped", []),
         "principles": [
             "Central SLH deployment is the operational Control Plane.",
@@ -61,6 +75,7 @@ def _render(m):
     projects = m["systems"]
     service_count = sum(len(p.get("services", [])) for p in projects)
     unmapped = m["github_unmapped"]
+    bots = m.get("bot_factory", [])
     canonical = m["control_plane"]
 
     lines = [
@@ -71,6 +86,7 @@ def _render(m):
         f"Managed Railway projects: {len(projects)}",
         f"Managed Railway services: {service_count}",
         f"GitHub repos without Railway mapping: {len(unmapped)}",
+        f"Bot Factory registry: {len(bots)}",
         "",
     ]
 
@@ -116,6 +132,21 @@ def _render(m):
                     f"   └ {sm} {s.get('name', '?')} → {s.get('repo', 'no repo')} [{s.get('status', 'unknown')}]"
                     f"{extra}"
                 )
+
+    lines += ["", "🤖 BOT FACTORY"]
+    if not bots:
+        lines.append("• No bots registered")
+    else:
+        for b in bots:
+            status = b.get("status", "draft")
+            marker = "🟢" if status in ("ready", "deployed", "running") else ("🟡" if status in ("draft", "deploying") else "🔴")
+            binding = ""
+            if b.get("railway_service_id"):
+                binding = " / Railway-bound"
+            lines.append(
+                f"{marker} {b.get('name', '?')} — {status} / {b.get('template', 'generic')}"
+                f"{binding} [{b.get('id', '?')}]"
+            )
 
     lines += ["", "GitHub-only/unmapped in this Railway workspace:"]
     for r in unmapped:
