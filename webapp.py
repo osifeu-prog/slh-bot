@@ -613,6 +613,22 @@ def api_tokenomics():
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
+@app.route("/api/v1/earnings")
+def api_earnings():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.earnings_read_model import get_earnings
+        return _no_store(jsonify(get_earnings(uid))), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
+
+
 @app.route("/api/v1/dashboard")
 def api_dashboard():
     uid = authenticated_uid()
@@ -759,7 +775,6 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
 
 
 
