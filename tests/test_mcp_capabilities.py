@@ -161,6 +161,15 @@ class MCPCapabilityTests(unittest.TestCase):
         register_resources(server)
         self.assertEqual(len(uris), len(set(uris)))
 
+    def test_capability_resource_is_machine_readable(self):
+        from slh_mcp.resources import capabilities_resource
+
+        rows = capabilities_resource(self.owner)
+        names = {row["name"] for row in rows}
+        self.assertIn("agents.list", names)
+        self.assertIn("economy.commit_transfer", names)
+        self.assertTrue(all("permission" in row and "mutating" in row for row in rows))
+
 
 if __name__ == "__main__":
     unittest.main()
