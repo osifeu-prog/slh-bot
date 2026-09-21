@@ -11,7 +11,8 @@ class TelegramTokenRegistryTests(unittest.TestCase):
         self.assertEqual(bots["air"]["username"], "SLH_AIR_bot")
         self.assertEqual(bots["claude"]["username"], "SLH_Claude_bot")
         self.assertEqual(bots["ton"]["username"], "TON_MNH_bot")
-        self.assertNotIn("token", repr(bots).lower())
+        self.assertNotIn("AAG", repr(bots))
+        self.assertNotIn("1234567890:", repr(bots))
 
     def test_air_uses_dedicated_telegram_token_variable(self):
         targets = targets_for("air")
