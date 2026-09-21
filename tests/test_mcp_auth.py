@@ -73,6 +73,23 @@ class MCPAuthTests(unittest.TestCase):
         self.assertIn("[REDACTED]", result)
         self.assertNotIn("secret-value", result)
 
+    def test_scope_header_resolves_principal(self):
+        from slh_mcp.auth import principal_from_scope
+
+        os.environ["SLH_MCP_BEARER_TOKEN"] = "expected"
+        os.environ["SLH_MCP_PRINCIPAL_ID"] = str(OWNER_TELEGRAM_ID)
+
+        scope = {
+            "type": "http",
+            "headers": [
+                (b"host", b"localhost"),
+                (b"authorization", b"Bearer expected"),
+            ],
+        }
+        principal = principal_from_scope(scope)
+        self.assertIsNotNone(principal)
+        self.assertEqual(principal.subject, str(OWNER_TELEGRAM_ID))
+
     def test_mcp_endpoint_rejects_missing_bearer(self):
         from starlette.testclient import TestClient
         from slh_mcp.server import build_mcp_app
