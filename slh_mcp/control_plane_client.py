@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import urllib.error
@@ -25,6 +27,11 @@ def _request(path: str, *, method="GET", payload=None, principal=None):
         "User-Agent": "SLH-MCP",
         "X-SLH-MCP-Key": token,
         "X-SLH-MCP-Principal": resolved_principal,
+        "X-SLH-MCP-Signature": hmac.new(
+            token.encode("utf-8"),
+            resolved_principal.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest(),
     }
     if payload is not None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
