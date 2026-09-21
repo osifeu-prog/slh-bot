@@ -100,3 +100,10 @@ def register_resources(server) -> None:
         name="agent",
         description="One visible SLH agent.",
     )(_resource_agent)
+
+def _tool_system_health():
+    return system_health()
+
+
+def _tool_bots_registry():
+    return bot_registry()
