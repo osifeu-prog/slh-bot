@@ -31,3 +31,6 @@ def missions_list(principal=None) -> list[dict]:
     if not isinstance(board, dict) or board.get("__invalid_state__"):
         raise RuntimeError("mission board unavailable")
     return [_public_mission(m) for m in board.get("missions", []) if isinstance(m, dict)]
+
+def _tool_missions_list():
+    return missions_list()
