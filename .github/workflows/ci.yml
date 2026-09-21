@@ -155,5 +155,6 @@ jobs:
           python -m unittest tests.test_mcp_bootstrap -v
       - name: Verify MQTT listener
         run: |
+          python -m pip install --disable-pip-version-check paho-mqtt
           python -m unittest tests.test_mqtt_listener tests.test_mcp_mqtt -v
           echo "MQTT listener + MCP status contracts: OK"
