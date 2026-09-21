@@ -142,7 +142,7 @@ def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
 
 
 def canonical_up(commit_sha=None):
-    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e8124c"
+    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e812f4"
     service_id = "13d97581-0199-4f6a-80d1-885c9304ffc5"
     environment_id = "661caa13-83cb-4197-8825-943bebf96c5a"
     sha = str(commit_sha or "").strip() or latest_github_commit()
@@ -153,4 +153,37 @@ def canonical_up(commit_sha=None):
         "environment": "production",
         "commit": sha,
         "deployment_id": deployment.get("id"),
+    }
+
+def deployment_status(deployment_id):
+    deployment_id = str(deployment_id).strip()
+    if not deployment_id:
+        raise RailwayControlError("INVALID_DEPLOYMENT_ID")
+    data = graphql(
+        """
+        query($id: String!) {
+          deployment(id: $id) {
+            id
+            status
+            createdAt
+            updatedAt
+            projectId
+            serviceId
+            environmentId
+          }
+        }
+        """,
+        {"id": deployment_id},
+    )
+    deployment = data.get("deployment")
+    if not isinstance(deployment, dict):
+        raise RailwayControlError("DEPLOYMENT_NOT_FOUND")
+    return {
+        "id": deployment.get("id"),
+        "status": deployment.get("status"),
+        "created_at": deployment.get("createdAt"),
+        "updated_at": deployment.get("updatedAt"),
+        "project_id": deployment.get("projectId"),
+        "service_id": deployment.get("serviceId"),
+        "environment_id": deployment.get("environmentId"),
     }

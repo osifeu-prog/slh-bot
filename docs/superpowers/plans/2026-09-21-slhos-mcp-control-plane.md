@@ -23,7 +23,7 @@
 - Production MCP runs over HTTPS with authentication and an explicit Host allowlist.
 - Pin `mcp==2.2.0`; the official v2 stable release requires Python 3.10+. (https://pypi.org/project/mcp/)
 - Use `MCPServer.streamable_http_app()` with the service lifespan entering `mcp.session_manager.run()`; deployed hostnames require explicit transport-security configuration. (https://py.sdk.modelcontextprotocol.io/run/asgi/)
-- The repository package is named `slh_mcp`, not `mcp`, to avoid shadowing the third-party SDK package named `mcp`.
+- The repository package is named `slh_mcp`, not `mcp`, to avoid shadowing the third-party SDK package named `mcp`. Use the public SDK import `from mcp.server import MCPServer`.
 
 ## Review Focus
 
@@ -296,7 +296,7 @@ git commit -m "feat(mcp): connect governed agents and missions"
 ### Task 5: Build the isolated agent economy
 
 **Files:**
-- Create: `core/agent_economy.py`
+- Create: `slh_mcp/agent_economy.py`
 - Create: `slh_mcp/tools/economy.py`
 - Create: `state/agent_economy.json`
 - Create: `tests/test_agent_economy.py`
@@ -352,7 +352,7 @@ Run: `python -m unittest tests.test_agent_economy -v`
 Expected: PASS including duplicate, invalid amount, and financial-state isolation cases.
 
 ```bash
-git add core/agent_economy.py slh_mcp/tools/economy.py state/agent_economy.json tests/test_agent_economy.py
+git add slh_mcp/agent_economy.py slh_mcp/tools/economy.py state/agent_economy.json tests/test_agent_economy.py
 git commit -m "feat(economy): add isolated idempotent agent ledger"
 ```
 
