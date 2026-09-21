@@ -36,6 +36,15 @@ def _has_valid_invite(uid):
     )
 
 
+def _bridge_status_display():
+    try:
+        from core.device_read_model import get_device_status
+        info = get_device_status("PC_Osif2", ttl_seconds=120)
+        return f"{info.get('status_icon', '⚪️')} {info.get('status', 'unknown')}"
+    except Exception:
+        return "⚪️ unknown"
+
+
 def load_branding():
     try:
         from datetime import datetime
@@ -53,12 +62,13 @@ def load_branding():
             "Smart Layer Hub",
             "🌟 רובוטוש",
             "🆔 972500000001",
-            "🔗 BRIDGE: PC_Osif2 (online)",
+            f"🔗 BRIDGE: PC_Osif2 ({_bridge_status_display()})",
             f"Updated: {date_greg}",
         ]
         return "\n".join(logo_lines)
     except Exception:
         return ""
+
 
 
 def register(bot, context=None):
