@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from slh_mcp.capabilities import guarded_handler, list_capabilities
-from slh_mcp.resources import register_resources
+from slh_mcp.resources import register_extended_resources, register_resources
 from slh_mcp.tools.agents import (
     _tool_agents_execute,
     _tool_agents_get,
@@ -51,4 +51,5 @@ def register_capabilities(server):
             description=capability.description,
         )
     register_resources(server)
+    register_extended_resources(server)
     return server
