@@ -67,3 +67,28 @@ finally:
 check("XTR authority delegates", called.get("currency") == "XTR" and result["status"] == "applied")
 
 print("PAYMENT BOUNDARY TESTS: PASS")
+
+# Replay must reconcile the revenue observability ledger even when the
+# underlying economy authority reports the charge as already processed.
+from unittest.mock import patch
+
+with patch.object(
+    stars_payment_authority.economy_service,
+    "record_stars_payment",
+    return_value={"status": "duplicate", "uid": "test-user", "credits": 100, "charge_id": "replay-charge"},
+) as duplicate:
+    with patch.object(stars_payment_authority.revenue_ledger, "record") as revenue:
+        replay = stars_payment_authority.record_stars_payment(
+            uid="test-user",
+            credits=100,
+            stars_paid=100,
+            currency="XTR",
+            telegram_payment_charge_id="replay-charge",
+        )
+
+check("duplicate payment reconciles revenue", replay["status"] == "duplicate")
+revenue.assert_called_once()
+check("duplicate revenue uses charge reference", revenue.call_args.kwargs["reference"] == "replay-charge")
+check("duplicate economy called once", duplicate.called)
+
+print("PAYMENT REPLAY RECONCILIATION: PASS")
