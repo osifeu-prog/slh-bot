@@ -1,71 +1,41 @@
-﻿<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>SLH Dashboard V2</title>
-<link rel="icon" href="/branding/favicon.svg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SLH OS — Control Plane</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<header>
-    <img src="/branding/slh-logo.svg" width="220"><h1>SLH Dashboard V2</h1>
-    <div id="health">╫ס╫ץ╫ף╫º ╫₧╫ó╫¿╫¢╫¬...</div>
+<div class="shell">
+<header class="top">
+  <div><div class="eyebrow">SLH OS</div><h1>Control Plane</h1><p>מפת מערכת אחת · בדיקות · תשתית · משתמשים · Agents · Bots · Deployments</p></div>
+  <button id="refresh" class="btn">↻ רענן</button>
 </header>
-
-<nav>
-    <button onclick="show('overview')">≡ƒןá ╫¿╫נ╫⌐╫ש</button>
-    <button onclick="show('agents')">≡ƒñצ Agents</button>
-    <button onclick="show('tasks')">≡ƒףכ Tasks</button>
-    <button onclick="show('logs')">≡ƒף£ Logs</button>
-</nav>
-
-<main>
-
-<section id="overview" class="card">
-<h2>System Overview</h2>
-
-<div class="grid">
-<div class="box">
-<h3>Users</h3>
-<span id="users">0</span>
-</div>
-
-<div class="box">
-<h3>Agents</h3>
-<span id="agents">0</span>
-</div>
-
-<div class="box">
-<h3>Tasks</h3>
-<span id="tasks">0</span>
-</div>
-</div>
-
+<section id="banner" class="banner">מתחבר למפת המערכת…</section>
+<section class="stats" id="stats"></section>
+<section class="card">
+  <div class="section-head"><h2>🧭 מפת המערכת</h2><span id="timestamp"></span></div>
+  <div id="map" class="map"></div>
 </section>
-
-
-<section id="agents" class="card hidden">
-<h2>Agents</h2>
-<pre id="agents-data">Loading...</pre>
+<section class="card">
+  <div class="section-head"><h2>🧪 בדיקת מערכת מלאה</h2><span id="summary"></span></div>
+  <div id="checks" class="checks"></div>
 </section>
-
-
-<section id="tasks" class="card hidden">
-<h2>Tasks</h2>
-<pre id="tasks-data">Loading...</pre>
+<section class="card">
+  <div class="section-head"><h2>🚀 Deploy / Git / Railway</h2></div>
+  <div id="deployment" class="details"></div>
 </section>
-
-
-<section id="logs" class="card hidden">
-<h2>Logs</h2>
-<pre id="logs-data">Loading...</pre>
+<section class="card">
+  <div class="section-head"><h2>🤖 Agents & Bots</h2></div>
+  <div id="runtime" class="details"></div>
 </section>
-
-</main>
-
+<section class="card">
+  <div class="section-head"><h2>🏗️ Railway inventory</h2></div>
+  <div id="railway" class="table-wrap"></div>
+</section>
+</div>
 <script src="app.js"></script>
-
 </body>
 </html>
