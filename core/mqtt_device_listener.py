@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 import paho.mqtt.client as mqtt
 
-import state_manager
+from state_manager import atomic_json_update
 from core.mqtt_config import BROKER, PORT, apply
 
 
@@ -55,7 +55,7 @@ def on_message(client, userdata, msg):
         return True
 
     try:
-        state_manager.atomic_json_update(
+        atomic_json_update(
             "devices.json",
             mutate,
             default={"devices": {}},
