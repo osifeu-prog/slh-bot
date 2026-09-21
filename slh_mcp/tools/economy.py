@@ -10,7 +10,14 @@ from core.authority import get_visible_agents
 from slh_mcp.agent_economy import AgentEconomyService
 from slh_mcp.core_client import configured_client
 
-_SERVICE = AgentEconomyService()
+_SERVICE = None
+
+
+def _local_service():
+    global _SERVICE
+    if _SERVICE is None:
+        _SERVICE = AgentEconomyService()
+    return _SERVICE
 
 
 def _principal(principal=None):
@@ -50,7 +57,7 @@ def economy_agent_balance(principal, agent_id: str) -> dict:
         raise PermissionError("AGENT_NOT_OWNED")
     return {
         "agent_id": str(agent_id),
-        "balance": _SERVICE.balance(str(agent_id)),
+        "balance": _local_service().balance(str(agent_id)),
         "currency": "agent_credits",
     }
 
@@ -65,7 +72,7 @@ def economy_agent_ledger(principal, agent_id: str, limit: int = 100) -> list[dic
     limit = int(limit)
     if limit < 1 or limit > 500:
         raise ValueError("INVALID_LIMIT")
-    rows = [row for row in _SERVICE.ledger() if row.get("account") == str(agent_id)]
+    rows = [row for row in _local_service().ledger() if row.get("account") == str(agent_id)]
     return rows[-limit:]
 
 
@@ -89,7 +96,7 @@ def economy_propose_transfer(
         return client.economy_propose(source_agent, target_agent, _positive_amount(amount), operation_id, reason)
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
-    return _SERVICE.propose_transfer(
+    return _local_service().propose_transfer(
         source_agent=source_agent,
         target_agent=target_agent,
         amount=_positive_amount(amount),
@@ -119,7 +126,7 @@ def economy_commit_transfer(
         return client.economy_transfer(source_agent, target_agent, _positive_amount(amount), operation_id, reason)
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
-    return _SERVICE.transfer(
+    return _local_service().transfer(
         source_agent=source_agent,
         target_agent=target_agent,
         amount=_positive_amount(amount),
