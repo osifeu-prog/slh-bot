@@ -6,14 +6,14 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.mission_lifecycle import MissionLifecycleService
 
-from slh_mcp.agent_economy import AgentEconomyService
+from slh_mcp.agent_economy_factory import get_agent_economy_service
 
 
 _PUBLIC_FIELDS = {
     "id", "desc", "status", "assigned_to", "reward", "created_at",
     "assigned_at", "execution_started_at", "execution_completed_at", "completed_at",
 }
-_SERVICE = AgentEconomyService()
+_SERVICE = get_agent_economy_service()
 
 
 def _resolve_principal(principal=None):
