@@ -39,6 +39,8 @@ _READ_CAPABILITIES = (
     Capability("github.repositories", "List GitHub repository metadata.", "exec.audit", False),
     Capability("github.ci_status", "Read GitHub CI status for a commit.", "exec.audit", False),
     Capability("bots.registry", "Read the non-secret SLH bot ownership registry.", "exec.audit", False),
+    Capability("revenue.status", "Read confirmed external revenue totals.", "exec.audit", False),
+    Capability("revenue.events", "Read confirmed external revenue events without credentials.", "exec.audit", False),
     Capability("bots.federation", "Cross-check registered bots against Railway service/deployment metadata.", "exec.audit", False),
 )
 
