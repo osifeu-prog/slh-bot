@@ -8,6 +8,12 @@ from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
 from core.authority import has_permission
+from core.control_plane_api import (
+    authorize_internal, list_agents_control, get_agent_control, runtime_status_control,
+    execute_agent_control, missions_list_control, mission_control, mission_complete_control,
+    economy_balance_control, economy_ledger_control, economy_propose_control,
+    economy_transfer_control, economy_reward_control,
+)
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
@@ -127,6 +133,175 @@ def require_self(uid):
     return None
 
 
+def _internal_control_plane_guard(permission):
+    key = request.headers.get("X-SLH-Internal-Key", "")
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    if not authorize_internal(key, principal_id, permission):
+        return jsonify({"error": "CONTROL_PLANE_INTERNAL_FORBIDDEN"}), 403
+    return None
+
+
+@app.route("/api/internal/control-plane/agents", methods=["GET"])
+def internal_agents():
+    denied = _internal_control_plane_guard("agents.view_all")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    return jsonify({"agents": list_agents_control(principal_id)}), 200
+
+
+@app.route("/api/internal/control-plane/agents/<agent_id>", methods=["GET"])
+def internal_agent(agent_id):
+    denied = _internal_control_plane_guard("agents.view_all")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        return jsonify({"agent": get_agent_control(principal_id, agent_id)}), 200
+    except KeyError:
+        return jsonify({"error": "AGENT_NOT_FOUND"}), 404
+
+
+@app.route("/api/internal/control-plane/runtime", methods=["GET"])
+def internal_runtime():
+    denied = _internal_control_plane_guard("agents.view_all")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    return jsonify(runtime_status_control(principal_id)), 200
+
+
+@app.route("/api/internal/control-plane/agents/<agent_id>/execute", methods=["POST"])
+def internal_agent_execute(agent_id):
+    denied = _internal_control_plane_guard("agents.modify_self")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    payload = request.get_json(silent=True) or {}
+    try:
+        return jsonify(execute_agent_control(principal_id, agent_id, payload.get("command", ""))), 200
+    except KeyError:
+        return jsonify({"error": "AGENT_NOT_FOUND"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/missions", methods=["GET"])
+def internal_missions():
+    denied = _internal_control_plane_guard("public.view")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    return jsonify({"missions": missions_list_control(principal_id)}), 200
+
+
+@app.route("/api/internal/control-plane/missions/<mission_id>", methods=["GET"])
+def internal_mission(mission_id):
+    denied = _internal_control_plane_guard("public.view")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        return jsonify({"mission": mission_control(principal_id, mission_id)}), 200
+    except KeyError:
+        return jsonify({"error": "MISSION_NOT_FOUND"}), 404
+
+
+@app.route("/api/internal/control-plane/missions/<mission_id>/complete", methods=["POST"])
+def internal_mission_complete(mission_id):
+    denied = _internal_control_plane_guard("agents.manage")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        return jsonify(mission_complete_control(principal_id, mission_id)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/economy/<agent_id>", methods=["GET"])
+def internal_economy_balance(agent_id):
+    denied = _internal_control_plane_guard("agents.view_all")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        return jsonify(economy_balance_control(principal_id, agent_id)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+
+
+@app.route("/api/internal/control-plane/economy/<agent_id>/ledger", methods=["GET"])
+def internal_economy_ledger(agent_id):
+    denied = _internal_control_plane_guard("agents.view_all")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    try:
+        limit = int(request.args.get("limit", "100"))
+        return jsonify({"ledger": economy_ledger_control(principal_id, agent_id, limit)}), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/economy/propose", methods=["POST"])
+def internal_economy_propose():
+    denied = _internal_control_plane_guard("economy.mutate_self")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    data = request.get_json(silent=True) or {}
+    try:
+        return jsonify(economy_propose_control(
+            principal_id, data.get("source_agent", ""), data.get("target_agent", ""),
+            data.get("amount"), data.get("operation_id", ""), data.get("reason", "agent_transfer"),
+        )), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/economy/transfer", methods=["POST"])
+def internal_economy_transfer():
+    denied = _internal_control_plane_guard("economy.mutate_self")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    data = request.get_json(silent=True) or {}
+    try:
+        return jsonify(economy_transfer_control(
+            principal_id, data.get("source_agent", ""), data.get("target_agent", ""),
+            data.get("amount"), data.get("operation_id", ""), data.get("reason", "agent_transfer"),
+        )), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/internal/control-plane/economy/reward", methods=["POST"])
+def internal_economy_reward():
+    denied = _internal_control_plane_guard("agents.manage")
+    if denied:
+        return denied
+    principal_id = request.headers.get("X-SLH-Principal-Id", "")
+    data = request.get_json(silent=True) or {}
+    try:
+        return jsonify(economy_reward_control(
+            principal_id, data.get("agent_id", ""), data.get("amount"),
+            data.get("operation_id", ""), data.get("mission_id", ""),
+        )), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/health")
 def health():
     return "OK", 200
@@ -148,618 +323,3 @@ def mini_app():
     """Serve the Mini App with a compatibility and staking UX shim."""
     html_path = BASE_DIR / "mini_app.html"
     html = html_path.read_text(encoding="utf-8")
-    shim = """
-<script>
-function showGuide(id){
-  const el=document.getElementById(id);
-  if(!el){return;}
-  if(el.tagName.toLowerCase()==='details'){
-    el.open=true;
-    el.scrollIntoView({behavior:'smooth',block:'center'});
-  }
-}
-(function(){
-  // Public Mini App staking mutations are disabled; keep the UI read-only.
-})();;
-</script>
-"""
-    if "function showGuide(" not in html:
-        html = html.replace("</body>", shim + "</body>")
-    resp = make_response(html)
-    resp.headers["Content-Type"] = "text/html; charset=utf-8"
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    return resp
-
-
-@app.route("/api/v1/system/unified-map")
-def unified_system_map():
-    uid = authenticated_uid()
-    if uid is None or not has_permission(uid, "exec.audit"):
-        return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
-    return jsonify(get_unified_map()), 200
-
-
-def _no_store(resp):
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    return resp
-
-
-@app.route("/api/v1/me")
-def investor_me():
-    """Return the read-only investor snapshot for the authenticated Telegram user."""
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-
-    try:
-        snapshot = get_investor_snapshot(uid)
-        global_alpha = alpha_state()
-        if isinstance(snapshot.get("alpha"), dict):
-            alpha = snapshot["alpha"]
-            alpha["readiness_status"] = alpha.get("status", "review")
-            alpha["global_status"] = global_alpha.get("status", "CLOSED")
-            if alpha["global_status"] == "OPEN":
-                alpha["status"] = "OPEN"
-        snapshot["alpha_global"] = global_alpha
-        return _no_store(jsonify(snapshot)), 200
-    except ValueError as exc:
-        if str(exc) == "USER_NOT_FOUND":
-            return jsonify({"error": "USER_NOT_FOUND"}), 404
-        raise
-
-
-@app.route("/api/v1/staking", methods=["POST"])
-def create_staking_position():
-    """Public Mini App staking mutation is disabled; expose read-only status only."""
-    return jsonify({
-        "error": "STAKING_MUTATION_DISABLED",
-        "message": "Staking actions are not enabled through the public Mini App.",
-    }), 403
-
-def _require_admin_api_key():
-    expected = os.getenv("ADMIN_API_KEY", "").strip()
-    supplied = request.headers.get("X-Admin-API-Key", "").strip()
-    if not expected:
-        return jsonify({"error": "ADMIN_API_NOT_CONFIGURED"}), 503
-    if not supplied or not hmac.compare_digest(supplied, expected):
-        return jsonify({"error": "FORBIDDEN"}), 403
-    return None
-
-
-@app.route("/api/v1/staking/revenue-share/status", methods=["GET"])
-def staking_revenue_share_status():
-    db = load_db()
-    pool = db.get("revenue_share_pool", {})
-    distributions = db.get("revenue_distributions", {})
-    positions = db.get("staking_positions", {})
-    active = sum(
-        1 for pos in positions.values()
-        if isinstance(pos, dict) and pos.get("status") == "active"
-    ) if isinstance(positions, dict) else 0
-    return jsonify({
-        "pool": pool if isinstance(pool, dict) else {},
-        "distribution_count": len(distributions) if isinstance(distributions, dict) else 0,
-        "active_positions": active,
-        "read_only": True,
-    }), 200
-
-
-@app.route("/api/v1/staking/revenue-share/distribute", methods=["POST"])
-def staking_revenue_share_distribute():
-    denied = _require_admin_api_key()
-    if denied:
-        return denied
-
-    data = request.get_json(silent=True) or {}
-    period_label = str(data.get("period_label", "")).strip()
-    if not period_label:
-        return jsonify({"error": "MISSING_PERIOD_LABEL"}), 400
-
-    try:
-        from core import staking_revenue_share as rs
-        result = rs.distribute_revenue(
-            data.get("gross_revenue", 0),
-            data.get("operating_costs", 0),
-            period_label,
-        )
-        return jsonify(result), 200
-    except (TypeError, ValueError) as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception:
-        return jsonify({"error": "SERVER_ERROR"}), 500
-@app.route("/api/wallet/<uid>")
-def get_wallet(uid):
-    denied = require_self(uid)
-    if denied:
-        return denied
-
-    db = load_db()
-    user = db.get("users", {}).get(str(uid), {})
-    wallet = user.get("wallet", {})
-
-    return _no_store(jsonify({
-        "name": user.get("name", str(uid)),
-        "credits": wallet.get("credits", 0),
-        "staked": wallet.get("staked", 0),
-        "token_balance": wallet.get("token_balance", 0),
-        "ton_wallet": user.get("ton_wallet")
-    }))
-
-
-@app.route("/api/v1/arcade/award", methods=["POST"])
-def arcade_award():
-    """Award Credits from arcade / skill-game play.
-
-    Requires a valid arcade secret (ARCADE_API_KEY). Credits are marked
-    with source="arcade" in the ledger meta so they can be distinguished
-    from purchased Credits. This endpoint does NOT bypass economy_service.
-    """
-    import os
-    expected = os.getenv("ARCADE_API_KEY", "").strip()
-    if not expected:
-        return jsonify({"error": "ARCADE_NOT_CONFIGURED"}), 503
-    if request.headers.get("X-Arcade-Key", "").strip() != expected:
-        return jsonify({"error": "FORBIDDEN"}), 403
-
-    data = request.get_json(silent=True) or {}
-    uid = str(data.get("uid", "")).strip()
-    amount = data.get("amount")
-    game_id = str(data.get("game_id", "")).strip()
-    event_id = str(data.get("event_id", "")).strip()
-
-    if not uid or not game_id or not event_id:
-        return jsonify({"error": "MISSING_FIELDS"}), 400
-    try:
-        amount = float(amount)
-    except (TypeError, ValueError):
-        return jsonify({"error": "INVALID_AMOUNT"}), 400
-    if amount <= 0 or amount > 10000:
-        return jsonify({"error": "AMOUNT_OUT_OF_RANGE"}), 400
-
-    from core import economy_service
-    try:
-        balance = economy_service.record_transaction(
-            uid,
-            amount,
-            reason="arcade:award",
-            meta={
-                "source": "arcade",
-                "game_id": game_id,
-                "event_id": event_id,
-                "idempotency_key": "arcade:" + game_id + ":" + event_id,
-            },
-        )
-        return jsonify({
-            "ok": True,
-            "uid": uid,
-            "awarded": amount,
-            "balance": balance,
-            "source": "arcade",
-        }), 200
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        print("[ARCADE] error:", type(e).__name__, str(e)[:200])
-        return jsonify({"error": "SERVER_ERROR"}), 500
-
-
-@app.route("/api/v1/wallet/combined/<uid>")
-def combined_wallet(uid):
-    """Read-only presentation adapter: internal ledger + slh-api ledger."""
-    denied = require_self(uid)
-    if denied:
-        return denied
-
-    db = load_db()
-    user = db.get("users", {}).get(str(uid), {})
-    wallet = user.get("wallet", {}) if isinstance(user, dict) else {}
-
-    internal = {
-        "credits": wallet.get("credits", 0),
-        "staked": wallet.get("staked", 0),
-        "slh": wallet.get("token_balance", 0),
-        "ton_wallet": user.get("ton_wallet") if isinstance(user, dict) else None,
-    }
-
-    api_data = slh_api_client.get_balances(uid)
-
-    return jsonify({
-        "user_id": str(uid),
-        "internal_ledger": internal,
-        "api_ledger": api_data,
-        "sources": {
-            "internal": "state/db.json",
-            "api": "slh-api/Postgres",
-        },
-        "read_only": True,
-    })
-
-
-@app.route("/api/wallet/bnb/challenge", methods=["POST"])
-def bnb_wallet_challenge():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    try:
-        result = issue_challenge(uid, payload.get("address"))
-        return jsonify(result), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@app.route("/api/wallet/bnb/verify", methods=["POST"])
-def bnb_wallet_verify():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    try:
-        binding = verify_signature(uid, payload.get("address"), payload.get("signature"))
-        return jsonify({"status": "verified", "binding": binding}), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-
-@app.route("/api/wallet/bnb")
-def bnb_wallet_binding():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    return jsonify({"binding": get_binding(uid)}), 200
-
-
-@app.route("/api/tasks/<uid>")
-def get_tasks(uid):
-    denied = require_self(uid)
-    if denied:
-        return denied
-
-    db = load_db()
-    tasks = db.get("tasks", {})
-
-    result = []
-
-    for tid, task in tasks.items():
-        if str(task.get('owner_id', '')) not in ('', str(uid)):
-            continue
-        done_by = task.get("done_by", [])
-
-        result.append({
-            "id": tid,
-            "title": task.get("title", "?"),
-            "reward": task.get("reward", 0),
-            "status": (
-                "done"
-                if str(uid) in [str(x) for x in done_by]
-                else task.get("status", "open")
-            ),
-            "agent": task.get("agent", "unassigned")
-        })
-
-    return jsonify(result)
-
-
-@app.route("/api/stats")
-def stats():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    db = load_db()
-    users = db.get("users", {})
-    agents = db.get("agents", {})
-    tasks = db.get("tasks", {})
-    total_credits = 0
-
-    if isinstance(users, dict):
-        for user in users.values():
-            if isinstance(user, dict):
-                wallet = user.get("wallet", {})
-                if isinstance(wallet, dict):
-                    credits = wallet.get("credits", 0)
-                    if isinstance(credits, (int, float)):
-                        total_credits += credits
-
-    return jsonify({
-        "users": len(users) if isinstance(users, dict) else 0,
-        "agents": len(agents) if isinstance(agents, dict) else 0,
-        "tasks": len(tasks) if isinstance(tasks, dict) else 0,
-        "credits": total_credits,
-    })
-
-
-@app.route("/api/leaderboard")
-def api_leaderboard():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    try:
-        from plugins.leaderboard import LeaderboardPlugin
-
-        lb = LeaderboardPlugin(str(DB_PATH))
-        top = lb.get_top(10)
-
-        result = []
-
-        for uid, data in top:
-            result.append({
-                "uid": str(uid),
-                "name": data.get("name", f"User{uid}"),
-                "points": (data.get("gamification") or {}).get("points", 0)
-            })
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
-
-
-@app.route("/api/v1/leaderboard")
-def api_v1_leaderboard():
-    return api_leaderboard()
-
-
-@app.route("/api/onchain/status")
-def onchain_status():
-    denied = require_auth()
-    if denied:
-        return denied
-
-    from core.deposit_monitor import get_onchain_status
-    return jsonify(get_onchain_status())
-
-
-# Read-only adapter over the existing exchange state. No order placement or settlement.
-@app.route("/api/v1/exchange/markets")
-def exchange_markets():
-    return jsonify({"markets": [{"base": "SLH", "quote": "CREDITS", "symbol": "SLH/CREDITS"}]})
-
-
-@app.route("/api/v1/exchange/orderbook")
-def exchange_orderbook():
-    db = load_db()
-    raw = db.get("exchange_orders", {})
-    orders = list(raw.values()) if isinstance(raw, dict) else (raw if isinstance(raw, list) else [])
-    rows = []
-    for order in orders:
-        if not isinstance(order, dict) or order.get("status") != "open":
-            continue
-        rows.append({
-            "id": order.get("id"),
-            "side": order.get("side"),
-            "amount": order.get("remaining_amount", order.get("original_amount")),
-            "price": order.get("limit_price"),
-            "created_at": order.get("created_at"),
-        })
-    rows.sort(key=lambda x: (x.get("created_at") or ""))
-    return jsonify({"symbol": "SLH/CREDITS", "orders": rows})
-
-
-@app.route("/api/v1/exchange/trades")
-def exchange_trades():
-    db = load_db()
-    raw = db.get("exchange_trades", [])
-    trades = raw if isinstance(raw, list) else []
-    public_trades = []
-    for trade in trades[-100:]:
-        public_trades.append({
-            "slh_amount": trade.get("slh_amount"),
-            "price": trade.get("price"),
-            "credits_value": trade.get("credits_value"),
-            "timestamp": trade.get("timestamp"),
-        })
-    return jsonify({"symbol": "SLH/CREDITS", "trades": public_trades})
-
-
-@app.route("/api/v1/exchange/ticker")
-def exchange_ticker():
-    db = load_db()
-    raw = db.get("exchange_trades", [])
-    trades = raw if isinstance(raw, list) else []
-    if not trades:
-        return jsonify({"symbol": "SLH/CREDITS", "has_data": False, "last_price": None})
-    last = trades[-1]
-    return jsonify({
-        "symbol": "SLH/CREDITS",
-        "has_data": True,
-        "last_price": last.get("price"),
-    })
-
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=8080
-    )
-
-
-
-@app.route("/api/v1/tokenomics")
-def api_tokenomics():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    try:
-        from core.tokenomics import snapshot, rewards_snapshot
-        from core.holiday_campaign import GRANT_AMOUNT, eligibility
-        from core import profile_manager
-
-        user = profile_manager.get_user(str(uid)) or {}
-        points = int((user.get("gamification") or {}).get("points", 0) or 0)
-        referrals = int((user.get("referral") or {}).get("count", 0) or 0)
-        campaign = eligibility(str(uid))
-        return jsonify({
-            "tokenomics": snapshot(),
-            "rewards": {
-                **rewards_snapshot(),
-                "task_rewards": "per_task",
-            },
-            "user": {
-                "points": points,
-                "successful_referrals": referrals,
-                "holiday_referral": campaign,
-            },
-            "source_of_truth": "core/tokenomics.py + canonical reward engines",
-            "read_only": True,
-        }), 200
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-@app.route("/api/v1/dashboard")
-def api_dashboard():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    try:
-        from core.dashboard_read_model import get_dashboard
-        return jsonify(get_dashboard(uid)), 200
-    except ValueError as exc:
-        if str(exc) == "USER_NOT_FOUND":
-            return jsonify({"error": "USER_NOT_FOUND"}), 404
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-
-
-@app.route("/api/v1/exchange/summary")
-def api_exchange_summary():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    try:
-        from core.exchange_read_model import get_exchange_summary
-        return jsonify(get_exchange_summary()), 200
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-
-
-@app.route("/api/v1/exchange/order", methods=["POST"])
-def api_exchange_order():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    side = str(payload.get("side", "")).strip().lower()
-    request_id = str(payload.get("client_request_id", "")).strip()
-    if side not in {"buy", "sell"}:
-        return jsonify({"error": "INVALID_SIDE"}), 400
-    if not request_id:
-        return jsonify({"error": "MISSING_REQUEST_ID"}), 400
-    try:
-        from handlers.exchange_handler import _dec, _place, REQUESTS_KEY
-        amount = _dec(payload.get("amount"), "amount")
-        price = _dec(payload.get("price"), "price")
-        key = f"WEBAPP-EXCHANGE-{uid}-{request_id}"
-
-        def mutate(db):
-            old = db.setdefault(REQUESTS_KEY, {}).get(key)
-            if old is not None:
-                return old
-            return _place(db, str(uid), side, amount, price, key)
-
-        result = state_manager.atomic_update(mutate)
-        return jsonify(result), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-
-@app.route("/api/v1/exchange/order/<order_id>", methods=["DELETE"])
-def api_exchange_cancel(order_id):
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    oid = str(order_id).strip()
-    if not oid:
-        return jsonify({"error": "MISSING_ORDER_ID"}), 400
-    try:
-        from handlers.exchange_handler import ORDERS_KEY, _wallet, _get, _set, _reserve, _set_reserve, _s, ZERO, _ledger, _assert_invariants
-
-        def mutate(db):
-            order = db.setdefault(ORDERS_KEY, {}).get(oid)
-            if not order or str(order.get("uid")) != str(uid) or order.get("status") != "open":
-                raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
-            wallet = _wallet(db, uid)
-            remaining = __import__("decimal").Decimal(str(order["remaining_amount"]))
-            if remaining <= ZERO:
-                raise ValueError("ORDER_NOT_OPEN")
-            if order["side"] == "sell":
-                reserve = __import__("decimal").Decimal(str(order["reserved_slh"]))
-                if reserve != remaining:
-                    raise ValueError("ORDER_RESERVE_MISMATCH")
-                _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserve)
-                before = _get(wallet, "token_balance")
-                _set(wallet, "token_balance", before + reserve)
-                _ledger(db, uid, before, reserve, "exchange:cancel_release_slh", {"order_id": oid, "source": "webapp"})
-                order["reserved_slh"] = _s(ZERO)
-            else:
-                reserve = __import__("decimal").Decimal(str(order["reserved_credits"]))
-                expected = remaining * __import__("decimal").Decimal(str(order["limit_price"]))
-                if reserve != expected:
-                    raise ValueError("ORDER_RESERVE_MISMATCH")
-                _set_reserve(wallet, "exchange_reserved_credits", _reserve(wallet, "exchange_reserved_credits") - reserve)
-                before = _get(wallet, "credits")
-                _set(wallet, "credits", before + reserve)
-                _ledger(db, uid, before, reserve, "exchange:cancel_release_credits", {"order_id": oid, "source": "webapp"})
-                order["reserved_credits"] = _s(ZERO)
-            order["remaining_amount"] = _s(ZERO)
-            order["status"] = "cancelled"
-            _assert_invariants(db)
-            return {"order_id": oid, "status": "cancelled"}
-
-        return jsonify(state_manager.atomic_update(mutate)), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-
-@app.route("/api/v1/transfer", methods=["POST"])
-def api_transfer():
-    uid = authenticated_uid()
-    if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    payload = request.get_json(silent=True) or {}
-    recipient = str(payload.get("recipient_uid", "")).strip()
-    amount_raw = payload.get("amount")
-    request_id = str(payload.get("client_request_id", "")).strip()
-    if not recipient:
-        return jsonify({"error": "MISSING_RECIPIENT"}), 400
-    if not request_id:
-        return jsonify({"error": "MISSING_REQUEST_ID"}), 400
-    try:
-        amount = float(amount_raw)
-    except (TypeError, ValueError):
-        return jsonify({"error": "INVALID_AMOUNT"}), 400
-    if amount <= 0:
-        return jsonify({"error": "INVALID_AMOUNT"}), 400
-    idempotency_key = f"WEBAPP-TRANSFER-{uid}-{request_id}"
-    try:
-        from core import economy_service
-        result = economy_service.transfer_credits(
-            sender_uid=uid,
-            recipient_uid=recipient,
-            amount=amount,
-            idempotency_key=idempotency_key,
-            meta={"source": "miniapp"},
-        )
-        return jsonify(result), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    except Exception as exc:
-        return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
-
-
-
