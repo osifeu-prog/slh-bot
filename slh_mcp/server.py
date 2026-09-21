@@ -81,7 +81,11 @@ def _transport_security():
         if x.strip()
     ]
     return TransportSecuritySettings(
-        allowed_hosts=hosts or ["localhost:*", "127.0.0.1:*", "[::1]:*"],
+        allowed_hosts=hosts or [
+            "localhost", "localhost:*",
+            "127.0.0.1", "127.0.0.1:*",
+            "[::1]", "[::1]:*",
+        ],
         allowed_origins=origins
         or [
             "http://localhost:*",
