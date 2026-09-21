@@ -36,7 +36,7 @@ class MCPAuthTests(unittest.TestCase):
             )
         )
 
-    def test_valid_token_resolves_principal(self):
+    def test_valid_token_resolves_supplied_owner_principal(self):
         from slh_mcp.auth import Principal
         principal = Principal.from_headers(
             {"Authorization": "Bearer expected"},
@@ -46,7 +46,7 @@ class MCPAuthTests(unittest.TestCase):
             (),
         )
         self.assertIsNotNone(principal)
-        self.assertEqual(principal.subject, "slh-mcp")
+        self.assertEqual(principal.subject, str(OWNER_TELEGRAM_ID))
 
     def test_owner_authorization_uses_canonical_authority(self):
         from slh_mcp.auth import Principal, authorize
@@ -73,7 +73,7 @@ class MCPAuthTests(unittest.TestCase):
         self.assertIn("[REDACTED]", result)
         self.assertNotIn("secret-value", result)
 
-    def test_scope_header_resolves_principal(self):
+    def test_scope_header_resolves_service_principal(self):
         from slh_mcp.auth import principal_from_scope
 
         os.environ["SLH_MCP_BEARER_TOKEN"] = "expected"
@@ -88,7 +88,7 @@ class MCPAuthTests(unittest.TestCase):
         }
         principal = principal_from_scope(scope)
         self.assertIsNotNone(principal)
-        self.assertEqual(principal.subject, str(OWNER_TELEGRAM_ID))
+        self.assertEqual(principal.subject, "slh-mcp")
 
     def test_mcp_endpoint_rejects_missing_bearer(self):
         from starlette.testclient import TestClient
@@ -113,7 +113,7 @@ class MCPAuthTests(unittest.TestCase):
             return PlainTextResponse("ok")
 
         os.environ["SLH_MCP_BEARER_TOKEN"] = "expected"
-        os.environ["SLH_MCP_PRINCIPAL_ID"] = str(OWNER_TELEGRAM_ID)
+        os.environ["SLH_MCP_SERVICE_PRINCIPAL_ID"] = "slh-mcp"
 
         app = Starlette(
             routes=[Route("/", downstream)],
