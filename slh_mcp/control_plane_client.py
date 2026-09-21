@@ -12,11 +12,11 @@ class ControlPlaneBridgeError(RuntimeError):
     pass
 
 
-def _request(path: str, *, method="GET", payload=None):
+def _request(path: str, *, method="GET", payload=None, principal=None):
     base = os.getenv("SLH_CONTROL_PLANE_URL", "").rstrip("/")
     token = os.getenv("SLH_MCP_BRIDGE_TOKEN", "").strip()
-    principal = os.getenv("SLH_MCP_PRINCIPAL_ID", "").strip()
-    if not base or not token or not principal:
+    resolved_principal = str(principal or os.getenv("SLH_MCP_PRINCIPAL_ID", "")).strip()
+    if not base or not token or not resolved_principal:
         raise ControlPlaneBridgeError("MCP_BRIDGE_NOT_CONFIGURED")
 
     body = None
@@ -24,7 +24,7 @@ def _request(path: str, *, method="GET", payload=None):
         "Accept": "application/json",
         "User-Agent": "SLH-MCP",
         "X-SLH-MCP-Key": token,
-        "X-SLH-MCP-Principal": principal,
+        "X-SLH-MCP-Principal": resolved_principal,
     }
     if payload is not None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -45,44 +45,46 @@ def _request(path: str, *, method="GET", payload=None):
         raise ControlPlaneBridgeError("CONTROL_PLANE_UNAVAILABLE") from exc
 
 
-def agents():
-    return _request("/api/internal/mcp/agents")
+def agents(principal=None):
+    return _request("/api/internal/mcp/agents", principal=principal)
 
 
-def agent(agent_id: str):
-    return _request("/api/internal/mcp/agents/" + str(agent_id))
+def agent(agent_id: str, principal=None):
+    return _request("/api/internal/mcp/agents/" + str(agent_id), principal=principal)
 
 
-def agent_execute(agent_id: str, command: str):
+def agent_execute(agent_id: str, command: str, principal=None):
     return _request(
         "/api/internal/mcp/agents/" + str(agent_id) + "/execute",
         method="POST",
         payload={"command": command},
+        principal=principal,
     )
 
 
-def missions():
-    return _request("/api/internal/mcp/missions")
+def missions(principal=None):
+    return _request("/api/internal/mcp/missions", principal=principal)
 
 
-def mission(mission_id: str):
-    return _request("/api/internal/mcp/missions/" + str(mission_id))
+def mission(mission_id: str, principal=None):
+    return _request("/api/internal/mcp/missions/" + str(mission_id), principal=principal)
 
 
-def mission_complete(mission_id: str):
+def mission_complete(mission_id: str, principal=None):
     return _request(
         "/api/internal/mcp/missions/" + str(mission_id) + "/complete",
         method="POST",
     )
 
-def authorize(permission: str) -> bool:
+def authorize(permission: str, principal=None) -> bool:
     result = _request(
         "/api/internal/mcp/authorize",
         method="POST",
         payload={"permission": str(permission)},
+        principal=principal,
     )
     return bool(result.get("authorized"))
 
 
-def runtime_status():
-    return _request("/api/internal/mcp/runtime-status")
+def runtime_status(principal=None):
+    return _request("/api/internal/mcp/runtime-status", principal=principal)
