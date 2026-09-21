@@ -7,7 +7,6 @@ from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
 
 from slh_mcp.auth import current_principal
-from slh_mcp.capabilities import bind_handler
 
 
 _SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id"}
@@ -73,22 +72,6 @@ def bot_registry(principal=None) -> list[dict]:
     return result
 
 
-def _tool_system_health():
-    return system_health()
-
-
-def _tool_agents_list():
-    return agents_resource()
-
-
-def _tool_agents_get(agent_id: str):
-    return agent_resource(agent_id)
-
-
-def _tool_bots_registry():
-    return bot_registry()
-
-
 def _resource_system():
     return system_health()
 
@@ -99,12 +82,6 @@ def _resource_agents():
 
 def _resource_agent(agent_id: str):
     return agent_resource(agent_id)
-
-
-bind_handler("system.health", _tool_system_health)
-bind_handler("agents.list", _tool_agents_list)
-bind_handler("agents.get", _tool_agents_get)
-bind_handler("bots.registry", _tool_bots_registry)
 
 
 def register_resources(server) -> None:
