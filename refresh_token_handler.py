@@ -33,32 +33,22 @@ def bots_text() -> str:
             "Use /refreshtoken <alias> to get the secure terminal rotation target.",
         ]
     )
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 
 def rotation_instructions(alias: str) -> str:
     bot = get_bot(alias)
     script = _script_path()
-    target_lines = "
-".join(
+    target_lines = "\n".join(
         f'• {t["project"]}/{t["service"]} → {t["variable"]}'
         for t in bot["targets"]
     )
     return (
-        f'🔐 TOKEN ROTATION — @{bot["username"]}
-
-'
-        f'{target_lines}
-
-'
-        "The token is NOT accepted in Telegram.
-"
-        "Run this from the operator terminal:
-"
-        f'{script.name} {bot["alias"]}
-
-'
+        f'🔐 TOKEN ROTATION — @{bot["username"]}\n\n'
+        f'{target_lines}\n\n'
+        "The token is NOT accepted in Telegram.\n"
+        "Run this from the operator terminal:\n"
+        f'{script.name} {bot["alias"]}\n\n'
         "The script validates Telegram getMe against the expected bot identity, "
         "updates every mapped Railway target, and redeploys explicitly."
     )
@@ -87,11 +77,8 @@ def init(bot, is_admin_func=None):
             aliases = ", ".join(item["alias"] for item in list_bots())
             bot.reply_to(
                 message,
-                "🔐 בחר בוט לרוטציה:
-"
-                "/refreshtoken <alias>
-
-"
+                "🔐 בחר בוט לרוטציה:\n"
+                "/refreshtoken <alias>\n\n"
                 f"Available: {aliases}",
             )
             return
