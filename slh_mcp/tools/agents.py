@@ -71,3 +71,18 @@ def agents_execute(principal, agent_id: str | None = None, command: str | None =
     if record is None or canonical_id not in visible:
         raise KeyError(str(agent_id))
     return execute_agent(canonical_id, command, source="mcp")
+
+def _tool_agents_list():
+    return agents_list()
+
+
+def _tool_agents_get(agent_id: str):
+    return agents_get(None, agent_id)
+
+
+def _tool_agents_runtime_status():
+    return agents_runtime_status()
+
+
+def _tool_agents_execute(agent_id: str, command: str):
+    return agents_execute(None, agent_id, command)
