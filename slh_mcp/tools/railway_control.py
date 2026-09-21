@@ -6,6 +6,7 @@ import os
 import re
 
 from core import railway_control
+from core.authority import has_permission
 
 
 _SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
@@ -49,7 +50,7 @@ def railway_deploy(
     environment_id = str(environment_id).strip()
     commit_sha = str(commit_sha).strip()
 
-    if str(principal.role) != "OWNER" and str(principal.role) not in {"ADMIN", "DEVELOPER"}:
+    if not has_permission(principal.subject, "agents.manage"):
         raise PermissionError("RAILWAY_DEPLOY_FORBIDDEN")
     if not _allowed(project_id, service_id, environment_id):
         raise PermissionError("RAILWAY_TARGET_NOT_ALLOWLISTED")
