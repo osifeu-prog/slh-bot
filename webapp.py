@@ -15,11 +15,13 @@ from core import slh_api_client
 from core.profile_manager import get_user
 from core import staking_service
 from handlers.unified_system_handler import get_unified_map
+from core.mcp_bridge_routes import register_mcp_bridge
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "state" / "db.json"
 
 app = Flask(__name__)
+register_mcp_bridge(app)
 
 
 _AI_RATE_STATE = {}
@@ -759,7 +761,6 @@ def api_transfer():
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
-
 
 
 
