@@ -34,7 +34,17 @@ class MCPAgentTests(unittest.TestCase):
 
     def test_execution_delegates_to_runtime_service(self):
         from slh_mcp.tools.agents import agents_execute
+        source = {"1": {"id": "1", "name": "alpha", "owner_id": str(OWNER_TELEGRAM_ID), "state": "idle"}}
         with patch(
+            "slh_mcp.tools.agents.list_agents",
+            return_value=source,
+        ), patch(
+            "slh_mcp.tools.agents.get_visible_agents",
+            return_value=source,
+        ), patch(
+            "slh_mcp.tools.agents.get_agent",
+            return_value=("1", source["1"]),
+        ), patch(
             "slh_mcp.tools.agents.execute_agent",
             return_value={"type": "agent", "data": "pong"},
         ) as execute:
