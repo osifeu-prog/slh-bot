@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
 from slh_mcp.tools.agents import agents_list, agents_get
 from slh_mcp.tools.missions import missions_list
@@ -28,7 +26,6 @@ def system_health(principal=None) -> dict:
 
 def agents_resource(principal=None) -> list[dict]:
     principal = _principal_or_raise(principal)
-    return agents_list(principal)
     return agents_list(principal)
 
 
