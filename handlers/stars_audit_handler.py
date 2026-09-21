@@ -72,10 +72,13 @@ def _fmt_tx(tx):
     partner = src if src else receiver
     partner_type = partner.get("type", "?")
     transaction_type = partner.get("transaction_type", "")
+    user = partner.get("user") or {}
+    user_id = user.get("id")
+    who = f" | telegram_uid={user_id}" if user_id is not None else ""
     return (
         f"{tx.get('id','?')} | {int(tx.get('amount',0) or 0)}⭐ | "
         f"{time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime(int(tx.get('date',0) or 0)))} | "
-        f"{partner_type}:{transaction_type}"
+        f"{partner_type}:{transaction_type}{who}"
     )
 
 
@@ -136,6 +139,16 @@ def register(bot):
                 for charge in local_only[:20]:
                     row = confirmed[charge]
                     lines.append(f"• {charge} | {row['stars']}⭐ | uid={row['uid']} | {row['kind']}")
+
+            lines.append("\nMatched payment details:")
+            for tx in incoming_invoice:
+                charge = str(tx.get("id") or "")
+                if charge in matched:
+                    local = confirmed.get(charge, {})
+                    lines.append("• " + _fmt_tx(tx))
+                    lines.append(
+                        f"  local: uid={local.get('uid')} stars={local.get('stars')} kind={local.get('kind')}"
+                    )
 
             lines.append("\nLatest Telegram invoice transactions:")
             for tx in incoming_invoice[-10:]:
