@@ -77,14 +77,44 @@ def _render(m):
     for p in projects:
         services = p.get("services", [])
         non_green = [s for s in services if s.get("status") not in (None, "SUCCESS")]
-        marker = "⚠️" if non_green else "✅"
+        role = p.get("role", "external")
+        if role == "canonical_control_plane":
+            marker = "🟢"
+            label = "CANONICAL"
+        elif role == "secondary_non_polling_runtime":
+            marker = "⚪"
+            label = "NON-POLLING"
+        elif any(s.get("status") == "CRASHED" for s in services):
+            marker = "🔴"
+            label = "FAILED"
+        elif non_green:
+            marker = "🟡"
+            label = "DEGRADED"
+        elif role.startswith("legacy_"):
+            marker = "🟡"
+            label = "LEGACY"
+        else:
+            marker = "🟢"
+            label = "EXTERNAL"
         lines.append(
-            f"{marker} {p['name']} — {p.get('role', 'external')} — {len(services)} services"
+            f"{marker} {p['name']} — {label} / {role} — {len(services)} services"
         )
         for s in services:
-            if s.get("class") != "infrastructure" and s.get("repo"):
+            if s.get("class") != "infrastructure" and (s.get("repo") or s.get("status") not in (None, "SUCCESS")):
+                if s.get("status") == "SUCCESS":
+                    sm = "🟢"
+                elif s.get("status") == "CRASHED":
+                    sm = "🔴"
+                elif s.get("status") in (None, "UNKNOWN", "unknown"):
+                    sm = "⚪"
+                else:
+                    sm = "🟡"
+                extra = ""
+                if s.get("runtime_policy", {}).get("RUN_BOT") == "0":
+                    extra = " / non-polling"
                 lines.append(
-                    f"   └ {s.get('name', '?')} → {s.get('repo')} [{s.get('status', 'unknown')}]"
+                    f"   └ {sm} {s.get('name', '?')} → {s.get('repo', 'no repo')} [{s.get('status', 'unknown')}]"
+                    f"{extra}"
                 )
 
     lines += ["", "GitHub-only/unmapped in this Railway workspace:"]
