@@ -24,21 +24,56 @@ def railway_services(principal, project_id: str) -> list[dict]:
     if not project:
         raise KeyError(str(project_id))
     rows = project.get("services", {}).get("edges", [])
-    return [
-        {"id": str(row["node"].get("id")), "name": str(row["node"].get("name"))}
-        for row in rows
-        if isinstance(row, dict) and isinstance(row.get("node"), dict)
-    ]
+    result = []
+    for row in rows:
+        node = row.get("node") if isinstance(row, dict) else None
+        if not isinstance(node, dict):
+            continue
+        instances = node.get("serviceInstances", {}).get("edges", [])
+        latest = None
+        if instances and isinstance(instances[0], dict):
+            instance = instances[0].get("node") or {}
+            latest = instance.get("latestDeployment")
+        result.append({
+            "id": str(node.get("id")),
+            "name": str(node.get("name")),
+            "latest_deployment": {
+                "id": latest.get("id"),
+                "status": latest.get("status"),
+                "created_at": latest.get("createdAt"),
+            } if isinstance(latest, dict) else None,
+        })
+    return result
 
 
 def railway_deployments(principal, project_id: str, service_id: str | None = None) -> list[dict]:
     _require_principal(principal)
-    # Deployment history is exposed through the existing Railway API only when
-    # the service adapter has a stable query available. Never expose env values.
     project = _safe_project(project_id)
     if not project:
         raise KeyError(str(project_id))
-    return []
+    rows = project.get("services", {}).get("edges", [])
+    services = []
+    for row in rows:
+        node = row.get("node") if isinstance(row, dict) else None
+        if isinstance(node, dict):
+            if service_id and str(node.get("id")) != str(service_id):
+                continue
+            services.append(node)
+    deployments = []
+    for node in services:
+        instances = node.get("serviceInstances", {}).get("edges", [])
+        for instance_row in instances:
+            instance = instance_row.get("node") if isinstance(instance_row, dict) else None
+            latest = instance.get("latestDeployment") if isinstance(instance, dict) else None
+            if isinstance(latest, dict):
+                deployments.append({
+                    "service_id": str(node.get("id")),
+                    "service_name": str(node.get("name")),
+                    "id": latest.get("id"),
+                    "status": latest.get("status"),
+                    "created_at": latest.get("createdAt"),
+                })
+    return deployments
 
 
 def github_repositories(principal=None) -> list[dict]:
@@ -129,7 +164,26 @@ def _safe_project(project_id: str) -> dict | None:
             query($id: String!) {
               project(id: $id) {
                 id name
-                services { edges { node { id name } } }
+                services {
+                  edges {
+                    node {
+                      id
+                      name
+                      serviceInstances {
+                        edges {
+                          node {
+                            latestDeployment {
+                              id
+                              status
+                              createdAt
+                              meta
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
                 environments { edges { node { id name } } }
               }
             }
