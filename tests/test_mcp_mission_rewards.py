@@ -50,6 +50,7 @@ class MissionRewardTests(unittest.TestCase):
         ):
             lifecycle_cls.return_value.complete_mission.return_value = service_result
             lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
+            lifecycle_cls.return_value.find_mission.return_value = mission
             economy.balance.return_value = 10
             economy.record_reward.return_value = {
                 "status": "completed",
@@ -97,6 +98,7 @@ class MissionRewardTests(unittest.TestCase):
             return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
         ):
             lifecycle_cls.return_value.load_state.return_value = ({"missions": [mission]}, {})
+            lifecycle_cls.return_value.find_mission.return_value = mission
             lifecycle_cls.return_value.complete_mission.return_value = {
                 "status": "completed",
                 "mission_id": "m1",
