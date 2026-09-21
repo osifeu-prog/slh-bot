@@ -46,14 +46,17 @@ def register_esp_handler(bot):
     @bot.message_handler(commands=["esp_ping"])
     def esp_ping(msg):
         parts = msg.text.split()
-        device_id = parts[1] if len(parts) > 1 else "esp32_01"
+        if len(parts) < 2:
+            bot.reply_to(msg, "⚠️ נא לציין מזהה מכשיר: /esp_ping <device_id>")
+            return
+        device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
         if _device_owner_id(dev) != str(msg.from_user.id):
-            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
+            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
             return
 
         _t = dev.get("mqtt_topics") or {}
@@ -168,16 +171,16 @@ def register_esp_handler(bot):
     def esp_activate(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(msg, "׳©׳™׳׳•׳©: /esp_activate <device_id>")
+            bot.reply_to(msg, "שימוש: /esp_activate <device_id>")
             return
         device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
+            bot.reply_to(msg, "מכשיר לא נמצא")
             return
         if _device_owner_id(dev) != str(msg.from_user.id):
-            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
+            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
             return
 
         def _mutate(devices, device_id=device_id):
@@ -190,19 +193,22 @@ def register_esp_handler(bot):
             return True
 
         atomic_device_update(_mutate)
-        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¢׳")
+        bot.reply_to(msg, f"{device_id} הופעל")
 
     @bot.message_handler(commands=["esp_heartbeat"])
     def esp_heartbeat(msg):
         parts = msg.text.split()
-        device_id = parts[1] if len(parts) > 1 else "esp32_01"
+        if len(parts) < 2:
+            bot.reply_to(msg, "⚠️ נא לציין מזהה מכשיר: /esp_heartbeat <device_id>")
+            return
+        device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
+            bot.reply_to(msg, "מכשיר לא נמצא")
             return
         if _device_owner_id(dev) != str(msg.from_user.id):
-            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
+            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
             return
 
         def _mutate(devices, device_id=device_id):
@@ -221,22 +227,22 @@ def register_esp_handler(bot):
     def esp_progress(msg):
         parts = msg.text.split()
         if len(parts) < 2:
-            bot.reply_to(msg, "׳©׳™׳׳•׳©: /esp_progress <device_id>")
+            bot.reply_to(msg, "שימוש: /esp_progress <device_id>")
             return
         device_id = parts[1]
         devices = load_devices()
         dev = devices.get(device_id)
         if not dev:
-            bot.reply_to(msg, "׳׳›׳©׳™׳¨ ׳׳ ׳ ׳׳¦׳")
+            bot.reply_to(msg, "מכשיר לא נמצא")
             return
         if _device_owner_id(dev) != str(msg.from_user.id):
-            bot.reply_to(msg, "׳׳™׳ ׳׳ ׳”׳¨׳©׳׳” ׳׳׳›׳©׳™׳¨ ׳–׳”")
+            bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
             return
         try:
             from core.esp_display import publish_progress
             ok, result = publish_progress(device_id)
             if ok:
-                bot.reply_to(msg, f"׳ ׳©׳׳— ׳-{device_id}\n{result}")
+                bot.reply_to(msg, f"נשלח ל-{device_id}\n{result}")
             else:
                 bot.reply_to(msg, f"{result}")
         except Exception as e:
@@ -270,7 +276,7 @@ def register_esp_handler(bot):
         if not ok:
             bot.reply_to(msg, f"Failed: {result}")
             return
-        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¢׳")
+        bot.reply_to(msg, f"{device_id} הופעל")
 
     @bot.message_handler(commands=["esp_stop"])
     def esp_stop(msg):
@@ -297,7 +303,7 @@ def register_esp_handler(bot):
         from core.exec_policy import run_gated
         cmd = f"pkill -f 'virtual_esp.py {device_id}'"
         ok, result = run_gated(OWNER_TELEGRAM_ID, cmd, source="esp_stop", timeout=5)
-        bot.reply_to(msg, f"{device_id} ׳”׳•׳₪׳¡׳§")
+        bot.reply_to(msg, f"{device_id} הופסק")
 
 
     @bot.message_handler(commands=["esp_broadcast_progress"])
