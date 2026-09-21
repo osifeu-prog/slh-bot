@@ -6,7 +6,7 @@ from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
 
-from slh_mcp.auth import current_principal
+from slh_mcp.auth import authorize, current_principal
 
 
 _SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id"}
@@ -157,12 +157,16 @@ def register_extended_resources(server) -> None:
 
 def railway_resource():
     principal = _principal_or_raise()
+    if not authorize(principal, "exec.audit"):
+        raise PermissionError("RAILWAY_RESOURCE_FORBIDDEN")
     from slh_mcp.tools.integrations import railway_projects
     return {"projects": railway_projects(principal)}
 
 
 def github_resource():
     principal = _principal_or_raise()
+    if not authorize(principal, "exec.audit"):
+        raise PermissionError("GITHUB_RESOURCE_FORBIDDEN")
     from slh_mcp.tools.integrations import github_repositories
     return {"repositories": github_repositories(principal)}
 
