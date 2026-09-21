@@ -4,9 +4,8 @@ import os
 from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
-from starlette.routing import Mount, Route
+from starlette.responses import JSONResponse
 
 from slh_mcp.auth import (
     principal_from_headers,
@@ -17,7 +16,7 @@ from slh_mcp.registry import register_capabilities
 
 
 class MCPAuthMiddleware:
-    """ASGI bearer gate that exposes the verified principal through ContextVar."""
+    """Protect the MCP transport while leaving health available."""
 
     def __init__(self, app):
         self.app = app
@@ -28,8 +27,8 @@ class MCPAuthMiddleware:
             path = scope.get("path", "")
             if path == "/mcp" or path.startswith("/mcp/"):
                 from starlette.datastructures import Headers
-                headers = Headers(scope=scope)
-                principal = principal_from_headers(headers)
+
+                principal = principal_from_headers(Headers(scope=scope))
                 if principal is None:
                     response = JSONResponse(
                         {"error": "AUTH_REQUIRED"},
@@ -39,6 +38,7 @@ class MCPAuthMiddleware:
                     await response(scope, receive, send)
                     return
                 token = set_current_principal(principal)
+
         try:
             await self.app(scope, receive, send)
         finally:
@@ -70,29 +70,36 @@ async def lifespan(_app):
 
 
 def _transport_security():
-    hosts = [x.strip() for x in os.getenv("SLH_MCP_ALLOWED_HOSTS", "").split(",") if x.strip()]
-    origins = [x.strip() for x in os.getenv("SLH_MCP_ALLOWED_ORIGINS", "").split(",") if x.strip()]
+    hosts = [
+        x.strip()
+        for x in os.getenv("SLH_MCP_ALLOWED_HOSTS", "").split(",")
+        if x.strip()
+    ]
+    origins = [
+        x.strip()
+        for x in os.getenv("SLH_MCP_ALLOWED_ORIGINS", "").split(",")
+        if x.strip()
+    ]
     return TransportSecuritySettings(
         allowed_hosts=hosts or ["localhost:*", "127.0.0.1:*", "[::1]:*"],
-        allowed_origins=origins or ["http://localhost:*", "http://127.0.0.1:*", "http://[::1]:*"],
+        allowed_origins=origins
+        or [
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://[::1]:*",
+        ],
     )
 
 
 def build_mcp_app():
-    routes = [
-        Route("/health", health, methods=["GET"]),
-        Mount(
-            "/mcp",
-            app=mcp.streamable_http_app(
-                transport_security=_transport_security(),
-            ),
-        ),
-    ]
-    return Starlette(
-        routes=routes,
-        lifespan=lifespan,
-        middleware=[Middleware(MCPAuthMiddleware)],
+    # The MCP SDK application already owns the /mcp route and its lifespan.
+    # Wrapping it in an outer ASGI app would duplicate the endpoint path.
+    app = mcp.streamable_http_app(
+        transport_security=_transport_security(),
     )
+    app.add_middleware(MCPAuthMiddleware)
+    return app
 
 
+# Keep a named factory for tests and deployment introspection.
 app = build_mcp_app()
