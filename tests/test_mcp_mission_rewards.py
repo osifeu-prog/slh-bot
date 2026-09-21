@@ -63,6 +63,7 @@ class MissionRewardTests(unittest.TestCase):
                 None,
                 "reward-m1",
             )
+        lifecycle_cls.return_value.complete_mission.assert_called_once_with("m1")
         economy.record_reward.assert_called_once_with(
             agent_id="1",
             amount=10.0,
