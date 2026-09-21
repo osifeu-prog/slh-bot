@@ -84,3 +84,19 @@ def execute_agent(principal: str, agent_id: str, command: str) -> dict:
 
 def get_missions(principal: str) -> list[dict]:
     return list(_request("/api/internal/mcp/missions", principal).get("missions", []))
+
+def complete_mission(
+    principal: str,
+    mission_id: str,
+    agent_id: str,
+    result: dict | None = None,
+) -> dict:
+    payload = {"agent_id": str(agent_id)}
+    if result is not None:
+        payload["result"] = result
+    return _request(
+        f"/api/internal/mcp/missions/{mission_id}/complete",
+        principal,
+        method="POST",
+        payload=payload,
+    )
