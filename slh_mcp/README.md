@@ -2,6 +2,19 @@
 
 Persistent MCP Control Plane service for SLH OS.
 
+## Architecture boundary
+
+slh-mcp is the MCP protocol layer. The web service remains the live owner of SLH user, agent, and mission state.
+
+The MCP service reaches live state through the authenticated internal Control Plane bridge:
+
+    slh-mcp
+      -> HTTPS bridge
+      -> web
+      -> core.authority / Agent Registry / Runtime / Mission Lifecycle
+
+It must not read the live user state directly from its own container filesystem.
+
 ## Local
 
 Install:
@@ -10,7 +23,7 @@ Install:
 
 Run:
 
-    uvicorn slh_mcp.server:app --host 127.0.0.1 --port 8080
+    uvicorn slh_mcp.server:app --host 127.0.0.1 --port 8080 --workers 1
 
 Health:
 
@@ -26,48 +39,80 @@ MCP endpoint:
     SLH_MCP_PRINCIPAL_ID
     SLH_MCP_ALLOWED_HOSTS
     SLH_MCP_ALLOWED_ORIGINS
+    SLH_CONTROL_PLANE_URL
+    SLH_MCP_BRIDGE_TOKEN
 
-Railway deployment control additionally requires:
-
-    SLH_MCP_DEPLOY_ALLOWLIST
-
-Format:
-
-    project_id|service_id|environment_id[,project_id|service_id|environment_id...]
+SLH_MCP_BRIDGE_TOKEN must be configured in both web and slh-mcp.
 
 There are no real secret values in this document.
 
-## Design rules
+## Capability model
 
-The MCP service is a protocol layer over the canonical SLH Control Plane.
-It does not replace Telegram handlers, does not maintain a second authority model, and does not write directly to state/db.json.
-Agent-economy state is isolated in state/agent_economy.json.
-Existing user Credits, SLH/token balances, staking positions, provenance, and historical user ledger records are outside the MCP write surface.
-Arbitrary shell execution is not an MCP capability.
+Capabilities are declared explicitly in slh_mcp/capabilities.py.
+
+The service does not scan Telegram handlers and does not expose arbitrary shell execution.
+
+Current capability families include:
+
+    system
+    agents
+    missions
+    economy
+    bots
+    railway
+    github
+
+All privileged capabilities pass through the live Control Plane authority before execution.
+
+## State boundaries
+
+Existing user financial state remains outside the MCP write surface:
+
+    state/db.json
+    user Credits
+    SLH/token balances
+    staking positions
+    historical user ledger
+    token provenance
+
+Agent Economy is isolated:
+
+    state/agent_economy.json
+
+It contains only agent-economy accounts, operations, and ledger entries.
+
+Every agent-economy mutation requires a stable operation id and is idempotent.
+
+The Agent Treasury may only be funded by record_revenue() with evidence; there is no arbitrary mint operation.
 
 ## Railway production
 
-The service should run from repository root with Dockerfile `slh_mcp/Dockerfile`.
+Create slh-mcp as an independent Railway service from repository root using:
 
-Persistent storage:
+    Dockerfile: slh_mcp/Dockerfile
+
+Required persistent volume:
 
     Railway Volume -> /app/state
 
-Start with one replica/worker. The agent economy is file-backed in this namespace; do not scale the MCP service horizontally until shared-state locking or a transactional datastore is introduced.
+The volume is required before Agent Economy is used in production.
 
-Required runtime configuration:
+Run one worker initially. The agent ledger is file-backed and process-local locking is not sufficient for horizontal scaling.
 
-    SLH_MCP_BEARER_TOKEN
-    SLH_MCP_PRINCIPAL_ID
-    SLH_MCP_ALLOWED_HOSTS
-    SLH_MCP_ALLOWED_ORIGINS
+Recommended host configuration:
 
-Optional read-only GitHub integration:
+    SLH_MCP_ALLOWED_HOSTS=<mcp-host>,<mcp-host>:*
+    SLH_MCP_ALLOWED_ORIGINS=<allowed-origin>
 
-    GITHUB_TOKEN
+Do not copy Telegram bot tokens into the slh-mcp service.
 
-Controlled deployment configuration:
+## Production smoke test
 
-    SLH_MCP_DEPLOY_ALLOWLIST
-
-No Telegram bot token is required by `slh-mcp`.
+1. GET /health and require HTTP 200.
+2. Connect an authenticated MCP client to /mcp.
+3. Verify tool/resource discovery.
+4. Call system.health, agents.list, missions.list.
+5. Read economy.agent_balance for an agent visible to the authenticated principal.
+6. Verify unauthenticated requests return 401.
+7. Verify the live bridge is reached for authority/state reads.
+8. Verify user financial regression is unchanged.
