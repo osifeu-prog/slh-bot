@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from slh_mcp.capabilities import guarded_handler, list_capabilities
 from slh_mcp.resources import (
+    register_economic_resources,
     register_extended_resources,
     register_infrastructure_resources,
     register_resources,
@@ -26,6 +27,7 @@ from slh_mcp.tools.integrations import (
     _tool_railway_projects,
     _tool_railway_services,
 )
+from slh_mcp.tools.economic_ledger import _tool_economy_ledger
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
     _tool_economy_agent_ledger,
@@ -46,6 +48,7 @@ def register_capabilities(server):
         "missions.complete": _tool_complete_agent_mission,
         "economy.agent_balance": _tool_economy_agent_balance,
         "economy.agent_ledger": _tool_economy_agent_ledger,
+        "economy.ledger": _tool_economy_ledger,
         "economy.propose_transfer": _tool_economy_propose_transfer,
         "economy.commit_transfer": _tool_economy_commit_transfer,
         "bots.registry": _tool_bots_registry,
@@ -69,5 +72,6 @@ def register_capabilities(server):
 
     register_resources(server)
     register_extended_resources(server)
+    register_economic_resources(server)
     register_infrastructure_resources(server)
     return server
