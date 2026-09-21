@@ -25,6 +25,7 @@ from slh_mcp.tools.integrations import (
     _tool_railway_projects,
     _tool_railway_services,
 )
+from slh_mcp.tools.income import income_status_tool
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
     _tool_economy_agent_ledger,
@@ -37,6 +38,8 @@ def register_capabilities(server):
     handlers = {
         "system.health": _tool_system_health,
         "system.snapshot": _tool_system_snapshot,
+        "system.health": _tool_system_health,
+        "income.status": income_status_tool,
         "agents.list": _tool_agents_list,
         "agents.get": _tool_agents_get,
         "agents.runtime_status": _tool_agents_runtime_status,
