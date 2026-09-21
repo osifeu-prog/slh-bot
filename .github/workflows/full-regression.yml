@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: pip install -r requirements.txt -r slh_mcp/requirements.txt pytest
       - name: Compile Python modules
         run: python3 -m compileall -q core agents handlers services
       - name: Run full test suite
