@@ -1,6 +1,7 @@
 from datetime import datetime
 from core.audit import log_event
 from core.agent_state_store import AgentStateStore
+from core.agent_policy import can_create_agent
 
 STORE = AgentStateStore()
 
@@ -56,6 +57,14 @@ def create_agent(name, role="agent", owner_id=None, runtime_class="EchoAgent"):
                         )
                 return str(agent.get("id", agent_id)), agent
             raise ValueError(f"Agent '{name}' already exists")
+
+    if owner_id is not None:
+        owned_count = sum(
+            1 for agent in agents.values()
+            if str(agent.get("owner_id", "")) == str(owner_id)
+        )
+        if not can_create_agent(owner_id, owned_count):
+            raise ValueError("AGENT_LIMIT_REACHED")
 
     numeric_ids = []
     for key in agents:
