@@ -14,6 +14,7 @@ class WebAppApiAuthTests(unittest.TestCase):
             "/api/leaderboard",
             "/api/v1/leaderboard",
             "/api/onchain/status",
+            "/api/v1/earnings",
         )
         with patch("webapp.authenticated_uid", return_value=None):
             for endpoint in endpoints:
@@ -21,6 +22,31 @@ class WebAppApiAuthTests(unittest.TestCase):
                     response = self.client.get(endpoint)
                     self.assertEqual(response.status_code, 401)
                     self.assertEqual(response.get_json(), {"error": "TELEGRAM_AUTH_REQUIRED"})
+
+    def test_earnings_returns_read_model(self):
+        db = {
+            "users": {
+                "1": {
+                    "role": "OWNER",
+                    "wallet": {"credits": 5, "staked": 10, "token_balance": 2},
+                    "gamification": {"points": 7},
+                }
+            },
+            "revenue_ledger": [],
+            "revenue_distributions": {},
+            "revenue_share_pool": {},
+            "stake_positions": {},
+            "reward_pools": {},
+        }
+        with patch("webapp.authenticated_uid", return_value="1"), patch(
+            "webapp.load_db", return_value=db
+        ):
+            response = self.client.get("/api/v1/earnings")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["balances"]["credits"], 5.0)
+        self.assertTrue(payload["read_only"])
+        self.assertEqual(payload["cash"]["status"], "telegram_stars_withdrawal_external")
 
     def test_stats_allows_authenticated_user(self):
         db = {
