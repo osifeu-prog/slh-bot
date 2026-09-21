@@ -8,6 +8,7 @@ from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 from starlette.routing import Mount, Route
 
+from slh_mcp.config import readiness
 from slh_mcp.auth import (
     principal_from_scope,
     reset_current_principal,
@@ -61,6 +62,14 @@ async def health(_request):
     )
 
 
+async def ready(_request):
+    state = readiness()
+    return JSONResponse(
+        state,
+        status_code=200 if state["ready"] else 503,
+    )
+
+
 @contextlib.asynccontextmanager
 async def lifespan(_app):
     async with mcp.session_manager.run():
@@ -79,6 +88,7 @@ def _transport_security():
 def build_mcp_app():
     routes = [
         Route("/health", health, methods=["GET"]),
+        Route("/ready", ready, methods=["GET"]),
         Mount(
             "/",
             app=mcp.streamable_http_app(
