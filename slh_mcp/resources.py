@@ -117,6 +117,31 @@ def register_resources(server) -> None:
         name="agent",
         description="One visible SLH agent.",
     )(_resource_agent)
+    server.resource(
+        "slh://agent/{agent_id}/economy",
+        name="agent_economy",
+        description="Isolated economy projection for one visible SLH agent.",
+    )(agent_economy_resource)
+    server.resource(
+        "slh://missions",
+        name="missions",
+        description="Canonical SLH mission projection.",
+    )(missions_resource)
+    server.resource(
+        "slh://economy",
+        name="economy",
+        description="Safe isolated Agent Economy summary.",
+    )(economy_resource)
+    server.resource(
+        "slh://railway",
+        name="railway",
+        description="Railway Control Plane resource placeholder.",
+    )(railway_resource)
+    server.resource(
+        "slh://github",
+        name="github",
+        description="GitHub Control Plane resource placeholder.",
+    )(github_resource)
 
 
 def _tool_system_health():
@@ -182,3 +207,47 @@ def register_infrastructure_resources(server) -> None:
         name="github",
         description="Safe GitHub repository metadata.",
     )(github_resource)
+
+def agent_economy_resource(agent_id: str, principal=None) -> dict:
+    principal = _principal_or_raise(principal)
+    from slh_mcp.agent_economy import AgentEconomyService
+
+    visible = get_visible_agents(principal.subject, list_agents())
+    canonical_id, agent = get_agent(str(agent_id))
+    if agent is None or canonical_id not in visible:
+        raise KeyError(str(agent_id))
+    service = AgentEconomyService()
+    rows = [row for row in service.ledger() if row.get("account") == canonical_id]
+    return {
+        "agent_id": canonical_id,
+        "currency": "agent_credits",
+        "balance": service.balance(canonical_id),
+        "ledger_count": len(rows),
+        "recent_ledger": rows[-20:],
+    }
+
+
+def missions_resource(principal=None) -> list[dict]:
+    from slh_mcp.tools.missions import missions_list
+    return missions_list(_principal_or_raise(principal))
+
+
+def economy_resource(principal=None) -> dict:
+    from slh_mcp.agent_economy import AgentEconomyService
+    _principal_or_raise(principal)
+    service = AgentEconomyService()
+    return {
+        "currency": "agent_credits",
+        "treasury_balance": service.balance("AGENT_TREASURY"),
+        "ledger_count": len(service.ledger()),
+    }
+
+
+def railway_resource(principal=None):
+    _principal_or_raise(principal)
+    return {"status": "adapter_pending"}
+
+
+def github_resource(principal=None):
+    _principal_or_raise(principal)
+    return {"status": "adapter_pending"}
