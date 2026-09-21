@@ -69,6 +69,7 @@ class MCPRailwayDeployTests(unittest.TestCase):
         ):
             result = railway_deploy(self.owner, "p", "s", "e", "a" * 40)
         self.assertEqual(result["deployment"]["status"], "SUCCESS")
+        self.assertTrue(result["terminal"])
 
 
 if __name__ == "__main__":
