@@ -26,6 +26,7 @@ _READ_CAPABILITIES = (
     Capability("agents.list", "List agents visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.get", "Get one agent visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.runtime_status", "Get canonical agent runtime status.", "agents.view_self", False),
+    Capability("agents.execute", "Execute a validated command through the canonical agent runtime.", "agents.modify_self", True),
     Capability("missions.list", "List canonical SLH missions.", "public.view", False),
     Capability("economy.agent_balance", "Read isolated agent-economy balance.", "agents.view_self", False),
     Capability("economy.agent_ledger", "Read isolated agent-economy ledger.", "agents.view_self", False),
