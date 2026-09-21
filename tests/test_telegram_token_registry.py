@@ -40,3 +40,26 @@ def test_unknown_alias_fails_closed():
         pass
     else:
         raise AssertionError("unknown alias must raise KeyError")
+
+
+
+def test_control_surface_never_contains_token_value():
+    from refresh_token_handler import bots_text, rotation_instructions
+
+    text = bots_text() + "\n" + rotation_instructions("air")
+    assert "TELEGRAM_TOKEN=" not in text
+    assert "SLH_CLAUDE_BOT_TOKEN=" not in text
+    assert "New Telegram token" not in text
+    assert "Run this from the operator terminal" in text
+    assert "rotate_telegram_token.sh air" in text
+
+
+def test_rotation_instructions_fail_closed_for_unknown_alias():
+    from refresh_token_handler import rotation_instructions
+
+    try:
+        rotation_instructions("wrong")
+    except KeyError:
+        pass
+    else:
+        raise AssertionError("unknown alias must raise KeyError")
