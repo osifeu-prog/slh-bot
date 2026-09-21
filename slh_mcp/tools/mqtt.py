@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+import paho.mqtt.client as mqtt
+
 from core import mqtt_config
 
 
@@ -42,13 +44,13 @@ def mqtt_probe(principal=None) -> dict:
     _principal(principal)
     client = create_probe_client()
     try:
-        rc = client.connect(BROKER, PORT, keepalive=10)
+        rc = client.connect(mqtt_config.BROKER, mqtt_config.PORT, keepalive=10)
         return {
             "reachable": rc == 0,
             "connect_rc": int(rc),
-            "broker": BROKER,
-            "port": PORT,
-            "tls": USE_TLS,
+            "broker": mqtt_config.BROKER,
+            "port": mqtt_config.PORT,
+            "tls": mqtt_config.USE_TLS,
         }
     except Exception as exc:
         return {
@@ -66,10 +68,8 @@ def mqtt_probe(principal=None) -> dict:
 
 
 def create_probe_client():
-    import paho.mqtt.client as mqtt
-    from core.mqtt_config import apply
     client = mqtt.Client(client_id="slh-mcp-probe")
-    apply(client)
+    mqtt_config.apply(client)
     return client
 
 
