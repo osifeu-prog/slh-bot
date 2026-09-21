@@ -27,6 +27,7 @@ def register_capabilities(server):
         "agents.execute": _tool_agents_execute,
         "missions.list": _tool_missions_list,
         "missions.complete": _tool_complete_agent_mission,
+        "missions.complete": _tool_complete_agent_mission,
         "economy.agent_balance": _tool_economy_agent_balance,
         "economy.agent_ledger": _tool_economy_agent_ledger,
         "economy.propose_transfer": _tool_economy_propose_transfer,
