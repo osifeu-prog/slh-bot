@@ -198,3 +198,17 @@ def register_economic_resources(server) -> None:
         name="economy",
         description="Canonical normalized SLH economic read model.",
     )(economic_resource)
+
+
+def mqtt_resource():
+    principal = _principal_or_raise()
+    from slh_mcp.tools.mqtt import mqtt_status
+    return mqtt_status(principal)
+
+
+def register_mqtt_resources(server) -> None:
+    server.resource(
+        "slh://mqtt",
+        name="mqtt",
+        description="Safe MQTT broker/listener configuration metadata.",
+    )(mqtt_resource)
