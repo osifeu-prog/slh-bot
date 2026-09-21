@@ -132,11 +132,3 @@ def _tool_complete_agent_mission(
     operation_id: str,
 ):
     return complete_agent_mission(None, mission_id, agent_id, result, operation_id)
-
-def _tool_complete_agent_mission(
-    mission_id: str,
-    agent_id: str,
-    result: dict,
-    operation_id: str,
-):
-    return complete_agent_mission(None, mission_id, agent_id, result, operation_id)
