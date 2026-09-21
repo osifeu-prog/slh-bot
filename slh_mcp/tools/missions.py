@@ -75,15 +75,12 @@ def complete_agent_mission(
 
     completion = lifecycle.complete_mission(mission_id)
     if completion.get("status") == "blocked":
-        refreshed_board, _ = lifecycle.load_state()
-        refreshed = lifecycle.find_mission(refreshed_board, mission_id)
-        if not isinstance(refreshed, dict) or refreshed.get("status") != "completed":
-            return {
-                "status": "blocked",
-                "mission_id": mission_id,
-                "agent_id": agent_id,
-                "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
-            }
+        return {
+            "status": "blocked",
+            "mission_id": mission_id,
+            "agent_id": agent_id,
+            "reason": completion.get("reason", "MISSION_COMPLETION_FAILED"),
+        }
 
     if reward == 0:
         return {
@@ -127,6 +124,14 @@ def complete_agent_mission(
 def _tool_missions_list():
     return missions_list()
 
+
+def _tool_complete_agent_mission(
+    mission_id: str,
+    agent_id: str,
+    result: dict,
+    operation_id: str,
+):
+    return complete_agent_mission(None, mission_id, agent_id, result, operation_id)
 
 def _tool_complete_agent_mission(
     mission_id: str,
