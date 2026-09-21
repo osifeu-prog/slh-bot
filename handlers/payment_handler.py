@@ -126,6 +126,22 @@ def register_payment_handlers(bot):
             else:
                 bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid item price.")
             return
+
+        if raw == f"vip_monthly_{query.from_user.id}":
+            try:
+                valid_amount = int(query.total_amount) == VIP_MONTHLY_STARS
+            except (TypeError, ValueError):
+                valid_amount = False
+            if query.currency == "XTR" and valid_amount:
+                bot.answer_pre_checkout_query(query.id, ok=True)
+            else:
+                bot.answer_pre_checkout_query(
+                    query.id,
+                    ok=False,
+                    error_message="Invalid VIP price.",
+                )
+            return
+
         parts = raw.split("_")
         if len(parts) != 3 or parts[0] != "credits" or parts[2] != str(query.from_user.id):
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment recipient.")
