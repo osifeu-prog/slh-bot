@@ -26,7 +26,7 @@ class MCPAuthMiddleware:
         token = None
         if scope.get("type") == "http":
             path = scope.get("path", "")
-            if path == "/mcp" or path.startswith("/mcp/"):
+            if path != "/health":
                 principal = principal_from_scope(scope)
                 if principal is None:
                     response = JSONResponse(
