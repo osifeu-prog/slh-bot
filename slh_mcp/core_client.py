@@ -11,6 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 
 class CoreControlPlaneClient:
@@ -151,4 +152,12 @@ def configured_client() -> CoreControlPlaneClient | None:
     principal_id = str(os.getenv("SLH_MCP_SERVICE_PRINCIPAL_ID", "slh-mcp")).strip()
     if not base_url or not key:
         return None
+    if os.getenv("RAILWAY_SERVICE_NAME", "").strip() == "slh-mcp":
+        parsed = urlparse(base_url)
+        if (
+            parsed.scheme != "http"
+            or not parsed.hostname
+            or not parsed.hostname.endswith(".railway.internal")
+        ):
+            raise RuntimeError("SLH_CORE_API_URL_MUST_BE_RAILWAY_PRIVATE")
     return CoreControlPlaneClient(base_url, key, principal_id)
