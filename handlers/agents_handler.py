@@ -6,6 +6,42 @@ from core.authority import get_visible_agents, normalize_uid, is_owner
 from core.runtime_service import execute_agent
 
 
+
+def _agent_sort_key(item):
+    created = str(item[1].get("created", ""))
+    try:
+        numeric_id = int(item[0])
+    except (TypeError, ValueError):
+        numeric_id = 10**18
+    return (created, numeric_id, str(item[0]))
+
+
+def format_agent_list(uid, all_agents):
+    """Return per-user display numbering without changing canonical agent IDs."""
+    uid = normalize_uid(uid)
+    visible = get_visible_agents(uid, all_agents)
+
+    # The /agents surface is a personal view. OWNER can still access the full
+    # canonical registry through privileged tools; here we show owned agents.
+    if is_owner(uid):
+        visible = {
+            aid: agent
+            for aid, agent in all_agents.items()
+            if str(agent.get("owner_id", "")) == uid
+        }
+
+    ordered = sorted(visible.items(), key=_agent_sort_key)
+    mapping = {}
+    lines = ["הסוכנים שלך:"]
+    for index, (agent_id, data) in enumerate(ordered, start=1):
+        mapping[str(index)] = str(agent_id)
+        lines.append(
+            f"{index}. {data.get('name', agent_id)} "
+            f"[{data.get('state', 'unknown')}] - {data.get('role', 'agent')}"
+        )
+    return "\\n".join(lines), mapping
+
+
 def _check_access(uid, identifier):
     agent_id, agent = get_agent(identifier)
     if agent is None:
