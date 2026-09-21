@@ -8,7 +8,7 @@ import os
 from contextvars import ContextVar, Token
 from typing import Mapping
 
-from core.authority import ROLES, get_role, has_permission
+from core.authority import ROLES, get_role
 
 from slh_mcp.security import redact
 
