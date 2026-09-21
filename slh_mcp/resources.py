@@ -5,6 +5,8 @@ from __future__ import annotations
 from core.agent_registry import get_agent, list_agents
 from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
+from slh_mcp.tools.agents import agents_list, agents_get
+from slh_mcp.tools.missions import missions_list
 
 from slh_mcp.auth import authorize, current_principal
 
@@ -26,27 +28,13 @@ def system_health(principal=None) -> dict:
 
 def agents_resource(principal=None) -> list[dict]:
     principal = _principal_or_raise(principal)
-    visible = get_visible_agents(principal.subject, list_agents())
-    return [
-        {key: value for key, value in item.items() if key not in _SENSITIVE_AGENT_FIELDS}
-        for item in visible.values()
-    ]
+    return agents_list(principal)
+    return agents_list(principal)
 
 
 def agent_resource(agent_id: str, principal=None) -> dict:
     principal = _principal_or_raise(principal)
-    visible = get_visible_agents(principal.subject, list_agents())
-    key = str(agent_id)
-    row = visible.get(key)
-    if row is None:
-        canonical_id, agent = get_agent(key)
-        if agent is None or canonical_id not in visible:
-            raise KeyError(key)
-        row = visible[canonical_id]
-    return {
-        key: value for key, value in row.items()
-        if key not in _SENSITIVE_AGENT_FIELDS
-    }
+    return agents_get(principal, agent_id)
 
 
 def bot_registry(principal=None) -> list[dict]:
@@ -87,7 +75,7 @@ def _resource_agent(agent_id: str):
 def system_snapshot(principal=None):
     principal = _principal_or_raise(principal)
     from slh_mcp.tools.missions import missions_list
-    agents = agents_resource(principal)
+    agents = agents_list(principal)
     missions = missions_list(principal)
     return {
         "service": "SLH MCP",
