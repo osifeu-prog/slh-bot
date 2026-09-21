@@ -191,9 +191,11 @@ def register(bot, context=None):
             combined_text = "\n\n".join(
                 part for part in (f"<pre>{branding}</pre>" if branding else "", owner_text, dashboard_text) if part
             )
-            markup = types.InlineKeyboardMarkup(row_width=1)
-            markup.add(types.InlineKeyboardButton("📚 המשך לקורס", callback_data="continue_course"))
-            markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
+            markup = types.InlineKeyboardMarkup(row_width=2)
+            markup.add(types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"), types.InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"))
+            markup.add(types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"), types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"))
+            markup.add(types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"), types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"))
+            markup.add(types.InlineKeyboardButton("🚀 פתיחת Mini App", web_app=types.WebAppInfo(url="https://web-production-22f28.up.railway.app/mini-app?v=20260918-system")))
             markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
             bot.send_message(
                 m.chat.id,
@@ -290,6 +292,90 @@ def register(bot, context=None):
             "📚 הקורס הפעיל שלך: bitcoin_mastery\n"
             "שלח /lesson bitcoin_mastery 1 כדי להתחיל."
         )
+
+    @bot.callback_query_handler(func=lambda call: call.data == "menu_wallet")
+    def menu_wallet(call):
+        bot.answer_callback_query(call.id)
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        markup.add(types.InlineKeyboardButton("💰 יתרה", callback_data="wallet_balance"), types.InlineKeyboardButton("↔️ העברה", callback_data="wallet_transfer"))
+        markup.add(types.InlineKeyboardButton("📈 Staking", callback_data="wallet_staking"), types.InlineKeyboardButton("🧾 היסטוריה", callback_data="wallet_history"))
+        markup.add(types.InlineKeyboardButton("⬅️ חזרה", callback_data="goto_dashboard"))
+        bot.send_message(call.message.chat.id, "👛 הארנק שלך\nבחר פעולה:", reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "menu_agents")
+    def menu_agents(call):
+        bot.answer_callback_query(call.id)
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(types.InlineKeyboardButton("🤖 הסוכנים שלי", callback_data="agents_list"))
+        markup.add(types.InlineKeyboardButton("➕ צור סוכן", callback_data="create_agent"))
+        markup.add(types.InlineKeyboardButton("⬅️ חזרה", callback_data="goto_dashboard"))
+        bot.send_message(call.message.chat.id, "🤖 Agents\nנהל את הסוכנים שלך:", reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "menu_ai")
+    def menu_ai(call):
+        bot.answer_callback_query(call.id)
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(types.InlineKeyboardButton("🧠 שאל את SLH AI", callback_data="ai_prompt"))
+        markup.add(types.InlineKeyboardButton("⬅️ חזרה", callback_data="goto_dashboard"))
+        bot.send_message(call.message.chat.id, "🧠 SLH AI\nהעוזר שלך מחובר למערכת.", reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "menu_missions")
+    def menu_missions(call):
+        bot.answer_callback_query(call.id)
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(types.InlineKeyboardButton("🎯 המשימות שלי", callback_data="missions_list"))
+        markup.add(types.InlineKeyboardButton("🏆 התקדמות", callback_data="progress_view"))
+        markup.add(types.InlineKeyboardButton("⬅️ חזרה", callback_data="goto_dashboard"))
+        bot.send_message(call.message.chat.id, "🎯 Missions\nהמשך מהנקודה האחרונה שלך:", reply_markup=markup)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "menu_share")
+    def menu_share(call):
+        bot.answer_callback_query(call.id)
+        link = referral_link(str(call.from_user.id))
+        text = "👥 הזמנה ל-SLH\n\n" + (f"שתף את הקישור שלך:\n{link}" if link else "קישור ההזמנה יופיע לאחר זיהוי הבוט.")
+        bot.send_message(call.message.chat.id, text)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "wallet_balance")
+    def wallet_balance(call):
+        bot.answer_callback_query(call.id)
+        uid = str(call.from_user.id)
+        wallet = state_manager.load_db().get("users", {}).get(uid, {}).get("wallet", {})
+        bot.send_message(call.message.chat.id, f"💰 Credits: {wallet.get('credits', 0)}\n🔒 Staked: {wallet.get('staked', 0)}")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "wallet_transfer")
+    def wallet_transfer(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "↔️ העברה: /transfer USER_ID AMOUNT")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "wallet_staking")
+    def wallet_staking(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "📈 Staking: /stake AMOUNT\nאו /stake_lock AMOUNT DAYS")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "wallet_history")
+    def wallet_history(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🧾 היסטוריה: /history")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "agents_list")
+    def agents_list(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🤖 הסוכנים שלך: /agents")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "ai_prompt")
+    def ai_prompt(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🧠 שאל אותי כאן: /ask מה תרצה לדעת?")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "missions_list")
+    def missions_list(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🎯 המשימות שלך: /mission")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "progress_view")
+    def progress_view(call):
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, "🏆 ההתקדמות שלך: /progress")
 
     @bot.callback_query_handler(func=lambda call: call.data == "system_status")
     def system_status(call):
