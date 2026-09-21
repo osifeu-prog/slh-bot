@@ -156,6 +156,7 @@ system.snapshot
 agents.list
 agents.get
 agents.runtime_status
+agents.consistency
 
 missions.list
 
@@ -258,110 +259,11 @@ Rules:
 ### Agent economic lifecycle
 
 ```
-Verified revenue
-  ↓
-AGENT_TREASURY
-  ↓
-fund agent
-  ↓
-agent executes missions/work
-  ↓
-agent-to-agent transfer
-  ↓
-future verified revenue
-```
 
-The current code intentionally does not auto-convert arbitrary external assets into agent-economy units.
+### Agent state consistency
 
-## 6. Federation operations
+`agents.consistency` is a read-only diagnostic. It treats `state/db.json` as the canonical live source and `state/agents.json` as the derived snapshot. It reports count/state drift and adds display-only numbering per owner; internal agent IDs are never rewritten.
 
-The bot registry is the canonical ownership map:
+### Current MCP deployment distinction
 
-`bots.registry`
-
-The federation read model cross-checks registered targets against Railway:
-
-`bots.federation`
-
-Interpretation:
-
-- `READY` — registered target has a SUCCESS deployment.
-- `ATTENTION` — target exists but latest deployment is not terminal SUCCESS.
-- `PROJECT_MISSING` — registered Railway project was not found.
-- `SERVICE_OR_DEPLOYMENT_UNKNOWN` — project exists but target service/deployment could not be resolved.
-
-The federation layer is read-only.
-
-## 7. Production safety rules
-
-Never paste Telegram, Railway, GitHub, database or MCP credentials into chat.
-
-Never enable a second Telegram service unless its token is proven to belong to a distinct bot.
-
-Never expose `state/db.json` as an MCP write surface.
-
-Never redeploy a service from a deployment that is still `NEEDS_APPROVAL`.
-
-Do not scale the file-backed Agent Economy horizontally until shared-state locking or transactional storage is introduced.
-
-Before any economy mutation, preserve a financial regression snapshot.
-
-## 8. Current rollout state
-
-### Completed
-
-- MCP SDK/runtime foundation.
-- Streamable HTTP service implementation.
-- Authentication and principal bridge.
-- Canonical authority enforcement.
-- Explicit capability registry.
-- Agent Registry/Runtime integration.
-- Mission read/completion integration.
-- Isolated Agent Economy.
-- Agent economy idempotency.
-- Canonical economic read model.
-- Bot registry/federation read model.
-- Railway/GitHub read adapters.
-- CI + full regression + security checks.
-
-### Still required for full external MCP operation
-
-- Confirm that a dedicated Railway service named `slh-mcp` exists.
-- Configure its MCP bearer secret and principal.
-- Configure its allowed Host/origin values.
-- Expose its HTTPS domain.
-- Connect an external MCP client/Inspector.
-- Run the live protocol smoke test.
-- Only then treat MCP as externally reachable infrastructure.
-
-The presence of `slh_mcp/` in the `web` deployment does not by itself prove that an independent MCP service is externally reachable.
-
-## 9. Recommended operating rhythm
-
-Use Telegram for fast interactive control and incident response.
-
-Use MCP for structured agent operations, discovery and future autonomous workflows.
-
-Use GitHub as the source for code and review.
-
-Use Railway as the production runtime and deployment authority.
-
-Use the Control Plane/read models as the cross-system observability layer.
-
-The intended long-term loop is:
-
-```
-Human / AI Agent
-      ↓
-MCP / Telegram
-      ↓
-Control Plane
-      ↓
-Authority
-      ↓
-Canonical service
-      ↓
-Audit + Read Model
-      ↓
-Next action
-```
+The presence of `slh_mcp/` in the `web` deployment does not prove that a standalone `slh-mcp` HTTPS endpoint exists. A dedicated Railway service must be verified separately before external MCP connectivity is declared live.
