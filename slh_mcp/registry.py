@@ -49,6 +49,7 @@ def register_capabilities(server):
     from slh_mcp.resources import (
         _tool_system_health,
         _tool_bots_registry,
+        _tool_system_snapshot,
     )
     handlers["system.health"] = _tool_system_health
     handlers["bots.registry"] = _tool_bots_registry
