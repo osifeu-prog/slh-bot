@@ -46,7 +46,7 @@ class MCPAuthTests(unittest.TestCase):
             (),
         )
         self.assertIsNotNone(principal)
-        self.assertEqual(principal.subject, str(OWNER_TELEGRAM_ID))
+        self.assertEqual(principal.subject, "slh-mcp")
 
     def test_owner_authorization_uses_canonical_authority(self):
         from slh_mcp.auth import Principal, authorize
@@ -95,7 +95,7 @@ class MCPAuthTests(unittest.TestCase):
         from slh_mcp.server import build_mcp_app
 
         os.environ["SLH_MCP_BEARER_TOKEN"] = "expected"
-        os.environ["SLH_MCP_PRINCIPAL_ID"] = str(OWNER_TELEGRAM_ID)
+        os.environ["SLH_MCP_SERVICE_PRINCIPAL_ID"] = "slh-mcp"
 
         with TestClient(build_mcp_app()) as client:
             response = client.post("/mcp", headers={"Host": "localhost"})
