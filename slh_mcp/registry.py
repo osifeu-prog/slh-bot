@@ -11,6 +11,12 @@ from slh_mcp.tools.agents import (
     _tool_agents_runtime_status,
 )
 from slh_mcp.tools.missions import _tool_missions_list
+from slh_mcp.tools.economy import (
+    _tool_economy_agent_balance,
+    _tool_economy_agent_ledger,
+    _tool_economy_propose_transfer,
+    _tool_economy_commit_transfer,
+)
 
 
 def register_capabilities(server):
@@ -20,6 +26,10 @@ def register_capabilities(server):
         "agents.runtime_status": _tool_agents_runtime_status,
         "agents.execute": _tool_agents_execute,
         "missions.list": _tool_missions_list,
+        "economy.agent_balance": _tool_economy_agent_balance,
+        "economy.agent_ledger": _tool_economy_agent_ledger,
+        "economy.propose_transfer": _tool_economy_propose_transfer,
+        "economy.commit_transfer": _tool_economy_commit_transfer,
     }
 
     from slh_mcp.resources import (
