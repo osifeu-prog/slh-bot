@@ -1,12 +1,10 @@
-"""MCP tools for isolated agent economy."""
+"""MCP tools for isolated Agent Economy state."""
 
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
-from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents
-
+from slh_mcp import control_plane_client
 from slh_mcp.agent_economy import AgentEconomyService
 
 _SERVICE = AgentEconomyService()
@@ -16,6 +14,7 @@ def _principal(principal=None):
     if principal is not None:
         return principal
     from slh_mcp.auth import current_principal
+
     value = current_principal()
     if value is None:
         raise PermissionError("MCP authentication required")
@@ -33,11 +32,8 @@ def _positive_amount(value) -> float:
 
 
 def _owned(principal, agent_id: str) -> bool:
-    visible = get_visible_agents(principal.subject, list_agents())
-    canonical_id, record = get_agent(agent_id)
-    if record is None or canonical_id not in visible:
-        return False
-    return str(principal.role) == "OWNER" or str(record.get("owner_id")) == str(principal.subject)
+    result = control_plane_client.agent(str(agent_id), principal.subject)
+    return isinstance(result.get("agent"), dict) and bool(result.get("agent"))
 
 
 def economy_agent_balance(principal, agent_id: str) -> dict:
@@ -58,7 +54,10 @@ def economy_agent_ledger(principal, agent_id: str, limit: int = 100) -> list[dic
     limit = int(limit)
     if limit < 1 or limit > 500:
         raise ValueError("INVALID_LIMIT")
-    rows = [row for row in _SERVICE.ledger() if row.get("account") == str(agent_id)]
+    rows = [
+        row for row in _SERVICE.ledger()
+        if row.get("account") == str(agent_id)
+    ]
     return rows[-limit:]
 
 
@@ -75,10 +74,12 @@ def economy_propose_transfer(
     target_agent = str(target_agent).strip()
     operation_id = str(operation_id).strip()
     reason = str(reason).strip()
+
     if not source_agent or not target_agent or not operation_id or not reason:
         raise ValueError("INVALID_TRANSFER_INPUT")
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
+
     return _SERVICE.propose_transfer(
         source_agent=source_agent,
         target_agent=target_agent,
@@ -102,10 +103,12 @@ def economy_commit_transfer(
     target_agent = str(target_agent).strip()
     operation_id = str(operation_id).strip()
     reason = str(reason).strip()
+
     if not source_agent or not target_agent or not operation_id or not reason:
         raise ValueError("INVALID_TRANSFER_INPUT")
     if not _owned(principal, source_agent):
         raise PermissionError("SOURCE_AGENT_NOT_OWNED")
+
     return _SERVICE.transfer(
         source_agent=source_agent,
         target_agent=target_agent,
