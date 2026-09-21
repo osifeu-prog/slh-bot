@@ -142,15 +142,13 @@ def latest_github_commit(repo="osifeu-prog/slh-bot", branch="main"):
 
 
 def canonical_up(commit_sha=None):
-    project_id = "fd30fefb-3d35-48a5-a7cb-e05337e8124c"
-    service_id = "13d97581-0199-4f6a-80d1-885c9304ffc5"
-    environment_id = "661caa13-83cb-4197-8825-943bebf96c5a"
-    sha = str(commit_sha or "").strip() or latest_github_commit()
-    deployment = deploy(service_id, environment_id, sha)
-    return {
-        "project": "endearing-amazement",
-        "service": "web",
-        "environment": "production",
-        "commit": sha,
-        "deployment_id": deployment.get("id"),
-    }
+    """Fail closed until a registered Railway runtime is explicitly selected."""
+    raise RailwayControlError(
+        "Canonical deploy target is not selected. Use the runtime registry "
+        "(wallet-bot, api, website, ai-bot) before deploying."
+    )
+
+
+def runtime_registry():
+    from core.runtime_registry import list_runtimes
+    return list_runtimes()
