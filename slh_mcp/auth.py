@@ -60,7 +60,7 @@ def principal_from_headers(headers: Mapping[str, str]) -> Principal | None:
     return Principal.from_headers(
         headers=headers,
         expected=os.getenv("SLH_MCP_BEARER_TOKEN"),
-        subject=os.getenv("SLH_MCP_PRINCIPAL_ID", ""),
+        subject=os.getenv("SLH_MCP_SERVICE_PRINCIPAL_ID", "slh-mcp"),
     )
 
 
