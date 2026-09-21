@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import os
 import unittest
 from unittest.mock import patch
@@ -25,9 +27,16 @@ class MCPBridgeTests(unittest.TestCase):
         return webapp.app.test_client()
 
     def _headers(self):
+        principal = str(OWNER_TELEGRAM_ID)
+        signature = hmac.new(
+            b"expected",
+            principal.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
         return {
             "X-SLH-MCP-Key": "expected",
-            "X-SLH-MCP-Principal": str(OWNER_TELEGRAM_ID),
+            "X-SLH-MCP-Principal": principal,
+            "X-SLH-MCP-Signature": signature,
         }
 
     def test_bridge_requires_secret(self):
@@ -41,13 +50,23 @@ class MCPBridgeTests(unittest.TestCase):
 
     def test_bridge_rejects_wrong_secret(self):
         os.environ["SLH_MCP_BRIDGE_TOKEN"] = "expected"
+        headers = self._headers()
+        headers["X-SLH-MCP-Key"] = "wrong"
         with self._client() as client:
             response = client.get(
                 "/api/internal/mcp/agents",
-                headers={
-                    "X-SLH-MCP-Key": "wrong",
-                    "X-SLH-MCP-Principal": str(OWNER_TELEGRAM_ID),
-                },
+                headers=headers,
+            )
+        self.assertEqual(response.status_code, 403)
+
+    def test_bridge_rejects_wrong_principal_signature(self):
+        os.environ["SLH_MCP_BRIDGE_TOKEN"] = "expected"
+        headers = self._headers()
+        headers["X-SLH-MCP-Signature"] = "0" * 64
+        with self._client() as client:
+            response = client.get(
+                "/api/internal/mcp/agents",
+                headers=headers,
             )
         self.assertEqual(response.status_code, 403)
 
