@@ -90,6 +90,52 @@ class MissionRewardTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["reward"], 10.0)
 
+    def test_already_executed_mission_can_retry_pending_reward(self):
+        from slh_mcp.tools.missions import complete_agent_mission
+
+        mission = self._mission()
+        mission["status"] = "executed"
+        verified_result = {
+            "execution_status": "success",
+            "verified": True,
+            "evidence": {"proof": "ok"},
+            "mission_id": "m1",
+            "action_type": "test",
+            "idempotency_key": "mission-op-1",
+        }
+        with patch(
+            "slh_mcp.tools.missions.MissionLifecycleService"
+        ) as lifecycle_cls, patch(
+            "slh_mcp.tools.missions._SERVICE"
+        ) as economy, patch(
+            "slh_mcp.tools.missions.list_agents",
+            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
+        ), patch(
+            "slh_mcp.tools.missions.get_visible_agents",
+            return_value={"1": {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}},
+        ), patch(
+            "slh_mcp.tools.missions.get_agent",
+            return_value=("1", {"id": "1", "owner_id": str(OWNER_TELEGRAM_ID)}),
+        ):
+            lifecycle = lifecycle_cls.return_value
+            lifecycle.load_state.return_value = ({"missions": [mission]}, {})
+            lifecycle.find_mission.return_value = mission
+            economy.record_reward.side_effect = [
+                ValueError("INSUFFICIENT_AGENT_ECONOMY"),
+                {"status": "completed", "operation_id": "reward-m1", "amount": 10},
+            ]
+
+            first = complete_agent_mission(
+                self.owner, "m1", "1", verified_result, "reward-m1"
+            )
+            second = complete_agent_mission(
+                self.owner, "m1", "1", verified_result, "reward-m1"
+            )
+
+        self.assertEqual(first["status"], "reward_pending")
+        self.assertEqual(second["status"], "completed")
+        self.assertEqual(economy.record_reward.call_count, 2)
+
     def test_reward_failure_returns_pending_without_user_ledger(self):
         from slh_mcp.tools.missions import complete_agent_mission
 
