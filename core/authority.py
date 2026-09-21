@@ -29,6 +29,7 @@ def _csv_ids(name):
 # day-to-day developer grants are persisted on the user profile and can be
 # managed by the OWNER through handlers/dev_admin.py.
 DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
+MCP_SERVICE_PRINCIPAL_ID = str(os.getenv("SLH_MCP_SERVICE_PRINCIPAL_ID", "slh-mcp")).strip()
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
@@ -51,7 +52,17 @@ ROLES = {
         "economy.view_self",
         "economy.mutate_self",
         "agents.modify_self",
-        "public.view",],
+        "public.view",
+    ],
+    "MCP_SERVICE": [
+        "public.view",
+        "agents.view_all",
+        "agents.manage",
+        "agents.modify_self",
+        "exec.audit",
+        "economy.view_self",
+        "economy.mutate_self",
+    ],
     "USER": [
         "public.view",
         "agents.view_self",
@@ -87,6 +98,9 @@ def get_role(uid) -> str:
 
     if uid == OWNER_ID:
         return "OWNER"
+
+    if MCP_SERVICE_PRINCIPAL_ID and uid == MCP_SERVICE_PRINCIPAL_ID:
+        return "MCP_SERVICE"
 
     # Explicit developer grants take precedence over legacy admin/partner
     # memberships. This lets a person such as Zvika retain alpha distribution
@@ -161,7 +175,7 @@ def get_visible_agents(uid, agents: dict) -> dict:
                 }
             continue
 
-        if role in ("ADMIN", "DEVELOPER"):
+        if role in ("ADMIN", "DEVELOPER", "MCP_SERVICE"):
             if agent.get("agent_type") == "system" or owner == uid:
                 visible[aid] = {
                     k: v for k, v in agent.items()
