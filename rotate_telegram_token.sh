@@ -25,39 +25,7 @@ if [[ -z "$ALIAS" ]]; then
   exit 3
 fi
 
-TARGETS="$(
-  python3 - "$REGISTRY" "$ALIAS" <<'PY'
-import importlib.util
-import sys
-
-registry_path, alias = sys.argv[1], sys.argv[2]
-spec = importlib.util.spec_from_file_location("slh_token_registry", registry_path)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-
-try:
-    bot = module.get_bot(alias)
-except KeyError:
-    print(f"ERROR: unknown bot alias: {alias}", file=sys.stderr)
-    raise SystemExit(4)
-
-print(bot["username"])
-for target in bot["targets"]:
-    print(
-        "\t".join(
-            [
-                target["project_id"],
-                target["environment_id"],
-                target["service_id"],
-                target["variable"],
-                target["project"],
-                target["service"],
-            ]
-        )
-    )
-PY
-)
-
+TARGETS="$(python3 -c 'import sys; from importlib.util import spec_from_file_location,module_from_spec; spec=spec_from_file_location("slh_token_registry",sys.argv[1]); m=module_from_spec(spec); spec.loader.exec_module(m); b=m.get_bot(sys.argv[2]); print(b["username"]); [print("\t".join([t["project_id"],t["environment_id"],t["service_id"],t["variable"],t["project"],t["service"]])) for t in b["targets"]]' "$REGISTRY" "$ALIAS")"
 EXPECTED_USERNAME="$(printf "%s\n" "$TARGETS" | sed -n '1p')"
 TARGET_ROWS="$(printf "%s\n" "$TARGETS" | tail -n +2)"
 
@@ -68,59 +36,26 @@ fi
 
 echo "Target bot: @$EXPECTED_USERNAME"
 echo "Enter the new token. Input is hidden and is never stored in shell history."
-
 read -r -s -p "New Telegram token: " NEW_TOKEN
 echo
-if [[ -z "${NEW_TOKEN}" ]]; then
+if [[ -z "$NEW_TOKEN" ]]; then
   echo "ERROR: empty token; nothing changed."
   exit 6
 fi
 
 export NEW_TOKEN EXPECTED_USERNAME
 trap 'unset NEW_TOKEN EXPECTED_USERNAME' EXIT
-python3 <<'PY'
-import json
-import os
-import sys
-import urllib.request
 
-token = os.environ.get("NEW_TOKEN", "")
-expected = os.environ.get("EXPECTED_USERNAME", "").lstrip("@")
+python3 -c 'import json,os,sys,urllib.request; token=os.environ["NEW_TOKEN"]; expected=os.environ["EXPECTED_USERNAME"].lstrip("@"); r=urllib.request.urlopen("https://api.telegram.org/bot"+token+"/getMe",timeout=10); d=json.load(r); actual=str((d.get("result") or {}).get("username") or "").lstrip("@"); (sys.exit(7) if not d.get("ok") else None); (print("ERROR: token belongs to a different bot; nothing changed.") or print("Expected: @"+expected) or print("Received: @"+(actual or "unknown")) or sys.exit(8)) if actual != expected else print("Telegram validation: OK (@"+actual+")")'
 
-try:
-    with urllib.request.urlopen(
-        "https://api.telegram.org/bot" + token + "/getMe",
-        timeout=10,
-    ) as response:
-        data = json.load(response)
-except Exception as exc:
-    print("ERROR: Telegram validation failed; nothing changed.")
-    print(type(exc).__name__)
-    sys.exit(7)
-
-if not data.get("ok"):
-    print("ERROR: Telegram rejected token; nothing changed.")
-    sys.exit(7)
-
-actual = str((data.get("result") or {}).get("username") or "").lstrip("@")
-if actual != expected:
-    print("ERROR: token belongs to a different bot; nothing changed.")
-    print(f"Expected: @{expected}")
-    print(f"Received: @{actual or 'unknown'}")
-    sys.exit(8)
-
-print(f"Telegram validation: OK (@{actual})")
-PY
 while IFS=$'\t' read -r PROJECT_ID ENVIRONMENT_ID SERVICE_ID VARIABLE PROJECT SERVICE; do
   [[ -z "$PROJECT_ID" ]] && continue
-
   echo "Updating $PROJECT/$SERVICE -> $VARIABLE"
-  printf '%s' "$NEW_TOKEN" | railway variable set "$VARIABLE" --stdin \
+  printf "%s" "$NEW_TOKEN" | railway variable set "$VARIABLE" --stdin \
     --project "$PROJECT_ID" \
     --service "$SERVICE_ID" \
     --environment "$ENVIRONMENT_ID" \
     --skip-deploys
-
   echo "Redeploying $PROJECT/$SERVICE"
   railway redeploy \
     --project "$PROJECT_ID" \
