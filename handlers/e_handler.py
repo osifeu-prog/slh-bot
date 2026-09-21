@@ -1,5 +1,15 @@
 from core.exec_policy import is_admin, run_audit, run_gated
 from core.authority import is_owner
+import shlex
+
+
+def normalize_python_command(cmd):
+    """Wrap simple Python snippets so /e can execute them without manual python3 -c."""
+    stripped = cmd.strip()
+    if stripped.startswith("import ") or stripped.startswith("from "):
+        return "python3 -c " + shlex.quote(stripped)
+    return cmd
+
 
 
 def register(bot):
@@ -156,7 +166,7 @@ def register(bot):
                 return
 
         if is_owner(uid):
-            ok, out = run_gated(uid, cmd, source="e", timeout=15)
+            ok, out = run_gated(uid, normalize_python_command(cmd), source="e", timeout=15)
         elif is_admin(uid):
             ok, out = run_audit(uid, cmd, source="e_admin_audit", timeout=15)
         else:
