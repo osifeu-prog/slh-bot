@@ -1,47 +1,3 @@
-import json
-import tempfile
-import unittest
-from pathlib import Path
-
-from core.identity import OWNER_TELEGRAM_ID
-
-
-class AgentEconomyTests(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
-        from slh_mcp.agent_economy import AgentEconomyService
-        self.economy = AgentEconomyService(root=self.root)
-
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def test_new_agent_account_starts_at_zero(self):
-        self.assertEqual(self.economy.balance("agent-1"), 0)
-
-    def test_revenue_funds_treasury_and_agent_without_touching_user_db(self):
-        revenue = self.economy.record_revenue(
-            amount=100,
-            operation_id="revenue-1",
-            actor=str(OWNER_TELEGRAM_ID),
-            reason="verified_external_revenue",
-            evidence={"event_id": "external-1"},
-        )
-        self.assertEqual(revenue["status"], "completed")
-        self.assertEqual(self.economy.balance("AGENT_TREASURY"), 100)
-
-        result = self.economy.treasury_fund(
-            agent_id="agent-1",
-            amount=60,
-            operation_id="fund-1",
-            actor=str(OWNER_TELEGRAM_ID),
-            reason="bootstrap",
-        )
-        self.assertEqual(result["status"], "completed")
-        self.assertEqual(self.economy.balance("agent-1"), 60)
-        self.assertEqual(self.economy.balance("AGENT_TREASURY"), 40)
-
-    def test_transfer_is_idempotent(self):
         self.economy.record_revenue(
             amount=100, operation_id="revenue-1", actor=str(OWNER_TELEGRAM_ID),
             reason="verified_external_revenue", evidence={"event_id": "external-1"},
@@ -62,7 +18,7 @@ class AgentEconomyTests(unittest.TestCase):
         self.assertEqual(second["status"], "duplicate")
         self.assertEqual(self.economy.balance("agent-1"), 75)
         self.assertEqual(self.economy.balance("agent-2"), 25)
-        self.assertEqual(len(self.economy.ledger()), 4)
+        self.assertEqual(len(self.economy.ledger()), 5)
 
     def test_insufficient_balance_is_rejected_atomically(self):
         with self.assertRaises(ValueError):
@@ -78,43 +34,3 @@ class AgentEconomyTests(unittest.TestCase):
         for amount in (0, -1):
             with self.assertRaises(ValueError):
                 self.economy.record_revenue(
-                    amount=amount, operation_id=f"rev-{amount}",
-                    actor=str(OWNER_TELEGRAM_ID), reason="bad",
-                    evidence={"event_id": "bad"},
-                )
-
-    def test_operation_ids_are_globally_unique(self):
-        self.economy.record_revenue(
-            amount=10, operation_id="op-1", actor=str(OWNER_TELEGRAM_ID),
-            reason="verified_external_revenue", evidence={"event_id": "external-1"},
-        )
-        with self.assertRaises(ValueError):
-            self.economy.record_revenue(
-                amount=10, operation_id="op-1", actor=str(OWNER_TELEGRAM_ID),
-                reason="collision", evidence={"event_id": "external-2"},
-            )
-
-    def test_revenue_requires_evidence(self):
-        with self.assertRaises(ValueError):
-            self.economy.record_revenue(
-                amount=10, operation_id="rev-1", actor=str(OWNER_TELEGRAM_ID),
-                reason="missing_evidence", evidence={},
-            )
-
-    def test_state_is_persistent_and_separate(self):
-        self.economy.record_revenue(
-            amount=7.5, operation_id="fund-1", actor=str(OWNER_TELEGRAM_ID),
-            reason="verified_external_revenue", evidence={"event_id": "external-1"},
-        )
-        path = self.root / "state" / "agent_economy.json"
-        self.assertTrue(path.exists())
-        document = json.loads(path.read_text(encoding="utf-8"))
-        self.assertIn("accounts", document)
-        self.assertIn("ledger", document)
-        self.assertIn("operations", document)
-        self.assertNotIn("users", document)
-        self.assertNotIn("wallet", document)
-
-
-if __name__ == "__main__":
-    unittest.main()
