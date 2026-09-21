@@ -42,7 +42,7 @@ def complete_agent_mission(
     principal,
     mission_id: str,
     agent_id: str,
-    result: dict,
+    result: dict | None,
     operation_id: str,
 ) -> dict:
     principal = _resolve_principal(principal)
@@ -51,8 +51,8 @@ def complete_agent_mission(
     operation_id = str(operation_id).strip()
     if not mission_id or not agent_id or not operation_id:
         raise ValueError("INVALID_MISSION_COMPLETION_INPUT")
-    if not isinstance(result, dict) or not result:
-        raise ValueError("MISSION_RESULT_REQUIRED")
+    if result is not None and not isinstance(result, dict):
+        raise ValueError("MISSION_RESULT_INVALID")
 
     visible = get_visible_agents(principal.subject, list_agents())
     canonical_id, agent = get_agent(agent_id)
@@ -128,7 +128,7 @@ def _tool_missions_list():
 def _tool_complete_agent_mission(
     mission_id: str,
     agent_id: str,
-    result: dict,
+    result: dict | None,
     operation_id: str,
 ):
     return complete_agent_mission(None, mission_id, agent_id, result, operation_id)
