@@ -40,9 +40,9 @@ class MCPBridgeTests(unittest.TestCase):
             result = control_plane_client.agents()
 
         self.assertEqual(result, {"agents": []})
-        request = factory.call_args[0]
-        self.assertEqual(request[0], "https://control.invalid/internal/mcp/v1/agents")
-        self.assertEqual(request[2]["Authorization"], "Bearer bridge-test")
+        request = factory.call_args
+        self.assertEqual(request.args[0], "https://control.invalid/internal/mcp/v1/agents")
+        self.assertEqual(request.kwargs["headers"]["Authorization"], "Bearer bridge-test")
 
 
 if __name__ == "__main__":
