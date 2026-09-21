@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "verified_date_utc": "2026-09-19",
+  "verified_date_utc": "2026-09-21",
   "purpose": "Canonical Control Plane inventory snapshot for SLH and connected external projects.",
   "canonical": {
     "repo": "osifeu-prog/slh-bot",
@@ -24,7 +24,14 @@
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
           "status": "SUCCESS",
-          "class": "primary"
+          "class": "primary",
+          "runtime_policy": {
+            "start_command": "bash start_railway.sh",
+            "restart_policy": "ALWAYS",
+            "replicas": 1,
+            "healthcheck": "/health",
+            "volume": "/app/state"
+          }
         }
       ]
     },
@@ -32,7 +39,7 @@
       "name": "slh-cloud-bot",
       "id": "b33cb8d5-e82c-4a74-b94b-b52eb8c3d3db",
       "environment_id": "e82af387-87bb-40c9-b250-2e8a0b7fb41a",
-      "role": "duplicate_runtime_candidate",
+      "role": "secondary_non_polling_runtime",
       "services": [
         {
           "name": "slh-cloud-bot",
@@ -40,7 +47,12 @@
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
           "status": "SUCCESS",
-          "class": "duplicate_candidate"
+          "class": "secondary_non_polling",
+          "runtime_policy": {
+            "RUN_BOT": "0",
+            "restart_policy": "NEVER",
+            "replicas": 1
+          }
         }
       ]
     },
@@ -214,7 +226,8 @@
           "repo": "osifeu-prog/slh-claude-bot",
           "branch": "main",
           "status": "CRASHED",
-          "class": "external_bot"
+          "class": "legacy_crashed_bot",
+          "runtime_note": "TelegramUnauthorizedError observed; do not revive blindly. Website AI is routed to canonical SLH OS."
         },
         {
           "name": "monitor.slh",
@@ -230,7 +243,8 @@
           "repo": "osifeu-prog/SLH.co.il",
           "branch": "main",
           "status": "SUCCESS",
-          "class": "public_site"
+          "class": "public_site",
+          "integration_note": "Live site; canonical website AI routes to SLH OS. Legacy slh-api remains in use by some legacy web paths."
         },
         {
           "name": "slh-fastapi",
@@ -364,9 +378,13 @@
     }
   ],
   "notes": [
-    "Statuses are latest Railway deployment statuses observed on 2026-09-19; they are not a live heartbeat.",
-    "Infrastructure services are tracked for ownership/visibility but are not treated as bots.",
-    "The two deployments sourced from osifeu-prog/slh-bot are both tracked; no automatic shutdown is performed.",
-    "Unmapped GitHub repositories have no matching Railway service in this snapshot; that does not prove they are not deployed elsewhere."
-  ]
+    "Railway statuses above were reconciled live on 2026-09-21 via project environment/service status APIs; they are point-in-time deployment states, not continuous process heartbeats.",
+    "Canonical production is endearing-amazement/web on osifeu-prog/slh-bot main. It is the only configured production polling gateway; start_railway.sh owns polling and the service is configured with one replica.",
+    "slh-cloud-bot also sources osifeu-prog/slh-bot main, but its live service configuration has RUN_BOT=0 and restart policy NEVER; it is retained as a non-polling secondary runtime and must not be enabled automatically.",
+    "Legacy/external stacks are tracked for ownership and migration visibility. No automatic shutdown or deletion was performed during reconciliation.",
+    "slh-AI-bot is CRASHED and has a TelegramUnauthorizedError in its known deployment; do not revive blindly. The public SLH.co.il site currently routes its AI assistant to the canonical SLH OS API.",
+    "slh-api remains live and is retained because legacy site/API paths still depend on it.",
+    "Unmapped GitHub repositories have no matching Railway service in this workspace snapshot; that does not prove they are not deployed elsewhere."
+  ],
+  "verification_scope": "Live Railway project/service deployment status and service configuration reconciled on 2026-09-21; deployment status is current at verification time, not continuous runtime heartbeat."
 }
