@@ -37,3 +37,41 @@ def mqtt_status(principal=None) -> dict:
 
 def _tool_mqtt_status():
     return mqtt_status()
+
+def mqtt_probe(principal=None) -> dict:
+    _principal(principal)
+    client = create_probe_client()
+    try:
+        rc = client.connect(BROKER, PORT, keepalive=10)
+        return {
+            "reachable": rc == 0,
+            "connect_rc": int(rc),
+            "broker": BROKER,
+            "port": PORT,
+            "tls": USE_TLS,
+        }
+    except Exception as exc:
+        return {
+            "reachable": False,
+            "broker": BROKER,
+            "port": PORT,
+            "tls": USE_TLS,
+            "error": type(exc).__name__,
+        }
+    finally:
+        try:
+            client.disconnect()
+        except Exception:
+            pass
+
+
+def create_probe_client():
+    import paho.mqtt.client as mqtt
+    from core.mqtt_config import apply
+    client = mqtt.Client(client_id="slh-mcp-probe")
+    apply(client)
+    return client
+
+
+def _tool_mqtt_probe():
+    return mqtt_probe()
