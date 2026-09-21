@@ -5,7 +5,8 @@ from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
-from starlette.routing import Mount, Route, Middleware
+from starlette.middleware import Middleware
+from starlette.routing import Mount, Route
 
 from slh_mcp.registry import register_capabilities
 
