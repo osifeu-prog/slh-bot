@@ -41,6 +41,27 @@ class VIPFulfillmentTests(unittest.TestCase):
             {"emoji_vip"},
         )
 
+    def test_vip_uses_unique_credit_idempotency_key(self):
+        from core.vip_fulfillment import apply_vip_benefits
+
+        with patch("core.vip_fulfillment.apply_grant", return_value={"ok": True}),              patch(
+                 "core.vip_fulfillment.economy_service.record_transaction",
+                 return_value=300,
+             ) as credit, patch(
+                 "core.vip_fulfillment._mark_bundle_status"
+             ):
+            result = apply_vip_benefits(
+                uid="1",
+                charge_id="charge-credits-1",
+                launch_offer_qualified=True,
+            )
+
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(
+            credit.call_args.kwargs["meta"]["idempotency_key"],
+            "vip:charge-credits-1:credits",
+        )
+
     def test_non_launch_vip_does_not_receive_launch_bundle(self):
         from core.vip_fulfillment import apply_vip_benefits
 
