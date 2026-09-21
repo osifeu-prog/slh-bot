@@ -1,4 +1,4 @@
-"""Safe read-only MCP resources and capability handlers."""
+"""Safe read-only MCP resources for SLH OS."""
 
 from __future__ import annotations
 
@@ -101,6 +101,7 @@ def register_resources(server) -> None:
         description="One visible SLH agent.",
     )(_resource_agent)
 
+
 def _tool_system_health():
     return system_health()
 
@@ -108,8 +109,9 @@ def _tool_system_health():
 def _tool_bots_registry():
     return bot_registry()
 
-def economy_resource(agent_id: str, principal=None):
-    principal = _principal_or_raise(principal)
+
+def economy_resource(agent_id: str):
+    principal = _principal_or_raise()
     from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
     return {
         "balance": economy_agent_balance(principal, agent_id),
@@ -117,8 +119,8 @@ def economy_resource(agent_id: str, principal=None):
     }
 
 
-def missions_resource(principal=None):
-    principal = _principal_or_raise(principal)
+def missions_resource():
+    principal = _principal_or_raise()
     from slh_mcp.tools.missions import missions_list
     return missions_list(principal)
 
@@ -135,14 +137,15 @@ def register_extended_resources(server) -> None:
         description="Safe canonical SLH mission projection.",
     )(missions_resource)
 
-def railway_resource(principal=None):
-    principal = _principal_or_raise(principal)
+
+def railway_resource():
+    principal = _principal_or_raise()
     from slh_mcp.tools.integrations import railway_projects
     return {"projects": railway_projects(principal)}
 
 
-def github_resource(principal=None):
-    principal = _principal_or_raise(principal)
+def github_resource():
+    principal = _principal_or_raise()
     from slh_mcp.tools.integrations import github_repositories
     return {"repositories": github_repositories(principal)}
 
