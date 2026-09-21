@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from slh_mcp.capabilities import list_capabilities
+from slh_mcp.capabilities import guarded_handler, list_capabilities
 from slh_mcp.resources import register_resources
 
 
@@ -11,7 +11,7 @@ def register_capabilities(server):
         if capability.handler is None:
             continue
         server.add_tool(
-            capability.handler,
+            guarded_handler(capability, capability.handler),
             name=capability.name,
             description=capability.description,
         )
