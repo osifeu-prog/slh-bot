@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from core.telegram_token_registry import list_bots
+from slh_mcp.capabilities import list_capabilities
 
 
 def _principal_or_raise(principal=None):
@@ -134,6 +135,19 @@ def github_resource(principal=None) -> dict:
     return {"repositories": github_repositories(principal)}
 
 
+def capabilities_resource(principal=None) -> list[dict]:
+    _principal_or_raise(principal)
+    return [
+        {
+            "name": capability.name,
+            "description": capability.description,
+            "permission": capability.permission,
+            "mutating": capability.mutating,
+        }
+        for capability in list_capabilities()
+    ]
+
+
 def bots_federation_resource(principal=None) -> list[dict]:
     principal = _principal_or_raise(principal)
     from slh_mcp.tools.bots import bots_federation
@@ -190,6 +204,12 @@ def register_resources(server) -> None:
             "github",
             "Safe GitHub repository metadata.",
             lambda: github_resource(),
+        ),
+        (
+            "slh://capabilities",
+            "capabilities",
+            "SLH MCP capability catalog.",
+            lambda: capabilities_resource(),
         ),
         (
             "slh://bots",
