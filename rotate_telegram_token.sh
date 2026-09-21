@@ -50,17 +50,21 @@ python3 -c 'import json,os,sys,urllib.request; token=os.environ["NEW_TOKEN"]; ex
 
 while IFS=$'\t' read -r PROJECT_ID ENVIRONMENT_ID SERVICE_ID VARIABLE PROJECT SERVICE; do
   [[ -z "$PROJECT_ID" ]] && continue
+  echo "Linking $PROJECT/$SERVICE"
+  railway link \
+    --project "$PROJECT_ID" \
+    --environment "$ENVIRONMENT_ID" \
+    --service "$SERVICE_ID" >/dev/null
+
   echo "Updating $PROJECT/$SERVICE -> $VARIABLE"
   printf "%s" "$NEW_TOKEN" | railway variable set "$VARIABLE" --stdin \
-    --project "$PROJECT_ID" \
     --service "$SERVICE_ID" \
     --environment "$ENVIRONMENT_ID" \
     --skip-deploys
+
   echo "Redeploying $PROJECT/$SERVICE"
   railway redeploy \
-    --project "$PROJECT_ID" \
     --service "$SERVICE_ID" \
-    --environment "$ENVIRONMENT_ID" \
     --yes
 done <<< "$TARGET_ROWS"
 
