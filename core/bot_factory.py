@@ -39,22 +39,16 @@ def status_bot(identifier):
         raise KeyError(f"Bot '{identifier}' not found")
 
     result = dict(bot)
-    if (
-        bot.get("railway_service_id")
-        and bot.get("railway_environment_id")
-    ):
-        try:
-            result["railway"] = railway_control.latest_deployment_status(
-                bot["railway_service_id"],
-                bot["railway_environment_id"],
-            )
-        except AttributeError:
-            result["railway"] = {"status": "unavailable"}
-        except Exception as exc:
-            result["railway"] = {
-                "status": "error",
-                "error": f"{type(exc).__name__}: {str(exc)[:200]}",
-            }
+    if bot.get("railway_service_id") and bot.get("railway_environment_id"):
+        # The registry stores an explicit Railway target binding. Live
+        # deployment state belongs to Railway's deployment API; do not call
+        # an optional/nonexistent helper and misreport a bot as unavailable.
+        result["railway"] = {
+            "status": "bound",
+            "service_id": bot["railway_service_id"],
+            "environment_id": bot["railway_environment_id"],
+        }
+
     return result
 
 
