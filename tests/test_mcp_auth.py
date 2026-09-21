@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest.mock import patch
 
 from core.identity import OWNER_TELEGRAM_ID
 
@@ -7,8 +8,13 @@ from core.identity import OWNER_TELEGRAM_ID
 class MCPAuthTests(unittest.TestCase):
     def setUp(self):
         self._env = {
-            "SLH_MCP_BEARER_TOKEN": os.environ.get("SLH_MCP_BEARER_TOKEN"),
-            "SLH_MCP_PRINCIPAL_ID": os.environ.get("SLH_MCP_PRINCIPAL_ID"),
+            key: os.environ.get(key)
+            for key in (
+                "SLH_MCP_BEARER_TOKEN",
+                "SLH_MCP_PRINCIPAL_ID",
+                "SLH_CONTROL_PLANE_URL",
+                "SLH_MCP_BRIDGE_TOKEN",
+            )
         }
 
     def tearDown(self):
@@ -20,9 +26,7 @@ class MCPAuthTests(unittest.TestCase):
 
     def test_missing_token_has_no_principal(self):
         from slh_mcp.auth import Principal
-        self.assertIsNone(
-            Principal.from_headers({}, "expected", "owner", None, ())
-        )
+        self.assertIsNone(Principal.from_headers({}, "expected", "owner", None, ()))
 
     def test_wrong_token_has_no_principal(self):
         from slh_mcp.auth import Principal
@@ -48,23 +52,28 @@ class MCPAuthTests(unittest.TestCase):
         self.assertIsNotNone(principal)
         self.assertEqual(principal.subject, str(OWNER_TELEGRAM_ID))
 
-    def test_owner_authorization_uses_canonical_authority(self):
+    def test_authorization_delegates_to_live_control_plane(self):
         from slh_mcp.auth import Principal, authorize
+
         principal = Principal(
             subject=str(OWNER_TELEGRAM_ID),
             role="OWNER",
             permissions=frozenset(),
         )
-        self.assertTrue(authorize(principal, "exec.audit"))
+        with patch("slh_mcp.control_plane_client.authorize", return_value=True) as remote:
+            self.assertTrue(authorize(principal, "exec.audit"))
+        remote.assert_called_once_with("exec.audit", str(OWNER_TELEGRAM_ID))
 
-    def test_unknown_principal_is_denied(self):
+    def test_unknown_principal_is_denied_when_bridge_denies(self):
         from slh_mcp.auth import Principal, authorize
+
         principal = Principal(
             subject="1",
             role="UNKNOWN",
             permissions=frozenset(),
         )
-        self.assertFalse(authorize(principal, "exec.audit"))
+        with patch("slh_mcp.control_plane_client.authorize", return_value=False):
+            self.assertFalse(authorize(principal, "exec.audit"))
 
     def test_redaction_masks_bearer(self):
         from slh_mcp.auth import redact
