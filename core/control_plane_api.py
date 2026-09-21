@@ -168,3 +168,16 @@ def economy_reward_control(principal_id: str, agent_id: str, amount, operation_i
         mission_id=mission_id,
         actor=principal_id,
     )
+
+def economic_events_control(principal_id: str, limit: int = 100, domain: str | None = None, account_id: str | None = None) -> list[dict]:
+    if not has_permission(principal_id, "exec.audit"):
+        raise PermissionError("ECONOMIC_LEDGER_FORBIDDEN")
+    from core.economic_read_model import EconomicReadModel
+    return EconomicReadModel().events(limit=limit, domain=domain, account_id=account_id)
+
+
+def economic_summary_control(principal_id: str) -> dict:
+    if not has_permission(principal_id, "exec.audit"):
+        raise PermissionError("ECONOMIC_LEDGER_FORBIDDEN")
+    from core.economic_read_model import EconomicReadModel
+    return EconomicReadModel().summary()
