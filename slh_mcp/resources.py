@@ -2,12 +2,7 @@
 
 from __future__ import annotations
 
-from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents
 from core.telegram_token_registry import list_bots
-
-
-_SENSITIVE_AGENT_FIELDS = {"inbox", "history", "permissions", "owner_id"}
 
 
 def _principal_or_raise(principal=None):
@@ -32,28 +27,16 @@ def system_health(principal=None) -> dict:
 
 def agents_resource(principal=None) -> list[dict]:
     principal = _principal_or_raise(principal)
-    visible = get_visible_agents(principal.subject, list_agents())
-    return [
-        {
-            key: value
-            for key, value in item.items()
-            if key not in _SENSITIVE_AGENT_FIELDS
-        }
-        for item in visible.values()
-    ]
+    from slh_mcp.tools.agents import agents_list
+
+    return agents_list(principal)
 
 
 def agent_resource(agent_id: str, principal=None) -> dict:
     principal = _principal_or_raise(principal)
-    visible = get_visible_agents(principal.subject, list_agents())
-    canonical_id, agent = get_agent(str(agent_id))
-    if agent is None or canonical_id not in visible:
-        raise KeyError(str(agent_id))
-    return {
-        key: value
-        for key, value in visible[canonical_id].items()
-        if key not in _SENSITIVE_AGENT_FIELDS
-    }
+    from slh_mcp.tools.agents import agents_get
+
+    return agents_get(principal, str(agent_id))
 
 
 def bot_registry(principal=None) -> list[dict]:
@@ -83,8 +66,11 @@ def bot_registry(principal=None) -> list[dict]:
 
 def system_snapshot(principal=None) -> dict:
     principal = _principal_or_raise(principal)
-    missions = missions_resource(principal)
-    agents = agents_resource(principal)
+    from slh_mcp.tools.agents import agents_list
+    from slh_mcp.tools.missions import missions_list
+
+    agents = agents_list(principal)
+    missions = missions_list(principal)
     return {
         "service": "SLH MCP",
         "status": "ok",
@@ -95,45 +81,35 @@ def system_snapshot(principal=None) -> dict:
 
 def agent_economy_resource(agent_id: str, principal=None) -> dict:
     principal = _principal_or_raise(principal)
-    from slh_mcp.agent_economy import AgentEconomyService
+    from slh_mcp.tools.economy import economy_agent_balance, economy_agent_ledger
 
-    visible = get_visible_agents(principal.subject, list_agents())
-    canonical_id, agent = get_agent(str(agent_id))
-    if agent is None or canonical_id not in visible:
-        raise KeyError(str(agent_id))
-
-    service = AgentEconomyService()
-    rows = [
-        row
-        for row in service.ledger()
-        if row.get("account") == canonical_id
-    ]
+    balance = economy_agent_balance(principal, agent_id)
+    ledger = economy_agent_ledger(principal, agent_id)
     return {
-        "agent_id": canonical_id,
-        "currency": "agent_credits",
-        "balance": service.balance(canonical_id),
-        "ledger_count": len(rows),
-        "recent_ledger": rows[-20:],
+        "agent_id": balance["agent_id"],
+        "currency": balance["currency"],
+        "balance": balance["balance"],
+        "ledger_count": len(ledger),
+        "recent_ledger": ledger[-20:],
     }
 
 
 def economy_resource(principal=None) -> dict:
     principal = _principal_or_raise(principal)
     from slh_mcp.agent_economy import AgentEconomyService
+    from slh_mcp.tools.agents import agents_list
 
     service = AgentEconomyService()
-    visible_agents = get_visible_agents(principal.subject, list_agents())
-    owned_ids = set(visible_agents)
-    agent_rows = [
-        row
-        for row in service.ledger()
-        if row.get("account") in owned_ids
+    owned_ids = {str(row.get("id")) for row in agents_list(principal)}
+    ledger = [
+        row for row in service.ledger()
+        if str(row.get("account")) in owned_ids
     ]
     return {
         "currency": "agent_credits",
         "treasury_balance": service.balance("AGENT_TREASURY"),
         "visible_agent_count": len(owned_ids),
-        "visible_ledger_count": len(agent_rows),
+        "visible_ledger_count": len(ledger),
     }
 
 
@@ -148,18 +124,14 @@ def railway_resource(principal=None) -> dict:
     principal = _principal_or_raise(principal)
     from slh_mcp.tools.integrations import railway_projects
 
-    return {
-        "projects": railway_projects(principal),
-    }
+    return {"projects": railway_projects(principal)}
 
 
 def github_resource(principal=None) -> dict:
     principal = _principal_or_raise(principal)
     from slh_mcp.tools.integrations import github_repositories
 
-    return {
-        "repositories": github_repositories(principal),
-    }
+    return {"repositories": github_repositories(principal)}
 
 
 def bots_federation_resource(principal=None) -> list[dict]:
