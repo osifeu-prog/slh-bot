@@ -134,3 +134,27 @@ def register_extended_resources(server) -> None:
         name="missions",
         description="Safe canonical SLH mission projection.",
     )(missions_resource)
+
+def railway_resource(principal=None):
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.integrations import railway_projects
+    return {"projects": railway_projects(principal)}
+
+
+def github_resource(principal=None):
+    principal = _principal_or_raise(principal)
+    from slh_mcp.tools.integrations import github_repositories
+    return {"repositories": github_repositories(principal)}
+
+
+def register_infrastructure_resources(server) -> None:
+    server.resource(
+        "slh://railway",
+        name="railway",
+        description="Safe Railway project metadata.",
+    )(railway_resource)
+    server.resource(
+        "slh://github",
+        name="github",
+        description="Safe GitHub repository metadata.",
+    )(github_resource)
