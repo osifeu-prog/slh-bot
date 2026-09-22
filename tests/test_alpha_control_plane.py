@@ -175,3 +175,21 @@ def test_revenue_reconcile_ignores_unproven_test_like_payment(monkeypatch):
 
     assert added == ["REAL_CHARGE"]
     assert [row["reference"] for row in recorded] == ["REAL_CHARGE"]
+
+
+def test_student_profile_blocks_legacy_env_developer_grant(monkeypatch):
+    from core import authority
+
+    uid = "7757102350"
+    monkeypatch.setattr(authority, "DEVELOPER_IDS", {uid})
+    monkeypatch.setattr(authority, "user_exists", lambda value: str(value) == uid)
+    monkeypatch.setattr(
+        authority,
+        "get_user",
+        lambda value: {
+            "role": "student",
+        } if str(value) == uid else {},
+    )
+
+    assert authority.get_role(uid) == "USER"
+    assert authority.has_permission(uid, "agents.view_all") is False
