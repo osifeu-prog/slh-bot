@@ -226,3 +226,10 @@ def test_vip_invoice_link_request_contains_stars_subscription(monkeypatch):
     assert "currency=XTR" in captured["body"]
     assert "subscription_period=2592000" in captured["body"]
     assert "vip_monthly_123" in captured["body"]
+
+
+def test_referral_vip_offer_is_open_during_launch_window(monkeypatch):
+    from core import referral_reward
+
+    assert referral_reward.offer_open(1790000000) is True
+    assert referral_reward.offer_open(1793483999) is False
