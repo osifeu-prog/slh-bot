@@ -6,10 +6,25 @@ def register(bot):
     @bot.message_handler(commands=["share", "refer", "invite"])
     def share_cmd(msg):
         uid = str(msg.from_user.id)
+
+        try:
+            from core.holiday_campaign import record_entry
+            record_entry(uid, source="share_command")
+        except Exception as e:
+            print("HOLIDAY CAMPAIGN SHARE ENTRY FAILED:", e)
+
         db = state_manager.load_db()
         users = db.get("users", {})
         u = users.get(uid, {})
-        bot_username = "Me_ad_main_bot"
+
+        try:
+            bot_username = getattr(bot.get_me(), "username", None)
+        except Exception:
+            bot_username = None
+        if not bot_username:
+            bot_username = "Me_ad_main_bot"
+        bot_username = str(bot_username).lstrip("@").strip()
+
         link = f"https://t.me/{bot_username}?start=ref_{uid}"
 
         ref = u.get("referral", {}) if isinstance(u.get("referral"), dict) else {}
