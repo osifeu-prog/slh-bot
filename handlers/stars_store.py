@@ -1,7 +1,7 @@
 """Stars checkout for the SLH store."""
 from telebot.types import LabeledPrice
 from store.engine import load_items, resolve_item_id
-from store.stars_purchase_service import get_stars_items, get_stars_price
+from store.stars_purchase_service import get_stars_items, get_stars_price\nfrom core.stars_price_authority import TELEGRAM_STARS_CURRENCY
 
 
 def register(bot):
@@ -32,7 +32,7 @@ def register(bot):
                 description="SLH Store - " + name,
                 invoice_payload="item_" + item_id + "_" + str(m.from_user.id),
                 provider_token="",
-                currency="XTR",
+                currency=TELEGRAM_STARS_CURRENCY,
                 prices=[LabeledPrice(label=name, amount=stars)],
                 start_parameter="item",
                 is_flexible=False,
