@@ -1,4 +1,8 @@
+import json
 import os
+import urllib.parse
+import urllib.request
+
 import state_manager
 from core import stars_payment_authority
 from core.stars_price_authority import (
@@ -23,47 +27,45 @@ def _resolve_stars_package(credits, stars_paid):
     return package.pack_id, package.stars, package.credits, package.label
 
 
-def _send_vip_invoice(bot, chat_id, uid):
-    """Send a recurring Stars invoice, with a 4.26.x compatibility fallback."""
-    kwargs = {
-        "chat_id": chat_id,
+def _create_vip_invoice_link(bot, uid):
+    """Create a recurring Telegram Stars invoice through the raw Bot API."""
+    token = getattr(bot, "token", None) or getattr(bot, "TOKEN", None)
+    if not token:
+        raise RuntimeError("BOT_TOKEN_UNAVAILABLE")
+
+    params = {
         "title": "SLH VIP",
         "description": "SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
-        "invoice_payload": f"vip_monthly_{uid}",
-        "provider_token": "",
+        "payload": f"vip_monthly_{uid}",
         "currency": TELEGRAM_STARS_CURRENCY,
-        "prices": [LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)],
-        "start_parameter": "slh-vip-monthly",
-        "subscription_period": VIP_SUBSCRIPTION_PERIOD,
-        "need_name": False,
-        "need_phone_number": False,
-        "need_email": False,
-        "is_flexible": False,
+        "prices": json.dumps(
+            [{"label": "SLH VIP Monthly", "amount": VIP_MONTHLY_STARS}],
+            separators=(",", ":"),
+        ),
+        "subscription_period": str(VIP_SUBSCRIPTION_PERIOD),
     }
-    try:
-        bot.send_invoice(**kwargs)
-        return "invoice"
-    except TypeError as exc:
-        if "subscription_period" not in str(exc) or not hasattr(bot, "create_invoice_link"):
-            raise
-        # pyTelegramBotAPI 4.26.x exposes subscription_period on
-        # create_invoice_link even though sync send_invoice lacks it.
-        link_kwargs = {
-            key: value
-            for key, value in kwargs.items()
-            if key not in {"chat_id", "subscription_period", "need_name", "need_phone_number",
-                           "need_email", "is_flexible"}
-        }
-        link_kwargs["subscription_period"] = VIP_SUBSCRIPTION_PERIOD
-        link = bot.create_invoice_link(**link_kwargs)
-        markup = InlineKeyboardMarkup(row_width=1)
-        markup.add(InlineKeyboardButton(text="⭐ פתיחת מנוי VIP", url=link))
-        bot.send_message(
-            chat_id,
-            "⭐ מנוי VIP מוכן לתשלום דרך Telegram Stars:",
-            reply_markup=markup,
-        )
-        return "invoice_link"
+    encoded = urllib.parse.urlencode(params).encode("utf-8")
+    url = f"https://api.telegram.org/bot{token}/createInvoiceLink"
+    req = urllib.request.Request(url, data=encoded, method="POST")
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        result = json.loads(resp.read().decode("utf-8"))
+
+    if not result.get("ok") or not result.get("result"):
+        raise RuntimeError(str(result.get("description") or "TELEGRAM_INVOICE_LINK_FAILED"))
+    return str(result["result"])
+
+
+def _send_vip_invoice(bot, chat_id, uid):
+    """Open a recurring Stars subscription using Telegram's invoice-link API."""
+    link = _create_vip_invoice_link(bot, uid)
+    markup = InlineKeyboardMarkup(row_width=1)
+    markup.add(InlineKeyboardButton(text="⭐ פתיחת מנוי VIP — 499 Stars", url=link))
+    bot.send_message(
+        chat_id,
+        "⭐ מנוי VIP מוכן לתשלום דרך Telegram Stars.",
+        reply_markup=markup,
+    )
+    return "invoice_link"
 
 
 def _send_pay_menu(bot, chat_id, uid):
