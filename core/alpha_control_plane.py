@@ -271,8 +271,13 @@ def format_report(result):
     lines = ["ALPHA CONTROL PLANE", "────────────────────"]
     for check in result["checks"]:
         lines.append(f"{check['name']:<28} {check['status']}")
-    lines += ["────────────────────", f"BLOCKERS: {len(result['blockers'])}",
-              f"STATUS: {result['status']}"]
+    lines += [
+        "────────────────────",
+        f"ALPHA BLOCKERS: {len(result['blockers'])}",
+        f"ALPHA STATUS: {result['status']}",
+        f"SYSTEM STATUS: {result.get('system_status', 'READY')}",
+        f"SYSTEM WARNINGS: {len(result.get('system_blockers', []))}",
+    ]
     return "\n".join(lines)
 
 
