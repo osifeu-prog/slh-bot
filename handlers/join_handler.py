@@ -200,6 +200,13 @@ def register(bot):
                             idempotency_key=f"ref:{uid}"
                         )
                         try:
+                            from core.referral_reward import maybe_award
+                            vip_award = maybe_award(str(ref_uid))
+                            if vip_award:
+                                print(f"REFERRAL VIP AWARD: {vip_award}")
+                        except Exception as e:
+                            print("REFERRAL VIP AWARD FAILED:", e)
+                        try:
                             from core.holiday_campaign import settle
                             settlement = settle(str(ref_uid))
                             print(
