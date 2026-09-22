@@ -1,31 +1,39 @@
+"""Admin revenue reporting from the canonical external-payment ledger.
+
+Internal Credit spending and test/fake payment records are intentionally excluded.
+"""
+
 import json
 from pathlib import Path
 
+from core.revenue_ledger import summary as revenue_summary
 
-def _real_stars_transactions(db):
-    """Return transactions backed by canonical real Telegram Stars ledger entries."""
-    transactions = db.get("transactions", [])
-    ledger = db.get("ledger", [])
-    real_charge_ids = set()
 
-    for entry in ledger:
-        if entry.get("reason") != "payment:telegram_stars":
-            continue
-        meta = entry.get("meta") or {}
-        if meta.get("source") != "telegram_successful_payment":
-            continue
-        if meta.get("currency") != "XTR":
-            continue
-        charge_id = str(meta.get("charge_id") or "").strip()
-        if charge_id:
-            real_charge_ids.add(charge_id)
+def _canonical_xtr_rows(db):
+    rows = db.get("revenue_ledger", [])
+    if not isinstance(rows, list):
+        return []
+    return [
+        row for row in rows
+        if isinstance(row, dict)
+        and str(row.get("currency", "")) == "XTR"
+        and float(row.get("amount", 0) or 0) > 0
+        and str(row.get("reference", "")).strip()
+    ]
 
-    result = []
-    for tx in transactions:
-        charge_id = str(tx.get("telegram_payment_charge_id") or tx.get("charge_id") or "").strip()
-        if charge_id and charge_id in real_charge_ids:
-            result.append(tx)
-    return result
+
+def _label(row):
+    source = str(row.get("source", ""))
+    meta = row.get("meta") or {}
+    kind = str(meta.get("kind", ""))
+
+    if source == "telegram_stars_subscription" or kind == "vip_monthly":
+        return "VIP"
+    if source == "telegram_stars_item" or kind == "telegram_stars_item":
+        return f"Store:{meta.get('item_id', 'item')}"
+    if source == "telegram_stars":
+        return "Credits"
+    return source or "Other"
 
 
 def register(bot):
@@ -37,18 +45,49 @@ def register(bot):
             return
 
         db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
-        transactions = _real_stars_transactions(db)
-        total_stars = sum(t.get("stars_paid", 0) for t in transactions)
-        total_credits_sold = sum(t.get("credits", 0) for t in transactions)
-        paying_customers = len({str(t.get("uid")) for t in transactions if t.get("uid")})
-        commissions = db.get("commissions", {})
-        total_commission = sum(commissions.values())
+        rows = _canonical_xtr_rows(db)
 
-        text = (
-            "📊 SLH Revenue\n"
-            f"💰 Real Stars received: {total_stars}\n"
-            f"🎟 Credits sold: {total_credits_sold}\n"
-            f"🤝 Commissions paid: {total_commission}\n"
-            f"👥 Paying customers: {paying_customers}"
-        )
-        bot.reply_to(msg, text)
+        total_stars = sum(float(row.get("amount", 0) or 0) for row in rows)
+        paying_customers = len({
+            str(row.get("uid"))
+            for row in rows
+            if row.get("uid") not in (None, "")
+        })
+
+        by_product = {}
+        for row in rows:
+            label = _label(row)
+            bucket = by_product.setdefault(label, {"orders": 0, "stars": 0})
+            bucket["orders"] += 1
+            bucket["stars"] += float(row.get("amount", 0) or 0)
+
+        lines = [
+            "📊 SLH Revenue — canonical external payments",
+            f"💰 Real Telegram Stars: {total_stars:g}",
+            f"👥 Paying customers: {paying_customers}",
+            f"🧾 Confirmed revenue events: {len(rows)}",
+        ]
+
+        for label, bucket in sorted(by_product.items()):
+            lines.append(
+                f"• {label}: {bucket['stars']:g}⭐ / {bucket['orders']} payment(s)"
+            )
+
+        lines.append("")
+        lines.append("ℹ️ Internal Credit spending is not cash revenue.")
+        lines.append("ℹ️ Fake/test payment records are excluded because this view uses revenue_ledger.")
+
+        bot.reply_to(msg, "\n".join(lines))
+
+    @bot.message_handler(commands=["revenue_audit"])
+    def revenue_audit_cmd(msg):
+        from admin_utils import is_admin
+        if not is_admin(msg):
+            bot.reply_to(msg, "⛔️ Admin only")
+            return
+        data = revenue_summary()
+        lines = [f"📈 Revenue ledger events: {data['events']}"]
+        for currency, total in sorted(data["totals"].items()):
+            lines.append(f"• {currency}: {total:g}")
+        lines.append("Internal Credit spending is not counted as cash revenue.")
+        bot.reply_to(msg, "\n".join(lines))
