@@ -105,7 +105,7 @@ def load_handlers(bot, context):
         ("diagnostic", "diagnostic_handler"),
         ("guide", "guide_handler"),
         ("junk", "junk_handler"),
-        ("report", "report_handler"),
+        ("bug", "handlers.bug_handler"),
         ("roadmap", "roadmap_handler"),
         ("sandbox", "sandbox_handler"),
         ("test", "test_handler"),
