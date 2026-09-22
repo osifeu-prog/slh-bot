@@ -193,3 +193,36 @@ def test_student_profile_blocks_legacy_env_developer_grant(monkeypatch):
 
     assert authority.get_role(uid) == "USER"
     assert authority.has_permission(uid, "agents.view_all") is False
+
+
+def test_vip_invoice_link_request_contains_stars_subscription(monkeypatch):
+    from handlers import payment_handler
+
+    captured = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+        def read(self):
+            return b'{"ok":true,"result":"https://t.me/$test_invoice"}'
+
+    def fake_urlopen(req, timeout):
+        captured["url"] = req.full_url
+        captured["body"] = req.data.decode("utf-8")
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    class FakeBot:
+        token = "TEST_TOKEN"
+
+    monkeypatch.setattr(payment_handler.urllib.request, "urlopen", fake_urlopen)
+
+    link = payment_handler._create_vip_invoice_link(FakeBot(), "123")
+
+    assert link.startswith("https://t.me/")
+    assert captured["url"].endswith("/createInvoiceLink")
+    assert "currency=XTR" in captured["body"]
+    assert "subscription_period=2592000" in captured["body"]
+    assert "vip_monthly_123" in captured["body"]
