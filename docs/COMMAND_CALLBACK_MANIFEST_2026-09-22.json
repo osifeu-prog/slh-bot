@@ -1,0 +1,255 @@
+{
+  "schema_version": "1.0",
+  "generated": "2026-09-22",
+  "repository": "osifeu-prog/slh-bot",
+  "source_ref": "main@96990e1aae5d52da4d01221868514eaa2c464ce1",
+  "scope": "verified current loader + targeted handler inspection; not a claim of exhaustive callback scan",
+  "canonical_runtime": "bot_gateway.py -> handlers.loader.load_handlers",
+  "commands": [
+    {
+      "command": "start",
+      "owner": "handlers.onboarding_v2",
+      "loader_key": "onboarding",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Golden Path entry"
+    },
+    {
+      "command": "join",
+      "owner": "handlers.join_handler",
+      "loader_key": "join",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Golden Path onboarding"
+    },
+    {
+      "command": "pay",
+      "owner": "handlers.payment_handler",
+      "loader_key": "payment",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Telegram Stars payment surface"
+    },
+    {
+      "command": "stake",
+      "owner": "handlers.staking_handler",
+      "loader_key": "staking",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Economy/staking Golden Path"
+    },
+    {
+      "command": "unstake",
+      "owner": "handlers.staking_handler",
+      "loader_key": "staking",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Economy/staking Golden Path"
+    },
+    {
+      "command": "academy",
+      "owner": "handlers.academy_menu_handler",
+      "loader_key": "academy_menu",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Canonical Academy menu surface"
+    },
+    {
+      "command": "lesson",
+      "owner": "handlers.lesson_handler",
+      "loader_key": "lesson",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Lesson flow"
+    },
+    {
+      "command": "finish",
+      "owner": "handlers.lesson_handler",
+      "loader_key": "lesson",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Lesson completion"
+    },
+    {
+      "command": "help",
+      "owner": "handlers.help_handler",
+      "loader_key": "help",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Canonical help"
+    },
+    {
+      "command": "admin",
+      "owner": "admin_handler",
+      "loader_key": "admin",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Control plane"
+    },
+    {
+      "command": "exec",
+      "owner": "handlers.exec_handler",
+      "loader_key": "exec",
+      "status": "KEEP",
+      "confidence": "HIGH",
+      "notes": "Gated execution surface"
+    },
+    {
+      "command": "brief",
+      "owner": [
+        "handlers.brief_handler",
+        "brief_handler"
+      ],
+      "loader_key": [
+        "brief",
+        "brief_legacy"
+      ],
+      "status": "REVIEW",
+      "confidence": "HIGH",
+      "notes": "Two distinct module registrations under same command; verify runtime duplicate behavior before removing legacy entry"
+    },
+    {
+      "command": "complete",
+      "owner": [
+        "handlers.academy_handler",
+        "complete_handler"
+      ],
+      "loader_key": [
+        "academy",
+        "complete"
+      ],
+      "status": "REVIEW",
+      "confidence": "HIGH",
+      "notes": "Conflicting semantics: Academy lesson completion vs task completion"
+    },
+    {
+      "command": "self_test",
+      "owner": "test_handler",
+      "loader_key": "test",
+      "status": "ARCHIVE-CANDIDATE",
+      "confidence": "MEDIUM",
+      "notes": "Legacy self_test path; requires caller/rollback proof before retirement"
+    }
+  ],
+  "callbacks": [
+    {
+      "pattern": "start_join",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "show_help",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "continue_course",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "menu_wallet",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "menu_agents",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "menu_ai",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "menu_missions",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "menu_share",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "system_status",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "goto_dashboard",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "create_agent",
+      "owner": "handlers.onboarding_v2",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "slh_academy",
+      "owner": "handlers.academy_menu_handler",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "academy_<course>",
+      "owner": "handlers.academy_menu_handler",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "slh_lesson_<course>_<stage>",
+      "owner": "handlers.academy_menu_handler",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "slh_finish_<course>_<stage>",
+      "owner": "handlers.academy_menu_handler",
+      "status": "KEEP",
+      "confidence": "HIGH"
+    },
+    {
+      "pattern": "onboard_start",
+      "owner": "handlers.onboarding_v2",
+      "status": "REVIEW",
+      "confidence": "HIGH",
+      "notes": "Legacy callback surface"
+    }
+  ],
+  "loader_policy_findings": [
+    {
+      "severity": "HIGH",
+      "finding": "Import/register exceptions are caught and startup still prints ALL HANDLERS READY",
+      "action": "Required/optional classification + structured readiness gate"
+    },
+    {
+      "severity": "HIGH",
+      "finding": "Duplicate/conflicting command ownership exists",
+      "action": "Resolve /brief and /complete before cleanup"
+    },
+    {
+      "severity": "MEDIUM",
+      "finding": "Older COMMAND_OWNERSHIP_AUDIT.json is based partly on bot_stable.py and registry-only inference",
+      "action": "Do not use it as current runtime authority"
+    },
+    {
+      "severity": "MEDIUM",
+      "finding": "Complete callback collision scan is not yet exhaustive",
+      "action": "Scan every loaded handler source before archive/delete"
+    }
+  ]
+}
