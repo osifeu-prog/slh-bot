@@ -215,10 +215,13 @@ def register(bot):
             return
         uid = parts[1].strip()
         role = parts[2].lower()
-        profile_manager.update_user(uid, {
+        update = {
             "role": role,
             "permissions": _role_permissions(role),
-        })
+        }
+        if role == "developer":
+            update["developer_access_status"] = "active"
+        profile_manager.update_user(uid, update)
         bot.reply_to(m, f"✅ User {uid} role changed to {role.upper()}")
 
     print("✅ dev_admin loaded")
