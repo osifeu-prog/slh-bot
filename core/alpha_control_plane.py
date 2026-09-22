@@ -19,8 +19,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ALPHA_KEY = "alpha_control"
 
 
-def _check(name, passed, detail=""):
-    return {"name": name, "status": "PASS" if passed else "FAIL", "detail": detail}
+def _check(name, passed, detail="", scope="alpha"):
+    return {"name": name, "status": "PASS" if passed else "FAIL", "detail": detail, "scope": scope}
 
 
 def _token_integrity(users, ledger):
@@ -170,6 +170,7 @@ def _user_journey_contracts():
     referral = ROOT / "core" / "referral_reward.py"
     stars = ROOT / "core" / "stars_payment_authority.py"
     prices = ROOT / "core" / "stars_price_authority.py"
+    staking = ROOT / "handlers" / "staking_handler.py"
 
     checks = []
     ok, detail = _static_contract(onboarding, commands=("start",))
@@ -192,6 +193,12 @@ def _user_journey_contracts():
     checks.append(_check("stars_payment_authority", ok, detail))
     ok, detail = _static_contract(prices, functions=("resolve_credit_pack",))
     checks.append(_check("stars_price_authority", ok, detail))
+    ok, detail = _static_contract(
+        staking,
+        commands=("stake", "unstake"),
+        calls=("stake_locked", "unstake_locked"),
+    )
+    checks.append(_check("staking_commands", ok, detail))
     return checks
 
 
@@ -221,14 +228,14 @@ def evaluate():
     token_ok, token_detail = _token_integrity(users, ledger)
     checks.append(_check("slh_integrity", token_ok, token_detail))
     checks.append(_check("slh_transfer", (ROOT / "core" / "slh_distribution.py").exists(),
-                         "SLH distribution authority present"))
+                         "SLH distribution authority present", scope="system"))
     checks.append(_check("payments", (ROOT / "handlers" / "payment_handler.py").exists(),
                          "payment handler present"))
 
     exchange = ROOT / "handlers" / "exchange_handler.py"
     if not exchange.exists():
         exchange = ROOT / "core" / "exchange_service.py"
-    checks.append(_check("exchange", exchange.exists(), "exchange path present"))
+    checks.append(_check("exchange", exchange.exists(), "exchange path present", scope="system"))
     checks.append(_check("staking", (ROOT / "core" / "staking_service.py").exists(),
                          "staking service present"))
 
@@ -239,7 +246,7 @@ def evaluate():
     except Exception:
         settlement_ok = False
     checks.append(_check("staking_reward_settlement", settlement_ok,
-                         "staking reward claim authority present"))
+                         "staking reward claim authority present", scope="system"))
 
     checks.append(_check("onboarding", (ROOT / "handlers" / "onboarding_v2.py").exists(),
                          "onboarding handler present"))
@@ -248,9 +255,16 @@ def evaluate():
     safety_ok, safety_detail = _evaluate_safety()
     checks.append(_check("gate_safety", safety_ok, safety_detail))
 
-    blockers = [c for c in checks if c["status"] != "PASS"]
-    return {"status": "BLOCKED" if blockers else "READY", "blockers": blockers,
-            "checks": checks, "timestamp": time.time()}
+    alpha_blockers = [c for c in checks if c["status"] != "PASS" and c.get("scope") == "alpha"]
+    system_blockers = [c for c in checks if c["status"] != "PASS" and c.get("scope") == "system"]
+    return {
+        "status": "BLOCKED" if alpha_blockers else "READY",
+        "blockers": alpha_blockers,
+        "system_status": "DEGRADED" if system_blockers else "READY",
+        "system_blockers": system_blockers,
+        "checks": checks,
+        "timestamp": time.time(),
+    }
 
 
 def format_report(result):
