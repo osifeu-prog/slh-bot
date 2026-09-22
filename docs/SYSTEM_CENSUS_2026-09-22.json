@@ -1,0 +1,48 @@
+{
+  "snapshot_date": "2026-09-22",
+  "github": {
+    "visible_repositories": 17,
+    "push_access_repositories": [
+      "osifeu-prog/slh-bot"
+    ],
+    "canonical_repo": "osifeu-prog/slh-bot",
+    "canonical_branch": "main",
+    "canonical_commit": "96990e1aae5d52da4d01221868514eaa2c464ce1"
+  },
+  "railway": {
+    "visible_projects": 10,
+    "visible_services": 35,
+    "workspace": "osifeu-prog's Projects",
+    "canonical_project": "endearing-amazement",
+    "canonical_services": [
+      "web",
+      "slh-mcp"
+    ],
+    "non_polling_service": "slh-cloud-bot"
+  },
+  "canonical_path": [
+    "GitHub main",
+    "Railway endearing-amazement/web",
+    "Telegram @Me_ad_main_bot",
+    "Mini-App",
+    "Stars",
+    "Credits",
+    "Academy",
+    "Agents",
+    "Staking"
+  ],
+  "cleanup_policy": {
+    "delete_nothing_without_dependency_and_data_check": true,
+    "branch_deletion_not_yet_performed": true,
+    "open_pr_backlog_currently_zero": true
+  },
+  "next_audit_targets": [
+    "repo-to-Railway mapping",
+    "duplicate repository comparison",
+    "branch commit classification",
+    "handler loader dependency audit",
+    "Railway persistent-data dependency audit",
+    "real Stars payment E2E"
+  ],
+  "notes": "Secrets and token values intentionally excluded."
+}
