@@ -73,51 +73,6 @@ def register_payment_handlers(bot):
     def pay_command(m):
         _send_pay_menu(bot, m.chat.id, str(m.from_user.id))
 
-    @bot.message_handler(commands=['buystars'])
-    def buystars_command(m):
-        parts = m.text.split(maxsplit=1)
-        if len(parts) != 2 or not parts[1].strip():
-            bot.reply_to(m, "Usage: /buystars <item_id>")
-            return
-
-        uid = str(m.from_user.id)
-        item_id = parts[1].strip()
-        db = state_manager.load_db()
-        if uid not in db.get("users", {}):
-            bot.reply_to(m, "❌ Please /join first.")
-            return
-
-        try:
-            stars = int(get_stars_price(item_id))
-        except Exception:
-            stars = 0
-        if stars <= 0:
-            bot.reply_to(m, "❌ Invalid or unavailable Stars item.")
-            return
-
-        try:
-            from store.engine import load_items
-            item = load_items().get(item_id, {})
-            item_name = str(item.get("name") or item_id)
-            bot.send_invoice(
-                chat_id=m.chat.id,
-                title=item_name,
-                description=f"Purchase {item_name} with Telegram Stars",
-                invoice_payload=f"item_{item_id}_{uid}",
-                provider_token=PROVIDER_TOKEN,
-                currency=TELEGRAM_STARS_CURRENCY,
-                prices=[LabeledPrice(label=item_name, amount=stars)],
-                start_parameter=f"item_{item_id}",
-                need_name=False,
-                need_phone_number=False,
-                need_email=False,
-                is_flexible=False,
-            )
-            print(f"[PAY] Store Stars invoice sent to {uid} for item={item_id} stars={stars}")
-        except Exception as e:
-            print(f"[PAY] Store Stars invoice error: {type(e).__name__}")
-            bot.reply_to(m, "⚠️ לא ניתן לפתוח כרגע את רכישת ה-Stars.")
-
     @bot.callback_query_handler(func=lambda call: call.data == "slh_credits")
     def credits_callback(call):
         bot.answer_callback_query(call.id)
