@@ -23,6 +23,49 @@ def _resolve_stars_package(credits, stars_paid):
     return package.pack_id, package.stars, package.credits, package.label
 
 
+def _send_vip_invoice(bot, chat_id, uid):
+    """Send a recurring Stars invoice, with a 4.26.x compatibility fallback."""
+    kwargs = {
+        "chat_id": chat_id,
+        "title": "SLH VIP",
+        "description": "SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
+        "invoice_payload": f"vip_monthly_{uid}",
+        "provider_token": "",
+        "currency": TELEGRAM_STARS_CURRENCY,
+        "prices": [LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)],
+        "start_parameter": "slh-vip-monthly",
+        "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+        "need_name": False,
+        "need_phone_number": False,
+        "need_email": False,
+        "is_flexible": False,
+    }
+    try:
+        bot.send_invoice(**kwargs)
+        return "invoice"
+    except TypeError as exc:
+        if "subscription_period" not in str(exc) or not hasattr(bot, "create_invoice_link"):
+            raise
+        # pyTelegramBotAPI 4.26.x exposes subscription_period on
+        # create_invoice_link even though sync send_invoice lacks it.
+        link_kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key not in {"chat_id", "subscription_period", "need_name", "need_phone_number",
+                           "need_email", "is_flexible"}
+        }
+        link_kwargs["subscription_period"] = VIP_SUBSCRIPTION_PERIOD
+        link = bot.create_invoice_link(**link_kwargs)
+        markup = InlineKeyboardMarkup(row_width=1)
+        markup.add(InlineKeyboardButton(text="⭐ פתיחת מנוי VIP", url=link))
+        bot.send_message(
+            chat_id,
+            "⭐ מנוי VIP מוכן לתשלום דרך Telegram Stars:",
+            reply_markup=markup,
+        )
+        return "invoice_link"
+
+
 def _send_pay_menu(bot, chat_id, uid):
     db = state_manager.load_db()
     if uid not in db.get("users", {}):
@@ -50,21 +93,7 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, f"⭐ VIP פעיל עד {time.strftime('%Y-%m-%d', time.gmtime(until))}.")
             return
         try:
-            bot.send_invoice(
-                chat_id=m.chat.id,
-                title="SLH VIP",
-                description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
-                invoice_payload=f"vip_monthly_{uid}",
-                provider_token="",
-                currency=TELEGRAM_STARS_CURRENCY,
-                prices=[LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)],
-                start_parameter="slh-vip-monthly",
-                subscription_period=VIP_SUBSCRIPTION_PERIOD,
-                need_name=False,
-                need_phone_number=False,
-                need_email=False,
-                is_flexible=False,
-            )
+            _send_vip_invoice(bot, m.chat.id, uid)
         except Exception as e:
             print(f"[VIP] invoice error: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
