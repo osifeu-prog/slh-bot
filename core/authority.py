@@ -88,20 +88,28 @@ def get_role(uid) -> str:
     if uid == OWNER_ID:
         return "OWNER"
 
+    # Persistent profile status can revoke/lock developer access even when
+    # the UID is still present in the bootstrap environment variable.
+    profile = get_user(uid) if user_exists(uid) else {}
+    profile = profile or {}
+    developer_status = str(profile.get("developer_access_status", "")).strip().lower()
+    profile_role = str(profile.get("role", "")).strip().lower()
+
+    if developer_status in {"locked", "revoked"}:
+        if profile_role == "admin":
+            return "ADMIN"
+        return "USER" if profile else "UNKNOWN"
+
     # Explicit developer grants take precedence over legacy admin/partner
-    # memberships. This lets a person such as Zvika retain alpha distribution
-    # through ALPHA_DISTRIBUTOR_IDS while having a single DEVELOPER role.
+    # memberships. Persistent deny state above always wins.
     if uid in DEVELOPER_IDS:
         return "DEVELOPER"
 
     if uid in ADMIN_IDS:
         return "ADMIN"
 
-    if not user_exists(uid):
+    if not profile:
         return "UNKNOWN"
-
-    profile = get_user(uid) or {}
-    profile_role = str(profile.get("role", "")).strip().lower()
 
     if profile_role == "developer":
         return "DEVELOPER"
