@@ -9,11 +9,13 @@ import state_manager
 from core import economy_service
 from core import revenue_ledger
 from core.vip_fulfillment import apply_vip_benefits, is_launch_offer_open
+from core.stars_price_authority import (
+    TELEGRAM_STARS_CURRENCY,
+    VIP_MONTHLY_STARS,
+    VIP_SUBSCRIPTION_PERIOD,
+)
 
 
-TELEGRAM_STARS_CURRENCY = "XTR"
-VIP_MONTHLY_STARS = 499
-VIP_SUBSCRIPTION_PERIOD = 2592000
 
 
 def _record_revenue(*, source: str, amount: int, reference: str, uid: str, meta: dict):
