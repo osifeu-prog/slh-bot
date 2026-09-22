@@ -201,3 +201,37 @@ Do not use this document as permission to delete anything. It is the shared map 
 
 ## Snapshot provenance
 Captured from the connected GitHub/Railway integrations during the 2026-09-22 consolidation audit. Configuration values/secrets are intentionally excluded.
+
+
+## Fresh Railway runtime status — 2026-09-22
+
+A fresh Railway environment status read was successful for all 10 visible projects. This is stronger evidence than the earlier inventory.
+
+### Canonical SLH runtime
+- endearing-amazement/web: **SUCCESS**, latest deployment 2026-09-22 06:43Z; persistent volume /app/state (5 GB).
+- endearing-amazement/slh-mcp: **SUCCESS**, latest deployment 2026-09-22 11:24Z; no volume.
+- slh-cloud-bot: **SUCCESS**, latest deployment 2026-09-22 06:43Z.
+
+### Other active/separate systems
+- nifti-bot/bot: SUCCESS; Postgres SUCCESS with 5 GB volume; Redis SUCCESS with 5 GB volume.
+- SLH_investor_wallet_bot/slh-bot: SUCCESS; its Postgres latest deployment is FAILED, and it owns a 5 GB database volume. Treat the database as protected until its data/dependency role is understood.
+- slh-guardian/gardian: SUCCESS; Postgres and Redis SUCCESS, both with persistent 5 GB volumes.
+- diligent-radiance/SLH.co.il: SUCCESS; monitor.slh SUCCESS; slh-AI-bot SUCCESS; TON-MNH-bot SUCCESS; Osifs_Factory_bot SUCCESS; Postgres and Redis SUCCESS.
+- slh-api/slh-api: SUCCESS; slh-air-bot SUCCESS; Postgres and Redis SUCCESS.
+- dazzling-unity/SLH_PROJECT_V2: SUCCESS; glorious-caring SUCCESS; Postgres and Redis SUCCESS.
+
+### Services requiring investigation before any cleanup
+- Tax_Free_world_bot service: **CRASHED** on latest deployment; Postgres and Redis remain SUCCESS with persistent volumes.
+- TELEGRAM-BOT/Telegram_bot: **FAILED**; its Postgres and Redis remain SUCCESS with persistent volumes.
+- TELEGRAM-BOT/prometheus: **FAILED**; Grafana SUCCESS.
+- diligent-radiance/slh-fastapi: **FAILED**.
+- SLH_investor_wallet_bot/Postgres: latest deployment **FAILED** despite the database service having persistent storage.
+- A service being FAILED/CRASHED does NOT mean its database can be deleted.
+
+### Immediate conclusion
+There are at least three distinct classes in Railway:
+1. **Canonical SLH path:** endearing-amazement.
+2. **Active separate/legacy product stacks:** nifti, investor wallet, guardian, diligent-radiance, slh-api, dazzling-unity.
+3. **Broken or uncertain application services with still-live persistent data:** Tax Free, TELEGRAM-BOT, investor Postgres, plus failed slh-fastapi.
+
+This materially changes the cleanup plan: **database/volume preservation comes before service consolidation.**
