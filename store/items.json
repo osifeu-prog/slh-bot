@@ -30,7 +30,8 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_bitcoin"
-    }
+    },
+    "price_stars": 25
   },
   "emoji_slh": {
     "name": "חבילת אימוג'י SLH OS",
@@ -38,7 +39,8 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_slh"
-    }
+    },
+    "price_stars": 50
   },
   "emoji_vip": {
     "name": "חבילת אימוג'י VIP זהוב",
@@ -46,7 +48,8 @@
     "type": "digital",
     "grant": {
       "digital": "emoji_vip"
-    }
+    },
+    "price_stars": 100
   },
   "agent_os": {
     "name": "Agent OS",
