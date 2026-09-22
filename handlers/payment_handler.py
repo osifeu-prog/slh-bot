@@ -93,7 +93,7 @@ def register_payment_handlers(bot):
                 description=f"Add {credits} credits to your SLH account",
                 invoice_payload=f"credits_{credits}_{call.from_user.id}",
                 provider_token=PROVIDER_TOKEN,
-                currency="XTR",
+                currency=TELEGRAM_STARS_CURRENCY,
                 prices=[LabeledPrice(label=label, amount=stars)],
                 start_parameter=f"credits_{credits}",
                 need_name=False,
@@ -117,7 +117,7 @@ def register_payment_handlers(bot):
                 valid_amount = int(query.total_amount) == expected_stars
             except (TypeError, ValueError):
                 valid_amount = False
-            if query.currency == "XTR" and valid_amount:
+            if query.currency == TELEGRAM_STARS_CURRENCY and valid_amount:
                 bot.answer_pre_checkout_query(query.id, ok=True)
             else:
                 bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid item price.")
@@ -148,7 +148,7 @@ def register_payment_handlers(bot):
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package.")
             return
         package = _resolve_stars_package(expected_credits, query.total_amount)
-        if query.currency != "XTR" or package is None:
+        if query.currency != TELEGRAM_STARS_CURRENCY or package is None:
             bot.answer_pre_checkout_query(query.id, ok=False, error_message="Invalid payment package or price.")
             return
         bot.answer_pre_checkout_query(query.id, ok=True)
@@ -162,7 +162,7 @@ def register_payment_handlers(bot):
         if payload == f"vip_monthly_{uid}":
             import time
             charge_id = str(payment.telegram_payment_charge_id or "").strip()
-            if payment.currency != "XTR" or int(payment.total_amount) != VIP_MONTHLY_STARS or not charge_id:
+            if payment.currency != TELEGRAM_STARS_CURRENCY or int(payment.total_amount) != VIP_MONTHLY_STARS or not charge_id:
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
@@ -207,7 +207,7 @@ def register_payment_handlers(bot):
                 valid_amount = int(payment.total_amount) == expected_stars
             except (TypeError, ValueError):
                 valid_amount = False
-            if payment.currency != "XTR" or not charge_id or not valid_amount:
+            if payment.currency != TELEGRAM_STARS_CURRENCY or not charge_id or not valid_amount:
                 bot.send_message(m.chat.id, "❌ Invalid Stars item payment.")
                 return
             try:
@@ -242,7 +242,7 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "❌ Error parsing credits.")
             return
         package = _resolve_stars_package(credits, payment.total_amount)
-        if payment.currency != "XTR" or package is None:
+        if payment.currency != TELEGRAM_STARS_CURRENCY or package is None:
             bot.send_message(m.chat.id, "❌ Invalid payment package or price.")
             return
         try:

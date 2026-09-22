@@ -66,7 +66,7 @@ jobs:
           stars_store = Path("handlers/stars_store.py").read_text(encoding="utf-8")
           items = __import__("json").loads(Path("store/items.json").read_text(encoding="utf-8-sig"))
 
-          assert 'currency="XTR"' in payment
+          assert "TELEGRAM_STARS_CURRENCY" in payment
           assert "telegram_payment_charge_id" in payment
           assert "_resolve_stars_package" in payment
 
@@ -80,7 +80,7 @@ jobs:
           assert "reference=charge_id" in purchase
           assert "reference" in revenue
           assert "commands=['buystars']" in stars_store
-          assert 'currency="XTR"' in stars_store
+          assert "TELEGRAM_STARS_CURRENCY" in stars_store
           assert 'invoice_payload="item_"' in stars_store
           assert any(isinstance(item, dict) and item.get("price_stars") for item in items.values())
           print("Stars payment + fulfillment + revenue contracts: OK")
