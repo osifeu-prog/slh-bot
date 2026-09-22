@@ -65,3 +65,18 @@ def test_alpha_gate_safety_is_read_only(monkeypatch):
     ok, detail = alpha_control_plane._evaluate_safety()
     assert ok is True
     assert "read-only" in detail
+
+
+def test_join_handler_gates_completion_on_academy_initialization(monkeypatch):
+    from pathlib import Path
+    import ast
+
+    source = Path("handlers/join_handler.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    names = {
+        node.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name)
+    }
+    assert "academy_started" in names
+    assert "start_course" in names
