@@ -28,31 +28,22 @@ def _resolve_stars_package(credits, stars_paid):
 
 
 def _create_vip_invoice_link(bot, uid):
-    """Create a recurring Telegram Stars invoice through the raw Bot API."""
-    token = getattr(bot, "token", None) or getattr(bot, "TOKEN", None)
-    if not token:
-        raise RuntimeError("BOT_TOKEN_UNAVAILABLE")
+    """Create a recurring Telegram Stars invoice through the supported TeleBot wrapper."""
+    link = bot.create_invoice_link(
+        title="SLH VIP",
+        description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
+        payload=f"vip_monthly_{uid}",
+        provider_token=None,
+        currency=TELEGRAM_STARS_CURRENCY,
+        prices=[
+            LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)
+        ],
+        subscription_period=VIP_SUBSCRIPTION_PERIOD,
+    )
+    if not link:
+        raise RuntimeError("TELEGRAM_INVOICE_LINK_EMPTY")
+    return str(link)
 
-    params = {
-        "title": "SLH VIP",
-        "description": "SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
-        "payload": f"vip_monthly_{uid}",
-        "currency": TELEGRAM_STARS_CURRENCY,
-        "prices": json.dumps(
-            [{"label": "SLH VIP Monthly", "amount": VIP_MONTHLY_STARS}],
-            separators=(",", ":"),
-        ),
-        "subscription_period": str(VIP_SUBSCRIPTION_PERIOD),
-    }
-    encoded = urllib.parse.urlencode(params).encode("utf-8")
-    url = f"https://api.telegram.org/bot{token}/createInvoiceLink"
-    req = urllib.request.Request(url, data=encoded, method="POST")
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        result = json.loads(resp.read().decode("utf-8"))
-
-    if not result.get("ok") or not result.get("result"):
-        raise RuntimeError(str(result.get("description") or "TELEGRAM_INVOICE_LINK_FAILED"))
-    return str(result["result"])
 
 
 def _send_vip_invoice(bot, chat_id, uid):
