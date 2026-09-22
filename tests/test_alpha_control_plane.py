@@ -9,6 +9,9 @@ def test_alpha_control_plane_evaluator_has_stable_shape(monkeypatch):
     assert isinstance(result["blockers"], list)
     assert len(result["checks"]) >= 1
     assert all(c["status"] in {"PASS", "FAIL"} for c in result["checks"])
+    assert all(c["scope"] in {"alpha", "system"} for c in result["checks"])
+    assert result["status"] in {"READY", "BLOCKED"}
+    assert result["system_status"] in {"READY", "DEGRADED"}
 
 
 def test_format_report_is_deterministic_shape(monkeypatch):
@@ -16,8 +19,9 @@ def test_format_report_is_deterministic_shape(monkeypatch):
     result = alpha_control_plane.evaluate()
     report = alpha_control_plane.format_report(result)
     assert report.startswith("ALPHA CONTROL PLANE")
-    assert f"BLOCKERS: {len(result['blockers'])}" in report
-    assert f"STATUS: {result['status']}" in report
+    assert f"ALPHA BLOCKERS: {len(result['blockers'])}" in report
+    assert f"ALPHA STATUS: {result['status']}" in report
+    assert f"SYSTEM STATUS: {result['system_status']}" in report
 
 
 def test_open_alpha_rejects_non_owner_without_state_write(monkeypatch):
@@ -51,6 +55,7 @@ def test_alpha_user_journey_contracts_are_explicit(monkeypatch):
         "stars_payment_authority",
         "stars_price_authority",
         "gate_safety",
+        "staking_commands",
     }
     assert required <= names
     assert all(
@@ -80,3 +85,11 @@ def test_join_handler_gates_completion_on_academy_initialization(monkeypatch):
     }
     assert "academy_started" in names
     assert "start_course" in names
+
+
+def test_staking_contract_is_alpha_critical(monkeypatch):
+    monkeypatch.setenv("RUN_BOT", "1")
+    result = alpha_control_plane.evaluate()
+    check = next(c for c in result["checks"] if c["name"] == "staking_commands")
+    assert check["scope"] == "alpha"
+    assert check["status"] == "PASS"
