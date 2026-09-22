@@ -4,6 +4,9 @@ Values here describe the current runtime model; they do not mint or allocate
 funds. Runtime balances remain authoritative in state/db.json.
 """
 
+from core.stars_price_authority import CREDIT_PACKS
+
+
 TOKENOMICS = {
     "SLH": {
         "type": "internal_token",
@@ -21,9 +24,7 @@ TOKENOMICS = {
         "tradable": False,
         "supply_model": "ledger_issued",
         "pricing_examples": {
-            "100_stars": 100,
-            "450_stars": 500,
-            "800_stars": 1000,
+            f"{pack.stars}_stars": pack.credits for pack in CREDIT_PACKS
         },
         "notes": "Credits are the internal settlement unit for products, staking and marketplace activity.",
     },
