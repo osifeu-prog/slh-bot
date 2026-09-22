@@ -43,7 +43,11 @@ def record_stars_payment(**kwargs):
             amount=int(kwargs.get("stars_paid", 0)),
             reference=str(kwargs.get("telegram_payment_charge_id", "")),
             uid=str(kwargs.get("uid", "")),
-            meta={"kind": "telegram_stars_gross"},
+            meta={
+                "kind": "telegram_stars_gross",
+                "payment_meta": dict(kwargs.get("meta") or {}),
+                "provider_charge_id": kwargs.get("provider_payment_charge_id"),
+            },
         )
 
     return result

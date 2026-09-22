@@ -38,31 +38,59 @@ def _label(row):
 
 
 
+def _is_authoritative_credit_payment(tx, ledger):
+    """Require a matching successful Telegram payment ledger record."""
+    charge_id = str(tx.get("telegram_payment_charge_id", "")).strip()
+    if not charge_id or charge_id.lower().startswith(("fakepay", "test")):
+        return False
+    if str(tx.get("currency", "")) != "XTR":
+        return False
+    try:
+        stars = int(tx.get("stars_paid", 0))
+    except (TypeError, ValueError):
+        return False
+    if stars <= 0:
+        return False
+
+    for entry in ledger if isinstance(ledger, list) else []:
+        if entry.get("reason") != "payment:telegram_stars":
+            continue
+        meta = entry.get("meta") or {}
+        if str(meta.get("charge_id", "")).strip() != charge_id:
+            continue
+        if str(meta.get("source", "")).strip() != "telegram_successful_payment":
+            continue
+        if str(meta.get("currency", "")).strip() != "XTR":
+            continue
+        if bool(meta.get("test_mode")):
+            continue
+        return True
+    return False
+
+
 def reconcile_existing_commerce(db):
-    """Backfill missing canonical revenue events without changing commerce state."""
+    """Backfill only payments already proven by the local commerce ledger."""
     added = []
+    ledger = db.get("ledger", [])
 
     transactions = db.get("transactions", [])
     if isinstance(transactions, list):
         for tx in transactions:
+            if not _is_authoritative_credit_payment(tx, ledger):
+                continue
             charge_id = str(tx.get("telegram_payment_charge_id", "")).strip()
-            if not charge_id or charge_id.startswith("fakepay:") or charge_id.startswith("test"):
-                continue
-            if str(tx.get("currency", "")) != "XTR":
-                continue
-            try:
-                stars = int(tx.get("stars_paid", 0))
-            except (TypeError, ValueError):
-                continue
-            if stars <= 0:
-                continue
+            stars = int(tx.get("stars_paid", 0))
             result = revenue_ledger.record(
                 source="telegram_stars",
                 amount=stars,
                 currency="XTR",
                 reference=charge_id,
                 uid=str(tx.get("uid", "")),
-                meta={"kind": "telegram_stars_gross", "reconciled": True},
+                meta={
+                    "kind": "telegram_stars_gross",
+                    "reconciled": True,
+                    "source": "telegram_successful_payment",
+                },
             )
             if result.get("status") == "recorded":
                 added.append(charge_id)
@@ -71,6 +99,9 @@ def reconcile_existing_commerce(db):
     if isinstance(vip, dict):
         for charge_id, row in vip.items():
             if not isinstance(row, dict):
+                continue
+            charge_id = str(charge_id).strip()
+            if not charge_id or charge_id.lower().startswith(("fakepay", "test")):
                 continue
             try:
                 stars = int(row.get("stars_paid", 0))
@@ -82,12 +113,12 @@ def reconcile_existing_commerce(db):
                 source="telegram_stars_subscription",
                 amount=stars,
                 currency="XTR",
-                reference=str(charge_id),
+                reference=charge_id,
                 uid=str(row.get("uid", "")),
                 meta={"kind": "vip_monthly", "reconciled": True},
             )
             if result.get("status") == "recorded":
-                added.append(str(charge_id))
+                added.append(charge_id)
 
     orders = db.get("star_item_orders", {})
     if isinstance(orders, dict):
@@ -95,7 +126,7 @@ def reconcile_existing_commerce(db):
             if not isinstance(row, dict) or row.get("status") != "FULFILLED":
                 continue
             charge_id = str(row.get("charge_id", "")).strip()
-            if not charge_id:
+            if not charge_id or charge_id.lower().startswith(("fakepay", "test")):
                 continue
             try:
                 stars = int(row.get("stars_paid", 0))
@@ -109,13 +140,16 @@ def reconcile_existing_commerce(db):
                 currency="XTR",
                 reference=charge_id,
                 uid=str(row.get("uid", "")),
-                meta={"kind": "telegram_stars_item", "item_id": str(row.get("item_id", "")), "reconciled": True},
+                meta={
+                    "kind": "telegram_stars_item",
+                    "item_id": str(row.get("item_id", "")),
+                    "reconciled": True,
+                },
             )
             if result.get("status") == "recorded":
                 added.append(charge_id)
 
     return added
-
 
 def register(bot):
     @bot.message_handler(commands=["revenue"])
