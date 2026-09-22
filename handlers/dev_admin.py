@@ -94,7 +94,7 @@ def register(bot):
         })
         bot.reply_to(m, f"⛔ Developer access permanently revoked for {uid}")
 
-    @bot.message_handler(commands=['dev_add'])
+    @bot.message_handler(commands=['dev_activate'])
     def dev_activate(m):
         if not is_owner(m):
             bot.reply_to(m, "⛔ OWNER only")
