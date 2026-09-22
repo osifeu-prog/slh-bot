@@ -1,5 +1,5 @@
 ﻿from core import profile_manager
-from security.permissions import get_role, get_permissions
+from security.permissions import get_permissions
 import state_manager
 from core.authority import is_owner, ROLES, get_role
 
@@ -30,7 +30,7 @@ def register(bot):
             return
         parts = m.text.split()
         if len(parts) < 2:
-            bot.reply_to(m, "Usage: /dev_add <user_id>")
+            bot.reply_to(m, "Usage: /dev_activate <user_id>")
             return
 
         uid = parts[1].strip()
