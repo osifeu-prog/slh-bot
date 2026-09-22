@@ -81,3 +81,26 @@ Recommended eventual shape: one canonical command owner, with distinct explicit 
 `bot_gateway.py` is the current canonical startup path: it imports `handlers.loader.load_handlers` and starts the primary bot. `bot_stable.py` contains additional legacy command registrations, including `/test`, but is not the startup path used by the canonical Railway service.
 
 Therefore source-code presence in `bot_stable.py` must not be treated as proof that those commands are active in production.
+
+## Evidence-quality correction
+
+The repository contains older generated audit artifacts under state/takeover/, including runtime_command_registration_audit.json generated on 2026-08-14. That report treats bot_stable.py as the entrypoint and uses broad command-string mentions as evidence. It therefore produces false-positive ownership signals (for example, help text containing /start or /join is not itself a handler registration).
+
+For the 2026-09-22 audit, actual @bot.message_handler(commands=...) decorators plus the current loader list are the stronger evidence source. The older generated JSON must not be used as the current command-owner authority.
+
+## Current callback surface
+
+A targeted read-only inspection of the Alpha/UI handlers confirms callback ownership in handlers/onboarding_v2.py and handlers/academy_menu_handler.py, including:
+- start_join, show_help, continue_course, menu_wallet, menu_agents, menu_ai, menu_missions, menu_share, system_status, goto_dashboard, create_agent
+- slh_academy, academy_<course>, slh_lesson_<course>_<stage>, slh_finish_<course>_<stage>
+- legacy onboard_start
+
+No callback collision is declared from this targeted sample alone. A complete callback-prefix audit still requires scanning every loaded handler source rather than inferring from command ownership.
+
+## Current command conclusions
+
+The current source audit supports these high-confidence collision findings:
+- /brief: two actual handlers are registered by the loader (handlers.brief_handler and root brief_handler).
+- /complete: two actual handlers are registered by the loader (handlers.academy_handler and root complete_handler), with incompatible semantics.
+- /self_test: legacy registered surface.
+- The earlier 2026-08-14 generated command audit is stale and should be archived/replaced as evidence after the new machine-readable manifest is built.
