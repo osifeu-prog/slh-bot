@@ -56,3 +56,28 @@ This audit verifies source registration, not live Telegram E2E behavior. A live 
 4. Retire `/self_test` only after the canonical CI/doctor path is confirmed as its replacement.
 5. Continue command/callback collision audit for callback prefixes and non-loader registrations.
 6. Only then begin archive/delete candidates. No live DB, Railway service, main branch, or production state was changed in this audit.
+
+
+## Follow-up collision finding — /complete
+
+A deeper inspection confirmed a second command collision that should be treated as HIGH PRIORITY REVIEW:
+
+- `handlers.academy_handler.register` registers `/complete` for Academy lesson completion and routes to `core.lesson_engine.complete_lesson`.
+- `complete_handler.init` also registers `/complete`, but interprets the argument as a task ID and calls `internal_agent.complete_task`.
+- The loader registers both modules: `academy` and `complete`.
+
+These are two different semantic contracts under the same Telegram command. This is more serious than the `/brief` duplicate because the implementations can produce different outcomes for the same input.
+
+**Do not delete either implementation yet.** First map:
+1. callers/tests using `/complete <task_id>`;
+2. Academy compatibility usage of `/complete <stage>` and `/complete <course_id> <stage>`;
+3. any inline keyboards or documentation that emit the command;
+4. whether a command split or explicit dispatcher is the safer migration.
+
+Recommended eventual shape: one canonical command owner, with distinct explicit commands for task completion and lesson completion if both capabilities are still required.
+
+## Follow-up runtime-authority finding
+
+`bot_gateway.py` is the current canonical startup path: it imports `handlers.loader.load_handlers` and starts the primary bot. `bot_stable.py` contains additional legacy command registrations, including `/test`, but is not the startup path used by the canonical Railway service.
+
+Therefore source-code presence in `bot_stable.py` must not be treated as proof that those commands are active in production.
