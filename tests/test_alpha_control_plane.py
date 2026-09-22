@@ -200,32 +200,19 @@ def test_vip_invoice_link_request_contains_stars_subscription(monkeypatch):
 
     captured = {}
 
-    class FakeResponse:
-        def __enter__(self):
-            return self
-        def __exit__(self, *args):
-            return False
-        def read(self):
-            return b'{"ok":true,"result":"https://t.me/$test_invoice"}'
-
-    def fake_urlopen(req, timeout):
-        captured["url"] = req.full_url
-        captured["body"] = req.data.decode("utf-8")
-        captured["timeout"] = timeout
-        return FakeResponse()
-
     class FakeBot:
-        token = "TEST_TOKEN"
-
-    monkeypatch.setattr(payment_handler.urllib.request, "urlopen", fake_urlopen)
+        def create_invoice_link(self, **kwargs):
+            captured.update(kwargs)
+            return "https://t.me/$test_invoice"
 
     link = payment_handler._create_vip_invoice_link(FakeBot(), "123")
 
     assert link.startswith("https://t.me/")
-    assert captured["url"].endswith("/createInvoiceLink")
-    assert "currency=XTR" in captured["body"]
-    assert "subscription_period=2592000" in captured["body"]
-    assert "vip_monthly_123" in captured["body"]
+    assert captured["currency"] == "XTR"
+    assert captured["subscription_period"] == 2592000
+    assert captured["payload"] == "vip_monthly_123"
+    assert captured["provider_token"] is None
+    assert captured["prices"][0].amount == 499
 
 
 def test_referral_vip_offer_is_open_during_launch_window(monkeypatch):
