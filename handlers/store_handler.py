@@ -9,7 +9,7 @@ def register(bot):
     def shop_cmd(message):
         uid = str(message.from_user.id)
         bal = get_balance(uid)
-        bot.reply_to(message, format_shop_message(bal), parse_mode="Markdown")
+        bot.reply_to(message, format_shop_message(bal))
 
     @bot.message_handler(commands=['buy'])
     def buy_cmd(message):
