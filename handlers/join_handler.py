@@ -168,6 +168,25 @@ def register(bot):
                 )
                 return
 
+            # Academy initialization is part of the canonical join contract.
+            # Do it before rewards/referral settlement so a missing course cannot
+            # produce a false "registration complete" response.
+            try:
+                import importlib
+                academy_manager = importlib.import_module("core.academy_manager")
+                academy_started = bool(academy_manager.start_course(uid, "bitcoin_mastery"))
+            except Exception as e:
+                academy_started = False
+                print("JOIN ACADEMY START FAILED:", e)
+
+            if not academy_started:
+                bot.reply_to(
+                    msg,
+                    "⚠️ הפרופיל והסוכן נשמרו, אך אתחול ה-Academy נכשל.\n"
+                    "ההרשמה לא תאושר עד שה-Academy יהיה זמין. נסה שוב מאוחר יותר."
+                )
+                return
+
             try:
                 from core.holiday_campaign import finalize_entry
                 finalized = finalize_entry(uid)
@@ -220,14 +239,6 @@ def register(bot):
                 print("REFERRAL GRANT FAILED:", e)
 
             user_states.pop(uid, None)
-
-            # Start the canonical Academy course before presenting lesson 1.
-            try:
-                import importlib
-                academy_manager = importlib.import_module("core.academy_manager")
-                academy_manager.start_course(uid, "bitcoin_mastery")
-            except Exception as e:
-                print("JOIN ACADEMY START FAILED:", e)
 
             bot.reply_to(
                 msg,
