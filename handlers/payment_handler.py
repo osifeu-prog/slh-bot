@@ -10,9 +10,9 @@ VIP_MONTHLY_STARS = 499
 VIP_SUBSCRIPTION_PERIOD = 2592000
 
 STARS_PACKS = {
-    "100credits": (100, 100, "100 Credits"),
-    "500credits": (500, 450, "500 Credits (10% off)"),
-    "1000credits": (1000, 800, "1000 Credits (20% off)"),
+    "100credits": (100, 100, "בסיס"),
+    "500credits": (500, 550, "בונוס 10%"),
+    "1000credits": (1000, 1200, "בונוס 20%"),
 }
 
 
