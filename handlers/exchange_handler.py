@@ -1,6 +1,11 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import state_manager
+from core.slh_distribution import (
+    _release_reserved_in_db,
+    _reserve_in_db,
+    _settle_reserved_in_db,
+)
 
 ORDERS_KEY = "exchange_orders"
 TRADES_KEY = "exchange_trades"
@@ -190,10 +195,16 @@ def _match(db, incoming):
         _ledger(db, seller_uid, seller_before, cost, "exchange:settlement_credits",
                 {"trade_id": tid, "order_id": sell["id"]})
 
-        buyer_before = _get(buyer, "token_balance")
-        _set(buyer, "token_balance", buyer_before + take)
-        _ledger(db, buyer_uid, buyer_before, take, "exchange:settlement_slh",
-                {"trade_id": tid, "order_id": buy["id"]})
+        _settle_reserved_in_db(
+            db,
+            seller_uid=seller_uid,
+            buyer_uid=buyer_uid,
+            amount=take,
+            event_id=f"exchange:{tid}:slh",
+            trade_id=tid,
+            sell_order_id=sell["id"],
+            buy_order_id=buy["id"],
+        )
 
         improvement = take * (bid - price)
         if improvement > ZERO:
@@ -222,11 +233,6 @@ def _place(db, uid, side, amount, price, request_id):
     w = _wallet(db, uid)
     if side == "sell":
         available = _get(w, "token_balance")
-        if available < amount:
-            raise ValueError("INSUFFICIENT_SLH")
-        _set(w, "token_balance", available - amount)
-        _set_reserve(w, "exchange_reserved_slh",
-                     _reserve(w, "exchange_reserved_slh") + amount)
     else:
         reserve = amount * price
         available = _get(w, "credits")
@@ -238,8 +244,7 @@ def _place(db, uid, side, amount, price, request_id):
 
     order = _new_order(db, uid, side, amount, price, request_id)
     if side == "sell":
-        _ledger(db, uid, available, -amount, "exchange:sell_reserve",
-                {"order_id": order["id"], "request_id": request_id})
+        _reserve_in_db(db, uid=uid, amount=amount, order_id=order["id"])
     else:
         _ledger(db, uid, available, -amount * price, "exchange:buy_reserve",
                 {"order_id": order["id"], "request_id": request_id})
@@ -339,11 +344,9 @@ def register(bot):
                 res = Decimal(str(o["reserved_slh"]))
                 if res != rem:
                     raise ValueError("ORDER_RESERVE_MISMATCH")
-                _set_reserve(w, "exchange_reserved_slh",
-                             _reserve(w, "exchange_reserved_slh") - res)
-                before = _get(w, "token_balance")
-                _set(w, "token_balance", before + res)
-                _ledger(db, uid, before, res, "exchange:cancel_release_slh", {"order_id": oid})
+                _release_reserved_in_db(
+                    db, uid=uid, amount=res, order_id=oid
+                )
                 o["reserved_slh"] = _s(ZERO)
             else:
                 res = Decimal(str(o["reserved_credits"]))
