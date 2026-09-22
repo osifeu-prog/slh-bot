@@ -7,7 +7,7 @@ from core.stars_price_authority import VIP_SUBSCRIPTION_PERIOD
 
 REFERRALS_REQUIRED = 5
 MAX_AWARDS = 10
-OFFER_ENDS_AT = 1761944400
+OFFER_ENDS_AT = 1793483999
 AWARDS_KEY = "referral_vip_awards"
 
 
