@@ -200,6 +200,24 @@ def register(bot):
                             idempotency_key=f"ref:{uid}"
                         )
                         try:
+                            from core.referral_rewards import settle
+                            current_db = state_manager.load_db()
+                            referral_count = int(
+                                (
+                                    current_db.get("users", {})
+                                    .get(str(ref_uid), {})
+                                    .get("referral", {})
+                                    .get("count", 0)
+                                ) or 0
+                            )
+                            milestone_results = settle(str(ref_uid), referral_count)
+                            print(
+                                f"REFERRAL MILESTONE SETTLEMENT: "
+                                f"{ref_uid} count={referral_count} -> {milestone_results}"
+                            )
+                        except Exception as e:
+                            print("REFERRAL MILESTONE SETTLEMENT FAILED:", e)
+                        try:
                             from core.holiday_campaign import settle
                             settlement = settle(str(ref_uid))
                             print(
