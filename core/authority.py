@@ -100,9 +100,12 @@ def get_role(uid) -> str:
             return "ADMIN"
         return "USER" if profile else "UNKNOWN"
 
-    # Explicit developer grants take precedence over legacy admin/partner
-    # memberships. Persistent deny state above always wins.
+    # Environment developer IDs are a bootstrap grant, not an override over
+    # an explicit non-developer profile role. /dev_remove therefore remains
+    # effective even if an old Railway env entry has not been cleaned yet.
     if uid in DEVELOPER_IDS:
+        if profile_role in {"student", "user"} and developer_status != "active":
+            return "USER"
         return "DEVELOPER"
 
     if uid in ADMIN_IDS:
