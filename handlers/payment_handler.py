@@ -1,31 +1,26 @@
 import os
 import state_manager
 from core import stars_payment_authority
+from core.stars_price_authority import (
+    CREDIT_PACKS_BY_ID,
+    TELEGRAM_STARS_CURRENCY,
+    VIP_MONTHLY_STARS,
+    VIP_SUBSCRIPTION_PERIOD,
+    resolve_credit_pack,
+)
 from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
 
-VIP_MONTHLY_STARS = 499
-VIP_SUBSCRIPTION_PERIOD = 2592000
-
-STARS_PACKS = {
-    "100credits": (100, 100, "בסיס"),
-    "500credits": (500, 550, "בונוס 10%"),
-    "1000credits": (1000, 1200, "בונוס 20%"),
-}
+STARS_PACKS = CREDIT_PACKS_BY_ID
 
 
 def _resolve_stars_package(credits, stars_paid):
-    try:
-        credits = int(credits)
-        stars_paid = int(stars_paid)
-    except (TypeError, ValueError):
+    package = resolve_credit_pack(credits, stars_paid)
+    if package is None:
         return None
-    for pack_id, (expected_stars, expected_credits, label) in STARS_PACKS.items():
-        if expected_credits == credits and expected_stars == stars_paid:
-            return pack_id, expected_stars, expected_credits, label
-    return None
+    return package.pack_id, package.stars, package.credits, package.label
 
 
 def _send_pay_menu(bot, chat_id, uid):
@@ -34,9 +29,9 @@ def _send_pay_menu(bot, chat_id, uid):
         bot.send_message(chat_id, "❌ Please /join first.")
         return
     markup = InlineKeyboardMarkup(row_width=1)
-    for pack_id, (stars, credits, label) in STARS_PACKS.items():
+    for pack_id, package in STARS_PACKS.items():
         markup.add(InlineKeyboardButton(
-            text=f"⭐ {stars} Stars → {credits} Credits ({label})",
+            text=package.button_text,
             callback_data=f"pay_{pack_id}"
         ))
     bot.send_message(chat_id, "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.", reply_markup=markup)
@@ -61,7 +56,7 @@ def register_payment_handlers(bot):
                 description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
                 invoice_payload=f"vip_monthly_{uid}",
                 provider_token="",
-                currency="XTR",
+                currency=TELEGRAM_STARS_CURRENCY,
                 prices=[LabeledPrice(label="SLH VIP Monthly", amount=VIP_MONTHLY_STARS)],
                 start_parameter="slh-vip-monthly",
                 subscription_period=VIP_SUBSCRIPTION_PERIOD,
@@ -89,7 +84,8 @@ def register_payment_handlers(bot):
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
             return
-        stars, credits, label = STARS_PACKS[pack_id]
+        package = STARS_PACKS[pack_id]
+        stars, credits, label = package.stars, package.credits, package.label
         try:
             bot.send_invoice(
                 chat_id=call.message.chat.id,
