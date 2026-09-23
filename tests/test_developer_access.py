@@ -1,5 +1,7 @@
-import importlib
 import json
+import tempfile
+import unittest
+from pathlib import Path
 
 
 def seed_db(path, uid="100"):
@@ -25,139 +27,107 @@ def seed_db(path, uid="100"):
     )
 
 
-def load_service(monkeypatch, tmp_path):
-    import state_manager
+class DeveloperAccessTests(unittest.TestCase):
+    def setUp(self):
+        import state_manager
 
-    monkeypatch.setattr(state_manager, "DB_FILE", str(tmp_path / "db.json"))
-    monkeypatch.setattr(
-        state_manager,
-        "_LOCK_PATH",
-        str(tmp_path / "db.json.lock"),
-    )
+        self.state_manager = state_manager
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db_path = Path(self.tmp.name) / "db.json"
+        seed_db(self.db_path)
 
-    from core import developer_access
+        self.old_db_file = state_manager.DB_FILE
+        self.old_lock_path = state_manager._LOCK_PATH
+        state_manager.DB_FILE = str(self.db_path)
+        state_manager._LOCK_PATH = str(self.db_path) + ".lock"
 
-    return importlib.reload(developer_access)
+        from core import developer_access
 
+        self.service = developer_access
 
-def set_bitcoin_complete(state_manager):
-    data = state_manager.load_db()
-    data["users"]["100"]["academy"]["courses"]["bitcoin_mastery"] = {
-        "stage": 12,
-        "completed": list(range(1, 13)),
-    }
-    state_manager.save_db(data)
+    def tearDown(self):
+        self.state_manager.DB_FILE = self.old_db_file
+        self.state_manager._LOCK_PATH = self.old_lock_path
+        self.tmp.cleanup()
 
+    def _set_bitcoin_complete(self):
+        data = self.state_manager.load_db()
+        data["users"]["100"]["academy"]["courses"]["bitcoin_mastery"] = {
+            "stage": 12,
+            "completed": list(range(1, 13)),
+        }
+        self.state_manager.save_db(data)
 
-def test_bitcoin_mastery_is_required(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
+    def test_bitcoin_mastery_is_required(self):
+        result = self.service.prerequisite_status("100")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason"], "bitcoin_mastery_incomplete")
 
-    result = service.prerequisite_status("100")
-    assert result["ok"] is False
-    assert result["reason"] == "bitcoin_mastery_incomplete"
+        self._set_bitcoin_complete()
 
-    import state_manager
+        result = self.service.prerequisite_status("100")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["completed"], 12)
+        self.assertEqual(result["required"], 12)
 
-    set_bitcoin_complete(state_manager)
+    def test_request_is_idempotent(self):
+        self._set_bitcoin_complete()
 
-    result = service.prerequisite_status("100")
-    assert result["ok"] is True
-    assert result["completed"] == 12
-    assert result["required"] == 12
+        first = self.service.request_access("100")
+        second = self.service.request_access("100")
 
+        self.assertTrue(first["ok"])
+        self.assertEqual(first["status"], "pending")
+        self.assertTrue(second["ok"])
+        self.assertEqual(second["status"], "pending")
 
-def test_request_is_idempotent(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
+        stored = self.state_manager.load_db()["developer_access_requests"]["100"]
+        self.assertEqual(stored["status"], "pending")
 
-    import state_manager
+    def test_approval_rechecks_course(self):
+        self._set_bitcoin_complete()
+        self.assertTrue(self.service.request_access("100")["ok"])
 
-    set_bitcoin_complete(state_manager)
+        data = self.state_manager.load_db()
+        data["users"]["100"]["academy"]["courses"]["bitcoin_mastery"]["completed"] = []
+        self.state_manager.save_db(data)
 
-    first = service.request_access("100")
-    second = service.request_access("100")
+        result = self.service.approve_access("100", "8789977826")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason"], "bitcoin_mastery_incomplete")
 
-    assert first["ok"] is True
-    assert first["status"] == "pending"
-    assert second["ok"] is True
-    assert second["status"] == "pending"
+    def test_approval_sets_role_after_prerequisite(self):
+        self._set_bitcoin_complete()
+        self.assertTrue(self.service.request_access("100")["ok"])
 
-    stored = state_manager.load_db()["developer_access_requests"]["100"]
-    assert stored["status"] == "pending"
+        result = self.service.approve_access("100", "8789977826")
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["status"], "approved")
 
+        user = self.state_manager.load_db()["users"]["100"]
+        self.assertEqual(user["role"], "developer")
+        self.assertEqual(user["developer_access_status"], "active")
+        self.assertIn("agents.view_all", user["permissions"])
+        self.assertEqual(
+            self.state_manager.load_db()["developer_access_requests"]["100"]["status"],
+            "approved",
+        )
 
-def test_approval_rechecks_course_and_sets_developer_role(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
+    def test_non_owner_cannot_approve(self):
+        self._set_bitcoin_complete()
+        self.assertTrue(self.service.request_access("100")["ok"])
 
-    import state_manager
+        result = self.service.approve_access("100", "200")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason"], "owner_only")
 
-    set_bitcoin_complete(state_manager)
+    def test_approval_requires_pending_request(self):
+        self._set_bitcoin_complete()
 
-    assert service.request_access("100")["ok"] is True
-
-    # Course can no longer be considered complete at approval time.
-    data = state_manager.load_db()
-    data["users"]["100"]["academy"]["courses"]["bitcoin_mastery"]["completed"] = []
-    state_manager.save_db(data)
-
-    result = service.approve_access("100", "8789977826")
-    assert result["ok"] is False
-    assert result["reason"] == "bitcoin_mastery_incomplete"
-
-
-def test_approval_sets_role_only_after_fresh_prerequisite_check(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
-
-    import state_manager
-
-    set_bitcoin_complete(state_manager)
-
-    assert service.request_access("100")["ok"] is True
-    result = service.approve_access("100", "8789977826")
-
-    assert result["ok"] is True
-    assert result["status"] == "approved"
-
-    data = state_manager.load_db()
-    user = data["users"]["100"]
-    assert user["role"] == "developer"
-    assert user["developer_access_status"] == "active"
-    assert "agents.view_all" in user["permissions"]
-    assert data["developer_access_requests"]["100"]["status"] == "approved"
+        result = self.service.approve_access("100", "8789977826")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["reason"], "request_not_pending")
 
 
-def test_non_owner_cannot_approve(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
-
-    import state_manager
-
-    set_bitcoin_complete(state_manager)
-
-    assert service.request_access("100")["ok"] is True
-    result = service.approve_access("100", "200")
-
-    assert result["ok"] is False
-    assert result["reason"] == "owner_only"
-
-
-def test_approval_requires_pending_request(tmp_path, monkeypatch):
-    db = tmp_path / "db.json"
-    seed_db(db)
-    service = load_service(monkeypatch, tmp_path)
-
-    import state_manager
-
-    set_bitcoin_complete(state_manager)
-
-    result = service.approve_access("100", "8789977826")
-    assert result["ok"] is False
-    assert result["reason"] == "request_not_pending"
+if __name__ == "__main__":
+    unittest.main()
