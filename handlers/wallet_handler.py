@@ -73,8 +73,8 @@ def register(bot):
 
         text += (
             "📤 העברת Credits: /transfer <uid> <amount>\n"
+            "🎁 מתנת Credits: /gift <uid> <amount>\n"
             "🎁 מרכז מתנות ו-Airdrop: /gifts\n"
-            "🪙 העברת SLH: /p2p_slh <uid> <amount>\n"
             "⭐ רכישת Credits: /pay\n"
             "📜 היסטוריית תשלומים: /history\n\n"
             "🌐 BNB/TON deposits: מושהים כרגע עד להשלמת user-binding מאומת.\n"
