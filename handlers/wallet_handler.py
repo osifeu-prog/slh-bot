@@ -73,6 +73,7 @@ def register(bot):
 
         text += (
             "📤 העברת Credits: /transfer <uid> <amount>\n"
+            "🎁 מרכז מתנות ו-Airdrop: /gifts\n"
             "🪙 העברת SLH: /p2p_slh <uid> <amount>\n"
             "⭐ רכישת Credits: /pay\n"
             "📜 היסטוריית תשלומים: /history\n\n"
