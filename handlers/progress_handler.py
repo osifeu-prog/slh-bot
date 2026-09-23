@@ -10,6 +10,23 @@ from core.progress_tracker import (
 )
 
 
+
+DEFAULT_TASK = "SOW Security Completion"
+DEFAULT_TASK_ID = "SOW-P1-SECURITY"
+DEFAULT_PHASE = "Phase 1 — Security Completion"
+
+
+def _resolve_task(message, allow_default=False):
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) >= 2 and parts[1].strip():
+        return parts[1].strip()
+    if allow_default:
+        return DEFAULT_TASK
+    from core.progress_tracker import get_active_work
+    active = get_active_work(message.from_user.id)
+    return active.get("task") if active else None
+
+
 def register_handlers(bot, context=None):
     @bot.message_handler(commands=["progress"])
     def progress_cmd(message):
@@ -17,12 +34,13 @@ def register_handlers(bot, context=None):
 
     @bot.message_handler(commands=["startwork"])
     def startwork_cmd(message):
-        parts = (message.text or "").split(maxsplit=1)
-        if len(parts) < 2:
-            bot.reply_to(message, "שימוש: /startwork <שם משימה>")
-            return
-        task_name = parts[1].strip()
-        if start_work(task_name, message.from_user.id):
+        task_name = _resolve_task(message, allow_default=True)
+        if start_work(
+            task_name,
+            message.from_user.id,
+            task_id=DEFAULT_TASK_ID if task_name == DEFAULT_TASK else None,
+            phase=DEFAULT_PHASE if task_name == DEFAULT_TASK else None,
+        ):
             bot.reply_to(
                 message,
                 "⏱️ מדידת זמן החלה.\n\n"
@@ -36,11 +54,10 @@ def register_handlers(bot, context=None):
 
     @bot.message_handler(commands=["pausework"])
     def pausework_cmd(message):
-        parts = (message.text or "").split(maxsplit=1)
-        if len(parts) < 2:
-            bot.reply_to(message, "שימוש: /pausework <שם משימה>")
+        task_name = _resolve_task(message)
+        if not task_name:
+            bot.reply_to(message, "אין משימת עבודה פעילה. שימוש: /startwork [שם משימה]")
             return
-        task_name = parts[1].strip()
         if pause_work(task_name, message.from_user.id):
             bot.reply_to(
                 message,
@@ -52,11 +69,10 @@ def register_handlers(bot, context=None):
 
     @bot.message_handler(commands=["resumework"])
     def resumework_cmd(message):
-        parts = (message.text or "").split(maxsplit=1)
-        if len(parts) < 2:
-            bot.reply_to(message, "שימוש: /resumework <שם משימה>")
+        task_name = _resolve_task(message)
+        if not task_name:
+            bot.reply_to(message, "אין משימת עבודה פעילה. שימוש: /startwork [שם משימה]")
             return
-        task_name = parts[1].strip()
         if resume_work(task_name, message.from_user.id):
             bot.reply_to(
                 message,
@@ -72,11 +88,10 @@ def register_handlers(bot, context=None):
 
     @bot.message_handler(commands=["stopwork"])
     def stopwork_cmd(message):
-        parts = (message.text or "").split(maxsplit=1)
-        if len(parts) < 2:
-            bot.reply_to(message, "שימוש: /stopwork <שם משימה>")
+        task_name = _resolve_task(message)
+        if not task_name:
+            bot.reply_to(message, "אין משימת עבודה פעילה. שימוש: /startwork [שם משימה]")
             return
-        task_name = parts[1].strip()
         if stop_work(task_name, message.from_user.id):
             bot.reply_to(
                 message,
