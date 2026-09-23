@@ -86,6 +86,7 @@ def load_handlers(bot, context):
         ("staking_revenue", "handlers.staking_revenue_handler"),
         ("dev", "handlers.dev_handler"),
         ("dev_admin", "handlers.dev_admin"),
+        ("developer_access", "handlers.developer_access_handler"),
         ("ux", "handlers.ux_handler"),
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
