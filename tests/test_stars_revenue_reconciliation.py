@@ -35,7 +35,11 @@ class StarsRevenueReconciliationTests(unittest.TestCase):
             currency="XTR",
             reference="replay-charge",
             uid="test-user",
-            meta={"kind": "telegram_stars_gross"},
+            meta={
+                "kind": "telegram_stars_gross",
+                "payment_meta": {},
+                "provider_charge_id": None,
+            },
         )
 
 
