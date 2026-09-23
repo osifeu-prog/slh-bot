@@ -1,0 +1,19 @@
+כל מה שאתה שולח למודל בכל פעם:
+
+1. **ההודעה הנוכחית של המשתמש**
+2. **כל ההיסטוריה של השיחה** — כן, נשלחת כולה בכל פעם!
+3. **System prompt** — ההוראות הקבועות שאתה נותן למודל
+4. **מסמכים מצורפים, RAG context, או נתונים שאתה דוחף לתוך הפרומפט**
+5. **הגדרת הכלים (Tool definitions / Function schemas)** — אם אתה משתמש ב-function calling, ה-JSON schema של הכלים נספר כטוקנים בכל פנייה
+
+**טריק החיסכון:** את ה-system prompt הקבוע + הגדרת הכלים → שים ב-Cache. אנתרופיק וגוגל נותנים עד 90% הנחה על תוכן שחוזר על עצמו.
+
+**Python דוגמה:**
+```python
+import tiktoken
+enc = tiktoken.encoding_for_model("gpt-4o")
+prompt = "אני רוצה לבנות מערכת..."
+print(f"Token count: {len(enc.encode(prompt))}")
+```
+
+---
