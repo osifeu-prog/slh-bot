@@ -17,6 +17,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
     def test_catalog_has_real_fulfillment_grants(self):
         expected = {
             "course_bitcoin_101": ("course", "bitcoin_mastery"),
+            "ai_tokens_course": ("course", "ai_tokens"),
             "emoji_bitcoin": ("digital", "emoji_bitcoin"),
             "emoji_slh": ("digital", "emoji_slh"),
             "emoji_vip": ("digital", "emoji_vip"),

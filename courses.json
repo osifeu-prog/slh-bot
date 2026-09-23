@@ -123,5 +123,118 @@
         "lesson": "lessons/slh_vs_eth_sol/5.txt"
       }
     ]
+  },
+  "ai_tokens": {
+    "name": "איך מחושבים טוקנים ב-AI",
+    "stages": [
+      {
+        "id": 1,
+        "name": "פתיחה — למה זה חשוב",
+        "content": "כל מי שעובד עם AI משלם בכל פעולה. אם לא יודעים איך נוצרת העלות, הופכים מהר לבזבזנים. הקורס הזה מלמד אותך לחשוב כמו המודל - לראות את העולם דרך טוקנים, ולחתוך את העלות שלך ב-50-80% בלי לאבד איכות.\n\nמתאים ל: מפתחים שבונים אפליקציות AI, יזמים שמשלמים על API, אנשי מוצר שמתכננים מערכת AI.\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 2,
+        "name": "פרק 1: מה זה בכלל טוקן? (~12 דקות)",
+        "content": "המודל לא קורא מילים. הוא קורא **נתחים של טקסט** (sub-words) שנקראים טוקנים. רוב המודלים משתמשים בטכניקה שנקראת **BPE — Byte Pair Encoding**: היא מפרקת טקסט ליחידות קטנות שחוזרות הרבה.\n\n**מספרים מעשיים:**\n- באנגלית: 1 טוקן ≈ 4 תווים, או ≈ 0.75 מילים\n- 1,000 טוקנים ≈ 750 מילים\n- בעברית: בגלל שהטוקנייזרים אומנו על אנגלית בעיקר, מילה ממוצעת בעברית = 2-4 טוקנים\n- \"והילדים\" עשוי להתפרק ל: \"ו\" + \"ה\" + \"ילד\" + \"ים\" = 4 טוקנים. \"Children\" = 1 טוקן\n\n**משמעות:** אותו תוכן בעברית עולה פי 2-3 מאשר באנגלית. אם זה לא חיוני, כתוב prompts באנגלית גם אם המשתמש מקבל תשובה בעברית.\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 3,
+        "name": "פרק 2: טוקני קלט (Input Tokens) (~22 דקות)",
+        "content": "כל מה שאתה שולח למודל בכל פעם:\n\n1. **ההודעה הנוכחית של המשתמש**\n2. **כל ההיסטוריה של השיחה** — כן, נשלחת כולה בכל פעם!\n3. **System prompt** — ההוראות הקבועות שאתה נותן למודל\n4. **מסמכים מצורפים, RAG context, או נתונים שאתה דוחף לתוך הפרומפט**\n5. **הגדרת הכלים (Tool definitions / Function schemas)** — אם אתה משתמש ב-function calling, ה-JSON schema של הכלים נספר כטוקנים בכל פנייה\n\n**טריק החיסכון:** את ה-system prompt הקבוע + הגדרת הכלים → שים ב-Cache. אנתרופיק וגוגל נותנים עד 90% הנחה על תוכן שחוזר על עצמו.\n\n**Python דוגמה:**\n```python\nimport tiktoken\nenc = tiktoken.encoding_for_model(\"gpt-4o\")\nprompt = \"אני רוצה לבנות מערכת...\"\nprint(f\"Token count: {len(enc.encode(prompt))}\")\n```\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 4,
+        "name": "פרק 3: טוקני פלט (Output Tokens) (~18 דקות)",
+        "content": "אלה הטוקנים שהמודל מייצר. **הם יקרים פי 3-8 מטוקני קלט.**\n\n| מודל | קלט | פלט | יחס |\n|------|-----|------|-----|\n| GPT-5.4 | $2.50/M | $15/M | 6× |\n| Claude Opus 4.6 | $5/M | $25/M | 5× |\n| Claude Sonnet 4.6 | $3/M | $15/M | 5× |\n| Gemini 2.5 Pro | $2.50/M | $20/M | 8× |\n\n**משמעות אסטרטגית:**\n- אל תבקש \"תכתוב לי מאמר של 5,000 מילים\" אם אתה לא צריך\n- בקש סיכום קצר תחילה, ואז להרחיב רק את החלקים החשובים\n- השתמש ב-`max_tokens` כדי להגביל בכוח את אורך הפלט\n\n**טוקני \"מחשבה\" (Reasoning Tokens):**\nבמודלים חדשים כמו o1 או Claude Extended Thinking, יש טוקנים פנימיים של \"חשיבה\" שלא נראים בפלט הסופי **אבל אתה משלם עליהם כעל פלט.** זה יכול להיות פי 5-10 יותר ממה שראית. תזהיר את עצמך.\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 5,
+        "name": "פרק 4: היסטוריית שיחה (~16 דקות)",
+        "content": "זה החלק שתופס את רוב היזמים בהפתעה. בכל הודעה חדשה, **כל ההיסטוריה נשלחת שוב**:\n\n| הודעה | טוקני קלט |\n|-------|-----------|\n| הודעה 1 | 100 |\n| הודעה 2 | 100 (מקור) + 100 (היסטוריה) = 200 |\n| הודעה 3 | 100 + 200 = 300 |\n| הודעה 4 | 100 + 300 = 400 |\n| הודעה 10 | ~5,500 |\n| הודעה 20 | ~21,000 |\n\n**זו צמיחה ריבועית, לא ליניארית.** שיחה של 20 הודעות תעלה פי 13 משיחה של הודעה אחת × 20.\n\n**מה לעשות:**\n1. **סיכום אוטומטי**: אחרי X הודעות, סכם את ההיסטוריה לכמה משפטים והחלף אותה\n2. **קיצוץ אגרסיבי**: שמור רק את N ההודעות האחרונות\n3. **Cache the prefix**: אם יש system prompt קבוע, ה-cache יחסוך לך את החלק הזה\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 6,
+        "name": "פרק 5: חלון הקשר (Context Window) (~24 דקות)",
+        "content": "זה המספר המקסימלי של טוקנים שהמודל יכול לעבד בבת אחת.\n\n| מודל | חלון הקשר |\n|------|-----------|\n| GPT-5.4 | 272K (extended: 1M) |\n| Claude Opus 4.6 | 1M |\n| Claude Sonnet 4.6 | 1M |\n| Gemini 2.5 Pro | 1M |\n| GPT-3.5 (legacy) | 16K |\n\n**אם חורגים מהגבול:**\n- חלק מהמודלים פשוט יזרקו את ההודעות הישנות\n- חלק יזרקו שגיאה\n- חלק יסכם אוטומטית (פחות מומלץ - הם מקצרים את החלקים הלא נכונים)\n\n**יותר חלון = יותר עלות.** תוכל לשים 1M טוקנים בפרומפט אחד? כן. זה יעלה ~$2-5? גם כן.\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 7,
+        "name": "פרק 6: שפות שונות (~14 דקות)",
+        "content": "| שפה | טוקנים למילה ממוצעת |\n|-----|---------------------|\n| אנגלית | 0.75 |\n| ספרדית | 1.2 |\n| עברית | 2.5 |\n| ערבית | 2.8 |\n| סינית | 0.5 (כל תו = יחידה) |\n| יפנית | 0.6 |\n\n**אסטרטגיות לעברית:**\n1. **System prompt באנגלית, תשובה לפי בקשה**: \"Respond in Hebrew\"\n2. **Few-shot examples בעברית** רק כשצריך\n3. **שימוש ב-models שאומנו על עברית**: Claude מצוין, GPT-4o טוב, Gemini פחות\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 8,
+        "name": "פרק 7: Prompt Caching (~28 דקות)",
+        "content": "ההפתעה הגדולה של 2024-2026: הנחה של 50-90% על תוכן שחוזר על עצמו.\n\n| חברה | הנחה | מינימום | תוקף Cache |\n|------|------|---------|------------|\n| Anthropic | 90% | 1,024 טוקנים | 5 דקות (auto-extends) |\n| Google | 90% | 32,768 טוקנים | 1 שעה (configurable) |\n| OpenAI | 50% | 1,024 טוקנים | 5-10 דקות |\n\n**מתי זה עובד:**\n- מערכת RAG עם אותו corpus\n- Chat application עם system prompt קבוע\n- API שמבצע אותה פעולה עם נתונים שונים\n\n**Anthropic example (Python):**\n```python\nfrom anthropic import Anthropic\nclient = Anthropic()\nresponse = client.messages.create(\n    model=\"claude-opus-4-6\",\n    max_tokens=1024,\n    system=[\n        {\n            \"type\": \"text\",\n            \"text\": \"You are a helpful Hebrew tutor...\",\n            \"cache_control\": {\"type\": \"ephemeral\"}  # ← THIS\n        }\n    ],\n    messages=[{\"role\": \"user\", \"content\": \"שאלה ראשונה\"}],\n)\n```\n\n**חיסכון אמיתי:** במערכת SLH, בוט עם system prompt של ~3,000 טוקנים שעונה ל-100 שיחות ביום: בלי cache = $0.45/יום. עם cache = $0.05/יום. **חיסכון של 90%.**\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 9,
+        "name": "פרק 8: tiktoken — מחשב טוקנים בפועל (~32 דקות)",
+        "content": "**התקנה:**\n```bash\npip install tiktoken\n```\n\n**שימוש בסיסי:**\n```python\nimport tiktoken\n\n# Per model\nenc_gpt5 = tiktoken.encoding_for_model(\"gpt-4o\")  # uses o200k_base\nenc_gpt4 = tiktoken.encoding_for_model(\"gpt-4\")   # uses cl100k_base\n\ntext = \"Hello world\"\nprint(len(enc_gpt5.encode(text)))  # 2 tokens\n\ntext_he = \"שלום עולם\"\nprint(len(enc_gpt5.encode(text_he)))  # 6 tokens (פי 3!)\n```\n\n**מחשב עלות מלא:**\n```python\ndef estimate_cost(prompt: str, expected_output_tokens: int, model: str = \"gpt-4o\"):\n    enc = tiktoken.encoding_for_model(model)\n    input_tokens = len(enc.encode(prompt))\n    PRICING = {\n        \"gpt-4o\": (2.50, 15.00),       # per 1M tokens (input, output)\n        \"claude-opus-4-6\": (5.00, 25.00),\n    }\n    in_price, out_price = PRICING.get(model, (3.0, 15.0))\n    cost_usd = (input_tokens / 1_000_000) * in_price + (expected_output_tokens / 1_000_000) * out_price\n    return {\n        \"input_tokens\": input_tokens,\n        \"expected_output_tokens\": expected_output_tokens,\n        \"estimated_cost_usd\": round(cost_usd, 6),\n        \"estimated_cost_ils\": round(cost_usd * 3.7, 4),\n    }\n\nprint(estimate_cost(\"שאלה ארוכה...\", 500))\n```\n\n**ל-Claude / Anthropic:** אין tiktoken, יש tokenizer של אנתרופיק. Estimate מהיר: ≈ tiktoken × 1.1.\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 10,
+        "name": "פרק 9: בנייה של AI App חסכוני — Case Study SLH (~36 דקות)",
+        "content": "איך מערכת SLH חוסכת 70% מעלות AI:\n\n### לפני האופטימיזציה (חודש 1):\n- 25 בוטים, כל אחד שולח full system prompt בכל הודעה\n- אין caching\n- שיחות לא מסוכמות, היסטוריה מצטברת\n- כל בוט מחזיר response באורך מלא\n- **עלות: $850/חודש**\n\n### אחרי האופטימיזציה (חודש 3):\n1. **System prompt משותף** עם cache_control (Anthropic)\n2. **Auto-summarization** של היסטוריה אחרי 10 הודעות\n3. **max_tokens=300** ברירת מחדל (אפשר להאריך באקסטרא)\n4. **JSON compact**: `json.dumps(data, separators=(',', ':'))` חוסך 10-20% מהמשקל\n5. **Tool definitions קבועות → ב-cache**\n6. **Routing חכם**: שאלות פשוטות → Haiku ($0.25/M). מורכבות → Opus ($5/M)\n\n**עלות אחרי: $260/חודש. חיסכון של 70%.**\n\n### החלק האסטרטגי\nהמהלך הכי חזק שעשינו: **Smart routing**. במקום לשלוח הכל ל-Opus, יצרנו classifier זול שמחליט:\n- 70% מהשאלות → Haiku\n- 25% → Sonnet\n- 5% → Opus (רק שאלות באמת מורכבות)\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 11,
+        "name": "נספח א': Quick Reference Card",
+        "content": "הדפס ושמור על השולחן:\n\n```\nטוקנים מחשבון מהיר:\n- אנגלית:  1 מילה ≈ 0.75 טוקן\n- עברית:   1 מילה ≈ 2.5 טוקן\n- קוד:     שורה ≈ 5-15 טוקנים\n- JSON:    דחוס יותר טוב ב-15%\n\nמחיר ($/1M tokens):\n                Input   Output\nGPT-5.4:        2.50    15.00\nGPT-5 Mini:     0.15    0.60\nClaude Opus 4.6: 5.00    25.00\nClaude Sonnet:  3.00    15.00\nClaude Haiku:   0.25    1.25\nGemini 2.5 Pro: 2.50    20.00\n\nCache savings:\n- Anthropic:  90% off\n- Google:     90% off\n- OpenAI:     50% off\n\nחוקי אצבע:\n- Output יקר פי 5-8 מ-Input\n- היסטוריית שיחה גדלה ריבועית\n- עברית עולה פי 2.5 מאנגלית\n- Cache תמיד אם > 1024 טוקנים חוזרים\n```\n\n---",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      },
+      {
+        "id": 12,
+        "name": "נספח ב': כלי חישוב אונליין",
+        "content": "- https://platform.openai.com/tokenizer (OpenAI)\n- https://anthropic.com/tokenizer (Claude)\n- https://huggingface.co/spaces/Xenova/the-tokenizer-playground (כל המודלים)\n\n\n**סוף הקורס.** רוצה לחשב על system prompt ספציפי שלך? פנה ב-Telegram: @osifeu_prog",
+        "reward": {
+          "credits": 10,
+          "points": 25
+        }
+      }
+    ]
   }
 }

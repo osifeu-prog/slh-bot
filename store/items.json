@@ -59,5 +59,14 @@
       "plugin": "agent_os"
     },
     "price_stars": 199
+  },
+  "ai_tokens_course": {
+    "name": "קורס: איך מחושבים טוקנים ב-AI",
+    "price": 0,
+    "type": "course",
+    "grant": {
+      "course": "ai_tokens"
+    },
+    "price_stars": 299
   }
 }
