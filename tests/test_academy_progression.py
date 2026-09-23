@@ -3,6 +3,8 @@
 import sys
 import types
 
+import pytest
+
 
 # Keep the test independent of the production state volume and optional runtime deps.
 state = {}
@@ -60,9 +62,13 @@ fake_reward = types.SimpleNamespace(
 # Import production modules after the fake persistence/reward boundaries are ready.
 from core import academy_manager, lesson_engine  # noqa: E402
 
-academy_manager.profile_manager = fake_profile
-academy_manager.reward_engine = fake_reward
-lesson_engine.academy_manager = academy_manager
+
+@pytest.fixture(autouse=True)
+def isolate_production_academy_boundaries(monkeypatch):
+    """Scope fake persistence/reward boundaries to this test module only."""
+    monkeypatch.setattr(academy_manager, "profile_manager", fake_profile)
+    monkeypatch.setattr(academy_manager, "reward_engine", fake_reward)
+    monkeypatch.setattr(lesson_engine, "academy_manager", academy_manager)
 
 
 def test_start_initializes_progress_and_is_idempotent():

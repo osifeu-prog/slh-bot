@@ -83,8 +83,18 @@ def test_join_handler_gates_completion_on_academy_initialization(monkeypatch):
         for node in ast.walk(tree)
         if isinstance(node, ast.Name)
     }
+    call_names = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    call_names |= {
+        node.func.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
     assert "academy_started" in names
-    assert "start_course" in names
+    assert "start_course" in call_names
 
 
 def test_staking_contract_is_alpha_critical(monkeypatch):
