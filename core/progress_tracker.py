@@ -119,9 +119,15 @@ def start_work(task_name, user_id, task_id=None, phase=None):
         return False
 
     log = _load_work_log()
-    existing = _active_entry(log, task_name, user_id)
-    if existing:
-        return False
+    # Keep one active clock per user so task-less pause/resume/stop stays deterministic.
+    uid = str(user_id)
+    for existing in reversed(log):
+        if (
+            str(existing.get("user")) == uid
+            and existing.get("stop") is None
+            and existing.get("status", "running") in {"running", "paused"}
+        ):
+            return False
 
     now = _now()
     entry = {
