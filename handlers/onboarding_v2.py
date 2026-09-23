@@ -110,6 +110,7 @@ def register(bot, context=None):
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton("📚 המשך לקורס", callback_data="continue_course"))
         markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
+        markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
         markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
         bot.send_message(chat_id, safe_clip(text), reply_markup=markup)
 
@@ -205,6 +206,7 @@ def register(bot, context=None):
             markup.add(types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"), types.InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"))
             markup.add(types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"), types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"))
             markup.add(types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"), types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"))
+            markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
             markup.add(types.InlineKeyboardButton("🚀 פתיחת Mini App", web_app=types.WebAppInfo(url="https://web-production-22f28.up.railway.app/mini-app?v=20260918-system")))
             markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
             bot.send_message(
@@ -228,6 +230,7 @@ def register(bot, context=None):
         )
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton("🚀 הצטרף ל-SLH", callback_data="start_join"))
+        markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
         markup.add(types.InlineKeyboardButton("📖 עזרה", callback_data="show_help"))
         bot.send_message(m.chat.id, text, reply_markup=markup)
 
@@ -263,6 +266,8 @@ def register(bot, context=None):
             "/academy — Academy\n"
             "/pay — Credits דרך Telegram Stars\n"
             "/wallet — ארנק Credits\n"
+            "/gifts — מתנות, Rewards ו-Airdrop\n"
+            "/gift <uid> <amount> — שליחת מתנת Credits\n"
             "/stake <amount> — Staking פנימי\n"
             "/dashboard — לוח אישי"
         )

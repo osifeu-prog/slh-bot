@@ -72,5 +72,6 @@ def register(bot):
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton("📚 המשך קורס", callback_data="continue_course"))
         markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
+        markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
         markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
         bot.send_message(m.chat.id, text, reply_markup=markup)
