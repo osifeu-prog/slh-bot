@@ -134,46 +134,11 @@ def _orders(bot, chat_id, uid):
 
 
 def _cancel(bot, chat_id, uid, order_id):
-    def mutate(db):
-        orders = db.setdefault("exchange_orders", {})
-        order = orders.get(order_id)
-        if not order or str(order.get("uid")) != uid or order.get("status") != "open":
-            raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
+    from handlers.exchange_handler import cancel_order_in_db
 
-        from handlers.exchange_handler import (
-            _wallet, _get, _set, _reserve, _set_reserve, _ledger,
-            _s, _assert_invariants, ZERO
-        )
-
-        wallet = _wallet(db, uid)
-        remaining = Decimal(str(order["remaining_amount"]))
-
-        if order["side"] == "sell":
-            reserved = Decimal(str(order["reserved_slh"]))
-            if reserved != remaining:
-                raise ValueError("ORDER_RESERVE_MISMATCH")
-            _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserved)
-            before = _get(wallet, "token_balance")
-            _set(wallet, "token_balance", before + reserved)
-            _ledger(db, uid, before, reserved, "exchange:cancel_release_slh", {"order_id": order_id})
-            order["reserved_slh"] = _s(ZERO)
-        else:
-            reserved = Decimal(str(order["reserved_credits"]))
-            expected = remaining * Decimal(str(order["limit_price"]))
-            if reserved != expected:
-                raise ValueError("ORDER_RESERVE_MISMATCH")
-            _set_reserve(wallet, "exchange_reserved_credits", _reserve(wallet, "exchange_reserved_credits") - reserved)
-            before = _get(wallet, "credits")
-            _set(wallet, "credits", before + reserved)
-            _ledger(db, uid, before, reserved, "exchange:cancel_release_credits", {"order_id": order_id})
-            order["reserved_credits"] = _s(ZERO)
-
-        order["remaining_amount"] = _s(ZERO)
-        order["status"] = "cancelled"
-        _assert_invariants(db)
-        return True
-
-    state_manager.atomic_update(mutate)
+    state_manager.atomic_update(
+        lambda db: cancel_order_in_db(db, uid, order_id)
+    )
     bot.send_message(chat_id, f"✅ הוראה #{order_id} בוטלה")
 
 
