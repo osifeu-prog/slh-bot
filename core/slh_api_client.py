@@ -12,14 +12,20 @@ BASE = os.getenv("SLH_API_BASE", "https://slh-api-production.up.railway.app")
 TIMEOUT = 5
 
 
+SLH_SERVICE_TOKEN = os.getenv("SLH_SERVICE_TOKEN", "")
+
+
 def _get(path, params=None):
+    headers = {"Accept": "application/json"}
+    if SLH_SERVICE_TOKEN:
+        headers["X-SLH-Service-Token"] = SLH_SERVICE_TOKEN
     try:
-        r = requests.get(BASE + path, params=params or {}, timeout=TIMEOUT)
+        r = requests.get(BASE + path, params=params or {}, headers=headers, timeout=TIMEOUT)
         if r.status_code != 200:
             return None
         return r.json()
     except Exception as e:
-        print("[slh_api] " + path + " failed: " + type(e).name)
+        print("[slh_api] " + path + " failed: " + type(e).__name__)
         return None
 
 
