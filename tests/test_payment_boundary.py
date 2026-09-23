@@ -15,7 +15,8 @@ def check(name, condition):
 
 
 # Canonical packages must resolve only at their exact Stars price.
-for pack_id, (stars, credits, _label) in STARS_PACKS.items():
+for pack_id, package in STARS_PACKS.items():
+    stars, credits = package.stars, package.credits
     resolved = _resolve_stars_package(credits, stars)
     check(f"{pack_id} exact price accepted", resolved is not None and resolved[0] == pack_id)
 
