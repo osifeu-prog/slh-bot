@@ -109,6 +109,7 @@ def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
 
 
 def test_new_user_start_without_invite_stays_closed(monkeypatch):
+    monkeypatch.delenv("ALPHA_INVITE_OPEN", raising=False)
     db = {"users": {"100": {"wallet": {}}}, "pending_referrals": {}, "agents": {}}
     onboarding = _load_onboarding(monkeypatch, db)
 
