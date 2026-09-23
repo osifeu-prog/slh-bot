@@ -95,6 +95,23 @@ def apply_vip_benefits(
         )
         steps["emoji_vip"] = emoji_result.get("ok") is True
 
+        from store.engine import load_items
+        granted = []
+        for item_id, item in sorted(load_items().items()):
+            if not isinstance(item, dict):
+                continue
+            course_id = (item.get("grant") or {}).get("course")
+            if not course_id:
+                continue
+            course_result = apply_grant(
+                uid,
+                {"course": course_id},
+                purchase_id=f"vip:{charge_id}:course:{course_id}",
+            )
+            if course_result.get("ok") is True:
+                granted.append(course_id)
+        steps["courses"] = granted
+
         credits = economy_service.record_transaction(
             uid=uid,
             amount=VIP_MONTHLY_CREDITS,
@@ -117,6 +134,7 @@ def apply_vip_benefits(
                 "credits": VIP_MONTHLY_CREDITS,
                 "agent_os": steps["agent_os"],
                 "emoji_vip": steps["emoji_vip"],
+                "courses": steps.get("courses", []),
             },
         )
         return {
