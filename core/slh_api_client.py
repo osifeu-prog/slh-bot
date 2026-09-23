@@ -18,7 +18,7 @@ SLH_SERVICE_TOKEN = os.getenv("SLH_SERVICE_TOKEN", "")
 def _get(path, params=None):
     headers = {"Accept": "application/json"}
     if SLH_SERVICE_TOKEN:
-        headers["Authorization"] = "Bearer " + SLH_SERVICE_TOKEN
+        headers["X-SLH-Service-Token"] = SLH_SERVICE_TOKEN
     try:
         r = requests.get(BASE + path, params=params or {}, headers=headers, timeout=TIMEOUT)
         if r.status_code != 200:
