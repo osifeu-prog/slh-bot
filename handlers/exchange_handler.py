@@ -73,6 +73,30 @@ def _set_reserve(w, field, value):
     _set(w, field, value)
 
 
+
+def _order_filled(order):
+    original = Decimal(str(order.get("original_amount", "0")))
+    recorded = order.get("filled_amount")
+    if recorded is not None:
+        return Decimal(str(recorded))
+    remaining = Decimal(str(order.get("remaining_amount", "0")))
+    return max(ZERO, original - remaining)
+
+
+def _sync_request(db, order):
+    request_id = order.get("client_request_id")
+    if not request_id:
+        return
+    remaining = Decimal(str(order.get("remaining_amount", "0")))
+    filled = _order_filled(order)
+    db.setdefault(REQUESTS_KEY, {})[request_id] = {
+        "order_id": order["id"],
+        "filled": _s(filled),
+        "remaining": _s(remaining),
+        "status": str(order.get("status") or "open"),
+    }
+
+
 def _next(db):
     db[SEQ_KEY] = int(db.get(SEQ_KEY, 0)) + 1
     return db[SEQ_KEY]
@@ -88,6 +112,7 @@ def _new_order(db, uid, side, amount, price, request_id):
     order = {
         "id": oid, "uid": str(uid), "side": side,
         "original_amount": _s(amount), "remaining_amount": _s(amount),
+        "filled_amount": _s(ZERO),
         "limit_price": _s(price),
         "reserved_slh": _s(amount if side == "sell" else ZERO),
         "reserved_credits": _s(amount * price if side == "buy" else ZERO),
@@ -184,9 +209,12 @@ def _match(db, incoming):
             _reserve(buyer, "exchange_reserved_credits") - take * bid,
         )
         buy["reserved_credits"] = _s(buy_res - take * bid)
-        buy["remaining_amount"] = _s(Decimal(str(buy["remaining_amount"])) - take)
-        sell["reserved_slh"] = _s(sell_res - take)
-        sell["remaining_amount"] = _s(Decimal(str(sell["remaining_amount"])) - take)
+        buy_remaining = Decimal(str(buy["remaining_amount"])) - take
+        buy["remaining_amount"] = _s(buy_remaining)
+        buy["filled_amount"] = _s(_order_filled(buy) + take)
+        sell_remaining = Decimal(str(sell["remaining_amount"])) - take
+        sell["remaining_amount"] = _s(sell_remaining)
+        sell["filled_amount"] = _s(_order_filled(sell) + take)
 
         settle_reserve_in_db(
             db,
@@ -224,15 +252,20 @@ def _match(db, incoming):
         remaining -= take
         if Decimal(str(resting["remaining_amount"])) == ZERO:
             resting["status"] = "filled"
+        else:
+            resting["status"] = "open"
+        _sync_request(db, resting)
 
     if remaining == ZERO:
         incoming["status"] = "filled"
+    else:
+        incoming["status"] = "open"
+    _sync_request(db, incoming)
     return filled, remaining
 
 
 def _place(db, uid, side, amount, price, request_id):
     w = _wallet(db, uid)
-    order_id_preview = None
 
     if side == "sell":
         # The order ID is required for the canonical SLH reserve event, so
@@ -273,9 +306,58 @@ def _place(db, uid, side, amount, price, request_id):
         "order_id": order["id"], "filled": _s(filled), "remaining": _s(remaining),
         "status": order["status"],
     }
-    db.setdefault(REQUESTS_KEY, {})[request_id] = result
+    _sync_request(db, order)
     _assert_invariants(db)
     return result
+
+
+
+def cancel_order_in_db(db, uid, order_id):
+    uid = str(uid)
+    oid = str(order_id)
+    order = db.setdefault(ORDERS_KEY, {}).get(oid)
+    if not order or str(order.get("uid")) != uid or order.get("status") != "open":
+        raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
+
+    wallet = _wallet(db, uid)
+    remaining = Decimal(str(order["remaining_amount"]))
+    filled = _order_filled(order)
+
+    if order["side"] == "sell":
+        reserved = Decimal(str(order["reserved_slh"]))
+        if reserved != remaining:
+            raise ValueError("ORDER_RESERVE_MISMATCH")
+        release_reserve_in_db(
+            db,
+            uid=uid,
+            amount=reserved,
+            event_id=f"exchange:release_slh:{oid}",
+            order_id=oid,
+        )
+        order["reserved_slh"] = _s(ZERO)
+    else:
+        reserved = Decimal(str(order["reserved_credits"]))
+        expected = remaining * Decimal(str(order["limit_price"]))
+        if reserved != expected:
+            raise ValueError("ORDER_RESERVE_MISMATCH")
+        _set_reserve(
+            wallet, "exchange_reserved_credits",
+            _reserve(wallet, "exchange_reserved_credits") - reserved,
+        )
+        before = _get(wallet, "credits")
+        _set(wallet, "credits", before + reserved)
+        _ledger(
+            db, uid, before, reserved, "exchange:cancel_release_credits",
+            {"order_id": oid},
+        )
+        order["reserved_credits"] = _s(ZERO)
+
+    order["remaining_amount"] = _s(ZERO)
+    order["filled_amount"] = _s(filled)
+    order["status"] = "cancelled"
+    _sync_request(db, order)
+    _assert_invariants(db)
+    return True
 
 
 def register(bot):
@@ -353,47 +435,8 @@ def register(bot):
             return
         oid, uid = parts[1], str(msg.from_user.id)
 
-        def mutate(db):
-            o = db.setdefault(ORDERS_KEY, {}).get(oid)
-            if not o or str(o.get("uid")) != uid or o.get("status") != "open":
-                raise ValueError("ORDER_NOT_FOUND_OR_NOT_YOURS")
-            w = _wallet(db, uid)
-            rem = Decimal(str(o["remaining_amount"]))
-            if o["side"] == "sell":
-                res = Decimal(str(o["reserved_slh"]))
-                if res != rem:
-                    raise ValueError("ORDER_RESERVE_MISMATCH")
-                release_reserve_in_db(
-                    db,
-                    uid=uid,
-                    amount=res,
-                    event_id=f"exchange:release_slh:{oid}",
-                    order_id=oid,
-                )
-                o["reserved_slh"] = _s(ZERO)
-            else:
-                res = Decimal(str(o["reserved_credits"]))
-                expected = rem * Decimal(str(o["limit_price"]))
-                if res != expected:
-                    raise ValueError("ORDER_RESERVE_MISMATCH")
-                _set_reserve(
-                    w, "exchange_reserved_credits",
-                    _reserve(w, "exchange_reserved_credits") - res,
-                )
-                before = _get(w, "credits")
-                _set(w, "credits", before + res)
-                _ledger(
-                    db, uid, before, res, "exchange:cancel_release_credits",
-                    {"order_id": oid},
-                )
-                o["reserved_credits"] = _s(ZERO)
-            o["remaining_amount"] = _s(ZERO)
-            o["status"] = "cancelled"
-            _assert_invariants(db)
-            return True
-
         try:
-            state_manager.atomic_update(mutate)
+            state_manager.atomic_update(lambda db: cancel_order_in_db(db, uid, oid))
             bot.reply_to(msg, f"✅ הוראה #{oid} בוטלה")
         except ValueError as e:
             bot.reply_to(msg, "❌ " + str(e))
