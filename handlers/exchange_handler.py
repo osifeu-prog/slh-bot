@@ -209,12 +209,14 @@ def _match(db, incoming):
             _reserve(buyer, "exchange_reserved_credits") - take * bid,
         )
         buy["reserved_credits"] = _s(buy_res - take * bid)
+        buy_filled_before = _order_filled(buy)
         buy_remaining = Decimal(str(buy["remaining_amount"])) - take
         buy["remaining_amount"] = _s(buy_remaining)
-        buy["filled_amount"] = _s(_order_filled(buy) + take)
+        buy["filled_amount"] = _s(buy_filled_before + take)
+        sell_filled_before = _order_filled(sell)
         sell_remaining = Decimal(str(sell["remaining_amount"])) - take
         sell["remaining_amount"] = _s(sell_remaining)
-        sell["filled_amount"] = _s(_order_filled(sell) + take)
+        sell["filled_amount"] = _s(sell_filled_before + take)
 
         settle_reserve_in_db(
             db,
