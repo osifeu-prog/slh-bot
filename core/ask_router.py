@@ -23,6 +23,7 @@ INTENTS = {
     "missions": ["המשימות שלי","רשימת משימות","my tasks","show tasks","/task"],
     "progress": ["התקדמות","מצב התקדמות","progress"],
     "rewards": ["פרסים","תגמולים","rewards"],
+    "leaderboard": ["לוח מובילים","טבלת המובילים","מובילים","leaderboard","leaders","top","נקודות"],
     "wallet": ["קרדיטים","קרדיט","credits","credit","balance","יתרה","היתרה שלי","כמה יש לי","ארנק","wallet"],
     "staking": ["סטייקינג","stake","staked","נעל","נעלתי","כמה סטייק"],
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
@@ -45,7 +46,7 @@ def is_system_state_question(text):
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
 
-PRIORITY = ["time","staking","wallet","progress","rewards","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
+PRIORITY = ["time","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
 
 
 def detect_intent(text):
@@ -161,6 +162,13 @@ def route(text, uid=None):
             return progress_report()
         except Exception:
             return "לא ניתן לקרוא התקדמות כרגע."
+
+    if intent == "leaderboard":
+        try:
+            from handlers.leaderboard_handler import show_leaderboard
+            return show_leaderboard()
+        except Exception:
+            return "לא ניתן להציג את טבלת המובילים כרגע."
 
     if intent == "rewards":
         try:

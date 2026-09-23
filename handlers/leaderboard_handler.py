@@ -30,7 +30,7 @@ def register(bot):
 
 
 
-    @bot.message_handler(commands=['top','leaderboard','points'])
+    @bot.message_handler(commands=['top','leaderboard','leaderbouard','leaders','points'])
 
     def top_handler(m):
 
