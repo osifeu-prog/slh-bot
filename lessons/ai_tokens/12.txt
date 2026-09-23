@@ -1,0 +1,6 @@
+- https://platform.openai.com/tokenizer (OpenAI)
+- https://anthropic.com/tokenizer (Claude)
+- https://huggingface.co/spaces/Xenova/the-tokenizer-playground (כל המודלים)
+
+
+**סוף הקורס.** רוצה לחשב על system prompt ספציפי שלך? פנה ב-Telegram: @osifeu_prog
