@@ -1,4 +1,5 @@
-﻿from core import profile_manager
+from core import profile_manager
+from core import developer_access
 from security.permissions import get_permissions
 import state_manager
 from core.authority import is_owner, ROLES, get_role
@@ -22,6 +23,31 @@ def _role_permissions(role):
     return sorted(ROLES.get(str(role or "").upper(), []))
 
 
+def _approve_requested(bot, m, uid):
+    result = developer_access.approve_access(uid, str(m.from_user.id))
+    if not result.get("ok"):
+        reason = result.get("reason")
+        if reason == "request_not_pending":
+            bot.reply_to(m, "⛔ אין בקשת Developer ממתינה. המשתמש חייב להשלים Bitcoin Mastery ואז לשלוח /dev_request.")
+        elif reason == "bitcoin_mastery_incomplete":
+            bot.reply_to(
+                m,
+                f"🔒 Bitcoin Mastery לא הושלם: {result.get('completed', 0)}/{result.get('required', 0)}."
+            )
+        elif reason == "user_not_found":
+            bot.reply_to(m, "❌ משתמש לא נמצא.")
+        else:
+            bot.reply_to(m, f"❌ Developer approval failed: {reason or 'unknown'}")
+        return False
+
+    bot.reply_to(
+        m,
+        f"✅ Developer Access approved for {uid}.\n"
+        "RBAC role=DEVELOPER, status=active."
+    )
+    return True
+
+
 def register(bot):
     @bot.message_handler(commands=['dev_add'])
     def dev_add(m):
@@ -30,18 +56,9 @@ def register(bot):
             return
         parts = m.text.split()
         if len(parts) < 2:
-            bot.reply_to(m, "Usage: /dev_activate <user_id>")
+            bot.reply_to(m, "Usage: /dev_add <user_id>")
             return
-
-        uid = parts[1].strip()
-        user = profile_manager.get_user(uid)
-        profile_manager.update_user(uid, {
-            "role": "developer",
-            "permissions": _role_permissions("DEVELOPER"),
-            "developer_access_status": "active",
-        })
-        name = _display_name(uid, user)
-        bot.reply_to(m, f"✅ {name} ({uid}) promoted to DEVELOPER")
+        _approve_requested(bot, m, parts[1].strip())
 
     @bot.message_handler(commands=['dev_remove'])
     def dev_remove(m):
@@ -101,17 +118,9 @@ def register(bot):
             return
         parts = m.text.split()
         if len(parts) < 2:
-            bot.reply_to(m, "Usage: /dev_add <user_id>")
+            bot.reply_to(m, "Usage: /dev_activate <user_id>")
             return
-        uid = parts[1].strip()
-        user = profile_manager.get_user(uid)
-        profile_manager.update_user(uid, {
-            "role": "developer",
-            "permissions": _role_permissions("DEVELOPER"),
-            "developer_access_status": "active",
-        })
-        name = _display_name(uid, user)
-        bot.reply_to(m, f"✅ {name} ({uid}) developer access activated")
+        _approve_requested(bot, m, parts[1].strip())
 
     @bot.message_handler(commands=['dev_reward'])
     def dev_reward(m):
@@ -215,12 +224,18 @@ def register(bot):
             return
         uid = parts[1].strip()
         role = parts[2].lower()
+        if role == "developer":
+            bot.reply_to(
+                m,
+                "🔒 Direct Developer role assignment is disabled. "
+                "User must complete Bitcoin Mastery, send /dev_request, then Owner approves."
+            )
+            return
+
         update = {
             "role": role,
             "permissions": _role_permissions(role),
         }
-        if role == "developer":
-            update["developer_access_status"] = "active"
         profile_manager.update_user(uid, update)
         bot.reply_to(m, f"✅ User {uid} role changed to {role.upper()}")
 
