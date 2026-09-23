@@ -1,13 +1,4 @@
 {
-  "course_bitcoin_101": {
-    "name": "קורס ביטקוין",
-    "price": 0,
-    "type": "course",
-    "grant": {
-      "course": "bitcoin_mastery"
-    },
-    "price_stars": 299
-  },
   "esp32_pro": {
     "name": "ESP32 Pro Device",
     "price": 888,
