@@ -1,60 +1,62 @@
-#!/usr/bin/env python3
-"""Regression tests for the Telegram Stars payment boundary."""
-import sys
+"""Regression coverage for the Telegram Stars payment boundary."""
 
-sys.path.insert(0, ".")
-
-from handlers.payment_handler import STARS_PACKS, _resolve_stars_package
 from core import stars_payment_authority
+from handlers.payment_handler import STARS_PACKS, _resolve_stars_package
 
 
-def check(name, condition):
-    if not condition:
-        raise AssertionError(name)
-    print(f"PASS: {name}")
+def test_canonical_packages_resolve_only_at_exact_stars_price():
+    assert STARS_PACKS
+    for pack_id, package in STARS_PACKS.items():
+        resolved = _resolve_stars_package(package.credits, package.stars)
+        assert resolved is not None
+        assert resolved[0] == pack_id
+        assert resolved[1] == package.stars
+        assert resolved[2] == package.credits
+        assert resolved[3] == package.label
 
 
-# Canonical packages must resolve only at their exact Stars price.
-for pack_id, package in STARS_PACKS.items():
-    stars, credits = package.stars, package.credits
-    resolved = _resolve_stars_package(credits, stars)
-    check(f"{pack_id} exact price accepted", resolved is not None and resolved[0] == pack_id)
+def test_wrong_price_and_unknown_package_values_rejected():
+    assert _resolve_stars_package(100, 99) is None
+    assert _resolve_stars_package(500, 500) is None
+    assert _resolve_stars_package(1000, 801) is None
+    assert _resolve_stars_package(9999, 9999) is None
+    assert _resolve_stars_package("abc", 100) is None
+    assert _resolve_stars_package(100, "abc") is None
 
-# Wrong price, currency is handled by the caller, and unknown package values
-# must not resolve to a credit grant.
-check("100 credits at 99 Stars rejected", _resolve_stars_package(100, 99) is None)
-check("500 credits at 500 Stars rejected", _resolve_stars_package(500, 500) is None)
-check("1000 credits at 801 Stars rejected", _resolve_stars_package(1000, 801) is None)
-check("unknown credits rejected", _resolve_stars_package(9999, 9999) is None)
-check("malformed credits rejected", _resolve_stars_package("abc", 100) is None)
-check("malformed Stars rejected", _resolve_stars_package(100, "abc") is None)
 
-# The payment-path authority must reject non-Telegram-Stars currency before
-# delegating to the atomic economy service.
-try:
-    stars_payment_authority.record_stars_payment(
-        uid="test-user",
-        credits=100,
-        stars_paid=100,
-        currency="USD",
-        telegram_payment_charge_id="boundary-test-usd",
+def test_payment_authority_rejects_non_xtr_before_economy():
+    try:
+        stars_payment_authority.record_stars_payment(
+            uid="test-user",
+            credits=100,
+            stars_paid=100,
+            currency="USD",
+            telegram_payment_charge_id="boundary-test-usd",
+        )
+    except ValueError as exc:
+        assert str(exc) == "INVALID_PAYMENT_CURRENCY"
+    else:
+        raise AssertionError("non-XTR authority rejection")
+
+
+def test_payment_authority_delegates_valid_xtr_without_db_side_effects(monkeypatch):
+    called = {}
+
+    def fake_record(**kwargs):
+        called.update(kwargs)
+        return {
+            "status": "applied",
+            "uid": kwargs["uid"],
+            "credits": 100,
+            "charge_id": kwargs["telegram_payment_charge_id"],
+        }
+
+    monkeypatch.setattr(
+        stars_payment_authority.economy_service,
+        "record_stars_payment",
+        fake_record,
     )
-except ValueError as exc:
-    check("non-XTR authority rejection", str(exc) == "INVALID_PAYMENT_CURRENCY")
-else:
-    raise AssertionError("non-XTR authority rejection")
 
-# A valid XTR request must still delegate to the existing atomic economy
-# authority. Stub only the downstream call so this test has no DB side effect.
-called = {}
-original = stars_payment_authority.economy_service.record_stars_payment
-
-def fake_record(**kwargs):
-    called.update(kwargs)
-    return {"status": "applied", "uid": kwargs["uid"], "credits": 100, "charge_id": kwargs["telegram_payment_charge_id"]}
-
-stars_payment_authority.economy_service.record_stars_payment = fake_record
-try:
     result = stars_payment_authority.record_stars_payment(
         uid="test-user",
         credits=100,
@@ -62,9 +64,13 @@ try:
         currency="XTR",
         telegram_payment_charge_id="boundary-test-xtr",
     )
-finally:
-    stars_payment_authority.economy_service.record_stars_payment = original
 
-check("XTR authority delegates", called.get("currency") == "XTR" and result["status"] == "applied")
+    assert called["currency"] == "XTR"
+    assert called["uid"] == "test-user"
+    assert called["credits"] == 100
+    assert result["status"] == "applied"
 
-print("PAYMENT BOUNDARY TESTS: PASS")
+
+if __name__ == "__main__":
+    import pytest
+    raise SystemExit(pytest.main([__file__]))
