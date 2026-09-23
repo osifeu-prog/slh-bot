@@ -28,8 +28,6 @@ def load_handlers(bot, context):
         ("bot_factory", "handlers.bot_factory"),
         ("stars_store", "handlers.stars_store"),
         ("webapp_data", "handlers.webapp_data_handler"),
-
-
         ("e", "handlers.e_handler"),
         ("alpha_control", "handlers.alpha_control_handler"),
         ("reconcile", "handlers.reconcile_handler"),
@@ -86,6 +84,7 @@ def load_handlers(bot, context):
         ("staking_revenue", "handlers.staking_revenue_handler"),
         ("dev", "handlers.dev_handler"),
         ("dev_admin", "handlers.dev_admin"),
+        ("developer_access", "handlers.developer_access_handler"),
         ("ux", "handlers.ux_handler"),
         ("admin", "admin_handler"),
         ("admin_extras", "handlers.admin_extras"),
