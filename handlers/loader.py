@@ -169,4 +169,10 @@ def load_handlers(bot, context):
         print("🧠 advanced ask loaded")
     except Exception as e:
         print("ask skipped:", e)
+    try:
+        from handlers.natural_chat import register as register_natural_chat
+        register_natural_chat(bot)
+        print("💬 natural chat loaded")
+    except Exception as e:
+        print("natural chat skipped:", e)
     print("✅ ALL HANDLERS READY")
