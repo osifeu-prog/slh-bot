@@ -84,6 +84,11 @@ def _status_text(uid):
 
 def _home_markup(uid):
     markup = types.InlineKeyboardMarkup(row_width=2)
+    db = state_manager.load_db()
+    if str(uid) not in (db.get("users", {}) or {}):
+        markup.add(types.InlineKeyboardButton("🚀 הצטרף ל-SLH", callback_data="start_join"))
+        markup.add(types.InlineKeyboardButton("📖 עזרה", callback_data="show_help"))
+        return markup
     markup.add(
         types.InlineKeyboardButton("🎁 שלח מתנה", callback_data="gifts:send"),
         types.InlineKeyboardButton("🪂 בדוק Airdrop", callback_data="gifts:airdrop"),
