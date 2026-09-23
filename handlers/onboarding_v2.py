@@ -267,6 +267,7 @@ def register(bot, context=None):
             "/pay — Credits דרך Telegram Stars\n"
             "/wallet — ארנק Credits\n"
             "/gifts — מתנות, Rewards ו-Airdrop\n"
+            "/gift <uid> <amount> — שליחת מתנת Credits\n"
             "/stake <amount> — Staking פנימי\n"
             "/dashboard — לוח אישי"
         )
