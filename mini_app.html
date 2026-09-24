@@ -81,7 +81,7 @@
 })();
 </script>
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const headers=initData?{"X-Telegram-Init-Data":initData}:{};const $=id=>document.getElementById(id);let state={};
+const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const headers=initData?{"X-Telegram-Init-Data":initData}:{};console.log("[TG-AUTH]",JSON.stringify({webapp:!!tg,initDataLength:initData.length,platform:tg?.platform||"",version:tg?.version||"",userId:tg?.initDataUnsafe?.user?.id||null}));const $=id=>document.getElementById(id);let state={};
 function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;document.querySelector(".app")?.setAttribute("aria-hidden","true");document.body.classList.add("auth-required")}
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
