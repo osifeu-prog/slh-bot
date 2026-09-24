@@ -88,6 +88,19 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertEqual(self.db["users"][UID]["wallet"]["credits"], 100)
         self.assertEqual(self.db["used_ton_txs"], [TX])
 
+    def test_unsafe_rate_is_rejected_when_deposits_open(self):
+        self.tx_patch.return_value = self._tx()
+        self.settings_patch.stop()
+        unsafe = patch.object(
+            ton_deposit_service,
+            "_settings",
+            return_value=(TREASURY, 1000),
+        )
+        unsafe.start()
+        self.addCleanup(unsafe.stop)
+        with self.assertRaisesRegex(ValueError, "TON_RATE_NOT_SAFE"):
+            ton_deposit_service.settle_ton_deposit(UID, TX)
+
 
 if __name__ == "__main__":
     unittest.main()
