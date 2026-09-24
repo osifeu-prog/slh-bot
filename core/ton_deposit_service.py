@@ -38,6 +38,13 @@ def _settings():
     return wallet, Decimal(str(rate or 0))
 
 
+def deposits_are_open() -> bool:
+    if not _deposits_open():
+        return False
+    treasury, rate = _settings()
+    return bool(treasury and TON_RATE_MIN <= rate <= TON_RATE_MAX)
+
+
 def memo_for(uid) -> str:
     return f"SLH{uid}"
 
@@ -160,7 +167,7 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
 
 def settle_ton_deposit(uid, tx_hash):
     uid = str(uid)
-    if not _deposits_open():
+    if not deposits_are_open():
         raise ValueError("TON_DEPOSITS_CLOSED")
     if not isinstance(tx_hash, str) or not tx_hash.strip():
         raise ValueError("INVALID_TX_HASH")
