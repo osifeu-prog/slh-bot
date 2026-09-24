@@ -446,12 +446,12 @@ def ton_wallet_binding():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    from core.ton_deposit_service import _settings, memo_for
+    from core.ton_deposit_service import _settings, deposits_are_open, memo_for
     from core.ton_wallet_binding import get_ton_binding
     treasury, rate = _settings()
     return jsonify({
         "binding": get_ton_binding(uid),
-        "deposits_open": os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1",
+        "deposits_open": deposits_are_open(),
         "treasury": treasury,
         "credits_per_ton": float(rate),
         "memo": memo_for(uid),
