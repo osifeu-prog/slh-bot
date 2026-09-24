@@ -4,8 +4,13 @@ on:
   pull_request:
     paths:
       - 'core/wallet_binding.py'
+      - 'core/ton_wallet_binding.py'
+      - 'core/ton_deposit_service.py'
       - 'tests/test_wallet_binding.py'
+      - 'tests/test_ton_wallet_binding.py'
+      - 'tests/test_ton_deposit_service.py'
       - 'webapp.py'
+      - 'handlers/ton_address_handler.py'
       - '.github/workflows/wallet-binding.yml'
 
 jobs:
@@ -19,4 +24,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: python3 -m unittest tests/test_wallet_binding.py
+      - run: python3 -m unittest tests/test_wallet_binding.py tests/test_ton_wallet_binding.py tests/test_ton_deposit_service.py
