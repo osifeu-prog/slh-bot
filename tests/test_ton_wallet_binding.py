@@ -49,17 +49,17 @@ class TonWalletBindingTests(unittest.TestCase):
             "load_db",
             side_effect=lambda: self.db,
         )
-        self.public_key_patch = patch.object(
+        self.state_init_patch = patch.object(
             ton_wallet_binding,
-            "_get_onchain_public_key",
-            return_value=self.public_key,
+            "_get_state_init_info",
+            return_value={"address": RAW_ADDRESS, "public_key": bytes.fromhex(self.public_key)},
         )
         self.atomic_patch.start()
         self.load_patch.start()
-        self.public_key_patch.start()
+        self.state_init_patch.start()
         self.addCleanup(self.atomic_patch.stop)
         self.addCleanup(self.load_patch.stop)
-        self.addCleanup(self.public_key_patch.stop)
+        self.addCleanup(self.state_init_patch.stop)
 
     def _proof(self, payload, timestamp=None, address=RAW_ADDRESS, public_key=None):
         ts = int(timestamp or datetime.now(timezone.utc).timestamp())
@@ -69,7 +69,7 @@ class TonWalletBindingTests(unittest.TestCase):
             "address": address,
             "network": "-239",
             "public_key": public_key or self.public_key,
-            "wallet_state_init": "",
+            "wallet_state_init": "state-init-fixture",
             "proof": {
                 "timestamp": ts,
                 "domain": {
