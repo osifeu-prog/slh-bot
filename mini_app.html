@@ -194,9 +194,6 @@ async function initTonConnect(){
     manifestUrl:'https://slh-nft.com/tonconnect-manifest.json',
     buttonRootId:'tonConnectButton'
   });
-  try{
-    _tonConnectUI.uiOptions={twaReturnUrl:'https://t.me/SLH_AIR_bot'};
-  }catch(_){}
   _tonConnectUI.onStatusChange(async wallet=>{
     if(!wallet) return;
     const proofItem=wallet.connectItems?.tonProof;
