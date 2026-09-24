@@ -74,6 +74,11 @@ For TON, the new settlement service must separate:
 - on-chain TX verification,
 - economic mutation.
 
+A TON deposit must satisfy both layers:
+- the sender must equal the previously verified TON wallet binding;
+- the inbound transaction must carry the requesting user's personal memo `SLH<uid>`.
+The memo is an additional transaction identifier and is never treated as proof of wallet ownership.
+
 No TON private keys are stored or used.
 
 ## UI and Integration
@@ -131,6 +136,15 @@ No balance is copied from on-chain assets into internal SLH.
 - Failed/unconfirmed TX: reject.
 - Already-recorded TX hash: return idempotent/no-second-credit result.
 - Any partial settlement failure must leave the economic mutation atomic.
+
+## Deposit Economics Safety Gate
+
+TON user deposits remain closed by default. Opening requires:
+- runtime kill switch `TON_DEPOSITS_OPEN=1`;
+- one configured canonical TON treasury address;
+- a Credits/TON rate inside the approved 100–110 safety band.
+
+A configured rate outside the band must fail closed rather than crediting at the unsafe rate.
 
 ## Testing
 
