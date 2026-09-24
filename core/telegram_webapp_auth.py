@@ -40,6 +40,7 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     check_string = "\n".join(
         f"{key}={value}"
         for key, value in sorted(data.items())
+        if key != "signature"
     )
     secret_key = hmac.new(
         _bot_token().encode("utf-8"),
