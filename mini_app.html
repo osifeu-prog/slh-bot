@@ -209,7 +209,7 @@ async function initTonConnect(){
       const account=wallet.account||{};
       const body={
         address:account.address,
-        network:account.chain,
+        network:account.chain || account.network || '-239',
         public_key:account.publicKey,
         wallet_state_init:account.walletStateInit||account.stateInit||'',
         proof:proofItem.proof
@@ -237,8 +237,13 @@ async function bindTonWallet(){
     if(!cr.ok) throw Error(cd.error||('HTTP '+cr.status));
     _tonChallenge=cd;
     const ui=await initTonConnect();
+    if(ui.connected && typeof ui.disconnect==='function'){
+      await ui.disconnect().catch(()=>{});
+    }
     if(typeof ui.setConnectRequestParameters==='function'){
       ui.setConnectRequestParameters({state:'ready',value:{tonProof:cd.payload}});
+    }else{
+      throw Error('TON Proof request is not supported by this connector');
     }
     await ui.openModal();
   }catch(e){
