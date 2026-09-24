@@ -20,13 +20,16 @@ def register_ton_handlers(bot):
             f"Current configured rate: 1 TON = {settings.get('rate', DEFAULT_RATE)} Credits."
         )
 
-    @bot.message_handler(commands=['ton_check'])
-    def ton_check(m):
+    @bot.message_handler(commands=['ton'])
+    def ton_info(m):
+        settings = get_ton_settings()
+        open_flag = __import__("os").getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
+        status = "OPEN" if open_flag else "CLOSED"
         bot.send_message(
             m.chat.id,
-            "⛔ /ton_check מושבת זמנית.\n"
-            "אימות TX לבדו אינו מוכיח שההפקדה שייכת לחשבון Telegram המבקש.\n"
-            "המסלול יופעל מחדש רק לאחר הוספת user-binding מאומת."
+            "💎 TON deposits status: " + status + "\n"
+            f"Configured rate: 1 TON = {settings.get('credits_per_ton', settings.get('rate', DEFAULT_RATE))} Credits.\n"
+            "Use /ton_address for the treasury address and your personal memo."
         )
 
     @bot.message_handler(commands=['ton_rate'])
