@@ -249,7 +249,8 @@ def verify_ton_proof(uid, proof_payload: dict):
     if network != MAINNET:
         raise ValueError("TON_NETWORK_NOT_SUPPORTED")
 
-    public_key = _decode_public_key(proof_payload.get("public_key"))
+    supplied_public_key = proof_payload.get("public_key")
+    public_key = _decode_public_key(supplied_public_key) if supplied_public_key else None
     proof = proof_payload.get("proof") or {}
     if proof.get("payload") is None:
         raise ValueError("INVALID_TON_PROOF")
@@ -295,8 +296,9 @@ def verify_ton_proof(uid, proof_payload: dict):
     except Exception as exc:
         raise ValueError("TON_PUBLIC_KEY_LOOKUP_FAILED") from exc
 
-    if onchain_public_key != public_key:
+    if public_key is not None and onchain_public_key != public_key:
         raise ValueError("TON_PUBLIC_KEY_MISMATCH")
+    public_key = onchain_public_key
 
     digest = _proof_digest(raw_address, domain, timestamp, str(proof.get("payload")))
     try:
