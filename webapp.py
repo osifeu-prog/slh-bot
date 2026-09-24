@@ -106,8 +106,19 @@ def authenticated_uid():
     """Return the Telegram UID authenticated by server-validated initData."""
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     try:
-        return validate_init_data(init_data)["uid"]
-    except (ValueError, RuntimeError):
+        result = validate_init_data(init_data)
+        print("[AUTH] Telegram initData OK uid=", result.get("uid"))
+        return result["uid"]
+    except (ValueError, RuntimeError) as exc:
+        # Never log initData, hashes, or bot-token material. Log only the
+        # validation reason so production auth failures are diagnosable.
+        reason = str(exc) or type(exc).__name__
+        print(
+            "[AUTH] Telegram initData rejected:",
+            reason,
+            "header_present=", bool(init_data),
+            "header_length=", len(init_data),
+        )
         return None
 
 
