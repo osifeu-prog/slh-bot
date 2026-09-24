@@ -30,4 +30,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: python3 -m unittest tests/test_wallet_binding.py tests/test_ton_wallet_binding.py tests/test_ton_deposit_service.py
+      - run: python3 -m unittest tests/test_wallet_binding.py tests/test_ton_wallet_binding.py tests/test_ton_deposit_service.py tests/test_secure_wallet_binding_contract.py tests/test_wallet_and_academy_ui_contract.py
