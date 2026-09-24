@@ -97,7 +97,7 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
         self.assertEqual(repaired["revenue_ledger"][0]["reference"], "charge-revenue-recovery")
 
     def test_real_catalog_course_purchase_uses_real_grant(self):
-        item = self.catalog["course_bitcoin_101"]
+        item = self.catalog["course_ethereum"]
         self.assertEqual(item["price_stars"], 299)
 
         with patch("store.stars_purchase_service.load_items", return_value=self.catalog),              patch(
@@ -105,17 +105,17 @@ class StarsStoreFulfillmentTests(unittest.TestCase):
                  return_value={
                      "ok": True,
                      "type": "course",
-                     "value": "bitcoin_mastery",
+                     "value": "ethereum",
                      "academy_enrolled": True,
                  },
              ) as grant:
             result = purchase_item_with_stars(
-                "100", "course_bitcoin_101", 299, "real-course-charge"
+                "100", "course_ethereum", 299, "real-course-charge"
             )
 
         self.assertEqual(result["status"], "SUCCESS")
         grant.assert_called_once_with(
-            "100", {"course": "bitcoin_mastery"}, purchase_id="stars:real-course-charge"
+            "100", {"course": "ethereum"}, purchase_id="stars:real-course-charge"
         )
 
     def test_real_catalog_plugin_purchase_uses_real_grant(self):

@@ -62,7 +62,8 @@
         "name": "סיכום והמשך הדרך",
         "lesson": "lessons/bitcoin_mastery/12.txt"
       }
-    ]
+    ],
+    "access": "free"
   },
   "ethereum": {
     "title": "אתריום מאסטרי",
@@ -92,7 +93,9 @@
         "name": "אבטחה וחשיבה ביקורתית",
         "lesson": "lessons/ethereum/5.txt"
       }
-    ]
+    ],
+    "access": "paid",
+    "store_item": "course_ethereum"
   },
   "slh_vs_eth_sol": {
     "title": "SLH vs Ethereum vs Solana",
@@ -122,7 +125,9 @@
         "name": "איך משווים בלי שיווק",
         "lesson": "lessons/slh_vs_eth_sol/5.txt"
       }
-    ]
+    ],
+    "access": "paid",
+    "store_item": "course_slh_vs_eth_sol"
   },
   "ai_tokens": {
     "name": "איך מחושבים טוקנים ב-AI",
@@ -236,6 +241,7 @@
         "lesson": "lessons/ai_tokens/12.txt"
       }
     ],
-    "title": "איך מחושבים טוקנים ב-AI"
+    "title": "איך מחושבים טוקנים ב-AI",
+    "access": "free"
   }
 }
