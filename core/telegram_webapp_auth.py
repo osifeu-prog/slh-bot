@@ -37,10 +37,12 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     # Telegram WebApp validation:
     # secret_key = HMAC-SHA256(key=bot_token, data="WebAppData")
     # expected_hash = HMAC-SHA256(key=secret_key, data=data_check_string)
+    # The bot-token validation includes every received field except hash.
+    # Telegram's separate Ed25519 third-party validation is the flow that
+    # excludes both hash and signature from its data-check-string.
     check_string = "\n".join(
         f"{key}={value}"
         for key, value in sorted(data.items())
-        if key != "signature"
     )
     secret_key = hmac.new(
         _bot_token().encode("utf-8"),
