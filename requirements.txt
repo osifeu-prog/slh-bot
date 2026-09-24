@@ -9,4 +9,4 @@ paho-mqtt
 web3==7.16.0
 Pillow
 hdate
-cryptography==46.0.4
+cryptography==50.0.1
