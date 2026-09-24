@@ -20,6 +20,10 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("const domain=window.location.hostname", source)
         self.assertIn("slh-nft.com/tonconnect-manifest.json", source)
 
+    def test_ton_connect_does_not_redirect_to_noncanonical_bot(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertNotIn("SLH_AIR_bot", source)
+
 
 if __name__ == "__main__":
     unittest.main()
