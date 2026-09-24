@@ -8,6 +8,7 @@ core.ton_deposit_service authority.
 
 def register(bot, context=None):
     from core.ton_deposit_service import (
+        _settings,
         credit_new_ton_deposits,
         deposits_are_open,
         memo_for,
@@ -17,11 +18,7 @@ def register(bot, context=None):
     import state_manager
 
     def settings():
-        s = state_manager.load_db().get("ton_settings", {}) or {}
-        rate = s.get("credits_per_ton")
-        if rate in (None, "", 0):
-            rate = s.get("rate")
-        return s.get("wallet"), rate
+        return _settings()
 
     @bot.message_handler(commands=["ton_address", "ton_deposit"])
     def ton_address_cmd(msg):
