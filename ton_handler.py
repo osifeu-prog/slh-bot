@@ -7,6 +7,7 @@ DEFAULT_RATE = 109
 
 
 def register_ton_handlers(bot):
+    from core.ton_deposit_service import deposits_are_open
     def get_ton_settings():
         db = state_manager.load_db()
         return db.get("ton_settings", {"credits_per_ton": DEFAULT_RATE, "rate": DEFAULT_RATE, "testnet": False})
@@ -14,8 +15,7 @@ def register_ton_handlers(bot):
     @bot.message_handler(commands=["ton"])
     def ton_info(m):
         settings = get_ton_settings()
-        open_flag = os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
-        status = "OPEN" if open_flag else "CLOSED"
+        status = "OPEN" if deposits_are_open() else "CLOSED"
         rate = settings.get("credits_per_ton") or settings.get("rate") or DEFAULT_RATE
         bot.send_message(
             m.chat.id,
