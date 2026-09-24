@@ -30,6 +30,14 @@ class SecureWalletBindingContractTests(unittest.TestCase):
         self.assertEqual(loader.count('("exchange", "handlers.exchange_handler")'), 1)
         self.assertEqual(loader.count('("wallet", "handlers.wallet_handler")'), 1)
 
+    def test_ton_check_has_one_owner(self):
+        loader = Path("handlers/loader.py").read_text(encoding="utf-8")
+        ton_address = Path("handlers/ton_address_handler.py").read_text(encoding="utf-8")
+        ton_legacy = Path("ton_handler.py").read_text(encoding="utf-8")
+        self.assertEqual(loader.count('("ton_address", "handlers.ton_address_handler")'), 1)
+        self.assertEqual(ton_address.count('commands=["ton_check"]'), 1)
+        self.assertNotIn("commands=['ton_check']", ton_legacy)
+
 
 if __name__ == "__main__":
     unittest.main()
