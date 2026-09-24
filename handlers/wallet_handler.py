@@ -1,4 +1,5 @@
 from core import profile_manager
+import os
 from heb_convert import get_hebrew_date
 import state_manager
 
@@ -71,14 +72,34 @@ def register(bot):
         if invite:
             text += f"🔗 קישור ההזמנה האישי שלך:\n{invite}\n\n"
 
+        from core.wallet_binding import get_binding
+        from core.ton_deposit_service import _settings, deposits_are_open
+        from core.ton_wallet_binding import get_ton_binding
+
+        bnb_binding = get_binding(uid)
+        ton_binding = get_ton_binding(uid)
+        ton_treasury, ton_rate = _settings()
+        ton_open = deposits_are_open()
+
         text += (
             "📤 העברת Credits: /transfer <uid> <amount>\n"
             "🎁 מתנת Credits: /gift <uid> <amount>\n"
             "🎁 מרכז מתנות ו-Airdrop: /gifts\n"
             "⭐ רכישת Credits: /pay\n"
             "📜 היסטוריית תשלומים: /history\n\n"
-            "🌐 BNB/TON deposits: מושהים כרגע עד להשלמת user-binding מאומת.\n"
-            "המערכת אינה מזכה מטבע קריפטו לפי TX בלבד."
+            "🔐 Wallet binding:\n"
+            f"   BNB: {'✅ מאומת' if bnb_binding else '⚪️ לא מאומת'}"
+            + (f" — {bnb_binding.get('address')}" if bnb_binding else "")
+            + "\n"
+            f"   TON: {'✅ מאומת' if ton_binding else '⚪️ לא מאומת'}"
+            + (f" — {ton_binding.get('address')}" if ton_binding else "")
+            + "\n"
+            + (
+                f"   TON deposits: ✅ OPEN · 1 TON = {ton_rate:g} Credits\n"
+                if ton_open and ton_rate
+                else "   TON deposits: ⛔ CLOSED\n"
+            )
+            + "המערכת מזכה הפקדות רק לאחר binding מאומת ובדיקת sender/recipient/memo. TX לבדו אינו מספיק."
         )
 
         try:
