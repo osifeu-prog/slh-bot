@@ -73,6 +73,20 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.addCleanup(unsafe.stop)
         self.assertFalse(ton_deposit_service.deposits_are_open())
 
+    def test_settings_prefers_railway_ton_wallet_env(self):
+        from unittest.mock import patch
+        state = {
+            "ton_settings": {
+                "wallet": "YOUR_TON_WALLET_ADDRESS",
+                "rate": 109,
+            }
+        }
+        with patch.object(ton_deposit_service.state_manager, "load_db", return_value=state):
+            with patch.dict("os.environ", {"TON_WALLET": TREASURY}, clear=False):
+                wallet, rate = ton_deposit_service._settings()
+        self.assertEqual(wallet, TREASURY)
+        self.assertEqual(rate, 109)
+
     def test_wrong_sender_rejected(self):
         self.tx_patch.return_value = self._tx(sender="0:" + "44" * 32)
         with self.assertRaisesRegex(ValueError, "TON_TX_SENDER_NOT_BOUND_WALLET"):
