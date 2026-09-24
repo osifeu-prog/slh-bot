@@ -36,8 +36,7 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
 
     # Telegram's HMAC data-check-string excludes both the hash and the
     # third-party validation signature fields.
-    check_string = "
-".join(
+    check_string = "\n".join(
         f"{key}={value}"
         for key, value in sorted(data.items())
         if key != "signature"
