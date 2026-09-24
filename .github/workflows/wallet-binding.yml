@@ -15,6 +15,8 @@ on:
       - 'mini_app.html'
       - 'handlers/ton_address_handler.py'
       - 'handlers/wallet_handler.py'
+      - 'ton_handler.py'
+      - 'requirements.txt'
       - '.github/workflows/wallet-binding.yml'
 
 jobs:
