@@ -91,7 +91,10 @@ USER QUESTION:
     # Primary: Gemini (own AI model)
     try:
         result = ask_gemini(prompt)
-        if result and not result.startswith("Gemini Error:"):
+        if result and not (
+            result.startswith("Gemini Error:")
+            or result == "GEMINI_API_KEY missing"
+        ):
             return result
         print("[LLM] Gemini failed, falling back to Groq:", result[:120])
     except Exception as e:
