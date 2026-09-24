@@ -44,6 +44,13 @@ class SecureWalletBindingContractTests(unittest.TestCase):
         self.assertIn("def deposits_are_open", service)
         self.assertIn("deposits_are_open", handler)
 
+    def test_ton_handlers_use_canonical_settings(self):
+        ton_address = Path("handlers/ton_address_handler.py").read_text(encoding="utf-8")
+        wallet = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        self.assertIn("from core.ton_deposit_service import", ton_address)
+        self.assertIn("_settings", ton_address)
+        self.assertIn("_settings", wallet)
+
 
 if __name__ == "__main__":
     unittest.main()
