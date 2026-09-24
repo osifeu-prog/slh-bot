@@ -231,8 +231,7 @@ async function initTonConnect(){
 async function bindTonWallet(){
   if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
   try{
-    const domain=window.location.hostname;
-    const cr=await fetch('/api/wallet/ton/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({domain})});
+    const cr=await fetch('/api/wallet/ton/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({})});
     const cd=await cr.json().catch(()=>({}));
     if(!cr.ok) throw Error(cd.error||('HTTP '+cr.status));
     _tonChallenge=cd;
