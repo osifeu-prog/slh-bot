@@ -207,7 +207,7 @@ def register(bot, context=None):
             markup.add(types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"), types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"))
             markup.add(types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"), types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"))
             markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
-            markup.add(types.InlineKeyboardButton("🚀 פתיחת Mini App", web_app=types.WebAppInfo(url="https://web-production-22f28.up.railway.app/mini-app?v=20260918-system")))
+            markup.add(types.InlineKeyboardButton("🚀 פתיחת Mini App", web_app=types.WebAppInfo(url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260918-system")))
             markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
             bot.send_message(
                 m.chat.id,
