@@ -62,6 +62,17 @@ class TonDepositSettlementTests(unittest.TestCase):
             "observed": True,
         }
 
+    def test_unsafe_rate_makes_effective_deposits_closed(self):
+        self.settings_patch.stop()
+        unsafe = patch.object(
+            ton_deposit_service,
+            "_settings",
+            return_value=(TREASURY, 1000),
+        )
+        unsafe.start()
+        self.addCleanup(unsafe.stop)
+        self.assertFalse(ton_deposit_service.deposits_are_open())
+
     def test_wrong_sender_rejected(self):
         self.tx_patch.return_value = self._tx(sender="0:" + "44" * 32)
         with self.assertRaisesRegex(ValueError, "TON_TX_SENDER_NOT_BOUND_WALLET"):
