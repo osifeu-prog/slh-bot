@@ -37,6 +37,7 @@ def _fetch_transactions(bot, max_pages=20):
 def _local_snapshot():
     db = state_manager.load_db()
     confirmed = {}
+
     for row in db.get("transactions", []) if isinstance(db.get("transactions"), list) else []:
         charge = str(row.get("telegram_payment_charge_id") or "").strip()
         if charge:
@@ -45,6 +46,7 @@ def _local_snapshot():
                 "uid": str(row.get("uid", "")),
                 "stars": int(row.get("stars_paid", 0) or 0),
                 "kind": "credits",
+                "status": "APPLIED",
             }
 
     for charge, row in (db.get("vip_subscriptions", {}) or {}).items():
@@ -55,12 +57,32 @@ def _local_snapshot():
                 "uid": str(row.get("uid", "")),
                 "stars": int(row.get("stars_paid", 0) or 0),
                 "kind": "vip",
+                "status": str(row.get("status", "ACTIVE")),
             })
+
+    # Telegram Stars item purchases are authoritative in star_item_orders.
+    # Include every recorded order in the local correlation set, while
+    # preserving fulfillment status so RECOVERABLE orders remain visible.
+    for order_id, row in (db.get("star_item_orders", {}) or {}).items():
+        if not isinstance(row, dict):
+            continue
+        charge = str(row.get("charge_id") or "").strip()
+        if not charge:
+            continue
+        confirmed.setdefault(charge, {
+            "charge_id": charge,
+            "uid": str(row.get("uid", "")),
+            "stars": int(row.get("stars_paid", 0) or 0),
+            "kind": "item",
+            "status": str(row.get("status", "UNKNOWN")),
+            "item_id": str(row.get("item_id", "")),
+        })
 
     revenue = db.get("revenue_ledger", [])
     revenue_refs = {
         str(row.get("reference")).strip()
-        for row in revenue if isinstance(revenue, list) and row.get("currency") == "XTR"
+        for row in revenue
+        if isinstance(revenue, list) and row.get("currency") == "XTR"
     }
 
     return db, confirmed, revenue_refs
@@ -115,6 +137,19 @@ def register(bot):
             local_gross = sum(v["stars"] for v in confirmed.values())
             missing_revenue_refs = sorted(local_ids - revenue_refs)
 
+            item_orders = [
+                v for v in confirmed.values()
+                if v.get("kind") == "item"
+            ]
+            item_fulfilled = [
+                v for v in item_orders
+                if str(v.get("status")).upper() == "FULFILLED"
+            ]
+            item_recoverable = [
+                v for v in item_orders
+                if str(v.get("status")).upper() == "RECOVERABLE"
+            ]
+
             lines = [
                 "⭐ SLH — Telegram Stars authoritative audit",
                 f"Bot Stars balance: {int((balance or {}).get('amount', 0) or 0)}⭐",
@@ -125,6 +160,9 @@ def register(bot):
                 f"Matched charge IDs: {len(matched)}",
                 f"Telegram-only confirmed payments: {len(telegram_only)}",
                 f"Local-only charge IDs: {len(local_only)}",
+                f"Stars item orders: {len(item_orders)} / {sum(v['stars'] for v in item_orders)}⭐",
+                f"Stars item fulfilled: {len(item_fulfilled)}",
+                f"Stars item recoverable: {len(item_recoverable)}",
                 f"Local XTR revenue refs missing from revenue_ledger: {len(missing_revenue_refs)}",
             ]
 
@@ -134,11 +172,22 @@ def register(bot):
                     tx = next(x for x in incoming_invoice if str(x.get("id")) == charge)
                     lines.append("• " + _fmt_tx(tx))
 
+            if item_recoverable:
+                lines.append("\n⚠️ STAR ITEMS NEEDING FULFILLMENT RECOVERY:")
+                for row in item_recoverable[:20]:
+                    lines.append(
+                        f"• {row['charge_id']} | {row['stars']}⭐ | "
+                        f"uid={row['uid']} | item={row.get('item_id','?')} | status={row['status']}"
+                    )
+
             if local_only:
                 lines.append("\n⚠️ LOCAL-ONLY (local record, Telegram history not in fetched window):")
                 for charge in local_only[:20]:
                     row = confirmed[charge]
-                    lines.append(f"• {charge} | {row['stars']}⭐ | uid={row['uid']} | {row['kind']}")
+                    lines.append(
+                        f"• {charge} | {row['stars']}⭐ | uid={row['uid']} | "
+                        f"{row['kind']} | status={row.get('status')}"
+                    )
 
             lines.append("\nMatched payment details:")
             for tx in incoming_invoice:
@@ -147,7 +196,8 @@ def register(bot):
                     local = confirmed.get(charge, {})
                     lines.append("• " + _fmt_tx(tx))
                     lines.append(
-                        f"  local: uid={local.get('uid')} stars={local.get('stars')} kind={local.get('kind')}"
+                        f"  local: uid={local.get('uid')} stars={local.get('stars')} "
+                        f"kind={local.get('kind')} status={local.get('status')}"
                     )
 
             lines.append("\nLatest Telegram invoice transactions:")
