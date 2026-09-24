@@ -31,8 +31,8 @@ def _deposits_open() -> bool:
 
 def _settings():
     settings = state_manager.load_db().get("ton_settings", {}) or {}
-    wallet = settings.get("wallet")
-    rate = settings.get("credits_per_ton")
+    wallet = os.getenv("TON_WALLET", "").strip() or settings.get("wallet")
+    rate = os.getenv("TON_CREDITS_PER_TON", "").strip() or settings.get("credits_per_ton")
     if rate in (None, "", 0):
         rate = settings.get("rate")
     return wallet, Decimal(str(rate or 0))
