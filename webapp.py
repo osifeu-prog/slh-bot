@@ -413,6 +413,68 @@ def bnb_wallet_binding():
     return jsonify({"binding": get_binding(uid)}), 200
 
 
+@app.route("/api/wallet/ton/challenge", methods=["POST"])
+def ton_wallet_challenge():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.ton_wallet_binding import issue_ton_challenge
+        result = issue_ton_challenge(uid, domain=payload.get("domain"))
+        return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/ton/verify", methods=["POST"])
+def ton_wallet_verify():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.ton_wallet_binding import verify_ton_proof
+        binding = verify_ton_proof(uid, payload)
+        return jsonify({"status": "verified", "binding": binding}), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/ton")
+def ton_wallet_binding():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core.ton_deposit_service import _settings, memo_for
+    from core.ton_wallet_binding import get_ton_binding
+    treasury, rate = _settings()
+    return jsonify({
+        "binding": get_ton_binding(uid),
+        "deposits_open": os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1",
+        "treasury": treasury,
+        "credits_per_ton": float(rate),
+        "memo": memo_for(uid),
+    }), 200
+
+
+@app.route("/api/wallet/ton/check", methods=["POST"])
+def ton_wallet_check():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from core.ton_deposit_service import settle_ton_deposit
+        result = settle_ton_deposit(uid, tx_hash)
+        return jsonify(result), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/api/tasks/<uid>")
 def get_tasks(uid):
     denied = require_self(uid)
