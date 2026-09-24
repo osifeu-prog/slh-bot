@@ -95,23 +95,7 @@ def _find_ton_transaction(treasury: str, tx_hash: str):
     raise ValueError("TON_TX_NOT_FOUND")
 
 
-def settle_ton_deposit(uid, tx_hash):
-    uid = str(uid)
-    if not _deposits_open():
-        raise ValueError("TON_DEPOSITS_CLOSED")
-    if not isinstance(tx_hash, str) or not tx_hash.strip():
-        raise ValueError("INVALID_TX_HASH")
-    tx_hash = tx_hash.strip()
-
-    binding = get_ton_binding(uid)
-    if not binding:
-        raise ValueError("TON_WALLET_NOT_VERIFIED")
-
-    treasury, rate = _settings()
-    if not treasury or rate <= 0:
-        raise ValueError("TON_NOT_CONFIGURED")
-
-    transaction = _find_ton_transaction(treasury, tx_hash)
+def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
     bound_raw = normalize_ton_address(binding.get("address_raw") or binding.get("address"))
     sender = transaction.get("from") or ""
     if not sender:
@@ -135,6 +119,10 @@ def settle_ton_deposit(uid, tx_hash):
     credits = (amount_ton * rate).quantize(Decimal("0.01"))
     if credits <= 0:
         raise ValueError("INVALID_TON_CREDITS")
+
+    tx_hash = str(transaction.get("tx_hash") or "").strip()
+    if not tx_hash:
+        raise ValueError("INVALID_TX_HASH")
 
     result = record_ton_deposit(
         uid=uid,
@@ -168,6 +156,25 @@ def settle_ton_deposit(uid, tx_hash):
     }
 
 
+def settle_ton_deposit(uid, tx_hash):
+    uid = str(uid)
+    if not _deposits_open():
+        raise ValueError("TON_DEPOSITS_CLOSED")
+    if not isinstance(tx_hash, str) or not tx_hash.strip():
+        raise ValueError("INVALID_TX_HASH")
+    tx_hash = tx_hash.strip()
+
+    binding = get_ton_binding(uid)
+    if not binding:
+        raise ValueError("TON_WALLET_NOT_VERIFIED")
+
+    treasury, rate = _settings()
+    if not treasury or rate <= 0:
+        raise ValueError("TON_NOT_CONFIGURED")
+
+    transaction = _find_ton_transaction(treasury, tx_hash)
+    return _settle_observed_transaction(uid, transaction, treasury, rate, binding)
+
 def credit_new_ton_deposits(uid):
     """Scan recent treasury inbound transactions and credit matching bound deposits."""
     uid = str(uid)
@@ -178,8 +185,8 @@ def credit_new_ton_deposits(uid):
     if not binding:
         raise ValueError("TON_WALLET_NOT_VERIFIED")
 
-    treasury, _rate = _settings()
-    if not treasury:
+    treasury, rate = _settings()
+    if not treasury or rate <= 0:
         raise ValueError("TON_NOT_CONFIGURED")
 
     response = requests.get(
@@ -193,14 +200,36 @@ def credit_new_ton_deposits(uid):
     if not data.get("ok", True):
         raise ValueError("TONCENTER_ERROR")
 
+    target = normalize_ton_address(treasury)
+    bound = normalize_ton_address(binding.get("address_raw") or binding.get("address"))
+    expected_memo = memo_for(uid).lower()
     credited = []
+
     for tx in data.get("result", []) or []:
         transaction_id = tx.get("transaction_id") or {}
         tx_hash = str(transaction_id.get("hash") or "").strip()
         if not tx_hash:
             continue
+        in_msg = tx.get("in_msg") or {}
+        transaction = {
+            "tx_hash": tx_hash,
+            "from": _address_value(in_msg.get("source")),
+            "to": _address_value(in_msg.get("destination")) or _address_value(in_msg.get("dest")),
+            "amount_ton": Decimal(int(in_msg.get("value") or 0)) / NANO,
+            "memo": str(in_msg.get("message") or "").strip(),
+            "observed": True,
+            "utime": tx.get("utime"),
+            "lt": transaction_id.get("lt"),
+        }
+
         try:
-            result = settle_ton_deposit(uid, tx_hash)
+            if not transaction["from"] or normalize_ton_address(transaction["from"]) != bound:
+                continue
+            if not transaction["to"] or normalize_ton_address(transaction["to"]) != target:
+                continue
+            if transaction["memo"].lower() != expected_memo:
+                continue
+            result = _settle_observed_transaction(uid, transaction, treasury, rate, binding)
         except ValueError as exc:
             if str(exc) in {
                 "TON_TX_SENDER_NOT_BOUND_WALLET",
@@ -212,6 +241,8 @@ def credit_new_ton_deposits(uid):
             }:
                 continue
             raise
+
         if not result["idempotent"]:
             credited.append(result)
+
     return credited
