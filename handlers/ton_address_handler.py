@@ -9,15 +9,12 @@ core.ton_deposit_service authority.
 def register(bot, context=None):
     from core.ton_deposit_service import (
         credit_new_ton_deposits,
+        deposits_are_open,
         memo_for,
         settle_ton_deposit,
     )
     from core.ton_wallet_binding import get_ton_binding
-    import os
     import state_manager
-
-    def is_open():
-        return os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
 
     def settings():
         s = state_manager.load_db().get("ton_settings", {}) or {}
@@ -28,7 +25,7 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["ton_address", "ton_deposit"])
     def ton_address_cmd(msg):
-        if not is_open():
+        if not deposits_are_open():
             bot.reply_to(msg, "⛔ הפקדות TON סגורות כרגע. אל תשלח TON עד להודעה.")
             return
 
