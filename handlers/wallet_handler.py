@@ -73,13 +73,13 @@ def register(bot):
             text += f"🔗 קישור ההזמנה האישי שלך:\n{invite}\n\n"
 
         from core.wallet_binding import get_binding
+        from core.ton_deposit_service import _settings, deposits_are_open
         from core.ton_wallet_binding import get_ton_binding
 
         bnb_binding = get_binding(uid)
         ton_binding = get_ton_binding(uid)
-        ton_open = os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
-        ton_settings = db.get("ton_settings", {}) or {}
-        ton_rate = ton_settings.get("credits_per_ton") or ton_settings.get("rate") or 0
+        ton_treasury, ton_rate = _settings()
+        ton_open = deposits_are_open()
 
         text += (
             "📤 העברת Credits: /transfer <uid> <amount>\n"
