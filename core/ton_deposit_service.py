@@ -20,6 +20,8 @@ from core.ton_wallet_binding import get_ton_binding, normalize_ton_address
 
 TONCENTER_URL = os.getenv("TONCENTER_URL", "https://toncenter.com/api/v2").rstrip("/")
 TONCENTER_API_KEY = os.getenv("TONCENTER_API_KEY", "").strip()
+TON_RATE_MIN = Decimal("100")
+TON_RATE_MAX = Decimal("110")
 NANO = Decimal(10) ** 9
 
 
@@ -171,6 +173,8 @@ def settle_ton_deposit(uid, tx_hash):
     treasury, rate = _settings()
     if not treasury or rate <= 0:
         raise ValueError("TON_NOT_CONFIGURED")
+    if _deposits_open() and not (TON_RATE_MIN <= rate <= TON_RATE_MAX):
+        raise ValueError("TON_RATE_NOT_SAFE")
 
     transaction = _find_ton_transaction(treasury, tx_hash)
     return _settle_observed_transaction(uid, transaction, treasury, rate, binding)
