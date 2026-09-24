@@ -37,7 +37,7 @@ def register(bot, context=None):
 
         try:
             if action in ("buy_slh", "sell_slh") and len(parts) == 3:
-                _exchange_order(bot, chat_id, uid, action, parts[1], parts[2])
+                _exchange_order(\n                    bot, chat_id, uid, action, parts[1], parts[2],\n                    str(data.get("nonce") or message.message_id),\n                )
             elif action == "orders" and len(parts) == 1:
                 _orders(bot, chat_id, uid)
             elif action == "cancel" and len(parts) == 2:
@@ -57,7 +57,7 @@ def register(bot, context=None):
             bot.send_message(chat_id, "❌ הפעולה נכשלה: " + str(exc)[:160])
 
 
-def _exchange_order(bot, chat_id, uid, action, amount_text, price_text):
+def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
     from handlers.exchange_handler import _dec, _place
 
     amount = _dec(amount_text, "amount")
@@ -65,7 +65,7 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text):
     side = "buy" if action == "buy_slh" else "sell"
 
     # One logical Mini App action gets one idempotency key.
-    request_id = f"WEBAPP-EXCHANGE-{uid}-{side}-{amount_text}-{price_text}"
+    request_id = f"WEBAPP-EXCHANGE-{uid}-{side}-{amount_text}-{price_text}-{nonce}"
 
     def mutate(db):
         requests = db.setdefault("exchange_requests", {})
