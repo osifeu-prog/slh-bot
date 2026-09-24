@@ -115,5 +115,5 @@ def register(bot, context=None):
             msg,
             "✅ הפקדות TON אומתו וזוכו:\n"
             + "\n".join(lines)
-            + f"\n\nסה"כ: {total:g} Credits",
+            + f"\n\nסה״כ: {total:g} Credits",
         )
