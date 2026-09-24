@@ -38,6 +38,12 @@ class SecureWalletBindingContractTests(unittest.TestCase):
         self.assertEqual(ton_address.count('commands=["ton_check"]'), 1)
         self.assertNotIn("commands=['ton_check']", ton_legacy)
 
+    def test_ton_ui_uses_effective_open_guard(self):
+        service = Path("core/ton_deposit_service.py").read_text(encoding="utf-8")
+        handler = Path("handlers/ton_address_handler.py").read_text(encoding="utf-8")
+        self.assertIn("def deposits_are_open", service)
+        self.assertIn("deposits_are_open", handler)
+
 
 if __name__ == "__main__":
     unittest.main()
