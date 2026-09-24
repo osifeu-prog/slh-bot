@@ -15,6 +15,11 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("כדי לפתוח Staking: התחל קורס", source)
         self.assertIn("Academy הוא מסלול למידה נפרד", source)
 
+    def test_ton_challenge_uses_canonical_manifest_domain(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertNotIn("const domain=window.location.hostname", source)
+        self.assertIn("slh-nft.com/tonconnect-manifest.json", source)
+
 
 if __name__ == "__main__":
     unittest.main()
