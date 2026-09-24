@@ -41,6 +41,8 @@ TON_PROOF_ALLOWED_DOMAINS = {
     if x.strip()
 }
 TON_PROOF_ALLOWED_DOMAINS.add(TON_PROOF_DOMAIN)
+TONAPI_URL = os.getenv("TONAPI_URL", "https://tonapi.io").rstrip("/")
+TONAPI_TOKEN = os.getenv("TONAPI_TOKEN", "").strip()
 
 
 def _now() -> datetime:
@@ -198,6 +200,35 @@ def _public_key_from_stack_value(value) -> str:
     return number.to_bytes(32, "big").hex()
 
 
+def _get_state_init_info(wallet_state_init: str) -> dict:
+    value = str(wallet_state_init or "").strip()
+    if not value:
+        raise ValueError("TON_STATE_INIT_REQUIRED")
+
+    headers = {"Authorization": f"Bearer {TONAPI_TOKEN}"} if TONAPI_TOKEN else {}
+    try:
+        response = requests.post(
+            f"{TONAPI_URL}/v2/tonconnect/stateinit",
+            json={"state_init": value},
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except Exception as exc:
+        raise ValueError("TON_STATE_INIT_LOOKUP_FAILED") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError("TON_STATE_INIT_INVALID")
+
+    address = str(data.get("address") or "").strip()
+    public_key = str(data.get("public_key") or "").strip().lower().removeprefix("0x")
+    if not address or len(public_key) != 64:
+        raise ValueError("TON_STATE_INIT_INVALID")
+
+    return {"address": normalize_ton_address(address), "public_key": _decode_public_key(public_key)}
+
+
 def _get_onchain_public_key(address: str) -> str:
     url = f"{TONCENTER_URL}/runGetMethod"
     headers = {"X-API-Key": TONCENTER_API_KEY} if TONCENTER_API_KEY else {}
@@ -251,6 +282,16 @@ def verify_ton_proof(uid, proof_payload: dict):
 
     supplied_public_key = proof_payload.get("public_key")
     public_key = _decode_public_key(supplied_public_key) if supplied_public_key else None
+    wallet_state_init = str(proof_payload.get("wallet_state_init") or "").strip()
+    if not wallet_state_init:
+        raise ValueError("TON_STATE_INIT_REQUIRED")
+    state_info = _get_state_init_info(wallet_state_init)
+    if state_info["address"] != raw_address:
+        raise ValueError("TON_STATE_INIT_ADDRESS_MISMATCH")
+    state_public_key = state_info["public_key"]
+    if public_key is not None and public_key != state_public_key:
+        raise ValueError("TON_PUBLIC_KEY_MISMATCH")
+    public_key = state_public_key
     proof = proof_payload.get("proof") or {}
     if proof.get("payload") is None:
         raise ValueError("INVALID_TON_PROOF")
@@ -288,17 +329,6 @@ def verify_ton_proof(uid, proof_payload: dict):
         raise ValueError("TON_CHALLENGE_MISMATCH")
     if str(challenge.get("domain", "")).lower() != domain:
         raise ValueError("TON_PROOF_DOMAIN_MISMATCH")
-
-    try:
-        onchain_public_key = _decode_public_key(_get_onchain_public_key(supplied_address))
-    except ValueError:
-        raise
-    except Exception as exc:
-        raise ValueError("TON_PUBLIC_KEY_LOOKUP_FAILED") from exc
-
-    if public_key is not None and onchain_public_key != public_key:
-        raise ValueError("TON_PUBLIC_KEY_MISMATCH")
-    public_key = onchain_public_key
 
     digest = _proof_digest(raw_address, domain, timestamp, str(proof.get("payload")))
     try:
