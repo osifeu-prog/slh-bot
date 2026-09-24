@@ -34,8 +34,13 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     if not received_hash:
         raise ValueError("TELEGRAM_INIT_DATA_HASH_MISSING")
 
-    check_string = "\n".join(
-        f"{key}={value}" for key, value in sorted(data.items())
+    # Telegram's HMAC data-check-string excludes both the hash and the
+    # third-party validation signature fields.
+    check_string = "
+".join(
+        f"{key}={value}"
+        for key, value in sorted(data.items())
+        if key != "signature"
     )
     secret_key = hmac.new(
         b"WebAppData", _bot_token().encode("utf-8"), hashlib.sha256
