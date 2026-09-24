@@ -37,7 +37,10 @@ def register(bot, context=None):
 
         try:
             if action in ("buy_slh", "sell_slh") and len(parts) == 3:
-                _exchange_order(\n                    bot, chat_id, uid, action, parts[1], parts[2],\n                    str(data.get("nonce") or message.message_id),\n                )
+                _exchange_order(
+                    bot, chat_id, uid, action, parts[1], parts[2],
+                    str(data.get("nonce") or message.message_id),
+                )
             elif action == "orders" and len(parts) == 1:
                 _orders(bot, chat_id, uid)
             elif action == "cancel" and len(parts) == 2:
