@@ -14,7 +14,6 @@ OWNER_ID = str(OWNER_TELEGRAM_ID)
 # ADMIN is intentionally reserved for the owner until an explicit future
 # admin policy is introduced. Developer access is a separate role.
 ADMIN_IDS = {OWNER_ID}
-PARTNER_IDS = set()  # 5010371391 suspended pending accounting reconciliation
 
 
 def _csv_ids(name):
@@ -29,6 +28,9 @@ def _csv_ids(name):
 # day-to-day developer grants are persisted on the user profile and can be
 # managed by the OWNER through handlers/dev_admin.py.
 DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
+# Partners (alpha.distribute) are granted only via env, e.g. after an
+# accounting reconciliation is closed. Empty by default.
+PARTNER_IDS = _csv_ids("SLH_PARTNER_IDS")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {

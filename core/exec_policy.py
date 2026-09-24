@@ -73,15 +73,33 @@ def is_audit_command(cmd):
 
 
 SECRET_PATTERNS = [
-    re.compile(r"\d{8,10}:AA[A-Za-z0-9_-]{33}"),
-    re.compile(r"(sk-|gsk_|AIzaSy)[A-Za-z0-9_-]{20,}"),
+    # Telegram bot tokens
+    re.compile(r"\b\d{8,12}:AA[A-Za-z0-9_-]{30,}"),
+    # OpenAI / Anthropic / Groq style keys
+    re.compile(r"\b(?:sk-|gsk_)[A-Za-z0-9_-]{20,}"),
+    # Google API keys: classic AIza... and new AQ. format (Gemini)
+    re.compile(r"\bAIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"\bAQ\.[A-Za-z0-9_-]{20,}"),
+    # JWTs
+    re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"),
+    # PEM private keys
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----"),
 ]
+
+# NAME=value / NAME: value for secret-looking names -> keep the name, hide the value
+_ASSIGNMENT = re.compile(
+    r"(?i)\b([A-Z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|PRIVATE_KEY|DATABASE_URL|REDIS_URL)[A-Z0-9_]*)"
+    r"(\s*[:=]\s*[\"']?)([^\s\"',}]{8,})"
+)
 
 
 def redact_secrets(text):
+    if not text:
+        return text
+    text = str(text)
     for pattern in SECRET_PATTERNS:
         text = pattern.sub("[REDACTED]", text)
-    return text
+    return _ASSIGNMENT.sub(lambda m: f"{m.group(1)}{m.group(2)}[REDACTED]", text)
 
 
 AUDIT_PATH = "state/exec_audit.json"
@@ -94,7 +112,7 @@ def audit(user_id, cmd, source, result):
                 logs = json.load(f)
         except Exception:
             logs = []
-        logs.append({"user": str(user_id), "cmd": cmd, "source": source, "result": result, "time": time.time()})
+        logs.append({"user": str(user_id), "cmd": redact_secrets(cmd), "source": source, "result": result, "time": time.time()})
         os.makedirs(os.path.dirname(AUDIT_PATH), exist_ok=True)
         with open(AUDIT_PATH, "w", encoding="utf-8") as f:
             json.dump(logs, f, indent=2, ensure_ascii=False)

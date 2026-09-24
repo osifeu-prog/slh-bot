@@ -1,19 +1,25 @@
 """Revenue Share distribution engine.
 
-Distributes 80% of net ESP revenue pro-rata to stakers.
+Distributes 80% of net revenue pro-rata to active stake positions.
 Never guarantees a fixed yield. If net revenue is 0, distribution is 0.
+
+2026-09-24: reads the canonical `stake_positions` store written by
+core/staking_service.py (fields: uid, amount, created_at, unlocks_at,
+status="locked"). The previous version read a `staking_positions` key that
+no module ever wrote, so every distribution returned no_eligible_stakers.
+Positions are per position_id; payouts are aggregated per uid.
 """
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import state_manager
 
 DISTRIBUTION_RATIO = Decimal("0.80")
 ANNUAL_CAP_RATIO = Decimal("0.65")
-LOCK_PERIOD_DAYS = 365
-MIN_STAKE = Decimal("100")
+LOCK_PERIOD_DAYS = 365          # policy constant (not enforced by eligibility)
+MIN_STAKE = Decimal("100")      # policy constant (not enforced by eligibility)
 
 POOL_KEY = "revenue_share_pool"
-POSITIONS_KEY = "staking_positions"
+POSITIONS_KEY = "stake_positions"          # canonical, written by staking_service
 DISTRIBUTIONS_KEY = "revenue_distributions"
 
 
@@ -29,21 +35,35 @@ def _net(gross, costs):
     return max(_dec(gross) - _dec(costs), Decimal("0"))
 
 
+def _ts(value):
+    """stake_positions stores epoch seconds; accept ISO strings too."""
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(float(value), tz=timezone.utc)
+    dt = datetime.fromisoformat(str(value))
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def _cap(principal, staked_at):
-    days = (_now() - staked_at).days
+    days = max((_now() - staked_at).days, 0)
     years = Decimal(days) / Decimal("365")
     return _dec(principal) * ANNUAL_CAP_RATIO * years
 
 
 def _eligible(db):
+    """Active (still locked) positions, keyed by position_id."""
     now = _now()
     out = {}
-    for uid, pos in db.get(POSITIONS_KEY, {}).items():
-        if pos.get("status") != "active":
+    for pid, pos in db.get(POSITIONS_KEY, {}).items():
+        if pos.get("status") != "locked":
             continue
-        if datetime.fromisoformat(pos["unlock_at"]) <= now:
+        try:
+            if _ts(pos["unlocks_at"]) <= now:
+                continue
+            if _dec(pos.get("amount")) <= 0 or not pos.get("uid"):
+                continue
+        except (KeyError, ValueError, TypeError):
             continue
-        out[uid] = pos
+        out[pid] = pos
     return out
 
 
@@ -62,23 +82,23 @@ def distribute_revenue(gross_revenue, operating_costs, period_label):
         if not elig:
             return {"status": "no_eligible_stakers", "period": period_label}
 
-        total_staked = sum((_dec(p["principal"]) for p in elig.values()), Decimal("0"))
+        total_staked = sum((_dec(p["amount"]) for p in elig.values()), Decimal("0"))
         if total_staked <= 0:
             return {"status": "no_stake", "period": period_label}
 
         actual = Decimal("0")
         per_staker = {}
-        for uid, pos in elig.items():
-            principal = _dec(pos["principal"])
+        for pid, pos in elig.items():
+            principal = _dec(pos["amount"])
             share = (principal / total_staked) * total_to_dist
-            staked_at = datetime.fromisoformat(pos["staked_at"])
-            cap = _cap(principal, staked_at)
+            cap = _cap(principal, _ts(pos.get("created_at")))
             already = _dec(pos.get("total_received", 0))
             remaining = max(cap - already, Decimal("0"))
             payout = min(share, remaining)
             if payout <= 0:
                 continue
-            per_staker[uid] = payout
+            uid = str(pos["uid"])
+            per_staker[uid] = per_staker.get(uid, Decimal("0")) + payout
             actual += payout
             pos["total_received"] = float(already + payout)
 
@@ -92,6 +112,7 @@ def distribute_revenue(gross_revenue, operating_costs, period_label):
             "total_distributed": float(actual),
             "surplus_to_pool": float(surplus),
             "staker_count": len(per_staker),
+            "position_count": len(elig),
             "distributed_at": _now().isoformat(),
         }
 
