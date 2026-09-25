@@ -3,6 +3,49 @@ from core import lesson_engine
 from core import profile_manager
 
 
+def _stars_price(store_item):
+    try:
+        import json
+        with open("store/items.json", encoding="utf-8") as f:
+            return (json.load(f).get(store_item) or {}).get("price_stars")
+    except Exception:
+        return None
+
+
+def _access_label(data):
+    if data.get("access") != "paid":
+        return "חינם"
+    price = _stars_price(data.get("store_item", ""))
+    return f"{price}⭐" if price else "בתשלום"
+
+
+def _paid_course_lock(uid, course_id):
+    """Return a lock message if the course is paid and the user is not enrolled.
+
+    Enrollment for paid courses happens only through the store grant
+    (Stars purchase or VIP), which calls academy_manager.start_course directly.
+    Users who already started the course keep access. The owner is never locked.
+    """
+    course = academy_manager.get_courses().get(course_id) or {}
+    if course.get("access") != "paid":
+        return None
+    try:
+        from core.authority import is_owner
+        if is_owner(uid):
+            return None
+    except Exception:
+        pass
+    if academy_manager.get_course(uid, course_id):
+        return None
+    item = course.get("store_item", "")
+    price = _stars_price(item)
+    return (
+        f"🔒 {course.get('title', course_id)} הוא קורס בתשלום"
+        + (f" ({price}⭐)" if price else "")
+        + f".\n\nלרכישה: /buystars {item}"
+    )
+
+
 def register(bot):
 
     @bot.message_handler(commands=['courses'])
@@ -20,7 +63,7 @@ def register(bot):
 
         for cid, data in courses.items():
             text += (
-                f"📘 {data['title']}\n"
+                f"📘 {data['title']} — {_access_label(data)}\n"
                 f"/course_{cid}\n\n"
             )
 
@@ -54,6 +97,10 @@ def register(bot):
     def start_course(m):
         uid = str(m.from_user.id)
         course_id = m.text.replace("/course_", "", 1).split()[0]
+        locked = _paid_course_lock(uid, course_id)
+        if locked:
+            bot.reply_to(m, locked)
+            return
         ok = academy_manager.start_course(uid, course_id)
 
         if ok:

@@ -1,10 +1,21 @@
 {
-  "course_bitcoin_101": {
-    "name": "קורס ביטקוין",
+  "course_ethereum": {
+    "name": "קורס: אתריום מאסטרי",
     "price": 0,
+    "stars_only": true,
     "type": "course",
     "grant": {
-      "course": "bitcoin_mastery"
+      "course": "ethereum"
+    },
+    "price_stars": 299
+  },
+  "course_slh_vs_eth_sol": {
+    "name": "קורס: SLH מול אתריום וסולנה",
+    "price": 0,
+    "stars_only": true,
+    "type": "course",
+    "grant": {
+      "course": "slh_vs_eth_sol"
     },
     "price_stars": 299
   },
@@ -59,14 +70,5 @@
       "plugin": "agent_os"
     },
     "price_stars": 199
-  },
-  "ai_tokens_course": {
-    "name": "קורס: איך מחושבים טוקנים ב-AI",
-    "price": 0,
-    "type": "course",
-    "grant": {
-      "course": "ai_tokens"
-    },
-    "price_stars": 299
   }
 }

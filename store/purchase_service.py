@@ -161,6 +161,9 @@ def purchase(uid, item_id, request_id=None):
         return False, "ITEM_NOT_FOUND"
 
     item = items[item_id]
+    if item.get("stars_only"):
+        # Sold only through Telegram Stars; never grant it through the Credits path.
+        return False, "STARS_ONLY"
     purchase_state, error = _get_or_create_purchase(uid, item_id, request_id, item)
     if error:
         return False, error
