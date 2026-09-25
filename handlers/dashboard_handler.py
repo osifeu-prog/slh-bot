@@ -69,9 +69,28 @@ def register(bot):
             f"מה תרצה לעשות?"
         )
 
-        markup = types.InlineKeyboardMarkup(row_width=1)
-        markup.add(types.InlineKeyboardButton("📚 המשך קורס", callback_data="continue_course"))
-        markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
-        markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
-        markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
+        markup = types.InlineKeyboardMarkup(row_width=3)
+        markup.add(
+            types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"),
+            types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"),
+            types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"),
+        )
+        markup.add(
+            types.InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"),
+            types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"),
+            types.InlineKeyboardButton("🎁 Rewards", callback_data="gifts:home"),
+        )
+        markup.add(
+            types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"),
+            types.InlineKeyboardButton("📊 מערכת", callback_data="system_status"),
+            types.InlineKeyboardButton("🔄 רענון", callback_data="refresh_dashboard"),
+        )
+        markup.add(
+            types.InlineKeyboardButton(
+                "🚀 Mini App",
+                web_app=types.WebAppInfo(
+                    url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260925-dashboard"
+                ),
+            )
+        )
         bot.send_message(m.chat.id, text, reply_markup=markup)

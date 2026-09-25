@@ -46,25 +46,43 @@ def _bridge_status_display():
         return "⚪️ unknown"
 
 
+def _hebrew_date_display(gregorian_date):
+    try:
+        import hdate
+        from hdate.gematria import hebrew_number
+        from hdate.translator import set_language
+
+        set_language("he")
+        hd = hdate.HDateInfo(gregorian_date).hdate
+        return f"{hebrew_number(hd.day)} ב{hd.month} ה'{hebrew_number(hd.year)}"
+    except Exception:
+        return ""
+
+
 def load_branding():
     try:
         from datetime import datetime
-        date_greg = datetime.now().strftime("%Y-%m-%d")
+        from zoneinfo import ZoneInfo
+
+        now = datetime.now(ZoneInfo("Asia/Jerusalem"))
+        date_greg = now.strftime("%Y-%m-%d")
+        date_hebrew = _hebrew_date_display(now.date())
+
         logo_lines = [
             'בס"ד',
-            "███████╗██╗     ██╗  ██╗",
-            "██╔════╝██║     ██║  ██║",
-            "███████╗██║     ███████║",
-            "╚════██║██║     ██║  ██║",
-            "███████║███████╗██║  ██║",
-            "╚══════╝╚══════╝╚═╝  ╚═╝",
-            "",
-            "SLH SYSTEM",
-            "Smart Layer Hub",
+            f"📅 {date_hebrew}" if date_hebrew else f"📅 {date_greg}",
+            "SLH SYSTEM — Smart Layer Hub",
             "🌟 רובוטוש",
             "🆔 972500000001",
             f"🔗 BRIDGE: PC_Osif2 ({_bridge_status_display()})",
             f"Updated: {date_greg}",
+            "",
+            "███████╗██╗     ██╗  ██╗",
+            "██╔════╝██║     ██║  ██╗",
+            "███████╗██║     ███████║",
+            "╚════██║██║     ██║  ██╗",
+            "███████║███████╗██║  ██╗",
+            "╚══════╝╚══════╝╚═╝  ╚═╝",
         ]
         return "\n".join(logo_lines)
     except Exception:
@@ -109,24 +127,57 @@ def register(bot, context=None):
             if isinstance(enrolled, list)
             else "📚 קורסים: 0"
         )
+        internal_token = wallet.get("live_token_balance")
+        if internal_token in (None, ""):
+            internal_token = wallet.get("token_balance", 0)
+
         return (
             f"🌟 {display_name} — ה-Dashboard שלך\n\n"
+            f"🧾 כל היתרות:\n"
             f"💰 Credits: {wallet.get('credits', 0)}\n"
             f"🔒 Staked: {wallet.get('staked', 0)}\n"
+            f"🪙 Internal SLH: {internal_token}\n"
+            f"💎 TON Wallet: {wallet.get('ton_wallet') or 'לא מקושר'}\n\n"
             f"{course_line}\n"
             f"🤖 הסוכנים שלך: {len(owned_agents)}\n"
             f"🎯 משימות פתוחות: {tasks.get('open', 0)}\n\n"
             "מה תרצה לעשות?"
         )
 
+    def _dashboard_markup():
+        markup = types.InlineKeyboardMarkup(row_width=3)
+        markup.add(
+            types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"),
+            types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"),
+            types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"),
+        )
+        markup.add(
+            types.InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"),
+            types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"),
+            types.InlineKeyboardButton("🎁 Rewards", callback_data="gifts:home"),
+        )
+        markup.add(
+            types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"),
+            types.InlineKeyboardButton("📊 מערכת", callback_data="system_status"),
+            types.InlineKeyboardButton("🔄 רענון", callback_data="refresh_dashboard"),
+        )
+        markup.add(
+            types.InlineKeyboardButton(
+                "🚀 Mini App",
+                web_app=types.WebAppInfo(
+                    url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260925-dashboard"
+                ),
+            )
+        )
+        return markup
+
     def send_dashboard(chat_id, user_id):
         text = _personal_dashboard_text(user_id)
-        markup = types.InlineKeyboardMarkup(row_width=1)
-        markup.add(types.InlineKeyboardButton("📚 המשך לקורס", callback_data="continue_course"))
-        markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
-        markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
-        markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
-        bot.send_message(chat_id, safe_clip(text), reply_markup=markup)
+        bot.send_message(
+            chat_id,
+            safe_clip(text),
+            reply_markup=_dashboard_markup(),
+        )
 
     @bot.message_handler(commands=["start"])
     def start(m):
@@ -168,7 +219,8 @@ def register(bot, context=None):
             return
 
         from datetime import datetime
-        now = datetime.now().strftime("%Y-%m-%d")
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo("Asia/Jerusalem")).strftime("%Y-%m-%d")
         db = state_manager.load_db()
         user_wallet = db.get("users", {}).get(user_id, {}).get("wallet", {})
         credits = user_wallet.get("credits", 0)
@@ -181,16 +233,12 @@ def register(bot, context=None):
         )
 
         if is_owner:
-            # Owner /start is a single canonical surface: branding + personal summary + Dashboard.
-            # Do not emit separate Telegram messages for branding, welcome, and dashboard.
+            # Owner /start is the canonical personal control surface.
+            # Keep branding, balances and dashboard actions together in one message.
             branding = load_branding()
             dashboard_text = _personal_dashboard_text(user_id)
             owner_text = (
                 f"ברוך שובך, {user_name}!\n\n"
-                f"📅 {now}\n"
-                f"👤 משתמש: {user_name}\n"
-                f"💰 יתרה: {credits}\n"
-                f"🔒 סטייקינג: {staked}\n\n"
                 "אני רובוטוש, העוזר האישי שלך.\n"
                 "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
                 "🚀 המערכת האישית שלך מוכנה.\n\n"
@@ -199,15 +247,15 @@ def register(bot, context=None):
                 f"{invite_line}"
             )
             combined_text = "\n\n".join(
-                part for part in (f"<pre>{branding}</pre>" if branding else "", owner_text, dashboard_text) if part
+                part
+                for part in (
+                    f"<pre>{branding}</pre>" if branding else "",
+                    owner_text,
+                    dashboard_text,
+                )
+                if part
             )
-            markup = types.InlineKeyboardMarkup(row_width=2)
-            markup.add(types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"), types.InlineKeyboardButton("🤖 סוכנים", callback_data="menu_agents"))
-            markup.add(types.InlineKeyboardButton("📚 Academy", callback_data="continue_course"), types.InlineKeyboardButton("🧠 AI", callback_data="menu_ai"))
-            markup.add(types.InlineKeyboardButton("🎯 משימות", callback_data="menu_missions"), types.InlineKeyboardButton("👥 הזמנה", callback_data="menu_share"))
-            markup.add(types.InlineKeyboardButton("🎁 מתנות ו-Airdrop", callback_data="gifts:home"))
-            markup.add(types.InlineKeyboardButton("🚀 פתיחת Mini App", web_app=types.WebAppInfo(url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260918-system")))
-            markup.add(types.InlineKeyboardButton("📊 סטטוס מערכת", callback_data="system_status"))
+            markup = _dashboard_markup()
             bot.send_message(
                 m.chat.id,
                 safe_clip(combined_text),
@@ -400,6 +448,11 @@ def register(bot, context=None):
             "שירות פעיל, DB פעיל, LLM תקין.\n"
             "שלח /doctor לדוח מלא."
         )
+
+    @bot.callback_query_handler(func=lambda call: call.data == "refresh_dashboard")
+    def refresh_dashboard(call):
+        bot.answer_callback_query(call.id, "🔄 עודכן")
+        send_dashboard(call.message.chat.id, str(call.from_user.id))
 
     @bot.callback_query_handler(func=lambda call: call.data == "goto_dashboard")
     def goto_dashboard(call):
