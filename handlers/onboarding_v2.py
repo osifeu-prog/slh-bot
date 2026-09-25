@@ -7,6 +7,7 @@ from core.profile_manager import user_exists, update_user
 from core.agent_registry import create_agent
 from core.identity_resolver import get_display_name
 from core.invite_gate import can_start_onboarding
+from core.investor_read_model import get_investor_snapshot
 
 
 def _set_pending_referral(uid, ref_uid):
@@ -90,23 +91,36 @@ def register(bot, context=None):
             return None
         return f"https://t.me/{username}?start=ref_{user_id}"
 
-    def send_dashboard(chat_id, user_id):
+    def _personal_dashboard_text(user_id):
+        snapshot = get_investor_snapshot(str(user_id))
+        identity = snapshot.get("identity", {})
+        wallet = snapshot.get("wallet", {})
+        academy = snapshot.get("academy", {})
+        tasks = snapshot.get("tasks", {})
         db = state_manager.load_db()
-        user = db.get("users", {}).get(str(user_id), {})
-        wallet = user.get("wallet", {})
-        credits = wallet.get("credits", 0)
-        course = user.get("active_course", "אין")
         owned_agents = [
             agent for agent in db.get("agents", {}).values()
             if isinstance(agent, dict) and str(agent.get("owner_id", "")) == str(user_id)
         ]
-        text = (
-            "🌟 ה-Dashboard שלך\n\n"
-            f"💰 Credits: {credits}\n"
-            f"📚 קורס פעיל: {course}\n"
-            f"🤖 הסוכנים שלך: {len(owned_agents)}\n\n"
+        display_name = identity.get("display_name") or get_display_name(str(user_id)) or "חבר"
+        enrolled = academy.get("enrolled", [])
+        course_line = (
+            f"📚 קורסים: {len(enrolled)}"
+            if isinstance(enrolled, list)
+            else "📚 קורסים: 0"
+        )
+        return (
+            f"🌟 {display_name} — ה-Dashboard שלך\n\n"
+            f"💰 Credits: {wallet.get('credits', 0)}\n"
+            f"🔒 Staked: {wallet.get('staked', 0)}\n"
+            f"{course_line}\n"
+            f"🤖 הסוכנים שלך: {len(owned_agents)}\n"
+            f"🎯 משימות פתוחות: {tasks.get('open', 0)}\n\n"
             "מה תרצה לעשות?"
         )
+
+    def send_dashboard(chat_id, user_id):
+        text = _personal_dashboard_text(user_id)
         markup = types.InlineKeyboardMarkup(row_width=1)
         markup.add(types.InlineKeyboardButton("📚 המשך לקורס", callback_data="continue_course"))
         markup.add(types.InlineKeyboardButton("🤖 צור סוכן חדש", callback_data="create_agent"))
@@ -170,22 +184,7 @@ def register(bot, context=None):
             # Owner /start is a single canonical surface: branding + personal summary + Dashboard.
             # Do not emit separate Telegram messages for branding, welcome, and dashboard.
             branding = load_branding()
-            dashboard_db = state_manager.load_db()
-            dashboard_user = dashboard_db.get("users", {}).get(user_id, {})
-            dashboard_wallet = dashboard_user.get("wallet", {})
-            dashboard_credits = dashboard_wallet.get("credits", credits)
-            dashboard_course = dashboard_user.get("active_course", "אין")
-            owned_agents = [
-                agent for agent in dashboard_db.get("agents", {}).values()
-                if isinstance(agent, dict) and str(agent.get("owner_id", "")) == str(user_id)
-            ]
-            dashboard_text = (
-                "🌟 ה-Dashboard שלך\n\n"
-                f"💰 Credits: {dashboard_credits}\n"
-                f"📚 קורס פעיל: {dashboard_course}\n"
-                f"🤖 הסוכנים שלך: {len(owned_agents)}\n\n"
-                "מה תרצה לעשות?"
-            )
+            dashboard_text = _personal_dashboard_text(user_id)
             owner_text = (
                 f"ברוך שובך, {user_name}!\n\n"
                 f"📅 {now}\n"
