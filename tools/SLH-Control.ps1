@@ -198,15 +198,19 @@ function Show-PcSummary {
 function Show-Railway {
     param([string]$Name)
     Require-Command railway
-    Ensure-SlhTarget $Name
+    # READ-ONLY: target switching is performed only by slhuse.
     $t = Get-SlhTarget $Name
     Write-SlhTitle "$($t.label) / Railway"
     Write-Host "Project : $($t.railway_project)"
     Write-Host "Service : $($t.service)"
     Write-Host "Env     : $($t.environment)"
     Write-Host "Role    : $($t.role)"
-    & railway status
-    if ($LASTEXITCODE -ne 0) { Write-Host "Railway status returned exit code $LASTEXITCODE" -ForegroundColor Yellow }
+    & railway status `
+        --project $t.railway_project_id `
+        --environment $t.environment_id
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Railway status returned exit code $LASTEXITCODE" -ForegroundColor Yellow
+    }
 }
 
 function Show-Dashboard {
@@ -311,34 +315,62 @@ function Sync-Check {
 function Show-Logs {
     Require-Command railway
     $name = Get-ActiveTargetName
-    Ensure-SlhTarget $name
-    Write-SlhTitle "$(Get-SlhTarget $name).label / LOGS"
-    & railway logs
+    # READ-ONLY: target switching is performed only by slhuse.
+    $t = Get-SlhTarget $name
+    Write-SlhTitle "$($t.label) / LOGS"
+    & railway logs `
+        --project $t.railway_project_id `
+        --environment $t.environment_id `
+        --service $t.service_id
 }
 
 function Show-DeployCheck {
     Require-Command railway
     $name = Get-ActiveTargetName
-    Ensure-SlhTarget $name
-    Write-SlhTitle "$(Get-SlhTarget $name).label / DEPLOYMENT"
-    & railway status
+    # READ-ONLY: target switching is performed only by slhuse.
+    $t = Get-SlhTarget $name
+    Write-SlhTitle "$($t.label) / DEPLOYMENT"
+    & railway deployment list `
+        --service $t.service_id `
+        --environment $t.environment_id `
+        --limit 5
 }
 
 function Show-VariableNames {
     Require-Command railway
-    Ensure-SlhTarget (Get-ActiveTargetName)
+    # READ-ONLY: target switching is performed only by slhuse.
+    $name = Get-ActiveTargetName
+    $t = Get-SlhTarget $name
     Write-SlhTitle "VARIABLE NAMES"
     Write-Host "Names only; values are never printed." -ForegroundColor Green
-    $raw = & railway variable list --json
-    if ($LASTEXITCODE -ne 0) { throw "railway variable list failed" }
+
+    $raw = & railway variable list `
+        --service $t.service_id `
+        --environment $t.environment_id `
+        --json
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "railway variable list failed"
+    }
+
     try {
-        $obj = $raw | ConvertFrom-Json
-        if ($obj.variables) { $obj.variables.PSObject.Properties.Name | Sort-Object | ForEach-Object { Write-Host $_ } }
-    } catch {
+        $obj = ($raw -join "`n") | ConvertFrom-Json
+
+        $names = @(
+            $obj.PSObject.Properties.Name |
+                Sort-Object
+        )
+
+        Write-Host "Variable count: $($names.Count)" -ForegroundColor Green
+
+        $names | ForEach-Object {
+            Write-Host $_
+        }
+    }
+    catch {
         Write-Host "Could not parse variable names safely." -ForegroundColor Yellow
     }
 }
-
 function Set-ActiveTarget {
     param([string]$Name)
     if ([string]::IsNullOrWhiteSpace($Name)) { throw "Usage: slhuse main|web|api" }
