@@ -230,6 +230,54 @@ def investor_me():
 
 
 
+@app.route("/api/v1/store", methods=["GET"])
+def stars_store_api():
+    """Authenticated catalog of products purchasable through Telegram Stars."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    from core.stars_price_authority import VIP_MONTHLY_STARS
+    from store.engine import load_items
+    from store.stars_purchase_service import get_stars_items, get_stars_price
+
+    catalog = []
+    items = load_items()
+    categories = {
+        "course": "courses",
+        "plugin": "tools",
+        "digital": "emojis",
+    }
+    for item_id, price in get_stars_items().items():
+        item = items.get(item_id, {})
+        if not isinstance(item, dict):
+            item = {}
+        grant = item.get("grant") if isinstance(item.get("grant"), dict) else {}
+        grant_type = next(iter(grant), None)
+        category = categories.get(grant_type, "other")
+        catalog.append({
+            "id": str(item_id),
+            "name": str(item.get("name", item_id)),
+            "price_stars": get_stars_price(item_id),
+            "category": category,
+            "type": str(item.get("type", "digital")),
+            "command": f"/buystars {item_id}",
+        })
+
+    catalog.append({
+        "id": "vip_monthly",
+        "name": "SLH VIP — חודשי",
+        "price_stars": int(VIP_MONTHLY_STARS),
+        "category": "vip",
+        "type": "subscription",
+        "command": "/vip",
+    })
+
+    order = {"courses": 0, "tools": 1, "vip": 2, "emojis": 3, "other": 4}
+    catalog.sort(key=lambda row: (order.get(row["category"], 9), row["price_stars"], row["name"]))
+    return _no_store(jsonify({"items": catalog, "currency": "XTR"})), 200
+
+
 @app.route("/api/v1/tasks", methods=["GET"])
 def personal_tasks_api():
     """Authenticated read model for the caller's personal tasks."""
