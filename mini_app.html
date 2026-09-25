@@ -147,12 +147,19 @@ async function loadStarsStore(){
     if(!r.ok)throw Error(d.error||'STORE_HTTP_'+r.status);
     const groups={courses:"🎓 Courses",tools:"🤖 Tools",vip:"⭐️ VIP",emojis:"🎨 Emojis",other:"🛍 Other"};
     const items=Array.isArray(d.items)?d.items:[];
+    const vip=d.vip&&typeof d.vip==='object'?d.vip:{};
+    const vipDate=vip.active&&vip.expires_at?new Date(Number(vip.expires_at)*1000).toLocaleDateString('he-IL'):''; 
     const html=Object.keys(groups).map(category=>{
       const rows=items.filter(x=>x.category===category);
       if(!rows.length)return '';
       return '<div class="section-title" style="margin-top:14px">'+groups[category]+'</div>'+
-        rows.map(item=>'<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>'+esc(item.name)+'</b><div class="muted">'+esc(item.type||'digital')+'</div></span><strong>⭐ '+fmt(item.price_stars)+'</strong></div>'+
-        '<button class="action primary" style="width:100%;margin-top:8px" onclick="sendCommand(\''+esc(item.command).replace(/'/g,"\\'")+'\',\'קנייה ב-Stars\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button></div>').join('');
+        rows.map(item=>{
+          const isActiveVip=item.category==='vip'&&vip.active;
+          const vipStatus=isActiveVip
+            ? '<div class="status" style="margin-top:8px"><span class="pill ok">✅ פעיל עד '+esc(vipDate)+'</span></div>'
+            : '<button class="action primary" style="width:100%;margin-top:8px" onclick="sendCommand(\\''+esc(item.command).replace(/'/g,"\\'")+'\\',\\'קנייה ב-Stars\\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button>';
+          return '<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>'+esc(item.name)+'</b><div class="muted">'+esc(item.type||'digital')+'</div></span><strong>⭐ '+fmt(item.price_stars)+'</strong></div>'+vipStatus+'</div>';
+        }).join('');
     }).join('');
     el.innerHTML=html||'<div class="muted">אין כרגע מוצרים זמינים ב-Stars.</div>';
   }catch(e){
