@@ -54,12 +54,12 @@ def _hebrew_date_display(gregorian_date):
 
         set_language("he")
         hd = hdate.HDateInfo(gregorian_date).hdate
-        return f"{hebrew_number(hd.day)} ב{hd.month} ה'{hebrew_number(hd.year)}"
+        return f"{hebrew_number(hd.day)} ב{hd.month} {hebrew_number(hd.year)}"
     except Exception:
         return ""
 
 
-def load_branding():
+def load_branding(bot=None):
     try:
         from datetime import datetime
         from zoneinfo import ZoneInfo
@@ -68,12 +68,19 @@ def load_branding():
         date_greg = now.strftime("%Y-%m-%d")
         date_hebrew = _hebrew_date_display(now.date())
 
+        bot_id = "unknown"
+        if bot is not None:
+            try:
+                bot_id = str(bot.get_me().id)
+            except Exception:
+                pass
+
         logo_lines = [
             'בס"ד',
             f"📅 {date_hebrew}" if date_hebrew else f"📅 {date_greg}",
             "SLH SYSTEM — Smart Layer Hub",
             "🌟 רובוטוש",
-            "🆔 972500000001",
+            f"🆔 {bot_id}",
             f"🔗 BRIDGE: PC_Osif2 ({_bridge_status_display()})",
             f"Updated: {date_greg}",
             "",
@@ -235,7 +242,7 @@ def register(bot, context=None):
         if is_owner:
             # Owner /start is the canonical personal control surface.
             # Keep branding, balances and dashboard actions together in one message.
-            branding = load_branding()
+            branding = load_branding(bot)
             dashboard_text = _personal_dashboard_text(user_id)
             owner_text = (
                 f"ברוך שובך, {user_name}!\n\n"
