@@ -56,7 +56,7 @@ def provider_available(name="groq"):
 
     # Credential gate
     if name == "groq":
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = (os.getenv("GROQ_API_KEY") or "").strip().strip('"\'')
 
         if not api_key:
             return False
