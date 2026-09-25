@@ -42,6 +42,13 @@ def register(bot):
             bot.answer_callback_query(call.id, "קורס לא נמצא")
             return
 
+        from handlers.academy_handler import _paid_course_lock
+        locked = _paid_course_lock(uid, cid)
+        if locked:
+            bot.answer_callback_query(call.id, "🔒 הקורס בתשלום")
+            bot.send_message(call.message.chat.id, locked)
+            return
+
         academy_manager.start_course(uid, cid)
         progress = academy_manager.get_course(uid, cid)
         current = int(progress.get("stage", 0) or 0)
@@ -147,20 +154,43 @@ def register(bot):
             return
 
         reward = result.get("reward", {})
+        course = academy_manager.get_courses().get(course_id) or {}
+        total = len(course.get("stages", []))
         markup = InlineKeyboardMarkup(row_width=1)
+
+        if stage < total:
+            markup.add(
+                InlineKeyboardButton(
+                    f"➡️ שיעור {stage + 1}/{total}",
+                    callback_data=f"slh_lesson_{course_id}_{stage + 1}"
+                )
+            )
+        else:
+            markup.add(
+                InlineKeyboardButton(
+                    "🏁 הקורס הושלם",
+                    callback_data="slh_academy"
+                )
+            )
+
         markup.add(
             InlineKeyboardButton(
-                "🎓 המשך ל-Academy",
+                "🎓 Academy",
                 callback_data="slh_academy"
             )
         )
 
         bot.answer_callback_query(call.id, "השיעור הושלם ✓")
+        next_text = (
+            f"➡️ השיעור הבא: {stage + 1}/{total}"
+            if stage < total else
+            "🏁 זה היה השיעור האחרון בקורס."
+        )
         bot.send_message(
             call.message.chat.id,
             "🎉 השיעור הושלם!\n\n"
             f"⭐ נקודות: {reward.get('points', 0)}\n\n"
-            "הנקודות נזקפו לחשבונך. המשך ל-Academy כדי לפתוח את השיעור הבא:",
+            f"{next_text}",
             reply_markup=markup
         )
 
@@ -201,12 +231,15 @@ def _send_academy(bot, chat_id, uid):
 
         if total and not remaining:
             text += f"✅ הושלם: {total}/{total}\n\n"
+            button_text = f"✅ {data['title']} — הושלם"
         else:
-            text += f"התקדמות: {current}/{total}\n\n"
+            next_stage = remaining[0] if remaining else min(current + 1, total)
+            text += f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n\n"
+            button_text = f"▶️ המשך {data['title']} · {next_stage}/{total}"
 
         markup.add(
             InlineKeyboardButton(
-                f"📖 {data['title']}",
+                button_text,
                 callback_data=f"academy_{cid}"
             )
         )

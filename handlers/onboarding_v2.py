@@ -348,12 +348,9 @@ def register(bot, context=None):
 
     @bot.callback_query_handler(func=lambda call: call.data == "continue_course")
     def continue_course(call):
-        bot.answer_callback_query(call.id, "📚 המשך לקורס")
-        bot.send_message(
-            call.message.chat.id,
-            "📚 הקורס הפעיל שלך: bitcoin_mastery\n"
-            "שלח /lesson bitcoin_mastery 1 כדי להתחיל."
-        )
+        bot.answer_callback_query(call.id, "📚 פותח את ה-Academy")
+        from handlers.academy_menu_handler import _send_academy
+        _send_academy(bot, call.message.chat.id, str(call.from_user.id))
 
     @bot.callback_query_handler(func=lambda call: call.data == "menu_wallet")
     def menu_wallet(call):

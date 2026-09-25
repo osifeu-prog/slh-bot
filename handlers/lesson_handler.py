@@ -1,4 +1,5 @@
 from core import lesson_engine
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def register(bot):
@@ -8,41 +9,26 @@ def register(bot):
         parts = m.text.split()
 
         if len(parts) != 3:
-            bot.reply_to(
-                m,
-                "שימוש:\n/lesson bitcoin_mastery 1"
+            markup = InlineKeyboardMarkup(row_width=1)
+        markup.add(
+            InlineKeyboardButton(
+                "✅ סיימתי את השיעור",
+                callback_data=f"slh_finish_{course_id}_{stage}"
             )
-            return
-
-        uid = str(m.from_user.id)
-        course_id = parts[1]
-
-        try:
-            stage = int(parts[2])
-        except (TypeError, ValueError):
-            bot.reply_to(m, "מספר שיעור לא תקין")
-            return
-
-        if not lesson_engine.can_access_lesson(uid, course_id, stage):
-            bot.reply_to(
-                m,
-                "🔒 השיעור נעול\n\n"
-                "יש להשלים קודם את השיעור הקודם, או להתחיל את הקורס דרך /academy."
+        )
+        markup.add(
+            InlineKeyboardButton(
+                "🎓 חזרה ל-Academy",
+                callback_data="slh_academy"
             )
-            return
+        )
 
-        lesson = lesson_engine.get_lesson(course_id, stage)
-
-        if not lesson:
-            bot.reply_to(m, "❌ שיעור לא נמצא")
-            return
-
-        bot.reply_to(
-            m,
+        bot.send_message(
+            m.chat.id,
             f"📘 {lesson['name']}\n\n"
             f"{lesson['content']}\n\n"
-            f"לאחר שסיימת:\n"
-            f"/finish {course_id} {stage}"
+            "סיימת? לחץ על הכפתור למטה. 👇",
+            reply_markup=markup
         )
 
     @bot.message_handler(commands=['finish'])
@@ -91,6 +77,22 @@ def register(bot):
             return
 
         reward = result.get("reward", {})
+        course = lesson_engine.academy_manager.get_courses().get(course_id) or {}
+        total = len(course.get("stages", []))
+        markup = InlineKeyboardMarkup(row_width=1)
+        if stage < total:
+            markup.add(
+                InlineKeyboardButton(
+                    f"➡️ שיעור {stage + 1}/{total}",
+                    callback_data=f"slh_lesson_{course_id}_{stage + 1}"
+                )
+            )
+        markup.add(
+            InlineKeyboardButton(
+                "🎓 Academy",
+                callback_data="slh_academy"
+            )
+        )
         if stage == 1:
             bot.reply_to(
                 m,
@@ -100,7 +102,8 @@ def register(bot):
                 "🔗 השלב הבא: שתף את קישור ה-Referral האישי שלך.\n"
                 "אחר כך אפשר לעבור ל-Credits דרך Telegram Stars.\n\n"
                 "📎 פתח /start כדי לראות את הקישור האישי.\n"
-                "💎 /pay — Credits דרך Telegram Stars"
+                "💎 /pay — Credits דרך Telegram Stars",
+                reply_markup=markup
             )
         else:
             bot.reply_to(
@@ -108,5 +111,6 @@ def register(bot):
                 "🎉 שיעור הושלם!\n\n"
                 f"⭐ נקודות: {reward.get('points', 0)}\n"
                 f"💰 קרדיטים: {reward.get('credits', 0)}\n\n"
-                "📊 /academy_progress"
+                "📊 /academy_progress",
+                reply_markup=markup
             )
