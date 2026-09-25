@@ -44,7 +44,7 @@ class Principal:
         token = token.strip()
         if scheme.lower() != "bearer" or not token:
             return None
-        if not hmac.compare_digest(token, str(expected)):
+        if not hmac.compare_digest(token.encode("utf-8"), str(expected).encode("utf-8")):
             return None
 
         resolved_role = get_role(subject)
