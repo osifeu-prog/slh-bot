@@ -378,7 +378,7 @@ async function loadControlTasks(){
     const rows=Array.isArray(d.tasks)?d.tasks:[];
     setHTML('controlTasks',rows.length?rows.map(t=>{
       const done=t.status==='done';
-      const button=done?'':'<button class="ghost" style="margin-inline-start:8px" onclick="completeControlTask(\\''+esc(t.id)+'\\')">השלם</button>';
+      const button=done?'':'<button class="ghost" style="margin-inline-start:8px" onclick="completeControlTask(\''+esc(t.id)+'\')">השלם</button>';
       return '<div class="task '+(done?'done':'')+'">'+(done?'✅':'⬜')+' <b>'+esc(t.title||t.id)+'</b><span class="muted"> · '+esc(t.status||'open')+'</span>'+button+'</div>';
     }).join(''):'<div class="muted">אין משימות אישיות</div>');
   }catch(e){setHTML('controlTasks','<div class="muted">לא ניתן לטעון משימות</div>')}
