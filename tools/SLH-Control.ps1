@@ -90,8 +90,18 @@ function Show-GitSummary {
     }
 }
 
+function Get-LocalAgentSupervisorProcesses {
+    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like "*slh_agent_background.ps1*" }
+}
+
+function Get-SlhPcTask {
+    Get-ScheduledTask -TaskName "SLH-PC-Agent" -ErrorAction SilentlyContinue
+}
+
 function Show-PcSummary {
     Write-SlhTitle "PC / AGENT"
+
     $agentPath = Join-Path $env:USERPROFILE "slh_agent.py"
     $launcherPath = Join-Path $env:USERPROFILE "slh_agent.bat"
     $secretPath = Join-Path $env:USERPROFILE "slh_mqtt_heartbeat_secret.txt"
@@ -101,22 +111,75 @@ function Show-PcSummary {
 
     if (Test-Path $agentPath) {
         $heartbeat = Select-String -Path $agentPath -Pattern "HEARTBEAT_TOPIC|publish_heartbeat|heartbeat_loop|PC_Osif2" -Quiet
-        if ($heartbeat) { Write-Host "Heartbeat code: PRESENT" -ForegroundColor Green }
-        else { Write-Host "Heartbeat code: MISSING" -ForegroundColor Red }
-    } else { Write-Host "Agent file: MISSING" -ForegroundColor Red }
+        if ($heartbeat) {
+            Write-Host "Heartbeat code: PRESENT" -ForegroundColor Green
+        } else {
+            Write-Host "Heartbeat code: MISSING" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Agent file: MISSING" -ForegroundColor Red
+    }
 
     if (Test-Path $secretPath) {
         $len = (Get-Content $secretPath -Raw -Encoding ASCII).Trim().Length
         Write-Host "Heartbeat secret: PRESENT (length $len)" -ForegroundColor Green
-    } else { Write-Host "Heartbeat secret: MISSING" -ForegroundColor Red }
+    } else {
+        Write-Host "Heartbeat secret: MISSING" -ForegroundColor Red
+    }
 
-    $procs = @(Get-LocalAgentProcesses)
-    if ($procs.Count -gt 0) {
-        Write-Host "Process : RUNNING ($($procs.Count))" -ForegroundColor Green
-        $procs | ForEach-Object { Write-Host "  PID $($_.ProcessId)" }
-    } else { Write-Host "Process : NOT RUNNING" -ForegroundColor Yellow }
+    $task = Get-SlhPcTask
+    $supervisors = @(Get-LocalAgentSupervisorProcesses)
+    $agents = @(Get-LocalAgentProcesses)
+
+    if ($task) {
+        Write-Host "Task        : $($task.State)"
+    } else {
+        Write-Host "Task        : NOT FOUND" -ForegroundColor Red
+    }
+
+    if ($supervisors.Count -eq 1) {
+        $supervisor = $supervisors[0]
+        Write-Host "Supervisor  : RUNNING (PID $($supervisor.ProcessId))" -ForegroundColor Green
+    } elseif ($supervisors.Count -gt 1) {
+        $supervisor = $null
+        $pids = ($supervisors | ForEach-Object { $_.ProcessId }) -join ", "
+        Write-Host "Supervisor  : AMBIGUOUS ($($supervisors.Count)) PIDs: $pids" -ForegroundColor Yellow
+    } else {
+        $supervisor = $null
+        Write-Host "Supervisor  : NOT RUNNING" -ForegroundColor Red
+    }
+
+    if ($agents.Count -eq 1) {
+        $agent = $agents[0]
+        Write-Host "Agent       : RUNNING (PID $($agent.ProcessId))" -ForegroundColor Green
+
+        if ($supervisor -and ([int]$agent.ParentProcessId -eq [int]$supervisor.ProcessId)) {
+            Write-Host "Parent      : SUPERVISOR (PID $($supervisor.ProcessId))" -ForegroundColor Green
+            Write-Host "Chain       : HEALTHY" -ForegroundColor Green
+        } elseif ($supervisor) {
+            Write-Host "Parent      : MISMATCH (PID $($agent.ParentProcessId))" -ForegroundColor Yellow
+            Write-Host "Chain       : BROKEN" -ForegroundColor Red
+        } else {
+            Write-Host "Parent      : UNSUPERVISED (PID $($agent.ParentProcessId))" -ForegroundColor Yellow
+            Write-Host "Chain       : BROKEN" -ForegroundColor Red
+        }
+    } elseif ($agents.Count -gt 1) {
+        $pids = ($agents | ForEach-Object { $_.ProcessId }) -join ", "
+        Write-Host "Agent       : AMBIGUOUS ($($agents.Count)) PIDs: $pids" -ForegroundColor Yellow
+        Write-Host "Parent      : NOT DETERMINED" -ForegroundColor Yellow
+        Write-Host "Chain       : AMBIGUOUS" -ForegroundColor Yellow
+    } else {
+        Write-Host "Agent       : NOT RUNNING" -ForegroundColor Yellow
+
+        if ($supervisor) {
+            Write-Host "Parent      : SUPERVISOR HAS NO AGENT" -ForegroundColor Yellow
+            Write-Host "Chain       : DEGRADED" -ForegroundColor Yellow
+        } else {
+            Write-Host "Parent      : NONE"
+            Write-Host "Chain       : DOWN" -ForegroundColor Red
+        }
+    }
 }
-
 function Show-Railway {
     param([string]$Name)
     Require-Command railway
