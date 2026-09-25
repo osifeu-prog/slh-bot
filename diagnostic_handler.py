@@ -1,9 +1,9 @@
 import subprocess, os
 
-DIAG_SCRIPT = os.path.expanduser("~/slh_clean/diag_scan.sh")
+DIAG_SCRIPT = "/app/diag_scan.sh"
 
 def init(bot):
-    @bot.message_handler(commands=['diagnostic'])
+    @bot.message_handler(commands=['diagnostic', 'diagnose'])
     def diagnostic(m):
         if str(m.chat.id) not in ["8789977826"]:
             bot.reply_to(m, "❌ Admin only")
@@ -18,3 +18,6 @@ def init(bot):
             bot.reply_to(m, "❌ Timeout")
         except Exception as e:
             bot.reply_to(m, f"❌ Error: {e}")
+
+# Loader hook
+register = init
