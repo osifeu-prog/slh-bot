@@ -511,6 +511,27 @@ def bnb_wallet_claim():
         return jsonify({"error": "SERVER_ERROR"}), 500
 
 
+@app.route("/api/wallet/bnb/slh-deposit", methods=["POST"])
+def bnb_wallet_slh_deposit():
+    """Settle a real SLH BEP-20 transfer into the authenticated internal balance."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from core.slh_deposit_service import settle_slh_deposit
+        result = settle_slh_deposit(uid, tx_hash)
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH_DEPOSIT] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
+
+
 @app.route("/api/wallet/bnb")
 def bnb_wallet_binding():
     uid = authenticated_uid()
