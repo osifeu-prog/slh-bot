@@ -176,6 +176,21 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
     log("Flask API gateway started")
+    try:
+        from core.deposit_monitor import get_onchain_status
+        chain = get_onchain_status()
+        if chain.get("ok"):
+            log(
+                "[BSC] Treasury snapshot: "
+                f"address={chain.get('treasury_wallet')} "
+                f"BNB={chain.get('treasury_bnb')} "
+                f"SLH={chain.get('treasury_slh')} "
+                f"confirmations_required={chain.get('confirmations_required')}"
+            )
+        else:
+            log(f"[BSC] Treasury snapshot unavailable: {chain.get('error', 'unknown')}")
+    except Exception as exc:
+        log(f"[BSC] Treasury snapshot failed: {type(exc).__name__}: {str(exc)[:200]}")
 
     if os.getenv("RUN_BOT") != "1":
         log("RUN_BOT != 1, sleeping...")
