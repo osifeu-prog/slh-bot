@@ -128,8 +128,18 @@ def _assert_invariants(db):
         w = user.setdefault("wallet", {})
         rs = _reserve(w, "exchange_reserved_slh")
         rc = _reserve(w, "exchange_reserved_credits")
-        if rs < ZERO or rc < ZERO or _get(w, "token_balance") < ZERO or _get(w, "credits") < ZERO:
+        total_slh = _get(w, "token_balance")
+        live_slh = _get(w, "live_token_balance")
+        if (
+            rs < ZERO
+            or rc < ZERO
+            or total_slh < ZERO
+            or live_slh < ZERO
+            or _get(w, "credits") < ZERO
+        ):
             raise ValueError("EXCHANGE_NEGATIVE_BALANCE")
+        if live_slh + rs > total_slh:
+            raise ValueError("WALLET_LIVE_SLH_BACKING_BREACH")
         if rs != want_slh.get(str(uid), ZERO):
             raise ValueError("WALLET_SLH_RESERVE_MISMATCH")
         if rc != want_cr.get(str(uid), ZERO):
