@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import state_manager
+from core.identity_resolver import get_display_name
 
 
 COURSE_FILE = Path("courses.json")
@@ -189,7 +190,7 @@ def get_investor_snapshot(uid):
     return {
         "identity": {
             "uid": uid,
-            "display_name": user.get("display_name") or user.get("name") or f"User{uid}",
+            "display_name": get_display_name(uid),
             "role": user.get("role", "student"),
         },
         "wallet": {
