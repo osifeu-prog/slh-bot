@@ -34,8 +34,6 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         wallet = user.setdefault("wallet", {})
         credits = float(wallet.get("credits", 0) or 0)
         staked = float(wallet.get("staked", 0) or 0)
-        if credits < amount:
-            raise ValueError("insufficient credits")
 
         positions = db.setdefault('stake_positions', {})
         request_key = f'{uid}:{request_id}' if request_id else ''
@@ -51,6 +49,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                     'credits': float(wallet.get('credits', 0) or 0),
                     'staked': float(wallet.get('staked', 0) or 0),
                 }
+        if credits < amount:
+            raise ValueError("insufficient credits")
         now = time.time()
         position_id = f"sp_{int(now * 1000)}"
         while position_id in positions:
