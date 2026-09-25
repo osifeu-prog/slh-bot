@@ -76,6 +76,7 @@ def load_handlers(bot, context):
         ("progress", "handlers.progress_handler"),
         ("health_monitor", "handlers.health_monitor_handler"),
         ("exec_log", "handlers.exec_log_handler"),
+        ("snapshot", "handlers.snapshot_handler"),
         ("user", "handlers.user_handler"),
         ("services", "handlers.services_handler"),
         ("voting", "handlers.ai_voting_handler"),
