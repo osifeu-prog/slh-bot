@@ -135,7 +135,7 @@ function Get-RailwayStatusObject {
     param([object]$Target)
     $raw = & railway status --json --service $Target.service --environment $Target.environment
     if ($LASTEXITCODE -ne 0) { throw "railway status --json failed" }
-    try { return ($raw | ConvertFrom-Json) } catch { throw "Could not parse railway status JSON" }
+    try { return ($raw | Out-String | ConvertFrom-Json) } catch { throw "Could not parse railway status JSON" }
 }
 
 function Show-TargetIntegrity {
@@ -147,32 +147,21 @@ function Show-TargetIntegrity {
 
     $ok = $true
     Write-Host ("CONFIG TARGET       {0} / {1}" -f $Name.ToLower(),$t.railway_project)
-    Write-Host ("ACTIVE TARGET       {0}" -f $active)
 
-    if ($active -ne $Name.ToLower()) {
-        $ok = $false
-        Write-Host "ACTIVE TARGET       MISMATCH" -ForegroundColor Yellow
+    if ($active -eq $Name.ToLower()) {
+        Write-Host ("ACTIVE TARGET       {0} / MATCH" -f $active) -ForegroundColor Green
     } else {
-        Write-Host "ACTIVE TARGET       MATCH" -ForegroundColor Green
+        $ok = $false
+        Write-Host ("ACTIVE TARGET       {0} / MISMATCH" -f $active) -ForegroundColor Yellow
     }
 
     try {
         $obj = Get-RailwayStatusObject $t
-        $projectId = if ($obj.project.id) { [string]$obj.project.id } elseif ($obj.projectId) { [string]$obj.projectId } else { "" }
-        $projectName = if ($obj.project.name) { [string]$obj.project.name } elseif ($obj.name) { [string]$obj.name } else { "" }
-        $envId = if ($obj.environment.id) { [string]$obj.environment.id } elseif ($obj.environmentId) { [string]$obj.environmentId } else { "" }
-        $envName = if ($obj.environment.name) { [string]$obj.environment.name } elseif ($obj.environmentName) { [string]$obj.environmentName } else { "" }
+        $json = $obj | ConvertTo-Json -Depth 30 -Compress
 
-        $serviceObj = $null
-        if ($obj.service) { $serviceObj = $obj.service }
-        elseif ($obj.linkedService) { $serviceObj = $obj.linkedService }
-        elseif ($obj.services) { $serviceObj = @($obj.services | Where-Object { $_.name -eq $t.service -or $_.id -eq $t.service_id } | Select-Object -First 1) }
-        $serviceId = if ($serviceObj.id) { [string]$serviceObj.id } else { "" }
-        $serviceName = if ($serviceObj.name) { [string]$serviceObj.name } else { "" }
-
-        $projectMatch = ($projectId -eq [string]$t.railway_project_id -and $projectName -eq [string]$t.railway_project)
-        $envMatch = ($envId -eq [string]$t.environment_id -and $envName -eq [string]$t.environment)
-        $serviceMatch = ($serviceId -eq [string]$t.service_id -and $serviceName -eq [string]$t.service)
+        $projectMatch = ($json -like "*$($t.railway_project_id)*") -and ($json -like "*$($t.railway_project)*")
+        $envMatch = ($json -like "*$($t.environment_id)*") -and ($json -like "*$($t.environment)*")
+        $serviceMatch = ($json -like "*$($t.service_id)*") -and ($json -like "*$($t.service)*")
 
         Write-Host ("RAILWAY PROJECT     {0}" -f $(if ($projectMatch) { "MATCH" } else { "MISMATCH" })) -ForegroundColor $(if ($projectMatch) { "Green" } else { "Red" })
         Write-Host ("RAILWAY ENV         {0}" -f $(if ($envMatch) { "MATCH" } else { "MISMATCH" })) -ForegroundColor $(if ($envMatch) { "Green" } else { "Red" })
@@ -194,34 +183,18 @@ function Show-TargetIntegrity {
 
 function Get-RailwayLogMessages {
     param([object]$Target)
-    $raw = & railway logs --latest --lines 120 --json --filter "PC_Osif2" --service $Target.service --environment $Target.environment
+    $raw = @(& railway logs --latest --lines 120 --json --filter "PC_Osif2" --service $Target.service --environment $Target.environment)
     if ($LASTEXITCODE -ne 0) { throw "railway logs --json failed" }
-    try { return ($raw | ConvertFrom-Json) } catch { throw "Could not parse railway logs JSON" }
-}
 
-function Get-HeartbeatEntries {
-    param([object]$Object)
     $items = @()
-    function Walk-HeartbeatObject {
-        param([object]$Node)
-        if ($null -eq $Node) { return }
-        if ($Node -is [System.Collections.IEnumerable] -and $Node -isnot [string]) {
-            foreach ($item in $Node) { Walk-HeartbeatObject $item }
-            return
-        }
-        if ($Node.PSObject.Properties.Name -contains "message") {
-            $message = [string]$Node.message
-            if ($message -match "PC_Osif2") {
-                $stamp = ""
-                if ($Node.PSObject.Properties.Name -contains "timestamp") { $stamp = [string]$Node.timestamp }
-                $items += [pscustomobject]@{ Timestamp = $stamp; Message = $message }
-            }
-        }
-        foreach ($p in $Node.PSObject.Properties) {
-            if ($p.Name -notin @("message","timestamp")) { Walk-HeartbeatObject $p.Value }
+    foreach ($line in $raw) {
+        if ([string]::IsNullOrWhiteSpace([string]$line)) { continue }
+        try {
+            $items += ($line | ConvertFrom-Json)
+        } catch {
+            continue
         }
     }
-    Walk-HeartbeatObject $Object
     return $items
 }
 
@@ -230,24 +203,30 @@ function Show-HeartbeatStatus {
     Require-Command railway
     $t = Get-SlhTarget $Name
     Write-SlhTitle "PC HEARTBEAT"
+
     try {
-        $obj = Get-RailwayLogMessages $t
-        $entries = @(Get-HeartbeatEntries $obj)
-        $online = @($entries | Where-Object { $_.Message -match "ONLINE PC_Osif2" })
-        $reject = @($entries | Where-Object { $_.Message -match "REJECTED PC_Osif2" })
+        $entries = @(Get-RailwayLogMessages $t)
+        $online = @($entries | Where-Object { [string]$_.message -match "ONLINE PC_Osif2" })
+        $reject = @($entries | Where-Object { [string]$_.message -match "REJECTED PC_Osif2" })
+
         $lastOnline = $online | Select-Object -Last 1
         $lastReject = $reject | Select-Object -Last 1
 
-        if ($lastOnline) { Write-Host "PC_Osif2           ONLINE" -ForegroundColor Green }
-        elseif ($lastReject) { Write-Host "PC_Osif2           AUTH REJECTED" -ForegroundColor Red }
-        else { Write-Host "PC_Osif2           NO RECENT SIGNAL" -ForegroundColor Yellow }
-
-        if ($lastOnline) { Write-Host "Last ONLINE        $($lastOnline.Timestamp)" }
-        if ($lastReject) { Write-Host "Last REJECT        $($lastReject.Timestamp)" }
+        if ($lastOnline) {
+            Write-Host "PC_Osif2           ONLINE" -ForegroundColor Green
+            Write-Host "Last ONLINE        $([string]$lastOnline.timestamp)"
+        } elseif ($lastReject) {
+            Write-Host "PC_Osif2           AUTH REJECTED" -ForegroundColor Red
+            Write-Host "Last REJECT        $([string]$lastReject.timestamp)"
+        } else {
+            Write-Host "PC_Osif2           NO RECENT SIGNAL" -ForegroundColor Yellow
+        }
 
         if ($lastOnline -and $lastReject) {
             try {
-                if ([datetimeoffset]::Parse($lastOnline.Timestamp) -gt [datetimeoffset]::Parse($lastReject.Timestamp)) {
+                $onlineTs = [datetimeoffset]::Parse([string]$lastOnline.timestamp)
+                $rejectTs = [datetimeoffset]::Parse([string]$lastReject.timestamp)
+                if ($onlineTs -gt $rejectTs) {
                     Write-Host "Heartbeat auth     PASS" -ForegroundColor Green
                 } else {
                     Write-Host "Heartbeat auth     CHECK REQUIRED" -ForegroundColor Yellow
@@ -255,6 +234,8 @@ function Show-HeartbeatStatus {
             } catch {
                 Write-Host "Heartbeat auth     ONLINE SIGNAL FOUND" -ForegroundColor Green
             }
+        } elseif ($lastOnline) {
+            Write-Host "Heartbeat auth     PASS" -ForegroundColor Green
         }
     } catch {
         Write-Host "Heartbeat check    FAILED: $($_.Exception.Message)" -ForegroundColor Yellow
