@@ -241,6 +241,11 @@ def stars_store_api():
     from store.engine import load_items
     from store.stars_purchase_service import get_stars_items, get_stars_price
 
+    db = load_db()
+    user = db.get("users", {}).get(str(uid), {}) if isinstance(db, dict) else {}
+    vip_expires_at = int(user.get("vip_access_until", 0) or 0)
+    vip_active = vip_expires_at > int(time.time())
+
     catalog = []
     items = load_items()
     categories = {
@@ -275,7 +280,14 @@ def stars_store_api():
 
     order = {"courses": 0, "tools": 1, "vip": 2, "emojis": 3, "other": 4}
     catalog.sort(key=lambda row: (order.get(row["category"], 9), row["price_stars"], row["name"]))
-    return _no_store(jsonify({"items": catalog, "currency": "XTR"})), 200
+    return _no_store(jsonify({
+        "items": catalog,
+        "currency": "XTR",
+        "vip": {
+            "active": vip_active,
+            "expires_at": vip_expires_at if vip_active else None,
+        },
+    })), 200
 
 
 @app.route("/api/v1/tasks", methods=["GET"])
