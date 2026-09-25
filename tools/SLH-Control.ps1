@@ -78,18 +78,33 @@ function Show-GitSummary {
     $branch = (git -C $RepoRoot branch --show-current).Trim()
     $head = (git -C $RepoRoot rev-parse --short HEAD).Trim()
     $origin = (git -C $RepoRoot rev-parse --short origin/main 2>$null).Trim()
-    $dirty = @(git -C $RepoRoot status --porcelain)
-    Write-Host "Branch : $branch"
-    Write-Host "HEAD   : $head"
-    Write-Host "Origin : $(if ($origin) { $origin } else { 'unavailable' })"
-    if ($dirty.Count -eq 0) {
-        Write-Host "Tree   : CLEAN" -ForegroundColor Green
+    $status = @(git -C $RepoRoot status --porcelain)
+    $tracked = @($status | Where-Object { $_.Length -ge 2 -and $_.Substring(0,2) -ne "??" })
+    $untracked = @($status | Where-Object { $_.Length -ge 2 -and $_.Substring(0,2) -eq "??" })
+
+    Write-Host "Branch           : $branch"
+    Write-Host "HEAD             : $head"
+    Write-Host "Origin           : $(if ($origin) { $origin } else { 'unavailable' })"
+    Write-Host "Tracked changes  : $($tracked.Count)"
+
+    if ($tracked.Count -eq 0) {
+        Write-Host "Git code         : CLEAN" -ForegroundColor Green
     } else {
-        Write-Host "Tree   : DIRTY ($($dirty.Count) changes)" -ForegroundColor Yellow
-        $dirty | Select-Object -First 10 | ForEach-Object { Write-Host "  $_" }
+        Write-Host "Git code         : MODIFIED" -ForegroundColor Yellow
+        $tracked | Select-Object -First 10 | ForEach-Object { Write-Host "  $_" }
+        if ($tracked.Count -gt 10) {
+            Write-Host "  ... and $($tracked.Count - 10) more"
+        }
+    }
+
+    Write-Host "Local workspace  : $($untracked.Count) untracked item(s)" -ForegroundColor DarkCyan
+    if ($untracked.Count -gt 0) {
+        $untracked | Select-Object -First 10 | ForEach-Object { Write-Host "  $_" }
+        if ($untracked.Count -gt 10) {
+            Write-Host "  ... and $($untracked.Count - 10) more"
+        }
     }
 }
-
 function Get-LocalAgentSupervisorProcesses {
     Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
         Where-Object { $_.CommandLine -like "*slh_agent_background.ps1*" }
