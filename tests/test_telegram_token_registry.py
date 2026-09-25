@@ -50,8 +50,7 @@ class TelegramTokenRegistryTests(unittest.TestCase):
     def test_control_surface_never_contains_token_value(self):
         from refresh_token_handler import bots_text, rotation_instructions
 
-        text = bots_text() + "
-" + rotation_instructions("air")
+        text = bots_text() + "\n" + rotation_instructions("air")
         self.assertNotIn("TELEGRAM_TOKEN=", text)
         self.assertNotIn("SLH_CLAUDE_BOT_TOKEN=", text)
         self.assertNotIn("New Telegram token", text)
