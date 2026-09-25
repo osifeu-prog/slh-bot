@@ -96,7 +96,8 @@ def verify_slh_deposit(tx_hash):
             recipient = _address_from_topic(topics[2])
             if recipient.lower() != treasury.lower():
                 continue
-            raw_value = int(log.get("data", "0x0"), 16)
+            data_value = log.get("data", "0x0")
+            raw_value = int(data_value.hex(), 16) if hasattr(data_value, "hex") else int(str(data_value), 16)
             matches.append({
                 "from": sender,
                 "to": recipient,
