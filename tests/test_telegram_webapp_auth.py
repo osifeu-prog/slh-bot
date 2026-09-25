@@ -13,16 +13,21 @@ from core.telegram_webapp_auth import validate_init_data
 class TelegramWebAppAuthTests(unittest.TestCase):
     TOKEN = "123456:TEST_TOKEN"
 
-    def make_init_data(self, auth_date=None, user_id=100, tamper=False):
+    def make_init_data(self, auth_date=None, user_id=100, tamper=False, include_signature=True):
         auth_date = int(time.time()) if auth_date is None else int(auth_date)
         data = {
             "auth_date": str(auth_date),
             "query_id": "AA-test-query",
             "user": json.dumps({"id": user_id, "first_name": "Test"}, separators=(",", ":")),
         }
+        if include_signature:
+            # Modern Telegram Mini Apps may include a third-party signature.
+            # Bot-token HMAC validation still hashes every received field except "hash".
+            data["signature"] = "test-signature"
+
         check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
         secret_key = hmac.new(
-            b"WebAppData", self.TOKEN.encode(), hashlib.sha256
+            self.TOKEN.encode(), b"WebAppData", hashlib.sha256
         ).digest()
         digest = hmac.new(
             secret_key, check_string.encode(), hashlib.sha256
@@ -36,6 +41,14 @@ class TelegramWebAppAuthTests(unittest.TestCase):
     def test_valid_init_data_returns_authenticated_uid(self):
         result = validate_init_data(self.make_init_data(user_id=777), now=int(time.time()))
         self.assertEqual(result["uid"], "777")
+
+    @patch.dict(os.environ, {"BOT_TOKEN": TOKEN}, clear=False)
+    def test_valid_init_data_includes_signature_field_in_hmac(self):
+        result = validate_init_data(
+            self.make_init_data(user_id=778, include_signature=True),
+            now=int(time.time()),
+        )
+        self.assertEqual(result["uid"], "778")
 
     @patch.dict(os.environ, {"BOT_TOKEN": TOKEN}, clear=False)
     def test_tampered_init_data_rejected(self):
