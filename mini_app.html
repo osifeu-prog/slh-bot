@@ -157,7 +157,7 @@ async function loadStarsStore(){
           const isActiveVip=item.category==='vip'&&vip.active;
           const vipStatus=isActiveVip
             ? '<div class="status" style="margin-top:8px"><span class="pill ok">✅ פעיל עד '+esc(vipDate)+'</span></div>'
-            : '<button class="action primary" style="width:100%;margin-top:8px" onclick="sendCommand(\\''+esc(String(item.command||"").replace(/\\/g,"\\\\").split(String.fromCharCode(39)).join(String.fromCharCode(92,39)))+'\\',\\'קנייה ב-Stars\\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button>';
+            : '<button class="action primary" style="width:100%;margin-top:8px" onclick="sendCommand(\''+esc(String(item.command||'').replace(/\\/g,"\\\\").replace(/'/g,"\\'"))+'\',\'קנייה ב-Stars\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button>';
             : '<button class="action primary" style="width:100%;margin-top:8px" onclick="sendCommand(\''+esc(String(item.command||"").replace(/\\/g,"\\\\").split(String.fromCharCode(39)).join(String.fromCharCode(92,39)))+'\',\'קנייה ב-Stars\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button>';
         }).join('');
     }).join('');
