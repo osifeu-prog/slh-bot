@@ -18,6 +18,56 @@ def _bot_token():
     return token
 
 
+def _hmac_hex(secret_key, message):
+    return hmac.new(secret_key, message.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def _safe_hmac_diagnostics(init_data, data, received_hash, secret_key):
+    """Identify matching canonicalizations without changing authentication behavior."""
+    decoded_all = "\n".join(
+        f"{key}={value}"
+        for key, value in sorted(data.items())
+    )
+    decoded_without_signature = "\n".join(
+        f"{key}={value}"
+        for key, value in sorted(data.items())
+        if key != "signature"
+    )
+
+    raw_pairs = [
+        part for part in init_data.split("&")
+        if part and not part.startswith("hash=")
+    ]
+    raw_all = "\n".join(sorted(raw_pairs))
+    raw_without_signature = "\n".join(
+        sorted(
+            part for part in raw_pairs
+            if not part.startswith("signature=")
+        )
+    )
+
+    candidates = {
+        "decoded_all": _hmac_hex(secret_key, decoded_all),
+        "decoded_no_signature": _hmac_hex(secret_key, decoded_without_signature),
+        "raw_all": _hmac_hex(secret_key, raw_all),
+        "raw_no_signature": _hmac_hex(secret_key, raw_without_signature),
+    }
+
+    # Legacy Login Widget derivation is diagnostic only and is never accepted.
+    legacy_key = hashlib.sha256(_bot_token().encode("utf-8")).digest()
+    candidates["legacy_sha256_token"] = _hmac_hex(legacy_key, decoded_all)
+
+    return {
+        "keys": sorted(data),
+        "hash_len": len(received_hash),
+        "signature_present": "signature" in data,
+        "matches": sorted(
+            name for name, digest in candidates.items()
+            if hmac.compare_digest(received_hash.lower(), digest)
+        ),
+    }
+
+
 def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     """Validate Telegram WebApp initData and return the authenticated user."""
     if not isinstance(init_data, str) or not init_data.strip():
@@ -37,9 +87,7 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     # Telegram WebApp validation:
     # secret_key = HMAC-SHA256(key=bot_token, data="WebAppData")
     # expected_hash = HMAC-SHA256(key=secret_key, data=data_check_string)
-    # The bot-token validation includes every received field except hash.
-    # Telegram's separate Ed25519 third-party validation is the flow that
-    # excludes both hash and signature from its data-check-string.
+    # Bot-token validation covers every received field except hash.
     check_string = "\n".join(
         f"{key}={value}"
         for key, value in sorted(data.items())
@@ -49,14 +97,21 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
         b"WebAppData",
         hashlib.sha256,
     ).digest()
-    expected_hash = hmac.new(
-        secret_key,
-        check_string.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
+    expected_hash = _hmac_hex(secret_key, check_string)
 
     if not hmac.compare_digest(received_hash.lower(), expected_hash):
-        raise ValueError("TELEGRAM_INIT_DATA_INVALID")
+        diag = _safe_hmac_diagnostics(init_data, data, received_hash, secret_key)
+        detail = "TELEGRAM_INIT_DATA_INVALID"
+        if diag["matches"]:
+            detail += ";HMAC_DIAGNOSTIC=" + ",".join(diag["matches"])
+        else:
+            detail += (
+                ";HMAC_DIAGNOSTIC=NONE"
+                f";keys={','.join(diag['keys'])}"
+                f";hash_len={diag['hash_len']}"
+                f";signature_present={str(diag['signature_present']).lower()}"
+            )
+        raise ValueError(detail)
 
     try:
         auth_date = int(data.get("auth_date", "0"))
