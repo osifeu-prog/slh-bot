@@ -231,7 +231,7 @@ function Show-Dashboard {
     Write-Host "slhmap              -> architecture / source-of-truth"
     Write-Host "slhwatch            -> health audit"
     Write-Host "slhpc               -> PC agent + heartbeat"
-    Write-Host "slhsync             -> git fetch + runtime check"
+    Write-Host "slhsync             -> sync check (read-only)"
     Write-Host "slhuse main|web|api -> switch Railway target"
     Write-Host "slhlogs             -> selected Railway logs"
     Write-Host "slhdeploycheck      -> selected deployment"
