@@ -78,20 +78,28 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
     recipient_wallet = recipient.setdefault("wallet", {})
     sender_balance = Decimal(str(sender_wallet.get("token_balance", 0) or 0))
     recipient_balance = Decimal(str(recipient_wallet.get("token_balance", 0) or 0))
-    if sender_balance < amount:
-        raise ValueError("INSUFFICIENT_SLH")
+    sender_live = Decimal(str(sender_wallet.get("live_token_balance", 0) or 0))
+    recipient_live = Decimal(str(recipient_wallet.get("live_token_balance", 0) or 0))
+    if sender_live < amount:
+        raise ValueError("INSUFFICIENT_LIVE_SLH")
 
     sender_after = sender_balance - amount
     recipient_after = recipient_balance + amount
+    sender_live_after = sender_live - amount
+    recipient_live_after = recipient_live + amount
     entry = {
         "event_id": event_id, "from_uid": from_uid, "to_uid": to_uid,
         "amount": float(amount), "reason": str(reason), "kind": "wallet_transfer",
         "before_from": float(sender_balance), "after_from": float(sender_after),
         "before_to": float(recipient_balance), "after_to": float(recipient_after),
+        "before_live_from": float(sender_live), "after_live_from": float(sender_live_after),
+        "before_live_to": float(recipient_live), "after_live_to": float(recipient_live_after),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     sender_wallet["token_balance"] = float(sender_after)
     recipient_wallet["token_balance"] = float(recipient_after)
+    sender_wallet["live_token_balance"] = float(sender_live_after)
+    recipient_wallet["live_token_balance"] = float(recipient_live_after)
     ledger.append(entry)
     return {"status": "completed", **entry}
 
@@ -114,14 +122,14 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
         return {"status": "already_completed", **existing}
 
     wallet = _wallet(db, uid)
-    available = Decimal(str(wallet.get("token_balance", 0) or 0))
+    available = Decimal(str(wallet.get("live_token_balance", 0) or 0))
     reserve_before = Decimal(str(wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
     if available < amount:
-        raise ValueError("INSUFFICIENT_SLH")
+        raise ValueError("INSUFFICIENT_LIVE_SLH")
 
     available_after = available - amount
     reserve_after = reserve_before + amount
-    wallet["token_balance"] = float(available_after)
+    wallet["live_token_balance"] = float(available_after)
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
     entry = {
         "event_id": event_id, "from_uid": uid, "to_uid": EXCHANGE_RESERVE_UID,
@@ -154,13 +162,15 @@ def release_reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="e
     wallet = _wallet(db, uid)
     reserve_before = Decimal(str(wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
     available_before = Decimal(str(wallet.get("token_balance", 0) or 0))
+    live_before = Decimal(str(wallet.get("live_token_balance", 0) or 0))
     if reserve_before < amount:
         raise ValueError("INSUFFICIENT_SLH_RESERVE")
 
     reserve_after = reserve_before - amount
-    available_after = available_before + amount
+    available_after = available_before
+    live_after = live_before + amount
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
-    wallet["token_balance"] = float(available_after)
+    wallet["live_token_balance"] = float(live_after)
     entry = {
         "event_id": event_id, "from_uid": EXCHANGE_RESERVE_UID, "to_uid": uid,
         "amount": float(amount), "reason": str(reason), "kind": "exchange_release",
@@ -202,20 +212,30 @@ def settle_reserve_in_db(
     seller = _wallet(db, seller_uid)
     buyer = _wallet(db, buyer_uid)
     seller_reserve_before = Decimal(str(seller.get(EXCHANGE_RESERVE_KEY, 0) or 0))
+    seller_total_before = Decimal(str(seller.get("token_balance", 0) or 0))
     buyer_before = Decimal(str(buyer.get("token_balance", 0) or 0))
+    buyer_live_before = Decimal(str(buyer.get("live_token_balance", 0) or 0))
     if seller_reserve_before < amount:
         raise ValueError("INSUFFICIENT_SLH_RESERVE")
+    if seller_total_before < amount:
+        raise ValueError("SLH_TOTAL_BALANCE_BREACH")
 
     seller_reserve_after = seller_reserve_before - amount
+    seller_total_after = seller_total_before - amount
     buyer_after = buyer_before + amount
+    buyer_live_after = buyer_live_before + amount
     seller[EXCHANGE_RESERVE_KEY] = float(seller_reserve_after)
+    seller["token_balance"] = float(seller_total_after)
     buyer["token_balance"] = float(buyer_after)
+    buyer["live_token_balance"] = float(buyer_live_after)
     entry = {
         "event_id": event_id, "from_uid": EXCHANGE_RESERVE_UID, "to_uid": buyer_uid,
         "seller_uid": seller_uid, "amount": float(amount), "reason": str(reason),
         "kind": "exchange_settlement", "order_id": order_id, "trade_id": trade_id,
         "before_reserve": float(seller_reserve_before), "after_reserve": float(seller_reserve_after),
+        "before_from_total": float(seller_total_before), "after_from_total": float(seller_total_after),
         "before_to": float(buyer_before), "after_to": float(buyer_after),
+        "before_live_to": float(buyer_live_before), "after_live_to": float(buyer_live_after),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     ledger.append(entry)

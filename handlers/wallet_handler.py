@@ -34,6 +34,7 @@ def register(bot):
         credits = wallet.get("credits", 0)
         staked = wallet.get("staked", 0)
         token_balance = wallet.get("token_balance", 0)
+        live_token_balance = wallet.get("live_token_balance", 0)
         points = gamification.get("points", 0)
         level = gamification.get("level", 1)
         referral_count = referral.get("count", 0)
@@ -50,11 +51,20 @@ def register(bot):
             f"📅 {get_hebrew_date()}\n"
             f"💳 Credits: {credits}\n"
             f"🔒 Staked: {staked}\n"
-            f"🪙 SLH Token: {token_balance}\n"
+            f"🪙 SLH Live (מגובה): {live_token_balance}\n"
             f"⭐ Points: {points} (Level {level})\n"
             f"👥 Referrals: {referral_count}\n"
             f"💎 Referral commission: {commission}\n\n"
         )
+        try:
+            legacy_unbacked = float(token_balance or 0) - float(live_token_balance or 0)
+        except (TypeError, ValueError):
+            legacy_unbacked = 0
+        if legacy_unbacked > 0:
+            text += (
+                f"⚠️ SLH פנימי לא מגובה/Legacy: {legacy_unbacked:g}\n"
+                "   היתרה הזו אינה זמינה למסחר Live עד להפקדת SLH on-chain מאומתת.\n\n"
+            )
 
         # On-chain / multi-token view from slh-api (separate ledger — never merged)
         api_data = _fetch_api_wallet(uid)
