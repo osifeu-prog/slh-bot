@@ -1,18 +1,15 @@
 ההפתעה הגדולה של 2024-2026: הנחה של 50-90% על תוכן שחוזר על עצמו.
 
-| חברה | הנחה | מינימום | תוקף Cache |
-|------|------|---------|------------|
-| Anthropic | 90% | 1,024 טוקנים | 5 דקות (auto-extends) |
-| Google | 90% | 32,768 טוקנים | 1 שעה (configurable) |
-| OpenAI | 50% | 1,024 טוקנים | 5-10 דקות |
+• חברה: Anthropic | הנחה: 90% | מינימום: 1,024 טוקנים | תוקף Cache: 5 דקות (auto-extends)
+• חברה: Google | הנחה: 90% | מינימום: 32,768 טוקנים | תוקף Cache: 1 שעה (configurable)
+• חברה: OpenAI | הנחה: 50% | מינימום: 1,024 טוקנים | תוקף Cache: 5-10 דקות
 
-**מתי זה עובד:**
+מתי זה עובד:
 - מערכת RAG עם אותו corpus
 - Chat application עם system prompt קבוע
 - API שמבצע אותה פעולה עם נתונים שונים
 
-**Anthropic example (Python):**
-```python
+Anthropic example (Python):
 from anthropic import Anthropic
 client = Anthropic()
 response = client.messages.create(
@@ -27,8 +24,5 @@ response = client.messages.create(
     ],
     messages=[{"role": "user", "content": "שאלה ראשונה"}],
 )
-```
 
-**חיסכון אמיתי:** במערכת SLH, בוט עם system prompt של ~3,000 טוקנים שעונה ל-100 שיחות ביום: בלי cache = $0.45/יום. עם cache = $0.05/יום. **חיסכון של 90%.**
-
----
+חיסכון אמיתי: במערכת SLH, בוט עם system prompt של ~3,000 טוקנים שעונה ל-100 שיחות ביום: בלי cache = $0.45/יום. עם cache = $0.05/יום. חיסכון של 90%.
