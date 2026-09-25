@@ -251,7 +251,8 @@ function Show-Map {
     Write-SlhTitle "SOURCE OF TRUTH"
     Write-Host "GitHub  = versioned code / PR / CI / release history"
     Write-Host "Railway = live deployment / runtime / infrastructure"
-    Write-Host "Bot DB  = state/db.json on Railway Volume"
+    Write-Host "Bot DB  = /app/state/db.json on MAIN BOT Railway Volume"
+    Write-Host "Journal = /app/state/journals/*.jsonl on MAIN BOT Railway Volume"
     Write-Host "API DB  = slh-api / Postgres data plane"
     Write-Host "PC      = local operator + PC_Osif2 agent"
     Write-SlhTitle "FLOW"
@@ -281,27 +282,45 @@ function Show-Watch {
 }
 
 function Show-Journal {
-    Write-SlhTitle "JOURNAL"
-    $dbPath = Join-Path $RepoRoot "state\db.json"
-    if (-not (Test-Path $dbPath)) {
-        Write-Host "Local state not mounted. Runtime /journal remains canonical." -ForegroundColor Yellow
-        return
-    }
-    $db = $dbPath.Replace("\","\\")
-    & python -c "import json; from pathlib import Path; d=json.loads(Path(r'$db').read_text(encoding='utf-8')); r=d.get('journal',[]); r=list(r.values()) if isinstance(r,dict) else r; [print(x) for x in r[-10:]]; print('Journal rows:',len(r))"
-}
+    Require-Command railway
 
+    # Canonical journal lives on the MAIN BOT Railway Volume.
+    $t = Get-SlhTarget "main"
+
+    Write-SlhTitle "JOURNAL / MAIN BOT"
+
+    $py = "import glob,json; entries=[json.loads(line) for f in glob.glob('/app/state/journals/*.jsonl') for line in open(f,encoding='utf-8') if line.strip()]; entries.sort(key=lambda x:str(x.get('timestamp',x.get('time','')))); print('Remote journal: no entries') if not entries else [print(json.dumps(x,ensure_ascii=False)) for x in entries[-10:]]; print('Journal rows:',len(entries))"
+
+    & railway ssh `
+        --project $t.railway_project_id `
+        --service $t.service_id `
+        --environment $t.environment_id `
+        -- python3 -c $py
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Remote journal read failed." -ForegroundColor Yellow
+    }
+}
 function Show-Tasks {
-    Write-SlhTitle "TASKS"
-    $dbPath = Join-Path $RepoRoot "state\db.json"
-    if (-not (Test-Path $dbPath)) {
-        Write-Host "Local state not mounted. Runtime /tasks remains canonical." -ForegroundColor Yellow
-        return
-    }
-    $db = $dbPath.Replace("\","\\")
-    & python -c "import json; from pathlib import Path; d=json.loads(Path(r'$db').read_text(encoding='utf-8')); t=d.get('tasks',{}); a=list(t.items()) if isinstance(t,dict) else list(enumerate(t if isinstance(t,list) else [])); [print(k,v) for k,v in a[-15:]]; print('Task rows:',len(a))"
-}
+    Require-Command railway
 
+    # Canonical tasks live in the MAIN BOT Railway Volume.
+    $t = Get-SlhTarget "main"
+
+    Write-SlhTitle "TASKS / MAIN BOT"
+
+    $py = "import json; d=json.load(open('/app/state/db.json',encoding='utf-8')); t=d.get('tasks',{}); print('REMOTE TASKS'); [print(k,'|',v.get('status','active'),'|',v.get('progress',0),'%','|',v.get('title',v.get('desc','?'))) for k,v in t.items()]; print('Task rows:',len(t))"
+
+    & railway ssh `
+        --project $t.railway_project_id `
+        --service $t.service_id `
+        --environment $t.environment_id `
+        -- python3 -c $py
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Remote tasks read failed." -ForegroundColor Yellow
+    }
+}
 function Sync-Check {
     Require-Command git
     Require-Command railway
