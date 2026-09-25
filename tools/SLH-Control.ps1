@@ -110,6 +110,28 @@ function Show-PcSummary {
         Write-Host "Heartbeat secret: PRESENT (length $len)" -ForegroundColor Green
     } else { Write-Host "Heartbeat secret: MISSING" -ForegroundColor Red }
 
+    $runnerPath = Join-Path $env:USERPROFILE "slh_agent_background.ps1"
+    if (Test-Path $runnerPath) {
+        Write-Host "Runner  : PRESENT" -ForegroundColor Green
+    } else {
+        Write-Host "Runner  : MISSING" -ForegroundColor Red
+    }
+
+    $taskName = "SLH-PC-Agent"
+    $task = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+    if ($null -ne $task) {
+        $taskInfo = Get-ScheduledTaskInfo -TaskName $taskName -ErrorAction SilentlyContinue
+        Write-Host "Task    : $($task.State)" -ForegroundColor $(if ($task.State -eq "Running" -or $task.State -eq "Ready") { "Green" } else { "Yellow" })
+        if ($taskInfo) {
+            Write-Host "Last run: $($taskInfo.LastRunTime)"
+            if ($taskInfo.NextRunTime -and $taskInfo.NextRunTime -ne [datetime]::MinValue) {
+                Write-Host "Next run: $($taskInfo.NextRunTime)"
+            }
+        }
+    } else {
+        Write-Host "Task    : MISSING ($taskName)" -ForegroundColor Red
+    }
+
     $procs = @(Get-LocalAgentProcesses)
     if ($procs.Count -gt 0) {
         Write-Host "Process : RUNNING ($($procs.Count))" -ForegroundColor Green
