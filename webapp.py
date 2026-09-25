@@ -230,11 +230,80 @@ def investor_me():
 
 @app.route("/api/v1/staking", methods=["POST"])
 def create_staking_position():
-    """Public Mini App staking mutation is disabled; expose read-only status only."""
-    return jsonify({
-        "error": "STAKING_MUTATION_DISABLED",
-        "message": "Staking actions are not enabled through the public Mini App.",
-    }), 403
+    """Create a real Credits staking position for the authenticated Telegram user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    request_id = str(payload.get("client_request_id", "")).strip()
+    if not request_id or len(request_id) > 200:
+        return jsonify({"error": "INVALID_REQUEST_ID"}), 400
+    try:
+        amount = float(payload.get("amount"))
+        lock_days = int(payload.get("lock_days", 30))
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_STAKING_PARAMS"}), 400
+    if amount <= 0 or lock_days <= 0 or lock_days > 3650:
+        return jsonify({"error": "INVALID_STAKING_PARAMS"}), 400
+    try:
+        result = staking_service.stake_locked(
+            uid, amount, lock_days=lock_days,
+            request_id=request_id,
+            meta={"source": "mini_app", "client_request_id": request_id},
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[STAKING] create error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
+
+
+@app.route("/api/v1/staking/positions", methods=["GET"])
+def staking_positions():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    db = load_db()
+    raw = db.get("stake_positions", {})
+    rows = []
+    if isinstance(raw, dict):
+        for position_id, position in raw.items():
+            if not isinstance(position, dict) or str(position.get("uid")) != str(uid):
+                continue
+            rows.append({
+                "id": position_id,
+                "amount": position.get("amount", 0),
+                "lock_days": position.get("lock_days", 0),
+                "created_at": position.get("created_at"),
+                "unlocks_at": position.get("unlocks_at"),
+                "status": position.get("status", "unknown"),
+            })
+    rows.sort(key=lambda x: float(x.get("created_at") or 0), reverse=True)
+    return _no_store(jsonify({"positions": rows})), 200
+
+
+@app.route("/api/v1/staking/unstake", methods=["POST"])
+def unstake_staking_position():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    position_id = str(payload.get("position_id", "")).strip()
+    request_id = str(payload.get("client_request_id", "")).strip()
+    if not position_id or not request_id or len(request_id) > 200:
+        return jsonify({"error": "MISSING_STAKING_FIELDS"}), 400
+    try:
+        result = staking_service.unstake_locked(
+            uid, position_id, request_id=request_id,
+            meta={"source": "mini_app", "client_request_id": request_id},
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[STAKING] unstake error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
 
 def _require_admin_api_key():
     expected = os.getenv("ADMIN_API_KEY", "").strip()
@@ -419,6 +488,27 @@ def bnb_wallet_verify():
         return jsonify({"status": "verified", "binding": binding}), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/bnb/claim", methods=["POST"])
+def bnb_wallet_claim():
+    """Settle a real BNB deposit after server-side binding + on-chain verification."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from core.bnb_deposit_service import settle_bnb_deposit
+        result = settle_bnb_deposit(uid, tx_hash)
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BNB] claim error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
 
 
 @app.route("/api/wallet/bnb")

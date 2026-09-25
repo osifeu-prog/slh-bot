@@ -11,11 +11,14 @@ from datetime import datetime, timezone
 import state_manager
 
 
-def stake_locked(uid, amount, lock_days=30, meta=None):
+def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
     uid = str(uid)
     amount = float(amount)
     lock_days = int(lock_days)
     meta = dict(meta or {})
+    request_id = str(request_id or '').strip()
+    if len(request_id) > 200:
+        raise ValueError('request_id too long')
 
     if amount <= 0:
         raise ValueError("amount must be positive")
@@ -34,7 +37,20 @@ def stake_locked(uid, amount, lock_days=30, meta=None):
         if credits < amount:
             raise ValueError("insufficient credits")
 
-        positions = db.setdefault("stake_positions", {})
+        positions = db.setdefault('stake_positions', {})
+        request_key = f'{uid}:{request_id}' if request_id else ''
+        if request_key:
+            requests = db.setdefault('staking_requests', {})
+            existing = requests.get(request_key)
+            if existing:
+                existing_position = positions.get(existing.get('position_id'))
+                return {
+                    'status': 'duplicate',
+                    'request_id': request_id,
+                    'position': existing_position,
+                    'credits': float(wallet.get('credits', 0) or 0),
+                    'staked': float(wallet.get('staked', 0) or 0),
+                }
         now = time.time()
         position_id = f"sp_{int(now * 1000)}"
         while position_id in positions:
@@ -53,7 +69,14 @@ def stake_locked(uid, amount, lock_days=30, meta=None):
             "status": "locked",
         }
 
-        db.setdefault("ledger", []).append({
+        if request_key:
+            db.setdefault('staking_requests', {})[request_key] = {
+                'position_id': position_id,
+                'uid': uid,
+                'created_at': now,
+            }
+
+        db.setdefault('ledger', []).append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
             "before": credits,
@@ -70,7 +93,9 @@ def stake_locked(uid, amount, lock_days=30, meta=None):
         })
 
         return {
-            "position": positions[position_id],
+            'status': 'completed',
+            'request_id': request_id or None,
+            'position': positions[position_id],
             "credits": credits - amount,
             "staked": staked + amount,
         }
@@ -78,10 +103,13 @@ def stake_locked(uid, amount, lock_days=30, meta=None):
     return state_manager.atomic_update(mutate)
 
 
-def unstake_locked(uid, position_id, meta=None):
+def unstake_locked(uid, position_id, meta=None, request_id=None):
     uid = str(uid)
     position_id = str(position_id)
     meta = dict(meta or {})
+    request_id = str(request_id or '').strip()
+    if len(request_id) > 200:
+        raise ValueError('request_id too long')
 
     def mutate(db):
         users = db.setdefault("users", {})
@@ -92,8 +120,20 @@ def unstake_locked(uid, position_id, meta=None):
         position = db.setdefault("stake_positions", {}).get(position_id)
         if not position or str(position.get("uid")) != uid:
             raise ValueError("position not found")
-        if position.get("status") == "unlocked":
-            return {"status": "duplicate", "position_id": position_id}
+        request_key = f'{uid}:{request_id}' if request_id else ''
+        if request_key:
+            requests = db.setdefault('staking_unstake_requests', {})
+            existing = requests.get(request_key)
+            if existing:
+                return {
+                    'status': 'duplicate',
+                    'request_id': request_id,
+                    'position_id': existing.get('position_id', position_id),
+                    'credits': float(user.setdefault('wallet', {}).get('credits', 0) or 0),
+                    'staked': float(user.setdefault('wallet', {}).get('staked', 0) or 0),
+                }
+        if position.get('status') == 'unlocked':
+            return {'status': 'duplicate', 'position_id': position_id, 'request_id': request_id or None}
         if time.time() < float(position.get("unlocks_at", 0)):
             raise ValueError("still locked")
 
@@ -112,7 +152,14 @@ def unstake_locked(uid, position_id, meta=None):
         position["status"] = "unlocked"
         position["unlocked_at"] = time.time()
 
-        db.setdefault("ledger", []).append({
+        if request_key:
+            db.setdefault('staking_unstake_requests', {})[request_key] = {
+                'position_id': position_id,
+                'uid': uid,
+                'created_at': time.time(),
+            }
+
+        db.setdefault('ledger', []).append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
             "before": credits,
