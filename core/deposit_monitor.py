@@ -28,6 +28,7 @@ def get_onchain_status():
                 "token_contract": None,
                 "treasury_bnb": 0,
                 "treasury_slh": 0,
+                "confirmations_required": int(cfg.get("confirmations") or 15),
             }
 
         w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
@@ -49,6 +50,7 @@ def get_onchain_status():
             "token_contract": cfg["token_contract"],
             "treasury_bnb": float(bnb),
             "treasury_slh": float(slh),
+            "confirmations_required": int(cfg.get("confirmations") or 15),
             "symbol": "SLH",
             "network": cfg.get("network", "bsc"),
         }
