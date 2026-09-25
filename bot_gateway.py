@@ -134,6 +134,30 @@ except Exception as e:
 STATE_DIR = Path("state")
 STATE_DIR.mkdir(exist_ok=True)
 
+
+def run_mqtt_device_listener():
+    if not os.getenv("MQTT_DEVICE_HEARTBEAT_SECRET", "").strip():
+        log(
+            "[MQTT] Device heartbeat listener disabled: "
+            "MQTT_DEVICE_HEARTBEAT_SECRET is missing"
+        )
+        return
+
+    while True:
+        try:
+            from core.mqtt_device_listener import run_forever
+
+            log("[MQTT] Starting authenticated device heartbeat listener")
+            run_forever()
+            log("[MQTT] Device heartbeat listener stopped; retrying in 5s")
+        except Exception as e:
+            log(
+                "[MQTT] Device heartbeat listener crashed: "
+                f"{type(e).__name__}: {e}"
+            )
+        time.sleep(5)
+
+
 try:
     from core.runtime_service import boot as boot_agent_runtime, boot_report
     runtime_report = boot_agent_runtime()
@@ -176,6 +200,13 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
     log("Flask API gateway started")
+
+    heartbeat_thread = threading.Thread(
+        target=run_mqtt_device_listener,
+        daemon=True,
+        name="mqtt-device-heartbeat-listener",
+    )
+    heartbeat_thread.start()
     try:
         from core.deposit_monitor import get_onchain_status
         chain = get_onchain_status()
