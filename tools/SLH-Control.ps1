@@ -324,13 +324,38 @@ function Show-Tasks {
 function Sync-Check {
     Require-Command git
     Require-Command railway
-    Write-SlhTitle "SYNC"
-    Invoke-SlhGit fetch origin
+
+    Show-SlhBanner
+    Write-SlhTitle "SYNC / READ-ONLY"
+
+    $localSha = (git -C $RepoRoot rev-parse HEAD).Trim()
+
+    if (-not $localSha) {
+        throw "Could not determine local HEAD."
+    }
+
+    $remoteLine = (git -C $RepoRoot ls-remote origin refs/heads/main).Trim()
+
+    if (-not $remoteLine) {
+        throw "Could not read origin/main."
+    }
+
+    $remoteSha = ($remoteLine -split "\s+")[0]
+
+    Write-Host "Local HEAD  : $localSha"
+    Write-Host "Remote main : $remoteSha"
+
+    if ($localSha -eq $remoteSha) {
+        Write-Host "Git sync    : IN SYNC" -ForegroundColor Green
+    } else {
+        Write-Host "Git sync    : DIFFERENT" -ForegroundColor Yellow
+    }
+
     Show-GitSummary
     Show-Railway -Name (Get-ActiveTargetName)
-    Write-Host "No automatic pull/push/merge/deploy/financial mutation." -ForegroundColor Green
-}
 
+    Write-Host "No fetch/pull/push/merge/deploy/financial mutation." -ForegroundColor Green
+}
 function Show-Logs {
     Require-Command railway
     $name = Get-ActiveTargetName
