@@ -189,6 +189,11 @@ if __name__ == "__main__":
     if primary_token:
         try:
             bot = telebot.TeleBot(primary_token, parse_mode=None)
+            bot_identity = bot.get_me()
+            log(
+                "[TELEGRAM] Primary token identity: "
+                f"@{bot_identity.username or 'no_username'} id={bot_identity.id}"
+            )
             from security.permissions import is_admin as canonical_is_admin
             handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
             load_handlers(bot, handler_context)

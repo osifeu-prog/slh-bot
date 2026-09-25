@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory, request, make_response
+from flask import Flask, jsonify, send_from_directory, request, make_response, g
 import state_manager
 import hmac
 import json
@@ -107,12 +107,14 @@ def authenticated_uid():
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     try:
         result = validate_init_data(init_data)
+        g.telegram_auth_reason = "ok"
         print("[AUTH] Telegram initData OK uid=", result.get("uid"))
         return result["uid"]
     except (ValueError, RuntimeError) as exc:
         # Never log initData, hashes, or bot-token material. Log only the
         # validation reason so production auth failures are diagnosable.
         reason = str(exc) or type(exc).__name__
+        g.telegram_auth_reason = reason
         print(
             "[AUTH] Telegram initData rejected:",
             reason,
@@ -204,7 +206,10 @@ def investor_me():
     """Return the read-only investor snapshot for the authenticated Telegram user."""
     uid = authenticated_uid()
     if uid is None:
-        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+        return jsonify({
+            "error": "TELEGRAM_AUTH_REQUIRED",
+            "detail": getattr(g, "telegram_auth_reason", "AUTH_FAILED"),
+        }), 401
 
     try:
         snapshot = get_investor_snapshot(uid)
