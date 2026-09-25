@@ -60,7 +60,10 @@ def detect_intent(text):
             if kw and _kw_match(kw, text_lower):
                 return "time"
 
-    if len(text_lower) <= 40 and any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")) and any(x in text_lower for x in ("איך", "כיצד", "להשלים", "להתחיל", "where", "how")):
+    # Route direct course/Academy questions to the canonical local data path.
+    # These questions must not fall through to the LLM merely because they
+    # contain a generic question word such as "מה".
+    if len(text_lower) <= 80 and any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
