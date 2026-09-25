@@ -784,12 +784,13 @@ def ton_wallet_binding():
     from core.ton_deposit_service import _settings, deposits_are_open, memo_for
     from core.ton_wallet_binding import get_ton_binding
     treasury, rate = _settings()
+    deposits_open = deposits_are_open()
     return jsonify({
         "binding": get_ton_binding(uid),
-        "deposits_open": deposits_are_open(),
-        "treasury": treasury,
-        "credits_per_ton": float(rate),
-        "memo": memo_for(uid),
+        "deposits_open": deposits_open,
+        "treasury": treasury if deposits_open else None,
+        "credits_per_ton": float(rate) if deposits_open else None,
+        "memo": memo_for(uid) if deposits_open else None,
     }), 200
 
 
