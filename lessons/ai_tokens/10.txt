@@ -5,22 +5,20 @@
 - אין caching
 - שיחות לא מסוכמות, היסטוריה מצטברת
 - כל בוט מחזיר response באורך מלא
-- **עלות: $850/חודש**
+- עלות: $850/חודש
 
 ### אחרי האופטימיזציה (חודש 3):
-1. **System prompt משותף** עם cache_control (Anthropic)
-2. **Auto-summarization** של היסטוריה אחרי 10 הודעות
-3. **max_tokens=300** ברירת מחדל (אפשר להאריך באקסטרא)
-4. **JSON compact**: `json.dumps(data, separators=(',', ':'))` חוסך 10-20% מהמשקל
-5. **Tool definitions קבועות → ב-cache**
-6. **Routing חכם**: שאלות פשוטות → Haiku ($0.25/M). מורכבות → Opus ($5/M)
+1. System prompt משותף עם cache_control (Anthropic)
+2. Auto-summarization של היסטוריה אחרי 10 הודעות
+3. max_tokens=300 ברירת מחדל (אפשר להאריך באקסטרא)
+4. JSON compact: json.dumps(data, separators=(',', ':')) חוסך 10-20% מהמשקל
+5. Tool definitions קבועות → ב-cache
+6. Routing חכם: שאלות פשוטות → Haiku ($0.25/M). מורכבות → Opus ($5/M)
 
-**עלות אחרי: $260/חודש. חיסכון של 70%.**
+עלות אחרי: $260/חודש. חיסכון של 70%.
 
 ### החלק האסטרטגי
-המהלך הכי חזק שעשינו: **Smart routing**. במקום לשלוח הכל ל-Opus, יצרנו classifier זול שמחליט:
+המהלך הכי חזק שעשינו: Smart routing. במקום לשלוח הכל ל-Opus, יצרנו classifier זול שמחליט:
 - 70% מהשאלות → Haiku
 - 25% → Sonnet
 - 5% → Opus (רק שאלות באמת מורכבות)
-
----

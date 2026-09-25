@@ -1,10 +1,7 @@
-**התקנה:**
-```bash
+התקנה:
 pip install tiktoken
-```
 
-**שימוש בסיסי:**
-```python
+שימוש בסיסי:
 import tiktoken
 
 # Per model
@@ -16,10 +13,8 @@ print(len(enc_gpt5.encode(text)))  # 2 tokens
 
 text_he = "שלום עולם"
 print(len(enc_gpt5.encode(text_he)))  # 6 tokens (פי 3!)
-```
 
-**מחשב עלות מלא:**
-```python
+מחשב עלות מלא:
 def estimate_cost(prompt: str, expected_output_tokens: int, model: str = "gpt-4o"):
     enc = tiktoken.encoding_for_model(model)
     input_tokens = len(enc.encode(prompt))
@@ -37,8 +32,5 @@ def estimate_cost(prompt: str, expected_output_tokens: int, model: str = "gpt-4o
     }
 
 print(estimate_cost("שאלה ארוכה...", 500))
-```
 
-**ל-Claude / Anthropic:** אין tiktoken, יש tokenizer של אנתרופיק. Estimate מהיר: ≈ tiktoken × 1.1.
-
----
+ל-Claude / Anthropic: אין tiktoken, יש tokenizer של אנתרופיק. Estimate מהיר: ≈ tiktoken × 1.1.
