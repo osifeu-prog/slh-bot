@@ -53,7 +53,7 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["ton_check"])
     def ton_check_cmd(msg):
-        if not is_open():
+        if not deposits_are_open():
             bot.reply_to(msg, "⛔ הפקדות TON סגורות כרגע.")
             return
         parts = (msg.text or "").split()
