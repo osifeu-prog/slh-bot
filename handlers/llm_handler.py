@@ -11,7 +11,7 @@ client = None
 
 
 def ask_gemini(prompt):
-    key = os.getenv("GEMINI_API_KEY")
+    key = (os.getenv("GEMINI_API_KEY") or "").strip().strip('"\'')
     if not key:
         return "GEMINI_API_KEY missing"
     url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + key
@@ -29,7 +29,7 @@ def ask_groq(prompt):
     global client
     try:
         if client is None:
-            key = os.getenv("GROQ_API_KEY")
+            key = (os.getenv("GROQ_API_KEY") or "").strip().strip('"\'')
             if not key:
                 return "GROQ_API_KEY missing"
             client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
