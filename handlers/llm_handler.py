@@ -10,19 +10,50 @@ from core.authority import is_owner
 client = None
 
 
+_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+_gemini_model_cache = {"name": None}
+
+
+def _discover_gemini_model(key):
+    """Pick an available 'flash' model that supports generateContent."""
+    try:
+        r = requests.get(f"{_GEMINI_BASE}/models", params={"key": key, "pageSize": 200}, timeout=15)
+        models = r.json().get("models", [])
+    except Exception:
+        return None
+    usable = [m.get("name", "").split("/", 1)[-1] for m in models
+              if "generateContent" in (m.get("supportedGenerationMethods") or [])]
+    stable = [n for n in usable if "flash" in n and "preview" not in n and "exp" not in n and "lite" not in n]
+    for group in (stable, [n for n in usable if "flash" in n], usable):
+        if group:
+            return sorted(group)[-1]
+    return None
+
+
 def ask_gemini(prompt):
     key = (os.getenv("GEMINI_API_KEY") or "").strip().strip('"\'')
     if not key:
         return "GEMINI_API_KEY missing"
-    url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + key
+    model = (os.getenv("GEMINI_MODEL") or "").strip() or _gemini_model_cache["name"] or "gemini-2.5-flash"
+    body = {"contents": [{"parts": [{"text": str(prompt)}]}]}
     try:
-        r = requests.post(url, json={"contents": [{"parts": [{"text": str(prompt)}]}]}, timeout=20)
-        j = r.json()
-        if "candidates" in j:
-            return j["candidates"][0]["content"]["parts"][0]["text"]
-        return "Gemini Error: " + str(j)
+        for attempt in range(2):
+            r = requests.post(f"{_GEMINI_BASE}/models/{model}:generateContent", params={"key": key}, json=body, timeout=20)
+            j = r.json()
+            if "candidates" in j:
+                _gemini_model_cache["name"] = model
+                return j["candidates"][0]["content"]["parts"][0]["text"]
+            # Model retired or unknown for this key: discover a current one once.
+            if attempt == 0 and r.status_code == 404 and not os.getenv("GEMINI_MODEL"):
+                found = _discover_gemini_model(key)
+                if found and found != model:
+                    print("[LLM] Gemini model switched:", model, "->", found)
+                    model = found
+                    continue
+            return "Gemini Error: " + str(j)[:300]
     except Exception as e:
         return f"Gemini Error: {e}"
+    return "Gemini Error: no response"
 
 
 def ask_groq(prompt):
