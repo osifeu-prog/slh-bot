@@ -15,7 +15,7 @@
   </div>
 </div><div class="app">
 <header class="top"><div class="brand"><div class="logo">⚡</div><div><div class="title">SLH OS</div><div class="subtitle" id="name">מתחבר…</div></div></div><button class="refresh" onclick="refreshAll()">↻</button></header>
-<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('ai')" id="nai">✨ AI</button></div>
+<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button></div>
 <main>
 <section id="home" class="screen"><div class="hero"><div class="hero-label">היתרה שלך</div><div class="hero-balance" id="credits">—</div><div class="subtitle">Credits · יתרה פנימית</div></div><div class="grid"><div class="card"><div class="metric-label">🪙 SLH</div><div class="metric token" id="token">—</div></div><div class="card"><div class="metric-label">🔒 Staked</div><div class="metric stake" id="staked">—</div></div></div><div class="section-title">הצעד הבא</div><div class="next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div><div class="section-title">פעולות</div><div class="card actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>💳 קנייה</b><span>בחירת חבילה ותשלום דרך Telegram Stars</span></button><button class="action" onclick="show('wallet')"><b>👛 ארנק</b><span>יתרות וסטטוס</span></button><button class="action" onclick="show('transfer')"><b>💸 העברה</b><span>העברת Credits למשתמש אחר</span></button><button class="action" onclick="show('stake')"><b>🔒 Staking</b><span>תנאים ומסלול פעולה</span></button><button class="action" onclick="show('alpha')"><b>🚀 Alpha</b><span>התקדמות וזכאות</span></button><button class="action" onclick="show('academy')"><b>🎓 Academy</b><span>השלמת שיעורים ומשימות</span></button></div><details class="guide"><summary>ℹ️ איך משתמשים במערכת?</summary><p>התחל מהצעד הבא. Wallet מציג מצב, Transfer מטפל בהעברת Credits, Buy מטפל ברכישה, Stake מציג את התנאים, Academy מנהל את הלמידה, Alpha מציג ראיות, ו־AI מסביר מה לעשות הלאה.</p></details></section>
 <section id="market" class="screen"><div class="section-title">🛍 SLH Market</div>
@@ -48,6 +48,15 @@
 <div class="card"><b>איך זה עובד</b><p class="muted">פקודת קנייה שומרת Credits; פקודת מכירה שומרת SLH. כשהמחירים תואמים, מנגנון המסחר הקיים מסלק את העסקה ומחזיר שיפור מחיר לקונה אם יש.</p></div>
 </section>
 <section id="academy" class="screen"><div class="section-title">🎓 Academy & Tasks</div><div class="card"><div id="academyText" class="muted">טוען…</div><div id="tasks" style="margin-top:8px"></div></div><div class="card"><b>מסלול Bitcoin Mastery</b><p class="muted">Academy הוא מסלול למידה נפרד. Staking אינו דורש השלמת קורס. אפשר ללמוד בקצב שלך ולהמשיך לשיעורים לפי הסדר.</p><div class="actions"><button class="action primary" onclick="openAction('/courses','פתיחת Academy')"><b>🎓 פתיחת Academy</b><span>רשימת הקורסים</span></button><button class="action" onclick="openAction('/course_bitcoin_mastery','Bitcoin Mastery')"><b>📘 Bitcoin Mastery</b><span>התחלת הקורס</span></button></div></div></section>
+<section id="control" class="screen">
+<div class="section-title">🧭 SLH OS Control</div>
+<div class="card"><b>🎯 המשימות שלי</b><div id="controlTasks" style="margin-top:8px">טוען…</div></div>
+<div class="card"><b>🗳️ Governance</b><div id="controlGov" style="margin-top:8px">טוען…</div></div>
+<div class="card"><b>📓 היומן שלי</b><div id="controlJournal" style="margin-top:8px">טוען…</div>
+<textarea id="journalInput" class="form-input" style="min-height:90px;margin-top:10px" placeholder="כתוב רשומה חדשה…"></textarea>
+<button class="action primary" style="width:100%;margin-top:9px" onclick="saveJournalEntry()"><b>💾 שמור ביומן</b><span>נשמר רק ביומן האישי שלך</span></button>
+</div>
+</section>
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
 <section id="system" class="screen"><div class="section-title">🖥 מערכת SLH OS</div><div class="card"><b>Health</b><div id="sysHealth">טוען…</div></div><div class="card"><b>Exchange</b><div id="sysExchange">טוען…</div></div><div class="card"><b>Rewards</b><div id="sysRewards">טוען…</div></div></section></main></div>
 <nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet')">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button></nav><div id="toast" class="toast"></div>
@@ -86,7 +95,7 @@ function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;docum
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
 function toast(x){const e=$("toast");e.textContent=x;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
-function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));const s=$(id);if(s)s.classList.add('active');document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],ai:['bi','nai']};(map[id]||[]).forEach(x=>$(x)?.classList.add('active'));window.scrollTo({top:0,behavior:'smooth'});if(id==='exchange')loadExchange()}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));const s=$(id);if(s)s.classList.add('active');document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai']};(map[id]||[]).forEach(x=>$(x)?.classList.add('active'));window.scrollTo({top:0,behavior:'smooth'});if(id==='exchange')loadExchange()}
 function sendCommand(cmd,label){try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}if(tg&&typeof tg.sendData==='function'){tg.sendData(JSON.stringify({cmd:String(cmd)}));toast('נשלח לבוט');return}navigator.clipboard?.writeText(String(cmd));toast('הפקודה הועתקה')}catch(e){toast('שליחה נכשלה')}}
 function openAction(cmd,label){sendCommand(cmd,label)}
 async function loadBook(){try{const t=await(await fetch('/api/v1/exchange/ticker')).json();setText("exPrice",t.has_data?fmt(t.last_price)+' Credits':'טרם בוצעו עסקאות');const w=state.wallet||{};setText("exCredits",fmt(w.credits||0));setText("exSLH",fmt(w.token_balance||0));/*loadBook_no_wallet*/const b=await(await fetch('/api/v1/exchange/orderbook')).json();const rows=(b.orders||[]);setHTML("exBook",rows.length?rows.map(o=>`<div class="wallet-row"><span class="pill ${o.side==='buy'?'ok':''}">${o.side==='buy'?'קנייה':'מכירה'}</span><span>${fmt(o.amount)} SLH</span><strong>${fmt(o.price)}</strong></div>`).join(''):'<div class="muted">אין הזמנות פתוחות</div>');}catch(e){setHTML("exBook",'<div class="muted">לא ניתן לטעון</div>')}}
@@ -355,6 +364,85 @@ async function sendTransferViaApi(){
     toast('❌ שגיאה: '+(e.message||e));
   }
 }
+
+async function loadControl(){
+  if(!initData)return;
+  await Promise.allSettled([loadControlTasks(),loadControlGovernance(),loadControlJournal()]);
+}
+
+async function loadControlTasks(){
+  try{
+    const r=await fetch('/api/v1/tasks',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    const rows=Array.isArray(d.tasks)?d.tasks:[];
+    setHTML('controlTasks',rows.length?rows.map(t=>{
+      const done=t.status==='done';
+      const button=done?'':'<button class="ghost" style="margin-inline-start:8px" onclick="completeControlTask(\\''+esc(t.id)+'\\')">השלם</button>';
+      return '<div class="task '+(done?'done':'')+'">'+(done?'✅':'⬜')+' <b>'+esc(t.title||t.id)+'</b><span class="muted"> · '+esc(t.status||'open')+'</span>'+button+'</div>';
+    }).join(''):'<div class="muted">אין משימות אישיות</div>');
+  }catch(e){setHTML('controlTasks','<div class="muted">לא ניתן לטעון משימות</div>')}
+}
+
+async function completeControlTask(taskId){
+  try{
+    const r=await fetch('/api/v1/tasks/'+encodeURIComponent(taskId)+'/complete',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:'{}'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast('❌ '+(d.error||('HTTP '+r.status)));return}
+    toast(d.reward_status==='paid'?'✅ משימה הושלמה':'✅ המשימה מסומנת כהושלמה');
+    await loadControlTasks();
+    await loadMe();
+  }catch(e){toast('❌ '+(e.message||e))}
+}
+
+async function loadControlGovernance(){
+  try{
+    const r=await fetch('/api/v1/governance',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    let h='<div class="wallet-row"><span>Agents</span><strong>'+fmt(d.agents||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>Proposals</span><strong>'+fmt(d.proposal_count||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>Open</span><strong>'+fmt(d.open_proposals||0)+'</strong></div>';
+    h+='<div class="muted" style="margin-top:8px">מקור אמת: '+esc(d.source_of_truth||'state/db.json')+'</div>';
+    const ps=Array.isArray(d.proposals)?d.proposals.slice().reverse():[];
+    if(ps.length){
+      h+='<div class="section-title" style="margin-top:12px">הצעות אחרונות</div>';
+      h+=ps.map(p=>{
+        const v=p.votes||{};
+        return '<div class="task"><b>#'+esc(p.id) +' '+esc(p.title||'')+'</b><div class="muted">'+esc(p.status||'unknown')+' · כן '+fmt(v.yes||0)+' · לא '+fmt(v.no||0)+' · נמנע '+fmt(v.abstain||0)+'</div></div>';
+      }).join('');
+    }else{
+      h+='<div class="muted" style="margin-top:8px">אין הצעות להצגה</div>';
+    }
+    setHTML('controlGov',h);
+  }catch(e){setHTML('controlGov','<div class="muted">Governance לא זמין</div>')}
+}
+
+async function loadControlJournal(){
+  try{
+    const r=await fetch('/api/v1/journal',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    const rows=Array.isArray(d.entries)?d.entries.slice().reverse():[];
+    setHTML('controlJournal',rows.length?rows.map(e=>'<div class="task"><div class="muted">'+esc(e.timestamp||'')+'</div><div>'+esc(e.text||'')+'</div></div>').join(''):'<div class="muted">אין רשומות עדיין</div>');
+  }catch(e){setHTML('controlJournal','<div class="muted">היומן לא זמין</div>')}
+}
+
+async function saveJournalEntry(){
+  if(!initData){showAuthGate();return}
+  const input=$('journalInput');
+  const text=(input?.value||'').trim();
+  if(!text){toast('כתוב רשומה לפני השמירה');return}
+  try{
+    const r=await fetch('/api/v1/journal',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({text})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast('❌ '+(d.error||('HTTP '+r.status)));return}
+    input.value='';
+    toast('✅ נשמר ביומן');
+    await loadControlJournal();
+  }catch(e){toast('❌ '+(e.message||e))}
+}
+
 async function loadSystem(){
   if(!initData)return;
   try{
