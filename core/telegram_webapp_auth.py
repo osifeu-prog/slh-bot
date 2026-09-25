@@ -1,5 +1,6 @@
 """Server-side authentication for Telegram Mini App initData."""
 
+import base64
 import hashlib
 import hmac
 import json
@@ -7,8 +8,13 @@ import os
 import time
 from urllib.parse import parse_qsl
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
 
 DEFAULT_MAX_AGE = 3600
+TELEGRAM_ED25519_PUBLIC_KEY_HEX = (
+    "e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c187fe7d34caed242d"
+)
 
 
 def _bot_token():
@@ -53,7 +59,6 @@ def _safe_hmac_diagnostics(init_data, data, received_hash, secret_key):
         "raw_no_signature": _hmac_hex(secret_key, raw_without_signature),
     }
 
-    # Legacy Login Widget derivation is diagnostic only and is never accepted.
     legacy_key = hashlib.sha256(_bot_token().encode("utf-8")).digest()
     candidates["legacy_sha256_token"] = _hmac_hex(legacy_key, decoded_all)
 
@@ -66,6 +71,40 @@ def _safe_hmac_diagnostics(init_data, data, received_hash, secret_key):
             if hmac.compare_digest(received_hash.lower(), digest)
         ),
     }
+
+
+def _verify_ed25519_signature(data):
+    """Verify Telegram's official third-party initData signature."""
+    signature = str(data.get("signature", "") or "")
+    if not signature:
+        return False
+
+    token = _bot_token()
+    bot_id = token.split(":", 1)[0]
+    if not bot_id.isdigit():
+        return False
+
+    check_string = "\n".join(
+        [
+            f"{bot_id}:WebAppData",
+            *(
+                f"{key}={value}"
+                for key, value in sorted(data.items())
+                if key not in {"hash", "signature"}
+            ),
+        ]
+    )
+
+    try:
+        padded = signature + ("=" * (-len(signature) % 4))
+        signature_bytes = base64.urlsafe_b64decode(padded.encode("ascii"))
+        public_key = Ed25519PublicKey.from_public_bytes(
+            bytes.fromhex(TELEGRAM_ED25519_PUBLIC_KEY_HEX)
+        )
+        public_key.verify(signature_bytes, check_string.encode("utf-8"))
+        return True
+    except (ValueError, TypeError, UnicodeEncodeError):
+        return False
 
 
 def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
@@ -84,10 +123,6 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     if not received_hash:
         raise ValueError("TELEGRAM_INIT_DATA_HASH_MISSING")
 
-    # Telegram WebApp validation:
-    # secret_key = HMAC-SHA256(key=bot_token, data="WebAppData")
-    # expected_hash = HMAC-SHA256(key=secret_key, data=data_check_string)
-    # Bot-token validation covers every received field except hash.
     check_string = "\n".join(
         f"{key}={value}"
         for key, value in sorted(data.items())
@@ -100,18 +135,20 @@ def validate_init_data(init_data, max_age=DEFAULT_MAX_AGE, now=None):
     expected_hash = _hmac_hex(secret_key, check_string)
 
     if not hmac.compare_digest(received_hash.lower(), expected_hash):
-        diag = _safe_hmac_diagnostics(init_data, data, received_hash, secret_key)
-        detail = "TELEGRAM_INIT_DATA_INVALID"
-        if diag["matches"]:
-            detail += ";HMAC_DIAGNOSTIC=" + ",".join(diag["matches"])
-        else:
-            detail += (
-                ";HMAC_DIAGNOSTIC=NONE"
-                f";keys={','.join(diag['keys'])}"
-                f";hash_len={diag['hash_len']}"
-                f";signature_present={str(diag['signature_present']).lower()}"
-            )
-        raise ValueError(detail)
+        if not _verify_ed25519_signature(data):
+            diag = _safe_hmac_diagnostics(init_data, data, received_hash, secret_key)
+            detail = "TELEGRAM_INIT_DATA_INVALID"
+            if diag["matches"]:
+                detail += ";HMAC_DIAGNOSTIC=" + ",".join(diag["matches"])
+            else:
+                detail += (
+                    ";HMAC_DIAGNOSTIC=NONE"
+                    f";keys={','.join(diag['keys'])}"
+                    f";hash_len={diag['hash_len']}"
+                    f";signature_present={str(diag['signature_present']).lower()}"
+                    ";ED25519=INVALID"
+                )
+            raise ValueError(detail)
 
     try:
         auth_date = int(data.get("auth_date", "0"))
