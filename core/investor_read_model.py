@@ -196,6 +196,12 @@ def get_investor_snapshot(uid):
             "credits": wallet.get("credits", 0),
             "staked": wallet.get("staked", 0),
             "token_balance": wallet.get("token_balance", 0),
+            "live_token_balance": wallet.get("live_token_balance", 0),
+            "token_balance_status": (
+                "backed"
+                if float(wallet.get("live_token_balance", 0) or 0) > 0
+                else "unbacked_or_empty"
+            ),
             "ton_wallet": user.get("ton_wallet"),
         },
         "academy": {
