@@ -228,6 +228,144 @@ def investor_me():
         raise
 
 
+
+
+@app.route("/api/v1/tasks", methods=["GET"])
+def personal_tasks_api():
+    """Authenticated read model for the caller's personal tasks."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        snapshot = get_investor_snapshot(uid)
+        tasks = snapshot.get("tasks", {})
+        personal = tasks.get("personal", []) if isinstance(tasks, dict) else []
+        return _no_store(jsonify({
+            "tasks": personal if isinstance(personal, list) else [],
+            "completed": tasks.get("completed", 0) if isinstance(tasks, dict) else 0,
+            "open": tasks.get("open", 0) if isinstance(tasks, dict) else 0,
+        })), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/v1/tasks/<task_id>/complete", methods=["POST"])
+def complete_personal_task_api(task_id):
+    """Complete one caller-owned task through the canonical task service."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    task_id = str(task_id or "").strip()
+    if not task_id or len(task_id) > 200:
+        return jsonify({"error": "INVALID_TASK_ID"}), 400
+    try:
+        from core import task_completion_service
+        result = task_completion_service.complete_task(
+            uid=uid,
+            task_id=task_id,
+            meta={"source": "mini_app", "telegram_user_id": str(uid)},
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[TASKS] complete API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
+
+
+@app.route("/api/v1/governance", methods=["GET"])
+def governance_read_api():
+    """Read-only authenticated Governance summary; no voting mutation here."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core import governance_store
+        gov = governance_store.load_governance()
+        agents = gov.get("agents_registry", {}) if isinstance(gov, dict) else {}
+        proposals = gov.get("proposals", []) if isinstance(gov, dict) else []
+        safe_proposals = []
+        for proposal in proposals if isinstance(proposals, list) else []:
+            if not isinstance(proposal, dict):
+                continue
+            votes = proposal.get("votes", {}) if isinstance(proposal.get("votes"), dict) else {}
+            safe_proposals.append({
+                "id": proposal.get("id"),
+                "title": proposal.get("title", ""),
+                "description": proposal.get("description", ""),
+                "status": proposal.get("status", "unknown"),
+                "created_at": proposal.get("created_at"),
+                "created_by": str(proposal.get("created_by", "")),
+                "votes": {
+                    "yes": votes.get("yes", 0),
+                    "no": votes.get("no", 0),
+                    "abstain": votes.get("abstain", 0),
+                    "weighted_yes": votes.get("weighted_yes", 0),
+                    "weighted_no": votes.get("weighted_no", 0),
+                },
+            })
+        return _no_store(jsonify({
+            "source_of_truth": gov.get("source_of_truth", "state/db.json") if isinstance(gov, dict) else "state/db.json",
+            "agents": len(agents) if isinstance(agents, dict) else 0,
+            "proposal_count": len(safe_proposals),
+            "open_proposals": sum(1 for p in safe_proposals if p.get("status") == "open"),
+            "proposals": safe_proposals[-20:],
+        })), 200
+    except Exception as exc:
+        print("[GOV] read API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "SERVER_ERROR"}), 500
+
+
+@app.route("/api/v1/journal", methods=["GET", "POST"])
+def personal_journal_api():
+    """Authenticated personal journal read/write. Only the caller's journal is exposed."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    journal_dir = BASE_DIR / "state" / "journals"
+    journal_path = journal_dir / f"{str(uid)}.jsonl"
+
+    if request.method == "GET":
+        entries = []
+        if journal_path.exists():
+            try:
+                lines = journal_path.read_text(encoding="utf-8").splitlines()[-10:]
+                for line in lines:
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if isinstance(entry, dict):
+                        entries.append({
+                            "timestamp": entry.get("timestamp"),
+                            "text": str(entry.get("text", ""))[:2000],
+                        })
+            except OSError:
+                return jsonify({"error": "JOURNAL_UNAVAILABLE"}), 503
+        return _no_store(jsonify({"entries": entries})), 200
+
+    payload = request.get_json(silent=True) or {}
+    entry_text = str(payload.get("text", "")).strip()
+    if not entry_text:
+        return jsonify({"error": "EMPTY_JOURNAL_ENTRY"}), 400
+    if len(entry_text) > 2000:
+        return jsonify({"error": "JOURNAL_ENTRY_TOO_LONG"}), 400
+
+    try:
+        journal_dir.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime()),
+            "text": entry_text,
+        }
+        with journal_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\\n")
+        return _no_store(jsonify({"ok": True, "entry": entry})), 201
+    except OSError:
+        return jsonify({"error": "JOURNAL_WRITE_FAILED"}), 503
+
 @app.route("/api/v1/staking", methods=["POST"])
 def create_staking_position():
     """Create a real Credits staking position for the authenticated Telegram user."""
