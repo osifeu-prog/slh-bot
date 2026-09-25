@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "repo": {
+    "full_name": "osifeu-prog/slh-bot",
+    "branch": "main"
+  },
+  "targets": {
+    "main": {
+      "label": "MAIN BOT",
+      "railway_project_id": "b33cb8d5-e82c-4a74-b94b-b52eb8c3d3db",
+      "railway_project": "slh-cloud-bot",
+      "environment_id": "e82af387-87bb-40c9-b250-2e8a0b7fb41a",
+      "environment": "production",
+      "service_id": "48b829d9-7bec-4d6c-ac25-025c77ce2794",
+      "service": "slh-cloud-bot",
+      "role": "Telegram/Main runtime"
+    },
+    "web": {
+      "label": "WEB",
+      "railway_project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
+      "railway_project": "endearing-amazement",
+      "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
+      "environment": "production",
+      "service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
+      "service": "web",
+      "role": "Web/Mini App runtime"
+    },
+    "api": {
+      "label": "API",
+      "railway_project_id": "96452076-6885-4e6d-9b26-9ef20d6c3cd7",
+      "railway_project": "slh-api",
+      "environment_id": "82f92047-5350-4082-a11b-eb07c64cf0fd",
+      "environment": "production",
+      "service_id": "bcbb5f6a-f0a1-4547-a85b-b8462985cdce",
+      "service": "slh-api",
+      "role": "Canonical API/auth/data plane"
+    }
+  },
+  "pc_agent": {
+    "device_id": "PC_Osif2",
+    "agent_path": "%USERPROFILE%\\\\slh_agent.py",
+    "launcher_path": "%USERPROFILE%\\\\slh_agent.bat",
+    "heartbeat_secret_path": "%USERPROFILE%\\\\slh_mqtt_heartbeat_secret.txt",
+    "heartbeat_topic": "slh/device/PC_Osif2/heartbeat",
+    "heartbeat_interval_seconds": 30
+  },
+  "safety": {
+    "read_only_default": true,
+    "never_use_railway_up_for_release": true,
+    "never_print_secret_values": true,
+    "financial_state_mutation_requires_explicit_action": true,
+    "token_balance_mutation_requires_provenance": true
+  }
+}
