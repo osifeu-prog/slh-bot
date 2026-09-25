@@ -38,9 +38,10 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
             raise ValueError("insufficient credits")
 
         positions = db.setdefault('stake_positions', {})
-        if request_id:
+        request_key = f'{uid}:{request_id}' if request_id else ''
+        if request_key:
             requests = db.setdefault('staking_requests', {})
-            existing = requests.get(request_id)
+            existing = requests.get(request_key)
             if existing:
                 existing_position = positions.get(existing.get('position_id'))
                 return {
@@ -68,8 +69,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
             "status": "locked",
         }
 
-        if request_id:
-            db.setdefault('staking_requests', {})[request_id] = {
+        if request_key:
+            db.setdefault('staking_requests', {})[request_key] = {
                 'position_id': position_id,
                 'uid': uid,
                 'created_at': now,
@@ -119,9 +120,10 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         position = db.setdefault("stake_positions", {}).get(position_id)
         if not position or str(position.get("uid")) != uid:
             raise ValueError("position not found")
-        if request_id:
+        request_key = f'{uid}:{request_id}' if request_id else ''
+        if request_key:
             requests = db.setdefault('staking_unstake_requests', {})
-            existing = requests.get(request_id)
+            existing = requests.get(request_key)
             if existing:
                 return {
                     'status': 'duplicate',
@@ -150,8 +152,8 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         position["status"] = "unlocked"
         position["unlocked_at"] = time.time()
 
-        if request_id:
-            db.setdefault('staking_unstake_requests', {})[request_id] = {
+        if request_key:
+            db.setdefault('staking_unstake_requests', {})[request_key] = {
                 'position_id': position_id,
                 'uid': uid,
                 'created_at': time.time(),
