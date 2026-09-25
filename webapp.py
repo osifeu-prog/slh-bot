@@ -261,6 +261,16 @@ def complete_personal_task_api(task_id):
     if not task_id or len(task_id) > 200:
         return jsonify({"error": "INVALID_TASK_ID"}), 400
     try:
+        snapshot = get_investor_snapshot(uid)
+        personal = snapshot.get("tasks", {}).get("personal", [])
+        owned_ids = {
+            str(task.get("id"))
+            for task in personal
+            if isinstance(task, dict) and task.get("id")
+        }
+        if task_id not in owned_ids:
+            return jsonify({"error": "TASK_NOT_FOUND"}), 404
+
         from core import task_completion_service
         result = task_completion_service.complete_task(
             uid=uid,
@@ -297,7 +307,6 @@ def governance_read_api():
                 "description": proposal.get("description", ""),
                 "status": proposal.get("status", "unknown"),
                 "created_at": proposal.get("created_at"),
-                "created_by": str(proposal.get("created_by", "")),
                 "votes": {
                     "yes": votes.get("yes", 0),
                     "no": votes.get("no", 0),
