@@ -16,6 +16,7 @@ from pathlib import Path
 from web3 import Web3
 
 import state_manager
+from core.bnb_gate import bnb_deposits_open
 from core.binance_connector import get_bsc_config
 from core.wallet_binding import get_binding
 
@@ -162,6 +163,8 @@ def verify_slh_deposit(tx_hash):
 
 
 def settle_slh_deposit(uid, tx_hash):
+    if not bnb_deposits_open():
+        raise ValueError("BNB_DEPOSITS_CLOSED")
     uid = str(uid)
     tx_hash = str(tx_hash or "").strip()
     if not tx_hash:

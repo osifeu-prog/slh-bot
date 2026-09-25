@@ -7,6 +7,7 @@ This module does not broadcast transactions or expose private keys.
 
 import state_manager
 
+from core.bnb_gate import bnb_deposits_open
 from core.deposit_monitor import verify_bnb_deposit
 from core.wallet_binding import get_binding
 from core.economy_service import record_transaction
@@ -15,6 +16,8 @@ CREDITS_PER_BNB = 1000
 
 
 def settle_bnb_deposit(uid, tx_hash):
+    if not bnb_deposits_open():
+        raise ValueError("BNB_DEPOSITS_CLOSED")
     uid = str(uid)
     if not isinstance(tx_hash, str) or not tx_hash.strip():
         raise ValueError("INVALID_TX_HASH")
