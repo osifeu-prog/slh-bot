@@ -12,6 +12,14 @@ import state_manager
 from core import economy_service
 
 
+
+def _fmt(x):
+    """Show money without float noise (3.9000000000000004 -> 3.9)."""
+    try:
+        return ("%.8f" % float(x)).rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return str(x)
+
 def _wallet(uid):
     db = state_manager.load_db()
     return (db.get("users", {}).get(str(uid), {}) or {}).get("wallet", {}) or {}
@@ -203,7 +211,7 @@ def register(bot):
             "🎁 המתנה נשלחה בהצלחה!\n\n"
             f"💰 {result.get('amount')} Credits\n"
             f"👤 למשתמש: {result.get('recipient_uid')}\n"
-            f"💳 היתרה שלך: {result.get('sender_balance')} Credits\n"
+            f"💳 היתרה שלך: {_fmt(result.get('sender_balance'))} Credits\n"
             f"🧾 Transfer ID: {result.get('transfer_id')}",
         )
 

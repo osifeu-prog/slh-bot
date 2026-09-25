@@ -37,6 +37,15 @@ def _paid_course_lock(uid, course_id):
         pass
     if academy_manager.get_course(uid, course_id):
         return None
+    # Active VIP includes every course (VIP = all benefits).
+    try:
+        import time
+        from core import profile_manager
+        user = profile_manager.get_user(str(uid)) or {}
+        if int(user.get("vip_access_until", 0) or 0) > time.time():
+            return None
+    except Exception:
+        pass
     item = course.get("store_item", "")
     price = _stars_price(item)
     return (

@@ -9,6 +9,14 @@ ACADEMY_NOTE = (
 )
 
 
+
+def _fmt(x):
+    """Show money without float noise (3.9000000000000004 -> 3.9)."""
+    try:
+        return ("%.8f" % float(x)).rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return str(x)
+
 def register(bot):
     @bot.message_handler(commands=["stake"])
     def stake(msg):
@@ -26,8 +34,8 @@ def register(bot):
             bot.reply_to(
                 msg,
                 f"{amount} credits הועברו לסטייקינג\n"
-                f"יתרה: {result['credits']}\n"
-                f"סטייק: {result['staked']}\n"
+                f"יתרה: {_fmt(result['credits'])}\n"
+                f"סטייק: {_fmt(result['staked'])}\n"
                 f"Position: {result['position']['id']}"
             )
         except ValueError as e:
@@ -52,7 +60,7 @@ def register(bot):
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
-            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {res.get('credits')}\nסטייק: {res.get('staked')}")
+            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:
             bot.reply_to(msg, str(e))
 
@@ -67,7 +75,7 @@ def register(bot):
             days = int(parts[2])
             uid = str(msg.from_user.id)
             result = staking_service.stake_locked(uid, amount, lock_days=days, meta={"source": "telegram", "command": "stake_lock"})
-            bot.reply_to(msg, f"{amount} credits הועברו לסטייקינג נעול\nתקופה: {days} ימים\nיתרה: {result['credits']}\nסטייק: {result['staked']}\nPosition: {result['position']['id']}")
+            bot.reply_to(msg, f"{amount} credits הועברו לסטייקינג נעול\nתקופה: {days} ימים\nיתרה: {_fmt(result['credits'])}\nסטייק: {_fmt(result['staked'])}\nPosition: {result['position']['id']}")
         except Exception as e:
             bot.reply_to(msg, str(e))
 
@@ -107,7 +115,7 @@ def register(bot):
                 if result.get("status") in {"already_paid", "duplicate", "nothing_to_claim"}:
                     bot.reply_to(msg, "אין כרגע תגמול חדש למימוש.")
                     return
-                bot.reply_to(msg, f"תגמול שולם: {result.get('amount', 0)} credits\nיתרה: {result.get('after', 'עודכנה')}")
+                bot.reply_to(msg, f"תגמול שולם: {_fmt(result.get('amount', 0))} credits\nיתרה: {_fmt(result.get('after', 'עודכנה'))}")
             except Exception as e:
                 bot.reply_to(msg, str(e))
             return
@@ -137,7 +145,7 @@ def register(bot):
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
-            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {res.get('credits')}\nסטייק: {res.get('staked')}")
+            bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:
             bot.reply_to(msg, str(e))
 
