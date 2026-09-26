@@ -182,7 +182,13 @@ def load_handlers(bot, context):
     # Best-effort fulfillment recovery: retries already-paid orders only.
     # It never creates a charge and never handles blockchain deposits.
     try:
-        from store.fulfillment_recovery import recover_paid_orders
+        from store.fulfillment_recovery import (
+            recover_paid_orders,
+            reconcile_telegram_stars,
+        )
+        stars = reconcile_telegram_stars()
+        if stars.get("attempted"):
+            print("[STARS] startup reconciliation:", stars)
         recovery = recover_paid_orders()
         print("[FULFILLMENT] startup recovery:", recovery)
         from store.fulfillment_recovery import start_recovery_loop
