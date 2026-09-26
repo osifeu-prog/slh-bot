@@ -27,3 +27,12 @@ def test_owner_start_passes_user_id_to_dashboard_markup():
     src = Path("handlers/onboarding_v2.py").read_text(encoding="utf-8")
     assert "if is_owner:" in src
     assert "markup = _dashboard_markup(user_id)" in src
+
+
+
+def test_control_center_prefers_railway_commit_and_runtime_llm_state():
+    src = Path("handlers/os_handler.py").read_text(encoding="utf-8")
+    assert "RAILWAY_GIT_COMMIT_SHA" in src
+    assert "git rev-parse" in src
+    assert "llm_state" in src
+    assert "providers" in src
