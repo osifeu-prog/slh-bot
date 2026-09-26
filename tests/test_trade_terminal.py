@@ -15,3 +15,11 @@ def test_execution_fee_defaults_to_zero(monkeypatch):
 
 def test_six_languages_exist():
     assert {"he", "en", "ar", "es", "ru", "pt"} <= set(trade_terminal._TEXT)
+
+
+def test_trade_ui_has_ai_explanation_and_localized_execution_strings():
+    for lang in ("he", "en", "ar", "es", "ru", "pt"):
+        assert "ai_explain" in trade_terminal._TEXT[lang]
+        assert "execution_connector" in trade_terminal._TEXT[lang]
+        assert "verified" in trade_terminal._TEXT[lang]
+        assert "not_verified" in trade_terminal._TEXT[lang]
