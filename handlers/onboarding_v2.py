@@ -116,6 +116,20 @@ def register(bot, context=None):
             return None
         return f"https://t.me/{username}?start=ref_{user_id}"
 
+    def _ton_label(uid, wallet):
+        """Display the verified TON binding first, with legacy fallback."""
+        try:
+            from core.ton_wallet_binding import get_ton_binding
+            binding = get_ton_binding(str(uid))
+        except Exception:
+            binding = None
+        address = (binding or {}).get("address") or (wallet or {}).get("ton_wallet")
+        if not address:
+            return "לא מקושר"
+        address = str(address)
+        short = address if len(address) <= 14 else f"{address[:6]}…{address[-4:]}"
+        return f"✅ {short}" if binding else short
+
     def _personal_dashboard_text(user_id):
         snapshot = get_investor_snapshot(str(user_id))
         identity = snapshot.get("identity", {})
@@ -144,7 +158,7 @@ def register(bot, context=None):
             f"💰 Credits: {wallet.get('credits', 0)}\n"
             f"🔒 Staked: {wallet.get('staked', 0)}\n"
             f"🪙 Internal SLH: {internal_token}\n"
-            f"💎 TON Wallet: {wallet.get('ton_wallet') or 'לא מקושר'}\n\n"
+            f"💎 TON Wallet: {_ton_label(user_id, wallet)}\n\n"
             f"{course_line}\n"
             f"🤖 הסוכנים שלך: {len(owned_agents)}\n"
             f"🎯 משימות פתוחות: {tasks.get('open', 0)}\n\n"
