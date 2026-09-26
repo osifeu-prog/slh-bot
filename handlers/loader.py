@@ -33,6 +33,7 @@ def load_handlers(bot, context):
         ("reconcile", "handlers.reconcile_handler"),
         ("revenue", "handlers.revenue_handler"),
         ("ton_address", "handlers.ton_address_handler"),
+        ("usdt_audit", "handlers.usdt_audit_handler"),
         ("recon_release", "handlers.recon_release_handler"),
         ("ton_balance", "handlers.ton_balance_handler"),
         ("ton_claim", "handlers.ton_claim_handler"),
