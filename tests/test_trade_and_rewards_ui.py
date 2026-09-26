@@ -27,3 +27,11 @@ def test_owner_start_passes_user_id_to_dashboard_markup():
     src = Path("handlers/onboarding_v2.py").read_text(encoding="utf-8")
     assert "if is_owner:" in src
     assert "markup = _dashboard_markup(user_id)" in src
+
+
+
+def test_walletconnect_config_route_is_public_bsc_only():
+    src = Path("webapp.py").read_text(encoding="utf-8")
+    assert '@app.route("/api/walletconnect/config")' in src
+    assert '"chain_id": 56' in src
+    assert '"project_id": project_id or None' in src
