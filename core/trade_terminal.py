@@ -252,6 +252,69 @@ _TEXT = {
 }
 
 
+# UI strings used by the Telegram handler outside the main text catalog.
+_TEXT["he"].update({
+    "ai_explain": "🧠 הסבר AI",
+    "ai_explain_prompt": "הסבר למשתמש בעברית איך עובד SLH Trade Terminal, מה אפשר לעשות בו כרגע, מה לא פעיל, ומה הסיכונים. אל תיתן המלצת קנייה/מכירה ואל תבטיח רווח.",
+    "execution_connector": "מחבר ביצוע",
+    "execution_open": "פעיל",
+    "execution_safe": "מצב בטוח",
+    "execution_fee": "עמלת ביצוע מוגדרת: {fee:.2f}%",
+    "verified": "מאומת",
+    "not_verified": "לא אומת",
+})
+_TEXT["en"].update({
+    "ai_explain": "🧠 AI Explanation",
+    "ai_explain_prompt": "Explain to the user in English how the SLH Trade Terminal works, what is currently available, what is disabled, and the risks. Do not provide a buy/sell recommendation or profit guarantee.",
+    "execution_connector": "Execution connector",
+    "execution_open": "OPEN",
+    "execution_safe": "SAFE MODE",
+    "execution_fee": "Configured execution fee: {fee:.2f}%",
+    "verified": "verified",
+    "not_verified": "not verified",
+})
+_TEXT["ar"].update({
+    "ai_explain": "🧠 شرح بالذكاء الاصطناعي",
+    "ai_explain_prompt": "اشرح للمستخدم بالعربية كيف تعمل منصة SLH Trade، وما المتاح حالياً وما المعطل وما المخاطر. لا تقدم توصية شراء أو بيع ولا ضماناً للربح.",
+    "execution_connector": "موصل التنفيذ",
+    "execution_open": "مفتوح",
+    "execution_safe": "الوضع الآمن",
+    "execution_fee": "رسوم التنفيذ المحددة: {fee:.2f}%",
+    "verified": "موثّق",
+    "not_verified": "غير موثّق",
+})
+_TEXT["es"].update({
+    "ai_explain": "🧠 Explicación de IA",
+    "ai_explain_prompt": "Explica al usuario en español cómo funciona SLH Trade, qué está disponible ahora, qué está desactivado y los riesgos. No des recomendaciones de compra/venta ni garantías de ganancias.",
+    "execution_connector": "Conector de ejecución",
+    "execution_open": "ABIERTO",
+    "execution_safe": "MODO SEGURO",
+    "execution_fee": "Comisión de ejecución configurada: {fee:.2f}%",
+    "verified": "verificado",
+    "not_verified": "no verificado",
+})
+_TEXT["ru"].update({
+    "ai_explain": "🧠 Объяснение ИИ",
+    "ai_explain_prompt": "Объясни пользователю по-русски, как работает SLH Trade, что сейчас доступно, что отключено и какие есть риски. Не давай рекомендаций покупать/продавать и не обещай прибыль.",
+    "execution_connector": "Коннектор исполнения",
+    "execution_open": "ОТКРЫТ",
+    "execution_safe": "БЕЗОПАСНЫЙ РЕЖИМ",
+    "execution_fee": "Настроенная комиссия исполнения: {fee:.2f}%",
+    "verified": "подтверждено",
+    "not_verified": "не подтверждено",
+})
+_TEXT["pt"].update({
+    "ai_explain": "🧠 Explicação por IA",
+    "ai_explain_prompt": "Explique ao usuário em português como funciona o SLH Trade, o que está disponível agora, o que está desativado e os riscos. Não dê recomendação de compra/venda nem garantia de lucro.",
+    "execution_connector": "Conector de execução",
+    "execution_open": "ABERTO",
+    "execution_safe": "MODO SEGURO",
+    "execution_fee": "Taxa de execução configurada: {fee:.2f}%",
+    "verified": "verificado",
+    "not_verified": "não verificado",
+})
+
+
 def language_for(uid: str) -> str:
     try:
         from language_handler import get_lang
