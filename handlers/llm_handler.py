@@ -76,7 +76,16 @@ def ask_groq(prompt):
         return f"LLM Error: {e}"
 
 
+def _load_canonical_faq():
+    try:
+        from core.faq_service import load_faq
+        return load_faq()
+    except Exception:
+        return ""
+
+
 def query_llm_with_context(question, uid=None, skip_checks=False):
+    faq = _load_canonical_faq()
     try:
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
@@ -115,6 +124,15 @@ Do not infer or reveal hidden financial/account details.
 
 SYSTEM CONTEXT:
 {context}
+
+CANONICAL FAQ:
+{faq or "FAQ unavailable"}
+
+IMPORTANT:
+- Use the FAQ as background documentation only.
+- Live runtime/account state is authoritative when it conflicts with the FAQ.
+- Do not claim KYC verification exists for a user unless live KYC status is actually provided.
+- Do not invent product capabilities that are not supported by runtime context.
 
 USER QUESTION:
 {str(question)}
