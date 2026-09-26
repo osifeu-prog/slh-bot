@@ -15,6 +15,7 @@ from core.stars_price_authority import (
     CREDIT_PACKS,
     TELEGRAM_STARS_CURRENCY,
     VIP_MONTHLY_STARS,
+    VIP_SUBSCRIPTION_PERIOD,
 )
 
 _ITEM_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -76,16 +77,20 @@ def create_invoice_link(req):
     if not token:
         raise RuntimeError("BOT_TOKEN_MISSING")
 
+    body = {
+        "title": str(req["title"])[:32],
+        "description": str(req["description"])[:255],
+        "payload": str(req["payload"]),
+        "provider_token": "",
+        "currency": TELEGRAM_STARS_CURRENCY,
+        "prices": [{"label": str(req["title"])[:32], "amount": int(req["stars"])}],
+    }
+    if req.get("recurring"):
+        body["subscription_period"] = int(VIP_SUBSCRIPTION_PERIOD)
+
     response = requests.post(
         f"https://api.telegram.org/bot{token}/createInvoiceLink",
-        json={
-            "title": str(req["title"])[:32],
-            "description": str(req["description"])[:255],
-            "payload": str(req["payload"]),
-            "provider_token": "",
-            "currency": TELEGRAM_STARS_CURRENCY,
-            "prices": [{"label": str(req["title"])[:32], "amount": int(req["stars"])}],
-        },
+        json=body,
         timeout=15,
     )
     data = response.json()
