@@ -38,8 +38,8 @@ def register(bot):
                 f"סטייק: {_fmt(result['staked'])}\n"
                 f"Position: {result['position']['id']}"
             )
-        except ValueError as e:
-            bot.reply_to(msg, str(e))
+        except ValueError:
+            bot.reply_to(msg, "שימוש: /stake <amount>\n\n" + ACADEMY_NOTE)
         except Exception as e:
             bot.reply_to(msg, str(e))
 
