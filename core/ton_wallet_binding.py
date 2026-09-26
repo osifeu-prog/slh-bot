@@ -146,6 +146,7 @@ def issue_ton_challenge(uid, domain: str | None = None, ttl_seconds: int = CHALL
         raise ValueError("INVALID_CHALLENGE_TTL")
 
     payload = "slh-ton-" + secrets.token_urlsafe(32)
+    sign_data_message = "SLH OS wallet verification\\nChallenge: " + payload
     expires_at = _now() + timedelta(seconds=ttl_seconds)
 
     def mutate(db):
@@ -154,6 +155,7 @@ def issue_ton_challenge(uid, domain: str | None = None, ttl_seconds: int = CHALL
             "uid": uid,
             "chain": CHAIN,
             "payload": payload,
+            "sign_data_message": sign_data_message,
             "domain": domain,
             "created_at": _iso(_now()),
             "expires_at": _iso(expires_at),
@@ -165,6 +167,7 @@ def issue_ton_challenge(uid, domain: str | None = None, ttl_seconds: int = CHALL
         "chain": CHAIN,
         "network": MAINNET,
         "payload": payload,
+        "sign_data_message": sign_data_message,
         "domain": domain,
         "expires_at": _iso(expires_at),
     }
@@ -266,6 +269,131 @@ def _decode_public_key(value: str) -> bytes:
         return bytes.fromhex(raw)
     except ValueError as exc:
         raise ValueError("TON_PUBLIC_KEY_INVALID") from exc
+
+
+def _sign_data_digest(raw_address: str, domain: str, timestamp: int, text: str) -> bytes:
+    domain_bytes = domain.encode("utf-8")
+    data_bytes = text.encode("utf-8")
+    message = (
+        b"\\xff\\xff"
+        + b"ton-connect/sign-data/"
+        + address_bytes(raw_address)
+        + struct.pack(">I", len(domain_bytes))
+        + domain_bytes
+        + struct.pack(">Q", int(timestamp))
+        + b"txt"
+        + struct.pack(">I", len(data_bytes))
+        + data_bytes
+    )
+    return hashlib.sha256(message).digest()
+
+
+def verify_ton_sign_data(uid, sign_payload: dict):
+    uid = str(uid)
+    if not isinstance(sign_payload, dict):
+        raise ValueError("INVALID_TON_SIGN_DATA")
+
+    address = sign_payload.get("address")
+    raw_address = normalize_ton_address(address)
+
+    network = str(sign_payload.get("network", "")).strip()
+    if network and network != MAINNET:
+        raise ValueError("TON_NETWORK_NOT_SUPPORTED")
+
+    wallet_state_init = str(sign_payload.get("wallet_state_init") or "").strip()
+    if not wallet_state_init:
+        raise ValueError("TON_STATE_INIT_REQUIRED")
+
+    state_info = _get_state_init_info(wallet_state_init)
+    if state_info["address"] != raw_address:
+        raise ValueError("TON_STATE_INIT_ADDRESS_MISMATCH")
+
+    public_key = state_info["public_key"]
+    supplied_public_key = sign_payload.get("public_key")
+    if supplied_public_key and _decode_public_key(supplied_public_key) != public_key:
+        raise ValueError("TON_PUBLIC_KEY_MISMATCH")
+
+    try:
+        timestamp = int(sign_payload.get("timestamp"))
+        domain = _normalize_domain(sign_payload.get("domain"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("INVALID_TON_SIGN_DATA") from exc
+
+    now_ts = int(_now().timestamp())
+    if timestamp > now_ts + PROOF_FUTURE_SKEW_SECONDS:
+        raise ValueError("TON_PROOF_TIMESTAMP_INVALID")
+    if timestamp < now_ts - PROOF_TTL_SECONDS:
+        raise ValueError("TON_PROOF_EXPIRED")
+
+    payload = sign_payload.get("payload") or {}
+    if not isinstance(payload, dict) or payload.get("type") != "text":
+        raise ValueError("TON_SIGN_DATA_TYPE_UNSUPPORTED")
+    text_value = str(payload.get("text") or "")
+
+    signature = _decode_b64(sign_payload.get("signature"))
+    if len(signature) != 64:
+        raise ValueError("INVALID_TON_SIGN_DATA")
+
+    db = state_manager.load_db()
+    challenge = (db.get("ton_wallet_challenges") or {}).get(uid)
+    if not challenge:
+        raise ValueError("TON_CHALLENGE_NOT_FOUND")
+    if challenge.get("consumed"):
+        raise ValueError("TON_CHALLENGE_CONSUMED")
+    if _now() >= _parse_iso(challenge["expires_at"]):
+        raise ValueError("TON_CHALLENGE_EXPIRED")
+
+    expected_message = str(
+        challenge.get("sign_data_message")
+        or ("SLH OS wallet verification\\nChallenge: " + str(challenge.get("payload") or ""))
+    )
+    if text_value != expected_message:
+        raise ValueError("TON_CHALLENGE_MISMATCH")
+    if str(challenge.get("domain", "")).lower() != domain:
+        raise ValueError("TON_PROOF_DOMAIN_MISMATCH")
+
+    digest = _sign_data_digest(raw_address, domain, timestamp, text_value)
+    try:
+        Ed25519PublicKey.from_public_bytes(public_key).verify(signature, digest)
+    except Exception as exc:
+        raise ValueError("INVALID_TON_SIGN_DATA") from exc
+
+    def mutate(db):
+        challenges = db.setdefault("ton_wallet_challenges", {})
+        current = challenges.get(uid)
+        if not current or current.get("consumed"):
+            raise ValueError("TON_CHALLENGE_CONSUMED")
+        if current.get("payload") != challenge.get("payload"):
+            raise ValueError("TON_CHALLENGE_MISMATCH")
+
+        bindings = db.setdefault("ton_wallet_bindings", {})
+        existing = bindings.get(raw_address)
+        if existing and str(existing.get("uid")) != uid:
+            raise ValueError("TON_WALLET_ALREADY_BOUND")
+
+        for bound_address, binding in bindings.items():
+            if str(binding.get("uid")) == uid and bound_address != raw_address:
+                raise ValueError("USER_ALREADY_HAS_TON_WALLET")
+
+        binding = {
+            "uid": uid,
+            "chain": CHAIN,
+            "network": MAINNET,
+            "address": address,
+            "address_raw": raw_address,
+            "public_key": public_key.hex(),
+            "domain": domain,
+            "verified_at": _iso(_now()),
+            "proof_timestamp": timestamp,
+            "verification_method": "ton_sign_data",
+        }
+        bindings[raw_address] = binding
+        current["consumed"] = True
+        current["consumed_at"] = _iso(_now())
+        current["verification_method"] = "ton_sign_data"
+        return binding
+
+    return state_manager.atomic_update(mutate)
 
 
 def verify_ton_proof(uid, proof_payload: dict):
