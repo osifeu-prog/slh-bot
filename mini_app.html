@@ -82,7 +82,11 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
   .ux-summary .ux-tile:first-child{grid-column:1/-1}
   .ux-wallet-steps{grid-template-columns:1fr}
   .actions{grid-template-columns:1fr}
-  .nav{margin-bottom:8px}
+  .nav{display:none}
+  .app{padding-bottom:4px}
+  .bottom{grid-template-columns:repeat(5,1fr)}
+  .more-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .more-grid button{min-height:58px}
 }
 @media(prefers-reduced-motion:reduce){
   .screen.active{animation:none}.action,.nav button{transition:none}
@@ -149,7 +153,24 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 </section>
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
 <section id="system" class="screen"><div class="section-title">🖥 מערכת SLH OS</div><div class="card"><b>Health</b><div id="sysHealth">טוען…</div></div><div class="card"><b>Exchange</b><div id="sysExchange">טוען…</div></div><div class="card"><b>Rewards</b><div id="sysRewards">טוען…</div></div></section></main></div>
-<nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet')">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button></nav><div id="toast" class="toast"></div>
+<nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet');loadCombined()">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button><button id="bmore" onclick="openMoreMenu()">☰<br>עוד</button></nav>
+<div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="v-panel">
+    <h3 id="mTitle">עוד ב־SLH OS</h3>
+    <p class="v-sub">כל המסכים הנוספים במקום אחד — בלי גלילה אופקית.</p>
+    <div class="more-grid">
+      <button class="action" onclick="show('market');closeMoreMenu()"><b>🛍 שוק</b><span>מוצרים ותשלומים</span></button>
+      <button class="action" onclick="show('buy');closeMoreMenu()"><b>💳 קנייה</b><span>Credits</span></button>
+      <button class="action" onclick="show('stake');closeMoreMenu()"><b>🔒 סטייקינג</b><span>פוזיציות ותנאים</span></button>
+      <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
+      <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button>
+      <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button>
+      <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
+      <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Control Plane</span></button>
+    </div>
+    <div class="v-row"><button type="button" id="mClose">סגור</button></div>
+  </div>
+</div><div id="toast" class="toast"></div>
 <script>
 (function(){
   window.addEventListener("error",function(e){
@@ -959,7 +980,7 @@ html[data-text="xl"] .app{zoom:1.22}
   if(W&&ok('7.0')&&W.SettingsButton){try{W.SettingsButton.show();W.SettingsButton.onClick(open)}catch(_e){}}
   if(W&&ok('6.1')&&typeof W.onEvent==='function'){try{W.onEvent('themeChanged',function(){if(pref.skin==='tg')applyTg();chrome()})}catch(_e){}}
   document.addEventListener('click',function(e){if(pref.haptics!=='on'||!W||!W.HapticFeedback||!ok('6.1'))return;if(e.target.closest('button,.action,a'))try{W.HapticFeedback.impactOccurred('light')}catch(_e){}},true);
-  if(W&&ok('6.1')&&W.BackButton){try{W.BackButton.onClick(function(){if(sheet.classList.contains('on')){close();return}if(typeof window.__slhGoBack==='function')window.__slhGoBack();else W.close?.()})}catch(_e){}}
+  if(W&&ok('6.1')&&W.BackButton){try{W.BackButton.onClick(function(){var ms=document.getElementById('mSheet');if(sheet.classList.contains('on')){close();return}if(ms&&ms.classList.contains('on')){window.closeMoreMenu?.();return}if(typeof window.__slhGoBack==='function')window.__slhGoBack();else W.close?.()})}catch(_e){}}
   load();
 })();
 </script>
@@ -970,6 +991,16 @@ html[data-text="xl"] .app{zoom:1.22}
     try{var o=document.getElementById('bnbWcOrigin');if(o)o.textContent=window.location.origin;}catch(_e){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initWcUx);else initWcUx();
+})();
+</script>
+<script>
+(function(){
+  var m=document.getElementById('mSheet'),c=document.getElementById('mClose');
+  window.openMoreMenu=function(){if(m)m.classList.add('on');};
+  window.closeMoreMenu=function(){if(m)m.classList.remove('on');};
+  if(c)c.onclick=window.closeMoreMenu;
+  if(m)m.addEventListener('click',function(e){if(e.target===m)window.closeMoreMenu();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')window.closeMoreMenu();});
 })();
 </script>
 <script id="slh-ux-runtime">
