@@ -169,6 +169,9 @@ def register(bot, context=None):
             types.InlineKeyboardButton("🔄 רענון", callback_data="refresh_dashboard"),
         )
         markup.add(
+            types.InlineKeyboardButton("🚀 Trade Terminal", callback_data="trade:home"),
+        )
+        markup.add(
             types.InlineKeyboardButton(
                 "🚀 Mini App",
                 web_app=types.WebAppInfo(
@@ -323,7 +326,9 @@ def register(bot, context=None):
             "/gifts — מתנות, Rewards ו-Airdrop\n"
             "/gift <uid> <amount> — שליחת מתנת Credits\n"
             "/stake <amount> — Staking פנימי\n"
-            "/dashboard — לוח אישי"
+            "/dashboard — לוח אישי
+"
+            "/trade — SLH Trade Terminal"
         )
 
     # Backward-compatible callback retained for existing keyboards/messages.

@@ -1,5 +1,5 @@
 def register(bot):
-    @bot.message_handler(commands=['faq'])
+    @bot.message_handler(commands=["faq"])
     def faq_cmd(msg):
         try:
             from core.faq_service import telegram_faq
@@ -7,7 +7,7 @@ def register(bot):
         except Exception:
             bot.reply_to(msg, "FAQ לא זמין כרגע.")
 
-    @bot.message_handler(commands=['help'])
+    @bot.message_handler(commands=["help"])
     def help_cmd(msg):
         text = """📘 SLH OS — מפת המערכת
 
@@ -16,6 +16,14 @@ def register(bot):
 /join – הרשמה
 /me – פרופיל קצר
 /profile – פרופיל וארנק
+
+🚀 TRADING TERMINAL
+/trade – מסוף המסחר
+/token <address> – סורק טוקן
+/swap <chain> <address> – פתיחת מסחר
+/portfolio – פורטפוליו
+/trade_model – מודל הכנסות שקוף
+/tradepro – Trade Pro
 
 🛍 MARKET & PRODUCTS
 /shop – קטלוג מוצרים
@@ -78,16 +86,15 @@ def register(bot):
 /refer – קיצור ל-Share
 /invite – קיצור ל-Share
 
-🔗 LEGACY WALLET
-/migrate <legacy_bnb_wallet> – חיבור ארנק ישן
-/migrate_verify <wallet> <signature> – אימות בעלות
-
 📊 OWNER BUSINESS CONTROL
 /biz – תמונת עסק כללית
 /biz_users [days] – כניסות משתמשים
 /biz_revenue [days] – הכנסות מאומתות
 /biz_ai – מצב AI
 /biz_bots – מלאי bots
+/bot_seed – רישום הצהרות BotFather
+/bot_register <@username> [name] – רישום בוט
+/bot_status <@username> – תקינות בוט
 
 🛠 TOOLS
 /miniapp – Mini App
@@ -108,5 +115,5 @@ def register(bot):
 /logs – לוגים
 /deploy – Deploy
 
-💡 טיפ: לממשק מלא פתח /miniapp. הפקודות נשארות זמינות למשתמשים מתקדמים ולאוטומציה."""
+💡 לממשק המלא פתח /miniapp. למסחר: /trade."""
         bot.reply_to(msg, text)

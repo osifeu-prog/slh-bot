@@ -1,7 +1,7 @@
 import state_manager
 from dotenv import load_dotenv
 load_dotenv('.env')
-import os, json, time, threading, traceback, sys
+import os, json, time, threading, traceback, sys, hmac
 from pathlib import Path
 import telebot
 from flask import Flask, jsonify, send_from_directory, request
@@ -25,6 +25,48 @@ from core.telegram_webapp_auth import validate_init_data
 from core.authority import has_permission
 register_control_center(app)
 register_mcp_bridge_routes(app)
+
+@app.route('/api/federation/heartbeat', methods=['POST'])
+def federation_heartbeat():
+    expected = (os.getenv("SLH_FEDERATION_TOKEN") or "").strip()
+    presented = (request.headers.get("Authorization") or "").strip()
+    if not expected:
+        return jsonify({"error": "FEDERATION_NOT_CONFIGURED"}), 503
+    if not presented.startswith("Bearer "):
+        return jsonify({"error": "FEDERATION_AUTH_REQUIRED"}), 401
+    token = presented[7:].strip()
+    if not hmac.compare_digest(token, expected):
+        return jsonify({"error": "FEDERATION_UNAUTHORIZED"}), 403
+
+    try:
+        payload = request.get_json(silent=True) or {}
+        identifier = payload.get("bot_id") or payload.get("bot_key") or payload.get("telegram_username")
+        if not identifier:
+            return jsonify({"error": "BOT_IDENTIFIER_REQUIRED"}), 400
+        status = str(payload.get("status") or "ok")
+        details = payload.get("details") or {}
+        if not isinstance(details, dict):
+            details = {"value": str(details)}
+        details = {
+            str(k): str(v)[:500]
+            for k, v in details.items()
+        }
+        from core.bot_registry import record_heartbeat
+        record = record_heartbeat(identifier, status=status, details=details)
+        return jsonify({
+            "ok": True,
+            "bot_id": record.get("id"),
+            "telegram_username": record.get("telegram_username"),
+            "health": record.get("health"),
+            "telemetry_status": record.get("telemetry_status"),
+            "last_heartbeat_at": record.get("last_heartbeat_at"),
+        }), 200
+    except KeyError:
+        return jsonify({"error": "BOT_NOT_REGISTERED"}), 404
+    except Exception as exc:
+        print("[FEDERATION] heartbeat error:", type(exc).__name__)
+        return jsonify({"error": "FEDERATION_HEARTBEAT_FAILED"}), 500
+
 
 try:
     from webapp import app as webapp_app
@@ -240,6 +282,18 @@ if __name__ == "__main__":
                 "[TELEGRAM] Primary token identity: "
                 f"@{bot_identity.username or 'no_username'} id={bot_identity.id}"
             )
+            try:
+                from core.identity import OWNER_TELEGRAM_ID
+                from core.bot_registry import ensure_runtime_bot
+                ensure_runtime_bot(
+                    name="Me_ad_main",
+                    owner_id=str(OWNER_TELEGRAM_ID),
+                    telegram_username=bot_identity.username,
+                    role="control_plane",
+                )
+                log("[FEDERATION] Me_ad_main registered in canonical bot registry")
+            except Exception as exc:
+                log(f"[FEDERATION] runtime bot registration skipped: {type(exc).__name__}")
             from security.permissions import is_admin as canonical_is_admin
             handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
             load_handlers(bot, handler_context)
