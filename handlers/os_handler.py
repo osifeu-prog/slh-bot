@@ -1,4 +1,4 @@
-import os, json, subprocess
+import os, json, subprocess, time
 from datetime import datetime
 from telebot import types
 
@@ -7,8 +7,48 @@ MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
 def register(bot, context=None):
     @bot.message_handler(commands=["os"])
     def os_cmd(message):
-        git_hash = subprocess.getoutput("git rev-parse --short HEAD")
-        groq = "✅" if os.getenv("GROQ_API_KEY") else "❌"
+        # Railway does not include git in the slim runtime image. Prefer the
+        # immutable deployment commit exposed by Railway; use git only locally.
+        git_hash = (os.getenv("RAILWAY_GIT_COMMIT_SHA") or "").strip()
+        if git_hash:
+            git_hash = git_hash[:7]
+        else:
+            try:
+                git_hash = subprocess.check_output(
+                    ["git", "rev-parse", "--short", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=2,
+                ).strip() or "unknown"
+            except Exception:
+                git_hash = "unknown"
+
+        try:
+            from handlers import llm_handler
+            now = time.time()
+            providers = []
+            gemini_key = bool((os.getenv("GEMINI_API_KEY") or "").strip())
+            groq_key = bool((os.getenv("GROQ_API_KEY") or "").strip())
+            ollama_base = bool((os.getenv("OLLAMA_BASE_URL") or "").strip())
+            gemini_cd = now < float(llm_handler._provider_cooldown_until.get("gemini", 0))
+            groq_cd = now < float(llm_handler._provider_cooldown_until.get("groq", 0))
+            ollama_cd = now < float(getattr(llm_handler, "_OLLAMA_COOLDOWN_UNTIL", 0))
+            if gemini_key:
+                providers.append("Gemini:cooldown" if gemini_cd else "Gemini:configured")
+            if groq_key:
+                providers.append("Groq:cooldown" if groq_cd else "Groq:configured")
+            if ollama_base:
+                providers.append("Ollama:cooldown" if ollama_cd else "Ollama:configured")
+            llm_state = "✅" if any([
+                gemini_key and not gemini_cd,
+                groq_key and not groq_cd,
+                ollama_base and not ollama_cd,
+            ]) else ("⚠️" if providers else "❌")
+            llm_detail = ", ".join(providers) if providers else "none configured"
+        except Exception:
+            llm_state = "⚠️"
+            llm_detail = "status unavailable"
+
         railway = os.getenv("RAILWAY_ENVIRONMENT", "local")
         handlers = len([f for f in os.listdir("handlers") if f.endswith(".py")])
         try:
@@ -21,7 +61,7 @@ def register(bot, context=None):
         except: ai_failures = "?"
         header = f"""🟢 SLH OS CONTROL CENTER
 {datetime.now():%Y-%m-%d %H:%M:%S}
-🔀 Git: {git_hash} | 🧠 LLM: {groq} | 🌐 {railway}
+🔀 Git: {git_hash} | 🧠 LLM: {llm_state} ({llm_detail}) | 🌐 {railway}
 📂 Handlers: {handlers} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
 """
         menu = "/start /agents /task /wallet /market /miniapp /ask /dashboard /help /status"
