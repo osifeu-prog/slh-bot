@@ -9,6 +9,7 @@ def load_handlers(bot, context):
         ("os", "handlers.os_handler"),
         ("market", "handlers.market_handler"),
         ("monetization", "handlers.monetization_handler"),
+        ("business_control", "handlers.business_control_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
