@@ -1,31 +1,57 @@
-# SLH Current State
+# SLH OS — CURRENT STATE (מקור אמת)
 
-Updated: 2026-09-19
+עודכן: 2026-09-26
 
-## Verified green items
+## Runtime
+- Production service: Railway project `slh-cloud-bot` / service `slh-cloud-bot`.
+- Start command: `python3 -u -B bot_gateway.py`.
+- Current verified production deployment: `47a9422d-0ef0-4cad-9144-18a1c5cee29e`, commit `21e618be4857cfb51d074a98ac6c62ef51aab1ba`, status `SUCCESS`.
+- `/start` was re-verified by the owner on 2026-09-26 and returned the personal dashboard successfully.
+- Newer main commit `32d673d1f1801b6dd1709d0f86d9124951c89879` contains the Control Center `/os` fix; its Railway deployment is awaiting approval at publication time.
+- Production state volume is mounted at `/app/state`.
 
-- Canonical `state_manager.save_db` uses atomic temp-file replacement via `os.replace`.
-- Anti-wipe validation rejects malformed DBs and empty user sets.
-- A full runtime DB backup was verified before the state-manager hardening.
-- Live DB and the safe backup matched for users, stake positions, ledger, and owner staking state at verification time.
-- Owner staking counter was reconciled from 552 to 792 after six historical locked positions (240 SLH total) were proven by ledger debits.
-- Reconciliation records the counter correction as zero-credit accounting metadata; no credits were minted.
-- Mini App wallet reads and dashboard/exchange paths are live.
-- The Mini App tokenomics request was fixed in source to send Telegram authentication headers.
+## Development rules
+1. Every code change goes through a PR to `main`.
+2. Runtime state under `state/` is not source code and must not be committed.
+3. `/e` is read-only verification; container edits are not release artifacts.
+4. Do not mark a feature LIVE or verified without runtime or on-chain evidence.
+5. Financial, wallet, token, deposit, mint, transfer, and settlement changes require explicit verification before release.
 
-## Current known gaps
+## AI
+- Gemini is configured but has recently returned HTTP 429 quota errors in production.
+- Groq is configured but can enter application cooldown after provider failures.
+- Ollama support exists in code and is active only when `OLLAMA_BASE_URL` is configured.
+- `/os` still reports the older simplified state until PR #235 is deployed.
 
-- The Mini App tokenomics authentication fix is on `main` but its Railway deployment is currently `NEEDS_APPROVAL`; it is not yet verified live.
-- Agent ↔ Device canonical binding is not yet proven; User→Agent and User→Device ownership exist.
-- SLH Bot local state and SLH API/Postgres are still separate data planes.
-- The authoritative Device Registry in `slh-api` must be mapped before introducing another store.
-- Multiple Railway projects/services remain; legacy services must not be treated as production merely because they exist.
-- Website + Mini App + AI intake + Bot Factory entry points still need one documented ownership/routing map.
+## Wallets / chains
+- TON wallet binding exists in the Mini App and is handled separately from BSC.
+- BNB wallet binding supports the existing injected-provider path.
+- WalletConnect BNB support is prepared in PR #234; it is not merged and no production Project ID is configured.
+- BSC Treasury `0x693db6c817083818696a7228aebfbd0cd3371f02` uses an EIP-7702 delegation visible on-chain. Controller identity and historical custody still require independent verification.
+- No BSC or TON transaction was sent as part of the 2026-09-26 engineering and forensic work.
 
-## Token provenance incident
+## Token / liquidity forensics
+- SLH token owner is the Treasury address above.
+- Observed on-chain state: total supply 111,186,328 SLH; Treasury balance 26,332,942.28 SLH.
+- Observed SLH/WBNB PancakeSwap V2 pool reserves were approximately 3.14 SLH and 0.00000304 WBNB, so it must not be represented as a liquid market without further evidence.
+- LP token holder identity is not yet established.
+- No mint/burn/redistribution is authorized by this document.
 
-The 44M SLH token-balance provenance incident has been corrected and documented. Current bot balances were reconciled to zero and the historical issuance/correction records are preserved. No new mint/burn/redistribution is authorized as part of the integration work unless separately approved and backed by a documented provenance path.
+## State data
+- `state/db.json` is ignored by `.gitignore` but is still tracked in Git; it must be removed from repository tracking in a separate controlled change.
+- `state_manager.load_db()` initializes an empty structure when the file is absent, and `save_db()` refuses malformed or empty-user writes.
 
-## Release principle
+## Public website
+- Historical `/control-center.html` currently returns HTTP 404 in public verification.
+- Current public repo contains `control.html`, which uses a client-side `localStorage` password gate; that is not a substitute for server-side authorization.
+- The connected website repository is read-only for the current GitHub connection, so website security changes cannot be pushed from this connection.
 
-Only verified, versioned, tested changes are promoted to public-facing release. Historical forensic fixes and data reconciliations must remain explicitly documented and must not be silently represented as product features.
+## Release gates
+- Production bot stability: verified for `/start`.
+- Control Center runtime observability: merged as PR #235; Railway deployment still requires approval.
+- WalletConnect BNB: pending merge and production Project ID configuration.
+- Treasury security: controller ownership and LP ownership unresolved.
+- Customer-facing BNB/TON deposits: availability must be verified from runtime gate and custody path; environment-variable names alone are not evidence.
+
+## Source-of-truth principle
+This file records verified state and unresolved items. Historical documents are subordinate when they conflict with runtime, repository, or on-chain evidence.
