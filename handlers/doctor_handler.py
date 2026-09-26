@@ -9,6 +9,12 @@ def _ok(label, val):
 def register(bot):
     @bot.message_handler(commands=["doctor"])
     def doctor_cmd(msg):
+        from core.authority import has_permission
+        uid = str(msg.from_user.id)
+        if not has_permission(uid, "exec.audit"):
+            bot.reply_to(msg, "⛔️ הרשאת אבחון מערכת מלאה נדרשת.")
+            return
+
         lines = ["🩺 SLH HEALTH REPORT", ""]
 
         # Bot
