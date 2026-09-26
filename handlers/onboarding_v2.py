@@ -165,6 +165,21 @@ def register(bot, context=None):
             "מה תרצה לעשות?"
         )
 
+    def _trade_button_label(user_id):
+        labels = {
+            "he": "🚀 Trade Terminal",
+            "en": "🚀 Trade Terminal",
+            "ar": "🚀 منصة تداول SLH",
+            "es": "🚀 Terminal de Trading SLH",
+            "ru": "🚀 SLH Trade Terminal",
+            "pt": "🚀 Terminal de Trading SLH",
+        }
+        try:
+            from language_handler import get_lang
+            return labels.get(get_lang(user_id), labels["he"])
+        except Exception:
+            return labels["he"]
+
     def _dashboard_markup():
         markup = types.InlineKeyboardMarkup(row_width=3)
         markup.add(
@@ -183,7 +198,7 @@ def register(bot, context=None):
             types.InlineKeyboardButton("🔄 רענון", callback_data="refresh_dashboard"),
         )
         markup.add(
-            types.InlineKeyboardButton("🚀 Trade Terminal", callback_data="trade:home"),
+            types.InlineKeyboardButton(_trade_button_label(user_id), callback_data="trade:home"),
         )
         markup.add(
             types.InlineKeyboardButton(
