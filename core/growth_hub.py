@@ -139,6 +139,10 @@ def build_growth_hub(uid):
     ton_label = "✅" if ton_binding else "⚪"
     bnb_deposit_label = "OPEN" if bnb_deposits_open() else "CLOSED"
     ton_deposit_label = "OPEN" if ton_deposits_open() else "CLOSED"
+    bnb_label = "✅" if bnb_binding else "⚪"
+    ton_label = "✅" if ton_binding else "⚪"
+    bnb_deposit_label = "OPEN" if bnb_deposits_open() else "CLOSED"
+    ton_deposit_label = "OPEN" if ton_deposits_open() else "CLOSED"
     commission = _num(referral.get("commission", 0))
 
     next_action = {
@@ -219,12 +223,7 @@ def build_growth_hub(uid):
                 "id": "wallets",
                 "title": "👛 BNB + TON",
                 "status": "connected" if bnb_binding or ton_binding else "ready",
-                "detail": (
-                    f"BNB {"✅" if bnb_binding else "⚪"} · "
-                    f"TON {"✅" if ton_binding else "⚪"} · "
-                    f"BNB deposits {"OPEN" if bnb_deposits_open() else "CLOSED"} · "
-                    f"TON native deposits {"OPEN" if ton_deposits_open() else "CLOSED"}"
-                ),
+                "detail": f"BNB {bnb_label} · TON {ton_label} · BNB deposits {bnb_deposit_label} · TON native deposits {ton_deposit_label}",
                 "action": "wallet",
             },
             {
