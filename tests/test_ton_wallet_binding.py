@@ -20,7 +20,7 @@ def sign_data_digest(address_raw, domain, timestamp, text):
     domain_bytes = domain.encode("utf-8")
     data_bytes = text.encode("utf-8")
     message = (
-        b"\\xff\\xff"
+        b"\xff\xff"
         + b"ton-connect/sign-data/"
         + struct.pack(">i", int(workchain))
         + bytes.fromhex(addr_hex)
