@@ -172,6 +172,21 @@ def tonconnect_manifest():
         "iconUrl": "https://slh-nft.com/icon-192.png",
     }), 200
 
+@app.route("/api/walletconnect/config")
+def walletconnect_config():
+    """Public WalletConnect client configuration for the Mini App.
+
+    The project ID is a public client identifier, never a private credential.
+    The route deliberately exposes only the ID and the fixed BSC chain target.
+    """
+    project_id = str(os.getenv("WALLETCONNECT_PROJECT_ID", "")).strip()
+    return _no_store(jsonify({
+        "enabled": bool(project_id),
+        "project_id": project_id or None,
+        "chain_id": 56,
+        "chain_name": "BNB Smart Chain",
+    })), 200
+
 
 @app.route("/market")
 def market():
