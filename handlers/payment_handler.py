@@ -288,6 +288,59 @@ def register_payment_handlers(bot):
             print(f"[PAY] Atomic payment failed: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ Payment processing failed safely. Please contact /paysupport.")
 
+
+    @bot.message_handler(commands=['my_orders'])
+    def my_orders(m):
+        uid = str(m.from_user.id)
+        try:
+            import state_manager
+            from store.fulfillment_recovery import recover_paid_orders
+
+            db = state_manager.load_db()
+            orders = db.get("star_item_orders", {})
+            mine = [
+                row for row in orders.values()
+                if isinstance(row, dict) and str(row.get("uid")) == uid
+            ] if isinstance(orders, dict) else []
+
+            pending = [
+                row for row in mine
+                if row.get("status") in {"RECOVERABLE", "PAID"}
+            ]
+
+            if pending:
+                # Retry fulfillment only; no new payment is created.
+                recovery = recover_paid_orders(limit=min(len(pending), 10))
+                remaining = len([
+                    row for row in (state_manager.load_db().get("star_item_orders", {}) or {}).values()
+                    if isinstance(row, dict)
+                    and str(row.get("uid")) == uid
+                    and row.get("status") in {"RECOVERABLE", "PAID"}
+                ])
+                bot.send_message(
+                    m.chat.id,
+                    "🔄 בדקתי הזמנות ששולמו אך לא הושלמו.\n"
+                    f"✅ ניסיונות מוצלחים: {recovery.get('success', 0)}\n"
+                    f"⚠️ עדיין דורשות טיפול: {remaining}"
+                )
+                return
+
+            recent = mine[-10:]
+            if not recent:
+                bot.send_message(m.chat.id, "📦 אין הזמנות Stars רשומות כרגע.")
+                return
+
+            lines = ["📦 ההזמנות האחרונות שלך:"]
+            for row in recent:
+                lines.append(
+                    f"• {row.get('item_name', row.get('item_id', 'item'))} — "
+                    f"{row.get('stars_paid', 0)}⭐ — {row.get('status', '?')}"
+                )
+            bot.send_message(m.chat.id, "\n".join(lines))
+        except Exception as exc:
+            print(f"[ORDERS] recovery/status error: {type(exc).__name__}")
+            bot.send_message(m.chat.id, "⚠️ לא ניתן לטעון כרגע את סטטוס ההזמנות.")
+
     @bot.message_handler(commands=['paysupport'])
     def paysupport(m):
         bot.send_message(m.chat.id, "💳 SLH Payment Support\nFor a payment issue, send the payment date/time, Stars amount, and payment reference if available.")
