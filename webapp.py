@@ -145,6 +145,16 @@ def health():
     return "OK", 200
 
 
+@app.route("/tonconnect-manifest.json")
+def tonconnect_manifest():
+    """Public TON Connect manifest; proof domain remains the canonical SLH site."""
+    return jsonify({
+        "url": "https://slh-nft.com",
+        "name": "SLH Ecosystem",
+        "iconUrl": "https://slh-nft.com/icon-192.png",
+    }), 200
+
+
 @app.route("/market")
 def market():
     return jsonify({
@@ -773,6 +783,8 @@ def ton_wallet_verify():
         binding = verify_ton_proof(uid, payload)
         return jsonify({"status": "verified", "binding": binding}), 200
     except ValueError as exc:
+        # Log only the canonical error code; never log proof/signature/address data.
+        print("[TON_VERIFY] rejected:", str(exc))
         return jsonify({"error": str(exc)}), 400
 
 
