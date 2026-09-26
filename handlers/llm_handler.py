@@ -33,7 +33,7 @@ def ask_ollama(prompt):
     if time.time() < _OLLAMA_COOLDOWN_UNTIL:
         return "OLLAMA_COOLDOWN"
 
-    model = (os.getenv("OLLAMA_MODEL") or "").strip() or "aya-expanse:8b"
+    model = (os.getenv("OLLAMA_MODEL") or "").strip() or "qwen3:8b"
     try:
         timeout = max(10, int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120")))
     except ValueError:
