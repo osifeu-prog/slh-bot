@@ -178,4 +178,14 @@ def load_handlers(bot, context):
         print("💬 natural chat loaded")
     except Exception as e:
         print("natural chat skipped:", e)
+    # Best-effort fulfillment recovery: retries already-paid orders only.
+    # It never creates a charge and never handles blockchain deposits.
+    try:
+        from store.fulfillment_recovery import recover_paid_orders
+        recovery = recover_paid_orders()
+        if recovery.get("attempted"):
+            print("[FULFILLMENT] recovery:", recovery)
+    except Exception as e:
+        print("[FULFILLMENT] recovery skipped:", type(e).__name__)
+
     print("✅ ALL HANDLERS READY")
