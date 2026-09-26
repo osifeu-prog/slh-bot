@@ -12,6 +12,73 @@ _provider_cooldown_until = {"gemini": 0.0, "groq": 0.0}
 
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 _gemini_model_cache = {"name": None}
+_OLLAMA_COOLDOWN_UNTIL = 0.0
+
+
+def _ollama_base():
+    return (os.getenv("OLLAMA_BASE_URL") or "").strip().rstrip("/")
+
+
+def ask_ollama(prompt):
+    """Use the user's own Ollama server when configured.
+
+    No Ollama URL means this provider is disabled and the caller can continue
+    to the normal cloud fallback chain. Optional auth headers support a
+    protected reverse proxy / Cloudflare Access in front of the local server.
+    """
+    global _OLLAMA_COOLDOWN_UNTIL
+    base = _ollama_base()
+    if not base:
+        return "OLLAMA_NOT_CONFIGURED"
+    if time.time() < _OLLAMA_COOLDOWN_UNTIL:
+        return "OLLAMA_COOLDOWN"
+
+    model = (os.getenv("OLLAMA_MODEL") or "").strip() or "aya-expanse:8b"
+    try:
+        timeout = max(10, int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120")))
+    except ValueError:
+        timeout = 120
+
+    headers = {"Content-Type": "application/json"}
+    bearer = (os.getenv("OLLAMA_API_KEY") or "").strip()
+    cf_id = (os.getenv("OLLAMA_CF_ACCESS_CLIENT_ID") or "").strip()
+    cf_secret = (os.getenv("OLLAMA_CF_ACCESS_CLIENT_SECRET") or "").strip()
+    if bearer:
+        headers["Authorization"] = f"Bearer {bearer}"
+    if cf_id:
+        headers["CF-Access-Client-Id"] = cf_id
+    if cf_secret:
+        headers["CF-Access-Client-Secret"] = cf_secret
+
+    body = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": SLH_SYSTEM_RULES},
+            {"role": "user", "content": str(prompt)},
+        ],
+        "stream": False,
+    }
+    try:
+        r = requests.post(f"{base}/api/chat", headers=headers, json=body, timeout=timeout)
+        try:
+            data = r.json()
+        except ValueError:
+            data = {}
+        if r.status_code >= 400:
+            if r.status_code in (429, 502, 503, 504):
+                _OLLAMA_COOLDOWN_UNTIL = time.time() + 30
+            return f"OLLAMA_HTTP_{r.status_code}"
+        content = ((data.get("message") or {}).get("content") if isinstance(data, dict) else None)
+        if content:
+            return str(content)
+        return "OLLAMA_EMPTY_RESPONSE"
+    except requests.RequestException as e:
+        _OLLAMA_COOLDOWN_UNTIL = time.time() + 30
+        return f"OLLAMA_ERROR: {type(e).__name__}"
+    except Exception as e:
+        return f"OLLAMA_ERROR: {type(e).__name__}"
+
+
 
 
 def _discover_gemini_model(key):
@@ -158,8 +225,27 @@ USER QUESTION:
     except Exception as e:
         print("[LLM] Gemini exception:", e)
 
-    # Fallback: Groq
-    # Groq only (Gemini key is invalid)
+    # Local AI: user's own Ollama server, when configured.
+    # This path has no per-token provider quota and does not replace the
+    # existing cloud fallbacks when the local endpoint is absent/unavailable.
+    try:
+        result = ask_ollama(prompt)
+        if result and not (
+            result.startswith("OLLAMA_ERROR:")
+            or result.startswith("OLLAMA_HTTP_")
+            or result in {
+                "OLLAMA_NOT_CONFIGURED",
+                "OLLAMA_COOLDOWN",
+                "OLLAMA_EMPTY_RESPONSE",
+            }
+        ):
+            return result
+        if result != "OLLAMA_NOT_CONFIGURED":
+            print("[LLM] Ollama unavailable/cooldown:", result)
+    except Exception as e:
+        print("[LLM] Ollama exception:", type(e).__name__)
+
+    # Final cloud fallback: Groq
     try:
         result = ask_groq(prompt)
         if result and not (
