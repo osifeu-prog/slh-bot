@@ -180,7 +180,7 @@ def register(bot, context=None):
         except Exception:
             return labels["he"]
 
-    def _dashboard_markup():
+    def _dashboard_markup(user_id):
         markup = types.InlineKeyboardMarkup(row_width=3)
         markup.add(
             types.InlineKeyboardButton("👛 ארנק", callback_data="menu_wallet"),
@@ -215,7 +215,7 @@ def register(bot, context=None):
         bot.send_message(
             chat_id,
             safe_clip(text),
-            reply_markup=_dashboard_markup(),
+            reply_markup=_dashboard_markup(user_id),
         )
 
     @bot.message_handler(commands=["start"])
