@@ -99,6 +99,7 @@ def build_growth_hub(uid):
     items = load_items()
     stars_catalog = []
     pack_prices = ", ".join(str(p.stars) for p in CREDIT_PACKS)
+    pack_prices = ", ".join(str(p.stars) for p in CREDIT_PACKS)
     for item_id, price in stars_items.items():
         item = items.get(item_id, {})
         if not isinstance(item, dict):
