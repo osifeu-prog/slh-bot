@@ -76,16 +76,16 @@ def ask_groq(prompt):
         return f"LLM Error: {e}"
 
 
-def _load_canonical_faq():
+def _load_canonical_faq(question=""):
     try:
-        from core.faq_service import load_faq
-        return load_faq()
+        from core.faq_service import relevant_faq
+        return relevant_faq(question)
     except Exception:
         return ""
 
 
 def query_llm_with_context(question, uid=None, skip_checks=False):
-    faq = _load_canonical_faq()
+    faq = _load_canonical_faq(question)
     try:
         with open("state/db.json", encoding="utf-8") as f:
             db = json.load(f)
