@@ -19,6 +19,43 @@ def register(bot, context=None):
         if not user_text:
             return
 
+        # Do not spend LLM quota on technical identifiers accidentally pasted
+        # into chat. Give a deterministic instruction instead.
+        compact = user_text.strip()
+        if (compact.startswith(("UQ", "EQ")) and len(compact) >= 40):
+            bot.send_message(
+                msg.chat.id,
+                "📌 זוהתה כתובת TON.\n"
+                "לבדיקת הפקדה צריך TX hash, לא כתובת.\n"
+                "אם מדובר ב-USDT/Jetton: המסלול הזה עדיין אינו נתמך ל-Credits."
+            )
+            return
+
+        if (len(compact) == 42 and compact.startswith(("0x", "0X"))):
+            bot.send_message(
+                msg.chat.id,
+                "📌 זוהתה כתובת BNB/BSC.\n"
+                "כתובת אינה TX hash ולא מבצעת זיכוי.\n"
+                "הפקדת BNB נבדקת רק דרך /claim <TX hash> לאחר שהמסלול פתוח."
+            )
+            return
+
+        if (len(compact) == 64 and all(c in "0123456789abcdefABCDEF" for c in compact)):
+            bot.send_message(
+                msg.chat.id,
+                "📌 התקבל מזהה באורך 64 תווים.\n"
+                "אם זה TX hash, השתמש בפקודה המתאימה למסלול הנכס; אל תשלח כספים נוספים לצורך בדיקה."
+            )
+            return
+
+        if compact.upper().startswith("SLH") and compact[3:].isdigit():
+            bot.send_message(
+                msg.chat.id,
+                "📌 זהו Memo של SLH. ה-Memo לבדו אינו הפקדה ואינו מזכה Credits.\n"
+                "יש לצרף אותו להעברת TON native אל Treasury לפי ההוראות."
+            )
+            return
+
         try:
             bot.send_chat_action(msg.chat.id, "typing")
         except Exception:
