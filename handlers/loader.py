@@ -184,8 +184,9 @@ def load_handlers(bot, context):
     try:
         from store.fulfillment_recovery import recover_paid_orders
         recovery = recover_paid_orders()
-        if recovery.get("attempted"):
-            print("[FULFILLMENT] recovery:", recovery)
+        print("[FULFILLMENT] startup recovery:", recovery)
+        from store.fulfillment_recovery import start_recovery_loop
+        start_recovery_loop()
     except Exception as e:
         print("[FULFILLMENT] recovery skipped:", type(e).__name__)
 
