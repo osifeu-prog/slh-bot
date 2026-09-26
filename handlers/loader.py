@@ -203,7 +203,5 @@ def load_handlers(bot, context):
         print("[CARD] automatic payment recovery loop started")
     except Exception as e:
         print("[CARD] recovery loop skipped:", type(e).__name__)
-    except Exception as e:
-        print("[FULFILLMENT] recovery skipped:", type(e).__name__)
 
     print("✅ ALL HANDLERS READY")
