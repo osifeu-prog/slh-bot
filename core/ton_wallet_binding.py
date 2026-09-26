@@ -26,7 +26,7 @@ import state_manager
 
 CHAIN = "ton"
 MAINNET = "-239"
-CHALLENGE_TTL_SECONDS = 300
+CHALLENGE_TTL_SECONDS = 900
 PROOF_TTL_SECONDS = 900
 PROOF_FUTURE_SKEW_SECONDS = 60
 TONCENTER_URL = os.getenv("TONCENTER_URL", "https://toncenter.com/api/v2").rstrip("/")
