@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "verified_date_utc": "2026-09-21",
+  "verified_date_utc": "2026-09-26",
   "purpose": "Canonical Control Plane inventory snapshot for SLH and connected external projects.",
   "canonical": {
     "repo": "osifeu-prog/slh-bot",
-    "railway_project": "endearing-amazement",
+    "railway_project": "slh-os-control-plane",
     "railway_project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
     "railway_service": "web",
     "railway_service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
@@ -38,7 +38,7 @@
           "id": "97aaaea9-6ab3-4aad-960d-23d12e3c8b11",
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
-          "status": "DEPLOYING",
+          "status": "FAILED",
           "class": "mcp_control_plane",
           "domain": "slh-mcp-production.up.railway.app",
           "runtime_policy": {
