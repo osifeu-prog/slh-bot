@@ -1,0 +1,156 @@
+/* SLH Design System v1 — tokens + primitives
+ * Drop into mini_app.html <style> or link as shared sheet.
+ * Safe additive layer: does not remove existing class names.
+ */
+:root {
+  --bg: #070a12;
+  --surface: #111827;
+  --surface-2: #0d1422;
+  --elevated: #1a2234;
+  --border: #2a3548;
+  --text: #f8fafc;
+  --text-2: #cbd5e1;
+  --muted: #94a3b8;
+  --accent: #7c5cff;
+  --accent-deep: #5b4bd8;
+  --accent-2: #20d3a7;
+  --ok: #34d399;
+  --pending: #fbbf24;
+  --danger: #fb7185;
+  --info: #38bdf8;
+  --r: 18px;
+  --r-sm: 12px;
+  --nav-h: 64px;
+  --font: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+/* Legacy aliases (map old vars if present) */
+:root {
+  --panel: var(--surface);
+  --panel2: var(--surface-2);
+  --line: var(--border);
+  --warn: var(--pending);
+}
+
+body.slh-ds {
+  font-family: var(--font);
+  background:
+    radial-gradient(circle at 85% -10%, #2a1d62 0%, var(--bg) 40%),
+    var(--bg);
+  color: var(--text);
+  padding-bottom: calc(var(--nav-h) + 16px);
+}
+
+.slh-ds .card,
+.slh-ds .hero {
+  background: linear-gradient(145deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+
+.slh-ds .btn-primary,
+.slh-ds button.primary {
+  min-height: 44px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  font-weight: 800;
+}
+
+.slh-ds .pill {
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.slh-ds .pill.ok { color: var(--ok); background: #10b98122; }
+.slh-ds .pill.pending { color: var(--pending); background: #f59e0b22; }
+.slh-ds .pill.danger { color: var(--danger); background: #fb718522; }
+.slh-ds .pill.muted { color: var(--muted); background: #ffffff0c; }
+.slh-ds .pill.info { color: var(--info); background: #38bdf822; }
+
+/* Bottom nav — 4 items */
+.slh-bottom-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 8px max(10px, calc((100vw - 720px) / 2 + 10px));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: #090d16f2;
+  backdrop-filter: blur(14px);
+  border-top: 1px solid #ffffff14;
+}
+.slh-bottom-nav button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 4px;
+  border-radius: 12px;
+}
+.slh-bottom-nav button.active {
+  color: var(--text);
+  background: #7c5cff22;
+}
+
+/* More sheet */
+.slh-more-sheet {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: var(--nav-h);
+  z-index: 19;
+  max-height: 55vh;
+  overflow: auto;
+  padding: 12px max(12px, calc((100vw - 720px) / 2 + 12px));
+  background: var(--elevated);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+}
+.slh-more-sheet.open { display: block; }
+.slh-more-sheet button {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Wallet status card */
+.slh-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #ffffff0c;
+}
+.slh-status-card:last-child { border-bottom: 0; }
+.slh-status-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+/* Skeleton */
+.slh-skeleton {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ffffff08, #ffffff14, #ffffff08);
+  background-size: 200% 100%;
+  animation: slh-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes slh-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
