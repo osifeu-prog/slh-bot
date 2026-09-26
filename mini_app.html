@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SLH OS — Personal Hub</title><script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://unpkg.com/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js"></script>
+<title>SLH OS — Personal Hub</title><script src="https://telegram.org/js/telegram-web-app.js"></script><script src="https://unpkg.com/@walletconnect/ethereum-provider@2.25.0/dist/index.umd.js"></script><script src="https://unpkg.com/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js"></script>
 <style>
 :root{--bg:#070a12;--panel:#111827;--panel2:#0d1422;--line:#243047;--text:#f8fafc;--muted:#94a3b8;--accent:#7c5cff;--accent2:#20d3a7;--warn:#fbbf24;--danger:#fb7185;--r:20px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -10%,#2a1d62 0,#070a12 38%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;padding:16px 14px 88px}.app{max-width:720px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{display:flex;gap:10px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#14b8a6);display:grid;place-items:center;font-size:22px}.title{font-size:21px;font-weight:900}.subtitle,.muted{color:var(--muted);font-size:12px}.refresh,.ghost,.copy{background:#ffffff0c;color:#fff;border:1px solid #ffffff14;border-radius:11px;padding:9px 11px}.hero,.card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}.hero{background:linear-gradient(145deg,#17152d,#111827 60%);border-radius:24px}.hero-label{color:#b9a9ff;font-size:12px}.hero-balance{font-size:37px;font-weight:900;margin:4px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric-label{color:var(--muted);font-size:12px}.metric{font-size:21px;font-weight:800;margin-top:5px}.token{color:#d8ccff}.stake{color:#70e4c6}.section-title{font-size:15px;font-weight:900;margin:18px 2px 8px}.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.nav button{background:#ffffff09;color:#cbd5e1;border:1px solid #ffffff12;border-radius:13px;padding:10px 6px;font-size:12px}.nav button.active{background:#7c5cff22;color:#fff;border-color:#7c5cff66}.screen{display:none}.screen.active{display:block}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.action{background:#ffffff08;border:1px solid #ffffff12;color:#fff;border-radius:15px;padding:14px;text-align:right;min-height:76px}.action b{display:block;font-size:14px;margin-bottom:4px}.action span{font-size:11px;color:var(--muted)}.primary{background:linear-gradient(135deg,#7c5cff,#5b4bd8);border-color:transparent}.status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #ffffff0b}.status:last-child{border:0}.pill{border-radius:999px;padding:5px 9px;font-size:11px;background:#ffffff0b;color:#cbd5e1}.ok{color:#6ee7b7;background:#10b98118}.pending{color:#fcd34d;background:#f59e0b18}.progress{height:7px;background:#ffffff0b;border-radius:99px;overflow:hidden;margin:9px 0}.bar{height:100%;background:linear-gradient(90deg,#7c5cff,#20d3a7);border-radius:99px}.wallet-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff0b}.wallet-row:last-child{border:0}.address{direction:ltr;text-align:left;font-family:monospace;font-size:11px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guide{margin-top:10px;padding:12px;border:1px solid #ffffff10;border-radius:14px;background:#ffffff05}.guide summary{cursor:pointer;font-weight:800;font-size:13px}.guide p{color:#cbd5e1;font-size:12px;line-height:1.55}.next{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#20d3a710;border:1px solid #20d3a733;border-radius:15px;padding:13px}.ai{background:linear-gradient(145deg,#17152d,#0f1a27);border:1px solid #7c5cff44}.ai b{font-size:15px}.ai p{font-size:12px;line-height:1.55;color:#cbd5e1}.task{padding:9px 0;border-bottom:1px solid #ffffff0b;font-size:13px}.task:last-child{border:0}.done{opacity:.55}.form-label{display:block;font-size:12px;color:var(--muted);margin:8px 0 5px}.form-input{width:100%;background:#ffffff08;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:12px;font-size:14px;outline:none}.form-input:focus{border-color:#7c5cff88}.bottom{position:fixed;bottom:0;left:0;right:0;background:#090d16ee;backdrop-filter:blur(14px);border-top:1px solid #ffffff12;padding:8px max(10px,calc((100vw - 720px)/2 + 10px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;z-index:5}.bottom button{background:none;color:#94a3b8;font-size:11px;padding:7px}.bottom button.active{color:#fff}.toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%) translateY(20px);background:#182235;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:10px 14px;font-size:12px;opacity:0;transition:.2s;pointer-events:none;z-index:10}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:420px){.hero-balance{font-size:31px}}
 .auth-gate{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;background:rgba(7,10,18,.96);backdrop-filter:blur(16px)}.auth-gate[hidden]{display:none}.auth-gate-card{width:min(520px,100%);background:linear-gradient(145deg,#17152d,#111827);border:1px solid #7c5cff66;border-radius:24px;padding:28px;text-align:center;box-shadow:0 20px 80px #0008}.auth-gate-icon{font-size:42px;margin-bottom:8px}.auth-gate-card h2{margin:0 0 10px;font-size:21px}.auth-gate-card p{margin:0 0 18px;color:#cbd5e1;font-size:13px;line-height:1.6}.auth-gate-card a{display:inline-block;text-decoration:none;background:linear-gradient(135deg,#7c5cff,#5b4bd8);color:#fff;border-radius:14px;padding:12px 18px;font-weight:800}</style></head>
@@ -37,7 +37,7 @@
 <div class="card"><b>🎁 Referral</b><p class="muted">קישור ההזמנה והעמלה הרשומה במערכת.</p><button class="action primary" onclick="openAction('/share','פתיחת Referral')"><b>שתף והזמן</b><span>קישור אישי</span></button></div>
 </section>
 
-<section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH Live (מגובה)</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card"><b>🔐 אימות ארנקים</b><div class="wallet-row"><span class="muted">BNB / BSC</span><span id="bnbBindingStatus" class="pill pending">בודק…</span></div><div id="bnbBindingAddress" class="muted" style="margin:6px 0"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindBnbWallet()"><b>🔗 אמת ארנק BNB</b><span>חתום על אתגר חד־פעמי — אין שמירת מפתח פרטי</span></button><div id="bnbDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען BNB on-chain…</span></div><label class="form-label" for="bnbTxHash">TX hash של הפקדת BNB</label><input id="bnbTxHash" class="form-input" inputmode="text" placeholder="0x…"><button class="action primary" style="width:100%;margin-top:8px" onclick="claimBnbDeposit()"><b>💰 אשר הפקדה והוסף Credits</b><span>server-side verification + confirmations + binding</span></button><div class="guide" style="margin-top:10px"><b>⚡ הפקדת SLH Live</b><p class="muted">שלח SLH מהארנק המאומת אל ה־Treasury. רק Transfer on-chain מאומת ייצור יתרה פנימית מגובה 1:1.</p><label class="form-label" for="slhTxHash">TX hash של הפקדת SLH</label><input id="slhTxHash" class="form-input" inputmode="text" placeholder="0x…"><button class="action primary" style="width:100%;margin-top:8px" onclick="claimSlhDeposit()"><b>⚡ אמת הפקדת SLH</b><span>Transfer event + contract + Treasury + confirmations</span></button></div><div class="wallet-row" style="margin-top:10px"><span class="muted">TON</span><span id="tonBindingStatus" class="pill pending">בודק…</span></div><div id="tonBindingAddress" class="muted" style="margin:6px 0"></div><div id="tonConnectButton" style="margin-top:8px"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindTonWallet()"><b>💎 אמת ארנק TON</b><span>TON Connect + TON Proof</span></button><div id="tonDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען הגדרות הפקדה…</span></div></div><div class="card actions"><button class="action primary" onclick="show('market')"><b>🛍 Market</b><span>מוצרים ודרכי תשלום</span></button><button class="action" onclick="show('transfer')"><b>💸 העברת Credits</b><span>העברה למשתמש אחר</span></button><button class="action" onclick="openAction('/wallet','פתיחת Wallet')"><b>👛 Wallet</b><span>פתיחת פקודת הארנק</span></button></div><div class="card"><b>מה ההבדל?</b><p class="muted">Credits הם יתרה פנימית. SLH הוא נכס נפרד. מידע on-chain לא צריך להתערבב עם יתרות פנימיות.</p></div><details class="guide"><summary>📘 מדריך Wallet</summary><p>בדוק כאן יתרות וסטטוס. לפני כל פעולה כספית ודא שאתה מבין איזה נכס משתנה ומה הסכום.</p></details></section>
+<section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH Live (מגובה)</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card"><b>🔐 אימות ארנקים</b><div class="wallet-row"><span class="muted">BNB / BSC</span><span id="bnbBindingStatus" class="pill pending">בודק…</span></div><div id="bnbBindingAddress" class="muted" style="margin:6px 0"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindBnbWallet()"><b>🔗 אמת ארנק BNB</b><span>MetaMask / injected wallet — חתום על אתגר חד־פעמי</span></button><button class="action" style="width:100%;margin-top:8px" onclick="connectBnbWalletConnect()"><b>📱 WalletConnect</b><span>חבר Trust Wallet, MetaMask Mobile וארנקים תואמים מתוך ה-Mini App</span></button><div id="bnbWalletConnectStatus" class="muted" style="margin-top:8px"></div><div id="bnbDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען BNB on-chain…</span></div><label class="form-label" for="bnbTxHash">TX hash של הפקדת BNB</label><input id="bnbTxHash" class="form-input" inputmode="text" placeholder="0x…"><button class="action primary" style="width:100%;margin-top:8px" onclick="claimBnbDeposit()"><b>💰 אשר הפקדה והוסף Credits</b><span>server-side verification + confirmations + binding</span></button><div class="guide" style="margin-top:10px"><b>⚡ הפקדת SLH Live</b><p class="muted">שלח SLH מהארנק המאומת אל ה־Treasury. רק Transfer on-chain מאומת ייצור יתרה פנימית מגובה 1:1.</p><label class="form-label" for="slhTxHash">TX hash של הפקדת SLH</label><input id="slhTxHash" class="form-input" inputmode="text" placeholder="0x…"><button class="action primary" style="width:100%;margin-top:8px" onclick="claimSlhDeposit()"><b>⚡ אמת הפקדת SLH</b><span>Transfer event + contract + Treasury + confirmations</span></button></div><div class="wallet-row" style="margin-top:10px"><span class="muted">TON</span><span id="tonBindingStatus" class="pill pending">בודק…</span></div><div id="tonBindingAddress" class="muted" style="margin:6px 0"></div><div id="tonConnectButton" style="margin-top:8px"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindTonWallet()"><b>💎 אמת ארנק TON</b><span>TON Connect + TON Proof</span></button><div id="tonDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען הגדרות הפקדה…</span></div></div><div class="card actions"><button class="action primary" onclick="show('market')"><b>🛍 Market</b><span>מוצרים ודרכי תשלום</span></button><button class="action" onclick="show('transfer')"><b>💸 העברת Credits</b><span>העברה למשתמש אחר</span></button><button class="action" onclick="openAction('/wallet','פתיחת Wallet')"><b>👛 Wallet</b><span>פתיחת פקודת הארנק</span></button></div><div class="card"><b>מה ההבדל?</b><p class="muted">Credits הם יתרה פנימית. SLH הוא נכס נפרד. מידע on-chain לא צריך להתערבב עם יתרות פנימיות.</p></div><details class="guide"><summary>📘 מדריך Wallet</summary><p>בדוק כאן יתרות וסטטוס. לפני כל פעולה כספית ודא שאתה מבין איזה נכס משתנה ומה הסכום.</p></details></section>
 <section id="transfer" class="screen"><div class="section-title">💸 העברת Credits</div><div class="card"><b>העברה פנימית למשתמש אחר</b><p class="muted">ההעברה הקיימת במערכת היא העברת Credits. הממשק מכין את הפקודה המדויקת; האישור והביצוע נשארים תחת סמכות הבוט.</p><label class="form-label" for="recipient">מזהה Telegram של המקבל</label><input id="recipient" class="form-input" inputmode="numeric" placeholder="לדוגמה: 5010371391"><label class="form-label" for="amount">סכום Credits</label><input id="amount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 100"><div class="actions" style="margin-top:10px"><button class="action primary" onclick="sendTransferViaApi()"><b>🚀 שלח עכשיו</b><span>העברה ישירה מהאפליקציה</span></button><button class="action primary" onclick="prepareTransfer()"><b>📤 הכנת העברה</b><span>בדיקת שדות והעתקת פקודה</span></button><button class="action" onclick="openAction('/transfer','העברה')"><b>ℹ️ פורמט הפקודה</b><span>/transfer &lt;recipient_uid&gt; &lt;amount&gt;</span></button></div></div><div class="card"><b>חשוב</b><p class="muted">אין כאן מסחר, מחיר שוק או העברת SLH on-chain. זהו מסלול Credits פנימי בלבד. אל תסתמך על צילום מסך במקום אישור ההעברה מהבוט.</p></div><details class="guide"><summary>📘 איך זה עובד?</summary><p>מזינים UID וסכום → הממשק בונה /transfer → מעתיקים ל־Telegram → הבוט מבצע את הבדיקה וההעברה דרך מנגנון הכלכלה הקיים.</p></details></section>
 <section id="buy" class="screen"><div class="section-title">💳 קניית Credits</div><div class="card"><b>רכישה דרך Telegram Stars</b><p class="muted">ה־Mini App מסביר את התהליך; התשלום עצמו נשאר תחת סמכות הבוט.</p><div class="actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>בחר חבילה</b><span>פתיחת תהליך הרכישה</span></button><button class="action" onclick="showGuide('buyguide')"><b>איך זה עובד?</b><span>מדריך קצר</span></button></div><details id="buyguide" class="guide"><summary>📘 מדריך קנייה</summary><p>בחר חבילה → בדוק מחיר וכמות → אשר תשלום ב־Telegram → המתן לאישור. אל תסתמך על צילום מסך כתחליף לאישור המערכת.</p></details></div></section>
 <section id="stake" class="screen"><div class="section-title">🔒 Staking Live</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking מבצע פעולה אמיתית על יתרת Credits באמצעות אותו מנגנון אטומי של המערכת.</p><label class="form-label" for="stakeAmount">כמות Credits</label><input id="stakeAmount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 10"><label class="form-label" for="stakeDays">תקופת נעילה (ימים)</label><input id="stakeDays" class="form-input" inputmode="numeric" value="30"><button class="action primary" style="width:100%;margin-top:10px" onclick="submitStake()"><b>🔒 בצע Staking</b><span>העברה אטומית + Position ID + ledger</span></button></div><div class="card"><b>📊 הפוזיציות שלי</b><div id="stakePositions" class="muted" style="margin-top:8px">טוען…</div></div><div class="card"><b>ℹ️ איך זה עובד</b><p class="muted">ה־UID נלקח מהאימות של Telegram בצד השרת. בקשת Mini App מקבלת מזהה חד־פעמי, כך ש־Retry לא ייצור staking כפול.</p></div></section>
@@ -94,7 +94,7 @@
 })();
 </script>
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const headers=initData?{"X-Telegram-Init-Data":initData}:{};console.log("[TG-AUTH]",JSON.stringify({webapp:!!tg,initDataLength:initData.length,platform:tg?.platform||"",version:tg?.version||"",userId:tg?.initDataUnsafe?.user?.id||null}));const $=id=>document.getElementById(id);let state={};
+const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}const initData=tg?tg.initData:"";const headers=initData?{"X-Telegram-Init-Data":initData}:{};console.log("[TG-AUTH]",JSON.stringify({webapp:!!tg,initDataLength:initData.length,platform:tg?.platform||"",version:tg?.version||"",userId:tg?.initDataUnsafe?.user?.id||null}));const $=id=>document.getElementById(id);let state={};let _walletConnectProvider=null;let _walletConnectProjectId=null;
 function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;document.querySelector(".app")?.setAttribute("aria-hidden","true");document.body.classList.add("auth-required")}
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
@@ -352,30 +352,80 @@ async function claimSlhDeposit(){
     await loadMe();
   }catch(e){toast('❌ SLH: '+(e.message||e));}
 }
+async function verifyBnbProvider(provider,label){
+  if(!provider)throw Error('BNB wallet provider unavailable');
+  const accounts=await provider.request({method:'eth_requestAccounts'});
+  const address=accounts&&accounts[0];
+  if(!address)throw Error('לא נבחר ארנק');
+  const chainId=await provider.request({method:'eth_chainId'}).catch(()=>null);
+  if(chainId!=='0x38'){
+    try{
+      await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]});
+    }catch(e){
+      if(e&&e.code===4902){
+        await provider.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},rpcUrls:['https://bsc-dataseed.binance.org/'],blockExplorerUrls:['https://bscscan.com/']}]});
+      }else throw e;
+    }
+  }
+  const ch=await (await fetch('/api/wallet/bnb/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({address})})).json();
+  if(!ch.message)throw Error(ch.error||'BNB challenge failed');
+  const signature=await provider.request({method:'personal_sign',params:[ch.message,address]});
+  const vr=await fetch('/api/wallet/bnb/verify',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({address,signature})});
+  const vd=await vr.json().catch(()=>({}));
+  if(!vr.ok)throw Error(vd.error||('HTTP '+vr.status));
+  toast('✅ '+label+' — ארנק BNB אומת');
+  await loadWalletBindings();
+  return address;
+}
+
 async function bindBnbWallet(){
   if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
-  if(!window.ethereum){toast('לא נמצא ארנק BNB בדפדפן הזה');return}
+  if(!window.ethereum){toast('לא נמצא ארנק BNB בדפדפן הזה — נסה WalletConnect');return}
+  try{await verifyBnbProvider(window.ethereum,'BNB');}
+  catch(e){toast('❌ BNB: '+(e.message||e));}
+}
+
+async function initBnbWalletConnect(){
+  if(_walletConnectProvider)return _walletConnectProvider;
+  if(!window['@walletconnect/ethereum-provider']?.EthereumProvider)throw Error('WalletConnect SDK לא נטען');
+  const r=await fetch('/api/walletconnect/config',{cache:'no-store'});
+  const cfg=await r.json().catch(()=>({}));
+  if(!r.ok||!cfg.enabled||!cfg.project_id)throw Error('WALLETCONNECT_PROJECT_ID לא מוגדר בשרת');
+  _walletConnectProjectId=cfg.project_id;
+  const EthereumProvider=window['@walletconnect/ethereum-provider'].EthereumProvider;
+  _walletConnectProvider=await EthereumProvider.init({
+    projectId:_walletConnectProjectId,
+    optionalChains:[56],
+    showQrModal:true,
+    rpcMap:{56:'https://bsc-dataseed.binance.org/'},
+    metadata:{
+      name:'SLH OS',
+      description:'SLH OS Mini App — BNB wallet connection',
+      url:window.location.origin,
+      icons:['https://slh-nft.com/icon-192.png']
+    }
+  });
+  _walletConnectProvider.on?.('accountsChanged',()=>loadWalletBindings());
+  _walletConnectProvider.on?.('chainChanged',()=>loadWalletBindings());
+  _walletConnectProvider.on?.('disconnect',()=>{_walletConnectProvider=null;setText('bnbWalletConnectStatus','⚪️ WalletConnect מנותק')});
+  return _walletConnectProvider;
+}
+
+async function connectBnbWalletConnect(){
+  if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
   try{
-    const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
-    const address=accounts&&accounts[0];
-    if(!address){toast('לא נבחר ארנק');return}
-    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]}).catch(async e=>{
-      if(e&&e.code===4902){
-        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},rpcUrls:['https://bsc-dataseed.binance.org/'],blockExplorerUrls:['https://bscscan.com/']} ]});
-      }else throw e;
-    });
-    const ch=await (await fetch('/api/wallet/bnb/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({address})})).json();
-    if(!ch.message) throw Error(ch.error||'BNB challenge failed');
-    const signature=await window.ethereum.request({method:'personal_sign',params:[ch.message,address]});
-    const vr=await fetch('/api/wallet/bnb/verify',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({address,signature})});
-    const vd=await vr.json().catch(()=>({}));
-    if(!vr.ok) throw Error(vd.error||('HTTP '+vr.status));
-    toast('✅ ארנק BNB אומת');
-    await loadWalletBindings();
+    setText('bnbWalletConnectStatus','⏳ פותח WalletConnect…');
+    const provider=await initBnbWalletConnect();
+    await provider.connect({chains:[56]});
+    const address=await verifyBnbProvider(provider,'WalletConnect');
+    setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
   }catch(e){
-    toast('❌ BNB: '+(e.message||e));
+    console.error('[BNB/WC]',e);
+    setText('bnbWalletConnectStatus','❌ '+(e.message||e));
+    toast('❌ WalletConnect: '+(e.message||e));
   }
 }
+
 
 async function signTonWalletFallback(wallet){
   if(!_tonChallenge){setText('tonBindingStatus','⚠️ חסר challenge');return}
