@@ -257,6 +257,44 @@ def card_store_api():
     })), 200
 
 
+@app.route("/api/card-pay/checkout", methods=["POST"])
+def card_pay_checkout():
+    """Create a hosted card checkout for the authenticated Telegram user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    item_id = str(payload.get("item_id", "")).strip()
+    client_request_id = str(payload.get("client_request_id", "")).strip()
+    if not item_id:
+        return jsonify({"error": "ITEM_REQUIRED"}), 400
+    if len(client_request_id) > 200:
+        return jsonify({"error": "INVALID_REQUEST_ID"}), 400
+    try:
+        from core import card_payment_service
+        result = card_payment_service.create_card_checkout(
+            uid=str(uid),
+            item_id=item_id,
+            client_request_id=client_request_id or None,
+        )
+        return _no_store(jsonify({
+            "ok": True,
+            "order_id": result.get("order_id"),
+            "item_id": result.get("item_id"),
+            "item_name": result.get("item_name"),
+            "amount": result.get("amount"),
+            "currency": result.get("currency", "ILS"),
+            "payment_page_link": result.get("payment_page_link"),
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        print("[CARD] checkout API error:", type(exc).__name__)
+        return jsonify({"error": "CARD_CHECKOUT_FAILED"}), 500
+
+
 @app.route("/api/card-pay/callback", methods=["POST"])
 def card_pay_callback():
     """PayPlus server callback; fulfillment occurs only after callback validation + server-side verification."""
