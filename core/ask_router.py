@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from pathlib import Path
 
 from core.ask_guard import guard
 from core.context_builder import get_context
@@ -9,6 +10,18 @@ from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
 MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+
+_TON_FAQ_SHORT = (
+    "💎 אימות ארנק TON (binding)\n\n"
+    "הפקדה לאוצר לא מזהה לבד מי אתה בטלגרם. "
+    "קודם מאמתים ארנק ב-Mini App (TON Connect + Proof), ורק אז אפשר לזכות Credits.\n\n"
+    "• ארנק: MyTonWallet / Tonkeeper (לא @wallet)\n"
+    "• אל תזין 12 מילים ב-Mini App\n"
+    "• אמת → אשר Connect + Proof תוך דקות\n"
+    "• אחרי אימות: שליחה לאוצר עם Memo האישי SLH + מספר המשתמש\n\n"
+    f"Mini App: {MINI_APP_URL}\n"
+    "אימות ארנק ≠ KYC (זיהוי זהות)."
+)
 
 
 def _kw_match(kw, text_lower):
@@ -25,6 +38,12 @@ INTENTS = {
     "rewards": ["פרסים","תגמולים","rewards"],
     "leaderboard": ["לוח מובילים","טבלת המובילים","מובילים","leaderboard","leaders","top","נקודות"],
     "wallet": ["קרדיטים","קרדיט","credits","credit","balance","יתרה","היתרה שלי","כמה יש לי","ארנק","wallet"],
+    "ton": [
+        "ton", "אימות ton", "אימות ארנק", "ton proof", "tonconnect", "ton connect",
+        "הפקדת ton", "הפקדה ton", "@wallet", "mytonwallet", "tonkeeper",
+        "ממתין ל-proof", "ממתין ל proof", "binding", "treasury", "memo",
+    ],
+    "kyc": ["kyc", "זיהוי", "תעודת זהות", "דרכון", "aml"],
     "staking": ["סטייקינג","stake","staked","נעל","נעלתי","כמה סטייק"],
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
     "greeting": ["היי","שלום","בוקר טוב","ערב טוב","אהלן"],
@@ -32,13 +51,13 @@ INTENTS = {
     "dashboard": ["dashboard","לוח המחוונים","דשבורד"],
     "analysis": ["נתח","ניתוח","תנתח","שיפור","איך לשפר","המלצה","ארכיטקטורה","אסטרטגיה"],
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
-    "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה"],
+    "help": ["עזרה","מה אפשר לעשות","/help","עזרה בבקשה", "faq"],
     "system": ["מהי המערכת","מצב המערכת","סטטוס המערכת","health","status"],
     "time": ["מה השעה","מה הזמן","השעה","what time is it","what time"],
     "general": []
 }
 
-FORBIDDEN_ASK_TOPICS = ["p0", "משימות p0", "חסימה"] # "p0", "משימות p0", "חסימה"] # "launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
+FORBIDDEN_ASK_TOPICS = ["p0", "משימות p0", "חסימה"]
 
 
 def is_system_state_question(text):
@@ -46,7 +65,7 @@ def is_system_state_question(text):
     return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
 
 
-PRIORITY = ["time","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
+PRIORITY = ["time","ton","kyc","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
 
 
 def detect_intent(text):
@@ -60,9 +79,14 @@ def detect_intent(text):
             if kw and _kw_match(kw, text_lower):
                 return "time"
 
-    # Route direct course/Academy questions to the canonical local data path.
-    # These questions must not fall through to the LLM merely because they
-    # contain a generic question word such as "מה".
+    # TON / deposit / proof — before generic "ארנק" wallet balance
+    for kw in INTENTS["ton"]:
+        if kw and kw.lower() in text_lower:
+            return "ton"
+    for kw in INTENTS["kyc"]:
+        if kw and kw.lower() in text_lower:
+            return "kyc"
+
     if len(text_lower) <= 80 and any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
@@ -76,10 +100,13 @@ def detect_intent(text):
 
     question_words = ["כיצד", "איך", "מה", "מדוע", "למה", "הסבר", "explain", "how", "what", "why"]
     if any(word in text_lower for word in question_words):
+        # Prefer FAQ intents over blind LLM for money/wallet how-to
+        if any(x in text_lower for x in ("ton", "הפקד", "ארנק", "proof", "memo", "אוצר")):
+            return "ton"
         return "general"
 
     for intent in PRIORITY:
-        if intent in ("staking", "wallet", "greeting", "time"):
+        if intent in ("staking", "wallet", "greeting", "time", "ton", "kyc"):
             continue
         for kw in INTENTS[intent]:
             if kw and _kw_match(kw, text_lower):
@@ -102,7 +129,6 @@ def route(text, uid=None):
 
     intent = detect_intent(text)
 
-    # Build canonical project context for every AI session without exposing secrets.
     try:
         from core.project_context import get_project_context
         project_context = get_project_context(uid, "slh-canonical")
@@ -116,6 +142,16 @@ def route(text, uid=None):
     if intent == "time":
         now = datetime.now(ZoneInfo("Asia/Jerusalem"))
         return f"השעה הנוכחית בישראל היא {now:%H:%M}"
+
+    if intent == "ton":
+        return _TON_FAQ_SHORT
+
+    if intent == "kyc":
+        return (
+            "KYC (זיהוי זהות) עדיין לא מופעל כמודול נפרד ב-SLH.\n"
+            "מה שכן קיים: אימות ארנק TON/BNB — הוכחת שליטה בכתובת, לא תעודת זהות.\n"
+            "לשאלות על הפקדה/אימות ארנק — שאל על TON או פתח את הארנק ב-Mini App."
+        )
 
     if intent == "staking":
         base = ("סטייקינג SLH\n\n" "אין צורך להשלים קורס כדי לבצע Staking. זה מנגנון פנימי של Credits.\n" "אין צורך לחפש Dashboard נפרד.\n\n" "הפעלת Staking: /stake <amount>\n" "צפייה בסטייקינג: /my_stake\n\n" "Academy הוא מסלול לימודי נפרד ואינו תנאי ל-Staking.\n\n" "סטייקינג פנימי בלבד, לא on-chain.")
@@ -133,7 +169,11 @@ def route(text, uid=None):
             return "לא ניתן לזהות את המשתמש."
         try:
             credits = get_balance_safe(str(uid))
-            return f"היתרה שלך: {credits} credits"
+            return (
+                f"היתרה שלך: {credits} credits\n\n"
+                f"להפקדת TON / אימות ארנק: {MINI_APP_URL}\n"
+                "(@wallet בטלגרם לא תומך ב-TON Proof — השתמש ב-Tonkeeper או MyTonWallet.)"
+            )
         except Exception as e:
             if str(e) == "USER_NOT_FOUND":
                 return "המשתמש לא נמצא במערכת."
@@ -200,7 +240,11 @@ def route(text, uid=None):
     if intent == "agents":
         return "נסה /agents לרשימת הסוכנים."
     if intent == "help":
-        return "פקודות עיקריות: /start, /join, /courses, /agents, /ask"
+        return (
+            "פקודות: /start, /join, /courses, /agents, /ask\n\n"
+            f"ארנק והפקדת TON: {MINI_APP_URL}\n"
+            "שאל /ask אימות TON לעזרה ממוקדת."
+        )
     if intent == "system":
         return "SLH OS היא מערכת AI אוטונומית עם סוכנים, קורסים וכלכלה פנימית."
 
@@ -220,6 +264,13 @@ def route(text, uid=None):
                 "services": len(project_context.get("services", [])),
                 "runtime": project_context.get("runtime", {}).get("running", False),
             })
+        # Soft FAQ hint for general LLM path (wallet/money questions that slipped through)
+        enriched += (
+            "\n\n[FAQ_HINT]\n"
+            "TON deposits require wallet binding via TON Connect proof. "
+            "Never ask for seed phrases. @wallet cannot sign ton_proof. "
+            "KYC is not the same as wallet binding and is not enabled as a separate module."
+        )
         return query_llm_with_context(enriched, uid=str(uid) if uid is not None else None)
     except Exception:
         return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
