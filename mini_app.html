@@ -150,7 +150,7 @@ async function loadCardStore(){
     const items=Array.isArray(d.items)?d.items:[];
     if(!items.length){el.innerHTML='<div class="muted">אין כרגע מוצרים פיזיים זמינים בכרטיס.</div>';return}
     el.innerHTML=items.map(function(item){
-      return '<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>'+esc(item.name)+'</b><div class="muted">מוצר פיזי · תשלום מאובטח</div></span><strong>'+fmt(item.price_ils)+' ₪</strong></div><button class="action primary" style="width:100%;margin-top:8px" class="action primary card-checkout-btn" data-card-item="'+esc(String(item.id))+\'"><b>💳 שלם בכרטיס</b><span>פתיחת עמוד סליקה מאובטח</span></button></div>';
+      return `<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>${esc(item.name)}</b><div class="muted">מוצר פיזי · תשלום מאובטח</div></span><strong>${fmt(item.price_ils)} ₪</strong></div><button class="action primary card-checkout-btn" style="width:100%;margin-top:8px" data-card-item="${esc(String(item.id))}"><b>💳 שלם בכרטיס</b><span>פתיחת עמוד סליקה מאובטח</span></button></div>`;
     }).join("");
     el.querySelectorAll(".card-checkout-btn").forEach(function(btn){
       btn.addEventListener("click",function(){
