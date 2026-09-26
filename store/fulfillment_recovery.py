@@ -12,8 +12,11 @@ import state_manager
 MAX_ATTEMPTS = 20
 
 
-def recover_paid_orders(limit: int = MAX_ATTEMPTS) -> dict:
-    """Retry pending/recoverable Stars fulfillments, without charging again."""
+def recover_paid_orders(limit: int = MAX_ATTEMPTS, uid: str | None = None) -> dict:
+    """Retry pending/recoverable Stars fulfillments, without charging again.
+
+    When uid is supplied, only that customer's orders are retried.
+    """
     db = state_manager.load_db()
 
     star_orders = db.get("star_item_orders") or {}
@@ -25,14 +28,16 @@ def recover_paid_orders(limit: int = MAX_ATTEMPTS) -> dict:
             if not isinstance(order, dict):
                 continue
             if order.get("status") in {"RECOVERABLE", "PAID"}:
-                candidates.append(("star", order))
+                if uid is None or str(order.get("uid")) == str(uid):
+                    candidates.append(("star", order))
 
     if isinstance(vip_orders, dict):
         for order in vip_orders.values():
             if not isinstance(order, dict):
                 continue
             if order.get("fulfillment_status") in {"pending", "failed"}:
-                candidates.append(("vip", order))
+                if uid is None or str(order.get("uid")) == str(uid):
+                    candidates.append(("vip", order))
 
     candidates = candidates[:max(1, int(limit))]
     attempted = success = failed = 0
