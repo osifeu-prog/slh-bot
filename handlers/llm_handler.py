@@ -8,7 +8,7 @@ import time
 from core.authority import is_owner
 
 client = None
-
+_provider_cooldown_until = {"gemini": 0.0, "groq": 0.0}
 
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 _gemini_model_cache = {"name": None}
@@ -31,6 +31,8 @@ def _discover_gemini_model(key):
 
 
 def ask_gemini(prompt):
+    if time.time() < _provider_cooldown_until["gemini"]:
+        return "GEMINI_COOLDOWN"
     key = (os.getenv("GEMINI_API_KEY") or "").strip().strip('"\'')
     if not key:
         return "GEMINI_API_KEY missing"
@@ -50,6 +52,8 @@ def ask_gemini(prompt):
                     print("[LLM] Gemini model switched:", model, "->", found)
                     model = found
                     continue
+            if r.status_code == 429:
+                _provider_cooldown_until["gemini"] = time.time() + 300
             return "Gemini Error: " + str(j)[:300]
     except Exception as e:
         return f"Gemini Error: {e}"
@@ -58,6 +62,8 @@ def ask_gemini(prompt):
 
 def ask_groq(prompt):
     global client
+    if time.time() < _provider_cooldown_until["groq"]:
+        return "GROQ_COOLDOWN"
     try:
         if client is None:
             key = (os.getenv("GROQ_API_KEY") or "").strip().strip('"\'')
@@ -153,11 +159,16 @@ USER QUESTION:
     # Groq only (Gemini key is invalid)
     try:
         result = ask_groq(prompt)
-        if result and not result.startswith("LLM Error:"):
+        if result and not (
+            result.startswith("LLM Error:")
+            or result == "GROQ_COOLDOWN"
+        ):
             return result
-        return result or "לא התקבלה תשובה כרגע."
+        print("[LLM] Groq unavailable/cooldown")
+        return "🧠 ה־AI אינו זמין כרגע. אפשר להשתמש בפקודה המתאימה ישירות; לא בוצעה שום פעולה או שינוי ביתרה."
     except Exception as e:
-        return f"LLM Error: {e}"
+        print("[LLM] fallback exception:", type(e).__name__)
+        return "🧠 ה־AI אינו זמין כרגע. לא בוצעה שום פעולה או שינוי ביתרה."
 
 
 def register_llm_handler(bot):
