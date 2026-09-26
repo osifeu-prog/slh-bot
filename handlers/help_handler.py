@@ -24,6 +24,7 @@ def register(bot):
 /pay – רכישת Credits ב-Telegram Stars
 /history – היסטוריית עסקאות
 /paysupport – תמיכה בתשלום
+/my_orders – הזמנות ותיקון אספקה ללא חיוב נוסף
 
 👛 WALLET & MONEY
 /wallet – ארנק מלא
