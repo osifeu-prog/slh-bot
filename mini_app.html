@@ -305,7 +305,7 @@ async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
   _tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl:'https://slh-nft.com/tonconnect-manifest.json',
+    manifestUrl:'https://slh-cloud-bot-production.up.railway.app/tonconnect-manifest.json',
     buttonRootId:'tonConnectButton'
   });
   _tonConnectUI.onStatusChange(async wallet=>{
