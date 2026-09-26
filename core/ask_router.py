@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from core.ask_guard import guard
+from core.trust_router import guard
 from core.context_builder import get_context
 from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
