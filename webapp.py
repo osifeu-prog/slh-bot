@@ -788,6 +788,21 @@ def ton_wallet_verify():
         return jsonify({"error": str(exc)}), 400
 
 
+@app.route("/api/wallet/ton/sign-data/verify", methods=["POST"])
+def ton_wallet_sign_data_verify():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.ton_wallet_binding import verify_ton_sign_data
+        binding = verify_ton_sign_data(uid, payload)
+        return jsonify({"status": "verified", "binding": binding}), 200
+    except ValueError as exc:
+        print("[TON_SIGN_DATA_VERIFY] rejected:", str(exc))
+        return jsonify({"error": str(exc)}), 400
+
+
 @app.route("/api/wallet/ton")
 def ton_wallet_binding():
     uid = authenticated_uid()
