@@ -267,17 +267,45 @@ def _find_existing_request(uid: str, client_request_id: str) -> dict | None:
     return None
 
 
-def _reserve_inventory(item_id: str, quantity: int = 1) -> dict:
+def _create_reserved_card_order(record: dict) -> dict:
+    """Create the order and reserve one hardware unit in the same atomic write.
+
+    This closes the gap where inventory could be reserved without a matching
+    order record, and makes client_request_id deduplication race-safe.
+    """
+    order_id = str(record["order_id"])
+    item_id = str(record["item_id"])
+    uid = str(record["uid"])
+    client_request_id = str(record.get("client_request_id") or "").strip()
+
     def mutate(db):
+        orders = db.setdefault("card_orders", {})
+        if client_request_id:
+            for row in orders.values():
+                if (
+                    isinstance(row, dict)
+                    and str(row.get("uid")) == uid
+                    and str(row.get("client_request_id") or "") == client_request_id
+                    and row.get("status") not in {"FAILED", "CANCELLED"}
+                ):
+                    # A second request must never reserve another unit for the
+                    # same client request. Reuse a completed link or surface
+                    # the existing in-progress order to the caller.
+                    return dict(row)
+
         products = db.setdefault("products", {})
-        product = products.get(str(item_id))
+        product = products.get(item_id)
         if not isinstance(product, dict):
             raise ValueError("CARD_INVENTORY_NOT_CONFIGURED")
+
         inventory = int(product.get("inventory", 0) or 0)
-        if inventory < quantity:
+        if inventory < 1:
             raise ValueError("CARD_OUT_OF_STOCK")
-        product["inventory"] = inventory - quantity
-        return {"item_id": str(item_id), "quantity": int(quantity)}
+
+        product["inventory"] = inventory - 1
+        record["inventory_reservation"] = {"item_id": item_id, "quantity": 1}
+        orders[order_id] = dict(record)
+        return dict(record)
 
     return state_manager.atomic_update(mutate)
 
@@ -326,13 +354,7 @@ def create_card_checkout(uid: str, item_id: str, client_request_id: str | None =
         raise ValueError("CARD_ITEM_PRICE_NOT_CONFIGURED")
 
     client_request_id = str(client_request_id or "").strip()
-    if client_request_id:
-        existing = _find_existing_request(uid, client_request_id)
-        if existing and existing.get("payment_page_link"):
-            return existing
-
     order_id = f"card:{uuid.uuid4().hex}"
-    reservation = _reserve_inventory(item_id, 1)
     record = {
         "order_id": order_id,
         "uid": uid,
@@ -348,16 +370,19 @@ def create_card_checkout(uid: str, item_id: str, client_request_id: str | None =
         "transaction_uid": None,
         "created_at": time.time(),
         "updated_at": time.time(),
-        "inventory_reservation": reservation,
+        "inventory_reservation": None,
         "fulfillment": None,
         "error": None,
     }
 
-    def create_record(db):
-        db.setdefault("card_orders", {})[order_id] = record
-        return dict(record)
-
-    state_manager.atomic_update(create_record)
+    created = _create_reserved_card_order(record)
+    if (
+        str(created.get("order_id")) != order_id
+        and created.get("payment_page_link")
+    ):
+        return created
+    if str(created.get("order_id")) != order_id:
+        raise RuntimeError("CARD_CHECKOUT_IN_PROGRESS")
 
     base = _public_base()
     generate_payload = {
@@ -603,8 +628,22 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
         if uid is not None and str(row.get("uid")) != str(uid):
             continue
         status = str(row.get("status", ""))
-        if status not in {"LINK_CREATED", "PAID", "RECOVERABLE"}:
+        if status not in {"CREATED", "LINK_CREATED", "PAID", "RECOVERABLE"}:
             continue
+        if status == "CREATED":
+            try:
+                created_at = float(row.get("created_at", now) or now)
+            except (TypeError, ValueError):
+                created_at = now
+            if now - created_at > 15 * 60:
+                _update_order(
+                    row["order_id"],
+                    status="CANCELLED",
+                    error="CHECKOUT_CREATE_EXPIRED",
+                    updated_at=time.time(),
+                )
+                _release_inventory(row["order_id"])
+                continue
         if status == "LINK_CREATED":
             try:
                 created_at = float(row.get("created_at", now) or now)
@@ -626,6 +665,9 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
         attempted += 1
         try:
             current = order
+            if current.get("status") == "CREATED":
+                # A stale CREATED order has no provider page to reconcile.
+                continue
             if current.get("status") == "LINK_CREATED":
                 page_uid = str(current.get("page_request_uid") or "").strip()
                 if not page_uid:
