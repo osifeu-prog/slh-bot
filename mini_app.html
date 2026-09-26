@@ -609,4 +609,79 @@ async function loadSystem(){
     setHTML('sysRewards',rr);
   }catch(e){setHTML('sysHealth','Error: '+esc(e.message||e));}
 }
-</script><div id=slh-rewards-widget style="position:fixed;left:16px;bottom:16px;z-index:9999"><button onclick="fetch('/api/v1/tokenomics',{headers}).then(r=>r.json()).then(d=>{document.getElementById('slh-rewards-body').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';document.getElementById('slh-rewards-modal').style.display='block'})">🎁 תגמולים</button><div id=slh-rewards-modal style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);padding:20px"><div style="background:#fff;padding:20px;border-radius:12px;max-width:520px;margin:40px auto"><button onclick="document.getElementById('slh-rewards-modal').style.display='none'">✕</button><div id=slh-rewards-body>טוען...</div></div></div></div></body></html>
+</script><div id=slh-rewards-widget style="position:fixed;left:16px;bottom:16px;z-index:9999"><button onclick="fetch('/api/v1/tokenomics',{headers}).then(r=>r.json()).then(d=>{document.getElementById('slh-rewards-body').innerHTML='<pre>'+JSON.stringify(d,null,2)+'</pre>';document.getElementById('slh-rewards-modal').style.display='block'})">🎁 תגמולים</button><div id=slh-rewards-modal style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);padding:20px"><div style="background:#fff;padding:20px;border-radius:12px;max-width:520px;margin:40px auto"><button onclick="document.getElementById('slh-rewards-modal').style.display='none'">✕</button><div id=slh-rewards-body>טוען...</div></div></div></div>
+<style id="slh-views">
+html[data-skin="paper"],html[data-skin="tg"]{--bg:var(--v-bg);--panel:var(--v-panel);--panel2:var(--v-panel);--line:var(--v-line);--text:var(--v-ink);--muted:var(--v-hint);--accent:var(--v-accent);--accent2:var(--v-accent2)}
+html[data-skin="paper"]{--v-bg:#f3f5f9;--v-panel:#fff;--v-line:#d9dee8;--v-ink:#0e1b2c;--v-hint:#5a6678;--v-accent:#2442d6;--v-accent2:#0e8f7a;--v-soft:#0e1b2c0d;--v-on-accent:#fff}
+html[data-skin="paper"] body,html[data-skin="tg"] body{background:var(--v-bg);color:var(--v-ink)}
+html[data-skin="paper"] .hero,html[data-skin="paper"] .card,html[data-skin="paper"] .ai,html[data-skin="tg"] .hero,html[data-skin="tg"] .card,html[data-skin="tg"] .ai{background:var(--v-panel);border-color:var(--v-line)}
+html[data-skin="paper"] .hero,html[data-skin="tg"] .hero{border-inline-start:4px solid var(--v-accent)}
+html[data-skin="paper"] .hero-label,html[data-skin="tg"] .hero-label,html[data-skin="paper"] .token,html[data-skin="tg"] .token{color:var(--v-accent)}
+html[data-skin="paper"] .stake,html[data-skin="tg"] .stake{color:var(--v-accent2)}
+html[data-skin="paper"] :is(.refresh,.ghost,.copy,.action,.nav button,.pill,.guide,.form-input),html[data-skin="tg"] :is(.refresh,.ghost,.copy,.action,.nav button,.pill,.guide,.form-input){background:var(--v-soft);color:var(--v-ink);border-color:var(--v-line)}
+html[data-skin="paper"] .nav button.active,html[data-skin="tg"] .nav button.active{background:var(--v-accent);color:var(--v-on-accent);border-color:var(--v-accent)}
+html[data-skin="paper"] .primary,html[data-skin="tg"] .primary{background:var(--v-accent);color:var(--v-on-accent);border-color:var(--v-accent)}
+html[data-skin="paper"] .primary span,html[data-skin="tg"] .primary span{color:var(--v-on-accent);opacity:.85}
+html[data-skin="paper"] :is(.guide p,.ai p),html[data-skin="tg"] :is(.guide p,.ai p){color:var(--v-hint)}
+html[data-skin="paper"] :is(.status,.wallet-row,.task),html[data-skin="tg"] :is(.status,.wallet-row,.task){border-color:var(--v-line)}
+html[data-skin="paper"] .next,html[data-skin="tg"] .next{background:var(--v-soft);border-color:var(--v-accent2)}
+html[data-skin="paper"] .bottom,html[data-skin="tg"] .bottom{background:var(--v-panel);border-color:var(--v-line)}
+html[data-skin="paper"] .bottom button,html[data-skin="tg"] .bottom button{color:var(--v-hint);border:0;border-radius:12px}
+html[data-skin="paper"] .bottom button.active,html[data-skin="tg"] .bottom button.active{background:var(--v-soft);color:var(--v-accent);font-weight:800}
+html[data-skin="paper"] .toast,html[data-skin="tg"] .toast{background:var(--v-ink);color:var(--v-bg);border-color:transparent}
+html[data-skin="paper"] .bar,html[data-skin="tg"] .bar{background:var(--v-accent)}
+html[data-skin="paper"] .logo,html[data-skin="tg"] .logo{background:var(--v-accent)}
+html[data-density="compact"] :is(.card,.hero){padding:11px;margin-bottom:8px}
+html[data-density="compact"] .action{min-height:58px;padding:10px}
+html[data-density="compact"] :is(.wallet-row,.status){padding:7px 0}
+html[data-density="roomy"] :is(.card,.hero){padding:20px;margin-bottom:16px}
+html[data-density="roomy"] .action{min-height:88px;padding:16px}
+html[data-text="l"] .app{zoom:1.1}
+html[data-text="xl"] .app{zoom:1.22}
+.v-open{font-weight:800;min-width:44px}
+.v-sheet{position:fixed;inset:0;z-index:10001;display:none;background:#0008}
+.v-sheet.on{display:block}
+.v-panel{position:absolute;inset-inline:0;bottom:0;max-width:720px;margin:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.v-panel h3{margin:0 0 4px;font-size:17px}.v-panel .v-sub{margin:0 0 14px;font-size:12px;color:var(--muted)}
+.v-group{margin-bottom:14px}.v-group>b{display:block;font-size:13px;margin-bottom:7px}
+.v-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.v-seg button{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:12px;padding:10px 6px;font-size:13px}
+.v-seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800}
+.v-seg button:focus-visible,.v-open:focus-visible,.v-row button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.v-row{display:flex;gap:8px;margin-top:6px}.v-row button{flex:1;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:12px;padding:11px;font-size:13px}.v-row button[hidden]{display:none}
+@media (prefers-reduced-motion:no-preference){.v-sheet.on .v-panel{animation:vUp .18s ease-out}@keyframes vUp{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+<div class="v-sheet" id="vSheet" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+  <div class="v-panel">
+    <h3 id="vTitle">התאמת תצוגה</h3>
+    <p class="v-sub">הבחירה נשמרת בחשבון הטלגרם שלך ועוברת איתך בין מכשירים.</p>
+    <div class="v-group"><b>ערכת צבעים</b><div class="v-seg" data-key="skin"><button type="button" data-val="night">לילה</button><button type="button" data-val="paper">יום</button><button type="button" data-val="tg">כמו טלגרם</button></div></div>
+    <div class="v-group"><b>גודל טקסט</b><div class="v-seg" data-key="text"><button type="button" data-val="m">רגיל</button><button type="button" data-val="l">גדול</button><button type="button" data-val="xl">גדול מאוד</button></div></div>
+    <div class="v-group"><b>צפיפות</b><div class="v-seg" data-key="density"><button type="button" data-val="compact">צפוף</button><button type="button" data-val="normal">רגיל</button><button type="button" data-val="roomy">מרווח</button></div></div>
+    <div class="v-group"><b>רטט בלחיצה</b><div class="v-seg" data-key="haptics"><button type="button" data-val="on">פעיל</button><button type="button" data-val="off">כבוי</button></div></div>
+    <div class="v-row"><button type="button" id="vHome" hidden>📲 הוסף למסך הבית</button><button type="button" id="vFull" hidden>⛶ מסך מלא</button></div>
+    <div class="v-row"><button type="button" id="vClose">סגור</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var W=window.Telegram&&window.Telegram.WebApp,KEY='slh_view_v1',DEF={skin:'night',text:'m',density:'normal',haptics:'on'},pref=Object.assign({},DEF);
+  function ok(v){return !!(W&&typeof W.isVersionAtLeast==='function'&&W.isVersionAtLeast(v))}
+  function hex(c,f){return typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c)?c:f}
+  function applyTg(){var p=(W&&W.themeParams)||{},r=document.documentElement.style;r.setProperty('--v-bg',hex(p.secondary_bg_color,hex(p.bg_color,'#f3f5f9')));r.setProperty('--v-panel',hex(p.bg_color,'#fff'));r.setProperty('--v-ink',hex(p.text_color,'#0e1b2c'));r.setProperty('--v-hint',hex(p.hint_color,'#5a6678'));r.setProperty('--v-accent',hex(p.button_color,'#2442d6'));r.setProperty('--v-on-accent',hex(p.button_text_color,'#fff'));r.setProperty('--v-accent2',hex(p.link_color,'#0e8f7a'));r.setProperty('--v-line',hex(p.section_separator_color,'#d9dee8'));r.setProperty('--v-soft','color-mix(in srgb, '+hex(p.text_color,'#0e1b2c')+' 6%, transparent)')}
+  function chrome(){if(!W)return;try{if(ok('6.1')){var bg=getComputedStyle(document.documentElement).getPropertyValue('--v-bg').trim()||'#f3f5f9';W.setBackgroundColor(pref.skin==='night'?'#070a12':pref.skin==='tg'?'bg_color':bg);W.setHeaderColor(pref.skin==='night'?'#070a12':pref.skin==='tg'?'bg_color':'#f3f5f9')}}catch(_e){}try{if(ok('7.10')&&typeof W.setBottomBarColor==='function')W.setBottomBarColor(pref.skin==='night'?'#090d16':'bottom_bar_bg_color')}catch(_e){}}
+  function apply(){var h=document.documentElement;h.dataset.skin=pref.skin;h.dataset.text=pref.text;h.dataset.density=pref.density;if(pref.skin==='tg')applyTg();document.querySelectorAll('#vSheet .v-seg').forEach(function(seg){var k=seg.dataset.key;seg.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.val===pref[k]))})});chrome()}
+  function save(){var v=JSON.stringify(pref);try{localStorage.setItem(KEY,v)}catch(_e){}try{if(ok('6.9')&&W.CloudStorage)W.CloudStorage.setItem(KEY,v,function(){})}catch(_e){}}
+  function load(){try{var l=localStorage.getItem(KEY);if(l)pref=Object.assign({},DEF,JSON.parse(l))}catch(_e){}apply();try{if(ok('6.9')&&W.CloudStorage)W.CloudStorage.getItem(KEY,function(err,v){if(!err&&v){try{pref=Object.assign({},DEF,JSON.parse(v));apply();try{localStorage.setItem(KEY,v)}catch(_e){}}catch(_e){}}})}catch(_e){}}
+  var sheet=document.getElementById('vSheet');function open(){sheet.classList.add('on');var f=sheet.querySelector('button[aria-pressed="true"]');if(f)f.focus()}function close(){sheet.classList.remove('on')}
+  window.openViewSettings=open;sheet.addEventListener('click',function(e){if(e.target===sheet)close()});document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});document.getElementById('vClose').onclick=close;
+  sheet.querySelectorAll('.v-seg').forEach(function(seg){seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;pref[seg.dataset.key]=b.dataset.val;apply();save()})});
+  var home=document.getElementById('vHome'),full=document.getElementById('vFull');if(ok('8.0')&&typeof W.addToHomeScreen==='function'){home.hidden=false;home.onclick=function(){try{W.addToHomeScreen()}catch(_e){}}}if(ok('8.0')&&typeof W.requestFullscreen==='function'){full.hidden=false;full.onclick=function(){try{if(W.isFullscreen){W.exitFullscreen()}else{W.requestFullscreen()}}catch(_e){}}}
+  var top=document.querySelector('header.top');if(top){var b=document.createElement('button');b.type='button';b.className='ghost v-open';b.textContent='Aa';b.setAttribute('aria-label','התאמת תצוגה');b.onclick=open;top.appendChild(b)}
+  if(W&&ok('7.0')&&W.SettingsButton){try{W.SettingsButton.show();W.SettingsButton.onClick(open)}catch(_e){}}
+  if(W&&ok('6.1')&&typeof W.onEvent==='function'){try{W.onEvent('themeChanged',function(){if(pref.skin==='tg')applyTg();chrome()})}catch(_e){}}
+  document.addEventListener('click',function(e){if(pref.haptics!=='on'||!W||!W.HapticFeedback||!ok('6.1'))return;if(e.target.closest('button,.action,a'))try{W.HapticFeedback.impactOccurred('light')}catch(_e){}},true);
+  if(typeof window.show==='function'&&W&&ok('6.1')&&W.BackButton){var base=window.show;window.show=function(id){base.apply(this,arguments);try{if(id==='home')W.BackButton.hide();else W.BackButton.show()}catch(_e){}};try{W.BackButton.onClick(function(){if(sheet.classList.contains('on')){close();return}window.show('home')})}catch(_e){}}
+  load();
+})();
+</script>
+</body></html>
