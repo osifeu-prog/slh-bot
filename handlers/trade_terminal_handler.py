@@ -91,9 +91,7 @@ def _trade_menu(uid):
 
 
 def register(bot):
-    @bot.message_handler(commands=["trade", "trading", "terminal"])
-    def trade_command(message):
-        uid = _prepare_locale(message)
+    def _send_trade_home(bot, chat_id, uid):
         text = (
             f"{trade.t('title', uid)}\n\n"
             f"{trade.t('subtitle', uid)}\n"
@@ -101,7 +99,12 @@ def register(bot):
             f"{trade.t('read_only', uid)}\n\n"
             f"{trade.t('commands', uid)}"
         )
-        bot.send_message(message.chat.id, text, reply_markup=_trade_menu(uid))
+        bot.send_message(chat_id, text, reply_markup=_trade_menu(uid))
+
+    @bot.message_handler(commands=["trade", "trading", "terminal"])
+    def trade_command(message):
+        uid = _prepare_locale(message)
+        _send_trade_home(bot, message.chat.id, uid)
 
     @bot.message_handler(commands=["token", "scan"])
     def token_command(message):
@@ -204,7 +207,9 @@ def register(bot):
 
         action = str(call.data).split(":", 1)[1]
         bot.answer_callback_query(call.id)
-        if action == "scanner":
+        if action == "home":
+            _send_trade_home(bot, call.message.chat.id, uid)
+        elif action == "scanner":
             bot.send_message(call.message.chat.id, trade.t("scan_usage", uid))
         elif action == "portfolio":
             _send_portfolio(bot, call.message.chat.id, uid)
