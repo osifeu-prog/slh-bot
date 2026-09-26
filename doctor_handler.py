@@ -5,10 +5,15 @@ from pathlib import Path
 def register_doctor_handlers(bot):
     @bot.message_handler(commands=["doctor"])
     def doctor(m):
-        report = generate_health_report(bot)
+        from core.authority import has_permission
+        uid = str(m.from_user.id)
+        if not has_permission(uid, "exec.audit"):
+            bot.reply_to(m, "⛔️ הרשאת אבחון מערכת מלאה נדרשת.")
+            return
+        report = generate_health_report(bot, uid)
         bot.reply_to(m, report)
 
-def generate_health_report(bot):
+def generate_health_report(bot, uid=None):
     lines = ["🩺 SLH HEALTH REPORT", ""]
     checks = {}
 
