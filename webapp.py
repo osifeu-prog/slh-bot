@@ -783,6 +783,8 @@ def ton_wallet_verify():
         binding = verify_ton_proof(uid, payload)
         return jsonify({"status": "verified", "binding": binding}), 200
     except ValueError as exc:
+        # Log only the canonical error code; never log proof/signature/address data.
+        print("[TON_VERIFY] rejected:", str(exc))
         return jsonify({"error": str(exc)}), 400
 
 
