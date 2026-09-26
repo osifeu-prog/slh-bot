@@ -254,6 +254,15 @@ _TEXT = {
 
 # UI strings used by the Telegram handler outside the main text catalog.
 _TEXT["he"].update({
+    "buy_with_stars": "רכישה: /buystars trade_pro",
+    "chain_label": "שרשרת",
+    "dex_label": "DEX",
+    "price_usd_label": "מחיר USD",
+    "change_24h_label": "שינוי 24 שעות",
+    "liquidity_label": "נזילות USD",
+    "volume_label": "נפח 24 שעות USD",
+    "scanner_note": "ℹ️ נתוני הסורק הם נתוני שוק בלבד, לא audit ולא המלצת קנייה/מכירה.",
+    "token_fallback": "TOKEN",
     "ai_explain": "🧠 הסבר AI",
     "ai_explain_prompt": "הסבר למשתמש בעברית איך עובד SLH Trade Terminal, מה אפשר לעשות בו כרגע, מה לא פעיל, ומה הסיכונים. אל תיתן המלצת קנייה/מכירה ואל תבטיח רווח.",
     "execution_connector": "מחבר ביצוע",
@@ -264,6 +273,15 @@ _TEXT["he"].update({
     "not_verified": "לא אומת",
 })
 _TEXT["en"].update({
+    "buy_with_stars": "Purchase: /buystars trade_pro",
+    "chain_label": "Chain",
+    "dex_label": "DEX",
+    "price_usd_label": "Price USD",
+    "change_24h_label": "24h change",
+    "liquidity_label": "Liquidity USD",
+    "volume_label": "Volume 24h USD",
+    "scanner_note": "ℹ️ Scanner data is market data, not a contract audit or trading recommendation.",
+    "token_fallback": "TOKEN",
     "ai_explain": "🧠 AI Explanation",
     "ai_explain_prompt": "Explain to the user in English how the SLH Trade Terminal works, what is currently available, what is disabled, and the risks. Do not provide a buy/sell recommendation or profit guarantee.",
     "execution_connector": "Execution connector",
@@ -274,6 +292,15 @@ _TEXT["en"].update({
     "not_verified": "not verified",
 })
 _TEXT["ar"].update({
+    "buy_with_stars": "الشراء: /buystars trade_pro",
+    "chain_label": "الشبكة",
+    "dex_label": "DEX",
+    "price_usd_label": "السعر USD",
+    "change_24h_label": "التغير خلال 24 ساعة",
+    "liquidity_label": "السيولة USD",
+    "volume_label": "الحجم خلال 24 ساعة USD",
+    "scanner_note": "ℹ️ بيانات الفحص بيانات سوق فقط وليست تدقيقاً للعقد ولا توصية شراء/بيع.",
+    "token_fallback": "عملة",
     "ai_explain": "🧠 شرح بالذكاء الاصطناعي",
     "ai_explain_prompt": "اشرح للمستخدم بالعربية كيف تعمل منصة SLH Trade، وما المتاح حالياً وما المعطل وما المخاطر. لا تقدم توصية شراء أو بيع ولا ضماناً للربح.",
     "execution_connector": "موصل التنفيذ",
@@ -284,6 +311,15 @@ _TEXT["ar"].update({
     "not_verified": "غير موثّق",
 })
 _TEXT["es"].update({
+    "buy_with_stars": "Compra: /buystars trade_pro",
+    "chain_label": "Cadena",
+    "dex_label": "DEX",
+    "price_usd_label": "Precio USD",
+    "change_24h_label": "Cambio 24h",
+    "liquidity_label": "Liquidez USD",
+    "volume_label": "Volumen 24h USD",
+    "scanner_note": "ℹ️ Los datos del scanner son datos de mercado, no una auditoría ni recomendación de compra/venta.",
+    "token_fallback": "TOKEN",
     "ai_explain": "🧠 Explicación de IA",
     "ai_explain_prompt": "Explica al usuario en español cómo funciona SLH Trade, qué está disponible ahora, qué está desactivado y los riesgos. No des recomendaciones de compra/venta ni garantías de ganancias.",
     "execution_connector": "Conector de ejecución",
@@ -294,6 +330,15 @@ _TEXT["es"].update({
     "not_verified": "no verificado",
 })
 _TEXT["ru"].update({
+    "buy_with_stars": "Покупка: /buystars trade_pro",
+    "chain_label": "Сеть",
+    "dex_label": "DEX",
+    "price_usd_label": "Цена USD",
+    "change_24h_label": "Изменение за 24ч",
+    "liquidity_label": "Ликвидность USD",
+    "volume_label": "Объём за 24ч USD",
+    "scanner_note": "ℹ️ Данные сканера — рыночные данные, а не аудит контракта и не рекомендация покупать/продавать.",
+    "token_fallback": "ТОКЕН",
     "ai_explain": "🧠 Объяснение ИИ",
     "ai_explain_prompt": "Объясни пользователю по-русски, как работает SLH Trade, что сейчас доступно, что отключено и какие есть риски. Не давай рекомендаций покупать/продавать и не обещай прибыль.",
     "execution_connector": "Коннектор исполнения",
@@ -304,6 +349,15 @@ _TEXT["ru"].update({
     "not_verified": "не подтверждено",
 })
 _TEXT["pt"].update({
+    "buy_with_stars": "Compra: /buystars trade_pro",
+    "chain_label": "Rede",
+    "dex_label": "DEX",
+    "price_usd_label": "Preço USD",
+    "change_24h_label": "Variação 24h",
+    "liquidity_label": "Liquidez USD",
+    "volume_label": "Volume 24h USD",
+    "scanner_note": "ℹ️ Os dados do scanner são dados de mercado, não uma auditoria nem recomendação de compra/venda.",
+    "token_fallback": "TOKEN",
     "ai_explain": "🧠 Explicação por IA",
     "ai_explain_prompt": "Explique ao usuário em português como funciona o SLH Trade, o que está disponível agora, o que está desativado e os riscos. Não dê recomendação de compra/venda nem garantia de lucro.",
     "execution_connector": "Conector de execução",
