@@ -22,5 +22,9 @@
 - **BNB / SLH Live:** שער `BNB_DEPOSITS_OPEN` (כרגע `1` לפי החלטת הבעלים). קופת BSC `0x693d…1f02` מואצלת (EIP-7702) לחוזה שמעביר כל BNB נכנס ל-`0xd0a1…e3a9` — לבדוק לפני הפקדות לקוחות. `CREDITS_PER_BNB=1000` קבוע בקוד (לא תואם מחיר שוק).
 - **Stars:** 100⭐️ = 100 Credits (`core/stars_price_authority.py`).
 
+## Revenue Path
+- Mini App Stars checkout: authenticated `/api/v1/stars/invoice` → Telegram `openInvoice` → existing `successful_payment` fulfillment.
+- Browser-side Credits granting is not allowed; payment fulfillment remains server-authoritative.
+
 ## פתוח
 ראה `docs/EXECUTOR_BRIEF_2026-09-26.md`.
