@@ -526,6 +526,129 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
     return _fulfill(updated)
 
 
+def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
+    """Recover card orders even when the provider callback was delayed or lost.
+
+    LINK_CREATED orders are re-checked with PayPlus by payment_request_uid.
+    PAID/RECOVERABLE orders only retry fulfillment. No new charge is created.
+    """
+    if not _enabled() or not _configured():
+        return {"attempted": 0, "success": 0, "remaining": 0, "skipped": True}
+
+    db = state_manager.load_db()
+    orders = db.get("card_orders", {})
+    if not isinstance(orders, dict):
+        return {"attempted": 0, "success": 0, "remaining": 0}
+
+    now = time.time()
+    pending = []
+    for row in orders.values():
+        if not isinstance(row, dict):
+            continue
+        if uid is not None and str(row.get("uid")) != str(uid):
+            continue
+        status = str(row.get("status", ""))
+        if status not in {"LINK_CREATED", "PAID", "RECOVERABLE"}:
+            continue
+        if status == "LINK_CREATED":
+            try:
+                created_at = float(row.get("created_at", now) or now)
+            except (TypeError, ValueError):
+                created_at = now
+            if now - created_at > 48 * 3600:
+                continue
+        pending.append(dict(row))
+
+    attempted = success = 0
+    for order in pending[:max(0, int(limit))]:
+        attempted += 1
+        try:
+            current = order
+            if current.get("status") == "LINK_CREATED":
+                page_uid = str(current.get("page_request_uid") or "").strip()
+                if not page_uid:
+                    continue
+                verified = _post_payplus(
+                    "PaymentPages/ipn-full",
+                    {"payment_request_uid": page_uid},
+                )
+                summary = _find_tx_summary(verified)
+                if not summary.get("approved"):
+                    continue
+
+                amount = summary.get("amount")
+                expected_amount = _money(current.get("amount"))
+                if amount is not None and expected_amount is not None and amount != expected_amount:
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_AMOUNT_MISMATCH",
+                        updated_at=time.time(),
+                    )
+                    continue
+
+                currency = summary.get("currency")
+                if currency and currency != "ILS":
+                    _update_order(
+                        current["order_id"],
+                        status="RECOVERABLE",
+                        error="PAYPLUS_CURRENCY_MISMATCH",
+                        updated_at=time.time(),
+                    )
+                    continue
+
+                tx_uid = str(summary.get("transaction_uid") or "").strip()
+                if not tx_uid:
+                    continue
+
+                current = _update_order(
+                    current["order_id"],
+                    status="PAID",
+                    transaction_uid=tx_uid,
+                    provider_response=verified,
+                    updated_at=time.time(),
+                    error=None,
+                )
+
+            result = _fulfill(current)
+            if result.get("status") in {"fulfilled", "duplicate"}:
+                success += 1
+        except Exception as exc:
+            print("[CARD] automatic reconciliation error:", type(exc).__name__)
+
+    return {
+        "attempted": attempted,
+        "success": success,
+        "remaining": max(0, len(pending) - success),
+    }
+
+
+def start_card_recovery_loop(interval_seconds: int = 300):
+    """Run provider reconciliation + fulfillment recovery in the background."""
+    import threading
+
+    interval_seconds = max(60, int(interval_seconds))
+
+    def runner():
+        time.sleep(15)
+        while True:
+            try:
+                result = reconcile_card_orders(limit=20)
+                if result.get("attempted"):
+                    print("[CARD] automatic reconciliation:", result)
+            except Exception as exc:
+                print("[CARD] reconciliation loop error:", type(exc).__name__)
+            time.sleep(interval_seconds)
+
+    thread = threading.Thread(
+        target=runner,
+        daemon=True,
+        name="card-payment-recovery",
+    )
+    thread.start()
+    return thread
+
+
 def recover_card_orders(uid: str, limit: int = 10) -> dict:
     uid = str(uid)
     db = state_manager.load_db()
