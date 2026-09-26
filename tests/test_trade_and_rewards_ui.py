@@ -20,3 +20,10 @@ def test_trade_dashboard_button_is_localized():
     assert "def _trade_button_label" in src
     assert "get_lang(user_id)" in src
     assert 'callback_data="trade:home"' in src
+
+
+
+def test_owner_start_passes_user_id_to_dashboard_markup():
+    src = Path("handlers/onboarding_v2.py").read_text(encoding="utf-8")
+    assert "if is_owner:" in src
+    assert "markup = _dashboard_markup(user_id)" in src
