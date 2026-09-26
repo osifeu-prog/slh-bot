@@ -64,7 +64,7 @@ def scan(text: Any) -> dict[str, Any]:
             indicators.append(name)
 
     if any(phrase in lowered for phrase in SECRET_LANGUAGE):
-        indicators.append("credential_request_or_disclosure")
+        indicators.append("credential_language")
 
     if any(phrase in lowered for phrase in PROMPT_INJECTION):
         indicators.append("prompt_injection")
@@ -79,7 +79,7 @@ def scan(text: Any) -> dict[str, Any]:
     high = {
         "private_key", "jwt", "github_token", "telegram_bot_token",
         "bearer_token", "aws_access_key", "api_key_assignment",
-        "credential_request_or_disclosure", "credential_targeting",
+        "credential_targeting",
     }
 
     if any(item in high for item in indicators):
