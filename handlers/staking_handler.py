@@ -76,6 +76,8 @@ def register(bot):
             uid = str(msg.from_user.id)
             result = staking_service.stake_locked(uid, amount, lock_days=days, meta={"source": "telegram", "command": "stake_lock"})
             bot.reply_to(msg, f"{amount} credits הועברו לסטייקינג נעול\nתקופה: {days} ימים\nיתרה: {_fmt(result['credits'])}\nסטייק: {_fmt(result['staked'])}\nPosition: {result['position']['id']}")
+        except ValueError:
+            bot.reply_to(msg, "שימוש: /stake_lock <amount> <days>\n\n" + ACADEMY_NOTE)
         except Exception as e:
             bot.reply_to(msg, str(e))
 
