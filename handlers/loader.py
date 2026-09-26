@@ -197,4 +197,13 @@ def load_handlers(bot, context):
     except Exception as e:
         print("[FULFILLMENT] recovery skipped:", type(e).__name__)
 
+    try:
+        from core.card_payment_service import start_card_recovery_loop
+        start_card_recovery_loop()
+        print("[CARD] automatic payment recovery loop started")
+    except Exception as e:
+        print("[CARD] recovery loop skipped:", type(e).__name__)
+    except Exception as e:
+        print("[FULFILLMENT] recovery skipped:", type(e).__name__)
+
     print("✅ ALL HANDLERS READY")
