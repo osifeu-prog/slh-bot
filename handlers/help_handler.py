@@ -82,6 +82,13 @@ def register(bot):
 /migrate <legacy_bnb_wallet> – חיבור ארנק ישן
 /migrate_verify <wallet> <signature> – אימות בעלות
 
+📊 OWNER BUSINESS CONTROL
+/biz – תמונת עסק כללית
+/biz_users [days] – כניסות משתמשים
+/biz_revenue [days] – הכנסות מאומתות
+/biz_ai – מצב AI
+/biz_bots – מלאי bots
+
 🛠 TOOLS
 /miniapp – Mini App
 /dashboard – Dashboard
