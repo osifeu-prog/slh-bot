@@ -81,7 +81,6 @@ def create_invoice_link(req):
         "title": str(req["title"])[:32],
         "description": str(req["description"])[:255],
         "payload": str(req["payload"]),
-        "provider_token": "",
         "currency": TELEGRAM_STARS_CURRENCY,
         "prices": [{"label": str(req["title"])[:32], "amount": int(req["stars"])}],
     }
