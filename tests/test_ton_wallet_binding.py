@@ -31,6 +31,10 @@ def proof_digest(address_raw, domain, timestamp, payload):
 
 
 class TonWalletBindingTests(unittest.TestCase):
+    def test_default_challenge_ttl_is_15_minutes(self):
+        self.assertEqual(ton_wallet_binding.CHALLENGE_TTL_SECONDS, 900)
+        self.assertLessEqual(ton_wallet_binding.CHALLENGE_TTL_SECONDS, 900)
+
     def setUp(self):
         self.db = {}
         self.private_key = Ed25519PrivateKey.generate()
