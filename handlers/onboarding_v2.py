@@ -270,7 +270,20 @@ def register(bot, context=None):
                 system = build_snapshot()
                 db_stats = system.get("db", {})
                 revenue = system.get("revenue", {})
+                ton_system = system.get("ton", {})
+                bsc = system.get("bsc", {})
                 bridge = system.get("bridge", {})
+
+                try:
+                    from core.exchange_read_model import get_exchange_summary
+                    exchange = get_exchange_summary()
+                except Exception:
+                    exchange = {}
+
+                exchange_status = exchange.get("status", {}) if isinstance(exchange, dict) else {}
+                ticker = exchange.get("ticker", {}) if isinstance(exchange, dict) else {}
+                orderbook = exchange.get("orderbook", {}) if isinstance(exchange, dict) else {}
+
                 lines.extend(
                     [
                         "",
@@ -295,8 +308,33 @@ def register(bot, context=None):
                             f"Events: {revenue.get('events', 0)}"
                         ),
                         (
+                            f"   TON: {'OPEN' if ton_system.get('open') else 'CLOSED'} · "
+                            f"rate={ton_system.get('rate')} · "
+                            f"band={'OK' if ton_system.get('in_safety_band') else 'CHECK'}"
+                        ),
+                        (
+                            f"   BSC: {bsc.get('network', 'unknown')} · "
+                            f"chain={bsc.get('chain_id')} · "
+                            f"confirmations={bsc.get('confirmations')}"
+                        ),
+                        (
+                            f"   Exchange: {'OPEN' if exchange_status.get('open') else 'CLOSED'} · "
+                            f"orders={exchange_status.get('total_orders', 0)} · "
+                            f"trades={exchange_status.get('total_trades', 0)}"
+                        ),
+                        (
+                            f"   Market: bid={orderbook.get('best_bid') if orderbook.get('best_bid') is not None else '—'} · "
+                            f"ask={orderbook.get('best_ask') if orderbook.get('best_ask') is not None else '—'} · "
+                            f"last={ticker.get('last_price') if ticker.get('last_price') is not None else '—'}"
+                        ),
+                        (
                             f"   VIP active: {db_stats.get('vip_active', 0)} · "
-                            f"Bridge: {bridge.get('icon', '⚪️')} {bridge.get('status', 'unknown')}"
+                            f"VIP subscriptions: {db_stats.get('vip_subscriptions', 0)}"
+                        ),
+                        (
+                            f"   Bridge: {bridge.get('icon', '⚪️')} "
+                            f"{bridge.get('status', 'unknown')} "
+                            f"({bridge.get('age_seconds')}s)"
                         ),
                     ]
                 )
