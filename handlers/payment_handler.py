@@ -289,6 +289,148 @@ def register_payment_handlers(bot):
             bot.send_message(m.chat.id, "⚠️ Payment processing failed safely. Please contact /paysupport.")
 
 
+    @bot.message_handler(commands=['cardpay'])
+    def cardpay_command(m):
+        """Hosted card checkout for configured physical/hardware products only."""
+        from core import card_payment_service
+
+        parts = (m.text or "").split(maxsplit=1)
+        if len(parts) == 1:
+            try:
+                items = card_payment_service.get_card_items()
+            except Exception:
+                items = []
+            if not items:
+                bot.send_message(
+                    m.chat.id,
+                    "💳 סליקת כרטיסים אינה זמינה כרגע.\n"
+                    "המסלול מופעל רק למוצרים פיזיים שהוגדרו מראש לסליקה.",
+                )
+                return
+            markup = InlineKeyboardMarkup(row_width=1)
+            for item in items:
+                markup.add(
+                    InlineKeyboardButton(
+                        text=f"💳 {item['name']} — {item['price_ils']:.2f} ₪",
+                        callback_data=f"cardpay_{item['id']}",
+                    )
+                )
+            bot.send_message(
+                m.chat.id,
+                "💳 רכישה בכרטיס\n\n"
+                "האפשרות הזו מיועדת למוצרי חומרה/מוצרים פיזיים בלבד.",
+                reply_markup=markup,
+            )
+            return
+
+        item_id = parts[1].strip()
+        try:
+            result = card_payment_service.create_card_checkout(
+                uid=str(m.from_user.id),
+                item_id=item_id,
+            )
+            markup = InlineKeyboardMarkup(row_width=1)
+            markup.add(
+                InlineKeyboardButton(
+                    text="💳 המשך לתשלום מאובטח",
+                    url=result["payment_page_link"],
+                )
+            )
+            bot.send_message(
+                m.chat.id,
+                "✅ הזמנת כרטיס נפתחה.\n"
+                f"מוצר: {result['item_name']}\n"
+                f"סכום: {result['amount']:.2f} ₪\n"
+                "הזמנה תסופק רק לאחר אישור שרת של ספק התשלום.",
+                reply_markup=markup,
+            )
+        except ValueError as exc:
+            code = str(exc)
+            messages = {
+                "CARD_ONLY_PHYSICAL_PRODUCTS": "⛔ כרטיסים זמינים רק למוצרים פיזיים/חומרה. מוצרים דיגיטליים ו-Credits נרכשים ב-Telegram Stars.",
+                "CARD_ITEM_PRICE_NOT_CONFIGURED": "⏳ המחיר של המוצר הזה לסליקת כרטיסים עדיין לא הוגדר.",
+                "INVALID_USER_ID": "❌ מזהה משתמש לא תקין.",
+                "ITEM_NOT_FOUND": "❌ המוצר לא נמצא.",
+            }
+            bot.send_message(m.chat.id, messages.get(code, "⚠️ לא ניתן לפתוח כרגע תשלום בכרטיס."))
+        except RuntimeError as exc:
+            code = str(exc)
+            if code == "CARD_PAYMENTS_CLOSED":
+                msg = "⛔ סליקת כרטיסים סגורה כרגע."
+            elif code == "CARD_PROVIDER_NOT_CONFIGURED":
+                msg = "⏳ ספק הסליקה עדיין לא הוגדר בשרת."
+            else:
+                msg = "⚠️ סליקת כרטיסים אינה זמינה כרגע."
+            bot.send_message(m.chat.id, msg)
+        except Exception as exc:
+            print(f"[CARD] checkout error: {type(exc).__name__}")
+            bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע תשלום בכרטיס.")
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("cardpay_"))
+    def cardpay_callback(call):
+        from core import card_payment_service
+
+        item_id = call.data[len("cardpay_"):].strip()
+        if not item_id:
+            bot.answer_callback_query(call.id, "מוצר לא תקין.")
+            return
+        try:
+            result = card_payment_service.create_card_checkout(
+                uid=str(call.from_user.id),
+                item_id=item_id,
+            )
+            markup = InlineKeyboardMarkup(row_width=1)
+            markup.add(
+                InlineKeyboardButton(
+                    text="💳 המשך לתשלום מאובטח",
+                    url=result["payment_page_link"],
+                )
+            )
+            bot.answer_callback_query(call.id)
+            bot.send_message(
+                call.message.chat.id,
+                "💳 תשלום בכרטיס מוכן.\n"
+                f"{result['item_name']} — {result['amount']:.2f} ₪",
+                reply_markup=markup,
+            )
+        except Exception as exc:
+            print(f"[CARD] callback error: {type(exc).__name__}")
+            bot.answer_callback_query(call.id, "לא ניתן לפתוח תשלום כרגע.", show_alert=True)
+
+    @bot.message_handler(commands=['card_orders'])
+    def card_orders(m):
+        from core import card_payment_service
+
+        try:
+            recovery = card_payment_service.recover_card_orders(
+                uid=str(m.from_user.id),
+                limit=10,
+            )
+            db = state_manager.load_db()
+            orders = db.get("card_orders", {})
+            mine = [
+                row for row in orders.values()
+                if isinstance(row, dict) and str(row.get("uid")) == str(m.from_user.id)
+            ] if isinstance(orders, dict) else []
+            recent = mine[-10:]
+            if not recent:
+                bot.send_message(m.chat.id, "📦 אין הזמנות כרטיס רשומות כרגע.")
+                return
+
+            lines = [
+                "💳 הזמנות כרטיס אחרונות:",
+                f"🔄 ניסיונות אספקה שבוצעו: {recovery.get('attempted', 0)}",
+            ]
+            for row in recent:
+                lines.append(
+                    f"• {row.get('item_name', row.get('item_id', 'item'))} — "
+                    f"{row.get('amount', 0):.2f} ₪ — {row.get('status', '?')}"
+                )
+            bot.send_message(m.chat.id, "\n".join(lines))
+        except Exception as exc:
+            print(f"[CARD] order status error: {type(exc).__name__}")
+            bot.send_message(m.chat.id, "⚠️ לא ניתן לטעון כרגע את הזמנות הכרטיס.")
+
     @bot.message_handler(commands=['my_orders'])
     def my_orders(m):
         uid = str(m.from_user.id)
