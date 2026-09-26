@@ -36,3 +36,11 @@ def test_control_center_prefers_railway_commit_and_runtime_llm_state():
     assert "git rev-parse" in src
     assert "llm_state" in src
     assert "providers" in src
+
+
+
+def test_walletconnect_config_route_is_public_bsc_only():
+    src = Path("webapp.py").read_text(encoding="utf-8")
+    assert '@app.route("/api/walletconnect/config")' in src
+    assert '"chain_id": 56' in src
+    assert '"project_id": project_id or None' in src
