@@ -326,8 +326,7 @@ def register(bot, context=None):
             "/gifts — מתנות, Rewards ו-Airdrop\n"
             "/gift <uid> <amount> — שליחת מתנת Credits\n"
             "/stake <amount> — Staking פנימי\n"
-            "/dashboard — לוח אישי
-"
+            "/dashboard — לוח אישי\n"
             "/trade — SLH Trade Terminal"
         )
 
