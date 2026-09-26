@@ -1,9 +1,15 @@
 def test_declared_bot_and_heartbeat(tmp_path, monkeypatch):
+    import state_manager
     import core.bot_registry as registry
 
     db_path = tmp_path / "db.json"
-    db_path.write_text('{"users":{}}', encoding="utf-8")
-    monkeypatch.setattr("state_manager.DB_PATH", db_path)
+    db_path.write_text('{"users":{"1":{}}}', encoding="utf-8")
+    monkeypatch.setattr(state_manager, "DB_FILE", str(db_path))
+    monkeypatch.setattr(
+        state_manager,
+        "_LOCK_PATH",
+        str(db_path) + ".lock",
+    )
 
     row = registry.register_declared_bot(
         "@ExampleTradeBot",
