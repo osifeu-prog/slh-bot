@@ -294,7 +294,7 @@ def register(bot, context=None):
                 )
                 if part
             )
-            markup = _dashboard_markup()
+            markup = _dashboard_markup(user_id)
             bot.send_message(
                 m.chat.id,
                 safe_clip(combined_text),
