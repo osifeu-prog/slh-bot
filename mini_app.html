@@ -330,7 +330,7 @@ async function initTonConnect(){
         _tonSignPending=true;
         try{
           const account=wallet.account||{};
-          const message=_tonChallenge.sign_data_message||('SLH OS wallet verification\\nChallenge: '+_tonChallenge.payload);
+          const message=_tonChallenge.sign_data_message||('SLH OS wallet verification\nChallenge: '+_tonChallenge.payload);
           const signed=await _tonConnectUI.signData({
             type:'text',
             text:message,
