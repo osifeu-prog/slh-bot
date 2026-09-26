@@ -73,4 +73,26 @@ def faq_available() -> bool:
     return FAQ_PATH.is_file()
 
 
-__all__ = ["FAQ_PATH", "load_faq", "relevant_faq", "faq_available"]
+__all__ = ["FAQ_PATH", "load_faq", "relevant_faq", "telegram_faq", "faq_available"]
+
+
+
+def telegram_faq() -> str:
+    """Return a compact FAQ suitable for one Telegram message."""
+    text = load_faq()
+    if not text:
+        return "FAQ לא זמין כרגע."
+
+    preferred = {
+        "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        "11", "12", "13", "14", "15", "18", "19",
+    }
+    sections = re.split(r"(?=^## \d+\. )", text, flags=re.MULTILINE)
+    selected = []
+    for section in sections:
+        match = re.match(r"^## (\d+)\. ", section.strip())
+        if match and match.group(1) in preferred:
+            selected.append(section.strip())
+
+    result = "# SLH OS — FAQ\n\n" + "\n\n".join(selected)
+    return result[:3800] + ("\n\n...[המשך בידע הקנוני]" if len(result) > 3800 else "")
