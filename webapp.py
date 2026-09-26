@@ -145,6 +145,16 @@ def health():
     return "OK", 200
 
 
+@app.route("/tonconnect-manifest.json")
+def tonconnect_manifest():
+    """Public TON Connect manifest; proof domain remains the canonical SLH site."""
+    return jsonify({
+        "url": "https://slh-nft.com",
+        "name": "SLH Ecosystem",
+        "iconUrl": "https://slh-nft.com/icon-192.png",
+    }), 200
+
+
 @app.route("/market")
 def market():
     return jsonify({
