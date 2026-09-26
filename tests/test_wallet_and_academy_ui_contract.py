@@ -24,6 +24,13 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("SLH_AIR_bot", source)
 
+    def test_ton_connect_surfaces_proof_and_connection_errors(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("proofItem?.error", source)
+        self.assertIn("tonProof error", source)
+        self.assertIn("connect error", source)
+        self.assertIn("TON_CONNECT_ERROR", source)
+
 
 if __name__ == "__main__":
     unittest.main()
