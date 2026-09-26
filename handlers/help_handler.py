@@ -25,6 +25,8 @@ def register(bot):
 /history – היסטוריית עסקאות
 /paysupport – תמיכה בתשלום
 /my_orders – הזמנות ותיקון אספקה ללא חיוב נוסף
+/cardpay – סליקת כרטיסים למוצרים פיזיים שהוגדרו מראש
+/card_orders – סטטוס/שחזור הזמנות כרטיס ללא חיוב נוסף
 
 👛 WALLET & MONEY
 /wallet – ארנק מלא
