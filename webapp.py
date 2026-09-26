@@ -240,6 +240,94 @@ def investor_me():
 
 
 
+@app.route("/api/v1/card/store", methods=["GET"])
+def card_store_api():
+    """Authenticated catalog of configured physical products payable by card."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core import card_payment_service
+    status = card_payment_service.card_payments_status()
+    items = card_payment_service.get_card_items() if status["configured"] else []
+    return _no_store(jsonify({
+        "enabled": bool(status["enabled"] and status["configured"]),
+        "provider": "payplus",
+        "currency": "ILS",
+        "items": items,
+    })), 200
+
+
+@app.route("/api/card-pay/callback", methods=["POST"])
+def card_pay_callback():
+    """PayPlus server callback; fulfillment occurs only after callback validation + server-side verification."""
+    from core import card_payment_service
+
+    if not request.is_json:
+        return jsonify({"error": "PAYPLUS_JSON_REQUIRED"}), 415
+
+    body = request.get_json(silent=True) or {}
+    supplied_hash = request.headers.get("hash", "")
+    user_agent = request.headers.get("user-agent", "")
+    try:
+        result = card_payment_service.handle_payplus_callback(
+            body=body,
+            supplied_hash=supplied_hash,
+            user_agent=user_agent,
+        )
+        return jsonify({"ok": True, **result}), 200
+    except ValueError as exc:
+        print("[CARD] callback rejected:", type(exc).__name__)
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    except RuntimeError as exc:
+        print("[CARD] callback unavailable:", type(exc).__name__)
+        return jsonify({"ok": False, "error": str(exc)}), 503
+    except Exception as exc:
+        print("[CARD] callback error:", type(exc).__name__)
+        return jsonify({"ok": False, "error": "CARD_CALLBACK_FAILED"}), 500
+
+
+@app.route("/card-pay/success")
+def card_pay_success():
+    order_id = str(request.args.get("order_id", "")).strip()
+    return (
+        "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
+        "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
+        "<h2>✅ התשלום הועבר לבדיקה</h2>"
+        "<p>ההזמנה תסופק רק לאחר אישור שרת של ספק הסליקה.</p>"
+        "<p>אין צורך לשלם שוב.</p>"
+        + (f"<p>Order: <code>{order_id}</code></p>" if order_id else "")
+        + "</body></html>",
+        200,
+        {"Content-Type": "text/html; charset=utf-8"},
+    )
+
+
+@app.route("/card-pay/failure")
+def card_pay_failure():
+    return (
+        "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
+        "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
+        "<h2>❌ התשלום לא אושר</h2>"
+        "<p>לא בוצעה אספקה של המוצר.</p>"
+        "</body></html>",
+        200,
+        {"Content-Type": "text/html; charset=utf-8"},
+    )
+
+
+@app.route("/card-pay/cancel")
+def card_pay_cancel():
+    return (
+        "<!doctype html><meta charset='utf-8'><title>SLH Payment</title>"
+        "<body style='font-family:system-ui;direction:rtl;padding:32px'>"
+        "<h2>↩️ התשלום בוטל</h2>"
+        "<p>לא נוצר חיוב נוסף.</p>"
+        "</body></html>",
+        200,
+        {"Content-Type": "text/html; charset=utf-8"},
+    )
+
+
 @app.route("/api/v1/store", methods=["GET"])
 def stars_store_api():
     """Authenticated catalog of products purchasable through Telegram Stars."""
