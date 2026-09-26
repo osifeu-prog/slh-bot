@@ -146,7 +146,7 @@ def issue_ton_challenge(uid, domain: str | None = None, ttl_seconds: int = CHALL
         raise ValueError("INVALID_CHALLENGE_TTL")
 
     payload = "slh-ton-" + secrets.token_urlsafe(32)
-    sign_data_message = "SLH OS wallet verification\\nChallenge: " + payload
+    sign_data_message = "SLH OS wallet verification\nChallenge: " + payload
     expires_at = _now() + timedelta(seconds=ttl_seconds)
 
     def mutate(db):
