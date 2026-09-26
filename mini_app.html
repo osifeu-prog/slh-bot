@@ -20,9 +20,9 @@ body{padding-top:max(10px,env(safe-area-inset-top,0px));padding-bottom:calc(92px
 }
 .brand{min-width:0}.brand>div:last-child{min-width:0}.subtitle{line-height:1.35}
 .nav{
-  position:sticky;top:66px;z-index:25;display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;
-  padding:6px 2px 10px;margin:0 -2px 12px;scroll-snap-type:x proximity;
-  scrollbar-width:none;background:linear-gradient(180deg,rgba(7,10,18,.92),rgba(7,10,18,.72),transparent)
+  display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;
+  padding:4px 2px 10px;margin:0 -2px 12px;scroll-snap-type:x proximity;
+  scrollbar-width:none
 }
 .nav::-webkit-scrollbar{display:none}
 .nav button{
@@ -31,7 +31,7 @@ body{padding-top:max(10px,env(safe-area-inset-top,0px));padding-bottom:calc(92px
 }
 .nav button:active,.action:active,.refresh:active,.ghost:active{transform:scale(.97)}
 .nav button.active{box-shadow:0 6px 20px rgba(124,92,255,.18)}
-.screen.active{animation:uxFade .2s var(--ux-ease)}
+.screen.active{animation:none}
 @keyframes uxFade{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:none}}
 .hero{box-shadow:var(--ux-shadow);position:relative;overflow:hidden}
 .hero:after{
@@ -82,7 +82,7 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
   .ux-summary .ux-tile:first-child{grid-column:1/-1}
   .ux-wallet-steps{grid-template-columns:1fr}
   .actions{grid-template-columns:1fr}
-  .nav{top:64px}
+  .nav{margin-bottom:8px}
 }
 @media(prefers-reduced-motion:reduce){
   .screen.active{animation:none}.action,.nav button{transition:none}
@@ -100,7 +100,7 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 <div id="slhUxBar" class="ux-summary" aria-label="SLH מצב מהיר">
   <div class="ux-tile"><b id="uxAccountName">SLH OS</b><span id="uxAccountMeta">מצב חשבון</span></div>
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
-  <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Crypto</span></div>
+  <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
 <div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button></div>
 <main>
@@ -152,32 +152,11 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 <nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet')">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button></nav><div id="toast" class="toast"></div>
 <script>
 (function(){
-  function box(h,b,bg,pos){
-    try{
-      var d=document.createElement("div");
-      d.style.cssText="position:fixed;"+pos+":0;left:0;right:0;background:"+bg+";color:#fff;padding:12px;font:11px monospace;direction:ltr;text-align:left;z-index:99999;white-space:pre-wrap;max-height:60vh;overflow:auto";
-      d.dataset.slshDiag=h;
-      d.textContent=h+"\n"+b;
-      (document.body||document.documentElement).appendChild(d);
-    }catch(e){}
-  }
-  window.onerror=function(m,src,ln,col){
-    box("JS ERROR","msg="+m+"\nsrc="+src+"\nline="+ln+"\ncol="+col,"#7f1d1d","top");
-    return false;
-  };
-  window.addEventListener("unhandledrejection",function(e){
-    var m=e&&e.reason?(e.reason.stack||e.reason.message||String(e.reason)):"unhandled rejection";
-    box("PROMISE REJECT",m,"#7c2d12","bottom");
+  window.addEventListener("error",function(e){
+    console.error("[SLH JS ERROR]",e.message,e.filename,e.lineno,e.colno);
   });
-  window.addEventListener("DOMContentLoaded",function(){
-    setTimeout(function(){
-      var n=document.getElementById("name");
-      var tg0=window.Telegram&&window.Telegram.WebApp;
-      var id=tg0&&tg0.initData||"";
-      if(n && n.textContent.indexOf("מתחבר")>=0 && id){
-        box("STUCK","loadMe() never finished.\ninitData length: "+id.length,"#7c2d12","bottom");
-      }
-    },3000);
+  window.addEventListener("unhandledrejection",function(e){
+    console.error("[SLH PROMISE REJECT]",e.reason);
   });
 })();
 </script>
@@ -187,7 +166,43 @@ function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;docum
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
 function toast(x){const e=$("toast");e.textContent=x;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
-function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));const s=$(id);if(s)s.classList.add('active');document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai']};(map[id]||[]).forEach(x=>$(x)?.classList.add('active'));window.scrollTo({top:0,behavior:'smooth'});if(id==='exchange')loadExchange();if(id==='market'){loadStarsStore();loadCardStore()}if(id==='growth'){loadGrowthHub();trackGrowth('home_view','growth',{screen:'growth'})}}
+const __slhNavStack=['home'];let __slhShowing='home';let __slhNavReady=false;
+function __slhSetBack(){
+  try{
+    if(tg&&tg.BackButton){
+      if(__slhNavStack.length>1)tg.BackButton.show();else tg.BackButton.hide();
+    }
+  }catch(_e){}
+}
+function __slhRender(id){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  const scr=$(id);if(scr)scr.classList.add('active');
+  document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
+  const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai']};
+  (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
+  window.scrollTo(0,0);
+  __slhShowing=id;
+  __slhSetBack();
+  if(id==='exchange')loadExchange();
+  if(id==='market'){loadStarsStore();loadCardStore()}
+  if(id==='growth'){loadGrowthHub();trackGrowth('home_view','growth',{screen:'growth'})}
+}
+function show(id,opts){
+  if(!$(id))return;
+  opts=opts||{};
+  const current=__slhShowing||'home';
+  if(!__slhNavReady){__slhNavReady=true;__slhNavStack=['home'];}
+  if(!opts.fromBack&&id!==current){
+    if(id==='home')__slhNavStack=['home'];
+    else if(__slhNavStack[__slhNavStack.length-1]!==id)__slhNavStack.push(id);
+  }
+  __slhRender(id);
+}
+function __slhGoBack(){
+  if(__slhNavStack.length<=1){try{tg?.close?.()}catch(_e){};return}
+  __slhNavStack.pop();
+  __slhRender(__slhNavStack[__slhNavStack.length-1]);
+}
 function sendCommand(cmd,label){try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}const c=String(cmd||'').trim();if(c.startsWith('/buystars ')){return buyStars('store_item',c.slice(10).trim())}if(c==='/pay'){return chooseCreditPack()}if(tg&&typeof tg.sendData==='function'){tg.sendData(JSON.stringify({cmd:c}));toast('נשלח לבוט');return}navigator.clipboard?.writeText(c);toast('הפקודה הועתקה')}catch(e){toast('שליחה נכשלה')}}
 async function starsPost(body){const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),10000);try{const r=await fetch('/api/v1/stars/invoice',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify(body),signal:ctl.signal});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}finally{clearTimeout(timer)}}
 async function buyStars(kind,id){trackGrowth('purchase_intent','market',{rail:'stars',item_id:id});try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}toast('⏳ פותח תשלום…');const d=await starsPost({kind:String(kind||''),id:String(id||'')});if(!d.link)throw Error('NO_LINK');if(tg&&typeof tg.openInvoice==='function'){tg.openInvoice(d.link,function(status){if(status==='paid'){try{tg.HapticFeedback?.notificationOccurred('success')}catch(_e){}toast('✅ התשלום התקבל');setTimeout(()=>loadMe(),1200)}else if(status==='failed'){toast('❌ התשלום נכשל. לא חויבת.')}else if(status==='cancelled'){toast('התשלום בוטל')}});return}if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink(d.link);return}window.location.href=d.link}catch(e){console.log('buyStars',e);toast('❌ לא ניתן לפתוח תשלום: '+(e.message||e))}}
@@ -944,7 +959,7 @@ html[data-text="xl"] .app{zoom:1.22}
   if(W&&ok('7.0')&&W.SettingsButton){try{W.SettingsButton.show();W.SettingsButton.onClick(open)}catch(_e){}}
   if(W&&ok('6.1')&&typeof W.onEvent==='function'){try{W.onEvent('themeChanged',function(){if(pref.skin==='tg')applyTg();chrome()})}catch(_e){}}
   document.addEventListener('click',function(e){if(pref.haptics!=='on'||!W||!W.HapticFeedback||!ok('6.1'))return;if(e.target.closest('button,.action,a'))try{W.HapticFeedback.impactOccurred('light')}catch(_e){}},true);
-  if(typeof window.show==='function'&&W&&ok('6.1')&&W.BackButton){var base=window.show;window.show=function(id){base.apply(this,arguments);try{if(id==='home')W.BackButton.hide();else W.BackButton.show()}catch(_e){}};try{W.BackButton.onClick(function(){if(sheet.classList.contains('on')){close();return}window.show('home')})}catch(_e){}}
+  if(W&&ok('6.1')&&W.BackButton){try{W.BackButton.onClick(function(){if(sheet.classList.contains('on')){close();return}if(typeof window.__slhGoBack==='function')window.__slhGoBack();else W.close?.()})}catch(_e){}}
   load();
 })();
 </script>
