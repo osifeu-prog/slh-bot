@@ -61,6 +61,7 @@ class StarsInvoiceTest(unittest.TestCase):
         body = post.call_args.kwargs["json"]
         self.assertEqual(body["currency"], "XTR")
         self.assertEqual(body["prices"][0]["amount"], 100)
+        self.assertNotIn("provider_token", body)
         self.assertNotIn("subscription_period", body)
 
     def test_create_link_includes_subscription_period_for_vip(self):
