@@ -10,6 +10,7 @@ def load_handlers(bot, context):
         ("market", "handlers.market_handler"),
         ("monetization", "handlers.monetization_handler"),
         ("business_control", "handlers.business_control_handler"),
+        ("trade_terminal", "handlers.trade_terminal_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
@@ -59,7 +60,6 @@ def load_handlers(bot, context):
         ("agent_submission_guard", "handlers.agent_submission_guard"),
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
-        # KILLED_natural_chat
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
         ("unified_system", "handlers.unified_system_handler"),
@@ -181,13 +181,8 @@ def load_handlers(bot, context):
         print("💬 natural chat loaded")
     except Exception as e:
         print("natural chat skipped:", e)
-    # Best-effort fulfillment recovery: retries already-paid orders only.
-    # It never creates a charge and never handles blockchain deposits.
     try:
-        from store.fulfillment_recovery import (
-            recover_paid_orders,
-            reconcile_telegram_stars,
-        )
+        from store.fulfillment_recovery import recover_paid_orders, reconcile_telegram_stars
         stars = reconcile_telegram_stars()
         if stars.get("attempted"):
             print("[STARS] startup reconciliation:", stars)
