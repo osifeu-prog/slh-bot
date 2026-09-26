@@ -305,14 +305,26 @@ async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
   _tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl:'https://slh-nft.com/tonconnect-manifest.json',
+    manifestUrl:'https://slh-cloud-bot-production.up.railway.app/tonconnect-manifest.json',
     buttonRootId:'tonConnectButton'
   });
   _tonConnectUI.onStatusChange(async wallet=>{
-    if(!wallet) return;
+    if(!wallet){
+      setText('tonBindingStatus','⚪️ TON לא מחובר');
+      return;
+    }
     const proofItem=wallet.connectItems?.tonProof;
+    if(proofItem?.error){
+      const name=proofItem.error.name||'TON_PROOF_ERROR';
+      const message=proofItem.error.message||'Wallet did not return a TON Proof';
+      console.error('[TON] tonProof error',name,message);
+      setText('tonBindingStatus','❌ Proof error: '+name);
+      toast('❌ TON Proof: '+message);
+      return;
+    }
     if(!proofItem || !proofItem.proof){
-      setText('tonBindingStatus','⚠️ מחובר, ממתין ל-Proof');
+      console.warn('[TON] wallet connected without tonProof',wallet.walletInfo?.name||'unknown');
+      setText('tonBindingStatus','⚠️ מחובר, הארנק לא החזיר Proof');
       return;
     }
     if(!_tonChallenge){setText('tonBindingStatus','⚠️ חסר challenge');return}
@@ -335,6 +347,12 @@ async function initTonConnect(){
       setText('tonBindingStatus','❌ Proof נדחה');
       toast('❌ TON: '+(e.message||e));
     }
+  }, error=>{
+    const name=error?.name||'TON_CONNECT_ERROR';
+    const message=error?.message||String(error||'Unknown TON Connect error');
+    console.error('[TON] connect error',name,message);
+    setText('tonBindingStatus','❌ Connect error: '+name);
+    toast('❌ TON Connect: '+message);
   });
   return _tonConnectUI;
 }
