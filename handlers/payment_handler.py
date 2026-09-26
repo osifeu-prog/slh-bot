@@ -310,7 +310,7 @@ def register_payment_handlers(bot):
 
             if pending:
                 # Retry fulfillment only; no new payment is created.
-                recovery = recover_paid_orders(limit=min(len(pending), 10))
+                recovery = recover_paid_orders(limit=min(len(pending), 10), uid=uid)
                 remaining = len([
                     row for row in (state_manager.load_db().get("star_item_orders", {}) or {}).values()
                     if isinstance(row, dict)
