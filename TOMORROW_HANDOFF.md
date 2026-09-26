@@ -1,3 +1,7 @@
+> ⚠️ **SUPERSEDED — 2026-09-26.** קובץ היסטורי. מקור האמת הנוכחי: `docs/CURRENT_STATE.md`.
+> Production = Railway project `slh-cloud-bot` / service `slh-cloud-bot` (`bot_gateway.py`).
+> `endearing-amazement/web` (`web-production-22f28`) הוא LEGACY — לא production.
+
 # SLH OS — TOMORROW HANDOFF
 Date: 2026-07-27
 
