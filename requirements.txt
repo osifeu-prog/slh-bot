@@ -10,3 +10,4 @@ web3==7.16.0
 Pillow
 hdate
 cryptography==50.0.1
+requests>=2.32.0
