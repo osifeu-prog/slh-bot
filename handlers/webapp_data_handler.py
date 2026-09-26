@@ -7,7 +7,7 @@ import json
 from decimal import Decimal
 import state_manager
 
-ALLOWED_COMMANDS = {"/wallet","/pay","/shop","/orders","/courses","/academy","/share","/staking","/positions","/buy","/buystars","/vip","/order_esp32","/buy_shop","/ask"}
+ALLOWED_COMMANDS = {"/wallet","/pay","/shop","/orders","/courses","/academy","/share","/staking","/positions","/buy","/buystars","/vip","/order_esp32","/buy_shop","/ask","/trade"}
 
 
 def _payload(raw):
