@@ -144,6 +144,12 @@ jobs:
           assert 'def is_dangerous(cmd):' in policy
           print("Direct token balance mutation guard: OK")
           PY
+      - name: Verify SLH Trust Layer
+        run: |
+          python tools/test_trust_layer.py
+          python tools/test_trust_router.py
+          python tools/test_action_trust.py
+          echo "SLH Trust Layer contracts: OK"
       - name: Verify multi-bot Telegram token control
         run: |
           python -m unittest tests.test_telegram_token_registry
