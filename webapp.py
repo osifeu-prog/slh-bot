@@ -140,6 +140,24 @@ def require_self(uid):
     return None
 
 
+@app.route("/api/v1/stars/invoice", methods=["POST"])
+def stars_invoice():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.stars_invoice import build_invoice_request, create_invoice_link
+        invoice = build_invoice_request(uid, payload.get("kind"), payload.get("id"))
+        return _no_store(jsonify({"link": create_invoice_link(invoice)})), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "INVOICE_FAILED"}), 502
+
+
 @app.route("/health")
 def health():
     return "OK", 200
