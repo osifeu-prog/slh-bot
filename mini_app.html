@@ -194,6 +194,8 @@ async function loadWalletBindings(){
     $('tonBindingStatus')?.classList.toggle('ok', !!tb);
     $('tonBindingStatus')?.classList.toggle('pending', !tb);
     setText('tonBindingAddress', tb ? esc(tb.address) : 'אין ארנק TON מאומת');
+    // Keep the wallet summary in sync with the authoritative TON binding endpoint.
+    setText('ton', tb ? esc(tb.address) : 'לא מקושר');
     if($('tonDepositInfo')){
       if(!ton.deposits_open){
         $('tonDepositInfo').innerHTML='<span class="muted">⛔ הפקדות TON סגורות כרגע.</span>';
