@@ -294,8 +294,12 @@ def register_payment_handlers(bot):
         uid = str(m.from_user.id)
         try:
             import state_manager
-            from store.fulfillment_recovery import recover_paid_orders
+            from store.fulfillment_recovery import (
+                recover_paid_orders,
+                reconcile_telegram_stars,
+            )
 
+            reconcile_telegram_stars(uid=uid)
             db = state_manager.load_db()
             orders = db.get("star_item_orders", {})
             mine = [
