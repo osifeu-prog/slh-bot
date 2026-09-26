@@ -86,3 +86,29 @@ def recover_paid_orders(limit: int = MAX_ATTEMPTS) -> dict:
         "failed": failed,
         "details": details,
     }
+
+
+def start_recovery_loop(interval_seconds: int = 300) -> None:
+    """Start a single background retry loop for already-paid fulfillments."""
+    import threading
+    import time
+
+    if getattr(start_recovery_loop, "_started", False):
+        return
+    start_recovery_loop._started = True
+
+    def worker():
+        while True:
+            try:
+                result = recover_paid_orders()
+                if result.get("attempted"):
+                    print("[FULFILLMENT] periodic recovery:", result)
+            except Exception as exc:
+                print("[FULFILLMENT] periodic recovery error:", type(exc).__name__)
+            time.sleep(max(60, int(interval_seconds)))
+
+    threading.Thread(
+        target=worker,
+        name="slh-fulfillment-recovery",
+        daemon=True,
+    ).start()
