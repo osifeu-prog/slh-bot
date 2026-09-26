@@ -402,7 +402,7 @@ def register_payment_handlers(bot):
         from core import card_payment_service
 
         try:
-            recovery = card_payment_service.recover_card_orders(
+            recovery = card_payment_service.reconcile_card_orders(
                 uid=str(m.from_user.id),
                 limit=10,
             )
