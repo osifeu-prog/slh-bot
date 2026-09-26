@@ -168,39 +168,44 @@ def _money(value: Any) -> Decimal | None:
 
 
 def _find_tx_summary(data: dict) -> dict:
-    """Extract a conservative transaction summary from PayPlus API variants."""
-    statuses = set()
-    approved_flags = []
-    candidates = []
-    for row in _all_dicts(data):
-        for key in ("status", "transaction_status", "payment_status", "state", "status_description"):
-            value = row.get(key)
-            if value not in (None, ""):
-                statuses.add(str(value).strip().lower())
-        for key in ("approved", "success", "paid"):
-            if isinstance(row.get(key), bool):
-                approved_flags.append(row[key])
-        uid = row.get("transaction_uid") or row.get("transactionUid") or row.get("uid")
-        amount = row.get("amount") or row.get("transaction_amount") or row.get("total_amount")
-        currency = row.get("currency_code") or row.get("currency")
-        if uid or amount or currency:
-            candidates.append({
-                "transaction_uid": str(uid).strip() if uid else None,
-                "amount": _money(amount),
-                "currency": str(currency).strip().upper() if currency else None,
-            })
-
+    """Extract only transaction-level approval data from PayPlus API variants."""
     success_words = {
         "success", "successful", "approved", "approve", "paid", "completed",
         "complete", "succeeded", "ok", "true",
     }
-    successful_status = any(s in success_words for s in statuses)
-    approved = successful_status or any(approved_flags)
-    tx = next((c for c in candidates if c["transaction_uid"]), None)
-    if tx is None and candidates:
-        tx = candidates[0]
+    candidates = []
+    statuses = set()
+
+    for row in _all_dicts(data):
+        tx_uid = row.get("transaction_uid") or row.get("transactionUid")
+        amount = row.get("amount") or row.get("transaction_amount") or row.get("total_amount")
+        currency = row.get("currency_code") or row.get("currency")
+        approved_flags = [
+            row.get(key) for key in ("approved", "success", "paid")
+            if isinstance(row.get(key), bool)
+        ]
+        row_statuses = {
+            str(row.get(key)).strip().lower()
+            for key in ("status", "transaction_status", "payment_status", "state")
+            if row.get(key) not in (None, "")
+        }
+        if not (tx_uid or amount or currency):
+            continue
+
+        statuses.update(row_statuses)
+        candidates.append({
+            "transaction_uid": str(tx_uid).strip() if tx_uid else None,
+            "amount": _money(amount),
+            "currency": str(currency).strip().upper() if currency else None,
+            "approved": any(approved_flags) or any(s in success_words for s in row_statuses),
+        })
+
+    tx = next((c for c in candidates if c["transaction_uid"] and c["approved"]), None)
+    if tx is None:
+        tx = next((c for c in candidates if c["transaction_uid"]), None)
+
     return {
-        "approved": bool(approved),
+        "approved": bool(tx and tx.get("approved")),
         "statuses": sorted(statuses),
         "transaction_uid": (tx or {}).get("transaction_uid"),
         "amount": (tx or {}).get("amount"),
@@ -416,11 +421,33 @@ def _fulfill(order: dict) -> dict:
     if order.get("status") == "FULFILLED":
         return {"status": "duplicate", "order": order}
 
+    def claim(db):
+        current = db.setdefault("card_orders", {}).get(order_id)
+        if not current:
+            raise KeyError("CARD_ORDER_NOT_FOUND")
+        if current.get("status") == "FULFILLED":
+            return dict(current), "DUPLICATE"
+        if current.get("status") == "FULFILLING":
+            started = float(current.get("fulfillment_started_at", 0) or 0)
+            if started and time.time() - started < 15 * 60:
+                return dict(current), "IN_PROGRESS"
+        current["status"] = "FULFILLING"
+        current["fulfillment_started_at"] = time.time()
+        current["updated_at"] = time.time()
+        current["error"] = None
+        return dict(current), "CLAIMED"
+
+    claimed, claim_status = state_manager.atomic_update(claim)
+    if claim_status == "DUPLICATE":
+        return {"status": "duplicate", "order": claimed}
+    if claim_status == "IN_PROGRESS":
+        return {"status": "in_progress", "order": claimed}
+
+    order = claimed
     item = load_items().get(str(order["item_id"]))
     if not isinstance(item, dict):
         raise ValueError("ITEM_NOT_FOUND")
 
-    _update_order(order_id, status="FULFILLING", updated_at=time.time(), error=None)
     try:
         fulfillment = apply_grant(
             str(order["uid"]),
@@ -462,6 +489,7 @@ def _fulfill(order: dict) -> dict:
             order_id,
             status="RECOVERABLE",
             error=type(exc).__name__,
+            fulfillment_started_at=None,
             updated_at=time.time(),
         )
         _notify(
