@@ -275,7 +275,7 @@ def _sign_data_digest(raw_address: str, domain: str, timestamp: int, text: str) 
     domain_bytes = domain.encode("utf-8")
     data_bytes = text.encode("utf-8")
     message = (
-        b"\\xff\\xff"
+        b"\xff\xff"
         + b"ton-connect/sign-data/"
         + address_bytes(raw_address)
         + struct.pack(">I", len(domain_bytes))
