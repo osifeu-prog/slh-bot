@@ -86,6 +86,28 @@ def register(bot):
         except Exception:
             lines.append("Health: 🟢 תקין")
 
-        lines.append("")
-        lines.append("המלצה: ✅ Safe to operate")
+        try:
+            from core.control_center import get_infrastructure_snapshot
+            infrastructure = get_infrastructure_snapshot()
+            non_green = infrastructure.get("non_green", [])
+            if non_green:
+                lines.append("")
+                lines.append(
+                    f"Federation: ⚠️ {len(non_green)} application services not green"
+                )
+                lines.append(
+                    "Details: /health_monitor"
+                )
+                lines.append(
+                    "המלצה: 🟡 הבוט המרכזי נבדק; שירותי פדרציה דורשים בדיקה."
+                )
+            else:
+                lines.append("")
+                lines.append("Federation: 🟢 application services green")
+                lines.append("המלצה: ✅ הבוט והפדרציה ללא חריגה מדווחת.")
+        except Exception:
+            lines.append("")
+            lines.append("Federation: ⚪️ לא אומת")
+            lines.append("המלצה: 🟡 הבוט נבדק מקומית; הפדרציה לא אומתה.")
+
         bot.reply_to(msg, "\n".join(lines))
