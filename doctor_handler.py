@@ -69,6 +69,18 @@ def generate_health_report(bot):
 
     checks["Health"] = "🟢 תקין"
 
+    try:
+        from core.control_center import get_infrastructure_snapshot
+        infrastructure = get_infrastructure_snapshot()
+        non_green = infrastructure.get("non_green", [])
+        checks["Federation"] = (
+            f"⚠️ {len(non_green)} application services not green"
+            if non_green
+            else "🟢 application services green"
+        )
+    except Exception:
+        checks["Federation"] = "⚪️ not verified"
+
     for key, val in checks.items():
         lines.append(f"{key}: {val}")
 
@@ -76,7 +88,11 @@ def generate_health_report(bot):
     lines.append("המלצה:")
     if any("🔴" in str(v) for v in checks.values()):
         lines.append("❌ יש בעיות ברכיב קריטי")
+    elif "not green" in str(checks.get("Federation", "")):
+        lines.append("🟡 הבוט המרכזי נבדק; שירותי הפדרציה דורשים בדיקה.")
+    elif "not verified" in str(checks.get("Federation", "")):
+        lines.append("🟡 הבוט נבדק מקומית; הפדרציה לא אומתה.")
     else:
-        lines.append("✅ Safe to operate")
+        lines.append("✅ הבוט והפדרציה ללא חריגה מדווחת.")
 
     return "\n".join(lines)
