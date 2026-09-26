@@ -34,8 +34,8 @@ def _send_portfolio(bot, chat_id, uid):
             f"💰 Credits: {wallet.get('credits', 0)}",
             f"🔒 Staked: {wallet.get('staked', 0)}",
             f"🌐 SLH on-chain: {balances.get('SLH', 0)}",
-            f"BNB: {'✅ verified' if bnb else '⚪️ not verified'}",
-            f"TON: {'✅ verified' if ton else '⚪️ not verified'}",
+            f"BNB: {'✅ ' + trade.t('verified', uid) if bnb else '⚪️ ' + trade.t('not_verified', uid)}",
+            f"TON: {'✅ ' + trade.t('verified', uid) if ton else '⚪️ ' + trade.t('not_verified', uid)}",
         ]
         bot.send_message(chat_id, "\n".join(lines))
     except Exception as exc:
@@ -45,12 +45,12 @@ def _send_portfolio(bot, chat_id, uid):
 
 def _send_trade_model(bot, chat_id, uid):
     fee = trade.execution_fee_bps() / 100
-    execution = "OPEN" if trade.execution_enabled() else "SAFE MODE"
+    execution = trade.t("execution_open", uid) if trade.execution_enabled() else trade.t("execution_safe", uid)
     bot.send_message(
         chat_id,
         trade.t("model_text", uid)
-        + f"\n\nExecution connector: {execution}"
-        + f"\nConfigured execution fee: {fee:.2f}%",
+        + f"\n\n{trade.t('execution_connector', uid)}: {execution}"
+        + f"\n{trade.t('execution_fee', uid, fee=fee)}",
     )
 
 
@@ -63,7 +63,7 @@ def _send_tradepro(bot, chat_id, uid):
         return
     bot.send_message(
         chat_id,
-        trade.t("tradepro_text", uid) + "\n\nUse: /buystars trade_pro",
+        trade.t("tradepro_text", uid) + "\n\n" + trade.t("buy_with_stars", uid),
     )
 
 
@@ -86,6 +86,7 @@ def _trade_menu(uid):
         types.InlineKeyboardButton(trade.t("risk", uid), callback_data="trade:risk"),
     )
     markup.add(types.InlineKeyboardButton(trade.t("pro", uid), callback_data="trade:pro"))
+    markup.add(types.InlineKeyboardButton(trade.t("ai_explain", uid), callback_data="trade:ai"))
     return markup
 
 
@@ -127,14 +128,14 @@ def register(bot):
             return
 
         lines = [
-            f"📊 {snapshot['base_symbol'] or snapshot['base_name'] or 'TOKEN'}",
-            f"Chain: {snapshot['chain'] or '—'} · DEX: {snapshot['dex'] or '—'}",
-            f"Price USD: {snapshot['price_usd'] or '—'}",
-            f"24h change: {snapshot['price_change_24h'] if snapshot['price_change_24h'] is not None else '—'}%",
-            f"Liquidity USD: {snapshot['liquidity_usd'] if snapshot['liquidity_usd'] is not None else '—'}",
-            f"Volume 24h USD: {snapshot['volume_24h'] if snapshot['volume_24h'] is not None else '—'}",
+            f"📊 {snapshot['base_symbol'] or snapshot['base_name'] or trade.t('token_fallback', uid)}",
+            f"{trade.t('chain_label', uid)}: {snapshot['chain'] or '—'} · {trade.t('dex_label', uid)}: {snapshot['dex'] or '—'}",
+            f"{trade.t('price_usd_label', uid)}: {snapshot['price_usd'] or '—'}",
+            f"{trade.t('change_24h_label', uid)}: {snapshot['price_change_24h'] if snapshot['price_change_24h'] is not None else '—'}%",
+            f"{trade.t('liquidity_label', uid)}: {snapshot['liquidity_usd'] if snapshot['liquidity_usd'] is not None else '—'}",
+            f"{trade.t('volume_label', uid)}: {snapshot['volume_24h'] if snapshot['volume_24h'] is not None else '—'}",
             "",
-            "ℹ️ Scanner data is market data, not a contract audit or trading recommendation.",
+            trade.t("scanner_note", uid),
         ]
         markup = types.InlineKeyboardMarkup(row_width=2)
         chain = snapshot["chain"].lower()
@@ -221,5 +222,14 @@ def register(bot):
             bot.send_message(call.message.chat.id, trade.t("risk_text", uid))
         elif action == "pro":
             _send_tradepro(bot, call.message.chat.id, uid)
+        elif action == "ai":
+            try:
+                from core.ask_router import route
+                bot.send_chat_action(call.message.chat.id, "typing")
+                answer = route(trade.t("ai_explain_prompt", uid), uid)
+                bot.send_message(call.message.chat.id, str(answer or "לא התקבלה תשובת AI כרגע.")[:4000])
+            except Exception as exc:
+                print("[TRADE] AI explanation:", type(exc).__name__)
+                bot.send_message(call.message.chat.id, "🧠 מנוע ה-AI אינו זמין כרגע.")
 
     print("✅ trade terminal handler registered")

@@ -15,3 +15,27 @@ def test_execution_fee_defaults_to_zero(monkeypatch):
 
 def test_six_languages_exist():
     assert {"he", "en", "ar", "es", "ru", "pt"} <= set(trade_terminal._TEXT)
+
+
+def test_trade_ui_has_ai_explanation_and_localized_execution_strings():
+    for lang in ("he", "en", "ar", "es", "ru", "pt"):
+        assert "ai_explain" in trade_terminal._TEXT[lang]
+        assert "execution_connector" in trade_terminal._TEXT[lang]
+        assert "verified" in trade_terminal._TEXT[lang]
+        assert "not_verified" in trade_terminal._TEXT[lang]
+
+
+def test_trade_scanner_labels_are_localized():
+    for lang in ("he", "en", "ar", "es", "ru", "pt"):
+        for key in (
+            "buy_with_stars",
+            "chain_label",
+            "dex_label",
+            "price_usd_label",
+            "change_24h_label",
+            "liquidity_label",
+            "volume_label",
+            "scanner_note",
+            "token_fallback",
+        ):
+            assert key in trade_terminal._TEXT[lang]
