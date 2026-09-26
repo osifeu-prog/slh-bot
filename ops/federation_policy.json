@@ -1,0 +1,34 @@
+{
+  "schema_version": "2.0",
+  "purpose": "Canonical SLH federation/migration architecture. Runtime source of truth remains state/db.json.",
+  "canonical": {
+    "repository": "osifeu-prog/slh-bot",
+    "control_bot": "Me_ad_main",
+    "runtime_target": "slh-cloud-bot",
+    "state_source": "state/db.json",
+    "revenue_source": "state/db.json:revenue_ledger"
+  },
+  "migration_policy": {
+    "lifecycle": [
+      "ACTIVE",
+      "MIGRATION",
+      "RETIRED"
+    ],
+    "auto_shutdown": false,
+    "retire_only_after_reconciliation": true
+  },
+  "bots": [
+    {
+      "name": "Me_ad_main",
+      "role": "canonical_control_and_product_bot",
+      "status": "active",
+      "telemetry": "canonical"
+    },
+    {
+      "name": "Osifs_Factory_bot",
+      "role": "legacy_acquisition_bot",
+      "status": "migration",
+      "telemetry": "disconnected"
+    }
+  ]
+}
