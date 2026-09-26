@@ -278,7 +278,7 @@ def register(bot, context=None):
                         (
                             f"   Users: {db_stats.get('users', 0)} · "
                             f"Agents: {len(db.get('agents', {}))} · "
-                            f"Tasks: {db_stats.get('ledger', 0) and db.get('tasks', {}) and len(db.get('tasks', {})) or 0}"
+                            f"Tasks: {len(db.get('tasks', {}))}"
                         ),
                         (
                             f"   Ledger: {db_stats.get('ledger', 0)} · "
