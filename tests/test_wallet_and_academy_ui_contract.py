@@ -20,6 +20,13 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("const domain=window.location.hostname", source)
         self.assertIn("slh-nft.com/tonconnect-manifest.json", source)
 
+    def test_ton_connect_has_sign_data_fallback(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("signData", source)
+        self.assertIn("/api/wallet/ton/sign-data/verify", source)
+        self.assertIn("ton_sign_data", Path("core/ton_wallet_binding.py").read_text(encoding="utf-8"))
+
+
     def test_ton_connect_does_not_redirect_to_noncanonical_bot(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("SLH_AIR_bot", source)
