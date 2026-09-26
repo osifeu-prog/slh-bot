@@ -62,8 +62,17 @@ def register(bot, context=None):
         if len(parts) != 2:
             bot.reply_to(msg, "שימוש: /ton_check &lt;TX hash&gt;", parse_mode="HTML")
             return
+        tx_hash = parts[1].strip()
+        # A UQ/EQ value is a TON address, not a transaction hash.
+        if tx_hash.startswith(("UQ", "EQ")) and len(tx_hash) >= 40:
+            bot.reply_to(
+                msg,
+                "⚠️ זה נראה כמו כתובת TON, לא TX hash.\n"
+                "שלח את ה־transaction hash של העברת TON native אל האוצר."
+            )
+            return
         try:
-            result = settle_ton_deposit(msg.from_user.id, parts[1])
+            result = settle_ton_deposit(msg.from_user.id, tx_hash)
             if result["idempotent"]:
                 bot.reply_to(
                     msg,
