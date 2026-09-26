@@ -1,0 +1,16 @@
+{
+  "allocation_mode": "REVIEW_REQUIRED",
+  "snapshot_cutoff_utc": null,
+  "excluded_addresses": [],
+  "allocation_rules": {
+    "eligible_holder_basis": "BSC_HOLDER_BALANCE_AT_SNAPSHOT",
+    "ratio": null,
+    "rounding": "EXPLICIT_APPROVAL_REQUIRED"
+  },
+  "buckets": {
+    "community": null,
+    "liquidity": null,
+    "team": null,
+    "reserve": null
+  }
+}
