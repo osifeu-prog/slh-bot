@@ -41,6 +41,11 @@ def _local_checks():
 def register(bot, context=None):
     @bot.message_handler(commands=["health_monitor"])
     def health_monitor(m):
+        from core.authority import has_permission
+        uid = str(m.from_user.id)
+        if not has_permission(uid, "exec.audit"):
+            bot.reply_to(m, "⛔️ הרשאת ניטור מערכת מלאה נדרשת.")
+            return
         try:
             snapshot = get_system_snapshot()
             infrastructure = snapshot.get("infrastructure", {})
