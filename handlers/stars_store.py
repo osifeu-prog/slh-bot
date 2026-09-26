@@ -3,6 +3,7 @@ from telebot.types import LabeledPrice
 from store.engine import load_items, resolve_item_id
 from store.stars_purchase_service import get_stars_items, get_stars_price
 from core.stars_price_authority import TELEGRAM_STARS_CURRENCY
+from core.stars_invoice import build_item_payload
 
 
 def register(bot):
@@ -31,7 +32,7 @@ def register(bot):
                 chat_id=m.chat.id,
                 title=name,
                 description="SLH Store - " + name,
-                invoice_payload="item_" + item_id + "_" + str(m.from_user.id),
+                invoice_payload=build_item_payload(item_id, str(m.from_user.id)),
                 provider_token="",
                 currency=TELEGRAM_STARS_CURRENCY,
                 prices=[LabeledPrice(label=name, amount=stars)],
