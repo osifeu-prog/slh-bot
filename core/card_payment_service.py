@@ -267,6 +267,44 @@ def _find_existing_request(uid: str, client_request_id: str) -> dict | None:
     return None
 
 
+def _reserve_inventory(item_id: str, quantity: int = 1) -> dict:
+    def mutate(db):
+        products = db.setdefault("products", {})
+        product = products.get(str(item_id))
+        if not isinstance(product, dict):
+            raise ValueError("CARD_INVENTORY_NOT_CONFIGURED")
+        inventory = int(product.get("inventory", 0) or 0)
+        if inventory < quantity:
+            raise ValueError("CARD_OUT_OF_STOCK")
+        product["inventory"] = inventory - quantity
+        return {"item_id": str(item_id), "quantity": int(quantity)}
+
+    return state_manager.atomic_update(mutate)
+
+
+def _release_inventory(order_id: str) -> bool:
+    def mutate(db):
+        order = db.setdefault("card_orders", {}).get(str(order_id))
+        if not isinstance(order, dict):
+            return False
+        reservation = order.get("inventory_reservation")
+        if not isinstance(reservation, dict):
+            return False
+        item_id = str(reservation.get("item_id", "")).strip()
+        quantity = int(reservation.get("quantity", 0) or 0)
+        if not item_id or quantity <= 0:
+            order["inventory_reservation"] = None
+            return False
+        product = db.setdefault("products", {}).get(item_id)
+        if isinstance(product, dict):
+            product["inventory"] = int(product.get("inventory", 0) or 0) + quantity
+        order["inventory_reservation"] = None
+        order["updated_at"] = time.time()
+        return True
+
+    return bool(state_manager.atomic_update(mutate))
+
+
 def create_card_checkout(uid: str, item_id: str, client_request_id: str | None = None) -> dict:
     _require_card_config()
     uid = str(uid).strip()
@@ -294,6 +332,7 @@ def create_card_checkout(uid: str, item_id: str, client_request_id: str | None =
             return existing
 
     order_id = f"card:{uuid.uuid4().hex}"
+    reservation = _reserve_inventory(item_id, 1)
     record = {
         "order_id": order_id,
         "uid": uid,
@@ -309,6 +348,7 @@ def create_card_checkout(uid: str, item_id: str, client_request_id: str | None =
         "transaction_uid": None,
         "created_at": time.time(),
         "updated_at": time.time(),
+        "inventory_reservation": reservation,
         "fulfillment": None,
         "error": None,
     }
@@ -361,6 +401,7 @@ def create_card_checkout(uid: str, item_id: str, client_request_id: str | None =
             error=type(exc).__name__,
             updated_at=time.time(),
         )
+        _release_inventory(order_id)
         raise
 
 
@@ -457,6 +498,7 @@ def _fulfill(order: dict) -> dict:
         if not fulfillment or (isinstance(fulfillment, dict) and fulfillment.get("ok") is False):
             raise RuntimeError("FULFILLMENT_FAILED")
 
+        _update_order(order_id, inventory_reservation=None)
         fulfilled = _update_order(
             order_id,
             status="FULFILLED",
@@ -514,7 +556,20 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
     if order.get("status") == "FULFILLED":
         return {"status": "duplicate", "order_id": order["order_id"]}
 
-    verification = _verify_provider_transaction(order, body)
+    try:
+        verification = _verify_provider_transaction(order, body)
+    except ValueError as exc:
+        if str(exc) == "PAYPLUS_PAYMENT_NOT_APPROVED":
+            _update_order(
+                order["order_id"],
+                status="CANCELLED",
+                error="PAYPLUS_PAYMENT_NOT_APPROVED",
+                updated_at=time.time(),
+            )
+            _release_inventory(order["order_id"])
+            return {"status": "cancelled", "order_id": order["order_id"]}
+        raise
+
     updated = _update_order(
         order["order_id"],
         status="PAID",
@@ -556,6 +611,13 @@ def reconcile_card_orders(limit: int = 20, uid: str | None = None) -> dict:
             except (TypeError, ValueError):
                 created_at = now
             if now - created_at > 48 * 3600:
+                _update_order(
+                    row["order_id"],
+                    status="CANCELLED",
+                    error="CHECKOUT_EXPIRED",
+                    updated_at=time.time(),
+                )
+                _release_inventory(row["order_id"])
                 continue
         pending.append(dict(row))
 
