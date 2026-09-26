@@ -79,7 +79,10 @@ def ask_groq(prompt):
         )
         return str(resp.choices[0].message.content or "")
     except Exception as e:
-        return f"LLM Error: {e}"
+        message = str(e)
+        if "429" in message or "rate_limit" in message.lower() or "tokens per day" in message.lower():
+            _provider_cooldown_until["groq"] = time.time() + 300
+        return f"LLM Error: {message}"
 
 
 def _load_canonical_faq(question=""):
@@ -148,7 +151,7 @@ USER QUESTION:
         result = ask_gemini(prompt)
         if result and not (
             result.startswith("Gemini Error:")
-            or result == "GEMINI_API_KEY missing"
+            or result in {"GEMINI_API_KEY missing", "GEMINI_COOLDOWN"}
         ):
             return result
         print("[LLM] Gemini failed, falling back to Groq:", result[:120])
