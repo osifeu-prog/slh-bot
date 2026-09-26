@@ -399,6 +399,88 @@ def card_pay_cancel():
     )
 
 
+
+@app.route("/api/v1/growth-hub", methods=["GET"])
+def growth_hub_api():
+    """Authenticated read-only composition of existing revenue and reward rails."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.growth_hub import build_growth_hub
+        return _no_store(jsonify(build_growth_hub(uid))), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[GROWTH_HUB] read API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "GROWTH_HUB_UNAVAILABLE"}), 503
+
+
+ALLOWED_GROWTH_EVENTS = {
+    "home_view",
+    "market_view",
+    "purchase_intent",
+    "reward_view",
+    "referral_intent",
+    "wallet_bind_intent",
+    "trade_view",
+    "trade_pro_intent",
+    "task_complete_view",
+}
+
+
+@app.route("/api/v1/growth-events", methods=["POST"])
+def growth_events_api():
+    """Authenticated, privacy-minimal funnel telemetry; never mutates balances."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    event = str(payload.get("event", "")).strip()
+    event_id = str(payload.get("event_id", "")).strip()
+    surface = str(payload.get("surface", "")).strip()[:80]
+
+    if event not in ALLOWED_GROWTH_EVENTS:
+        return jsonify({"error": "INVALID_GROWTH_EVENT"}), 400
+    if not event_id or len(event_id) > 200:
+        return jsonify({"error": "INVALID_EVENT_ID"}), 400
+
+    supplied_meta = payload.get("meta") if isinstance(payload.get("meta"), dict) else {}
+    safe_meta = {}
+    for key in ("item_id", "rail", "screen", "chain"):
+        if key in supplied_meta:
+            safe_meta[key] = str(supplied_meta[key])[:120]
+
+    def mutate(db):
+        rows = db.setdefault("growth_events", [])
+        for existing in rows:
+            if (
+                isinstance(existing, dict)
+                and str(existing.get("event_id")) == event_id
+                and str(existing.get("uid")) == str(uid)
+            ):
+                return {"status": "duplicate"}
+        rows.append({
+            "timestamp": time.time(),
+            "uid": str(uid),
+            "event": event,
+            "surface": surface,
+            "event_id": event_id,
+            "meta": safe_meta,
+        })
+        if len(rows) > 10000:
+            del rows[:-10000]
+        return {"status": "recorded"}
+
+    try:
+        return _no_store(jsonify(state_manager.atomic_update(mutate))), 200
+    except Exception as exc:
+        print("[GROWTH_EVENTS] write error:", type(exc).__name__)
+        return jsonify({"error": "GROWTH_EVENT_FAILED"}), 503
+
 @app.route("/api/v1/store", methods=["GET"])
 def stars_store_api():
     """Authenticated catalog of products purchasable through Telegram Stars."""
