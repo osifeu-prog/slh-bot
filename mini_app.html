@@ -200,7 +200,7 @@ async function loadWalletBindings(){
       if(!ton.deposits_open){
         $('tonDepositInfo').innerHTML='<span class="muted">⛔ הפקדות TON סגורות כרגע.</span>';
       }else{
-        $('tonDepositInfo').innerHTML='<span class="muted">כתובת אוצר: </span><code style="word-break:break-all">'+esc(ton.treasury||'—')+'</code><br><span class="muted">Memo אישי: </span><code>'+esc(ton.memo||'—')+'</code><br><span class="muted">שער: 1 TON = '+fmt(ton.credits_per_ton||0)+' Credits</span>';
+        $('tonDepositInfo').innerHTML='<span class="muted">נכס נתמך: <b>TON native בלבד</b></span><br><span class="muted">כתובת אוצר: </span><code style="word-break:break-all">'+esc(ton.treasury||'—')+'</code><br><span class="muted">Memo אישי: </span><code>'+esc(ton.memo||'—')+'</code><br><span class="muted">שער: 1 TON = '+fmt(ton.credits_per_ton||0)+' Credits</span><br><span class="muted">⚠️ USDT/Jetton ב-TON אינם מזוכים במסלול זה.</span>';
       }
     }
   }catch(e){
