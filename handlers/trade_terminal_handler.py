@@ -63,7 +63,7 @@ def _send_tradepro(bot, chat_id, uid):
         return
     bot.send_message(
         chat_id,
-        trade.t("tradepro_text", uid) + "\n\nUse: /buystars trade_pro",
+        trade.t("tradepro_text", uid) + "\n\n" + trade.t("buy_with_stars", uid),
     )
 
 
@@ -128,14 +128,14 @@ def register(bot):
             return
 
         lines = [
-            f"📊 {snapshot['base_symbol'] or snapshot['base_name'] or 'TOKEN'}",
-            f"Chain: {snapshot['chain'] or '—'} · DEX: {snapshot['dex'] or '—'}",
-            f"Price USD: {snapshot['price_usd'] or '—'}",
-            f"24h change: {snapshot['price_change_24h'] if snapshot['price_change_24h'] is not None else '—'}%",
-            f"Liquidity USD: {snapshot['liquidity_usd'] if snapshot['liquidity_usd'] is not None else '—'}",
-            f"Volume 24h USD: {snapshot['volume_24h'] if snapshot['volume_24h'] is not None else '—'}",
+            f"📊 {snapshot['base_symbol'] or snapshot['base_name'] or trade.t('token_fallback', uid)}",
+            f"{trade.t('chain_label', uid)}: {snapshot['chain'] or '—'} · {trade.t('dex_label', uid)}: {snapshot['dex'] or '—'}",
+            f"{trade.t('price_usd_label', uid)}: {snapshot['price_usd'] or '—'}",
+            f"{trade.t('change_24h_label', uid)}: {snapshot['price_change_24h'] if snapshot['price_change_24h'] is not None else '—'}%",
+            f"{trade.t('liquidity_label', uid)}: {snapshot['liquidity_usd'] if snapshot['liquidity_usd'] is not None else '—'}",
+            f"{trade.t('volume_label', uid)}: {snapshot['volume_24h'] if snapshot['volume_24h'] is not None else '—'}",
             "",
-            "ℹ️ Scanner data is market data, not a contract audit or trading recommendation.",
+            trade.t("scanner_note", uid),
         ]
         markup = types.InlineKeyboardMarkup(row_width=2)
         chain = snapshot["chain"].lower()
