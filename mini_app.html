@@ -302,6 +302,47 @@ async function bindBnbWallet(){
   }
 }
 
+async function signTonWalletFallback(wallet){
+  if(!_tonChallenge){setText('tonBindingStatus','⚠️ חסר challenge');return}
+  if(typeof _tonConnectUI?.signData!=='function'){
+    setText('tonBindingStatus','⚠️ הארנק מחובר אך SDK זה לא מציע SignData');
+    return;
+  }
+  if(_tonSignPending)return;
+  _tonSignPending=true;
+  try{
+    const account=wallet?.account||{};
+    const message=_tonChallenge.sign_data_message||('SLH OS wallet verification\nChallenge: '+_tonChallenge.payload);
+    setText('tonBindingStatus','✍️ אשר חתימת אימות בארנק');
+    const signed=await _tonConnectUI.signData({
+      type:'text',
+      text:message,
+      network:account.chain||'-239',
+      from:account.address
+    });
+    const vr=await fetch('/api/wallet/ton/sign-data/verify',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:JSON.stringify(Object.assign({},signed,{
+        wallet_state_init:account.walletStateInit||account.stateInit||'',
+        public_key:account.publicKey,
+        network:account.chain||account.network||'-239'
+      }))
+    });
+    const vd=await vr.json().catch(()=>({}));
+    if(!vr.ok)throw Error(vd.error||('HTTP '+vr.status));
+    _tonChallenge=null;
+    toast('✅ ארנק TON אומת');
+    await loadWalletBindings();
+  }catch(e){
+    setText('tonBindingStatus','❌ חתימת אימות נכשלה');
+    toast('❌ TON SignData: '+(e.message||e));
+  }finally{
+    _tonSignPending=false;
+  }
+}
+
+
 async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
@@ -316,50 +357,21 @@ async function initTonConnect(){
     }
     const proofItem=wallet.connectItems?.tonProof;
     if(proofItem?.error){
+      const code=proofItem.error.code;
       const name=proofItem.error.name||'TON_PROOF_ERROR';
       const message=proofItem.error.message||'Wallet did not return a TON Proof';
-      console.error('[TON] tonProof error',name,message);
-      setText('tonBindingStatus','❌ Proof error: '+name);
-      toast('❌ TON Proof: '+message);
+      console.error('[TON] tonProof error',name,code,message);
+      if(code===400 || code==='METHOD_NOT_SUPPORTED'){
+        await signTonWalletFallback(wallet);
+      }else{
+        setText('tonBindingStatus','❌ Proof error: '+name);
+        toast('❌ TON Proof: '+message);
+      }
       return;
     }
     if(!proofItem || !proofItem.proof){
       console.warn('[TON] wallet connected without tonProof',wallet.walletInfo?.name||'unknown');
-      setText('tonBindingStatus','✍️ הארנק מחובר — נדרש אישור חתימה');
-      if(typeof _tonConnectUI.signData==='function' && _tonChallenge && !_tonSignPending){
-        _tonSignPending=true;
-        try{
-          const account=wallet.account||{};
-          const message=_tonChallenge.sign_data_message||('SLH OS wallet verification\nChallenge: '+_tonChallenge.payload);
-          const signed=await _tonConnectUI.signData({
-            type:'text',
-            text:message,
-            network:account.chain||'-239',
-            from:account.address
-          });
-          const vr=await fetch('/api/wallet/ton/sign-data/verify',{
-            method:'POST',
-            headers:Object.assign({'Content-Type':'application/json'},headers),
-            body:JSON.stringify(Object.assign({},signed,{
-              wallet_state_init:account.walletStateInit||account.stateInit||'',
-              public_key:account.publicKey,
-              network:account.chain||account.network||'-239'
-            }))
-          });
-          const vd=await vr.json().catch(()=>({}));
-          if(!vr.ok) throw Error(vd.error||('HTTP '+vr.status));
-          _tonChallenge=null;
-          toast('✅ ארנק TON אומת');
-          await loadWalletBindings();
-        }catch(e){
-          setText('tonBindingStatus','❌ חתימת אימות נכשלה');
-          toast('❌ TON SignData: '+(e.message||e));
-        }finally{
-          _tonSignPending=false;
-        }
-      }else if(typeof _tonConnectUI.signData!=='function'){
-        setText('tonBindingStatus','⚠️ הארנק מחובר אך SDK זה לא מציע SignData');
-      }
+      await signTonWalletFallback(wallet);
       return;
     }
     if(!_tonChallenge){setText('tonBindingStatus','⚠️ חסר challenge');return}
