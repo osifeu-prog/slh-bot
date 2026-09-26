@@ -45,9 +45,11 @@ def register(bot, context=None):
             f"כתובת האוצר:\n<code>{wallet}</code>\n\n"
             f"קוד Comment/Memo אישי:\n<code>{memo_for(uid)}</code>\n\n"
             f"שער: <b>1 TON = {rate:g} Credits</b>\n\n"
+            "⚠️ המסלול הזה מקבל TON native בלבד. USDT/Jetton, גם אם נשלחו ברשת TON, "
+            "אינם נכללים במסלול הזה.\n"
             "הזיכוי דורש גם ארנק TON מאומת וגם את ההערה המדויקת. "
             "שליחה מארנק אחר לא תזוכה לחשבון.\n"
-            "לאחר השליחה: /ton_paid או /ton_check &lt;TX hash&gt;.",
+            "לאחר שליחת TON native: /ton_paid או /ton_check &lt;TX hash&gt;.",
             parse_mode="HTML",
         )
 
@@ -100,7 +102,7 @@ def register(bot, context=None):
         if not credited:
             bot.reply_to(
                 msg,
-                "⏳ לא נמצאה הפקדה חדשה עם הארנק המאומת וההערה שלך. "
+                "⏳ לא נמצאה הפקדת TON native מתאימה עם הארנק המאומת וההערה שלך. "
                 f"ודא שנשלח <code>{memo_for(msg.from_user.id)}</code> ונסה שוב.",
                 parse_mode="HTML",
             )
