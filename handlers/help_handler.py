@@ -1,4 +1,12 @@
 def register(bot):
+    @bot.message_handler(commands=['faq'])
+    def faq_cmd(msg):
+        try:
+            from core.faq_service import telegram_faq
+            bot.reply_to(msg, telegram_faq())
+        except Exception:
+            bot.reply_to(msg, "FAQ לא זמין כרגע.")
+
     @bot.message_handler(commands=['help'])
     def help_cmd(msg):
         text = """📘 SLH OS — מפת המערכת
@@ -79,6 +87,7 @@ def register(bot):
 /doctor – אבחון
 /megadiag – אבחון מלא
 /ask <question> – AI
+/faq – שאלות נפוצות
 
 🔐 ADMIN
 /admin – Control Center
