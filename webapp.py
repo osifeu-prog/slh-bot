@@ -26,6 +26,9 @@ _AI_RATE_STATE = {}
 _AI_RATE_WINDOW = 60
 _AI_RATE_LIMIT = 20
 _AI_ALLOWED_ORIGINS = {"https://slh.co.il", "https://slh-nft.com"}
+_STARS_INVOICE_RATE_STATE = {}
+_STARS_INVOICE_RATE_WINDOW = 60
+_STARS_INVOICE_RATE_LIMIT = 10
 
 
 def _ai_cors_response(response):
@@ -288,6 +291,50 @@ def stars_store_api():
             "expires_at": vip_expires_at if vip_active else None,
         },
     })), 200
+
+
+@app.route("/api/v1/stars/invoice", methods=["POST"])
+def create_stars_invoice_api():
+    """Create a Telegram Stars invoice link for the authenticated Mini App user."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    now = time.monotonic()
+    key = str(uid)
+    bucket = _STARS_INVOICE_RATE_STATE.get(key)
+    if bucket is None or now - bucket[0] >= _STARS_INVOICE_RATE_WINDOW:
+        _STARS_INVOICE_RATE_STATE[key] = [now, 1]
+    elif bucket[1] >= _STARS_INVOICE_RATE_LIMIT:
+        return jsonify({"error": "STARS_INVOICE_RATE_LIMITED"}), 429
+    else:
+        bucket[1] += 1
+
+    payload = request.get_json(silent=True) or {}
+    kind = str(payload.get("kind", "")).strip()
+    item_id = str(payload.get("id", "")).strip()
+    request_id = str(payload.get("client_request_id", "")).strip()
+
+    if kind not in {"credit_pack", "store_item", "vip"}:
+        return jsonify({"error": "INVALID_PURCHASE_KIND"}), 400
+    if not item_id or len(item_id) > 100:
+        return jsonify({"error": "INVALID_PURCHASE_ID"}), 400
+    if request_id and len(request_id) > 200:
+        return jsonify({"error": "INVALID_REQUEST_ID"}), 400
+
+    from core.stars_invoice import create_invoice_link_for_purchase
+    try:
+        result = create_invoice_link_for_purchase(uid=str(uid), kind=kind, item_id=item_id)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        print("[STARS] invoice creation unavailable:", type(exc).__name__)
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        print("[STARS] invoice creation error:", type(exc).__name__)
+        return jsonify({"error": "STARS_INVOICE_UNAVAILABLE"}), 503
+
+    return _no_store(jsonify(result)), 200
 
 
 @app.route("/api/v1/tasks", methods=["GET"])
