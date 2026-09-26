@@ -122,34 +122,188 @@ def register(bot, context=None):
         wallet = snapshot.get("wallet", {})
         academy = snapshot.get("academy", {})
         tasks = snapshot.get("tasks", {})
+        rewards = snapshot.get("rewards", {})
         db = state_manager.load_db()
+
         owned_agents = [
             agent for agent in db.get("agents", {}).values()
-            if isinstance(agent, dict) and str(agent.get("owner_id", "")) == str(user_id)
+            if isinstance(agent, dict)
+            and str(agent.get("owner_id", "")) == str(user_id)
         ]
-        display_name = identity.get("display_name") or get_display_name(str(user_id)) or "חבר"
-        enrolled = academy.get("enrolled", [])
-        course_line = (
-            f"📚 קורסים: {len(enrolled)}"
-            if isinstance(enrolled, list)
-            else "📚 קורסים: 0"
+
+        user = db.get("users", {}).get(str(user_id), {})
+        referral = user.get("referral", {}) if isinstance(user, dict) else {}
+        if not isinstance(referral, dict):
+            referral = {}
+
+        display_name = (
+            identity.get("display_name")
+            or get_display_name(str(user_id))
+            or "חבר"
         )
+
+        enrolled = academy.get("enrolled", [])
+        progress = academy.get("progress", {})
+        if not isinstance(enrolled, list):
+            enrolled = []
+        if not isinstance(progress, dict):
+            progress = {}
+
+        # Keep the dashboard tied to the canonical course catalog so the
+        # owner sees real progress rather than a hard-coded course count.
+        course_defs = {}
+        try:
+            import json
+            with open("courses.json", "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                course_defs = loaded
+        except Exception:
+            course_defs = {}
+
+        progress_lines = []
+        completed_courses = 0
+        completed_lessons = 0
+        total_lessons = 0
+
+        for course_id in enrolled:
+            course_id = str(course_id)
+            course = course_defs.get(course_id, {})
+            stages = course.get("stages", []) if isinstance(course, dict) else []
+            total = len(stages)
+            state = progress.get(course_id, {})
+            completed = state.get("completed", []) if isinstance(state, dict) else []
+            if not isinstance(completed, list):
+                completed = []
+            done = len(set(completed))
+            completed_lessons += done
+            total_lessons += total
+            if total and done >= total:
+                completed_courses += 1
+
+            title = (
+                course.get("title", course_id)
+                if isinstance(course, dict)
+                else course_id
+            )
+            progress_lines.append(f"   • {title}: {done}/{total}")
+
+        academy_summary = (
+            f"📚 Academy: {completed_courses}/{len(enrolled)} קורסים הושלמו"
+            f" · {completed_lessons}/{total_lessons} שיעורים"
+            if enrolled
+            else "📚 Academy: 0 קורסים"
+        )
+
         internal_token = wallet.get("live_token_balance")
         if internal_token in (None, ""):
             internal_token = wallet.get("token_balance", 0)
 
-        return (
-            f"🌟 {display_name} — ה-Dashboard שלך\n\n"
-            f"🧾 כל היתרות:\n"
-            f"💰 Credits: {wallet.get('credits', 0)}\n"
-            f"🔒 Staked: {wallet.get('staked', 0)}\n"
-            f"🪙 Internal SLH: {internal_token}\n"
-            f"💎 TON Wallet: {wallet.get('ton_wallet') or 'לא מקושר'}\n\n"
-            f"{course_line}\n"
-            f"🤖 הסוכנים שלך: {len(owned_agents)}\n"
-            f"🎯 משימות פתוחות: {tasks.get('open', 0)}\n\n"
-            "מה תרצה לעשות?"
+        try:
+            from core.wallet_binding import get_binding
+            bnb_binding = get_binding(str(user_id))
+        except Exception:
+            bnb_binding = None
+
+        try:
+            from core.ton_wallet_binding import get_ton_binding
+            ton_binding = get_ton_binding(str(user_id))
+        except Exception:
+            ton_binding = None
+
+        try:
+            from core.ton_deposit_service import _settings, deposits_are_open
+            _, ton_rate = _settings()
+            ton_open = bool(deposits_are_open())
+        except Exception:
+            ton_rate = None
+            ton_open = False
+
+        tasks_completed = int(tasks.get("completed", 0) or 0)
+        tasks_open = int(tasks.get("open", 0) or 0)
+        points = rewards.get("points", 0)
+        level = user.get("gamification", {}).get("level", 1)
+        referral_count = referral.get("count", 0)
+        referral_commission = db.get("commissions", {}).get(str(user_id), 0)
+
+        lines = [
+            f"🌟 {display_name} — ה-Dashboard שלך",
+            "",
+            "🧾 כל היתרות:",
+            f"💰 Credits: {wallet.get('credits', 0)}",
+            f"🔒 Staked: {wallet.get('staked', 0)}",
+            f"🪙 Internal SLH: {internal_token}",
+            f"💎 TON Wallet: {wallet.get('ton_wallet') or 'לא מקושר'}",
+            "",
+            academy_summary,
+        ]
+
+        lines.extend(progress_lines)
+
+        lines.extend(
+            [
+                "",
+                f"🤖 הסוכנים שלך: {len(owned_agents)}",
+                f"🎯 משימות פתוחות: {tasks_open} · הושלמו: {tasks_completed}",
+                f"🏆 Points: {points} · Level {level}",
+                f"👥 Referrals: {referral_count} · Commission: {referral_commission}",
+                "",
+                "🔐 Wallet binding:",
+                f"   BNB: {'✅ מאומת' if bnb_binding else '⚪️ לא מאומת'}",
+                f"   TON: {'✅ מאומת' if ton_binding else '⚪️ לא מאומת'}",
+                (
+                    f"💎 TON deposits: ✅ OPEN · 1 TON = {float(ton_rate):g} Credits"
+                    if ton_open and ton_rate is not None
+                    else "💎 TON deposits: ⛔ CLOSED"
+                ),
+            ]
         )
+
+        if ton_open and not ton_binding:
+            lines.append("   ⚠️ זיכוי TON חסום עד אימות ארנק דרך Mini App.")
+
+        # Owner gets the same compact read-only system metrics available to
+        # /snapshot, while normal users keep a strictly personal dashboard.
+        if int(user_id) == int(OWNER_TELEGRAM_ID):
+            try:
+                from handlers.snapshot_handler import build_snapshot
+                system = build_snapshot()
+                db_stats = system.get("db", {})
+                revenue = system.get("revenue", {})
+                bridge = system.get("bridge", {})
+                lines.extend(
+                    [
+                        "",
+                        "🖥️ Owner System Metrics:",
+                        (
+                            f"   Users: {db_stats.get('users', 0)} · "
+                            f"Agents: {len(db.get('agents', {}))} · "
+                            f"Tasks: {db_stats.get('ledger', 0) and db.get('tasks', {}) and len(db.get('tasks', {})) or 0}"
+                        ),
+                        (
+                            f"   Ledger: {db_stats.get('ledger', 0)} · "
+                            f"Stakes: {db_stats.get('stakes_locked', 0)} locked / "
+                            f"{db_stats.get('stakes_total', 0)} total"
+                        ),
+                        (
+                            f"   BNB bindings: {db_stats.get('bnb_bindings', 0)} · "
+                            f"TON bindings: {db_stats.get('ton_bindings', 0)}"
+                        ),
+                        (
+                            f"   Stars: {revenue.get('stars_total', 0):g} · "
+                            f"Customers: {revenue.get('customers', 0)} · "
+                            f"Events: {revenue.get('events', 0)}"
+                        ),
+                        (
+                            f"   VIP active: {db_stats.get('vip_active', 0)} · "
+                            f"Bridge: {bridge.get('icon', '⚪️')} {bridge.get('status', 'unknown')}"
+                        ),
+                    ]
+                )
+            except Exception as exc:
+                lines.append(f"🖥️ Owner System Metrics: unavailable ({type(exc).__name__})")
+
+        return "\n".join(lines);
 
     def _dashboard_markup():
         markup = types.InlineKeyboardMarkup(row_width=3)
