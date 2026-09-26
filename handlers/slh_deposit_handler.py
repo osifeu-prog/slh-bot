@@ -25,8 +25,7 @@ def register(bot):
             if result.get("status") == "duplicate":
                 bot.reply_to(
                     msg,
-                    "♻️ ה־SLH Live כבר זוכה בעבר.
-"
+                    "♻️ ה־SLH Live כבר זוכה בעבר.\n"
                     f"TX: {result['tx_hash']}\n"
                     f"SLH Live: {result.get('live_token_balance', 0)}"
                 )
@@ -34,8 +33,7 @@ def register(bot):
 
             bot.reply_to(
                 msg,
-                "✅ הפקדת SLH Live אומתה וזוכתה.
-"
+                "✅ הפקדת SLH Live אומתה וזוכתה.\n"
                 f"Amount: {result['amount_slh']} SLH\n"
                 f"Live balance: {result['live_token_balance']} SLH\n"
                 f"Confirmations: {result['confirmations']}\n"
