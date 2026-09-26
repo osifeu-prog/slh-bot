@@ -135,6 +135,10 @@ def build_growth_hub(uid):
 
     points = _num(gamification.get("points", 0))
     referrals = int(referral.get("count", 0) or 0)
+    bnb_label = "✅" if bnb_binding else "⚪"
+    ton_label = "✅" if ton_binding else "⚪"
+    bnb_deposit_label = "OPEN" if bnb_deposits_open() else "CLOSED"
+    ton_deposit_label = "OPEN" if ton_deposits_open() else "CLOSED"
     commission = _num(referral.get("commission", 0))
 
     next_action = {
