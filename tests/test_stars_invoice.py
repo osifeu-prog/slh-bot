@@ -2,7 +2,11 @@ import unittest
 from unittest import mock
 
 from core import stars_invoice
-from core.stars_price_authority import CREDIT_PACKS, VIP_MONTHLY_STARS
+from core.stars_price_authority import (
+    CREDIT_PACKS,
+    VIP_MONTHLY_STARS,
+    VIP_SUBSCRIPTION_PERIOD,
+)
 
 
 class StarsInvoiceTest(unittest.TestCase):
@@ -41,17 +45,37 @@ class StarsInvoiceTest(unittest.TestCase):
     def test_create_link_uses_xtr(self):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$abc"}
-        with mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),              mock.patch("core.stars_invoice.requests.post", return_value=fake) as post:
-            link = stars_invoice.create_invoice_link({
-                "title": "100 Credits",
-                "description": "d",
-                "payload": "credits_100_1",
-                "stars": 100,
-            })
+        with (
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
+        ):
+            link = stars_invoice.create_invoice_link(
+                {
+                    "title": "100 Credits",
+                    "description": "d",
+                    "payload": "credits_100_1",
+                    "stars": 100,
+                }
+            )
         self.assertEqual(link, "https://t.me/$abc")
         body = post.call_args.kwargs["json"]
         self.assertEqual(body["currency"], "XTR")
         self.assertEqual(body["prices"][0]["amount"], 100)
+        self.assertNotIn("subscription_period", body)
+
+    def test_create_link_includes_subscription_period_for_vip(self):
+        req = stars_invoice.build_invoice_request("123", "vip_monthly", "vip_monthly")
+        fake = mock.Mock()
+        fake.json.return_value = {"ok": True, "result": "https://t.me/$vip"}
+        with (
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
+        ):
+            stars_invoice.create_invoice_link(req)
+        body = post.call_args.kwargs["json"]
+        self.assertEqual(body["currency"], "XTR")
+        self.assertEqual(body["prices"][0]["amount"], VIP_MONTHLY_STARS)
+        self.assertEqual(body["subscription_period"], VIP_SUBSCRIPTION_PERIOD)
 
 
 if __name__ == "__main__":
