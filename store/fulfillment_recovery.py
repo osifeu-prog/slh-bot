@@ -6,10 +6,181 @@ recoverable/pending.
 """
 from __future__ import annotations
 
+import os
+import requests
 import state_manager
 
 
 MAX_ATTEMPTS = 20
+
+
+def reconcile_telegram_stars(limit: int = 100, uid: str | None = None) -> dict:
+    """Reconcile recent successful Telegram Stars invoice payments.
+
+    Telegram exposes recent StarTransaction records through getStarTransactions.
+    Only incoming user invoice payments are considered. Existing local
+    idempotency protects against duplicate processing.
+    """
+    token = (os.getenv("BOT_TOKEN") or "").strip()
+    if not token:
+        return {"enabled": False, "attempted": 0, "success": 0, "failed": 0}
+
+    try:
+        response = requests.get(
+            f"https://api.telegram.org/bot{token}/getStarTransactions",
+            params={"limit": max(1, min(int(limit), 100))},
+            timeout=15,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:
+        return {
+            "enabled": True,
+            "attempted": 0,
+            "success": 0,
+            "failed": 0,
+            "error": type(exc).__name__,
+        }
+
+    if not payload.get("ok"):
+        return {
+            "enabled": True,
+            "attempted": 0,
+            "success": 0,
+            "failed": 0,
+            "error": "TELEGRAM_STARS_API_ERROR",
+        }
+
+    transactions = (payload.get("result") or {}).get("transactions") or []
+    attempted = success = failed = skipped = 0
+    details = []
+
+    for tx in transactions:
+        if not isinstance(tx, dict):
+            skipped += 1
+            continue
+
+        try:
+            amount = int(tx.get("amount", 0) or 0)
+        except (TypeError, ValueError):
+            skipped += 1
+            continue
+
+        source = tx.get("source") or {}
+        if (
+            amount <= 0
+            or source.get("type") != "user"
+            or source.get("transaction_type") != "invoice_payment"
+        ):
+            skipped += 1
+            continue
+
+        user = source.get("user") or {}
+        tx_uid = str(user.get("id") or "").strip()
+        invoice_payload = str(source.get("invoice_payload") or "").strip()
+        charge_id = str(tx.get("id") or "").strip()
+
+        if not tx_uid or not invoice_payload or not charge_id:
+            skipped += 1
+            continue
+        if uid is not None and tx_uid != str(uid):
+            continue
+
+        attempted += 1
+        try:
+            if invoice_payload.startswith("item_") and invoice_payload.endswith("_" + tx_uid):
+                item_id = invoice_payload[5:-(len(tx_uid) + 1)]
+                from store.stars_purchase_service import purchase_item_with_stars
+
+                result = purchase_item_with_stars(
+                    uid=tx_uid,
+                    item_id=item_id,
+                    stars_paid=amount,
+                    charge_id=charge_id,
+                )
+                ok = result.get("status") in {"SUCCESS", "DUPLICATE"}
+
+            elif invoice_payload == f"vip_monthly_{tx_uid}":
+                from core.stars_payment_authority import record_vip_subscription_payment
+
+                result = record_vip_subscription_payment(
+                    uid=tx_uid,
+                    stars_paid=amount,
+                    charge_id=charge_id,
+                    recurring=False,
+                    first_recurring=True,
+                )
+                ok = result.get("fulfillment_status") == "completed" or result.get("status") == "duplicate"
+
+            elif invoice_payload.startswith("credits_") and invoice_payload.endswith("_" + tx_uid):
+                parts = invoice_payload.split("_")
+                if len(parts) != 3 or parts[2] != tx_uid:
+                    skipped += 1
+                    continue
+
+                try:
+                    requested_credits = int(parts[1])
+                except (TypeError, ValueError):
+                    skipped += 1
+                    continue
+
+                from core.stars_price_authority import resolve_credit_pack
+                package = resolve_credit_pack(requested_credits, amount)
+                if package is None:
+                    skipped += 1
+                    continue
+
+                from core import stars_payment_authority
+
+                result = stars_payment_authority.record_stars_payment(
+                    uid=tx_uid,
+                    credits=package.credits,
+                    stars_paid=package.stars,
+                    currency="XTR",
+                    telegram_payment_charge_id=charge_id,
+                    provider_payment_charge_id=None,
+                    referrer_uid=None,
+                    meta={
+                        "source": "telegram_star_reconciliation",
+                        "invoice_payload": invoice_payload,
+                        "reconciled": True,
+                    },
+                )
+                ok = result.get("status") in {"applied", "duplicate"}
+
+            else:
+                skipped += 1
+                continue
+
+            if ok:
+                success += 1
+            else:
+                failed += 1
+
+            details.append({
+                "uid": tx_uid,
+                "charge_id": charge_id,
+                "payload": invoice_payload[:120],
+                "status": result.get("status") or result.get("fulfillment_status"),
+            })
+        except Exception as exc:
+            failed += 1
+            details.append({
+                "uid": tx_uid,
+                "charge_id": charge_id,
+                "payload": invoice_payload[:120],
+                "status": "error",
+                "error": type(exc).__name__,
+            })
+
+    return {
+        "enabled": True,
+        "attempted": attempted,
+        "success": success,
+        "failed": failed,
+        "skipped": skipped,
+        "details": details,
+    }
 
 
 def recover_paid_orders(limit: int = MAX_ATTEMPTS, uid: str | None = None) -> dict:
@@ -105,6 +276,9 @@ def start_recovery_loop(interval_seconds: int = 300) -> None:
     def worker():
         while True:
             try:
+                stars = reconcile_telegram_stars()
+                if stars.get("attempted"):
+                    print("[STARS] periodic reconciliation:", stars)
                 result = recover_paid_orders()
                 if result.get("attempted"):
                     print("[FULFILLMENT] periodic recovery:", result)
