@@ -15,6 +15,25 @@ DOMAIN = "slh-nft.com"
 UID = "12345"
 
 
+def sign_data_digest(address_raw, domain, timestamp, text):
+    workchain, addr_hex = address_raw.split(":", 1)
+    domain_bytes = domain.encode("utf-8")
+    data_bytes = text.encode("utf-8")
+    message = (
+        b"\\xff\\xff"
+        + b"ton-connect/sign-data/"
+        + struct.pack(">i", int(workchain))
+        + bytes.fromhex(addr_hex)
+        + struct.pack(">I", len(domain_bytes))
+        + domain_bytes
+        + struct.pack(">Q", int(timestamp))
+        + b"txt"
+        + struct.pack(">I", len(data_bytes))
+        + data_bytes
+    )
+    return hashlib.sha256(message).digest()
+
+
 def proof_digest(address_raw, domain, timestamp, payload):
     workchain, addr_hex = address_raw.split(":", 1)
     message = (
@@ -88,6 +107,56 @@ class TonWalletBindingTests(unittest.TestCase):
         self.assertEqual(result["address"], RAW_ADDRESS)
         self.assertEqual(result["network"], "-239")
         self.assertTrue(self.db["ton_wallet_challenges"][UID]["consumed"])
+
+    def test_valid_sign_data_binds_wallet(self):
+        challenge = ton_wallet_binding.issue_ton_challenge(UID, domain=DOMAIN)
+        ts = int(datetime.now(timezone.utc).timestamp())
+        digest = sign_data_digest(
+            RAW_ADDRESS,
+            DOMAIN,
+            ts,
+            challenge["sign_data_message"],
+        )
+        signature = self.private_key.sign(digest)
+        result = ton_wallet_binding.verify_ton_sign_data(
+            UID,
+            {
+                "address": RAW_ADDRESS,
+                "network": "-239",
+                "wallet_state_init": "state-init-fixture",
+                "signature": base64.b64encode(signature).decode("ascii"),
+                "timestamp": ts,
+                "domain": DOMAIN,
+                "payload": {
+                    "type": "text",
+                    "text": challenge["sign_data_message"],
+                },
+            },
+        )
+        self.assertEqual(result["uid"], UID)
+        self.assertEqual(result["address"], RAW_ADDRESS)
+        self.assertEqual(result["verification_method"], "ton_sign_data")
+        self.assertTrue(self.db["ton_wallet_challenges"][UID]["consumed"])
+
+    def test_invalid_sign_data_signature_rejected(self):
+        challenge = ton_wallet_binding.issue_ton_challenge(UID, domain=DOMAIN)
+        ts = int(datetime.now(timezone.utc).timestamp())
+        with self.assertRaisesRegex(ValueError, "INVALID_TON_SIGN_DATA"):
+            ton_wallet_binding.verify_ton_sign_data(
+                UID,
+                {
+                    "address": RAW_ADDRESS,
+                    "network": "-239",
+                    "wallet_state_init": "state-init-fixture",
+                    "signature": base64.b64encode(b"0" * 64).decode("ascii"),
+                    "timestamp": ts,
+                    "domain": DOMAIN,
+                    "payload": {
+                        "type": "text",
+                        "text": challenge["sign_data_message"],
+                    },
+                },
+            )
 
     def test_invalid_signature_rejected(self):
         challenge = ton_wallet_binding.issue_ton_challenge(UID, domain=DOMAIN)
