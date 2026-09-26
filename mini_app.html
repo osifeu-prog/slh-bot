@@ -129,7 +129,7 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 <div class="card"><b>🎁 Referral</b><p class="muted">קישור ההזמנה והעמלה הרשומה במערכת.</p><button class="action primary" onclick="openAction('/share','פתיחת Referral')"><b>שתף והזמן</b><span>קישור אישי</span></button></div>
 </section>
 
-<section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH Live (מגובה)</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card"><b>🔐 אימות ארנקים</b><div class="wallet-row"><span class="muted">BNB / BSC</span><span id="bnbBindingStatus" class="pill pending">בודק…</span></div><div id="bnbBindingAddress" class="muted" style="margin:6px 0"></div><div class="ux-wallet-hero"><div class="ux-deposit-title"><b>🔐 חיבור ארנק BNB</b><span>OPEN SAFE MODE</span></div><div class="muted" style="margin-top:6px">חיבור ואימות בעלות פתוחים. הפקדה וזיכוי מטבע פנימי מתבצעים רק לאחר אימות שרת ו־on-chain.</div><div class="ux-wallet-steps"><div class="ux-wallet-step on"><b>1 · Connect</b><span>MetaMask / Trust / WalletConnect</span></div><div class="ux-wallet-step"><b>2 · Verify</b><span>חתימת challenge חד־פעמית</span></div><div class="ux-wallet-step"><b>3 · Deposit</b><span>רק כאשר שער settlement פתוח</span></div></div></div><button class="action" style="width:100%;margin-top:8px" onclick="bindBnbWallet()"><b>🦊 MetaMask / ארנק בדפדפן</b><span>חיבור ישיר + חתימת אימות חד־פעמית</span></button><button class="action primary" style="width:100%;margin-top:8px" onclick="connectBnbWalletConnect()"><b>📱 WalletConnect</b><span>חבר Trust Wallet, MetaMask Mobile וארנקים תואמים מתוך ה-Mini App</span></button><div id="bnbWalletConnectStatus" class="muted" style="margin-top:8px"></div><div id="bnbDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען BNB on-chain…</span></div><label class="form-label" for="bnbTxHash">TX hash של הפקדת BNB</label><input id="bnbTxHash" class="form-input" inputmode="text" placeholder="0x…"><button id="bnbClaimButton" class="action primary" style="width:100%;margin-top:8px" onclick="claimBnbDeposit()"><b>💰 אשר הפקדה והוסף Credits</b><span>server-side verification + confirmations + binding</span></button><div class="guide" style="margin-top:10px"><b>⚡ הפקדת SLH Live</b><p class="muted">שלח SLH מהארנק המאומת אל ה־Treasury. רק Transfer on-chain מאומת ייצור יתרה פנימית מגובה 1:1.</p><label class="form-label" for="slhTxHash">TX hash של הפקדת SLH</label><input id="slhTxHash" class="form-input" inputmode="text" placeholder="0x…"><button id="slhClaimButton" class="action primary" style="width:100%;margin-top:8px" onclick="claimSlhDeposit()"><b>⚡ אמת הפקדת SLH</b><span>Transfer event + contract + Treasury + confirmations</span></button></div><div class="wallet-row" style="margin-top:10px"><span class="muted">TON</span><span id="tonBindingStatus" class="pill pending">בודק…</span></div><div id="tonBindingAddress" class="muted" style="margin:6px 0"></div><div id="tonConnectButton" style="margin-top:8px"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindTonWallet()"><b>💎 אמת ארנק TON</b><span>TON Connect + TON Proof</span></button><div id="tonDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען הגדרות הפקדה…</span></div></div><div class="card actions"><button class="action primary" onclick="show('market')"><b>🛍 Market</b><span>מוצרים ודרכי תשלום</span></button><button class="action" onclick="show('transfer')"><b>💸 העברת Credits</b><span>העברה למשתמש אחר</span></button><button class="action" onclick="openAction('/wallet','פתיחת Wallet')"><b>👛 Wallet</b><span>פתיחת פקודת הארנק</span></button></div><div class="card"><b>מה ההבדל?</b><p class="muted">Credits הם יתרה פנימית. SLH הוא נכס נפרד. מידע on-chain לא צריך להתערבב עם יתרות פנימיות.</p></div><details class="guide"><summary>📘 מדריך Wallet</summary><p>בדוק כאן יתרות וסטטוס. לפני כל פעולה כספית ודא שאתה מבין איזה נכס משתנה ומה הסכום.</p></details></section>
+<section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH Live (מגובה)</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card"><b>🔐 אימות ארנקים</b><div class="wallet-row"><span class="muted">BNB / BSC</span><span id="bnbBindingStatus" class="pill pending">בודק…</span></div><div id="bnbBindingAddress" class="muted" style="margin:6px 0"></div><div class="ux-wallet-hero"><div class="ux-deposit-title"><b>🔐 חיבור ארנק BNB</b><span>OPEN SAFE MODE</span></div><div class="muted" style="margin-top:6px">חיבור ואימות בעלות פתוחים. הפקדה וזיכוי מטבע פנימי מתבצעים רק לאחר אימות שרת ו־on-chain.</div><div class="ux-wallet-steps"><div class="ux-wallet-step on"><b>1 · Connect</b><span>MetaMask / Trust / WalletConnect</span></div><div class="ux-wallet-step"><b>2 · Verify</b><span>חתימת challenge חד־פעמית</span></div><div class="ux-wallet-step"><b>3 · Deposit</b><span>רק כאשר שער settlement פתוח</span></div></div></div><button class="action" style="width:100%;margin-top:8px" onclick="bindBnbWallet()"><b>🦊 MetaMask / ארנק בדפדפן</b><span>חיבור ישיר + חתימת אימות חד־פעמית</span></button><button class="action primary" style="width:100%;margin-top:8px" onclick="connectBnbWalletConnect()"><b>📱 WalletConnect</b><span>חבר Trust Wallet, MetaMask Mobile וארנקים תואמים מתוך ה-Mini App</span></button><div id="bnbWalletConnectStatus" class="muted" style="margin-top:8px"></div><div id="bnbDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען BNB on-chain…</span></div><label class="form-label" for="bnbTxHash">TX hash של הפקדת BNB</label><input id="bnbTxHash" class="form-input" inputmode="text" placeholder="0x…"><button id="bnbClaimButton" class="action primary" style="width:100%;margin-top:8px" onclick="claimBnbDeposit()"><b>💰 אשר הפקדה והוסף Credits</b><span>server-side verification + confirmations + binding</span></button><div class="guide" style="margin-top:10px"><b>⚡ הפקדת SLH Live</b><p class="muted">שלח SLH מהארנק המאומת אל ה־Treasury. רק Transfer on-chain מאומת ייצור יתרה פנימית מגובה 1:1.</p><label class="form-label" for="slhTxHash">TX hash של הפקדת SLH</label><input id="slhTxHash" class="form-input" inputmode="text" placeholder="0x…"><button id="slhClaimButton" class="action primary" style="width:100%;margin-top:8px" onclick="claimSlhDeposit()"><b>⚡ אמת הפקדת SLH</b><span>Transfer event + contract + Treasury + confirmations</span></button></div><div class="guide" id="slhSendCard" style="margin-top:10px"><b>⚡ שליחת SLH on-chain</b><p class="muted">העברה ישירה מהארנק שלך על BNB Smart Chain. SLH OS רק מכין את העסקה; הארנק שלך מאשר ומשדר אותה. אין שמירת מפתחות ואין שינוי ביתרה הפנימית.</p><label class="form-label" for="slhSendRecipient">כתובת יעד</label><input id="slhSendRecipient" class="form-input" inputmode="text" autocomplete="off" placeholder="0x…"><label class="form-label" for="slhSendAmount">כמות SLH</label><input id="slhSendAmount" class="form-input" inputmode="decimal" autocomplete="off" placeholder="לדוגמה: 1"><div class="actions" style="margin-top:10px"><button class="action" type="button" onclick="quoteSlhTransfer()"><b>⛽ בדוק Gas</b><span>יתרת SLH + BNB + עלות משוערת</span></button><button class="action primary" id="slhSendButton" type="button" disabled onclick="sendSlhOnChain()"><b>⚡ שלח SLH</b><span>הארנק יבקש אישור עסקה</span></button></div><div id="slhSendQuote" class="muted" style="margin-top:10px">הזן כתובת יעד וכמות כדי לחשב עלות.</div><div id="slhSendStatus" class="muted" style="margin-top:8px"></div></div><div class="wallet-row" style="margin-top:10px"><span class="muted">TON</span><span id="tonBindingStatus" class="pill pending">בודק…</span></div><div id="tonBindingAddress" class="muted" style="margin:6px 0"></div><div id="tonConnectButton" style="margin-top:8px"></div><button class="action primary" style="width:100%;margin-top:8px" onclick="bindTonWallet()"><b>💎 אמת ארנק TON</b><span>TON Connect + TON Proof</span></button><div id="tonDepositInfo" class="guide" style="margin-top:10px"><span class="muted">טוען הגדרות הפקדה…</span></div></div><div class="card actions"><button class="action primary" onclick="show('market')"><b>🛍 Market</b><span>מוצרים ודרכי תשלום</span></button><button class="action" onclick="show('transfer')"><b>💸 העברת Credits</b><span>העברה למשתמש אחר</span></button><button class="action" onclick="openAction('/wallet','פתיחת Wallet')"><b>👛 Wallet</b><span>פתיחת פקודת הארנק</span></button></div><div class="card"><b>מה ההבדל?</b><p class="muted">Credits הם יתרה פנימית. SLH הוא נכס נפרד. מידע on-chain לא צריך להתערבב עם יתרות פנימיות.</p></div><details class="guide"><summary>📘 מדריך Wallet</summary><p>בדוק כאן יתרות וסטטוס. לפני כל פעולה כספית ודא שאתה מבין איזה נכס משתנה ומה הסכום.</p></details></section>
 <section id="transfer" class="screen"><div class="section-title">💸 העברת Credits</div><div class="card"><b>העברה פנימית למשתמש אחר</b><p class="muted">ההעברה הקיימת במערכת היא העברת Credits. הממשק מכין את הפקודה המדויקת; האישור והביצוע נשארים תחת סמכות הבוט.</p><label class="form-label" for="recipient">מזהה Telegram של המקבל</label><input id="recipient" class="form-input" inputmode="numeric" placeholder="לדוגמה: 5010371391"><label class="form-label" for="amount">סכום Credits</label><input id="amount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 100"><div class="actions" style="margin-top:10px"><button class="action primary" onclick="sendTransferViaApi()"><b>🚀 שלח עכשיו</b><span>העברה ישירה מהאפליקציה</span></button><button class="action primary" onclick="prepareTransfer()"><b>📤 הכנת העברה</b><span>בדיקת שדות והעתקת פקודה</span></button><button class="action" onclick="openAction('/transfer','העברה')"><b>ℹ️ פורמט הפקודה</b><span>/transfer &lt;recipient_uid&gt; &lt;amount&gt;</span></button></div></div><div class="card"><b>חשוב</b><p class="muted">אין כאן מסחר, מחיר שוק או העברת SLH on-chain. זהו מסלול Credits פנימי בלבד. אל תסתמך על צילום מסך במקום אישור ההעברה מהבוט.</p></div><details class="guide"><summary>📘 איך זה עובד?</summary><p>מזינים UID וסכום → הממשק בונה /transfer → מעתיקים ל־Telegram → הבוט מבצע את הבדיקה וההעברה דרך מנגנון הכלכלה הקיים.</p></details></section>
 <section id="buy" class="screen"><div class="section-title">💳 קניית Credits</div><div class="card"><b>רכישה דרך Telegram Stars</b><p class="muted">ה־Mini App מסביר את התהליך; התשלום עצמו נשאר תחת סמכות הבוט.</p><div class="actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>בחר חבילה</b><span>פתיחת תהליך הרכישה</span></button><button class="action" onclick="showGuide('buyguide')"><b>איך זה עובד?</b><span>מדריך קצר</span></button></div><details id="buyguide" class="guide"><summary>📘 מדריך קנייה</summary><p>בחר חבילה → בדוק מחיר וכמות → אשר תשלום ב־Telegram → המתן לאישור. אל תסתמך על צילום מסך כתחליף לאישור המערכת.</p></details></div></section>
 <section id="stake" class="screen"><div class="section-title">🔒 Staking Live</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking מבצע פעולה אמיתית על יתרת Credits באמצעות אותו מנגנון אטומי של המערכת.</p><label class="form-label" for="stakeAmount">כמות Credits</label><input id="stakeAmount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 10"><label class="form-label" for="stakeDays">תקופת נעילה (ימים)</label><input id="stakeDays" class="form-input" inputmode="numeric" value="30"><button class="action primary" style="width:100%;margin-top:10px" onclick="submitStake()"><b>🔒 בצע Staking</b><span>העברה אטומית + Position ID + ledger</span></button></div><div class="card"><b>📊 הפוזיציות שלי</b><div id="stakePositions" class="muted" style="margin-top:8px">טוען…</div></div><div class="card"><b>ℹ️ איך זה עובד</b><p class="muted">ה־UID נלקח מהאימות של Telegram בצד השרת. בקשת Mini App מקבלת מזהה חד־פעמי, כך ש־Retry לא ייצור staking כפול.</p></div></section>
@@ -766,6 +766,167 @@ async function bindTonWallet(){
 
 if(typeof window.ethereum!=='undefined'){
   try{window.ethereum.on('accountsChanged',()=>loadWalletBindings())}catch(_){}
+}
+
+const SLH_BSC_TOKEN_ADDRESS='0xACb0A09414CEA1C879c67bB7A877E4e19480f022';
+const SLH_BSC_CHAIN_HEX='0x38';
+const SLH_BSC_CHAIN_ID=56;
+const SLH_NATIVE_DECIMALS=18;
+const SLH_TRANSFER_SELECTOR='0xa9059cbb';
+const SLH_BALANCEOF_SELECTOR='0x70a08231';
+const SLH_DECIMALS_SELECTOR='0x313ce567';
+const SLH_BNB_SAFETY_BUFFER_BPS=12500;
+const SLH_BNB_RESERVE_WEI=1000000000000000n; // 0.001 BNB retained after an estimated transfer.
+let _slhLastQuote=null;
+
+function _hexBigInt(value){
+  const raw=String(value||'0');
+  return BigInt(raw||'0');
+}
+function _pad32Hex(hex){
+  const raw=String(hex||'').replace(/^0x/i,'').toLowerCase();
+  return raw.padStart(64,'0');
+}
+function _normalizeEvmAddress(value){
+  const a=String(value||'').trim();
+  if(!/^0x[a-fA-F0-9]{40}$/.test(a)) throw Error('כתובת יעד אינה כתובת BSC תקינה');
+  return a;
+}
+function _parseTokenUnits(value,decimals){
+  const s=String(value??'').trim();
+  if(!/^\d+(\.\d+)?$/.test(s)) throw Error('כמות SLH אינה תקינה');
+  const parts=s.split('.');
+  const whole=BigInt(parts[0]||'0');
+  const frac=(parts[1]||'').padEnd(decimals,'0');
+  if(frac.length>decimals) throw Error('יש יותר מדי ספרות עשרוניות עבור SLH');
+  return whole*(10n**BigInt(decimals))+BigInt(frac||'0');
+}
+function _formatUnits(raw,decimals,maxFrac=6){
+  let n=BigInt(raw||0);
+  const neg=n<0n;if(neg)n=-n;
+  const unit=10n**BigInt(decimals);
+  const whole=n/unit;
+  let frac=(n%unit).toString().padStart(decimals,'0').slice(0,maxFrac).replace(/0+$/,'');
+  return (neg?'-':'')+whole.toString()+(frac?'.'+frac:'');
+}
+function _formatGwei(raw){
+  return _formatUnits(raw,9,6)+' Gwei';
+}
+function _erc20TransferData(to,rawAmount){
+  return SLH_TRANSFER_SELECTOR+_pad32Hex(to)+_pad32Hex(rawAmount.toString(16));
+}
+function _erc20BalanceData(address){
+  return SLH_BALANCEOF_SELECTOR+_pad32Hex(address);
+}
+async function _getSlhTxProvider(){
+  if(_walletConnectProvider)return _walletConnectProvider;
+  if(window.ethereum)return window.ethereum;
+  throw Error('חבר קודם ארנק BNB דרך WalletConnect או ארנק בדפדפן');
+}
+async function _ensureBscProvider(provider){
+  let chain=await provider.request({method:'eth_chainId'}).catch(()=>null);
+  if(chain!==SLH_BSC_CHAIN_HEX){
+    try{
+      await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:SLH_BSC_CHAIN_HEX}]});
+    }catch(e){
+      if(e&&e.code===4902){
+        await provider.request({method:'wallet_addEthereumChain',params:[{
+          chainId:SLH_BSC_CHAIN_HEX,chainName:'BNB Smart Chain',
+          nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},
+          rpcUrls:['https://bsc-dataseed.binance.org/'],
+          blockExplorerUrls:['https://bscscan.com/']
+        }]});
+      }else throw e;
+    }
+  }
+  chain=await provider.request({method:'eth_chainId'});
+  if(chain!==SLH_BSC_CHAIN_HEX)throw Error('הארנק אינו מחובר ל־BNB Smart Chain');
+  let accounts=await provider.request({method:'eth_accounts'}).catch(()=>[]);
+  if(!Array.isArray(accounts)||!accounts[0])accounts=await provider.request({method:'eth_requestAccounts'});
+  const address=accounts&&accounts[0];
+  if(!address)throw Error('לא נבחר ארנק BNB');
+  return address;
+}
+async function quoteSlhTransfer(){
+  if(!initData){showAuthGate();throw Error('פתח מתוך Telegram')}
+  const out=$('slhSendQuote'),status=$('slhSendStatus'),button=$('slhSendButton');
+  if(button)button.disabled=true;
+  if(out)out.textContent='⏳ מחשב יתרת SLH ו־Gas בזמן אמת…';
+  if(status)status.textContent='';
+  try{
+    const recipient=_normalizeEvmAddress($('slhSendRecipient')?.value);
+    const amountText=($('slhSendAmount')?.value||'').trim();
+    const provider=await _getSlhTxProvider();
+    const account=await _ensureBscProvider(provider);
+    const bindingResp=await fetch('/api/wallet/bnb',{headers,cache:'no-store'});
+    const bindingData=await bindingResp.json().catch(()=>({}));
+    if(!bindingResp.ok)throw Error(bindingData.error||('HTTP '+bindingResp.status));
+    const bound=bindingData.binding;
+    if(!bound)throw Error('BNB_WALLET_NOT_VERIFIED');
+    if(String(bound.address).toLowerCase()!==String(account).toLowerCase())throw Error('הארנק המחובר שונה מהארנק המאומת');
+    const decimalsRaw=await provider.request({method:'eth_call',params:[{to:SLH_BSC_TOKEN_ADDRESS,data:SLH_DECIMALS_SELECTOR},'latest']});
+    const decimals=Number(_hexBigInt(decimalsRaw));
+    if(!Number.isInteger(decimals)||decimals<0||decimals>30)throw Error('SLH decimals לא תקינים');
+    const rawAmount=_parseTokenUnits(amountText,decimals);
+    if(rawAmount<=0n)throw Error('כמות SLH חייבת להיות גדולה מאפס');
+    const balanceRaw=_hexBigInt(await provider.request({method:'eth_call',params:[{to:SLH_BSC_TOKEN_ADDRESS,data:_erc20BalanceData(account)},'latest']}));
+    if(rawAmount>balanceRaw)throw Error('אין מספיק SLH בארנק');
+    const data=_erc20TransferData(recipient,rawAmount);
+    const gasRaw=_hexBigInt(await provider.request({method:'eth_estimateGas',params:[{from:account,to:SLH_BSC_TOKEN_ADDRESS,data,value:'0x0'}]));
+    if(gasRaw<=0n)throw Error('הרשת לא הצליחה להעריך Gas לעסקה');
+    const gasPriceRaw=_hexBigInt(await provider.request({method:'eth_gasPrice'}));
+    if(gasPriceRaw<=0n)throw Error('לא התקבל מחיר Gas');
+    const estimatedFeeRaw=gasRaw*gasPriceRaw;
+    const bufferedFeeRaw=(estimatedFeeRaw*SLH_BNB_SAFETY_BUFFER_BPS+9999n)/10000n;
+    const requiredBnbRaw=bufferedFeeRaw+SLH_BNB_RESERVE_WEI;
+    const bnbBalanceRaw=_hexBigInt(await provider.request({method:'eth_getBalance',params:[account,'latest']}));
+    if(bnbBalanceRaw<requiredBnbRaw){
+      throw Error('אין מספיק BNB גם לעמלה וגם לרזרבת הביטחון. נדרש לפחות '+_formatUnits(requiredBnbRaw,18,8)+' BNB');
+    }
+    const bnbAfterRaw=bnbBalanceRaw-estimatedFeeRaw;
+    if(out)out.innerHTML=
+      '<div><b>✅ עסקה ניתנת לחישוב</b></div>'+
+      '<div>SLH: <b>'+esc(_formatUnits(rawAmount,decimals,6))+'</b> → '+esc(recipient)+'</div>'+
+      '<div>יתרת SLH: '+esc(_formatUnits(balanceRaw,decimals,6))+'</div>'+
+      '<div>Gas משוער: '+esc(gasRaw.toString())+'</div>'+
+      '<div>Gas Price: '+esc(_formatGwei(gasPriceRaw))+'</div>'+
+      '<div>עמלה משוערת: <b>'+esc(_formatUnits(estimatedFeeRaw,18,8))+' BNB</b></div>'+
+      '<div>רזרבת ביטחון: '+esc(_formatUnits(requiredBnbRaw-estimatedFeeRaw,18,8))+' BNB</div>'+
+      '<div>BNB אחרי העמלה המשוערת: <b>'+esc(_formatUnits(bnbAfterRaw,18,8))+' BNB</b></div>';
+    if(status)status.textContent='⛽ ה־Gas מחושב בזמן אמת. הארנק עצמו יציג את הסכום הסופי לפני אישור.';
+    _slhLastQuote={provider,account,recipient,rawAmount,decimals,data,gasRaw,gasPriceRaw,estimatedFeeRaw,bnbBalanceRaw,requiredBnbRaw};
+    if(button)button.disabled=false;
+    return _slhLastQuote;
+  }catch(e){
+    _slhLastQuote=null;
+    if(out)out.textContent='❌ '+(e.message||e);
+    if(status)status.textContent='העסקה לא נשלחה.';
+    toast('❌ SLH: '+(e.message||e));
+    throw e;
+  }
+}
+async function sendSlhOnChain(){
+  try{
+    const q=await quoteSlhTransfer();
+    if(!_slhLastQuote)throw Error('חסר אומדן עסקה');
+    const txParams={
+      from:q.account,
+      to:SLH_BSC_TOKEN_ADDRESS,
+      data:q.data,
+      value:'0x0',
+      gas:'0x'+q.gasRaw.toString(16),
+      gasPrice:'0x'+q.gasPriceRaw.toString(16)
+    };
+    setText('slhSendStatus','⏳ מבקש אישור עסקה מהארנק…');
+    const txHash=await q.provider.request({method:'eth_sendTransaction',params:[txParams]});
+    const status=$('slhSendStatus');
+    if(status)status.innerHTML='✅ נשלחה עסקת SLH.<br><a href="https://bscscan.com/tx/'+encodeURIComponent(txHash)+'" target="_blank" rel="noopener">פתיחת TX ב־BscScan</a>';
+    toast('✅ עסקת SLH נשלחה');
+    return txHash;
+  }catch(e){
+    if(String(e?.message||'').toLowerCase().includes('user rejected'))toast('העסקה בוטלה בארנק');
+    return null;
+  }
 }
 function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}show('home');if(!initData){showAuthGate();}else{hideAuthGate();loadMe();trackGrowth('home_view','home',{screen:'home'});}
 
