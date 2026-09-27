@@ -16,8 +16,8 @@ class BnbCanonicalTreasuryGateTests(unittest.TestCase):
 
     def test_gate_is_closed_without_explicit_canonical_treasury(self):
         with patch.dict(os.environ, {"BNB_DEPOSITS_OPEN": "1"}, clear=False), patch(
-            "core.bnb_gate.get_bsc_config", return_value=self.cfg()
-        ), patch("core.bnb_gate.Path"):
+            "core.bnb_gate._effective_config", return_value=self.cfg()
+        ):
             status = bnb_readiness()
         self.assertFalse(status["effective_open"])
         self.assertIn("BNB_CANONICAL_TREASURY_MISSING", status["reasons"])
@@ -30,7 +30,7 @@ class BnbCanonicalTreasuryGateTests(unittest.TestCase):
                 "SLH_BSC_CANONICAL_TREASURY": self.cfg()["treasury_wallet"],
             },
             clear=False,
-        ), patch("core.bnb_gate.get_bsc_config", return_value=self.cfg()), patch("core.bnb_gate.Path"):
+        ), patch("core.bnb_gate._effective_config", return_value=self.cfg()):
             status = bnb_readiness()
         self.assertTrue(status["effective_open"])
 
@@ -42,7 +42,7 @@ class BnbCanonicalTreasuryGateTests(unittest.TestCase):
                 "SLH_BSC_CANONICAL_TREASURY": "0x2222222222222222222222222222222222222222",
             },
             clear=False,
-        ), patch("core.bnb_gate.get_bsc_config", return_value=self.cfg()), patch("core.bnb_gate.Path"):
+        ), patch("core.bnb_gate._effective_config", return_value=self.cfg()):
             status = bnb_readiness()
         self.assertFalse(status["effective_open"])
         self.assertIn("BNB_CANONICAL_TREASURY_MISMATCH", status["reasons"])
