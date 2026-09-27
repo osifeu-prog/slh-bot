@@ -227,6 +227,24 @@ def run_bot(bot):
             log(f"Polling crashed: {type(e).__name__}: {e}")
             time.sleep(10)
 
+def configure_default_mini_app_menu(bot):
+    """Expose the Mini App from Telegram's persistent private-chat menu."""
+    try:
+        from telebot import types
+        mini_app_url = (
+            os.getenv("SLH_MINI_APP_URL")
+            or "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+        ).strip()
+        bot.set_chat_menu_button(
+            menu_button=types.MenuButtonWebApp(
+                text="🚀 SLH OS",
+                web_app=types.WebAppInfo(url=mini_app_url),
+            )
+        )
+        log("[TELEGRAM] Default Mini App menu button configured")
+    except Exception as exc:
+        log(f"[TELEGRAM] Mini App menu button configuration skipped: {type(exc).__name__}")
+
 def token_in_use(token, started_tokens):
     token = str(token or "").strip()
     if not token:
