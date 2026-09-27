@@ -122,6 +122,49 @@ def register(bot):
         except ValueError as exc:
             bot.reply_to(msg, f"❌ {exc}")
 
+    @bot.message_handler(commands=["vault_verify"])
+    def vault_verify(msg):
+        if not guard(msg):
+            return
+        parts = (msg.text or "").split()
+        names = [_bot(parts[1])] if len(parts) > 1 else [row["username"] for row in bot_vault.list_bots()]
+        out = ["🔎 Bot Vault verification"]
+        for name in names:
+            try:
+                db = __import__("state_manager").load_db()
+                entry = (db.get("bot_vault") or {}).get(name)
+                if not entry:
+                    raise ValueError("BOT_NOT_IN_VAULT")
+                token = bot_vault.get_token(name)
+                info = bot_vault._verify(token)
+                identity_ok = str(entry.get("bot_id")) == str(info.get("bot_id")) and name == info.get("username")
+                encrypted_ok = bool(entry.get("token_enc"))
+                exposures = len([x for x in entry.get("exposures", []) if not x.get("resolved_at")])
+                state = "✅" if identity_ok and encrypted_ok else "❌"
+                out.append(f"{state} @{name} · encrypted={'yes' if encrypted_ok else 'no'} · identity={'match' if identity_ok else 'MISMATCH'} · module={entry.get('module','home')} · {entry.get('token_tail','')} · exposures={exposures}")
+            except ValueError as exc:
+                out.append(f"❌ @{name}: {exc}")
+            except Exception:
+                out.append(f"❌ @{name}: VAULT_VERIFY_FAILED")
+        bot.reply_to(msg, "\n".join(out))
+
+    @bot.message_handler(commands=["vault_help"])
+    def vault_help(msg):
+        if not guard(msg):
+            return
+        bot.reply_to(msg, """🔐 Bot Vault — Owner
+
+/vault — רשימת בוטים ומטא־דאטה
+/vault_verify [@bot] — אימות הצפנה + זהות Telegram לכל הרשומות
+/vault_add <token> [module] — הוספה מוצפנת; ההודעה נמחקת
+/vault_rotate <@bot> <new_token> — סיבוב טוקן
+/vault_remove <@bot> — הסרה ושמירת audit
+/vault_health [@bot] — getMe + webhook + pending
+/vault_exposed <@bot> <source> [note] — רישום חשיפה כהמלצה
+/vault_log — 20 פעולות אחרונות ללא טוקנים
+
+⚠️ טוקנים לעולם לא מוחזרים בתשובה.""")
+ 
     @bot.message_handler(commands=["vault_log"])
     def vault_log(msg):
         if not guard(msg):
