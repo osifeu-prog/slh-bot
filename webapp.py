@@ -244,6 +244,26 @@ def _no_store(resp):
     return resp
 
 
+@app.route("/api/v1/vault")
+def bot_vault_snapshot():
+    """Owner-only Bot Vault snapshot; never exposes decrypted tokens."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.authority import get_role, normalize_uid
+        if get_role(normalize_uid(uid)) != "OWNER":
+            return jsonify({"error": "OWNER_ONLY"}), 403
+        from core import bot_vault
+        return _no_store(jsonify({
+            "ok": True,
+            "bots": bot_vault.list_bots(),
+        })), 200
+    except Exception as exc:
+        print("[VAULT] snapshot error:", type(exc).__name__)
+        return jsonify({"error": "VAULT_UNAVAILABLE"}), 503
+
+
 @app.route("/api/v1/me")
 def investor_me():
     """Return the read-only investor snapshot for the authenticated Telegram user."""
