@@ -210,6 +210,23 @@ def developer_lab_requests():
         return jsonify({"error": "DEV_LAB_REQUESTS_FAILED"}), 500
 
 
+@app.route("/api/dev/lab/preview/<request_id>", methods=["GET"])
+def developer_lab_preview(request_id):
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    try:
+        from core.developer_lab import request_preview
+        return jsonify(request_preview(request_id, actor)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except KeyError:
+        return jsonify({"error": "REQUEST_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[DEV_LAB] preview error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_PREVIEW_FAILED"}), 500
+
+
 @app.route("/api/dev/lab/status/<request_id>", methods=["GET"])
 def developer_lab_status(request_id):
     actor, error, status = _developer_lab_actor()
