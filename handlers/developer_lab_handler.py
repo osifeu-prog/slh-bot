@@ -44,6 +44,32 @@ def _call(method, path, uid, payload=None):
 
 
 def register(bot):
+    @bot.message_handler(commands=["dev_read"])
+    def dev_read(m):
+        role = get_role(m.from_user.id)
+        if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
+            bot.reply_to(m, "⛔ Developer Access required.")
+            return
+        parts = (m.text or "").split(maxsplit=1)
+        if len(parts) != 2:
+            bot.reply_to(m, "Usage: /dev_read <path>")
+            return
+        try:
+            result = _call(
+                "GET",
+                "/api/dev/lab/file?path=" + requests.utils.quote(parts[1].strip(), safe="/._-"),
+                m.from_user.id,
+            )
+            content = str(result.get("content") or "")
+            if result.get("truncated"):
+                content += "\n… truncated at 12000 bytes"
+            bot.reply_to(
+                m,
+                f"📄 {result.get('path')}\n\n{content}"[:3900],
+            )
+        except Exception as exc:
+            bot.reply_to(m, f"❌ Developer read: {type(exc).__name__}: {str(exc)[:200]}")
+
     @bot.message_handler(commands=["dev_write"])
     def dev_write(m):
         role = get_role(m.from_user.id)
