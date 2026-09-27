@@ -22,6 +22,21 @@ def _display_name(uid, data):
 def _role_permissions(role):
     return sorted(ROLES.get(str(role or "").upper(), []))
 
+def _parse_target_uid(parts):
+    """Return a positive numeric Telegram UID or None for invalid input."""
+    if len(parts) < 2:
+        return None
+    raw = str(parts[1] or "").strip()
+    if not raw.isdigit() or int(raw) <= 0:
+        return None
+    return raw
+
+
+def _target_user_exists(uid):
+    db = state_manager.load_db()
+    return str(uid) in db.get("users", {})
+
+
 
 def _parse_permission_command(parts):
     """Parse explicit permission actions without treating action words as permissions."""
@@ -90,7 +105,13 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /dev_remove <user_id>")
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         profile_manager.update_user(uid, {
             "role": "student",
             "permissions": _role_permissions("USER"),
@@ -107,7 +128,13 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /dev_lock <user_id>")
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         profile_manager.update_user(uid, {
             "role": "student",
             "permissions": _role_permissions("USER"),
@@ -124,7 +151,13 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(m, "Usage: /dev_revoke <user_id>")
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         profile_manager.update_user(uid, {
             "role": "student",
             "permissions": _role_permissions("USER"),
@@ -152,7 +185,13 @@ def register(bot):
         if len(parts) < 3:
             bot.reply_to(m, "Usage: /dev_reward <user_id> <credits> [reason]")
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         try:
             credits = float(parts[2])
         except (TypeError, ValueError):
@@ -226,7 +265,13 @@ def register(bot):
                 "Also: /dev_perm <user_id> +<permission> | -<permission>",
             )
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         action, perm = _parse_permission_command(parts)
         if not perm or perm in {"add", "remove", "toggle"}:
             bot.reply_to(m, "❌ Permission name is required.")
@@ -257,8 +302,18 @@ def register(bot):
         if len(parts) < 3:
             bot.reply_to(m, "Usage: /dev_role <user_id> <role>")
             return
-        uid = parts[1].strip()
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
         role = _normalize_role_action(parts[2])
+        if role not in {"revoke", "lock"} and role not in {str(r).lower() for r in ROLES}:
+            bot.reply_to(m, f"❌ תפקיד לא מוכר: {role}.")
+            return
+
         if role == "developer":
             bot.reply_to(
                 m,
