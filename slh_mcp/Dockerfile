@@ -15,4 +15,4 @@ ENV PYTHONUNBUFFERED=1
 COPY slh_mcp/boot.sh /usr/local/bin/slh-mcp-boot
 RUN chmod +x /usr/local/bin/slh-mcp-boot
 CMD ["/usr/local/bin/slh-mcp-boot"]
-# Railway deployment trigger: rebuild after service dockerfile-path reconciliation; startCommand is handled by Railway.
+# MCP service build is intentionally isolated from the bot image; Railway service config selects this Dockerfile.
