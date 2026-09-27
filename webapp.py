@@ -167,6 +167,7 @@ def developer_lab_propose():
             payload.get("path"),
             payload.get("content"),
             payload.get("summary"),
+            chat_id=payload.get("chat_id"),
         )
         safe = {k: result.get(k) for k in ("id", "uid", "path", "summary", "status", "created_at")}
         return jsonify(safe), 201
