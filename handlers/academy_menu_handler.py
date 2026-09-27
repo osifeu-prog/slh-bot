@@ -2,14 +2,26 @@ from core import academy_manager
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-def _lesson_keyboard(course_id, stage):
-    markup = InlineKeyboardMarkup(row_width=1)
-    markup.add(
-        InlineKeyboardButton(
-            "📖 פתח שיעור",
-            callback_data=f"slh_lesson_{course_id}_{stage}"
+def _lesson_picker(course_id, stages, completed):
+    markup = InlineKeyboardMarkup(row_width=2)
+    completed = set(int(x) for x in (completed or []) if str(x).isdigit())
+
+    for item in stages:
+        stage_id = int(item.get("id"))
+        if stage_id in completed:
+            label = f"✅ שיעור {stage_id}"
+        elif stage_id == (max(completed) + 1 if completed else 1):
+            label = f"▶️ המשך {stage_id}"
+        else:
+            label = f"🔒 שיעור {stage_id}"
+
+        markup.add(
+            InlineKeyboardButton(
+                label,
+                callback_data=f"slh_lesson_{course_id}_{stage_id}"
+            )
         )
-    )
+
     markup.add(
         InlineKeyboardButton(
             "🎓 חזרה ל-Academy",
@@ -19,9 +31,51 @@ def _lesson_keyboard(course_id, stage):
     return markup
 
 
+def _course_overview(bot, chat_id, uid, course_id):
+    course = academy_manager.get_courses().get(course_id)
+    if not course:
+        bot.send_message(chat_id, "❌ קורס לא נמצא")
+        return
+
+    progress = academy_manager.get_course(uid, course_id) or {}
+    completed = set(
+        int(x) for x in (progress.get("completed", []) or [])
+        if str(x).isdigit()
+    )
+    stages = course.get("stages", [])
+    total = len(stages)
+    complete = bool(total and len(completed) >= total)
+
+    if complete:
+        intro = (
+            f"🎓 {course['title']}\n\n"
+            "✅ הקורס הושלם במלואו.\n"
+            "אפשר לחזור לכל שיעור, לקרוא אותו שוב ולהמשיך מהנקודה הרצויה.\n\n"
+            "בחר שיעור:"
+        )
+    else:
+        next_stage = min(
+            [int(item.get("id")) for item in stages
+             if int(item.get("id")) not in completed],
+            default=1,
+        )
+        intro = (
+            f"🎓 {course['title']}\n\n"
+            f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n"
+            "שיעורים שהושלמו נשארים פתוחים לחזרה בכל עת.\n\n"
+            "בחר שיעור:"
+        )
+
+    bot.send_message(
+        chat_id,
+        intro,
+        reply_markup=_lesson_picker(course_id, stages, completed),
+    )
+
+
 def register(bot):
 
-    @bot.message_handler(commands=['academy'])
+    @bot.message_handler(commands=["academy"])
     def academy(m):
         _send_academy(bot, m.chat.id, str(m.from_user.id))
 
@@ -50,36 +104,8 @@ def register(bot):
             return
 
         academy_manager.start_course(uid, cid)
-        progress = academy_manager.get_course(uid, cid)
-        current = int(progress.get("stage", 0) or 0)
-        total = len(course.get("stages", []))
-        completed = set(progress.get("completed", []))
-
         bot.answer_callback_query(call.id)
-
-        if total and current >= total and total in completed:
-            bot.send_message(
-                call.message.chat.id,
-                f"🎓 {course['title']}\n\n"
-                "✅ הקורס הושלם במלואו!\n\n"
-                "כל נקודות הלימוד נזקפו לחשבונך. אפשר להמשיך לקורס הבא.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(
-                    "🎓 חזרה ל-Academy", callback_data="slh_academy"
-                )]])
-            )
-            return
-
-        next_stage = current + 1
-        if total:
-            next_stage = min(next_stage, total)
-
-        bot.send_message(
-            call.message.chat.id,
-            f"📘 {course['title']}\n\n"
-            f"השיעור הבא שלך: שלב {next_stage}\n\n"
-            "לחץ על הכפתור כדי לפתוח את השיעור.",
-            reply_markup=_lesson_keyboard(cid, next_stage)
-        )
+        _course_overview(bot, call.message.chat.id, uid, cid)
 
     @bot.callback_query_handler(
         func=lambda c: c.data.startswith("slh_lesson_")
@@ -89,6 +115,7 @@ def register(bot):
         if "_" not in raw:
             bot.answer_callback_query(call.id, "שיעור לא תקין")
             return
+
         course_id, stage_raw = raw.rsplit("_", 1)
         try:
             stage = int(stage_raw)
@@ -98,8 +125,13 @@ def register(bot):
 
         from core import lesson_engine
         uid = str(call.from_user.id)
+
         if not lesson_engine.can_access_lesson(uid, course_id, stage):
-            bot.answer_callback_query(call.id, "השיעור נעול")
+            bot.answer_callback_query(
+                call.id,
+                "🔒 יש להשלים קודם את השיעור הקודם",
+                show_alert=False,
+            )
             return
 
         lesson = lesson_engine.get_lesson(course_id, stage)
@@ -107,11 +139,30 @@ def register(bot):
             bot.answer_callback_query(call.id, "השיעור לא נמצא")
             return
 
+        progress = academy_manager.get_course(uid, course_id) or {}
+        completed = stage in {
+            int(x) for x in (progress.get("completed", []) or [])
+            if str(x).isdigit()
+        }
+        course = academy_manager.get_courses().get(course_id) or {}
+        total = len(course.get("stages", []))
+
         markup = InlineKeyboardMarkup(row_width=1)
         markup.add(
             InlineKeyboardButton(
+                "✅ כבר הושלם — קרא שוב",
+                callback_data=f"slh_lesson_{course_id}_{stage}"
+            )
+            if completed else
+            InlineKeyboardButton(
                 "✅ סיימתי את השיעור",
                 callback_data=f"slh_finish_{course_id}_{stage}"
+            )
+        )
+        markup.add(
+            InlineKeyboardButton(
+                "📚 בחירת שיעור בקורס",
+                callback_data=f"academy_{course_id}"
             )
         )
         markup.add(
@@ -120,11 +171,17 @@ def register(bot):
                 callback_data="slh_academy"
             )
         )
+
         bot.answer_callback_query(call.id)
         bot.send_message(
             call.message.chat.id,
-            f"📘 {lesson['name']}\n\n{lesson['content']}",
-            reply_markup=markup
+            f"📘 {lesson['name']}\n\n{lesson['content']}\n\n"
+            + (
+                "✅ השיעור כבר הושלם — ניתן לחזור אליו בכל עת."
+                if completed else
+                "סיימת? לחץ על הכפתור למטה. 👇"
+            ),
+            reply_markup=markup,
         )
 
     @bot.callback_query_handler(
@@ -135,6 +192,7 @@ def register(bot):
         if "_" not in raw:
             bot.answer_callback_query(call.id, "שיעור לא תקין")
             return
+
         course_id, stage_raw = raw.rsplit("_", 1)
         try:
             stage = int(stage_raw)
@@ -148,7 +206,18 @@ def register(bot):
 
         if result.get("already_completed"):
             bot.answer_callback_query(call.id, "השיעור כבר הושלם")
+            bot.send_message(
+                call.message.chat.id,
+                "ℹ️ השיעור כבר הושלם. אפשר לפתוח אותו שוב דרך בחירת השיעור.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton(
+                        "📚 בחירת שיעור בקורס",
+                        callback_data=f"academy_{course_id}"
+                    )
+                ]]),
+            )
             return
+
         if not result.get("ok"):
             bot.answer_callback_query(call.id, "לא ניתן להשלים את השיעור")
             return
@@ -168,8 +237,8 @@ def register(bot):
         else:
             markup.add(
                 InlineKeyboardButton(
-                    "🏁 הקורס הושלם",
-                    callback_data="slh_academy"
+                    "🏁 הקורס הושלם — פתח את רשימת השיעורים",
+                    callback_data=f"academy_{course_id}"
                 )
             )
 
@@ -184,7 +253,7 @@ def register(bot):
         next_text = (
             f"➡️ השיעור הבא: {stage + 1}/{total}"
             if stage < total else
-            "🏁 זה היה השיעור האחרון בקורס."
+            "🏁 זה היה השיעור האחרון. כל השיעורים נשארים זמינים לחזרה."
         )
         bot.send_message(
             call.message.chat.id,
@@ -207,9 +276,7 @@ def _send_academy(bot, chat_id, uid):
     for cid, data in courses.items():
         stages = data.get("stages", [])
         total = len(stages)
-
         progress = academy_manager.get_course(uid, cid) or {}
-        current = int(progress.get("stage", 0) or 0)
 
         completed = set()
         for value in progress.get("completed", []) or []:
@@ -218,22 +285,25 @@ def _send_academy(bot, chat_id, uid):
             except (TypeError, ValueError):
                 pass
 
-        stage_ids = []
+        remaining = []
         for item in stages:
             try:
-                stage_ids.append(int(item.get("id")))
+                stage_id = int(item.get("id"))
             except (TypeError, ValueError):
-                pass
-
-        remaining = [stage_id for stage_id in stage_ids if stage_id not in completed]
+                continue
+            if stage_id not in completed:
+                remaining.append(stage_id)
 
         text += f"📘 {data['title']}\n"
 
         if total and not remaining:
-            text += f"✅ הושלם: {total}/{total}\n\n"
-            button_text = f"✅ {data['title']} — הושלם"
+            text += (
+                f"✅ הושלם: {total}/{total}\n"
+                "📖 זמין לקריאה חוזרת בכל עת.\n\n"
+            )
+            button_text = f"📖 חזרה לקורס {data['title']}"
         else:
-            next_stage = remaining[0] if remaining else min(current + 1, total)
+            next_stage = remaining[0] if remaining else min(len(completed) + 1, total)
             text += f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n\n"
             button_text = f"▶️ המשך {data['title']} · {next_stage}/{total}"
 

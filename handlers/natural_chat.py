@@ -1,5 +1,6 @@
 from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
+from core.conversation_memory import record_turn
 
 
 def register(bot, context=None):
@@ -82,6 +83,16 @@ def register(bot, context=None):
                 answer[:4000],
                 parse_mode=None
             )
+            if (
+                answer
+                and not answer.startswith("🧠 ה־AI אינו זמין כרגע")
+                and not answer.startswith("מנוע ה-AI לא זמין כרגע")
+            ):
+                record_turn(
+                    str(msg.from_user.id),
+                    user_text,
+                    answer[:4000],
+                )
         except Exception as e:
             print("NATURAL CHAT SEND ERROR:", e)
 

@@ -59,24 +59,14 @@ def register(bot):
 
     @bot.message_handler(commands=['courses'])
     def courses(m):
-        courses = academy_manager.get_courses()
-
-        if not courses:
-            bot.reply_to(
-                m,
-                "📚 אין קורסים זמינים כרגע"
-            )
-            return
-
-        text = "🎓 SLH Academy\n\n"
-
-        for cid, data in courses.items():
-            text += (
-                f"📘 {data['title']} — {_access_label(data)}\n"
-                f"/course_{cid}\n\n"
-            )
-
-        bot.reply_to(m, text)
+        # Keep /courses and /academy on the same canonical interactive UI.
+        # This gives completed courses a real reopen path instead of a dead-end text list.
+        from handlers.academy_menu_handler import _send_academy
+        _send_academy(
+            bot,
+            m.chat.id,
+            str(m.from_user.id),
+        )
 
     @bot.message_handler(commands=['academy_progress'])
     def progress(m):

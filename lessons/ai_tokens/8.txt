@@ -1,28 +1,40 @@
-ההפתעה הגדולה של 2024-2026: הנחה של 50-90% על תוכן שחוזר על עצמו.
+תוכן שחוזר על עצמו הוא בזבוז פוטנציאלי — ולכן caching הוא כלי מרכזי במערכות AI.
 
-• חברה: Anthropic | הנחה: 90% | מינימום: 1,024 טוקנים | תוקף Cache: 5 דקות (auto-extends)
-• חברה: Google | הנחה: 90% | מינימום: 32,768 טוקנים | תוקף Cache: 1 שעה (configurable)
-• חברה: OpenAI | הנחה: 50% | מינימום: 1,024 טוקנים | תוקף Cache: 5-10 דקות
+בפועל, ספקי מודלים מציעים כיום מנגנוני prompt/context caching בתנאים שונים, והמחירים והספים משתנים. בדקו תמיד את התיעוד הרשמי של הספק לפני אופטימיזציה כספית. לדוגמה, Google מפרסמת מחירי context caching נפרדים לפי מודל ורמת שירות.
 
-מתי זה עובד:
-- מערכת RAG עם אותו corpus
-- Chat application עם system prompt קבוע
-- API שמבצע אותה פעולה עם נתונים שונים
+### לחשוב כמו blockchain
+חלק קבוע אפשר לראות כ"prefix" יציב:
+- system rules
+- tool definitions
+- project context
+- מסמכי ידע יציבים
 
-Anthropic example (Python):
-from anthropic import Anthropic
-client = Anthropic()
-response = client.messages.create(
-    model="claude-opus-4-6",
-    max_tokens=1024,
-    system=[
-        {
-            "type": "text",
-            "text": "You are a helpful Hebrew tutor...",
-            "cache_control": {"type": "ephemeral"}  # ← THIS
-        }
-    ],
-    messages=[{"role": "user", "content": "שאלה ראשונה"}],
-)
+וחלק משתנה:
+- user message
+- current state
+- new evidence
 
-חיסכון אמיתי: במערכת SLH, בוט עם system prompt של ~3,000 טוקנים שעונה ל-100 שיחות ביום: בלי cache = $0.45/יום. עם cache = $0.05/יום. חיסכון של 90%.
+כך מתקבלת צורת עבודה:
+
+STABLE CONTEXT
+↓
+CACHED / REUSED
+↓
+CURRENT EVENT
+↓
+NEW RESPONSE
+
+היתרון הוא לא רק מחיר.
+גם ארכיטקטורה טובה יותר נוצרת:
+- פחות payload חוזר
+- פחות רעש
+- פחות סיכון לסתירות
+- יותר הפרדה בין "מה קבוע" לבין "מה השתנה"
+
+### אבל cache אינו truth
+Cache יכול להיות ישן.
+
+לכן:
+Canonical State / Live Runtime > Cached Context
+
+זה כלל קריטי במערכות שיש בהן כסף, הרשאות או מצב מערכת.

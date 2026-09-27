@@ -489,10 +489,31 @@ def register(bot):
                 f"PR #{result.get('pr_number')}",
                 f"Checks: {result.get('ci_total', 0)}",
             ]
-            for item in checks[:20]:
+            for item in checks[:12]:
                 lines.append(
                     f"• {item.get('name')}: {item.get('status')} / {item.get('conclusion')}"
                 )
+
+            evidence = result.get("workflow_evidence") or []
+            if evidence:
+                lines.append("")
+                lines.append("🔎 Runner diagnostics:")
+                for run in evidence[:8]:
+                    if run.get("error"):
+                        lines.append(f"• diagnostics error: {run.get('error')}")
+                        continue
+                    lines.append(
+                        f"• {run.get('workflow')}: run {run.get('run_id')} "
+                        f"{run.get('status')}/{run.get('conclusion')}"
+                    )
+                    for job in (run.get("jobs") or [])[:4]:
+                        lines.append(
+                            f"  ↳ {job.get('job')}: "
+                            f"{job.get('status')}/{job.get('conclusion')} "
+                            f"runner={job.get('runner_id') or 'none'} "
+                            f"steps={job.get('steps_count') if job.get('steps_count') is not None else 'none'}"
+                        )
+
             bot.reply_to(m, "\n".join(lines)[:3900])
         except Exception as exc:
             bot.reply_to(m, f"❌ CI lookup failed: {type(exc).__name__}")
