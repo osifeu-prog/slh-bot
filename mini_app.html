@@ -830,9 +830,15 @@ async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)ret
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
   _tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl:'https://slh-cloud-bot-production.up.railway.app/tonconnect-manifest.json',
-    buttonRootId:'tonConnectButton'
+    manifestUrl:window.location.origin+'/tonconnect-manifest.json',
+    buttonRootId:'tonConnectButton',
+    restoreConnection:true
   });
+  _tonConnectUI.connectionRestored?.then(restored=>{
+    if(!restored){
+      console.log('[TON] No previous connection restored');
+    }
+  }).catch(err=>console.warn('[TON] restore connection failed',err));
   _tonConnectUI.onStatusChange(async wallet=>{
     if(!wallet){
       setText('tonBindingStatus','⚪️ TON לא מחובר');
