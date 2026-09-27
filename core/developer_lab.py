@@ -134,6 +134,40 @@ def submit_proposal(uid: str, path: str, content: str, summary: str) -> dict:
     return state_manager.atomic_update(mutate)
 
 
+
+def read_file(path: str) -> dict:
+    path = _normalize_path(path)
+    if path.startswith(".git/") or path.startswith("state/") or _SECRET_WORDS.search(path):
+        raise PermissionError("PATH_NOT_READABLE")
+    if not (path in _ALLOWED_ROOT_FILES or path.startswith(_ALLOWED_PREFIXES) or path in _PROTECTED):
+        raise PermissionError("PATH_NOT_READABLE")
+
+    response = _github(
+        "GET",
+        f"/repos/{REPO}/contents/{path}",
+        params={"ref": BASE_BRANCH},
+    )
+    data = response.json()
+    if data.get("type") != "file":
+        raise ValueError("NOT_A_FILE")
+    raw = data.get("content", "")
+    if data.get("encoding") == "base64":
+        content = base64.b64decode(raw).decode("utf-8", errors="replace")
+    else:
+        content = str(raw)
+    try:
+        from core.exec_policy import redact_secrets
+        content = redact_secrets(content)
+    except Exception:
+        pass
+    return {
+        "path": path,
+        "size": len(content.encode("utf-8")),
+        "content": content[:12000],
+        "truncated": len(content) > 12000,
+    }
+
+
 def pending_requests() -> list[dict]:
     db = state_manager.load_db()
     rows = []
