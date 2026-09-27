@@ -249,7 +249,8 @@ def reject_proposal(request_id: str, actor_uid: str) -> dict:
     actor_uid = str(actor_uid)
     if not is_owner(actor_uid):
         raise PermissionError("OWNER_ONLY")
-    item = _get_request(request_id)
+    _get_request(request_id)
+
     def mutate(db):
         stored = db.setdefault(REQUESTS_KEY, {}).get(request_id)
         if stored:
@@ -257,7 +258,15 @@ def reject_proposal(request_id: str, actor_uid: str) -> dict:
             stored["rejected_at"] = _now()
             stored["rejected_by"] = actor_uid
             stored.pop("content", None)
-        return request_status(request_id, actor_uid)
+            return {
+                k: stored.get(k)
+                for k in (
+                    "id", "uid", "path", "summary", "status", "created_at",
+                    "rejected_at", "rejected_by",
+                )
+            }
+        return {"id": str(request_id), "status": "rejected"}
+
     return state_manager.atomic_update(mutate)
 
 
@@ -289,7 +298,7 @@ def ci_status(request_id: str, actor_uid: str) -> dict:
         "id": request_id,
         "status": item.get("status"),
         "pr_number": int(pr_number),
-        "pr_url": item.get("pr_url"),
+        "pr_url": pr.get("html_url"),
         "sha": sha,
         "ci_total": int(checks.get("total_count", 0)),
         "ci_checks": rows,
