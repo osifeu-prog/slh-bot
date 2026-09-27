@@ -3,6 +3,7 @@ import requests
 from telebot import types
 
 from core.authority import get_role, is_owner
+from core.identity import OWNER_TELEGRAM_ID
 
 
 def _lab_base_url():
@@ -36,7 +37,9 @@ def _call(method, path, uid, payload=None):
     except Exception:
         body = {"error": response.text[:250]}
     if response.status_code >= 400:
-        raise RuntimeError(str(body.get("error") or body.get("detail") or "LAB_REQUEST_FAILED"))
+        raise RuntimeError(
+            str(body.get("error") or body.get("detail") or "LAB_REQUEST_FAILED")
+        )
     return body
 
 
@@ -54,26 +57,23 @@ def register(bot):
             bot.reply_to(
                 m,
                 "Usage:\n/dev_write <path> <summary>\n"
-                "then put the complete UTF-8 file content after the command.
-"
+                "then put the complete UTF-8 file content after the command.\n"
                 "Example:\n/dev_write handlers/example.py Add example handler\n"
-                "print('hello')"
+                "print('hello')",
             )
             return
 
         path = parts[1].strip()
         rest = parts[2]
-        # First line is the short summary; remaining lines are file content.
         lines = rest.splitlines()
         summary = lines[0].strip()[:240] if lines else "Developer code change"
-        content = "
-".join(lines[1:]) if len(lines) > 1 else ""
+        content = "\n".join(lines[1:]) if len(lines) > 1 else ""
 
         if not content.strip():
             bot.reply_to(
                 m,
                 "❌ חסר תוכן קובץ. השורה הראשונה אחרי הנתיב היא Summary, "
-                "וכל השורות שאחריה הן תוכן הקובץ."
+                "וכל השורות שאחריה הן תוכן הקובץ.",
             )
             return
 
@@ -91,7 +91,7 @@ def register(bot):
                     f"🧪 Developer Lab proposal created\n"
                     f"ID: {request_id}\n"
                     f"Path: {path}\n"
-                    "As OWNER, approve it with /dev_lab_approve <id>."
+                    "As OWNER, approve it with /dev_lab_approve <id>.",
                 )
                 return
 
@@ -107,7 +107,7 @@ def register(bot):
                 ),
             )
             bot.send_message(
-                __import__("core.identity", fromlist=["OWNER_TELEGRAM_ID"]).OWNER_TELEGRAM_ID,
+                OWNER_TELEGRAM_ID,
                 "🧪 Developer Lab — approval required\n\n"
                 f"Developer: {m.from_user.id}\n"
                 f"Path: {path}\n"
@@ -118,10 +118,13 @@ def register(bot):
             bot.reply_to(
                 m,
                 f"📨 שינוי נשמר כ־proposal {request_id}.\n"
-                "ממתין לאישור OWNER; אין שינוי ב-production."
+                "ממתין לאישור OWNER; אין שינוי ב-production.",
             )
         except Exception as exc:
-            bot.reply_to(m, f"❌ Developer Lab: {type(exc).__name__}: {str(exc)[:250]}")
+            bot.reply_to(
+                m,
+                f"❌ Developer Lab: {type(exc).__name__}: {str(exc)[:250]}",
+            )
 
     @bot.message_handler(commands=["dev_lab_requests"])
     def dev_lab_requests(m):
@@ -169,7 +172,7 @@ def register(bot):
                 f"Path: {result.get('path')}\n"
                 f"Branch: {result.get('branch') or '—'}\n"
                 f"PR: #{result.get('pr_number') or '—'}\n"
-                f"{result.get('pr_url') or ''}"
+                f"{result.get('pr_url') or ''}",
             )
         except Exception as exc:
             bot.reply_to(m, f"❌ Developer Lab: {type(exc).__name__}")
@@ -193,10 +196,13 @@ def register(bot):
                 m,
                 "✅ Developer Lab approved\n"
                 f"PR #{result.get('pr_number')}\n"
-                f"{result.get('pr_url') or ''}"
+                f"{result.get('pr_url') or ''}",
             )
         except Exception as exc:
-            bot.reply_to(m, f"❌ Approval failed: {type(exc).__name__}: {str(exc)[:200]}")
+            bot.reply_to(
+                m,
+                f"❌ Approval failed: {type(exc).__name__}: {str(exc)[:200]}",
+            )
 
     @bot.message_handler(commands=["dev_lab_reject"])
     def dev_lab_reject(m):
@@ -243,8 +249,7 @@ def register(bot):
                 lines.append(
                     f"• {item.get('name')}: {item.get('status')} / {item.get('conclusion')}"
                 )
-            bot.reply_to(m, "
-".join(lines)[:3900])
+            bot.reply_to(m, "\n".join(lines)[:3900])
         except Exception as exc:
             bot.reply_to(m, f"❌ CI lookup failed: {type(exc).__name__}")
 
@@ -277,7 +282,10 @@ def register(bot):
                     call.from_user.id,
                 )
                 bot.answer_callback_query(call.id, "❌ rejected")
-                bot.send_message(call.from_user.id, f"❌ Proposal {result.get('id')} rejected.")
+                bot.send_message(
+                    call.from_user.id,
+                    f"❌ Proposal {result.get('id')} rejected.",
+                )
         except Exception as exc:
             bot.answer_callback_query(call.id, "❌ failed")
             bot.send_message(
