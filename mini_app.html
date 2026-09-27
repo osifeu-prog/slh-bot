@@ -261,7 +261,7 @@ function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;docum
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
 function toast(x){const e=$("toast");e.textContent=x;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
-const __slhNavStack=['home'];let __slhShowing='home';let __slhNavReady=false;
+let __slhNavStack=['home'];let __slhShowing='home';let __slhNavReady=false;
 function __slhSetBack(){
   try{
     if(tg&&tg.BackButton){
