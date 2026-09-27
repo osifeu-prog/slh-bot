@@ -1479,4 +1479,7 @@ try{
   const saved=localStorage.getItem('slh.theme');
   if(saved&&SLH_THEME_META[saved])applyUiTheme(saved);
 }catch(_e){}
+try{
+  if(initData) setTimeout(()=>loadUiSettings(),0);
+}catch(_e){}
 </script></body></html>
