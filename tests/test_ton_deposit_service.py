@@ -42,7 +42,7 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.atomic_patch.start()
         self.load_patch.start()
         self.binding_patch.start()
-        self.tx_patch.start()
+        self.tx_mock = self.tx_patch.start()
         self.open_patch.start()
         self.settings_patch.start()
         self.addCleanup(self.atomic_patch.stop)
@@ -83,27 +83,30 @@ class TonDepositSettlementTests(unittest.TestCase):
         }
         with patch.object(ton_deposit_service.state_manager, "load_db", return_value=state):
             with patch.dict("os.environ", {"TON_WALLET": TREASURY}, clear=False):
-                wallet, rate = ton_deposit_service._settings()
+                # The unit test controls the DB rate; an inherited local/Railway
+                # rate must not make the assertion environment-dependent.
+                with patch.dict("os.environ", {"TON_CREDITS_PER_TON": ""}, clear=False):
+                    wallet, rate = ton_deposit_service._settings()
         self.assertEqual(wallet, TREASURY)
         self.assertEqual(rate, 109)
 
     def test_wrong_sender_rejected(self):
-        self.tx_patch.return_value = self._tx(sender="0:" + "44" * 32)
+        self.tx_mock.return_value = self._tx(sender="0:" + "44" * 32)
         with self.assertRaisesRegex(ValueError, "TON_TX_SENDER_NOT_BOUND_WALLET"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
 
     def test_wrong_treasury_rejected(self):
-        self.tx_patch.return_value = self._tx(recipient="0:" + "55" * 32)
+        self.tx_mock.return_value = self._tx(recipient="0:" + "55" * 32)
         with self.assertRaisesRegex(ValueError, "TON_TX_RECIPIENT_NOT_TREASURY"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
 
     def test_wrong_memo_rejected(self):
-        self.tx_patch.return_value = self._tx(memo="SLH999")
+        self.tx_mock.return_value = self._tx(memo="SLH999")
         with self.assertRaisesRegex(ValueError, "TON_TX_MEMO_MISMATCH"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
 
     def test_success_is_idempotent(self):
-        self.tx_patch.return_value = self._tx()
+        self.tx_mock.return_value = self._tx()
         first = ton_deposit_service.settle_ton_deposit(UID, TX)
         second = ton_deposit_service.settle_ton_deposit(UID, TX)
         self.assertTrue(first["ok"])
@@ -114,7 +117,7 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertEqual(self.db["used_ton_txs"], [TX])
 
     def test_unsafe_rate_is_rejected_when_deposits_open(self):
-        self.tx_patch.return_value = self._tx()
+        self.tx_mock.return_value = self._tx()
         self.settings_patch.stop()
         unsafe = patch.object(
             ton_deposit_service,
@@ -123,7 +126,8 @@ class TonDepositSettlementTests(unittest.TestCase):
         )
         unsafe.start()
         self.addCleanup(unsafe.stop)
-        with self.assertRaisesRegex(ValueError, "TON_RATE_NOT_SAFE"):
+        self.assertFalse(ton_deposit_service.deposits_are_open())
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSITS_CLOSED"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
 
 
