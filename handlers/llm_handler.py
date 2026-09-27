@@ -163,7 +163,7 @@ def _sanitize_unknown_commands(text):
         return str(text or "")
 
     import re
-    pattern = re.compile(r"(?<![\\w/:])/[A-Za-z][A-Za-z0-9_]*")
+    pattern = re.compile(r"(?<![A-Za-z0-9_/:])/[A-Za-z][A-Za-z0-9_]*")
     removed = []
 
     def repl(match):
