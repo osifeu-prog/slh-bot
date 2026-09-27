@@ -47,7 +47,34 @@ TOKENOMICS = {
 
 
 def snapshot():
-    return {key: dict(value) for key, value in TOKENOMICS.items()}
+    data = {key: dict(value) for key, value in TOKENOMICS.items()}
+
+    # A capability existing in code is not the same as a settlement gate being open.
+    try:
+        from core.bnb_gate import bnb_readiness
+        bnb = bnb_readiness()
+        data["BNB"]["deposit_capable"] = True
+        data["BNB"]["deposit_supported"] = bool(bnb["effective_open"])
+        data["BNB"]["settlement_open"] = bool(bnb["effective_open"])
+    except Exception:
+        data["BNB"]["deposit_capable"] = True
+        data["BNB"]["deposit_supported"] = False
+        data["BNB"]["settlement_open"] = False
+
+    try:
+        from core.ton_deposit_service import deposits_are_open
+        ton_open = bool(deposits_are_open())
+        data["TON"]["deposit_capable"] = True
+        data["TON"]["deposit_supported"] = ton_open
+        data["TON"]["settlement_open"] = ton_open
+    except Exception:
+        data["TON"]["deposit_capable"] = True
+        data["TON"]["deposit_supported"] = False
+        data["TON"]["settlement_open"] = False
+
+    data["SLH"]["market_scope"] = "internal_orderbook"
+    data["SLH"]["public_dex_trading"] = False
+    return data
 
 
 REWARDS = {
