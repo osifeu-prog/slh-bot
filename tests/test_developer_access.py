@@ -27,6 +27,35 @@ def seed_db(path, uid="100"):
     )
 
 
+class DevCommandParsingTests(unittest.TestCase):
+    def test_permission_remove_is_action(self):
+        from handlers.dev_admin import _parse_permission_command
+        self.assertEqual(
+            _parse_permission_command(["/dev_perm", "100", "remove", "deploy"]),
+            ("remove", "deploy"),
+        )
+
+    def test_permission_dash_is_remove(self):
+        from handlers.dev_admin import _parse_permission_command
+        self.assertEqual(
+            _parse_permission_command(["/dev_perm", "100", "-deploy"]),
+            ("remove", "deploy"),
+        )
+
+    def test_permission_toggle_remains_compatible(self):
+        from handlers.dev_admin import _parse_permission_command
+        self.assertEqual(
+            _parse_permission_command(["/dev_perm", "100", "deploy"]),
+            ("toggle", "deploy"),
+        )
+
+    def test_revoke_aliases_normalize(self):
+        from handlers.dev_admin import _normalize_role_action
+        for value in ("revoke", "remove", "none"):
+            self.assertEqual(_normalize_role_action(value), "revoke")
+        self.assertEqual(_normalize_role_action("lock"), "lock")
+
+
 class DeveloperAccessTests(unittest.TestCase):
     def setUp(self):
         import state_manager
