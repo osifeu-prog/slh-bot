@@ -3,8 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import state_manager
 from core.developer_lab import can_propose_path
-from store.grant_engine import _atomic_write_json, _canonical_uid
+from store.grant_engine import _canonical_uid
 
 
 class TestGrantEngineSecurity(unittest.TestCase):
@@ -14,10 +15,14 @@ class TestGrantEngineSecurity(unittest.TestCase):
         with self.assertRaises(ValueError):
             _canonical_uid("owner")
 
-    def test_atomic_json_write_replaces_complete_file(self):
+    def test_atomic_json_update_replaces_complete_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "devices.json"
-            _atomic_write_json(path, {"devices": {"d1": {"owner": "123456789"}}})
+
+            def mutate(data):
+                data.setdefault("devices", {})["d1"] = {"owner": "123456789"}
+
+            state_manager.atomic_json_update(str(path), mutate, default={"devices": {}})
 
             loaded = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(loaded["devices"]["d1"]["owner"], "123456789")
