@@ -74,6 +74,7 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertFalse(ton_deposit_service.deposits_are_open())
 
     def test_settings_prefers_railway_ton_wallet_env(self):
+        self.settings_patch.stop()
         state = {
             "ton_settings": {
                 "wallet": "YOUR_TON_WALLET_ADDRESS",
