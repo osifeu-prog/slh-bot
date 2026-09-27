@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from telebot import types
 
@@ -186,12 +187,12 @@ def register(bot):
         summary = lines[0].strip()[:240] if lines else "Developer code change"
         inline_content = "\n".join(lines[1:]) if len(lines) > 1 else ""
         if inline_content.strip():
-            _start_write_session(m, path, summary)
-            _submit_write_content(type("InlineMessage", (), {
-                "from_user": m.from_user,
-                "text": inline_content,
-                "reply_to_message": m,
-            })(), inline_content)
+            write_sessions[str(m.from_user.id)] = {
+                "path": path,
+                "summary": summary,
+                "expires_at": time.time() + 600,
+            }
+            _submit_write_content(m, inline_content)
             return
 
         _start_write_session(m, path, summary)
