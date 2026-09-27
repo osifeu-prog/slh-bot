@@ -122,19 +122,23 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
         return {"status": "already_completed", **existing}
 
     wallet = _wallet(db, uid)
+    total_before = Decimal(str(wallet.get("token_balance", 0) or 0))
     available = Decimal(str(wallet.get("live_token_balance", 0) or 0))
     reserve_before = Decimal(str(wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
-    if available < amount:
+    if available < amount or total_before < amount:
         raise ValueError("INSUFFICIENT_LIVE_SLH")
 
+    total_after = total_before - amount
     available_after = available - amount
     reserve_after = reserve_before + amount
+    wallet["token_balance"] = float(total_after)
     wallet["live_token_balance"] = float(available_after)
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
     entry = {
         "event_id": event_id, "from_uid": uid, "to_uid": EXCHANGE_RESERVE_UID,
         "amount": float(amount), "reason": str(reason), "kind": "exchange_reserve",
-        "order_id": order_id, "before_from": float(available), "after_from": float(available_after),
+        "order_id": order_id, "before_from": float(total_before), "after_from": float(total_after),
+        "before_live_from": float(available), "after_live_from": float(available_after),
         "before_reserve": float(reserve_before), "after_reserve": float(reserve_after),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -170,6 +174,7 @@ def release_reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="e
     available_after = available_before
     live_after = live_before + amount
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
+    wallet["token_balance"] = float(available_after + amount)
     wallet["live_token_balance"] = float(live_after)
     entry = {
         "event_id": event_id, "from_uid": EXCHANGE_RESERVE_UID, "to_uid": uid,
@@ -221,7 +226,7 @@ def settle_reserve_in_db(
         raise ValueError("SLH_TOTAL_BALANCE_BREACH")
 
     seller_reserve_after = seller_reserve_before - amount
-    seller_total_after = seller_total_before - amount
+    seller_total_after = seller_total_before
     buyer_after = buyer_before + amount
     buyer_live_after = buyer_live_before + amount
     seller[EXCHANGE_RESERVE_KEY] = float(seller_reserve_after)
