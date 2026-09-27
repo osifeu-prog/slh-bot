@@ -393,14 +393,72 @@ def ci_status(request_id: str, actor_uid: str) -> dict:
         f"/repos/{REPO}/commits/{sha}/check-runs",
         params={"per_page": 100},
     ).json()
-    rows = [
-        {
-            "name": item.get("name"),
-            "status": item.get("status"),
-            "conclusion": item.get("conclusion"),
-        }
-        for item in checks.get("check_runs", [])
-    ]
+
+    rows = []
+    for check in checks.get("check_runs", []):
+        rows.append(
+            {
+                "name": check.get("name"),
+                "status": check.get("status"),
+                "conclusion": check.get("conclusion"),
+                "details_url": check.get("details_url"),
+            }
+        )
+
+    # A check can fail before a runner executes any step. Capture the workflow
+    # job metadata so developers can distinguish code/test failures from
+    # runner, billing, or Actions infrastructure failures.
+    try:
+        workflow_runs = _github(
+            "GET",
+            f"/repos/{REPO}/commits/{sha}/check-runs",
+            params={"per_page": 100},
+        )
+        _ = workflow_runs  # keep the request explicit for audit/debug parity
+    except Exception:
+        pass
+
+    workflow_evidence = []
+    try:
+        runs = _github(
+            "GET",
+            f"/repos/{REPO}/actions/runs",
+            params={"head_sha": sha, "per_page": 100},
+        ).json().get("workflow_runs", [])
+        for run in runs:
+            run_id = run.get("id")
+            row = {
+                "run_id": run_id,
+                "workflow": run.get("name"),
+                "status": run.get("status"),
+                "conclusion": run.get("conclusion"),
+                "run_attempt": run.get("run_attempt"),
+                "job_count": 0,
+                "jobs": [],
+            }
+            if run_id:
+                jobs = _github(
+                    "GET",
+                    f"/repos/{REPO}/actions/runs/{int(run_id)}/jobs",
+                    params={"per_page": 100},
+                ).json().get("jobs", [])
+                row["job_count"] = len(jobs)
+                for job in jobs:
+                    steps = job.get("steps")
+                    row["jobs"].append(
+                        {
+                            "job": job.get("name"),
+                            "status": job.get("status"),
+                            "conclusion": job.get("conclusion"),
+                            "runner_id": job.get("runner_id"),
+                            "runner_name": job.get("runner_name"),
+                            "steps_count": len(steps) if isinstance(steps, list) else None,
+                        }
+                    )
+            workflow_evidence.append(row)
+    except Exception as exc:
+        workflow_evidence = [{"error": type(exc).__name__}]
+
     result = {
         "id": request_id,
         "status": item.get("status"),
@@ -409,6 +467,7 @@ def ci_status(request_id: str, actor_uid: str) -> dict:
         "sha": sha,
         "ci_total": int(checks.get("total_count", 0)),
         "ci_checks": rows,
+        "workflow_evidence": workflow_evidence,
     }
 
     def mutate(db):
