@@ -170,15 +170,20 @@ def read_file(path: str) -> dict:
     }
 
 
-def pending_requests() -> list[dict]:
+def pending_requests(actor_uid: str | None = None) -> list[dict]:
     db = state_manager.load_db()
+    actor_uid = str(actor_uid) if actor_uid is not None else None
+    include_all = actor_uid is not None and is_owner(actor_uid)
     rows = []
     for item in (db.get(REQUESTS_KEY, {}) or {}).values():
-        if isinstance(item, dict) and item.get("status") == "pending":
-            rows.append({
-                k: item.get(k)
-                for k in ("id", "uid", "path", "summary", "status", "created_at")
-            })
+        if not isinstance(item, dict) or item.get("status") != "pending":
+            continue
+        if not include_all and actor_uid is not None and str(item.get("uid")) != actor_uid:
+            continue
+        rows.append({
+            k: item.get(k)
+            for k in ("id", "uid", "path", "summary", "status", "created_at")
+        })
     return sorted(rows, key=lambda x: x.get("created_at", 0))
 
 
