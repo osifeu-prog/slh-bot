@@ -46,6 +46,19 @@ def _bridge_status_display():
         return "⚪️ unknown"
 
 
+def _llm_status_line():
+    """Show configuration status without making provider calls."""
+    try:
+        from system_health import get_health
+        providers = (get_health().get("components") or {}).get("llm_providers", {})
+        configured = [name for name, ok in providers.items() if ok]
+        if configured:
+            return "🧠 LLM: ✅ " + ", ".join(configured) + " configured"
+        return "🧠 LLM: ⚠️ no provider configured"
+    except Exception:
+        return "🧠 LLM: ⚪ status unavailable"
+
+
 def _fmt_balance(value):
     """Render balances without binary floating-point noise."""
     try:
@@ -497,7 +510,8 @@ def register(bot, context=None):
         bot.send_message(
             call.message.chat.id,
             "🖥 SLH OS\n"
-            "שירות פעיל, DB פעיל, LLM תקין.\n"
+            "שירות פעיל, DB פעיל.\n"
+            f"{_llm_status_line()}\n"
             "שלח /doctor לדוח מלא."
         )
 
