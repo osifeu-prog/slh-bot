@@ -5,6 +5,15 @@ from core import bnb_deposit_service
 
 
 class BnbDepositServiceTests(unittest.TestCase):
+    def setUp(self):
+        # Settlement tests isolate the production gate; live BNB remains closed.
+        gate = patch(
+            "core.bnb_deposit_service.bnb_deposits_open",
+            return_value=True,
+        )
+        gate.start()
+        self.addCleanup(gate.stop)
+
     @patch.object(bnb_deposit_service, "record_transaction")
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
