@@ -12,5 +12,7 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["sh", "-c", "exec python -m uvicorn slh_mcp.server:app --host 0.0.0.0 --port ${PORT:-8080}"]
+COPY slh_mcp/boot.sh /usr/local/bin/slh-mcp-boot
+RUN chmod +x /usr/local/bin/slh-mcp-boot
+CMD ["/usr/local/bin/slh-mcp-boot"]
 # Railway deployment trigger: startCommand is intentionally executed through sh for ${PORT:-8080} expansion.
