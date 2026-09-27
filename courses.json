@@ -130,7 +130,7 @@
     "store_item": "course_slh_vs_eth_sol"
   },
   "ai_tokens": {
-    "name": "איך מחושבים טוקנים ב-AI",
+    "name": "איך מחושבים טוקנים ב-AI — ומה לומדים מעקרונות בלוקצ׳יין",
     "stages": [
       {
         "id": 1,
@@ -241,7 +241,7 @@
         "lesson": "lessons/ai_tokens/12.txt"
       }
     ],
-    "title": "איך מחושבים טוקנים ב-AI",
+    "title": "איך מחושבים טוקנים ב-AI — ומה לומדים מעקרונות בלוקצ׳יין",
     "access": "free"
   }
 }
