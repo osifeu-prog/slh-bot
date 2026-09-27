@@ -293,6 +293,41 @@ def investor_me():
 
 
 
+@app.route("/api/v1/settings", methods=["GET", "POST"])
+def user_ui_settings():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    from core.ui_preferences import get_preferences, set_preferences, theme_choices
+
+    if request.method == "GET":
+        prefs = get_preferences(uid)
+        return _no_store(jsonify({
+            "ok": True,
+            "preferences": prefs,
+            "themes": theme_choices(),
+        })), 200
+
+    payload = request.get_json(silent=True) or {}
+    theme = payload.get("theme")
+    if theme is not None:
+        theme = str(theme).strip().lower()
+    try:
+        prefs = set_preferences(
+            uid,
+            theme=theme,
+            language=payload.get("language"),
+            compact=payload.get("compact") if "compact" in payload else None,
+        )
+        return _no_store(jsonify({"ok": True, "preferences": prefs})), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[UI_SETTINGS] error:", type(exc).__name__)
+        return jsonify({"error": "UI_SETTINGS_UNAVAILABLE"}), 503
+
+
 @app.route("/api/v1/card/store", methods=["GET"])
 def card_store_api():
     """Authenticated catalog of configured physical products payable by card."""
