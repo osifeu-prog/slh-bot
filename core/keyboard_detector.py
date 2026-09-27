@@ -53,6 +53,11 @@ def hebrew_word_score(text):
 
 def should_convert_keyboard(text):
 
+    # Short Latin input produces common Hebrew words by accident (e.g. "go" -> "עם", "tbh" -> "אני").
+    latin_letters = re.findall(r"[A-Za-z]", text)
+    if len(latin_letters) < 4:
+        return False
+
     if looks_like_command(text):
         return False
 
