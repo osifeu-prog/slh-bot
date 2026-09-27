@@ -7,7 +7,7 @@ def register(bot):
         except Exception:
             bot.reply_to(msg, "FAQ לא זמין כרגע.")
 
-    @bot.message_handler(commands=["help"])
+    @bot.message_handler(commands=["help", "allcommands", "commands", "comands"])
     def help_cmd(msg):
         text = """📘 SLH OS — מפת המערכת
 

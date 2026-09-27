@@ -27,6 +27,25 @@ def register(bot):
         recipient_uid = parts[1].strip()
         amount = parts[2].strip()
         event_id = parts[3].strip() if len(parts) >= 4 else ""
+
+        # Angle brackets are documentation placeholders, not command syntax.
+        if any(
+            value.startswith("<") and value.endswith(">")
+            for value in (recipient_uid, amount, event_id)
+            if value
+        ):
+            bot.reply_to(
+                message,
+                "❌ יש להסיר את הסוגריים < >. "
+                "השימוש הוא: /airdrop_slh <uid> <amount> <event_id>\n"
+                "לדוגמה: /airdrop_slh 123456789 1 Sukkot2026",
+            )
+            return
+
+        if not recipient_uid.isdigit():
+            bot.reply_to(message, "❌ ה-UID של המקבל חייב להיות מספר Telegram.")
+            return
+
         if not event_id:
             bot.reply_to(message, "❌ event_id חובה כדי למנוע חלוקה כפולה.")
             return

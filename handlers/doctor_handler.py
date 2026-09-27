@@ -48,16 +48,18 @@ def register(bot):
         except Exception:
             lines.append("Volume: ⚪️ לא נבדק")
 
-        # LLM API
+        # LLM configuration (no provider call, so /doctor does not burn quota)
         try:
-            # DISABLED 2026-09-17 — /doctor no longer burns Groq
-            test = "SKIPPED"
-            if "Error" not in test and "missing" not in test:
-                lines.append("LLM API: 🟢 SKIPPED")
+            from system_health import get_health
+            components = get_health().get("components", {})
+            providers = components.get("llm_providers", {})
+            configured = [name for name, ok in providers.items() if ok]
+            if configured:
+                lines.append("LLM config: 🟢 " + ", ".join(configured))
             else:
-                lines.append(f"LLM API: 🔴 {test}")
+                lines.append("LLM config: 🔴 no provider configured")
         except Exception as e:
-            lines.append(f"LLM API: 🔴 {e}")
+            lines.append(f"LLM config: 🔴 {type(e).__name__}")
 
         # Dashboard
         dash = Path("web/dashboard_v2/index.html")

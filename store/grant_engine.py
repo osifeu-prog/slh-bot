@@ -1,11 +1,22 @@
 import json
 import time
-from pathlib import Path
+
+import state_manager
 from core import profile_manager
+from core.authority import normalize_uid
 from core.esp_license import issue_license
 
 
+def _canonical_uid(uid):
+    """Return the canonical Telegram user id or fail closed."""
+    value = normalize_uid(uid).strip()
+    if not value.isdigit():
+        raise ValueError("CANONICAL_OWNER_ID_REQUIRED")
+    return value
+
+
 def apply_grant(uid, grant, purchase_id=None):
+    uid = _canonical_uid(uid)
     user = profile_manager.get_user(uid)
 
     if "permission" in grant:
@@ -61,48 +72,86 @@ def apply_grant(uid, grant, purchase_id=None):
 
         device_id = "ESP_PURCHASE_" + str(purchase_id).replace(":", "_")
         address = f"SLH_ESP_{device_id}"
-        dev_path = Path("state/devices.json")
-        try:
-            dev_data = json.loads(dev_path.read_text(encoding="utf-8"))
-        except Exception:
-            dev_data = {"devices": {}}
-        devices = dev_data.setdefault("devices", {})
 
-        existing = devices.get(device_id)
-        if existing:
-            if str(existing.get("owner")) != str(uid):
-                raise ValueError("DEVICE_OWNER_MISMATCH")
-            license_result = issue_license(device_id, str(uid), duration_days=365)
+        def register_device(dev_data):
+            if not isinstance(dev_data, dict):
+                raise ValueError("DEVICES_STATE_INVALID")
+            devices = dev_data.setdefault("devices", {})
+            if not isinstance(devices, dict):
+                raise ValueError("DEVICES_STATE_INVALID")
+
+            existing = devices.get(device_id)
+            if existing:
+                if str(existing.get("owner")) != uid:
+                    raise ValueError("DEVICE_OWNER_MISMATCH")
+                return {
+                    "already_exists": True,
+                    "wallet": existing.get("wallet_address", address),
+                    "agent_id": existing.get("agent_id", "7"),
+                }
+
+            devices[device_id] = {
+                "name": device_id,
+                "type": "esp32",
+                "status": "new",
+                "owner": uid,
+                "verified": False,
+                "wallet_address": address,
+                "agent_id": "7",
+                "capabilities": ["sensor", "wallet", "signing"],
+                "registered": time.time(),
+                "purchase_id": purchase_id,
+            }
+            return {"already_exists": False, "wallet": address, "agent_id": "7"}
+
+        device_result = state_manager.atomic_json_update(
+            "devices.json",
+            register_device,
+            default={"devices": {}},
+        )
+
+        if device_result["already_exists"]:
+            license_result = issue_license(device_id, uid, duration_days=365)
             if not license_result.get("ok"):
                 raise RuntimeError(license_result.get("error", "LICENSE_ISSUE_FAILED"))
-            return {"ok": True, "type": "hardware", "device_id": device_id, "wallet": existing.get("wallet_address", address), "agent_id": existing.get("agent_id", "7"), "license": license_result.get("license"), "purchase_id": purchase_id, "already_exists": True}
+            return {
+                "ok": True,
+                "type": "hardware",
+                "device_id": device_id,
+                "wallet": device_result["wallet"],
+                "agent_id": device_result["agent_id"],
+                "license": license_result.get("license"),
+                "purchase_id": purchase_id,
+                "already_exists": True,
+            }
 
-        devices[device_id] = {
-            "name": device_id,
-            "type": "esp32",
-            "status": "new",
-            "owner": str(uid),
-            "verified": False,
-            "wallet_address": address,
-            "agent_id": "7",
-            "capabilities": ["sensor", "wallet", "signing"],
-            "registered": time.time(),
-            "purchase_id": purchase_id,
-        }
-        dev_path.write_text(json.dumps(dev_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        def mutate_db(db):
+            if not isinstance(db, dict) or "users" not in db:
+                raise RuntimeError("DB_STATE_INVALID")
+            db.setdefault("device_wallets", {})[device_id] = {
+                "address": address,
+                "credits": 0,
+                "staked": 0,
+                "token_balance": 0,
+                "owner": uid,
+                "purchase_id": purchase_id,
+            }
+            db.setdefault("device_agent_map", {})[device_id] = "7"
+            return None
 
-        db_path = Path("state/db.json")
-        try:
-            db = json.loads(db_path.read_text(encoding="utf-8"))
-        except Exception:
-            db = {}
-        db.setdefault("device_wallets", {})[device_id] = {"address": address, "credits": 0, "staked": 0, "token_balance": 0, "owner": str(uid), "purchase_id": purchase_id}
-        db.setdefault("device_agent_map", {})[device_id] = "7"
-        db_path.write_text(json.dumps(db, ensure_ascii=False, indent=2), encoding="utf-8")
+        state_manager.atomic_update(mutate_db)
 
-        license_result = issue_license(device_id, str(uid), duration_days=365)
+        license_result = issue_license(device_id, uid, duration_days=365)
         if not license_result.get("ok"):
             raise RuntimeError(license_result.get("error", "LICENSE_ISSUE_FAILED"))
-        return {"ok": True, "type": "hardware", "device_id": device_id, "wallet": address, "agent_id": "7", "license": license_result.get("license"), "purchase_id": purchase_id}
+        return {
+            "ok": True,
+            "type": "hardware",
+            "device_id": device_id,
+            "wallet": address,
+            "agent_id": "7",
+            "license": license_result.get("license"),
+            "purchase_id": purchase_id,
+        }
 
     return {"ok": False, "error": "UNSUPPORTED_GRANT", "purchase_id": purchase_id}

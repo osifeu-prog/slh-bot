@@ -4,6 +4,7 @@ import requests
 from telebot import types
 
 from core.authority import get_role, is_owner
+from core.developer_lab import can_propose_path
 from core.identity import OWNER_TELEGRAM_ID
 
 
@@ -79,7 +80,25 @@ def register(bot):
             if float(session.get("expires_at", 0)) <= now:
                 write_sessions.pop(uid, None)
 
+    def _validate_write_path(path):
+        try:
+            if not can_propose_path(path):
+                return False, f"⛔ הנתיב {path} הוא read-only / protected ב-Developer Lab."
+        except (TypeError, ValueError, PermissionError):
+            return False, "⛔ נתיב לא תקין ל-Developer Lab."
+        return True, ""
+
+
     def _start_write_session(m, path, summary):
+        allowed, error_message = _validate_write_path(path)
+        if not allowed:
+            bot.reply_to(
+                m,
+                error_message
+                + "\nלקריאה השתמש ב-/dev_read. שינויים ב-store/, state/, authority ונתיבי settlement נשארים מחוץ ל-Developer Lab.",
+            )
+            return False
+
         write_sessions[str(m.from_user.id)] = {
             "path": path,
             "summary": summary,
@@ -188,6 +207,14 @@ def register(bot):
         summary = lines[0].strip()[:240] if lines else "Developer code change"
         inline_content = "\n".join(lines[1:]) if len(lines) > 1 else ""
         if inline_content.strip():
+            allowed, error_message = _validate_write_path(path)
+            if not allowed:
+                bot.reply_to(
+                    m,
+                    error_message
+                    + "\nלקריאה השתמש ב-/dev_read. שינויים ב-store/, state/, authority ונתיבי settlement נשארים מחוץ ל-Developer Lab.",
+                )
+                return
             write_sessions[str(m.from_user.id)] = {
                 "path": path,
                 "summary": summary,

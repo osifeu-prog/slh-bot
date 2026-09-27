@@ -268,10 +268,10 @@ USER QUESTION:
         result = ask_groq(prompt)
         if result and not (
             result.startswith("LLM Error:")
-            or result == "GROQ_COOLDOWN"
+            or result in {"GROQ_API_KEY missing", "GROQ_COOLDOWN"}
         ):
             return result
-        print("[LLM] Groq unavailable/cooldown")
+        print("[LLM] Groq unavailable/cooldown:", result[:120])
         return "🧠 ה־AI אינו זמין כרגע. אפשר להשתמש בפקודה המתאימה ישירות; לא בוצעה שום פעולה או שינוי ביתרה."
     except Exception as e:
         print("[LLM] fallback exception:", type(e).__name__)
