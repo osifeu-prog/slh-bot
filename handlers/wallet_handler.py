@@ -22,6 +22,30 @@ def register(bot):
             pass
         return None
 
+    @bot.message_handler(commands=["connect_bnb"])
+    def connect_bnb(msg):
+        """Open the external Mini App wallet screen for BNB ownership binding."""
+        url = "https://slh-nft.com/mini-app?screen=wallet&external=1"
+        try:
+            from telebot import types
+            markup = types.InlineKeyboardMarkup()
+            markup.add(types.InlineKeyboardButton("🦊 התחבר ואמת BNB", url=url))
+            bot.reply_to(
+                msg,
+                "🔐 חיבור BNB\n\n"
+                "פתח את מסך Wallet בדפדפן כדי לבצע challenge + חתימה "
+                "ולהוכיח בעלות על ארנק BNB.\n"
+                "אין לשלוח כספים לצורך האימות.",
+                reply_markup=markup,
+            )
+        except Exception:
+            bot.reply_to(
+                msg,
+                "🔐 חיבור BNB:\n"
+                f"{url}\n\n"
+                "פתח בדפדפן כדי לאמת בעלות על הארנק. אין לשלוח כספים לצורך האימות.",
+            )
+
     @bot.message_handler(commands=["wallet"])
     def wallet(msg):
         uid = str(msg.from_user.id)
