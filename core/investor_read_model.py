@@ -9,6 +9,10 @@ from pathlib import Path
 
 import state_manager
 from core.identity_resolver import get_display_name
+from core.wallet_binding import get_binding
+from core.ton_wallet_binding import get_ton_binding
+from core.bnb_gate import bnb_readiness
+from core.ton_deposit_service import deposits_are_open as ton_deposits_are_open, _settings as ton_settings
 
 
 COURSE_FILE = Path("courses.json")
@@ -187,6 +191,12 @@ def get_investor_snapshot(uid):
     if not isinstance(gamification, dict):
         gamification = {}
 
+    bnb_binding = get_binding(uid)
+    ton_binding = get_ton_binding(uid)
+    bnb_status = bnb_readiness()
+    ton_open = ton_deposits_are_open()
+    ton_treasury, ton_rate = ton_settings()
+
     return {
         "identity": {
             "uid": uid,
@@ -204,6 +214,19 @@ def get_investor_snapshot(uid):
                 else "unbacked_or_empty"
             ),
             "ton_wallet": user.get("ton_wallet"),
+            "bnb_binding": bnb_binding,
+            "ton_binding": ton_binding,
+            "bnb_settlement": {
+                "open": bool(bnb_status.get("effective_open")),
+                "chain_id": bnb_status.get("chain_id"),
+                "confirmations_required": bnb_status.get("confirmations_required"),
+                "reasons": bnb_status.get("reasons", []),
+            },
+            "ton_settlement": {
+                "open": bool(ton_open),
+                "treasury": ton_treasury if ton_open else None,
+                "credits_per_ton": float(ton_rate) if ton_open else None,
+            },
         },
         "academy": {
             "courses": sorted(str(course_id) for course_id in courses.keys()),
