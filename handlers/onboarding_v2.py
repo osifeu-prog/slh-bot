@@ -202,6 +202,12 @@ def register(bot, context=None):
         )
         markup.add(
             types.InlineKeyboardButton(
+                "👛 חיבור ארנקים",
+                web_app=types.WebAppInfo(
+                    url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?screen=wallet&v=20260927-wallet"
+                ),
+            ),
+            types.InlineKeyboardButton(
                 "🚀 Mini App",
                 web_app=types.WebAppInfo(
                     url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260926-bnb-transfer-gas"
