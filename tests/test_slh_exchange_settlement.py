@@ -11,8 +11,8 @@ from core.slh_distribution import (
 def _db():
     return {
         "users": {
-            "seller": {"wallet": {"token_balance": 100.0, EXCHANGE_RESERVE_KEY: 0.0}},
-            "buyer": {"wallet": {"token_balance": 5.0, EXCHANGE_RESERVE_KEY: 0.0}},
+            "seller": {"wallet": {"token_balance": 100.0, "live_token_balance": 100.0, EXCHANGE_RESERVE_KEY: 0.0}},
+            "buyer": {"wallet": {"token_balance": 5.0, "live_token_balance": 5.0, EXCHANGE_RESERVE_KEY: 0.0}},
         },
         "slh_token_ledger": [],
     }
