@@ -826,7 +826,7 @@ async function signTonWalletFallback(wallet){
 }
 
 
-async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)return;const controls=document.getElementById('bnbConnectControls');if(controls)controls.hidden=true;const notice=document.getElementById('bnbTelegramNotice');if(notice)notice.hidden=false;const top=document.getElementById('tonBindingStatusTop');if(top)top.textContent='TON Connect';}catch(_e){}}
+async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)return;const controls=document.getElementById('bnbConnectControls');if(controls)controls.hidden=false;const notice=document.getElementById('bnbTelegramNotice');if(notice)notice.hidden=true;const top=document.getElementById('tonBindingStatusTop');if(top)top.textContent='TON Connect';const wc=document.getElementById('bnbWalletConnectStatus');if(wc&&!wc.textContent)wc.textContent='WalletConnect זמין בתוך Telegram — ניתן לחבר Trust Wallet / MetaMask Mobile.';}catch(_e){}}
 
 async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
@@ -1081,7 +1081,7 @@ async function sendSlhOnChain(){
     return null;
   }
 }
-function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}show('home');if(!initData){showAuthGate();}else{hideAuthGate();loadMe();trackGrowth('home_view','home',{screen:'home'});}
+function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}function __slhBoot(){show('home');if(!initData){showAuthGate();setText('name','נדרש לפתוח מתוך Telegram');return}hideAuthGate();loadMe();trackGrowth('home_view','home',{screen:'home'});}__slhBoot();window.addEventListener('load',function(){if(!window.Telegram?.WebApp?.initData){setTimeout(function(){try{if(window.Telegram?.WebApp?.initData){window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();loadMe();}}catch(_e){}},1200);}});
 
 async function sendTransferViaApi(){
   if(!initData){toast('פתח מתוך Telegram');return}
