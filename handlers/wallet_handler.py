@@ -24,27 +24,62 @@ def register(bot):
 
     @bot.message_handler(commands=["connect_bnb"])
     def connect_bnb(msg):
-        """Open the external Mini App wallet screen for BNB ownership binding."""
-        url = "https://slh-nft.com/mini-app?screen=wallet&external=1"
-        try:
-            from telebot import types
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("🦊 התחבר ואמת BNB", url=url))
+        """Issue a short-lived BNB ownership challenge; no transaction is requested."""
+        uid = str(msg.from_user.id)
+        parts = msg.text.split(maxsplit=1)
+        if len(parts) < 2 or not parts[1].strip():
             bot.reply_to(
                 msg,
                 "🔐 חיבור BNB\n\n"
-                "פתח את מסך Wallet בדפדפן כדי לבצע challenge + חתימה "
-                "ולהוכיח בעלות על ארנק BNB.\n"
-                "אין לשלוח כספים לצורך האימות.",
-                reply_markup=markup,
+                "הדבק כתובת BNB כדי לקבל challenge חד־פעמי.\n\n"
+                "/connect_bnb <כתובת BNB>\n\n"
+                "לא שולחים BNB ולא חותמים על עסקה — רק חותמים על הודעת אימות."
             )
-        except Exception:
+            return
+        address = parts[1].strip().split()[0]
+        try:
+            from core.wallet_binding import issue_challenge
+            challenge = issue_challenge(uid, address)
             bot.reply_to(
                 msg,
-                "🔐 חיבור BNB:\n"
-                f"{url}\n\n"
-                "פתח בדפדפן כדי לאמת בעלות על הארנק. אין לשלוח כספים לצורך האימות.",
+                "🔐 BNB OWNERSHIP CHALLENGE\n\n"
+                "חתום בארנק על ההודעה הבאה (Sign Message / personal_sign):\n\n"
+                f"{challenge['message']}\n\n"
+                "לא מדובר בעסקה ולא נשלח כסף.\n"
+                "לאחר החתימה שלח:\n"
+                "/connect_bnb_verify <הכתובת> <signature>"
             )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ BNB challenge: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB challenge failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["connect_bnb_verify"])
+    def connect_bnb_verify(msg):
+        """Verify the user's signed BNB ownership challenge."""
+        uid = str(msg.from_user.id)
+        parts = msg.text.split()
+        if len(parts) != 3:
+            bot.reply_to(
+                msg,
+                "שימוש:\n/connect_bnb_verify <כתובת BNB> <signature>"
+            )
+            return
+        address, signature = parts[1], parts[2]
+        try:
+            from core.wallet_binding import verify_signature
+            binding = verify_signature(uid, address, signature)
+            bot.reply_to(
+                msg,
+                "✅ BNB WALLET VERIFIED\n\n"
+                f"Wallet: {binding['address']}\n"
+                "הבעלות אומתה. כעת הפקדת BNB תיבדק server-side "
+                "מול הכתובת הזו, ה־Treasury ו־15 confirmations."
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ BNB verification: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB verification failed: {type(exc).__name__}")
 
     @bot.message_handler(commands=["wallet"])
     def wallet(msg):
