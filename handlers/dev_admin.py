@@ -23,6 +23,27 @@ def _role_permissions(role):
     return sorted(ROLES.get(str(role or "").upper(), []))
 
 
+def _parse_permission_command(parts):
+    """Parse explicit permission actions without treating action words as permissions."""
+    if len(parts) >= 4 and parts[2].lower() in {"add", "remove", "toggle"}:
+        return parts[2].lower(), parts[3].lower()
+    raw = parts[2].strip()
+    if raw.startswith("+") and len(raw) > 1:
+        return "add", raw[1:].lower()
+    if raw.startswith("-") and len(raw) > 1:
+        return "remove", raw[1:].lower()
+    return "toggle", raw.lower()
+
+
+def _normalize_role_action(raw_role):
+    role = str(raw_role or "").strip().lower()
+    if role in {"revoke", "remove", "none"}:
+        return "revoke"
+    if role == "lock":
+        return "lock"
+    return role
+
+
 def _approve_requested(bot, m, uid):
     result = developer_access.approve_access(uid, str(m.from_user.id))
     if not result.get("ok"):
@@ -199,19 +220,33 @@ def register(bot):
             return
         parts = m.text.split()
         if len(parts) < 3:
-            bot.reply_to(m, "Usage: /dev_perm <user_id> <permission>")
+            bot.reply_to(
+                m,
+                "Usage: /dev_perm <user_id> <add|remove|toggle> <permission>\n"
+                "Also: /dev_perm <user_id> +<permission> | -<permission>",
+            )
             return
         uid = parts[1].strip()
-        perm = parts[2].lower()
+        action, perm = _parse_permission_command(parts)
+        if not perm or perm in {"add", "remove", "toggle"}:
+            bot.reply_to(m, "❌ Permission name is required.")
+            return
+
         perms = set(get_permissions(uid))
-        if perm in perms:
-            perms.remove(perm)
-            action = "removed"
-        else:
+        if action == "add":
             perms.add(perm)
-            action = "added"
+        elif action == "remove":
+            perms.discard(perm)
+        else:
+            if perm in perms:
+                perms.remove(perm)
+                action = "remove"
+            else:
+                perms.add(perm)
+                action = "add"
+
         profile_manager.update_user(uid, {"permissions": sorted(perms)})
-        bot.reply_to(m, f"✅ Permission '{perm}' {action} for user {uid}")
+        bot.reply_to(m, f"✅ Permission '{perm}' {action}d for user {uid}")
 
     @bot.message_handler(commands=['dev_role'])
     def dev_role(m):
@@ -223,13 +258,31 @@ def register(bot):
             bot.reply_to(m, "Usage: /dev_role <user_id> <role>")
             return
         uid = parts[1].strip()
-        role = parts[2].lower()
+        role = _normalize_role_action(parts[2])
         if role == "developer":
             bot.reply_to(
                 m,
                 "🔒 Direct Developer role assignment is disabled. "
                 "User must complete Bitcoin Mastery, send /dev_request, then Owner approves."
             )
+            return
+
+        if role == "revoke":
+            profile_manager.update_user(uid, {
+                "role": "student",
+                "permissions": _role_permissions("USER"),
+                "developer_access_status": "revoked",
+            })
+            bot.reply_to(m, f"⛔ Developer access revoked for {uid}")
+            return
+
+        if role == "lock":
+            profile_manager.update_user(uid, {
+                "role": "student",
+                "permissions": _role_permissions("USER"),
+                "developer_access_status": "locked",
+            })
+            bot.reply_to(m, f"🔒 Developer access locked for {uid}")
             return
 
         update = {
