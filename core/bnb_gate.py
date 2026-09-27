@@ -5,15 +5,30 @@ fail-closed until the BSC network, RPC and treasury are configured correctly.
 """
 from __future__ import annotations
 
+import json
 import os
+from pathlib import Path
 
 from core.binance_connector import get_bsc_config
 
 CLOSED_MESSAGE = "⛔️ הפקדות BNB/SLH סגורות כרגע. אל תשלח עד להודעה."
 
 
+def _effective_config() -> dict:
+    cfg = dict(get_bsc_config())
+    path = Path("state/db.json")
+    try:
+        db = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, ValueError):
+        return cfg
+    overrides = db.get("bsc_settings") if isinstance(db, dict) else None
+    if isinstance(overrides, dict):
+        cfg.update(overrides)
+    return cfg
+
+
 def bnb_readiness() -> dict:
-    cfg = get_bsc_config()
+    cfg = _effective_config()
     reasons: list[str] = []
     chain_id = cfg.get("chain_id")
     if int(chain_id or 0) != 56:
