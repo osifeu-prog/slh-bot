@@ -152,6 +152,21 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 <button class="action primary" style="width:100%;margin-top:9px" onclick="saveJournalEntry()"><b>💾 שמור ביומן</b><span>נשמר רק ביומן האישי שלך</span></button>
 </div>
 </section>
+<section id="vault" class="screen">
+<div class="section-title">🔐 Bot Vault</div>
+<div class="card">
+  <b>Owner-only Bot Vault</b>
+  <p class="muted">המסך מציג מטא־דאטה בלבד. טוקנים לעולם אינם מוצגים כאן.</p>
+  <div id="vaultRows" style="margin-top:8px">טוען…</div>
+</div>
+<div class="card">
+  <b>ניהול מאובטח</b>
+  <div class="muted" style="margin-top:6px">הוספה וסיבוב טוקנים מתבצעים ב־Telegram בפרטי בלבד:</div>
+  <div class="guide">
+    <p><code>/vault_add &lt;token&gt; [module]</code><br><code>/vault_rotate &lt;@bot&gt; &lt;new_token&gt;</code><br><code>/vault_health</code><br><code>/vault_log</code></p>
+  </div>
+</div>
+</section>
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
 <section id="system" class="screen"><div class="section-title">🖥 מערכת SLH OS</div><div class="card"><b>Health</b><div id="sysHealth">טוען…</div></div><div class="card"><b>Exchange</b><div id="sysExchange">טוען…</div></div><div class="card"><b>Rewards</b><div id="sysRewards">טוען…</div></div></section></main></div>
 <nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet');loadCombined()">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button><button id="bmore" onclick="openMoreMenu()">☰<br>עוד</button></nav>
@@ -168,6 +183,7 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
       <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button>
       <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
       <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Control Plane</span></button>
+      <button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button>
     </div>
     <div class="v-row"><button type="button" id="mClose">סגור</button></div>
   </div>
@@ -1041,6 +1057,26 @@ async function saveJournalEntry(){
     await loadControlJournal();
   }catch(e){toast('❌ '+(e.message||e))}
 }
+
+async function loadVault(){
+  if(!initData){showAuthGate();return}
+  const box=$('vaultRows');
+  if(!box)return;
+  try{
+    const r=await fetch('/api/v1/vault',{headers});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===403){box.innerHTML='<div class="muted">⛔️ הכספת זמינה לבעלים בלבד.</div>';return}
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    const rows=Array.isArray(d.bots)?d.bots:[];
+    if(!rows.length){box.innerHTML='<div class="muted">הכספת ריקה. הוסף בוט דרך /vault_add בצ׳אט פרטי.</div>';return}
+    box.innerHTML=rows.map(function(x){
+      const exp=x.open_exposures?(' · ⚠️ חשיפות '+x.open_exposures):'';
+      const rot=x.rotated_at?(' · סובב '+esc(String(x.rotated_at).slice(0,16).replace('T',' '))):'';
+      return '<div class="wallet-row"><span><b>@'+esc(x.username||'')+'</b><br><small class="muted">'+esc(x.module||'home')+' · '+esc(x.token_tail||'')+exp+rot+'</small></span></div>';
+    }).join('');
+  }catch(e){box.innerHTML='<div class="muted">❌ הכספת לא זמינה</div>';}
+}
+
 
 async function loadSystem(){
   if(!initData)return;
