@@ -348,13 +348,14 @@ def register(bot):
             )
 
             delivered = False
+            delivery_error = ""
             direct_target = developer_chat_id or developer_uid
             if direct_target and direct_target != str(m.chat.id):
                 try:
                     bot.send_message(direct_target, notice)
                     delivered = True
-                except Exception:
-                    delivered = False
+                except Exception as exc:
+                    delivery_error = f"{type(exc).__name__}: {str(exc)[:180]}"
 
             if not delivered and str(m.chat.id) != developer_uid:
                 try:
@@ -366,13 +367,21 @@ def register(bot):
                         f"{result.get('pr_url') or ''}",
                     )
                     delivered = True
-                except Exception:
-                    delivered = False
+                except Exception as exc:
+                    delivery_error = f"{type(exc).__name__}: {str(exc)[:180]}"
 
-            if not delivered:
+            if delivered:
                 bot.reply_to(
                     m,
-                    "⚠️ PR אושר, אבל לא הצלחתי למסור את הודעת האישור למפתח. "
+                    "📩 אישור נמסר למפתח בהצלחה. "
+                    f"PR #{result.get('pr_number')}.",
+                )
+            else:
+                bot.reply_to(
+                    m,
+                    "⚠️ ה־PR אושר אבל Telegram לא מסר את ההודעה למפתח.\n"
+                    f"Developer UID: {developer_uid or 'unknown'}\n"
+                    f"Delivery error: {delivery_error or 'UNKNOWN'}\n"
                     "ה־PR קיים וניתן לפתוח אותו ישירות.",
                 )
         except Exception as exc:
