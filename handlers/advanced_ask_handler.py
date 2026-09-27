@@ -2,6 +2,7 @@ from handlers.llm_handler import query_llm_with_context
 from core.ask_router import route
 from core.keyboard_detector import normalize_keyboard_text
 from core.authority import is_owner
+from core.conversation_memory import record_turn
 
 
 def _safe_clip(value, limit=3500):
@@ -64,11 +65,23 @@ def register_ask_handler(bot):
         if not answer:
             answer = "⚠️ אין תשובה זמינה כרגע."
 
+        final_answer = _safe_clip(answer)
         bot.send_message(
             msg.chat.id,
-            _safe_clip(answer),
+            final_answer,
             parse_mode=None
         )
+        if (
+            final_answer
+            and not final_answer.startswith("🧠 ה־AI אינו זמין כרגע")
+            and not final_answer.startswith("מנוע ה-AI לא זמין כרגע")
+        ):
+            record_turn(
+                str(msg.from_user.id),
+                question,
+                final_answer,
+                intent="ask",
+            )
 
 
 print("ASK MODULE LOADED FROM:", __file__)
