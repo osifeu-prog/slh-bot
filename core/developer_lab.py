@@ -51,7 +51,7 @@ def _now() -> float:
 
 
 def _normalize_path(path: str) -> str:
-    value = str(path or "").strip().replace("\", "/")
+    value = str(path or "").strip().replace("\\", "/")
     if not value or value.startswith("/") or ".." in value.split("/"):
         raise ValueError("INVALID_PATH")
     if not _PATH_RE.fullmatch(value):
