@@ -29,10 +29,33 @@ THEMES = {
 }
 DEFAULT_THEME = "calm"
 
+THEME_ALIASES = {
+    "dark": "calm",
+    "כהה": "calm",
+    "רגוע": "calm",
+    "telegram": "system",
+    "מערכת": "system",
+    "light": "light",
+    "בהיר": "light",
+    "high-contrast": "contrast",
+    "high_contrast": "contrast",
+    "contrast": "contrast",
+    "ניגודיות": "contrast",
+}
+
 
 def normalize_theme(value: str | None) -> str:
     key = str(value or "").strip().lower()
+    key = THEME_ALIASES.get(key, key)
     return key if key in THEMES else DEFAULT_THEME
+
+
+def validate_theme(value: str | None) -> str:
+    key = str(value or "").strip().lower()
+    key = THEME_ALIASES.get(key, key)
+    if key not in THEMES:
+        raise ValueError("THEME_INVALID")
+    return key
 
 
 def get_preferences(uid) -> dict:
@@ -51,7 +74,7 @@ def set_preferences(uid, *, theme=None, language=None, compact=None) -> dict:
     current = get_preferences(uid)
     updated = dict(current)
     if theme is not None:
-        updated["theme"] = normalize_theme(theme)
+        updated["theme"] = validate_theme(theme)
     if language is not None:
         updated["language"] = str(language).strip().lower()[:8] or current["language"]
     if compact is not None:
