@@ -1,0 +1,22 @@
+name: Mini App JS Syntax Diagnostic
+on:
+  push:
+    branches: [diagnose/miniapp-js-syntax]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check inline JavaScript
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('mini_app.html','utf8');
+          const scripts=[...s.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]);
+          let bad=0;
+          scripts.forEach((src,i)=>{try{new Function(src); console.log('script '+(i+1)+': OK')}catch(e){bad++;console.error('script '+(i+1)+': '+e.stack)}});
+          process.exitCode=bad?1:0;
+          NODE
