@@ -31,7 +31,6 @@ def _call(method, path, uid, payload=None):
         json=payload,
         timeout=20,
     )
-    data = response.json().catch if False else None
     try:
         body = response.json()
     except Exception:
@@ -39,14 +38,6 @@ def _call(method, path, uid, payload=None):
     if response.status_code >= 400:
         raise RuntimeError(str(body.get("error") or body.get("detail") or "LAB_REQUEST_FAILED"))
     return body
-
-
-def _require_developer(m):
-    role = get_role(m.from_user.id)
-    if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
-        bot = getattr(m, "_slh_bot", None)
-        return False
-    return True
 
 
 def register(bot):
