@@ -174,6 +174,36 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(m, f"❌ Developer Lab: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["dev_lab_preview"])
+    def dev_lab_preview(m):
+        role = get_role(m.from_user.id)
+        if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
+            bot.reply_to(m, "⛔ Developer Access required.")
+            return
+        parts = (m.text or "").split()
+        if len(parts) != 2:
+            bot.reply_to(m, "Usage: /dev_lab_preview <request_id>")
+            return
+        try:
+            result = _call(
+                "GET",
+                "/api/dev/lab/preview/" + parts[1].strip(),
+                m.from_user.id,
+            )
+            content = str(result.get("content") or "")
+            if result.get("truncated"):
+                content += "\n… truncated at 3500 chars"
+            bot.reply_to(
+                m,
+                f"🧪 Proposal {result.get('id')}\n"
+                f"Path: {result.get('path')}\n"
+                f"Summary: {result.get('summary')}\n"
+                f"SHA256: {result.get('content_sha256')}\n\n"
+                f"{content}"[:3900],
+            )
+        except Exception as exc:
+            bot.reply_to(m, f"❌ Preview failed: {type(exc).__name__}: {str(exc)[:200]}")
+
     @bot.message_handler(commands=["dev_lab_status"])
     def dev_lab_status(m):
         role = get_role(m.from_user.id)
