@@ -179,6 +179,24 @@ def developer_lab_propose():
         return jsonify({"error": "DEV_LAB_PROPOSAL_FAILED"}), 500
 
 
+@app.route("/api/dev/lab/file", methods=["GET"])
+def developer_lab_file_read():
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    path = str(request.args.get("path", "")).strip()
+    try:
+        from core.developer_lab import read_file
+        return jsonify(read_file(path)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DEV_LAB] read error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_READ_FAILED"}), 500
+
+
 @app.route("/api/dev/lab/requests", methods=["GET"])
 def developer_lab_requests():
     actor, error, status = _developer_lab_actor()
