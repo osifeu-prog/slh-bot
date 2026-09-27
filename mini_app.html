@@ -826,7 +826,9 @@ async function signTonWalletFallback(wallet){
 }
 
 
-async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)return;const controls=document.getElementById('bnbConnectControls');if(controls)controls.hidden=true;const notice=document.getElementById('bnbTelegramNotice');if(notice)notice.hidden=false;const top=document.getElementById('tonBindingStatusTop');if(top)top.textContent='TON Connect';}catch(_e){}}\n\nasync function initTonConnect(){
+async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)return;const controls=document.getElementById('bnbConnectControls');if(controls)controls.hidden=true;const notice=document.getElementById('bnbTelegramNotice');if(notice)notice.hidden=false;const top=document.getElementById('tonBindingStatusTop');if(top)top.textContent='TON Connect';}catch(_e){}}
+
+async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
   _tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
