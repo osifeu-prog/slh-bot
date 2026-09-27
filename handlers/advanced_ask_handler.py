@@ -32,6 +32,7 @@ def register_ask_handler(bot):
             return
 
         question = question[:2000]
+        original_question = question
 
         # Last EXEC output can contain privileged operational data.
         # It is never injected into non-owner ASK context.
@@ -78,7 +79,7 @@ def register_ask_handler(bot):
         ):
             record_turn(
                 str(msg.from_user.id),
-                question,
+                original_question,
                 final_answer,
                 intent="ask",
             )
