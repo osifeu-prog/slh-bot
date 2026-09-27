@@ -1,4 +1,3 @@
-import re
 import unittest
 from pathlib import Path
 
@@ -20,9 +19,10 @@ class MiniAppRegressionTests(unittest.TestCase):
         self.assertIn(expected, self.source)
 
     def test_command_bridge_routes_known_actions_without_send_data_or_clipboard(self):
-        match = re.search(r"function sendCommand\(cmd,label\)\{(.*?)\n?\}", self.source)
-        self.assertIsNotNone(match, "sendCommand function not found")
-        body = match.group(1)
+        start = self.source.find("function sendCommand(cmd,label){")
+        self.assertGreaterEqual(start, 0, "sendCommand function not found")
+        end = self.source.find("\nfunction ", start + 1)
+        body = self.source[start:] if end < 0 else self.source[start:end]
         self.assertNotIn("tg.sendData", body)
         self.assertNotIn("navigator.clipboard", body)
         for command, screen in (
