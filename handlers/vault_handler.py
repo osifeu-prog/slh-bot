@@ -13,7 +13,35 @@ def _bot(name: str) -> str:
     return str(name or "").strip().lstrip("@")
 
 
-def register(bot):
+def _install_owner_commands(bot, context=None):
+    """Expose Vault commands in the Telegram menu only for the canonical owner chat."""
+    try:
+        if (context or {}).get("bot_name") not in (None, "Me_ad_main"):
+            return
+        from core.identity import OWNER_TELEGRAM_ID
+        from telebot import types
+        existing = bot.get_my_commands() if hasattr(bot, "get_my_commands") else []
+        names = {getattr(c, "command", "") for c in existing}
+        vault = [
+            ("vault", "כספת בוטים"),
+            ("vault_verify", "אימות הכספת"),
+            ("vault_add", "הוספת בוט לכספת"),
+            ("vault_rotate", "סיבוב טוקן"),
+            ("vault_remove", "הסרת בוט"),
+            ("vault_health", "בריאות בוטים"),
+            ("vault_exposed", "רישום חשיפה"),
+            ("vault_log", "Audit הכספת"),
+            ("vault_help", "עזרת הכספת"),
+        ]
+        merged = list(existing)
+        for command, description in vault:
+            if command not in names:
+                merged.append(types.BotCommand(command, description))
+        bot.set_my_commands(merged[:100], scope=types.BotCommandScopeChat(int(OWNER_TELEGRAM_ID)))
+    except Exception as exc:
+        print("[VAULT] owner command menu skipped:", type(exc).__name__)
+
+def register(bot, context=None):
     def guard(msg):
         if getattr(msg.chat, "type", "private") != "private":
             return False
@@ -122,6 +150,49 @@ def register(bot):
         except ValueError as exc:
             bot.reply_to(msg, f"❌ {exc}")
 
+    @bot.message_handler(commands=["vault_verify"])
+    def vault_verify(msg):
+        if not guard(msg):
+            return
+        parts = (msg.text or "").split()
+        names = [_bot(parts[1])] if len(parts) > 1 else [row["username"] for row in bot_vault.list_bots()]
+        out = ["🔎 Bot Vault verification"]
+        for name in names:
+            try:
+                db = __import__("state_manager").load_db()
+                entry = (db.get("bot_vault") or {}).get(name)
+                if not entry:
+                    raise ValueError("BOT_NOT_IN_VAULT")
+                token = bot_vault.get_token(name)
+                info = bot_vault._verify(token)
+                identity_ok = str(entry.get("bot_id")) == str(info.get("bot_id")) and name == info.get("username")
+                encrypted_ok = bool(entry.get("token_enc"))
+                exposures = len([x for x in entry.get("exposures", []) if not x.get("resolved_at")])
+                state = "✅" if identity_ok and encrypted_ok else "❌"
+                out.append(f"{state} @{name} · encrypted={'yes' if encrypted_ok else 'no'} · identity={'match' if identity_ok else 'MISMATCH'} · module={entry.get('module','home')} · {entry.get('token_tail','')} · exposures={exposures}")
+            except ValueError as exc:
+                out.append(f"❌ @{name}: {exc}")
+            except Exception:
+                out.append(f"❌ @{name}: VAULT_VERIFY_FAILED")
+        bot.reply_to(msg, "\n".join(out))
+
+    @bot.message_handler(commands=["vault_help"])
+    def vault_help(msg):
+        if not guard(msg):
+            return
+        bot.reply_to(msg, """🔐 Bot Vault — Owner
+
+/vault — רשימת בוטים ומטא־דאטה
+/vault_verify [@bot] — אימות הצפנה + זהות Telegram לכל הרשומות
+/vault_add <token> [module] — הוספה מוצפנת; ההודעה נמחקת
+/vault_rotate <@bot> <new_token> — סיבוב טוקן
+/vault_remove <@bot> — הסרה ושמירת audit
+/vault_health [@bot] — getMe + webhook + pending
+/vault_exposed <@bot> <source> [note] — רישום חשיפה כהמלצה
+/vault_log — 20 פעולות אחרונות ללא טוקנים
+
+⚠️ טוקנים לעולם לא מוחזרים בתשובה.""")
+ 
     @bot.message_handler(commands=["vault_log"])
     def vault_log(msg):
         if not guard(msg):
@@ -139,3 +210,5 @@ def register(bot):
                 f"{entry.get('token_tail', '')} {entry.get('note', '')}".strip()
             )
         bot.reply_to(msg, "\n".join(lines))
+
+    _install_owner_commands(bot, context)

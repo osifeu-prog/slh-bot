@@ -92,6 +92,49 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 @media(prefers-reduced-motion:reduce){
   .screen.active{animation:none}.action,.nav button{transition:none}
 }
+</style><style id="slh-ux-v4">
+/* SLH OS UX v4 — Telegram-native, calm, dense, touch-first */
+:root{--v4-bg:var(--tg-theme-bg-color,#f4f6fa);--v4-panel:var(--tg-theme-secondary-bg-color,#fff);--v4-text:var(--tg-theme-text-color,#172033);--v4-hint:var(--tg-theme-hint-color,#6b7280);--v4-line:var(--tg-theme-section-bg-color,#e5e7eb);--v4-btn:var(--tg-theme-button-color,#315efb);--v4-btntext:var(--tg-theme-button-text-color,#fff);--v4-soft:color-mix(in srgb,var(--v4-text) 5%,transparent);--v4-radius:18px}
+body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif!important;padding-left:12px!important;padding-right:12px!important}
+.app{max-width:680px!important}
+.top{margin-left:-12px!important;margin-right:-12px!important;padding-left:12px!important;padding-right:12px!important;background:color-mix(in srgb,var(--v4-bg) 92%,transparent)!important;border-bottom:1px solid color-mix(in srgb,var(--v4-text) 8%,transparent);backdrop-filter:blur(18px)}
+.logo{background:var(--v4-btn)!important;box-shadow:none!important}
+.title{letter-spacing:-.02em}
+.subtitle,.muted{color:var(--v4-hint)!important}
+.hero,.card{background:var(--v4-panel)!important;border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent)!important;box-shadow:0 2px 14px color-mix(in srgb,var(--v4-text) 6%,transparent)!important;border-radius:var(--v4-radius)!important}
+.hero{padding:18px!important}
+.hero-label{color:var(--v4-hint)!important}
+.hero-balance{font-size:34px!important;letter-spacing:-.03em}
+.section-title{margin-top:20px!important}
+.nav{padding:3px 0 9px!important}
+.nav button{background:var(--v4-soft)!important;color:var(--v4-text)!important;border:1px solid color-mix(in srgb,var(--v4-text) 8%,transparent)!important}
+.nav button.active{background:var(--v4-btn)!important;color:var(--v4-btntext)!important;border-color:var(--v4-btn)!important;box-shadow:none!important}
+.action{background:var(--v4-panel)!important;color:var(--v4-text)!important;border:1px solid color-mix(in srgb,var(--v4-text) 10%,transparent)!important;box-shadow:none!important}
+.action.primary,.primary{background:var(--v4-btn)!important;color:var(--v4-btntext)!important}
+.action span{color:var(--v4-hint)!important}
+.bottom{background:color-mix(in srgb,var(--v4-panel) 94%,transparent)!important;border-top:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent)!important}
+.bottom button{color:var(--v4-hint)!important}
+.bottom button.active{color:var(--v4-btn)!important}
+.v4{font-variant-numeric:tabular-nums}
+.slh-v4-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:8px 2px 14px}
+.slh-v4-head h2{margin:2px 0 4px;font-size:24px;letter-spacing:-.03em}
+.slh-v4-head p{margin:0;color:var(--v4-hint);font-size:12px;line-height:1.45}
+.slh-v4-kicker{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--v4-btn);text-transform:uppercase}
+.slh-v4-icon{width:42px;height:42px;border-radius:13px;border:1px solid color-mix(in srgb,var(--v4-text) 10%,transparent);background:var(--v4-panel);color:var(--v4-text);font-size:21px}
+.slh-v4-security{display:flex;align-items:center;gap:10px;padding:12px 13px;margin-bottom:10px;border-radius:15px;background:color-mix(in srgb,#22c55e 8%,var(--v4-panel));border:1px solid color-mix(in srgb,#22c55e 22%,transparent)}
+.slh-v4-check{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#22c55e;color:#fff;font-weight:900}
+.slh-v4-security b{display:block;font-size:13px}.slh-v4-security small{display:block;color:var(--v4-hint);font-size:10px;margin-top:2px}.slh-v4-badge{margin-inline-start:auto;font-size:9px;font-weight:900;padding:5px 8px;border-radius:999px;background:var(--v4-soft);color:var(--v4-hint)}
+.slh-v4-card{background:var(--v4-panel);border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent);border-radius:var(--v4-radius);padding:14px;margin-bottom:10px}
+.slh-v4-cardhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.slh-v4-cardhead b{display:block;font-size:14px}.slh-v4-cardhead small{display:block;color:var(--v4-hint);font-size:10px;margin-top:3px}.slh-v4-count{min-width:30px;text-align:center;border-radius:999px;padding:5px 8px;background:var(--v4-soft);font-size:11px}
+.slh-v4-list .wallet-row{padding:12px 0;border-color:color-mix(in srgb,var(--v4-text) 8%,transparent)!important}
+.slh-v4-list .wallet-row b{font-size:13px}.slh-v4-list .wallet-row small{font-size:10px}
+.slh-v4-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slh-v4-actions button{border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent);background:var(--v4-soft);color:var(--v4-text);border-radius:14px;text-align:start;padding:12px;min-height:64px}
+.slh-v4-actions b{display:block;font-size:12px}.slh-v4-actions span{display:block;color:var(--v4-hint);font-size:10px;margin-top:3px}
+.slh-v4-note{margin-top:9px;padding:10px;border-radius:12px;background:var(--v4-soft);color:var(--v4-hint);font-size:10px;line-height:1.6;word-break:break-word}
+.slh-v4-note code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--v4-text)}
+@media(max-width:520px){.actions{grid-template-columns:1fr!important}.slh-v4-actions{grid-template-columns:1fr 1fr}.hero-balance{font-size:31px!important}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style></head>
 <body><div id="authGate" class="auth-gate" hidden>
   <div class="auth-gate-card">
@@ -153,18 +196,32 @@ button:disabled{opacity:.45;filter:saturate(.5);cursor:not-allowed;transform:non
 </div>
 </section>
 <section id="vault" class="screen">
-<div class="section-title">🔐 Bot Vault</div>
-<div class="card">
-  <b>Owner-only Bot Vault</b>
-  <p class="muted">המסך מציג מטא־דאטה בלבד. טוקנים לעולם אינם מוצגים כאן.</p>
-  <div id="vaultRows" style="margin-top:8px">טוען…</div>
-</div>
-<div class="card">
-  <b>ניהול מאובטח</b>
-  <div class="muted" style="margin-top:6px">הוספה וסיבוב טוקנים מתבצעים ב־Telegram בפרטי בלבד:</div>
-  <div class="guide">
-    <p><code>/vault_add &lt;token&gt; [module]</code><br><code>/vault_rotate &lt;@bot&gt; &lt;new_token&gt;</code><br><code>/vault_health</code><br><code>/vault_log</code></p>
+<div class="slh-v4-head">
+  <div>
+    <div class="slh-v4-kicker">OWNER CONTROL</div>
+    <h2>🔐 Bot Vault</h2>
+    <p>מרכז שליטה לבוטים. הטוקנים עצמם לעולם אינם מוצגים במיני־אפ.</p>
   </div>
+  <button class="slh-v4-icon" onclick="loadVault()" aria-label="רענון הכספת">↻</button>
+</div>
+<div class="slh-v4-security">
+  <span class="slh-v4-check">✓</span>
+  <div><b>Encrypted storage</b><small>Fernet · metadata only</small></div>
+  <span class="slh-v4-badge">OWNER</span>
+</div>
+<div class="slh-v4-card">
+  <div class="slh-v4-cardhead"><div><b>בוטים בכספת</b><small>מצב, module, tail וחשיפות</small></div><span id="vaultCount" class="slh-v4-count">—</span></div>
+  <div id="vaultRows" class="slh-v4-list">טוען…</div>
+</div>
+<div class="slh-v4-card">
+  <div class="slh-v4-cardhead"><div><b>פעולות בטוחות</b><small>כל שינוי מבוצע בצ'אט פרטי מול הבוט</small></div></div>
+  <div class="slh-v4-actions">
+    <button onclick="openAction('/vault','ניהול הכספת')"><b>📋 /vault</b><span>רשימת בוטים</span></button>
+    <button onclick="openAction('/vault_verify','אימות הכספת')"><b>🔎 /vault_verify</b><span>הצפנה + זהות</span></button>
+    <button onclick="openAction('/vault_health','בריאות הבוטים')"><b>🩺 /vault_health</b><span>חי · webhook · pending</span></button>
+    <button onclick="openAction('/vault_log','Audit')"><b>📜 /vault_log</b><span>20 פעולות אחרונות</span></button>
+  </div>
+  <div class="slh-v4-note">➕ הוספה: <code>/vault_add &lt;token&gt; [module]</code> · 🔄 סיבוב: <code>/vault_rotate &lt;@bot&gt; &lt;new_token&gt;</code></div>
 </div>
 </section>
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
@@ -1240,4 +1297,16 @@ html[data-text="xl"] .app{zoom:1.22}
   }catch(_e){}
 })();
 </script>
-</body></html>
+<script id="slh-v4-vault-count">
+(function(){
+  var oldLoad=window.loadVault;
+  if(typeof oldLoad!=="function")return;
+  window.loadVault=async function(){
+    await oldLoad();
+    try{
+      var box=document.getElementById("vaultRows"), count=document.getElementById("vaultCount");
+      if(count) count.textContent=box?box.querySelectorAll(".wallet-row").length:"—";
+    }catch(_e){}
+  };
+})();
+</script></body></html>

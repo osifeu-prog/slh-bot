@@ -86,6 +86,17 @@ def register(bot):
 /refer – קיצור ל-Share
 /invite – קיצור ל-Share
 
+🔐 BOT VAULT (OWNER / PRIVATE CHAT)
+/vault — רשימת בוטים ומטא־דאטה
+/vault_verify [@bot] — אימות הצפנה + זהות Telegram
+/vault_add <token> [module] — הוספה מוצפנת
+/vault_rotate <@bot> <new_token> — סיבוב טוקן
+/vault_remove <@bot> — הסרה
+/vault_health [@bot] — health לכל בוט
+/vault_exposed <@bot> <source> [note] — רישום חשיפה
+/vault_log — audit אחרון
+/vault_help — עזרה לכספת
+
 📊 OWNER BUSINESS CONTROL
 /biz – תמונת עסק כללית
 /biz_users [days] – כניסות משתמשים
