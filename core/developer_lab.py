@@ -100,7 +100,13 @@ def _get_request(request_id: str) -> dict:
     return item
 
 
-def submit_proposal(uid: str, path: str, content: str, summary: str) -> dict:
+def submit_proposal(
+    uid: str,
+    path: str,
+    content: str,
+    summary: str,
+    chat_id: str | None = None,
+) -> dict:
     uid = str(uid)
     if get_role(uid) not in {"DEVELOPER", "ADMIN", "OWNER"}:
         raise PermissionError("DEVELOPER_ACCESS_REQUIRED")
@@ -120,6 +126,7 @@ def submit_proposal(uid: str, path: str, content: str, summary: str) -> dict:
     item = {
         "id": request_id,
         "uid": uid,
+        "chat_id": str(chat_id) if chat_id else None,
         "path": path,
         "summary": summary or "Developer code change",
         "content_sha256": __import__("hashlib").sha256(content.encode("utf-8")).hexdigest(),
