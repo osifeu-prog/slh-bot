@@ -1,4 +1,42 @@
 def register(bot):
+    @bot.message_handler(commands=['dev_help'])
+    def dev_help(m):
+        from core.authority import get_role, has_permission
+        uid = str(m.from_user.id)
+        role = get_role(uid)
+        if role not in ("DEVELOPER", "ADMIN", "OWNER"):
+            bot.reply_to(m, "⛔ Developer access required.")
+            return
+        lines = [
+            "🛠 SLH OS Developer — Telegram workflow",
+            "",
+            f"Role: {role}",
+            "",
+            "READ / AUDIT:",
+            "/e whoami",
+            "/e pwd",
+            "/e cat <path>",
+            "/e grep <pattern> <path>",
+            "/e find <path> ...",
+            "/e settlement_status",
+            "",
+            "AGENT:",
+            "/agents",
+            "/inbox <agent>",
+            "/sendagent <agent> <message>",
+            "",
+            "ACCESS:",
+            "/dev_request  → request Developer role",
+            "/dev_requests → OWNER: pending requests",
+            "/execr <command> → request OWNER approval",
+            "",
+            "IMPORTANT:",
+            "Current DEVELOPER role has no direct code-write, GitHub commit, merge, or deploy permission.",
+            "Production writes remain OWNER-gated.",
+            "Telegram is currently a control/audit surface, not a full GitHub IDE.",
+        ]
+        bot.reply_to(m, "\n".join(lines))
+
     @bot.message_handler(commands=['dev'])
     def dev_menu(msg):
         text = """🛠 SLH OS Developer Dashboard
