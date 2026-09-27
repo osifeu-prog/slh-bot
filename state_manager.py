@@ -1,6 +1,5 @@
 import json
 import os
-import fcntl
 
 try:
     with open("config.json") as f:
@@ -59,6 +58,7 @@ def delete_agent(prefix):
 
 def clear_agents():
     set_agents({})
+
 
 try:
     import fcntl
@@ -121,4 +121,3 @@ def atomic_json_update(filename, mutate_fn, default=None):
         finally:
             if HAS_FCNTL:
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
-
