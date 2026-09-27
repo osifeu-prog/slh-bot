@@ -13,7 +13,35 @@ def _bot(name: str) -> str:
     return str(name or "").strip().lstrip("@")
 
 
-def register(bot):
+def _install_owner_commands(bot, context=None):
+    """Expose Vault commands in the Telegram menu only for the canonical owner chat."""
+    try:
+        if (context or {}).get("bot_name") not in (None, "Me_ad_main"):
+            return
+        from core.identity import OWNER_TELEGRAM_ID
+        from telebot import types
+        existing = bot.get_my_commands() if hasattr(bot, "get_my_commands") else []
+        names = {getattr(c, "command", "") for c in existing}
+        vault = [
+            ("vault", "כספת בוטים"),
+            ("vault_verify", "אימות הכספת"),
+            ("vault_add", "הוספת בוט לכספת"),
+            ("vault_rotate", "סיבוב טוקן"),
+            ("vault_remove", "הסרת בוט"),
+            ("vault_health", "בריאות בוטים"),
+            ("vault_exposed", "רישום חשיפה"),
+            ("vault_log", "Audit הכספת"),
+            ("vault_help", "עזרת הכספת"),
+        ]
+        merged = list(existing)
+        for command, description in vault:
+            if command not in names:
+                merged.append(types.BotCommand(command, description))
+        bot.set_my_commands(merged[:100], scope=types.BotCommandScopeChat(int(OWNER_TELEGRAM_ID)))
+    except Exception as exc:
+        print("[VAULT] owner command menu skipped:", type(exc).__name__)
+
+def register(bot, context=None):
     def guard(msg):
         if getattr(msg.chat, "type", "private") != "private":
             return False
@@ -182,3 +210,5 @@ def register(bot):
                 f"{entry.get('token_tail', '')} {entry.get('note', '')}".strip()
             )
         bot.reply_to(msg, "\n".join(lines))
+
+    _install_owner_commands(bot, context)
