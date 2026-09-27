@@ -46,6 +46,15 @@ def _bridge_status_display():
         return "⚪️ unknown"
 
 
+def _fmt_balance(value):
+    """Render balances without binary floating-point noise."""
+    try:
+        text = f"{float(value):.8f}".rstrip("0").rstrip(".")
+        return text if text else "0"
+    except (TypeError, ValueError):
+        return str(value)
+
+
 def _hebrew_date_display(gregorian_date):
     try:
         import hdate
@@ -155,9 +164,9 @@ def register(bot, context=None):
         return (
             f"🌟 {display_name} — ה-Dashboard שלך\n\n"
             f"🧾 כל היתרות:\n"
-            f"💰 Credits: {wallet.get('credits', 0)}\n"
-            f"🔒 Staked: {wallet.get('staked', 0)}\n"
-            f"🪙 Internal SLH: {internal_token}\n"
+            f"💰 Credits: {_fmt_balance(wallet.get('credits', 0))}\n"
+            f"🔒 Staked: {_fmt_balance(wallet.get('staked', 0))}\n"
+            f"🪙 Internal SLH: {_fmt_balance(internal_token)}\n"
             f"💎 TON Wallet: {_ton_label(user_id, wallet)}\n\n"
             f"{course_line}\n"
             f"🤖 הסוכנים שלך: {len(owned_agents)}\n"
