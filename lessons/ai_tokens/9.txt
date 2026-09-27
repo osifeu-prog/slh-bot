@@ -1,36 +1,33 @@
-התקנה:
-pip install tiktoken
+## איך מודדים טוקנים בפועל
 
-שימוש בסיסי:
-import tiktoken
+אפשר להשתמש ב-tokenizer המתאים למודל כדי למדוד input/output ולבנות estimate.
 
-# Per model
-enc_gpt5 = tiktoken.encoding_for_model("gpt-4o")  # uses o200k_base
-enc_gpt4 = tiktoken.encoding_for_model("gpt-4")   # uses cl100k_base
+העיקרון:
+1. מדוד את ה-input האמיתי
+2. הערך output צפוי
+3. השתמש בתמחור העדכני של הספק
+4. מדוד cache/context בנפרד
+5. השווה בין גרסאות prompt
 
-text = "Hello world"
-print(len(enc_gpt5.encode(text)))  # 2 tokens
+### אל תמדוד רק מחיר
+מדדו גם:
+- latency
+- איכות תשובה
+- שיעור שגיאות
+- אורך context
+- מספר פעולות המשך
+- כמה פעמים המשתמש נאלץ לחזור על עצמו
 
-text_he = "שלום עולם"
-print(len(enc_gpt5.encode(text_he)))  # 6 tokens (פי 3!)
+### מדידה בסגנון ledger
+לכל ניסוי שמרו:
+Experiment ID
+→ Prompt version
+→ Model
+→ Input tokens
+→ Output tokens
+→ Result
+→ Evidence
 
-מחשב עלות מלא:
-def estimate_cost(prompt: str, expected_output_tokens: int, model: str = "gpt-4o"):
-    enc = tiktoken.encoding_for_model(model)
-    input_tokens = len(enc.encode(prompt))
-    PRICING = {
-        "gpt-4o": (2.50, 15.00),       # per 1M tokens (input, output)
-        "claude-opus-4-6": (5.00, 25.00),
-    }
-    in_price, out_price = PRICING.get(model, (3.0, 15.0))
-    cost_usd = (input_tokens / 1_000_000) * in_price + (expected_output_tokens / 1_000_000) * out_price
-    return {
-        "input_tokens": input_tokens,
-        "expected_output_tokens": expected_output_tokens,
-        "estimated_cost_usd": round(cost_usd, 6),
-        "estimated_cost_ils": round(cost_usd * 3.7, 4),
-    }
+כך אפשר להשוות ניסוי לניסוי במקום להסתמך על תחושה.
 
-print(estimate_cost("שאלה ארוכה...", 500))
-
-ל-Claude / Anthropic: אין tiktoken, יש tokenizer של אנתרופיק. Estimate מהיר: ≈ tiktoken × 1.1.
+הגישה הזאת היא הבסיס ל-engineering שניתן לשחזר ולשפר.
