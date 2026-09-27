@@ -39,7 +39,7 @@ class BotSystemRegistryTests(unittest.TestCase):
     def test_snapshot_merges_runtime_vault_and_railway_metadata(self):
         with patch.object(bot_system_registry.state_manager, "load_db", return_value=self.db),              patch.object(bot_system_registry.bot_registry, "list_bots", return_value=[
                  self.db["bots"]["BOT_1"]
-             ]),              patch.object(bot_system_registry.bot_vault, "list_bots", return_value=[]),              patch("core.bnb_gate.bnb_deposits_open", return_value=False),              patch("core.ton_deposit_service.deposits_are_open", return_value=False):
+             ]), patch("core.bnb_gate.bnb_deposits_open", return_value=False),              patch("core.ton_deposit_service.deposits_are_open", return_value=False):
             data = bot_system_registry.snapshot()
 
         main = next(row for row in data["bots"] if row["username"] == "@Me_ad_main_bot")
