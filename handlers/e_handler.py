@@ -22,6 +22,16 @@ def register(bot):
             return
 
         cmd = parts[1].strip()
+        # Telegram may quote/paste a prior multi-line reply after a control-plane
+        # command. Never send such known control commands to the shell.
+        first_line = cmd.splitlines()[0].strip() if cmd.splitlines() else ""
+        known_single_commands = {
+            "settlement_status", "settlement", "money_status",
+            "alpha_status", "alpha_open", "alpha_state",
+        }
+        if first_line in known_single_commands and cmd != first_line:
+            cmd = first_line
+
         if cmd.startswith("railway"):
             if not is_owner(uid):
                 bot.reply_to(msg, "⛔️ OWNER only for Railway control-plane actions")
