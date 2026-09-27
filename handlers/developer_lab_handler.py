@@ -115,6 +115,7 @@ def register(bot):
                     "path": session["path"],
                     "summary": session["summary"],
                     "content": content,
+                    "chat_id": str(m.chat.id),
                 },
             )
             write_sessions.pop(uid, None)
@@ -335,14 +336,44 @@ def register(bot):
                 f"{result.get('pr_url') or ''}"
             )
             bot.reply_to(m, approval_message)
+
             developer_uid = str(result.get("uid") or "")
-            if developer_uid and developer_uid != str(m.from_user.id):
-                bot.send_message(
-                    developer_uid,
-                    "✅ Your Developer Lab proposal was approved by OWNER.\n"
-                    f"PR #{result.get('pr_number')}\n"
-                    f"{result.get('pr_url') or ''}\n"
-                    "Production deploy is not automatic; CI/merge remain separate.",
+            developer_chat_id = str(result.get("chat_id") or "")
+            notice = (
+                "✅ Your Developer Lab proposal was approved by OWNER.\n"
+                f"Proposal: {result.get('id')}\n"
+                f"PR #{result.get('pr_number')}\n"
+                f"{result.get('pr_url') or ''}\n"
+                "Production deploy is not automatic; CI/merge remain separate."
+            )
+
+            delivered = False
+            direct_target = developer_chat_id or developer_uid
+            if direct_target and direct_target != str(m.chat.id):
+                try:
+                    bot.send_message(direct_target, notice)
+                    delivered = True
+                except Exception:
+                    delivered = False
+
+            if not delivered and str(m.chat.id) != developer_uid:
+                try:
+                    bot.send_message(
+                        m.chat.id,
+                        "📩 Developer Lab approval notification\n"
+                        f"Developer: {developer_uid or 'unknown'}\n"
+                        f"PR #{result.get('pr_number')}\n"
+                        f"{result.get('pr_url') or ''}",
+                    )
+                    delivered = True
+                except Exception:
+                    delivered = False
+
+            if not delivered:
+                bot.reply_to(
+                    m,
+                    "⚠️ PR אושר, אבל לא הצלחתי למסור את הודעת האישור למפתח. "
+                    "ה־PR קיים וניתן לפתוח אותו ישירות.",
                 )
         except Exception as exc:
             bot.reply_to(
@@ -372,14 +403,31 @@ def register(bot):
             status = str(result.get("status") or "")
             if status != "pr_open":
                 raise RuntimeError(f"REQUEST_NOT_PR_OPEN:{status}")
-            bot.send_message(
-                developer_uid,
+            developer_chat_id = str(result.get("chat_id") or "")
+            notice = (
                 "✅ Your Developer Lab proposal was approved by OWNER.\n"
                 f"Proposal: {result.get('id')}\n"
                 f"PR #{result.get('pr_number')}\n"
                 f"{result.get('pr_url') or ''}\n"
-                "Production deploy is not automatic; CI/merge remain separate.",
+                "Production deploy is not automatic; CI/merge remain separate."
             )
+            delivered = False
+            direct_target = developer_chat_id or developer_uid
+            if direct_target and direct_target != str(m.chat.id):
+                try:
+                    bot.send_message(direct_target, notice)
+                    delivered = True
+                except Exception:
+                    delivered = False
+            if not delivered and str(m.chat.id) != developer_uid:
+                bot.send_message(
+                    m.chat.id,
+                    "📩 Developer Lab approval notification\n"
+                    f"Developer: {developer_uid}\n"
+                    f"PR #{result.get('pr_number')}\n"
+                    f"{result.get('pr_url') or ''}",
+                )
+                delivered = True
             bot.reply_to(
                 m,
                 f"📩 Approval notification sent to Developer {developer_uid} "
