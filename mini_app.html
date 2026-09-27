@@ -135,6 +135,27 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .slh-v4-note code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--v4-text)}
 @media(max-width:520px){.actions{grid-template-columns:1fr!important}.slh-v4-actions{grid-template-columns:1fr 1fr}.hero-balance{font-size:31px!important}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style><style id="slh-ux-v5-settings">
+:root[data-slh-theme="calm"]{
+  --v4-bg:#0f1420;--v4-panel:#171d2b;--v4-text:#f4f7fb;--v4-hint:#aab5c7;--v4-line:#2a3447;--v4-btn:#7d73e8;--v4-btntext:#fff
+}
+:root[data-slh-theme="light"]{
+  --v4-bg:#f5f7fb;--v4-panel:#fff;--v4-text:#172033;--v4-hint:#667085;--v4-line:#dde3ee;--v4-btn:#4967d8;--v4-btntext:#fff
+}
+:root[data-slh-theme="contrast"]{
+  --v4-bg:#050505;--v4-panel:#0d0d0d;--v4-text:#fff;--v4-hint:#f1f1f1;--v4-line:#fff;--v4-btn:#fff;--v4-btntext:#050505
+}
+.slh-v5-settings-card{background:var(--v4-panel);border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent);border-radius:18px;padding:15px;margin-bottom:10px}
+.slh-v5-settings-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.slh-v5-settings-head b{display:block;font-size:14px}.slh-v5-settings-head small{display:block;color:var(--v4-hint);font-size:10px;line-height:1.4;margin-top:3px}
+.slh-v5-theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slh-v5-theme{appearance:none;text-align:right;width:100%;padding:13px;border-radius:15px;background:var(--v4-soft);color:var(--v4-text);border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent);cursor:pointer;min-height:80px}
+.slh-v5-theme[aria-selected="true"]{border-color:var(--v4-btn);box-shadow:0 0 0 2px color-mix(in srgb,var(--v4-btn) 18%,transparent)}
+.slh-v5-theme b{display:block;font-size:13px}.slh-v5-theme span{display:block;color:var(--v4-hint);font-size:10px;line-height:1.45;margin-top:4px}
+.slh-v5-swatch{width:100%;height:8px;border-radius:99px;margin-bottom:9px;background:linear-gradient(90deg,#141a27,#7d73e8,#20d3a7)}
+.slh-v5-theme.light .slh-v5-swatch{background:linear-gradient(90deg,#fff,#4967d8,#20a879)}
+.slh-v5-theme.contrast .slh-v5-swatch{background:linear-gradient(90deg,#000,#fff,#fff)}
+@media(max-width:520px){.slh-v5-theme-grid{grid-template-columns:1fr}.slh-v5-settings-card{padding:14px}}
 </style></head>
 <body><div id="authGate" class="auth-gate" hidden>
   <div class="auth-gate-card">
@@ -154,9 +175,9 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
   <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
-<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button></div>
+<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
 <main>
-<section id="home" class="screen"><div class="hero"><div class="hero-label">היתרה שלך</div><div class="hero-balance" id="credits">—</div><div class="subtitle">Credits · יתרה פנימית</div></div><div class="grid"><div class="card"><div class="metric-label">🪙 SLH</div><div class="metric token" id="token">—</div></div><div class="card"><div class="metric-label">🔒 Staked</div><div class="metric stake" id="staked">—</div></div></div><div class="section-title">הצעד הבא</div><div class="next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div><div class="section-title">פעולות</div><div class="card actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>💳 קנייה</b><span>בחירת חבילה ותשלום דרך Telegram Stars</span></button><button class="action" onclick="show('wallet')"><b>👛 ארנק</b><span>יתרות וסטטוס</span></button><button class="action" onclick="show('transfer')"><b>💸 העברה</b><span>העברת Credits למשתמש אחר</span></button><button class="action" onclick="show('stake')"><b>🔒 Staking</b><span>תנאים ומסלול פעולה</span></button><button class="action" onclick="show('alpha')"><b>🚀 Alpha</b><span>התקדמות וזכאות</span></button><button class="action" onclick="show('academy')"><b>🎓 Academy</b><span>השלמת שיעורים ומשימות</span></button></div><details class="guide"><summary>ℹ️ איך משתמשים במערכת?</summary><p>התחל מהצעד הבא. Wallet מציג מצב, Transfer מטפל בהעברת Credits, Buy מטפל ברכישה, Stake מציג את התנאים, Academy מנהל את הלמידה, Alpha מציג ראיות, ו־AI מסביר מה לעשות הלאה.</p></details></section>
+<section id="home" class="screen"><div class="hero"><div class="hero-label">היתרה שלך</div><div class="hero-balance" id="credits">—</div><div class="subtitle">Credits · יתרה פנימית</div></div><div class="grid"><div class="card"><div class="metric-label">🪙 SLH</div><div class="metric token" id="token">—</div></div><div class="card"><div class="metric-label">🔒 Staked</div><div class="metric stake" id="staked">—</div></div></div><div class="section-title">הצעד הבא</div><div class="next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div><div class="section-title">פעולות</div><div class="card actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>💳 קנייה</b><span>בחירת חבילה ותשלום דרך Telegram Stars</span></button><button class="action" onclick="show('wallet')"><b>👛 ארנק</b><span>יתרות וסטטוס</span></button><button class="action" onclick="show('transfer')"><b>💸 העברה</b><span>העברת Credits למשתמש אחר</span></button><button class="action" onclick="show('stake')"><b>🔒 Staking</b><span>תנאים ומסלול פעולה</span></button><button class="action" onclick="show('alpha')"><b>🚀 Alpha</b><span>התקדמות וזכאות</span></button><button class="action" onclick="show('academy')"><b>🎓 Academy</b><span>השלמת שיעורים ומשימות</span></button><button class="action" onclick="show('settings');loadUiSettings()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button></div><details class="guide"><summary>ℹ️ איך משתמשים במערכת?</summary><p>התחל מהצעד הבא. Wallet מציג מצב, Transfer מטפל בהעברת Credits, Buy מטפל ברכישה, Stake מציג את התנאים, Academy מנהל את הלמידה, Alpha מציג ראיות, ו־AI מסביר מה לעשות הלאה.</p></details></section>
 <section id="growth" class="screen"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></section>
 <section id="market" class="screen"><div class="section-title">🛍 SLH Market</div>
 <div class="card"><b>⭐️ SLH Stars Store</b><p class="muted">רכישה ישירה דרך Telegram Stars. לחיצה על קנייה תפתח את תהליך התשלום בבוט, באמצעות מנגנון ה־Stars וה־fulfillment הקיימים.</p><div id="starsStore"><div class="muted">טוען קטלוג…</div></div></div>
@@ -229,7 +250,22 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 </div>
 </section>
 <section id="ai" class="screen"><div class="section-title">✨ SLH AI</div><div class="card ai"><b>העוזר האישי שלך</b><p>לא צריך לזכור פקודות. שאל את הבינה מה המצב שלך, מה הצעד הבא, או מה המשמעות של פעולה במערכת.</p><div class="actions"><button class="action primary" onclick="openAction('/ask','שאל את SLH AI')"><b>✨ שאל את ה־AI</b><span>פתיחת העוזר ב־Telegram</span></button><button class="action" onclick="show('home')"><b>🏠 חזרה</b><span>ראה את הצעד הבא</span></button></div></div><details class="guide"><summary>דוגמאות לשאלות</summary><p>"מה כדאי לי לעשות עכשיו?" · "איך משלימים את 3 שיעורי Bitcoin?" · "מה מצב ה־Alpha שלי?" · "מה ההבדל בין Credits ל־SLH?" · "איך עובד Staking?"</p></details></section>
-<section id="system" class="screen"><div class="section-title">🖥 מערכת SLH OS</div><div class="card"><b>Health</b><div id="sysHealth">טוען…</div></div><div class="card"><b>Exchange</b><div id="sysExchange">טוען…</div></div><div class="card"><b>Rewards</b><div id="sysRewards">טוען…</div></div></section></main></div>
+<section id="system" class="screen"><div class="section-title">🖥 מערכת SLH OS</div><div class="card"><b>Health</b><div id="sysHealth">טוען…</div></div><div class="card"><b>Exchange</b><div id="sysExchange">טוען…</div></div><div class="card"><b>Rewards</b><div id="sysRewards">טוען…</div></div></section><section id="settings" class="screen">
+  <div class="slh-v4-head">
+    <div><div class="slh-v4-kicker">SLH OS · PERSONAL</div><h2>⚙️ הגדרות</h2><p>תצוגה אחת משותפת לבוט ול־Mini App.</p></div>
+    <button class="slh-v4-icon" type="button" onclick="loadUiSettings()">↻</button>
+  </div>
+  <div class="slh-v5-settings-card">
+    <div class="slh-v5-settings-head"><div><b>🎨 ערכת תצוגה</b><small id="settingsThemeMeta">טוען…</small></div><span id="settingsSync" class="pill pending">מסנכרן…</span></div>
+    <div id="themeChoices" class="slh-v5-theme-grid"><div class="muted">טוען ערכות…</div></div>
+  </div>
+  <div class="slh-v5-settings-card">
+    <div class="slh-v5-settings-head"><div><b>🔄 מקור אמת</b><small>הבחירה נשמרת לחשבון שלך ומיושמת בשני הממשקים.</small></div><span>state/db.json</span></div>
+    <p class="muted" id="settingsCurrent">—</p>
+  </div>
+  <details class="guide"><summary>📘 איך זה עובד?</summary><p>שינוי ערכה כאן נשמר בצד השרת. בפעם הבאה ש־Mini App נפתח הוא טוען את אותה בחירה, ופקודת /theme בבוט משנה את אותה הגדרה בדיוק.</p></details>
+</section>
+</main></div>
 <nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet');loadCombined()">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button><button id="bmore" onclick="openMoreMenu()">☰<br>עוד</button></nav>
 <div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="v-panel">
@@ -277,7 +313,7 @@ function __slhRender(id){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const scr=$(id);if(scr)scr.classList.add('active');
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
-  const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai']};
+  const map={home:['nh','bh'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai'],settings:['nsettings']};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
   window.scrollTo(0,0);
   __slhShowing=id;
@@ -1382,4 +1418,65 @@ function handleApiAuthFailure(status,data){
 }
 </script>
 
-</body></html>
+<script id="slh-settings-sync">
+const SLH_THEME_META = {
+  calm:{label:'רגוע כהה',description:'כהה, נקי ונוח לעיניים'},
+  system:{label:'לפי Telegram',description:'עוקב אחרי ערכת Telegram במכשיר'},
+  light:{label:'בהיר',description:'רקע בהיר עם ניגודיות מאוזנת'},
+  contrast:{label:'ניגודיות גבוהה',description:'טקסט ופקדים בולטים יותר'}
+};
+function applyUiTheme(theme){
+  const t=SLH_THEME_META[theme]?theme:'calm';
+  if(t==='system') document.documentElement.removeAttribute('data-slh-theme');
+  else document.documentElement.setAttribute('data-slh-theme',t);
+  try{localStorage.setItem('slh.theme',t)}catch(_e){}
+  setText('settingsThemeMeta',SLH_THEME_META[t].label+' · '+SLH_THEME_META[t].description);
+  return t;
+}
+function renderThemeChoices(current,choices){
+  const el=$('themeChoices'); if(!el)return;
+  const list=Array.isArray(choices)&&choices.length?choices:Object.entries(SLH_THEME_META).map(([id,v])=>({id,...v}));
+  setHTML('themeChoices',list.map(x=>{
+    const selected=x.id===current;
+    const cls='slh-v5-theme '+x.id;
+    return '<button type="button" class="'+cls+'" aria-selected="'+selected+'" onclick="setUiTheme(\''+esc(x.id)+'\')"><span class="slh-v5-swatch"></span><b>'+(selected?'✅ ':'')+esc(x.label||x.id)+'</b><span>'+esc(x.description||'')+'</span></button>';
+  }).join(''));
+  setText('settingsCurrent','ערכת תצוגה נוכחית: '+(SLH_THEME_META[current]?.label||current));
+}
+async function loadUiSettings(){
+  if(!initData){showAuthGate();return}
+  const sync=$('settingsSync'); if(sync)sync.textContent='מסנכרן…';
+  try{
+    const r=await fetch('/api/v1/settings',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    const current=d.preferences?.theme||'calm';
+    applyUiTheme(current);
+    renderThemeChoices(current,d.themes);
+    if(sync){sync.textContent='✅ מסונכרן';sync.className='pill ok'}
+  }catch(e){
+    if(sync){sync.textContent='⚠️ לא מסונכרן';sync.className='pill pending'}
+  }
+}
+async function setUiTheme(theme){
+  if(!SLH_THEME_META[theme])return;
+  const previous=document.documentElement.getAttribute('data-slh-theme')||'system';
+  applyUiTheme(theme);
+  try{
+    const r=await fetch('/api/v1/settings',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({theme})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){applyUiTheme(previous);if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    const saved=d.preferences?.theme||theme;
+    applyUiTheme(saved);
+    renderThemeChoices(saved,d.themes);
+    const sync=$('settingsSync'); if(sync){sync.textContent='✅ נשמר';sync.className='pill ok'}
+    toast('✅ ערכת התצוגה מסונכרנת עם הבוט');
+  }catch(e){
+    toast('❌ לא ניתן לשמור את הערכה');
+  }
+}
+try{
+  const saved=localStorage.getItem('slh.theme');
+  if(saved&&SLH_THEME_META[saved])applyUiTheme(saved);
+}catch(_e){}
+</script></body></html>
