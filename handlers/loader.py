@@ -56,6 +56,7 @@ def load_handlers(bot, context):
         ("kb", "handlers.kb_handler"),
         ("leaderboard", "handlers.leaderboard_handler"),
         ("rewards", "handlers.rewards_handler"),
+        ("vault", "handlers.vault_handler"),
         ("gifts", "handlers.gifts_handler"),
         ("agent_submission_guard", "handlers.agent_submission_guard"),
         ("learning_path", "learning_path"),
