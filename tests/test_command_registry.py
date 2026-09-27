@@ -21,4 +21,5 @@ def test_unknown_command_filter_uses_runtime_registry():
     text = _sanitize_unknown_commands("השתמש ב-/share וב-/verify")
     assert "/share" in text
     assert "/verify" not in text
+    assert "/helpdesk" not in _sanitize_unknown_commands("call /helpdesk")
     assert "[פקודה לא רשומה]" in text
