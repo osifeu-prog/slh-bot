@@ -300,6 +300,7 @@ if __name__ == "__main__":
                 "[TELEGRAM] Primary token identity: "
                 f"@{bot_identity.username or 'no_username'} id={bot_identity.id}"
             )
+            configure_default_mini_app_menu(bot)
             try:
                 from core.identity import OWNER_TELEGRAM_ID
                 from core.bot_registry import ensure_runtime_bot
