@@ -139,7 +139,9 @@ def read_file(path: str) -> dict:
     path = _normalize_path(path)
     if path.startswith(".git/") or path.startswith("state/") or _SECRET_WORDS.search(path):
         raise PermissionError("PATH_NOT_READABLE")
-    if not (path in _ALLOWED_ROOT_FILES or path.startswith(_ALLOWED_PREFIXES) or path in _PROTECTED):
+    if path in _PROTECTED:
+        raise PermissionError("PATH_NOT_READABLE")
+    if not (path in _ALLOWED_ROOT_FILES or path.startswith(_ALLOWED_PREFIXES)):
         raise PermissionError("PATH_NOT_READABLE")
 
     response = _github(
