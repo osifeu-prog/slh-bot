@@ -350,6 +350,47 @@ def register(bot):
                 f"❌ Approval failed: {type(exc).__name__}: {str(exc)[:200]}",
             )
 
+    @bot.message_handler(commands=["dev_lab_notify"])
+    def dev_lab_notify(m):
+        if not is_owner(m.from_user.id):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+        parts = (m.text or "").split()
+        if len(parts) != 2:
+            bot.reply_to(m, "Usage: /dev_lab_notify <request_id>")
+            return
+        request_id = parts[1].strip()
+        try:
+            result = _call(
+                "GET",
+                "/api/dev/lab/status/" + request_id,
+                m.from_user.id,
+            )
+            developer_uid = str(result.get("uid") or "")
+            if not developer_uid:
+                raise RuntimeError("DEVELOPER_UID_MISSING")
+            status = str(result.get("status") or "")
+            if status != "pr_open":
+                raise RuntimeError(f"REQUEST_NOT_PR_OPEN:{status}")
+            bot.send_message(
+                developer_uid,
+                "✅ Your Developer Lab proposal was approved by OWNER.\n"
+                f"Proposal: {result.get('id')}\n"
+                f"PR #{result.get('pr_number')}\n"
+                f"{result.get('pr_url') or ''}\n"
+                "Production deploy is not automatic; CI/merge remain separate.",
+            )
+            bot.reply_to(
+                m,
+                f"📩 Approval notification sent to Developer {developer_uid} "
+                f"for PR #{result.get('pr_number')}.",
+            )
+        except Exception as exc:
+            bot.reply_to(
+                m,
+                f"❌ Developer notification failed: {type(exc).__name__}: {str(exc)[:200]}",
+            )
+
     @bot.message_handler(commands=["dev_lab_reject"])
     def dev_lab_reject(m):
         if not is_owner(m.from_user.id):
