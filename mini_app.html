@@ -135,7 +135,10 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .slh-v4-note code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--v4-text)}
 @media(max-width:520px){.actions{grid-template-columns:1fr!important}.slh-v4-actions{grid-template-columns:1fr 1fr}.hero-balance{font-size:31px!important}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-</style><style id="slh-ux-v5-settings">
+/* visible header + bottom bar controls on light Telegram themes */
+.refresh,.ghost{background:var(--v4-soft)!important;color:var(--v4-text)!important;border:1px solid color-mix(in srgb,var(--v4-text) 12%,transparent)!important}
+.bottom button{border:0!important;background:transparent!important;border-radius:12px!important}
+.bottom button.active{background:var(--v4-soft)!important}</style><style id="slh-ux-v5-settings">
 :root[data-slh-theme="calm"]{
   --v4-bg:#0f1420;--v4-panel:#171d2b;--v4-text:#f4f7fb;--v4-hint:#aab5c7;--v4-line:#2a3447;--v4-btn:#7d73e8;--v4-btntext:#fff
 }
@@ -366,7 +369,18 @@ async function loadRewardsPanel(){
     h+='<div class="section-title" style="margin-top:16px">💱 נכסים</div>';
     for(const [key,val] of Object.entries(tk)){
       if(!val||typeof val!=="object")continue;
-      const supported=val.deposit_supported===true?"✅ הפקדה זמינה":(val.tradable===true?"✅ מסחר זמין":"ℹ️ שימוש פנימי/הפקדה בלבד");
+      let supported="ℹ️ שימוש פנימי/הפקדה בלבד";
+      if(val.deposit_supported===true){
+        supported="✅ הפקדה זמינה";
+      }else if(val.deposit_capable===true){
+        supported="⛔️ הפקדה כרגע סגורה";
+      }else if(val.market_scope==="internal_orderbook" && val.tradable===true){
+        supported="✅ מסחר פנימי זמין";
+      }else if(val.public_dex_trading===true){
+        supported="✅ מסחר on-chain זמין";
+      }else if(val.tradable===true){
+        supported="✅ מסחר זמין";
+      }
       h+='<div class="card" style="margin-top:8px"><b>'+esc(key)+'</b><div class="muted" style="margin-top:6px">'+supported+'</div></div>';
     }
     if(ref.reason)h+='<div class="muted" style="margin-top:12px">Referral: '+esc(ref.reason)+'</div>';
