@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from core.telegram_webapp_auth import validate_init_data
-from core.authority import has_permission
+from core.authority import has_permission, get_role
 from core.investor_read_model import get_investor_snapshot
 from core.alpha_control_plane import alpha_state
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
@@ -138,6 +138,132 @@ def require_self(uid):
     if str(uid) != authenticated:
         return jsonify({"error": "FORBIDDEN_USER_MISMATCH"}), 403
     return None
+
+
+def _developer_lab_actor():
+    expected = str(os.getenv("SLH_DEVELOPER_LAB_TOKEN", "")).strip()
+    supplied = str(request.headers.get("X-SLH-Dev-Lab-Token", "")).strip()
+    actor = str(request.headers.get("X-SLH-Actor-UID", "")).strip()
+    if not expected or not supplied or not hmac.compare_digest(supplied, expected):
+        return None, jsonify({"error": "DEV_LAB_AUTH_REQUIRED"}), 401
+    if not actor.isdigit() or int(actor) <= 0:
+        return None, jsonify({"error": "DEV_LAB_ACTOR_REQUIRED"}), 400
+    role = get_role(actor)
+    if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
+        return None, jsonify({"error": "DEVELOPER_ACCESS_REQUIRED"}), 403
+    return actor, None, None
+
+
+@app.route("/api/dev/lab/propose", methods=["POST"])
+def developer_lab_propose():
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.developer_lab import submit_proposal
+        result = submit_proposal(
+            actor,
+            payload.get("path"),
+            payload.get("content"),
+            payload.get("summary"),
+        )
+        safe = {k: result.get(k) for k in ("id", "uid", "path", "summary", "status", "created_at")}
+        return jsonify(safe), 201
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DEV_LAB] proposal error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_PROPOSAL_FAILED"}), 500
+
+
+@app.route("/api/dev/lab/requests", methods=["GET"])
+def developer_lab_requests():
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    try:
+        from core.developer_lab import pending_requests
+        return jsonify({"requests": pending_requests()}), 200
+    except Exception as exc:
+        print("[DEV_LAB] requests error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_REQUESTS_FAILED"}), 500
+
+
+@app.route("/api/dev/lab/status/<request_id>", methods=["GET"])
+def developer_lab_status(request_id):
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    try:
+        from core.developer_lab import request_status
+        return jsonify(request_status(request_id, actor)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except KeyError:
+        return jsonify({"error": "REQUEST_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[DEV_LAB] status error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_STATUS_FAILED"}), 500
+
+
+@app.route("/api/dev/lab/approve/<request_id>", methods=["POST"])
+def developer_lab_approve(request_id):
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    if not __import__("core.authority", fromlist=["is_owner"]).is_owner(actor):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+    try:
+        from core.developer_lab import approve_proposal
+        return jsonify(approve_proposal(request_id, actor)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except KeyError:
+        return jsonify({"error": "REQUEST_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[DEV_LAB] approve error:", type(exc).__name__, str(exc)[:180])
+        return jsonify({"error": "DEV_LAB_APPROVAL_FAILED"}), 500
+
+
+@app.route("/api/dev/lab/reject/<request_id>", methods=["POST"])
+def developer_lab_reject(request_id):
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    if not __import__("core.authority", fromlist=["is_owner"]).is_owner(actor):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+    try:
+        from core.developer_lab import reject_proposal
+        return jsonify(reject_proposal(request_id, actor)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except KeyError:
+        return jsonify({"error": "REQUEST_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[DEV_LAB] reject error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_REJECT_FAILED"}), 500
+
+
+@app.route("/api/dev/lab/ci/<request_id>", methods=["GET"])
+def developer_lab_ci(request_id):
+    actor, error, status = _developer_lab_actor()
+    if error is not None:
+        return error, status
+    try:
+        from core.developer_lab import ci_status
+        return jsonify(ci_status(request_id, actor)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except KeyError:
+        return jsonify({"error": "REQUEST_NOT_FOUND"}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DEV_LAB] CI error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "DEV_LAB_CI_FAILED"}), 500
 
 
 @app.route("/api/v1/stars/invoice", methods=["POST"])
