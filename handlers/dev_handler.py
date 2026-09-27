@@ -30,10 +30,12 @@ def register(bot):
             "/dev_requests → OWNER: pending requests",
             "/execr <command> → request OWNER approval",
             "",
-            "IMPORTANT:",
-            "Current DEVELOPER role has no direct code-write, GitHub commit, merge, or deploy permission.",
-            "Production writes remain OWNER-gated.",
-            "Telegram is currently a control/audit surface, not a full GitHub IDE.",
+            "DEVELOPER LAB:",
+            "/dev_write <path> <summary>\\n<complete file content>",
+            "/dev_lab_status <request_id>",
+            "/dev_ci <request_id>",
+            "Your change becomes a proposal. OWNER approval creates a GitHub branch + PR.",
+            "CI runs on the PR. Merge/deploy remain separately controlled.",
         ]
         bot.reply_to(m, "\n".join(lines))
 
