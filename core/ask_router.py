@@ -9,6 +9,8 @@ from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
 MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+AI_MAX_INPUT_CHARS = 1500
+AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 1500 תווים ונסה שוב."
 
 
 def _kw_match(kw, text_lower):
@@ -98,6 +100,9 @@ def route(text, uid=None):
         msg = "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
     if blocked:
         return msg
+
+    if len(str(text or "")) > AI_MAX_INPUT_CHARS:
+        return AI_INPUT_TOO_LONG_MESSAGE
 
     intent = detect_intent(text)
 
