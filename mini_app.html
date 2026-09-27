@@ -1081,7 +1081,26 @@ async function sendSlhOnChain(){
     return null;
   }
 }
-function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}function __slhBoot(){show('home');refreshTelegramAuth();if(!initData){showAuthGate();setText('name','נדרש לפתוח מתוך Telegram');return}hideAuthGate();loadMe();trackGrowth('home_view','home',{screen:'home'});}__slhBoot();window.addEventListener('load',function(){setTimeout(function(){try{if(refreshTelegramAuth()){window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();hideAuthGate();loadMe();}}catch(_e){}},1200);});
+function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}function __slhGetTelegramWebApp(){return window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null}
+function __slhRefreshTelegramRuntime(){const w=__slhGetTelegramWebApp();if(!w)return false;try{w.ready();w.expand()}catch(_e){}return !!refreshTelegramAuth()}
+let __slhBootTimer=null;
+function __slhBootWithRetry(attempt){
+  show('home');
+  if(__slhRefreshTelegramRuntime()){
+    hideAuthGate();
+    loadMe();
+    trackGrowth('home_view','home',{screen:'home'});
+    return;
+  }
+  if(attempt<12){
+    __slhBootTimer=setTimeout(()=>__slhBootWithRetry(attempt+1),250);
+    return;
+  }
+  showAuthGate();
+  setText('name','נדרש לפתוח מתוך Telegram');
+}
+__slhBootWithRetry(0);
+window.addEventListener('load',function(){__slhRefreshTelegramRuntime();});
 
 async function sendTransferViaApi(){
   if(!initData){toast('פתח מתוך Telegram');return}
