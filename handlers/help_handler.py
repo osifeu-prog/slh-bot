@@ -102,7 +102,7 @@ def register(bot):
 /biz_users [days] – כניסות משתמשים
 /biz_revenue [days] – הכנסות מאומתות
 /biz_ai – מצב AI
-/biz_bots – מלאי bots
+/biz_bots – מלאי bots\n/bots – מפת bots מאוחדת: Vault + Factory + Railway
 /bot_seed – רישום הצהרות BotFather
 /bot_register <@username> [name] – רישום בוט
 /bot_status <@username> – תקינות בוט
