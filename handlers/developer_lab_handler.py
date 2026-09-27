@@ -329,12 +329,21 @@ def register(bot):
                 "/api/dev/lab/approve/" + parts[1].strip(),
                 m.from_user.id,
             )
-            bot.reply_to(
-                m,
+            approval_message = (
                 "✅ Developer Lab approved\n"
                 f"PR #{result.get('pr_number')}\n"
-                f"{result.get('pr_url') or ''}",
+                f"{result.get('pr_url') or ''}"
             )
+            bot.reply_to(m, approval_message)
+            developer_uid = str(result.get("uid") or "")
+            if developer_uid and developer_uid != str(m.from_user.id):
+                bot.send_message(
+                    developer_uid,
+                    "✅ Your Developer Lab proposal was approved by OWNER.\n"
+                    f"PR #{result.get('pr_number')}\n"
+                    f"{result.get('pr_url') or ''}\n"
+                    "Production deploy is not automatic; CI/merge remain separate.",
+                )
         except Exception as exc:
             bot.reply_to(
                 m,
@@ -412,6 +421,15 @@ def register(bot):
                     f"PR #{result.get('pr_number')}\n"
                     f"{result.get('pr_url') or ''}",
                 )
+                developer_uid = str(result.get("uid") or "")
+                if developer_uid and developer_uid != str(call.from_user.id):
+                    bot.send_message(
+                        developer_uid,
+                        "✅ Your Developer Lab proposal was approved by OWNER.\n"
+                        f"PR #{result.get('pr_number')}\n"
+                        f"{result.get('pr_url') or ''}\n"
+                        "Production deploy is not automatic; CI/merge remain separate.",
+                    )
             else:
                 result = _call(
                     "POST",
