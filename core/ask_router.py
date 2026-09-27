@@ -93,13 +93,11 @@ def route(text, uid=None):
     is_pasted_log = bool(re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", str(text or "")))
     guard_result = guard(text, uid)
     if isinstance(guard_result, tuple):
-        blocked, msg = guard_result
-    else:
-        allowed = bool(guard_result)
-        blocked = not allowed
-        msg = "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
-    if blocked:
-        return msg
+        allowed, msg = guard_result
+        if not allowed:
+            return msg
+    elif not bool(guard_result):
+        return "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
 
     if len(str(text or "")) > AI_MAX_INPUT_CHARS:
         return AI_INPUT_TOO_LONG_MESSAGE
