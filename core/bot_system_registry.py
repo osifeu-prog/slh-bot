@@ -12,13 +12,12 @@ returns a Telegram token.
 """
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 from datetime import datetime, timezone
 
 import state_manager
 
-from core import bot_catalog, bot_registry, bot_vault, telegram_token_registry
+from core import bot_catalog, bot_registry, telegram_token_registry
 
 
 def _now() -> str:
