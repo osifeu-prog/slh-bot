@@ -18,6 +18,13 @@ import requests
 import state_manager
 from core.authority import get_role, is_owner
 
+_SECRET_CONTENT = re.compile(
+    r"(?i)(?:\b\d{8,12}:AA[A-Za-z0-9_-]{30,}\b|"
+    r"\b(?:sk-|gsk_)[A-Za-z0-9_-]{20,}\b|"
+    r"\bAIza[0-9A-Za-z_-]{30,}\b|"
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----)"
+)
+
 
 REPO = str(os.getenv("SLH_GITHUB_REPOSITORY", "osifeu-prog/slh-bot")).strip()
 BASE_BRANCH = str(os.getenv("SLH_DEVELOPER_LAB_BASE", "main")).strip() or "main"
@@ -104,6 +111,8 @@ def submit_proposal(uid: str, path: str, content: str, summary: str) -> dict:
         raise ValueError("CONTENT_REQUIRED")
     if len(content.encode("utf-8")) > MAX_CONTENT:
         raise ValueError("CONTENT_TOO_LARGE")
+    if _SECRET_CONTENT.search(content):
+        raise ValueError("SECRET_CONTENT_BLOCKED")
     summary = str(summary or "Developer code change").strip()[:240]
 
     request_id = uuid.uuid4().hex[:10]
