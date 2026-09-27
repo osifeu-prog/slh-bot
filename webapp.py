@@ -204,7 +204,7 @@ def developer_lab_requests():
         return error, status
     try:
         from core.developer_lab import pending_requests
-        return jsonify({"requests": pending_requests()}), 200
+        return jsonify({"requests": pending_requests(actor)}), 200
     except Exception as exc:
         print("[DEV_LAB] requests error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "DEV_LAB_REQUESTS_FAILED"}), 500
