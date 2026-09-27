@@ -1,0 +1,48 @@
+name: Bot Vault Regression
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feat/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  vault-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check cryptography requests pyTelegramBotAPI
+
+      - name: Compile changed Python components
+        run: |
+          python -m py_compile core/bot_vault.py
+          python -m py_compile handlers/vault_handler.py
+          python -m py_compile handlers/loader.py
+
+      - name: Run Bot Vault tests
+        run: python -m unittest tests.test_bot_vault tests.test_vault_handler -v
+
+      - name: Run Mini App deep-link tests
+        run: python -m unittest tests.test_miniapp_deeplink_regression -v
+
+      - name: Security scan — no real Telegram token in changed files
+        shell: bash
+        run: |
+          set -e
+          if grep -RniE '^[0-9]{6,}:[A-Za-z0-9_-]{20,}$' core/bot_vault.py handlers/vault_handler.py tests/test_bot_vault.py tests/test_vault_handler.py; then
+            echo "Potential live Telegram token detected"
+            exit 1
+          fi
+          echo "No live Telegram token pattern detected"
