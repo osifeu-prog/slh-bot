@@ -143,10 +143,44 @@ def submit_proposal(
 
 
 
+def _read_github_file(path: str) -> dict:
+    response = _github(
+        "GET",
+        f"/repos/{REPO}/contents/{path}",
+        params={"ref": BASE_BRANCH},
+    )
+    data = response.json()
+    if data.get("type") != "file":
+        raise ValueError("NOT_A_FILE")
+    raw = data.get("content", "")
+    content = (
+        base64.b64decode(raw).decode("utf-8", errors="replace")
+        if data.get("encoding") == "base64"
+        else str(raw)
+    )
+    try:
+        from core.exec_policy import redact_secrets
+        content = redact_secrets(content)
+    except Exception:
+        pass
+    return {
+        "path": path,
+        "size": len(content.encode("utf-8")),
+        "content": content[:12000],
+        "truncated": len(content) > 12000,
+    }
+
+
 def read_file(path: str) -> dict:
     path = _normalize_path(path)
     if path.startswith(".git/") or path.startswith("state/") or _SECRET_WORDS.search(path):
         raise PermissionError("PATH_NOT_READABLE")
+    # CI workflow files are readable for diagnosis, but cannot be proposed
+    # for modification because can_propose_path() does not allow .github/.
+    if path.startswith(".github/workflows/"):
+        if not path.endswith((".yml", ".yaml")):
+            raise PermissionError("PATH_NOT_READABLE")
+        return _read_github_file(path)
     # Protected authorities remain read-only for Developer Lab:
     # write/merge/deploy permissions stay blocked by can_propose_path().
     if not (path in _ALLOWED_ROOT_FILES or path.startswith(_READABLE_PREFIXES)):
