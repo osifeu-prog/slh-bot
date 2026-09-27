@@ -70,59 +70,66 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(m, f"❌ Developer read: {type(exc).__name__}: {str(exc)[:200]}")
 
-    @bot.message_handler(commands=["dev_write"])
-    def dev_write(m):
-        role = get_role(m.from_user.id)
-        if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
-            bot.reply_to(m, "⛔ Developer Access required.")
-            return
+    write_sessions = {}
 
-        raw = m.text or ""
-        parts = raw.split(maxsplit=2)
-        if len(parts) < 3:
-            bot.reply_to(
-                m,
-                "Usage:\n/dev_write <path> <summary>\n"
-                "then put the complete UTF-8 file content after the command.\n"
-                "Example:\n/dev_write handlers/example.py Add example handler\n"
-                "print('hello')",
-            )
-            return
+    def _expire_write_sessions():
+        now = time.time()
+        for uid, session in list(write_sessions.items()):
+            if float(session.get("expires_at", 0)) <= now:
+                write_sessions.pop(uid, None)
 
-        path = parts[1].strip()
-        rest = parts[2]
-        lines = rest.splitlines()
-        summary = lines[0].strip()[:240] if lines else "Developer code change"
-        content = "\n".join(lines[1:]) if len(lines) > 1 else ""
+    def _start_write_session(m, path, summary):
+        write_sessions[str(m.from_user.id)] = {
+            "path": path,
+            "summary": summary,
+            "expires_at": time.time() + 600,
+        }
+        markup = types.ForceReply(selective=True)
+        bot.reply_to(
+            m,
+            "🧪 Developer Lab — send the complete file content in your next message "
+            "or as a document reply.\n"
+            f"Path: {path}\n"
+            f"Summary: {summary}\n"
+            "Session expires in 10 minutes.\n"
+            "No production change occurs until OWNER approval.",
+            reply_markup=markup,
+        )
 
-        if not content.strip():
-            bot.reply_to(
-                m,
-                "❌ חסר תוכן קובץ. השורה הראשונה אחרי הנתיב היא Summary, "
-                "וכל השורות שאחריה הן תוכן הקובץ.",
-            )
-            return
-
+    def _submit_write_content(m, content):
+        _expire_write_sessions()
+        uid = str(m.from_user.id)
+        session = write_sessions.get(uid)
+        if not session:
+            return False
+        if str(get_role(uid)) not in {"DEVELOPER", "ADMIN", "OWNER"}:
+            write_sessions.pop(uid, None)
+            return False
         try:
             result = _call(
                 "POST",
                 "/api/dev/lab/propose",
-                m.from_user.id,
-                {"path": path, "summary": summary, "content": content},
+                uid,
+                {
+                    "path": session["path"],
+                    "summary": session["summary"],
+                    "content": content,
+                },
             )
+            write_sessions.pop(uid, None)
             request_id = result["id"]
-            if is_owner(m.from_user.id):
+            if is_owner(uid):
                 bot.reply_to(
                     m,
                     f"🧪 Developer Lab proposal created\n"
                     f"ID: {request_id}\n"
-                    f"Path: {path}\n"
+                    f"Path: {session['path']}\n"
                     "As OWNER, approve it with /dev_lab_approve <id>.",
                 )
-                return
+                return True
 
             owner_markup = types.InlineKeyboardMarkup()
-            owner_markup.add(
+            owner_markup.row(
                 types.InlineKeyboardButton(
                     "✅ APPROVE → GitHub PR",
                     callback_data=f"devlab_approve_{request_id}",
@@ -135,9 +142,9 @@ def register(bot):
             bot.send_message(
                 OWNER_TELEGRAM_ID,
                 "🧪 Developer Lab — approval required\n\n"
-                f"Developer: {m.from_user.id}\n"
-                f"Path: {path}\n"
-                f"Summary: {summary}\n"
+                f"Developer: {uid}\n"
+                f"Path: {session['path']}\n"
+                f"Summary: {session['summary']}\n"
                 f"Request: {request_id}",
                 reply_markup=owner_markup,
             )
@@ -146,11 +153,84 @@ def register(bot):
                 f"📨 שינוי נשמר כ־proposal {request_id}.\n"
                 "ממתין לאישור OWNER; אין שינוי ב-production.",
             )
+            return True
         except Exception as exc:
             bot.reply_to(
                 m,
                 f"❌ Developer Lab: {type(exc).__name__}: {str(exc)[:250]}",
             )
+            return True
+
+    @bot.message_handler(commands=["dev_write"])
+    def dev_write(m):
+        role = get_role(m.from_user.id)
+        if role not in {"DEVELOPER", "ADMIN", "OWNER"}:
+            bot.reply_to(m, "⛔ Developer Access required.")
+            return
+
+        raw = m.text or ""
+        parts = raw.split(maxsplit=2)
+        if len(parts) < 3:
+            bot.reply_to(
+                m,
+                "Usage:\n"
+                "/dev_write <path> <summary>\n"
+                "Then reply to the bot with the complete file content, "
+                "or attach the file as a document reply.",
+            )
+            return
+
+        path = parts[1].strip()
+        rest = parts[2]
+        lines = rest.splitlines()
+        summary = lines[0].strip()[:240] if lines else "Developer code change"
+        inline_content = "\n".join(lines[1:]) if len(lines) > 1 else ""
+        if inline_content.strip():
+            _start_write_session(m, path, summary)
+            _submit_write_content(type("InlineMessage", (), {
+                "from_user": m.from_user,
+                "text": inline_content,
+                "reply_to_message": m,
+            })(), inline_content)
+            return
+
+        _start_write_session(m, path, summary)
+
+    @bot.message_handler(
+        func=lambda m: bool(
+            m.reply_to_message
+            and m.from_user
+            and str(m.from_user.id) in write_sessions
+            and not (m.text or "").lstrip().startswith("/")
+        ),
+        content_types=["text"],
+    )
+    def dev_write_reply(m):
+        _submit_write_content(m, m.text or "")
+    
+    @bot.message_handler(
+        func=lambda m: bool(
+            m.reply_to_message
+            and m.from_user
+            and str(m.from_user.id) in write_sessions
+        ),
+        content_types=["document"],
+    )
+    def dev_write_document(m):
+        try:
+            _expire_write_sessions()
+            uid = str(m.from_user.id)
+            session = write_sessions.get(uid)
+            if not session:
+                return
+            file_info = bot.get_file(m.document.file_id)
+            content = bot.download_file(file_info.file_path)
+            if len(content) > 24000:
+                bot.reply_to(m, "❌ File too large. Maximum Developer Lab payload is 24 KB.")
+                return
+            _submit_write_content(m, content.decode("utf-8", errors="replace"))
+        except Exception as exc:
+            bot.reply_to(m, f"❌ Developer Lab document: {type(exc).__name__}: {str(exc)[:200]}")
 
     @bot.message_handler(commands=["dev_lab_requests"])
     def dev_lab_requests(m):
