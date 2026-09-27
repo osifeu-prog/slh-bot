@@ -139,6 +139,37 @@ def register(bot):
                 bot.reply_to(msg, f"❌ Railway control: {exc}")
             return
 
+        if cmd in ("settlement_status", "settlement", "money_status"):
+            if not is_owner(uid):
+                bot.reply_to(msg, "⛔️ OWNER only for settlement control-plane status")
+                return
+            try:
+                from core.bnb_gate import bnb_readiness
+                from core.ton_deposit_service import deposits_are_open as ton_deposits_open, _settings as ton_settings
+                bnb = bnb_readiness()
+                ton_treasury, ton_rate = ton_settings()
+                ton_open = bool(ton_deposits_open())
+                bot.reply_to(
+                    msg,
+                    "💰 SLH SETTLEMENT STATUS\\n\\n"
+                    "BNB / BSC:\\n"
+                    f"• flag_open: {bool(bnb['flag_open'])}\\n"
+                    f"• ready: {bool(bnb['ready'])}\\n"
+                    f"• effective_open: {bool(bnb['effective_open'])}\\n"
+                    f"• chain_id: {int(bnb['chain_id'])}\\n"
+                    f"• confirmations_required: {int(bnb['confirmations_required'])}\\n"
+                    f"• reasons: {', '.join(bnb['reasons']) if bnb['reasons'] else '[]'}\\n\\n"
+                    "TON:\\n"
+                    f"• deposits_open: {ton_open}\\n"
+                    f"• rate_configured: {bool(ton_rate)}\\n"
+                    "• treasury_configured: "
+                    f"{bool(str(ton_treasury or '').strip())}"
+                )
+                return
+            except Exception as exc:
+                bot.reply_to(msg, f"❌ Settlement status: {exc}")
+                return
+
         if cmd in ("alpha_status", "alpha_open", "alpha_state"):
             if not is_owner(uid):
                 bot.reply_to(msg, "⛔️ OWNER only for alpha control-plane actions")
