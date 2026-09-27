@@ -408,16 +408,6 @@ def ci_status(request_id: str, actor_uid: str) -> dict:
     # A check can fail before a runner executes any step. Capture the workflow
     # job metadata so developers can distinguish code/test failures from
     # runner, billing, or Actions infrastructure failures.
-    try:
-        workflow_runs = _github(
-            "GET",
-            f"/repos/{REPO}/commits/{sha}/check-runs",
-            params={"per_page": 100},
-        )
-        _ = workflow_runs  # keep the request explicit for audit/debug parity
-    except Exception:
-        pass
-
     workflow_evidence = []
     try:
         runs = _github(
