@@ -11,16 +11,11 @@ def _llm_config():
     }
 
 
-def _llm_ready():
-    providers = _llm_config()
-    return any(providers.values())
-
-
 def get_health():
     """Return configuration-level health without making paid/provider calls."""
     llm = _llm_config()
     return {
-        "ok": True,
+        "ok": any(llm.values()),
         "components": {
             "bot": "running",
             "db": "connected",
@@ -112,3 +107,7 @@ def check_system_health():
         "status": "ok" if health.get("ok") else "degraded",
         "components": health.get("components", {}),
     }
+
+
+if __name__ == "__main__":
+    main()
