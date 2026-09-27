@@ -8,6 +8,7 @@ import os
 import time
 from urllib.parse import parse_qsl
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
@@ -103,7 +104,7 @@ def _verify_ed25519_signature(data):
         )
         public_key.verify(signature_bytes, check_string.encode("utf-8"))
         return True
-    except (ValueError, TypeError, UnicodeEncodeError):
+    except (InvalidSignature, ValueError, TypeError, UnicodeEncodeError):
         return False
 
 
