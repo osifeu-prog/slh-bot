@@ -151,17 +151,17 @@ def register(bot):
                 ton_open = bool(ton_deposits_open())
                 bot.reply_to(
                     msg,
-                    "💰 SLH SETTLEMENT STATUS\\n\\n"
-                    "BNB / BSC:\\n"
-                    f"• flag_open: {bool(bnb['flag_open'])}\\n"
-                    f"• ready: {bool(bnb['ready'])}\\n"
-                    f"• effective_open: {bool(bnb['effective_open'])}\\n"
-                    f"• chain_id: {int(bnb['chain_id'])}\\n"
-                    f"• confirmations_required: {int(bnb['confirmations_required'])}\\n"
-                    f"• reasons: {', '.join(bnb['reasons']) if bnb['reasons'] else '[]'}\\n\\n"
-                    "TON:\\n"
-                    f"• deposits_open: {ton_open}\\n"
-                    f"• rate_configured: {bool(ton_rate)}\\n"
+                    "💰 SLH SETTLEMENT STATUS\n\n"
+                    "BNB / BSC:\n"
+                    f"• flag_open: {bool(bnb['flag_open'])}\n"
+                    f"• ready: {bool(bnb['ready'])}\n"
+                    f"• effective_open: {bool(bnb['effective_open'])}\n"
+                    f"• chain_id: {int(bnb['chain_id'])}\n"
+                    f"• confirmations_required: {int(bnb['confirmations_required'])}\n"
+                    f"• reasons: {', '.join(bnb['reasons']) if bnb['reasons'] else '[]'}\n\n"
+                    "TON:\n"
+                    f"• deposits_open: {ton_open}\n"
+                    f"• rate_configured: {bool(ton_rate)}\n"
                     "• treasury_configured: "
                     f"{bool(str(ton_treasury or '').strip())}"
                 )
