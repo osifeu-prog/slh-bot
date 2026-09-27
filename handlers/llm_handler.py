@@ -152,6 +152,34 @@ def ask_groq(prompt):
         return f"LLM Error: {message}"
 
 
+def _sanitize_unknown_commands(text):
+    """Remove slash commands that are not present in the runtime command registry."""
+    try:
+        from core.command_registry import get_registered_commands
+        known = {"/" + c for c in get_registered_commands()}
+    except Exception:
+        known = set()
+    if not known:
+        return str(text or "")
+
+    import re
+    pattern = re.compile(r"(?<![\\w/:])/[A-Za-z][A-Za-z0-9_]*")
+    removed = []
+
+    def repl(match):
+        token = match.group(0)
+        if token.lower() in known:
+            return token
+        removed.append(token)
+        return "[פקודה לא רשומה]"
+
+    cleaned = pattern.sub(repl, str(text or ""))
+    if removed:
+        unique = ", ".join(dict.fromkeys(removed))
+        cleaned = cleaned.rstrip() + f"\\n\\n⚠️ הוסרו פקודות שאינן רשומות במערכת: {unique}"
+    return cleaned
+
+
 def _load_canonical_faq(question=""):
     try:
         from core.faq_service import relevant_faq
@@ -188,6 +216,11 @@ Votes: {len(db.get('votes', {}))}
     except Exception as e:
         context = f"Context unavailable: {type(e).__name__}"
 
+    try:
+        from core.command_registry import get_registered_commands_text
+        command_catalog = get_registered_commands_text()
+    except Exception:
+        command_catalog = ""
     prompt = f"""
 You are SLH OS AI assistant.
 
@@ -203,6 +236,9 @@ SYSTEM CONTEXT:
 
 CANONICAL FAQ:
 {faq or "FAQ unavailable"}
+
+RUNTIME COMMAND REGISTRY:
+{command_catalog or "No command registry available."}
 
 IMPORTANT:
 - Use the FAQ as background documentation only.
