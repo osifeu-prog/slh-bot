@@ -42,6 +42,12 @@ def bnb_readiness() -> dict:
     if not treasury:
         reasons.append("BNB_TREASURY_MISSING")
 
+    canonical_treasury = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip()
+    if not canonical_treasury:
+        reasons.append("BNB_CANONICAL_TREASURY_MISSING")
+    elif canonical_treasury.lower() != treasury.lower():
+        reasons.append("BNB_CANONICAL_TREASURY_MISMATCH")
+
     try:
         confirmations = int(cfg.get("confirmations") or 15)
     except (TypeError, ValueError):
