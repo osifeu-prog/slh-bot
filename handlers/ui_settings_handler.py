@@ -1,5 +1,5 @@
 """User UI settings commands for Telegram."""
-from core.ui_preferences import get_preferences, set_preferences, theme_choices
+from core.ui_preferences import get_preferences, set_preferences, theme_choices, validate_theme
 
 
 def _themes_text(current: str) -> str:
@@ -36,7 +36,7 @@ def register(bot):
             bot.reply_to(message, _themes_text(prefs["theme"]))
             return
         try:
-            prefs = set_preferences(uid, theme=value)
+            prefs = set_preferences(uid, theme=validate_theme(value))
         except Exception:
             bot.reply_to(message, "❌ ערכת תצוגה לא תקינה. השתמש ב-/theme כדי לראות את האפשרויות.")
             return
