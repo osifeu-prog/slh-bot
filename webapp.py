@@ -1015,8 +1015,13 @@ def bnb_wallet_binding():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    from core.bnb_gate import bnb_deposits_open
-    return jsonify({"binding": get_binding(uid), "deposits_open": bnb_deposits_open()}), 200
+    from core.bnb_gate import bnb_readiness
+    readiness = bnb_readiness()
+    return jsonify({
+        "binding": get_binding(uid),
+        "deposits_open": bool(readiness["effective_open"]),
+        "readiness": readiness,
+    }), 200
 
 
 @app.route("/api/wallet/ton/challenge", methods=["POST"])
