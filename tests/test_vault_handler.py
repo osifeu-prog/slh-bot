@@ -70,6 +70,30 @@ class VaultHandlerTests(unittest.TestCase):
             self.bot.handlers["vault"](msg("/vault", uid=2))
         self.assertIn("לבעלים בלבד", self.bot.sent[-1])
 
+    def test_vault_verify_never_outputs_plain_token(self):
+        from core import bot_vault
+        encrypted = bot_vault._fernet().encrypt(TOKEN.encode()).decode()
+        self.db["bot_vault"] = {
+            "botx": {
+                "bot_id": "123456789",
+                "username": "botx",
+                "token_enc": encrypted,
+                "token_tail": "…aaaa",
+                "module": "academy",
+                "exposures": [],
+            }
+        }
+        with mock.patch("core.bot_vault._verify", return_value={"bot_id": "123456789", "username": "botx", "name": "B"}):
+            self.bot.handlers["vault_verify"](msg("/vault_verify"))
+        self.assertIn("identity=match", self.bot.sent[-1])
+        self.assertIn("encrypted=yes", self.bot.sent[-1])
+        self.assertNotIn(TOKEN, self.bot.sent[-1])
+
+    def test_vault_help_is_owner_only(self):
+        self.bot.handlers["vault_help"](msg("/vault_help"))
+        self.assertIn("/vault_verify", self.bot.sent[-1])
+        self.assertNotIn(TOKEN, self.bot.sent[-1])
+
     def test_add_deletes_token_message(self):
         self.bot.handlers["vault_add"](msg(f"/vault_add {TOKEN} academy"))
         self.assertIn(7, self.bot.deleted)
