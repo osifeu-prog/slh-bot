@@ -32,6 +32,7 @@ REQUESTS_KEY = "developer_lab_requests"
 MAX_CONTENT = 24000
 
 _ALLOWED_PREFIXES = ("core/", "handlers/", "tests/", "slh_mcp/")
+_READABLE_PREFIXES = ("core/", "handlers/", "tests/", "slh_mcp/", "store/", "services/")
 _ALLOWED_ROOT_FILES = {"mini_app.html", "webapp.py", "README.md", "DEVELOPER_GUIDE.md"}
 _PROTECTED = {
     ".env", ".env.example", "Dockerfile", "railway.json", "control_plane_registry.json",
@@ -139,9 +140,9 @@ def read_file(path: str) -> dict:
     path = _normalize_path(path)
     if path.startswith(".git/") or path.startswith("state/") or _SECRET_WORDS.search(path):
         raise PermissionError("PATH_NOT_READABLE")
-    if path in _PROTECTED:
-        raise PermissionError("PATH_NOT_READABLE")
-    if not (path in _ALLOWED_ROOT_FILES or path.startswith(_ALLOWED_PREFIXES)):
+    # Protected authorities remain read-only for Developer Lab:
+    # write/merge/deploy permissions stay blocked by can_propose_path().
+    if not (path in _ALLOWED_ROOT_FILES or path.startswith(_READABLE_PREFIXES)):
         raise PermissionError("PATH_NOT_READABLE")
 
     response = _github(
@@ -220,7 +221,7 @@ def request_status(request_id: str, actor_uid: str) -> dict:
         for k in (
             "id", "uid", "path", "summary", "status", "created_at",
             "approved_at", "approved_by", "branch", "pr_number", "pr_url",
-            "ci_total", "ci_checks", "error",
+            "chat_id", "ci_total", "ci_checks", "error",
         )
     }
 
@@ -231,6 +232,7 @@ def approve_proposal(request_id: str, actor_uid: str) -> dict:
         raise PermissionError("OWNER_ONLY")
     item = _get_request(request_id)
     if item.get("status") != "pending":
+        # Idempotent approval: do not create another branch or PR.
         return request_status(request_id, actor_uid)
 
     path = _normalize_path(item["path"])
