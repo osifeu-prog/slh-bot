@@ -180,6 +180,29 @@ def pending_requests() -> list[dict]:
     return sorted(rows, key=lambda x: x.get("created_at", 0))
 
 
+
+def request_preview(request_id: str, actor_uid: str) -> dict:
+    item = _get_request(request_id)
+    actor_uid = str(actor_uid)
+    if actor_uid != str(item.get("uid")) and not is_owner(actor_uid):
+        raise PermissionError("FORBIDDEN")
+    content = str(item.get("content") or "")
+    try:
+        from core.exec_policy import redact_secrets
+        content = redact_secrets(content)
+    except Exception:
+        pass
+    return {
+        "id": request_id,
+        "path": item.get("path"),
+        "summary": item.get("summary"),
+        "content": content[:3500],
+        "truncated": len(content) > 3500,
+        "content_sha256": item.get("content_sha256"),
+        "status": item.get("status"),
+    }
+
+
 def request_status(request_id: str, actor_uid: str) -> dict:
     item = _get_request(request_id)
     actor_uid = str(actor_uid)
