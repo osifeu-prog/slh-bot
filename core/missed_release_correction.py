@@ -8,10 +8,11 @@ Evidence rule — a correction is allowed only when ALL are true:
   * no release was ever recorded (neither slh_token_ledger
     "exchange:release_slh:<oid>" nor ledger "exchange:cancel_release_slh")
   * amount to restore = original_amount - SLH actually filled in trades
+  * legacy/internal wallet: live_token_balance is absent or None
 
 The correction is idempotent (event_id "correction:missed_release:<oid>"),
-writes one slh_token_ledger entry and one ledger entry, and never touches
-any other account. Default is DRY RUN.
+writes one slh_token_ledger entry and one ledger entry, and never creates
+or changes live_token_balance. Default is DRY RUN.
 """
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -60,9 +61,18 @@ def _plan(db, order_id):
     wallet = ((db.get("users") or {}).get(uid) or {}).get("wallet")
     if wallet is None:
         raise ValueError("USER_NOT_FOUND")
+
+    # This correction is for the legacy/internal SLH wallet model only.
+    # A live_token_balance means the account participates in the backed/live
+    # token model and must not be credited by this legacy repair path.
+    live_value = wallet.get("live_token_balance")
+    if live_value is not None:
+        raise ValueError("LIVE_BALANCE_PRESENT")
+
     before = Decimal(str(wallet.get("token_balance", 0) or 0))
     return {"order_id": order_id, "uid": uid, "original": str(order["original_amount"]),
             "filled": str(filled), "restore": str(missing),
+            "wallet_model": "legacy_internal",
             "token_balance_before": str(before), "token_balance_after": str(before + missing)}
 
 
