@@ -127,5 +127,9 @@ def register(bot):
 /logs – לוגים
 /deploy – Deploy
 
+⚙️ SETTINGS
+/settings – הגדרות תצוגה
+/theme – שינוי ערכת תצוגה
+
 💡 לממשק המלא פתח /miniapp. למסחר: /trade."""
         bot.reply_to(msg, text)
