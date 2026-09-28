@@ -28,12 +28,19 @@ def register(bot):
         onchain = d.get("onchain", {})
         exchange = d.get("exchange", {})
         balances = onchain.get("balances", {}) if isinstance(onchain, dict) else {}
+        asset_truth = wallet.get("asset_truth", {}) if isinstance(wallet, dict) else {}
 
         name = identity.get("display_name") or "משתמש"
         enrolled = academy.get("enrolled", [])
         completed = tasks.get("completed", 0)
         total = tasks.get("open", 0) + completed
         alpha_status = alpha.get("status", "unknown")
+
+        slh_total = asset_truth.get("current_total", wallet.get("token_balance", 0))
+        slh_live = asset_truth.get("current_live", wallet.get("live_token_balance", 0))
+        slh_reserved = asset_truth.get("current_reserved", wallet.get("exchange_reserved_slh", 0))
+        slh_spendable = asset_truth.get("spendable_live", 0)
+        slh_status = asset_truth.get("provenance_status", "unknown")
 
         ex_status = exchange.get("status", {}) if isinstance(exchange, dict) else {}
         ex_ticker = exchange.get("ticker", {}) if isinstance(exchange, dict) else {}
@@ -52,7 +59,11 @@ def register(bot):
             f"👤 {name} · {identity.get('role', 'USER')}\n"
             f"💰 Credits: {wallet.get('credits', 0)}\n"
             f"🔒 Staked: {wallet.get('staked', 0)}\n"
-            f"🪙 Internal SLH: {wallet.get('token_balance', 0)}\n\n"
+            f"🪙 SLH Total: {slh_total}\n"
+            f"🟢 Live: {slh_live}\n"
+            f"🔒 Reserved: {slh_reserved}\n"
+            f"💸 Spendable live: {slh_spendable}\n"
+            f"ℹ️ Provenance: {slh_status}\n\n"
             f"⛓️ On-chain SLH: {balances.get('SLH', 0)}\n"
             f"📚 Academy: {len(enrolled)} enrolled\n"
             f"🎯 Tasks: {completed}/{total} completed\n"
