@@ -55,6 +55,7 @@ def load_handlers(bot, context):
         ("gateway", "handlers.gateway_handler"),
         ("file", "handlers.file_handler"),
         ("help", "handlers.help_handler"),
+        ("commands_catalog", "handlers.commands_catalog_handler"),
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
         ("leaderboard", "handlers.leaderboard_handler"),
