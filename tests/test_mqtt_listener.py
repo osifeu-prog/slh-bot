@@ -13,11 +13,16 @@ class MQTTListenerTests(unittest.TestCase):
     def test_heartbeat_update_uses_atomic_json_update(self):
         import core.mqtt_device_listener as listener
 
+        import time
+        listener.HEARTBEAT_SECRET = "test-secret"
+        ts = time.time()
+        sig = listener._expected_signature("device-1", ts)
+        heartbeat = {"device_id": "device-1", "ts": ts, "sig": sig}
         payload = {"devices": {}}
         message = type(
             "Message",
             (),
-            {"topic": "slh/device/device-1/heartbeat", "payload": b"{}"},
+            {"topic": "slh/device/device-1/heartbeat", "payload": __import__("json").dumps(heartbeat).encode()},
         )()
 
         with patch.object(listener, "atomic_json_update") as update:
