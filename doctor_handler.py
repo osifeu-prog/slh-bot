@@ -46,15 +46,19 @@ def generate_health_report(bot, uid=None):
     except Exception:
         checks["Volume"] = "⚪️ לא נבדק"
 
+    # LLM configuration only: do not call a provider from /doctor or burn quota.
+    # Keep this check aligned with system_health and the canonical provider chain.
     try:
-        from handlers.llm_handler import ask_groq
-        test = ask_groq("Reply with OK")
-        if "Error" not in test and "missing" not in test:
-            checks["LLM API"] = "🟢 תקין"
+        from system_health import get_health
+        components = get_health().get("components", {})
+        providers = components.get("llm_providers", {})
+        configured = [name for name, ok in providers.items() if ok]
+        if configured:
+            checks["LLM API"] = "🟢 configured: " + ", ".join(configured)
         else:
-            checks["LLM API"] = f"🔴 {test}"
+            checks["LLM API"] = "🔴 no provider configured"
     except Exception as e:
-        checks["LLM API"] = f"🔴 {e}"
+        checks["LLM API"] = f"🔴 {type(e).__name__}"
 
     dash = Path("web/dashboard_v2/index.html")
     checks["Dashboard"] = "🟢 קיים" if dash.exists() else "🔴 חסר"
