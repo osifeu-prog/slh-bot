@@ -3,9 +3,12 @@ import unittest
 from core.missed_release_correction import _plan
 
 
-def _db(live=None):
+_MISSING = object()
+
+
+def _db(live=_MISSING):
     wallet = {"token_balance": 40000.0}
-    if live is not ...:
+    if live is not _MISSING:
         wallet["live_token_balance"] = live
     return {
         "users": {"100": {"wallet": wallet}},
