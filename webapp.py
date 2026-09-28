@@ -617,7 +617,7 @@ def card_pay_cancel():
 
 
 
-@app.route("/api/v1/growth-hub", methods=["GET"])
+@app.route("/api/v1/growth-hub")
 def growth_hub_api():
     """Authenticated read-only composition of existing revenue and reward rails."""
     uid = authenticated_uid()
