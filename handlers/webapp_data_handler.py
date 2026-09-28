@@ -147,6 +147,7 @@ def _cancel(bot, chat_id, uid, order_id):
             _wallet, _get, _set, _reserve, _set_reserve, _ledger,
             _s, _assert_invariants, ZERO
         )
+        from core.slh_distribution import release_reserve_in_db
 
         wallet = _wallet(db, uid)
         remaining = Decimal(str(order["remaining_amount"]))
@@ -155,10 +156,13 @@ def _cancel(bot, chat_id, uid, order_id):
             reserved = Decimal(str(order["reserved_slh"]))
             if reserved != remaining:
                 raise ValueError("ORDER_RESERVE_MISMATCH")
-            _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserved)
-            before = _get(wallet, "token_balance")
-            _set(wallet, "token_balance", before + reserved)
-            _ledger(db, uid, before, reserved, "exchange:cancel_release_slh", {"order_id": order_id})
+            release_reserve_in_db(
+                db,
+                uid=uid,
+                amount=reserved,
+                event_id=f"exchange:release_slh:{order_id}",
+                order_id=order_id,
+            )
             order["reserved_slh"] = _s(ZERO)
         else:
             reserved = Decimal(str(order["reserved_credits"]))

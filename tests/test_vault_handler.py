@@ -66,7 +66,7 @@ class VaultHandlerTests(unittest.TestCase):
         self.assertEqual(self.db, {})
 
     def test_non_owner_denied(self):
-        with mock.patch("core.authority.get_role", return_value="USER"):
+        with mock.patch("handlers.vault_handler.get_role", return_value="USER"):
             self.bot.handlers["vault"](msg("/vault", uid=2))
         self.assertIn("לבעלים בלבד", self.bot.sent[-1])
 
