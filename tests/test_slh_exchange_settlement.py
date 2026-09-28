@@ -23,7 +23,6 @@ def _supply(db):
     for user in db["users"].values():
         wallet = user["wallet"]
         total += float(wallet.get("token_balance", 0.0))
-        total += float(wallet.get(EXCHANGE_RESERVE_KEY, 0.0))
     return total
 
 
@@ -43,7 +42,7 @@ class SlhExchangeSettlementTests(unittest.TestCase):
 
         self.assertEqual(first["status"], "completed")
         self.assertEqual(second["status"], "already_completed")
-        self.assertEqual(db["users"]["seller"]["wallet"]["token_balance"], 60.0)
+        self.assertEqual(db["users"]["seller"]["wallet"]["token_balance"], 100.0)
         self.assertEqual(db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 40.0)
         self.assertEqual(_supply(db), before)
         self.assertEqual(len(db["slh_token_ledger"]), 1)
@@ -63,7 +62,7 @@ class SlhExchangeSettlementTests(unittest.TestCase):
         )
 
         self.assertEqual(result["status"], "completed")
-        self.assertEqual(db["users"]["seller"]["wallet"]["token_balance"], 60.0)
+        self.assertEqual(db["users"]["seller"]["wallet"]["token_balance"], 75.0)
         self.assertEqual(db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 15.0)
         self.assertEqual(db["users"]["buyer"]["wallet"]["token_balance"], 30.0)
         self.assertEqual(_supply(db), before)

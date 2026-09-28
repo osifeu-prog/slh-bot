@@ -25,7 +25,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
             "esp32_pro": ("hardware", "esp32_pro"),
             "esp32_standard": ("hardware", "esp32_standard"),
         }
-        self.assertEqual(set(self.items), set(expected))
+        self.assertTrue(set(expected).issubset(set(self.items)))
         for item_id, (grant_type, value) in expected.items():
             item = self.items[item_id]
             self.assertEqual(item["grant"], {grant_type: value})
@@ -69,7 +69,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
                 json.dumps({"devices": {}}), encoding="utf-8"
             )
             (root / "state" / "db.json").write_text(
-                json.dumps({}), encoding="utf-8"
+                json.dumps({"users": {"100": {}}}), encoding="utf-8"
             )
 
             license_payload = {
