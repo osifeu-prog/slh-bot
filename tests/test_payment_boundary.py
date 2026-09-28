@@ -56,6 +56,11 @@ def test_payment_authority_delegates_valid_xtr_without_db_side_effects(monkeypat
         "record_stars_payment",
         fake_record,
     )
+    monkeypatch.setattr(
+        stars_payment_authority,
+        "_record_revenue",
+        lambda **kwargs: None,
+    )
 
     result = stars_payment_authority.record_stars_payment(
         uid="test-user",

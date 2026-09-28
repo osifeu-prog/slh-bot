@@ -48,7 +48,7 @@ jobs:
           python - <<'PY'
           from store.engine import resolve_item_id, load_items
           items = load_items()
-          assert resolve_item_id("coursebitcoin101", items) == "course_bitcoin_101"
+          assert resolve_item_id("courseethereum", items) == "course_ethereum"
           assert resolve_item_id("agentos", items) == "agent_os"
           print("Store alias resolver: OK")
           PY
