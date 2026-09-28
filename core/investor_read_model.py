@@ -5,6 +5,7 @@ profile/economy/academy/task state for the Investor Mini App API.
 """
 
 import json
+import os
 from pathlib import Path
 
 import state_manager
@@ -227,18 +228,25 @@ def get_investor_snapshot(uid):
     ton_settings_db = db.get("ton_settings", {})
     if not isinstance(ton_settings_db, dict):
         ton_settings_db = {}
-    ton_open = ton_deposits_are_open()
     ton_treasury = (
-        __import__("os").getenv("TON_WALLET", "").strip()
+        os.getenv("TON_WALLET", "").strip()
         or ton_settings_db.get("wallet")
     )
     ton_rate_raw = (
-        __import__("os").getenv("TON_CREDITS_PER_TON", "").strip()
+        os.getenv("TON_CREDITS_PER_TON", "").strip()
         or ton_settings_db.get("credits_per_ton")
         or ton_settings_db.get("rate")
         or 0
     )
-    ton_rate = float(ton_rate_raw or 0)
+    try:
+        ton_rate = float(ton_rate_raw or 0)
+    except (TypeError, ValueError):
+        ton_rate = 0.0
+    ton_open = (
+        os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
+        and bool(ton_treasury)
+        and 100.0 <= ton_rate <= 110.0
+    )
 
     return {
         "identity": {
