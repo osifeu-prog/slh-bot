@@ -883,7 +883,7 @@ async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
   _tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl:window.location.origin+'/tonconnect-manifest.json',
+    manifestUrl:'https://slh-nft.com/tonconnect-manifest.json',
     buttonRootId:'tonConnectButton',
     restoreConnection:true
   });
