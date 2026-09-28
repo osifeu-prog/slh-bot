@@ -185,7 +185,15 @@ def register(bot):
             logo = ""
         if logo:
             text = logo + "\n\n" + text
-
-        bot.reply_to(msg, text)
+            # Keep the ASCII logo monospace/aligned in Telegram on both
+            # desktop and mobile. The body remains outside <pre> so normal
+            # wallet text wrapping is preserved.
+            bot.reply_to(
+                msg,
+                f"<pre>{logo}</pre>\\n\\n{text[len(logo) + 2:]}",
+                parse_mode="HTML",
+            )
+        else:
+            bot.reply_to(msg, text)
 
     print("wallet_handler loaded")
