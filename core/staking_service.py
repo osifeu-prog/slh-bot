@@ -175,7 +175,7 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         })
 
         return {
-            "status": "unlocked",
+            "status": "completed",
             "position": position,
             "credits": credits + amount,
             "staked": staked - amount,
