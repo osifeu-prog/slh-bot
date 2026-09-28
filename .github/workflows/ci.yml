@@ -167,3 +167,11 @@ jobs:
           python -m pip install --disable-pip-version-check paho-mqtt
           python -m unittest tests.test_mqtt_listener tests.test_mcp_mqtt -v
           echo "MQTT listener + MCP status contracts: OK"
+
+      - name: Upload CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slh-ci-diagnostics
+          path: ci-diagnostics/**
+          if-no-files-found: warn
