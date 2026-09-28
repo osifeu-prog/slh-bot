@@ -500,9 +500,9 @@ def verify_ton_proof(uid, proof_payload: dict):
     return state_manager.atomic_update(mutate)
 
 
-def get_ton_binding(uid):
+def get_ton_binding(uid, db=None):
     uid = str(uid)
-    db = state_manager.load_db()
+    db = state_manager.load_db() if db is None else db
     for binding in (db.get("ton_wallet_bindings") or {}).values():
         if str(binding.get("uid")) == uid and binding.get("chain") == CHAIN:
             return binding
