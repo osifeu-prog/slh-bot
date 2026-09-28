@@ -2,7 +2,7 @@ import os, json, subprocess, time
 from datetime import datetime
 from telebot import types
 
-MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260926-bnb-transfer-gas"
+MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app?v=20260928-system"
 
 def register(bot, context=None):
     @bot.message_handler(commands=["os"])
@@ -64,7 +64,7 @@ def register(bot, context=None):
 🔀 Git: {git_hash} | 🧠 LLM: {llm_state} ({llm_detail}) | 🌐 {railway}
 📂 Handlers: {handlers} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
 """
-        menu = "/start /agents /task /wallet /market /miniapp /ask /dashboard /help /status"
+        menu = (\n            "CORE: /start /os /status /help /miniapp /dashboard /ask\n"\n            "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"\n            "ALPHA: /alpha /academy /share /rewards /task /journal\n"\n            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs\n"\n            "SECURITY: /vault /vault_verify /vault_health /vault_log\n"\n            "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"\n            "DEV: /e /exec"\n        )
         bot.reply_to(message, header + menu)
 
     @bot.message_handler(commands=["miniapp"])
