@@ -74,7 +74,7 @@ def canonical_ai_chat():
     lang = str(payload.get("lang", "he")).strip().lower()[:8]
     if not message:
         return _ai_cors_response(jsonify({"error": "MISSING_MESSAGE"})), 400
-    if len(message) > 2000:
+    if len(message) > 12000:
         return _ai_cors_response(jsonify({"error": "MESSAGE_TOO_LONG"})), 400
 
     rate_key = f"uid:{uid}" if uid is not None else f"ip:{request.remote_addr or 'unknown'}"
