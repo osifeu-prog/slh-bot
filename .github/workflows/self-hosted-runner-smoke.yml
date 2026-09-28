@@ -21,20 +21,20 @@ jobs:
           echo "Runner OS: $(uname -s)"
           echo "Runner arch: $(uname -m)"
           echo "Runner host: $(hostname)"
-          python --version || python3 --version
+          python3 --version
 
       - name: Compile core
         shell: bash
         run: |
           set -eu
-          python -m py_compile core/asset_truth.py
-          python -m py_compile core/investor_read_model.py
-          python -m py_compile handlers/dashboard_handler.py
+          python3 -m py_compile core/asset_truth.py
+          python3 -m py_compile core/investor_read_model.py
+          python3 -m py_compile handlers/dashboard_handler.py
           echo "Core compile: OK"
 
       - name: Asset Truth regression
         shell: bash
         run: |
           set -eu
-          python -m unittest tests.test_asset_truth -v
+          python3 -m unittest tests.test_asset_truth -v
           echo "Asset Truth tests: OK"
