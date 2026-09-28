@@ -246,6 +246,25 @@ def register(bot, context=None):
             reply_markup=_dashboard_markup(user_id),
         )
 
+    @bot.message_handler(commands=["miniapp"])
+    def miniapp(m):
+        mini_app_url = (
+            __import__("os").getenv("SLH_MINI_APP_URL")
+            or "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+        ).strip()
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(
+            types.InlineKeyboardButton(
+                "🚀 פתח Mini App",
+                web_app=types.WebAppInfo(url=mini_app_url),
+            )
+        )
+        bot.send_message(
+            m.chat.id,
+            "🚀 SLH OS Mini App\\n\\nפתח את האפליקציה מתוך Telegram כדי שהסשן המאומת יועבר אוטומטית.",
+            reply_markup=markup,
+        )
+
     @bot.message_handler(commands=["start"])
     def start(m):
         user_id = str(m.from_user.id)
