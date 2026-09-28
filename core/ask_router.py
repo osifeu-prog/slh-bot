@@ -8,7 +8,7 @@ from core.ask_debug import debug_ask
 from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
-MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app"
 AI_MAX_INPUT_CHARS = 4000
 AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 4000 תווים ונסה שוב."
 
