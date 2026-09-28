@@ -1,3 +1,5 @@
+import json
+import time
 import unittest
 from unittest.mock import patch
 
@@ -14,10 +16,20 @@ class MQTTListenerTests(unittest.TestCase):
         import core.mqtt_device_listener as listener
 
         payload = {"devices": {}}
+        timestamp = time.time()
+        listener.HEARTBEAT_SECRET = "test-secret"
+        listener.MAX_HEARTBEAT_SKEW_SECONDS = 300
+        heartbeat = {
+            "ts": timestamp,
+            "sig": listener._expected_signature("device-1", timestamp),
+        }
         message = type(
             "Message",
             (),
-            {"topic": "slh/device/device-1/heartbeat", "payload": b"{}"},
+            {
+                "topic": "slh/device/device-1/heartbeat",
+                "payload": json.dumps(heartbeat).encode("utf-8"),
+            },
         )()
 
         with patch.object(listener, "atomic_json_update") as update:

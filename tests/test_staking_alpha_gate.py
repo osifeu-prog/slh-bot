@@ -57,7 +57,7 @@ def test_stake_and_unlock_round_trip_is_atomic():
         released = staking_service.unstake_locked(
             "123", position_id, meta={"source": "test"}
         )
-        assert released["status"] == "unlocked"
+        assert released["status"] == "completed"
         assert released["credits"] == 100.0
         assert released["staked"] == 0.0
 

@@ -72,8 +72,10 @@ def scan(text: Any) -> dict[str, Any]:
     if any(phrase in lowered for phrase in EXTERNAL_CONTROL):
         indicators.append("external_control_request")
 
-    if any(phrase in lowered for phrase in CREDENTIAL_TARGETING):
+    credential_targeting = any(phrase in lowered for phrase in CREDENTIAL_TARGETING)
+    if credential_targeting:
         indicators.append("credential_targeting")
+        indicators.append("credential_request_or_disclosure")
 
     indicators = list(dict.fromkeys(indicators))
     high = {

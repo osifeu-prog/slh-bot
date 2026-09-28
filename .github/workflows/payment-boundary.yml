@@ -16,13 +16,13 @@ on:
 
 jobs:
   payment-boundary:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
       - name: Run payment boundary regression
-        run: python3 tests/test_payment_boundary.py
+        run: python3 -m pytest -q tests/test_payment_boundary.py

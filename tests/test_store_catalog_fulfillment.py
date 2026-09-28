@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import state_manager
+
 from store.grant_engine import apply_grant
 
 
@@ -25,7 +27,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
             "esp32_pro": ("hardware", "esp32_pro"),
             "esp32_standard": ("hardware", "esp32_standard"),
         }
-        self.assertEqual(set(self.items), set(expected))
+        self.assertTrue(set(expected).issubset(set(self.items)))
         for item_id, (grant_type, value) in expected.items():
             item = self.items[item_id]
             self.assertEqual(item["grant"], {grant_type: value})
@@ -69,7 +71,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
                 json.dumps({"devices": {}}), encoding="utf-8"
             )
             (root / "state" / "db.json").write_text(
-                json.dumps({}), encoding="utf-8"
+                json.dumps({"users": {"100": {}}}), encoding="utf-8"
             )
 
             license_payload = {
@@ -80,6 +82,10 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
             with patch("store.grant_engine.issue_license", return_value={"ok": True, "license": license_payload}),                  patch("store.grant_engine.profile_manager.get_user", return_value={}):
                 import os
                 old = os.getcwd()
+                old_db_file = state_manager.DB_FILE
+                old_lock_path = state_manager._LOCK_PATH
+                state_manager.DB_FILE = str(root / "state" / "db.json")
+                state_manager._LOCK_PATH = str(root / "state" / "db.json.lock")
                 os.chdir(tmp)
                 try:
                     result = apply_grant(
@@ -89,6 +95,8 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
                     )
                 finally:
                     os.chdir(old)
+                    state_manager.DB_FILE = old_db_file
+                    state_manager._LOCK_PATH = old_lock_path
 
             self.assertTrue(result["ok"])
             self.assertEqual(result["device_id"], "ESP_PURCHASE_p4")

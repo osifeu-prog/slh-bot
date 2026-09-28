@@ -48,7 +48,7 @@ jobs:
           python - <<'PY'
           from store.engine import resolve_item_id, load_items
           items = load_items()
-          assert resolve_item_id("coursebitcoin101", items) == "course_bitcoin_101"
+          assert resolve_item_id("courseethereum", items) == "course_ethereum"
           assert resolve_item_id("agentos", items) == "agent_os"
           print("Store alias resolver: OK")
           PY
@@ -146,9 +146,9 @@ jobs:
           PY
       - name: Verify SLH Trust Layer
         run: |
-          python tools/test_trust_layer.py
-          python tools/test_trust_router.py
-          python tools/test_action_trust.py
+          PYTHONPATH=. python tools/test_trust_layer.py
+          PYTHONPATH=. python tools/test_trust_router.py
+          PYTHONPATH=. python tools/test_action_trust.py
           echo "SLH Trust Layer contracts: OK"
       - name: Verify multi-bot Telegram token control
         run: |
