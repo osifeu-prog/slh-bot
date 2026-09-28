@@ -9,8 +9,8 @@ from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
 MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
-AI_MAX_INPUT_CHARS = 1500
-AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 1500 תווים ונסה שוב."
+AI_MAX_INPUT_CHARS = 4000
+AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 4000 תווים ונסה שוב."
 
 
 def _kw_match(kw, text_lower):
