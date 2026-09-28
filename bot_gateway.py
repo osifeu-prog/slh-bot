@@ -251,6 +251,22 @@ def token_in_use(token, started_tokens):
         return False
     return any(token == existing for existing in started_tokens)
 
+def primary_bot_token_candidates():
+    """Return primary Telegram token candidates without exposing their values."""
+    primary_token = str(os.getenv("BOT_TOKEN", "") or "").strip()
+    candidates = []
+    if primary_token:
+        candidates.append(("environment", primary_token))
+    try:
+        from core.bot_vault import get_token as get_vault_token
+        vault_token = str(get_vault_token("Me_ad_main_bot") or "").strip()
+        if vault_token and vault_token != primary_token:
+            candidates.append(("bot_vault", vault_token))
+    except Exception as exc:
+        log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
+    return candidates
+
+
 if __name__ == "__main__":
     log("=== BOT + API GATEWAY STARTUP ===")
     log(f"Python: {sys.executable} {sys.version}")
@@ -292,17 +308,7 @@ if __name__ == "__main__":
     started_tokens = []
 
     primary_token = os.getenv("BOT_TOKEN")
-    primary_candidates = []
-    if primary_token:
-        primary_candidates.append(("environment", primary_token))
-
-    try:
-        from core.bot_vault import get_token as get_vault_token
-        vault_token = get_vault_token("Me_ad_main_bot")
-        if vault_token and vault_token != primary_token:
-            primary_candidates.append(("bot_vault", vault_token))
-    except Exception as exc:
-        log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
+    primary_candidates = primary_bot_token_candidates()
 
     if not primary_candidates:
         log("No primary Telegram token available")
