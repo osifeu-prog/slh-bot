@@ -6,7 +6,7 @@ from pathlib import Path
 
 from core.authority import is_owner
 
-DEVICES_PATH = Path("devices.json")
+DEVICES_PATH = Path("state/devices.json")
 
 
 def _devices() -> dict:
