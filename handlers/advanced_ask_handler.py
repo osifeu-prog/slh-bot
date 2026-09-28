@@ -31,7 +31,7 @@ def register_ask_handler(bot):
             bot.reply_to(msg, "Usage: /ask [question]")
             return
 
-        question = question[:2000]
+        question = question[:12000]
         original_question = question
 
         # Last EXEC output can contain privileged operational data.
