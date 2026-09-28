@@ -17,12 +17,12 @@ _BOT_REGISTRY = {
         "label": "SLH Control Plane",
         "targets": [
             {
-                "project": "slh-cloud-bot",
-                "project_id": "b33cb8d5-e82c-4a74-b94b-b52eb8c3d3db",
+                "project": "slh-os-control-plane",
+                "project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
                 "environment": "production",
-                "environment_id": "e82af387-87bb-40c9-b250-2e8a0b7fb41a",
-                "service": "slh-cloud-bot",
-                "service_id": "48b829d9-7bec-4d6c-ac25-025c77ce2794",
+                "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
+                "service": "web",
+                "service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
                 "variable": "BOT_TOKEN",
             }
         ],
