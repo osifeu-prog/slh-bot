@@ -167,16 +167,16 @@ def release_reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="e
 
     wallet = _wallet(db, uid)
     reserve_before = Decimal(str(wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
-    available_before = Decimal(str(wallet.get("token_balance", 0) or 0))
+    total_before = Decimal(str(wallet.get("token_balance", 0) or 0))
     live_before = Decimal(str(wallet.get("live_token_balance", 0) or 0))
     if reserve_before < amount:
         raise ValueError("INSUFFICIENT_SLH_RESERVE")
 
     reserve_after = reserve_before - amount
-    available_after = available_before
+    total_after = total_before
     live_after = live_before + amount
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
-    wallet["token_balance"] = float(available_after + amount)
+    wallet["token_balance"] = float(total_after)
     wallet["live_token_balance"] = float(live_after)
     entry = {
         "event_id": event_id, "from_uid": EXCHANGE_RESERVE_UID, "to_uid": uid,

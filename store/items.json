@@ -1,4 +1,12 @@
 {
+  "course_bitcoin_101": {
+    "name": "קורס: Bitcoin Mastery",
+    "price": 0,
+    "stars_only": true,
+    "type": "course",
+    "grant": {"course": "bitcoin_mastery"},
+    "price_stars": 299
+  },
   "course_ethereum": {
     "name": "קורס: אתריום מאסטרי",
     "price": 0,
