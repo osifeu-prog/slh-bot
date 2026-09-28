@@ -54,17 +54,30 @@ def register(bot, context=None):
         try:
             from core.agent_registry import STORE
             agents = len(STORE.get_all())
-        except: agents = "?"
+        except Exception:
+            agents = "?"
         try:
-            with open("state/ai_health.json") as f: health = json.load(f)
+            with open("state/ai_health.json") as f:
+                health = json.load(f)
             ai_failures = health["groq"]["failures"]
-        except: ai_failures = "?"
+        except Exception:
+            ai_failures = "?"
+
         header = f"""🟢 SLH OS CONTROL CENTER
 {datetime.now():%Y-%m-%d %H:%M:%S}
 🔀 Git: {git_hash} | 🧠 LLM: {llm_state} ({llm_detail}) | 🌐 {railway}
 📂 Handlers: {handlers} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
 """
-        menu = (\n            "CORE: /start /os /status /help /miniapp /dashboard /ask\n"\n            "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"\n            "ALPHA: /alpha /academy /share /rewards /task /journal\n"\n            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs\n"\n            "SECURITY: /vault /vault_verify /vault_health /vault_log\n"\n            "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"\n            "DEV: /e /exec"\n        )
+
+        menu = (
+            "CORE: /start /os /status /help /miniapp /dashboard /ask\n"
+            "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"
+            "ALPHA: /alpha /academy /share /rewards /task /journal\n"
+            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs\n"
+            "SECURITY: /vault /vault_verify /vault_health /vault_log\n"
+            "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"
+            "DEV: /e /exec"
+        )
         bot.reply_to(message, header + menu)
 
     @bot.message_handler(commands=["miniapp"])
