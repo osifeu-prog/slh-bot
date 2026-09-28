@@ -18,9 +18,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Capture CI diagnostics
+        run: bash tools/ci_diagnostics.sh
       - name: Install dependencies
         run: pip install -r requirements.txt -r slh_mcp/requirements.txt pytest
       - name: Compile Python modules
         run: python3 -m compileall -q core agents handlers services
       - name: Run full test suite
-        run: python3 -m pytest -q tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -m pytest -q tests 2>&1 | tee ci-diagnostics/pytest.log
+
+      - name: Upload CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slh-full-regression-diagnostics
+          path: |
+            ci-diagnostics/**
+          if-no-files-found: warn
