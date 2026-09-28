@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Capture CI diagnostics
+        run: bash tools/ci_diagnostics.sh
+
       - name: Compile Python sources
         shell: bash
         run: |
