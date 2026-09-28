@@ -190,7 +190,7 @@ def register(bot):
             # wallet text wrapping is preserved.
             bot.reply_to(
                 msg,
-                f"<pre>{logo}</pre>\\n\\n{text[len(logo) + 2:]}",
+                f"<pre>{logo}</pre>\n\n{text[len(logo) + 2:]}",
                 parse_mode="HTML",
             )
         else:
