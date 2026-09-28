@@ -9,6 +9,7 @@ from pathlib import Path
 
 import state_manager
 from core.identity_resolver import get_display_name
+from core.asset_truth import build_slH_asset_truth
 
 
 COURSE_FILE = Path("courses.json")
@@ -183,6 +184,8 @@ def get_investor_snapshot(uid):
                 "reason": str(entry.get("reason", "unknown")),
             })
 
+    asset_truth = build_slH_asset_truth(wallet)
+
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
         gamification = {}
@@ -204,6 +207,7 @@ def get_investor_snapshot(uid):
                 else "unbacked_or_empty"
             ),
             "ton_wallet": user.get("ton_wallet"),
+            "asset_truth": asset_truth,
         },
         "academy": {
             "courses": sorted(str(course_id) for course_id in courses.keys()),
