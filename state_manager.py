@@ -73,8 +73,9 @@ def atomic_update(mutate_fn):
     Safely load, mutate, and save the DB as one atomic operation.
     mutate_fn receives the db dict, modifies it in place, and returns a result.
     """
-    os.makedirs("state", exist_ok=True)
-    with open(_LOCK_PATH, "w") as lockfile:
+    os.makedirs(os.path.dirname(DB_FILE) or ".", exist_ok=True)
+    os.makedirs(os.path.dirname(_LOCK_PATH) or ".", exist_ok=True)
+    with open(_LOCK_PATH, "a+", encoding="utf-8") as lockfile:
         if HAS_FCNTL:
             fcntl.flock(lockfile, fcntl.LOCK_EX)
         try:
