@@ -1,3 +1,7 @@
+
+concurrency:
+  group: academy-boundary-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 name: SLH Academy Boundary
 
 on:
