@@ -191,16 +191,59 @@ def get_investor_snapshot(uid):
     if not isinstance(gamification, dict):
         gamification = {}
 
-    bnb_binding = get_binding(uid)
-    ton_binding = get_ton_binding(uid)
+    # Keep the investor read model user-scoped and single-read.  The snapshot
+    # already owns the canonical DB object, so do not call helpers that reload
+    # state_manager.load_db() for the same request.
+    display_name = (
+        user.get("display_name")
+        or user.get("name")
+        or (user.get("profile") or {}).get("name")
+        or user.get("telegram_name")
+        or f"User {uid}"
+    )
+    bindings = db.get("wallet_bindings", {})
+    if not isinstance(bindings, dict):
+        bindings = {}
+    bnb_binding = next(
+        (
+            binding for binding in bindings.values()
+            if isinstance(binding, dict)
+            and str(binding.get("uid")) == uid
+            and binding.get("chain") == "bsc"
+        ),
+        None,
+    )
+    ton_bindings = db.get("ton_wallet_bindings", {})
+    if not isinstance(ton_bindings, dict):
+        ton_bindings = {}
+    ton_binding = next(
+        (
+            binding for binding in ton_bindings.values()
+            if isinstance(binding, dict) and str(binding.get("uid")) == uid
+        ),
+        None,
+    )
     bnb_status = bnb_readiness()
+    ton_settings_db = db.get("ton_settings", {})
+    if not isinstance(ton_settings_db, dict):
+        ton_settings_db = {}
     ton_open = ton_deposits_are_open()
-    ton_treasury, ton_rate = ton_settings()
+    ton_treasury = (
+        __import__("os").getenv("TON_WALLET", "").strip()
+        or ton_settings_db.get("wallet")
+    )
+    ton_rate_raw = (
+        __import__("os").getenv("TON_CREDITS_PER_TON", "").strip()
+        or ton_settings_db.get("credits_per_ton")
+        or ton_settings_db.get("rate")
+        or 0
+    )
+    ton_rate = float(ton_rate_raw or 0)
 
     return {
         "identity": {
             "uid": uid,
-            "display_name": get_display_name(uid),
+            "display_name": display_name,
             "role": user.get("role", "student"),
         },
         "wallet": {
