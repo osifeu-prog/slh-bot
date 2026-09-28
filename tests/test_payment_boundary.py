@@ -40,6 +40,7 @@ def test_payment_authority_rejects_non_xtr_before_economy():
 
 
 def test_payment_authority_delegates_valid_xtr_without_db_side_effects(monkeypatch):
+    # Revenue persistence is mocked here so this unit test remains side-effect free.
     called = {}
 
     def fake_record(**kwargs):
