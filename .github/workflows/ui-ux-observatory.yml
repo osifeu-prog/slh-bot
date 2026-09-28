@@ -21,6 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Capture CI diagnostics
+        run: bash tools/ci_diagnostics.sh
       - name: Install UI test dependencies
         working-directory: ui_observatory
         run: npm install
@@ -35,7 +37,10 @@ jobs:
         working-directory: ui_observatory
         env:
           SLH_UI_BASE_URL: http://127.0.0.1:8080/mini-app
-        run: npm run test:ui -- --reporter=list
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:ui -- --reporter=list 2>&1 | tee ../ci-diagnostics/ui-ux-tests.log
       - name: Upload UI evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,4 +50,5 @@ jobs:
             ui_observatory/artifacts/**
             ui_observatory/tests/**/*-snapshots/**
             /tmp/slh-ui.log
+            ci-diagnostics/**
           if-no-files-found: warn
