@@ -53,6 +53,7 @@ def load_handlers(bot, context):
         ("feedback", "handlers.feedback_handler"),
         ("gateway", "handlers.gateway_handler"),
         ("file", "handlers.file_handler"),
+        ("voice", "handlers.voice_handler"),
         ("help", "handlers.help_handler"),
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
