@@ -292,38 +292,60 @@ if __name__ == "__main__":
     started_tokens = []
 
     primary_token = os.getenv("BOT_TOKEN")
+    primary_candidates = []
     if primary_token:
-        try:
-            bot = telebot.TeleBot(primary_token, parse_mode=None)
-            bot_identity = bot.get_me()
-            log(
-                "[TELEGRAM] Primary token identity: "
-                f"@{bot_identity.username or 'no_username'} id={bot_identity.id}"
-            )
-            configure_default_mini_app_menu(bot)
-            try:
-                from core.identity import OWNER_TELEGRAM_ID
-                from core.bot_registry import ensure_runtime_bot
-                ensure_runtime_bot(
-                    name="Me_ad_main",
-                    owner_id=str(OWNER_TELEGRAM_ID),
-                    telegram_username=bot_identity.username,
-                    role="control_plane",
-                )
-                log("[FEDERATION] Me_ad_main registered in canonical bot registry")
-            except Exception as exc:
-                log(f"[FEDERATION] runtime bot registration skipped: {type(exc).__name__}")
-            from security.permissions import is_admin as canonical_is_admin
-            handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
-            load_handlers(bot, handler_context)
-            log("[OK] Bot Me_ad_main started")
-            threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
-            started_bots["Me_ad_main"] = bot
-            started_tokens.append(primary_token)
-        except Exception as e:
-            log(f"[FAIL] Primary bot Me_ad_main failed: {type(e).__name__}: {e}")
+        primary_candidates.append(("environment", primary_token))
+
+    try:
+        from core.bot_vault import get_token as get_vault_token
+        vault_token = get_vault_token("Me_ad_main_bot")
+        if vault_token and vault_token != primary_token:
+            primary_candidates.append(("bot_vault", vault_token))
+    except Exception as exc:
+        log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
+
+    if not primary_candidates:
+        log("No primary Telegram token available")
     else:
-        log("No BOT_TOKEN, primary bot not started")
+        for token_source, candidate_token in primary_candidates:
+            try:
+                bot = telebot.TeleBot(candidate_token, parse_mode=None)
+                bot_identity = bot.get_me()
+                log(
+                    "[TELEGRAM] Primary token identity: "
+                    f"@{bot_identity.username or 'no_username'} id={bot_identity.id} "
+                    f"source={token_source}"
+                )
+                configure_default_mini_app_menu(bot)
+                try:
+                    from core.identity import OWNER_TELEGRAM_ID
+                    from core.bot_registry import ensure_runtime_bot
+                    ensure_runtime_bot(
+                        name="Me_ad_main",
+                        owner_id=str(OWNER_TELEGRAM_ID),
+                        telegram_username=bot_identity.username,
+                        role="control_plane",
+                    )
+                    log("[FEDERATION] Me_ad_main registered in canonical bot registry")
+                except Exception as exc:
+                    log(f"[FEDERATION] runtime bot registration skipped: {type(exc).__name__}")
+                from security.permissions import is_admin as canonical_is_admin
+                handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
+                load_handlers(bot, handler_context)
+                log("[OK] Bot Me_ad_main started")
+                threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
+                started_bots["Me_ad_main"] = bot
+                started_tokens.append(candidate_token)
+                break
+            except telebot.apihelper.ApiTelegramException as exc:
+                if getattr(exc, "error_code", None) == 401 and token_source == "environment":
+                    log("[TELEGRAM] BOT_TOKEN rejected by Telegram; trying Bot Vault fallback")
+                    continue
+                log(f"[FAIL] Primary bot Me_ad_main failed: {type(exc).__name__}: {exc}")
+                break
+            except Exception as exc:
+                log(f"[FAIL] Primary bot Me_ad_main failed: {type(exc).__name__}: {exc}")
+                break
 
     try:
         bots_file = STATE_DIR / "bots.json"
