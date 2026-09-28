@@ -1,3 +1,7 @@
+
+concurrency:
+  group: ui-ux-observatory-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 name: SLH UI UX Observatory
 
 on:
