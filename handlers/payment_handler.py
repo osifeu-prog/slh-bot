@@ -495,15 +495,38 @@ def register_payment_handlers(bot):
     def history(m):
         uid = str(m.from_user.id)
         db = state_manager.load_db()
-        txs = [t for t in db.get("transactions", []) if t.get("uid") == uid]
-        if not txs:
-            bot.send_message(m.chat.id, "📜 No transactions yet.")
+        rows = [
+            row for row in db.get("ledger", [])
+            if str(row.get("uid")) == uid
+        ]
+        if not rows:
+            bot.send_message(m.chat.id, "📜 אין עדיין תנועות Credits.")
             return
-        msg = "📜 Your transactions:\n" + "".join(
-            f"▫️ {tx.get('credits', 0)} credits — {str(tx.get('timestamp', ''))[:10]}\n"
-            for tx in txs[-10:]
-        )
-        bot.send_message(m.chat.id, msg.strip())
+
+        def _history_reason(row):
+            reason = str(row.get("reason", "")).strip()
+            labels = {
+                "arcade:entry": "Arcade",
+                "staking:stake": "Staking",
+                "staking:unstake": "Unstaking",
+                "staking:reward_claim": "Staking reward",
+                "task:completion_reward": "Task reward",
+                "bridge:spend": "Spend",
+                "bridge:add_credits": "Credits added",
+            }
+            return labels.get(reason, reason or "Credit movement")
+
+        lines = ["📜 היסטוריית Credits:"]
+        for row in rows[-10:]:
+            amount = row.get("amount", 0)
+            sign = "+" if isinstance(amount, (int, float)) and amount > 0 else ""
+            amount_text = f"{sign}{amount:g}" if isinstance(amount, (int, float)) else str(amount)
+            date_text = str(row.get("time", ""))[:10]
+            lines.append(
+                f"▫️ {amount_text} Credits — {_history_reason(row)} — {date_text}"
+            )
+
+        bot.send_message(m.chat.id, "\n".join(lines))
 
     @bot.message_handler(commands=['fakepay_disabled'])
     def fakepay(m):
