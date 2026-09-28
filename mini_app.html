@@ -349,6 +349,22 @@ window.addEventListener('DOMContentLoaded',()=>{
 const tg=window.Telegram&&window.Telegram.WebApp;const __slhTelegramMiniApp=!!tg;if(tg){tg.ready();tg.expand()}let initData=tg?.initData||"";let headers=initData?{"X-Telegram-Init-Data":initData}:{};function refreshTelegramAuth(){const w=window.Telegram?.WebApp;initData=w?.initData||"";headers=initData?{"X-Telegram-Init-Data":initData}:{};return initData}console.log("[TG-AUTH]",JSON.stringify({webapp:!!tg,initDataLength:initData.length,platform:tg?.platform||"",version:tg?.version||"",userId:tg?.initDataUnsafe?.user?.id||null}));const $=id=>document.getElementById(id);let state={};let _walletConnectProvider=null;let _walletConnectProjectId=null;const __slhStartScreen=new URLSearchParams(window.location.search).get("screen");
 function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;document.querySelector(".app")?.setAttribute("aria-hidden","true");document.body.classList.add("auth-required")}
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
+function __slhRefreshSession(){
+  try{
+    const current=refreshTelegramAuth();
+    if(current){
+      hideAuthGate();
+      if(typeof loadMe==="function")loadMe();
+    }else{
+      showAuthGate();
+    }
+  }catch(_e){}
+}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible")setTimeout(__slhRefreshSession,80);
+});
+window.addEventListener("pageshow",function(){setTimeout(__slhRefreshSession,80)});
+window.addEventListener("focus",function(){setTimeout(__slhRefreshSession,80)});
 
 function toast(x){const e=$("toast");e.textContent=x;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
 let __slhNavStack=['home'];let __slhShowing='home';let __slhNavReady=false;
