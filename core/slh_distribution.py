@@ -227,10 +227,15 @@ def settle_reserve_in_db(
 
     seller_reserve_after = seller_reserve_before - amount
     seller_total_after = seller_total_before - amount
+    seller_live_before = Decimal(str(seller.get("live_token_balance", 0) or 0))
+    if seller_live_before < amount:
+        raise ValueError("INSUFFICIENT_LIVE_SLH")
+    seller_live_after = seller_live_before - amount
     buyer_after = buyer_before + amount
     buyer_live_after = buyer_live_before + amount
     seller[EXCHANGE_RESERVE_KEY] = float(seller_reserve_after)
     seller["token_balance"] = float(seller_total_after)
+    seller["live_token_balance"] = float(seller_live_after)
     buyer["token_balance"] = float(buyer_after)
     buyer["live_token_balance"] = float(buyer_live_after)
     entry = {
@@ -239,6 +244,7 @@ def settle_reserve_in_db(
         "kind": "exchange_settlement", "order_id": order_id, "trade_id": trade_id,
         "before_reserve": float(seller_reserve_before), "after_reserve": float(seller_reserve_after),
         "before_from_total": float(seller_total_before), "after_from_total": float(seller_total_after),
+        "before_live_from": float(seller_live_before), "after_live_from": float(seller_live_after),
         "before_to": float(buyer_before), "after_to": float(buyer_after),
         "before_live_to": float(buyer_live_before), "after_live_to": float(buyer_live_after),
         "timestamp": datetime.now(timezone.utc).isoformat(),
