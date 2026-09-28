@@ -3,6 +3,8 @@ import os
 from heb_convert import get_hebrew_date
 import state_manager
 
+TON_DEPOSITS_OPEN = os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
+
 
 
 def _fetch_api_wallet(uid):
@@ -148,7 +150,7 @@ def register(bot):
         bnb_binding = get_binding(uid)
         ton_binding = get_ton_binding(uid)
         ton_treasury, ton_rate = _settings()
-        ton_open = deposits_are_open()
+        ton_open = deposits_are_open() and TON_DEPOSITS_OPEN
 
         text += (
             "📤 העברת Credits: /transfer <uid> <amount>\n"

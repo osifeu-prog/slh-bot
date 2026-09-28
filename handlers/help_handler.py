@@ -112,6 +112,7 @@ def register(bot):
 /miniapp – Mini App
 /dashboard – Dashboard
 /settings – הגדרות מערכת
+/theme – בחירת ערכת תצוגה
 /status – סטטוס
 /health – בדיקת בריאות
 /doctor – אבחון

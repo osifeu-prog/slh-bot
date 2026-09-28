@@ -9,6 +9,7 @@ def register(bot, context=None):
     def os_cmd(message):
         # Railway does not include git in the slim runtime image. Prefer the
         # immutable deployment commit exposed by Railway; use git only locally.
+        # Local fallback remains intentionally explicit: git rev-parse --short HEAD
         git_hash = (os.getenv("RAILWAY_GIT_COMMIT_SHA") or "").strip()
         if git_hash:
             git_hash = git_hash[:7]
