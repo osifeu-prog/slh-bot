@@ -324,6 +324,17 @@ if __name__ == "__main__":
                 )
                 configure_default_mini_app_menu(bot)
                 try:
+                    from core.bot_vault import add_bot
+                    add_bot(
+                        candidate_token,
+                        actor="system:startup",
+                        module="home",
+                        role="control_plane",
+                    )
+                    log("[TELEGRAM] Primary token persisted in encrypted Bot Vault")
+                except Exception as vault_exc:
+                    log(f"[TELEGRAM] Bot Vault persistence skipped: {type(vault_exc).__name__}")
+                try:
                     from core.identity import OWNER_TELEGRAM_ID
                     from core.bot_registry import ensure_runtime_bot
                     ensure_runtime_bot(
