@@ -18,8 +18,8 @@ class TelegramTokenRegistryTests(unittest.TestCase):
     def test_main_targets_live_polling_service(self):
         targets = targets_for("main")
         self.assertEqual(len(targets), 1)
-        self.assertEqual(targets[0]["project"], "slh-cloud-bot")
-        self.assertEqual(targets[0]["service"], "slh-cloud-bot")
+        self.assertEqual(targets[0]["project"], "slh-os-control-plane")
+        self.assertEqual(targets[0]["service"], "web")
         self.assertEqual(targets[0]["variable"], "BOT_TOKEN")
 
     def test_air_uses_dedicated_telegram_token_variable(self):
