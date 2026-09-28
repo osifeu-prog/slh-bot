@@ -1,0 +1,40 @@
+name: SLH Self-Hosted Runner Smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Runner identity
+        shell: bash
+        run: |
+          set -eu
+          echo "Runner OS: $(uname -s)"
+          echo "Runner arch: $(uname -m)"
+          echo "Runner host: $(hostname)"
+          python --version || python3 --version
+
+      - name: Compile core
+        shell: bash
+        run: |
+          set -eu
+          python -m py_compile core/asset_truth.py
+          python -m py_compile core/investor_read_model.py
+          python -m py_compile handlers/dashboard_handler.py
+          echo "Core compile: OK"
+
+      - name: Asset Truth regression
+        shell: bash
+        run: |
+          set -eu
+          python -m unittest tests.test_asset_truth -v
+          echo "Asset Truth tests: OK"
