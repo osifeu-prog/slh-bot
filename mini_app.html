@@ -517,7 +517,8 @@ let _tonConnectUI = null;
 let _tonChallenge = null;
 let _tonSignPending = false;
 
-async function loadWalletBindings(){\n  await __slhApplyTelegramWalletPolicy();
+async function loadWalletBindings(){
+  await __slhApplyTelegramWalletPolicy();
   if(!initData) return;
   try{
     const [bnbResp, tonResp] = await Promise.all([
