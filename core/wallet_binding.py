@@ -138,9 +138,9 @@ def verify_signature(uid, address, signature):
     return state_manager.atomic_update(mutate)
 
 
-def get_binding(uid):
+def get_binding(uid, db=None):
     uid = str(uid)
-    db = state_manager.load_db()
+    db = state_manager.load_db() if db is None else db
     for binding in db.get("wallet_bindings", {}).values():
         if str(binding.get("uid")) == uid and binding.get("chain") == CHAIN:
             return binding
