@@ -3,7 +3,7 @@ import unittest
 from core.asset_truth import build_slH_asset_truth
 
 
-class AssetTruthTests(unittest.TestCase):
+class AssetTruthTests(unittest.TestCase):  # CI-discoverable regression suite
     def test_legacy_internal_balance_is_not_promoted_to_live(self):
         truth = build_slH_asset_truth({
             "token_balance": 50000,
