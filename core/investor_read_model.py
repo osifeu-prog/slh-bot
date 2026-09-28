@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 
 import state_manager
-from core.identity_resolver import get_display_name
 from core.wallet_binding import get_binding
 from core.ton_wallet_binding import get_ton_binding
 from core.bnb_gate import bnb_readiness
@@ -191,8 +190,8 @@ def get_investor_snapshot(uid):
     if not isinstance(gamification, dict):
         gamification = {}
 
-    bnb_binding = get_binding(uid)
-    ton_binding = get_ton_binding(uid)
+    bnb_binding = get_binding(uid, db=db)
+    ton_binding = get_ton_binding(uid, db=db)
     bnb_status = bnb_readiness()
     ton_open = ton_deposits_are_open()
     ton_treasury, ton_rate = ton_settings()
@@ -200,7 +199,7 @@ def get_investor_snapshot(uid):
     return {
         "identity": {
             "uid": uid,
-            "display_name": get_display_name(uid),
+            "display_name": (user.get("display_name") or user.get("telegram_name") or user.get("name") or f"User{uid}"),
             "role": user.get("role", "student"),
         },
         "wallet": {
