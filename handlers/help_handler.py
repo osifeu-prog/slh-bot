@@ -111,6 +111,7 @@ def register(bot):
 🛠 TOOLS
 /miniapp – Mini App
 /dashboard – Dashboard
+/settings – הגדרות מערכת
 /status – סטטוס
 /health – בדיקת בריאות
 /doctor – אבחון
