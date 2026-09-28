@@ -45,9 +45,37 @@ async function clickPrimaryNav(page, label) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // The production Mini App requires Telegram WebApp initData. Provide a
+  // deterministic browser-only mock so the Observatory exercises the UI
+  // after the real auth gate rather than testing the unauthenticated screen.
+  await page.route('https://telegram.org/js/telegram-web-app.js', async route => {
+    await route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        window.Telegram = {
+          WebApp: {
+            initData: 'query_id=ui-test&user=%7B%22id%22%3A100%2C%22first_name%22%3A%22UI%20Test%22%7D',
+            initDataUnsafe: { user: { id: 100, first_name: 'UI Test' } },
+            platform: 'tdesktop',
+            version: '7.10',
+            ready() {},
+            expand() {},
+            close() {},
+            openTelegramLink() {},
+            HapticFeedback: {
+              impactOccurred() {},
+              notificationOccurred() {}
+            },
+            BackButton: { show() {}, hide() {}, onClick() {} }
+          }
+        };
+      `
+    });
+  });
   await mockBackend(page);
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
+  await expect(page.locator('#authGate')).toBeHidden();
 });
 
 test('all primary screens are reachable', async ({ page }) => {
