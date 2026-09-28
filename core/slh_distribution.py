@@ -128,8 +128,8 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
     if available < amount or total_before < amount:
         raise ValueError("INSUFFICIENT_LIVE_SLH")
 
-    total_after = total_before - amount
-    available_after = available - amount
+    total_after = total_before
+    available_after = available
     reserve_after = reserve_before + amount
     wallet["token_balance"] = float(total_after)
     wallet["live_token_balance"] = float(available_after)
@@ -172,9 +172,9 @@ def release_reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="e
 
     reserve_after = reserve_before - amount
     available_after = available_before
-    live_after = live_before + amount
+    live_after = live_before
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
-    wallet["token_balance"] = float(available_after + amount)
+    wallet["token_balance"] = float(available_after)
     wallet["live_token_balance"] = float(live_after)
     entry = {
         "event_id": event_id, "from_uid": EXCHANGE_RESERVE_UID, "to_uid": uid,
@@ -226,7 +226,7 @@ def settle_reserve_in_db(
         raise ValueError("SLH_TOTAL_BALANCE_BREACH")
 
     seller_reserve_after = seller_reserve_before - amount
-    seller_total_after = seller_total_before
+    seller_total_after = seller_total_before - amount
     buyer_after = buyer_before + amount
     buyer_live_after = buyer_live_before + amount
     seller[EXCHANGE_RESERVE_KEY] = float(seller_reserve_after)
