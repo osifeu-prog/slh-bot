@@ -134,13 +134,13 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
     available_after = available - amount
     reserve_after = reserve_before + amount
     wallet["token_balance"] = float(total_after)
-    wallet["live_token_balance"] = float(total_after)
+    wallet["live_token_balance"] = float(available_after)
     wallet[EXCHANGE_RESERVE_KEY] = float(reserve_after)
     entry = {
         "event_id": event_id, "from_uid": uid, "to_uid": EXCHANGE_RESERVE_UID,
         "amount": float(amount), "reason": str(reason), "kind": "exchange_reserve",
         "order_id": order_id, "before_from": float(total_before), "after_from": float(total_after),
-        "before_live_from": float(available), "after_live_from": float(total_after),
+        "before_live_from": float(available), "after_live_from": float(available_after),
         "before_reserve": float(reserve_before), "after_reserve": float(reserve_after),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
