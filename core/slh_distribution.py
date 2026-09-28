@@ -128,7 +128,9 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
     if available < amount or total_before < amount:
         raise ValueError("INSUFFICIENT_LIVE_SLH")
 
-    total_after = total_before - amount
+    # Reserve moves live/spendable SLH into escrow; it does not change the
+    # holder's total balance until settlement actually transfers ownership.
+    total_after = total_before
     available_after = available - amount
     reserve_after = reserve_before + amount
     wallet["token_balance"] = float(total_after)
@@ -226,7 +228,7 @@ def settle_reserve_in_db(
         raise ValueError("SLH_TOTAL_BALANCE_BREACH")
 
     seller_reserve_after = seller_reserve_before - amount
-    seller_total_after = seller_total_before
+    seller_total_after = seller_total_before - amount
     buyer_after = buyer_before + amount
     buyer_live_after = buyer_live_before + amount
     seller[EXCHANGE_RESERVE_KEY] = float(seller_reserve_after)
