@@ -1514,3 +1514,46 @@ function renderThemeChoices(current,choices){
     const selected=x.id===current;
     const cls='slh-v5-theme '+x.id;
     return '<button type="button" class="'+cls+'" aria-selected="'+selected+'" onclick="setUiTheme(\''+esc(x.id)+'\')"><span class="slh-v5-swatch"></span><b>'+(selected?'✅ ':'')+esc(x.label||x.id)+'</b><span>'+esc(x.description||'')+'</span></button>';
+  }).join(''));
+  setText('settingsCurrent','ערכת תצוגה נוכחית: '+(SLH_THEME_META[current]?.label||current));
+}
+async function loadUiSettings(){
+  if(!initData){showAuthGate();return}
+  const sync=$('settingsSync'); if(sync)sync.textContent='מסנכרן…';
+  try{
+    const r=await fetch('/api/v1/settings',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    const current=d.preferences?.theme||'calm';
+    applyUiTheme(current);
+    renderThemeChoices(current,d.themes);
+    if(sync){sync.textContent='✅ מסונכרן';sync.className='pill ok'}
+  }catch(e){
+    if(sync){sync.textContent='⚠️ לא מסונכרן';sync.className='pill pending'}
+  }
+}
+async function setUiTheme(theme){
+  if(!SLH_THEME_META[theme])return;
+  const previous=document.documentElement.getAttribute('data-slh-theme')||'system';
+  applyUiTheme(theme);
+  try{
+    const r=await fetch('/api/v1/settings',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({theme})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){applyUiTheme(previous);if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    const saved=d.preferences?.theme||theme;
+    applyUiTheme(saved);
+    renderThemeChoices(saved,d.themes);
+    const sync=$('settingsSync'); if(sync){sync.textContent='✅ נשמר';sync.className='pill ok'}
+    toast('✅ ערכת התצוגה מסונכרנת עם הבוט');
+  }catch(e){
+    toast('❌ לא ניתן לשמור את הערכה');
+  }
+}
+try{
+  const saved=localStorage.getItem('slh.theme');
+  if(saved&&SLH_THEME_META[saved])applyUiTheme(saved);
+}catch(_e){}
+try{
+  if(initData) setTimeout(()=>loadUiSettings(),0);
+}catch(_e){}
+</script></body></html>
