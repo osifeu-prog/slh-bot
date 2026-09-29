@@ -19,6 +19,10 @@ on:
       - 'requirements.txt'
       - '.github/workflows/wallet-binding.yml'
 
+concurrency:
+  group: slh-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   wallet-binding:
     runs-on: [self-hosted, linux, x64]
