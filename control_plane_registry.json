@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "verified_date_utc": "2026-09-21",
+  "verified_date_utc": "2026-09-29",
   "purpose": "Canonical Control Plane inventory snapshot for SLH and connected external projects.",
   "canonical": {
     "repo": "osifeu-prog/slh-bot",
-    "railway_project": "endearing-amazement",
+    "railway_project": "slh-os-control-plane",
     "railway_project_id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
     "railway_service": "web",
     "railway_service_id": "13d97581-0199-4f6a-80d1-885c9304ffc5",
@@ -13,7 +13,7 @@
   },
   "railway_projects": [
     {
-      "name": "endearing-amazement",
+      "name": "slh-os-control-plane",
       "id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
       "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
       "role": "canonical_control_plane",
@@ -38,7 +38,7 @@
           "id": "97aaaea9-6ab3-4aad-960d-23d12e3c8b11",
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
-          "status": "DEPLOYING",
+          "status": "SUCCESS",
           "class": "mcp_control_plane",
           "domain": "slh-mcp-production.up.railway.app",
           "runtime_policy": {
@@ -395,9 +395,9 @@
     }
   ],
   "notes": [
-    "slh-mcp is a dedicated MCP control-plane service in endearing-amazement; deployment status is point-in-time and must be re-verified before treating MCP as live.",
-    "Railway statuses above were reconciled live on 2026-09-21 via project environment/service status APIs; they are point-in-time deployment states, not continuous process heartbeats.",
-    "Canonical production is endearing-amazement/web on osifeu-prog/slh-bot main. It is the only configured production polling gateway; start_railway.sh owns polling and the service is configured with one replica.",
+    "slh-mcp is a dedicated MCP control-plane service in slh-os-control-plane; deployment status is point-in-time and must be re-verified before treating MCP as live.",
+    "Railway statuses above were reconciled live on 2026-09-29 via project environment/service status APIs; they are point-in-time deployment states, not continuous process heartbeats.",
+    "Canonical production is slh-os-control-plane/web on osifeu-prog/slh-bot main. It is the only configured production polling gateway; start_railway.sh owns polling and the service is configured with one replica.",
     "slh-cloud-bot also sources osifeu-prog/slh-bot main, but its live service configuration has RUN_BOT=0 and restart policy NEVER; it is retained as a non-polling secondary runtime and must not be enabled automatically.",
     "Legacy/external stacks are tracked for ownership and migration visibility. No automatic shutdown or deletion was performed during reconciliation.",
     "slh-AI-bot is CRASHED and has a TelegramUnauthorizedError in its known deployment; do not revive blindly. The public SLH.co.il site currently routes its AI assistant to the canonical SLH OS API.",
