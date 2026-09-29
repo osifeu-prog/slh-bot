@@ -258,12 +258,15 @@ def primary_bot_token_candidates():
     if primary_token:
         candidates.append(("environment", primary_token))
     try:
-        from core.bot_vault import get_token as get_vault_token
-        vault_token = str(get_vault_token("Me_ad_main_bot") or "").strip()
+        from core.bot_vault import get_token_by_identity
+        vault_token = str(get_token_by_identity("Me_ad_main_bot") or "").strip()
         if vault_token and vault_token != primary_token:
             candidates.append(("bot_vault", vault_token))
     except Exception as exc:
-        log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
+        log(
+            "[TELEGRAM] Bot Vault fallback unavailable: "
+            f"{type(exc).__name__}: {str(exc)[:80]}"
+        )
     return candidates
 
 
