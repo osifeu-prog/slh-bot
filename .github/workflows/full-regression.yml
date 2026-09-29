@@ -10,6 +10,10 @@ on:
       - 'feat/mission-real-execution-contract'
   workflow_dispatch:
 
+concurrency:
+  group: slh-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   full-regression:
     runs-on: [self-hosted, linux, x64]
