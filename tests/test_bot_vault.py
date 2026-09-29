@@ -47,6 +47,15 @@ class BotVaultTests(unittest.TestCase):
         self.assertEqual(bot_vault.get_token("bot123456789"), TOKEN)
         self.assertTrue(all(TOKEN not in json.dumps(a) for a in self.db["bot_vault_audit"]))
 
+    def test_token_resolves_by_case_insensitive_identity(self):
+        self.db["bot_vault"] = {
+            "Me_ad_main_bot": {
+                "username": "Me_Ad_Main_Bot",
+                "token_enc": bot_vault._fernet().encrypt(TOKEN.encode()).decode(),
+            }
+        }
+        self.assertEqual(bot_vault.get_token_by_identity("@me_ad_main_bot"), TOKEN)
+
     def test_rotation_requires_same_bot(self):
         bot_vault.add_bot(TOKEN, actor="owner")
         with self.assertRaises(ValueError):
