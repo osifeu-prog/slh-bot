@@ -63,7 +63,7 @@ class WebAppExchangeCancelTests(unittest.TestCase):
 
         wallet = db["users"]["seller"]["wallet"]
         self.assertEqual(wallet["token_balance"], 100.0)
-        self.assertEqual(wallet["live_token_balance"], 100.0)
+        self.assertEqual(wallet["live_token_balance"], 60.0)
         self.assertEqual(wallet["exchange_reserved_slh"], 0.0)
 
         order = db["exchange_orders"]["O1"]

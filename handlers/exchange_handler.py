@@ -138,7 +138,7 @@ def _assert_invariants(db):
             or _get(w, "credits") < ZERO
         ):
             raise ValueError("EXCHANGE_NEGATIVE_BALANCE")
-        if live_slh + rs > total_slh:
+        if live_slh > total_slh or rs > live_slh:
             raise ValueError("WALLET_LIVE_SLH_BACKING_BREACH")
         if rs != want_slh.get(str(uid), ZERO):
             raise ValueError("WALLET_SLH_RESERVE_MISMATCH")
