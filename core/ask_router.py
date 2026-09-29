@@ -10,7 +10,39 @@ from handlers.llm_handler import query_llm_with_context
 
 MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
 AI_MAX_INPUT_CHARS = 1500
-AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 1500 תווים ונסה שוב."
+AI_MAX_INPUT_CHUNKS = 6
+
+
+def _normalize_ai_input(text):
+    """Normalize transport whitespace without destroying pasted logs or code."""
+    value = str(text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    lines = [re.sub(r"[ \t]+", " ", line).rstrip() for line in value.split("\n")]
+    return "\n".join(lines).strip()
+
+
+def _chunk_ai_input(text, max_chars=AI_MAX_INPUT_CHARS, max_chunks=AI_MAX_INPUT_CHUNKS):
+    """Split long AI input into bounded chunks, preferring line/word boundaries."""
+    text = _normalize_ai_input(text)
+    if len(text) <= max_chars:
+        return [text] if text else []
+
+    chunks = []
+    remaining = text
+    while remaining and len(chunks) < max_chunks:
+        if len(remaining) <= max_chars:
+            chunks.append(remaining)
+            remaining = ""
+            break
+        cut = remaining.rfind("\n", 0, max_chars + 1)
+        if cut < max_chars // 2:
+            cut = remaining.rfind(" ", 0, max_chars + 1)
+        if cut < max_chars // 2:
+            cut = max_chars
+        chunks.append(remaining[:cut].rstrip())
+        remaining = remaining[cut:].lstrip(" \n")
+    if remaining:
+        chunks[-1] = chunks[-1].rstrip() + "\n\n[המשך הקלט קוצר כדי לשמור על גבול העיבוד]"
+    return chunks
 
 
 def _kw_match(kw, text_lower):
@@ -90,8 +122,9 @@ def detect_intent(text):
 
 
 def route(text, uid=None):
-    is_pasted_log = bool(re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", str(text or "")))
-    guard_result = guard(text, uid)
+    normalized_text = _normalize_ai_input(text)
+    is_pasted_log = bool(re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", normalized_text))
+    guard_result = guard(normalized_text, uid)
     if isinstance(guard_result, tuple):
         allowed, msg = guard_result
         if not allowed:
@@ -99,9 +132,7 @@ def route(text, uid=None):
     elif not bool(guard_result):
         return "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
 
-    if len(str(text or "")) > AI_MAX_INPUT_CHARS:
-        return AI_INPUT_TOO_LONG_MESSAGE
-
+    text = normalized_text
     intent = detect_intent(text)
 
     # Build canonical project context for every AI session without exposing secrets.
@@ -225,6 +256,23 @@ def route(text, uid=None):
                 "services": len(project_context.get("services", [])),
                 "runtime": project_context.get("runtime", {}).get("running", False),
             })
-        return query_llm_with_context(enriched, uid=str(uid) if uid is not None else None)
+        chunks = _chunk_ai_input(enriched)
+        if not chunks:
+            return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
+        replies = []
+        for index, chunk in enumerate(chunks, 1):
+            chunk_prompt = chunk
+            if len(chunks) > 1:
+                chunk_prompt = (
+                    f"זהו חלק {index} מתוך {len(chunks)} של אותה הודעת משתמש. "
+                    "נתח את החלק הזה בהקשרו ואל תמציא מידע שחסר.\n\n" + chunk
+                )
+            reply = query_llm_with_context(
+                chunk_prompt,
+                uid=str(uid) if uid is not None else None,
+            )
+            if reply:
+                replies.append(str(reply))
+        return "\n\n".join(replies) if replies else "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
     except Exception:
         return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
