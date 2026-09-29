@@ -61,6 +61,32 @@ def run_system_checks():
                          "Guard active: token_balance values are intentionally not inspected or modified"))
 
     try:
+        from core.bnb_gate import bnb_readiness
+        br = bnb_readiness()
+        checks.append(_check("bnb_gate", bool(br.get("ready")), "BNB readiness evaluated",
+                             ready=br.get("ready"),
+                             effective_open=br.get("effective_open"),
+                             chain_id=br.get("chain_id"),
+                             confirmations_required=br.get("confirmations_required"),
+                             reasons=br.get("reasons")))
+    except Exception as exc:
+        checks.append(_check("bnb_gate", False, f"{type(exc)}: {exc}"))
+
+    try:
+        from core.ton_deposit_service import deposits_are_open, _settings
+        ton_treasury, ton_rate = _settings()
+        ton_open = deposits_are_open()
+        ton_rate_ok = ton_rate is not None and 100 <= ton_rate <= 110
+        checks.append(_check("ton_gate", bool(ton_open and ton_treasury and ton_rate_ok),
+                             "TON deposit readiness evaluated",
+                             open=ton_open,
+                             treasury_configured=bool(ton_treasury),
+                             rate_valid=ton_rate_ok,
+                             rate=str(ton_rate) if ton_rate is not None else None))
+    except Exception as exc:
+        checks.append(_check("ton_gate", False, f"{type(exc)}: {exc}"))
+
+    try:
         importlib.import_module("core.control_center")
         checks.append(_check("control_center_import", True, "Control Center imports"))
     except Exception as exc:
