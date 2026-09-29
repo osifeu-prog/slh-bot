@@ -45,6 +45,23 @@ async function clickPrimaryNav(page, label) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.Telegram = {
+      WebApp: {
+        initData: 'ui-test-init-data',
+        initDataUnsafe: { user: { id: 777 } },
+        platform: 'tdesktop',
+        version: '9.0',
+        ready() {},
+        expand() {},
+        onEvent() {},
+        offEvent() {},
+        HapticFeedback: { impactOccurred() {}, notificationOccurred() {} },
+        BackButton: { show() {}, hide() {}, onClick() {} },
+        openTelegramLink() {},
+      },
+    };
+  });
   await mockBackend(page);
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
