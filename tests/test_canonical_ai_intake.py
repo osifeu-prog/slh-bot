@@ -64,10 +64,20 @@ class CanonicalAiIntakeTests(unittest.TestCase):
         self.assertTrue(response.get_json()["authenticated"])
         route.assert_called_once_with("מה היתרה?", "777")
 
-    def test_message_length_is_bounded(self):
+    def test_message_length_allows_bounded_long_input(self):
+        with patch("core.ask_router.route", return_value="OK"):
+            response = self.client.post(
+                "/api/ai/chat",
+                json={"message": "x" * 2001},
+                headers={"Origin": "https://slh.co.il"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["reply"], "OK")
+
+    def test_message_length_rejects_over_bound(self):
         response = self.client.post(
             "/api/ai/chat",
-            json={"message": "x" * 2001},
+            json={"message": "x" * 12001},
             headers={"Origin": "https://slh.co.il"},
         )
         self.assertEqual(response.status_code, 400)
