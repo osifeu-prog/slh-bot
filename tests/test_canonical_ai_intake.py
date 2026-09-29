@@ -71,7 +71,7 @@ class CanonicalAiIntakeTests(unittest.TestCase):
             headers={"Origin": "https://slh.co.il"},
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "MESSAGE_TOO_LONG"})
+        self.assertEqual(response.get_json(), {"error": "MESSAGE_TOO_LONG", "max_chars": 12000})
 
 
 if __name__ == "__main__":
