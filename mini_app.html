@@ -1161,7 +1161,6 @@ function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigit
 function __slhRefreshTelegramRuntime(){const w=__slhGetTelegramWebApp();if(!w)return false;try{w.ready();w.expand()}catch(_e){}return !!refreshTelegramAuth()}
 let __slhBootTimer=null;
 let __slhResumeTimer=null;
-let __slhAuthRetryInFlight=false;
 function __slhBootWithRetry(attempt){
   show('home');
   if(__slhRefreshTelegramRuntime()){
