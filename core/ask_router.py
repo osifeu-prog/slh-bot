@@ -9,9 +9,77 @@ from core.economy_service import get_balance_safe
 from handlers.llm_handler import query_llm_with_context
 
 MINI_APP_URL = "https://web-production-22f28.up.railway.app/mini-app"
-AI_MAX_INPUT_CHARS = 4096
-AI_INPUT_TOO_LONG_MESSAGE = "🧠 ההודעה ארוכה מדי לעיבוד AI. קצר אותה לעד 4096 תווים ונסה שוב."
+AI_CHUNK_CHARS = 1400
+AI_MAX_CHUNKS = 8
+AI_CHUNKING_NOTICE = "הבקשה חולקה לחלקים לעיבוד רציף."
 
+
+def normalize_and_chunk_ai_input(text):
+    """Normalize user input and split long requests into LLM-safe chunks."""
+    import unicodedata
+
+    normalized = unicodedata.normalize("NFKC", str(text or ""))
+    normalized = normalized.replace("\x00", "")
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line.rstrip() for line in normalized.split("\n")]
+    normalized = "\n".join(lines).strip()
+    if not normalized:
+        return []
+    if len(normalized) <= AI_CHUNK_CHARS:
+        return [normalized]
+
+    chunks = []
+    remaining = normalized
+    while remaining and len(chunks) < AI_MAX_CHUNKS:
+        if len(remaining) <= AI_CHUNK_CHARS:
+            chunks.append(remaining.strip())
+            remaining = ""
+            break
+        cut = remaining.rfind("\n", 0, AI_CHUNK_CHARS + 1)
+        if cut < AI_CHUNK_CHARS // 2:
+            cut = remaining.rfind(" ", 0, AI_CHUNK_CHARS + 1)
+        if cut < AI_CHUNK_CHARS // 2:
+            cut = AI_CHUNK_CHARS
+        part = remaining[:cut].strip()
+        if part:
+            chunks.append(part)
+        remaining = remaining[cut:].lstrip()
+
+    if remaining:
+        chunks.append(remaining[:AI_CHUNK_CHARS].strip())
+    return [part for part in chunks if part]
+
+
+def _query_chunked_llm(text, uid):
+    chunks = normalize_and_chunk_ai_input(text)
+    if not chunks:
+        return ""
+    if len(chunks) == 1:
+        return query_llm_with_context(chunks[0], uid)
+
+    partials = []
+    total = len(chunks)
+    for index, chunk in enumerate(chunks, 1):
+        prompt = (
+            f"{AI_CHUNKING_NOTICE}\n"
+            f"PART {index}/{total}. Analyze this part and preserve concrete facts. "
+            "Do not invent missing context and do not claim to have executed actions.\n\n"
+            f"{chunk}"
+        )
+        partial = query_llm_with_context(prompt, uid)
+        if partial:
+            partials.append(str(partial))
+
+    if not partials:
+        return ""
+
+    synthesis = (
+        "Synthesize the following sequential analysis fragments into one direct answer "
+        "to the user's original request. Preserve uncertainty and do not invent actions. "
+        "Answer in the user's language.\n\n"
+        + "\n\n--- PARTIAL ANALYSIS ---\n\n".join(partials)
+    )
+    return query_llm_with_context(synthesis, uid)
 
 def _kw_match(kw, text_lower):
     kwl = kw.lower()
@@ -98,9 +166,6 @@ def route(text, uid=None):
             return msg
     elif not bool(guard_result):
         return "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
-
-    if len(str(text or "")) > AI_MAX_INPUT_CHARS:
-        return AI_INPUT_TOO_LONG_MESSAGE
 
     intent = detect_intent(text)
 
@@ -225,6 +290,6 @@ def route(text, uid=None):
                 "services": len(project_context.get("services", [])),
                 "runtime": project_context.get("runtime", {}).get("running", False),
             })
-        return query_llm_with_context(enriched, uid=str(uid) if uid is not None else None)
+        return _query_chunked_llm(enriched, uid=str(uid) if uid is not None else None)
     except Exception:
         return "מנוע ה-AI לא זמין כרגע, נסה שוב מאוחר יותר."
