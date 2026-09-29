@@ -251,22 +251,34 @@ def token_in_use(token, started_tokens):
         return False
     return any(token == existing for existing in started_tokens)
 
+CANONICAL_TELEGRAM_BOT_USERNAME = str(
+    os.getenv("SLH_MAIN_BOT_USERNAME", "Me_ad_main_bot")
+).strip().lstrip("@").casefold()
+
+
 def primary_bot_token_candidates():
     """Return primary Telegram token candidates without exposing their values."""
-    primary_token = str(os.getenv("BOT_TOKEN", "") or "").strip()
     candidates = []
-    if primary_token:
-        candidates.append(("environment", primary_token))
+    seen = set()
+
+    def add(source, value):
+        token = str(value or "").strip()
+        if token and token not in seen:
+            candidates.append((source, token))
+            seen.add(token)
+
+    add("environment", os.getenv("BOT_TOKEN", ""))
     try:
         from core.bot_vault import get_token_by_identity
-        vault_token = str(get_token_by_identity("Me_ad_main_bot") or "").strip()
-        if vault_token and vault_token != primary_token:
-            candidates.append(("bot_vault", vault_token))
+        add("bot_vault", get_token_by_identity(CANONICAL_TELEGRAM_BOT_USERNAME))
     except Exception as exc:
         log(
             "[TELEGRAM] Bot Vault fallback unavailable: "
             f"{type(exc).__name__}: {str(exc)[:80]}"
         )
+
+    for name in ("TOKEN_1", "TOKEN_2", "TOKEN_3"):
+        add(name.lower(), os.getenv(name, ""))
     return candidates
 
 
@@ -320,11 +332,18 @@ if __name__ == "__main__":
             try:
                 bot = telebot.TeleBot(candidate_token, parse_mode=None)
                 bot_identity = bot.get_me()
+                username = str(bot_identity.username or "").strip().lstrip("@")
                 log(
                     "[TELEGRAM] Primary token identity: "
-                    f"@{bot_identity.username or 'no_username'} id={bot_identity.id} "
+                    f"@{username or 'no_username'} id={bot_identity.id} "
                     f"source={token_source}"
                 )
+                if username.casefold() != CANONICAL_TELEGRAM_BOT_USERNAME:
+                    log(
+                        "[TELEGRAM] Candidate belongs to a different bot; "
+                        "skipping primary polling"
+                    )
+                    continue
                 configure_default_mini_app_menu(bot)
                 try:
                     from core.identity import OWNER_TELEGRAM_ID
