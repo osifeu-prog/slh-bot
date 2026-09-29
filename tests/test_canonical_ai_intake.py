@@ -67,7 +67,7 @@ class CanonicalAiIntakeTests(unittest.TestCase):
     def test_message_length_is_bounded(self):
         response = self.client.post(
             "/api/ai/chat",
-            json={"message": "x" * 2001},
+            json={"message": "x" * 4001},
             headers={"Origin": "https://slh.co.il"},
         )
         self.assertEqual(response.status_code, 400)
