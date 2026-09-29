@@ -31,7 +31,11 @@ def register_ask_handler(bot):
             bot.reply_to(msg, "Usage: /ask [question]")
             return
 
-        question = question[:2000]
+        from core.ai_intake import AI_MAX_INPUT_CHARS
+        from core.ask_router import AI_INPUT_TOO_LONG_MESSAGE
+        if len(question) > AI_MAX_INPUT_CHARS:
+            bot.reply_to(msg, AI_INPUT_TOO_LONG_MESSAGE)
+            return
         original_question = question
 
         # Last EXEC output can contain privileged operational data.
