@@ -50,6 +50,8 @@ class AdvancedAskInputTests(unittest.TestCase):
             advanced_ask_handler, "is_owner", return_value=False
         ), patch.object(
             advanced_ask_handler, "normalize_keyboard_text", side_effect=lambda value: value
+        ), patch.object(
+            advanced_ask_handler, "record_turn"
         ):
             handler(message)
 
