@@ -346,7 +346,32 @@ window.addEventListener('DOMContentLoaded',()=>{
 })();
 </script>
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp;const __slhTelegramMiniApp=!!tg;if(tg){tg.ready();tg.expand()}let initData=tg?.initData||"";let headers=initData?{"X-Telegram-Init-Data":initData}:{};function refreshTelegramAuth(){const w=window.Telegram?.WebApp;initData=w?.initData||"";headers=initData?{"X-Telegram-Init-Data":initData}:{};return initData}console.log("[TG-AUTH]",JSON.stringify({webapp:!!tg,initDataLength:initData.length,platform:tg?.platform||"",version:tg?.version||"",userId:tg?.initDataUnsafe?.user?.id||null}));const $=id=>document.getElementById(id);let state={};let _walletConnectProvider=null;let _walletConnectProjectId=null;const __slhStartScreen=new URLSearchParams(window.location.search).get("screen");
+const tg=window.Telegram&&window.Telegram.WebApp;const __slhTelegramMiniApp=!!tg;if(tg){tg.ready();tg.expand()}
+let initData=tg?.initData||"";
+let headers=initData?{"X-Telegram-Init-Data":initData}:{};
+let __slhAuthRevision=0;
+let __slhAuthRefreshInFlight=false;
+function refreshTelegramAuth(){
+  const w=window.Telegram?.WebApp;
+  const next=String(w?.initData||"");
+  const changed=!!next && next!==initData;
+  initData=next;
+  headers=initData?{"X-Telegram-Init-Data":initData}:{};
+  if(changed)__slhAuthRevision++;
+  return initData;
+}
+function __slhAuthLog(reason){
+  try{console.log("[TG-AUTH]",JSON.stringify({
+    reason,
+    webapp:!!window.Telegram?.WebApp,
+    initDataLength:initData.length,
+    authRevision:__slhAuthRevision,
+    platform:window.Telegram?.WebApp?.platform||"",
+    version:window.Telegram?.WebApp?.version||"",
+    userId:window.Telegram?.WebApp?.initDataUnsafe?.user?.id||null
+  }))}catch(_e){}
+}
+__slhAuthLog("boot");const $=id=>document.getElementById(id);let state={};let _walletConnectProvider=null;let _walletConnectProjectId=null;const __slhStartScreen=new URLSearchParams(window.location.search).get("screen");
 function showAuthGate(){const gate=$("authGate");if(gate)gate.hidden=false;document.querySelector(".app")?.setAttribute("aria-hidden","true");document.body.classList.add("auth-required")}
 function hideAuthGate(){const gate=$("authGate");if(gate)gate.hidden=true;document.querySelector(".app")?.removeAttribute("aria-hidden");document.body.classList.remove("auth-required")}
 
@@ -549,7 +574,7 @@ async function loadGrowthHub(){
     }
   }catch(e){setHTML('growthRails','<div class="muted">לא ניתן לטעון כרגע את Growth Hub.</div>')}
 }
-async function loadMe(){if(!initData){showAuthGate();setText("name",'פתח מתוך Telegram');show('home');showAuthDiagnostic('Telegram initData חסר','WebApp: '+(!!tg)+' | initData length: 0');return}try{const stamp=Date.now();const r=await fetch('/api/v1/me?_='+stamp,{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok){showAuthDiagnostic('השרת דחה את /api/v1/me','HTTP '+r.status+' | initData length: '+initData.length+' | error: '+(d.detail||d.error||'unknown'));if(handleApiAuthFailure(r.status,d)){throw Error('AUTH_REQUIRED')}throw Error('ME_HTTP_'+r.status)}document.querySelectorAll('[data-slsh-diag="STUCK"]').forEach(function(el){el.remove()});showAuthDiagnostic('האימות הצליח','HTTP 200 | initData length: '+initData.length+' | userId: '+(tg?.initDataUnsafe?.user?.id||'unknown'));state=d;const w=d.wallet||{},id=d.identity||{},ac=d.academy||{},ts=d.tasks||{};
+async function loadMe(allowAuthRefresh=true){__slhRefreshTelegramRuntime();if(!initData){showAuthGate("TELEGRAM_INIT_DATA_MISSING");setText("name",'פתח מתוך Telegram');show('home');showAuthDiagnostic('Telegram initData חסר','WebApp: '+(!!tg)+' | initData length: 0');return}try{const stamp=Date.now();const r=await fetch('/api/v1/me?_='+stamp,{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok){showAuthDiagnostic('השרת דחה את /api/v1/me','HTTP '+r.status+' | initData length: '+initData.length+' | error: '+(d.detail||d.error||'unknown'));if(r.status===401 && allowAuthRefresh){const before=initData;__slhRefreshTelegramRuntime();if(initData && initData!==before){hideAuthGate();return await loadMe(false)}}if(handleApiAuthFailure(r.status,d)){throw Error('AUTH_REQUIRED')}throw Error('ME_HTTP_'+r.status)}document.querySelectorAll('[data-slsh-diag="STUCK"]').forEach(function(el){el.remove()});showAuthDiagnostic('האימות הצליח','HTTP 200 | initData length: '+initData.length+' | userId: '+(tg?.initDataUnsafe?.user?.id||'unknown'));state=d;const w=d.wallet||{},id=d.identity||{},ac=d.academy||{},ts=d.tasks||{};
 setText("name",id.display_name||d.name||'Telegram user');
 setText("credits",fmt(w.credits));
 setText("token",fmt(w.live_token_balance??w.token_balance));
@@ -1135,6 +1160,8 @@ async function sendSlhOnChain(){
 function fmt(v){return Number(v||0).toLocaleString('en-US',{maximumFractionDigits:4})}function setText(id,v){const el=document.getElementById(id);if(el)el.textContent=v}function setHTML(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}async function refreshAll(){await loadMe();if($("exchange")?.classList.contains('active'))await loadExchange();toast('הנתונים עודכנו')}function __slhGetTelegramWebApp(){return window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null}
 function __slhRefreshTelegramRuntime(){const w=__slhGetTelegramWebApp();if(!w)return false;try{w.ready();w.expand()}catch(_e){}return !!refreshTelegramAuth()}
 let __slhBootTimer=null;
+let __slhResumeTimer=null;
+let __slhAuthRetryInFlight=false;
 function __slhBootWithRetry(attempt){
   show('home');
   if(__slhRefreshTelegramRuntime()){
@@ -1147,11 +1174,39 @@ function __slhBootWithRetry(attempt){
     __slhBootTimer=setTimeout(()=>__slhBootWithRetry(attempt+1),250);
     return;
   }
-  showAuthGate();
+  showAuthGate("TELEGRAM_INIT_DATA_MISSING");
   setText('name','נדרש לפתוח מתוך Telegram');
 }
+async function __slhResumeTelegramSession(reason){
+  if(__slhAuthRefreshInFlight)return false;
+  __slhAuthRefreshInFlight=true;
+  try{
+    const before=initData;
+    const refreshed=__slhRefreshTelegramRuntime();
+    const changed=!!refreshed && refreshed!==before;
+    __slhAuthLog(reason||"resume");
+    if(changed){
+      hideAuthGate();
+      await loadMe(false);
+      return true;
+    }
+    if(!initData){
+      showAuthGate("TELEGRAM_INIT_DATA_MISSING");
+      return false;
+    }
+    return true;
+  }catch(e){
+    console.log("[TG-AUTH] resume failed",typeOfError(e));
+    return false;
+  }finally{
+    __slhAuthRefreshInFlight=false;
+  }
+}
+function typeOfError(e){return e?.name||e?.message||"Error"}
 __slhBootWithRetry(0);
 window.addEventListener('load',function(){__slhRefreshTelegramRuntime();});
+window.addEventListener('focus',function(){clearTimeout(__slhResumeTimer);__slhResumeTimer=setTimeout(()=>__slhResumeTelegramSession("window-focus"),120);});
+document.addEventListener('visibilitychange',function(){if(!document.hidden){clearTimeout(__slhResumeTimer);__slhResumeTimer=setTimeout(()=>__slhResumeTelegramSession("visibility-resume"),120);}});
 
 async function sendTransferViaApi(){
   if(!initData){toast('פתח מתוך Telegram');return}
