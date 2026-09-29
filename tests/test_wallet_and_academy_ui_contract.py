@@ -27,6 +27,15 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("ton_sign_data", Path("core/ton_wallet_binding.py").read_text(encoding="utf-8"))
 
 
+
+    def test_mini_app_refreshes_telegram_session_on_resume_and_retries_auth(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("visibilitychange", source)
+        self.assertIn("window.addEventListener('focus'", source)
+        self.assertIn("__slhResumeTelegramSession", source)
+        self.assertIn("loadMe(false)", source)
+        self.assertIn("X-Telegram-Init-Data", Path("webapp.py").read_text(encoding="utf-8"))
+
     def test_ton_connect_does_not_redirect_to_noncanonical_bot(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("SLH_AIR_bot", source)
