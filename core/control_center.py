@@ -127,12 +127,14 @@ def get_release_state():
         result["warnings"].append("system_check_unavailable")
         result["diagnostics"] = {"system_check_error": type(exc).__name__}
     try:
-        from core.alpha_control_plane import evaluate
+        from core.alpha_control_plane import alpha_state, evaluate
         alpha = evaluate() or {}
         result["alpha"] = alpha
         alpha_status = str(alpha.get("status", "")).upper()
         result["readiness"]["alpha"] = "READY" if alpha_status == "READY" else "BLOCKED" if alpha_status == "BLOCKED" else "DEGRADED"
-        result["current_state"]["alpha"] = "OPEN" if alpha.get("open") is True else "CLOSED" if alpha.get("open") is False else "UNKNOWN"
+        alpha_runtime = alpha_state() or {}
+        alpha_status = str(alpha_runtime.get("status", "")).upper()
+        result["current_state"]["alpha"] = "OPEN" if alpha_status == "OPEN" else "CLOSED" if alpha_status else "UNKNOWN"
     except Exception as exc:
         result["readiness"]["alpha"] = "DEGRADED"
         result["warnings"].append("alpha_control_plane_unavailable")
@@ -142,8 +144,6 @@ def get_release_state():
         bnb = bnb_readiness() or {}
         result["bnb"] = bnb
         result["current_state"]["bnb_settlement"] = "OPEN" if bnb.get("effective_open") is True else "CLOSED"
-        if bnb.get("effective_open") is not True:
-            result["warnings"].append("bnb_settlement_closed")
     except Exception as exc:
         result["warnings"].append("bnb_gate_unavailable")
         result["diagnostics"] = {"bnb_error": type(exc).__name__}
@@ -151,8 +151,6 @@ def get_release_state():
         from core.ton_deposit_service import deposits_are_open
         ton_open = bool(deposits_are_open())
         result["current_state"]["ton_settlement"] = "OPEN" if ton_open else "CLOSED"
-        if not ton_open:
-            result["warnings"].append("ton_settlement_closed")
     except Exception as exc:
         result["warnings"].append("ton_gate_unavailable")
         result["diagnostics"] = {"ton_error": type(exc).__name__}
