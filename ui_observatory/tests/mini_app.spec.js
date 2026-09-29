@@ -46,6 +46,30 @@ async function clickPrimaryNav(page, label) {
 
 test.beforeEach(async ({ page }) => {
   await mockBackend(page);
+
+  // The production Mini App requires Telegram WebApp initData.
+  // Stub the Telegram runtime in-browser so the observatory exercises the
+  // authenticated UI surface without disabling or bypassing server auth.
+  await page.route('https://telegram.org/js/telegram-web-app.js', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: [
+        'window.Telegram = { WebApp: {',
+        '  initData: "ui-test-init-data",',
+        '  initDataUnsafe: { user: { id: 100 } },',
+        '  platform: "test",',
+        '  version: "7.0",',
+        '  ready: function(){}, expand: function(){},',
+        '  HapticFeedback: { impactOccurred: function(){}, notificationOccurred: function(){} },',
+        '  openTelegramLink: function(){}, openInvoice: function(){},',
+        '  setHeaderColor: function(){}, setBackgroundColor: function(){},',
+        '  colorScheme: "dark", themeParams: {}',
+        '} };'
+      ].join('\\n')
+    });
+  });
+
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
 });
