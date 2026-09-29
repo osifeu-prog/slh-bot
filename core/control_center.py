@@ -98,3 +98,68 @@ def get_full_system_map():
     snapshot = get_system_snapshot()
     snapshot["verification"] = run_system_checks()
     return snapshot
+
+def get_release_state():
+    """Read-only aggregate of release readiness and current operating gates."""
+    result = {
+        "overall": "DEGRADED",
+        "readiness": {"code": "UNKNOWN", "runtime": "UNKNOWN", "alpha": "UNKNOWN", "deployment": "UNKNOWN"},
+        "current_state": {"alpha": "UNKNOWN", "bnb_settlement": "CLOSED", "ton_settlement": "CLOSED"},
+        "ci": {"hosted": "UNKNOWN", "self_hosted": "UNKNOWN"},
+        "blockers": [], "warnings": [], "auto_actions": [], "owner_actions": [],
+        "scope": "read_only",
+    }
+    try:
+        from core.system_check import run_system_checks
+        checks = run_system_checks() or {}
+        result["system_check"] = checks
+        status = str(checks.get("status", "")).upper()
+        if status in {"PASS", "READY", "GREEN"}:
+            result["readiness"]["runtime"] = "READY"
+        elif status in {"FAIL", "BLOCKED"}:
+            result["readiness"]["runtime"] = "BLOCKED"
+            result["blockers"].append("system_check")
+        else:
+            result["readiness"]["runtime"] = "DEGRADED"
+            result["warnings"].append("system_check_status_unknown")
+    except Exception as exc:
+        result["readiness"]["runtime"] = "DEGRADED"
+        result["warnings"].append("system_check_unavailable")
+        result["diagnostics"] = {"system_check_error": type(exc).__name__}
+    try:
+        from core.alpha_control_plane import evaluate
+        alpha = evaluate() or {}
+        result["alpha"] = alpha
+        alpha_status = str(alpha.get("status", "")).upper()
+        result["readiness"]["alpha"] = "READY" if alpha_status == "READY" else "BLOCKED" if alpha_status == "BLOCKED" else "DEGRADED"
+        result["current_state"]["alpha"] = "OPEN" if alpha.get("open") is True else "CLOSED" if alpha.get("open") is False else "UNKNOWN"
+    except Exception as exc:
+        result["readiness"]["alpha"] = "DEGRADED"
+        result["warnings"].append("alpha_control_plane_unavailable")
+        result["diagnostics"] = {"alpha_error": type(exc).__name__}
+    try:
+        from core.bnb_gate import bnb_readiness
+        bnb = bnb_readiness() or {}
+        result["bnb"] = bnb
+        result["current_state"]["bnb_settlement"] = "OPEN" if bnb.get("effective_open") is True else "CLOSED"
+        if bnb.get("effective_open") is not True:
+            result["warnings"].append("bnb_settlement_closed")
+    except Exception as exc:
+        result["warnings"].append("bnb_gate_unavailable")
+        result["diagnostics"] = {"bnb_error": type(exc).__name__}
+    try:
+        from core.ton_deposit_service import deposits_are_open
+        ton_open = bool(deposits_are_open())
+        result["current_state"]["ton_settlement"] = "OPEN" if ton_open else "CLOSED"
+        if not ton_open:
+            result["warnings"].append("ton_settlement_closed")
+    except Exception as exc:
+        result["warnings"].append("ton_gate_unavailable")
+        result["diagnostics"] = {"ton_error": type(exc).__name__}
+    result["infrastructure"] = get_infrastructure_snapshot()
+    if result["infrastructure"].get("non_green_application_services", 0):
+        result["warnings"].append("non_green_application_services")
+    result["readiness"]["code"] = "BLOCKED" if result["blockers"] else "READY" if result["readiness"]["runtime"] == "READY" else "DEGRADED"
+    result["readiness"]["deployment"] = "READY" if get_deployment_state().get("commit") != "unknown" else "UNKNOWN"
+    result["overall"] = "BLOCKED" if result["blockers"] else "DEGRADED" if result["warnings"] else "GREEN"
+    return result
