@@ -170,6 +170,21 @@ def get_token(username: str) -> str:
         raise ValueError("VAULT_ENTRY_CORRUPT")
     return _fernet().decrypt(token_enc.encode()).decode()
 
+def get_token_by_identity(username: str) -> str:
+    """Resolve a vault token by case-insensitive Telegram username."""
+    wanted = str(username or "").strip().lstrip("@").casefold()
+    if not wanted:
+        raise ValueError("BOT_NOT_IN_VAULT")
+    vault = state_manager.load_db().get("bot_vault") or {}
+    for key, entry in vault.items():
+        stored = str((entry or {}).get("username") or key).strip().lstrip("@").casefold()
+        if stored == wanted:
+            token_enc = str((entry or {}).get("token_enc") or "")
+            if not token_enc:
+                raise ValueError("VAULT_ENTRY_CORRUPT")
+            return _fernet().decrypt(token_enc.encode()).decode()
+    raise ValueError("BOT_NOT_IN_VAULT")
+
 
 def health(username: str) -> dict:
     token = get_token(username)
