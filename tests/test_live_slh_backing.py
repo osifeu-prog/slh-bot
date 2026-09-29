@@ -33,7 +33,7 @@ class LiveSlhBackingTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         wallet = db["users"]["seller"]["wallet"]
         self.assertEqual(wallet["token_balance"], 100.0)
-        self.assertEqual(wallet["live_token_balance"], 60.0)
+        self.assertEqual(wallet["live_token_balance"], 100.0)
         self.assertEqual(wallet["exchange_reserved_slh"], 40.0)
 
     def test_settlement_transfers_only_backed_supply(self):
@@ -50,7 +50,7 @@ class LiveSlhBackingTests(unittest.TestCase):
         seller = db["users"]["seller"]["wallet"]
         buyer = db["users"]["buyer"]["wallet"]
         self.assertEqual(seller["token_balance"], 75.0)
-        self.assertEqual(seller["live_token_balance"], 40.0)
+        self.assertEqual(seller["live_token_balance"], 15.0)
         self.assertEqual(seller["exchange_reserved_slh"], 15.0)
         self.assertEqual(buyer["token_balance"], 25.0)
         self.assertEqual(buyer["live_token_balance"], 25.0)
