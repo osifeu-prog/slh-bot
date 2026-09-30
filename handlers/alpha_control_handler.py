@@ -3,7 +3,7 @@ from core.alpha_control_plane import evaluate, format_report, open_alpha, alpha_
 
 
 def register(bot, context=None):
-    @bot.message_handler(commands=["alpha_status"])
+    @bot.message_handler(commands=["alpha", "alpha_status"])
     def alpha_status_cmd(m):
         if not is_owner(m.from_user.id):
             bot.reply_to(m, "⛔️ Owner only.")
