@@ -25,14 +25,23 @@ jobs:
         working-directory: ui_observatory
         run: npm install
       - name: Install Chromium runtime dependency
+        shell: bash
         run: |
           set -euo pipefail
-          if command -v sudo >/dev/null 2>&1; then
-            sudo -n apt-get update
-            sudo -n apt-get install -y libnspr4
+          if ldconfig -p 2>/dev/null | grep -q 'libnspr4\.so'; then
+            echo "libnspr4 already available"
           else
-            apt-get update
-            apt-get install -y libnspr4
+            mkdir -p "$RUNNER_TEMP/nspr"
+            (sudo -n apt-get update && sudo -n apt-get install -y libnspr4) || {
+              echo "sudo apt install unavailable; using unprivileged package extraction"
+              mkdir -p "$RUNNER_TEMP/nspr-download"
+              cd "$RUNNER_TEMP/nspr-download"
+              apt-get download libnspr4
+              deb="$(ls libnspr4_*.deb | head -n 1)"
+              test -n "$deb"
+              dpkg-deb -x "$deb" "$RUNNER_TEMP/nspr"
+              echo "LD_LIBRARY_PATH=$RUNNER_TEMP/nspr/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+            }
           fi
 
       - name: Install Playwright browser
