@@ -606,6 +606,9 @@ async function loadWalletBindings(){
     $('tonBindingStatus')?.classList.toggle('ok', !!tb);
     $('tonBindingStatus')?.classList.toggle('pending', !tb);
     setText('tonBindingAddress', tb ? esc(tb.address) : 'אין ארנק TON מאומת');
+    const tonTx=$('tonTxHash'); const tonBtn=$('tonClaimButton');
+    if(tonTx) tonTx.disabled=!ton.deposits_open;
+    if(tonBtn) tonBtn.disabled=!ton.deposits_open;
     // Keep the wallet summary in sync with the authoritative TON binding endpoint.
     setText('ton', tb ? esc(tb.address) : 'לא מקושר');
     if($('tonDepositInfo')){
