@@ -7,13 +7,13 @@ protocol is implemented for TON deposits.
 
 
 def register(bot):
-    @bot.message_handler(commands=["claim_ton"])
+    @bot.message_handler(commands=["claim_ton", "ton_claim"])
     def claim_ton_cmd(msg):
         bot.reply_to(
             msg,
-            "⛔ /claim_ton מושבת זמנית.\n"
-            "הפקדות TON חייבות לעבור במסלול המאומת /ton_check עם TX hash.\n"
-            "זיהוי בעלות על הפקדת TON עדיין דורש מנגנון binding ייעודי."
+            "⛔ TON claim legacy route is disabled.\n"
+            "הפקדות TON עוברות במסלול המאומת /ton_check עם TX hash.\n"
+            "חיבור/אימות ארנק TON מתבצע דרך Mini App + TON Connect."
         )
 
     print("⚠️ legacy ton_claim_handler loaded (claim disabled)")
