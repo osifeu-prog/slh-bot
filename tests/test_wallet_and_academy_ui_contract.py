@@ -18,6 +18,8 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
     def test_ton_challenge_uses_canonical_manifest_domain(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("const domain=window.location.hostname", source)
+        self.assertNotIn("domain:window.location.hostname", source)
+        self.assertIn("body:JSON.stringify({domain:'slh-nft.com'})", source)
         self.assertIn("slh-nft.com/tonconnect-manifest.json", source)
 
     def test_ton_connect_has_sign_data_fallback(self):
