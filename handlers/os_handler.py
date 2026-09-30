@@ -71,12 +71,12 @@ def register(bot, context=None):
 """
 
         menu = (
-            "CORE: /start /os /status /help /miniapp /dashboard /ask\n"
-            "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"
-            "ALPHA: /alpha /academy /share /rewards /task /journal\n"
-            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs\n"
+            "CORE: /start /os /status /help /allcommands /miniapp /dashboard /ask\n"
+            "MONEY: /wallet /balance /transfer /stake /staking /positions /rewards /exchange /orders /trades /withdraw\n"
+            "ALPHA: /alpha_status /alpha_open /alpha_state /academy /share /rewards /task /journal\n"
+            "CONTROL: /system /map /services /agents /control /project /deploy /redeploy /logs\n"
             "SECURITY: /vault /vault_verify /vault_health /vault_log\n"
-            "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"
+            "CHAIN: /ton_address /ton_deposit /ton_check /ton_paid /ton_balance /claim /deposit_address /settlement_status\n"
             "DEV: /e /exec"
         )
         bot.reply_to(message, header + menu)
