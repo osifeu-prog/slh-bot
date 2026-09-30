@@ -580,11 +580,11 @@ async function loadWalletBindings(){
     if(handleApiAuthFailure(bnbResp.status,bnb)||handleApiAuthFailure(tonResp.status,ton)) return;
     const bb = bnb.binding || null;
     const tb = ton.binding || null;
+    const depositsOpen=!!bnb.deposits_open;
     setText('bnbBindingStatus', bb ? (depositsOpen ? '✅ מאומת · Deposit פתוח' : '🔒 מאומת · Settlement סגור') : '⚠️ לא אומת');
     $('bnbBindingStatus')?.classList.toggle('ok', !!bb);
     $('bnbBindingStatus')?.classList.toggle('pending', !bb);
     setText('bnbBindingAddress', bb ? esc(bb.address) : 'אין ארנק BNB מאומת');
-    const depositsOpen=!!bnb.deposits_open;
     const depInfo=$('bnbDepositInfo');
     const depHash=$('bnbTxHash');
     const depBtn=$('bnbClaimButton');
