@@ -138,14 +138,15 @@ def _page(name):
             "/task — task management\n"
             "/mission — mission control\n"
             "/progress — progress\n"
-            "/monitor_list — monitoring registry\n            /monitor_status — monitoring status\n            /monitor_logs — monitoring logs"
+            "/monitor_list — monitoring registry\n"
+            "/monitor_status — monitoring status\n"
+            "/monitor_logs — monitoring logs"
         ),
         "alpha": (
             "🎯 ALPHA CONTROL\n\n"
             "/alpha_status — canonical Alpha evaluation\n"
             "/alpha_state — current Alpha state\n"
             "/alpha_open — OWNER-only open transition\n"
-            ""
         ),
         "economy": (
             "💰 ECONOMY / WALLET\n\n"
@@ -163,7 +164,12 @@ def _page(name):
             "/stake_lock — locked staking\n"
             "/revenue — revenue-share surface\n"
             "/ton_balance — TON balance\n"
-            "/revenue_reconcile — revenue reconciliation\n            /revenue_audit — revenue audit\n            /ton_address — TON deposit address + memo\n            /ton_deposit — TON deposit address alias\n            /ton_check <TX hash> — verify one TON transaction\n            /ton_paid — scan recent qualifying TON deposits\n"
+            "/revenue_reconcile — revenue reconciliation\n"
+            "/revenue_audit — revenue audit\n"
+            "/ton_address — TON deposit address + memo\n"
+            "/ton_deposit — TON deposit address alias\n"
+            "/ton_check <TX hash> — verify one TON transaction\n"
+            "/ton_paid — scan recent qualifying TON deposits\n"
             "Read/modify actions remain permission-gated."
         ),
         "devices": (
@@ -223,7 +229,9 @@ def _page(name):
             "/map — system map\n"
             "/services — registered services\n"
             "/project — project information\n"
-            "/monitor — monitoring\n"
+            "/monitor_list — monitoring registry\n"
+            "/monitor_status — monitoring status\n"
+            "/monitor_logs — monitoring logs\n"
             "/health_monitor — health monitor"
         ),
         "dev": (
