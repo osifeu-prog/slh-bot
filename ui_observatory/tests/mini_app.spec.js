@@ -12,6 +12,26 @@ const screens = [
   ['academy', '🎓 Academy'],
 ];
 
+async function mockTelegramWebApp(page) {
+  await page.route('https://telegram.org/js/telegram-web-app.js', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `window.Telegram={WebApp:{
+        initData:'ui-test-init-data',
+        initDataUnsafe:{user:{id:999999999}},
+        platform:'test',
+        version:'8.0',
+        ready:function(){},
+        expand:function(){},
+        close:function(){},
+        openTelegramLink:function(){},
+        openInvoice:function(){}
+      }};`,
+    });
+  });
+}
+
 async function mockBackend(page) {
   await page.route('**/api/**', async route => {
     const url = new URL(route.request().url());
@@ -45,6 +65,9 @@ async function clickPrimaryNav(page, label) {
 }
 
 test.beforeEach(async ({ page }) => {
+  // The production Mini App must require real Telegram initData.
+  // The browser test supplies a deterministic Telegram WebApp stub and mocks API calls.
+  await mockTelegramWebApp(page);
   await mockBackend(page);
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
