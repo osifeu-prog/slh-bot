@@ -83,10 +83,11 @@ def _correlate_release_evidence(result):
         result["evidence"]["ci"] = "COLLECTED"
 
     deployment = evidence.get("deployment", {}) if isinstance(evidence.get("deployment", {}), dict) else {}
-    if deployment.get("status") == "SUCCESS":
+    deployment_source = deployment.get("source", "EXTERNAL_VERIFIED")
+    if deployment.get("status") == "SUCCESS" and deployment_source != "github_handoff":
         result["readiness"]["deployment"] = "READY"
         result["evidence"]["deployment"] = "COLLECTED"
-        result["deployment_verification"] = deployment.get("source", "EXTERNAL_VERIFIED")
+        result["deployment_verification"] = deployment_source
 
 
 def get_infrastructure_snapshot():
