@@ -3,6 +3,29 @@ from core.authority import has_permission
 
 gateway = SLHGateway()
 
+MAX_TELEGRAM_MESSAGE = 3500
+
+
+def _send_chunked(bot, message, text):
+    text = str(text or "(no output)")
+    if len(text) <= MAX_TELEGRAM_MESSAGE:
+        bot.reply_to(message, text)
+        return
+
+    chunks = [
+        text[i:i + MAX_TELEGRAM_MESSAGE]
+        for i in range(0, len(text), MAX_TELEGRAM_MESSAGE)
+    ]
+    total = len(chunks)
+    for index, chunk in enumerate(chunks, 1):
+        prefix = f"🌐 Gateway Status · {index}/{total}\n\n"
+        if len(prefix) + len(chunk) > 4096:
+            chunk = chunk[: 4096 - len(prefix)]
+        if index == 1:
+            bot.reply_to(message, prefix + chunk)
+        else:
+            bot.send_message(message.chat.id, prefix + chunk)
+
 
 def register(bot):
     @bot.message_handler(commands=["gateway"])
@@ -17,12 +40,9 @@ def register(bot):
                 cmd="status",
                 payload={"user_id": message.chat.id},
             )
-            bot.reply_to(
-                message,
-                f"🌐 SLH Gateway Status:\n\n{result}",
-            )
+            _send_chunked(bot, message, f"🌐 SLH Gateway Status:\n\n{result}")
         except Exception as e:
-            bot.reply_to(message, f"❌ Gateway error: {e}")
+            _send_chunked(bot, message, f"❌ Gateway error: {e}")
 
 
     @bot.message_handler(commands=["gateway_test"])
@@ -37,6 +57,6 @@ def register(bot):
                 cmd="telegram:test",
                 payload={"user_id": message.chat.id},
             )
-            bot.reply_to(message, str(result))
+            _send_chunked(bot, message, result)
         except Exception as e:
-            bot.reply_to(message, f"❌ Gateway test failed: {e}")
+            _send_chunked(bot, message, f"❌ Gateway test failed: {e}")
