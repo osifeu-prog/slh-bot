@@ -1,6 +1,6 @@
 import unittest
 
-from core.control_center import build_action, build_evidence
+from core.control_center import build_action, build_evidence, classify_action
 
 
 class TestEvidenceContract(unittest.TestCase):
@@ -80,6 +80,33 @@ class TestEvidenceContract(unittest.TestCase):
                 mutation=True,
                 owner_required=True,
             )
+
+    def test_known_read_only_action_is_auto_safe(self):
+        record = classify_action(
+            "collect_ci_evidence",
+            "Collect existing CI evidence.",
+        )
+        self.assertEqual(record["safe"], True)
+        self.assertEqual(record["mutation"], False)
+        self.assertEqual(record["owner_required"], False)
+
+    def test_known_sensitive_action_requires_owner(self):
+        record = classify_action(
+            "complete_bnb_opening_evidence",
+            "Complete BNB opening evidence.",
+        )
+        self.assertEqual(record["safe"], False)
+        self.assertEqual(record["mutation"], True)
+        self.assertEqual(record["owner_required"], True)
+
+    def test_unknown_action_fails_closed_to_owner_required(self):
+        record = classify_action(
+            "future_action_not_yet_reviewed",
+            "This action has not been reviewed.",
+        )
+        self.assertEqual(record["safe"], False)
+        self.assertEqual(record["mutation"], True)
+        self.assertEqual(record["owner_required"], True)
 
 
 if __name__ == "__main__":
