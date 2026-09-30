@@ -487,6 +487,44 @@ def register_payment_handlers(bot):
             print(f"[ORDERS] recovery/status error: {type(exc).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לטעון כרגע את סטטוס ההזמנות.")
 
+    @bot.message_handler(commands=['orderstatus'])
+    def orderstatus(m):
+        """Compatibility alias for the canonical Stars order-status command."""
+        my_orders(m)
+
+    @bot.message_handler(commands=['inventory', 'my_items'])
+    def inventory(m):
+        """Show digital entitlements already granted to the current user."""
+        uid = str(m.from_user.id)
+        try:
+            db = state_manager.load_db()
+            user = (db.get("users") or {}).get(uid, {})
+            digital = ((user.get("inventory") or {}).get("digital") or [])
+            if not digital:
+                bot.send_message(m.chat.id, "🎁 אין כרגע מוצרים דיגיטליים בחשבון שלך.")
+                return
+
+            item_names = {}
+            try:
+                with open("store/items.json", encoding="utf-8") as fh:
+                    catalog = json.load(fh)
+                if isinstance(catalog, dict):
+                    for item_id, item in catalog.items():
+                        if isinstance(item, dict):
+                            item_names[str(item_id)] = str(item.get("name") or item_id)
+            except Exception:
+                item_names = {}
+
+            lines = ["🎁 המוצרים הדיגיטליים שלך:"]
+            for item_id in digital:
+                item_id = str(item_id)
+                lines.append(f"• {item_names.get(item_id, item_id)}")
+            lines.append("\n📦 רכישה חדשה תופיע כאן לאחר השלמת התשלום.")
+            bot.send_message(m.chat.id, "\\n".join(lines))
+        except Exception as exc:
+            print(f"[INVENTORY] read error: {type(exc).__name__}")
+            bot.send_message(m.chat.id, "⚠️ לא ניתן לטעון כרגע את המוצרים שלך.")
+
     @bot.message_handler(commands=['paysupport'])
     def paysupport(m):
         bot.send_message(m.chat.id, "💳 SLH Payment Support\nFor a payment issue, send the payment date/time, Stars amount, and payment reference if available.")
