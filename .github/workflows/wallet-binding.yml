@@ -1,5 +1,9 @@
 name: SLH Wallet Binding Boundary
 
+concurrency:
+  group: slh-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     paths:
@@ -21,7 +25,7 @@ on:
 
 jobs:
   wallet-binding:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     env:
       PYTHONPATH: .
     steps:

@@ -12,6 +12,29 @@ const screens = [
   ['academy', '🎓 Academy'],
 ];
 
+async function mockTelegramWebApp(page) {
+  await page.route('https://telegram.org/js/telegram-web-app.js', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `window.Telegram={WebApp:{
+        initData:'ui-test-init-data',
+        initDataUnsafe:{user:{id:999999999}},
+        platform:'test',
+        version:'8.0',
+        ready:function(){},
+        expand:function(){},
+        close:function(){},
+        openTelegramLink:function(){},
+        openInvoice:function(){},
+        showPopup:function(){},
+        BackButton:{show:function(){},hide:function(){},onClick:function(){}},
+        HapticFeedback:{notificationOccurred:function(){}}
+      }};`,
+    });
+  });
+}
+
 async function mockBackend(page) {
   await page.route('**/api/**', async route => {
     const url = new URL(route.request().url());
@@ -41,13 +64,33 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 }
 
 async function clickPrimaryNav(page, label) {
-  await page.locator('.nav').getByRole('button', { name: label, exact: true }).click();
+  const desktopButton = page.locator('.nav').getByRole('button', { name: label, exact: true });
+  if (await desktopButton.isVisible().catch(() => false)) {
+    await desktopButton.click();
+    return;
+  }
+  const screenByLabel = Object.fromEntries(screens.map(([id, text]) => [text, id]));
+  const id = screenByLabel[label];
+  const bottomId = { home: 'bh', wallet: 'bw', transfer: 'bt' }[id];
+  if (bottomId) {
+    await page.locator('#' + bottomId).click();
+    return;
+  }
+  await page.locator('#bmore').click();
+  await page.locator('.more-grid button').filter({ hasText: label }).click();
 }
 
 test.beforeEach(async ({ page }) => {
+  // The production Mini App must require real Telegram initData.
+  // The browser test supplies a deterministic Telegram WebApp stub and mocks API calls.
+  await mockTelegramWebApp(page);
   await mockBackend(page);
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => window.Telegram?.WebApp?.initData === 'ui-test-init-data');
+  await expect(page.locator('#authGate')).toBeHidden();
+  await expect(page.locator('.app')).toBeVisible();
+  await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
 });
 
 test('all primary screens are reachable', async ({ page }) => {
