@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REGISTRY_FILE = Path("control_plane_registry.json")
+RELEASE_EVIDENCE_ENV = "SLH_RELEASE_EVIDENCE_JSON"
 
 
 def _load_json(path, default):
@@ -31,6 +32,60 @@ def get_deployment_state():
         "environment": os.getenv("RAILWAY_ENVIRONMENT", "production"),
         "deployment_id": os.getenv("RAILWAY_DEPLOYMENT_ID", "unknown"),
     }
+
+
+def _load_release_evidence():
+    """Load optional externally collected, read-only release evidence."""
+    raw = os.getenv(RELEASE_EVIDENCE_ENV, "").strip()
+    if not raw:
+        return {}
+    try:
+        evidence = json.loads(raw)
+    except (TypeError, ValueError):
+        return {}
+    return evidence if isinstance(evidence, dict) else {}
+
+
+def _correlate_release_evidence(result):
+    """Apply only evidence explicitly supplied for the running commit."""
+    evidence = _load_release_evidence()
+    current_sha = get_deployment_state().get("commit", "unknown")
+    result["release_evidence"] = {
+        "source": "environment",
+        "variable": RELEASE_EVIDENCE_ENV,
+        "sha": evidence.get("sha", "unknown"),
+        "matching_sha": bool(
+            current_sha != "unknown"
+            and evidence.get("sha")
+            and evidence.get("sha") == current_sha
+        ),
+    }
+
+    if not evidence:
+        return
+
+    evidence_sha = evidence.get("sha")
+    if not evidence_sha or current_sha == "unknown":
+        result["warnings"].append("release_evidence_sha_unavailable")
+        return
+    if evidence_sha != current_sha:
+        result["warnings"].append("release_evidence_sha_mismatch")
+        result["release_evidence"]["status"] = "STALE"
+        return
+
+    result["release_evidence"]["status"] = "MATCHED"
+
+    ci = evidence.get("ci", {}) if isinstance(evidence.get("ci", {}), dict) else {}
+    if ci.get("status") in {"PASS", "SUCCESS"}:
+        result["readiness"]["ci"] = "READY"
+        result["readiness"]["tests"] = "READY" if ci.get("tests_passed", True) else "DEGRADED"
+        result["readiness"]["code"] = "READY" if ci.get("code_validated", True) else "DEGRADED"
+        result["evidence"]["ci"] = "COLLECTED"
+
+    deployment = evidence.get("deployment", {}) if isinstance(evidence.get("deployment", {}), dict) else {}
+    if deployment.get("status") == "SUCCESS":
+        result["readiness"]["deployment"] = "READY"
+        result["evidence"]["deployment"] = "COLLECTED"
 
 
 def get_infrastructure_snapshot():
@@ -89,7 +144,6 @@ def get_system_snapshot():
         "deployment": get_deployment_state(),
         "infrastructure": get_infrastructure_snapshot(),
     }
-
 
 
 def get_full_system_map():
@@ -221,6 +275,8 @@ def get_release_state():
         "collect_ci_evidence",
         "collect_new_user_join_e2e_evidence",
     ])
+
+    _correlate_release_evidence(result)
 
     readiness_values = result["readiness"].values()
     if result["blockers"]:
