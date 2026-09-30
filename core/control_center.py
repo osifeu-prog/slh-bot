@@ -10,6 +10,11 @@ RELEASE_EVIDENCE_ENV = "SLH_RELEASE_EVIDENCE_JSON"
 
 EVIDENCE_STATUSES = {"PASS", "FAIL", "PENDING", "STALE", "UNKNOWN"}
 EVIDENCE_SCOPES = {"read_only", "isolated", "runtime", "external"}
+ACTION_POLICIES = {
+    "collect_ci_evidence": {"safe": True, "mutation": False, "owner_required": False},
+    "collect_new_user_join_e2e_evidence": {"safe": False, "mutation": True, "owner_required": True},
+    "complete_bnb_opening_evidence": {"safe": False, "mutation": True, "owner_required": True},
+}
 
 
 def build_evidence(*, sha, domain, status, source, scope):
@@ -50,6 +55,20 @@ def build_action(*, action, reason, safe, mutation=False, owner_required=False):
     if record["safe"] and record["mutation"]:
         raise ValueError("safe actions must be non-mutating")
     return record
+
+
+def classify_action(action, reason):
+    """Classify a proposed action without executing it; unknown actions fail closed."""
+    policy = ACTION_POLICIES.get(str(action or "").strip())
+    if policy is None:
+        return build_action(
+            action=action,
+            reason=reason,
+            safe=False,
+            mutation=True,
+            owner_required=True,
+        )
+    return build_action(action=action, reason=reason, **policy)
 
 
 def _load_json(path, default):
@@ -360,6 +379,21 @@ def get_release_state():
     ])
 
     _correlate_release_evidence(result)
+
+    action_reasons = {
+        "collect_ci_evidence": "CI runs are complete but release evidence is not yet correlated.",
+        "collect_new_user_join_e2e_evidence": "New-user /join end-to-end evidence is still pending.",
+        "complete_bnb_opening_evidence": "BNB opening evidence is incomplete and must remain fail-closed.",
+    }
+    for action in result["next_actions"]:
+        proposal = classify_action(
+            action,
+            action_reasons.get(action, "Control Center reported an unresolved next action."),
+        )
+        if proposal["safe"] and not proposal["mutation"]:
+            result["auto_actions"].append(proposal)
+        else:
+            result["owner_actions"].append(proposal)
 
     readiness_values = result["readiness"].values()
     if result["blockers"]:
