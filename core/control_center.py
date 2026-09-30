@@ -8,6 +8,50 @@ REGISTRY_FILE = Path("control_plane_registry.json")
 RELEASE_EVIDENCE_ENV = "SLH_RELEASE_EVIDENCE_JSON"
 
 
+EVIDENCE_STATUSES = {"PASS", "FAIL", "PENDING", "STALE", "UNKNOWN"}
+EVIDENCE_SCOPES = {"read_only", "isolated", "runtime", "external"}
+
+
+def build_evidence(*, sha, domain, status, source, scope):
+    """Create a validated, non-authoritative evidence record."""
+    record = {
+        "sha": str(sha or "unknown"),
+        "domain": str(domain or "").strip(),
+        "status": str(status or "UNKNOWN").upper(),
+        "source": str(source or "").strip(),
+        "scope": str(scope or "read_only").strip().lower(),
+    }
+    if not record["domain"]:
+        raise ValueError("evidence domain is required")
+    if not record["source"]:
+        raise ValueError("evidence source is required")
+    if record["status"] not in EVIDENCE_STATUSES:
+        raise ValueError("invalid evidence status")
+    if record["scope"] not in EVIDENCE_SCOPES:
+        raise ValueError("invalid evidence scope")
+    return record
+
+
+def build_action(*, action, reason, safe, mutation=False, owner_required=False):
+    """Create a descriptive action proposal; this function never executes it."""
+    record = {
+        "action": str(action or "").strip(),
+        "reason": str(reason or "").strip(),
+        "safe": bool(safe),
+        "mutation": bool(mutation),
+        "owner_required": bool(owner_required),
+    }
+    if not record["action"]:
+        raise ValueError("action is required")
+    if not record["reason"]:
+        raise ValueError("action reason is required")
+    if record["mutation"] and not record["owner_required"]:
+        raise ValueError("mutating actions require owner approval")
+    if record["safe"] and record["mutation"]:
+        raise ValueError("safe actions must be non-mutating")
+    return record
+
+
 def _load_json(path, default):
     try:
         with open(path, "r", encoding="utf-8") as f:
