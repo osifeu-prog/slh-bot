@@ -61,11 +61,42 @@ class TestReleaseStateContract(unittest.TestCase):
         self.assertEqual(state["readiness"]["code"], "READY")
         self.assertEqual(state["readiness"]["tests"], "READY")
         self.assertEqual(state["readiness"]["ci"], "READY")
-        self.assertEqual(state["readiness"]["deployment"], "READY")
-        self.assertEqual(state["deployment_verification"], "EXTERNAL_VERIFIED")
+        self.assertEqual(state["readiness"]["deployment"], "UNKNOWN")
+        self.assertEqual(state["deployment_verification"], "UNVERIFIED")
         self.assertEqual(state["deployment_identity"]["status"], "IDENTIFIED")
         self.assertNotIn("release_evidence_sha_mismatch", state["warnings"])
 
+    def test_github_handoff_never_counts_as_deployment_verification(self):
+        sha = "abc123"
+        evidence = {
+            "sha": sha,
+            "ci": {"status": "PASS", "code_validated": True, "tests_passed": True},
+            "deployment": {"status": "SUCCESS", "source": "github_handoff"},
+        }
+        with patch.dict(os.environ, {
+            "RAILWAY_GIT_COMMIT_SHA": sha,
+            "SLH_RELEASE_EVIDENCE_JSON": json.dumps(evidence),
+        }, clear=True),              patch("core.system_check.run_system_checks", return_value={"status": "PASS"}),              patch("core.alpha_control_plane.evaluate", return_value={"status": "READY"}),              patch("core.alpha_control_plane.alpha_state", return_value={"status": "CLOSED"}),              patch("core.bnb_gate.bnb_readiness", return_value={"effective_open": False}),              patch("core.ton_deposit_service.deposits_are_open", return_value=False),              patch("core.control_center._load_registry", return_value={"schema_version": "test", "railway_projects": []}):
+            state = get_release_state()
+
+        self.assertEqual(state["readiness"]["deployment"], "UNKNOWN")
+        self.assertEqual(state["deployment_verification"], "UNVERIFIED")
+
+    def test_railway_runtime_source_can_verify_matching_deployment(self):
+        sha = "abc123"
+        evidence = {
+            "sha": sha,
+            "ci": {"status": "PASS", "code_validated": True, "tests_passed": True},
+            "deployment": {"status": "SUCCESS", "source": "railway_runtime"},
+        }
+        with patch.dict(os.environ, {
+            "RAILWAY_GIT_COMMIT_SHA": sha,
+            "SLH_RELEASE_EVIDENCE_JSON": json.dumps(evidence),
+        }, clear=True),              patch("core.system_check.run_system_checks", return_value={"status": "PASS"}),              patch("core.alpha_control_plane.evaluate", return_value={"status": "READY"}),              patch("core.alpha_control_plane.alpha_state", return_value={"status": "CLOSED"}),              patch("core.bnb_gate.bnb_readiness", return_value={"effective_open": False}),              patch("core.ton_deposit_service.deposits_are_open", return_value=False),              patch("core.control_center._load_registry", return_value={"schema_version": "test", "railway_projects": []}):
+            state = get_release_state()
+
+        self.assertEqual(state["readiness"]["deployment"], "READY")
+        self.assertEqual(state["deployment_verification"], "railway_runtime")
     def test_mismatched_evidence_never_counts_as_pass(self):
         evidence = {
             "sha": "old-sha",
