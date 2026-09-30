@@ -83,9 +83,11 @@ def _correlate_release_evidence(result):
         result["evidence"]["ci"] = "COLLECTED"
 
     deployment = evidence.get("deployment", {}) if isinstance(evidence.get("deployment", {}), dict) else {}
-    if deployment.get("status") == "SUCCESS":
+    deployment_source = deployment.get("source", "EXTERNAL_VERIFIED")
+    if deployment.get("status") == "SUCCESS" and deployment_source != "github_handoff":
         result["readiness"]["deployment"] = "READY"
         result["evidence"]["deployment"] = "COLLECTED"
+        result["deployment_verification"] = deployment_source
 
 
 def get_infrastructure_snapshot():
@@ -250,12 +252,19 @@ def get_release_state():
         result["diagnostics"] = {"ton_error": type(exc).__name__}
 
     result["infrastructure"] = get_infrastructure_snapshot()
-    result["evidence"]["deployment"] = (
-        "COLLECTED" if get_deployment_state().get("commit") != "unknown" else "UNKNOWN"
-    )
-    result["readiness"]["deployment"] = (
-        "READY" if result["evidence"]["deployment"] == "COLLECTED" else "UNKNOWN"
-    )
+    deployment_identity = get_deployment_state()
+    result["deployment_identity"] = {
+        "commit": deployment_identity.get("commit", "unknown"),
+        "branch": deployment_identity.get("branch", "unknown"),
+        "environment": deployment_identity.get("environment", "production"),
+        "deployment_id": deployment_identity.get("deployment_id", "unknown"),
+        "status": (
+            "IDENTIFIED"
+            if deployment_identity.get("commit") != "unknown"
+            else "UNKNOWN"
+        ),
+    }
+    result["deployment_verification"] = "UNVERIFIED"
 
     if result["infrastructure"].get("non_green_application_services", 0):
         result["warnings"].append("non_green_application_services")
