@@ -1,5 +1,9 @@
 name: SLH Full Regression
 
+concurrency:
+  group: slh-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches:
