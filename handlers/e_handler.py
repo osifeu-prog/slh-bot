@@ -22,15 +22,22 @@ def register(bot):
             return
 
         cmd = parts[1].strip()
-        # Telegram may quote/paste a prior multi-line reply after a control-plane
-        # command. Never send such known control commands to the shell.
+        # Telegram users sometimes paste the full Admin menu line, e.g.
+        # "alpha_status — canonical Alpha evaluation". Normalize known
+        # control-plane commands before deciding whether to invoke the shell.
         first_line = cmd.splitlines()[0].strip() if cmd.splitlines() else ""
         known_single_commands = {
             "settlement_status", "settlement", "money_status",
             "alpha_status", "alpha_open", "alpha_state",
         }
-        if first_line in known_single_commands and cmd != first_line:
-            cmd = first_line
+        normalized = first_line
+        for known in known_single_commands:
+            if normalized == known:
+                cmd = known
+                break
+            if normalized.startswith(known + " ") or normalized.startswith(known + " —"):
+                cmd = known
+                break
 
         if cmd.startswith("railway"):
             if not is_owner(uid):
