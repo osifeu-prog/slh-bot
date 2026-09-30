@@ -24,6 +24,17 @@ jobs:
       - name: Install UI test dependencies
         working-directory: ui_observatory
         run: npm install
+      - name: Install Chromium runtime dependency
+        run: |
+          set -euo pipefail
+          if command -v sudo >/dev/null 2>&1; then
+            sudo -n apt-get update
+            sudo -n apt-get install -y libnspr4
+          else
+            apt-get update
+            apt-get install -y libnspr4
+          fi
+
       - name: Install Playwright browser
         working-directory: ui_observatory
         run: npx playwright install chromium
