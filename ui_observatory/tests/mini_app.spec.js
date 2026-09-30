@@ -26,7 +26,10 @@ async function mockTelegramWebApp(page) {
         expand:function(){},
         close:function(){},
         openTelegramLink:function(){},
-        openInvoice:function(){}
+        openInvoice:function(){},
+        showPopup:function(){},
+        BackButton:{show:function(){},hide:function(){},onClick:function(){}},
+        HapticFeedback:{notificationOccurred:function(){}}
       }};`,
     });
   });
