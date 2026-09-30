@@ -60,6 +60,7 @@ class TestEvidenceContract(unittest.TestCase):
         )
         self.assertEqual(record["mutation"], False)
         self.assertEqual(record["owner_required"], False)
+        self.assertEqual(record["execution"], "NOT_CONNECTED")
 
     def test_mutating_action_requires_owner_approval(self):
         with self.assertRaises(ValueError):
@@ -98,6 +99,7 @@ class TestEvidenceContract(unittest.TestCase):
         self.assertEqual(record["safe"], False)
         self.assertEqual(record["mutation"], True)
         self.assertEqual(record["owner_required"], True)
+        self.assertEqual(record["execution"], "NOT_CONNECTED")
 
     def test_unknown_action_fails_closed_to_owner_required(self):
         record = classify_action(
@@ -107,6 +109,7 @@ class TestEvidenceContract(unittest.TestCase):
         self.assertEqual(record["safe"], False)
         self.assertEqual(record["mutation"], True)
         self.assertEqual(record["owner_required"], True)
+        self.assertEqual(record["execution"], "NOT_CONNECTED")
 
 
 if __name__ == "__main__":
