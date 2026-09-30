@@ -36,11 +36,15 @@ def settle_bnb_deposit(uid, tx_hash):
     if not sender or sender.lower() != bound.lower():
         raise ValueError("BNB_TX_SENDER_NOT_BOUND_WALLET")
 
-    amount_bnb = float(verified.get("amount_bnb", 0))
-    if amount_bnb <= 0:
+    amount_wei = int(verified.get("amount_wei", 0) or 0)
+    if amount_wei <= 0:
         raise ValueError("INVALID_BNB_AMOUNT")
 
-    credits = amount_bnb * CREDITS_PER_BNB
+    # 1 BNB = 10**18 wei and 1 BNB = 1000 Credits.
+    # Derive Credits from the integer wei value so settlement never depends
+    # on a binary floating-point BNB amount.
+    credits = (amount_wei * CREDITS_PER_BNB) / 10**18
+    amount_bnb = float(verified.get("amount_bnb", 0))
     idempotency_key = f"bnb:deposit:{tx_hash.lower()}"
 
     before_db = state_manager.load_db()
@@ -57,6 +61,7 @@ def settle_bnb_deposit(uid, tx_hash):
             "idempotency_key": idempotency_key,
             "tx_hash": tx_hash,
             "bnb_amount": amount_bnb,
+            "bnb_amount_wei": amount_wei,
             "from": sender,
             "to": verified.get("to"),
             "block": verified.get("block"),
@@ -69,6 +74,7 @@ def settle_bnb_deposit(uid, tx_hash):
         "uid": uid,
         "tx_hash": tx_hash,
         "amount_bnb": amount_bnb,
+        "amount_wei": amount_wei,
         "credits": credits,
         "balance_after": balance_after,
         "idempotent": already_recorded,
