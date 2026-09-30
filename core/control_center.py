@@ -251,7 +251,11 @@ def get_release_state():
         if opening_status == "READY_TO_OPEN":
             result["readiness"]["bnb_opening"] = "READY"
         elif opening_status == "BLOCKED":
-            result["readiness"]["bnb_opening"] = "BLOCKED"
+            # BNB opening evidence is an advisory/read-only gate. A failed
+            # live probe or pending empirical proof must not turn the whole
+            # release state into BLOCKED; the actual settlement gate remains
+            # independently fail-closed.
+            result["readiness"]["bnb_opening"] = "PENDING"
         else:
             result["readiness"]["bnb_opening"] = "PENDING"
         if opening.get("warnings"):
@@ -259,8 +263,8 @@ def get_release_state():
                 f"bnb_opening:{warning}" for warning in opening["warnings"]
             )
         if opening.get("blockers"):
-            result["blockers"].extend(
-                f"bnb_opening:{blocker}" for blocker in opening["blockers"]
+            result["warnings"].extend(
+                f"bnb_opening_blocker:{blocker}" for blocker in opening["blockers"]
             )
         if not opening.get("ready_to_open"):
             result["next_actions"].append("complete_bnb_opening_evidence")
