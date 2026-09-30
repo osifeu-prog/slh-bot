@@ -97,22 +97,49 @@ def get_full_system_map():
     from core.system_check import run_system_checks
     snapshot = get_system_snapshot()
     snapshot["verification"] = run_system_checks()
+    snapshot["release_state"] = get_release_state()
     return snapshot
+
 
 def get_release_state():
     """Read-only aggregate of release readiness and current operating gates."""
     result = {
         "overall": "DEGRADED",
-        "readiness": {"code": "UNKNOWN", "runtime": "UNKNOWN", "alpha": "UNKNOWN", "deployment": "UNKNOWN"},
-        "current_state": {"alpha": "UNKNOWN", "bnb_settlement": "CLOSED", "ton_settlement": "CLOSED"},
+        "readiness": {
+            "code": "UNKNOWN",
+            "tests": "UNKNOWN",
+            "ci": "UNKNOWN",
+            "deployment": "UNKNOWN",
+            "runtime": "UNKNOWN",
+            "alpha": "UNKNOWN",
+            "e2e": "PENDING",
+        },
+        "evidence": {
+            "system_check": "NOT_COLLECTED",
+            "alpha_control_plane": "NOT_COLLECTED",
+            "ci": "NOT_COLLECTED",
+            "e2e": "PENDING",
+            "deployment": "NOT_COLLECTED",
+        },
+        "current_state": {
+            "alpha": "UNKNOWN",
+            "bnb_settlement": "CLOSED",
+            "ton_settlement": "CLOSED",
+        },
         "ci": {"hosted": "UNKNOWN", "self_hosted": "UNKNOWN"},
-        "blockers": [], "warnings": [], "auto_actions": [], "owner_actions": [],
+        "blockers": [],
+        "warnings": [],
+        "next_actions": [],
+        "auto_actions": [],
+        "owner_actions": [],
         "scope": "read_only",
     }
+
     try:
         from core.system_check import run_system_checks
         checks = run_system_checks() or {}
         result["system_check"] = checks
+        result["evidence"]["system_check"] = "COLLECTED"
         status = str(checks.get("status", "")).upper()
         if status in {"PASS", "READY", "GREEN"}:
             result["readiness"]["runtime"] = "READY"
@@ -126,27 +153,40 @@ def get_release_state():
         result["readiness"]["runtime"] = "DEGRADED"
         result["warnings"].append("system_check_unavailable")
         result["diagnostics"] = {"system_check_error": type(exc).__name__}
+
     try:
         from core.alpha_control_plane import alpha_state, evaluate
         alpha = evaluate() or {}
         result["alpha"] = alpha
+        result["evidence"]["alpha_control_plane"] = "COLLECTED"
         alpha_status = str(alpha.get("status", "")).upper()
-        result["readiness"]["alpha"] = "READY" if alpha_status == "READY" else "BLOCKED" if alpha_status == "BLOCKED" else "DEGRADED"
+        result["readiness"]["alpha"] = (
+            "READY" if alpha_status == "READY"
+            else "BLOCKED" if alpha_status == "BLOCKED"
+            else "DEGRADED"
+        )
         alpha_runtime = alpha_state() or {}
         alpha_status = str(alpha_runtime.get("status", "")).upper()
-        result["current_state"]["alpha"] = "OPEN" if alpha_status == "OPEN" else "CLOSED" if alpha_status else "UNKNOWN"
+        result["current_state"]["alpha"] = (
+            "OPEN" if alpha_status == "OPEN"
+            else "CLOSED" if alpha_status else "UNKNOWN"
+        )
     except Exception as exc:
         result["readiness"]["alpha"] = "DEGRADED"
         result["warnings"].append("alpha_control_plane_unavailable")
         result["diagnostics"] = {"alpha_error": type(exc).__name__}
+
     try:
         from core.bnb_gate import bnb_readiness
         bnb = bnb_readiness() or {}
         result["bnb"] = bnb
-        result["current_state"]["bnb_settlement"] = "OPEN" if bnb.get("effective_open") is True else "CLOSED"
+        result["current_state"]["bnb_settlement"] = (
+            "OPEN" if bnb.get("effective_open") is True else "CLOSED"
+        )
     except Exception as exc:
         result["warnings"].append("bnb_gate_unavailable")
         result["diagnostics"] = {"bnb_error": type(exc).__name__}
+
     try:
         from core.ton_deposit_service import deposits_are_open
         ton_open = bool(deposits_are_open())
@@ -154,10 +194,42 @@ def get_release_state():
     except Exception as exc:
         result["warnings"].append("ton_gate_unavailable")
         result["diagnostics"] = {"ton_error": type(exc).__name__}
+
     result["infrastructure"] = get_infrastructure_snapshot()
+    result["evidence"]["deployment"] = (
+        "COLLECTED" if get_deployment_state().get("commit") != "unknown" else "UNKNOWN"
+    )
+    result["readiness"]["deployment"] = (
+        "READY" if result["evidence"]["deployment"] == "COLLECTED" else "UNKNOWN"
+    )
+
     if result["infrastructure"].get("non_green_application_services", 0):
         result["warnings"].append("non_green_application_services")
-    result["readiness"]["code"] = "BLOCKED" if result["blockers"] else "READY" if result["readiness"]["runtime"] == "READY" else "DEGRADED"
-    result["readiness"]["deployment"] = "READY" if get_deployment_state().get("commit") != "unknown" else "UNKNOWN"
-    result["overall"] = "BLOCKED" if result["blockers"] else "DEGRADED" if result["warnings"] else "GREEN"
+
+    result["readiness"]["code"] = "UNKNOWN"
+    result["readiness"]["tests"] = "UNKNOWN"
+    result["readiness"]["ci"] = "UNKNOWN"
+    result["evidence"]["ci"] = "NOT_COLLECTED"
+
+    result["warnings"].extend([
+        "code_evidence_not_collected",
+        "test_evidence_not_collected",
+        "ci_evidence_not_collected",
+        "new_user_e2e_pending",
+    ])
+    result["next_actions"].extend([
+        "collect_ci_evidence",
+        "collect_new_user_join_e2e_evidence",
+    ])
+
+    readiness_values = result["readiness"].values()
+    if result["blockers"]:
+        result["overall"] = "BLOCKED"
+    elif any(value in {"UNKNOWN", "PENDING", "DEGRADED"} for value in readiness_values):
+        result["overall"] = "DEGRADED"
+    elif result["warnings"]:
+        result["overall"] = "DEGRADED"
+    else:
+        result["overall"] = "GREEN"
+
     return result
