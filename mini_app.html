@@ -580,11 +580,11 @@ async function loadWalletBindings(){
     if(handleApiAuthFailure(bnbResp.status,bnb)||handleApiAuthFailure(tonResp.status,ton)) return;
     const bb = bnb.binding || null;
     const tb = ton.binding || null;
+    const depositsOpen=!!bnb.deposits_open;
     setText('bnbBindingStatus', bb ? (depositsOpen ? '✅ מאומת · Deposit פתוח' : '🔒 מאומת · Settlement סגור') : '⚠️ לא אומת');
     $('bnbBindingStatus')?.classList.toggle('ok', !!bb);
     $('bnbBindingStatus')?.classList.toggle('pending', !bb);
     setText('bnbBindingAddress', bb ? esc(bb.address) : 'אין ארנק BNB מאומת');
-    const depositsOpen=!!bnb.deposits_open;
     const depInfo=$('bnbDepositInfo');
     const depHash=$('bnbTxHash');
     const depBtn=$('bnbClaimButton');
@@ -791,7 +791,7 @@ async function initBnbWalletConnect(){
     metadata:{
       name:'SLH OS',
       description:'SLH OS Mini App — BNB wallet connection',
-      url:window.location.origin,
+      url:'https://slh-nft.com',
       icons:['https://slh-nft.com/icon-192.png']
     }
   });
@@ -949,7 +949,7 @@ async function initTonConnect(){
 async function bindTonWallet(){
   if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
   try{
-    const cr=await fetch('/api/wallet/ton/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({domain:window.location.hostname})});
+    const cr=await fetch('/api/wallet/ton/challenge',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({domain:'slh-nft.com'})});
     const cd=await cr.json().catch(()=>({}));
     if(!cr.ok) throw Error(cd.error||('HTTP '+cr.status));
     _tonChallenge=cd;
