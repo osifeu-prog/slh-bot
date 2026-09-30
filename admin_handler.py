@@ -138,20 +138,20 @@ def _page(name):
             "/task — task management\n"
             "/mission — mission control\n"
             "/progress — progress\n"
-            "/monitor — monitoring"
+            "/monitor_list — monitoring registry\n            /monitor_status — monitoring status\n            /monitor_logs — monitoring logs"
         ),
         "alpha": (
             "🎯 ALPHA CONTROL\n\n"
-            "/e alpha_status — canonical Alpha evaluation\n"
-            "/e alpha_state — current Alpha state\n"
-            "/e alpha_open — OWNER-only open transition\n"
-            "/alpha — Alpha control surface"
+            "/alpha_status — canonical Alpha evaluation\n"
+            "/alpha_state — current Alpha state\n"
+            "/alpha_open — OWNER-only open transition\n"
+            ""
         ),
         "economy": (
             "💰 ECONOMY / WALLET\n\n"
             "/me — account read model\n"
             "/wallet — wallet surface\n"
-            "/p2p — P2P transfers\n"
+            "/transfer <uid> <amount> — Credits transfer\n"
             "/exchange — exchange surface\n"
             "/claim — claim/deposit path\n"
             "/withdraw — withdrawal requests\n"
@@ -163,7 +163,7 @@ def _page(name):
             "/stake_lock — locked staking\n"
             "/revenue — revenue-share surface\n"
             "/ton_balance — TON balance\n"
-            "/ton_claim — TON claim\n"
+            "/revenue_reconcile — revenue reconciliation\n            /revenue_audit — revenue audit\n            /ton_address — TON deposit address + memo\n            /ton_deposit — TON deposit address alias\n            /ton_check <TX hash> — verify one TON transaction\n            /ton_paid — scan recent qualifying TON deposits\n"
             "Read/modify actions remain permission-gated."
         ),
         "devices": (
