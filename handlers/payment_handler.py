@@ -520,7 +520,7 @@ def register_payment_handlers(bot):
                 item_id = str(item_id)
                 lines.append(f"• {item_names.get(item_id, item_id)}")
             lines.append("\n📦 רכישה חדשה תופיע כאן לאחר השלמת התשלום.")
-            bot.send_message(m.chat.id, "\\n".join(lines))
+            bot.send_message(m.chat.id, "\n".join(lines))
         except Exception as exc:
             print(f"[INVENTORY] read error: {type(exc).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לטעון כרגע את המוצרים שלך.")
