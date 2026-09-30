@@ -10,6 +10,7 @@ on:
 
 jobs:
   ui-ux:
+    timeout-minutes: 10
     runs-on: [self-hosted, linux, x64]
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +27,7 @@ jobs:
         run: npm install
       - name: Install Playwright browser
         working-directory: ui_observatory
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
       - name: Start Mini App server
         run: |
           nohup python -m flask --app webapp run --host 127.0.0.1 --port 8080 > /tmp/slh-ui.log 2>&1 &
