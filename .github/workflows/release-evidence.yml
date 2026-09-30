@@ -42,6 +42,31 @@ jobs:
               "Validate and hand off to Railway": None,
           }
 
+          # Railway publishes a commit status for the canonical production
+          # service. This is external deployment evidence, not GitHub's
+          # handoff workflow, so it can be correlated without granting
+          # GitHub a Railway secret or performing any deployment action.
+          import subprocess
+
+          statuses = json.loads(
+              subprocess.check_output(
+                  [
+                      "gh", "api",
+                      f"repos/{os.environ['REPO']}/commits/{sha}/statuses",
+                      "--paginate",
+                  ],
+                  text=True,
+              )
+          )
+          railway_statuses = [
+              item for item in statuses
+              if item.get("context") == "slh-cloud-bot - slh-cloud-bot"
+          ]
+          railway_success = any(
+              str(item.get("state", "")).lower() == "success"
+              for item in railway_statuses
+          )
+
           for run in runs:
               name = run.get("name")
               if name in required and run.get("headSha") == sha:
@@ -77,8 +102,10 @@ jobs:
                   "status": "PASS" if security_ok else conclusion("Bot Vault Regression")
               },
               "deployment": {
-                  "status": "SUCCESS" if handoff_ok else conclusion("Validate and hand off to Railway"),
-                  "source": "github_handoff"
+                  "status": "SUCCESS" if railway_success else (
+                      "PENDING" if handoff_ok else conclusion("Validate and hand off to Railway")
+                  ),
+                  "source": "external_verified" if railway_success else "github_handoff"
               },
               "workflows": {
                   name: {
