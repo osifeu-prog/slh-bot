@@ -62,6 +62,8 @@ class TestReleaseStateContract(unittest.TestCase):
         self.assertEqual(state["readiness"]["tests"], "READY")
         self.assertEqual(state["readiness"]["ci"], "READY")
         self.assertEqual(state["readiness"]["deployment"], "READY")
+        self.assertEqual(state["deployment_verification"], "EXTERNAL_VERIFIED")
+        self.assertEqual(state["deployment_identity"]["status"], "IDENTIFIED")
         self.assertNotIn("release_evidence_sha_mismatch", state["warnings"])
 
     def test_mismatched_evidence_never_counts_as_pass(self):
@@ -79,6 +81,8 @@ class TestReleaseStateContract(unittest.TestCase):
         self.assertEqual(state["release_evidence"]["status"], "STALE")
         self.assertFalse(state["release_evidence"]["matching_sha"])
         self.assertEqual(state["readiness"]["code"], "UNKNOWN")
+        self.assertEqual(state["deployment_verification"], "UNVERIFIED")
+        self.assertEqual(state["deployment_identity"]["status"], "IDENTIFIED")
         self.assertEqual(state["readiness"]["tests"], "UNKNOWN")
         self.assertEqual(state["readiness"]["ci"], "UNKNOWN")
         self.assertIn("release_evidence_sha_mismatch", state["warnings"])
