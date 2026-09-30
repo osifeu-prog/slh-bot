@@ -8,6 +8,70 @@ REGISTRY_FILE = Path("control_plane_registry.json")
 RELEASE_EVIDENCE_ENV = "SLH_RELEASE_EVIDENCE_JSON"
 
 
+EVIDENCE_STATUSES = {"PASS", "FAIL", "PENDING", "STALE", "UNKNOWN"}
+EVIDENCE_SCOPES = {"read_only", "isolated", "runtime", "external"}
+ACTION_POLICIES = {
+    "collect_ci_evidence": {"safe": True, "mutation": False, "owner_required": False},
+    "collect_new_user_join_e2e_evidence": {"safe": False, "mutation": True, "owner_required": True},
+    "complete_bnb_opening_evidence": {"safe": False, "mutation": True, "owner_required": True},
+}
+
+
+def build_evidence(*, sha, domain, status, source, scope):
+    """Create a validated, non-authoritative evidence record."""
+    record = {
+        "sha": str(sha or "unknown"),
+        "domain": str(domain or "").strip(),
+        "status": str(status or "UNKNOWN").upper(),
+        "source": str(source or "").strip(),
+        "scope": str(scope or "read_only").strip().lower(),
+    }
+    if not record["domain"]:
+        raise ValueError("evidence domain is required")
+    if not record["source"]:
+        raise ValueError("evidence source is required")
+    if record["status"] not in EVIDENCE_STATUSES:
+        raise ValueError("invalid evidence status")
+    if record["scope"] not in EVIDENCE_SCOPES:
+        raise ValueError("invalid evidence scope")
+    return record
+
+
+def build_action(*, action, reason, safe, mutation=False, owner_required=False):
+    """Create a descriptive action proposal; this function never executes it."""
+    record = {
+        "action": str(action or "").strip(),
+        "reason": str(reason or "").strip(),
+        "safe": bool(safe),
+        "mutation": bool(mutation),
+        "owner_required": bool(owner_required),
+        "execution": "NOT_CONNECTED",
+    }
+    if not record["action"]:
+        raise ValueError("action is required")
+    if not record["reason"]:
+        raise ValueError("action reason is required")
+    if record["mutation"] and not record["owner_required"]:
+        raise ValueError("mutating actions require owner approval")
+    if record["safe"] and record["mutation"]:
+        raise ValueError("safe actions must be non-mutating")
+    return record
+
+
+def classify_action(action, reason):
+    """Classify a proposed action without executing it; unknown actions fail closed."""
+    policy = ACTION_POLICIES.get(str(action or "").strip())
+    if policy is None:
+        return build_action(
+            action=action,
+            reason=reason,
+            safe=False,
+            mutation=True,
+            owner_required=True,
+        )
+    return build_action(action=action, reason=reason, **policy)
+
+
 def _load_json(path, default):
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -316,6 +380,21 @@ def get_release_state():
     ])
 
     _correlate_release_evidence(result)
+
+    action_reasons = {
+        "collect_ci_evidence": "CI runs are complete but release evidence is not yet correlated.",
+        "collect_new_user_join_e2e_evidence": "New-user /join end-to-end evidence is still pending.",
+        "complete_bnb_opening_evidence": "BNB opening evidence is incomplete and must remain fail-closed.",
+    }
+    for action in result["next_actions"]:
+        proposal = classify_action(
+            action,
+            action_reasons.get(action, "Control Center reported an unresolved next action."),
+        )
+        if proposal["safe"] and not proposal["mutation"]:
+            result["auto_actions"].append(proposal)
+        else:
+            result["owner_actions"].append(proposal)
 
     readiness_values = result["readiness"].values()
     if result["blockers"]:
