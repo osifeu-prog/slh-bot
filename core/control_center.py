@@ -45,6 +45,7 @@ def build_action(*, action, reason, safe, mutation=False, owner_required=False):
         "safe": bool(safe),
         "mutation": bool(mutation),
         "owner_required": bool(owner_required),
+        "execution": "NOT_CONNECTED",
     }
     if not record["action"]:
         raise ValueError("action is required")
