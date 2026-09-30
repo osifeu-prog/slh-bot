@@ -64,7 +64,20 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 }
 
 async function clickPrimaryNav(page, label) {
-  await page.locator('.nav').getByRole('button', { name: label, exact: true }).click();
+  const desktopButton = page.locator('.nav').getByRole('button', { name: label, exact: true });
+  if (await desktopButton.isVisible().catch(() => false)) {
+    await desktopButton.click();
+    return;
+  }
+  const screenByLabel = Object.fromEntries(screens.map(([id, text]) => [text, id]));
+  const id = screenByLabel[label];
+  const bottomId = { home: 'bh', wallet: 'bw', transfer: 'bt' }[id];
+  if (bottomId) {
+    await page.locator('#' + bottomId).click();
+    return;
+  }
+  await page.locator('#bmore').click();
+  await page.locator('.more-grid button').filter({ hasText: label }).click();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -74,6 +87,10 @@ test.beforeEach(async ({ page }) => {
   await mockBackend(page);
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => window.Telegram?.WebApp?.initData === 'ui-test-init-data');
+  await expect(page.locator('#authGate')).toBeHidden();
+  await expect(page.locator('.app')).toBeVisible();
+  await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
 });
 
 test('all primary screens are reachable', async ({ page }) => {
