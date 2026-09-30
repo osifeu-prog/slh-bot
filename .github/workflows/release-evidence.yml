@@ -1,0 +1,106 @@
+name: Release Evidence Correlation
+
+on:
+  workflow_run:
+    workflows:
+      - SLH CI
+      - SLH Full Regression
+      - Bot Vault Regression
+      - Validate and hand off to Railway
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  correlate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Correlate completed workflow evidence by SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          gh run list --repo "$REPO" --commit "$SHA" --limit 100             --json name,status,conclusion,databaseId,headSha > runs.json
+
+          python3 - <<'PYEOF'
+          import json
+          import os
+          from pathlib import Path
+
+          sha = os.environ["SHA"]
+          runs = json.loads(Path("runs.json").read_text(encoding="utf-8"))
+
+          required = {
+              "SLH CI": None,
+              "SLH Full Regression": None,
+              "Bot Vault Regression": None,
+              "Validate and hand off to Railway": None,
+          }
+
+          for run in runs:
+              name = run.get("name")
+              if name in required and run.get("headSha") == sha:
+                  required[name] = run
+
+          def conclusion(name):
+              run = required[name]
+              if not run:
+                  return "MISSING"
+              return str(run.get("conclusion") or run.get("status") or "UNKNOWN").upper()
+
+          ci_ok = conclusion("SLH CI") == "SUCCESS"
+          tests_ok = conclusion("SLH Full Regression") == "SUCCESS"
+          security_ok = conclusion("Bot Vault Regression") == "SUCCESS"
+          handoff_ok = conclusion("Validate and hand off to Railway") == "SUCCESS"
+
+          if all((ci_ok, tests_ok, security_ok, handoff_ok)):
+              aggregate = "PASS"
+          elif any(conclusion(n) in {"FAILURE", "CANCELLED", "TIMED_OUT"} for n in required):
+              aggregate = "FAIL"
+          else:
+              aggregate = "PENDING"
+
+          evidence = {
+              "schema_version": 1,
+              "sha": sha,
+              "ci": {
+                  "status": aggregate,
+                  "code_validated": ci_ok and handoff_ok,
+                  "tests_passed": tests_ok,
+              },
+              "security": {
+                  "status": "PASS" if security_ok else conclusion("Bot Vault Regression")
+              },
+              "deployment": {
+                  "status": "SUCCESS" if handoff_ok else conclusion("Validate and hand off to Railway"),
+                  "source": "github_handoff"
+              },
+              "workflows": {
+                  name: {
+                      "status": (run or {}).get("status", "MISSING"),
+                      "conclusion": conclusion(name),
+                      "run_id": (run or {}).get("databaseId")
+                  }
+                  for name, run in required.items()
+              }
+          }
+
+          Path("release-evidence.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8"
+          )
+
+          print(json.dumps(evidence, indent=2, sort_keys=True))
+          PYEOF
+
+      - name: Publish release evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-${{ github.event.workflow_run.head_sha }}
+          path: release-evidence.json
+          if-no-files-found: error
