@@ -40,7 +40,8 @@ def get_onchain_status():
         slh_raw = contract.functions.balanceOf(treasury).call()
         dec = contract.functions.decimals().call()
         slh = slh_raw / (10**dec)
-        bnb = w3.from_wei(w3.eth.get_balance(treasury), "ether")
+        bnb_wei = int(w3.eth.get_balance(treasury))
+        bnb = w3.from_wei(bnb_wei, "ether")
 
         return {
             "ok": True,
@@ -49,6 +50,7 @@ def get_onchain_status():
             "treasury_wallet": cfg["treasury_wallet"],
             "token_contract": cfg["token_contract"],
             "treasury_bnb": float(bnb),
+            "treasury_bnb_wei": bnb_wei,
             "treasury_slh": float(slh),
             "confirmations_required": int(cfg.get("confirmations") or 15),
             "symbol": "SLH",
@@ -95,12 +97,16 @@ def verify_bnb_deposit(tx_hash):
             "tx_hash": str(tx_hash),
         }
 
-    amount = w3.from_wei(tx.get("value", 0), "ether")
+    amount_wei = int(tx.get("value", 0))
+    if amount_wei <= 0:
+        return {"ok": False, "error": "INVALID_BNB_AMOUNT"}
+    amount = w3.from_wei(amount_wei, "ether")
     return {
         "ok": True,
         "from": str(tx.get("from")),
         "to": str(to_addr),
         "amount_bnb": float(amount),
+        "amount_wei": amount_wei,
         "block": block,
         "confirmations": confirmations,
         "required_confirmations": required_confirmations,
