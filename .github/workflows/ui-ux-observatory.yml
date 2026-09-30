@@ -32,15 +32,15 @@ jobs:
             echo "libnspr4 already available"
           else
             mkdir -p "$RUNNER_TEMP/nspr"
-            (sudo -n apt-get update && sudo -n apt-get install -y libnspr4) || {
+            (sudo -n apt-get update && sudo -n apt-get install -y libnspr4 libnss3) || {
               echo "sudo apt install unavailable; using unprivileged package extraction"
               mkdir -p "$RUNNER_TEMP/nspr-download"
               cd "$RUNNER_TEMP/nspr-download"
-              apt-get download libnspr4
+              apt-get download libnspr4 libnss3
               deb="$(ls libnspr4_*.deb | head -n 1)"
               test -n "$deb"
               dpkg-deb -x "$deb" "$RUNNER_TEMP/nspr"
-              echo "LD_LIBRARY_PATH=$RUNNER_TEMP/nspr/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$RUNNER_TEMP/nspr/usr/lib/x86_64-linux-gnu:$RUNNER_TEMP/nspr/usr/lib:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
             }
           fi
 
