@@ -244,6 +244,32 @@ def get_release_state():
         result["diagnostics"] = {"bnb_error": type(exc).__name__}
 
     try:
+        from core.bnb_gate import bnb_opening_evidence
+        opening = bnb_opening_evidence() or {}
+        result["bnb_opening_evidence"] = opening
+        opening_status = str(opening.get("status", "")).upper()
+        if opening_status == "READY_TO_OPEN":
+            result["readiness"]["bnb_opening"] = "READY"
+        elif opening_status == "BLOCKED":
+            result["readiness"]["bnb_opening"] = "BLOCKED"
+        else:
+            result["readiness"]["bnb_opening"] = "PENDING"
+        if opening.get("warnings"):
+            result["warnings"].extend(
+                f"bnb_opening:{warning}" for warning in opening["warnings"]
+            )
+        if opening.get("blockers"):
+            result["blockers"].extend(
+                f"bnb_opening:{blocker}" for blocker in opening["blockers"]
+            )
+        if not opening.get("ready_to_open"):
+            result["next_actions"].append("complete_bnb_opening_evidence")
+    except Exception as exc:
+        result["readiness"]["bnb_opening"] = "DEGRADED"
+        result["warnings"].append("bnb_opening_evidence_unavailable")
+        result["diagnostics"] = {"bnb_opening_error": type(exc).__name__}
+
+    try:
         from core.ton_deposit_service import deposits_are_open
         ton_open = bool(deposits_are_open())
         result["current_state"]["ton_settlement"] = "OPEN" if ton_open else "CLOSED"
