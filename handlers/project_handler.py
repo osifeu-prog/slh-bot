@@ -1,3 +1,5 @@
+import os
+
 from core.project_context import get_project_context
 from core.authority import has_permission
 
@@ -13,7 +15,7 @@ def _render(ctx):
         "🧠 SLH PROJECT",
         "",
         f"Repo: {identity.get('canonical_repo', 'unknown')}",
-        f"Railway: {identity.get('railway_project', 'unknown')} / {identity.get('railway_service', 'unknown')}",
+        f"Railway: {os.getenv('RAILWAY_PROJECT_NAME') or identity.get('railway_project', 'unknown')} / {os.getenv('RAILWAY_SERVICE_NAME') or identity.get('railway_service', 'unknown')}",
         f"Runtime: {'🟢' if runtime.get('running') else '🔴'}",
         f"Agents: {agents.get('count', 0)} ({agents.get('active', 0)} active)",
         f"Application services: {len(services)}",
