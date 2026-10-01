@@ -64,5 +64,85 @@ class GovernanceStoreTests(unittest.TestCase):
         self.assertEqual(result["source_of_truth"], "state/db.json")
 
 
+
+    def test_record_vote_updates_governance_points_and_slh_snapshot(self):
+        db = {
+            "users": {
+                "42": {
+                    "role": "student",
+                    "wallet": {"token_balance": 123.5, "live_token_balance": 120.0},
+                    "gamification": {"points": 100},
+                }
+            },
+            "governance": {
+                "source_of_truth": "state/db.json",
+                "rules": {"vote_weights": {"student": 1}, "pass_threshold": 0.6},
+                "proposals": [{
+                    "id": 9,
+                    "status": "open",
+                    "votes": {"yes": 0, "no": 0, "abstain": 0, "weighted_yes": 0, "weighted_no": 0},
+                }],
+                "individual_votes": {},
+            },
+        }
+
+        def fake_atomic_update(mutator):
+            return mutator(db)
+
+        with patch.object(governance_store, "atomic_update", side_effect=fake_atomic_update):
+            result = governance_store.record_vote(
+                proposal_id=9,
+                voter_uid="42",
+                choice="yes",
+                reward_points=10,
+                now="2026-10-01T10:00:00+00:00",
+            )
+
+        self.assertEqual(result["status"], "recorded")
+        self.assertEqual(result["weight"], 1)
+        self.assertEqual(result["points_awarded"], 10)
+        self.assertEqual(result["points_after"], 110)
+        self.assertEqual(result["slh_context"]["token_balance"], 123.5)
+        self.assertEqual(db["governance"]["proposals"][0]["votes"]["weighted_yes"], 1)
+        self.assertEqual(db["users"]["42"]["gamification"]["points"], 110)
+        self.assertEqual(len(db["users"]["42"]["points_ledger"]), 1)
+        self.assertEqual(
+            db["users"]["42"]["points_ledger"][0]["meta"]["idempotency_key"],
+            "governance_vote:9:42",
+        )
+
+        with patch.object(governance_store, "atomic_update", side_effect=fake_atomic_update):
+            again = governance_store.record_vote(
+                proposal_id=9,
+                voter_uid="42",
+                choice="yes",
+                reward_points=10,
+            )
+
+        self.assertEqual(again["status"], "already_voted")
+        self.assertEqual(db["users"]["42"]["gamification"]["points"], 110)
+        self.assertEqual(len(db["users"]["42"]["points_ledger"]), 1)
+
+    def test_record_vote_rejects_closed_proposal(self):
+        db = {
+            "users": {"42": {"role": "student", "gamification": {"points": 100}}},
+            "governance": {
+                "rules": {"vote_weights": {"student": 1}},
+                "proposals": [{"id": 9, "status": "approved", "votes": {}}],
+            },
+        }
+
+        def fake_atomic_update(mutator):
+            return mutator(db)
+
+        with patch.object(governance_store, "atomic_update", side_effect=fake_atomic_update):
+            with self.assertRaisesRegex(ValueError, "PROPOSAL_CLOSED"):
+                governance_store.record_vote(
+                    proposal_id=9,
+                    voter_uid="42",
+                    choice="yes",
+                    reward_points=10,
+                )
+
 if __name__ == "__main__":
     unittest.main()
