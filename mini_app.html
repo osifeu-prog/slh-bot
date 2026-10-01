@@ -1581,6 +1581,162 @@ function handleApiAuthFailure(status,data){
 }
 </script>
 
+<script id="slh-bsc-swap-v1">
+let __bscSwapPair='BNB_USDT';
+let __bscSwapPolicy=null;
+let __bscPreparedSwap=null;
+
+function setBscSwapPair(pair){
+  if(!['BNB_USDT','USDT_BNB'].includes(pair))return;
+  __bscSwapPair=pair;
+  const a=$('bscPairBnbUsdt'),b=$('bscPairUsdtBnb');
+  if(a)a.classList.toggle('active',pair==='BNB_USDT');
+  if(b)b.classList.toggle('active',pair==='USDT_BNB');
+  const input=$('bscSwapAmount');
+  if(input)input.placeholder=pair==='BNB_USDT'?'לדוגמה: 0.01':'לדוגמה: 10';
+  __bscPreparedSwap=null;
+  const send=$('bscSwapSendButton');if(send)send.disabled=true;
+  setText('bscSwapResult','בחר כמות ולחץ Quote כדי לקבל נתוני on-chain.');
+}
+
+async function loadBscSwapPolicy(){
+  const badge=$('bscSwapBadge'),gate=$('bscSwapGate'),quote=$('bscSwapQuoteButton'),prep=$('bscSwapPrepareButton');
+  try{
+    const r=await fetch('/api/v1/execution/policy',{cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    __bscSwapPolicy=d;
+    setText('bscSwapNetwork',(d.network||'—')+' · chain '+(d.chain_id??'—'));
+    setText('bscSwapRouter',d.router||'—');
+    if(!d.usdt_configured){
+      if(badge){badge.textContent='USDT לא מוגדר';badge.className='pill pending'}
+      if(gate){gate.className='slh-swap-gate locked';gate.textContent='⚠️ '+(d.network||'BSC')+' ללא כתובת USDT מוגדרת'}
+      if(quote)quote.disabled=true;if(prep)prep.disabled=true;
+      const send=$('bscSwapSendButton');if(send)send.disabled=true;
+      return d;
+    }
+    if(d.enabled){
+      if(badge){badge.textContent='✅ OPEN';badge.className='pill ok'}
+      if(gate){gate.className='slh-swap-gate open';gate.innerHTML='✅ <span id="bscSwapGateText">Execution פתוח · '+esc(d.network||'BSC')+'</span>'}
+      if(quote)quote.disabled=false;
+      if(prep)prep.disabled=true;
+    }else{
+      if(badge){badge.textContent='🔒 CLOSED';badge.className='pill pending'}
+      if(gate){gate.className='slh-swap-gate locked';gate.innerHTML='🔒 <span id="bscSwapGateText">Execution סגור · אין חתימה או שידור</span>'}
+      if(quote)quote.disabled=true;if(prep)prep.disabled=true;
+      const send=$('bscSwapSendButton');if(send)send.disabled=true;
+    }
+    return d;
+  }catch(e){
+    __bscSwapPolicy=null;
+    if(badge){badge.textContent='⚠️ לא זמין';badge.className='pill pending'}
+    if(gate){gate.className='slh-swap-gate locked';gate.innerHTML='⚠️ <span id="bscSwapGateText">Policy לא זמינה</span>'}
+    if(quote)quote.disabled=true;if(prep)prep.disabled=true;
+    const send=$('bscSwapSendButton');if(send)send.disabled=true;
+    setText('bscSwapResult','❌ '+(e.message||e));
+    return null;
+  }
+}
+
+async function quoteBscSwap(){
+  if(!initData){showAuthGate();return}
+  if(!__bscSwapPolicy)await loadBscSwapPolicy();
+  if(!__bscSwapPolicy?.enabled){toast('🔒 BSC execution סגור');return}
+  const amount=($('bscSwapAmount')?.value||'').trim();
+  if(!amount){toast('הזן כמות');return}
+  const button=$('bscSwapQuoteButton');if(button)button.disabled=true;
+  try{
+    const r=await fetch('/api/v1/execution/quote',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({trade:__bscSwapPair,amount})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    __bscPreparedSwap=null;
+    const send=$('bscSwapSendButton');if(send)send.disabled=true;
+    const outName=__bscSwapPair==='BNB_USDT'?'USDT':'BNB';
+    setHTML('bscSwapResult','<b>✅ Quote התקבל</b><br>רשת: '+esc(d.network)+' · block '+esc(d.block_number)+'<br>Input: <b>'+esc(d.amount_in)+' '+(__bscSwapPair==='BNB_USDT'?'BNB':'USDT')+'</b><br>Expected output: <b>'+esc(d.amount_out)+' '+outName+'</b><br><span class="slh-swap-code">'+esc(d.router)+'</span>');
+    if($('bscSwapPrepareButton'))$('bscSwapPrepareButton').disabled=false;
+  }catch(e){
+    setText('bscSwapResult','❌ '+(e.message||e));
+  }finally{
+    if(button)button.disabled=!__bscSwapPolicy?.enabled;
+  }
+}
+
+async function prepareBscSwap(){
+  if(!initData){showAuthGate();return}
+  if(!__bscSwapPolicy)await loadBscSwapPolicy();
+  if(!__bscSwapPolicy?.enabled){toast('🔒 BSC execution סגור');return}
+  const amount=($('bscSwapAmount')?.value||'').trim();
+  const slip=Number(($('bscSwapSlippage')?.value||'').trim());
+  const deadline=Number(($('bscSwapDeadline')?.value||'').trim());
+  if(!amount){toast('הזן כמות');return}
+  if(!Number.isInteger(slip)||slip<0||slip>1000){toast('Slippage חייב להיות 0–1000 bps');return}
+  if(!Number.isInteger(deadline)||deadline<60||deadline>3600){toast('Deadline חייב להיות 60–3600 שניות');return}
+  const button=$('bscSwapPrepareButton');if(button)button.disabled=true;
+  try{
+    const r=await fetch('/api/v1/execution/prepare-swap',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({trade:__bscSwapPair,amount,slippage_bps:slip,deadline_seconds:deadline})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
+    __bscPreparedSwap=d;
+    const minUnit=__bscSwapPair==='BNB_USDT'?'USDT':'BNB';
+    const approval=d.approval;
+    setHTML('bscSwapResult','<b>✅ Transaction prepared</b><br>Input: <b>'+esc(d.amount_in)+' '+(__bscSwapPair==='BNB_USDT'?'BNB':'USDT')+'</b><br>Quoted raw: <b>'+esc(String(d.quoted_out_raw))+'</b><br>Minimum out: <b>'+esc(String(d.minimum_out_raw))+' '+minUnit+' raw</b><br>Slippage: '+esc(d.slippage_bps)+' bps · Deadline: '+esc(d.deadline)+'<br>Estimated fee: <b>'+esc(String(d.estimated_fee_raw))+'</b> wei<br>'+(approval?'<b>Approval required:</b> exact input amount<br>':'Approval: <b>not required</b><br>')+'<span class="slh-swap-code">Router: '+esc(d.router)+'</span>');
+    const send=$('bscSwapSendButton');if(send)send.disabled=false;
+  }catch(e){
+    __bscPreparedSwap=null;
+    const send=$('bscSwapSendButton');if(send)send.disabled=true;
+    setText('bscSwapResult','❌ '+(e.message||e));
+  }finally{
+    if(button)button.disabled=!__bscSwapPolicy?.enabled;
+  }
+}
+
+async function _waitBscReceipt(provider,txHash,timeoutMs=120000){
+  const start=Date.now();
+  while(Date.now()-start<timeoutMs){
+    const receipt=await provider.request({method:'eth_getTransactionReceipt',params:[txHash]}).catch(()=>null);
+    if(receipt)return receipt;
+    await new Promise(resolve=>setTimeout(resolve,2500));
+  }
+  throw Error('TX_RECEIPT_TIMEOUT');
+}
+
+async function executePreparedBscSwap(){
+  if(!initData){showAuthGate();return}
+  if(!__bscPreparedSwap){toast('צריך Prepare לפני שליחה');return}
+  try{
+    setText('bscSwapResult','⏳ בודק ארנק BSC ומבקש אישור…');
+    const provider=await _getSlhTxProvider();
+    const account=await _ensureBscProvider(provider);
+    const bindingResp=await fetch('/api/wallet/bnb',{headers,cache:'no-store'});
+    const bindingData=await bindingResp.json().catch(()=>({}));
+    if(!bindingResp.ok)throw Error(bindingData.error||('HTTP '+bindingResp.status));
+    const bound=bindingData.binding;
+    if(!bound)throw Error('BNB_WALLET_NOT_VERIFIED');
+    if(String(bound.address).toLowerCase()!==String(account).toLowerCase())throw Error('הארנק המחובר שונה מהארנק המאומת');
+    const p=__bscPreparedSwap;
+    if(p.approval){
+      setText('bscSwapResult','⏳ מאשר Approval בארנק…');
+      const approvalHash=await provider.request({method:'eth_sendTransaction',params:[p.approval]});
+      setHTML('bscSwapResult','✅ Approval נשלח: <span class="slh-swap-code">'+esc(approvalHash)+'</span><br>ממתין לאישור בלוק…');
+      const approvalReceipt=await _waitBscReceipt(provider,approvalHash);
+      if(String(approvalReceipt.status||'0x1')==='0x0')throw Error('APPROVAL_TX_FAILED');
+    }
+    setText('bscSwapResult','⏳ מאשר את עסקת ה־Swap בארנק…');
+    const swapHash=await provider.request({method:'eth_sendTransaction',params:[p.tx]});
+    setHTML('bscSwapResult','✅ Swap נשלח: <span class="slh-swap-code">'+esc(swapHash)+'</span><br>ממתין לאישור בלוק…');
+    const swapReceipt=await _waitBscReceipt(provider,swapHash);
+    if(String(swapReceipt.status||'0x1')==='0x0')throw Error('SWAP_TX_FAILED');
+    const explorer='https://bscscan.com/tx/'+encodeURIComponent(swapHash);
+    setHTML('bscSwapResult','✅ Swap אושר on-chain.<br><a href="'+explorer+'" target="_blank" rel="noopener">פתיחת TX ב־BscScan</a>');
+    toast('✅ Swap אושר on-chain');
+  }catch(e){
+    const msg=String(e?.message||e||'');
+    setText('bscSwapResult','❌ '+msg);
+    if(/user rejected|user denied/i.test(msg))toast('העסקה בוטלה בארנק');
+  }
+}
+try{setTimeout(()=>loadBscSwapPolicy(),0)}catch(_e){}
+</script>
 <script id="slh-settings-sync">
 const SLH_THEME_META = {
   calm:{label:'רגוע כהה',description:'כהה, נקי ונוח לעיניים'},
