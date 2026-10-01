@@ -10,6 +10,7 @@ const screens = [
   ['stake', '🔒 סטייקינג'],
   ['alpha', '🚀 Alpha'],
   ['academy', '🎓 Academy'],
+  ['bscswap', '🔄 Swap'],
 ];
 
 async function mockTelegramWebApp(page) {
@@ -47,6 +48,8 @@ async function mockBackend(page) {
       body = { bnb: { status: 'pending' }, ton: { status: 'pending' } };
     } else if (url.pathname.includes('leaderboard')) {
       body = [];
+    } else if (url.pathname === '/api/v1/execution/policy') {
+      body = { enabled: false, network: 'bsc-testnet', chain_id: 97, router: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3', wbnb: '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd', usdt_configured: true, broadcast: false, custody: false };
     } else if (url.pathname.includes('tasks')) {
       body = [];
     }
@@ -162,4 +165,15 @@ test('visual baseline: alpha', async ({ page }, testInfo) => {
 test('visual baseline: academy', async ({ page }, testInfo) => {
   await clickPrimaryNav(page, '🎓 Academy');
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
+});
+
+
+test('BSC swap screen is reachable and remains execution-gated', async ({ page }) => {
+  await clickPrimaryNav(page, '🔄 Swap');
+  await expect(page.locator('#bscswap')).toHaveClass(/active/);
+  await expect(page.locator('#bscSwapBadge')).toHaveText('🔒 CLOSED');
+  await expect(page.locator('#bscSwapQuoteButton')).toBeDisabled();
+  await expect(page.locator('#bscSwapPrepareButton')).toBeDisabled();
+  await expect(page.locator('#bscSwapSendButton')).toBeDisabled();
+  await expect(page.locator('#bscSwapGateText')).toHaveText('Execution סגור · אין חתימה או שידור');
 });
