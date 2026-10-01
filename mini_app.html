@@ -1428,11 +1428,12 @@ html[data-text="xl"] .app{zoom:1.22}
       var ton=document.getElementById('tonBindingStatus')?.textContent?.trim()||'';
       var n=document.getElementById('uxAccountName'),m=document.getElementById('uxAccountMeta');
       if(n)n.textContent=name;
-      if(m)m.textContent='Credits '+credits+' · TON '+(ton.includes('✅')?'מחובר':'לא מחובר')+' · BNB '+(bnb.includes('✅')?'מחובר':'לא מחובר');
+      var tonConnected=ton.includes('✅');
+      var bnbConnected=bnb.includes('✅ מאומת')||bnb.includes('🔒 מאומת');
+      if(m)m.textContent='Credits '+credits+' · TON '+(tonConnected?'מחובר':'לא מחובר')+' · BNB '+(bnbConnected?'מחובר':'לא מחובר');
       var d=document.getElementById('uxBnbDot');
-      if(d)d.classList.toggle('good',bnb.includes('✅'));
-      var mini=document.getElementById('uxBnbMini');
-      if(mini)mini.textContent=bnb.includes('✅')?'✅ מאומת':'התחבר כדי לאמת';
+      if(d)d.classList.toggle('good',bnbConnected);
+      // uxBnbMini is rendered by renderBnbWalletState(); do not overwrite it here.
     }catch(_){}
   }
   window.slhUxRefresh=sync;
