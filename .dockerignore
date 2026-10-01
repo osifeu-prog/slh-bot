@@ -1,1 +1,7 @@
 
+
+# noise: audit/backup dumps
+/AUDIT_20260813_FULL/
+/_slh_audit/
+/_release_backup_*/
+/GIT_*.txt

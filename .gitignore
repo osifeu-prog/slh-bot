@@ -68,3 +68,15 @@ firmware_strings.txt
 # --- SLH audit directory (49MB, git bundle + snapshots) ---
 _slh_audit/
 *.bundle
+
+# noise: audit/backup dumps
+/AUDIT_20260813_FULL/
+/_slh_audit/
+/_release_backup_*/
+/GIT_*.txt
+
+# private dumps - never commit
+/*.bin
+/audit.jsonl
+/recovery/*.json
+/recovery/session_*/
