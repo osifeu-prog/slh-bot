@@ -68,3 +68,8 @@ firmware_strings.txt
 # --- SLH audit directory (49MB, git bundle + snapshots) ---
 _slh_audit/
 *.bundle
+
+# local databases
+/events.db
+/memory.db
+/slh_state.db
