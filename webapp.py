@@ -1187,6 +1187,88 @@ def bsc_execution_prepare():
         return jsonify({"error": "BSC_EXECUTION_PREPARE_FAILED"}), 502
 
 
+
+@app.route("/api/v1/execution/quote", methods=["POST"])
+def bsc_execution_quote():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    trade = str(payload.get("trade", "")).strip().upper()
+    amount = str(payload.get("amount", "")).strip()
+    if trade not in {"BNB_USDT", "USDT_BNB"}:
+        return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
+    if not amount:
+        return jsonify({"error": "MISSING_AMOUNT"}), 400
+
+    try:
+        from core import bsc_swap
+        result = (
+            bsc_swap.quote_bnb_usdt(uid, amount)
+            if trade == "BNB_USDT"
+            else bsc_swap.quote_usdt_bnb(uid, amount)
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        code = str(exc)
+        if code in {"BSC_EXECUTION_DISABLED", "BSC_MAINNET_EXECUTION_DISABLED"}:
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
+    except Exception as exc:
+        print("[BSC_SWAP] quote error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BSC_SWAP_QUOTE_FAILED"}), 502
+
+
+@app.route("/api/v1/execution/prepare-swap", methods=["POST"])
+def bsc_execution_prepare_swap():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    trade = str(payload.get("trade", "")).strip().upper()
+    amount = str(payload.get("amount", "")).strip()
+    slippage_raw = payload.get("slippage_bps")
+    deadline_raw = payload.get("deadline_seconds")
+
+    if trade not in {"BNB_USDT", "USDT_BNB"}:
+        return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
+    if not amount:
+        return jsonify({"error": "MISSING_AMOUNT"}), 400
+    try:
+        if isinstance(slippage_raw, bool) or slippage_raw is None:
+            raise ValueError("INVALID_SLIPPAGE_BPS")
+        slippage_bps = int(slippage_raw)
+        deadline_seconds = 1200 if deadline_raw is None else int(deadline_raw)
+    except (TypeError, ValueError):
+        return jsonify({"error": "INVALID_SWAP_PARAMETERS"}), 400
+
+    try:
+        from core import bsc_swap
+        result = (
+            bsc_swap.prepare_bnb_to_usdt(
+                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+            )
+            if trade == "BNB_USDT"
+            else bsc_swap.prepare_usdt_to_bnb(
+                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+            )
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        code = str(exc)
+        if code in {
+            "BSC_EXECUTION_DISABLED",
+            "BSC_MAINNET_EXECUTION_DISABLED",
+        }:
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
+    except Exception as exc:
+        print("[BSC_SWAP] prepare error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BSC_SWAP_PREPARE_FAILED"}), 502
+
+
 @app.route("/api/wallet/bnb/challenge", methods=["POST"])
 def bnb_wallet_challenge():
     uid = authenticated_uid()
