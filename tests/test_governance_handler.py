@@ -9,7 +9,7 @@ class GovernanceHandlerTests(unittest.TestCase):
 
     def test_parse_hash_proposal_id(self):
         self.assertEqual(_parse_proposal_id("#7"), 7)
-        self.assertEqual(_parse_proposal_id("  #64748b "), 64748)
+        self.assertEqual(_parse_proposal_id("  #64748 "), 64748)
 
     def test_parse_invalid_proposal_id(self):
         for value in ("", "#", "abc", "#abc", "0", "#0"):
