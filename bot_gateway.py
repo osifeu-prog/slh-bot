@@ -156,7 +156,8 @@ def api_logs():
 
 def run_flask():
     port = int(os.getenv('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=port, threads=8)
 
 LOG_FILE = Path("logs/bot_startup.log")
 LOG_FILE.parent.mkdir(exist_ok=True)
