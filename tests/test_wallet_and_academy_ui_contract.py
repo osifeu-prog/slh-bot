@@ -33,6 +33,20 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("SLH_AIR_bot", source)
 
+    def test_bnb_ui_uses_canonical_live_binding_renderer(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("function renderBnbWalletState(bnb)", source)
+        self.assertIn("const depositsOpen=data.deposits_open===true;", source)
+        self.assertIn("renderBnbWalletState(bnb);", source)
+        self.assertIn("renderBnbWalletUnavailable();", source)
+        self.assertIn("WalletConnect ו־MetaMask זמינים למסלול חיבור ואימות בעלות.", source)
+        self.assertIn("BNB Deposit · STAGED", source)
+        self.assertIn("BNB Deposit · LIVE", source)
+        self.assertNotIn("initialBnbBinding", source)
+        self.assertNotIn("const bb=w.bnb_binding||null;", source)
+        self.assertNotIn("החיבור וה־Binding פתוחים עכשיו.", source)
+        self.assertNotIn("אינו מופעל בתוך Telegram Mini App", source)
+
 
 if __name__ == "__main__":
     unittest.main()
