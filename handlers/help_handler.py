@@ -76,10 +76,11 @@ def register(bot):
 /task_add – הוספת משימה
 /mission – משימות/מיסיות
 /complete – השלמת משימה
-/vote <id> <yes/no> – הצבעה
-/propose <text> – הצעה
-/tally <id> – תוצאות
+/vote <id> <yes/no/abstain> – הצבעה קנונית + Points
+/propose <title> | <description> – הצעה קנונית
+/tally <id> – תוצאות קנוניות
 /gov_status – סטטוס Governance
+/gov_vote, /gov_propose, /gov_tally – aliases
 
 🎁 SHARE & REFERRAL
 /share – קישור הזמנה וסטטוס

@@ -55,6 +55,7 @@ REWARDS = {
     "referral_points": 10,
     "lesson_complete_points": 25,
     "course_complete_points": 250,
+    "vote_points": 10,
 }
 
 
