@@ -35,6 +35,57 @@ class MissionLifecycleService:
             / "results"
         )
 
+    def _bootstrap_missing_state(self):
+
+        # Railway mounts /app/state as a persistent volume, so files shipped
+        # under the repository's state/ directory may be hidden by the volume.
+        # Bootstrap only on mutation paths; load_state() remains read-only.
+        self.board_path.parent.mkdir(parents=True, exist_ok=True)
+        self.manifest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if not self.board_path.exists():
+            self._atomic_write_text(
+                self.board_path,
+                json.dumps(
+                    {"missions": []},
+                    indent=2,
+                    ensure_ascii=False,
+                ),
+            )
+
+        if not self.manifest_path.exists():
+            try:
+                import state_manager
+                agents_source = state_manager.get_agents()
+            except Exception:
+                agents_source = {}
+
+            items = []
+            if isinstance(agents_source, dict):
+                for agent_id, agent in agents_source.items():
+                    if not isinstance(agent, dict):
+                        continue
+                    items.append(
+                        {
+                            "id": str(agent.get("id", agent_id)),
+                            "name": str(agent.get("name", "")),
+                            "state": str(agent.get("state", "idle")),
+                        }
+                    )
+
+            manifest = {
+                "manifest_version": "runtime-bootstrap",
+                "agents": {"items": items},
+            }
+            self._atomic_write_text(
+                self.manifest_path,
+                json.dumps(
+                    manifest,
+                    indent=2,
+                    ensure_ascii=False,
+                ),
+            )
+
     def normalize_status(
         self,
         status
@@ -714,6 +765,7 @@ class MissionLifecycleService:
             self.root
         ):
 
+            self._bootstrap_missing_state()
             board, manifest = (
                 self.load_state()
             )
