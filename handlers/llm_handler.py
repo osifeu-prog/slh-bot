@@ -191,6 +191,39 @@ def ask_groq(prompt):
         if "429" in message or "rate_limit" in message.lower() or "tokens per day" in message.lower():
             _provider_cooldown_until["groq"] = time.time() + 300
         return f"LLM Error: {message}"
+
+def _sanitize_unknown_commands(text):
+    """Replace slash commands that are not present in the runtime registry."""
+    try:
+        from core.command_registry import get_registered_commands
+        known = {"/" + command for command in get_registered_commands()}
+    except Exception:
+        known = set()
+    if not known:
+        return str(text or "")
+
+    import re
+
+    removed = []
+
+    def repl(match):
+        token = match.group(0)
+        if token.lower() in known:
+            return token
+        removed.append(token)
+        return "[פקודה לא רשומה]"
+
+    cleaned = re.sub(
+        r"(?<![A-Za-z0-9_/:])/[A-Za-z][A-Za-z0-9_]*",
+        repl,
+        str(text or ""),
+    )
+    if removed:
+        cleaned = cleaned.rstrip() + (
+            f"\n\n⚠️ הוסרו {len(removed)} פקודות שאינן רשומות במערכת."
+        )
+    return cleaned
+
 def _load_canonical_faq(question=""):
     try:
         from core.faq_service import relevant_faq
@@ -200,6 +233,7 @@ def _load_canonical_faq(question=""):
 
 
 def query_llm_with_context(question, uid=None, skip_checks=False):
+    question = _sanitize_unknown_commands(question)
     faq = _load_canonical_faq(question)
     try:
         with open("state/db.json", encoding="utf-8") as f:
@@ -226,6 +260,12 @@ Votes: {len(db.get('votes', {}))}
 """
     except Exception as e:
         context = f"Context unavailable: {type(e).__name__}"
+
+    try:
+        from core.command_registry import get_registered_commands_text
+        command_catalog = get_registered_commands_text()
+    except Exception:
+        command_catalog = ""
 
     history = format_history(str(uid)) if uid is not None else "אין היסטוריית שיחה זמינה."
     continuation = is_continuation(str(question)) if uid is not None else False
@@ -255,6 +295,9 @@ SYSTEM CONTEXT:
 
 CANONICAL FAQ:
 {faq or "FAQ unavailable"}
+
+RUNTIME COMMAND REGISTRY:
+{command_catalog or "No command registry available."}
 
 RECENT CONVERSATION:
 {history}
