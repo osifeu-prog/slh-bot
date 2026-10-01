@@ -219,7 +219,7 @@ def register(bot, context=None):
             return
 
         try:
-            pid = int(parts[1])
+            pid = _parse_proposal_id(parts[1])
         except ValueError:
             bot.reply_to(m, "proposal_id חייב להיות מספר.")
             return
