@@ -133,14 +133,15 @@ def _compact_prompt(prompt, max_chars=9000):
     if len(text) <= max_chars:
         return text
 
-    head_chars = max_chars // 3
-    tail_chars = max_chars - head_chars
-    compacted = (
+    marker = "\n\n[CONTEXT COMPACTED FOR PROVIDER LIMIT]\n\n"
+    available = max(1, max_chars - len(marker))
+    head_chars = available // 3
+    tail_chars = available - head_chars
+    return (
         text[:head_chars]
-        + "\n\n[CONTEXT COMPACTED FOR PROVIDER LIMIT]\n\n"
+        + marker
         + text[-tail_chars:]
     )
-    return compacted[:max_chars]
 
 
 def ask_groq(prompt):
