@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone
 
+from core import governance_store
+
 BASE_DIR = Path(__file__).resolve().parents[1]
 GOV_PATH = BASE_DIR / "state" / "governance.json"
 DB_PATH = BASE_DIR / "state" / "db.json"
@@ -97,7 +99,7 @@ def register(bot, context=None):
             f"משקל: {weight}"
         )
 
-    @bot.message_handler(commands=["gov_propose"])
+    @bot.message_handler(commands=["propose", "gov_propose"])
     def gov_propose_cmd(m):
         body = (m.text or "").split(maxsplit=1)
 
@@ -145,12 +147,11 @@ def register(bot, context=None):
             f"📌 {title}"
         )
 
-    @bot.message_handler(commands=["gov_vote"])
+    @bot.message_handler(commands=["vote", "gov_vote"])
     def gov_vote_cmd(m):
         parts = (m.text or "").split()
-
         if len(parts) < 3:
-            bot.reply_to(m, "שימוש: /gov_vote <proposal_id> <yes|no|abstain>")
+            bot.reply_to(m, "שימוש: /vote <proposal_id> <yes|no|abstain>")
             return
 
         try:
@@ -160,63 +161,43 @@ def register(bot, context=None):
             return
 
         choice = parts[2].lower()
-
         if choice not in ("yes", "no", "abstain"):
             bot.reply_to(m, "הצבעה חייבת להיות yes / no / abstain.")
             return
 
-        gov = _load_gov()
-        proposals = gov.get("proposals", [])
-
-        if pid < 1 or pid > len(proposals):
-            bot.reply_to(m, "הצעה לא קיימת.")
+        try:
+            from core.tokenomics import rewards_snapshot
+            result = governance_store.record_vote(
+                proposal_id=pid,
+                voter_uid=str(m.from_user.id),
+                choice=choice,
+                reward_points=rewards_snapshot().get("vote_points", 0),
+            )
+        except ValueError as exc:
+            errors = {
+                "PROPOSAL_ID_INVALID": "proposal_id חייב להיות מספר.",
+                "VOTE_CHOICE_INVALID": "הצבעה חייבת להיות yes / no / abstain.",
+                "PROPOSAL_NOT_FOUND": "הצעה לא קיימת.",
+                "PROPOSAL_CLOSED": "ההצעה כבר סגורה.",
+            }
+            bot.reply_to(m, errors.get(str(exc), f"שגיאה בהצבעה: {exc}"))
             return
 
-        proposal = proposals[pid - 1]
-
-        if proposal.get("status") != "open":
-            bot.reply_to(m, "ההצעה כבר סגורה.")
+        if result["status"] == "already_voted":
+            bot.reply_to(m, f"כבר הצבעת על הצעה #{pid}.")
             return
 
-        uid = str(m.from_user.id)
-        weight = _get_weight(gov, uid)
-
-        individual_votes = gov.setdefault("individual_votes", {})
-        vote_key = f"p{pid}_{uid}"
-
-        if vote_key in individual_votes:
-            bot.reply_to(m, "כבר הצבעת על הצעה זו.")
-            return
-
-        individual_votes[vote_key] = {
-            "proposal_id": pid,
-            "voter": uid,
-            "choice": choice,
-            "weight": weight,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-
-        votes = proposal["votes"]
-
-        if choice == "yes":
-            votes["yes"] = votes.get("yes", 0) + 1
-            votes["weighted_yes"] = votes.get("weighted_yes", 0) + weight
-        elif choice == "no":
-            votes["no"] = votes.get("no", 0) + 1
-            votes["weighted_no"] = votes.get("weighted_no", 0) + weight
-        else:
-            votes["abstain"] = votes.get("abstain", 0) + 1
-
-        _save_gov(gov)
-
+        slh = result.get("slh_context", {})
         bot.reply_to(
             m,
-            f"הצבעה נרשמה:\n"
+            f"✅ הצבעה נרשמה:\n"
             f"הצעה #{pid} → {choice}\n"
-            f"משקל: {weight}"
+            f"משקל: {result['weight']}\n"
+            f"+{result['points_awarded']} Points ← Leaderboard\n"
+            f"SLH snapshot: {slh.get('token_balance', 0)}"
         )
 
-    @bot.message_handler(commands=["gov_tally"])
+    @bot.message_handler(commands=["tally", "gov_tally"])
     def gov_tally_cmd(m):
         parts = (m.text or "").split()
 
