@@ -151,41 +151,46 @@ def add_balance(uid, amount):
     )
 
 
-def add_points(uid, points, reason="unknown", meta=None):
+def add_points_in_db(db, uid, points, reason="unknown", meta=None):
+    """Apply a points mutation inside an existing atomic DB transaction."""
     uid = str(uid)
     meta = meta or {}
     idempotency_key = meta.get("idempotency_key")
 
-    def mutate(db):
-        user = (
-            db.setdefault("users", {})
-              .setdefault(uid, _default_user(uid))
+    user = (
+        db.setdefault("users", {})
+          .setdefault(uid, _default_user(uid))
+    )
+    points_ledger = user.setdefault("points_ledger", [])
+
+    if idempotency_key:
+        for entry in points_ledger:
+            if entry.get("meta", {}).get("idempotency_key") == idempotency_key:
+                return dict(user.get("gamification", {}))
+
+    game = user.setdefault("gamification", {})
+    before = game.get("points", 0)
+    game["points"] = before + points
+    game["level"] = (game["points"] // 100) + 1
+
+    points_ledger.append({
+        "time": datetime.utcnow().isoformat(),
+        "before": before,
+        "amount": points,
+        "after": game["points"],
+        "reason": reason,
+        "meta": meta,
+    })
+
+    return dict(game)
+
+
+def add_points(uid, points, reason="unknown", meta=None):
+    return state_manager.atomic_update(
+        lambda db: add_points_in_db(
+            db, uid, points, reason=reason, meta=meta
         )
-
-        points_ledger = user.setdefault("points_ledger", [])
-
-        if idempotency_key:
-            for entry in points_ledger:
-                if entry.get("meta", {}).get("idempotency_key") == idempotency_key:
-                    return dict(user.get("gamification", {}))
-
-        game = user.setdefault("gamification", {})
-        before = game.get("points", 0)
-        game["points"] = before + points
-        game["level"] = (game["points"] // 100) + 1
-
-        points_ledger.append({
-            "time": datetime.utcnow().isoformat(),
-            "before": before,
-            "amount": points,
-            "after": game["points"],
-            "reason": reason,
-            "meta": meta,
-        })
-
-        return dict(game)
-
-    return state_manager.atomic_update(mutate)
+    )
 
 
 def complete_course_stage(uid, course, stage):
