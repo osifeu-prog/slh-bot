@@ -49,7 +49,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
     def test_bnb_walletconnect_telegram_uses_manual_uri_flow(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertIn("showQrModal:false,", source)
-        self.assertIn("id="bnbWcUriWrap"", source)
+        self.assertIn('id="bnbWcUriWrap"', source)
         self.assertIn("provider.on?.('display_uri',uri=>", source)
         self.assertIn("WalletConnect URI נוצר.", source)
         self.assertNotIn("showQrModal:true,", source)
