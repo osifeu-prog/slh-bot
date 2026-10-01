@@ -302,7 +302,7 @@ def prepare_usdt_to_bnb(
             ["address", "address"],
             [sender, cfg["router"]],
         ).hex(),
-    }.copy()))
+    }).hex(), 16)
     approval = None
     if allowance < amount_in_raw:
         approval_data = _encode_approve(cfg["router"], amount_in_raw)
