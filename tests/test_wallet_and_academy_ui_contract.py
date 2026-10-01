@@ -50,7 +50,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertIn("showQrModal:false,", source)
         self.assertIn('id="bnbWcUriWrap"', source)
-        self.assertIn("provider.on?.('display_uri',uri=>", source)
+        self.assertIn("_walletConnectProvider.on?.('display_uri',uri=>", source)
         self.assertIn("WalletConnect URI נוצר.", source)
         self.assertNotIn("showQrModal:true,", source)
 
