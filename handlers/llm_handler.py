@@ -128,31 +128,69 @@ def ask_gemini(prompt):
     return "Gemini Error: no response"
 
 
+def _compact_prompt(prompt, max_chars=9000):
+    text = str(prompt or "")
+    if len(text) <= max_chars:
+        return text
+
+    marker = "\n\n[CONTEXT COMPACTED FOR PROVIDER LIMIT]\n\n"
+    available = max(1, max_chars - len(marker))
+    head_chars = available // 3
+    tail_chars = available - head_chars
+    return (
+        text[:head_chars]
+        + marker
+        + text[-tail_chars:]
+    )
+
+
 def ask_groq(prompt):
     global client
     if time.time() < _provider_cooldown_until["groq"]:
         return "GROQ_COOLDOWN"
+
     try:
         if client is None:
             key = (os.getenv("GROQ_API_KEY") or "").strip().strip('"\'')
             if not key:
                 return "GROQ_API_KEY missing"
             client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
-        resp = client.chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=[{"role": "system", "content": SLH_SYSTEM_RULES}, {"role": "user", "content": str(prompt)}],
-            max_tokens=2000,
-            tools=[],
-            tool_choice="none"
-        )
+
+        compacted_prompt = _compact_prompt(prompt, max_chars=9000)
+
+        try:
+            resp = client.chat.completions.create(
+                model="openai/gpt-oss-20b",
+                messages=[
+                    {"role": "system", "content": SLH_SYSTEM_RULES},
+                    {"role": "user", "content": compacted_prompt},
+                ],
+                max_tokens=1200,
+                tools=[],
+                tool_choice="none",
+            )
+        except Exception as first_error:
+            first_message = str(first_error)
+            if "413" not in first_message and "request too large" not in first_message.lower():
+                raise
+
+            resp = client.chat.completions.create(
+                model="openai/gpt-oss-20b",
+                messages=[
+                    {"role": "system", "content": SLH_SYSTEM_RULES},
+                    {"role": "user", "content": _compact_prompt(prompt, max_chars=5000)},
+                ],
+                max_tokens=800,
+                tools=[],
+                tool_choice="none",
+            )
+
         return str(resp.choices[0].message.content or "")
     except Exception as e:
         message = str(e)
         if "429" in message or "rate_limit" in message.lower() or "tokens per day" in message.lower():
             _provider_cooldown_until["groq"] = time.time() + 300
         return f"LLM Error: {message}"
-
-
 def _load_canonical_faq(question=""):
     try:
         from core.faq_service import relevant_faq
