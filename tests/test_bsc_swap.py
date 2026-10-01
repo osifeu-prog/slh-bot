@@ -69,8 +69,9 @@ def test_bnb_to_usdt_calldata_round_trips():
     data = bsc_swap._encode_swap_exact_eth_for_tokens(
         990, [token, sender], sender, 123456
     )
+    assert data.startswith("0x7ff36ab5")
     raw = bytes.fromhex(data[10:])
-    decoded = decode(["uint256", "address[]", "address", "uint256"], raw[4:])
+    decoded = decode(["uint256", "address[]", "address", "uint256"], raw)
     assert decoded[0] == 990
     assert list(decoded[1]) == [token, sender]
     assert decoded[2] == sender
@@ -83,8 +84,9 @@ def test_usdt_to_bnb_calldata_round_trips():
     data = bsc_swap._encode_swap_exact_tokens_for_eth(
         1000, 900, [token, sender], sender, 654321
     )
+    assert data.startswith("0x18cbafe5")
     raw = bytes.fromhex(data[10:])
-    decoded = decode(["uint256", "uint256", "address[]", "address", "uint256"], raw[4:])
+    decoded = decode(["uint256", "uint256", "address[]", "address", "uint256"], raw)
     assert decoded[0] == 1000
     assert decoded[1] == 900
     assert list(decoded[2]) == [token, sender]
@@ -95,7 +97,8 @@ def test_usdt_to_bnb_calldata_round_trips():
 def test_approval_is_exact_amount():
     token = "0x2222222222222222222222222222222222222222"
     data = bsc_swap._encode_approve(token, 12345)
+    assert data.startswith("0x095ea7b3")
     raw = bytes.fromhex(data[10:])
-    decoded = decode(["address", "uint256"], raw[4:])
+    decoded = decode(["address", "uint256"], raw)
     assert decoded[0] == token
     assert decoded[1] == 12345
