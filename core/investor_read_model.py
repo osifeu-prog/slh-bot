@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 
 import state_manager
+from core.asset_truth import build_slH_asset_truth
 from core.identity_resolver import get_display_name
 from core.wallet_binding import get_binding
 from core.ton_wallet_binding import get_ton_binding
@@ -188,6 +189,8 @@ def get_investor_snapshot(uid):
                 "reason": str(entry.get("reason", "unknown")),
             })
 
+    asset_truth = build_slH_asset_truth(wallet)
+
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
         gamification = {}
@@ -265,6 +268,7 @@ def get_investor_snapshot(uid):
                 else "unbacked_or_empty"
             ),
             "ton_wallet": user.get("ton_wallet"),
+            "asset_truth": asset_truth,
             "bnb_binding": bnb_binding,
             "ton_binding": ton_binding,
             "bnb_settlement": {
