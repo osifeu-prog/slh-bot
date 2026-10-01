@@ -46,6 +46,12 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("const bb=w.bnb_binding||null;", source)
         self.assertNotIn("החיבור וה־Binding פתוחים עכשיו.", source)
         self.assertNotIn("אינו מופעל בתוך Telegram Mini App", source)
+    def test_bnb_ux_runtime_does_not_overwrite_canonical_mini_status(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("var bnbConnected=bnb.includes('✅ מאומת')||bnb.includes('🔒 מאומת');", source)
+        self.assertIn("uxBnbMini is rendered by renderBnbWalletState(); do not overwrite it here.", source)
+        self.assertNotIn("mini.textContent=bnb.includes('✅')?'✅ מאומת':'התחבר כדי לאמת'", source)
+
 
 
 if __name__ == "__main__":
