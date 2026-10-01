@@ -219,9 +219,8 @@ def _sanitize_unknown_commands(text):
         str(text or ""),
     )
     if removed:
-        unique = ", ".join(dict.fromkeys(removed))
         cleaned = cleaned.rstrip() + (
-            f"\n\n⚠️ הוסרו פקודות שאינן רשומות במערכת: {unique}"
+            f"\n\n⚠️ הוסרו {len(removed)} פקודות שאינן רשומות במערכת."
         )
     return cleaned
 
