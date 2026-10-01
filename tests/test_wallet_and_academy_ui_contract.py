@@ -46,6 +46,14 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("const bb=w.bnb_binding||null;", source)
         self.assertNotIn("החיבור וה־Binding פתוחים עכשיו.", source)
         self.assertNotIn("אינו מופעל בתוך Telegram Mini App", source)
+    def test_bnb_walletconnect_telegram_uses_manual_uri_flow(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("showQrModal:false,", source)
+        self.assertIn("id="bnbWcUriWrap"", source)
+        self.assertIn("provider.on?.('display_uri',uri=>", source)
+        self.assertIn("WalletConnect URI נוצר.", source)
+        self.assertNotIn("showQrModal:true,", source)
+
     def test_bnb_ux_runtime_does_not_overwrite_canonical_mini_status(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertIn("var bnbConnected=bnb.includes('✅ מאומת')||bnb.includes('🔒 מאומת');", source)
