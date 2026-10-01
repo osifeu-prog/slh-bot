@@ -785,91 +785,105 @@ async function bindBnbWallet(){
 }
 
 async function ensureWalletConnectSdk(){
-  const hasSdk=()=>window['@walletconnect/ethereum-provider']?.EthereumProvider || window.WalletConnectEthereumProvider?.EthereumProvider || window.WalletConnectEthereumProvider?.default || window.WalletConnectEthereumProvider;
-  if(hasSdk())return true;
-  if(window.__slhWalletConnectEthereumProvider)return true;
+  if(window.__slhReownWalletConnect) return true;
   let lastError=null;
   try{
-    const mod=await import('https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.25.0/+esm');
-    const EthereumProvider=mod?.EthereumProvider || mod?.default?.EthereumProvider || mod?.default;
-    if(typeof EthereumProvider==='function'){
-      window.__slhWalletConnectEthereumProvider=EthereumProvider;
-      return true;
+    const [coreMod,netMod,ucMod]=await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/@reown/appkit@1.8.24/+esm'),
+      import('https://cdn.jsdelivr.net/npm/@reown/appkit@1.8.24/networks/+esm'),
+      import('https://cdn.jsdelivr.net/npm/@walletconnect/universal-provider@2.25.0/+esm')
+    ]);
+    const createAppKit=coreMod?.createAppKit||coreMod?.default?.createAppKit;
+    const bsc=netMod?.bsc;
+    const UniversalProvider=ucMod?.default||ucMod?.UniversalProvider;
+    if(typeof createAppKit!=='function')throw Error('Reown AppKit createAppKit export לא נמצא');
+    if(!bsc)throw Error('Reown BSC network export לא נמצא');
+    if(typeof UniversalProvider!=='function')throw Error('WalletConnect UniversalProvider export לא נמצא');
+
+    let cfg={};
+    let localResp=null;
+    try{
+      localResp=await fetch('/api/walletconnect/config',{cache:'no-store'});
+      cfg=await localResp.json().catch(()=>({}));
+    }catch(_e){}
+    if(!localResp?.ok||!cfg.enabled||!cfg.project_id){
+      try{
+        const fallbackResp=await fetch('https://slh-cloud-bot-production.up.railway.app/api/walletconnect/config',{cache:'no-store'});
+        const fallbackCfg=await fallbackResp.json().catch(()=>({}));
+        if(fallbackResp.ok&&fallbackCfg.enabled&&fallbackCfg.project_id)cfg=fallbackCfg;
+      }catch(_e){}
     }
-    lastError=Error('WalletConnect ESM loaded without EthereumProvider export');
-  }catch(e){lastError=e}
-  try{
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.25.0/dist/index.umd.js';
-      s.async=true;
-      s.crossOrigin='anonymous';
-      s.onload=()=>resolve();
-      s.onerror=()=>reject(Error('WalletConnect UMD CDN load failed'));
-      document.head.appendChild(s);
+    if(!cfg.enabled||!cfg.project_id)throw Error('WALLETCONNECT_PROJECT_ID לא מוגדר במסלול ה־Mini App');
+    _walletConnectProjectId=cfg.project_id;
+
+    const provider=await UniversalProvider.init({projectId:_walletConnectProjectId});
+    const modal=createAppKit({
+      projectId:_walletConnectProjectId,
+      networks:[bsc],
+      universalProvider:provider,
+      manualWCControl:true,
+      metadata:{
+        name:'SLH OS',
+        description:'SLH OS Mini App — BNB wallet connection',
+        url:window.location.origin,
+        icons:['https://slh-nft.com/icon-192.png']
+      },
+      enableNetworkSwitcher:false
     });
-    if(hasSdk())return true;
-  }catch(e){lastError=e||lastError}
-  console.error('[WalletConnect] SDK load failed',lastError||'unknown');
-  return false;
+
+    provider.on?.('display_uri',uri=>{
+      const value=String(uri||'');
+      const box=$('bnbWcUri'),wrap=$('bnbWcUriWrap'),copy=$('bnbWcCopy');
+      if(wrap)wrap.hidden=!value;
+      if(box)box.textContent=value;
+      if(copy){copy.hidden=!value;copy.onclick=async()=>{
+        try{await navigator.clipboard.writeText(value);toast('✅ URI הועתק')}
+        catch(_e){toast('לא ניתן להעתיק URI במכשיר הזה')}
+      }}
+      setText('bnbWcDiag',value?'✅ WalletConnect URI נוצר. השתמש ב־Reown/Wallet תואם.':'⚠️ WalletConnect החזיר URI ריק.');
+    });
+    provider.on?.('accountsChanged',()=>loadWalletBindings());
+    provider.on?.('chainChanged',()=>loadWalletBindings());
+    provider.on?.('disconnect',()=>{_walletConnectProvider=null;setText('bnbWalletConnectStatus','⚪️ WalletConnect מנותק')});
+
+    window.__slhReownWalletConnect={modal,provider};
+    _walletConnectProvider=provider;
+    setText('bnbWcDiag','✅ Reown AppKit מוכן · BNB Smart Chain');
+    return true;
+  }catch(e){
+    lastError=e;
+    console.error('[WalletConnect] Reown AppKit init failed',lastError);
+    return false;
+  }
 }
 async function initBnbWalletConnect(){
   if(_walletConnectProvider)return _walletConnectProvider;
-  if(!(await ensureWalletConnectSdk()))throw Error('WalletConnect SDK לא נטען');
-  let cfg={};
-  let localResp=null;
-  try{
-    localResp=await fetch('/api/walletconnect/config',{cache:'no-store'});
-    cfg=await localResp.json().catch(()=>({}));
-  }catch(_e){}
-  if(!localResp?.ok||!cfg.enabled||!cfg.project_id){
-    try{
-      const fallbackResp=await fetch('https://slh-cloud-bot-production.up.railway.app/api/walletconnect/config',{cache:'no-store'});
-      const fallbackCfg=await fallbackResp.json().catch(()=>({}));
-      if(fallbackResp.ok&&fallbackCfg.enabled&&fallbackCfg.project_id)cfg=fallbackCfg;
-    }catch(_e){}
-  }
-  if(!cfg.enabled||!cfg.project_id)throw Error('WALLETCONNECT_PROJECT_ID לא מוגדר במסלול ה־Mini App');
-  _walletConnectProjectId=cfg.project_id;
-  setText('bnbWcOrigin',window.location.origin);
-  const diag=$('bnbWcDiag'); if(diag)diag.textContent='WalletConnect SDK נטען · Project ID זמין · מנסה לפתוח חיבור…';
-  const EthereumProvider=window.__slhWalletConnectEthereumProvider || window['@walletconnect/ethereum-provider']?.EthereumProvider || window.WalletConnectEthereumProvider?.EthereumProvider || window.WalletConnectEthereumProvider?.default || window.WalletConnectEthereumProvider;
-  if(typeof EthereumProvider!=='function')throw Error('WalletConnect EthereumProvider export לא נמצא');
-  _walletConnectProvider=await EthereumProvider.init({
-    projectId:_walletConnectProjectId,
-    optionalChains:[56],
-    showQrModal:false,
-    rpcMap:{56:'https://bsc-dataseed.binance.org/'},
-    metadata:{
-      name:'SLH OS',
-      description:'SLH OS Mini App — BNB wallet connection',
-      url:'https://slh-nft.com',
-      icons:['https://slh-nft.com/icon-192.png']
-    }
-  });
-  _walletConnectProvider.on?.('display_uri',uri=>{
-    const value=String(uri||'');
-    const box=$('bnbWcUri'),wrap=$('bnbWcUriWrap'),copy=$('bnbWcCopy');
-    if(wrap)wrap.hidden=!value;
-    if(box)box.textContent=value;
-    if(copy){copy.hidden=!value;copy.onclick=async()=>{
-      try{await navigator.clipboard.writeText(value);toast('✅ URI הועתק')}
-      catch(_e){toast('לא ניתן להעתיק URI במכשיר הזה')}
-    }}
-    setText('bnbWcDiag',value?'✅ WalletConnect URI נוצר. השתמש בהעתקה/בארנק תואם.':'⚠️ WalletConnect החזיר URI ריק.');
-  });
-  _walletConnectProvider.on?.('accountsChanged',()=>loadWalletBindings());
-  _walletConnectProvider.on?.('chainChanged',()=>loadWalletBindings());
-  _walletConnectProvider.on?.('disconnect',()=>{_walletConnectProvider=null;setText('bnbWalletConnectStatus','⚪️ WalletConnect מנותק')});
-  return _walletConnectProvider;
+  if(!(await ensureWalletConnectSdk()))throw Error('WalletConnect/Reown SDK לא נטען');
+  return window.__slhReownWalletConnect?.provider||_walletConnectProvider;
 }
 
 async function connectBnbWalletConnect(){
   if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
   try{
-    setText('bnbWalletConnectStatus','⏳ פותח WalletConnect…');
+    setText('bnbWalletConnectStatus','⏳ פותח Reown WalletConnect…');
     const provider=await initBnbWalletConnect();
-    await provider.connect({chains:[56]});
+    const modal=window.__slhReownWalletConnect?.modal;
+    if(!provider)throw Error('WalletConnect provider unavailable');
+
+    const session=provider.session;
+    if(!(session&&Object.keys(session).length)){
+      if(modal?.open) await modal.open({view:'Connect',namespace:'eip155'});
+      await provider.connect({
+        optionalNamespaces:{
+          eip155:{
+            methods:['eth_chainId','eth_accounts','personal_sign','eth_signTypedData'],
+            chains:['eip155:56'],
+            events:['chainChanged','accountsChanged']
+          }
+        }
+      });
+    }
+
     const address=await verifyBnbProvider(provider,'WalletConnect');
     setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
   }catch(e){
@@ -884,7 +898,7 @@ async function connectBnbWalletConnect(){
       ? 'יש לאשר את Origin הזה ב-Reown Project Domains: '+origin
       : raw;
     const reset=$('bnbWcReset');
-    if(reset){reset.hidden=false;reset.onclick=()=>{_walletConnectProvider=null;setText('bnbWcDiag','מנסה שוב…');connectBnbWalletConnect();}}
+    if(reset){reset.hidden=false;reset.onclick=()=>{_walletConnectProvider=null;window.__slhReownWalletConnect=null;setText('bnbWcDiag','מנסה שוב…');connectBnbWalletConnect();}}
     toast(msg);
   }
 }
