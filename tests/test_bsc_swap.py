@@ -102,3 +102,9 @@ def test_approval_is_exact_amount():
     decoded = decode(["address", "uint256"], raw)
     assert decoded[0] == token
     assert decoded[1] == 12345
+
+
+
+def test_uint256_rpc_bytes_decode_is_big_endian():
+    raw = (123456789).to_bytes(32, "big")
+    assert bsc_swap._decode_uint256(raw) == 123456789
