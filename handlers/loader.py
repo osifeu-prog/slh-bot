@@ -127,6 +127,7 @@ def load_handlers(bot, context):
 
     import importlib
     import inspect
+    from core.command_registry import register_module
 
     for name, mod_path in modules:
         try:
@@ -152,37 +153,48 @@ def load_handlers(bot, context):
                 m.register_handlers(bot, context)
             else:
                 raise Exception("No supported register function")
+            register_module(m)
             print(f"✅ {name} loaded")
         except Exception as e:
             print(f"⚠️ {name} skipped:", str(e)[:120])
 
     try:
+        import doctor_handler
         from doctor_handler import register_doctor_handlers
         register_doctor_handlers(bot)
+        register_module(doctor_handler)
         print("✅ doctor loaded")
     except Exception as e:
         print("doctor skipped:", e)
     try:
+        import language_handler
         from language_handler import register_language
         register_language(bot)
+        register_module(language_handler)
         print("✅ language loaded")
     except Exception as e:
         print("language skipped:", e)
     try:
+        import handlers.esp_handler as esp_handler
         from handlers.esp_handler import register_esp_handler
         register_esp_handler(bot)
+        register_module(esp_handler)
         print("📡 esp loaded")
     except Exception as e:
         print("esp skipped:", e)
     try:
+        import handlers.advanced_ask_handler as advanced_ask_handler
         from handlers.advanced_ask_handler import register_ask_handler
         register_ask_handler(bot)
+        register_module(advanced_ask_handler)
         print("🧠 advanced ask loaded")
     except Exception as e:
         print("ask skipped:", e)
     try:
+        import handlers.natural_chat as natural_chat
         from handlers.natural_chat import register as register_natural_chat
         register_natural_chat(bot)
+        register_module(natural_chat)
         print("💬 natural chat loaded")
     except Exception as e:
         print("natural chat skipped:", e)
