@@ -48,6 +48,10 @@ MAX_SLIPPAGE_BPS = 1_000
 DEFAULT_DEADLINE_SECONDS = 1_200
 
 
+def _decode_uint256(raw: bytes) -> int:
+    return int(raw.hex(), 16)
+
+
 def _cfg() -> dict[str, Any]:
     name = network_name()
     cfg = NETWORKS[name]
@@ -90,7 +94,7 @@ def _require_enabled() -> dict[str, Any]:
 
 def _token_decimals(web3, token: str) -> int:
     raw = web3.eth.call({"to": token, "data": "0x" + ERC20_DECIMALS_SELECTOR})
-    decimals = int(raw.hex(), 16)
+    decimals = _decode_uint256(raw)
     if not 0 <= decimals <= 36:
         raise ValueError("TOKEN_DECIMALS_INVALID")
     return decimals
@@ -296,13 +300,13 @@ def prepare_usdt_to_bnb(
     amount_out_raw = amounts[-1]
     amount_out_min = _amount_out_min(amount_out_raw, slippage_bps)
     deadline = _deadline(deadline_seconds)
-    allowance = int(web3.eth.call({
+    allowance = _decode_uint256(web3.eth.call({
         "to": cfg["usdt"],
         "data": "0x" + ERC20_ALLOWANCE_SELECTOR + encode(
             ["address", "address"],
             [sender, cfg["router"]],
         ).hex(),
-    }).hex(), 16)
+    }))
     approval = None
     if allowance < amount_in_raw:
         approval_data = _encode_approve(cfg["router"], amount_in_raw)
@@ -320,10 +324,10 @@ def prepare_usdt_to_bnb(
             "gas": _hex_quantity(approval_gas),
             "gasPrice": _hex_quantity(int(web3.eth.gas_price)),
         }
-    token_balance = int(web3.eth.call({
+    token_balance = _decode_uint256(web3.eth.call({
         "to": cfg["usdt"],
         "data": "0x" + ERC20_BALANCE_OF_SELECTOR + sender[2:].lower().zfill(64),
-    }.copy()))
+    }))
     if token_balance < amount_in_raw:
         raise ValueError("INSUFFICIENT_USDT_BALANCE")
     gas_data = _encode_swap_exact_tokens_for_eth(
