@@ -1139,6 +1139,54 @@ def combined_wallet(uid):
     })
 
 
+@app.route("/api/v1/execution/policy")
+def bsc_execution_policy():
+    try:
+        from core.bsc_execution import policy_snapshot
+        return _no_store(jsonify(policy_snapshot())), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BSC_EXECUTION] policy error:", type(exc).__name__)
+        return jsonify({"error": "BSC_EXECUTION_POLICY_UNAVAILABLE"}), 503
+
+
+@app.route("/api/v1/execution/prepare", methods=["POST"])
+def bsc_execution_prepare():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    asset = str(payload.get("asset", "")).strip().upper()
+    recipient = str(payload.get("recipient", "")).strip()
+    amount = str(payload.get("amount", "")).strip()
+
+    if asset not in {"BNB", "USDT"}:
+        return jsonify({"error": "UNSUPPORTED_EXECUTION_ASSET"}), 400
+    if not recipient:
+        return jsonify({"error": "MISSING_RECIPIENT"}), 400
+    if not amount:
+        return jsonify({"error": "MISSING_AMOUNT"}), 400
+
+    try:
+        from core import bsc_execution
+        result = (
+            bsc_execution.prepare_native_transfer(uid, recipient, amount)
+            if asset == "BNB"
+            else bsc_execution.prepare_usdt_transfer(uid, recipient, amount)
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        code = str(exc)
+        if code in {"BSC_EXECUTION_DISABLED", "BSC_MAINNET_EXECUTION_DISABLED"}:
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
+    except Exception as exc:
+        print("[BSC_EXECUTION] prepare error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BSC_EXECUTION_PREPARE_FAILED"}), 502
+
+
 @app.route("/api/wallet/bnb/challenge", methods=["POST"])
 def bnb_wallet_challenge():
     uid = authenticated_uid()
