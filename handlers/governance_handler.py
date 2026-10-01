@@ -35,6 +35,19 @@ def _get_weight(gov, uid):
     return gov.get("rules", {}).get("vote_weights", {}).get(role, 1)
 
 
+def _parse_proposal_id(value):
+    """Accept proposal IDs as plain numbers or Telegram-style #123."""
+    raw = str(value).strip()
+    if raw.startswith("#"):
+        raw = raw[1:].strip()
+    if not raw.isdigit():
+        raise ValueError("PROPOSAL_ID_INVALID")
+    proposal_id = int(raw)
+    if proposal_id < 1:
+        raise ValueError("PROPOSAL_ID_INVALID")
+    return proposal_id
+
+
 def register(bot, context=None):
     @bot.message_handler(commands=["agent_status"])
     def agent_status_cmd(m):
@@ -155,7 +168,7 @@ def register(bot, context=None):
             return
 
         try:
-            pid = int(parts[1])
+            pid = _parse_proposal_id(parts[1])
         except ValueError:
             bot.reply_to(m, "proposal_id חייב להיות מספר.")
             return
