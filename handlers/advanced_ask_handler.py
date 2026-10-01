@@ -1,5 +1,5 @@
 from handlers.llm_handler import query_llm_with_context
-from core.ask_router import route
+from core.ask_router import route, AI_MAX_INPUT_CHARS, AI_INPUT_TOO_LONG_MESSAGE
 from core.keyboard_detector import normalize_keyboard_text
 from core.authority import is_owner
 from core.conversation_memory import record_turn
@@ -31,7 +31,10 @@ def register_ask_handler(bot):
             bot.reply_to(msg, "Usage: /ask [question]")
             return
 
-        question = question[:2000]
+        if len(question) > AI_MAX_INPUT_CHARS:
+            bot.reply_to(msg, AI_INPUT_TOO_LONG_MESSAGE)
+            return
+
         original_question = question
 
         # Last EXEC output can contain privileged operational data.
