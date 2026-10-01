@@ -263,6 +263,11 @@ def primary_bot_token_candidates():
         vault_token = str(get_vault_token("Me_ad_main_bot") or "").strip()
         if vault_token and vault_token != primary_token:
             candidates.append(("bot_vault", vault_token))
+    except ValueError as exc:
+        if str(exc) == "BOT_NOT_IN_VAULT" and primary_token:
+            log("[TELEGRAM] Bot Vault entry not configured; environment token remains primary")
+        else:
+            log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
     except Exception as exc:
         log(f"[TELEGRAM] Bot Vault fallback unavailable: {type(exc).__name__}")
     return candidates
