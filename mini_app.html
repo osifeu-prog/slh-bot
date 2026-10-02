@@ -1389,7 +1389,7 @@ async function connectBnbWalletConnect(){
     console.log('[WC] relay state after connect',relayState());
     await Promise.race([
       provider.connect({chains:[56]}),
-      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect session timeout — אשר את החיבור בארנק; ניתן לסרוק את ה־QR או לפתוח ב־Trust Wallet')),90000))
+      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect approval timeout — אשר את החיבור בארנק; ניתן לסרוק את ה־QR או לפתוח את ה־URI בארנק ולנסות שוב')),120000))
     ]);
     const address=await verifyBnbProvider(provider,'WalletConnect');
     setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
