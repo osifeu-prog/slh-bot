@@ -971,11 +971,15 @@ async function connectBnbWalletConnect(){
     }
     setText('bnbWcDiag','4/4 · ממתין לחיבור Relay…');
     console.log('[WC] relay state after connect',relayState());
-    await Promise.race([
-      provider.connect({chains:[56]}),
-      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect connect timeout — לא התקבל URI או session')),25000))
-    ]);
-    const address=await verifyBnbProvider(provider,'WalletConnect');
+    // WalletConnect emits display_uri before connect() resolves. Do not impose
+    // a short local timeout here: the promise stays pending while the user
+    // approves the pairing in Trust Wallet / MetaMask Mobile.
+    const address=await (async()=>{
+      setText('bnbWalletConnectStatus','⏳ URI נוצר — ממתין לאישור בארנק…');
+      setText('bnbWcDiag','✅ URI נוצר · ממתין לאישור החיבור בארנק');
+      await provider.connect({chains:[56]});
+      return verifyBnbProvider(provider,'WalletConnect');
+    })();
     setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
   }catch(e){
     console.error('[BNB/WC]',e);
