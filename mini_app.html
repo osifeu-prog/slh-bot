@@ -145,6 +145,7 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
   --v4-bg:#f5f7fb;--v4-panel:#fff;--v4-text:#172033;--v4-hint:#667085;--v4-line:#dde3ee;--v4-btn:#4967d8;--v4-btntext:#fff
 }
 :root[data-slh-theme="contrast"]{
+  --v-bg:#050505;--v-panel:#0d0d0d;--v-panel2:#050505;--v-ink:#fff;--v-hint:#f1f1f1;--v-line:#fff;--v-accent:#fff;--v-accent2:#fff;--v-soft:#ffffff1a;--v-on-accent:#050505;
   --v4-bg:#050505;--v4-panel:#0d0d0d;--v4-text:#fff;--v4-hint:#f1f1f1;--v4-line:#fff;--v4-btn:#fff;--v4-btntext:#050505
 }
 .slh-v5-settings-card{background:var(--v4-panel);border:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent);border-radius:18px;padding:15px;margin-bottom:10px}
@@ -1874,10 +1875,42 @@ const SLH_THEME_META = {
 };
 function applyUiTheme(theme){
   const t=SLH_THEME_META[theme]?theme:'calm';
-  if(t==='system') document.documentElement.removeAttribute('data-slh-theme');
-  else document.documentElement.setAttribute('data-slh-theme',t);
+  const h=document.documentElement;
+  const skinMap={calm:'night',system:'tg',light:'paper',contrast:'night'};
+  h.setAttribute('data-slh-theme',t);
+  h.setAttribute('data-skin',skinMap[t]);
+  if(t==='system'){
+    try{
+      const W=window.Telegram&&window.Telegram.WebApp;
+      const p=W?.themeParams||{};
+      const hex=(c,f)=>typeof c==='string'&&/^#[0-9a-f]{6}$/i.test(c)?c:f;
+      const r=document.documentElement.style;
+      r.setProperty('--v-bg',hex(p.secondary_bg_color,hex(p.bg_color,'#f3f5f9')));
+      r.setProperty('--v-panel',hex(p.bg_color,'#fff'));
+      r.setProperty('--v-panel2',hex(p.bg_color,'#fff'));
+      r.setProperty('--v-ink',hex(p.text_color,'#0e1b2c'));
+      r.setProperty('--v-hint',hex(p.hint_color,'#5a6678'));
+      r.setProperty('--v-accent',hex(p.button_color,'#2442d6'));
+      r.setProperty('--v-on-accent',hex(p.button_text_color,'#fff'));
+      r.setProperty('--v-accent2',hex(p.link_color,'#0e8f7a'));
+      r.setProperty('--v-line',hex(p.section_separator_color,'#d9dee8'));
+      r.setProperty('--v-soft','color-mix(in srgb, '+hex(p.text_color,'#0e1b2c')+' 6%, transparent)');
+    }catch(_e){}
+  }else{
+    try{
+      ['--v-bg','--v-panel','--v-panel2','--v-ink','--v-hint','--v-accent','--v-on-accent','--v-accent2','--v-line','--v-soft'].forEach(k=>h.style.removeProperty(k));
+    }catch(_e){}
+  }
   try{localStorage.setItem('slh.theme',t)}catch(_e){}
   setText('settingsThemeMeta',SLH_THEME_META[t].label+' · '+SLH_THEME_META[t].description);
+  try{
+    const W=window.Telegram&&window.Telegram.WebApp;
+    if(W&&typeof W.setBackgroundColor==='function'){
+      const bg=getComputedStyle(h).getPropertyValue('--v-bg').trim()||getComputedStyle(h).getPropertyValue('--bg').trim();
+      if(bg)W.setBackgroundColor(bg);
+      if(typeof W.setHeaderColor==='function'&&bg)W.setHeaderColor(bg);
+    }
+  }catch(_e){}
   return t;
 }
 function renderThemeChoices(current,choices){
@@ -1928,5 +1961,16 @@ try{
 }catch(_e){}
 try{
   if(initData) setTimeout(()=>loadUiSettings(),0);
+}catch(_e){}
+try{
+  const W=window.Telegram&&window.Telegram.WebApp;
+  if(W&&typeof W.onEvent==='function'){
+    W.onEvent('themeChanged',function(){
+      try{
+        const current=document.documentElement.getAttribute('data-slh-theme')||'calm';
+        if(current==='system')applyUiTheme('system');
+      }catch(_e){}
+    });
+  }
 }catch(_e){}
 </script></body></html>
