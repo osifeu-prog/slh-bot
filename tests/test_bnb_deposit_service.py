@@ -1,4 +1,5 @@
 import unittest
+from decimal import Decimal
 from unittest.mock import patch
 
 from core import bnb_deposit_service
@@ -69,6 +70,10 @@ class BnbDepositServiceTests(unittest.TestCase):
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertEqual(result["amount_wei"], 123456789012345678)
         self.assertEqual(result["credits"], 123.45678901234568)
+        self.assertEqual(
+            result["credits"],
+            float(Decimal(123456789012345678) * Decimal(1000) / Decimal(10**18)),
+        )
         self.assertEqual(
             record.call_args.kwargs["meta"]["bnb_amount_wei"],
             123456789012345678,
