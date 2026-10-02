@@ -3,6 +3,32 @@ from pathlib import Path
 
 
 class WalletAndAcademyUiContractTests(unittest.TestCase):
+    def test_bot_first_wallet_commands_are_registered(self):
+        source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        for command in [
+            'commands=["wallet_status", "wallet_ops"]',
+            'commands=["bnb_gate"]',
+            'commands=["bsc_policy"]',
+            'commands=["bsc_prepare_bnb"]',
+            'commands=["bsc_prepare_slh"]',
+            'commands=["bsc_receipt"]',
+            'commands=["connect_bnb", "bnb_challenge"]',
+            'commands=["connect_bnb_verify", "bnb_verify"]',
+        ]:
+            self.assertIn(command, source)
+
+    def test_bot_first_bsc_commands_never_request_private_key_or_seed(self):
+        source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        lowered = source.lower()
+        self.assertNotIn("private key", lowered)
+        self.assertNotIn("seed phrase", lowered)
+        self.assertIn("bot לא מחזיק את המפתח", source)
+
+    def test_bsc_execution_remains_external_signer_only(self):
+        source = Path("core/bsc_execution.py").read_text(encoding="utf-8")
+        self.assertIn("external_signer_only", source)
+        self.assertIn("This module never stores private keys", source)
+
     def test_wallet_copy_is_binding_aware_not_globally_paused(self):
         source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
         self.assertNotIn("מושהים כרגע עד להשלמת user-binding מאומת", source)
