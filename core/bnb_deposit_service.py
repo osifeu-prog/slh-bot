@@ -5,6 +5,8 @@ core.deposit_monitor; credit mutation goes through core.economy_service.
 This module does not broadcast transactions or expose private keys.
 """
 
+from decimal import Decimal
+
 import state_manager
 
 from core.bnb_gate import bnb_deposits_open
@@ -41,9 +43,12 @@ def settle_bnb_deposit(uid, tx_hash):
         raise ValueError("INVALID_BNB_AMOUNT")
 
     # 1 BNB = 10**18 wei and 1 BNB = 1000 Credits.
-    # Derive Credits from the integer wei value so settlement never depends
-    # on a binary floating-point BNB amount.
-    credits = (amount_wei * CREDITS_PER_BNB) / 10**18
+    # Keep the conversion exact in Decimal until the existing Credits ledger
+    # boundary, which currently accepts numeric (float/int) balances.
+    credits_exact = (
+        Decimal(amount_wei) * Decimal(CREDITS_PER_BNB) / Decimal(10**18)
+    )
+    credits = float(credits_exact)
     amount_bnb = float(verified.get("amount_bnb", 0))
     idempotency_key = f"bnb:deposit:{tx_hash.lower()}"
 
