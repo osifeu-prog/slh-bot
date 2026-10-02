@@ -191,6 +191,15 @@ def get_investor_snapshot(uid):
 
     asset_truth = build_slH_asset_truth(wallet)
 
+    referral_data = user.get("referral", {}) if isinstance(user.get("referral"), dict) else {}
+    referral_count = int(referral_data.get("count", 0) or 0)
+    referral_policy = {
+        "count": referral_count,
+        "required": 5,
+        "remaining": max(0, 5 - referral_count),
+        "per_successful_referral": {"credits": 0.9, "points": 10},
+    }
+
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
         gamification = {}
@@ -251,6 +260,23 @@ def get_investor_snapshot(uid):
         and 100.0 <= ton_rate <= 110.0
     )
 
+    completed_courses = 0
+    completed_stages = 0
+    for course_id, course_progress in progress.items():
+        if not isinstance(course_progress, dict):
+            continue
+        completed = course_progress.get("completed", [])
+        if isinstance(completed, list):
+            completed_stages += len(set(completed))
+        try:
+            stage = int(course_progress.get("stage", 0) or 0)
+        except (TypeError, ValueError):
+            stage = 0
+        definition = courses.get(course_id, {})
+        total_stages = len(definition.get("stages", [])) if isinstance(definition, dict) else 0
+        if total_stages and stage >= total_stages:
+            completed_courses += 1
+
     return {
         "identity": {
             "uid": uid,
@@ -287,6 +313,10 @@ def get_investor_snapshot(uid):
             "courses": sorted(str(course_id) for course_id in courses.keys()),
             "enrolled": enrolled,
             "progress": progress,
+            "active_course": academy.get("active_course"),
+            "completed_courses": completed_courses,
+            "completed_stages": completed_stages,
+            "source_of_truth": "state/db.json",
         },
         "tasks": {
             "personal": personal_tasks,
@@ -297,6 +327,16 @@ def get_investor_snapshot(uid):
             "credits": reward_credits,
             "points": gamification.get("points", 0),
             "recent": recent_rewards,
+        },
+        "referral": {
+            "count": int(referral_policy.get("count", 0) or 0),
+            "required": int(referral_policy.get("required", 5) or 5),
+            "remaining": int(referral_policy.get("remaining", 0) or 0),
+            "per_successful_referral": referral_policy.get(
+                "per_successful_referral",
+                {"credits": 0.9, "points": 10},
+            ),
+            "source_of_truth": "core.referral_reward",
         },
         "airdrop": {
             "status": "not_connected",

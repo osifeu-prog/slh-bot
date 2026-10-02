@@ -59,8 +59,24 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("var bnbConnected=bnb.includes('✅ מאומת')||bnb.includes('🔒 מאומת');", source)
         self.assertIn("uxBnbMini is rendered by renderBnbWalletState(); do not overwrite it here.", source)
         self.assertNotIn("mini.textContent=bnb.includes('✅')?'✅ מאומת':'התחבר כדי לאמת'", source)
+    def test_alpha_global_open_is_not_user_eligibility_override(self):
+        source = Path("webapp.py").read_text(encoding="utf-8")
+        self.assertIn('alpha["global_status"]', source)
+        self.assertIn('alpha["global_readiness_status"]', source)
+        self.assertNotIn('alpha["status"] = "OPEN"', source)
 
+    def test_mini_app_distinguishes_global_alpha_from_user_eligibility(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("const globalStatus=a.global_status||'CLOSED';", source)
+        self.assertIn("const personalStatus=a.status||'review';", source)
+        self.assertIn("Alpha global", source)
+        self.assertIn("Eligibility", source)
 
+    def test_referral_share_uses_canonical_reward_policy(self):
+        source = Path("handlers/share_handler.py").read_text(encoding="utf-8")
+        self.assertIn("from core import referral_reward", source)
+        self.assertIn("referral_reward.progress(uid)", source)
+        self.assertNotIn("0.9 Credits +10 Points", source)
 
 if __name__ == "__main__":
     unittest.main()
