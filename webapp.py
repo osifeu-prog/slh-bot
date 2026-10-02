@@ -1593,6 +1593,82 @@ def onchain_status():
 
 
 # Read-only adapter over the existing exchange state. No order placement or settlement.
+@app.route("/api/v1/distribution/secondary", methods=["GET"])
+def secondary_distribution_status():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.secondary_distribution_service import secondary_distribution_snapshot
+        return _no_store(jsonify(secondary_distribution_snapshot(uid))), 200
+    except Exception as exc:
+        print("[DISTRIBUTION] status error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SECONDARY_DISTRIBUTION_STATUS_FAILED"}), 502
+
+
+@app.route("/api/v1/distribution/secondary/prepare", methods=["POST"])
+def secondary_distribution_prepare():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.secondary_distribution_service import prepare_secondary_slh_transfer
+        result = prepare_secondary_slh_transfer(
+            uid,
+            payload.get("recipient"),
+            payload.get("amount"),
+            payload.get("request_id"),
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DISTRIBUTION] prepare error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SECONDARY_DISTRIBUTION_PREPARE_FAILED"}), 502
+
+
+@app.route("/api/v1/distribution/secondary/confirm", methods=["POST"])
+def secondary_distribution_confirm():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.secondary_distribution_service import confirm_secondary_slh_transfer
+        result = confirm_secondary_slh_transfer(
+            uid,
+            payload.get("request_id"),
+            payload.get("tx_hash"),
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        code = str(exc)
+        if code == "INSUFFICIENT_CONFIRMATIONS":
+            return jsonify({"error": code, "retryable": True}), 409
+        return jsonify({"error": code}), 400
+    except Exception as exc:
+        print("[DISTRIBUTION] confirm error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SECONDARY_DISTRIBUTION_CONFIRM_FAILED"}), 502
+
+
+@app.route("/api/v1/distribution/secondary/cancel", methods=["POST"])
+def secondary_distribution_cancel():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    try:
+        from core.secondary_distribution_service import cancel_secondary_slh_transfer
+        result = cancel_secondary_slh_transfer(uid, payload.get("request_id"))
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DISTRIBUTION] cancel error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SECONDARY_DISTRIBUTION_CANCEL_FAILED"}), 502
+
+
 @app.route("/api/v1/exchange/markets")
 def exchange_markets():
     return jsonify({"markets": [{"base": "SLH", "quote": "CREDITS", "symbol": "SLH/CREDITS"}]})
