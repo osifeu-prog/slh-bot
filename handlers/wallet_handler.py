@@ -198,6 +198,35 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(msg, f"❌ BSC receipt failed: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["bnb_sign"])
+    def bnb_sign(msg):
+        """Create a one-time external-browser signing link bound to one BSC address."""
+        uid = str(msg.from_user.id)
+        parts = msg.text.split()
+        if len(parts) != 2:
+            bot.reply_to(msg, "שימוש: /bnb_sign <כתובת BNB>")
+            return
+        try:
+            from core.bnb_web_proof import issue_session
+            session = issue_session(uid, parts[1])
+            bot.reply_to(
+                msg,
+                "🔐 BNB WALLET PROOF — BOT FIRST\\n\\n"
+                f"כתובת היעד לאימות: {session['address']}\\n"
+                f"⏱️ הקישור בתוקף עד: {session['expires_at']}\\n\\n"
+                "פתח את הקישור בדפדפן רגיל שבו MetaMask/Trust נגישים (לא Telegram Mini App):\\n"
+                f"{session['url']}\\n\\n"
+                "1. Connect MetaMask / Trust\\n"
+                "2. ודא BSC Mainnet / chain 56\\n"
+                "3. לחץ Sign ownership proof בלבד\\n"
+                "4. אין שליחת BNB/SLH, אין Approve ואין Swap\\n\\n"
+                "בסיום חזור לבוט והרץ /wallet_status."
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ BNB signing session: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB signing session failed: {type(exc).__name__}")
+
     @bot.message_handler(commands=["connect_bnb", "bnb_challenge"])
     def connect_bnb(msg):
         """Issue a short-lived BNB ownership challenge; no transaction is requested."""
