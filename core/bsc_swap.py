@@ -18,6 +18,7 @@ from core.bsc_execution import (
     _hex_quantity,
     _parse_units,
     _client,
+    _network,
     execution_enabled,
     mainnet_allowed,
     network_name,
@@ -53,21 +54,23 @@ def _decode_uint256(raw: bytes) -> int:
 
 
 def _cfg() -> dict[str, Any]:
-    name = network_name()
-    cfg = NETWORKS[name]
-    if name == "bsc-mainnet" and not mainnet_allowed():
-        raise ValueError("BSC_MAINNET_EXECUTION_DISABLED")
+    """Use the canonical execution-layer network config, including its RPC URL."""
     import os
+
+    exec_cfg = _network()
+    name = exec_cfg["name"]
     router = os.getenv("SLH_BSC_PANCAKE_V2_ROUTER", "").strip() or DEFAULTS[name]["router"]
     wbnb = os.getenv("SLH_BSC_WBNB_ADDRESS", "").strip() or DEFAULTS[name]["wbnb"]
     usdt = os.getenv(DEFAULTS[name]["usdt_env"], "").strip()
+
     return {
         "name": name,
-        "chain_id": cfg["chain_id"],
+        "chain_id": exec_cfg["chain_id"],
+        "rpc_url": exec_cfg["rpc_url"],
         "router": _checksum_address(router, field="router"),
         "wbnb": _checksum_address(wbnb, field="token"),
         "usdt": _checksum_address(usdt, field="token") if usdt else None,
-        "native_symbol": cfg["native_symbol"],
+        "native_symbol": exec_cfg["native_symbol"],
     }
 
 
