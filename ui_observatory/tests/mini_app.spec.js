@@ -168,6 +168,29 @@ test('visual baseline: academy', async ({ page }, testInfo) => {
 });
 
 
+test('display theme selection is interactive and persistent', async ({ page }) => {
+  await clickPrimaryNav(page, '⚙️ הגדרות').catch(async () => {
+    await page.locator('#bmore').click();
+    const settingsButton = page.locator('.more-grid button').filter({ hasText: 'הגדרות' });
+    if (await settingsButton.count()) await settingsButton.click();
+    else await page.locator('[onclick*="show(\\'settings\\')"]').first().click();
+  });
+  await expect(page.locator('#settings')).toHaveClass(/active/);
+  await expect(page.locator('#themeChoices button')).toHaveCount(4);
+
+  const contrast = page.locator('#themeChoices button.contrast');
+  await expect(contrast).toBeVisible();
+  await contrast.click();
+
+  await expect(page.locator('html')).toHaveAttribute('data-slh-theme', 'contrast');
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'night');
+  await expect(page.locator('#settingsThemeMeta')).toContainText('ניגודיות גבוהה');
+
+  const saved = await page.evaluate(() => localStorage.getItem('slh.theme'));
+  expect(saved).toBe('contrast');
+  await expect(contrast).toHaveAttribute('aria-selected', 'true');
+});
+
 test('BSC swap screen is reachable and remains execution-gated', async ({ page }) => {
   await clickPrimaryNav(page, '🔄 Swap');
   await expect(page.locator('#bscswap')).toHaveClass(/active/);
