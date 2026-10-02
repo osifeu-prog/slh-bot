@@ -183,7 +183,7 @@ def _user_journey_contracts():
     checks.append(_check("academy_authority", ok, detail))
     ok, detail = _course_contract()
     checks.append(_check("academy_lesson_1", ok, detail))
-    ok, detail = _static_contract(join, calls=("_persist_referral", "maybe_award"))
+    ok, detail = _static_contract(join, calls=("_persist_referral", "settle_successful_referral"))
     checks.append(_check("referral_chain", ok, detail))
     ok, detail = _static_contract(referral, functions=("maybe_award",), calls=("atomic_update",))
     checks.append(_check("referral_authority", ok, detail))

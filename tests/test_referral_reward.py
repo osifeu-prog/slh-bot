@@ -21,6 +21,18 @@ class ReferralRewardTests(unittest.TestCase):
             with mock.patch.object(state_manager, "load_db", lambda: db):
                 return referral_reward.maybe_award(uid, now=now)
 
+    def test_successful_referral_reward_policy(self):
+        with mock.patch.object(referral_reward, "grant") as grant, mock.patch.object(
+            referral_reward, "maybe_award", return_value=None
+        ):
+            grant.side_effect = [{"points": 10}, {"credits": 0.9}]
+            result = referral_reward.settle_successful_referral("1", "2")
+
+        assert result["points"]["points"] == 10
+        assert result["credits"]["credits"] == 0.9
+        assert grant.call_args_list[0].kwargs["idempotency_key"] == "ref:2"
+        assert grant.call_args_list[1].kwargs["idempotency_key"] == "referral-credit:2"
+
     def test_grants_vip_at_five(self):
         db = make_db(5)
         self.assertIsNotNone(self.award(db))

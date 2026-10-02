@@ -7,12 +7,6 @@ def register(bot):
     def share_cmd(msg):
         uid = str(msg.from_user.id)
 
-        try:
-            from core.holiday_campaign import record_entry
-            record_entry(uid, source="share_command")
-        except Exception as e:
-            print("HOLIDAY CAMPAIGN SHARE ENTRY FAILED:", e)
-
         db = state_manager.load_db()
         users = db.get("users", {})
         u = users.get(uid, {})
@@ -34,9 +28,10 @@ def register(bot):
         text = (
             "🎁 הזמנה ו-Referral\n\n"
             f"🔗 {link}\n\n"
-            f"👥 משתמשים שהוזמנו: {count}\n"
-            f"💰 עמלה שנרשמה: {commission}\n\n"
-            "העמלה המוצגת כאן נלקחת מספר העמלות של המערכת. "
-            "היא אינה הבטחה לרווח עתידי."
+            f"👥 משתמשים שהוזמנו בהצלחה: {count}\n"
+            "🎁 על כל הצטרפות מוצלחת: +0.9 Credits +10 Points\n"
+            "⭐ אחרי 5 referrals: חודש VIP (הצעת השקה)\n\n"
+            f"💰 עמלת רכישות שהצטברה: {commission}\n\n"
+            "התגמול ניתן על הצטרפות מוצלחת, לא על עצם הלחיצה/השיתוף."
         )
         bot.reply_to(msg, text)

@@ -481,7 +481,13 @@ def register(bot, context=None):
     def menu_share(call):
         bot.answer_callback_query(call.id)
         link = referral_link(str(call.from_user.id))
-        text = "👥 הזמנה ל-SLH\n\n" + (f"שתף את הקישור שלך:\n{link}" if link else "קישור ההזמנה יופיע לאחר זיהוי הבוט.")
+        text = (
+            "👥 הזמנה ל-SLH\n\n"
+            + (f"שתף את הקישור שלך:\n{link}\n\n" if link else "קישור ההזמנה יופיע לאחר זיהוי הבוט.\n\n")
+            + "🎁 על כל הצטרפות מוצלחת: +0.9 Credits +10 Points\n"
+            + "⭐ אחרי 5 referrals: חודש VIP (הצעת השקה)\n"
+            + "התגמול ניתן על הצטרפות מוצלחת — לא על קליק בלבד."
+        )
         bot.send_message(call.message.chat.id, text)
 
     @bot.callback_query_handler(func=lambda call: call.data == "wallet_balance")
