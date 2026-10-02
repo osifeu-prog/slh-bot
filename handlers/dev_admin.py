@@ -347,4 +347,94 @@ def register(bot):
         profile_manager.update_user(uid, update)
         bot.reply_to(m, f"✅ User {uid} role changed to {role.upper()}")
 
+    @bot.message_handler(commands=['dist_wallet_status'])
+    def dist_wallet_status(m):
+        if not is_owner(m):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+        parts = m.text.split()
+        if len(parts) != 2 or not parts[1].isdigit() or int(parts[1]) <= 0:
+            bot.reply_to(m, "Usage: /dist_wallet_status <user_id>")
+            return
+        from core.distribution_wallet_registry import get_secondary_distribution_wallet
+        record = get_secondary_distribution_wallet(parts[1])
+        if not record:
+            bot.reply_to(m, "ℹ️ אין ארנק חלוקה משני רשום למשתמש הזה.")
+            return
+        bot.reply_to(
+            m,
+            "🔐 Secondary Distribution Wallet\n"
+            f"UID: {record.get('uid')}\n"
+            f"Address: {record.get('address')}\n"
+            f"Status: {record.get('status')}\n"
+            f"Mode: {record.get('mode')}\n"
+            f"Per-tx: {record.get('per_tx_limit_slh')} SLH\n"
+            f"Daily: {record.get('daily_limit_slh')} SLH\n"
+            f"Asset: {record.get('asset')} | Chain: {record.get('chain_id')}"
+        )
+
+    @bot.message_handler(commands=['dist_wallet_set'])
+    def dist_wallet_set(m):
+        if not is_owner(m):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+        parts = m.text.split()
+        if len(parts) != 4:
+            bot.reply_to(
+                m,
+                "Usage: /dist_wallet_set <user_id> <per_tx_limit_slh> <daily_limit_slh>"
+            )
+            return
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        try:
+            from core.distribution_wallet_registry import set_secondary_distribution_wallet
+            result = set_secondary_distribution_wallet(
+                m.from_user.id,
+                uid,
+                per_tx_limit=parts[2],
+                daily_limit=parts[3],
+            )
+            bot.reply_to(
+                m,
+                "✅ Secondary Distribution Wallet registered\n"
+                f"UID: {result['uid']}\n"
+                f"Address: {result['address']}\n"
+                f"Per-tx: {result['per_tx_limit_slh']} SLH\n"
+                f"Daily: {result['daily_limit_slh']} SLH\n"
+                "🔐 user_signed_only · no custody · no funds moved"
+            )
+        except (PermissionError, ValueError) as exc:
+            bot.reply_to(m, f"❌ {exc}")
+        except Exception as exc:
+            bot.reply_to(m, f"❌ Registration failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=['dist_wallet_revoke'])
+    def dist_wallet_revoke(m):
+        if not is_owner(m):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+        parts = m.text.split()
+        if len(parts) != 2:
+            bot.reply_to(m, "Usage: /dist_wallet_revoke <user_id>")
+            return
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        try:
+            from core.distribution_wallet_registry import revoke_secondary_distribution_wallet
+            result = revoke_secondary_distribution_wallet(m.from_user.id, uid)
+            bot.reply_to(
+                m,
+                f"✅ Secondary Distribution Wallet revoked for {uid}\n"
+                f"Address: {result.get('address')}"
+            )
+        except (PermissionError, ValueError) as exc:
+            bot.reply_to(m, f"❌ {exc}")
+        except Exception as exc:
+            bot.reply_to(m, f"❌ Revoke failed safely: {type(exc).__name__}")
+
     print("✅ dev_admin loaded")
