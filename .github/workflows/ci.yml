@@ -104,9 +104,11 @@ jobs:
           rewards = rewards_snapshot()
           assert rewards["join_points"] == 1000
           assert rewards["referral_points"] == 10
+          assert rewards["referral_credits"] == 0.9
           assert rewards["lesson_complete_points"] == 25
           assert rewards["course_complete_points"] == 250
-          assert rewards["airdrop_slh"] == 100000
+          assert rewards["airdrop_slh"] == 0
+          assert rewards["historical_holiday_airdrop_slh"] == 100000
 
           academy = Path("core/academy_manager.py").read_text(encoding="utf-8")
           assert "course_complete:" in academy
