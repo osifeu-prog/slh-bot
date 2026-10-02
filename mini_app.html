@@ -956,13 +956,20 @@ async function connectBnbWalletConnect(){
     const relay=provider?.signer?.client?.core?.relayer;
     const relayState=()=>({connected:!!relay?.connected,connecting:!!relay?.connecting});
     console.log('[WC] relay state before connect',relayState());
-    if(relay?.connected===false && typeof relay?.connect==='function'){
-      try{await Promise.race([
-        relay.connect(),
-        new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect Relay connect timeout')),8000))
-      ]);}catch(e){console.warn('[WC] relay connect',e)}
+    if(relay){
+      relay.on?.('error',e=>{
+        const msg=String(e?.message||e||'');
+        console.error('[WC Relay error]',e);
+        setText('bnbWcDiag','❌ Relay error: '+msg.slice(0,180));
+      });
+      relay.on?.('disconnect',e=>{
+        const msg=String(e?.message||e||'');
+        console.warn('[WC Relay disconnect]',e);
+        if(!provider.session)setText('bnbWcDiag','⚠️ Relay disconnected'+(msg?': '+msg.slice(0,140):''));
+      });
+      relay.on?.('connect',()=>setText('bnbWcDiag','✅ Relay מחובר · מבקש URI…'));
     }
-    setText('bnbWcDiag','4/4 · Relay '+(relay?.connected?'✅ מחובר':'⚠️ לא מחובר')+' · מבקש URI…');
+    setText('bnbWcDiag','4/4 · ממתין לחיבור Relay…');
     console.log('[WC] relay state after connect',relayState());
     await Promise.race([
       provider.connect({chains:[56]}),
