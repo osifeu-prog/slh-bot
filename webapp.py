@@ -1378,6 +1378,22 @@ def bnb_wallet_slh_deposit():
         return jsonify({"error": "SERVER_ERROR"}), 500
 
 
+@app.route("/api/v1/wallet/bsc-assets")
+def bsc_wallet_assets():
+    """Read-only live BSC asset snapshot for the authenticated verified wallet."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.bsc_wallet_read_model import read_bsc_wallet
+        return _no_store(jsonify(read_bsc_wallet(uid))), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BSC_WALLET] read error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "BSC_WALLET_READ_FAILED"}), 502
+
+
 @app.route("/api/wallet/bnb")
 def bnb_wallet_binding():
     uid = authenticated_uid()
@@ -1700,6 +1716,35 @@ def api_exchange_summary():
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
+
+
+@app.route("/api/v1/exchange/my-orders")
+def api_exchange_my_orders():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        db = load_db()
+        raw = db.get("exchange_orders", {})
+        orders = list(raw.values()) if isinstance(raw, dict) else (raw if isinstance(raw, list) else [])
+        rows = []
+        for order in orders:
+            if not isinstance(order, dict):
+                continue
+            if str(order.get("uid")) != str(uid) or order.get("status") != "open":
+                continue
+            rows.append({
+                "id": order.get("id"),
+                "side": order.get("side"),
+                "amount": order.get("remaining_amount", order.get("original_amount")),
+                "price": order.get("limit_price"),
+                "created_at": order.get("created_at"),
+            })
+        rows.sort(key=lambda x: (x.get("created_at") or ""), reverse=True)
+        return _no_store(jsonify({"symbol": "SLH/CREDITS", "orders": rows})), 200
+    except Exception as exc:
+        print("[EXCHANGE] my-orders error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "EXCHANGE_MY_ORDERS_FAILED"}), 502
 
 
 @app.route("/api/v1/exchange/order", methods=["POST"])

@@ -53,6 +53,7 @@ def snapshot():
 REWARDS = {
     "join_points": 1000,
     "referral_points": 10,
+    "referral_credits": 0.9,
     "lesson_complete_points": 25,
     "course_complete_points": 250,
     "vote_points": 10,
@@ -62,5 +63,7 @@ REWARDS = {
 def rewards_snapshot():
     from core.holiday_campaign import GRANT_AMOUNT
     d = dict(REWARDS)
-    d["airdrop_slh"] = GRANT_AMOUNT
+    # Historical one-day Holiday campaign only; no active automatic SLH airdrop.
+    d["airdrop_slh"] = 0
+    d["historical_holiday_airdrop_slh"] = GRANT_AMOUNT
     return d
