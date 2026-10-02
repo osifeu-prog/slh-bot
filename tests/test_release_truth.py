@@ -42,15 +42,15 @@ def test_release_truth_targets_include_canonical_web_and_mcp(monkeypatch):
     assert targets["slh-mcp"]["railway_service_id"] == "mcp-1"
 
 
-def test_release_status_ignores_historical_removed_deployments(monkeypatch):
+def test_release_truth_allows_service_specific_commits(monkeypatch):
     deployments = [
         {
-            "id": "current-web",
+            "id": "current-mcp",
             "status": "SUCCESS",
-            "meta": {"commitHash": "a" * 40},
+            "meta": {"commitHash": "b" * 40},
         },
         {
-            "id": "current-mcp",
+            "id": "current-web",
             "status": "SUCCESS",
             "meta": {"commitHash": "a" * 40},
         },
@@ -70,30 +70,36 @@ def test_release_status_ignores_historical_removed_deployments(monkeypatch):
         },
     )
 
-    targets = deploy_handler._release_truth_targets()
     rows = []
-    for name, target in sorted(targets.items()):
+    for name, target in sorted(
+        deploy_handler._release_truth_targets().items()
+    ):
         dep = deploy_handler._latest_deployment("token", target)
         rows.append((name, dep["status"], dep["meta"]["commitHash"]))
 
-    assert [row[0] for row in rows] == ["slh-mcp", "web"]
     assert all(row[1] == "SUCCESS" for row in rows)
-    assert len({row[2] for row in rows}) == 1
+    assert {row[2] for row in rows} == {"a" * 40, "b" * 40}
 
 
-def test_release_status_detects_commit_mismatch():
+def test_release_truth_expected_commit_applies_to_web_only():
     rows = [
-        ("web", "SUCCESS", "a" * 40),
         ("slh-mcp", "SUCCESS", "b" * 40),
-    ]
-    commits = {row[2] for row in rows if row[2]}
-    assert len(commits) != 1
-
-
-def test_release_status_detects_expected_commit_mismatch():
-    rows = [
         ("web", "SUCCESS", "a" * 40),
-        ("slh-mcp", "SUCCESS", "a" * 40),
     ]
-    expected = "b" * 40
-    assert not all(row[2] == expected for row in rows)
+    expected = "a" * 40
+
+    success = all(row[1] == "SUCCESS" for row in rows)
+    web_commit = next(row[2] for row in rows if row[0] == "web")
+    expected_ok = web_commit == expected
+
+    assert success
+    assert expected_ok
+
+
+def test_release_truth_blocks_failed_service():
+    rows = [
+        ("slh-mcp", "FAILED", "b" * 40),
+        ("web", "SUCCESS", "a" * 40),
+    ]
+
+    assert not all(row[1] == "SUCCESS" for row in rows)

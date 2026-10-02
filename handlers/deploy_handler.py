@@ -292,26 +292,26 @@ def register(bot):
                 bot.reply_to(m, "RELEASE TRUTH\nBLOCKED: no canonical web/slh-mcp deployments found")
                 return
 
-            commits = {row[2] for row in rows if row[2]}
             success = all(row[1] == "SUCCESS" for row in rows)
-            same_commit = len(commits) == 1 and len(commits) == len(rows)
-            expected_ok = not expected or all(row[2] == expected for row in rows)
-            status = "PASS" if success and same_commit and expected_ok else "BLOCKED"
+            web_commit = next((row[2] for row in rows if row[0] == "web"), "")
+            expected_ok = not expected or web_commit == expected
+            status = "PASS" if success and expected_ok else "BLOCKED"
 
             lines = [
                 "RELEASE TRUTH",
                 f"STATUS: {status}",
                 f"DEPLOYMENTS_SUCCESS: {success}",
-                f"SAME_COMMIT: {same_commit}",
+                f"WEB_COMMIT: {web_commit or 'unknown'}",
                 f"EXPECTED_COMMIT: {expected or '(not supplied)'}",
-                f"EXPECTED_MATCH: {expected_ok}",
+                f"WEB_EXPECTED_MATCH: {expected_ok}",
+                "MCP_SHA_POLICY: independent latest successful deployment; watch-pattern scoped",
             ]
             for name, dep_status, commit, dep_id in rows:
                 lines.append(
                     f"• {name}: {dep_status} commit={commit[:12] or 'unknown'} deployment={dep_id}"
                 )
             lines.append(
-                "Historical REMOVED deployments are ignored; only the latest deployment per canonical service is evaluated."
+                "Historical REMOVED deployments are ignored; each canonical service is evaluated against its own deployment policy."
             )
             bot.reply_to(m, "\n".join(lines)[:3900])
         except Exception as exc:
