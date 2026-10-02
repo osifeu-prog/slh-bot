@@ -92,3 +92,18 @@ def test_broadcast_requires_execution_gate(monkeypatch):
     monkeypatch.delenv("SLH_BSC_EXECUTION_ENABLED", raising=False)
     with pytest.raises(ValueError, match="BSC_EXECUTION_DISABLED"):
         bsc_execution.broadcast_signed_transaction("0x01")
+
+def test_broadcast_is_separately_gated(monkeypatch):
+    monkeypatch.setenv("SLH_BSC_EXECUTION_ENABLED", "1")
+    monkeypatch.setenv("SLH_BSC_EXECUTION_NETWORK", "bsc-testnet")
+    monkeypatch.delenv("SLH_BSC_BROADCAST_ENABLED", raising=False)
+    assert bsc_execution.broadcast_enabled() is False
+    with pytest.raises(ValueError, match="BSC_BROADCAST_DISABLED"):
+        bsc_execution.broadcast_signed_transaction("0x01")
+
+
+def test_policy_reports_broadcast_gate(monkeypatch):
+    monkeypatch.delenv("SLH_BSC_BROADCAST_ENABLED", raising=False)
+    snap = bsc_execution.policy_snapshot()
+    assert snap["broadcast"] is False
+    assert snap["broadcast_gate"] == "SLH_BSC_BROADCAST_ENABLED"
