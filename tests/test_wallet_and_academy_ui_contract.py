@@ -93,6 +93,10 @@ if __name__ == "__main__":
         self.assertIn("MetaMask — Connect & Verify", source)
         self.assertIn("פתח SLH OS בתוך Trust Wallet", source)
         self.assertIn("חבר Trust Wallet, MetaMask Mobile וארנקים תואמים", source) if "חבר Trust Wallet, MetaMask Mobile וארנקים תואמים" in source else None
+        self.assertIn("openBnbInExternalBrowser", source)
+        self.assertIn("url:window.location.origin", source)
+        self.assertIn("session timeout", source)
+        self.assertIn("tg?.openLink(deepLink)", source)
 
     def test_bnb_tx_provider_prefers_verified_universal_provider(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
