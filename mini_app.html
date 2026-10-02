@@ -722,7 +722,36 @@ async function sendExchangeOrder(side,amount,price){
 function prepareTransfer(){const r=($("recipient")?.value||'').trim();const a=($("amount")?.value||'').trim();if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}const n=Number(a);if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}sendCommand(`/transfer ${r} ${a}`,'העברת Credits')}
 function nextAction(){const n=state.next||{};if(n.screen)show(n.screen);else show('wallet')}
 function statusText(v){const m={complete:'הושלם',active:'בתהליך',none:'לא התחיל',verified:'מאומת',not_verified:'טרם אומת',incomplete:'לא הושלם',review:'בבדיקה',policy_missing:'מדיניות הקצאה טרם הוגדרה'};return m[v]||v||'לא ידוע'}
-function renderAlpha(a){if(!a){setText("alphaBox",'לא ניתן לטעון Alpha');return}const rows=[['Identity',a.identity?.status],['Onboarding',a.onboarding?.status],['Academy',a.academy?.status],['Tasks',a.tasks?.status],['Referral',a.referral?.status],['Share',a.share?.status]];let h=`<div class="status"><b>סטטוס</b><span class="pill ${a.status==='review'?'pending':'ok'}">${statusText(a.status)}</span></div>`;rows.forEach(([k,v])=>h+=`<div class="status"><span>${k}</span><span class="pill ${v==='complete'||v==='verified'?'ok':''}">${statusText(v)}</span></div>`);const ac=a.academy||{},t=a.tasks||{};if(ac.courses!=null){const p=ac.courses?Math.round((ac.completed_courses||0)/ac.courses*100):0;h+=`<div class="muted" style="margin-top:12px">Academy ${ac.completed_courses||0}/${ac.courses||0} courses · ${ac.completed_stages||0} stages</div><div class="progress"><div class="bar" style="width:${p}%"></div></div>`}if(t.total!=null)h+=`<div class="muted">Tasks ${t.completed||0}/${t.total||0}</div>`;const al=a.allocation||{};h+=`<div class="status"><span>Allocation</span><span class="pill pending">${statusText(al.status)}</span></div>`;setHTML("alphaBox",h)}
+function renderAlpha(a){
+  if(!a){setText("alphaBox",'לא ניתן לטעון Alpha');return}
+  const globalStatus=a.global_status||'CLOSED';
+  const globalReady=a.global_readiness_status||'BLOCKED';
+  const personalStatus=a.status||'review';
+  const rows=[
+    ['Identity',a.identity?.status],
+    ['Onboarding',a.onboarding?.status],
+    ['Academy',a.academy?.status],
+    ['Tasks',a.tasks?.status],
+    ['Referral',a.referral?.status],
+    ['Share',a.share?.status]
+  ];
+  let h='<div class="status"><b>Alpha global</b><span class="pill '+(globalStatus==='OPEN'?'ok':'pending')+'">'+statusText(globalStatus)+'</span></div>'+
+    '<div class="status"><b>Eligibility</b><span class="pill '+(personalStatus==='complete'?'ok':'pending')+'">'+statusText(personalStatus)+'</span></div>'+
+    '<div class="status"><span>Readiness engine</span><span class="pill '+(globalReady==='READY'?'ok':'pending')+'">'+statusText(globalReady)+'</span></div>';
+  rows.forEach(([k,v])=>h+='<div class="status"><span>'+k+'</span><span class="pill '+(v==='complete'||v==='verified'?'ok':'')+'">'+statusText(v)+'</span></div>');
+  const ac=a.academy||{},t=a.tasks||{};
+  if(ac.courses!=null){
+    const p=ac.courses?Math.round((ac.completed_courses||0)/ac.courses*100):0;
+    const active=ac.active_course?(' · פעיל: '+esc(ac.active_course)):'';
+    h+='<div class="muted" style="margin-top:12px">Academy '+(ac.completed_courses||0)+'/'+(ac.courses||0)+' courses · '+(ac.completed_stages||0)+' stages'+active+'</div><div class="progress"><div class="bar" style="width:'+p+'%"></div></div>';
+  }
+  if(t.total!=null)h+='<div class="muted">Tasks '+(t.completed||0)+'/'+(t.total||0)+'</div>';
+  const ref=a.referral||{};
+  h+='<div class="muted" style="margin-top:8px">Referral '+fmt(ref.count||0)+'/'+fmt(ref.required||5)+' · עוד '+fmt(ref.remaining||0)+' · +'+fmt(ref.per_successful_referral?.credits||0)+' Credits +'+fmt(ref.per_successful_referral?.points||0)+' Points</div>';
+  const al=a.allocation||{};
+  h+='<div class="status"><span>Allocation</span><span class="pill pending">'+statusText(al.status)+'</span></div>';
+  setHTML("alphaBox",h)
+}
 async function loadCombined(){if(!initData)return;try{const u=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user;if(!u||!u.id)return;const r=await fetch("/api/v1/wallet/combined/"+u.id,{headers});if(!r.ok)return;const d=await r.json();const api=d.api_ledger||{};const b=api.balances||{};let h="";h+="<div class=\"wallet-row\"><span class=\"muted\">SLH on-chain</span><strong>"+fmt(b.SLH||0)+"</strong></div>";if(b.ZVK)h+="<div class=\"wallet-row\"><span class=\"muted\">ZVK</span><strong>"+fmt(b.ZVK)+"</strong></div>";if(b.MNH)h+="<div class=\"wallet-row\"><span class=\"muted\">MNH</span><strong>"+fmt(b.MNH)+"</strong></div>";if(b.REP)h+="<div class=\"wallet-row\"><span class=\"muted\">REP</span><strong>"+fmt(b.REP)+"</strong></div>";if(b.ZUZ)h+="<div class=\"wallet-row\"><span class=\"muted\">ZUZ</span><strong>"+fmt(b.ZUZ)+"</strong></div>";h+="<div class=\"wallet-row\"><span class=\"muted\">שווי (₪)</span><strong>"+fmt(api.total_value_ils||0)+"</strong></div>";const el=document.getElementById("onchainBody");if(el)el.innerHTML=h;}catch(e){console.log("combined",e)}}
 function showAuthDiagnostic(title,details){let el=document.getElementById('authDiagnostic');if(!el){el=document.createElement('div');el.id='authDiagnostic';el.style.cssText='margin:10px 0;padding:14px;border:1px solid #fb718566;border-radius:14px;background:#fb718512;color:#f8fafc;font-size:12px;line-height:1.7;direction:rtl';const home=document.getElementById('home');home?.insertBefore(el,home.firstChild)}el.innerHTML='<b>🔎 אבחון חיבור</b><br>'+esc(title)+'<br><span style="color:#cbd5e1;white-space:pre-wrap">'+esc(details)+'</span>'}
 async function loadCardStore(){
