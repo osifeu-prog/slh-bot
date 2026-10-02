@@ -113,6 +113,11 @@ def _latest_deployment(token, target):
             status
             createdAt
             updatedAt
+            meta {
+              commitHash
+              branch
+              commitMessage
+            }
           }
         }
       }
@@ -229,7 +234,7 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(m, f"{command} failed: {type(exc).__name__}: {str(exc)[:250]}")
 
-    @bot.message_handler(commands=["logs"])
+    @bot.message_handler(commands=["release_status"])\n    def release_status_cmd(m):\n        if not is_owner(m):\n            return\n\n        token = os.getenv("RAILWAY_API_TOKEN")\n        if not token:\n            bot.reply_to(m, "RAILWAY_API_TOKEN not set")\n            return\n\n        try:\n            targets = _managed_targets()\n            expected = ""\n            parts = m.text.split()\n            if len(parts) > 1:\n                expected = parts[1].strip().lower()\n\n            rows = []\n            for name, target in sorted(targets.items()):\n                if target.get("railway_project") != "endearing-amazement":\n                    continue\n                if target.get("service") not in ("web", "slh-mcp"):\n                    continue\n                dep = _latest_deployment(token, target)\n                commit = str((dep.get("meta") or {}).get("commitHash") or "").lower()\n                rows.append((name, dep.get("status"), commit, dep.get("id")))\n\n            if not rows:\n                bot.reply_to(m, "RELEASE TRUTH\\nBLOCKED: no canonical web/slh-mcp deployments found")\n                return\n\n            commits = {row[2] for row in rows if row[2]}\n            success = all(row[1] == "SUCCESS" for row in rows)\n            same_commit = len(commits) == 1 and len(commits) == len(rows)\n            expected_ok = not expected or all(row[2] == expected for row in rows)\n            status = "PASS" if success and same_commit and expected_ok else "BLOCKED"\n\n            lines = [\n                "RELEASE TRUTH",\n                f"STATUS: {status}",\n                f"DEPLOYMENTS_SUCCESS: {success}",\n                f"SAME_COMMIT: {same_commit}",\n                f"EXPECTED_COMMIT: {expected or '(not supplied)'}",\n                f"EXPECTED_MATCH: {expected_ok}",\n            ]\n            for name, dep_status, commit, dep_id in rows:\n                lines.append(f"• {name}: {dep_status} commit={commit[:12] or 'unknown'} deployment={dep_id}")\n            lines.append("Historical REMOVED deployments are ignored; only the latest deployment per canonical service is evaluated.")\n            bot.reply_to(m, "\\n".join(lines)[:3900])\n        except Exception as exc:\n            bot.reply_to(m, f"release_status failed: {type(exc).__name__}: {str(exc)[:300]}")\n\n    @bot.message_handler(commands=["logs"])
     def logs_cmd(m):
         if not is_owner(m):
             return
