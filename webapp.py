@@ -9,7 +9,7 @@ from pathlib import Path
 from core.telegram_webapp_auth import validate_init_data
 from core.authority import has_permission, get_role
 from core.investor_read_model import get_investor_snapshot
-from core.alpha_control_plane import alpha_state
+from core.alpha_control_plane import alpha_state, evaluate as alpha_evaluate
 from core.wallet_binding import issue_challenge, verify_signature, get_binding
 from core import slh_api_client
 from core.profile_manager import get_user
@@ -442,13 +442,24 @@ def investor_me():
     try:
         snapshot = get_investor_snapshot(uid)
         global_alpha = alpha_state()
+        readiness = alpha_evaluate()
         if isinstance(snapshot.get("alpha"), dict):
             alpha = snapshot["alpha"]
             alpha["readiness_status"] = alpha.get("status", "review")
             alpha["global_status"] = global_alpha.get("status", "CLOSED")
-            if alpha["global_status"] == "OPEN":
-                alpha["status"] = "OPEN"
-        snapshot["alpha_global"] = global_alpha
+            alpha["global_readiness_status"] = readiness.get("status", "BLOCKED")
+        snapshot["alpha_global"] = {
+            "status": global_alpha.get("status", "CLOSED"),
+            "opened_at": global_alpha.get("opened_at"),
+            "opened_by": global_alpha.get("opened_by"),
+            "readiness_status": readiness.get("status", "BLOCKED"),
+            "system_status": readiness.get("system_status", "DEGRADED"),
+            "blockers": [
+                c.get("name")
+                for c in readiness.get("blockers", [])
+                if isinstance(c, dict)
+            ],
+        }
         return _no_store(jsonify(snapshot)), 200
     except ValueError as exc:
         if str(exc) == "USER_NOT_FOUND":
