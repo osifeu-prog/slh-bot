@@ -477,6 +477,25 @@ def stars_financial_truth_api():
         return jsonify({"error": "STARS_FINANCIAL_TRUTH_UNAVAILABLE"}), 503
 
 
+@app.route("/api/v1/financial-truth")
+def financial_truth_api():
+    """Authenticated, read-only unified financial truth for the Mini App."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.financial_truth import build_financial_truth
+        owner = bool(has_permission(uid, "exec.audit"))
+        return _no_store(jsonify(build_financial_truth(uid, owner=owner))), 200
+    except ValueError as exc:
+        if str(exc) == "USER_NOT_FOUND":
+            return jsonify({"error": "USER_NOT_FOUND"}), 404
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[FINANCIAL_TRUTH] read API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "FINANCIAL_TRUTH_UNAVAILABLE"}), 503
+
+
 @app.route("/api/v1/settings", methods=["GET", "POST"])
 def user_ui_settings():
     uid = authenticated_uid()
