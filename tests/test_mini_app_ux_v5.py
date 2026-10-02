@@ -14,6 +14,6 @@ def test_expired_telegram_session_has_recovery_ui():
 def test_wallet_flow_is_labelled_connect_mode():
     html = HTML.read_text(encoding="utf-8")
     assert "CONNECT MODE" in html
-    assert "MetaMask / ארנק בדפדפן" in html
+    assert "MetaMask — Connect & Verify" in html
     assert "WalletConnect" in html
     assert "TON Connect + TON Proof" in html

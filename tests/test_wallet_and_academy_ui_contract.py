@@ -80,3 +80,21 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_bnb_wallet_connect_supports_metamask_connect_and_trust_dapp_browser(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("@metamask/connect-evm@2.1.1/+esm", source)
+        self.assertIn("createEVMClient", source)
+        self.assertIn("client.connect({chainIds:['0x38']})", source)
+        self.assertIn("personal_sign", source)
+        self.assertIn("window.trustwallet?.ethereum", source)
+        self.assertIn("link.trustwallet.com/open_url", source)
+        self.assertIn("MetaMask — Connect & Verify", source)
+        self.assertIn("פתח SLH OS בתוך Trust Wallet", source)
+        self.assertIn("חבר Trust Wallet, MetaMask Mobile וארנקים תואמים", source) if "חבר Trust Wallet, MetaMask Mobile וארנקים תואמים" in source else None
+
+    def test_bnb_tx_provider_prefers_verified_universal_provider(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("if(__slhBnbProvider)return __slhBnbProvider;", source)
+        self.assertIn("if(window.trustwallet?.ethereum)return window.trustwallet.ethereum;", source)
