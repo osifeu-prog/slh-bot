@@ -168,6 +168,15 @@ test('visual baseline: academy', async ({ page }, testInfo) => {
 });
 
 
+test('MetaMask mobile fallback and Trust Wallet external-open paths are wired', async ({ page }) => {
+  const html = await page.locator('html').evaluate(el => el.outerHTML);
+  expect(html).toContain('@metamask/connect-evm@2.1.1/+esm');
+  expect(html).toContain("client.connect({chainIds:['0x38']})");
+  expect(html).toContain("client.getProvider()");
+  expect(html).toContain("verifyBnbProvider(provider,'MetaMask Connect')");
+  expect(html).toContain('W.openLink(deepLink)');
+});
+ 
 test('display theme selection is interactive and persistent', async ({ page }) => {
   await page.locator('#bmore').click();
   await page.locator('.more-grid button').filter({ hasText: '⚙️ הגדרות' }).click();
