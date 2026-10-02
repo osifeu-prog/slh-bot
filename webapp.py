@@ -1243,12 +1243,22 @@ def bsc_execution_prepare():
             else bsc_execution.prepare_usdt_transfer(uid, recipient, amount)
         )
         return _no_store(jsonify(result)), 200
-    except ValueError as exc:
-        code = str(exc)
-        if code in {"BSC_EXECUTION_DISABLED", "BSC_MAINNET_EXECUTION_DISABLED"}:
-            return jsonify({"error": code}), 403
-        return jsonify({"error": code}), 400
     except Exception as exc:
+        from core.bsc_execution import BSCExecutionError
+        if isinstance(exc, BSCExecutionError):
+            return jsonify({
+                "ok": False,
+                "code": exc.code,
+                **exc.details,
+                "message": "Wallet needs additional BNB for transaction gas."
+                if exc.code == "INSUFFICIENT_NATIVE_GAS"
+                else exc.code,
+            }), 400
+        if isinstance(exc, ValueError):
+            code = str(exc)
+            if code in {"BSC_EXECUTION_DISABLED", "BSC_MAINNET_EXECUTION_DISABLED"}:
+                return jsonify({"error": code}), 403
+            return jsonify({"error": code}), 400
         print("[BSC_EXECUTION] prepare error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "BSC_EXECUTION_PREPARE_FAILED"}), 502
 
@@ -1322,15 +1332,25 @@ def bsc_execution_prepare_swap():
             )
         )
         return _no_store(jsonify(result)), 200
-    except ValueError as exc:
-        code = str(exc)
-        if code in {
-            "BSC_EXECUTION_DISABLED",
-            "BSC_MAINNET_EXECUTION_DISABLED",
-        }:
-            return jsonify({"error": code}), 403
-        return jsonify({"error": code}), 400
     except Exception as exc:
+        from core.bsc_execution import BSCExecutionError
+        if isinstance(exc, BSCExecutionError):
+            return jsonify({
+                "ok": False,
+                "code": exc.code,
+                **exc.details,
+                "message": "Wallet needs additional BNB for transaction gas."
+                if exc.code == "INSUFFICIENT_NATIVE_GAS"
+                else exc.code,
+            }), 400
+        if isinstance(exc, ValueError):
+            code = str(exc)
+            if code in {
+                "BSC_EXECUTION_DISABLED",
+                "BSC_MAINNET_EXECUTION_DISABLED",
+            }:
+                return jsonify({"error": code}), 403
+            return jsonify({"error": code}), 400
         print("[BSC_SWAP] prepare error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "BSC_SWAP_PREPARE_FAILED"}), 502
 
