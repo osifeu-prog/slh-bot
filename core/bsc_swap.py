@@ -22,6 +22,7 @@ from core.bsc_execution import (
     execution_enabled,
     mainnet_allowed,
     network_name,
+    _fee_fields,
 )
 
 V2_GET_AMOUNTS_OUT_SELECTOR = "d06ca61f"
@@ -242,6 +243,9 @@ def prepare_bnb_to_usdt(
     amount_out_raw = amounts[-1]
     amount_out_min = _amount_out_min(amount_out_raw, slippage_bps)
     deadline = _deadline(deadline_seconds)
+    native_balance = int(web3.eth.get_balance(sender))
+    if native_balance < amount_in_raw:
+        raise ValueError("INSUFFICIENT_NATIVE_GAS")
     gas = int(web3.eth.estimate_gas({
         "from": sender,
         "to": cfg["router"],
@@ -250,9 +254,9 @@ def prepare_bnb_to_usdt(
             amount_out_min, [cfg["wbnb"], cfg["usdt"]], sender, deadline
         ),
     }))
-    gas_price = int(web3.eth.gas_price)
-    native_balance = int(web3.eth.get_balance(sender))
-    required_native = amount_in_raw + gas * gas_price
+    fees = _fee_fields(web3)
+    max_fee = int(fees["maxFeePerGas"], 16)
+    required_native = amount_in_raw + gas * max_fee
     if native_balance < required_native:
         raise ValueError("INSUFFICIENT_BNB_FOR_SWAP_AND_GAS")
     return {
@@ -269,6 +273,7 @@ def prepare_bnb_to_usdt(
         "minimum_out_raw": amount_out_min,
         "slippage_bps": slippage_bps,
         "deadline": deadline,
+        "nonce": int(web3.eth.get_transaction_count(sender, "pending")),
         "tx": {
             "from": sender,
             "to": cfg["router"],
@@ -277,9 +282,12 @@ def prepare_bnb_to_usdt(
                 amount_out_min, [cfg["wbnb"], cfg["usdt"]], sender, deadline
             ),
             "gas": _hex_quantity(gas),
-            "gasPrice": _hex_quantity(gas_price),
+            "gas_limit": _hex_quantity(gas),
+            "nonce": _hex_quantity(int(web3.eth.get_transaction_count(sender, "pending"))),
+            "chainId": _hex_quantity(cfg["chain_id"]),
+            **fees,
         },
-        "estimated_fee_raw": gas * gas_price,
+        "estimated_fee_raw": gas * max_fee,
         "broadcast": False,
         "approval_required": False,
     }
