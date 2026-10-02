@@ -1,6 +1,8 @@
-"""Safe BSC execution preparation for user-signed transactions.
+"""Fail-closed BSC execution layer for user-signed and external-signer flows.
 
-This module NEVER stores keys and NEVER broadcasts transactions.
+This module never stores private keys. It can broadcast only already-signed raw
+transactions after an explicit execution gate. Production server signing must
+remain behind an external signer/HSM boundary.
 It prepares deterministic native BNB and ERC-20 transfer payloads after:
 1. explicit execution feature gate,
 2. explicit BSC network selection,
