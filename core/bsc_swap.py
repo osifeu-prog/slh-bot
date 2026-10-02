@@ -266,6 +266,7 @@ def prepare_bnb_to_usdt(
             estimated_gas=gas,
             estimated_fee_raw=gas * max_fee,
         )
+    nonce = int(web3.eth.get_transaction_count(sender, "pending"))
     return {
         "ok": True,
         "trade": "BNB_USDT",
@@ -280,7 +281,7 @@ def prepare_bnb_to_usdt(
         "minimum_out_raw": amount_out_min,
         "slippage_bps": slippage_bps,
         "deadline": deadline,
-        "nonce": int(web3.eth.get_transaction_count(sender, "pending")),
+        "nonce": nonce,
         "tx": {
             "from": sender,
             "to": cfg["router"],
@@ -290,7 +291,7 @@ def prepare_bnb_to_usdt(
             ),
             "gas": _hex_quantity(gas),
             "gas_limit": _hex_quantity(gas),
-            "nonce": _hex_quantity(int(web3.eth.get_transaction_count(sender, "pending"))),
+            "nonce": _hex_quantity(nonce),
             "chainId": _hex_quantity(cfg["chain_id"]),
             **fees,
         },
