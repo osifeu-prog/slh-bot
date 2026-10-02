@@ -48,6 +48,14 @@ def register(bot):
 /rewards – תגמולים
 /ton – סטטוס TON
 /claim – Claim BNB
+/wallet_status – wallet + settlement + execution truth (read-only)
+/bnb_challenge <address> – BNB ownership challenge
+/bnb_verify <address> <signature> – verify signed challenge
+/bnb_gate – BNB settlement opening evidence (read-only)
+/bsc_policy – BSC execution policy (read-only)
+/bsc_prepare_bnb <recipient> <amount> – prepare user-signed BNB tx
+/bsc_prepare_slh <recipient> <amount> – prepare user-signed SLH tx
+/bsc_receipt <tx_hash> – read BSC tx receipt
 
 🎮 EXPERIENCE
 /arcade – משחק
