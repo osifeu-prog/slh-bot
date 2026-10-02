@@ -73,6 +73,7 @@ def test_server_signing_is_disabled_by_default(monkeypatch):
 
 def test_server_signing_requires_explicit_signer_address(monkeypatch):
     monkeypatch.setenv("SLH_BSC_SERVER_SIGNING_ENABLED", "1")
+    monkeypatch.setenv("SLH_BSC_BROADCAST_ENABLED", "1")
     monkeypatch.delenv("SLH_BSC_SERVER_SIGNER_ADDRESS", raising=False)
     assert bsc_execution.server_signing_enabled() is True
     class DummySigner:
