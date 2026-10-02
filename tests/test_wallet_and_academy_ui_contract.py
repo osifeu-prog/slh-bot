@@ -51,7 +51,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("showQrModal:false,", source)
         self.assertIn('id="bnbWcUriWrap"', source)
         self.assertIn("_walletConnectProvider.on?.('display_uri',uri=>", source)
-        self.assertIn("WalletConnect URI נוצר.", source)
+        self.assertIn("WalletConnect URI נוצר", source)
         self.assertNotIn("showQrModal:true,", source)
 
     def test_bnb_ux_runtime_does_not_overwrite_canonical_mini_status(self):

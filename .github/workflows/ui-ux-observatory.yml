@@ -15,7 +15,7 @@ on:
 jobs:
   ui-ux:
     timeout-minutes: 10
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

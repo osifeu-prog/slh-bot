@@ -25,7 +25,7 @@ on:
 
 jobs:
   wallet-binding:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     env:
       PYTHONPATH: .
     steps:

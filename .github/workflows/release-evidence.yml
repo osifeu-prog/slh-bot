@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   correlate:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - name: Correlate completed workflow evidence by SHA
         env:
