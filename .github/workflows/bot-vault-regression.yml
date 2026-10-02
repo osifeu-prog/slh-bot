@@ -27,7 +27,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python -m pip install --disable-pip-version-check cryptography requests pyTelegramBotAPI
+        run: python -m pip install --disable-pip-version-check cryptography requests pyTelegramBotAPI python-dotenv
 
       - name: Compile changed Python components
         run: |

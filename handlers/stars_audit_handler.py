@@ -42,7 +42,12 @@ def _is_testish(row):
     if meta.get("test") is True or meta.get("is_test") is True:
         return True
     uid = str(row.get("uid") or "").strip().lower()
-    reference = str(\n        row.get("reference")\n        or row.get("charge_id")\n        or row.get("telegram_payment_charge_id")\n        or ""\n    ).strip().lower()
+    reference = str(
+        row.get("reference")
+        or row.get("charge_id")
+        or row.get("telegram_payment_charge_id")
+        or ""
+    ).strip().lower()
     return (
         uid.startswith("test")
         or reference.startswith("test")
@@ -201,15 +206,13 @@ def register(bot):
             ]
 
             if telegram_only:
-                lines.append("
-⚠️ TELEGRAM-ONLY (money received, local record not found):")
+                lines.append("\n⚠️ TELEGRAM-ONLY (money received, local record not found):")
                 for charge in telegram_only[:20]:
                     tx = next(x for x in incoming_invoice if str(x.get("id")) == charge)
                     lines.append("• " + _fmt_tx(tx))
 
             if local_only:
-                lines.append("
-⚠️ LOCAL-ONLY (not present in Telegram history):")
+                lines.append("\n⚠️ LOCAL-ONLY (not present in Telegram history):")
                 for charge in local_only[:20]:
                     row = confirmed[charge]
                     label = "TEST/LEGACY" if charge in local_test_ids else "REAL"
@@ -219,8 +222,7 @@ def register(bot):
                     )
 
             if missing_revenue_refs:
-                lines.append("
-⚠️ LOCAL REAL PAYMENTS MISSING REVENUE LEDGER:")
+                lines.append("\n⚠️ LOCAL REAL PAYMENTS MISSING REVENUE LEDGER:")
                 for charge in missing_revenue_refs[:20]:
                     row = confirmed[charge]
                     lines.append(
@@ -228,13 +230,11 @@ def register(bot):
                     )
 
             if orphan_revenue_refs:
-                lines.append("
-⚠️ REVENUE LEDGER REFS WITHOUT LOCAL PAYMENT RECORD:")
+                lines.append("\n⚠️ REVENUE LEDGER REFS WITHOUT LOCAL PAYMENT RECORD:")
                 for charge in orphan_revenue_refs[:20]:
                     lines.append(f"• {charge}")
 
-            lines.append("
-Matched payment details:")
+            lines.append("\nMatched payment details:")
             for tx in incoming_invoice:
                 charge = str(tx.get("id") or "")
                 if charge in matched:
@@ -245,13 +245,11 @@ Matched payment details:")
                         f"kind={local.get('kind')} status={local.get('status')}"
                     )
 
-            lines.append("
-Latest Telegram invoice transactions:")
+            lines.append("\nLatest Telegram invoice transactions:")
             for tx in incoming_invoice[-10:]:
                 lines.append("• " + _fmt_tx(tx))
 
-            bot.send_message(m.chat.id, "
-".join(lines)[:3900])
+            bot.send_message(m.chat.id, "\n".join(lines)[:3900])
         except Exception as exc:
             print(f"[STARS_AUDIT] read-only audit failed: {type(exc).__name__}")
             bot.send_message(
