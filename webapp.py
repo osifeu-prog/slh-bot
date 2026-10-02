@@ -14,6 +14,7 @@ from core.wallet_binding import issue_challenge, verify_signature, get_binding
 from core import slh_api_client
 from core.profile_manager import get_user
 from core import staking_service
+from core.ai_readiness import snapshot as ai_readiness_snapshot
 from handlers.unified_system_handler import get_unified_map
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -427,6 +428,19 @@ def bot_vault_snapshot():
     except Exception as exc:
         print("[VAULT] snapshot error:", type(exc).__name__)
         return jsonify({"error": "VAULT_UNAVAILABLE"}), 503
+
+
+@app.route("/api/v1/ai/readiness")
+def ai_readiness_api():
+    """Authenticated, read-only AI readiness; never exposes credentials."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        return _no_store(jsonify(ai_readiness_snapshot())), 200
+    except Exception as exc:
+        print("[AI_READINESS] error:", type(exc).__name__)
+        return jsonify({"error": "AI_READINESS_UNAVAILABLE"}), 503
 
 
 @app.route("/api/v1/me")
