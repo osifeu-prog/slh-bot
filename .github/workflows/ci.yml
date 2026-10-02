@@ -92,7 +92,7 @@ jobs:
 
       - name: Run store fulfillment tests
         run: |
-          python -m unittest tests.test_stars_store_fulfillment tests.test_store_catalog_fulfillment
+          python -m unittest tests.test_stars_store_fulfillment tests.test_store_catalog_fulfillment tests.test_stars_audit_reconciliation
           echo "Store fulfillment tests: OK"
 
       - name: Verify rewards and academy contracts
