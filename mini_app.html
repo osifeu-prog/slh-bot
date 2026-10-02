@@ -1173,6 +1173,9 @@ async function initBnbWalletConnect(){
       trust.onclick=()=>{
         if(!value)return;
         const deepLink='https://link.trustwallet.com/wc?uri='+encodeURIComponent(value);
+        try{
+          if(tg?.openLink){tg.openLink(deepLink);return}
+        }catch(_e){}
         window.location.href=deepLink;
       };
     }
@@ -1263,9 +1266,12 @@ async function connectBnbWalletConnect(){
     }
     setText('bnbWcDiag','4/4 · ממתין לחיבור Relay…');
     console.log('[WC] relay state after connect',relayState());
+    // WalletConnect may need time for the user to open Trust Wallet / MetaMask Mobile
+    // and approve the session. The URI is surfaced by display_uri above; keep the
+    // approval window open rather than reporting a false timeout after 25 seconds.
     await Promise.race([
       provider.connect({chains:[56]}),
-      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect connect timeout — לא התקבל URI או session')),25000))
+      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect approval timeout — יש לסרוק את ה-QR או לפתוח את ה-URI בארנק ולנסות שוב')),120000))
     ]);
     const address=await verifyBnbProvider(provider,'WalletConnect');
     setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
