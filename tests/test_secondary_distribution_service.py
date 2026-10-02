@@ -55,8 +55,8 @@ def test_counts_pending_amount_against_daily_limit(monkeypatch):
         "uid": UID,
         "status": "prepared",
         "amount_slh": "200",
-        "prepared_at": "2026-10-02T09:00:00+00:00",
-        "expires_at": "2026-10-02T10:00:00+00:00",
+        "prepared_at": "2026-10-02T23:00:00+00:00",
+        "expires_at": "2026-10-02T23:10:00+00:00",
     }
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     with patch.object(svc.state_manager, "load_db", return_value=db):
@@ -104,14 +104,35 @@ def test_request_id_is_idempotent(monkeypatch):
         "uid": UID,
         "status": "prepared",
         "amount_slh": "10",
-        "prepared_at": "2026-10-02T09:00:00+00:00",
-        "expires_at": "2099-10-02T10:00:00+00:00",
+        "prepared_at": "2026-10-02T23:00:00+00:00",
+        "expires_at": "2099-10-02T23:10:00+00:00",
     }
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
+    class Fn:
+        def __init__(self, value): self.value = value
+        def call(self): return self.value
+    class Contract:
+        functions = type("Fns", (), {
+            "decimals": lambda self: Fn(15),
+            "balanceOf": lambda self, address: Fn(10**18),
+        })()
+    class Eth:
+        chain_id = 56
+        gas_price = 3
+        def contract(self, **kwargs): return Contract()
+        def estimate_gas(self, tx): return 21000
+        def get_balance(self, address): return 10**18
+    class W3:
+        eth = Eth()
+        def is_connected(self): return True
+    monkeypatch.setattr(svc, "_client", lambda cfg: W3())
+    monkeypatch.setattr(svc, "_bsc_config", lambda: {"rpc": "x", "token_contract": TOKEN})
     with patch.object(svc.state_manager, "load_db", return_value=db):
         result = svc.prepare_secondary_slh_transfer(UID, RECIPIENT, "10", "r1")
     assert result["request_id"] == "r1"
     assert result["status"] == "prepared"
+    assert result["tx"]["from"].lower() == WALLET.lower()
+    assert result["tx"]["to"].lower() == TOKEN.lower()
 
 
 def test_cancel_releases_pending_request(monkeypatch):
