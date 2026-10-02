@@ -169,12 +169,8 @@ test('visual baseline: academy', async ({ page }, testInfo) => {
 
 
 test('display theme selection is interactive and persistent', async ({ page }) => {
-  await clickPrimaryNav(page, '⚙️ הגדרות').catch(async () => {
-    await page.locator('#bmore').click();
-    const settingsButton = page.locator('.more-grid button').filter({ hasText: 'הגדרות' });
-    if (await settingsButton.count()) await settingsButton.click();
-    else await page.locator('[onclick*="show(\\'settings\\')"]').first().click();
-  });
+  await page.locator('#bmore').click();
+  await page.locator('.more-grid button').filter({ hasText: '⚙️ הגדרות' }).click();
   await expect(page.locator('#settings')).toHaveClass(/active/);
   await expect(page.locator('#themeChoices button')).toHaveCount(4);
 
