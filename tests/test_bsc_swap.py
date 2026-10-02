@@ -53,6 +53,14 @@ def test_mainnet_stays_blocked_without_explicit_allow(monkeypatch):
         bsc_swap.policy_snapshot()
 
 
+def test_swap_config_includes_canonical_rpc_url(monkeypatch):
+    monkeypatch.setenv("SLH_BSC_EXECUTION_NETWORK", "bsc-mainnet")
+    monkeypatch.setenv("SLH_BSC_EXECUTION_ALLOW_MAINNET", "1")
+    monkeypatch.setenv("SLH_BSC_MAINNET_RPC_URL", "https://example.invalid/rpc")
+    cfg = bsc_swap._cfg()
+    assert cfg["chain_id"] == 56
+    assert cfg["rpc_url"] == "https://example.invalid/rpc"
+
 def test_amount_out_min_is_floor_exact():
     assert bsc_swap._amount_out_min(1000, 50) == 995
     assert bsc_swap._amount_out_min(999, 1) == 998
