@@ -15,7 +15,6 @@ from core.wallet_binding import get_binding
 from core.ton_wallet_binding import get_ton_binding
 from core.bnb_gate import bnb_readiness
 from core.ton_deposit_service import deposits_are_open as ton_deposits_are_open, _settings as ton_settings
-from core import referral_reward
 
 
 COURSE_FILE = Path("courses.json")
@@ -192,15 +191,14 @@ def get_investor_snapshot(uid):
 
     asset_truth = build_slH_asset_truth(wallet)
 
-    try:
-        referral_policy = referral_reward.progress(uid)
-    except Exception:
-        referral_policy = {
-            "count": int((user.get("referral") or {}).get("count", 0) or 0),
-            "required": 5,
-            "remaining": 0,
-            "per_successful_referral": {"credits": 0.9, "points": 10},
-        }
+    referral_data = user.get("referral", {}) if isinstance(user.get("referral"), dict) else {}
+    referral_count = int(referral_data.get("count", 0) or 0)
+    referral_policy = {
+        "count": referral_count,
+        "required": 5,
+        "remaining": max(0, 5 - referral_count),
+        "per_successful_referral": {"credits": 0.9, "points": 10},
+    }
 
     gamification = user.get("gamification", {})
     if not isinstance(gamification, dict):
