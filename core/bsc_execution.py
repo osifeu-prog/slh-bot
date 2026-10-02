@@ -46,6 +46,13 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 NATIVE_DECIMALS = 18
 
 
+class BSCExecutionError(ValueError):
+    def __init__(self, code: str, **details: Any):
+        self.code = str(code)
+        self.details = details
+        super().__init__(self.code)
+
+
 def execution_enabled() -> bool:
     return os.getenv("SLH_BSC_EXECUTION_ENABLED", "0").strip() == "1"
 
@@ -204,13 +211,13 @@ def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, 
     nonce = int(web3.eth.get_transaction_count(sender, "pending"))
     balance = int(web3.eth.get_balance(sender))
     if balance < raw_amount:
-        raise ValueError("INSUFFICIENT_NATIVE_GAS")
+        raise BSCExecutionError("INSUFFICIENT_NATIVE_GAS", available=balance, required_for_value=raw_amount, estimated_gas=None)
     gas = int(web3.eth.estimate_gas({"from": sender, "to": destination, "value": tx_value}))
     fees = _fee_fields(web3)
     max_fee = int(fees["maxFeePerGas"], 16)
     required = raw_amount + (gas * max_fee)
     if balance < required:
-        raise ValueError("INSUFFICIENT_BNB_FOR_VALUE_AND_GAS")
+        raise BSCExecutionError("INSUFFICIENT_NATIVE_GAS", available=balance, required_for_value=raw_amount, estimated_gas=gas, estimated_fee_raw=gas * max_fee)
 
     return {
         "ok": True,
