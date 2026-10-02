@@ -50,6 +50,7 @@ def register(bot):
 /claim – Claim BNB
 /wallet_status – wallet + settlement + execution truth (read-only)
 /bnb_challenge <address> – BNB ownership challenge
+/bnb_sign <address> – one-time browser signing link (MetaMask/Trust)
 /bnb_verify <address> <signature> – verify signed challenge
 /bnb_gate – BNB settlement opening evidence (read-only)
 /bsc_policy – BSC execution policy (read-only)
