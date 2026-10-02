@@ -146,3 +146,20 @@ def test_revoke_keeps_audit_history(monkeypatch):
     assert result["status"] == "revoked"
     assert db["secondary_distribution_wallet_audit"][-1]["event"] == "secondary_distribution_wallet_revoked"
     assert db["secondary_distribution_wallet_audit"][-1]["funds_moved"] is False
+
+
+def test_allows_explicit_unbounded_mode(monkeypatch):
+    db = _db()
+    monkeypatch.setattr(registry, "is_owner", lambda uid: True)
+    monkeypatch.setattr(registry, "get_binding", lambda uid: db["wallet_bindings"].copy().popitem()[1])
+    with patch("core.distribution_wallet_registry.state_manager.load_db", return_value=db),          patch("core.distribution_wallet_registry.state_manager.atomic_update", side_effect=lambda fn: fn(db)):
+        result = registry.set_secondary_distribution_wallet(
+            "1",
+            "123",
+            limit_mode="unbounded",
+        )
+    assert result["status"] == "active"
+    assert result["limit_mode"] == "unbounded"
+    assert result["per_tx_limit_slh"] is None
+    assert result["daily_limit_slh"] is None
+    assert db["secondary_distribution_wallet_audit"][-1]["limit_mode"] == "unbounded"

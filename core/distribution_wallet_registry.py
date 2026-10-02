@@ -73,8 +73,9 @@ def set_secondary_distribution_wallet(
     owner_id: Any,
     target_uid: Any,
     *,
-    per_tx_limit: Any,
-    daily_limit: Any,
+    per_tx_limit: Any = None,
+    daily_limit: Any = None,
+    limit_mode: str = "bounded",
 ) -> dict[str, Any]:
     """OWNER-gated registration of an already verified BSC wallet.
 
@@ -85,10 +86,16 @@ def set_secondary_distribution_wallet(
         raise PermissionError("OWNER_ONLY")
 
     target = _target_uid(target_uid)
-    per_tx = _limit(per_tx_limit, "PER_TX_LIMIT")
-    daily = _limit(daily_limit, "DAILY_LIMIT")
-    if daily < per_tx:
-        raise ValueError("DAILY_LIMIT_BELOW_PER_TX_LIMIT")
+    mode = str(limit_mode or "bounded").strip().lower()
+    if mode not in {"bounded", "unbounded"}:
+        raise ValueError("INVALID_LIMIT_MODE")
+    if mode == "unbounded":
+        per_tx = daily = None
+    else:
+        per_tx = _limit(per_tx_limit, "PER_TX_LIMIT")
+        daily = _limit(daily_limit, "DAILY_LIMIT")
+        if daily < per_tx:
+            raise ValueError("DAILY_LIMIT_BELOW_PER_TX_LIMIT")
 
     binding = get_binding(target)
     if not binding:
@@ -127,8 +134,9 @@ def set_secondary_distribution_wallet(
             "mode": "user_signed_only",
             "asset": "SLH",
             "token_contract": token_contract,
-            "per_tx_limit_slh": str(per_tx),
-            "daily_limit_slh": str(daily),
+            "limit_mode": mode,
+            "per_tx_limit_slh": str(per_tx) if per_tx is not None else None,
+            "daily_limit_slh": str(daily) if daily is not None else None,
             "enabled_by": owner,
             "enabled_at": now,
             "binding_verified": True,
@@ -143,8 +151,9 @@ def set_secondary_distribution_wallet(
                 "enabled_by": owner,
                 "enabled_at": now,
                 "previous_status": previous.get("status") if isinstance(previous, dict) else None,
-                "per_tx_limit_slh": str(per_tx),
-                "daily_limit_slh": str(daily),
+                "limit_mode": mode,
+                "per_tx_limit_slh": str(per_tx) if per_tx is not None else None,
+                "daily_limit_slh": str(daily) if daily is not None else None,
                 "token_contract": token_contract,
                 "funds_moved": False,
                 "custody_granted": False,

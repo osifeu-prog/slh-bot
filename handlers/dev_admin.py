@@ -368,8 +368,9 @@ def register(bot):
             f"Address: {record.get('address')}\n"
             f"Status: {record.get('status')}\n"
             f"Mode: {record.get('mode')}\n"
-            f"Per-tx: {record.get('per_tx_limit_slh')} SLH\n"
-            f"Daily: {record.get('daily_limit_slh')} SLH\n"
+            f"Limit mode: {record.get('limit_mode', 'bounded')}\n"
+            f"Per-tx: {record.get('per_tx_limit_slh') or 'unlimited'} SLH\n"
+            f"Daily: {record.get('daily_limit_slh') or 'unlimited'} SLH\n"
             f"Asset: {record.get('asset')} | Chain: {record.get('chain_id')}"
         )
 
@@ -379,10 +380,11 @@ def register(bot):
             bot.reply_to(m, "⛔ OWNER only")
             return
         parts = m.text.split()
-        if len(parts) != 4:
+        if len(parts) not in {3, 4}:
             bot.reply_to(
                 m,
-                "Usage: /dist_wallet_set <user_id> <per_tx_limit_slh> <daily_limit_slh>"
+                "Usage: /dist_wallet_set <user_id> unlimited\n"
+                "or: /dist_wallet_set <user_id> <per_tx_limit_slh> <daily_limit_slh>"
             )
             return
         uid = _parse_target_uid(parts)
@@ -391,20 +393,25 @@ def register(bot):
             return
         try:
             from core.distribution_wallet_registry import set_secondary_distribution_wallet
+            unlimited = len(parts) == 3 and parts[2].lower() == "unlimited"
+            if len(parts) == 3 and not unlimited:
+                raise ValueError("Usage: /dist_wallet_set <user_id> unlimited")
             result = set_secondary_distribution_wallet(
                 m.from_user.id,
                 uid,
-                per_tx_limit=parts[2],
-                daily_limit=parts[3],
+                per_tx_limit=None if unlimited else parts[2],
+                daily_limit=None if unlimited else parts[3],
+                limit_mode="unbounded" if unlimited else "bounded",
             )
             bot.reply_to(
                 m,
                 "✅ Secondary Distribution Wallet registered\n"
                 f"UID: {result['uid']}\n"
                 f"Address: {result['address']}\n"
-                f"Per-tx: {result['per_tx_limit_slh']} SLH\n"
-                f"Daily: {result['daily_limit_slh']} SLH\n"
-                "🔐 user_signed_only · no custody · no funds moved"
+                f"Limit mode: {result.get('limit_mode', 'bounded')}\n"
+                f"Per-tx: {result.get('per_tx_limit_slh') or 'unlimited'} SLH\n"
+                f"Daily: {result.get('daily_limit_slh') or 'unlimited'} SLH\n"
+                "🔐 user_signed_only · wallet signs/broadcasts · no server custody"
             )
         except (PermissionError, ValueError) as exc:
             bot.reply_to(m, f"❌ {exc}")
