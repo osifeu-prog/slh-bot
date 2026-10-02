@@ -53,6 +53,37 @@ def _managed_targets(include_infrastructure=False):
     return result
 
 
+def _release_truth_targets():
+    """Return exactly the canonical control-plane web and MCP services."""
+    registry = _load_registry()
+    canonical = registry.get("canonical") or {}
+    project_id = canonical.get("railway_project_id")
+    environment_id = canonical.get("railway_environment_id")
+    project_name = canonical.get("railway_project")
+    if not project_id or not environment_id:
+        return {}
+
+    result = {}
+    for project in registry.get("railway_projects", []):
+        if project.get("id") != project_id:
+            continue
+        if project.get("environment_id") != environment_id:
+            continue
+        for service in project.get("services", []):
+            name = service.get("name")
+            if name not in ("web", "slh-mcp") or not service.get("id"):
+                continue
+            result[name] = {
+                "railway_service_id": service["id"],
+                "railway_environment_id": environment_id,
+                "railway_project_id": project_id,
+                "railway_project": project.get("name", project_name or "unknown"),
+                "service": name,
+                "class": service.get("class", "unknown"),
+            }
+    return result
+
+
 def _resolve_target(name, include_infrastructure=False):
     targets = _managed_targets(include_infrastructure=include_infrastructure)
     if not name:
@@ -245,7 +276,7 @@ def register(bot):
             return
 
         try:
-            targets = _managed_targets()
+            targets = _release_truth_targets()
             expected = ""
             parts = m.text.split()
             if len(parts) > 1:
@@ -253,10 +284,6 @@ def register(bot):
 
             rows = []
             for name, target in sorted(targets.items()):
-                if target.get("service") not in ("web", "slh-mcp"):
-                    continue
-                if target.get("class") != "canonical":
-                    continue
                 dep = _latest_deployment(token, target)
                 commit = str((dep.get("meta") or {}).get("commitHash") or "").lower()
                 rows.append((name, dep.get("status"), commit, dep.get("id")))
