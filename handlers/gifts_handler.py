@@ -1,9 +1,9 @@
 """Unified Gifts / Rewards center.
 
-User-facing entry point for Credits gifts and existing SLH airdrop eligibility.
-Credits gifts are funded by the sender's existing Credits balance through the
-canonical idempotent transfer authority. SLH airdrops use the canonical
-distribution authority and never mint supply.
+User-facing entry point for Credits gifts, referral rewards and historical
+SLH campaign status. Credits gifts are funded by the sender's existing balance.
+The one-day 2026-09-11 Holiday SLH campaign is preserved for auditability but
+cannot be newly claimed after its expiry.
 """
 
 from telebot import types
@@ -77,6 +77,7 @@ def _status_text(uid):
             "NO_CAMPAIGN_ENTRY": "אין כניסה לקמפיין",
             "NOT_JOINED": "יש להשלים /join",
             "NO_SUCCESSFUL_REFERRAL": "נדרש לפחות Referral מוצלח אחד",
+            "CAMPAIGN_EXPIRED": "מבצע 11/09 הסתיים; אין Airdrop אוטומטי פעיל",
             "STATUS_UNAVAILABLE": "לא ניתן לבדוק כרגע",
         }
         air_line = f"🪂 Airdrop: {reasons.get(decision.get('reason'), 'לא זכאי כרגע')}"
