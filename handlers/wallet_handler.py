@@ -24,7 +24,181 @@ def register(bot):
             pass
         return None
 
-    @bot.message_handler(commands=["connect_bnb"])
+    @bot.message_handler(commands=["wallet_status", "wallet_ops"])
+    def wallet_status(msg):
+        """Read-only wallet/control status from the bot; no Mini App required."""
+        uid = str(msg.from_user.id)
+        try:
+            from core.wallet_binding import get_binding
+            from core.ton_wallet_binding import get_ton_binding
+            from core.bnb_gate import bnb_readiness
+            from core.ton_deposit_service import deposits_are_open, _settings
+            from core.bsc_execution import policy_snapshot
+
+            bnb_binding = get_binding(uid)
+            ton_binding = get_ton_binding(uid)
+            bnb = bnb_readiness()
+            ton_wallet, ton_rate = _settings()
+            try:
+                execution = policy_snapshot()
+            except Exception as exc:
+                execution = {"error": type(exc).__name__, "message": str(exc)[:120]}
+
+            bot.reply_to(
+                msg,
+                "🔐 SLH WALLET OPS — READ ONLY\\n\\n"
+                f"👛 BNB wallet: {'✅ verified' if bnb_binding else '⛔ not verified'}\\n"
+                f"💎 TON wallet: {'✅ verified' if ton_binding else '⛔ not verified'}\\n"
+                f"🚪 BNB settlement: {'OPEN' if bnb['effective_open'] else 'CLOSED'}\\n"
+                f"🚪 TON settlement: {'OPEN' if deposits_are_open() else 'CLOSED'}\\n"
+                f"⚙️ BSC execution: {'ENABLED' if execution.get('enabled') else 'DISABLED'}\\n"
+                f"📡 BSC network: {execution.get('network', '?')} / chain {execution.get('chain_id', '?')}\\n"
+                f"✍️ Server signing: {'ENABLED' if execution.get('server_signing') else 'OFF'}\\n"
+                "🔑 Key storage: external signer only\\n\\n"
+                "Next BNB proof step:\\n"
+                "/bnb_challenge <your BSC address>\\n"
+                "Then obtain the wallet signature and send:\\n"
+                "/bnb_verify <your BSC address> <signature>\\n\\n"
+                "Prepare-only examples:\\n"
+                "/bsc_prepare_bnb <recipient> <amount>\\n"
+                "/bsc_prepare_slh <recipient> <amount>\\n"
+                "/bsc_receipt <tx_hash>\\n\\n"
+                "⚠️ No private key or seed is requested by these commands."
+            )
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ wallet status failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bnb_gate"])
+    def bnb_gate_cmd(msg):
+        """Read-only BNB settlement evidence."""
+        try:
+            from core.bnb_gate import bnb_readiness, bnb_opening_evidence
+            r = bnb_readiness()
+            e = bnb_opening_evidence()
+            checks = ", ".join(f"{k}={v.get('status')}" for k, v in e.get("checks", {}).items())
+            bot.reply_to(
+                msg,
+                "🚪 BNB GATE — READ ONLY\\n\\n"
+                f"flag_open={r.get('flag_open')}\\n"
+                f"ready={r.get('ready')}\\n"
+                f"effective_open={r.get('effective_open')}\\n"
+                f"chain={r.get('chain_id')} / {r.get('network')}\\n"
+                f"checks: {checks}\\n"
+                f"warnings: {', '.join(e.get('warnings', [])) or 'none'}\\n"
+                f"next: {e.get('next_action', 'none')}"
+            )
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB gate failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bsc_policy"])
+    def bsc_policy_cmd(msg):
+        """Read-only BSC execution policy."""
+        try:
+            from core.bsc_execution import policy_snapshot
+            p = policy_snapshot()
+            bot.reply_to(
+                msg,
+                "⚙️ BSC EXECUTION POLICY — READ ONLY\\n\\n"
+                f"enabled={p.get('enabled')}\\n"
+                f"network={p.get('network')}\\n"
+                f"chain_id={p.get('chain_id')}\\n"
+                f"mainnet_allowed={p.get('mainnet_allowed')}\\n"
+                f"server_signing={p.get('server_signing')}\\n"
+                f"server_signer_configured={p.get('server_signer_configured')}\\n"
+                f"broadcast={p.get('broadcast')}\\n"
+                f"custody={p.get('custody')}\\n"
+                f"key_storage={p.get('key_storage')}"
+            )
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BSC policy failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bsc_prepare_bnb"])
+    def bsc_prepare_bnb_cmd(msg):
+        """Prepare a user-signed BNB transaction; never signs or broadcasts."""
+        parts = msg.text.split()
+        if len(parts) != 3:
+            bot.reply_to(msg, "שימוש: /bsc_prepare_bnb <recipient> <amount_bnb>")
+            return
+        try:
+            from core.bsc_execution import prepare_native_transfer
+            result = prepare_native_transfer(str(msg.from_user.id), parts[1], parts[2])
+            bot.reply_to(
+                msg,
+                "✅ BNB transaction prepared — NOT signed, NOT broadcast\\n\\n"
+                f"from={result['from']}\\n"
+                f"to={result['to']}\\n"
+                f"amount={result['amount']} BNB\\n"
+                f"gas={result['tx']['gas']}\\n"
+                f"gasPrice={result['tx']['gasPrice']}\\n"
+                f"nonce={result['tx']['nonce']}\\n"
+                f"chainId={result['tx']['chainId']}\\n\\n"
+                "חתום בארנק שלך בלבד. הבוט לא מחזיק את המפתח."
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ BNB prepare: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB prepare failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bsc_prepare_slh"])
+    def bsc_prepare_slh_cmd(msg):
+        """Prepare a user-signed SLH ERC-20 transfer; never signs or broadcasts."""
+        parts = msg.text.split()
+        if len(parts) != 3:
+            bot.reply_to(msg, "שימוש: /bsc_prepare_slh <recipient> <amount_slh>")
+            return
+        try:
+            from core.binance_connector import get_bsc_config
+            from core.bsc_execution import prepare_erc20_transfer
+            cfg = get_bsc_config()
+            token = cfg.get("token_contract")
+            if not token:
+                raise ValueError("SLH_TOKEN_NOT_CONFIGURED")
+            result = prepare_erc20_transfer(
+                str(msg.from_user.id), token, parts[1], parts[2], asset="SLH"
+            )
+            bot.reply_to(
+                msg,
+                "✅ SLH transaction prepared — NOT signed, NOT broadcast\\n\\n"
+                f"token={result['token']}\\n"
+                f"from={result['from']}\\n"
+                f"recipient={result['to']}\\n"
+                f"amount={result['amount']} SLH\\n"
+                f"gas={result['tx']['gas']}\\n"
+                f"gasPrice={result['tx']['gasPrice']}\\n"
+                f"nonce={result['tx']['nonce']}\\n"
+                f"chainId={result['tx']['chainId']}\\n\\n"
+                "חתום בארנק שלך בלבד. הבוט לא מחזיק את המפתח."
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ SLH prepare: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ SLH prepare failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bsc_receipt"])
+    def bsc_receipt_cmd(msg):
+        """Read-only receipt lookup for a user-signed transaction."""
+        parts = msg.text.split()
+        if len(parts) != 2:
+            bot.reply_to(msg, "שימוש: /bsc_receipt <tx_hash>")
+            return
+        try:
+            from core.bsc_execution import receipt_status
+            r = receipt_status(parts[1])
+            bot.reply_to(
+                msg,
+                "📡 BSC RECEIPT — READ ONLY\\n\\n"
+                f"status={r.get('status')}\\n"
+                f"succeeded={r.get('succeeded')}\\n"
+                f"confirmed={r.get('confirmed')}\\n"
+                f"block={r.get('block_number')}\\n"
+                f"gas_used={r.get('gas_used')}"
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, f"❌ BSC receipt: {exc}")
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BSC receipt failed: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["connect_bnb", "bnb_challenge"])
     def connect_bnb(msg):
         """Issue a short-lived BNB ownership challenge; no transaction is requested."""
         uid = str(msg.from_user.id)
@@ -56,7 +230,7 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(msg, f"❌ BNB challenge failed: {type(exc).__name__}")
 
-    @bot.message_handler(commands=["connect_bnb_verify"])
+    @bot.message_handler(commands=["connect_bnb_verify", "bnb_verify"])
     def connect_bnb_verify(msg):
         """Verify the user's signed BNB ownership challenge."""
         uid = str(msg.from_user.id)
