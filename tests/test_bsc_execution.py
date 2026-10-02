@@ -59,3 +59,36 @@ def test_policy_never_broadcasts(monkeypatch):
     assert snap["chain_id"] == 97
     assert snap["broadcast"] is False
     assert snap["custody"] is False
+
+
+def test_server_signing_is_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("SLH_BSC_SERVER_SIGNING_ENABLED", raising=False)
+    monkeypatch.delenv("SLH_BSC_SERVER_SIGNER_ADDRESS", raising=False)
+    assert bsc_execution.server_signing_enabled() is False
+    snap = bsc_execution.policy_snapshot()
+    assert snap["server_signing"] is False
+    assert snap["server_signer_configured"] is False
+    assert snap["key_storage"] == "external_signer_only"
+
+
+def test_server_signing_requires_explicit_signer_address(monkeypatch):
+    monkeypatch.setenv("SLH_BSC_SERVER_SIGNING_ENABLED", "1")
+    monkeypatch.delenv("SLH_BSC_SERVER_SIGNER_ADDRESS", raising=False)
+    assert bsc_execution.server_signing_enabled() is True
+    class DummySigner:
+        def address(self):
+            return "0x1111111111111111111111111111111111111111"
+        def sign_transaction(self, transaction):
+            raise AssertionError("must not sign when signer gate is incomplete")
+    with pytest.raises(ValueError, match="BSC_SERVER_SIGNER_NOT_CONFIGURED_OR_MISMATCH"):
+        bsc_execution.execute_with_external_signer(
+            {"chainId": 97},
+            DummySigner(),
+            expected_sender="0x1111111111111111111111111111111111111111",
+        )
+
+
+def test_broadcast_requires_execution_gate(monkeypatch):
+    monkeypatch.delenv("SLH_BSC_EXECUTION_ENABLED", raising=False)
+    with pytest.raises(ValueError, match="BSC_EXECUTION_DISABLED"):
+        bsc_execution.broadcast_signed_transaction("0x01")
