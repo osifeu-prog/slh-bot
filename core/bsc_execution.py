@@ -64,6 +64,11 @@ def server_signing_enabled() -> bool:
     return os.getenv("SLH_BSC_SERVER_SIGNING_ENABLED", "0").strip() == "1"
 
 
+def broadcast_enabled() -> bool:
+    """Raw-transaction broadcast is separately gated and fail-closed."""
+    return os.getenv("SLH_BSC_BROADCAST_ENABLED", "0").strip() == "1"
+
+
 def configured_server_signer_address() -> str | None:
     value = os.getenv("SLH_BSC_SERVER_SIGNER_ADDRESS", "").strip()
     if not value:
@@ -98,7 +103,8 @@ def policy_snapshot() -> dict[str, Any]:
         "mainnet_allowed": mainnet_allowed(),
         "server_signing": server_signing_enabled(),
         "server_signer_configured": bool(os.getenv("SLH_BSC_SERVER_SIGNER_ADDRESS", "").strip()),
-        "broadcast": False,
+        "broadcast": broadcast_enabled(),
+        "broadcast_gate": "SLH_BSC_BROADCAST_ENABLED",
         "custody": False,
         "key_storage": "external_signer_only",
     }
@@ -349,6 +355,8 @@ def recover_signed_sender(signed_tx_hex: str) -> str:
 def broadcast_signed_transaction(signed_tx_hex: str, *, expected_sender: str | None = None) -> dict[str, Any]:
     """Broadcast an already-signed transaction; this module never signs."""
     cfg = _require_enabled()
+    if not broadcast_enabled():
+        raise ValueError("BSC_BROADCAST_DISABLED")
     web3 = _client(cfg)
     sender = recover_signed_sender(signed_tx_hex)
     if expected_sender is not None:
@@ -374,6 +382,8 @@ def execute_with_external_signer(tx: dict[str, Any], signer: Any, *, expected_se
     """
     if not server_signing_enabled():
         raise ValueError("BSC_SERVER_SIGNING_DISABLED")
+    if not broadcast_enabled():
+        raise ValueError("BSC_BROADCAST_DISABLED")
     configured = configured_server_signer_address()
     expected = _checksum_address(expected_sender, field="expected_sender")
     if not configured or configured.lower() != expected.lower():
