@@ -146,3 +146,34 @@ def test_cancel_releases_pending_request(monkeypatch):
         result = svc.cancel_secondary_slh_transfer(UID, "r1")
     assert result["status"] == "cancelled"
     assert db["secondary_distribution_pending"]["r1"]["status"] == "cancelled"
+
+
+def test_unbounded_mode_does_not_block_large_amount(monkeypatch):
+    db = _db()
+    db["secondary_distribution_wallets"][UID]["limit_mode"] = "unbounded"
+    monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
+    class Fn:
+        def __init__(self, value): self.value = value
+        def call(self): return self.value
+    class Contract:
+        functions = type("Fns", (), {
+            "decimals": lambda self: Fn(15),
+            "balanceOf": lambda self, address: Fn(10**30),
+        })()
+    class Eth:
+        chain_id = 56
+        gas_price = 3
+        def contract(self, **kwargs): return Contract()
+        def estimate_gas(self, tx): return 21000
+        def get_balance(self, address): return 10**18
+    class W3:
+        eth = Eth()
+        def is_connected(self): return True
+    monkeypatch.setattr(svc, "_client", lambda cfg: W3())
+    monkeypatch.setattr(svc, "_bsc_config", lambda: {"rpc": "x", "token_contract": TOKEN})
+    with patch.object(svc.state_manager, "load_db", return_value=db),          patch.object(svc.state_manager, "atomic_update", side_effect=lambda fn: fn(db)):
+        result = svc.prepare_secondary_slh_transfer(UID, RECIPIENT, "1000000000", "large-1")
+    assert result["status"] == "prepared"
+    assert result["amount_slh"] == "1000000000"
+    assert result["broadcast"] is False
+    assert result["custody"] is False
