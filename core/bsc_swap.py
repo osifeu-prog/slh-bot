@@ -23,6 +23,7 @@ from core.bsc_execution import (
     mainnet_allowed,
     network_name,
     _fee_fields,
+    BSCExecutionError,
 )
 
 V2_GET_AMOUNTS_OUT_SELECTOR = "d06ca61f"
@@ -245,7 +246,7 @@ def prepare_bnb_to_usdt(
     deadline = _deadline(deadline_seconds)
     native_balance = int(web3.eth.get_balance(sender))
     if native_balance < amount_in_raw:
-        raise ValueError("INSUFFICIENT_NATIVE_GAS")
+        raise BSCExecutionError("INSUFFICIENT_NATIVE_GAS", available=native_balance, required_for_value=amount_in_raw, estimated_gas=None)
     gas = int(web3.eth.estimate_gas({
         "from": sender,
         "to": cfg["router"],
@@ -258,7 +259,13 @@ def prepare_bnb_to_usdt(
     max_fee = int(fees["maxFeePerGas"], 16)
     required_native = amount_in_raw + gas * max_fee
     if native_balance < required_native:
-        raise ValueError("INSUFFICIENT_BNB_FOR_SWAP_AND_GAS")
+        raise BSCExecutionError(
+            "INSUFFICIENT_NATIVE_GAS",
+            available=native_balance,
+            required_for_value=amount_in_raw,
+            estimated_gas=gas,
+            estimated_fee_raw=gas * max_fee,
+        )
     return {
         "ok": True,
         "trade": "BNB_USDT",
