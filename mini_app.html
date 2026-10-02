@@ -266,9 +266,10 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 <section id="wallet" class="screen"><div class="section-title">👛 הארנק והפורטפוליו</div><div class="card"><b>🌐 ארנק on-chain (slh-api)</b><div id="onchainBody"><div class="muted">טוען…</div></div></div><div class="card"><div class="wallet-row"><span class="muted">Credits</span><strong id="wcredits">—</strong></div><div class="wallet-row"><span class="muted">SLH Total</span><strong id="wslhTotal">—</strong></div><div class="wallet-row"><span class="muted">SLH Live (מגובה)</span><strong id="wtoken">—</strong></div><div class="wallet-row"><span class="muted">Reserved</span><strong id="wslhReserved">—</strong></div><div class="wallet-row"><span class="muted">Spendable Live</span><strong id="wslhSpendable">—</strong></div><div class="wallet-row"><span class="muted">Provenance</span><span id="wslhProvenance" class="pill pending">—</span></div><div class="wallet-row"><span class="muted">Staked</span><strong id="wstaked">—</strong></div><div class="wallet-row"><span class="muted">Points</span><strong id="wpoints">—</strong></div><div class="wallet-row"><span class="muted">Referrals</span><strong id="wreferrals">—</strong></div><div class="wallet-row"><span class="muted">Referral commission</span><strong id="wcommission">—</strong></div><div class="wallet-row"><span class="muted">TON Wallet</span><span id="ton" class="address">לא מקושר</span></div></div><div class="card" id="financialTruthCard" hidden><div class="section-title" style="margin-top:0">🧾 Unified Financial Truth</div><div id="starsTruthStatus" class="status"><span>מצב</span><span class="pill pending">בודק…</span></div><div id="starsTruthGrid"></div><div id="starsTruthEvents" class="muted" style="margin-top:8px"></div></div><div class="card"><b>🔐 אימות ארנקים · CONNECT MODE</b><div id="walletSyncDiag" class="muted" style="margin:6px 0"></div><div class="wallet-row"><span class="muted">TON</span><span id="tonBindingStatusTop" class="pill pending">מתכונן…</span></div><div class="guide" style="border-color:#20d3a755;background:#20d3a708"><b>💎 חיבור TON מתוך Telegram</b><p class="muted">זהו מסלול החיבור הנתמך בתוך Mini App: TON Connect + TON Proof. לחץ על כפתור החיבור למטה ואשר בארנק.</p></div><div class="wallet-row"><span class="muted">BNB / BSC</span><span id="bnbBindingStatus" class="pill pending">בדיקת זמינות…</span></div><div id="bnbBindingAddress" class="muted" style="margin:6px 0"></div><div class="card" id="bscLiveTruthCard" style="margin-top:8px"><div class="section-title" style="margin-top:0">🔎 BSC Wallet Truth</div><div id="bscLiveTruthStatus" class="muted">מחכה לאימות BNB…</div><div id="bscLiveTruthGrid" style="margin-top:8px"></div><div class="actions" style="margin-top:8px"><button class="action" type="button" onclick="loadBscAssets()"><b>↻ רענן on-chain</b><span>BNB · SLH · USDT</span></button></div><div class="muted" id="bscLiveTruthSource" style="margin-top:7px">מקור: BSC live RPC + BNB wallet binding</div></div><div class="card" id="secondaryDistributionCard" style="margin-top:10px" hidden>
   <b>🔐 Secondary SLH Distribution</b>
-  <p class="muted">מסלול חלוקה מבוקר מהארנק המשני המאומת. כל עסקה נחתמת ומשודרת מהארנק של בעליו; השרת לא מחזיק מפתח.</p>
+  <p class="muted">מסלול חלוקה מהארנק המשני המאומת. כל עסקה נחתמת ומשודרת מהארנק של בעליו; השרת לא מחזיק מפתח. מצב unlimited מסיר רק את המגבלות המספריות — בדיקת בעלות, חתימה ואימות on-chain נשארים חובה.</p>
   <div id="secondaryDistributionStatus" class="muted" style="margin-top:6px">בודק…</div>
-  <div class="wallet-row" style="margin-top:8px"><span class="muted">Per transaction</span><strong id="secondaryPerTx">—</strong></div>
+  <div class="wallet-row" style="margin-top:8px"><span class="muted">Limit mode</span><strong id="secondaryLimitMode">—</strong></div>
+  <div class="wallet-row"><span class="muted">Per transaction</span><strong id="secondaryPerTx">—</strong></div>
   <div class="wallet-row"><span class="muted">Daily remaining</span><strong id="secondaryDailyRemaining">—</strong></div>
   <label class="form-label" for="secondaryRecipient" style="margin-top:8px">כתובת יעד BSC</label>
   <input id="secondaryRecipient" class="form-input" inputmode="text" autocomplete="off" placeholder="0x…">
@@ -510,8 +511,10 @@ async function loadSecondaryDistribution(){
     if(!d.active)return;
     if(card)card.hidden=false;
     setText('secondaryDistributionStatus','✅ פעיל · '+esc(d.wallet||'')+' · user-signed-only');
-    setText('secondaryPerTx',fmt(d.per_tx_limit_slh)+' SLH');
-    setText('secondaryDailyRemaining',fmt(d.daily_remaining_slh)+' SLH');
+    const unlimited=String(d.limit_mode||'bounded')==='unbounded';
+    setText('secondaryLimitMode',unlimited?'♾️ unlimited':'bounded');
+    setText('secondaryPerTx',unlimited?'♾️ ללא מגבלה':fmt(d.per_tx_limit_slh)+' SLH');
+    setText('secondaryDailyRemaining',unlimited?'♾️ ללא מגבלה':fmt(d.daily_remaining_slh)+' SLH');
     if(d.daily_pending_slh) setText('secondaryPreparedStatus','⏳ Pending reserved today: '+fmt(d.daily_pending_slh)+' SLH');
   }catch(e){
     if(card)card.hidden=true;
