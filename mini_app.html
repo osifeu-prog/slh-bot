@@ -1561,7 +1561,7 @@ html[data-text="xl"] .app{zoom:1.22}
   function load(){try{var l=localStorage.getItem(KEY);if(l)pref=Object.assign({},DEF,JSON.parse(l))}catch(_e){}apply();try{if(ok('6.9')&&W.CloudStorage)W.CloudStorage.getItem(KEY,function(err,v){if(!err&&v){try{pref=Object.assign({},DEF,JSON.parse(v));apply();try{localStorage.setItem(KEY,v)}catch(_e){}}catch(_e){}}})}catch(_e){}}
   var sheet=document.getElementById('vSheet');function open(){sheet.classList.add('on');var f=sheet.querySelector('button[aria-pressed="true"]');if(f)f.focus()}function close(){sheet.classList.remove('on')}
   window.openViewSettings=open;sheet.addEventListener('click',function(e){if(e.target===sheet)close()});document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});document.getElementById('vClose').onclick=close;
-  sheet.querySelectorAll('.v-seg').forEach(function(seg){seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;pref[seg.dataset.key]=b.dataset.val;apply();save()})});
+  sheet.querySelectorAll('.v-seg').forEach(function(seg){seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var key=seg.dataset.key,value=b.dataset.val;pref[key]=value;apply();save();if(key==='skin'&&typeof window.setUiTheme==='function'){var mapped={night:'calm',paper:'light',tg:'system'}[value];if(mapped)window.setUiTheme(mapped)}})});
   var home=document.getElementById('vHome'),full=document.getElementById('vFull');if(ok('8.0')&&typeof W.addToHomeScreen==='function'){home.hidden=false;home.onclick=function(){try{W.addToHomeScreen()}catch(_e){}}}if(ok('8.0')&&typeof W.requestFullscreen==='function'){full.hidden=false;full.onclick=function(){try{if(W.isFullscreen){W.exitFullscreen()}else{W.requestFullscreen()}}catch(_e){}}}
   var top=document.querySelector('header.top');if(top){var b=document.createElement('button');b.type='button';b.className='ghost v-open';b.textContent='Aa';b.setAttribute('aria-label','התאמת תצוגה');b.onclick=open;top.appendChild(b)}
   if(W&&ok('7.0')&&W.SettingsButton){try{W.SettingsButton.show();W.SettingsButton.onClick(open)}catch(_e){}}
@@ -1932,6 +1932,12 @@ async function loadUiSettings(){
     if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
     const current=d.preferences?.theme||'calm';
     applyUiTheme(current);
+    try{
+      const skinMap={calm:'night',system:'tg',light:'paper',contrast:'night'};
+      const legacy=JSON.parse(localStorage.getItem('slh_view_v1')||'{}');
+      legacy.skin=skinMap[current]||legacy.skin||'night';
+      localStorage.setItem('slh_view_v1',JSON.stringify(Object.assign({skin:'night',text:'m',density:'normal',haptics:'on'},legacy)));
+    }catch(_e){}
     renderThemeChoices(current,d.themes);
     if(sync){sync.textContent='✅ מסונכרן';sync.className='pill ok'}
   }catch(e){
@@ -1948,6 +1954,13 @@ async function setUiTheme(theme){
     if(!r.ok){applyUiTheme(previous);if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
     const saved=d.preferences?.theme||theme;
     applyUiTheme(saved);
+    // Keep the legacy display-settings state aligned with the server-backed theme.
+    try{
+      const skinMap={calm:'night',system:'tg',light:'paper',contrast:'night'};
+      const legacy=JSON.parse(localStorage.getItem('slh_view_v1')||'{}');
+      legacy.skin=skinMap[saved]||legacy.skin||'night';
+      localStorage.setItem('slh_view_v1',JSON.stringify(Object.assign({skin:'night',text:'m',density:'normal',haptics:'on'},legacy)));
+    }catch(_e){}
     renderThemeChoices(saved,d.themes);
     const sync=$('settingsSync'); if(sync){sync.textContent='✅ נשמר';sync.className='pill ok'}
     toast('✅ ערכת התצוגה מסונכרנת עם הבוט');
