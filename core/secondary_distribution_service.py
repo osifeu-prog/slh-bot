@@ -165,6 +165,38 @@ def prepare_secondary_slh_transfer(
     sender = _checksum(binding.get("address"), "sender")
 
     db = state_manager.load_db()
+    pending = db.get(PENDING_KEY, {}) if isinstance(db, dict) else {}
+    existing = pending.get(request_id) if isinstance(pending, dict) else None
+    if isinstance(existing, dict):
+        if str(existing.get("uid")) != uid:
+            raise ValueError("REQUEST_ID_CONFLICT")
+        if existing.get("status") == "prepared":
+            expires_at = str(existing.get("expires_at") or "")
+            try:
+                expires = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                expires = now if "now" in locals() else _now()
+            if _now() < expires:
+                return {
+                    "ok": True,
+                    "status": "prepared",
+                    "request_id": request_id,
+                    "wallet": existing.get("address"),
+                    "recipient": existing.get("recipient"),
+                    "token": existing.get("token_contract"),
+                    "chain_id": 56,
+                    "amount_slh": str(existing.get("amount_slh")),
+                    "amount_raw": int(existing.get("amount_raw") or 0),
+                    "decimals": None,
+                    "expires_at": existing.get("expires_at"),
+                    "broadcast": False,
+                    "custody": False,
+                }
+        if existing.get("status") == "confirmed":
+            raise ValueError("REQUEST_ALREADY_CONFIRMED")
+        if existing.get("status") == "cancelled":
+            raise ValueError("REQUEST_ALREADY_CANCELLED")
+
     record = _active_record(db, uid)
     if str(record.get("address", "")).lower() != sender.lower():
         raise ValueError("SECONDARY_WALLET_BINDING_MISMATCH")
