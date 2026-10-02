@@ -17,6 +17,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from web3 import Web3
+from eth_account import Account
 
 DEFAULT_TESTNET_RPC = "https://bsc-testnet-dataseed.bnbchain.org"
 DEFAULT_MAINNET_RPC = "https://bsc-dataseed.bnbchain.org"
@@ -150,6 +151,64 @@ def _bound_account(uid: str) -> str:
     if not binding:
         raise ValueError("BNB_WALLET_NOT_VERIFIED")
     return _checksum_address(binding.get("address"), field="sender")
+
+
+def _normalize_raw_transaction(raw_transaction: str | bytes) -> bytes:
+    if isinstance(raw_transaction, bytes):
+        raw = raw_transaction
+    elif isinstance(raw_transaction, str):
+        value = raw_transaction.strip()
+        if value.startswith("0x"):
+            value = value[2:]
+        if not value or len(value) % 2:
+            raise ValueError("INVALID_RAW_TRANSACTION")
+        try:
+            raw = bytes.fromhex(value)
+        except ValueError as exc:
+            raise ValueError("INVALID_RAW_TRANSACTION") from exc
+    else:
+        raise ValueError("INVALID_RAW_TRANSACTION")
+    if not raw or len(raw) > 128_000:
+        raise ValueError("INVALID_RAW_TRANSACTION")
+    return raw
+
+
+def broadcast_signed_transaction(uid: str, raw_transaction: str | bytes) -> dict[str, Any]:
+    """Broadcast a transaction already signed by the user's bound wallet.
+
+    This function never receives or stores a private key. The signer is
+    recovered from the raw transaction and must equal the verified BNB wallet
+    bound to the Telegram UID. The BSC node performs the final chain/signature
+    validation when the raw transaction is submitted.
+    """
+    cfg = _require_enabled()
+    web3 = _client(cfg)
+    sender = _bound_account(uid)
+    raw = _normalize_raw_transaction(raw_transaction)
+
+    try:
+        recovered = Account.recover_transaction(raw)
+    except Exception as exc:
+        raise ValueError("INVALID_SIGNED_TRANSACTION") from exc
+
+    recovered = _checksum_address(recovered, field="sender")
+    if recovered != sender:
+        raise ValueError("SIGNED_TX_SENDER_NOT_BOUND_WALLET")
+
+    try:
+        tx_hash = web3.eth.send_raw_transaction(raw)
+    except Exception as exc:
+        raise ValueError(f"BSC_BROADCAST_REJECTED:{type(exc).__name__}") from exc
+
+    return {
+        "ok": True,
+        "network": cfg["name"],
+        "chain_id": cfg["chain_id"],
+        "from": sender,
+        "tx_hash": tx_hash.hex(),
+        "broadcast": True,
+        "custody": False,
+    }
 
 
 def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, Any]:
