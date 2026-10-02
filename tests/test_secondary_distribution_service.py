@@ -14,6 +14,7 @@ TOKEN = "0xACb0A09414CEA1C879c67bB7A877E4e19480f022"
 
 def _db():
     return {
+        "users": {UID: {"wallet": {}}},
         "secondary_distribution_wallets": {
             UID: {
                 "uid": UID,
