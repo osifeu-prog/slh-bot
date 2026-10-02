@@ -153,7 +153,7 @@ def prepare_secondary_slh_transfer(
     amount: Any,
     request_id: Any,
 ) -> dict[str, Any]:
-    """Prepare a bounded SLH transfer for the user's external wallet."""
+    """Prepare an approved SLH transfer for the user's external wallet."""
     uid = str(uid)
     request_id = str(request_id or "").strip()
     if not request_id or len(request_id) > 128:
@@ -169,32 +169,37 @@ def prepare_secondary_slh_transfer(
     if str(record.get("address", "")).lower() != sender.lower():
         raise ValueError("SECONDARY_WALLET_BINDING_MISMATCH")
 
-    per_tx = _limit(record.get("per_tx_limit_slh"), "PER_TX_LIMIT")
-    daily = _limit(record.get("daily_limit_slh"), "DAILY_LIMIT")
-    if amount > per_tx:
-        raise ValueError("PER_TX_LIMIT_EXCEEDED")
+    limit_mode = str(record.get("limit_mode") or "bounded").strip().lower()
+    if limit_mode not in {"bounded", "unbounded"}:
+        raise ValueError("INVALID_LIMIT_MODE")
 
     now = _now()
-    completed = _completed_today(db, uid, now)
-    pending = db.get(PENDING_KEY, {}) if isinstance(db, dict) else {}
-    pending_today = Decimal("0")
-    for row in pending.values() if isinstance(pending, dict) else []:
-        if not isinstance(row, dict) or str(row.get("uid")) != uid or row.get("status") != "prepared":
-            continue
-        try:
-            created = datetime.fromisoformat(str(row.get("prepared_at")).replace("Z", "+00:00"))
-        except (TypeError, ValueError):
-            continue
-        if created + timedelta(seconds=REQUEST_TTL_SECONDS) < now:
-            continue
-        if _utc_day(created) == _utc_day(now):
-            try:
-                pending_today += _parse_amount(row.get("amount_slh"))
-            except ValueError:
-                continue
+    if limit_mode == "bounded":
+        per_tx = _limit(record.get("per_tx_limit_slh"), "PER_TX_LIMIT")
+        daily = _limit(record.get("daily_limit_slh"), "DAILY_LIMIT")
+        if amount > per_tx:
+            raise ValueError("PER_TX_LIMIT_EXCEEDED")
 
-    if completed + pending_today + amount > daily:
-        raise ValueError("DAILY_LIMIT_EXCEEDED")
+        completed = _completed_today(db, uid, now)
+        pending = db.get(PENDING_KEY, {}) if isinstance(db, dict) else {}
+        pending_today = Decimal("0")
+        for row in pending.values() if isinstance(pending, dict) else []:
+            if not isinstance(row, dict) or str(row.get("uid")) != uid or row.get("status") != "prepared":
+                continue
+            try:
+                created = datetime.fromisoformat(str(row.get("prepared_at")).replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                continue
+            if created + timedelta(seconds=REQUEST_TTL_SECONDS) < now:
+                continue
+            if _utc_day(created) == _utc_day(now):
+                try:
+                    pending_today += _parse_amount(row.get("amount_slh"))
+                except ValueError:
+                    continue
+
+        if completed + pending_today + amount > daily:
+            raise ValueError("DAILY_LIMIT_EXCEEDED")
 
     cfg = _bsc_config()
     token_address = str(cfg.get("token_contract") or "").strip()
@@ -258,7 +263,10 @@ def prepare_secondary_slh_transfer(
                     fresh_pending += _parse_amount(row.get("amount_slh"))
                 except ValueError:
                     continue
-        if fresh_completed + fresh_pending + amount > _limit(
+        current_mode = str(current.get("limit_mode") or "bounded").strip().lower()
+        if current_mode not in {"bounded", "unbounded"}:
+            raise ValueError("INVALID_LIMIT_MODE")
+        if current_mode == "bounded" and fresh_completed + fresh_pending + amount > _limit(
             current.get("daily_limit_slh"), "DAILY_LIMIT"
         ):
             raise ValueError("DAILY_LIMIT_EXCEEDED")
@@ -480,18 +488,35 @@ def secondary_distribution_snapshot(uid: Any) -> dict[str, Any]:
             except ValueError:
                 continue
 
-    daily_limit = _limit(record.get("daily_limit_slh"), "DAILY_LIMIT")
-    per_tx = _limit(record.get("per_tx_limit_slh"), "PER_TX_LIMIT")
+    limit_mode = str(record.get("limit_mode") or "bounded").strip().lower()
+    if limit_mode == "bounded":
+        daily_limit = _limit(record.get("daily_limit_slh"), "DAILY_LIMIT")
+        per_tx = _limit(record.get("per_tx_limit_slh"), "PER_TX_LIMIT")
+        daily_remaining = max(Decimal("0"), daily_limit - completed - pending)
+        per_tx_value = str(per_tx)
+        daily_value = str(daily_limit)
+        confirmed_value = str(completed)
+        pending_value = str(pending)
+        remaining_value = str(daily_remaining)
+    elif limit_mode == "unbounded":
+        per_tx_value = "unlimited"
+        daily_value = "unlimited"
+        confirmed_value = str(completed)
+        pending_value = str(pending)
+        remaining_value = "unlimited"
+    else:
+        raise ValueError("INVALID_LIMIT_MODE")
     return {
         "active": True,
         "uid": uid,
         "wallet": record.get("address"),
         "role": record.get("role"),
         "mode": record.get("mode"),
-        "per_tx_limit_slh": str(per_tx),
-        "daily_limit_slh": str(daily_limit),
-        "daily_confirmed_slh": str(completed),
-        "daily_pending_slh": str(pending),
-        "daily_remaining_slh": str(max(Decimal("0"), daily_limit - completed - pending)),
+        "limit_mode": limit_mode,
+        "per_tx_limit_slh": per_tx_value,
+        "daily_limit_slh": daily_value,
+        "daily_confirmed_slh": confirmed_value,
+        "daily_pending_slh": pending_value,
+        "daily_remaining_slh": remaining_value,
         "timezone": "UTC",
     }
