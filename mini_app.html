@@ -853,8 +853,10 @@ async function initBnbWalletConnect(){
   if(typeof EthereumProvider!=='function')throw Error('WalletConnect EthereumProvider export לא נמצא');
   _walletConnectProvider=await EthereumProvider.init({
     projectId:_walletConnectProjectId,
-    optionalChains:[56],
+    chains:[56],
     showQrModal:false,
+    disableProviderPing:true,
+    relayUrl:'wss://relay.walletconnect.com',
     rpcMap:{56:'https://bsc-dataseed.binance.org/'},
     metadata:{
       name:'SLH OS',
@@ -950,7 +952,18 @@ async function connectBnbWalletConnect(){
   try{
     setText('bnbWalletConnectStatus','⏳ פותח WalletConnect…');
     const provider=await initBnbWalletConnect();
-    setText('bnbWcDiag','4/4 · מבקש חיבור — אמור להופיע QR…');
+    setText('bnbWcDiag','4/4 · מבקש חיבור — בודק Relay…');
+    const relay=provider?.signer?.client?.core?.relayer;
+    const relayState=()=>({connected:!!relay?.connected,connecting:!!relay?.connecting});
+    console.log('[WC] relay state before connect',relayState());
+    if(relay?.connected===false && typeof relay?.connect==='function'){
+      try{await Promise.race([
+        relay.connect(),
+        new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect Relay connect timeout')),8000))
+      ]);}catch(e){console.warn('[WC] relay connect',e)}
+    }
+    setText('bnbWcDiag','4/4 · Relay '+(relay?.connected?'✅ מחובר':'⚠️ לא מחובר')+' · מבקש URI…');
+    console.log('[WC] relay state after connect',relayState());
     await Promise.race([
       provider.connect({chains:[56]}),
       new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect connect timeout — לא התקבל URI או session')),25000))
