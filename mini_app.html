@@ -881,7 +881,25 @@ async function initBnbWalletConnect(){
       trust.onclick=()=>{
         if(!value)return;
         const deepLink='https://link.trustwallet.com/wc?uri='+encodeURIComponent(value);
-        window.location.href=deepLink;
+        // Telegram Android WebView can fail when an HTTPS redirect resolves
+        // to a native wallet scheme inside the WebView. Open the HTTPS
+        // Trust Wallet deep-link externally so Trust can handle its native hop.
+        try{
+          const W=window.Telegram&&window.Telegram.WebApp;
+          if(W&&typeof W.openLink==='function'){
+            W.openLink(deepLink);
+            return;
+          }
+        }catch(e){
+          console.warn('[WC Trust external]',e);
+        }
+        try{
+          const opened=window.open(deepLink,'_blank','noopener,noreferrer');
+          if(opened)return;
+        }catch(e){
+          console.warn('[WC Trust window.open]',e);
+        }
+        setText('bnbWcDiag','⚠️ פתיחת Trust Wallet נחסמה ב-WebView. השתמש בהעתקת URI.');
       };
     }
     if(box)box.textContent=value;
