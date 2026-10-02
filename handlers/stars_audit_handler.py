@@ -42,7 +42,7 @@ def _is_testish(row):
     if meta.get("test") is True or meta.get("is_test") is True:
         return True
     uid = str(row.get("uid") or "").strip().lower()
-    reference = str(row.get("reference") or row.get("charge_id") or "").strip().lower()
+    reference = str(\n        row.get("reference")\n        or row.get("charge_id")\n        or row.get("telegram_payment_charge_id")\n        or ""\n    ).strip().lower()
     return (
         uid.startswith("test")
         or reference.startswith("test")
