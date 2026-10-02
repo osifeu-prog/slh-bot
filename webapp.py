@@ -1321,6 +1321,160 @@ def bsc_execution_prepare_swap():
         return jsonify({"error": "BSC_SWAP_PREPARE_FAILED"}), 502
 
 
+@app.route("/wallet/bnb-sign")
+def bnb_wallet_sign_page():
+    session = str(request.args.get("session", "") or "").strip()
+    try:
+        from core.bnb_web_proof import get_session
+        data = get_session(session)
+    except ValueError as exc:
+        return f"<h2>SLH OS BNB proof</h2><p>❌ {exc}</p>", 400
+
+    import html
+    message = html.escape(str(data["message"]))
+    address = html.escape(str(data["address"]))
+    session_js = json.dumps(session)
+    expected_js = json.dumps(str(data["address"]).lower())
+
+    page = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SLH OS — BNB Wallet Proof</title>
+<style>
+body{{font-family:system-ui,-apple-system,sans-serif;max-width:720px;margin:40px auto;padding:0 20px;line-height:1.45}}
+button{{font-size:18px;padding:12px 18px;margin:8px 0;cursor:pointer}}
+pre{{white-space:pre-wrap;background:#f5f5f5;padding:14px;border-radius:8px}}
+.ok{{font-weight:700}} .err{{font-weight:700}}
+</style>
+</head>
+<body>
+<h2>🔐 SLH OS — BNB Wallet Proof</h2>
+<p>העמוד הזה נפתח דרך פקודת הבוט. אין כאן עסקה, Approve, Swap או שליחת כספים.</p>
+<p><b>Wallet:</b> {address}</p>
+<pre>{message}</pre>
+<button id="connect">1 · Connect MetaMask / Trust</button>
+<button id="sign" disabled>2 · Sign ownership proof</button>
+<p id="status">ממתין לחיבור ארנק…</p>
+<script>
+const session = {session_js};
+const expected = {expected_js};
+let provider = null;
+let account = null;
+let messageText = null;
+
+function setStatus(text, cls) {{
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.className = cls || '';
+}}
+
+function pickProvider() {{
+  if (window.trustwallet && window.trustwallet.ethereum) return window.trustwallet.ethereum;
+  if (window.ethereum && Array.isArray(window.ethereum.providers)) {{
+    const trust = window.ethereum.providers.find(p => p && (p.isTrust || p.isTrustWallet));
+    if (trust) return trust;
+  }}
+  return window.ethereum || null;
+}}
+
+async function connectWallet() {{
+  try {{
+    provider = pickProvider();
+    if (!provider) {{
+      throw new Error('NO_INJECTED_EVM_WALLET');
+    }}
+    const accounts = await provider.request({{method:'eth_requestAccounts'}});
+    account = (accounts && accounts[0] || '').toLowerCase();
+    if (account !== expected) throw new Error('CONNECTED_WALLET_DOES_NOT_MATCH_REQUESTED_ADDRESS');
+
+    const chain = await provider.request({{method:'eth_chainId'}});
+    if (String(chain).toLowerCase() !== '0x38') {{
+      try {{
+        await provider.request({{method:'wallet_switchEthereumChain',params:[{{chainId:'0x38'}}]}});
+      }} catch (switchErr) {{
+        throw new Error('BSC_CHAIN_56_REQUIRED');
+      }}
+    }}
+
+    const sessionData = await fetch('/api/wallet/bnb/session/' + encodeURIComponent(session)).then(r => r.json());
+    if (!sessionData.message) throw new Error(sessionData.error || 'CHALLENGE_UNAVAILABLE');
+    messageText = sessionData.message;
+    document.getElementById('sign').disabled = false;
+    setStatus('✅ הארנק הנכון מחובר על BSC / chain 56. אפשר לחתום.', 'ok');
+  }} catch (err) {{
+    setStatus('❌ ' + (err.message || String(err)), 'err');
+  }}
+}}
+
+async function signProof() {{
+  try {{
+    if (!provider || !account || !messageText) throw new Error('CONNECT_FIRST');
+    setStatus('ממתין לאישור Sign בלבד…');
+    const signature = await provider.request({{
+      method:'personal_sign',
+      params:[messageText, account]
+    }});
+    const response = await fetch('/api/wallet/bnb/session/' + encodeURIComponent(session) + '/verify', {{
+      method:'POST',
+      headers:{{'Content-Type':'application/json'}},
+      body:JSON.stringify({{signature}})
+    }});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'VERIFICATION_FAILED');
+    document.getElementById('connect').disabled = true;
+    document.getElementById('sign').disabled = true;
+    setStatus('✅ BNB WALLET VERIFIED — חזור לבוט והרץ /wallet_status', 'ok');
+  }} catch (err) {{
+    setStatus('❌ ' + (err.message || String(err)), 'err');
+  }}
+}}
+
+document.getElementById('connect').addEventListener('click', connectWallet);
+document.getElementById('sign').addEventListener('click', signProof);
+</script>
+</body>
+</html>"""
+    return page, 200
+
+
+@app.route("/api/wallet/bnb/session/<session_token>", methods=["GET"])
+def bnb_wallet_web_session(session_token):
+    try:
+        from core.bnb_web_proof import get_session
+        result = get_session(session_token)
+        return jsonify({
+            "chain": result["chain"],
+            "address": result["address"],
+            "message": result["message"],
+            "expires_at": result["expires_at"],
+        }), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/bnb/session/<session_token>/verify", methods=["POST"])
+def bnb_wallet_web_session_verify(session_token):
+    payload = request.get_json(silent=True) or {}
+    signature = str(payload.get("signature", "")).strip()
+    if not signature:
+        return jsonify({"error": "INVALID_SIGNATURE"}), 400
+    try:
+        from core.bnb_web_proof import verify_session
+        binding = verify_session(session_token, signature)
+        return jsonify({
+            "status": "verified",
+            "binding": binding,
+        }), 200
+    except ValueError as exc:
+        print("[BNB_WEB_VERIFY] rejected:", str(exc))
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BNB_WEB_VERIFY] failed:", type(exc).__name__)
+        return jsonify({"error": "BNB_WEB_VERIFY_FAILED"}), 500
+
+
 @app.route("/api/wallet/bnb/challenge", methods=["POST"])
 def bnb_wallet_challenge():
     uid = authenticated_uid()
