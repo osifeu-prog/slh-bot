@@ -46,6 +46,13 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 NATIVE_DECIMALS = 18
 
 
+class BSCExecutionError(ValueError):
+    def __init__(self, code: str, **details: Any):
+        self.code = str(code)
+        self.details = details
+        super().__init__(self.code)
+
+
 def execution_enabled() -> bool:
     return os.getenv("SLH_BSC_EXECUTION_ENABLED", "0").strip() == "1"
 
@@ -151,6 +158,21 @@ def _hex_quantity(value: int) -> str:
     return hex(int(value))
 
 
+def _fee_fields(web3: Web3) -> dict[str, Any]:
+    """Build a complete user-signable EIP-1559 fee envelope without signing."""
+    gas_price = int(web3.eth.gas_price)
+    if gas_price <= 0:
+        raise ValueError("INVALID_GAS_PRICE")
+    priority = min(gas_price, 1_000_000_000)
+    max_fee = max(gas_price * 2, priority + 1)
+    return {
+        "type": "0x2",
+        "maxFeePerGas": _hex_quantity(max_fee),
+        "maxPriorityFeePerGas": _hex_quantity(priority),
+        "gasPrice": _hex_quantity(gas_price),
+    }
+
+
 def _encode_erc20_transfer(recipient: str, amount_raw: int) -> str:
     recipient_bytes = recipient[2:].lower().zfill(64)
     amount_bytes = hex(amount_raw)[2:].zfill(64)
@@ -187,12 +209,15 @@ def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, 
     raw_amount = _parse_units(amount, NATIVE_DECIMALS)
     tx_value = _hex_quantity(raw_amount)
     nonce = int(web3.eth.get_transaction_count(sender, "pending"))
-    gas = int(web3.eth.estimate_gas({"from": sender, "to": destination, "value": tx_value}))
-    gas_price = int(web3.eth.gas_price)
     balance = int(web3.eth.get_balance(sender))
-    required = raw_amount + (gas * gas_price)
+    if balance < raw_amount:
+        raise BSCExecutionError("INSUFFICIENT_NATIVE_GAS", available=balance, required_for_value=raw_amount, estimated_gas=None)
+    gas = int(web3.eth.estimate_gas({"from": sender, "to": destination, "value": tx_value}))
+    fees = _fee_fields(web3)
+    max_fee = int(fees["maxFeePerGas"], 16)
+    required = raw_amount + (gas * max_fee)
     if balance < required:
-        raise ValueError("INSUFFICIENT_BNB_FOR_VALUE_AND_GAS")
+        raise BSCExecutionError("INSUFFICIENT_NATIVE_GAS", available=balance, required_for_value=raw_amount, estimated_gas=gas, estimated_fee_raw=gas * max_fee)
 
     return {
         "ok": True,
@@ -209,9 +234,10 @@ def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, 
             "to": destination,
             "value": tx_value,
             "gas": _hex_quantity(gas),
-            "gasPrice": _hex_quantity(gas_price),
+            "gas_limit": _hex_quantity(gas),
             "nonce": _hex_quantity(nonce),
             "chainId": _hex_quantity(cfg["chain_id"]),
+            **fees,
         },
         "signing_tx": {
             "from": sender,
@@ -222,7 +248,7 @@ def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, 
             "nonce": nonce,
             "chainId": cfg["chain_id"],
         },
-        "estimated_fee_raw": gas * gas_price,
+        "estimated_fee_raw": gas * max_fee,
         "balance_raw": balance,
         "broadcast": False,
     }

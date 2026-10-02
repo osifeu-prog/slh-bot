@@ -108,3 +108,26 @@ def test_policy_reports_broadcast_gate(monkeypatch):
     snap = bsc_execution.policy_snapshot()
     assert snap["broadcast"] is False
     assert snap["broadcast_gate"] == "SLH_BSC_BROADCAST_ENABLED"
+
+
+def test_fee_fields_include_user_signable_eip1559_envelope():
+    class FakeEth:
+        gas_price = 3_000_000_000
+    class FakeWeb3:
+        eth = FakeEth()
+    fees = bsc_execution._fee_fields(FakeWeb3())
+    assert fees["type"] == "0x2"
+    assert int(fees["maxFeePerGas"], 16) >= int(fees["maxPriorityFeePerGas"], 16)
+    assert int(fees["maxFeePerGas"], 16) == 6_000_000_000
+
+
+def test_structured_insufficient_gas_error():
+    err = bsc_execution.BSCExecutionError(
+        "INSUFFICIENT_NATIVE_GAS",
+        available=0,
+        required_for_value=10**15,
+        estimated_gas=None,
+    )
+    assert str(err) == "INSUFFICIENT_NATIVE_GAS"
+    assert err.details["available"] == 0
+    assert err.details["required_for_value"] == 10**15
