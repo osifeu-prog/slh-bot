@@ -24,12 +24,12 @@ def register(bot):
             "🎁 תגמולים\n\n"
             "מקורות תגמול פעילים:\n"
             f"• הצטרפות: {r['join_points']:,} Points\n"
-            f"• Referral מוצלח: {r['referral_points']:,} Points\n"
+            f"• Referral מוצלח: +{r['referral_points']:,} Points +{r['referral_credits']} Credits\n"
             f"• השלמת שיעור: {r['lesson_complete_points']:,} Points\n"
             "• השלמת משימה: לפי המשימה\n"
-            f"• Holiday Referral: עד {r['airdrop_slh']:,} SLH, בכפוף לזכאות\n\n"
+            "• Holiday Referral 100,000 SLH: מבצע חד־יומי שהסתיים ב־11/09/2026\n\n"
             f"Points שלך: {_points(uid):,}\n"
             f"Referrals מוצלחים: {_referrals(uid)}\n"
-            f"Holiday Referral: {status}"
+            "Referral קבוע: פעיל"
         )
         bot.reply_to(msg, text)
