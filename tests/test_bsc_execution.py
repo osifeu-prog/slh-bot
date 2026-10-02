@@ -59,3 +59,84 @@ def test_policy_never_broadcasts(monkeypatch):
     assert snap["chain_id"] == 97
     assert snap["broadcast"] is False
     assert snap["custody"] is False
+
+
+
+from unittest.mock import patch
+
+from eth_account import Account
+from hexbytes import HexBytes
+
+
+TEST_KEY = "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+
+class _FakeEth:
+    def __init__(self, tx_hash):
+        self.chain_id = 56
+        self._tx_hash = tx_hash
+
+    def send_raw_transaction(self, raw):
+        assert isinstance(raw, bytes)
+        return self._tx_hash
+
+
+class _FakeWeb3:
+    def __init__(self, tx_hash):
+        self.eth = _FakeEth(tx_hash)
+
+
+def _signed_transaction(account):
+    signed = account.sign_transaction(
+        {
+            "chainId": 56,
+            "nonce": 0,
+            "to": "0x1111111111111111111111111111111111111111",
+            "value": 1,
+            "gas": 21000,
+            "gasPrice": 1_000_000_000,
+        }
+    )
+    return signed.raw_transaction
+
+
+def _mainnet_cfg():
+    return {
+        "name": "bsc-mainnet",
+        "chain_id": 56,
+        "rpc_url": "https://example.invalid",
+        "native_symbol": "BNB",
+        "usdt_address": None,
+    }
+
+
+def test_broadcast_signed_transaction_accepts_only_bound_wallet():
+    account = Account.from_key(TEST_KEY)
+    raw = _signed_transaction(account)
+    tx_hash = HexBytes("0x" + "12" * 32)
+
+    with patch("core.bsc_execution._require_enabled", return_value=_mainnet_cfg()),          patch("core.bsc_execution._client", return_value=_FakeWeb3(tx_hash)),          patch("core.bsc_execution._bound_account", return_value=account.address):
+        result = bsc_execution.broadcast_signed_transaction("8789977826", raw)
+
+    assert result["ok"] is True
+    assert result["chain_id"] == 56
+    assert result["tx_hash"] == tx_hash.hex()
+    assert result["broadcast"] is True
+    assert result["custody"] is False
+
+
+def test_broadcast_signed_transaction_rejects_unbound_wallet():
+    signer = Account.from_key(TEST_KEY)
+    other = Account.create()
+    raw = _signed_transaction(signer)
+    tx_hash = HexBytes("0x" + "34" * 32)
+
+    with patch("core.bsc_execution._require_enabled", return_value=_mainnet_cfg()),          patch("core.bsc_execution._client", return_value=_FakeWeb3(tx_hash)),          patch("core.bsc_execution._bound_account", return_value=other.address):
+        with pytest.raises(ValueError, match="SIGNED_TX_SENDER_NOT_BOUND_WALLET"):
+            bsc_execution.broadcast_signed_transaction("8789977826", raw)
+
+
+def test_broadcast_signed_transaction_rejects_invalid_raw_transaction():
+    with patch("core.bsc_execution._require_enabled", return_value=_mainnet_cfg()),          patch("core.bsc_execution._client", return_value=_FakeWeb3(HexBytes("0x" + "56" * 32))),          patch("core.bsc_execution._bound_account", return_value=Account.from_key(TEST_KEY).address):
+        with pytest.raises(ValueError, match="INVALID_SIGNED_TRANSACTION"):
+            bsc_execution.broadcast_signed_transaction("8789977826", "not-a-transaction")
