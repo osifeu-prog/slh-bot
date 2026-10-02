@@ -207,36 +207,21 @@ def register(bot):
                 print("WELCOME BONUS FAILED:", e)
 
             try:
-                from core.reward_engine import grant
                 ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
                     persisted = _persist_referral(uid, ref_uid)
                     if persisted:
-                        grant(
-                            str(ref_uid),
-                            "referral",
-                            points=10,
-                            idempotency_key=f"ref:{uid}"
+                        from core.referral_reward import settle_successful_referral
+                        rewards = settle_successful_referral(str(ref_uid), uid)
+                        print(
+                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
+                            f"credits={rewards.get('credits')} "
+                            f"points={rewards.get('points')} "
+                            f"vip={rewards.get('vip')}"
                         )
-                        try:
-                            from core.referral_reward import maybe_award
-                            vip_award = maybe_award(str(ref_uid))
-                            if vip_award:
-                                print(f"REFERRAL VIP AWARD: {vip_award}")
-                        except Exception as e:
-                            print("REFERRAL VIP AWARD FAILED:", e)
-                        try:
-                            from core.holiday_campaign import settle
-                            settlement = settle(str(ref_uid))
-                            print(
-                                f"HOLIDAY CAMPAIGN SETTLEMENT: "
-                                f"{ref_uid} -> {settlement}"
-                            )
-                        except Exception as e:
-                            print("HOLIDAY CAMPAIGN SETTLEMENT FAILED:", e)
                     _clear_pending_referral(uid)
             except Exception as e:
-                print("REFERRAL GRANT FAILED:", e)
+                print("REFERRAL REWARD FAILED:", e)
 
             user_states.pop(uid, None)
 
