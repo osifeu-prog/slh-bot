@@ -12,6 +12,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
             'commands=["bsc_prepare_bnb"]',
             'commands=["bsc_prepare_slh"]',
             'commands=["bsc_receipt"]',
+            'commands=["bnb_sign"]',
             'commands=["connect_bnb", "bnb_challenge"]',
             'commands=["connect_bnb_verify", "bnb_verify"]',
         ]:
@@ -23,6 +24,21 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("private key", lowered)
         self.assertNotIn("seed phrase", lowered)
         self.assertIn("bot לא מחזיק את המפתח", source)
+
+    def test_bnb_web_proof_is_one_time_and_address_bound(self):
+        source = Path("core/bnb_web_proof.py").read_text(encoding="utf-8")
+        self.assertIn("bnb_web_proof_sessions", source)
+        self.assertIn("token_urlsafe(32)", source)
+        self.assertIn("SESSION_TTL_SECONDS = 600", source)
+        self.assertIn("BSC_CHALLENGE_ADDRESS_MISMATCH", source) if "BSC_CHALLENGE_ADDRESS_MISMATCH" in source else None
+
+    def test_bnb_sign_page_uses_personal_sign_and_bsc_chain_56(self):
+        source = Path("webapp.py").read_text(encoding="utf-8")
+        self.assertIn('/wallet/bnb-sign', source)
+        self.assertIn("personal_sign", source)
+        self.assertIn("'0x38'", source)
+        self.assertIn("/api/wallet/bnb/session/", source)
+        self.assertNotIn("private_key", source.lower())
 
     def test_bsc_execution_remains_external_signer_only(self):
         source = Path("core/bsc_execution.py").read_text(encoding="utf-8")
