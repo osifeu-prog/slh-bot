@@ -812,7 +812,21 @@ async function ensureWalletConnectSdk(){
     });
     if(hasSdk())return true;
   }catch(e){lastError=e||lastError}
+  try{
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://unpkg.com/@walletconnect/ethereum-provider@2.25.0/dist/index.umd.js';
+      s.async=true;
+      s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>reject(Error('WalletConnect UMD fallback load failed'));
+      document.head.appendChild(s);
+    });
+    if(hasSdk())return true;
+  }catch(e){lastError=e||lastError}
   console.error('[WalletConnect] SDK load failed',lastError||'unknown');
+  const diag=$('bnbWcDiag');
+  if(diag)diag.textContent='❌ WalletConnect SDK לא נטען: '+String(lastError?.message||lastError||'unknown');
   return false;
 }
 async function initBnbWalletConnect(){
@@ -834,7 +848,7 @@ async function initBnbWalletConnect(){
   if(!cfg.enabled||!cfg.project_id)throw Error('WALLETCONNECT_PROJECT_ID לא מוגדר במסלול ה־Mini App');
   _walletConnectProjectId=cfg.project_id;
   setText('bnbWcOrigin',window.location.origin);
-  const diag=$('bnbWcDiag'); if(diag)diag.textContent='WalletConnect SDK נטען · Project ID זמין · מנסה לפתוח חיבור…';
+  const diag=$('bnbWcDiag'); if(diag)diag.textContent='2/4 · SDK נטען · Project ID זמין · מאתחל WalletConnect…';
   const EthereumProvider=window.__slhWalletConnectEthereumProvider || window['@walletconnect/ethereum-provider']?.EthereumProvider || window.WalletConnectEthereumProvider?.EthereumProvider || window.WalletConnectEthereumProvider?.default || window.WalletConnectEthereumProvider;
   if(typeof EthereumProvider!=='function')throw Error('WalletConnect EthereumProvider export לא נמצא');
   _walletConnectProvider=await EthereumProvider.init({
@@ -913,6 +927,9 @@ async function initBnbWalletConnect(){
         : '⚠️ WalletConnect החזיר URI ריק.'
     );
   });
+  if(diag)diag.textContent='3/4 · WalletConnect אותחל · ממתין ל־URI…';
+  _walletConnectProvider.on?.('connect',()=>{if(diag)diag.textContent='✅ WalletConnect session נוצר'});
+  _walletConnectProvider.on?.('session_event',event=>console.log('[WC] session_event',event?.type||'event'));
   _walletConnectProvider.on?.('accountsChanged',()=>loadWalletBindings());
   _walletConnectProvider.on?.('chainChanged',()=>loadWalletBindings());
   _walletConnectProvider.on?.('disconnect',()=>{_walletConnectProvider=null;setText('bnbWalletConnectStatus','⚪️ WalletConnect מנותק')});
@@ -924,7 +941,11 @@ async function connectBnbWalletConnect(){
   try{
     setText('bnbWalletConnectStatus','⏳ פותח WalletConnect…');
     const provider=await initBnbWalletConnect();
-    await provider.connect({chains:[56]});
+    setText('bnbWcDiag','4/4 · מבקש חיבור — אמור להופיע QR…');
+    await Promise.race([
+      provider.connect({chains:[56]}),
+      new Promise((_,reject)=>setTimeout(()=>reject(Error('WalletConnect connect timeout — לא התקבל URI או session')),25000))
+    ]);
     const address=await verifyBnbProvider(provider,'WalletConnect');
     setText('bnbWalletConnectStatus','✅ מחובר: '+address.slice(0,6)+'…'+address.slice(-4));
   }catch(e){
