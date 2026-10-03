@@ -3,6 +3,8 @@ from core.identity import OWNER_TELEGRAM_ID
 from core.profile_manager import user_exists
 from core.invite_gate import can_start_onboarding
 import state_manager
+from core import product_telemetry
+import time
 
 user_states = {}
 
@@ -66,6 +68,19 @@ def _lesson_keyboard():
         InlineKeyboardButton("🎓 Academy", callback_data="slh_academy")
     )
     return markup
+
+
+def _telemetry(uid, event, result, reason=None, started_at=None):
+    product_telemetry.emit(
+        event=event,
+        actor_key=f"user:{uid}",
+        flow="onboarding",
+        surface="telegram",
+        result=result,
+        reason=reason,
+        journey_id="ONBOARDING_V1",
+        duration_ms=(int((time.monotonic() - started_at) * 1000) if started_at else None),
+    )
 
 
 def register(bot):
