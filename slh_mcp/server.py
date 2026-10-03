@@ -1,6 +1,8 @@
 import contextlib
 import os
 
+from slh_mcp import control_plane_client
+
 from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
@@ -72,6 +74,7 @@ async def ready(_request):
 
 @contextlib.asynccontextmanager
 async def lifespan(_app):
+    control_plane_client.self_test()
     async with mcp.session_manager.run():
         yield
 
