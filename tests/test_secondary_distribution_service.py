@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
@@ -51,19 +52,20 @@ def test_enforces_per_transaction_limit(monkeypatch):
 
 def test_counts_pending_amount_against_daily_limit(monkeypatch):
     db = _db()
+    now = datetime(2026, 10, 3, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(svc, "_now", lambda: now.isoformat())
     db["secondary_distribution_pending"]["r0"] = {
         "request_id": "r0",
         "uid": UID,
         "status": "prepared",
         "amount_slh": "200",
-        "prepared_at": "2026-10-02T23:00:00+00:00",
-        "expires_at": "2026-10-02T23:10:00+00:00",
+        "prepared_at": (now - timedelta(minutes=5)).isoformat(),
+        "expires_at": (now + timedelta(minutes=5)).isoformat(),
     }
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     with patch.object(svc.state_manager, "load_db", return_value=db):
         with pytest.raises(ValueError, match="DAILY_LIMIT_EXCEEDED"):
             svc.prepare_secondary_slh_transfer(UID, RECIPIENT, "51", "r1")
-
 
 def test_prepare_is_user_signed_only_and_returns_payload(monkeypatch):
     db = _db()
