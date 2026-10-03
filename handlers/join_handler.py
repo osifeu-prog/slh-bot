@@ -88,6 +88,8 @@ def register(bot):
     @bot.message_handler(commands=['join'])
     def join_start(msg):
         uid = str(msg.from_user.id)
+        started_at = time.monotonic()
+        _telemetry(uid, "onboarding.join_attempt", "started", started_at=started_at)
 
         try:
             from core.holiday_campaign import record_entry
@@ -97,6 +99,7 @@ def register(bot):
 
         if int(uid) == int(OWNER_TELEGRAM_ID):
             bot.reply_to(msg, "👑 OWNER — אינך צריך להירשם. שלח /start.")
+            _telemetry(uid, "onboarding.join_blocked", "blocked", "owner", started_at)
             return
 
         existing_user = user_exists(uid)
@@ -117,10 +120,12 @@ def register(bot):
                 "🚧 ההצטרפות לאלפא סגורה כרגע.\n"
                 "נדרש Invite כדי להצטרף."
             )
+            _telemetry(uid, "onboarding.join_blocked", "blocked", "invite_required", started_at)
             return
 
         if existing_user:
             bot.reply_to(msg, "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך.")
+            _telemetry(uid, "onboarding.join_blocked", "duplicate", "already_registered", started_at)
             return
 
         user_states[uid] = {"step": "name"}
@@ -144,6 +149,7 @@ def register(bot):
         if step == "name":
             state["name"] = (msg.text or "").strip()
             state["step"] = "group"
+            _telemetry(uid, "onboarding.name_submitted", "success")
             bot.reply_to(
                 msg,
                 f"נעים מאוד, {state['name']}!\n"
@@ -153,6 +159,7 @@ def register(bot):
 
         elif step == "group":
             group = (msg.text or "").strip()
+            _telemetry(uid, "onboarding.group_submitted", "success")
 
             try:
                 from core.agent_registry import create_agent
@@ -164,6 +171,7 @@ def register(bot):
                     "⚠️ יצירת הסוכן האישי נכשלה.\n"
                     "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
                 )
+                _telemetry(uid, "onboarding.join_failed", "failed", "agent_creation_failed")
                 return
 
             try:
@@ -181,7 +189,11 @@ def register(bot):
                     "⚠️ שמירת הפרופיל נכשלה.\n"
                     "ההרשמה לא הושלמה. נסה שוב מאוחר יותר."
                 )
+                _telemetry(uid, "onboarding.join_failed", "failed", "profile_save_failed")
                 return
+
+            _telemetry(uid, "onboarding.agent_created", "success")
+            _telemetry(uid, "onboarding.profile_saved", "success")
 
             # Academy initialization is part of the canonical join contract.
             # Do it before rewards/referral settlement so a missing course cannot
@@ -195,6 +207,7 @@ def register(bot):
                 print("JOIN ACADEMY START FAILED:", e)
 
             if not academy_started:
+                _telemetry(uid, "onboarding.join_failed", "failed", "academy_initialization_failed")
                 bot.reply_to(
                     msg,
                     "⚠️ הפרופיל והסוכן נשמרו, אך אתחול ה-Academy נכשל.\n"
@@ -218,6 +231,7 @@ def register(bot):
                     idempotency_key=f"welcome:{uid}"
                 )
                 print(f"WELCOME BONUS GRANTED: {uid}")
+                _telemetry(uid, "onboarding.welcome_reward_granted", "success")
             except Exception as e:
                 print("WELCOME BONUS FAILED:", e)
 
@@ -234,11 +248,14 @@ def register(bot):
                             f"points={rewards.get('points')} "
                             f"vip={rewards.get('vip')}"
                         )
+                        _telemetry(uid, "onboarding.referral_settled", "success")
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
 
+            _telemetry(uid, "onboarding.academy_initialized", "success")
             user_states.pop(uid, None)
+            _telemetry(uid, "onboarding.join_completed", "success", started_at=started_at)
 
             bot.reply_to(
                 msg,
