@@ -201,6 +201,14 @@ def run_mqtt_device_listener():
         time.sleep(5)
 
 
+
+try:
+    from core.autonomy_supervisor import start as start_autonomy_supervisor
+    start_autonomy_supervisor(logger=log)
+    log("[OK] Autonomy Supervisor started (read-only)")
+except Exception as e:
+    log(f"[FAIL] Autonomy Supervisor failed to start: {type(e).__name__}")
+
 try:
     from core.runtime_service import boot as boot_agent_runtime, boot_report
     runtime_report = boot_agent_runtime()
