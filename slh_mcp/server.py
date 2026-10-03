@@ -91,8 +91,19 @@ async def telegram_mcp_proof(request: Request):
 
     token = set_current_principal(principal)
     try:
-        if "agents.view_self" not in principal.permissions:
-            return JSONResponse({"error": "FORBIDDEN"}, status_code=403)
+        has_view_self = "agents.view_self" in principal.permissions
+        if not has_view_self:
+            return JSONResponse(
+                {
+                    "error": "FORBIDDEN",
+                    "diagnostic": {
+                        "role": principal.role,
+                        "has_agents_view_self": False,
+                        "permission_count": len(principal.permissions),
+                    },
+                },
+                status_code=403,
+            )
         runtime = _tool_agents_runtime_status()
         return JSONResponse(
             {
