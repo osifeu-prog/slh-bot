@@ -34,6 +34,7 @@ def load_handlers(bot, context):
         ("webapp_data", "handlers.webapp_data_handler"),
         ("e", "handlers.e_handler"),
         ("alpha_control", "handlers.alpha_control_handler"),
+        ("mcp_proof", "handlers.mcp_proof_handler"),
         ("reconcile", "handlers.reconcile_handler"),
         ("revenue", "handlers.revenue_handler"),
         ("ton_address", "handlers.ton_address_handler"),
