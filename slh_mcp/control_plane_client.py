@@ -72,6 +72,22 @@ def runtime_status() -> dict:
     return _request("/internal/mcp/v1/runtime/status")
 
 
+def self_test() -> bool:
+    """Verify the authenticated MCP -> Control Plane bridge without mutating state."""
+    if not enabled():
+        print("MCP_CONTROL_PLANE_SMOKE SKIP: bridge not configured")
+        return False
+    try:
+        data = runtime_status()
+        if not isinstance(data, dict):
+            raise RuntimeError("CONTROL_PLANE_INVALID_RESPONSE")
+        print("MCP_CONTROL_PLANE_SMOKE PASS")
+        return True
+    except Exception as exc:
+        print(f"MCP_CONTROL_PLANE_SMOKE FAIL: {type(exc).__name__}")
+        return False
+
+
 def agent_execute(agent_id: str, command: str) -> dict:
     return _request(
         f"/internal/mcp/v1/agents/{str(agent_id)}/execute",
