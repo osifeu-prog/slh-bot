@@ -2,27 +2,13 @@
 
 Telemetry is a best-effort side effect. Business flows must not depend on it.
 Events are persisted through the canonical audit writer; this module owns the
-product event contract and rejects fields outside the allowlist.
+product event contract.
 """
-
-from datetime import datetime, timezone
 
 from core.audit import log_event
 
 
 _ALLOWED_RESULTS = {"started", "success", "blocked", "failed", "duplicate", "cancelled"}
-_ALLOWED_FIELDS = {
-    "event",
-    "actor_key",
-    "flow",
-    "surface",
-    "result",
-    "reason",
-    "journey_id",
-    "duration_ms",
-    "environment",
-    "app_version",
-}
 _REQUIRED_FIELDS = {"event", "actor_key", "flow", "surface", "result", "journey_id"}
 
 # Deliberately bounded: these are taxonomy values, not arbitrary user input.
@@ -83,8 +69,6 @@ def emit(
             clean["duration_ms"] = duration_ms
 
         details = {k: v for k, v in clean.items() if k != "event" and v is not None}
-        # No message text, names, wallet/payment identifiers, balances, or raw
-        # callback data are accepted by this contract.
         return bool(
             log_event(
                 clean["event"],
