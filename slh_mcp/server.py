@@ -6,17 +6,20 @@ from slh_mcp import control_plane_client
 from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.middleware import Middleware
 from starlette.routing import Mount, Route
 
 from slh_mcp.config import readiness
 from slh_mcp.auth import (
+    Principal,
     principal_from_scope,
     reset_current_principal,
     set_current_principal,
 )
 from slh_mcp.registry import register_capabilities
+from slh_mcp.tools.agents import _tool_agents_runtime_status
 
 
 class MCPAuthMiddleware:
@@ -72,6 +75,41 @@ async def ready(_request):
     )
 
 
+async def telegram_mcp_proof(request: Request):
+    expected = os.getenv("SLH_MCP_BRIDGE_TOKEN", "").strip()
+    subject = (
+        os.getenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "").strip()
+        or os.getenv("SLH_MCP_PRINCIPAL_ID", "").strip()
+    )
+    principal = Principal.from_headers(
+        headers=request.headers,
+        expected=expected,
+        subject=subject,
+    )
+    if principal is None:
+        return JSONResponse({"error": "AUTH_REQUIRED"}, status_code=401)
+
+    token = set_current_principal(principal)
+    try:
+        if "agents.view_self" not in principal.permissions:
+            return JSONResponse({"error": "FORBIDDEN"}, status_code=403)
+        runtime = _tool_agents_runtime_status()
+        return JSONResponse(
+            {
+                "status": "PASS",
+                "tool": "agents.runtime_status",
+                "runtime": runtime,
+            }
+        )
+    except Exception as exc:
+        return JSONResponse(
+            {"status": "FAIL", "error": type(exc).__name__},
+            status_code=502,
+        )
+    finally:
+        reset_current_principal(token)
+
+
 @contextlib.asynccontextmanager
 async def lifespan(_app):
     control_plane_client.self_test()
@@ -92,6 +130,7 @@ def build_mcp_app():
     routes = [
         Route("/health", health, methods=["GET"]),
         Route("/ready", ready, methods=["GET"]),
+        Route("/internal/telegram/mcp-proof", telegram_mcp_proof, methods=["GET"]),
         Mount(
             "/",
             app=mcp.streamable_http_app(
