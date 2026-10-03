@@ -28,7 +28,23 @@ def register(bot, context=None):
                 },
                 timeout=15,
             )
-            response.raise_for_status()
+            if response.status_code >= 400:
+                try:
+                    error_data = response.json()
+                except ValueError:
+                    error_data = {}
+                diagnostic = error_data.get("diagnostic") or {}
+                if diagnostic:
+                    bot.reply_to(
+                        m,
+                        "❌ MCP auth diagnostic\n"
+                        f"role={diagnostic.get('role')}\n"
+                        f"agents.view_self={diagnostic.get('has_agents_view_self')}\n"
+                        f"permission_count={diagnostic.get('permission_count')}",
+                    )
+                else:
+                    response.raise_for_status()
+                return
             data = response.json()
         except requests.RequestException as exc:
             bot.reply_to(m, "❌ MCP proof failed: " + type(exc).__name__)
