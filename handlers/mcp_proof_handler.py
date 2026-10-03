@@ -1,4 +1,4 @@
-"""Owner-only Telegram proof of the live MCP -> Control Plane path."""
+"""Owner-only Telegram proofs of the live MCP and autonomy paths."""
 
 import os
 import requests
@@ -7,6 +7,35 @@ from core.exec_policy import is_owner
 
 
 def register(bot, context=None):
+    @bot.message_handler(commands=["autonomy_test"])
+    def autonomy_test_cmd(m):
+        if not is_owner(m.from_user.id):
+            bot.reply_to(m, "⛔️ Owner only.")
+            return
+        try:
+            from core.autonomy_control_plane import plan
+
+            result = plan()
+            observation = result.get("observation") or {}
+            alpha = observation.get("alpha") or {}
+            runtime = observation.get("runtime") or {}
+            decision = result.get("decision") or {}
+            settlement = result.get("financial_settlement") or {}
+            bot.reply_to(
+                m,
+                "AUTONOMY RUNTIME PROOF\n"
+                f"alpha={alpha.get('status')}\n"
+                f"system={alpha.get('system_status')}\n"
+                f"runtime={runtime.get('state')}\n"
+                f"running={runtime.get('running')}\n"
+                f"agents={runtime.get('agent_count')}\n"
+                f"decision={decision.get('class')}\n"
+                f"action={decision.get('action')}\n"
+                f"financial={settlement.get('class')}",
+            )
+        except Exception as exc:
+            bot.reply_to(m, "AUTONOMY RUNTIME PROOF FAILED: " + type(exc).__name__)
+
     @bot.message_handler(commands=["mcp_test"])
     def mcp_test_cmd(m):
         if not is_owner(m.from_user.id):
