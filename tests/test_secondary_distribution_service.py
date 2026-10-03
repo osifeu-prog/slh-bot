@@ -53,7 +53,7 @@ def test_enforces_per_transaction_limit(monkeypatch):
 def test_counts_pending_amount_against_daily_limit(monkeypatch):
     db = _db()
     now = datetime(2026, 10, 3, 12, 0, tzinfo=timezone.utc)
-    monkeypatch.setattr(svc, "_now", lambda: now.isoformat())
+    monkeypatch.setattr(svc, "_now", lambda: now)
     db["secondary_distribution_pending"]["r0"] = {
         "request_id": "r0",
         "uid": UID,
