@@ -128,7 +128,7 @@ def register(bot):
             _telemetry(uid, "onboarding.join_blocked", "duplicate", "already_registered", started_at)
             return
 
-        user_states[uid] = {"step": "name"}
+        user_states[uid] = {"step": "name", "_started_at": started_at}
         bot.reply_to(msg, "👋 ברוך הבא! איך קוראים לך? (שם מלא)")
 
     @bot.message_handler(
@@ -137,6 +137,7 @@ def register(bot):
     )
     def join_steps(msg):
         uid = str(msg.from_user.id)
+        started_at = user_states.get(uid, {}).get("_started_at")
 
         if int(uid) == int(OWNER_TELEGRAM_ID):
             user_states.pop(uid, None)
