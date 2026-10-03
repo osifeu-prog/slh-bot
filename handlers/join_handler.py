@@ -137,7 +137,7 @@ def register(bot):
     )
     def join_steps(msg):
         uid = str(msg.from_user.id)
-        started_at = user_states.get(uid, {}).get("_started_at")
+        started_at = user_states.get(uid, {}).get("_started_at") or time.monotonic()
 
         if int(uid) == int(OWNER_TELEGRAM_ID):
             user_states.pop(uid, None)
