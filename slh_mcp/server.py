@@ -133,7 +133,7 @@ def _transport_security():
     origins = [x.strip() for x in os.getenv("SLH_MCP_ALLOWED_ORIGINS", "").split(",") if x.strip()]
     return TransportSecuritySettings(
         allowed_hosts=hosts or ["localhost:*", "127.0.0.1:*", "[::1]:*"],
-        allowed_origins=origins or ["http://localhost:*", "http://127.0.0.1:*", "[::1]:*"],
+        allowed_origins=origins or ["http://localhost:*", "http://127.0.0.1:*", "http://[::1]:*"],
     )
 
 
