@@ -14,6 +14,7 @@ from starlette.routing import Mount, Route
 from slh_mcp.config import readiness
 from slh_mcp.auth import (
     Principal,
+    authorize,
     principal_from_scope,
     reset_current_principal,
     set_current_principal,
@@ -91,7 +92,7 @@ async def telegram_mcp_proof(request: Request):
 
     token = set_current_principal(principal)
     try:
-        has_view_self = "agents.view_self" in principal.permissions
+        has_view_self = authorize(principal, "agents.view_self")
         if not has_view_self:
             return JSONResponse(
                 {
