@@ -84,7 +84,9 @@ def self_test() -> bool:
         print("MCP_CONTROL_PLANE_SMOKE PASS")
         return True
     except Exception as exc:
-        print(f"MCP_CONTROL_PLANE_SMOKE FAIL: {type(exc).__name__}")
+        detail = str(exc)
+        safe = detail if detail.startswith(("CONTROL_PLANE_HTTP_", "CONTROL_PLANE_UNAVAILABLE", "CONTROL_PLANE_INVALID_JSON", "CONTROL_PLANE_INVALID_RESPONSE", "CONTROL_PLANE_BRIDGE_NOT_CONFIGURED")) else "CONTROL_PLANE_UNEXPECTED_ERROR"
+        print(f"MCP_CONTROL_PLANE_SMOKE FAIL: {type(exc).__name__}: {safe}")
         return False
 
 
