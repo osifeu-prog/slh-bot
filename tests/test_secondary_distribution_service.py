@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -51,13 +52,14 @@ def test_enforces_per_transaction_limit(monkeypatch):
 
 def test_counts_pending_amount_against_daily_limit(monkeypatch):
     db = _db()
+    now = svc._now()
     db["secondary_distribution_pending"]["r0"] = {
         "request_id": "r0",
         "uid": UID,
         "status": "prepared",
         "amount_slh": "200",
-        "prepared_at": "2026-10-02T23:00:00+00:00",
-        "expires_at": "2026-10-02T23:10:00+00:00",
+        "prepared_at": now.isoformat(),
+        "expires_at": (now + timedelta(seconds=svc.REQUEST_TTL_SECONDS)).isoformat(),
     }
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     with patch.object(svc.state_manager, "load_db", return_value=db):
