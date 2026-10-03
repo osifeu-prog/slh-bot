@@ -215,6 +215,8 @@ def register(bot):
                 )
                 return
 
+            _telemetry(uid, "onboarding.academy_initialized", "success")
+
             try:
                 from core.holiday_campaign import finalize_entry
                 finalized = finalize_entry(uid)
@@ -253,7 +255,6 @@ def register(bot):
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
 
-            _telemetry(uid, "onboarding.academy_initialized", "success")
             user_states.pop(uid, None)
             _telemetry(uid, "onboarding.join_completed", "success", started_at=started_at)
 
