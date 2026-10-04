@@ -235,18 +235,12 @@ def atomic_update(mutate_fn: Callable[[dict[str, Any]], Any]) -> Any:
     if not callable(mutate_fn):
         raise TypeError("mutate_fn must be callable")
 
+    # Re-enter the same lock while using the public API. This keeps test/runtime
+    # patch points intact without creating a second independent lock.
     with _db_lock():
-        try:
-            db = _load_db_unlocked()
-        except Exception as exc:
-            _notify_owner(
-                "❗️ SLH state read failed during an update. "
-                "The write was aborted and state/db.json was left untouched."
-            )
-            raise RuntimeError("DB_READ_FAILED") from exc
-
+        db = load_db()
         result = mutate_fn(db)
-        _save_db_unlocked(db)
+        save_db(db)
         return result
 
 
