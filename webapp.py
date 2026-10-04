@@ -1785,6 +1785,23 @@ def exchange_ticker():
     })
 
 
+@app.route("/api/wallet/ton/jettons")
+def ton_wallet_jettons():
+    """Read-only indexed Jetton balances for the authenticated verified TON wallet."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.ton_jetton_read_model import list_jetton_balances
+        limit = request.args.get("limit", default=100, type=int)
+        return _no_store(jsonify(list_jetton_balances(uid, limit=limit))), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[TON_JETTONS] read error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "TON_JETTON_READ_FAILED"}), 502
+
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
