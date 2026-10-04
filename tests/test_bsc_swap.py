@@ -170,7 +170,7 @@ def test_pair_state_reads_pancakeswap_pair_and_reserves():
             return Call("0x1111111111111111111111111111111111111111")
 
         def getReserves(self):
-            return Call(2_000_000_000_000_000_000_000_000, 0)
+            return Call((2_000_000_000_000_000_000_000_000, 1_000_000_000_000_000_000, 0))
 
     class Contract:
         def __init__(self, functions):
