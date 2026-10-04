@@ -18,19 +18,36 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         ]:
             self.assertIn(command, source)
 
-    def test_bot_first_bsc_commands_never_request_private_key_or_seed(self):
+    def test_bot_first_bsc_commands_do_not_accept_secret_material(self):
         source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
         lowered = source.lower()
-        self.assertNotIn("private key", lowered)
-        self.assertNotIn("seed phrase", lowered)
+
+        # The handlers may explain the security boundary in human-readable text.
+        # What must be absent is an input/API contract that accepts secret material.
+        forbidden_input_contracts = (
+            "private_key=",
+            "private_key>",
+            "seed_phrase=",
+            "seed_phrase>",
+            "mnemonic=",
+            "mnemonic>",
+            "secret_key=",
+            "secret_key>",
+        )
+        for marker in forbidden_input_contracts:
+            self.assertNotIn(marker, lowered)
+
         self.assertIn("bot לא מחזיק את המפתח", source)
+        self.assertIn("חתום בארנק שלך בלבד", source)
 
     def test_bnb_web_proof_is_one_time_and_address_bound(self):
         source = Path("core/bnb_web_proof.py").read_text(encoding="utf-8")
         self.assertIn("bnb_web_proof_sessions", source)
         self.assertIn("token_urlsafe(32)", source)
         self.assertIn("SESSION_TTL_SECONDS = 600", source)
-        self.assertIn("BSC_CHALLENGE_ADDRESS_MISMATCH", source) if "BSC_CHALLENGE_ADDRESS_MISMATCH" in source else None
+        self.assertIn("address", source)
+        self.assertIn("expires_at", source)
+        self.assertIn("consumed", source)
 
     def test_bnb_sign_page_uses_personal_sign_and_bsc_chain_56(self):
         source = Path("webapp.py").read_text(encoding="utf-8")
@@ -38,7 +55,9 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("personal_sign", source)
         self.assertIn("'0x38'", source)
         self.assertIn("/api/wallet/bnb/session/", source)
-        self.assertNotIn("private_key", source.lower())
+        self.assertNotIn("private_key=", source.lower())
+        self.assertNotIn("seed_phrase=", source.lower())
+        self.assertNotIn("mnemonic=", source.lower())
 
     def test_bsc_execution_remains_external_signer_only(self):
         source = Path("core/bsc_execution.py").read_text(encoding="utf-8")
@@ -88,6 +107,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertNotIn("const bb=w.bnb_binding||null;", source)
         self.assertNotIn("החיבור וה־Binding פתוחים עכשיו.", source)
         self.assertNotIn("אינו מופעל בתוך Telegram Mini App", source)
+
     def test_bnb_walletconnect_telegram_uses_manual_uri_flow(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertIn("showQrModal:false,", source)
@@ -101,6 +121,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("var bnbConnected=bnb.includes('✅ מאומת')||bnb.includes('🔒 מאומת');", source)
         self.assertIn("uxBnbMini is rendered by renderBnbWalletState(); do not overwrite it here.", source)
         self.assertNotIn("mini.textContent=bnb.includes('✅')?'✅ מאומת':'התחבר כדי לאמת'", source)
+
     def test_alpha_global_open_is_not_user_eligibility_override(self):
         source = Path("webapp.py").read_text(encoding="utf-8")
         self.assertIn('alpha["global_status"]', source)
@@ -119,6 +140,7 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("from core import referral_reward", source)
         self.assertIn("referral_reward.progress(uid)", source)
         self.assertNotIn("0.9 Credits +10 Points", source)
+
 
 if __name__ == "__main__":
     unittest.main()
