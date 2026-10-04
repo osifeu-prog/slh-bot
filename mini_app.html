@@ -2133,6 +2133,12 @@ function bscPairConfigured(pair){
   return !!__bscSwapPolicy.usdt_configured;
 }
 
+function bscPairPrepareConfigured(pair){
+  if(!bscPairConfigured(pair))return false;
+  if((pair==='BNB_SLH'||pair==='SLH_BNB')&&!__bscSwapPolicy.liquidity_policy_configured)return false;
+  return true;
+}
+
 function syncBscSwapControls(){
   const meta=bscSwapMeta(__bscSwapPair);
   const ids={
@@ -2195,6 +2201,7 @@ async function quoteBscSwap(){
   if(!initData){showAuthGate();return}
   if(!__bscSwapPolicy)await loadBscSwapPolicy();
   if(!bscPairConfigured(__bscSwapPair)){toast('🔒 Pair לא זמין כרגע');return}
+  if(!bscPairPrepareConfigured(__bscSwapPair)){toast('🔒 Liquidity policy לא מוגדרת עדיין');return}
   const amount=($('bscSwapAmount')?.value||'').trim();
   if(!amount){toast('הזן כמות');return}
   const button=$('bscSwapQuoteButton');if(button)button.disabled=true;
