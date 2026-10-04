@@ -749,7 +749,10 @@ class MissionLifecycleService:
         self,
         mission_id,
         description,
-        reward=0
+        reward=0,
+        action_type=None,
+        action_payload=None,
+        idempotency_key=None
     ):
 
         from datetime import datetime, timezone
@@ -851,6 +854,26 @@ class MissionLifecycleService:
                     now.isoformat(),
 
             }
+
+            # Optional execution contract fields are persisted when supplied.
+            # Legacy governance callers remain backward-compatible because all
+            # three fields default to None.
+            if action_type is not None:
+                action_type = str(action_type).strip()
+                if not action_type:
+                    raise ValueError("action_type must be non-empty")
+                mission["action_type"] = action_type
+
+            if action_payload is not None:
+                if not isinstance(action_payload, dict):
+                    raise ValueError("action_payload must be a dict")
+                mission["action_payload"] = dict(action_payload)
+
+            if idempotency_key is not None:
+                idempotency_key = str(idempotency_key).strip()
+                if not idempotency_key:
+                    raise ValueError("idempotency_key must be non-empty")
+                mission["idempotency_key"] = idempotency_key
 
             board.setdefault(
                 "missions",
