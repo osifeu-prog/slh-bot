@@ -1269,6 +1269,69 @@ def bsc_execution_prepare():
 
 
 
+@app.route("/api/v1/execution/broadcast", methods=["POST"])
+def bsc_execution_broadcast():
+    """Broadcast a user-signed BSC transaction; private keys never enter the server."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    signed_tx = str(payload.get("signed_tx", "")).strip()
+    if not signed_tx:
+        return jsonify({"error": "MISSING_SIGNED_TX"}), 400
+
+    binding = get_binding(uid)
+    if not binding or not binding.get("address"):
+        return jsonify({"error": "BNB_WALLET_NOT_VERIFIED"}), 403
+
+    try:
+        from core import bsc_execution
+        result = bsc_execution.broadcast_signed_transaction(
+            signed_tx,
+            expected_sender=binding["address"],
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        code = str(exc)
+        if code in {
+            "BSC_EXECUTION_DISABLED",
+            "BSC_MAINNET_EXECUTION_DISABLED",
+            "BSC_BROADCAST_DISABLED",
+            "SIGNED_TX_SENDER_MISMATCH",
+        }:
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
+    except Exception as exc:
+        print("[BSC_EXECUTION] broadcast error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BSC_EXECUTION_BROADCAST_FAILED"}), 502
+
+
+@app.route("/api/v1/execution/receipt/<tx_hash>")
+def bsc_execution_receipt(tx_hash):
+    """Read-only receipt check scoped to the authenticated BNB wallet."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    binding = get_binding(uid)
+    if not binding or not binding.get("address"):
+        return jsonify({"error": "BNB_WALLET_NOT_VERIFIED"}), 403
+
+    try:
+        from core import bsc_execution
+        result = bsc_execution.receipt_status(
+            tx_hash,
+            expected_sender=binding["address"],
+        )
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BSC_EXECUTION] receipt error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BSC_EXECUTION_RECEIPT_FAILED"}), 502
+
+
 @app.route("/api/v1/execution/quote", methods=["POST"])
 def bsc_execution_quote():
     uid = authenticated_uid()
