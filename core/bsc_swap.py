@@ -5,6 +5,7 @@ It prepares a user-signed PancakeSwap V2 transaction for BNB <-> USDT and SLH <-
 """
 from __future__ import annotations
 
+import os
 import time
 from decimal import Decimal
 from typing import Any
@@ -62,14 +63,14 @@ def _decode_uint256(raw: bytes) -> int:
 
 def _cfg() -> dict[str, Any]:
     """Use the canonical execution-layer network config, including its RPC URL."""
-    import os
-
     exec_cfg = _network()
     name = exec_cfg["name"]
     router = os.getenv("SLH_BSC_PANCAKE_V2_ROUTER", "").strip() or DEFAULTS[name]["router"]
     wbnb = os.getenv("SLH_BSC_WBNB_ADDRESS", "").strip() or DEFAULTS[name]["wbnb"]
     usdt = os.getenv(DEFAULTS[name]["usdt_env"], "").strip()
-    slh = os.getenv("SLH_BSC_SLH_TOKEN_ADDRESS", "").strip() or DEFAULTS[name]["slh_default"]
+    slh = os.getenv("SLH_BSC_SLH_TOKEN_ADDRESS", "").strip() or (
+        DEFAULTS[name]["slh_default"] if name == "bsc-mainnet" else ""
+    )
 
     return {
         "name": name,
@@ -78,7 +79,7 @@ def _cfg() -> dict[str, Any]:
         "router": _checksum_address(router, field="router"),
         "wbnb": _checksum_address(wbnb, field="token"),
         "usdt": _checksum_address(usdt, field="token") if usdt else None,
-        "slh": _checksum_address(slh, field="token") if name == "bsc-mainnet" or os.getenv("SLH_BSC_SLH_TOKEN_ADDRESS", "").strip() else None,
+        "slh": _checksum_address(slh, field="token") if slh else None,
         "native_symbol": exec_cfg["native_symbol"],
     }
 
@@ -218,13 +219,16 @@ def _guard_slh_wbnb_liquidity(
         raise ValueError("SLH_SWAP_TRADE_TOO_LARGE_FOR_LIQUIDITY")
     in_units = Decimal(amount_in_raw) / Decimal(10**input_decimals)
     out_units = Decimal(amount_out_raw) / Decimal(10**output_decimals)
-    spot = (
+    slh_per_wbnb = (
         Decimal(state["slh_reserve_raw"]) / Decimal(10**15)
     ) / (
         Decimal(state["wbnb_reserve_raw"]) / Decimal(10**18)
     )
-    if input_decimals == 18:
-        spot = Decimal(1) / spot
+    spot = (
+        Decimal(1) / slh_per_wbnb
+        if input_decimals == 15
+        else slh_per_wbnb
+    )
     fee_adjusted_spot = spot * Decimal("0.997")
     execution_ratio = out_units / in_units
     impact = max(Decimal(0), Decimal(1) - (execution_ratio / fee_adjusted_spot)) if fee_adjusted_spot > 0 else Decimal(1)
