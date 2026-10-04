@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import state_manager
 
-from core.bnb_gate import bnb_deposits_open
+from core.bnb_gate import bnb_deposits_open, empirical_smoke_allowed
 from core.deposit_monitor import verify_bnb_deposit
 from core.wallet_binding import get_binding
 from core.economy_service import record_transaction
@@ -17,9 +17,14 @@ from core.economy_service import record_transaction
 CREDITS_PER_BNB = 1000
 
 
-def settle_bnb_deposit(uid, tx_hash):
+def settle_bnb_deposit(uid, tx_hash, *, empirical_smoke=False):
+    uid = str(uid)
     if not bnb_deposits_open():
-        raise ValueError("BNB_DEPOSITS_CLOSED")
+        if not empirical_smoke or not empirical_smoke_allowed(uid):
+            raise ValueError("BNB_DEPOSITS_CLOSED")
+        # The empirical path is owner-only and is never enabled through the
+        # public settlement gate. It exists solely to prove the production
+        # settlement authority with one controlled live transaction.
     uid = str(uid)
     if not isinstance(tx_hash, str) or not tx_hash.strip():
         raise ValueError("INVALID_TX_HASH")
