@@ -151,5 +151,78 @@ class VIPOfferWindowTests(unittest.TestCase):
         self.assertFalse(is_launch_offer_open(dt))
 
 
+class VIPReplayIdempotencyTests(unittest.TestCase):
+    def test_history_has_one_entry_per_charge_id(self):
+        from core.vip_fulfillment import _mark_bundle_status
+
+        db = {"users": {"1": {}}}
+
+        with patch(
+            "core.vip_fulfillment.state_manager.atomic_update",
+            side_effect=lambda mutate: mutate(db),
+        ):
+            _mark_bundle_status(
+                "1",
+                "charge-1",
+                launch_offer_qualified=True,
+                status="pending",
+                details={"charge_id": "charge-1", "error": "RuntimeError"},
+            )
+            result = _mark_bundle_status(
+                "1",
+                "charge-1",
+                launch_offer_qualified=True,
+                status="completed",
+                details={"charge_id": "charge-1", "credits": 300},
+            )
+
+        history = result["history"]
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["charge_id"], "charge-1")
+        self.assertEqual(history[0]["credits"], 300)
+
+    def test_completed_vip_replay_does_not_refill_or_record_revenue(self):
+        from core.stars_payment_authority import (
+            VIP_MONTHLY_STARS,
+            record_vip_subscription_payment,
+        )
+
+        db = {"users": {"1": {}}, "vip_subscriptions": {}}
+        fulfillment = {
+            "status": "completed",
+            "launch_offer_qualified": True,
+            "bundle": {"status": "completed"},
+        }
+
+        with patch(
+            "core.stars_payment_authority.state_manager.atomic_update",
+            side_effect=lambda mutate: mutate(db),
+        ), patch(
+            "core.stars_payment_authority.apply_vip_benefits",
+            return_value=fulfillment,
+        ) as apply, patch(
+            "core.stars_payment_authority._record_revenue"
+        ) as revenue:
+            first = record_vip_subscription_payment(
+                uid="1",
+                stars_paid=VIP_MONTHLY_STARS,
+                charge_id="charge-replay-1",
+                now=1000,
+            )
+            second = record_vip_subscription_payment(
+                uid="1",
+                stars_paid=VIP_MONTHLY_STARS,
+                charge_id="charge-replay-1",
+                now=2000,
+            )
+
+        self.assertEqual(first["status"], "applied")
+        self.assertEqual(second["status"], "duplicate")
+        self.assertEqual(second["fulfillment_status"], "completed")
+        apply.assert_called_once()
+        revenue.assert_called_once()
+        self.assertEqual(db["vip_subscriptions"]["charge-replay-1"]["expires_at"], 1000 + 2592000)
+
+
 if __name__ == "__main__":
     unittest.main()
