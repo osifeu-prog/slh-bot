@@ -26,7 +26,7 @@ class MCPEconomyToolTests(unittest.TestCase):
     def test_balance_requires_owned_agent(self):
         from slh_mcp.tools.economy import economy_agent_balance
         source = {"1": {"id":"1","owner_id":"999","name":"other","state":"idle"}}
-        with patch("slh_mcp.tools.economy.list_agents", return_value=source),              patch("slh_mcp.tools.economy.get_visible_agents", return_value={}):
+        with patch("slh_mcp.tools.economy.list_agents", return_value=source),              patch("slh_mcp.tools.economy.get_visible_agents", return_value={}),              patch("slh_mcp.tools.economy.get_agent", return_value=(None, None)):
             with self.assertRaises(PermissionError):
                 economy_agent_balance(self.owner, "1")
 
