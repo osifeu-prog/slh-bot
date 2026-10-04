@@ -89,6 +89,7 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
 
     monkeypatch.setattr(join_handler, "profile_manager", profile)
     monkeypatch.setattr(join_handler, "user_exists", user_exists)
+    monkeypatch.setattr(join_handler.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(join_handler, "can_start_onboarding", lambda **kwargs: True)
     monkeypatch.setattr(join_handler, "OWNER_TELEGRAM_ID", "999999999")
 
