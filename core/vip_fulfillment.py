@@ -48,8 +48,17 @@ def _mark_bundle_status(
             }
         )
         if details:
-            bundle.setdefault("history", []).append(dict(details))
-            bundle["history"] = bundle["history"][-20:]
+            history = bundle.setdefault("history", [])
+            charge_key = str(details.get("charge_id", charge_id))
+            history = [
+                entry for entry in history
+                if not (
+                    isinstance(entry, dict)
+                    and str(entry.get("charge_id", "")) == charge_key
+                )
+            ]
+            history.append(dict(details))
+            bundle["history"] = history[-20:]
         return dict(bundle)
 
     return state_manager.atomic_update(mutate)

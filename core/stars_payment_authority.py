@@ -136,17 +136,30 @@ def record_vip_subscription_payment(
 
     record, created = state_manager.atomic_update(activate_and_mark)
 
-    _record_revenue(
-        source="telegram_stars_subscription",
-        amount=stars_paid,
-        reference=charge_id,
-        uid=uid,
-        meta={
-            "kind": "vip_monthly",
-            "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+    # A completed replay is a no-op: do not re-run fulfillment or record
+    # subscription revenue a second time. Pending replays remain recoverable.
+    if not created and str(record.get("fulfillment_status", "pending")) == "completed":
+        return {
+            "status": "duplicate",
+            "created": False,
+            "record": record,
             "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
-        },
-    )
+            "fulfillment_status": "completed",
+            "bundle": record.get("bundle"),
+        }
+
+    if created:
+        _record_revenue(
+            source="telegram_stars_subscription",
+            amount=stars_paid,
+            reference=charge_id,
+            uid=uid,
+            meta={
+                "kind": "vip_monthly",
+                "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+                "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
+            },
+        )
 
     bundle = apply_vip_benefits(
         uid=uid,

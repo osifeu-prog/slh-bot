@@ -78,11 +78,7 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
             )
 
         self.assertEqual(result["status"], "duplicate")
-        fulfill.assert_called_once_with(
-            uid="1",
-            charge_id="charge-1",
-            launch_offer_qualified=True,
-        )
+        fulfill.assert_not_called()
 
 
 if __name__ == "__main__":
