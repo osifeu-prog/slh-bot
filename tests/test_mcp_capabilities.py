@@ -102,7 +102,7 @@ class MCPCapabilityTests(unittest.TestCase):
         with patch(
             "slh_mcp.capabilities.current_principal",
             return_value=Principal("1", "UNKNOWN", frozenset()),
-        ):
+        ), patch("core.authority.get_role", return_value="UNKNOWN"):
             with self.assertRaises(ToolError):
                 handler()
         self.assertEqual(called, [])
