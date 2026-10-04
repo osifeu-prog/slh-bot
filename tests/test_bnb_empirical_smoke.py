@@ -11,11 +11,7 @@ ADDRESS = "0x1111111111111111111111111111111111111111"
 def test_owner_smoke_reconciles_settlement_and_replay():
     db = {
         "users": {UID: {"wallet": {"credits": 8.0}}},
-        "ledger": [
-            {
-                "meta": {"idempotency_key": f"bnb:deposit:{TX[2:].lower()}"},
-            }
-        ],
+        "ledger": [],
         "settlement_evidence": {},
     }
     balances = iter([8.0, 9.0, 9.0])
