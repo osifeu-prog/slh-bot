@@ -27,7 +27,7 @@ class MCPRailwayDeployTests(unittest.TestCase):
 
         principal = Principal("1", "UNKNOWN", frozenset())
         os.environ["SLH_MCP_DEPLOY_ALLOWLIST"] = "p|s|e"
-        with self.assertRaises(PermissionError):
+        with patch("core.authority.get_role", return_value="UNKNOWN"), self.assertRaises(PermissionError):
             railway_deploy(principal, "p", "s", "e", "a" * 40)
 
     def test_unknown_target_is_rejected(self):
