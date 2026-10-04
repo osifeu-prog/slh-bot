@@ -116,3 +116,31 @@ def test_approval_is_exact_amount():
 def test_uint256_rpc_bytes_decode_is_big_endian():
     raw = (123456789).to_bytes(32, "big")
     assert bsc_swap._decode_uint256(raw) == 123456789
+
+
+def test_mainnet_policy_reports_slh_and_liquidity_guard_configuration(monkeypatch):
+    monkeypatch.setenv("SLH_BSC_EXECUTION_NETWORK", "bsc-mainnet")
+    monkeypatch.setenv("SLH_BSC_EXECUTION_ALLOW_MAINNET", "1")
+    monkeypatch.delenv("SLH_BSC_SWAP_MAX_TRADE_FRACTION_BPS", raising=False)
+    monkeypatch.delenv("SLH_BSC_SWAP_MIN_WBNB_RESERVE", raising=False)
+    monkeypatch.delenv("SLH_BSC_SWAP_MIN_SLH_RESERVE", raising=False)
+    snap = bsc_swap.policy_snapshot()
+    assert snap["slh_configured"] is True
+    assert snap["liquidity_policy_configured"] is False
+
+
+def test_slh_wbnb_trade_guard_requires_explicit_liquidity_policy(monkeypatch):
+    monkeypatch.delenv("SLH_BSC_SWAP_MAX_TRADE_FRACTION_BPS", raising=False)
+    monkeypatch.delenv("SLH_BSC_SWAP_MIN_WBNB_RESERVE", raising=False)
+    monkeypatch.delenv("SLH_BSC_SWAP_MIN_SLH_RESERVE", raising=False)
+    with pytest.raises(ValueError, match="SLH_SWAP_LIQUIDITY_POLICY_MISSING"):
+        bsc_swap._liquidity_policy()
+
+
+def test_slh_bnb_calldata_uses_exact_tokens_for_eth():
+    sender = "0x1111111111111111111111111111111111111111"
+    token = "0x2222222222222222222222222222222222222222"
+    data = bsc_swap._encode_swap_exact_tokens_for_eth(
+        123456, 120000, [token, "0x3333333333333333333333333333333333333333"], sender, 654321
+    )
+    assert data.startswith("0x18cbafe5")
