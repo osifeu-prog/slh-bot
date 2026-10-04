@@ -11,6 +11,25 @@ from pathlib import Path
 
 from core.binance_connector import get_bsc_config
 
+def empirical_smoke_allowed(uid) -> bool:
+    """Allow the live settlement smoke only to the canonical OWNER."""
+    try:
+        from core.authority import is_owner
+        return is_owner(uid)
+    except Exception:
+        return False
+
+
+def _empirical_settlement_evidence() -> dict | None:
+    try:
+        import state_manager
+        db = state_manager.load_db()
+    except Exception:
+        return None
+    evidence = db.get("settlement_evidence", {}) if isinstance(db, dict) else {}
+    bnb = evidence.get("bnb") if isinstance(evidence, dict) else None
+    return bnb if isinstance(bnb, dict) else None
+
 CLOSED_MESSAGE = "⛔️ הפקדות BNB/SLH סגורות כרגע. אל תשלח עד להודעה."
 
 
@@ -134,14 +153,33 @@ def bnb_opening_evidence() -> dict:
     else:
         evidence["blockers"].append("LIVE_BSC_RPC_UNVERIFIED")
 
-    # These checks intentionally remain pending without a live-money operation.
-    evidence["checks"]["wallet_binding"] = {"status": "PENDING_EMPIRICAL"}
-    evidence["checks"]["tx_verification"] = {"status": "PENDING_EMPIRICAL"}
-    evidence["checks"]["idempotency"] = {"status": "PENDING_EMPIRICAL"}
-    evidence["checks"]["atomic_ledger"] = {"status": "PENDING_EMPIRICAL"}
-    evidence["checks"]["reconciliation"] = {"status": "PENDING_EMPIRICAL"}
-    evidence["warnings"].append("empirical_settlement_reconciliation_pending")
-    evidence["next_action"] = "controlled_empirical_reconciliation_before_opening"
+    empirical = _empirical_settlement_evidence()
+    if empirical and empirical.get("status") == "PASS":
+        for check in (
+            "wallet_binding",
+            "tx_verification",
+            "idempotency",
+            "atomic_ledger",
+            "reconciliation",
+        ):
+            evidence["checks"][check] = {"status": "PASS", "source": "state/db.json"}
+        evidence["empirical_settlement"] = {
+            "status": "PASS",
+            "tx_hash": empirical.get("tx_hash"),
+            "observed_at": empirical.get("observed_at"),
+        }
+        evidence["next_action"] = "operator_may_open_bnb_settlement"
+    else:
+        for check in (
+            "wallet_binding",
+            "tx_verification",
+            "idempotency",
+            "atomic_ledger",
+            "reconciliation",
+        ):
+            evidence["checks"][check] = {"status": "PENDING_EMPIRICAL"}
+        evidence["warnings"].append("empirical_settlement_reconciliation_pending")
+        evidence["next_action"] = "controlled_empirical_reconciliation_before_opening"
 
     if evidence["blockers"]:
         return evidence
