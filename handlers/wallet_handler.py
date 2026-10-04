@@ -132,7 +132,7 @@ def register(bot):
                 f"gasPrice={result['tx']['gasPrice']}\\n"
                 f"nonce={result['tx']['nonce']}\\n"
                 f"chainId={result['tx']['chainId']}\\n\\n"
-                "חתום בארנק שלך בלבד. הבוט לא מחזיק את המפתח."
+                "חתום בארנק שלך בלבד. הבוט לא מחזיק את המפתח. bot לא מחזיק את המפתח"
             )
         except ValueError as exc:
             bot.reply_to(msg, f"❌ BNB prepare: {exc}")
