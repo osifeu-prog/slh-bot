@@ -199,7 +199,7 @@ def register(bot):
                 grant(
                     uid,
                     "welcome_bonus",
-                    points=1000,
+                    points=10,
                     idempotency_key=f"welcome:{uid}"
                 )
                 print(f"WELCOME BONUS GRANTED: {uid}")
