@@ -305,10 +305,12 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="bscswap" class="screen">
 <div class="section-title">🔄 BSC Swap</div>
 <div class="slh-swap-card">
-  <div class="slh-swap-head"><div><h3>BNB ↔ USDT</h3><p>Swap ישיר דרך PancakeSwap V2 · העסקה נשארת אצל הארנק שלך.</p></div><span id="bscSwapBadge" class="pill pending">בודק…</span></div>
+  <div class="slh-swap-head"><div><h3>SLH ↔ BNB · BNB ↔ USDT</h3><p>Swap ישיר דרך PancakeSwap V2 · החתימה והשידור מתבצעים בארנק שלך.</p></div><span id="bscSwapBadge" class="pill pending">בודק…</span></div>
   <div id="bscSwapGate" class="slh-swap-gate locked">🔒 <span id="bscSwapGateText">טוען מדיניות execution…</span></div>
   <div class="slh-swap-pair">
-    <button id="bscPairBnbUsdt" type="button" class="active" onclick="setBscSwapPair('BNB_USDT')">BNB → USDT</button>
+    <button id="bscPairBnbSlh" type="button" class="active" onclick="setBscSwapPair('BNB_SLH')">BNB → SLH</button>
+    <button id="bscPairSlhBnb" type="button" onclick="setBscSwapPair('SLH_BNB')">SLH → BNB</button>
+    <button id="bscPairBnbUsdt" type="button" onclick="setBscSwapPair('BNB_USDT')">BNB → USDT</button>
     <button id="bscPairUsdtBnb" type="button" onclick="setBscSwapPair('USDT_BNB')">USDT → BNB</button>
   </div>
   <div class="slh-swap-grid" style="margin-top:9px">
@@ -396,7 +398,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('stake');closeMoreMenu()"><b>🔒 סטייקינג</b><span>פוזיציות ותנאים</span></button>
       <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
-      <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>BNB · USDT · BSC</span></button>
+      <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
       <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
       <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Control Plane</span></button>
       <button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button>
@@ -2112,25 +2114,61 @@ function handleApiAuthFailure(status,data){
 </script>
 
 <script id="slh-bsc-swap-v1">
-let __bscSwapPair='BNB_USDT';
+let __bscSwapPair='BNB_SLH';
 let __bscSwapPolicy=null;
 let __bscPreparedSwap=null;
 
-function setBscSwapPair(pair){
-  if(!['BNB_USDT','USDT_BNB'].includes(pair))return;
-  __bscSwapPair=pair;
-  const a=$('bscPairBnbUsdt'),b=$('bscPairUsdtBnb');
-  if(a)a.classList.toggle('active',pair==='BNB_USDT');
-  if(b)b.classList.toggle('active',pair==='USDT_BNB');
+function bscSwapMeta(pair){
+  return ({
+    BNB_SLH:{input:'BNB',output:'SLH',example:'0.001'},
+    SLH_BNB:{input:'SLH',output:'BNB',example:'1'},
+    BNB_USDT:{input:'BNB',output:'USDT',example:'0.01'},
+    USDT_BNB:{input:'USDT',output:'BNB',example:'10'}
+  })[pair]||{input:'—',output:'—',example:'0.01'};
+}
+
+function bscPairConfigured(pair){
+  if(!__bscSwapPolicy?.enabled)return false;
+  if(pair==='BNB_SLH'||pair==='SLH_BNB')return !!__bscSwapPolicy.slh_configured;
+  return !!__bscSwapPolicy.usdt_configured;
+}
+
+function bscPairPrepareConfigured(pair){
+  if(!bscPairConfigured(pair))return false;
+  if((pair==='BNB_SLH'||pair==='SLH_BNB')&&!__bscSwapPolicy.liquidity_policy_configured)return false;
+  return true;
+}
+
+function syncBscSwapControls(){
+  const meta=bscSwapMeta(__bscSwapPair);
+  const ids={
+    BNB_SLH:'bscPairBnbSlh',
+    SLH_BNB:'bscPairSlhBnb',
+    BNB_USDT:'bscPairBnbUsdt',
+    USDT_BNB:'bscPairUsdtBnb'
+  };
+  Object.entries(ids).forEach(([pair,id])=>{
+    const el=$(id);if(el)el.classList.toggle('active',pair===__bscSwapPair);
+  });
   const input=$('bscSwapAmount');
-  if(input)input.placeholder=pair==='BNB_USDT'?'לדוגמה: 0.01':'לדוגמה: 10';
-  __bscPreparedSwap=null;
+  if(input)input.placeholder='לדוגמה: '+meta.example;
+  const quote=$('bscSwapQuoteButton');
+  if(quote)quote.disabled=!bscPairConfigured(__bscSwapPair);
+  const prep=$('bscSwapPrepareButton');
+  if(prep)prep.disabled=true;
   const send=$('bscSwapSendButton');if(send)send.disabled=true;
   setText('bscSwapResult','בחר כמות ולחץ Quote כדי לקבל נתוני on-chain.');
 }
 
+function setBscSwapPair(pair){
+  if(!['BNB_SLH','SLH_BNB','BNB_USDT','USDT_BNB'].includes(pair))return;
+  __bscSwapPair=pair;
+  __bscPreparedSwap=null;
+  syncBscSwapControls();
+}
+
 async function loadBscSwapPolicy(){
-  const badge=$('bscSwapBadge'),gate=$('bscSwapGate'),quote=$('bscSwapQuoteButton'),prep=$('bscSwapPrepareButton');
+  const badge=$('bscSwapBadge'),gate=$('bscSwapGate');
   try{
     const r=await fetch('/api/v1/execution/policy',{cache:'no-store'});
     const d=await r.json().catch(()=>({}));
@@ -2138,30 +2176,21 @@ async function loadBscSwapPolicy(){
     __bscSwapPolicy=d;
     setText('bscSwapNetwork',(d.network||'—')+' · chain '+(d.chain_id??'—'));
     setText('bscSwapRouter',d.router||'—');
-    if(!d.usdt_configured){
-      if(badge){badge.textContent='USDT לא מוגדר';badge.className='pill pending'}
-      if(gate){gate.className='slh-swap-gate locked';gate.textContent='⚠️ '+(d.network||'BSC')+' ללא כתובת USDT מוגדרת'}
-      if(quote)quote.disabled=true;if(prep)prep.disabled=true;
-      const send=$('bscSwapSendButton');if(send)send.disabled=true;
-      return d;
-    }
     if(d.enabled){
-      if(badge){badge.textContent='✅ OPEN';badge.className='pill ok'}
-      if(gate){gate.className='slh-swap-gate open';gate.innerHTML='✅ <span id="bscSwapGateText">Execution פתוח · '+esc(d.network||'BSC')+'</span>'}
-      if(quote)quote.disabled=false;
-      if(prep)prep.disabled=true;
+      if(badge){badge.textContent='✅ WALLET-SIGNED';badge.className='pill ok'}
+      if(gate){gate.className='slh-swap-gate open';gate.innerHTML='✅ <span id="bscSwapGateText">Quote + Prepare פתוחים · חתימה ושידור בארנק בלבד</span>'}
     }else{
       if(badge){badge.textContent='🔒 CLOSED';badge.className='pill pending'}
       if(gate){gate.className='slh-swap-gate locked';gate.innerHTML='🔒 <span id="bscSwapGateText">Execution סגור · אין חתימה או שידור</span>'}
-      if(quote)quote.disabled=true;if(prep)prep.disabled=true;
-      const send=$('bscSwapSendButton');if(send)send.disabled=true;
     }
+    syncBscSwapControls();
     return d;
   }catch(e){
     __bscSwapPolicy=null;
     if(badge){badge.textContent='⚠️ לא זמין';badge.className='pill pending'}
     if(gate){gate.className='slh-swap-gate locked';gate.innerHTML='⚠️ <span id="bscSwapGateText">Policy לא זמינה</span>'}
-    if(quote)quote.disabled=true;if(prep)prep.disabled=true;
+    const quote=$('bscSwapQuoteButton');if(quote)quote.disabled=true;
+    const prep=$('bscSwapPrepareButton');if(prep)prep.disabled=true;
     const send=$('bscSwapSendButton');if(send)send.disabled=true;
     setText('bscSwapResult','❌ '+(e.message||e));
     return null;
@@ -2171,7 +2200,8 @@ async function loadBscSwapPolicy(){
 async function quoteBscSwap(){
   if(!initData){showAuthGate();return}
   if(!__bscSwapPolicy)await loadBscSwapPolicy();
-  if(!__bscSwapPolicy?.enabled){toast('🔒 BSC execution סגור');return}
+  if(!bscPairConfigured(__bscSwapPair)){toast('🔒 Pair לא זמין כרגע');return}
+  if(!bscPairPrepareConfigured(__bscSwapPair)){toast('🔒 Liquidity policy לא מוגדרת עדיין');return}
   const amount=($('bscSwapAmount')?.value||'').trim();
   if(!amount){toast('הזן כמות');return}
   const button=$('bscSwapQuoteButton');if(button)button.disabled=true;
@@ -2181,20 +2211,19 @@ async function quoteBscSwap(){
     if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
     __bscPreparedSwap=null;
     const send=$('bscSwapSendButton');if(send)send.disabled=true;
-    const outName=__bscSwapPair==='BNB_USDT'?'USDT':'BNB';
-    setHTML('bscSwapResult','<b>✅ Quote התקבל</b><br>רשת: '+esc(d.network)+' · block '+esc(d.block_number)+'<br>Input: <b>'+esc(d.amount_in)+' '+(__bscSwapPair==='BNB_USDT'?'BNB':'USDT')+'</b><br>Expected output: <b>'+esc(d.amount_out)+' '+outName+'</b><br><span class="slh-swap-code">'+esc(d.router)+'</span>');
-    if($('bscSwapPrepareButton'))$('bscSwapPrepareButton').disabled=false;
+    const meta=bscSwapMeta(__bscSwapPair);
+    setHTML('bscSwapResult','<b>✅ Quote התקבל</b><br>רשת: '+esc(d.network)+' · block '+esc(d.block_number)+'<br>Input: <b>'+esc(d.amount_in)+' '+meta.input+'</b><br>Expected output: <b>'+esc(d.amount_out)+' '+meta.output+'</b><br><span class="slh-swap-code">'+esc(d.router)+'</span>');
+    const prep=$('bscSwapPrepareButton');if(prep)prep.disabled=false;
   }catch(e){
     setText('bscSwapResult','❌ '+(e.message||e));
   }finally{
-    if(button)button.disabled=!__bscSwapPolicy?.enabled;
+    if(button)button.disabled=!bscPairConfigured(__bscSwapPair);
   }
 }
 
 async function prepareBscSwap(){
   if(!initData){showAuthGate();return}
-  if(!__bscSwapPolicy)await loadBscSwapPolicy();
-  if(!__bscSwapPolicy?.enabled){toast('🔒 BSC execution סגור');return}
+  if(!bscPairConfigured(__bscSwapPair)){toast('🔒 Pair לא זמין כרגע');return}
   const amount=($('bscSwapAmount')?.value||'').trim();
   const slip=Number(($('bscSwapSlippage')?.value||'').trim());
   const deadline=Number(($('bscSwapDeadline')?.value||'').trim());
@@ -2207,16 +2236,16 @@ async function prepareBscSwap(){
     const d=await r.json().catch(()=>({}));
     if(!r.ok){if(handleApiAuthFailure(r.status,d))return;throw Error(d.error||('HTTP '+r.status))}
     __bscPreparedSwap=d;
-    const minUnit=__bscSwapPair==='BNB_USDT'?'USDT':'BNB';
+    const meta=bscSwapMeta(__bscSwapPair);
     const approval=d.approval;
-    setHTML('bscSwapResult','<b>✅ Transaction prepared</b><br>Input: <b>'+esc(d.amount_in)+' '+(__bscSwapPair==='BNB_USDT'?'BNB':'USDT')+'</b><br>Quoted raw: <b>'+esc(String(d.quoted_out_raw))+'</b><br>Minimum out: <b>'+esc(String(d.minimum_out_raw))+' '+minUnit+' raw</b><br>Slippage: '+esc(d.slippage_bps)+' bps · Deadline: '+esc(d.deadline)+'<br>Estimated fee: <b>'+esc(String(d.estimated_fee_raw))+'</b> wei<br>'+(approval?'<b>Approval required:</b> exact input amount<br>':'Approval: <b>not required</b><br>')+'<span class="slh-swap-code">Router: '+esc(d.router)+'</span>');
+    setHTML('bscSwapResult','<b>✅ Transaction prepared</b><br>Input: <b>'+esc(d.amount_in)+' '+meta.input+'</b><br>Quoted raw: <b>'+esc(String(d.quoted_out_raw))+'</b><br>Minimum out: <b>'+esc(String(d.minimum_out_raw))+' '+meta.output+' raw</b><br>Slippage: '+esc(d.slippage_bps)+' bps · Deadline: '+esc(d.deadline)+'<br>Estimated fee: <b>'+esc(String(d.estimated_fee_raw))+'</b> wei<br>'+(approval?'<b>Approval required:</b> exact input amount<br>':'Approval: <b>not required</b><br>')+(d.liquidity?'<b>Liquidity:</b> '+esc(d.liquidity.trade_fraction_bps)+' bps of pool input · est. impact '+esc(d.liquidity.estimated_price_impact_bps)+' bps<br>':'')+'<span class="slh-swap-code">Router: '+esc(d.router)+'</span>');
     const send=$('bscSwapSendButton');if(send)send.disabled=false;
   }catch(e){
     __bscPreparedSwap=null;
     const send=$('bscSwapSendButton');if(send)send.disabled=true;
     setText('bscSwapResult','❌ '+(e.message||e));
   }finally{
-    if(button)button.disabled=!__bscSwapPolicy?.enabled;
+    if(button)button.disabled=!bscPairConfigured(__bscSwapPair);
   }
 }
 
