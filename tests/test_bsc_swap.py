@@ -144,3 +144,71 @@ def test_slh_bnb_calldata_uses_exact_tokens_for_eth():
         123456, 120000, [token, "0x3333333333333333333333333333333333333333"], sender, 654321
     )
     assert data.startswith("0x18cbafe5")
+
+
+def test_pair_state_reads_pancakeswap_pair_and_reserves():
+    class Call:
+        def __init__(self, value):
+            self.value = value
+
+        def call(self):
+            return self.value
+
+    class RouterFunctions:
+        def factory(self):
+            return Call("0x4444444444444444444444444444444444444444")
+
+    class FactoryFunctions:
+        def getPair(self, _token_a, _token_b):
+            return Call("0x3333333333333333333333333333333333333333")
+
+    class PairFunctions:
+        def token0(self):
+            return Call("0x2222222222222222222222222222222222222222")
+
+        def token1(self):
+            return Call("0x1111111111111111111111111111111111111111")
+
+        def getReserves(self):
+            return Call((2_000_000_000_000_000_000_000_000, 1_000_000_000_000_000_000, 0))
+
+    class Contract:
+        def __init__(self, functions):
+            self.functions = functions
+
+    class Eth:
+        block_number = 123
+
+        def __init__(self):
+            self.calls = 0
+
+        def contract(self, *, address, abi):
+            self.calls += 1
+            if self.calls == 1:
+                return Contract(RouterFunctions())
+            if self.calls == 2:
+                return Contract(FactoryFunctions())
+            return Contract(PairFunctions())
+
+    class Web3Stub:
+        eth = Eth()
+
+    state = bsc_swap._pair_state(
+        Web3Stub(),
+        "0x5555555555555555555555555555555555555555",
+        "0x2222222222222222222222222222222222222222",
+        "0x1111111111111111111111111111111111111111",
+    )
+
+    assert state["pair"].lower() == "0x3333333333333333333333333333333333333333"
+    assert state["slh_reserve_raw"] == 2_000_000_000_000_000_000_000_000
+    assert state["wbnb_reserve_raw"] == 1_000_000_000_000_000_000
+    assert state["block_number"] == 123
+
+
+def test_invalid_liquidity_policy_value_is_rejected(monkeypatch):
+    monkeypatch.setenv("SLH_BSC_SWAP_MAX_TRADE_FRACTION_BPS", "not-a-number")
+    monkeypatch.setenv("SLH_BSC_SWAP_MIN_WBNB_RESERVE", "1")
+    monkeypatch.setenv("SLH_BSC_SWAP_MIN_SLH_RESERVE", "1")
+    with pytest.raises(ValueError, match="INVALID_SLH_BSC_SWAP_MAX_TRADE_FRACTION_BPS"):
+        bsc_swap._liquidity_policy()

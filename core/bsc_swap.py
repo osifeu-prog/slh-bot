@@ -7,10 +7,11 @@ from __future__ import annotations
 
 import os
 import time
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from eth_abi import encode
+from web3 import Web3
 
 from core.bsc_execution import (
     NETWORKS,
@@ -25,6 +26,7 @@ from core.bsc_execution import (
     network_name,
     _fee_fields,
     BSCExecutionError,
+    ZERO_ADDRESS,
 )
 
 V2_GET_AMOUNTS_OUT_SELECTOR = "d06ca61f"
