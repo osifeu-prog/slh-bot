@@ -64,7 +64,8 @@ class MCPAuthTests(unittest.TestCase):
             role="UNKNOWN",
             permissions=frozenset(),
         )
-        self.assertFalse(authorize(principal, "exec.audit"))
+        with patch("core.authority.get_role", return_value="UNKNOWN"):
+            self.assertFalse(authorize(principal, "exec.audit"))
 
     def test_redaction_masks_bearer(self):
         from slh_mcp.auth import redact
