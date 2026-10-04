@@ -61,6 +61,23 @@ class WalletBindingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "CHALLENGE_EXPIRED"):
             wallet_binding.verify_signature(self.uid, self.address, signature)
 
+    def test_revoke_binding_removes_only_binding_and_challenge(self):
+        challenge = wallet_binding.issue_challenge(self.uid, self.address)
+        signature = self.account.sign_message(encode_defunct(text=challenge["message"])).signature.hex()
+        wallet_binding.verify_signature(self.uid, self.address, signature)
+
+        self.assertIsNotNone(wallet_binding.get_binding(self.uid))
+        removed = wallet_binding.revoke_binding(self.uid)
+
+        self.assertEqual(removed["address"], self.address)
+        self.assertIsNone(wallet_binding.get_binding(self.uid))
+        self.assertNotIn(self.address.lower(), self.db.get("wallet_bindings", {}))
+        self.assertNotIn("bsc:test-user", self.db.get("wallet_challenges", {}))
+
+    def test_revoke_without_binding_is_idempotent(self):
+        self.assertIsNone(wallet_binding.revoke_binding(self.uid))
+        self.assertEqual(self.db.get("wallet_bindings", {}), {})
+
     def test_same_wallet_cannot_bind_to_second_user(self):
         challenge = wallet_binding.issue_challenge(self.uid, self.address)
         signature = self.account.sign_message(encode_defunct(text=challenge["message"])).signature.hex()
