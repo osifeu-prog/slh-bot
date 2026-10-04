@@ -63,7 +63,8 @@ class MCPCapabilityTests(unittest.TestCase):
     def test_agents_resource_is_sanitized(self):
         from slh_mcp.resources import agents_resource
 
-        result = agents_resource(self.owner)
+        with patch("slh_mcp.resources.list_agents", return_value={}):
+            result = agents_resource(self.owner)
         self.assertIsInstance(result, list)
         for row in result:
             self.assertNotIn("inbox", row)
@@ -101,7 +102,7 @@ class MCPCapabilityTests(unittest.TestCase):
         with patch(
             "slh_mcp.capabilities.current_principal",
             return_value=Principal("1", "UNKNOWN", frozenset()),
-        ):
+        ), patch("core.authority.get_role", return_value="UNKNOWN"):
             with self.assertRaises(ToolError):
                 handler()
         self.assertEqual(called, [])

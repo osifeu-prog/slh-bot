@@ -119,7 +119,7 @@ class TestReleaseStateContract(unittest.TestCase):
         self.assertIn("release_evidence_sha_mismatch", state["warnings"])
 
     def test_release_state_is_exposed_through_system_map(self):
-        with patch("core.system_check.run_system_checks", return_value={"status": "PASS"}),              patch("core.alpha_control_plane.evaluate", return_value={"status": "READY", "system_status": "READY"}),              patch("core.alpha_control_plane.alpha_state", return_value={"status": "CLOSED"}),              patch("core.bnb_gate.bnb_readiness", return_value={"effective_open": False}),              patch("core.ton_deposit_service.deposits_are_open", return_value=False),              patch("core.control_center._load_registry", return_value={"schema_version": "test", "railway_projects": []}),              patch.dict(os.environ, {}, clear=True):
+        with patch("core.system_check.run_system_checks", return_value={"status": "PASS"}),              patch("core.alpha_control_plane.evaluate", return_value={"status": "READY", "system_status": "READY"}),              patch("core.alpha_control_plane.alpha_state", return_value={"status": "CLOSED"}),              patch("core.bnb_gate.bnb_readiness", return_value={"effective_open": False}),              patch("core.ton_deposit_service.deposits_are_open", return_value=False),              patch("core.control_center._load_registry", return_value={"schema_version": "test", "railway_projects": []}),              patch("core.control_center.state_manager.get_agents", return_value={}),              patch.dict(os.environ, {}, clear=True):
             system_map = get_full_system_map()
 
         self.assertIn("release_state", system_map)

@@ -8,7 +8,8 @@ class AgentLimitTests(unittest.TestCase):
     def test_regular_user_limit_is_two(self):
         from core.agent_policy import max_agents_for_user
 
-        self.assertEqual(max_agents_for_user("1", now=2_000_000_000), 2)
+        with patch("core.agent_policy.get_user", return_value={}):
+            self.assertEqual(max_agents_for_user("1", now=2_000_000_000), 2)
 
     def test_launch_vip_user_limit_is_four(self):
         from core.agent_policy import max_agents_for_user

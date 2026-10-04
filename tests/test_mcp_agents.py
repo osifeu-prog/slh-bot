@@ -15,7 +15,9 @@ class MCPAgentTests(unittest.TestCase):
 
     def test_missing_agent_is_rejected(self):
         from slh_mcp.tools.agents import agents_get
-        with patch("slh_mcp.tools.agents.list_agents", return_value={}):
+        with patch("slh_mcp.tools.agents.list_agents", return_value={}), patch(
+            "slh_mcp.tools.agents.get_agent", return_value=(None, None)
+        ):
             with self.assertRaises(KeyError):
                 agents_get(self.owner, "missing")
 
