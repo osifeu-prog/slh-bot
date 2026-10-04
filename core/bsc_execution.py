@@ -381,7 +381,7 @@ def recover_signed_sender(signed_tx_hex: str) -> str:
 
 
 def broadcast_signed_transaction(signed_tx_hex: str, *, expected_sender: str | None = None) -> dict[str, Any]:
-    """Broadcast an already-signed transaction; this module never signs."""
+    """Broadcast an already-signed transaction; this module never signs or stores keys."""
     cfg = _require_enabled()
     if not broadcast_enabled():
         raise ValueError("BSC_BROADCAST_DISABLED")
@@ -391,7 +391,24 @@ def broadcast_signed_transaction(signed_tx_hex: str, *, expected_sender: str | N
         expected = _checksum_address(expected_sender, field="expected_sender")
         if sender.lower() != expected.lower():
             raise ValueError("SIGNED_TX_SENDER_MISMATCH")
-    tx_hash = web3.eth.send_raw_transaction(_signed_bytes(signed_tx_hex))
+    payload = _signed_bytes(signed_tx_hex)
+    tx_hash_hex = Web3.to_hex(Web3.keccak(payload))
+    try:
+        existing = web3.eth.get_transaction(tx_hash_hex)
+        if existing:
+            return {
+                "ok": True,
+                "network": cfg["name"],
+                "chain_id": cfg["chain_id"],
+                "from": sender,
+                "tx_hash": tx_hash_hex,
+                "broadcast": True,
+                "already_broadcast": True,
+                "custody": False,
+            }
+    except Exception:
+        pass
+    tx_hash = web3.eth.send_raw_transaction(payload)
     return {
         "ok": True,
         "network": cfg["name"],
@@ -399,6 +416,7 @@ def broadcast_signed_transaction(signed_tx_hex: str, *, expected_sender: str | N
         "from": sender,
         "tx_hash": Web3.to_hex(tx_hash),
         "broadcast": True,
+        "already_broadcast": False,
         "custody": False,
     }
 
@@ -425,7 +443,7 @@ def execute_with_external_signer(tx: dict[str, Any], signer: Any, *, expected_se
     return broadcast_signed_transaction(signed, expected_sender=expected)
 
 
-def receipt_status(tx_hash: str) -> dict[str, Any]:
+def receipt_status(tx_hash: str, *, expected_sender: str | None = None) -> dict[str, Any]:
     """Read-only receipt check for a previously submitted transaction."""
     cfg = _network()
     web3 = _client(cfg)
@@ -444,6 +462,12 @@ def receipt_status(tx_hash: str) -> dict[str, Any]:
             "confirmed": False,
         }
     status = int(receipt.get("status", 0))
+    if expected_sender is not None:
+        tx = web3.eth.get_transaction(raw)
+        actual_sender = _checksum_address(tx.get("from"), field="sender")
+        expected = _checksum_address(expected_sender, field="expected_sender")
+        if actual_sender.lower() != expected.lower():
+            raise ValueError("RECEIPT_SENDER_MISMATCH")
     return {
         "ok": True,
         "network": cfg["name"],
