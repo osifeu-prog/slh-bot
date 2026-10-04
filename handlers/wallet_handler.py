@@ -83,6 +83,30 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(msg, f"❌ BNB verification failed: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["disconnect_bnb"])
+    def disconnect_bnb(msg):
+        """Remove only this Telegram user's BNB binding for wallet recovery."""
+        uid = str(msg.from_user.id)
+        try:
+            from core.wallet_binding import revoke_binding
+            removed = revoke_binding(uid)
+            if not removed:
+                bot.reply_to(
+                    msg,
+                    "ℹ️ אין כרגע BNB wallet binding להסרה.\\n\\n"
+                    "אפשר לחבר ארנק חדש עם /connect_bnb <כתובת BNB>."
+                )
+                return
+            bot.reply_to(
+                msg,
+                "✅ BNB wallet binding הוסר בבטחה.\\n\\n"
+                f"Wallet: {removed.get('address', 'unknown')}\\n"
+                "הפקדות, ledger ויתרות לא השתנו.\\n"
+                "כעת חבר ארנק חדש עם /connect_bnb <כתובת BNB> ולאחר מכן חתום על challenge חדש."
+            )
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ BNB disconnect failed: {type(exc).__name__}")
+
     @bot.message_handler(commands=["wallet"])
     def wallet(msg):
         uid = str(msg.from_user.id)

@@ -138,6 +138,33 @@ def verify_signature(uid, address, signature):
     return state_manager.atomic_update(mutate)
 
 
+def revoke_binding(uid):
+    """Remove only the caller's BNB binding and any pending BNB challenge.
+
+    This is a recovery/security operation. It does not alter deposits, claims,
+    ledgers, balances, or on-chain state. A new wallet must pass a fresh
+    challenge/signature before it can be bound again.
+    """
+    uid = str(uid)
+
+    def mutate(db):
+        bindings = db.setdefault("wallet_bindings", {})
+        removed = None
+        for address_key, binding in list(bindings.items()):
+            if str(binding.get("uid")) == uid and binding.get("chain") == CHAIN:
+                removed = dict(binding)
+                del bindings[address_key]
+                break
+
+        challenges = db.setdefault("wallet_challenges", {})
+        challenge_key = f"{CHAIN}:{uid}"
+        if challenge_key in challenges:
+            del challenges[challenge_key]
+
+        return removed
+
+    return state_manager.atomic_update(mutate)
+
 def get_binding(uid):
     uid = str(uid)
     db = state_manager.load_db()
