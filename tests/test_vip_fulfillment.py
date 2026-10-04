@@ -119,7 +119,9 @@ class VIPFulfillmentTests(unittest.TestCase):
 
         with patch("core.vip_fulfillment.apply_grant") as grant, patch(
             "core.vip_fulfillment.economy_service.record_transaction"
-        ) as credit:
+        ) as credit, patch(
+            "core.vip_fulfillment._already_qualified", return_value=False
+        ):
             result = apply_vip_benefits(
                 uid="1",
                 charge_id="charge-2",
