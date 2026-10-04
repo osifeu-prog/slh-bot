@@ -26,6 +26,7 @@ def test_bnb_opening_evidence_is_read_only_and_blocks_without_empirical_proof():
         },
         clear=False,
     ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.bnb_gate._empirical_settlement_evidence", return_value=None), patch(
         "core.deposit_monitor.get_onchain_status",
         return_value={
             "ok": True,
