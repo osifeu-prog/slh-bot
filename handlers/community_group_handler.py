@@ -172,8 +172,7 @@ def register(bot):
 
         bot.reply_to(
             m,
-            "📊 Group member sync
-"
+            "📊 Group member sync\\n"
             + ("\n".join(results) if results else "No groups registered.")
         )
 
