@@ -1546,7 +1546,7 @@ def bnb_wallet_binding():
             "mode": "owner_canary",
             "asset": "BNB",
             "amount_bnb": "0.01",
-            "amount_wei": 10**16,
+            "amount_wei": str(10**16),
             "chain_id": 56,
             "treasury": cfg.get("treasury_wallet"),
         },
