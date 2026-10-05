@@ -280,6 +280,7 @@ def build_stars_financial_truth(uid: str, *, owner: bool = False) -> dict:
         "real_by_kind": real_by_kind,
         "mismatch_count": mismatch_count,
     }
+    result["owner"]["matched_charge_ids"] = matched
     result["owner"]["recent_matched"] = [
         {
             "kind": confirmed[str(tx.get("id"))].get("kind"),
