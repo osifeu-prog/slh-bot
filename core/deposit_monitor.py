@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from web3 import Web3
 from core.binance_connector import get_bsc_config
+import state_manager
 
 
 ERC20_ABI = [
@@ -16,7 +17,7 @@ ERC20_ABI = [
 def get_onchain_status():
     try:
         cfg = get_bsc_config()
-        db = json.loads(Path("state/db.json").read_text(encoding="utf-8"))
+        db = state_manager.load_db()
         if "bsc_settings" in db:
             cfg = {**cfg, **db["bsc_settings"]}
 
@@ -65,8 +66,7 @@ def get_onchain_status():
 
 def verify_bnb_deposit(tx_hash):
     cfg = get_bsc_config()
-    with open("state/db.json", encoding="utf-8") as f:
-        db = json.load(f)
+    db = state_manager.load_db()
     cfg = {**cfg, **db.get("bsc_settings", {})}
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
     try:
