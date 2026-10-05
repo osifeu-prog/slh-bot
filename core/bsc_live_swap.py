@@ -199,7 +199,7 @@ def quote(uid: str, trade: str, amount: str) -> dict[str, Any]:
     elif trade == "USDC_BNB":
         inp, out, din, dout = cfg["usdc"], cfg["wbnb"], _token_decimals(web3, cfg["usdc"]), 18
         amount_raw = _parse_units(amount, din)
-        paths = [[inp, out], [inp, cfg["wbnb"], out]]
+        paths = [[inp, out]]
     elif trade == "BNB_SLH":
         inp, out, din, dout = cfg["wbnb"], cfg["slh"], 18, _token_decimals(web3, cfg["slh"])
         amount_raw = _parse_units(amount, din)
@@ -208,6 +208,16 @@ def quote(uid: str, trade: str, amount: str) -> dict[str, Any]:
         inp, out, din, dout = cfg["slh"], cfg["wbnb"], _token_decimals(web3, cfg["slh"]), 18
         amount_raw = _parse_units(amount, din)
         paths = [[inp, out]]
+    elif trade == "USDC_SLH":
+        inp, out = cfg["usdc"], cfg["slh"]
+        din, dout = _token_decimals(web3, cfg["usdc"]), _token_decimals(web3, cfg["slh"])
+        amount_raw = _parse_units(amount, din)
+        paths = [[inp, out], [inp, cfg["wbnb"], out]]
+    elif trade == "SLH_USDC":
+        inp, out = cfg["slh"], cfg["usdc"]
+        din, dout = _token_decimals(web3, cfg["slh"]), _token_decimals(web3, cfg["usdc"])
+        amount_raw = _parse_units(amount, din)
+        paths = [[inp, out], [inp, cfg["wbnb"], out]]
     else:
         raise ValueError("UNSUPPORTED_SWAP_PAIR")
 
@@ -267,6 +277,27 @@ def prepare(uid: str, trade: str, amount: str, slippage_bps: int, deadline_secon
         if token_balance < amount_in_raw:
             raise ValueError("INSUFFICIENT_TOKEN_BALANCE")
         data = "0x" + SWAP_EXACT_TOKENS_FOR_ETH + encode(
+            ["uint256", "uint256", "address[]", "address", "uint256"],
+            [amount_in_raw, amount_out_min, path, sender, deadline],
+        ).hex()
+        gas = int(web3.eth.estimate_gas({"from": sender, "to": cfg["router"], "value": 0, "data": data}))
+        approval_gas = int(approval["gas"], 16) if approval else 0
+        native_balance = int(web3.eth.get_balance(sender))
+        if native_balance < (gas + approval_gas) * max_fee:
+            raise ValueError("INSUFFICIENT_BNB_FOR_GAS")
+        gas_tx = {
+            "from": sender, "to": cfg["router"], "value": "0x0", "data": data,
+            "gas": _hex_quantity(gas), "gas_limit": _hex_quantity(gas),
+            "nonce": _hex_quantity(int(web3.eth.get_transaction_count(sender, "pending"))),
+            "chainId": _hex_quantity(cfg["chain_id"]), **fees,
+        }
+    elif trade in {"USDC_SLH", "SLH_USDC"}:
+        offer_token = cfg["usdc"] if trade == "USDC_SLH" else cfg["slh"]
+        approval = _approval_tx(web3, sender, offer_token, cfg["router"], amount_in_raw)
+        token_balance = _token_balance(web3, offer_token, sender)
+        if token_balance < amount_in_raw:
+            raise ValueError("INSUFFICIENT_TOKEN_BALANCE")
+        data = "0x" + SWAP_EXACT_TOKENS_FOR_TOKENS + encode(
             ["uint256", "uint256", "address[]", "address", "uint256"],
             [amount_in_raw, amount_out_min, path, sender, deadline],
         ).hex()
