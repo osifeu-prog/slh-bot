@@ -83,22 +83,7 @@ def test_bnb_gate_closes_on_canonical_treasury_mismatch():
         assert "BNB_CANONICAL_TREASURY_MISMATCH" in status["reasons"]
 
 
-def test_bnb_readiness_uses_state_db_override(tmp_path):
-    import json
-
-    db_path = tmp_path / "state" / "db.json"
-    db_path.parent.mkdir()
-    db_path.write_text(
-        json.dumps(
-            {
-                "bsc_settings": {
-                    "treasury_wallet": TREASURY,
-                    "confirmations": 20,
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
+def test_bnb_readiness_uses_state_db_override():
     base = {
         "network": "bsc",
         "rpc": "https://example.invalid",
@@ -113,7 +98,13 @@ def test_bnb_readiness_uses_state_db_override(tmp_path):
         },
         clear=False,
     ), patch("core.bnb_gate.get_bsc_config", return_value=base), patch(
-        "core.bnb_gate.Path", return_value=db_path
+        "core.bnb_gate.state_manager.load_db",
+        return_value={
+            "bsc_settings": {
+                "treasury_wallet": TREASURY,
+                "confirmations": 20,
+            }
+        },
     ):
         status = bnb_readiness()
         assert status["ready"] is True

@@ -236,7 +236,7 @@ def get_investor_snapshot(uid):
         ),
         None,
     )
-    bnb_status = bnb_readiness()
+    bnb_status = bnb_readiness(db)
     ton_settings_db = db.get("ton_settings", {})
     if not isinstance(ton_settings_db, dict):
         ton_settings_db = {}
