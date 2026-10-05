@@ -38,11 +38,54 @@ def _settings():
     return wallet, Decimal(str(rate or 0))
 
 
-def deposits_are_open() -> bool:
-    if not _deposits_open():
-        return False
+def ton_readiness() -> dict:
+    """Read-only TON settlement readiness contract.
+
+    This does not open deposits. It validates configuration and the safe rate
+    band required before the operator can enable the normal gate.
+    """
     treasury, rate = _settings()
-    return bool(treasury and TON_RATE_MIN <= rate <= TON_RATE_MAX)
+    reasons = []
+    normalized = None
+    if not treasury:
+        reasons.append("TON_TREASURY_MISSING")
+    else:
+        try:
+            normalized = normalize_ton_address(str(treasury))
+        except ValueError:
+            reasons.append("TON_TREASURY_INVALID")
+
+    if not (TON_RATE_MIN <= rate <= TON_RATE_MAX):
+        reasons.append("TON_RATE_NOT_SAFE")
+
+    flag_open = _deposits_open()
+    return {
+        "flag_open": flag_open,
+        "ready": not reasons,
+        "effective_open": flag_open and not reasons,
+        "treasury": treasury,
+        "treasury_raw": normalized,
+        "rate": str(rate),
+        "reasons": reasons,
+    }
+
+
+def deposits_are_open() -> bool:
+    return bool(ton_readiness()["effective_open"])
+
+
+def ton_settlement_allowed(uid) -> bool:
+    """Allow explicit TON canary verification without opening normal deposits."""
+    uid = str(uid)
+    readiness = ton_readiness()
+    if readiness["effective_open"]:
+        return True
+    canary_uid = str(os.getenv("TON_DEPOSITS_CANARY_UID", "")).strip()
+    return bool(
+        canary_uid
+        and uid == canary_uid
+        and readiness["ready"]
+    )
 
 
 def memo_for(uid) -> str:
