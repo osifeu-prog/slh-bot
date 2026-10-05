@@ -241,7 +241,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
   <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
-<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
+<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
 <main>
 <section id="home" class="screen"><div class="card" style="border-color:#7c5cff55;background:linear-gradient(145deg,#17152d,#101827)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="font-size:16px">👛 חיבור ארנקים</b><div class="muted" style="margin-top:5px">חבר את הארנק מתוך Telegram כדי לאמת בעלות ולהמשיך למסלולי TON / BNB.</div></div><button class="action primary" type="button" style="white-space:nowrap;min-height:52px" onclick="show('wallet');loadWalletBindings().catch(()=>{})"><b>🔗 התחבר</b><span>Wallet</span></button></div><div class="muted" style="margin-top:9px">TON Connect זמין לחיבור בתוך Telegram. BNB WalletConnect מופיע במסך הארנק כאשר המסלול נתמך.</div></div><div class="card" id="liveNoticeCard" style="border-color:#20d3a755;background:linear-gradient(145deg,#111b1f,#101827);margin-bottom:10px"><b>📣 עדכוני SLH OS</b><div style="margin-top:8px">🎁 <b>Referral פעיל</b> · +0.9 Credits +10 Points לכל הצטרפות מוצלחת · 5 referrals → חודש VIP.</div><div style="margin-top:6px" id="marketNoticeLine">🪙 <b>SLH Exchange פעיל</b> · בודק נזילות ושוק בזמן אמת…</div><div class="muted" style="margin-top:6px">ה־100,000 SLH היה מבצע חד־יומי ב־11/09/2026 ואינו תגמול קבוע.</div></div><div class="hero"><div class="hero-label">היתרה שלך</div><div class="hero-balance" id="credits">—</div><div class="subtitle">Credits · יתרה פנימית</div></div><div class="grid"><div class="card"><div class="metric-label">🪙 SLH</div><div class="metric token" id="token">—</div></div><div class="card"><div class="metric-label">🔒 Staked</div><div class="metric stake" id="staked">—</div></div></div><div class="section-title">הצעד הבא</div><div class="next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div><div class="section-title">פעולות</div><div class="card actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>💳 קנייה</b><span>בחירת חבילה ותשלום דרך Telegram Stars</span></button><button class="action" onclick="show('wallet')"><b>👛 ארנק</b><span>יתרות וסטטוס</span></button><button class="action" onclick="show('transfer')"><b>💸 העברה</b><span>העברת Credits למשתמש אחר</span></button><button class="action" onclick="show('stake')"><b>🔒 Staking</b><span>תנאים ומסלול פעולה</span></button><button class="action" onclick="show('alpha')"><b>🚀 Alpha</b><span>התקדמות וזכאות</span></button><button class="action" onclick="show('academy')"><b>🎓 Academy</b><span>השלמת שיעורים ומשימות</span></button><button class="action" onclick="show('settings');loadUiSettings()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button></div><details class="guide"><summary>ℹ️ איך משתמשים במערכת?</summary><p>התחל מהצעד הבא. Wallet מציג מצב, Transfer מטפל בהעברת Credits, Buy מטפל ברכישה, Stake מציג את התנאים, Academy מנהל את הלמידה, Alpha מציג ראיות, ו־AI מסביר מה לעשות הלאה.</p></details></section>
 <section id="growth" class="screen"><div id="growthHub"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></div></section>
@@ -331,6 +331,30 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div id="bscSwapResult" class="slh-swap-result">הפעלת Swap תתאפשר רק כאשר שרת ה־execution יאשר אותה.</div>
   <button id="bscSwapSendButton" class="action primary" type="button" style="width:100%;margin-top:9px" onclick="executePreparedBscSwap()" disabled><b>⚡ אשר ושלח בארנק</b><span>ללא שמירת מפתח · WalletConnect / Browser Wallet</span></button><div class="guide" style="margin-top:9px;border-color:#f59e0b55"><b>ℹ️ USDC ב־BNB Chain</b><p class="muted">המסלול מציג Binance-Peg USDC ב־BSC, לא מצהיר עליו כ־Circle-native USDC. בדוק תמיד שרשרת, נכס וכתובת חוזה לפני חתימה.</p></div>
   <div class="guide" style="margin-top:9px"><b>🔐 גבולות אבטחה</b><p class="muted">אין כאן custody, אין private key בשרת, ואין שינוי ב־Credits. Quote/Prepare/Send ניתנים רק לפי שער execution; שערי הפקדת BNB/TON נפרדים.</p></div>
+</div>
+</section>
+<section id="tonswap" class="screen">
+<div class="section-title">💎 TON Swap</div>
+<div class="card">
+  <div class="wallet-row"><span><b>STON.fi · Non-custodial</b><small class="muted">המסלול משתמש ב־TON Connect; המפתח נשאר בארנק.</small></span><span id="tonSwapBadge" class="pill pending">בודק…</span></div>
+  <div class="guide" style="margin-top:9px"><b>נכסים נתמכים כרגע</b><p class="muted">TON ↔ jUSDC · TON ↔ jUSDT. jUSDC/jUSDT הם נכסי bridge על TON, לא Circle/Tether native ב־TON.</p></div>
+  <div class="slh-swap-pair" style="margin-top:9px">
+    <button id="tonPairTonJusdc" type="button" class="active" onclick="setTonSwapPair('TON_JUSDC')">TON → jUSDC</button>
+    <button id="tonPairJusdcTon" type="button" onclick="setTonSwapPair('JUSDC_TON')">jUSDC → TON</button>
+    <button id="tonPairTonJusdt" type="button" onclick="setTonSwapPair('TON_JUSDT')">TON → jUSDT</button>
+    <button id="tonPairJusdtTon" type="button" onclick="setTonSwapPair('JUSDT_TON')">jUSDT → TON</button>
+  </div>
+  <div class="slh-swap-grid" style="margin-top:9px">
+    <div class="full"><label class="form-label" for="tonSwapAmount">כמות</label><input id="tonSwapAmount" class="form-input" inputmode="decimal" autocomplete="off" placeholder="לדוגמה: 1"></div>
+    <div><label class="form-label" for="tonSwapSlippage">Slippage</label><input id="tonSwapSlippage" class="form-input" inputmode="decimal" value="0.005"></div>
+  </div>
+  <div class="slh-swap-actions">
+    <button id="tonSwapQuoteButton" class="action primary" type="button" onclick="quoteTonSwap()"><b>📊 Quote</b><span>STON.fi routing בזמן אמת</span></button>
+    <button id="tonSwapPrepareButton" class="action" type="button" onclick="prepareTonSwap()" disabled><b>🔐 Prepare</b><span>בניית הודעת TON לחתימה</span></button>
+  </div>
+  <div id="tonSwapResult" class="slh-swap-result">חבר TON כדי להתחיל.</div>
+  <button id="tonSwapSendButton" class="action primary" type="button" style="width:100%;margin-top:9px" onclick="executePreparedTonSwap()" disabled><b>⚡ אשר ושלח בארנק</b><span>TON Connect · ללא custody</span></button>
+  <div class="guide" style="margin-top:9px"><b>⚠️ חשוב</b><p class="muted">ה־quote הוא snapshot. לפני אישור העסקה מוצגים expected/min receive והארנק מבצע את החתימה. אין הבטחת מחיר או רווח.</p></div>
 </div>
 </section>
 <section id="academy" class="screen"><div class="section-title">🎓 Academy & Tasks</div><div class="card"><div id="academyText" class="muted">טוען…</div><div id="tasks" style="margin-top:8px"></div></div><div class="card"><b>מסלול Bitcoin Mastery</b><p class="muted">Academy הוא מסלול למידה נפרד. Staking אינו דורש השלמת קורס. אפשר ללמוד בקצב שלך ולהמשיך לשיעורים לפי הסדר.</p><div class="actions"><button class="action primary" onclick="openAction('/courses','פתיחת Academy')"><b>🎓 פתיחת Academy</b><span>רשימת הקורסים</span></button><button class="action" onclick="openAction('/course_bitcoin_mastery','Bitcoin Mastery')"><b>📘 Bitcoin Mastery</b><span>התחלת הקורס</span></button></div></div></section>
@@ -2302,6 +2326,223 @@ async function executePreparedBscSwap(){
   }
 }
 try{setTimeout(()=>loadBscSwapPolicy(),0)}catch(_e){}
+</script>
+<script id="slh-ton-swap-v1">
+const SLH_TON_ASSETS={
+  jUSDC:{address:'EQB-MPwrd1G6WKNkLz_VnV6WqBDd142KMQv-g1O-8QUA3728',label:'jUSDC',kind:'bridged USDC'},
+  jUSDT:{address:'EQBynBO23ywHy_CgarY9NK9FTz0yDsG82PtcbSTQgGoXwiuA',label:'jUSDT',kind:'bridged USDT'}
+};
+const SLH_TON_API_VERSION='0.32.0';
+const SLH_TON_SDK_VERSION='2.7.0';
+let __tonSwapPair='TON_JUSDC';
+let __tonSwapAssets={};
+let __tonSwapSimulation=null;
+let __tonPreparedSwap=null;
+let __tonStonApi=null;
+let __tonStonSdk=null;
+
+function tonSwapMeta(pair){
+  return ({
+    TON_JUSDC:{input:'TON',output:'jUSDC',asset:'jUSDC',example:'1'},
+    JUSDC_TON:{input:'jUSDC',output:'TON',asset:'jUSDC',example:'10'},
+    TON_JUSDT:{input:'TON',output:'jUSDT',asset:'jUSDT',example:'1'},
+    JUSDT_TON:{input:'jUSDT',output:'TON',asset:'jUSDT',example:'10'}
+  })[pair];
+}
+function setTonSwapPair(pair){
+  if(!tonSwapMeta(pair))return;
+  __tonSwapPair=pair;__tonSwapSimulation=null;__tonPreparedSwap=null;
+  const ids={TON_JUSDC:'tonPairTonJusdc',JUSDC_TON:'tonPairJusdcTon',TON_JUSDT:'tonPairTonJusdt',JUSDT_TON:'tonPairJusdtTon'};
+  Object.entries(ids).forEach(([k,id])=>$(id)?.classList.toggle('active',k===pair));
+  const meta=tonSwapMeta(pair);if($('tonSwapAmount'))$('tonSwapAmount').placeholder='לדוגמה: '+meta.example;
+  if($('tonSwapPrepareButton'))$('tonSwapPrepareButton').disabled=true;
+  if($('tonSwapSendButton'))$('tonSwapSendButton').disabled=true;
+  setText('tonSwapResult','לחץ Quote לקבלת נתוני STON.fi עדכניים.');
+}
+function __tonParseUnits(value,decimals){
+  const s=String(value??'').trim();
+  if(!/^\d+(\.\d+)?$/.test(s))throw Error('כמות TON/Jetton אינה תקינה');
+  const parts=s.split('.');
+  const whole=BigInt(parts[0]||'0');
+  const frac=(parts[1]||'').padEnd(decimals,'0');
+  if(frac.length>decimals)throw Error('יש יותר מדי ספרות עשרוניות');
+  return whole*(10n**BigInt(decimals))+BigInt(frac||'0');
+}
+function __tonFormatUnits(raw,decimals,maxFrac=6){
+  const n=BigInt(raw||0),unit=10n**BigInt(decimals),whole=n/unit;
+  let frac=(n%unit).toString().padStart(decimals,'0').slice(0,maxFrac).replace(/0+$/,'');
+  return whole.toString()+(frac?'.'+frac:'');
+}
+async function __loadStonModules(){
+  if(__tonStonApi&&__tonStonSdk)return [__tonStonApi,__tonStonSdk];
+  const [api,sdk]=await Promise.all([
+    import('https://esm.sh/@ston-fi/api@'+SLH_TON_API_VERSION),
+    import('https://esm.sh/@ston-fi/sdk@'+SLH_TON_SDK_VERSION)
+  ]);
+  __tonStonApi=api;__tonStonSdk=sdk;
+  return [api,sdk];
+}
+async function loadTonSwapAssets(){
+  try{
+    const [api]=await __loadStonModules();
+    const client=new api.StonApiClient();
+    for(const [key,item] of Object.entries(SLH_TON_ASSETS)){
+      const info=await client.getAsset(item.address);
+      __tonSwapAssets[key]=info||{};
+    }
+    const valid=Object.values(__tonSwapAssets).some(x=>x&&x.contractAddress);
+    const badge=$('tonSwapBadge');
+    if(badge){badge.textContent=valid?'✅ STON.fi LIVE':'⚠️ לא זמין';badge.className='pill '+(valid?'ok':'pending')}
+    return __tonSwapAssets;
+  }catch(e){
+    if($('tonSwapBadge')){$('tonSwapBadge').textContent='⚠️ API לא זמין';$('tonSwapBadge').className='pill pending'}
+    setText('tonSwapResult','❌ '+(e.message||e));
+    return null;
+  }
+}
+function __tonFriendlyAddress(raw){
+  const fn=window.TON_CONNECT_UI?.toUserFriendlyAddress;
+  return fn?fn(raw):String(raw||'');
+}
+function __tonWalletAddress(){
+  const wallet=__tonConnectUI?.wallet;
+  if(!wallet?.account?.address)throw Error('TON_WALLET_NOT_CONNECTED');
+  return __tonFriendlyAddress(wallet.account.address);
+}
+async function quoteTonSwap(){
+  try{
+    if(!initData){showAuthGate();return}
+    if(!__tonConnectUI||!__tonConnectUI.wallet){
+      await initTonConnect();
+    }
+    if(!__tonConnectUI?.wallet)throw Error('TON_WALLET_NOT_CONNECTED');
+    const meta=tonSwapMeta(__tonSwapPair);
+    const amount=($('tonSwapAmount')?.value||'').trim();
+    if(!amount){toast('הזן כמות');return}
+    const slip=String($('tonSwapSlippage')?.value||'0.005').trim();
+    const slipNum=Number(slip);
+    if(!Number.isFinite(slipNum)||slipNum<=0||slipNum>0.05)throw Error('Slippage חייב להיות >0 ועד 5%');
+    const assets=await loadTonSwapAssets();
+    const assetInfo=assets?.[meta.asset];
+    if(!assetInfo)throw Error('TON_ASSET_METADATA_UNAVAILABLE');
+    const assetDecimals=Number(assetInfo.meta?.decimals ?? assetInfo.decimals ?? 9);
+    if(!Number.isInteger(assetDecimals)||assetDecimals<0||assetDecimals>18)throw Error('TON_ASSET_DECIMALS_INVALID');
+    const inputDecimals=meta.input==='TON'?9:assetDecimals;
+    const offerUnits=__tonParseUnits(amount,inputDecimals).toString();
+    const offerAddress=meta.input==='TON'?'ton':SLH_TON_ASSETS[meta.asset].address;
+    const askAddress=meta.output==='TON'?'ton':SLH_TON_ASSETS[meta.asset].address;
+    const [api]=await __loadStonModules();
+    const client=new api.StonApiClient();
+    const simulation=await client.simulateSwap({
+      offerAddress,askAddress,offerUnits,slippageTolerance:String(slip)
+    });
+    __tonSwapSimulation={simulation,assetDecimals};
+    const expected=simulation.askUnits||simulation.minAskUnits;
+    const min=simulation.minAskUnits;
+    const outDecimals=meta.output==='TON'?9:assetDecimals;
+    setHTML('tonSwapResult',
+      '<b>✅ Quote STON.fi</b><br>'+
+      esc(meta.input)+': <b>'+esc(__tonFormatUnits(simulation.offerUnits||offerUnits,inputDecimals))+'</b> → '+
+      esc(meta.output)+': <b>'+esc(__tonFormatUnits(expected,outDecimals))+'</b><br>'+
+      'Minimum receive: <b>'+esc(__tonFormatUnits(min,outDecimals))+' '+esc(meta.output)+'</b><br>'+
+      'Price impact: '+esc(String(simulation.priceImpact??'—'))+
+      '<br>Router: <span class="slh-swap-code">'+esc(simulation.router?.address||'—')+'</span>'
+    );
+    if($('tonSwapPrepareButton'))$('tonSwapPrepareButton').disabled=false;
+  }catch(e){
+    __tonSwapSimulation=null;
+    if($('tonSwapPrepareButton'))$('tonSwapPrepareButton').disabled=true;
+    setText('tonSwapResult','❌ '+(e.message||e));
+  }
+}
+async function prepareTonSwap(){
+  try{
+    if(!__tonSwapSimulation?.simulation)throw Error('QUOTE_REQUIRED');
+    const meta=tonSwapMeta(__tonSwapPair);
+    const sim=__tonSwapSimulation.simulation;
+    const [_,sdk]=await __loadStonModules();
+    const tonAddress=__tonWalletAddress();
+    const tonClient=new sdk.Client({endpoint:'https://toncenter.com/api/v2/jsonRPC'});
+    const dex=sdk.dexFactory(sim.router);
+    const router=tonClient.open(dex.Router.create(sim.router.address));
+    const common={
+      userWalletAddress:tonAddress,
+      offerAmount:sim.offerUnits,
+      minAskAmount:sim.minAskUnits
+    };
+    let txParams;
+    if(meta.input==='TON'){
+      const proxyTon=dex.pTON.create(sim.router.ptonMasterAddress);
+      txParams=await router.getSwapTonToJettonTxParams({
+        ...common,proxyTon,askJettonAddress:sim.askAddress,queryId:BigInt(Date.now())
+      });
+    }else if(meta.output==='TON'){
+      const proxyTon=dex.pTON.create(sim.router.ptonMasterAddress);
+      txParams=await router.getSwapJettonToTonTxParams({
+        ...common,proxyTon,offerJettonAddress:sim.offerAddress,queryId:BigInt(Date.now())
+      });
+    }else{
+      throw Error('UNSUPPORTED_TON_PAIR');
+    }
+    __tonPreparedSwap={txParams,simulation:sim,tonAddress};
+    const value=String(txParams.value?.toString?.()||txParams.value||'0');
+    setHTML('tonSwapResult',
+      '<b>✅ Transaction prepared</b><br>From: '+esc(meta.input)+' → '+esc(meta.output)+
+      '<br>Min receive: <b>'+esc(String(sim.minAskUnits))+'</b>'+
+      '<br>Network value: <b>'+esc(value)+' nanotons</b>'+
+      '<br>Router: <span class="slh-swap-code">'+esc(sim.router?.address||'—')+'</span>'
+    );
+    if($('tonSwapSendButton'))$('tonSwapSendButton').disabled=false;
+  }catch(e){
+    __tonPreparedSwap=null;
+    if($('tonSwapSendButton'))$('tonSwapSendButton').disabled=true;
+    setText('tonSwapResult','❌ '+(e.message||e));
+  }
+}
+function __tonBodyBase64(body){
+  if(!body)return undefined;
+  if(typeof body==='string')return body;
+  if(typeof body.toBoc!=='function')throw Error('TON_TX_BODY_UNSUPPORTED');
+  const raw=body.toBoc();
+  const bytes=raw instanceof Uint8Array?raw:new Uint8Array(raw);
+  let binary='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunk,bytes.length)));
+  }
+  return btoa(binary);
+}
+async function executePreparedTonSwap(){
+  try{
+    if(!__tonPreparedSwap?.txParams)throw Error('PREPARE_REQUIRED');
+    if(!__tonConnectUI?.wallet)throw Error('TON_WALLET_NOT_CONNECTED');
+    const current=__tonWalletAddress();
+    if(String(current)!==String(__tonPreparedSwap.tonAddress))throw Error('TON_WALLET_CHANGED');
+    const p=__tonPreparedSwap.txParams;
+    const message={
+      address:String(p.to.toString()),
+      amount:String(p.value.toString())
+    };
+    const payload=__tonBodyBase64(p.body);
+    if(payload)message.payload=payload;
+    setText('tonSwapResult','⏳ הארנק מבקש אישור TON Swap…');
+    const result=await __tonConnectUI.sendTransaction({
+      validUntil:Math.floor(Date.now()/1000)+300,
+      network:'-239',
+      messages:[message]
+    });
+    const boc=result?.boc||'';
+    setHTML('tonSwapResult','✅ Swap נחתם ונשלח דרך TON Connect.'+(boc?'<br><span class="slh-swap-code">BoC התקבל</span>':''));
+    toast('✅ TON Swap נשלח');
+    __tonPreparedSwap=null;
+    if($('tonSwapSendButton'))$('tonSwapSendButton').disabled=true;
+  }catch(e){
+    const msg=String(e?.message||e||'');
+    setText('tonSwapResult','❌ '+msg);
+    if(/reject|cancel|denied/i.test(msg))toast('העסקה בוטלה בארנק');
+  }
+}
+try{setTimeout(()=>loadTonSwapAssets(),900)}catch(_e){}
 </script>
 <script id="slh-settings-sync">
 const SLH_THEME_META = {
