@@ -45,3 +45,24 @@ def test_ton_canary_never_overrides_unsafe_readiness():
         return_value={"ready": False, "effective_open": False},
     ):
         assert ton_deposit_service.ton_settlement_allowed("8789977826") is False
+
+
+def test_ton_settlement_authority_uses_canary_gate():
+    with patch.dict(os.environ, {
+        "TON_DEPOSITS_OPEN": "0",
+        "TON_DEPOSITS_CANARY_UID": "8789977826",
+    }, clear=False), patch.object(
+        ton_deposit_service,
+        "ton_settlement_allowed",
+        return_value=False,
+    ), patch.object(
+        ton_deposit_service,
+        "get_ton_binding",
+        return_value=None,
+    ):
+        try:
+            ton_deposit_service.settle_ton_deposit("8789977826", "tx")
+        except ValueError as exc:
+            assert str(exc) == "TON_DEPOSITS_CLOSED"
+        else:
+            raise AssertionError("closed TON gate must reject settlement")
