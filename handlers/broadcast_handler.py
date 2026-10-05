@@ -1,4 +1,4 @@
-import json
+import state_manager
 from core.identity import OWNER_TELEGRAM_ID
 
 
@@ -17,9 +17,9 @@ def register(bot):
         message_text = parts[1].strip()
 
         try:
-            db = json.load(open("state/db.json", encoding="utf-8"))
+            db = state_manager.load_db()
         except Exception as e:
-            bot.reply_to(m, f"DB error: {e}")
+            bot.reply_to(m, f"DB error: {type(e).__name__}: {e}")
             return
 
         users = db.get("users", {})
@@ -31,7 +31,7 @@ def register(bot):
                 bot.send_message(uid, message_text)
                 sent += 1
             except Exception as e:
-                failed.append(f"{uid}: {type(e).name} - {e}")
+                failed.append(f"{uid}: {type(e).__name__}: {e}")
 
         bot.reply_to(
             m,
