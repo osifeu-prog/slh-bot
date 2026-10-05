@@ -30,6 +30,7 @@ TOKENOMICS = {
         "contract_address": SLH_BSC_TOKEN_CONTRACT,
         "decimals": SLH_BSC_TOKEN_DECIMALS,
         "supply_policy_in_slh_os": "existing_balances_only",
+        "supply_model": "existing_balances_only",
         "minting_in_slh_os": False,
         "minting_supported": False,
         "notes": (
