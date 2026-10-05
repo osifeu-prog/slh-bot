@@ -217,7 +217,17 @@ def run_bot(bot):
     while True:
         try:
             log("Starting polling...")
-            bot.infinity_polling(timeout=60, long_polling_timeout=60, skip_pending=True)
+            bot.infinity_polling(\
+                timeout=60,\
+                long_polling_timeout=60,\
+                skip_pending=True,\
+                allowed_updates=[\
+                    "message", "edited_message", "channel_post", "edited_channel_post",\
+                    "inline_query", "chosen_inline_result", "callback_query",\
+                    "shipping_query", "pre_checkout_query", "poll", "poll_answer",\
+                    "my_chat_member", "chat_member", "chat_join_request",\
+                ],\
+            )
         except telebot.apihelper.ApiTelegramException as e:
             if getattr(e, "error_code", None) == 409:
                 log("FATAL: Telegram 409 Conflict; stopping this polling instance")
