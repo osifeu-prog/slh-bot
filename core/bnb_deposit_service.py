@@ -5,11 +5,12 @@ core.deposit_monitor; credit mutation goes through core.economy_service.
 This module does not broadcast transactions or expose private keys.
 """
 
+import os
 from decimal import Decimal
 
 import state_manager
 
-from core.bnb_gate import bnb_deposits_open
+from core.bnb_gate import bnb_deposits_open, bnb_readiness
 from core.deposit_monitor import verify_bnb_deposit
 from core.wallet_binding import get_binding
 from core.economy_service import record_transaction
@@ -18,9 +19,11 @@ CREDITS_PER_BNB = 1000
 
 
 def settle_bnb_deposit(uid, tx_hash):
-    if not bnb_deposits_open():
-        raise ValueError("BNB_DEPOSITS_CLOSED")
     uid = str(uid)
+    canary_uid = os.getenv("BNB_DEPOSITS_CANARY_UID", "").strip()
+    canary_allowed = bool(canary_uid) and uid == canary_uid and bool(bnb_readiness().get("ready"))
+    if not (bnb_deposits_open() or canary_allowed):
+        raise ValueError("BNB_DEPOSITS_CLOSED")
     if not isinstance(tx_hash, str) or not tx_hash.strip():
         raise ValueError("INVALID_TX_HASH")
     tx_hash = tx_hash.strip()
@@ -57,6 +60,19 @@ def settle_bnb_deposit(uid, tx_hash):
         entry.get("meta", {}).get("idempotency_key") == idempotency_key
         for entry in before_db.get("ledger", [])
     )
+
+    if already_recorded:
+        return {
+            "ok": True,
+            "uid": uid,
+            "tx_hash": tx_hash,
+            "amount_bnb": amount_bnb,
+            "amount_wei": amount_wei,
+            "credits": 0.0,
+            "balance_after": before_db.get("users", {}).get(uid, {}).get("wallet", {}).get("credits"),
+            "idempotent": True,
+            "binding": bound,
+        }
 
     balance_after = record_transaction(
         uid,
