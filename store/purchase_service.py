@@ -250,7 +250,7 @@ def purchase_physical(uid, item_id, request_id=None):
         product = products.get(item_id)
         if not isinstance(product, dict):
             return None, "PRODUCT_NOT_FOUND"
-        if product.get("type") != "physical":
+        if product.get("type") != "physical" and catalog.get("type") != "physical":
             return None, "NOT_PHYSICAL_PRODUCT"
 
         seller_uid = str(product.get("seller_uid") or "").strip()
