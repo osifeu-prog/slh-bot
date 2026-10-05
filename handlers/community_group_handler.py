@@ -140,6 +140,43 @@ def register(bot):
                 str(exc)[:160],
             )
 
+    @bot.message_handler(commands=["group_sync"])
+    def group_sync_cmd(m):
+        if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+
+        db = state_manager.load_db()
+        groups = db.get("community_groups", {})
+        results = []
+
+        for chat_id, group in groups.items():
+            role = group.get("role") or "unbound"
+            try:
+                count = int(bot.get_chat_member_count(int(chat_id)))
+            except Exception as exc:
+                results.append(
+                    f"{role}:{group.get('title') or chat_id} — ERROR:{type(exc).__name__}"
+                )
+                continue
+
+            def mutate(current_db, chat_id=chat_id, count=count):
+                current = current_db.setdefault("community_groups", {}).setdefault(chat_id, {})
+                current["member_count"] = count
+                current["member_count_updated_at"] = datetime.now(timezone.utc).isoformat()
+
+            state_manager.atomic_update(mutate)
+            results.append(
+                f"{role}:{group.get('title') or chat_id} — {count}"
+            )
+
+        bot.reply_to(
+            m,
+            "📊 Group member sync
+"
+            + ("\n".join(results) if results else "No groups registered.")
+        )
+
     @bot.my_chat_member_handler()
     def bot_membership_update(m):
         try:
