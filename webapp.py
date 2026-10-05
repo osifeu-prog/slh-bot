@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory, request, make_response, g
+from flask import Flask, jsonify, send_from_directory, request, make_response, g, redirect
 import state_manager
 import hmac
 import json
@@ -107,7 +107,7 @@ def load_db():
 
 
 def authenticated_uid():
-    """Return the Telegram UID authenticated by server-validated initData."""
+    """Return the trusted Telegram UID, or a short-lived wallet browser session UID."""
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     try:
         result = validate_init_data(init_data)
@@ -115,6 +115,23 @@ def authenticated_uid():
         print("[AUTH] Telegram initData OK uid=", result.get("uid"))
         return result["uid"]
     except (ValueError, RuntimeError) as exc:
+        # Wallet handoff sessions are accepted only by wallet-scoped API paths.
+        # They never become general Mini App authentication.
+        wallet_scoped = (
+            request.path.startswith("/api/wallet/")
+            or request.path.startswith("/api/v1/wallet/")
+            or request.path.startswith("/api/v1/distribution/secondary")
+        )
+        if wallet_scoped:
+            try:
+                from core.wallet_handoff import validate_session
+                session_uid = validate_session(request.cookies.get("slh_wallet_handoff"))
+                if session_uid:
+                    g.telegram_auth_reason = "wallet_handoff"
+                    return session_uid
+            except Exception:
+                pass
+
         # Never log initData, hashes, or bot-token material. Log only the
         # validation reason so production auth failures are diagnosable.
         reason = str(exc) or type(exc).__name__
@@ -337,6 +354,69 @@ def tonconnect_manifest():
         "name": "SLH Ecosystem",
         "iconUrl": "https://slh-nft.com/icon-192.png",
     }), 200
+
+@app.route("/api/wallet/bnb/handoff", methods=["POST"])
+def bnb_wallet_handoff():
+    uid = authenticated_uid()
+    if uid is None or not request.headers.get("X-Telegram-Init-Data"):
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.wallet_handoff import create_handoff
+        handoff = create_handoff(uid)
+        public_url = request.host_url.rstrip("/")
+        return _no_store(jsonify({
+            "ok": True,
+            "url": public_url + "/wallet-handoff?code=" + handoff["token"],
+            "expires_at": handoff["expires_at"],
+            "ttl_seconds": handoff["ttl_seconds"],
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[WALLET_HANDOFF] create error:", type(exc).__name__)
+        return jsonify({"error": "WALLET_HANDOFF_FAILED"}), 500
+
+
+@app.route("/wallet-handoff", methods=["GET"])
+def wallet_handoff():
+    code = str(request.args.get("code", "")).strip()
+    if not code:
+        return jsonify({"error": "MISSING_WALLET_HANDOFF"}), 400
+    try:
+        from core.wallet_handoff import consume_handoff
+        consume_handoff(code)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    response = make_response(redirect("/wallet-connect"))
+    response.set_cookie(
+        "slh_wallet_handoff",
+        code,
+        max_age=900,
+        httponly=True,
+        secure=True,
+        samesite="Lax",
+        path="/api",
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
+
+@app.route("/wallet-connect", methods=["GET"])
+def wallet_connect_page():
+    html_path = BASE_DIR / "wallet_connect.html"
+    if not html_path.exists():
+        return jsonify({"error": "WALLET_CONNECT_PAGE_NOT_FOUND"}), 500
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp
+
 
 @app.route("/api/walletconnect/config")
 def walletconnect_config():
