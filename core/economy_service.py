@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 from datetime import datetime, timezone
 import state_manager
@@ -28,6 +29,8 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
 
     if not isinstance(amount, (int, float)):
         raise TypeError("amount must be numeric")
+    if not math.isfinite(amount):
+        raise ValueError("INVALID_AMOUNT")
 
     meta = meta or {}
 
@@ -756,6 +759,8 @@ def transfer_credits(
     recipient_uid = str(recipient_uid)
     amount = float(amount)
 
+    if not math.isfinite(amount):
+        raise ValueError("INVALID_TRANSFER_AMOUNT")
     if sender_uid == recipient_uid:
         raise ValueError("SELF_TRANSFER")
     if amount <= 0:
