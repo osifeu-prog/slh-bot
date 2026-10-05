@@ -22,6 +22,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
 <div class="card">
 <h2>👛 SLH OS · Wallet Connect</h2>
 <p class="muted">חיבור מאובטח לארנק BNB/BSC. הבעלות מוכחת בחתימה; השרת אינו מקבל מפתח פרטי ואינו חותם עסקאות.</p>
+<div class="muted">⏱️ <b>QR / WalletConnect URI זמני</b>: צריך לאשר את החיבור בזמן שההזמנה פעילה. אם היא פגה, פשוט צור הזמנה חדשה.</div>
 <div id="identity" class="muted">בודק הרשאת Wallet Session…</div>
 <div id="wallet" class="hidden">
   <div class="row"><span>ארנק מאומת</span><b id="address" class="code">—</b></div>
@@ -29,7 +30,9 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <button id="meta" class="primary">🦊 MetaMask · Connect & Verify</button>
   <button id="trust" class="secondary">📱 פתח ב־Trust Wallet</button>
   <button id="wc" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
+<button id="fresh" class="secondary">♻️ צור QR / URI חדש</button>
   <div id="wcbox" class="hidden">
+    <div class="row"><span>תוקף ההזמנה</span><b id="expiry">—</b></div>
     <div id="qr"></div>
     <div id="uri" class="code"></div>
     <button id="copy" class="secondary">העתק WalletConnect URI</button>
@@ -47,7 +50,7 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
-let binding=null, provider=null, wcProvider=null, mmClient=null;
+let binding=null, provider=null, wcProvider=null, mmClient=null, expiryTimer=null;
 const $=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{$("status").textContent=x;$("status").className="status "+cls;};
 async function api(path,opts={}){
@@ -138,8 +141,34 @@ async function openTrust(){
   try{if(tg?.openLink){tg.openLink(link);return;}}catch(_e){}
   location.href=link;
 }
+function showExpiry(uri){
+  if(expiryTimer)clearInterval(expiryTimer);
+  const match=String(uri||"").match(/expiryTimestamp=(\d+)/i);
+  const el=$("expiry");
+  if(!match){if(el)el.textContent="זמן התפוגה לא זמין";return;}
+  const deadline=Number(match[1])*1000;
+  const render=()=>{
+    const remain=Math.max(0,deadline-Date.now());
+    if(!el)return;
+    if(remain<=0){
+      el.textContent="❌ פג תוקף — צור URI חדש";
+      el.className="err";
+      clearInterval(expiryTimer);
+      return;
+    }
+    const total=Math.floor(remain/1000),m=Math.floor(total/60),s=total%60;
+    el.textContent=m+":"+String(s).padStart(2,"0");
+    el.className=remain<30000?"warn":"ok";
+  };
+  render();
+  expiryTimer=setInterval(render,1000);
+}
 async function connectWalletConnect(){
   try{
+    if(wcProvider){try{wcProvider.disconnect?.()}catch(_e){}}
+    wcProvider=null;
+    showExpiry("");
+    $("wcbox").classList.add("hidden");
     setStatus("⏳ מאתחל WalletConnect…");
     const cfg=await api("/api/walletconnect/config");
     if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
@@ -152,7 +181,7 @@ async function connectWalletConnect(){
       metadata:{name:"SLH OS",description:"Wallet Connect",url:"https://slh-nft.com",icons:["https://slh-nft.com/icon-192.png"]}
     });
     wcProvider.on?.("display_uri",uri=>{
-      $("wcbox").classList.remove("hidden");$("uri").textContent=uri;
+      $("wcbox").classList.remove("hidden");$("uri").textContent=uri;showExpiry(uri);
       $("qr").innerHTML="";
       if(window.QRCode)new QRCode($("qr"),{text:uri,width:220,height:220});
       $("copy").onclick=async()=>{await navigator.clipboard.writeText(uri);setStatus("✅ URI הועתק.","ok");};
@@ -179,6 +208,7 @@ async function loadAssets(){
 $("meta").onclick=connectMetaMask;
 $("trust").onclick=openTrust;
 $("wc").onclick=connectWalletConnect;
+$("fresh").onclick=connectWalletConnect;
 init();
 </script>
 </body>
