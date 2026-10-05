@@ -11,6 +11,7 @@ def register(bot, context=None):
         _settings,
         credit_new_ton_deposits,
         deposits_are_open,
+        ton_settlement_allowed,
         memo_for,
         settle_ton_deposit,
     )
@@ -22,7 +23,7 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["ton_address", "ton_deposit"])
     def ton_address_cmd(msg):
-        if not deposits_are_open():
+        if not ton_settlement_allowed(msg.from_user.id):
             bot.reply_to(msg, "⛔ הפקדות TON סגורות כרגע. אל תשלח TON עד להודעה.")
             return
 
@@ -55,7 +56,7 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["ton_check"])
     def ton_check_cmd(msg):
-        if not deposits_are_open():
+        if not ton_settlement_allowed(msg.from_user.id):
             bot.reply_to(msg, "⛔ הפקדות TON סגורות כרגע.")
             return
         parts = (msg.text or "").split()
