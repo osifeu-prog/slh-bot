@@ -27,8 +27,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
-  <button id="send" class="primary">⚡️ אשר שליחת 0.01 BNB בארנק</button>
-  <button id="wc" class="secondary">🔗 אין ארנק כאן — הפעל WalletConnect</button>
+  <button id="send" class="primary">⚡️ שלח 0.01 BNB לבדיקה</button>
   <div id="wcbox" class="hidden">
     <div id="qr"></div>
     <div id="uri" class="code"></div>
@@ -93,10 +92,14 @@ async function ensureBsc(p){
 }
 
 async function send(){
-  $("send").disabled=true; setStatus("⏳ הארנק מבקש אישור…");
+  $("send").disabled=true; setStatus("⏳ מחפש ארנק מאושר…");
   try{
     provider=provider||window.ethereum;
-    if(!provider)throw Error("אין ספק ארנק בדפדפן. השתמש ב-WalletConnect.");
+    if(!provider){
+      setStatus("🔗 אין ספק ארנק בדפדפן. מפעיל WalletConnect אוטומטית…");
+      await walletConnect();
+      return;
+    }
     const account=await ensureBsc(provider);
     const txHash=await provider.request({method:"eth_sendTransaction",params:[{
       from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
@@ -128,7 +131,6 @@ async function poll(tx){
 }
 
 async function walletConnect(){
-  $("wc").disabled=true;
   try{
     const cfg=await api("/api/walletconnect/config");
     if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
@@ -148,11 +150,16 @@ async function walletConnect(){
     });
     await provider.connect();
     $("wcbox").classList.remove("hidden");
-    await send();
-  }catch(e){$("wc").disabled=false;setStatus("❌ WalletConnect: "+(e.message||e),"err");}
+    const account=await ensureBsc(provider);
+    const txHash=await provider.request({method:"eth_sendTransaction",params:[{
+      from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
+    }]});
+    setStatus("✅ TX נשלח: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
+    await poll(txHash);
+  }catch(e){setStatus("❌ WalletConnect: "+(e.message||e),"err");$("send").disabled=false;}
 }
 
-$("send").onclick=send;$("wc").onclick=walletConnect;init();
+$("send").onclick=send;init();
 </script>
 </body>
 </html>
