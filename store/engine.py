@@ -71,7 +71,7 @@ def format_shop_message(user_balance=0):
             msg += f"/buy {item_id} — Credits\n"
         msg += "\n"
 
-    msg += "⭐ VIP חודשי — 499 Telegram Stars\n/vip — מנוי מתחדש חודשי\n\n"
+    physical = [(str(item_id), product) for item_id, product in products.items() if isinstance(product, dict) and product.get("type") == "physical" and item_id not in items and int(product.get("inventory", 0) or 0) > 0 and float(product.get("price", 0) or 0) > 0]\n    if physical:\n        msg += "📦 *Marketplace — מוצרים פיזיים*\\n"\n        for item_id, product in physical:\n            msg += f"*{product.get('name', item_id)}* — {product.get('price')} Credits | במלאי: {int(product.get('inventory', 0) or 0)}\\n"\n            msg += f"/buy {item_id}\\n\\n"\n\n    msg += "⭐ VIP חודשי — 499 Telegram Stars\n/vip — מנוי מתחדש חודשי\n\n"
     msg += f"💰 היתרה שלך: {user_balance} Credits"
     return msg
 
