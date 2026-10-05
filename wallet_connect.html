@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLH OS · Wallet Connect</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0d12;color:#f4f5f7;margin:0;padding:16px}
+.card{max-width:620px;margin:auto;background:#151922;border:1px solid #2b3140;border-radius:18px;padding:20px}
+h2{margin:0 0 8px}.muted{color:#aeb5c2;line-height:1.5}.row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;align-items:center}
+button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.primary{background:#fff;color:#111}.secondary{background:#252b38;color:#fff}
+.code{font-family:ui-monospace,monospace;word-break:break-all;font-size:12px}
+.status{margin-top:14px;line-height:1.5}.ok{color:#7ff0a5}.err{color:#ff7f8f}.warn{color:#ffd166}
+#qr{display:flex;justify-content:center;margin:14px 0}.hidden{display:none}
+.asset{padding:10px 0;border-top:1px solid #2b3140}.asset:first-child{border-top:0}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>👛 SLH OS · Wallet Connect</h2>
+<p class="muted">חיבור מאובטח לארנק BNB/BSC. הבעלות מוכחת בחתימה; השרת אינו מקבל מפתח פרטי ואינו חותם עסקאות.</p>
+<div class="muted">⏱️ <b>QR / WalletConnect URI זמני</b>: צריך לאשר את החיבור בזמן שההזמנה פעילה. אם היא פגה, פשוט צור הזמנה חדשה.</div>
+<div id="identity" class="muted">בודק הרשאת Wallet Session…</div>
+<div id="wallet" class="hidden">
+  <div class="row"><span>ארנק מאומת</span><b id="address" class="code">—</b></div>
+  <div class="row"><span>רשת</span><b>BSC · 56</b></div>
+  <button id="meta" class="primary">🦊 MetaMask · Connect & Verify</button>
+  <button id="trust" class="secondary">📱 פתח ב־Trust Wallet</button>
+  <button id="wc" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
+<button id="fresh" class="secondary">♻️ צור QR / URI חדש</button>
+  <div id="wcbox" class="hidden">
+    <div class="row"><span>תוקף ההזמנה</span><b id="expiry">—</b></div>
+    <div id="qr"></div>
+    <div id="uri" class="code"></div>
+    <button id="copy" class="secondary">העתק WalletConnect URI</button>
+  </div>
+  <div id="assets" class="hidden" style="margin-top:16px">
+    <h3 style="margin-bottom:6px">🔎 BSC Wallet Truth</h3>
+    <div id="assetRows"></div>
+    <div id="source" class="muted" style="margin-top:8px"></div>
+  </div>
+</div>
+<div id="status" class="status"></div>
+</div>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+const initData=tg?.initData||"";
+const headers=initData?{"X-Telegram-Init-Data":initData}:{};
+let binding=null, provider=null, wcProvider=null, mmClient=null, expiryTimer=null;
+const $=id=>document.getElementById(id);
+const setStatus=(x,cls="")=>{$("status").textContent=x;$("status").className="status "+cls;};
+async function api(path,opts={}){
+  const h=Object.assign({},headers,opts.headers||{});
+  const r=await fetch(path,Object.assign({cache:"no-store",headers:h},opts));
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(d.error||("HTTP "+r.status));
+  return d;
+}
+async function init(){
+  try{
+    const d=await api("/api/wallet/bnb");
+    binding=d.binding||null;
+    if(!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
+    $("address").textContent=binding.address;
+    $("wallet").classList.remove("hidden");
+    $("identity").textContent="✅ Wallet Session פעיל. אפשר לחבר ולחתום על ownership.";
+    setStatus("בחר ארנק לחיבור.", "ok");
+  }catch(e){
+    $("identity").textContent="❌ אין Wallet Session תקף. פתח את SLH OS מתוך Telegram ובחר Trust Wallet.";
+    setStatus(String(e.message||e), "err");
+  }
+}
+async function verifyWithProvider(p,label){
+  if(!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
+  let chain=await p.request({method:"eth_chainId"});
+  if(chain!=="0x38"){
+    try{
+      await p.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});
+    }catch(e){
+      if(e?.code===4902){
+        await p.request({method:"wallet_addEthereumChain",params:[{
+          chainId:"0x38",chainName:"BNB Smart Chain",
+          nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
+          rpcUrls:["https://bsc-dataseed.binance.org/"],
+          blockExplorerUrls:["https://bscscan.com/"]
+        }]});
+      }else throw e;
+    }
+  }
+  const accounts=await p.request({method:"eth_requestAccounts"});
+  const address=accounts?.[0];
+  if(!address)throw Error("לא נבחר ארנק");
+  if(address.toLowerCase()!==binding.address.toLowerCase())throw Error("הארנק המחובר שונה מהארנק המאומת");
+  const ch=await api("/api/wallet/bnb/challenge",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),body:JSON.stringify({address})});
+  const signature=await p.request({method:"personal_sign",params:[ch.message,address]});
+  const vr=await api("/api/wallet/bnb/verify",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),body:JSON.stringify({address,signature})});
+  binding=vr.binding||binding;
+  $("address").textContent=binding.address;
+  setStatus("✅ "+label+" — ownership אומתה.", "ok");
+  await loadAssets();
+}
+function injectedProvider(){
+  if(window.trustwallet?.ethereum)return window.trustwallet.ethereum;
+  if(Array.isArray(window.ethereum?.providers)){
+    return window.ethereum.providers.find(p=>p?.isTrust||p?.isTrustWallet) ||
+           window.ethereum.providers.find(p=>p?.isMetaMask) ||
+           window.ethereum.providers[0] || null;
+  }
+  return window.ethereum||null;
+}
+async function connectMetaMask(){
+  try{
+    setStatus("⏳ מתחבר ל־MetaMask…");
+    const injected=injectedProvider();
+    if(injected){
+      provider=injected;
+      await verifyWithProvider(provider,"MetaMask");
+      return;
+    }
+    const mod=await import("https://cdn.jsdelivr.net/npm/@metamask/connect-evm@2.1.1/+esm");
+    const createEVMClient=mod?.createEVMClient||mod?.default?.createEVMClient;
+    if(typeof createEVMClient!=="function")throw Error("MetaMask Connect EVM SDK לא נטען");
+    mmClient=mmClient||await createEVMClient({
+      dapp:{name:"SLH OS",url:location.origin,iconUrl:"https://slh-nft.com/icon-192.png"},
+      api:{supportedNetworks:{"0x38":"https://bsc-dataseed.binance.org/"}},
+      analytics:{enabled:false}
+    });
+    const result=await mmClient.connect({chainIds:["0x38"]});
+    provider=mmClient.getProvider();
+    if(String(result?.chainId||"").toLowerCase()!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
+    await verifyWithProvider(provider,"MetaMask");
+  }catch(e){setStatus("❌ MetaMask: "+(e.message||e),"err");}
+}
+async function openTrust(){
+  const target=location.origin+"/wallet-connect";
+  const link="https://link.trustwallet.com/open_url?coin_id=60&url="+encodeURIComponent(target);
+  try{if(tg?.openLink){tg.openLink(link);return;}}catch(_e){}
+  location.href=link;
+}
+function showExpiry(uri){
+  if(expiryTimer)clearInterval(expiryTimer);
+  const match=String(uri||"").match(/expiryTimestamp=(\d+)/i);
+  const el=$("expiry");
+  if(!match){if(el)el.textContent="זמן התפוגה לא זמין";return;}
+  const deadline=Number(match[1])*1000;
+  const render=()=>{
+    const remain=Math.max(0,deadline-Date.now());
+    if(!el)return;
+    if(remain<=0){
+      el.textContent="❌ פג תוקף — צור URI חדש";
+      el.className="err";
+      clearInterval(expiryTimer);
+      return;
+    }
+    const total=Math.floor(remain/1000),m=Math.floor(total/60),s=total%60;
+    el.textContent=m+":"+String(s).padStart(2,"0");
+    el.className=remain<30000?"warn":"ok";
+  };
+  render();
+  expiryTimer=setInterval(render,1000);
+}
+async function connectWalletConnect(){
+  try{
+    if(wcProvider){try{wcProvider.disconnect?.()}catch(_e){}}
+    wcProvider=null;
+    showExpiry("");
+    $("wcbox").classList.add("hidden");
+    setStatus("⏳ מאתחל WalletConnect…");
+    const cfg=await api("/api/walletconnect/config");
+    if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
+    const mod=await import("https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.25.0/+esm");
+    const EthereumProvider=mod?.EthereumProvider||mod?.default?.EthereumProvider||mod?.default;
+    if(typeof EthereumProvider!=="function")throw Error("WalletConnect SDK לא נטען");
+    wcProvider=await EthereumProvider.init({
+      projectId:cfg.project_id,chains:[56],showQrModal:false,disableProviderPing:true,
+      rpcMap:{56:"https://bsc-dataseed.binance.org/"},
+      metadata:{name:"SLH OS",description:"Wallet Connect",url:"https://slh-nft.com",icons:["https://slh-nft.com/icon-192.png"]}
+    });
+    wcProvider.on?.("display_uri",uri=>{
+      $("wcbox").classList.remove("hidden");$("uri").textContent=uri;showExpiry(uri);
+      $("qr").innerHTML="";
+      if(window.QRCode)new QRCode($("qr"),{text:uri,width:220,height:220});
+      $("copy").onclick=async()=>{await navigator.clipboard.writeText(uri);setStatus("✅ URI הועתק.","ok");};
+      setStatus("📱 סרוק את ה־QR או פתח את ה־URI ב־Trust Wallet.", "ok");
+    });
+    await wcProvider.connect();
+    provider=wcProvider;
+    await verifyWithProvider(provider,"WalletConnect");
+  }catch(e){setStatus("❌ WalletConnect: "+(e.message||e),"err");}
+}
+async function loadAssets(){
+  try{
+    const d=await api("/api/v1/wallet/bsc-assets");
+    const rows=Object.entries(d.assets||{}).map(([k,v])=>{
+      const value=v?.amount==null?"—":String(v.amount);
+      const suffix=v?.error?" · "+v.error:"";
+      return '<div class="asset"><div class="row"><span>'+k+'</span><b>'+value+suffix+'</b></div></div>';
+    }).join("");
+    $("assetRows").innerHTML=rows||'<div class="muted">אין נכסים להצגה</div>';
+    $("source").textContent=String(d.source||"BSC live RPC + verified BNB wallet binding");
+    $("assets").classList.remove("hidden");
+  }catch(e){setStatus("⚠️ ownership אומתה, אך קריאת on-chain נכשלה: "+(e.message||e),"warn");}
+}
+$("meta").onclick=connectMetaMask;
+$("trust").onclick=openTrust;
+$("wc").onclick=connectWalletConnect;
+$("fresh").onclick=connectWalletConnect;
+init();
+</script>
+</body>
+</html>
