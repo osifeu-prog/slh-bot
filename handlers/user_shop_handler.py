@@ -70,15 +70,15 @@ def register(bot):
         if not owned:
             bot.reply_to(message, "📦 אין לך כרגע מוצרים פיזיים פעילים.")
             return
-        lines = ["📦 *המוצרים שלי*"]
+        lines = ["📦 המוצרים שלי"]
         for item_id, product in owned:
             lines.append(
-                f"*{product.get('name', item_id)}*\n"
+                f"{product.get('name', item_id)}\n"
                 f"🆔 {item_id}\n"
                 f"💰 {product.get('price')} Credits\n"
                 f"📦 מלאי: {int(product.get('inventory', 0) or 0)}"
             )
-        bot.reply_to(message, "\n\n".join(lines), parse_mode="Markdown")
+        bot.reply_to(message, "\n\n".join(lines))
 
     @bot.message_handler(commands=["umarket"])
     def user_market_cmd(message):
@@ -91,14 +91,14 @@ def register(bot):
         if not listed:
             bot.reply_to(message, "🏪 השוק הפיזי ריק כרגע.")
             return
-        lines = ["🏪 *SLH User Marketplace*", ""]
+        lines = ["🏪 SLH User Marketplace", ""]
         for item_id, product in listed:
             lines.append(
-                f"*{product.get('name', item_id)}* — {product.get('price')} Credits\n"
+                f"{product.get('name', item_id)} — {product.get('price')} Credits\n"
                 f"📦 מלאי: {int(product.get('inventory', 0) or 0)}\n"
                 f"/buy {item_id}\n"
             )
-        bot.reply_to(message, "\n".join(lines).strip(), parse_mode="Markdown")
+        bot.reply_to(message, "\n".join(lines).strip())
 
     @bot.message_handler(commands=["unsell"])
     def unsell_cmd(message):
