@@ -364,6 +364,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="section-title">🧭 SLH OS Control</div>
 <div class="card"><b>🎯 המשימות שלי</b><div id="controlTasks" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>🗳️ Governance</b><div id="controlGov" style="margin-top:8px">טוען…</div></div>
+<div class="card" id="walletHealthCard"><b>👛 Wallet Health · Owner</b><div id="walletHealthSummary" style="margin-top:8px">טוען…</div><div class="muted" style="margin-top:8px">קריאת on-chain בלבד. יתרה אפסית אינה מוכיחה פריצה; סימון אבטחה דורש בדיקה נפרדת.</div></div>
 <div class="card"><b>📓 היומן שלי</b><div id="controlJournal" style="margin-top:8px">טוען…</div>
 <textarea id="journalInput" class="form-input" style="min-height:90px;margin-top:10px" placeholder="כתוב רשומה חדשה…"></textarea>
 <button class="action primary" style="width:100%;margin-top:9px" onclick="saveJournalEntry()"><b>💾 שמור ביומן</b><span>נשמר רק ביומן האישי שלך</span></button>
@@ -1889,7 +1890,42 @@ async function sendTransferViaApi(){
 
 async function loadControl(){
   if(!initData)return;
-  await Promise.allSettled([loadControlTasks(),loadControlGovernance(),loadControlJournal()]);
+  await Promise.allSettled([loadControlTasks(),loadControlGovernance(),loadControlJournal(),loadWalletHealth()]);
+}
+async function loadWalletHealth(){
+  const card=$('walletHealthCard'), box=$('walletHealthSummary');
+  if(!card||!box)return;
+  try{
+    const r=await fetch('/api/v1/control/wallet-health',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===403){card.hidden=true;return}
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    const s=d.summary||{};
+    let h='<div class="wallet-row"><span>Known BSC wallets</span><strong>'+fmt(s.total||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>✅ Verified + funded</span><strong>'+fmt(s.verified_funded||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>⛽ Verified · needs BNB gas</span><strong>'+fmt(s.verified_needs_bnb_gas||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>⚪ Verified · empty</span><strong>'+fmt(s.verified_empty||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>🏦 Treasury</span><strong>'+fmt(s.treasury||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>⚠️ Unbound known address</span><strong>'+fmt(s.unbound_known||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>🚨 RPC errors</span><strong>'+fmt(s.rpc_error||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>🪙 ZUZ budget needed</span><strong>'+fmt(s.zuz_budget_needed||0)+(d.zuz_contract_configured?'':' · contract not configured')+'</strong></div>';
+    const rows=Array.isArray(d.wallets)?d.wallets:[];
+    if(rows.length){
+      h+='<div class="section-title" style="margin-top:12px">Live rows</div>';
+      h+=rows.map(x=>{
+        const a=String(x.address||'');
+        const short=a.length>12?a.slice(0,8)+'…'+a.slice(-6):a;
+        const asset=x.assets||{};
+        const bnb=asset.BNB?.amount??'—';
+        const slh=asset.SLH?.amount??'—';
+        const zuz=asset.ZUZ?.amount??(d.zuz_contract_configured?'—':'n/c');
+        return '<div class="task"><b>'+esc(x.health||'UNKNOWN')+'</b> · '+esc(short)+'<div class="muted">UID '+esc((x.uids||[]).join(',' )||'—')+' · BNB '+esc(String(bnb))+' · SLH '+esc(String(slh))+' · ZUZ '+esc(String(zuz))+'</div></div>';
+      }).join('');
+    }
+    setHTML('walletHealthSummary',h);
+  }catch(e){
+    box.textContent='לא ניתן לטעון Wallet Health כרגע.';
+  }
 }
 
 async function loadControlTasks(){
