@@ -487,6 +487,22 @@ function showGuide(id){
     return resp
 
 
+@app.route("/api/v1/control/wallet-health")
+def control_wallet_health():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core.authority import is_owner
+    if not is_owner(uid):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+    try:
+        from core.wallet_health import build_wallet_health
+        return _no_store(jsonify(build_wallet_health())), 200
+    except Exception as exc:
+        print("[WALLET_HEALTH] error:", type(exc).__name__, str(exc)[:180])
+        return jsonify({"error": "WALLET_HEALTH_UNAVAILABLE"}), 503
+
+
 @app.route("/api/v1/system/unified-map")
 def unified_system_map():
     uid = authenticated_uid()
