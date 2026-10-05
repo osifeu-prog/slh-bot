@@ -43,9 +43,6 @@ MAX_SLIPPAGE_BPS = 1_000
 
 
 def _cfg() -> dict[str, Any]:
-    name = os.getenv("SLH_BSC_EXECUTION_NETWORK", "bsc-mainnet").strip().lower()
-    if name not in NETWORKS:
-        name = "bsc-mainnet"
     cfg = _network()
     router = os.getenv("SLH_BSC_PANCAKE_V2_ROUTER", "").strip() or ROUTER_V2
     usdc = os.getenv("SLH_BSC_USDC_MAINNET_ADDRESS", "").strip() or BINANCE_PEG_USDC
@@ -198,7 +195,7 @@ def quote(uid: str, trade: str, amount: str) -> dict[str, Any]:
     if trade == "BNB_USDC":
         inp, out, din, dout = cfg["wbnb"], cfg["usdc"], 18, _token_decimals(web3, cfg["usdc"])
         amount_raw = _parse_units(amount, din)
-        paths = [[inp, out], [inp, cfg["wbnb"], out]]
+        paths = [[inp, out]]
     elif trade == "USDC_BNB":
         inp, out, din, dout = cfg["usdc"], cfg["wbnb"], _token_decimals(web3, cfg["usdc"]), 18
         amount_raw = _parse_units(amount, din)
@@ -293,7 +290,7 @@ def prepare(uid: str, trade: str, amount: str, slippage_bps: int, deadline_secon
         "deadline": deadline,
         "approval": approval,
         "tx": gas_tx,
-        "estimated_fee_raw": gas_tx["gas"],
+        "estimated_fee_raw": int(web3.eth.gas_price) * int(gas_tx["gas"], 16),
         "approval_required": approval is not None,
         "approval_required_exact": amount_in_raw if approval else 0,
     })
