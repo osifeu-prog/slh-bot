@@ -12,7 +12,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
-DEFAULT_MAX_AGE = 3600
+DEFAULT_MAX_AGE = 86400
 TELEGRAM_ED25519_PUBLIC_KEY_HEX = (
     "e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c187fe7d34caed242d"
 )
