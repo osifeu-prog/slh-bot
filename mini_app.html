@@ -305,11 +305,13 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="bscswap" class="screen">
 <div class="section-title">🔄 BSC Swap</div>
 <div class="slh-swap-card">
-  <div class="slh-swap-head"><div><h3>SLH ↔ BNB · BNB ↔ USDT</h3><p>Swap ישיר דרך PancakeSwap V2 · החתימה והשידור מתבצעים בארנק שלך.</p></div><span id="bscSwapBadge" class="pill pending">בודק…</span></div>
+  <div class="slh-swap-head"><div><h3>SLH ↔ BNB · BNB ↔ USDC / USDT</h3><p>Swap on-chain דרך PancakeSwap V2 · החתימה והשידור מתבצעים בארנק שלך.</p></div><span id="bscSwapBadge" class="pill pending">בודק…</span></div>
   <div id="bscSwapGate" class="slh-swap-gate locked">🔒 <span id="bscSwapGateText">טוען מדיניות execution…</span></div>
   <div class="slh-swap-pair">
     <button id="bscPairBnbSlh" type="button" class="active" onclick="setBscSwapPair('BNB_SLH')">BNB → SLH</button>
     <button id="bscPairSlhBnb" type="button" onclick="setBscSwapPair('SLH_BNB')">SLH → BNB</button>
+    <button id="bscPairBnbUsdc" type="button" onclick="setBscSwapPair('BNB_USDC')">BNB → USDC</button>
+    <button id="bscPairUsdcBnb" type="button" onclick="setBscSwapPair('USDC_BNB')">USDC → BNB</button>
     <button id="bscPairBnbUsdt" type="button" onclick="setBscSwapPair('BNB_USDT')">BNB → USDT</button>
     <button id="bscPairUsdtBnb" type="button" onclick="setBscSwapPair('USDT_BNB')">USDT → BNB</button>
   </div>
@@ -327,7 +329,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     <button id="bscSwapPrepareButton" class="action" type="button" onclick="prepareBscSwap()" disabled><b>🔐 Prepare</b><span>עסקה חתומה רק בארנק שלך</span></button>
   </div>
   <div id="bscSwapResult" class="slh-swap-result">הפעלת Swap תתאפשר רק כאשר שרת ה־execution יאשר אותה.</div>
-  <button id="bscSwapSendButton" class="action primary" type="button" style="width:100%;margin-top:9px" onclick="executePreparedBscSwap()" disabled><b>⚡ אשר ושלח בארנק</b><span>ללא שמירת מפתח · WalletConnect / Browser Wallet</span></button>
+  <button id="bscSwapSendButton" class="action primary" type="button" style="width:100%;margin-top:9px" onclick="executePreparedBscSwap()" disabled><b>⚡ אשר ושלח בארנק</b><span>ללא שמירת מפתח · WalletConnect / Browser Wallet</span></button><div class="guide" style="margin-top:9px;border-color:#f59e0b55"><b>ℹ️ USDC ב־BNB Chain</b><p class="muted">המסלול מציג Binance-Peg USDC ב־BSC, לא מצהיר עליו כ־Circle-native USDC. בדוק תמיד שרשרת, נכס וכתובת חוזה לפני חתימה.</p></div>
   <div class="guide" style="margin-top:9px"><b>🔐 גבולות אבטחה</b><p class="muted">אין כאן custody, אין private key בשרת, ואין שינוי ב־Credits. Quote/Prepare/Send ניתנים רק לפי שער execution; שערי הפקדת BNB/TON נפרדים.</p></div>
 </div>
 </section>
@@ -2122,6 +2124,8 @@ function bscSwapMeta(pair){
   return ({
     BNB_SLH:{input:'BNB',output:'SLH',example:'0.001'},
     SLH_BNB:{input:'SLH',output:'BNB',example:'1'},
+    BNB_USDC:{input:'BNB',output:'USDC',example:'0.01'},
+    USDC_BNB:{input:'USDC',output:'BNB',example:'10'},
     BNB_USDT:{input:'BNB',output:'USDT',example:'0.01'},
     USDT_BNB:{input:'USDT',output:'BNB',example:'10'}
   })[pair]||{input:'—',output:'—',example:'0.01'};
@@ -2130,6 +2134,7 @@ function bscSwapMeta(pair){
 function bscPairConfigured(pair){
   if(!__bscSwapPolicy?.enabled)return false;
   if(pair==='BNB_SLH'||pair==='SLH_BNB')return !!__bscSwapPolicy.slh_configured;
+  if(pair==='BNB_USDC'||pair==='USDC_BNB')return !!__bscSwapPolicy.usdc_configured;
   return !!__bscSwapPolicy.usdt_configured;
 }
 
@@ -2144,6 +2149,8 @@ function syncBscSwapControls(){
   const ids={
     BNB_SLH:'bscPairBnbSlh',
     SLH_BNB:'bscPairSlhBnb',
+    BNB_USDC:'bscPairBnbUsdc',
+    USDC_BNB:'bscPairUsdcBnb',
     BNB_USDT:'bscPairBnbUsdt',
     USDT_BNB:'bscPairUsdtBnb'
   };
@@ -2161,7 +2168,7 @@ function syncBscSwapControls(){
 }
 
 function setBscSwapPair(pair){
-  if(!['BNB_SLH','SLH_BNB','BNB_USDT','USDT_BNB'].includes(pair))return;
+  if(!['BNB_SLH','SLH_BNB','BNB_USDC','USDC_BNB','BNB_USDT','USDT_BNB'].includes(pair))return;
   __bscSwapPair=pair;
   __bscPreparedSwap=null;
   syncBscSwapControls();
