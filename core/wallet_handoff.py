@@ -97,9 +97,10 @@ def consume_handoff(token: Any) -> str:
         if not uid.isdigit() or int(uid) <= 0:
             raise ValueError("WALLET_HANDOFF_INVALID")
 
-        if not row.get("consumed_at"):
-            row["consumed_at"] = _iso(now)
-            rows[digest] = row
+        if row.get("consumed_at"):
+            raise ValueError("WALLET_HANDOFF_ALREADY_CONSUMED")
+        row["consumed_at"] = _iso(now)
+        rows[digest] = row
         return uid
 
     return state_manager.atomic_update(mutate)
