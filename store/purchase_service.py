@@ -33,7 +33,7 @@ def _validate_item(item):
     grant = item.get("grant")
     if not isinstance(grant, dict) or not grant:
         return "UNSUPPORTED_GRANT"
-    if not any(key in grant for key in ("permission", "course", "digital", "plugin", "hardware")):
+    if not any(key in grant for key in ("permission", "course", "digital", "plugin", "hardware", "physical")):
         return "UNSUPPORTED_GRANT"
     return None
 
@@ -155,8 +155,22 @@ def purchase(uid, item_id, request_id=None):
     if request_id is None:
         request_id = f"legacy:{uid}:{item_id}"
     uid = str(uid)
+    raw_item_id = str(item_id or "").strip()
     items = load_items()
-    item_id = resolve_item_id(item_id, items)
+
+    resolved = resolve_item_id(raw_item_id, items)
+    if resolved is not None and isinstance(items.get(resolved), dict) and items[resolved].get("type") == "physical":
+        return purchase_physical(uid, resolved, request_id)
+
+    try:
+        db = state_manager.load_db()
+        product = (db.get("products") or {}).get(raw_item_id)
+        if isinstance(product, dict) and product.get("type") == "physical":
+            return purchase_physical(uid, raw_item_id, request_id)
+    except Exception:
+        pass
+
+    item_id = resolved
     if item_id is None:
         return False, "ITEM_NOT_FOUND"
 
@@ -211,3 +225,118 @@ def purchase(uid, item_id, request_id=None):
     purchase_state = _update_purchase(claim["purchase_id"], status="FULFILLED", fulfillment=fulfillment, fulfilled_at=datetime.now(timezone.utc).isoformat(), fulfillment_started_at=None, error=None)
     _record_compat_ledger(purchase_state, fulfillment)
     return True, {"status": "SUCCESS", "item": purchase_state["item_name"], "paid": purchase_state["price"], "grant": fulfillment, "commission": 0}
+
+
+
+def purchase_physical(uid, item_id, request_id=None):
+    uid = str(uid)
+    item_id = str(item_id or "").strip()
+    if not item_id:
+        return False, "ITEM_NOT_FOUND"
+    if request_id is None:
+        request_id = "physical:" + uid + ":" + item_id
+    purchase_id = _purchase_id(request_id)
+
+    items = load_items()
+    resolved = resolve_item_id(item_id, items)
+    catalog = items.get(resolved, {}) if resolved is not None else {}
+
+    def mutate(db):
+        users = db.setdefault("users", {})
+        buyer = users.get(uid)
+        if not buyer:
+            return None, "BUYER_NOT_FOUND"
+        products = db.setdefault("products", {})
+        product = products.get(item_id)
+        if not isinstance(product, dict):
+            return None, "PRODUCT_NOT_FOUND"
+        if product.get("type") != "physical":
+            return None, "NOT_PHYSICAL_PRODUCT"
+
+        seller_uid = str(product.get("seller_uid") or "").strip()
+        if not seller_uid:
+            return None, "NO_SELLER"
+        if seller_uid == uid:
+            return None, "CANNOT_BUY_OWN_ITEM"
+        seller = users.get(seller_uid)
+        if not seller:
+            return None, "SELLER_NOT_FOUND"
+
+        purchases = db.setdefault("purchases", {})
+        existing = purchases.get(purchase_id)
+        if existing:
+            if str(existing.get("request_id")) != str(request_id) or str(existing.get("uid")) != uid or str(existing.get("item_id")) != item_id:
+                return None, "REQUEST_ID_CONFLICT"
+            if existing.get("status") in ("PAID", "FULFILLING", "COMPLETED", "FULFILLED"):
+                return {
+                    "status": "ALREADY_COMPLETED",
+                    "item": existing.get("item_name", item_id),
+                    "paid": existing.get("price", 0),
+                    "purchase_status": existing.get("status"),
+                }, None
+
+        raw_price = product.get("price", catalog.get("price"))
+        try:
+            price = float(raw_price)
+        except (TypeError, ValueError):
+            return None, "INVALID_PRICE"
+        if price <= 0:
+            return None, "INVALID_PRICE"
+
+        inventory = int(product.get("inventory", 0) or 0)
+        if inventory <= 0:
+            return None, "OUT_OF_STOCK"
+
+        buyer_wallet = buyer.setdefault("wallet", {})
+        buyer_balance = float(buyer_wallet.get("credits", 0) or 0)
+        if buyer_balance < price:
+            return None, "NOT_ENOUGH_CREDITS"
+
+        seller_wallet = seller.setdefault("wallet", {})
+        commission = round(price * 0.10, 8)
+        seller_payout = round(price - commission, 8)
+        now = datetime.now(timezone.utc).isoformat()
+
+        buyer_wallet["credits"] = buyer_balance - price
+        seller_balance = float(seller_wallet.get("credits", 0) or 0)
+        seller_wallet["credits"] = seller_balance + seller_payout
+
+        ledger = db.setdefault("ledger", [])
+        ledger.append({
+            "time": now, "uid": uid, "before": buyer_balance, "amount": -price,
+            "after": buyer_balance - price, "reason": "store:p2p_purchase",
+            "meta": {"item_id": item_id, "seller_uid": seller_uid, "purchase_id": purchase_id},
+        })
+        ledger.append({
+            "time": now, "uid": seller_uid, "before": seller_balance, "amount": seller_payout,
+            "after": seller_balance + seller_payout, "reason": "store:p2p_sale",
+            "meta": {"item_id": item_id, "buyer_uid": uid, "purchase_id": purchase_id},
+        })
+
+        treasury = users.get("SLH_TREASURY")
+        if treasury and commission > 0:
+            wallet = treasury.setdefault("wallet", {})
+            treasury_before = float(wallet.get("credits", 0) or 0)
+            wallet["credits"] = treasury_before + commission
+            ledger.append({
+                "time": now, "uid": "SLH_TREASURY", "before": treasury_before,
+                "amount": commission, "after": treasury_before + commission,
+                "reason": "store:commission",
+                "meta": {"item_id": item_id, "purchase_id": purchase_id},
+            })
+
+        product["inventory"] = inventory - 1
+        purchases[purchase_id] = {
+            "purchase_id": purchase_id, "request_id": str(request_id), "uid": uid,
+            "item_id": item_id, "item_name": product.get("name") or catalog.get("name", item_id),
+            "price": price, "seller_uid": seller_uid, "seller_payout": seller_payout,
+            "commission": commission, "status": "PAID", "created_at": now, "paid_at": now,
+            "fulfillment": None, "fulfilled_at": None,
+        }
+        return {
+            "status": "SUCCESS", "item": purchases[purchase_id]["item_name"],
+            "paid": price, "seller_payout": seller_payout, "commission": commission,
+            "purchase_status": "PAID", "new_balance": buyer_balance - price,
+        }, None
+
+    return state_manager.atomic_update(mutate)
