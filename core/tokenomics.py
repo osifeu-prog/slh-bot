@@ -31,6 +31,7 @@ TOKENOMICS = {
         "decimals": SLH_BSC_TOKEN_DECIMALS,
         "supply_policy_in_slh_os": "existing_balances_only",
         "minting_in_slh_os": False,
+        "minting_supported": False,
         "notes": (
             "SLH exists both as a deployed BSC token and as an internal SLH "
             "ledger used by the exchange/distribution authorities. The OS does "
