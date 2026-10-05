@@ -362,6 +362,18 @@ def market():
     }), 200
 
 
+@app.route("/bnb-smoke")
+def bnb_smoke_page():
+    """Temporary owner smoke UI launched from the Telegram bot button."""
+    html_path = BASE_DIR / "bnb_smoke.html"
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
 @app.route("/mini-app")
 @app.route("/mini-app-v2")
 @app.route("/mini-app-v3")
