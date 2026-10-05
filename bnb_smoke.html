@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLH OS · BNB Smoke</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0d12;color:#f4f5f7;margin:0;padding:18px}
+.card{max-width:620px;margin:auto;background:#151922;border:1px solid #2b3140;border-radius:18px;padding:20px}
+h2{margin-top:0}.muted{color:#aeb5c2}.row{display:flex;justify-content:space-between;gap:12px;margin:10px 0}
+button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.primary{background:#fff;color:#111}.secondary{background:#252b38;color:#fff}
+.code{font-family:ui-monospace,monospace;word-break:break-all;font-size:12px}
+.status{margin-top:14px;line-height:1.5}.ok{color:#7ff0a5}.err{color:#ff7f8f}
+#qr{display:flex;justify-content:center;margin:14px 0}.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>🧪 BNB Empirical Smoke</h2>
+<p class="muted">מסלול זמני מהבוט. Settlement ציבורי נשאר סגור.</p>
+<div id="state">⏳ מאמת Telegram ובודק מוכנות…</div>
+<div id="details" class="hidden">
+  <div class="row"><span>ארנק מאומת</span><b id="wallet" class="code">—</b></div>
+  <div class="row"><span>רשת</span><b>BSC · 56</b></div>
+  <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
+  <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
+  <button id="send" class="primary">⚡️ אשר שליחת 0.01 BNB בארנק</button>
+  <button id="wc" class="secondary">🔗 אין ארנק כאן — הפעל WalletConnect</button>
+  <div id="wcbox" class="hidden">
+    <div id="qr"></div>
+    <div id="uri" class="code"></div>
+    <button id="copy" class="secondary">העתק WalletConnect URI</button>
+  </div>
+</div>
+<div id="status" class="status"></div>
+</div>
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();}
+const initData=tg?.initData||"";
+const headers=initData?{"X-Telegram-Init-Data":initData}:{};
+let provider=null, binding=null, smoke=null, pollTimer=null;
+
+const $=id=>document.getElementById(id);
+const setStatus=(x,cls="")=>{const e=$("status");e.textContent=x;e.className="status "+cls};
+
+async function api(path,opts={}){
+  const r=await fetch(path,Object.assign({cache:"no-store",headers},opts));
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(d.error||("HTTP "+r.status));
+  return d;
+}
+
+async function init(){
+  if(!initData){$("state").textContent="❌ פתח את הכפתור מתוך Telegram";return;}
+  try{
+    const d=await api("/api/wallet/bnb");
+    binding=d.binding; smoke=d.empirical_smoke;
+    if(!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
+    if(smoke?.available!==true)throw Error("BNB_EMPIRICAL_SMOKE_NOT_AVAILABLE");
+    if(String(smoke.chain_id)!=="56")throw Error("BSC_CHAIN_ID_NOT_56");
+    if(String(smoke.amount_wei)!=="10000000000000000")throw Error("AMOUNT_NOT_0_01_BNB");
+    if(!smoke.treasury)throw Error("BNB_TREASURY_MISSING");
+    $("wallet").textContent=binding.address;
+    $("treasury").textContent=smoke.treasury;
+    $("details").classList.remove("hidden");
+    $("state").innerHTML='<span class="ok">✅ מוכן. השער הציבורי נשאר CLOSED.</span>';
+  }catch(e){$("state").textContent="❌ "+e.message;setStatus("לא בוצעה שליחה.", "err");}
+}
+
+async function ensureBsc(p){
+  let chain=await p.request({method:"eth_chainId"});
+  if(chain!=="0x38"){
+    try{await p.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});}
+    catch(e){
+      if(e?.code===4902)await p.request({method:"wallet_addEthereumChain",params:[{
+        chainId:"0x38",chainName:"BNB Smart Chain",
+        nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
+        rpcUrls:["https://bsc-dataseed.binance.org/"],
+        blockExplorerUrls:["https://bscscan.com/"]
+      }]}); else throw e;
+    }
+  }
+  chain=await p.request({method:"eth_chainId"});
+  if(chain!=="0x38")throw Error("הארנק לא מחובר ל-BSC 56");
+  const accounts=await p.request({method:"eth_requestAccounts"});
+  if(!accounts?.[0])throw Error("לא נבחר ארנק");
+  if(accounts[0].toLowerCase()!==binding.address.toLowerCase())throw Error("הארנק המחובר שונה מהארנק המאומת");
+  return accounts[0];
+}
+
+async function send(){
+  $("send").disabled=true; setStatus("⏳ הארנק מבקש אישור…");
+  try{
+    provider=provider||window.ethereum;
+    if(!provider)throw Error("אין ספק ארנק בדפדפן. השתמש ב-WalletConnect.");
+    const account=await ensureBsc(provider);
+    const txHash=await provider.request({method:"eth_sendTransaction",params:[{
+      from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
+    }]});
+    setStatus("✅ TX נשלח: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
+    await poll(txHash);
+  }catch(e){
+    setStatus("❌ "+(e.message||e),"err");$("send").disabled=false;
+  }
+}
+
+async function poll(tx){
+  try{
+    const d=await api("/api/wallet/bnb/empirical-smoke",{
+      method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),
+      body:JSON.stringify({tx_hash:tx})
+    });
+    if(d.status==="WAITING_FOR_CONFIRMATIONS"){
+      setStatus("⏳ confirmations: "+d.confirmations+" / "+d.required_confirmations+"\nTX: "+tx);
+      pollTimer=setTimeout(()=>poll(tx),5000); return;
+    }
+    if(d.status!=="PASS")throw Error("BNB_EMPIRICAL_SMOKE_NOT_PASS");
+    setStatus("🎉 PASS\n+ "+d.credits+" Credits\nledger entries: "+d.ledger_entries_for_idempotency_key+"\nreplay: +0\nSettlement נשאר CLOSED.","ok");
+    $("send").disabled=true;
+  }catch(e){
+    if(String(e.message||e).includes("WAITING")){pollTimer=setTimeout(()=>poll(tx),5000);return;}
+    setStatus("❌ settlement: "+(e.message||e),"err");$("send").disabled=false;
+  }
+}
+
+async function walletConnect(){
+  $("wc").disabled=true;
+  try{
+    const cfg=await api("/api/walletconnect/config");
+    if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
+    const mod=await import("https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.25.0/+esm");
+    const EthereumProvider=mod.EthereumProvider||mod.default?.EthereumProvider||mod.default;
+    if(typeof EthereumProvider!=="function")throw Error("WalletConnect SDK לא נטען");
+    provider=await EthereumProvider.init({
+      projectId:cfg.project_id,chains:[56],showQrModal:false,disableProviderPing:true,
+      rpcMap:{56:"https://bsc-dataseed.binance.org/"},
+      metadata:{name:"SLH OS BNB Smoke",description:"Temporary empirical settlement smoke",url:location.origin,icons:["https://slh-nft.com/icon-192.png"]}
+    });
+    provider.on?.("display_uri",uri=>{
+      $("wcbox").classList.remove("hidden");$("uri").textContent=uri;
+      $("qr").innerHTML=""; if(window.QRCode)new QRCode($("qr"),{text:uri,width:220,height:220});
+      $("copy").onclick=async()=>{await navigator.clipboard.writeText(uri);setStatus("✅ URI הועתק.","ok");};
+      setStatus("📱 סרוק את ה־QR עם Trust Wallet / MetaMask Mobile.");
+    });
+    await provider.connect();
+    $("wcbox").classList.remove("hidden");
+    await send();
+  }catch(e){$("wc").disabled=false;setStatus("❌ WalletConnect: "+(e.message||e),"err");}
+}
+
+$("send").onclick=send;$("wc").onclick=walletConnect;init();
+</script>
+</body>
+</html>
