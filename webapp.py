@@ -382,13 +382,20 @@ def wallet_handoff():
     code = str(request.args.get("code", "")).strip()
     if not code:
         return jsonify({"error": "MISSING_WALLET_HANDOFF"}), 400
+
+    next_path = str(request.args.get("next", "")).strip() or "/wallet-connect"
+    # Only allow fixed internal wallet pages; never accept arbitrary redirect URLs.
+    allowed_next = {"/wallet-connect", "/bnb-smoke"}
+    if next_path not in allowed_next:
+        return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
+
     try:
         from core.wallet_handoff import consume_handoff
         consume_handoff(code)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    response = make_response(redirect("/wallet-connect"))
+    response = make_response(redirect(next_path))
     response.set_cookie(
         "slh_wallet_handoff",
         code,
