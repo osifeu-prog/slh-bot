@@ -5,6 +5,7 @@ def _db():
     return {
         "transactions": [
             {"uid": "501", "stars_paid": 100, "telegram_payment_charge_id": "tx-100"},
+            {"uid": "999", "stars_paid": 60, "telegram_payment_charge_id": "legacy-test-60", "meta": {"test": True}},
         ],
         "vip_subscriptions": {
             "tx-499": {"uid": "224", "stars": 499, "status": "ACTIVE"},
@@ -54,6 +55,8 @@ def test_owner_live_reconciliation(monkeypatch):
     assert result["owner"]["incoming_gross"] == 823
     assert result["owner"]["real_external_gross"] == 823
     assert result["owner"]["matched_count"] == 4
+    assert result["owner"]["matched_charge_ids"] == ["tx-025", "tx-100", "tx-199", "tx-499"]
+    assert result["owner"]["test_legacy_charge_ids"] == ["legacy-test-60"]
     assert result["owner"]["mismatch_count"] == 0
     assert result["owner"]["real_by_kind"] == {"store": 224, "vip": 499, "credits": 100}
     assert result["owner"]["test_legacy_xtr_revenue_gross"] == 100
