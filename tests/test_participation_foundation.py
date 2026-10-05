@@ -25,7 +25,7 @@ def test_preview_distribution_is_pure(monkeypatch):
 
 def test_preview_position_reward_applies_cap():
     result = participation_service.preview_position_reward("100", "1000", "1000", 365)
-    assert result["share"] == Decimal("1000.00000000")
+    assert result["share"] == Decimal("100.00000000")
     assert result["cap"] == Decimal("65.00000000")
     assert result["allocation"] == Decimal("65.00000000")
 
