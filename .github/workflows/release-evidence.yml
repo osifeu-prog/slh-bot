@@ -8,6 +8,11 @@ on:
       - Bot Vault Regression
       - Validate and hand off to Railway
     types: [completed]
+    branches: [main]
+
+concurrency:
+  group: release-evidence-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
 
 permissions:
   actions: read
