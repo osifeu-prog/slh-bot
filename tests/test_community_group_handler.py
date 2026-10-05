@@ -64,3 +64,13 @@ def test_bind_current_group_persists_explicit_role():
     assert result["role"] == "vip"
     assert result["chat_id"] == "-100123"
     assert stored["community_groups"]["-100123"]["role"] == "vip"
+
+
+def test_group_status_snapshot_can_store_member_count():
+    db = {}
+    chat = _chat()
+    handler._record_membership(db, "501", chat, "member")
+    group = db["community_groups"]["-100123"]
+    group["member_count"] = 42
+
+    assert group["member_count"] == 42
