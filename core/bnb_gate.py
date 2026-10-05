@@ -15,20 +15,21 @@ import state_manager
 CLOSED_MESSAGE = "⛔️ הפקדות BNB/SLH סגורות כרגע. אל תשלח עד להודעה."
 
 
-def _effective_config() -> dict:
+def _effective_config(db=None) -> dict:
     cfg = dict(get_bsc_config())
-    try:
-        db = state_manager.load_db()
-    except Exception:
-        return cfg
+    if db is None:
+        try:
+            db = state_manager.load_db()
+        except Exception:
+            return cfg
     overrides = db.get("bsc_settings") if isinstance(db, dict) else None
     if isinstance(overrides, dict):
         cfg.update(overrides)
     return cfg
 
 
-def bnb_readiness() -> dict:
-    cfg = _effective_config()
+def bnb_readiness(db=None) -> dict:
+    cfg = _effective_config(db)
     reasons: list[str] = []
     chain_id = cfg.get("chain_id")
     if int(chain_id or 0) != 56:
