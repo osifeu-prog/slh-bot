@@ -50,7 +50,8 @@ class BnbDepositServiceTests(unittest.TestCase):
         load_db.return_value = {"ledger": [entry]}
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertTrue(result["idempotent"])
-        self.assertEqual(result["balance_after"], 1234)
+        self.assertIsNone(result["balance_after"])
+        record.assert_not_called()
 
     @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
