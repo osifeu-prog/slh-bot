@@ -74,7 +74,7 @@ def register(bot, context=None):
             "CORE: /start /os /status /help /miniapp /dashboard /ask\n"
             "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"
             "ALPHA: /alpha /academy /share /rewards /task /journal\n"
-            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs\n"
+            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs /releasecheck\n"
             "SECURITY: /vault /vault_verify /vault_health /vault_log\n"
             "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"
             "DEV: /e /exec"
