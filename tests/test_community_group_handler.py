@@ -1,9 +1,10 @@
 import types
+from unittest.mock import patch
 
 import handlers.community_group_handler as handler
 
 
-def _chat(chat_id="-100123", title="Test Group"):
+def _chat(chat_id=-100123, title="Test Group"):
     return types.SimpleNamespace(
         id=chat_id,
         type="supergroup",
@@ -49,8 +50,17 @@ def test_bind_current_group_persists_explicit_role():
         from_user=types.SimpleNamespace(id=8789977826),
         chat=_chat(),
     )
+    stored = {}
 
-    result = handler._bind_current_group(m, "vip")
+    def fake_update(mutator):
+        db = {}
+        result = mutator(db)
+        stored.update(db)
+        return result
+
+    with patch.object(handler.state_manager, "atomic_update", side_effect=fake_update):
+        result = handler._bind_current_group(m, "vip")
 
     assert result["role"] == "vip"
     assert result["chat_id"] == "-100123"
+    assert stored["community_groups"]["-100123"]["role"] == "vip"
