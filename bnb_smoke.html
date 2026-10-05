@@ -27,7 +27,8 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
-  <button id="send" class="primary">⚡️ שלח 0.01 BNB לבדיקה</button>
+  <button id="send" class="primary">🦊 MetaMask · שלח 0.01 BNB לבדיקה</button>
+  <button id="walletConnectBtn" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
   <div id="wcbox" class="hidden">
     <div id="qr"></div>
     <div id="uri" class="code"></div>
@@ -41,7 +42,7 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
-let provider=null, binding=null, smoke=null, pollTimer=null;
+let provider=null, binding=null, smoke=null, pollTimer=null, metamaskClient=null;
 
 const $=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{const e=$("status");e.textContent=x;e.className="status "+cls};
@@ -92,45 +93,57 @@ async function ensureBsc(p){
 }
 
 async function send(){
-  $("send").disabled=true; setStatus("⏳ מחפש ארנק מאושר…");
+  $("send").disabled=true; $("walletConnectBtn").disabled=true;
   try{
     provider=provider||window.ethereum;
-    if(!provider){
-      setStatus("🔗 אין ספק ארנק בדפדפן. מפעיל WalletConnect אוטומטית…");
-      await walletConnect();
+    if(provider){
+      setStatus("🦊 MetaMask זוהה בדפדפן. מבקש חיבור ל־BSC…");
+      await sendWithProvider(provider,"MetaMask");
       return;
     }
-    const account=await ensureBsc(provider);
-    const txHash=await provider.request({method:"eth_sendTransaction",params:[{
-      from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
-    }]});
-    setStatus("✅ TX נשלח: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
-    await poll(txHash);
+    setStatus("🦊 פותח חיבור ישיר ל־MetaMask…");
+    await metaMaskConnect();
   }catch(e){
-    setStatus("❌ "+(e.message||e),"err");$("send").disabled=false;
+    setStatus("❌ MetaMask: "+(e.message||e),"err");
+    $("send").disabled=false; $("walletConnectBtn").disabled=false;
   }
 }
 
-async function poll(tx){
-  try{
-    const d=await api("/api/wallet/bnb/empirical-smoke",{
-      method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),
-      body:JSON.stringify({tx_hash:tx})
-    });
-    if(d.status==="WAITING_FOR_CONFIRMATIONS"){
-      setStatus("⏳ confirmations: "+d.confirmations+" / "+d.required_confirmations+"\nTX: "+tx);
-      pollTimer=setTimeout(()=>poll(tx),5000); return;
-    }
-    if(d.status!=="PASS")throw Error("BNB_EMPIRICAL_SMOKE_NOT_PASS");
-    setStatus("🎉 PASS\n+ "+d.credits+" Credits\nledger entries: "+d.ledger_entries_for_idempotency_key+"\nreplay: +0\nSettlement נשאר CLOSED.","ok");
-    $("send").disabled=true;
-  }catch(e){
-    if(String(e.message||e).includes("WAITING")){pollTimer=setTimeout(()=>poll(tx),5000);return;}
-    setStatus("❌ settlement: "+(e.message||e),"err");$("send").disabled=false;
-  }
+async function sendWithProvider(p,label){
+  const account=await ensureBsc(p);
+  const txHash=await p.request({method:"eth_sendTransaction",params:[{
+    from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
+  }]});
+  setStatus("✅ "+label+" אישר את השליחה. TX: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
+  await poll(txHash);
+}
+
+async function metaMaskConnect(){
+  const mod=await import("https://cdn.jsdelivr.net/npm/@metamask/connect-evm@2.1.1/+esm");
+  const createEVMClient=mod.createEVMClient;
+  if(typeof createEVMClient!=="function")throw Error("MetaMask Connect SDK לא נטען");
+  metamaskClient=metamaskClient||await createEVMClient({
+    dapp:{
+      name:"SLH OS BNB Smoke",
+      url:location.origin,
+      iconUrl:"https://slh-nft.com/icon-192.png"
+    },
+    api:{
+      supportedNetworks:{
+        "0x38":"https://bsc-dataseed.binance.org/"
+      }
+    },
+    analytics:{enabled:false}
+  });
+  const {accounts,chainId}=await metamaskClient.connect({chainIds:["0x38"]});
+  provider=metamaskClient.getProvider();
+  if(chainId!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
+  if(!accounts?.[0])throw Error("MetaMask לא החזיר כתובת");
+  await sendWithProvider(provider,"MetaMask");
 }
 
 async function walletConnect(){
+  $("walletConnectBtn").disabled=true;
   try{
     const cfg=await api("/api/walletconnect/config");
     if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
@@ -150,16 +163,16 @@ async function walletConnect(){
     });
     await provider.connect();
     $("wcbox").classList.remove("hidden");
-    const account=await ensureBsc(provider);
-    const txHash=await provider.request({method:"eth_sendTransaction",params:[{
-      from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
-    }]});
-    setStatus("✅ TX נשלח: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
-    await poll(txHash);
-  }catch(e){setStatus("❌ WalletConnect: "+(e.message||e),"err");$("send").disabled=false;}
+    await sendWithProvider(provider,"WalletConnect");
+  }catch(e){
+    setStatus("❌ WalletConnect: "+(e.message||e),"err");
+    $("send").disabled=false; $("walletConnectBtn").disabled=false;
+  }
 }
 
-$("send").onclick=send;init();
+$("send").onclick=send;
+$("walletConnectBtn").onclick=walletConnect;
+init();
 </script>
 </body>
 </html>
