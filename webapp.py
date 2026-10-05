@@ -1214,6 +1214,14 @@ def bsc_execution_policy():
             **execution_policy_snapshot(),
             **swap_policy_snapshot(),
         }
+        try:
+            from core.bsc_live_swap import policy_snapshot as live_swap_policy_snapshot
+            live = live_swap_policy_snapshot()
+            payload.update({f"live_{k}": v for k, v in live.items()})
+            payload["usdc_configured"] = bool(live.get("usdc"))
+            payload["usdc_label"] = live.get("usdc_label", "USDC")
+        except Exception:
+            payload["usdc_configured"] = False
         return _no_store(jsonify(payload)), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1278,21 +1286,25 @@ def bsc_execution_quote():
     payload = request.get_json(silent=True) or {}
     trade = str(payload.get("trade", "")).strip().upper()
     amount = str(payload.get("amount", "")).strip()
-    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB"}:
+    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
         return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
     if not amount:
         return jsonify({"error": "MISSING_AMOUNT"}), 400
 
     try:
-        from core import bsc_swap
-        if trade == "BNB_USDT":
-            result = bsc_swap.quote_bnb_usdt(uid, amount)
-        elif trade == "USDT_BNB":
-            result = bsc_swap.quote_usdt_bnb(uid, amount)
-        elif trade == "BNB_SLH":
-            result = bsc_swap.quote_bnb_slh(uid, amount)
+        if trade in {"BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
+            from core import bsc_live_swap
+            result = bsc_live_swap.quote(uid, trade, amount)
         else:
-            result = bsc_swap.quote_slh_bnb(uid, amount)
+            from core import bsc_swap
+            if trade == "BNB_USDT":
+                result = bsc_swap.quote_bnb_usdt(uid, amount)
+            elif trade == "USDT_BNB":
+                result = bsc_swap.quote_usdt_bnb(uid, amount)
+            elif trade == "BNB_SLH":
+                result = bsc_swap.quote_bnb_slh(uid, amount)
+            else:
+                result = bsc_swap.quote_slh_bnb(uid, amount)
         return _no_store(jsonify(result)), 200
     except ValueError as exc:
         code = str(exc)
@@ -1316,7 +1328,7 @@ def bsc_execution_prepare_swap():
     slippage_raw = payload.get("slippage_bps")
     deadline_raw = payload.get("deadline_seconds")
 
-    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB"}:
+    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
         return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
     if not amount:
         return jsonify({"error": "MISSING_AMOUNT"}), 400
@@ -1329,23 +1341,29 @@ def bsc_execution_prepare_swap():
         return jsonify({"error": "INVALID_SWAP_PARAMETERS"}), 400
 
     try:
-        from core import bsc_swap
-        if trade == "BNB_USDT":
-            result = bsc_swap.prepare_bnb_to_usdt(
-                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
-            )
-        elif trade == "USDT_BNB":
-            result = bsc_swap.prepare_usdt_to_bnb(
-                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
-            )
-        elif trade == "BNB_SLH":
-            result = bsc_swap.prepare_bnb_to_slh(
-                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+        if trade in {"BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
+            from core import bsc_live_swap
+            result = bsc_live_swap.prepare(
+                uid, trade, amount, slippage_bps, deadline_seconds=deadline_seconds
             )
         else:
-            result = bsc_swap.prepare_slh_to_bnb(
-                uid, amount, slippage_bps, deadline_seconds=deadline_seconds
-            )
+            from core import bsc_swap
+            if trade == "BNB_USDT":
+                result = bsc_swap.prepare_bnb_to_usdt(
+                    uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+                )
+            elif trade == "USDT_BNB":
+                result = bsc_swap.prepare_usdt_to_bnb(
+                    uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+                )
+            elif trade == "BNB_SLH":
+                result = bsc_swap.prepare_bnb_to_slh(
+                    uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+                )
+            else:
+                result = bsc_swap.prepare_slh_to_bnb(
+                    uid, amount, slippage_bps, deadline_seconds=deadline_seconds
+                )
         return _no_store(jsonify(result)), 200
     except Exception as exc:
         from core.bsc_execution import BSCExecutionError
