@@ -1286,13 +1286,13 @@ def bsc_execution_quote():
     payload = request.get_json(silent=True) or {}
     trade = str(payload.get("trade", "")).strip().upper()
     amount = str(payload.get("amount", "")).strip()
-    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB"}:
+    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
         return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
     if not amount:
         return jsonify({"error": "MISSING_AMOUNT"}), 400
 
     try:
-        if trade in {"BNB_USDC", "USDC_BNB"}:
+        if trade in {"BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
             from core import bsc_live_swap
             result = bsc_live_swap.quote(uid, trade, amount)
         else:
@@ -1328,7 +1328,7 @@ def bsc_execution_prepare_swap():
     slippage_raw = payload.get("slippage_bps")
     deadline_raw = payload.get("deadline_seconds")
 
-    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB"}:
+    if trade not in {"BNB_USDT", "USDT_BNB", "BNB_SLH", "SLH_BNB", "BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
         return jsonify({"error": "UNSUPPORTED_SWAP_PAIR"}), 400
     if not amount:
         return jsonify({"error": "MISSING_AMOUNT"}), 400
@@ -1341,7 +1341,7 @@ def bsc_execution_prepare_swap():
         return jsonify({"error": "INVALID_SWAP_PARAMETERS"}), 400
 
     try:
-        if trade in {"BNB_USDC", "USDC_BNB"}:
+        if trade in {"BNB_USDC", "USDC_BNB", "USDC_SLH", "SLH_USDC"}:
             from core import bsc_live_swap
             result = bsc_live_swap.prepare(
                 uid, trade, amount, slippage_bps, deadline_seconds=deadline_seconds
