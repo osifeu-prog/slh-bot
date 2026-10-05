@@ -1,3 +1,5 @@
+import math
+
 from core.authority import is_owner
 from core import economy_service
 
@@ -15,6 +17,9 @@ def register(bot):
         try:
             amount = float(parts[2])
         except ValueError:
+            bot.reply_to(m, "Invalid amount")
+            return
+        if not math.isfinite(amount):
             bot.reply_to(m, "Invalid amount")
             return
         try:
