@@ -1472,17 +1472,84 @@ def bsc_wallet_assets():
         return jsonify({"error": "BSC_WALLET_READ_FAILED"}), 502
 
 
+@app.route("/api/wallet/bnb/empirical-smoke", methods=["POST"])
+def bnb_wallet_empirical_smoke():
+    """Run the owner-only empirical BNB settlement smoke without opening public deposits."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+
+    from core.authority import is_owner
+    from core.bnb_gate import bnb_deposits_open, bnb_settlement_allowed
+
+    if not is_owner(uid):
+        return jsonify({"error": "BNB_EMPIRICAL_SMOKE_OWNER_ONLY"}), 403
+    if bnb_deposits_open():
+        return jsonify({"error": "BNB_EMPIRICAL_SMOKE_REQUIRES_CLOSED_GATE"}), 409
+    if not bnb_settlement_allowed(uid):
+        return jsonify({"error": "BNB_EMPIRICAL_SMOKE_NOT_AUTHORIZED"}), 403
+
+    # Return a structured wait state until the canonical 15-confirmation
+    # requirement is met. No settlement occurs in this branch.
+    try:
+        from core.deposit_monitor import verify_bnb_deposit
+        verified = verify_bnb_deposit(tx_hash)
+        if not verified.get("ok"):
+            if verified.get("error") == "INSUFFICIENT_CONFIRMATIONS":
+                return _no_store(jsonify({
+                    "status": "WAITING_FOR_CONFIRMATIONS",
+                    "tx_hash": tx_hash,
+                    "confirmations": verified.get("confirmations"),
+                    "required_confirmations": verified.get("required_confirmations"),
+                    "block": verified.get("block"),
+                })), 202
+            return jsonify({"error": verified.get("error", "BNB_TX_NOT_VERIFIED")}), 400
+
+        from core.bnb_empirical_smoke import run
+        result = run(uid, tx_hash)
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BNB_EMPIRICAL_SMOKE] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "BNB_EMPIRICAL_SMOKE_FAILED"}), 500
+
+
 @app.route("/api/wallet/bnb")
 def bnb_wallet_binding():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    from core.bnb_gate import bnb_readiness
+    from core.bnb_gate import bnb_readiness, bnb_settlement_allowed
+    from core.binance_connector import get_bsc_config
+    from core.authority import is_owner
     readiness = bnb_readiness()
+    binding = get_binding(uid)
+    empirical_available = (
+        is_owner(uid)
+        and not readiness["effective_open"]
+        and bnb_settlement_allowed(uid)
+    )
+    cfg = get_bsc_config()
+    db = state_manager.load_db()
+    cfg = {**cfg, **db.get("bsc_settings", {})}
     return jsonify({
-        "binding": get_binding(uid),
+        "binding": binding,
         "deposits_open": bool(readiness["effective_open"]),
         "readiness": readiness,
+        "empirical_smoke": {
+            "available": empirical_available,
+            "mode": "owner_canary",
+            "asset": "BNB",
+            "amount_bnb": "0.01",
+            "amount_wei": str(10**16),
+            "chain_id": 56,
+            "treasury": cfg.get("treasury_wallet"),
+        },
     }), 200
 
 
