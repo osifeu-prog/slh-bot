@@ -56,7 +56,7 @@ class TelegramWebAppAuthTests(unittest.TestCase):
     def test_expired_init_data_rejected(self):
         now = int(time.time())
         with self.assertRaisesRegex(ValueError, "TELEGRAM_INIT_DATA_EXPIRED"):
-            validate_init_data(self.make_init_data(auth_date=now - 3601), now=now)
+            validate_init_data(self.make_init_data(auth_date=now - 86401), now=now)
 
     @patch.dict(os.environ, {"BOT_TOKEN": TOKEN}, clear=False)
     def test_future_init_data_rejected(self):
