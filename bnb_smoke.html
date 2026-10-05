@@ -27,8 +27,8 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
-  <button id="send" class="primary">🔗 התחבר לארנק ובצע בדיקה</button>
-  <div class="muted" style="margin-top:8px">בתוך Telegram נשתמש ב־WalletConnect. Trust Wallet הוא המסלול הראשי; MetaMask Mobile נתמך דרך WalletConnect.</div>
+  <button id="send" class="primary">🌐 פתח מסלול ארנק מאובטח</button>
+  <div class="muted" style="margin-top:8px">Telegram רק מעביר אותך לדפדפן חיצוני עם Wallet Session זמני. החיבור והחתימה מתבצעים שם דרך Trust Wallet / WalletConnect.</div>
   <div id="wcbox" class="hidden">
     <div id="qr"></div>
     <div id="uri" class="code"></div>
@@ -42,6 +42,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
 const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
+const inTelegram=Boolean(initData);
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
 let provider=null, binding=null, smoke=null, pollTimer=null, currentWalletConnectUri="";
 
@@ -56,7 +57,6 @@ async function api(path,opts={}){
 }
 
 async function init(){
-  if(!initData){$("state").textContent="❌ פתח את הכפתור מתוך Telegram";return;}
   try{
     const d=await api("/api/wallet/bnb");
     binding=d.binding; smoke=d.empirical_smoke;
@@ -68,8 +68,17 @@ async function init(){
     $("wallet").textContent=binding.address;
     $("treasury").textContent=smoke.treasury;
     $("details").classList.remove("hidden");
-    $("state").innerHTML='<span class="ok">✅ מוכן. השער הציבורי נשאר CLOSED.</span>';
-  }catch(e){$("state").textContent="❌ "+e.message;setStatus("לא בוצעה שליחה.", "err");}
+    if(inTelegram){
+      $("state").innerHTML='<span class="ok">✅ מוכן. קודם נצא מ־Telegram למסלול הארנק המאובטח.</span>';
+      $("send").textContent="🌐 פתח מסלול ארנק מאובטח";
+    }else{
+      $("state").innerHTML='<span class="ok">✅ Wallet Session פעיל. אפשר לבצע את בדיקת ה־0.01 BNB.</span>';
+      $("send").textContent="🔗 התחבר דרך WalletConnect ובצע בדיקה";
+    }
+  }catch(e){
+    $("state").textContent=inTelegram?"❌ לא ניתן להכין Wallet Session: "+e.message:"❌ אין Wallet Session תקף. פתח מחדש דרך /bnb_smoke.";
+    setStatus("לא בוצעה שליחה.", "err");
+  }
 }
 
 async function ensureBsc(p){
@@ -93,11 +102,30 @@ async function ensureBsc(p){
   return accounts[0];
 }
 
-async function send(){
+async function openExternalWalletSession(){
   $("send").disabled=true;
   try{
-    setStatus("🔗 יוצר חיבור WalletConnect זמני…");
-    await walletConnect();
+    if(!inTelegram){
+      setStatus("🔗 יוצר חיבור WalletConnect זמני…");
+      await walletConnect();
+      return;
+    }
+    setStatus("🔐 יוצר Wallet Session זמני…");
+    const d=await api("/api/wallet/bnb/handoff",{
+      method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},headers),
+      body:"{}"
+    });
+    const url=String(d.url||"").trim();
+    if(!url)throw Error("WALLET_HANDOFF_URL_MISSING");
+    const separator=url.includes("?")?"&":"?";
+    const target=url+separator+"next=%2Fbnb-smoke";
+    setStatus("🌐 פותח את הדפדפן החיצוני. שם נמשיך עם Trust Wallet / WalletConnect.","ok");
+    if(tg?.openLink){
+      tg.openLink(target);
+    }else{
+      window.open(target,"_blank","noopener,noreferrer");
+    }
   }catch(e){
     setStatus("❌ "+(e.message||e),"err");
     $("send").disabled=false;
@@ -142,7 +170,7 @@ async function walletConnect(){
   }
 }
 
-$("send").onclick=send;
+$("send").onclick=openExternalWalletSession;
 init();
 </script>
 </body>
