@@ -4,7 +4,9 @@
     "price": 0,
     "stars_only": true,
     "type": "course",
-    "grant": {"course": "ethereum"},
+    "grant": {
+      "course": "ethereum"
+    },
     "price_stars": 299
   },
   "course_slh_vs_eth_sol": {
@@ -12,47 +14,61 @@
     "price": 0,
     "stars_only": true,
     "type": "course",
-    "grant": {"course": "slh_vs_eth_sol"},
+    "grant": {
+      "course": "slh_vs_eth_sol"
+    },
     "price_stars": 299
   },
   "esp32_pro": {
     "name": "ESP32 Pro Device",
     "price": 888,
     "type": "hardware",
-    "grant": {"hardware": "esp32_pro"}
+    "grant": {
+      "hardware": "esp32_pro"
+    }
   },
   "esp32_standard": {
     "name": "ESP32 Standard Device",
     "price": 444,
     "type": "hardware",
-    "grant": {"hardware": "esp32_standard"}
+    "grant": {
+      "hardware": "esp32_standard"
+    }
   },
   "emoji_bitcoin": {
     "name": "חבילת אימוג'י ביטקוין",
     "price": 25,
     "type": "digital",
-    "grant": {"digital": "emoji_bitcoin"},
+    "grant": {
+      "digital": "emoji_bitcoin"
+    },
     "price_stars": 25
   },
   "emoji_slh": {
     "name": "חבילת אימוג'י SLH OS",
     "price": 50,
     "type": "digital",
-    "grant": {"digital": "emoji_slh"},
+    "grant": {
+      "digital": "emoji_slh"
+    },
     "price_stars": 50
   },
   "emoji_vip": {
     "name": "חבילת אימוג'י VIP זהוב",
     "price": 100,
     "type": "digital",
-    "grant": {"digital": "emoji_vip"},
+    "grant": {
+      "digital": "emoji_vip"
+    },
     "price_stars": 100
   },
   "agent_os": {
     "name": "Agent OS",
     "price": 199,
     "type": "plugin",
-    "grant": {"plugin": "agent_os"},
+    "grant": {
+      "plugin": "agent_os"
+    },
     "price_stars": 199
   },
   "trade_pro": {
@@ -60,7 +76,49 @@
     "price": 0,
     "stars_only": true,
     "type": "digital",
-    "grant": {"permission": "trade_pro"},
+    "grant": {
+      "permission": "trade_pro"
+    },
     "price_stars": 199
+  },
+  "bill_100_ils": {
+    "name": "שטר 100 ₪ פיזי",
+    "price": 50,
+    "type": "physical",
+    "grant": {
+      "physical": "bill_100_ils"
+    }
+  },
+  "bill_200_ils": {
+    "name": "שטר 200 ₪ פיזי",
+    "price": 100,
+    "type": "physical",
+    "grant": {
+      "physical": "bill_200_ils"
+    }
+  },
+  "test_bill": {
+    "name": "שטר בדיקה",
+    "price": 5,
+    "type": "physical",
+    "grant": {
+      "physical": "test_bill"
+    }
+  },
+  "bill_50_ils": {
+    "name": "שטר 50 ₪ פיזי",
+    "price": 25,
+    "type": "physical",
+    "grant": {
+      "physical": "bill_50_ils"
+    }
+  },
+  "bill_20_ils": {
+    "name": "שטר 20 ₪ פיזי",
+    "price": 10,
+    "type": "physical",
+    "grant": {
+      "physical": "bill_20_ils"
+    }
   }
 }
