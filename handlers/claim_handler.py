@@ -7,7 +7,7 @@ transfer to the configured treasury from that exact wallet.
 import json
 from pathlib import Path
 
-from core.bnb_gate import CLOSED_MESSAGE, bnb_deposits_open
+from core.bnb_gate import CLOSED_MESSAGE, bnb_deposits_open, bnb_settlement_allowed
 
 
 def _load_db():
@@ -17,7 +17,7 @@ def _load_db():
 def register(bot, context=None):
     @bot.message_handler(commands=["deposit_address"])
     def deposit_address_cmd(m):
-        if not bnb_deposits_open():
+        if not bnb_settlement_allowed(m.from_user.id):
             bot.reply_to(m, CLOSED_MESSAGE)
             return
         db = _load_db()
@@ -33,7 +33,7 @@ def register(bot, context=None):
 
     @bot.message_handler(commands=["claim"])
     def claim_cmd(m):
-        if not bnb_deposits_open():
+        if not bnb_settlement_allowed(m.from_user.id):
             bot.reply_to(m, CLOSED_MESSAGE)
             return
         parts = (m.text or "").split(maxsplit=1)
