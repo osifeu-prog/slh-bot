@@ -1,4 +1,4 @@
-"""Canonical configuration and activation gates for the future SLH Participation product."""
+"""Canonical configuration and activation gates for future SLH Participation."""
 
 from __future__ import annotations
 
@@ -22,6 +22,9 @@ def activation_status() -> dict:
         "policy_approved": _enabled("SLH_PARTICIPATION_POLICY_APPROVED"),
         "accounting_approved": _enabled("SLH_PARTICIPATION_ACCOUNTING_APPROVED"),
         "legal_approved": _enabled("SLH_PARTICIPATION_LEGAL_APPROVED"),
+        "asset_authority_ready": _enabled("SLH_PARTICIPATION_ASSET_AUTHORITY_READY"),
+        "reserve_ready": _enabled("SLH_PARTICIPATION_RESERVE_READY"),
+        "settlement_ready": _enabled("SLH_PARTICIPATION_SETTLEMENT_READY"),
     }
     active = all(checks.values())
     return {
