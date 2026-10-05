@@ -13,10 +13,12 @@ def test_asset_registry_has_real_settlement_flags():
     assert get_asset("slh")["symbol"] == "SLH"
 
 
-def test_tokenomics_has_no_minting_path_claim():
+def test_tokenomics_has_no_os_minting_path_and_is_on_chain():
     data = snapshot()
     assert data["SLH"]["minting_supported"] is False
-    assert data["SLH"]["on_chain"] is False
+    assert data["SLH"]["minting_in_slh_os"] is False
+    assert data["SLH"]["on_chain"] is True
+    assert data["SLH"]["chain_id"] == 56
 
 
 def test_revenue_ledger_module_compiles():
