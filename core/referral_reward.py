@@ -1,10 +1,10 @@
 """Referral rewards for successful user acquisition.
 
 Permanent referral reward:
-- 0.9 internal Credits per successful referral.
-- 10 Points per successful referral.
+- 5 internal Credits per successful referral.
+- 500 Points per successful referral.
 Launch offer:
-- 5 successful referrals unlock one VIP month.
+- 3 successful referrals unlock one VIP month.
 """
  
 import time
@@ -13,10 +13,10 @@ import state_manager
 from core.reward_engine import grant
 from core.stars_price_authority import VIP_SUBSCRIPTION_PERIOD
  
-REFERRALS_REQUIRED = 5
-SUCCESS_REFERRAL_CREDITS = 0.9
-SUCCESS_REFERRAL_POINTS = 10
-MAX_AWARDS = 10
+REFERRALS_REQUIRED = 3
+SUCCESS_REFERRAL_CREDITS = 5.0
+SUCCESS_REFERRAL_POINTS = 500
+MAX_AWARDS = 20
 OFFER_ENDS_AT = 1793483999
 AWARDS_KEY = "referral_vip_awards"
  
