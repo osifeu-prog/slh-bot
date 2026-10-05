@@ -1279,11 +1279,25 @@ async function connectBnbMetaMaskUniversal(){
   }
 }
 
-function openTrustWalletDapp(){
-  const target=location.origin+location.pathname;
-  const link='https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(target);
-  if(tg?.openLink){try{tg.openLink(link);return}catch(_){}}
-  window.location.href=link;
+async function openTrustWalletDapp(){
+  if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
+  try{
+    setText('bnbWalletConnectStatus','⏳ מכין מעבר מאובטח ל־Trust Wallet…');
+    const r=await fetch('/api/wallet/bnb/handoff',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:'{}',
+      cache:'no-store'
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.url)throw Error(d.error||('HTTP '+r.status));
+    const link='https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(d.url);
+    if(tg?.openLink){try{tg.openLink(link);return}catch(_){}}
+    window.location.href=link;
+  }catch(e){
+    setText('bnbWalletConnectStatus','❌ Trust Wallet: '+(e.message||e));
+    toast('❌ Trust Wallet: '+(e.message||e));
+  }
 }
 
 async function bindBnbWallet(){
