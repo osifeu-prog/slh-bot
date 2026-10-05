@@ -210,7 +210,7 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
 
 def settle_ton_deposit(uid, tx_hash):
     uid = str(uid)
-    if not deposits_are_open():
+    if not ton_settlement_allowed(uid):
         raise ValueError("TON_DEPOSITS_CLOSED")
     if not isinstance(tx_hash, str) or not tx_hash.strip():
         raise ValueError("INVALID_TX_HASH")
