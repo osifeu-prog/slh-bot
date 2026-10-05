@@ -70,6 +70,8 @@ def verify_bnb_deposit(tx_hash):
     cfg = {**cfg, **db.get("bsc_settings", {})}
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
     try:
+        if int(w3.eth.chain_id) != 56:
+            return {"ok": False, "error": "BSC_CHAIN_ID_NOT_56"}
         tx = w3.eth.get_transaction(tx_hash)
         receipt = w3.eth.get_transaction_receipt(tx_hash)
     except Exception as e:
