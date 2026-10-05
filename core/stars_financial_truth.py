@@ -205,7 +205,6 @@ def build_stars_financial_truth(uid: str, *, owner: bool = False) -> dict:
     incoming_ids = {str(tx.get("id")) for tx in incoming if tx.get("id")}
     local_ids = set(confirmed)
     matched = sorted(incoming_ids & local_ids)
-    result["owner"]["matched_charge_ids"] = matched
     telegram_only = sorted(incoming_ids - local_ids)
     local_only = sorted(local_ids - incoming_ids)
     real_local_ids = local_ids - local_test_ids
