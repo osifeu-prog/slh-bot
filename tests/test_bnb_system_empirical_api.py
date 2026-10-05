@@ -50,10 +50,10 @@ class BNBSystemEmpiricalApiTests(unittest.TestCase):
             "webapp.get_binding",
             return_value={"uid": "8789977826", "address": "0x1111111111111111111111111111111111111111"},
         ), patch(
-            "webapp.authority_is_owner" if hasattr(webapp, "authority_is_owner") else "core.authority.is_owner",
+            "core.authority.is_owner",
             return_value=True,
         ), patch(
-            "webapp.bnb_readiness",
+            "core.bnb_gate.bnb_readiness",
             return_value={
                 "effective_open": False,
                 "ready": True,
@@ -61,10 +61,10 @@ class BNBSystemEmpiricalApiTests(unittest.TestCase):
                 "reasons": [],
             },
         ), patch(
-            "webapp.bnb_settlement_allowed",
+            "core.bnb_gate.bnb_settlement_allowed",
             return_value=True,
         ), patch(
-            "webapp.get_bsc_config",
+            "core.binance_connector.get_bsc_config",
             return_value={"treasury_wallet": "0x2222222222222222222222222222222222222222"},
         ), patch(
             "webapp.state_manager.load_db",
