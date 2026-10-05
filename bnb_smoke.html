@@ -27,11 +27,12 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
-  <button id="send" class="primary">🦊 MetaMask · שלח 0.01 BNB לבדיקה</button>
-  <button id="walletConnectBtn" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
+  <button id="send" class="primary">🔗 התחבר לארנק ובצע בדיקה</button>
+  <div class="muted" style="margin-top:8px">בתוך Telegram נשתמש ב־WalletConnect. Trust Wallet הוא המסלול הראשי; MetaMask Mobile נתמך דרך WalletConnect.</div>
   <div id="wcbox" class="hidden">
     <div id="qr"></div>
     <div id="uri" class="code"></div>
+    <button id="trust" class="primary">📱 פתח את Trust Wallet</button>
     <button id="copy" class="secondary">העתק WalletConnect URI</button>
   </div>
 </div>
@@ -42,7 +43,7 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
-let provider=null, binding=null, smoke=null, pollTimer=null, metamaskClient=null;
+let provider=null, binding=null, smoke=null, pollTimer=null, currentWalletConnectUri="";
 
 const $=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{const e=$("status");e.textContent=x;e.className="status "+cls};
@@ -93,19 +94,13 @@ async function ensureBsc(p){
 }
 
 async function send(){
-  $("send").disabled=true; $("walletConnectBtn").disabled=true;
+  $("send").disabled=true;
   try{
-    provider=provider||window.ethereum;
-    if(provider){
-      setStatus("🦊 MetaMask זוהה בדפדפן. מבקש חיבור ל־BSC…");
-      await sendWithProvider(provider,"MetaMask");
-      return;
-    }
-    setStatus("🦊 פותח חיבור ישיר ל־MetaMask…");
-    await metaMaskConnect();
+    setStatus("🔗 יוצר חיבור WalletConnect זמני…");
+    await walletConnect();
   }catch(e){
-    setStatus("❌ MetaMask: "+(e.message||e),"err");
-    $("send").disabled=false; $("walletConnectBtn").disabled=false;
+    setStatus("❌ "+(e.message||e),"err");
+    $("send").disabled=false;
   }
 }
 
@@ -118,32 +113,7 @@ async function sendWithProvider(p,label){
   await poll(txHash);
 }
 
-async function metaMaskConnect(){
-  const mod=await import("https://cdn.jsdelivr.net/npm/@metamask/connect-evm@2.1.1/+esm");
-  const createEVMClient=mod.createEVMClient;
-  if(typeof createEVMClient!=="function")throw Error("MetaMask Connect SDK לא נטען");
-  metamaskClient=metamaskClient||await createEVMClient({
-    dapp:{
-      name:"SLH OS BNB Smoke",
-      url:location.origin,
-      iconUrl:"https://slh-nft.com/icon-192.png"
-    },
-    api:{
-      supportedNetworks:{
-        "0x38":"https://bsc-dataseed.binance.org/"
-      }
-    },
-    analytics:{enabled:false}
-  });
-  const {accounts,chainId}=await metamaskClient.connect({chainIds:["0x38"]});
-  provider=metamaskClient.getProvider();
-  if(chainId!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
-  if(!accounts?.[0])throw Error("MetaMask לא החזיר כתובת");
-  await sendWithProvider(provider,"MetaMask");
-}
-
 async function walletConnect(){
-  $("walletConnectBtn").disabled=true;
   try{
     const cfg=await api("/api/walletconnect/config");
     if(!cfg.enabled||!cfg.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
@@ -156,22 +126,23 @@ async function walletConnect(){
       metadata:{name:"SLH OS BNB Smoke",description:"Temporary empirical settlement smoke",url:location.origin,icons:["https://slh-nft.com/icon-192.png"]}
     });
     provider.on?.("display_uri",uri=>{
+      currentWalletConnectUri=uri;
       $("wcbox").classList.remove("hidden");$("uri").textContent=uri;
       $("qr").innerHTML=""; if(window.QRCode)new QRCode($("qr"),{text:uri,width:220,height:220});
       $("copy").onclick=async()=>{await navigator.clipboard.writeText(uri);setStatus("✅ URI הועתק.","ok");};
-      setStatus("📱 סרוק את ה־QR עם Trust Wallet / MetaMask Mobile.");
+      $("trust").onclick=()=>{window.location.href="https://link.trustwallet.com/wc?uri="+encodeURIComponent(currentWalletConnectUri);};
+      setStatus("📱 לחץ על Trust Wallet או סרוק את ה־QR. ההזמנה זמנית.");
     });
     await provider.connect();
     $("wcbox").classList.remove("hidden");
     await sendWithProvider(provider,"WalletConnect");
   }catch(e){
     setStatus("❌ WalletConnect: "+(e.message||e),"err");
-    $("send").disabled=false; $("walletConnectBtn").disabled=false;
+    $("send").disabled=false;
   }
 }
 
 $("send").onclick=send;
-$("walletConnectBtn").onclick=walletConnect;
 init();
 </script>
 </body>
