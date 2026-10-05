@@ -42,7 +42,6 @@ def load_handlers(bot, context):
         ("recon_release", "handlers.recon_release_handler"),
         ("ton_balance", "handlers.ton_balance_handler"),
         ("ton_claim", "handlers.ton_claim_handler"),
-        ("withdraw", "handlers.withdraw_request_handler"),
         ("terms", "handlers.terms_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
