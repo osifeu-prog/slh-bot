@@ -9,4 +9,5 @@ COPY . .
 
 RUN mkdir -p /app/state && chmod +x /app/start_railway.sh
 
+# Railway build retry marker; no runtime behavior change.
 CMD ["/app/start_railway.sh"]
