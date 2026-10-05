@@ -312,6 +312,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     <button id="bscPairSlhBnb" type="button" onclick="setBscSwapPair('SLH_BNB')">SLH → BNB</button>
     <button id="bscPairBnbUsdc" type="button" onclick="setBscSwapPair('BNB_USDC')">BNB → USDC</button>
     <button id="bscPairUsdcBnb" type="button" onclick="setBscSwapPair('USDC_BNB')">USDC → BNB</button>
+    <button id="bscPairUsdcSlh" type="button" onclick="setBscSwapPair('USDC_SLH')">USDC → SLH</button>
+    <button id="bscPairSlhUsdc" type="button" onclick="setBscSwapPair('SLH_USDC')">SLH → USDC</button>
     <button id="bscPairBnbUsdt" type="button" onclick="setBscSwapPair('BNB_USDT')">BNB → USDT</button>
     <button id="bscPairUsdtBnb" type="button" onclick="setBscSwapPair('USDT_BNB')">USDT → BNB</button>
   </div>
@@ -2150,6 +2152,8 @@ function bscSwapMeta(pair){
     SLH_BNB:{input:'SLH',output:'BNB',example:'1'},
     BNB_USDC:{input:'BNB',output:'USDC',example:'0.01'},
     USDC_BNB:{input:'USDC',output:'BNB',example:'10'},
+    USDC_SLH:{input:'USDC',output:'SLH',example:'10'},
+    SLH_USDC:{input:'SLH',output:'USDC',example:'1000'},
     BNB_USDT:{input:'BNB',output:'USDT',example:'0.01'},
     USDT_BNB:{input:'USDT',output:'BNB',example:'10'}
   })[pair]||{input:'—',output:'—',example:'0.01'};
@@ -2157,7 +2161,7 @@ function bscSwapMeta(pair){
 
 function bscPairConfigured(pair){
   if(!__bscSwapPolicy?.enabled)return false;
-  if(pair==='BNB_SLH'||pair==='SLH_BNB')return !!__bscSwapPolicy.slh_configured;
+  if(pair==='BNB_SLH'||pair==='SLH_BNB'||pair==='USDC_SLH'||pair==='SLH_USDC')return !!__bscSwapPolicy.slh_configured && !!__bscSwapPolicy.usdc_configured;
   if(pair==='BNB_USDC'||pair==='USDC_BNB')return !!__bscSwapPolicy.usdc_configured;
   return !!__bscSwapPolicy.usdt_configured;
 }
@@ -2175,6 +2179,8 @@ function syncBscSwapControls(){
     SLH_BNB:'bscPairSlhBnb',
     BNB_USDC:'bscPairBnbUsdc',
     USDC_BNB:'bscPairUsdcBnb',
+    USDC_SLH:'bscPairUsdcSlh',
+    SLH_USDC:'bscPairSlhUsdc',
     BNB_USDT:'bscPairBnbUsdt',
     USDT_BNB:'bscPairUsdtBnb'
   };
@@ -2192,7 +2198,7 @@ function syncBscSwapControls(){
 }
 
 function setBscSwapPair(pair){
-  if(!['BNB_SLH','SLH_BNB','BNB_USDC','USDC_BNB','BNB_USDT','USDT_BNB'].includes(pair))return;
+  if(!['BNB_SLH','SLH_BNB','BNB_USDC','USDC_BNB','USDC_SLH','SLH_USDC','BNB_USDT','USDT_BNB'].includes(pair))return;
   __bscSwapPair=pair;
   __bscPreparedSwap=null;
   syncBscSwapControls();
