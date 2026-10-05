@@ -157,3 +157,21 @@ def bnb_opening_evidence() -> dict:
 
 def bnb_deposits_open() -> bool:
     return bool(bnb_readiness()["effective_open"])
+
+
+def bnb_settlement_allowed(uid, db=None) -> bool:
+    """Allow normal settlement only when OPEN, or owner canary while the gate stays closed.
+
+    The canary is intentionally restricted to the configured UID and the same
+    readiness contract used by the production gate. It never opens the gate.
+    """
+    uid = str(uid)
+    if bnb_deposits_open():
+        return True
+
+    canary_uid = str(os.getenv("BNB_DEPOSITS_CANARY_UID", "")).strip()
+    return bool(
+        canary_uid
+        and uid == canary_uid
+        and bnb_readiness(db).get("ready")
+    )
