@@ -277,8 +277,13 @@ async function confirmSmoke(txHash){
         cache:"no-store"
       });
       const d=await r.json().catch(()=>({}));
-      if(r.status===409&&d.retryable){
-        setStatus("⏳ ממתין ל־15 confirmations…","warn");
+      if((r.status===409||r.status===503)&&d.retryable){
+        setStatus(
+          r.status===503
+            ? "⏳ ספק BSC זמנית לא החזיר נתונים — ממשיך לבדוק את אותה עסקה…"
+            : "⏳ ממתין ל־15 confirmations…",
+          "warn"
+        );
         await new Promise(resolve=>setTimeout(resolve,5000));
         continue;
       }
@@ -349,7 +354,22 @@ async function startSmoke(){
       params:[prepared.tx]
     });
 
-    setStatus("✅ העסקה נשלחה. ממתינים ל־15 confirmations…","ok");
+    // Preserve the exact broadcast transaction hash in the page session so
+    // a transient confirmation error does not force a second send.
+    window.sessionStorage.setItem(
+      "slh_smoke_broadcast",
+      JSON.stringify({
+        request_id: smokeRequestId,
+        tx_hash: String(txHash),
+        recipient: String(cfg.recipient),
+        amount_slh: "1",
+      })
+    );
+
+    setStatus(
+      "✅ העסקה נשלחה ל־BSC. ממשיך לאמת את אותו TX — אין שליחה נוספת.",
+      "ok"
+    );
     await confirmSmoke(txHash);
   }catch(e){
     console.error("[SLH_SMOKE]",e);
