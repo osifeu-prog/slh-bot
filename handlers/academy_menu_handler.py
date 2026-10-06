@@ -5,12 +5,16 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 def _lesson_picker(course_id, stages, completed):
     markup = InlineKeyboardMarkup(row_width=2)
     completed = set(int(x) for x in (completed or []) if str(x).isdigit())
+    next_stage = max(completed) + 1 if completed else 1
 
     for item in stages:
         stage_id = int(item.get("id"))
+        published = item.get("published", True) is True
         if stage_id in completed:
             label = f"✅ שיעור {stage_id}"
-        elif stage_id == (max(completed) + 1 if completed else 1):
+        elif not published:
+            label = f"⏳ שיעור {stage_id} — בקרוב"
+        elif stage_id == next_stage:
             label = f"▶️ המשך {stage_id}"
         else:
             label = f"🔒 שיעור {stage_id}"
