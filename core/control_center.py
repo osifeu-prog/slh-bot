@@ -221,6 +221,21 @@ def get_full_system_map():
     return snapshot
 
 
+def get_financial_truth():
+    """Explicit read-only live reconciliation; never mutates financial state."""
+    try:
+        from core.stars_financial_truth import build_stars_financial_truth
+        financial_truth = build_stars_financial_truth("", owner=True)
+        financial_truth["read_only"] = True
+        return financial_truth
+    except Exception as exc:
+        return {
+            "status": "UNAVAILABLE",
+            "read_only": True,
+            "error": type(exc).__name__,
+        }
+
+
 def get_release_state():
     """Read-only aggregate of release readiness and current operating gates."""
     result = {
@@ -254,25 +269,6 @@ def get_release_state():
         "owner_actions": [],
         "scope": "read_only",
     }
-
-    try:
-        from core.stars_financial_truth import build_stars_financial_truth
-        financial_truth = build_stars_financial_truth("", owner=True)
-        financial_truth["read_only"] = True
-        result["financial_truth"] = financial_truth
-        if financial_truth.get("status") == "LIVE_RECONCILED":
-            result["evidence"]["financial_truth"] = "LIVE_RECONCILED"
-        else:
-            result["evidence"]["financial_truth"] = "LIVE_RECONCILIATION_ISSUE"
-            result["warnings"].append("financial_truth_reconciliation_issue")
-    except Exception as exc:
-        result["financial_truth"] = {
-            "status": "UNAVAILABLE",
-            "read_only": True,
-            "error": type(exc).__name__,
-        }
-        result["evidence"]["financial_truth"] = "UNAVAILABLE"
-        result["warnings"].append("financial_truth_unavailable")
 
     try:
         from core.system_check import run_system_checks
