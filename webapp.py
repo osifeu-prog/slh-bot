@@ -464,6 +464,66 @@ def slh_smoke_page():
     return resp
 
 
+@app.route("/bnb-browser-return", methods=["GET"])
+def bnb_browser_return_page():
+    """Dedicated owner one-button native BNB return smoke page."""
+    html_path = BASE_DIR / "bnb_browser_return.html"
+    if not html_path.exists():
+        return jsonify({"error": "BNB_BROWSER_RETURN_PAGE_NOT_FOUND"}), 500
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp
+
+
+@app.route("/api/v1/wallet/bnb/browser-quick-return", methods=["GET"])
+def bnb_browser_quick_return_config():
+    """Owner-only read-only native BNB return preset."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.bnb_quick_return import get_bnb_return_config
+        return _no_store(jsonify(get_bnb_return_config(uid))), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[BNB RETURN] config error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "BNB_BROWSER_RETURN_CONFIG_FAILED"}), 502
+
+
+@app.route("/api/v1/wallet/bnb/browser-quick-return/verify", methods=["POST"])
+def bnb_browser_quick_return_verify():
+    """Read-only verification for the owner native BNB return smoke."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from core.bnb_quick_return import verify_bnb_return
+        result = verify_bnb_return(uid, tx_hash)
+        if not result.get("ok"):
+            return jsonify(result), 409
+        return _no_store(jsonify(result)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        code = str(exc)
+        status = 503 if code in {"BSC_RPC_UNAVAILABLE", "BSC_CHAIN_ID_MISMATCH"} else 400
+        return jsonify({"error": code}), status
+    except Exception as exc:
+        print("[BNB RETURN] verify error:", type(exc).__name__, str(exc)[:180])
+        return jsonify({"error": "BNB_BROWSER_RETURN_VERIFY_FAILED"}), 502
+
+
 @app.route("/slh-browser-send", methods=["GET"])
 def slh_browser_send_page():
     html_path = BASE_DIR / "slh_browser_send.html"
