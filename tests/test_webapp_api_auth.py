@@ -41,6 +41,22 @@ class WebAppApiAuthTests(unittest.TestCase):
             "credits": 10,
         })
 
+    def test_wallet_handoff_repeated_get_uses_existing_session_cookie(self):
+        token = "handoff-token-for-test-1234567890"
+        with patch("core.wallet_handoff.consume_handoff") as consume, patch(
+            "core.wallet_handoff.validate_session", return_value="5010371391"
+        ):
+            response = self.client.get(
+                "/wallet-handoff?code="+token+"&next=/slh-smoke",
+                headers={"Cookie": "slh_wallet_handoff="+token},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/slh-smoke")
+        consume.assert_not_called()
+        self.assertIn("slh_wallet_handoff=", response.headers.get("Set-Cookie", ""))
+        self.assertIn("Path=/", response.headers.get("Set-Cookie", ""))
+
 
 if __name__ == "__main__":
     unittest.main()
