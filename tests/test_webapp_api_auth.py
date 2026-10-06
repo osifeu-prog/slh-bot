@@ -88,6 +88,23 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json(), {"error": "WALLET_HANDOFF_INVALID"})
 
+    def test_secondary_confirm_maps_transaction_not_found_to_retryable(self):
+        with patch("webapp.authenticated_uid", return_value="5010371391"), patch(
+            "core.secondary_distribution_service.confirm_secondary_slh_transfer",
+            side_effect=ValueError("TRANSACTION_NOT_FOUND_RETRYABLE"),
+        ):
+            response = self.client.post(
+                "/api/v1/distribution/secondary/confirm",
+                json={"request_id": "r1", "tx_hash": "0xabc"},
+            )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.get_json(), {
+            "error": "TRANSACTION_NOT_FOUND_RETRYABLE",
+            "retryable": True,
+        })
+
+
 
 if __name__ == "__main__":
     unittest.main()
