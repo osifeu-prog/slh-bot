@@ -55,6 +55,17 @@ def _trust_wallet_smoke_url(uid):
     )
 
 
+def _owner_slh_browser_send_url(uid):
+    if str(uid) != str(OWNER_TELEGRAM_ID):
+        raise PermissionError("OWNER_ONLY")
+    handoff = create_handoff(uid)
+    target = (
+        f"{_public_origin()}/wallet-handoff?"
+        f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
+    )
+    return target
+
+
 
 def _format_amount(value):
     try:
@@ -139,6 +150,19 @@ def _menu(uid, *, include_test=False):
         markup.add(
             types.InlineKeyboardButton("🔐 אימות BNB", callback_data="slh_menu_connect"),
         )
+
+    if str(uid) == str(OWNER_TELEGRAM_ID):
+        try:
+            quick = get_quick_send_config(uid, "owner_to_tzvika_1")
+            browser_url = _owner_slh_browser_send_url(uid)
+            markup.add(
+                types.InlineKeyboardButton(
+                    f"⚡ שלח 1 SLH ל{quick.get('label', 'איש קשר')} · Trezor",
+                    url=browser_url,
+                )
+            )
+        except (PermissionError, ValueError) as exc:
+            print("[SLH] owner quick send unavailable:", str(exc))
 
     active = bool(registry and str(registry.get("status")) == "active")
     if include_test and active:
