@@ -145,6 +145,29 @@ def authenticated_uid():
         return None
 
 
+def _normalize_hex_value(value):
+    if hasattr(value, "hex") and not isinstance(value, str):
+        raw = value.hex()
+    else:
+        raw = str(value or "")
+    raw = raw.strip()
+    if not raw:
+        return ""
+    return raw if raw.lower().startswith("0x") else "0x" + raw
+
+
+def _indexed_topic_address(value):
+    from web3 import Web3
+
+    raw = _normalize_hex_value(value)
+    if len(raw) != 66:
+        return None
+    try:
+        return Web3.to_checksum_address("0x" + raw[-40:])
+    except ValueError:
+        return None
+
+
 def require_auth():
     """Require a valid Telegram Mini App identity for non-user-scoped APIs."""
     if authenticated_uid() is None:
@@ -1992,8 +2015,6 @@ def slh_browser_quick_send_verify():
             }), 409
 
         transfer_topic = Web3.keccak(text="Transfer(address,address,uint256)").hex()
-        sender_topic = "0x" + ("0" * 24) + sender[2:].lower()
-        recipient_topic = "0x" + ("0" * 24) + recipient[2:].lower()
         matches = []
         for log in receipt.get("logs", []):
             if str(log.get("address") or "").lower() != token_cs.lower():
@@ -2001,14 +2022,21 @@ def slh_browser_quick_send_verify():
             topics = log.get("topics") or []
             if len(topics) < 3:
                 continue
-            if str(topics[0].hex()).lower() != transfer_topic.lower():
+            if _normalize_hex_value(topics[0]).lower() != transfer_topic.lower():
                 continue
-            if str(topics[1].hex()).lower() != sender_topic.lower():
+            event_from = _indexed_topic_address(topics[1])
+            event_to = _indexed_topic_address(topics[2])
+            if not event_from or not event_to:
                 continue
-            if str(topics[2].hex()).lower() != recipient_topic.lower():
+            if event_from.lower() != sender.lower() or event_to.lower() != recipient.lower():
                 continue
-            data = log.get("data")
-            matches.append(int(data.hex(), 16))
+            data = _normalize_hex_value(log.get("data"))
+            if not data:
+                continue
+            try:
+                matches.append(int(data, 16))
+            except ValueError:
+                continue
 
         if len(matches) != 1:
             return jsonify({"error": "TRANSFER_EVENT_MISMATCH", "matches": len(matches)}), 400
