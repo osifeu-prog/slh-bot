@@ -163,3 +163,30 @@ def test_allows_explicit_unbounded_mode(monkeypatch):
     assert result["per_tx_limit_slh"] is None
     assert result["daily_limit_slh"] is None
     assert db["secondary_distribution_wallet_audit"][-1]["limit_mode"] == "unbounded"
+
+def test_transaction_sender_treats_not_found_as_retryable():
+    from web3.exceptions import TransactionNotFound
+    from core.secondary_distribution_service import _transaction_sender
+
+    class Eth:
+        def get_transaction(self, tx_hash):
+            raise TransactionNotFound(tx_hash)
+
+    class FakeWeb3:
+        eth = Eth()
+
+    with pytest.raises(ValueError, match="TRANSACTION_NOT_FOUND_RETRYABLE"):
+        _transaction_sender(FakeWeb3(), "0x"+"1"*64)
+
+
+def test_transaction_sender_returns_from_address():
+    from core.secondary_distribution_service import _transaction_sender
+
+    class Eth:
+        def get_transaction(self, tx_hash):
+            return {"from": "0x1111111111111111111111111111111111111111"}
+
+    class FakeWeb3:
+        eth = Eth()
+
+    assert _transaction_sender(FakeWeb3(), "0x"+"2"*64) == "0x1111111111111111111111111111111111111111"
