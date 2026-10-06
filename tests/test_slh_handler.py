@@ -67,6 +67,18 @@ def test_status_uses_live_bsc_truth_and_active_registry():
     assert "Daily: 1 SLH" in text
 
 
+def test_owner_browser_send_url_uses_wallet_handoff():
+    handoff = {"token": "browser-send-token-1234567890"}
+    with patch.object(slh_handler, "create_handoff", return_value=handoff):
+        url = slh_handler._owner_slh_browser_send_url("8789977826")
+
+    target = urlsplit(url)
+    assert target.path == "/wallet-handoff"
+    inner = parse_qs(target.query)
+    assert inner["next"] == ["/slh-browser-send"]
+    assert inner["code"] == ["browser-send-token-1234567890"]
+
+
 def test_trust_wallet_smoke_url_uses_one_time_handoff():
     handoff = {"token": "smoke-token-12345678901234567890"}
     with patch.object(slh_handler, "create_handoff", return_value=handoff):
