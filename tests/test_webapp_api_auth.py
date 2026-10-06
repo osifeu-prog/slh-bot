@@ -21,11 +21,11 @@ class WebAppApiAuthTests(unittest.TestCase):
 
         self.assertEqual(
             webapp._normalize_hex_value(HexBytes(event_topic)),
-            event_topic,
+            "0x" + event_topic,
         )
         self.assertEqual(
             webapp._normalize_hex_value(event_topic),
-            event_topic,
+            "0x" + event_topic,
         )
         self.assertEqual(
             webapp._indexed_topic_address(HexBytes(sender_topic)).lower(),
