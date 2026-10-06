@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLH OS · Trezor Browser Send</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0d12;color:#f4f5f7;margin:0;padding:16px}
+.card{max-width:680px;margin:auto;background:#151922;border:1px solid #2b3140;border-radius:18px;padding:20px}
+h2{margin:0 0 8px}.muted{color:#aeb5c2;line-height:1.5}.row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;align-items:center}
+.code{font-family:ui-monospace,monospace;word-break:break-all;font-size:12px}
+button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+.primary{background:#fff;color:#111}.secondary{background:#252b38;color:#fff}
+.status{margin-top:14px;line-height:1.5}.ok{color:#7ff0a5}.err{color:#ff7f8f}.warn{color:#ffd166}
+.kv{padding:10px 0;border-top:1px solid #2b3140}.kv:first-child{border-top:0}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>🛡️ SLH OS · Trezor Browser Send</h2>
+<p class="muted">מסלול דפדפן ל־Trezor דרך MetaMask Extension. השרת רק נותן יעד/כמות ומאמת תוצאה; MetaMask וה־Trezor חותמים ומשדרים. אין שמירת מפתח פרטי.</p>
+
+<div id="session" class="muted">⏳ מאמת Wallet Session…</div>
+<div id="details" hidden>
+  <div class="kv">
+    <b>עסקה נעולה</b>
+    <div class="row"><span>כמות</span><b id="amount">1 SLH</b></div>
+    <div class="row"><span>יעד</span><b id="recipient" class="code">—</b></div>
+    <div class="row"><span>Sender</span><b id="sender" class="code">—</b></div>
+    <div class="row"><span>רשת</span><b>BSC · Chain 56</b></div>
+    <div class="row"><span>Native value</span><b>0 BNB · gas בלבד</b></div>
+  </div>
+  <div class="kv">
+    <b>שלב 1 · MetaMask / Trezor</b>
+    <div id="walletStatus" class="muted">מחכה ל־MetaMask Extension…</div>
+    <button id="connect" class="primary">🦊 חבר MetaMask / Trezor</button>
+  </div>
+  <div class="kv">
+    <b>שלב 2 · שליחה</b>
+    <button id="send" class="primary" hidden>🔐 אשר ושלח בדיוק 1 SLH</button>
+    <div id="quote" class="muted"></div>
+  </div>
+  <div class="kv">
+    <b>שלב 3 · אימות</b>
+    <div id="verifyStatus" class="muted">לא נשלחה עסקה.</div>
+    <div id="tx" class="code"></div>
+  </div>
+</div>
+<div id="status" class="status"></div>
+</div>
+<script>
+let cfg=null,provider=null,account=null,quote=null;
+const el=id=>document.getElementById(id);
+const setStatus=(x,cls="")=>{el("status").textContent=x;el("status").className="status "+cls};
+
+function pad32Hex(value){return String(value).replace(/^0x/,"").toLowerCase().padStart(64,"0")}
+function balanceData(address){return "0x70a08231"+pad32Hex(address)}
+function transferData(to,raw){return "0xa9059cbb"+pad32Hex(to)+pad32Hex(BigInt(raw).toString(16))}
+function big(value){return BigInt(String(value))}
+function units(raw,decimals,maxFrac=8){
+  const n=BigInt(raw||0), u=10n**BigInt(decimals), whole=n/u;
+  const frac=(n%u).toString().padStart(decimals,"0").slice(0,maxFrac).replace(/0+$/,"");
+  return whole.toString()+(frac?"."+frac:"");
+}
+function parseUnits(text,decimals){
+  const s=String(text||"").trim();
+  if(!/^\d+(\.\d+)?$/.test(s))throw Error("INVALID_AMOUNT");
+  const p=s.split("."), frac=p[1]||"";
+  if(frac.length>decimals)throw Error("INVALID_TOKEN_PRECISION");
+  return BigInt(p[0]||"0")*(10n**BigInt(decimals))+BigInt((frac+"0".repeat(decimals)).slice(0,decimals)||"0");
+}
+async function api(path,opts={}){
+  const r=await fetch(path,Object.assign({cache:"no-store",credentials:"same-origin"},opts));
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(d.error||("HTTP "+r.status));
+  return d;
+}
+async function discoverMetaMask(){
+  const found=[],handler=e=>{if(e?.detail?.provider)found.push(e.detail)};
+  window.addEventListener("eip6963:announceProvider",handler);
+  try{
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    await new Promise(r=>setTimeout(r,700));
+  }finally{window.removeEventListener("eip6963:announceProvider",handler)}
+  const mm=found.find(x=>String(x?.info?.rdns||"").toLowerCase()==="io.metamask"||String(x?.info?.name||"").toLowerCase()==="metamask");
+  if(mm?.provider)return mm.provider;
+  if(window.ethereum?.isMetaMask)return window.ethereum;
+  if(Array.isArray(window.ethereum?.providers))return window.ethereum.providers.find(p=>p?.isMetaMask)||null;
+  return null;
+}
+async function ensureChain(){
+  let chain=await provider.request({method:"eth_chainId"});
+  if(chain!=="0x38"){
+    try{
+      await provider.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});
+    }catch(e){
+      if(e?.code===4902){
+        await provider.request({method:"wallet_addEthereumChain",params:[{
+          chainId:"0x38",chainName:"BNB Smart Chain",
+          nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
+          rpcUrls:["https://bsc-dataseed.binance.org/"],
+          blockExplorerUrls:["https://bscscan.com/"]
+        }]});
+      }else throw e;
+    }
+    chain=await provider.request({method:"eth_chainId"});
+  }
+  if(chain!=="0x38")throw Error("MetaMask אינו מחובר ל־BSC 56");
+}
+async function init(){
+  try{
+    cfg=await api("/api/v1/wallet/slh/browser-quick-send");
+    if(String(cfg.chain_id)!=="56"||String(cfg.amount_slh)!=="1")throw Error("QUICK_SEND_PRESET_INVALID");
+    el("recipient").textContent=cfg.recipient;
+    el("sender").textContent=cfg.sender;
+    el("details").hidden=false;
+    el("session").textContent="✅ Wallet Session פעיל · Owner Quick Send נעול על 1 SLH";
+    setStatus("התחבר דרך הדפדפן שבו MetaMask Extension שלך מחובר ל־Trezor.","ok");
+  }catch(e){
+    el("session").textContent="❌ Wallet Session לא תקף";
+    setStatus(String(e.message||e),"err");
+  }
+}
+async function connect(){
+  try{
+    provider=await discoverMetaMask();
+    if(!provider)throw Error("METAMASK_EXTENSION_NOT_FOUND");
+    await provider.request({method:"eth_requestAccounts"});
+    await ensureChain();
+    account=(await provider.request({method:"eth_accounts"}))[0];
+    if(!account)throw Error("NO_ACCOUNT");
+    if(account.toLowerCase()!==cfg.sender.toLowerCase())throw Error("החשבון המחובר אינו חשבון ה־Trezor המאומת");
+    el("walletStatus").textContent="✅ MetaMask מחובר לחשבון Trezor המאומת: "+account.slice(0,8)+"…"+account.slice(-6);
+    el("send").hidden=false;
+    setStatus("✅ הארנק הנכון מחובר.","ok");
+  }catch(e){
+    const msg=String(e.message||e);
+    el("walletStatus").textContent="❌ "+msg;
+    if(msg==="METAMASK_EXTENSION_NOT_FOUND"){
+      setStatus("פתח Chrome/Firefox בדפדפן שבו MetaMask Extension מותקן וה־Trezor מחובר אליו.","err");
+    }else setStatus(msg,"err");
+  }
+}
+async function prepare(){
+  await ensureChain();
+  const decimals=Number(big(await provider.request({method:"eth_call",params:[{to:cfg.token_contract,data:"0x313ce567"},"latest"]})));
+  if(decimals!==15)throw Error("SLH_DECIMALS_MISMATCH");
+  const rawAmount=parseUnits("1",decimals);
+  const balance=big(await provider.request({method:"eth_call",params:[{to:cfg.token_contract,data:balanceData(account)},"latest"]}));
+  if(balance<rawAmount)throw Error("אין מספיק SLH בארנק");
+  const data=transferData(cfg.recipient,rawAmount);
+  const gas=big(await provider.request({method:"eth_estimateGas",params:[{from:account,to:cfg.token_contract,data,value:"0x0"}]}));
+  const gasPrice=big(await provider.request({method:"eth_gasPrice"}));
+  const bnb=big(await provider.request({method:"eth_getBalance",params:[account,"latest"]}));
+  const fee=gas*gasPrice;
+  if(bnb<fee)throw Error("אין מספיק BNB ל־gas");
+  quote={rawAmount,data,gas,gasPrice,fee};
+  el("quote").textContent="✅ מוכן: 1 SLH → "+cfg.recipient+" · Gas משוער "+units(fee,18,8)+" BNB · value=0";
+  return quote;
+}
+async function send(){
+  try{
+    await prepare();
+    el("verifyStatus").textContent="⏳ MetaMask/Trezor יבקש אישור. אשר רק אם כתובת היעד נכונה וכמות = 1 SLH.";
+    const txHash=await provider.request({method:"eth_sendTransaction",params:[{
+      from:account,to:cfg.token_contract,data:quote.data,value:"0x0",
+      gas:"0x"+quote.gas.toString(16),gasPrice:"0x"+quote.gasPrice.toString(16)
+    }]});
+    el("tx").textContent=txHash;
+    el("verifyStatus").textContent="⏳ העסקה נשלחה. ממתינים ל־15 confirmations…";
+    await verify(txHash);
+  }catch(e){
+    const msg=String(e.message||e);
+    el("verifyStatus").textContent="❌ "+msg;
+    setStatus(msg,"err");
+  }
+}
+async function verify(txHash){
+  for(let i=0;i<90;i++){
+    try{
+      const d=await api("/api/v1/wallet/slh/browser-quick-send/verify",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({tx_hash:txHash})
+      });
+      if(d.ok){
+        el("verifyStatus").textContent="✅ PASS — 1 SLH הועבר ואומת on-chain · "+d.confirmations+" confirmations";
+        setStatus("✅ ההעברה הושלמה בהצלחה.","ok");
+        return;
+      }
+    }catch(e){
+      const msg=String(e.message||e);
+      if(msg==="INSUFFICIENT_CONFIRMATIONS"||msg==="TRANSACTION_NOT_FOUND_RETRYABLE"){
+        await new Promise(r=>setTimeout(r,5000)); continue;
+      }
+      throw e;
+    }
+  }
+  throw Error("אימות 15 confirmations לא הושלם בזמן");
+}
+el("connect").onclick=connect;
+el("send").onclick=send;
+init();
+</script>
+</body>
+</html>
