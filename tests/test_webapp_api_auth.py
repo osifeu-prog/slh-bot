@@ -105,6 +105,39 @@ class WebAppApiAuthTests(unittest.TestCase):
         })
 
 
+    def test_owner_quick_send_config_is_exposed(self):
+        payload = {
+            "ok": True,
+            "preset": "owner_to_tzvika_1",
+            "label": "צביקה",
+            "sender_uid": "8789977826",
+            "sender": "0x1111111111111111111111111111111111111111",
+            "recipient_uid": "5010371391",
+            "recipient": "0x2222222222222222222222222222222222222222",
+            "amount_slh": "1",
+            "chain_id": 56,
+            "token_contract": "0xACb0A09414CEA1C879c67bB7A877E4e19480f022",
+            "signing": "user_wallet_only",
+            "custody": False,
+        }
+        with patch("webapp.authenticated_uid", return_value="8789977826"), patch(
+            "core.slh_quick_send.get_quick_send_config", return_value=payload
+        ):
+            response = self.client.get("/api/v1/slh/quick-send/owner_to_tzvika_1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), payload)
+
+    def test_quick_send_config_rejects_non_owner(self):
+        with patch("webapp.authenticated_uid", return_value="5010371391"), patch(
+            "core.slh_quick_send.get_quick_send_config",
+            side_effect=PermissionError("OWNER_ONLY"),
+        ):
+            response = self.client.get("/api/v1/slh/quick-send/owner_to_tzvika_1")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json(), {"error": "OWNER_ONLY"})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -84,3 +84,41 @@ def test_trust_wallet_smoke_url_uses_one_time_handoff():
     inner = parse_qs(target.query)
     assert inner["next"] == ["/slh-smoke"]
     assert inner["code"] == ["smoke-token-12345678901234567890"]
+
+
+def test_owner_menu_includes_quick_send_to_tzvika():
+    binding = {
+        "uid": "8789977826",
+        "chain": "bsc",
+        "address": "0x1111111111111111111111111111111111111111",
+    }
+    live = {
+        "ok": True,
+        "assets": {
+            "BNB": {"amount": "0.01"},
+            "SLH": {"amount": "1"},
+        },
+    }
+    quick = {
+        "ok": True,
+        "label": "צביקה",
+        "sender": "0x1111111111111111111111111111111111111111",
+        "recipient": "0x2222222222222222222222222222222222222222",
+        "recipient_uid": "5010371391",
+        "amount_slh": "1",
+        "chain_id": 56,
+        "token_contract": "0xACb0A09414CEA1C879c67bB7A877E4e19480f022",
+        "signing": "user_wallet_only",
+        "custody": False,
+    }
+    with patch.object(slh_handler, "get_binding", return_value=binding), \
+         patch.object(slh_handler, "get_secondary_distribution_wallet", return_value=None), \
+         patch.object(slh_handler, "read_bsc_wallet", return_value=live), \
+         patch.object(slh_handler, "get_quick_send_config", return_value=quick):
+        text, markup = slh_handler._menu("8789977826", include_test=True)
+
+    buttons = [button for row in markup.keyboard for button in row]
+    quick_buttons = [b for b in buttons if "שלח 1 SLH" in b.text]
+    assert quick_buttons
+    assert quick_buttons[0].web_app.url.find("slh_route=quick_send") >= 0
+    assert quick_buttons[0].web_app.url.find("slh_quick_send=owner_to_tzvika_1") >= 0
