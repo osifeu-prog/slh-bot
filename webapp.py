@@ -385,7 +385,7 @@ def wallet_handoff():
 
     next_path = str(request.args.get("next", "")).strip() or "/wallet-connect"
     # Only allow fixed internal wallet pages; never accept arbitrary redirect URLs.
-    allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke"}
+    allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke", "/slh-browser-send"}
     if next_path not in allowed_next:
         return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
 
@@ -432,6 +432,20 @@ def slh_smoke_page():
     html_path = BASE_DIR / "wallet_connect.html"
     if not html_path.exists():
         return jsonify({"error": "WALLET_CONNECT_PAGE_NOT_FOUND"}), 500
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp
+
+
+@app.route("/slh-browser-send", methods=["GET"])
+def slh_browser_send_page():
+    html_path = BASE_DIR / "slh_browser_send.html"
+    if not html_path.exists():
+        return jsonify({"error": "SLH_BROWSER_SEND_PAGE_NOT_FOUND"}), 500
     resp = make_response(html_path.read_text(encoding="utf-8"))
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -1883,6 +1897,121 @@ def onchain_status():
 
 
 # Read-only adapter over the existing exchange state. No order placement or settlement.
+@app.route("/api/v1/wallet/slh/browser-quick-send", methods=["GET"])
+def slh_browser_quick_send_config():
+    """Owner-only read-only preset for MetaMask/Trezor browser signing."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.slh_quick_send import get_quick_send_config
+        result = get_quick_send_config(uid, "owner_to_tzvika_1")
+        return _no_store(jsonify(result)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH BROWSER SEND] config error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_BROWSER_SEND_CONFIG_FAILED"}), 502
+
+
+@app.route("/api/v1/wallet/slh/browser-quick-send/verify", methods=["POST"])
+def slh_browser_quick_send_verify():
+    """Read-only on-chain verification for the owner browser Quick Send."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from web3 import Web3
+        from core.distribution_wallet_registry import _bsc_config
+        from core.slh_quick_send import get_quick_send_config
+
+        config = get_quick_send_config(uid, "owner_to_tzvika_1")
+        w3cfg = _bsc_config()
+        rpc = str(w3cfg.get("rpc") or "").strip()
+        token = str(config.get("token_contract") or "").strip()
+        sender = Web3.to_checksum_address(config["sender"])
+        recipient = Web3.to_checksum_address(config["recipient"])
+        expected_raw = 10 ** 15
+        if not rpc or not token:
+            return jsonify({"error": "BSC_CONFIG_INCOMPLETE"}), 503
+
+        w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 8}))
+        receipt = w3.eth.get_transaction_receipt(tx_hash)
+        tx = w3.eth.get_transaction(tx_hash)
+
+        if int(receipt.get("status", 0)) != 1:
+            return jsonify({"error": "TRANSACTION_FAILED"}), 400
+        if str(tx.get("to") or "").lower() != Web3.to_checksum_address(token).lower():
+            return jsonify({"error": "TRANSACTION_TARGET_MISMATCH"}), 400
+        if str(tx.get("from") or "").lower() != sender.lower():
+            return jsonify({"error": "TRANSACTION_SENDER_MISMATCH"}), 400
+
+        latest_block = int(w3.eth.block_number)
+        block_number = int(receipt["blockNumber"])
+        confirmations = max(0, latest_block - block_number + 1)
+        if confirmations < 15:
+            return jsonify({
+                "error": "INSUFFICIENT_CONFIRMATIONS",
+                "retryable": True,
+                "confirmations": confirmations,
+                "required_confirmations": 15,
+                "tx_hash": tx_hash,
+            }), 409
+
+        transfer_topic = Web3.keccak(text="Transfer(address,address,uint256)").hex()
+        sender_topic = "0x" + ("0" * 24) + sender[2:].lower()
+        recipient_topic = "0x" + ("0" * 24) + recipient[2:].lower()
+        matches = []
+        for log in receipt.get("logs", []):
+            if str(log.get("address") or "").lower() != Web3.to_checksum_address(token).lower():
+                continue
+            topics = log.get("topics") or []
+            if len(topics) < 3:
+                continue
+            if str(topics[0].hex()).lower() != transfer_topic.lower():
+                continue
+            if str(topics[1].hex()).lower() != sender_topic.lower():
+                continue
+            if str(topics[2].hex()).lower() != recipient_topic.lower():
+                continue
+            matches.append(int(log["data"].hex(), 16))
+
+        if len(matches) != 1:
+            return jsonify({"error": "TRANSFER_EVENT_MISMATCH", "matches": len(matches)}), 400
+        if matches[0] != expected_raw:
+            return jsonify({"error": "TRANSFER_AMOUNT_MISMATCH"}), 400
+
+        return _no_store(jsonify({
+            "ok": True,
+            "status": "verified",
+            "tx_hash": tx_hash,
+            "chain_id": 56,
+            "sender": sender,
+            "recipient": recipient,
+            "amount_slh": "1",
+            "amount_raw": str(expected_raw),
+            "token_contract": Web3.to_checksum_address(token),
+            "block": block_number,
+            "confirmations": confirmations,
+            "required_confirmations": 15,
+        })), 200
+    except Exception as exc:
+        if type(exc).__name__ == "TransactionNotFound":
+            return jsonify({
+                "error": "TRANSACTION_NOT_FOUND_RETRYABLE",
+                "retryable": True,
+                "tx_hash": tx_hash,
+            }), 409
+        print("[SLH BROWSER SEND] verify error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_BROWSER_SEND_VERIFY_FAILED"}), 502
+
+
 @app.route("/api/v1/distribution/secondary", methods=["GET"])
 def secondary_distribution_status():
     uid = authenticated_uid()
