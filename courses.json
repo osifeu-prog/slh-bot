@@ -243,5 +243,34 @@
     ],
     "title": "טוקנים ב-AI — שיטת עבודה בהשראת בלוקצ׳יין",
     "access": "free"
+  },
+  "ai_history": {
+    "title": "היסטוריה של הבינה המלאכותית",
+    "access": "free",
+    "announcement_scope": "all_bound_groups",
+    "release_mode": "manual_announce",
+    "stages": [
+      {
+        "id": 1,
+        "name": "אז מי היה ה-AI הראשון?",
+        "published": true,
+        "reward": {
+          "credits": 0,
+          "points": 25
+        },
+        "lesson": "lessons/ai_history/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "מהמכונות הראשונות למודלי השפה: מה השתנה?",
+        "published": false,
+        "release_status": "coming_soon",
+        "reward": {
+          "credits": 0,
+          "points": 25
+        },
+        "lesson": "lessons/ai_history/2.txt"
+      }
+    ]
   }
 }
