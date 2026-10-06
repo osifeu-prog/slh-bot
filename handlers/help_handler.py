@@ -38,6 +38,9 @@ def register(bot):
 
 👛 WALLET & MONEY
 /wallet – ארנק מלא
+/slh – מרכז SLH: שליחה, קבלה, יתרה ובדיקת 1 SLH
+/slh_send [כתובת] [כמות] – פתיחת שליחת SLH
+/slh_test – פתיחת smoke מבוקר של 1 SLH
 /balance – יתרת Credits
 /transfer <uid> <amount> – העברת Credits
 /p2p_slh <uid> <amount> – העברת SLH
