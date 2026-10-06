@@ -16,6 +16,7 @@ from web3 import Web3
 from core.bsc_wallet_read_model import read_bsc_wallet
 from core.distribution_wallet_registry import get_secondary_distribution_wallet
 from core.identity import OWNER_TELEGRAM_ID
+from core.slh_quick_send import get_quick_send_config
 from core.wallet_binding import get_binding
 from core.wallet_handoff import create_handoff
 
@@ -139,6 +140,23 @@ def _menu(uid, *, include_test=False):
         markup.add(
             types.InlineKeyboardButton("🔐 אימות BNB", callback_data="slh_menu_connect"),
         )
+
+    if str(uid) == str(OWNER_TELEGRAM_ID):
+        try:
+            quick = get_quick_send_config(uid, "owner_to_tzvika_1")
+            quick_url = _mini_app_url(
+                screen="wallet",
+                slh_route="quick_send",
+                slh_quick="owner_to_tzvika_1",
+            )
+            markup.add(
+                types.InlineKeyboardButton(
+                    f"⚡ שלח 1 SLH ל{quick.get('label', 'איש קשר')}",
+                    web_app=types.WebAppInfo(url=quick_url),
+                )
+            )
+        except (PermissionError, ValueError) as exc:
+            print("[SLH] quick send unavailable:", str(exc))
 
     active = bool(registry and str(registry.get("status")) == "active")
     if include_test and active:
