@@ -370,7 +370,12 @@ def confirm_secondary_slh_transfer(
     sender = _checksum(row.get("address"), "sender")
     recipient = _checksum(row.get("recipient"), "recipient")
     token = _checksum(row.get("token_contract"), "token")
-    tx_from = str(web3.eth.get_transaction(tx_hash).get("from") or "")
+    try:
+        tx = web3.eth.get_transaction(tx_hash)
+    except TransactionNotFound as exc:
+        raise ValueError("TRANSACTION_NOT_FOUND_RETRYABLE") from exc
+
+    tx_from = str(tx.get("from") or "")
     if tx_from and tx_from.lower() != sender.lower():
         raise ValueError("TX_SENDER_NOT_BOUND_WALLET")
 
