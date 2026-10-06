@@ -110,6 +110,21 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(response.headers["Location"], "/slh-smoke")
         consume.assert_called_once_with(token)
 
+    def test_trezor_browser_send_page_supports_walletconnect(self):
+        response = self.client.get("/slh-browser-send")
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        for needle in (
+            "Trezor Suite",
+            "WalletConnect",
+            "ethereum-provider@2.25.0",
+            "/api/walletconnect/config",
+            "eth_sendTransaction",
+        ):
+            self.assertIn(needle, body)
+        self.assertIn("BSC · Chain 56", body)
+        self.assertIn("1 SLH", body)
+
     def test_wallet_handoff_consumed_token_without_valid_session_is_rejected(self):
         token = "handoff-token-for-test-1234567890"
         with patch(
