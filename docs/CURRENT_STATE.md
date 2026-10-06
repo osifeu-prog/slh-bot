@@ -3,11 +3,12 @@
 עודכן: 2026-09-26
 
 ## Runtime
-- Production service: Railway project `slh-cloud-bot` / service `slh-cloud-bot`.
-- Start command: `python3 -u -B bot_gateway.py`.
-- Current verified production deployment: `47a9422d-0ef0-4cad-9144-18a1c5cee29e`, commit `21e618be4857cfb51d074a98ac6c62ef51aab1ba`, status `SUCCESS`.
+- Production service: Railway project `slh-os-control-plane` / service `web`.
+- Secondary runtime: Railway project `slh-cloud-bot` / service `slh-cloud-bot` (RUN_BOT=0, non-polling).
+- Start command: `bash start_railway.sh`.
+- Current verified production deployment: `5343328d-924b-4717-8a2b-73d79155a051`, commit `2824a8d60659a69aba9d77c496a0516cbf1fefe6`, status `SUCCESS` (2026-10-06).
 - `/start` was re-verified by the owner on 2026-09-26 and returned the personal dashboard successfully.
-- Newer main commit `32d673d1f1801b6dd1709d0f86d9124951c89879` contains the Control Center `/os` fix; its Railway deployment is awaiting approval at publication time.
+- Control Center `/os` fix (PR #235) and Stars financial truth (#420) deployed successfully as of 2026-10-06.
 - Production state volume is mounted at `/app/state`.
 
 ## Development rules
