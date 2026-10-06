@@ -1960,12 +1960,20 @@ def secondary_distribution_confirm():
         return _no_store(jsonify(result)), 200
     except ValueError as exc:
         code = str(exc)
-        if code == "INSUFFICIENT_CONFIRMATIONS":
+        if code in {
+            "INSUFFICIENT_CONFIRMATIONS",
+            "TRANSACTION_NOT_FOUND_RETRYABLE",
+        }:
             return jsonify({"error": code, "retryable": True}), 409
         return jsonify({"error": code}), 400
     except Exception as exc:
-        print("[DISTRIBUTION] confirm error:", type(exc).__name__, str(exc)[:160])
-        return jsonify({"error": "SECONDARY_DISTRIBUTION_CONFIRM_FAILED"}), 502
+        # Confirmation is read-only verification. A transient provider error
+        # after wallet broadcast must remain retryable for the same tx hash.
+        print("[DISTRIBUTION] confirm retryable error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({
+            "error": "CONFIRMATION_RPC_RETRYABLE",
+            "retryable": True,
+        }), 503
 
 
 @app.route("/api/v1/distribution/secondary/cancel", methods=["POST"])
