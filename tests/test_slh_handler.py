@@ -64,3 +64,15 @@ def test_status_uses_live_bsc_truth_and_active_registry():
     assert "BNB gas: 0.01499" in text
     assert "Per-tx: 1 SLH" in text
     assert "Daily: 1 SLH" in text
+
+
+def test_trust_wallet_smoke_url_uses_one_time_handoff():
+    handoff = {"token": "smoke-token-12345678901234567890"}
+    with patch.object(slh_handler, "create_handoff", return_value=handoff),          patch.object(slh_handler, "os") as os_mock:
+        os_mock.getenv.return_value = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+        url = slh_handler._trust_wallet_smoke_url("5010371391")
+
+    assert url.startswith("https://link.trustwallet.com/open_url?coin_id=60&url=")
+    assert "wallet-handoff" in url
+    assert "next=%2Fslh-smoke" in url
+    assert "smoke-token-12345678901234567890" in url
