@@ -9,9 +9,10 @@ on:
       - Validate and hand off to Railway
     types: [completed]
     branches: [main]
+  status:
 
 concurrency:
-  group: release-evidence-${{ github.event.workflow_run.head_sha }}
+  group: release-evidence-${{ github.event.workflow_run.head_sha || github.event.sha }}
   cancel-in-progress: false
 
 permissions:
@@ -27,9 +28,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          SHA: ${{ github.event.workflow_run.head_sha }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.event.sha }}
         run: |
           set -euo pipefail
+
+          # Status events are emitted for every commit status. Only correlate
+          # the current main commit so feature-branch status updates cannot
+          # publish release evidence for a non-release SHA.
+          if [ "${{ github.event_name }}" = "status" ]; then
+            MAIN_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+            if [ "$SHA" != "$MAIN_SHA" ]; then
+              echo "Ignoring status event for non-current-main SHA $SHA"
+              exit 0
+            fi
+          fi
 
           gh run list --repo "$REPO" --commit "$SHA" --limit 100             --json name,status,conclusion,databaseId,headSha > runs.json
 
@@ -134,6 +146,6 @@ jobs:
       - name: Publish release evidence artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-evidence-${{ github.event.workflow_run.head_sha }}
+          name: release-evidence-${{ github.event.workflow_run.head_sha || github.event.sha }}
           path: release-evidence.json
           if-no-files-found: error
