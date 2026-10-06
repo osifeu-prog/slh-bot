@@ -39,14 +39,14 @@ class ControlCenterFinancialTruthTests(unittest.TestCase):
                     "core.ton_deposit_service.deposits_are_open",
                     return_value=False,
                 ):
-                    result = control_center.get_release_state()
+                    result = control_center.get_financial_truth()
 
         self.assertEqual(result["financial_truth"]["status"], "LIVE_RECONCILED")
         self.assertTrue(result["financial_truth"]["read_only"])
         self.assertEqual(result["financial_truth"]["owner"]["real_external_gross"], 1122)
         self.assertEqual(result["financial_truth"]["owner"]["matched_count"], 6)
         self.assertEqual(result["financial_truth"]["owner"]["mismatch_count"], 0)
-        self.assertEqual(result["evidence"]["financial_truth"], "LIVE_RECONCILED")
+        self.assertEqual(result["status"], "LIVE_RECONCILED")
 
 
 if __name__ == "__main__":
