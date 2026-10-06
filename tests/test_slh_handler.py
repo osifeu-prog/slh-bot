@@ -121,7 +121,7 @@ def test_owner_menu_includes_quick_send_to_tzvika():
     quick_buttons = [b for b in buttons if "שלח 1 SLH" in b.text]
     assert quick_buttons
     assert quick_buttons[0].url.find("/wallet-handoff?") >= 0
-    assert "next=%2Fslh-browser-send" in quick_buttons[0].url
+    assert "next=/slh-browser-send" in quick_buttons[0].url
 
 
 
