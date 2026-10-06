@@ -1875,6 +1875,25 @@ def onchain_status():
 
 
 # Read-only adapter over the existing exchange state. No order placement or settlement.
+@app.route("/api/v1/slh/quick-send/<preset>", methods=["GET"])
+def slh_quick_send_config(preset):
+    """Return an owner-only Quick Send preset resolved from live wallet bindings."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.slh_quick_send import get_quick_send_config
+        result = get_quick_send_config(uid, preset)
+        return _no_store(jsonify(result)), 200
+    except PermissionError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH QUICK SEND] config error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_QUICK_SEND_CONFIG_FAILED"}), 502
+
+
 @app.route("/api/v1/distribution/secondary", methods=["GET"])
 def secondary_distribution_status():
     uid = authenticated_uid()
