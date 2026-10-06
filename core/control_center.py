@@ -227,12 +227,20 @@ def get_financial_truth():
         from core.stars_financial_truth import build_stars_financial_truth
         financial_truth = build_stars_financial_truth("", owner=True)
         financial_truth["read_only"] = True
-        return financial_truth
+        return {
+            "status": financial_truth.get("status", "UNKNOWN"),
+            "read_only": True,
+            "financial_truth": financial_truth,
+        }
     except Exception as exc:
         return {
             "status": "UNAVAILABLE",
             "read_only": True,
-            "error": type(exc).__name__,
+            "financial_truth": {
+                "status": "UNAVAILABLE",
+                "read_only": True,
+                "error": type(exc).__name__,
+            },
         }
 
 
