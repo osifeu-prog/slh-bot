@@ -63,12 +63,24 @@ def _course_overview(bot, chat_id, uid, course_id):
              if int(item.get("id")) not in completed],
             default=1,
         )
-        intro = (
-            f"🎓 {course['title']}\n\n"
-            f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n"
-            "שיעורים שהושלמו נשארים פתוחים לחזרה בכל עת.\n\n"
-            "בחר שיעור:"
+        next_item = next(
+            (item for item in stages if int(item.get("id")) == next_stage),
+            {},
         )
+        if next_item.get("published", True) is not True:
+            intro = (
+                f"🎓 {course['title']}\n\n"
+                f"⏳ השיעור הבא: {next_stage}/{total} — יעלה בקרוב.\n"
+                "שיעורים שהושלמו נשארים פתוחים לחזרה בכל עת.\n\n"
+                "בחר שיעור:"
+            )
+        else:
+            intro = (
+                f"🎓 {course['title']}\n\n"
+                f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n"
+                "שיעורים שהושלמו נשארים פתוחים לחזרה בכל עת.\n\n"
+                "בחר שיעור:"
+            )
 
     bot.send_message(
         chat_id,
