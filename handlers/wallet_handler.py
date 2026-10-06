@@ -107,6 +107,54 @@ def register(bot):
         except Exception as exc:
             bot.reply_to(msg, f"❌ BNB disconnect failed: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["slh_smoke", "slhtest"])
+    def slh_smoke(msg):
+        """Owner-only Telegram entrypoint for the SLH on-chain smoke test."""
+        from core.authority import is_owner
+
+        uid = str(msg.from_user.id)
+        if not is_owner(uid):
+            return
+
+        parts = (msg.text or "").split(maxsplit=1)
+        recipient = parts[1].strip().split()[0] if len(parts) == 2 and parts[1].strip() else ""
+        if recipient and len(recipient) > 100:
+            bot.reply_to(msg, "❌ כתובת יעד ארוכה מדי.")
+            return
+
+        mini_app_url = (
+            os.getenv("SLH_MINI_APP_URL")
+            or "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+        ).strip()
+        sep = "&" if "?" in mini_app_url else "?"
+        target = mini_app_url + sep + "screen=wallet&slh_smoke=1"
+        if recipient:
+            from urllib.parse import quote
+            target += "&recipient=" + quote(recipient, safe="")
+
+        try:
+            from telebot import types
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "🪙 פתח בדיקת שליחת 1 SLH",
+                    web_app=types.WebAppInfo(url=target),
+                )
+            )
+            message = (
+                "🧪 SLH ON-CHAIN SMOKE\\n\\n"
+                "הבדיקה מתבצעת מתוך SLH OS ב־Telegram.\\n"
+                "• נכס: 1 SLH\\n"
+                "• רשת: BNB Smart Chain (56)\\n"
+                "• BNB: gas בלבד\\n"
+                "• אין שליחת BNB ליעד\\n"
+                "• הארנק שלך בלבד חותם ומשדר\\n\\n"
+                "לחץ על הכפתור כדי לפתוח את Wallet בתוך המערכת."
+            )
+            bot.reply_to(msg, message, reply_markup=markup)
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ SLH smoke button failed: {type(exc).__name__}")
+
     @bot.message_handler(commands=["wallet"])
     def wallet(msg):
         uid = str(msg.from_user.id)
