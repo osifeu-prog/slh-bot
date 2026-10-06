@@ -147,7 +147,7 @@ def _menu(uid, *, include_test=False):
             quick_url = _mini_app_url(
                 screen="wallet",
                 slh_route="quick_send",
-                slh_quick="owner_to_tzvika_1",
+                slh_quick_send="owner_to_tzvika_1",
             )
             markup.add(
                 types.InlineKeyboardButton(
