@@ -13,7 +13,6 @@ from urllib.parse import quote, urlencode
 from telebot import types
 from web3 import Web3
 
-from core.authority import is_owner
 from core.bsc_wallet_read_model import read_bsc_wallet
 from core.distribution_wallet_registry import get_secondary_distribution_wallet
 from core.identity import OWNER_TELEGRAM_ID
@@ -57,16 +56,14 @@ def _status(uid):
 
     if not binding:
         return (
-            "🪙 SLH OS
+            """🪙 SLH OS
 
-"
-            "ארנק BNB: ⛔ לא מאומת
-"
-            "SLH on-chain: לא זמין עד לאימות ארנק BSC.
+ארנק BNB: ⛔ לא מאומת
+SLH on-chain: לא זמין עד לאימות ארנק BSC.
 
-"
-            "פתח /slh כדי לקבל את מסלול החיבור."
-        ), binding, registry, live
+פתח /slh כדי לקבל את מסלול החיבור."""
+            , binding, registry, live
+        )
 
     wallet = str(binding.get("address") or "")
     assets = (live.get("assets") or {}) if isinstance(live, dict) else {}
