@@ -56,3 +56,30 @@
 
 ## Source-of-truth principle
 This file records verified state and unresolved items. Historical documents are subordinate when they conflict with runtime, repository, or on-chain evidence.
+## Process Rules (2026-10-06)
+
+### Branch protection
+- Ruleset "Protect main" (id: 24586944) ACTIVE
+- Blocks: force-push, delete, non-linear history
+- Requires: PR + status checks (validate, full-regression, vault-regression)
+- Admin bypass: always (use --admin only when needed)
+
+### Local tools (Windows PowerShell)
+- slh        - cd to project
+- slhstatus  - git + railway status
+- slhgh      - gh passthrough
+- slhruleset - ruleset status
+- slhprs     - PR list
+- slhci      - CI runs
+- slhprune   - git fetch --prune
+
+### Bot tools (Railway, /e)
+- /e ls, /e cat, /e python3 -c  - read-only inspection
+- /e git  - NOT available (git not installed)
+- /e gh   - NOT available (gh not installed)
+
+### Workflow rules
+- Never push directly to main (use PR)
+- Never run git filter-repo without a backup tag
+- Never commit secrets (.env, tokens, private keys)
+- Always pull + prune before starting work
