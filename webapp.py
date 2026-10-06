@@ -157,6 +157,8 @@ def _normalize_hex_value(value):
 
 
 def _indexed_topic_address(value):
+    from web3 import Web3
+
     raw = _normalize_hex_value(value)
     if len(raw) != 66:
         return None
