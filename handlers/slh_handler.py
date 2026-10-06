@@ -8,7 +8,7 @@ user-signed transfer through the existing SLH distribution authority.
 import os
 import re
 from decimal import Decimal, InvalidOperation
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit
 
 from telebot import types
 from web3 import Web3
