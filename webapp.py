@@ -466,7 +466,7 @@ def slh_smoke_page():
 
 @app.route("/bnb-browser-return", methods=["GET"])
 def bnb_browser_return_page():
-    """Dedicated owner one-button native BNB return smoke page."""
+    """Dedicated owner one-button native BNB return/repayment page."""
     html_path = BASE_DIR / "bnb_browser_return.html"
     if not html_path.exists():
         return jsonify({"error": "BNB_BROWSER_RETURN_PAGE_NOT_FOUND"}), 500
@@ -481,13 +481,14 @@ def bnb_browser_return_page():
 
 @app.route("/api/v1/wallet/bnb/browser-quick-return", methods=["GET"])
 def bnb_browser_quick_return_config():
-    """Owner-only read-only native BNB return preset."""
+    """Owner-only read-only native BNB return/repayment preset."""
     uid = authenticated_uid()
+    preset = str(request.args.get("preset", "smoke")).strip().lower()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
         from core.bnb_quick_return import get_bnb_return_config
-        return _no_store(jsonify(get_bnb_return_config(uid))), 200
+        return _no_store(jsonify(get_bnb_return_config(uid, preset=preset))), 200
     except PermissionError as exc:
         return jsonify({"error": str(exc)}), 403
     except ValueError as exc:
@@ -505,11 +506,12 @@ def bnb_browser_quick_return_verify():
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     payload = request.get_json(silent=True) or {}
     tx_hash = str(payload.get("tx_hash", "")).strip()
+    preset = str(payload.get("preset", "smoke")).strip().lower()
     if not tx_hash:
         return jsonify({"error": "INVALID_TX_HASH"}), 400
     try:
         from core.bnb_quick_return import verify_bnb_return
-        result = verify_bnb_return(uid, tx_hash)
+        result = verify_bnb_return(uid, tx_hash, preset=preset)
         if not result.get("ok"):
             return jsonify(result), 409
         return _no_store(jsonify(result)), 200
