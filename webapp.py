@@ -392,13 +392,21 @@ def wallet_handoff():
     session_cookie = str(request.cookies.get("slh_wallet_handoff") or "").strip()
     try:
         from core.wallet_handoff import consume_handoff, validate_session
-        # The handoff remains one-time, but a browser/Wallet deep-link can issue
-        # the GET twice. Once this browser already owns the session cookie,
-        # allow the repeated GET to re-enter the fixed internal target.
-        if session_cookie != code:
-            consume_handoff(code)
-        elif validate_session(code) is None:
-            return jsonify({"error": "INVALID_WALLET_SESSION"}), 400
+        # Trust Wallet may issue the deep-link GET more than once and the
+        # repeated request may not carry cookies from the first browser context.
+        # Keep consume_handoff one-time and accept only the exact same short-lived
+        # handoff token as a retry when its session is still valid.
+        if session_cookie == code:
+            if validate_session(code) is None:
+                return jsonify({"error": "INVALID_WALLET_SESSION"}), 400
+        else:
+            try:
+                consume_handoff(code)
+            except ValueError as exc:
+                if str(exc) != "WALLET_HANDOFF_ALREADY_CONSUMED":
+                    raise
+                if validate_session(code) is None:
+                    raise ValueError("WALLET_HANDOFF_INVALID")
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
