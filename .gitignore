@@ -68,3 +68,16 @@ firmware_strings.txt
 # --- SLH audit directory (49MB, git bundle + snapshots) ---
 _slh_audit/
 *.bundle
+
+# ESP32 firmware / partitions / dumps
+*.bin
+firmware/
+c3/
+
+# Runtime state (never tracked)
+state/agent_economy.json
+
+# Recovery / probe / audit artifacts
+recovery/
+slh_bot_probe.ps1
+audit.jsonl
