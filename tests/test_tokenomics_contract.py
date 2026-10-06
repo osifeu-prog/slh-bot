@@ -14,6 +14,13 @@ def test_slh_is_documented_as_on_chain_bsc_token():
     assert slh["contract_address"] == "0xACb0A09414CEA1C879c67bB7A877E4e19480f022"
     assert slh["decimals"] == 15
     assert slh["minting_in_slh_os"] is False
+    assert slh["internal_transfer_label"] == "SLH Move"
+    assert slh["internal_transfer_policy"] == "existing_internal_balance_only"
+    assert slh["on_chain_transfer_policy"] == "user_wallet_signed_only"
+    assert slh["treasury_distribution_policy"] == "existing_verified_balance_only"
+    assert slh["wallet_risk_policy"]["user_reported_compromised"] == "block_on_chain_real_money_outbound"
+    assert slh["wallet_risk_policy"]["internal_slh_move_allowed"] is True
+    assert slh["wallet_risk_policy"]["treasury_distribution_unaffected_when_using_a_separate_verified_source"] is True
 
 
 def test_credits_are_internal_but_p2p_transferable():
