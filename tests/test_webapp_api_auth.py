@@ -46,9 +46,9 @@ class WebAppApiAuthTests(unittest.TestCase):
         with patch("core.wallet_handoff.consume_handoff") as consume, patch(
             "core.wallet_handoff.validate_session", return_value="5010371391"
         ):
+            self.client.set_cookie("slh_wallet_handoff", token)
             response = self.client.get(
-                "/wallet-handoff?code="+token+"&next=/slh-smoke",
-                headers={"Cookie": "slh_wallet_handoff="+token},
+                "/wallet-handoff?code="+token+"&next=/slh-smoke"
             )
 
         self.assertEqual(response.status_code, 302)
