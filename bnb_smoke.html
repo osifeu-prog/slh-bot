@@ -27,8 +27,9 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
-  <button id="send" class="primary">🌐 פתח מסלול ארנק מאובטח</button>
-  <div class="muted" style="margin-top:8px">Telegram רק מעביר אותך לדפדפן חיצוני עם Wallet Session זמני. החיבור והחתימה מתבצעים שם דרך Trust Wallet / WalletConnect.</div>
+  <button id="send" class="primary">🦊 MetaMask · שלח 0.01 BNB לבדיקה</button>
+  <button id="walletConnectBtn" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
+  <div class="muted" style="margin-top:8px">זהו כבר דפדפן חיצוני עם Wallet Session פעיל. MetaMask מתחבר כאן ישירות; בטלפון אפשר להשתמש ב־WalletConnect.</div>
   <div id="wcbox" class="hidden">
     <div id="qr"></div>
     <div id="uri" class="code"></div>
@@ -44,7 +45,7 @@ if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const inTelegram=Boolean(initData);
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
-let provider=null, binding=null, smoke=null, pollTimer=null, currentWalletConnectUri="";
+let provider=null, binding=null, smoke=null, pollTimer=null, currentWalletConnectUri="", mmClient=null;
 
 const $=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{const e=$("status");e.textContent=x;e.className="status "+cls};
@@ -103,13 +104,9 @@ async function ensureBsc(p){
 }
 
 async function openExternalWalletSession(){
+  if(!inTelegram){await connectMetaMaskOrWalletConnect();return;}
   $("send").disabled=true;
   try{
-    if(!inTelegram){
-      setStatus("🔗 יוצר חיבור WalletConnect זמני…");
-      await walletConnect();
-      return;
-    }
     setStatus("🔐 יוצר Wallet Session זמני…");
     const d=await api("/api/wallet/bnb/handoff",{
       method:"POST",
@@ -118,18 +115,74 @@ async function openExternalWalletSession(){
     });
     const url=String(d.url||"").trim();
     if(!url)throw Error("WALLET_HANDOFF_URL_MISSING");
-    const separator=url.includes("?")?"&":"?";
-    const target=url+separator+"next=%2Fbnb-smoke";
-    setStatus("🌐 פותח את הדפדפן החיצוני. שם נמשיך עם Trust Wallet / WalletConnect.","ok");
-    if(tg?.openLink){
-      tg.openLink(target);
-    }else{
-      window.open(target,"_blank","noopener,noreferrer");
-    }
+    const target=url+(url.includes("?")?"&":"?")+"next=%2Fbnb-smoke";
+    setStatus("🌐 פותח דפדפן חיצוני…","ok");
+    if(tg?.openLink)tg.openLink(target);
+    else window.open(target,"_blank","noopener,noreferrer");
   }catch(e){
     setStatus("❌ "+(e.message||e),"err");
     $("send").disabled=false;
   }
+}
+
+async function discoverMetaMaskProvider(){
+  const announced=[];
+  const handler=(event)=>{const detail=event?.detail||{};if(detail?.provider)announced.push(detail)};
+  window.addEventListener("eip6963:announceProvider",handler);
+  try{
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    await new Promise(resolve=>setTimeout(resolve,700));
+  }finally{window.removeEventListener("eip6963:announceProvider",handler)}
+  const match=announced.find(x=>{
+    const rdns=String(x?.info?.rdns||"").toLowerCase();
+    const name=String(x?.info?.name||"").toLowerCase();
+    return rdns==="io.metamask"||name==="metamask";
+  });
+  if(match?.provider)return match.provider;
+  if(window.ethereum?.isMetaMask)return window.ethereum;
+  if(Array.isArray(window.ethereum?.providers))return window.ethereum.providers.find(p=>p?.isMetaMask)||null;
+  return null;
+}
+
+function normalizeMetaMaskError(e){
+  const code=e?.code??e?.rpcCode??e?.data?.originalError?.code;
+  if(code===4001||code==="4001")return "הבקשה נדחתה ב־MetaMask.";
+  if(code===-32002||code==="-32002")return "יש בקשת MetaMask ממתינה. אשר או דחה אותה ב־MetaMask.";
+  if(code===-32603||code==="-32603")return "MetaMask החזיר שגיאת RPC. ודא BSC 56.";
+  return String(e?.message||e||"שגיאה לא ידועה");
+}
+
+async function connectMetaMask(){
+  try{
+    setStatus("⏳ מחפש MetaMask…");
+    const injected=await discoverMetaMaskProvider();
+    if(injected){
+      provider=injected;
+      await sendWithProvider(provider,"MetaMask");
+      return;
+    }
+    const mod=await import("https://cdn.jsdelivr.net/npm/@metamask/connect-evm@2.1.1/+esm");
+    const createEVMClient=mod?.createEVMClient||mod?.default?.createEVMClient;
+    if(typeof createEVMClient!=="function")throw Error("MetaMask Connect SDK לא נטען");
+    mmClient=mmClient||await createEVMClient({
+      dapp:{name:"SLH OS BNB Smoke",url:window.location.href,iconUrl:"https://slh-nft.com/icon-192.png"},
+      api:{supportedNetworks:{"0x38":"https://bsc-dataseed.binance.org/"}},
+      ui:{headless:false,preferExtension:true,showInstallModal:true},
+      analytics:{enabled:false},
+      debug:true
+    });
+    const result=await mmClient.connect({chainIds:["0x38"],forceRequest:true});
+    provider=mmClient.getProvider();
+    if(String(result?.chainId||"").toLowerCase()!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
+    await sendWithProvider(provider,"MetaMask");
+  }catch(e){
+    setStatus("❌ MetaMask: "+normalizeMetaMaskError(e),"err");
+    $("send").disabled=false;
+  }
+}
+
+async function connectMetaMaskOrWalletConnect(){
+  await connectMetaMask();
 }
 
 async function sendWithProvider(p,label){
@@ -170,7 +223,8 @@ async function walletConnect(){
   }
 }
 
-$("send").onclick=openExternalWalletSession;
+$("send").onclick=()=>inTelegram?openExternalWalletSession():connectMetaMask();
+$("walletConnectBtn")?.addEventListener("click",walletConnect);
 init();
 </script>
 </body>
