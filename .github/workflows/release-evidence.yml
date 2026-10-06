@@ -3,9 +3,6 @@ name: Release Evidence Correlation
 on:
   workflow_run:
     workflows:
-      - SLH CI
-      - SLH Full Regression
-      - Bot Vault Regression
       - Validate and hand off to Railway
     types: [completed]
     branches: [main]
@@ -22,6 +19,7 @@ permissions:
 jobs:
   correlate:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - name: Correlate completed workflow evidence by SHA
         env:
@@ -30,8 +28,6 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-
-          gh run list --repo "$REPO" --commit "$SHA" --limit 100             --json name,status,conclusion,databaseId,headSha > runs.json
 
           python3 - <<'PYEOF'
           import json
@@ -42,7 +38,6 @@ jobs:
 
           repo = os.environ["REPO"]
           sha = os.environ["SHA"]
-          runs = json.loads(Path("runs.json").read_text(encoding="utf-8"))
 
           required_names = [
               "SLH CI",
@@ -50,21 +45,35 @@ jobs:
               "Bot Vault Regression",
               "Validate and hand off to Railway",
           ]
+          terminal = {"SUCCESS", "FAILURE", "CANCELLED", "TIMED_OUT", "ERROR", "SKIPPED"}
 
-          required = {}
-          for name in required_names:
-              candidates = [
-                  run for run in runs
-                  if run.get("name") == name and run.get("headSha") == sha
-              ]
-              if candidates:
-                  required[name] = max(
-                      candidates,
-                      key=lambda item: int(item.get("databaseId") or 0),
-                  )
+          def gh_json(args):
+              return json.loads(
+                  subprocess.check_output(["gh", *args], text=True)
+              )
 
-          def conclusion(name):
-              run = required.get(name)
+          def latest_runs():
+              runs = gh_json([
+                  "run", "list",
+                  "--repo", repo,
+                  "--commit", sha,
+                  "--limit", "100",
+                  "--json", "name,status,conclusion,databaseId,headSha",
+              ])
+              selected = {}
+              for name in required_names:
+                  candidates = [
+                      run for run in runs
+                      if run.get("name") == name and run.get("headSha") == sha
+                  ]
+                  if candidates:
+                      selected[name] = max(
+                          candidates,
+                          key=lambda item: int(item.get("databaseId") or 0),
+                      )
+              return selected
+
+          def conclusion(run):
               if not run:
                   return "MISSING"
               return str(
@@ -72,68 +81,79 @@ jobs:
               ).upper()
 
           def railway_state():
-              payload = json.loads(
-                  subprocess.check_output(
-                      [
-                          "gh",
-                          "api",
-                          f"repos/{repo}/commits/{sha}/statuses",
-                          "--paginate",
-                      ],
-                      text=True,
-                  )
-              )
+              payload = gh_json([
+                  "api",
+                  f"repos/{repo}/commits/{sha}/statuses",
+                  "--paginate",
+              ])
               matches = [
-                  item
-                  for item in payload
+                  item for item in payload
                   if item.get("context") == "slh-cloud-bot - slh-cloud-bot"
               ]
               if not matches:
-                  return None
+                  return "MISSING"
               latest = max(
                   matches,
                   key=lambda item: str(item.get("created_at") or ""),
               )
-              return str(latest.get("state") or "").lower() or None
+              return str(latest.get("state") or "").lower() or "UNKNOWN"
 
-          ci_ok = conclusion("SLH CI") == "SUCCESS"
-          tests_ok = conclusion("SLH Full Regression") == "SUCCESS"
-          security_ok = conclusion("Bot Vault Regression") == "SUCCESS"
-          handoff_ok = conclusion("Validate and hand off to Railway") == "SUCCESS"
+          deadline = time.time() + 300
+          required = {}
+          while time.time() < deadline:
+              required = latest_runs()
+              states = {name: conclusion(required.get(name)) for name in required_names}
 
-          required_failed = any(
-              conclusion(name) in {"FAILURE", "CANCELLED", "TIMED_OUT", "ERROR"}
-              for name in required_names
-          )
-          required_pending = any(
-              conclusion(name) in {"MISSING", "QUEUED", "IN_PROGRESS"}
-              for name in required_names
-          )
+              required_failed = any(
+                  state in {"FAILURE", "CANCELLED", "TIMED_OUT", "ERROR"}
+                  for state in states.values()
+              )
+              required_done = all(
+                  state in terminal
+                  for state in states.values()
+              )
 
-          railway = railway_state()
-          for attempt in range(18):
-              if railway == "success":
+              rail = railway_state()
+
+              print(json.dumps({
+                  "workflow_states": states,
+                  "railway": rail,
+              }, sort_keys=True))
+
+              if required_failed:
                   break
-              if railway in {"failure", "error"}:
-                  break
-              if required_failed or required_pending or not handoff_ok:
+              if required_done and rail in {"success", "failure", "error"}:
                   break
               time.sleep(5)
-              railway = railway_state()
+
+          required = latest_runs()
+          states = {name: conclusion(required.get(name)) for name in required_names}
+          rail = railway_state()
+
+          required_failed = any(
+              state in {"FAILURE", "CANCELLED", "TIMED_OUT", "ERROR"}
+              for state in states.values()
+          )
+          required_complete = all(
+              state in terminal
+              for state in states.values()
+          )
+          tests_ok = states["SLH Full Regression"] == "SUCCESS"
+          ci_ok = states["SLH CI"] == "SUCCESS"
+          security_ok = states["Bot Vault Regression"] == "SUCCESS"
+          handoff_ok = states["Validate and hand off to Railway"] == "SUCCESS"
 
           if required_failed:
               aggregate = "FAIL"
-          elif required_pending:
-              aggregate = "PENDING"
-          elif all((ci_ok, tests_ok, security_ok, handoff_ok)):
+          elif required_complete and all((ci_ok, tests_ok, security_ok, handoff_ok)):
               aggregate = "PASS"
           else:
               aggregate = "PENDING"
 
-          if railway == "success":
+          if rail == "success":
               deployment_status = "SUCCESS"
               deployment_source = "external_verified"
-          elif railway in {"failure", "error"}:
+          elif rail in {"failure", "error"}:
               deployment_status = "FAIL"
               deployment_source = "external_verified"
           else:
@@ -149,7 +169,7 @@ jobs:
                   "tests_passed": tests_ok,
               },
               "security": {
-                  "status": "PASS" if security_ok else conclusion("Bot Vault Regression")
+                  "status": "PASS" if security_ok else states["Bot Vault Regression"]
               },
               "deployment": {
                   "status": deployment_status,
@@ -158,7 +178,7 @@ jobs:
               "workflows": {
                   name: {
                       "status": (required.get(name) or {}).get("status", "MISSING"),
-                      "conclusion": conclusion(name),
+                      "conclusion": states[name],
                       "run_id": (required.get(name) or {}).get("databaseId"),
                   }
                   for name in required_names
