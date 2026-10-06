@@ -120,5 +120,18 @@ def test_owner_menu_includes_quick_send_to_tzvika():
     buttons = [button for row in markup.keyboard for button in row]
     quick_buttons = [b for b in buttons if "שלח 1 SLH" in b.text]
     assert quick_buttons
-    assert quick_buttons[0].web_app.url.find("slh_route=quick_send") >= 0
-    assert quick_buttons[0].web_app.url.find("slh_quick_send=owner_to_tzvika_1") >= 0
+    assert quick_buttons[0].url.find("/wallet-handoff?") >= 0
+    assert "next=/slh-browser-send" in quick_buttons[0].url
+
+
+
+def test_owner_browser_send_url_uses_wallet_handoff():
+    handoff = {"token": "browser-send-token-1234567890"}
+    with patch.object(slh_handler, "create_handoff", return_value=handoff):
+        url = slh_handler._owner_slh_browser_send_url("8789977826")
+
+    target = urlsplit(url)
+    assert target.path == "/wallet-handoff"
+    inner = parse_qs(target.query)
+    assert inner["next"] == ["/slh-browser-send"]
+    assert inner["code"] == ["browser-send-token-1234567890"]
