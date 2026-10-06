@@ -970,7 +970,7 @@ if(__slhSlhRoute==='send'&&__slhShowing==='wallet'){
 }
 if(__slhSlhRoute==='quick_send'&&__slhShowing==='wallet'&&__slhSlhQuickSend){
   loadQuickSlhSendPreset().then(()=>{
-    const card=$('slhSendCard');if(card){card.style.border='2px solid color-mix(in srgb,var(--v4-btn) 45%,transparent)';card.scrollIntoView({behavior:'smooth',block:'center');}
+    const card=$('slhSendCard');if(card){card.style.border='2px solid color-mix(in srgb,var(--v4-btn) 45%,transparent)';card.scrollIntoView({behavior:'smooth',block:'center'});}
   }).catch(e=>{
     console.error('[SLH QUICK SEND PRESET]',e);
     setText('slhSendStatus','❌ '+(e.message||e));
