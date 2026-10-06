@@ -407,9 +407,11 @@ def wallet_handoff():
         return jsonify({"error": "MISSING_WALLET_HANDOFF"}), 400
 
     next_path = str(request.args.get("next", "")).strip() or "/wallet-connect"
-    # Only allow fixed internal wallet pages; never accept arbitrary redirect URLs.
-    allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke", "/slh-browser-send"}
-    if next_path not in allowed_next:
+    # Only allow fixed internal wallet pages; query parameters are allowed only
+    # on approved internal pages so preset selection cannot become an arbitrary redirect.
+    next_base = next_path.split("?", 1)[0]
+    allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke", "/slh-browser-send", "/bnb-browser-return"}
+    if next_base not in allowed_next:
         return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
 
     session_cookie = str(request.cookies.get("slh_wallet_handoff") or "").strip()
