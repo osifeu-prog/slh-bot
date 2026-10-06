@@ -41,6 +41,43 @@ class WebAppApiAuthTests(unittest.TestCase):
             "credits": 10,
         })
 
+
+
+    def test_wallet_handoff_allows_browser_send_target(self):
+        token = "browser-send-token-1234567890"
+        with patch("core.wallet_handoff.consume_handoff", return_value="8789977826"):
+            response = self.client.get(
+                "/wallet-handoff?code="+token+"&next=/slh-browser-send"
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/slh-browser-send")
+        self.assertIn("slh_wallet_handoff=", response.headers.get("Set-Cookie", ""))
+        self.assertIn("Path=/", response.headers.get("Set-Cookie", ""))
+
+    def test_browser_quick_send_config_endpoint(self):
+        cfg = {
+            "ok": True,
+            "preset": "owner_to_tzvika_1",
+            "label": "צביקה",
+            "sender_uid": "8789977826",
+            "sender": "0x1111111111111111111111111111111111111111",
+            "recipient_uid": "5010371391",
+            "recipient": "0x2222222222222222222222222222222222222222",
+            "amount_slh": "1",
+            "chain_id": 56,
+            "token_contract": "0x3333333333333333333333333333333333333333",
+            "signing": "user_wallet_only",
+            "custody": False,
+        }
+        with patch("webapp.authenticated_uid", return_value="8789977826"), patch(
+            "core.slh_quick_send.get_quick_send_config", return_value=cfg
+        ):
+            response = self.client.get("/api/v1/wallet/slh/browser-quick-send")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), cfg)
+
     def test_wallet_handoff_repeated_get_uses_existing_session_cookie(self):
         token = "handoff-token-for-test-1234567890"
         with patch("core.wallet_handoff.consume_handoff") as consume, patch(
