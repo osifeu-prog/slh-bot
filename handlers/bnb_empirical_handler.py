@@ -48,41 +48,66 @@ def register(bot):
             bot.reply_to(message, f"❌ BNB smoke button failed: {type(exc).__name__}")
 
 
-    @bot.message_handler(commands=["bnb_return", "bnb_return_smoke"])
+    @bot.message_handler(commands=["bnb_return"])
     def bnb_return(message):
-        uid = str(message.from_user.id)
-        if not is_owner(uid):
-            return
+        _send_bnb_return_button(
+            bot,
+            message,
+            preset="repay_1",
+            button_text="↩️ החזר לצביקה 1 BNB",
+            title="↩️ BNB REPAYMENT",
+            amount="1 BNB",
+        )
 
-        public_url = os.getenv(
-            "SLH_PUBLIC_URL",
-            "https://slh-cloud-bot-production.up.railway.app",
-        ).rstrip("/")
-        url = public_url + "/bnb-browser-return"
 
-        try:
-            from telebot import types
+    @bot.message_handler(commands=["bnb_return_smoke"])
+    def bnb_return_smoke(message):
+        _send_bnb_return_button(
+            bot,
+            message,
+            preset="smoke",
+            button_text="🧪 שלח 0.01 BNB לבדיקה",
+            title="🧪 BNB RETURN SMOKE",
+            amount="0.01 BNB",
+        )
 
-            markup = types.InlineKeyboardMarkup()
-            markup.add(
-                types.InlineKeyboardButton(
-                    "↩️ החזר לצביקה 0.01 BNB",
-                    web_app=types.WebAppInfo(url=url),
-                )
+
+def _send_bnb_return_button(bot, message, preset, button_text, title, amount):
+    uid = str(message.from_user.id)
+    if not is_owner(uid):
+        return
+
+    public_url = os.getenv(
+        "SLH_PUBLIC_URL",
+        "https://slh-cloud-bot-production.up.railway.app",
+    ).rstrip("/")
+    url = f"{public_url}/bnb-browser-return?preset={preset}"
+
+    try:
+        from telebot import types
+
+        markup = types.InlineKeyboardMarkup()
+        markup.add(
+            types.InlineKeyboardButton(
+                button_text,
+                web_app=types.WebAppInfo(url=url),
             )
-            bot.reply_to(
-                message,
-                "↩️ BNB RETURN SMOKE\n\n"
-                "מסלול חד־פעמי לבעלים בלבד.\n"
-                "• סכום נעול: 0.01 BNB\n"
-                "• יעד: ארנק BNB המאומת הנוכחי של צביקה\n"
-                "• רשת: BNB Smart Chain (56)\n"
-                "• הארנק שלך בלבד חותם ומשדר\n"
-                "• השרת אינו מחזיק מפתח ואינו משדר\n"
-                "• אימות: sender + recipient + exact Wei + 15 confirmations\n\n"
-                "לחץ על הכפתור, חבר את ה־Trezor דרך MetaMask ואשר רק את העסקה שמוצגת.\n"
-                "Settlement ציבורי נשאר CLOSED.",
-                reply_markup=markup,
-            )
-        except Exception as exc:
-            bot.reply_to(message, f"❌ BNB return button failed: {type(exc).__name__}")
+        )
+        bot.reply_to(
+            message,
+            f"{title}\n\n"
+            "מסלול חד־פעמי לבעלים בלבד.\n"
+            f"• סכום נעול: {amount}\n"
+            "• יעד: ארנק BNB המאומת הנוכחי של צביקה\n"
+            "• רשת: BNB Smart Chain (56)\n"
+            "• הארנק שלך בלבד חותם ומשדר\n"
+            "• השרת אינו מחזיק מפתח ואינו משדר\n"
+            "• אימות: sender + recipient + exact Wei + 15 confirmations\n"
+            "• Gas בפועל יוצג לאחר האישור\n\n"
+            "לחץ על הכפתור, חבר את ה־Trezor דרך MetaMask ואשר רק את העסקה שמוצגת.\n"
+            "עמלת רשת משולמת ע״י הארנק השולח ומוצגת בנפרד.\n"
+            "Settlement ציבורי נשאר CLOSED.",
+            reply_markup=markup,
+        )
+    except Exception as exc:
+        bot.reply_to(message, f"❌ BNB return button failed: {type(exc).__name__}")
