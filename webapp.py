@@ -1968,7 +1968,7 @@ def secondary_distribution_confirm():
         return _no_store(jsonify(result)), 200
     except ValueError as exc:
         code = str(exc)
-        if code == "INSUFFICIENT_CONFIRMATIONS":
+        if code in {"INSUFFICIENT_CONFIRMATIONS", "TRANSACTION_NOT_FOUND_RETRYABLE"}:
             return jsonify({"error": code, "retryable": True}), 409
         return jsonify({"error": code}), 400
     except Exception as exc:

@@ -179,3 +179,33 @@ def test_unbounded_mode_does_not_block_large_amount(monkeypatch):
     assert result["amount_slh"] == "1000000000"
     assert result["broadcast"] is False
     assert result["custody"] is False
+
+
+def test_confirm_treats_missing_transaction_as_retryable(monkeypatch):
+    db = _db()
+    db["secondary_distribution_pending"]["r1"] = {
+        "request_id": "r1",
+        "uid": UID,
+        "status": "prepared",
+        "address": WALLET,
+        "recipient": RECIPIENT,
+        "token_contract": TOKEN,
+        "amount_slh": "1",
+        "amount_raw": 10**15,
+        "prepared_at": "2026-10-06T15:00:00+00:00",
+        "expires_at": "2099-10-06T15:10:00+00:00",
+    }
+
+    class Eth:
+        def get_transaction_receipt(self, tx_hash):
+            from web3.exceptions import TransactionNotFound
+            raise TransactionNotFound(tx_hash)
+
+    class W3:
+        eth = Eth()
+
+    monkeypatch.setattr(svc, "_client", lambda cfg: W3())
+    monkeypatch.setattr(svc, "_bsc_config", lambda: {"rpc": "x", "confirmations": 15})
+    with patch.object(svc.state_manager, "load_db", return_value=db):
+        with pytest.raises(ValueError, match="TRANSACTION_NOT_FOUND_RETRYABLE"):
+            svc.confirm_secondary_slh_transfer(UID, "r1", "0xabc")

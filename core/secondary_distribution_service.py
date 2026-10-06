@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from web3 import Web3
+from web3.exceptions import TransactionNotFound
 
 import state_manager
 from core.distribution_wallet_registry import (
@@ -349,7 +350,13 @@ def confirm_secondary_slh_transfer(
 
     cfg = _bsc_config()
     web3 = _client(cfg)
-    receipt = web3.eth.get_transaction_receipt(tx_hash)
+    try:
+        receipt = web3.eth.get_transaction_receipt(tx_hash)
+    except TransactionNotFound as exc:
+        # A freshly broadcast transaction can take a short time to propagate
+        # from the signing wallet/RPC to the settlement RPC. Treat this as
+        # retryable rather than a terminal confirmation failure.
+        raise ValueError("TRANSACTION_NOT_FOUND_RETRYABLE") from exc
     if not receipt or int(receipt.get("status", 0)) != 1:
         raise ValueError("BSC_TX_FAILED")
 
