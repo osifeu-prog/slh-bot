@@ -1,3 +1,4 @@
+from urllib.parse import parse_qs, urlsplit
 from unittest.mock import patch
 
 from handlers import slh_handler
@@ -64,3 +65,22 @@ def test_status_uses_live_bsc_truth_and_active_registry():
     assert "BNB gas: 0.01499" in text
     assert "Per-tx: 1 SLH" in text
     assert "Daily: 1 SLH" in text
+
+
+def test_trust_wallet_smoke_url_uses_one_time_handoff():
+    handoff = {"token": "smoke-token-12345678901234567890"}
+    with patch.object(slh_handler, "create_handoff", return_value=handoff):
+        url = slh_handler._trust_wallet_smoke_url("5010371391")
+
+    parts = urlsplit(url)
+    assert parts.scheme == "https"
+    assert parts.netloc == "link.trustwallet.com"
+    outer = parse_qs(parts.query)
+    assert outer["coin_id"] == ["20000714"]
+    assert len(outer["url"]) == 1
+
+    target = urlsplit(outer["url"][0])
+    assert target.path == "/wallet-handoff"
+    inner = parse_qs(target.query)
+    assert inner["next"] == ["/slh-smoke"]
+    assert inner["code"] == ["smoke-token-12345678901234567890"]

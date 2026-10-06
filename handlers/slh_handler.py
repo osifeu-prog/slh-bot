@@ -8,7 +8,7 @@ user-signed transfer through the existing SLH distribution authority.
 import os
 import re
 from decimal import Decimal, InvalidOperation
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit
 
 from telebot import types
 from web3 import Web3
@@ -17,6 +17,7 @@ from core.bsc_wallet_read_model import read_bsc_wallet
 from core.distribution_wallet_registry import get_secondary_distribution_wallet
 from core.identity import OWNER_TELEGRAM_ID
 from core.wallet_binding import get_binding
+from core.wallet_handoff import create_handoff
 
 
 _ADDRESS_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
@@ -30,6 +31,29 @@ def _mini_app_url(**params):
     ).strip()
     query = urlencode({k: v for k, v in params.items() if v not in (None, "")})
     return f"{base}?{query}" if query else base
+
+def _public_origin():
+    base = (
+        os.getenv("SLH_MINI_APP_URL")
+        or "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+    ).strip()
+    parts = urlsplit(base)
+    if parts.scheme and parts.netloc:
+        return f"{parts.scheme}://{parts.netloc}"
+    return "https://slh-cloud-bot-production.up.railway.app"
+
+
+def _trust_wallet_smoke_url(uid):
+    handoff = create_handoff(uid)
+    target = (
+        f"{_public_origin()}/wallet-handoff?"
+        f"code={quote(str(handoff['token']), safe='')}&next=/slh-smoke"
+    )
+    return (
+        "https://link.trustwallet.com/open_url?coin_id=20000714&url="
+        + quote(target, safe="")
+    )
+
 
 
 def _format_amount(value):
@@ -121,19 +145,30 @@ def _menu(uid, *, include_test=False):
         owner_binding = get_binding(str(OWNER_TELEGRAM_ID))
         owner_address = owner_binding.get("address") if owner_binding else None
         if owner_address:
-            smoke_url = _mini_app_url(
-                screen="wallet",
-                slh_route="smoke",
-                slh_smoke="1",
-                recipient=owner_address,
-                amount="1",
-            )
-            markup.add(
-                types.InlineKeyboardButton(
-                    "🧪 בדיקת 1 SLH",
-                    web_app=types.WebAppInfo(url=smoke_url),
+            try:
+                smoke_url = _trust_wallet_smoke_url(uid)
+                markup.add(
+                    types.InlineKeyboardButton(
+                        "🧪 שלח 1 SLH אל אוסיף",
+                        url=smoke_url,
+                    )
                 )
-            )
+            except Exception as exc:
+                print("[SLH] smoke link error:", type(exc).__name__)
+                markup.add(
+                    types.InlineKeyboardButton(
+                        "🧪 בדיקת 1 SLH",
+                        web_app=types.WebAppInfo(
+                            url=_mini_app_url(
+                                screen="wallet",
+                                slh_route="smoke",
+                                slh_smoke="1",
+                                recipient=owner_address,
+                                amount="1",
+                            )
+                        ),
+                    )
+                )
     return text, markup
 
 
@@ -207,20 +242,30 @@ def register(bot):
 
         target = owner_binding.get("address")
         markup = types.InlineKeyboardMarkup()
-        markup.add(
-            types.InlineKeyboardButton(
-                "🧪 פתח בדיקת 1 SLH",
-                web_app=types.WebAppInfo(
-                    url=_mini_app_url(
-                        screen="wallet",
-                        slh_route="smoke",
-                        slh_smoke="1",
-                        recipient=target,
-                        amount="1",
-                    )
-                ),
+        try:
+            smoke_url = _trust_wallet_smoke_url(uid)
+            markup.add(
+                types.InlineKeyboardButton(
+                    "🧪 פתח Trust Wallet ושלח 1 SLH",
+                    url=smoke_url,
+                )
             )
-        )
+        except Exception as exc:
+            print("[SLH] smoke link error:", type(exc).__name__)
+            markup.add(
+                types.InlineKeyboardButton(
+                    "🧪 פתח בדיקת 1 SLH",
+                    web_app=types.WebAppInfo(
+                        url=_mini_app_url(
+                            screen="wallet",
+                            slh_route="smoke",
+                            slh_smoke="1",
+                            recipient=target,
+                            amount="1",
+                        )
+                    ),
+                )
+            )
         bot.reply_to(
             message,
             "🧪 SLH ON-CHAIN SMOKE\n\n"

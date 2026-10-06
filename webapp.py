@@ -385,7 +385,7 @@ def wallet_handoff():
 
     next_path = str(request.args.get("next", "")).strip() or "/wallet-connect"
     # Only allow fixed internal wallet pages; never accept arbitrary redirect URLs.
-    allowed_next = {"/wallet-connect", "/bnb-smoke"}
+    allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke"}
     if next_path not in allowed_next:
         return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
 
@@ -409,6 +409,21 @@ def wallet_handoff():
     response.headers["Pragma"] = "no-cache"
     response.headers["Referrer-Policy"] = "no-referrer"
     return response
+
+
+@app.route("/slh-smoke", methods=["GET"])
+def slh_smoke_page():
+    """Dedicated one-button SLH smoke page for the approved secondary wallet."""
+    html_path = BASE_DIR / "wallet_connect.html"
+    if not html_path.exists():
+        return jsonify({"error": "WALLET_CONNECT_PAGE_NOT_FOUND"}), 500
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp
 
 
 @app.route("/wallet-connect", methods=["GET"])
@@ -1864,6 +1879,40 @@ def secondary_distribution_status():
     except Exception as exc:
         print("[DISTRIBUTION] status error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "SECONDARY_DISTRIBUTION_STATUS_FAILED"}), 502
+
+
+@app.route("/api/v1/distribution/secondary/smoke-config", methods=["GET"])
+def secondary_distribution_smoke_config():
+    """Read-only target for the controlled 1-SLH secondary-wallet smoke."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.secondary_distribution_service import secondary_distribution_snapshot
+        from core.wallet_binding import get_binding
+        from core.identity import OWNER_TELEGRAM_ID
+
+        snapshot = secondary_distribution_snapshot(uid)
+        if not snapshot.get("active"):
+            return jsonify({"error": "SECONDARY_DISTRIBUTION_WALLET_NOT_ACTIVE"}), 403
+
+        owner_binding = get_binding(str(OWNER_TELEGRAM_ID))
+        recipient = str(owner_binding.get("address") or "").strip() if owner_binding else ""
+        if not recipient:
+            return jsonify({"error": "OWNER_BSC_WALLET_NOT_VERIFIED"}), 503
+
+        return _no_store(jsonify({
+            "ok": True,
+            "chain_id": 56,
+            "amount_slh": "1",
+            "recipient": recipient,
+            "token_contract": snapshot.get("token_contract"),
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[DISTRIBUTION] smoke config error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SECONDARY_DISTRIBUTION_SMOKE_CONFIG_FAILED"}), 502
 
 
 @app.route("/api/v1/distribution/secondary/prepare", methods=["POST"])

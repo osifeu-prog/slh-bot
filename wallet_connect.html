@@ -50,7 +50,10 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
+const smokeMode=location.pathname==="/slh-smoke";
 let binding=null, provider=null, wcProvider=null, mmClient=null, expiryTimer=null;
+let smokeRequestId=null;
+let smokeRunning=false;
 const $=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{$("status").textContent=x;$("status").className="status "+cls;};
 async function api(path,opts={}){
@@ -169,7 +172,7 @@ async function connectMetaMask(){
 }
 async function openTrust(){
   const target=location.origin+"/wallet-connect";
-  const link="https://link.trustwallet.com/open_url?coin_id=60&url="+encodeURIComponent(target);
+  const link="https://link.trustwallet.com/open_url?coin_id=20000714&url="+encodeURIComponent(target);
   try{if(tg?.openLink){tg.openLink(link);return;}}catch(_e){}
   location.href=link;
 }
@@ -241,7 +244,147 @@ $("meta").onclick=connectMetaMask;
 $("trust").onclick=openTrust;
 $("wc").onclick=connectWalletConnect;
 $("fresh").onclick=connectWalletConnect;
-init();
+
+async function discoverSmokeProvider(){
+  if(window.trustwallet?.ethereum)return window.trustwallet.ethereum;
+  if(window.ethereum?.isTrust || window.ethereum?.isTrustWallet)return window.ethereum;
+  if(Array.isArray(window.ethereum?.providers)){
+    const trust=window.ethereum.providers.find(p=>p?.isTrust||p?.isTrustWallet);
+    if(trust)return trust;
+  }
+  return window.ethereum||null;
+}
+
+async function cancelSmoke(){
+  if(!smokeRequestId)return;
+  try{
+    await api("/api/v1/distribution/secondary/cancel",{
+      method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},headers),
+      body:JSON.stringify({request_id:smokeRequestId})
+    });
+  }catch(_e){}
+  smokeRequestId=null;
+}
+
+async function confirmSmoke(txHash){
+  for(let attempt=0;attempt<90;attempt++){
+    try{
+      const r=await fetch("/api/v1/distribution/secondary/confirm",{
+        method:"POST",
+        headers:Object.assign({"Content-Type":"application/json"},headers),
+        body:JSON.stringify({request_id:smokeRequestId,tx_hash:txHash}),
+        cache:"no-store"
+      });
+      const d=await r.json().catch(()=>({}));
+      if(r.status===409&&d.retryable){
+        setStatus("⏳ ממתין ל־15 confirmations…","warn");
+        await new Promise(resolve=>setTimeout(resolve,5000));
+        continue;
+      }
+      if(!r.ok)throw Error(d.error||("HTTP "+r.status));
+      if(d.status==="confirmed"||d.status==="duplicate"){
+        setStatus("✅ PASS — 1 SLH הועבר ואומת on-chain.","ok");
+        smokeRequestId=null;
+        return true;
+      }
+      throw Error("SMOKE_CONFIRMATION_FAILED");
+    }catch(e){
+      setStatus("❌ אימות העסקה נכשל: "+(e.message||e),"err");
+      return false;
+    }
+  }
+  setStatus("❌ האימות לא הושלם בזמן.","err");
+  return false;
+}
+
+function openSmokeTrust(){
+  const target=location.origin+"/slh-smoke";
+  const link="https://link.trustwallet.com/open_url?coin_id=20000714&url="+encodeURIComponent(target);
+  try{if(tg?.openLink){tg.openLink(link);return;}}catch(_e){}
+  location.href=link;
+}
+
+async function startSmoke(){
+  if(!smokeMode||smokeRunning)return;
+  smokeRunning=true;
+  try{
+    const p=await discoverSmokeProvider();
+    if(!p)throw Error("TRUST_WALLET_PROVIDER_NOT_FOUND");
+    provider=p;
+    const accounts=await p.request({method:"eth_requestAccounts"});
+    const address=accounts?.[0];
+    if(!address)throw Error("לא נבחר ארנק ב־Trust Wallet");
+
+    let chain=await p.request({method:"eth_chainId"}).catch(()=>null);
+    if(chain!=="0x38"){
+      await p.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});
+      chain=await p.request({method:"eth_chainId"});
+    }
+    if(chain!=="0x38")throw Error("Trust Wallet אינו מחובר ל־BSC 56");
+    if(String(address).toLowerCase()!==String(binding.address).toLowerCase()){
+      throw Error("כתובת Trust Wallet אינה תואמת לארנק המאומת של צביקה");
+    }
+
+    const cfg=await api("/api/v1/distribution/secondary/smoke-config");
+    if(String(cfg.amount_slh)!=="1")throw Error("SMOKE_AMOUNT_MISMATCH");
+
+    smokeRequestId=(crypto&&crypto.randomUUID)
+      ?crypto.randomUUID()
+      :("smoke-"+Date.now()+"-"+Math.random().toString(36).slice(2,8));
+
+    const prepared=await api("/api/v1/distribution/secondary/prepare",{
+      method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},headers),
+      body:JSON.stringify({
+        recipient:cfg.recipient,
+        amount:"1",
+        request_id:smokeRequestId
+      })
+    });
+
+    setStatus("⏳ 1 SLH מוכן. Trust Wallet יבקש עכשיו אישור…","ok");
+    const txHash=await p.request({
+      method:"eth_sendTransaction",
+      params:[prepared.tx]
+    });
+
+    setStatus("✅ העסקה נשלחה. ממתינים ל־15 confirmations…","ok");
+    await confirmSmoke(txHash);
+  }catch(e){
+    console.error("[SLH_SMOKE]",e);
+    const msg=String(e?.message||e||"");
+    if(/4001|user rejected|rejected/i.test(msg)){
+      await cancelSmoke();
+      setStatus("העסקה בוטלה ב־Trust Wallet. אפשר לנסות שוב.","warn");
+    }else if(msg==="TRUST_WALLET_PROVIDER_NOT_FOUND"){
+      setStatus("❌ Trust Wallet לא זמין. פתח את הקישור מתוך Trust Wallet.","err");
+    }else{
+      await cancelSmoke();
+      setStatus("❌ SLH Smoke: "+msg,"err");
+    }
+  }finally{
+    smokeRunning=false;
+  }
+}
+
+if(smokeMode){
+  $("meta").classList.add("hidden");
+  $("trust").classList.remove("hidden");
+  $("trust").textContent="📱 פתח שוב ב־Trust Wallet";
+  $("trust").onclick=openSmokeTrust;
+  $("wc").classList.add("hidden");
+  $("fresh").classList.add("hidden");
+  $("assets").classList.add("hidden");
+  document.title="SLH OS · 1 SLH Smoke";
+  (async()=>{
+    await init();
+    setStatus("⏳ מתחבר ל־Trust Wallet ומכין 1 SLH…","ok");
+    setTimeout(()=>startSmoke(),250);
+  })();
+}else{
+  init();
+}
 </script>
 </body>
 </html>
