@@ -389,9 +389,16 @@ def wallet_handoff():
     if next_path not in allowed_next:
         return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
 
+    session_cookie = str(request.cookies.get("slh_wallet_handoff") or "").strip()
     try:
-        from core.wallet_handoff import consume_handoff
-        consume_handoff(code)
+        from core.wallet_handoff import consume_handoff, validate_session
+        # The handoff remains one-time, but a browser/Wallet deep-link can issue
+        # the GET twice. Once this browser already owns the session cookie,
+        # allow the repeated GET to re-enter the fixed internal target.
+        if session_cookie != code:
+            consume_handoff(code)
+        elif validate_session(code) is None:
+            return jsonify({"error": "INVALID_WALLET_SESSION"}), 400
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -403,7 +410,7 @@ def wallet_handoff():
         httponly=True,
         secure=True,
         samesite="Lax",
-        path="/api",
+        path="/",
     )
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
