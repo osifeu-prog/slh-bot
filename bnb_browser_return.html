@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLH OS · BNB Return</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#0b0d12;color:#f4f5f7;margin:0;padding:16px}
+.card{max-width:680px;margin:auto;background:#151922;border:1px solid #2b3140;border-radius:18px;padding:20px}
+h2{margin:0 0 8px}.muted{color:#aeb5c2;line-height:1.5}.row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;align-items:center}.code{font-family:ui-monospace,monospace;word-break:break-all;font-size:12px}
+button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}.primary{background:#fff;color:#111}
+.status{margin-top:14px;line-height:1.5}.ok{color:#7ff0a5}.err{color:#ff7f8f}.kv{padding:10px 0;border-top:1px solid #2b3140}.kv:first-child{border-top:0}
+</style>
+</head>
+<body><div class="card">
+<h2>↩️ SLH OS · BNB Return Smoke</h2>
+<p class="muted">החזרה חד־פעמית של 0.01 BNB לצביקה. השרת אינו חותם ואינו משדר; הארנק שלך חותם ומשדר את העסקה.</p>
+<div id="session" class="muted">⏳ טוען יעד מאומת…</div>
+<div id="details" hidden>
+<div class="kv"><b>עסקה נעולה</b><div class="row"><span>כמות</span><b>0.01 BNB</b></div><div class="row"><span>יעד</span><b id="recipient" class="code">—</b></div><div class="row"><span>Sender</span><b id="sender" class="code">—</b></div><div class="row"><span>רשת</span><b>BSC Mainnet · Chain 56</b></div></div>
+<div class="kv"><b>שלב 1 · חיבור הארנק</b><div id="walletStatus" class="muted">חבר את MetaMask שבו ה־Trezor שלך מחובר.</div><button id="connect" class="primary">🦊 חבר MetaMask / Trezor</button></div>
+<div class="kv"><b>שלב 2 · שליחה</b><button id="send" class="primary" hidden>🔐 אשר ושלח בדיוק 0.01 BNB לצביקה</button><div id="quote" class="muted"></div></div>
+<div class="kv"><b>שלב 3 · אימות</b><div id="verifyStatus" class="muted">לא נשלחה עסקה.</div><div id="tx" class="code"></div></div>
+</div><div id="status" class="status"></div>
+</div>
+<script>
+let cfg=null,provider=null,account=null,quote=null;const el=id=>document.getElementById(id);const setStatus=(x,c="")=>{el("status").textContent=x;el("status").className="status "+c};
+function big(v){return BigInt(String(v))}function formatBnb(raw){const n=big(raw),u=1000000000000000000n,w=n/u,f=(n%u).toString().padStart(18,"0").slice(0,8).replace(/0+$/,"");return w.toString()+(f?"."+f:"")}
+async function api(path,opts={}){const r=await fetch(path,Object.assign({cache:"no-store",credentials:"same-origin"},opts));const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||("HTTP "+r.status));return d}
+async function discoverMetaMask(){const found=[],h=e=>{if(e?.detail?.provider)found.push(e.detail)};window.addEventListener("eip6963:announceProvider",h);try{window.dispatchEvent(new Event("eip6963:requestProvider"));await new Promise(r=>setTimeout(r,700))}finally{window.removeEventListener("eip6963:announceProvider",h)}const mm=found.find(x=>String(x?.info?.rdns||"").toLowerCase()==="io.metamask"||String(x?.info?.name||"").toLowerCase()==="metamask");if(mm?.provider)return mm.provider;if(window.ethereum?.isMetaMask)return window.ethereum;if(Array.isArray(window.ethereum?.providers))return window.ethereum.providers.find(p=>p?.isMetaMask)||null;throw Error("METAMASK_EXTENSION_NOT_FOUND")}
+async function ensureChain(){let c=await provider.request({method:"eth_chainId"});if(c!=="0x38"){try{await provider.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]})}catch(e){if(e?.code===4902)await provider.request({method:"wallet_addEthereumChain",params:[{chainId:"0x38",chainName:"BNB Smart Chain",nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},rpcUrls:["https://bsc-dataseed.bnbchain.org"],blockExplorerUrls:["https://bscscan.com/"]}]});else throw e}c=await provider.request({method:"eth_chainId"})}if(c!=="0x38")throw Error("BSC_CHAIN_ID_MISMATCH")}
+async function init(){try{cfg=await api("/api/v1/wallet/bnb/browser-quick-return");if(String(cfg.chain_id)!=="56"||String(cfg.amount_wei)!=="10000000000000000")throw Error("BNB_RETURN_PRESET_INVALID");el("recipient").textContent=cfg.recipient;el("sender").textContent=cfg.sender;el("details").hidden=false;el("session").textContent="✅ Wallet Session פעיל · החזרה נעולה על 0.01 BNB";setStatus("התחבר דרך הדפדפן שבו MetaMask Extension שלך מחובר ל־Trezor.","ok")}catch(e){el("session").textContent="❌ Wallet Session לא תקף";setStatus(String(e.message||e),"err")}}
+async function connect(){try{provider=await discoverMetaMask();await provider.request({method:"eth_requestAccounts"});await ensureChain();account=(await provider.request({method:"eth_accounts"}))[0];if(!account)throw Error("NO_ACCOUNT");if(account.toLowerCase()!==cfg.sender.toLowerCase())throw Error("החשבון המחובר אינו חשבון ה־Trezor המאומת");el("walletStatus").textContent="✅ MetaMask / Trezor מחובר: "+account.slice(0,8)+"…"+account.slice(-6);el("send").hidden=false;setStatus("✅ הארנק הנכון מחובר.","ok")}catch(e){el("walletStatus").textContent="❌ "+(e.message||e);setStatus(String(e.message||e),"err")}}
+async function prepare(){await ensureChain();const balance=big(await provider.request({method:"eth_getBalance",params:[account,"latest"]})),value=big(cfg.amount_wei),gas=big(await provider.request({method:"eth_estimateGas",params:[{from:account,to:cfg.recipient,value:"0x"+value.toString(16)}]})),gasPrice=big(await provider.request({method:"eth_gasPrice"})),fee=gas*gasPrice;if(balance<value+fee)throw Error("אין מספיק BNB עבור הסכום וה־gas");quote={gas,gasPrice,value,fee};el("quote").textContent="✅ מוכן: 0.01 BNB → "+cfg.recipient+" · Gas משוער "+formatBnb(fee)+" BNB"}
+async function send(){try{await prepare();el("verifyStatus").textContent="⏳ MetaMask/Trezor יבקש אישור. אשר רק אם היעד הוא הכתובת שמופיעה למעלה והכמות = 0.01 BNB.";const txHash=await provider.request({method:"eth_sendTransaction",params:[{from:account,to:cfg.recipient,value:"0x"+quote.value.toString(16),gas:"0x"+quote.gas.toString(16),gasPrice:"0x"+quote.gasPrice.toString(16)}]});el("tx").textContent=txHash;el("verifyStatus").textContent="⏳ העסקה נשלחה. ממתינים ל־15 confirmations…";await verify(txHash)}catch(e){el("verifyStatus").textContent="❌ "+(e.message||e);setStatus(String(e.message||e),"err")}}
+async function verify(txHash){for(let i=0;i<90;i++){try{const d=await api("/api/v1/wallet/bnb/browser-quick-return/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tx_hash:txHash})});if(d.ok){el("verifyStatus").textContent="✅ PASS — 0.01 BNB הועבר ואומת on-chain · "+d.confirmations+" confirmations";setStatus("✅ ההחזרה הושלמה בהצלחה.","ok");return}}catch(e){const m=String(e.message||e);if(m==="INSUFFICIENT_CONFIRMATIONS"||m==="TRANSACTION_NOT_FOUND_RETRYABLE"){await new Promise(r=>setTimeout(r,5000));continue}throw e}}throw Error("אימות 15 confirmations לא הושלם בזמן")}
+el("connect").onclick=connect;el("send").onclick=send;init();
+</script></body></html>
