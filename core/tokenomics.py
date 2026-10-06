@@ -23,7 +23,16 @@ TOKENOMICS = {
         "on_chain": True,
         "internal_ledger": True,
         "internal_transferable": True,
+        "internal_transfer_label": "SLH Move",
+        "internal_transfer_policy": "existing_internal_balance_only",
         "on_chain_transferable": True,
+        "on_chain_transfer_policy": "user_wallet_signed_only",
+        "treasury_distribution_policy": "existing_verified_balance_only",
+        "wallet_risk_policy": {
+            "user_reported_compromised": "block_on_chain_real_money_outbound",
+            "internal_slh_move_allowed": True,
+            "treasury_distribution_unaffected_when_using_a_separate_verified_source": True,
+        },
         "tradable_internal": True,
         "chain": "bsc",
         "chain_id": SLH_BSC_CHAIN_ID,
@@ -35,9 +44,14 @@ TOKENOMICS = {
         "minting_supported": False,
         "notes": (
             "SLH exists both as a deployed BSC token and as an internal SLH "
-            "ledger used by the exchange/distribution authorities. The OS does "
-            "not expose a mint_token path; verified on-chain deposits can "
-            "increase an internal SLH balance through the canonical deposit service."
+            "ledger used by the exchange/distribution authorities. SLH Move is the "
+            "product-level name for an internal transfer of existing ledger SLH; it "
+            "never mints supply. On-chain transfers remain user-wallet-signed. A wallet "
+            "reported as compromised is a security boundary for real-money/on-chain "
+            "outbound use, not an ownership erasure or a block on unrelated internal "
+            "SLH Move/Treasury allocation from a separate verified source. The OS does "
+            "not expose a mint_token path; verified on-chain deposits can increase an "
+            "internal SLH balance through the canonical deposit service."
         ),
     },
     "CREDITS": {
