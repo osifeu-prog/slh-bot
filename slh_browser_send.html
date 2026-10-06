@@ -31,9 +31,16 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
     <div class="row"><span>Native value</span><b>0 BNB · gas בלבד</b></div>
   </div>
   <div class="kv">
-    <b>שלב 1 · MetaMask / Trezor</b>
-    <div id="walletStatus" class="muted">מחכה ל־MetaMask Extension…</div>
+    <b>שלב 1 · חיבור הארנק</b>
+    <div id="walletStatus" class="muted">בחר שיטת חיבור ל־Trezor.</div>
     <button id="connect" class="primary">🦊 חבר MetaMask / Trezor</button>
+    <button id="connectWc" class="secondary">🔗 התחבר Trezor Suite · WalletConnect</button>
+    <div id="wcBox" hidden style="margin-top:10px">
+      <div class="muted"><b>WalletConnect URI זמני</b> — הדבק אותו ב־Trezor Suite → Connected apps.</div>
+      <div id="wcUri" class="code" style="margin-top:8px"></div>
+      <button id="copyWc" class="secondary">📋 העתק URI</button>
+      <div id="wcQr" style="display:flex;justify-content:center;margin-top:10px"></div>
+    </div>
   </div>
   <div class="kv">
     <b>שלב 2 · שליחה</b>
@@ -49,7 +56,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
 <div id="status" class="status"></div>
 </div>
 <script>
-let cfg=null,provider=null,account=null,quote=null;
+let cfg=null,provider=null,wcProvider=null,account=null,quote=null;
 const el=id=>document.getElementById(id);
 const setStatus=(x,cls="")=>{el("status").textContent=x;el("status").className="status "+cls};
 
@@ -121,24 +128,71 @@ async function init(){
     setStatus(String(e.message||e),"err");
   }
 }
+async function finalizeProvider(p,label){
+  provider=p;
+  await provider.request({method:"eth_requestAccounts"});
+  await ensureChain();
+  account=(await provider.request({method:"eth_accounts"}))[0];
+  if(!account)throw Error("NO_ACCOUNT");
+  if(account.toLowerCase()!==cfg.sender.toLowerCase())throw Error("החשבון המחובר אינו חשבון ה־Trezor המאומת");
+  el("walletStatus").textContent="✅ "+label+" מחובר לחשבון Trezor המאומת: "+account.slice(0,8)+"…"+account.slice(-6);
+  el("send").hidden=false;
+  setStatus("✅ הארנק הנכון מחובר.","ok");
+}
+
 async function connect(){
   try{
-    provider=await discoverMetaMask();
-    if(!provider)throw Error("METAMASK_EXTENSION_NOT_FOUND");
-    await provider.request({method:"eth_requestAccounts"});
-    await ensureChain();
-    account=(await provider.request({method:"eth_accounts"}))[0];
-    if(!account)throw Error("NO_ACCOUNT");
-    if(account.toLowerCase()!==cfg.sender.toLowerCase())throw Error("החשבון המחובר אינו חשבון ה־Trezor המאומת");
-    el("walletStatus").textContent="✅ MetaMask מחובר לחשבון Trezor המאומת: "+account.slice(0,8)+"…"+account.slice(-6);
-    el("send").hidden=false;
-    setStatus("✅ הארנק הנכון מחובר.","ok");
+    await finalizeProvider(await discoverMetaMask(),"MetaMask / Trezor");
   }catch(e){
     const msg=String(e.message||e);
     el("walletStatus").textContent="❌ "+msg;
     if(msg==="METAMASK_EXTENSION_NOT_FOUND"){
-      setStatus("פתח Chrome/Firefox בדפדפן שבו MetaMask Extension מותקן וה־Trezor מחובר אליו.","err");
+      setStatus("פתח את הדפדפן שבו MetaMask Extension מותקן וה־Trezor מחובר אליו, או השתמש בכפתור WalletConnect.","err");
     }else setStatus(msg,"err");
+  }
+}
+
+async function connectWalletConnect(){
+  try{
+    setStatus("⏳ מאתחל WalletConnect ל־Trezor Suite…");
+    const cfgWc=await api("/api/walletconnect/config");
+    if(!cfgWc.enabled||!cfgWc.project_id)throw Error("WALLETCONNECT_PROJECT_ID לא מוגדר");
+    const mod=await import("https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.25.0/+esm");
+    const EthereumProvider=mod?.EthereumProvider||mod?.default?.EthereumProvider||mod?.default;
+    if(typeof EthereumProvider!=="function")throw Error("WALLETCONNECT_SDK_NOT_LOADED");
+    if(wcProvider){try{await wcProvider.disconnect?.()}catch(_e){}}
+    wcProvider=await EthereumProvider.init({
+      projectId:cfgWc.project_id,
+      chains:[56],
+      showQrModal:false,
+      disableProviderPing:true,
+      rpcMap:{56:"https://bsc-dataseed.binance.org/"},
+      metadata:{
+        name:"SLH OS",
+        description:"Trezor SLH Quick Send",
+        url:location.origin,
+        icons:["https://slh-nft.com/icon-192.png"]
+      }
+    });
+    wcProvider.on?.("display_uri",uri=>{
+      el("wcBox").hidden=false;
+      el("wcUri").textContent=uri;
+      el("wcQr").innerHTML="";
+      if(window.QRCode){
+        new QRCode(el("wcQr"),{text:uri,width:220,height:220});
+      }
+      el("copyWc").onclick=async()=>{
+        await navigator.clipboard.writeText(uri);
+        setStatus("✅ WalletConnect URI הועתק.","ok");
+      };
+      el("walletStatus").textContent="📱 פתח Trezor Suite → Connected apps → Add with WalletConnect, וסרוק/הדבק את ה־URI.";
+    });
+    await wcProvider.connect();
+    await finalizeProvider(wcProvider,"Trezor Suite · WalletConnect");
+  }catch(e){
+    const msg=String(e.message||e);
+    el("walletStatus").textContent="❌ "+msg;
+    setStatus("❌ WalletConnect: "+msg,"err");
   }
 }
 async function prepare(){
@@ -198,6 +252,7 @@ async function verify(txHash){
   throw Error("אימות 15 confirmations לא הושלם בזמן");
 }
 el("connect").onclick=connect;
+el("connectWc").onclick=connectWalletConnect;
 el("send").onclick=send;
 init();
 </script>
