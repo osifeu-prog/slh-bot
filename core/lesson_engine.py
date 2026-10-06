@@ -40,7 +40,18 @@ def can_access_lesson(uid, course_id, stage):
     if stage < 1:
         return False
 
-    # A lesson cannot be entered until the course itself has been started.
+    course = academy_manager.get_courses().get(course_id) or {}
+    stage_data = next(
+        (
+            item for item in course.get("stages", [])
+            if int(item.get("id", -1)) == stage
+        ),
+        None,
+    )
+    if not stage_data:
+        return False
+
+    # A lesson can only be entered after the course has been started.
     progress = academy_manager.get_course(uid, course_id)
     if not progress:
         return False
@@ -48,8 +59,13 @@ def can_access_lesson(uid, course_id, stage):
     completed = set(progress.get("completed", []))
     current_stage = int(progress.get("stage", 0) or 0)
 
+    # Completed lessons remain readable even if a release is later retired.
     if stage in completed:
         return True
+
+    # Unpublished lessons stay locked until the owner releases them.
+    if stage_data.get("published", True) is not True:
+        return False
 
     # First lesson is available only after /course_<id>.
     if stage == 1:
