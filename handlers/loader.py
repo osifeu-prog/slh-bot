@@ -25,6 +25,7 @@ def load_handlers(bot, context):
         ("ui_exchange", "handlers.ui_exchange_handler"),
         ("econ", "econ_handler"),
         ("wallet", "handlers.wallet_handler"),
+        ("slh", "handlers.slh_handler"),
         ("bnb_empirical", "handlers.bnb_empirical_handler"),
         ("legacy_wallet", "handlers.legacy_wallet_handler"),
         ("arcade", "handlers.arcade_handler"),
