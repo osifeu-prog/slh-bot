@@ -46,3 +46,43 @@ def register(bot):
             )
         except Exception as exc:
             bot.reply_to(message, f"❌ BNB smoke button failed: {type(exc).__name__}")
+
+
+    @bot.message_handler(commands=["bnb_return", "bnb_return_smoke"])
+    def bnb_return(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            return
+
+        public_url = os.getenv(
+            "SLH_PUBLIC_URL",
+            "https://slh-cloud-bot-production.up.railway.app",
+        ).rstrip("/")
+        url = public_url + "/bnb-browser-return"
+
+        try:
+            from telebot import types
+
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "↩️ החזר לצביקה 0.01 BNB",
+                    web_app=types.WebAppInfo(url=url),
+                )
+            )
+            bot.reply_to(
+                message,
+                "↩️ BNB RETURN SMOKE\n\n"
+                "מסלול חד־פעמי לבעלים בלבד.\n"
+                "• סכום נעול: 0.01 BNB\n"
+                "• יעד: ארנק BNB המאומת הנוכחי של צביקה\n"
+                "• רשת: BNB Smart Chain (56)\n"
+                "• הארנק שלך בלבד חותם ומשדר\n"
+                "• השרת אינו מחזיק מפתח ואינו משדר\n"
+                "• אימות: sender + recipient + exact Wei + 15 confirmations\n\n"
+                "לחץ על הכפתור, חבר את ה־Trezor דרך MetaMask ואשר רק את העסקה שמוצגת.\n"
+                "Settlement ציבורי נשאר CLOSED.",
+                reply_markup=markup,
+            )
+        except Exception as exc:
+            bot.reply_to(message, f"❌ BNB return button failed: {type(exc).__name__}")
