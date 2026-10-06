@@ -290,7 +290,7 @@ async function confirmSmoke(txHash){
       }
       throw Error("SMOKE_CONFIRMATION_FAILED");
     }catch(e){
-      setStatus("❌ אימות העסקה נכשל: "+(e.message||e),"err");
+      setStatus("❌ אימות העסקה נכשל: "+(e.message||e)+" · TX: "+txHash,"err");
       return false;
     }
   }
