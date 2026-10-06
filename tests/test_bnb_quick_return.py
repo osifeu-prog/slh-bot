@@ -25,6 +25,10 @@ def test_bnb_return_config_is_owner_only(monkeypatch):
     result = bnb_quick_return.get_bnb_return_config("8789977826")
     assert result["amount_bnb"] == "0.01"
     assert result["amount_wei"] == "10000000000000000"
+    repay = bnb_quick_return.get_bnb_return_config("8789977826", preset="repay_1")
+    assert repay["amount_bnb"] == "1"
+    assert repay["amount_wei"] == "1000000000000000000"
+    assert repay["purpose"] == "BNB_REPAYMENT"
     assert result["chain_id"] == 56
     assert result["recipient"] == "0x2222222222222222222222222222222222222222"
     assert result["server_broadcast"] is False
