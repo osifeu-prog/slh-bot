@@ -19,5 +19,11 @@ class MiniAppViewsTest(unittest.TestCase):
         for bad in ("themeParams){}","haptics!=='on'!W","map[id][]"):
             self.assertNotIn(bad,self.src)
 
+    def test_home_shows_separate_live_bsc_slh_balance(self):
+        self.assertIn('id="tokenOnchain"', self.src)
+        self.assertIn("SLH · פנימי", self.src)
+        self.assertIn("SLH · on-chain", self.src)
+        self.assertIn("setText('tokenOnchain',liveSlh);", self.src)
+
 if __name__=="__main__":
     unittest.main()
