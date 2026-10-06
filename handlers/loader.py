@@ -93,6 +93,7 @@ def load_handlers(bot, context):
         ("voting", "handlers.ai_voting_handler"),
         ("governance", "handlers.governance_canonical_handler"),
         ("community_groups", "handlers.community_group_handler"),
+        ("academy_release", "handlers.academy_release_handler"),
         ("broadcast", "handlers.broadcast_handler"),
         ("firewall", "handlers.firewall_handler"),
         ("staking", "handlers.staking_handler"),
