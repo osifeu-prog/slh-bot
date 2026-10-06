@@ -8,6 +8,37 @@ class WebAppApiAuthTests(unittest.TestCase):
     def setUp(self):
         self.client = webapp.app.test_client()
 
+    def test_browser_quick_send_event_decoder_accepts_hexbytes_and_strings(self):
+        from hexbytes import HexBytes
+
+        sender = "0x468328B2a7C9b5629e87844Bb4531e7409400b34"
+        event_topic = webapp.Web3.keccak(
+            text="Transfer(address,address,uint256)"
+        ).hex()
+        sender_topic = "0x" + "0" * 24 + sender[2:].lower()
+        raw_amount = "0x" + (10**15).to_bytes(32, "big").hex()
+
+        self.assertEqual(
+            webapp._normalize_hex_value(HexBytes(event_topic)),
+            event_topic,
+        )
+        self.assertEqual(
+            webapp._normalize_hex_value(event_topic),
+            event_topic,
+        )
+        self.assertEqual(
+            webapp._indexed_topic_address(HexBytes(sender_topic)).lower(),
+            sender.lower(),
+        )
+        self.assertEqual(
+            webapp._indexed_topic_address(sender_topic).lower(),
+            sender.lower(),
+        )
+        self.assertEqual(
+            int(webapp._normalize_hex_value(HexBytes(raw_amount)), 16),
+            10**15,
+        )
+
     def test_global_endpoints_require_telegram_auth(self):
         endpoints = (
             "/api/stats",
