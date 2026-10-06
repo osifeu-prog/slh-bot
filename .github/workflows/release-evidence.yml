@@ -9,11 +9,10 @@ on:
       - Validate and hand off to Railway
     types: [completed]
     branches: [main]
-  status:
 
 concurrency:
-  group: release-evidence-${{ github.event.workflow_run.head_sha || github.event.sha }}
-  cancel-in-progress: false
+  group: release-evidence-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
@@ -28,85 +27,118 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          SHA: ${{ github.event.workflow_run.head_sha || github.event.sha }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-
-          # Status events are emitted for every commit status. Only correlate
-          # the current main commit so feature-branch status updates cannot
-          # publish release evidence for a non-release SHA.
-          if [ "${{ github.event_name }}" = "status" ]; then
-            MAIN_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
-            if [ "$SHA" != "$MAIN_SHA" ]; then
-              echo "Ignoring status event for non-current-main SHA $SHA"
-              exit 0
-            fi
-          fi
 
           gh run list --repo "$REPO" --commit "$SHA" --limit 100             --json name,status,conclusion,databaseId,headSha > runs.json
 
           python3 - <<'PYEOF'
           import json
           import os
+          import subprocess
+          import time
           from pathlib import Path
 
+          repo = os.environ["REPO"]
           sha = os.environ["SHA"]
           runs = json.loads(Path("runs.json").read_text(encoding="utf-8"))
 
-          required = {
-              "SLH CI": None,
-              "SLH Full Regression": None,
-              "Bot Vault Regression": None,
-              "Validate and hand off to Railway": None,
-          }
-
-          # Railway publishes a commit status for the canonical production
-          # service. This is external deployment evidence, not GitHub's
-          # handoff workflow, so it can be correlated without granting
-          # GitHub a Railway secret or performing any deployment action.
-          import subprocess
-
-          statuses = json.loads(
-              subprocess.check_output(
-                  [
-                      "gh", "api",
-                      f"repos/{os.environ['REPO']}/commits/{sha}/statuses",
-                      "--paginate",
-                  ],
-                  text=True,
-              )
-          )
-          railway_statuses = [
-              item for item in statuses
-              if item.get("context") == "slh-cloud-bot - slh-cloud-bot"
+          required_names = [
+              "SLH CI",
+              "SLH Full Regression",
+              "Bot Vault Regression",
+              "Validate and hand off to Railway",
           ]
-          railway_success = any(
-              str(item.get("state", "")).lower() == "success"
-              for item in railway_statuses
-          )
 
-          for run in runs:
-              name = run.get("name")
-              if name in required and run.get("headSha") == sha:
-                  required[name] = run
+          required = {}
+          for name in required_names:
+              candidates = [
+                  run for run in runs
+                  if run.get("name") == name and run.get("headSha") == sha
+              ]
+              if candidates:
+                  required[name] = max(
+                      candidates,
+                      key=lambda item: int(item.get("databaseId") or 0),
+                  )
 
           def conclusion(name):
-              run = required[name]
+              run = required.get(name)
               if not run:
                   return "MISSING"
-              return str(run.get("conclusion") or run.get("status") or "UNKNOWN").upper()
+              return str(
+                  run.get("conclusion") or run.get("status") or "UNKNOWN"
+              ).upper()
+
+          def railway_state():
+              payload = json.loads(
+                  subprocess.check_output(
+                      [
+                          "gh",
+                          "api",
+                          f"repos/{repo}/commits/{sha}/statuses",
+                          "--paginate",
+                      ],
+                      text=True,
+                  )
+              )
+              matches = [
+                  item
+                  for item in payload
+                  if item.get("context") == "slh-cloud-bot - slh-cloud-bot"
+              ]
+              if not matches:
+                  return None
+              latest = max(
+                  matches,
+                  key=lambda item: str(item.get("created_at") or ""),
+              )
+              return str(latest.get("state") or "").lower() or None
 
           ci_ok = conclusion("SLH CI") == "SUCCESS"
           tests_ok = conclusion("SLH Full Regression") == "SUCCESS"
           security_ok = conclusion("Bot Vault Regression") == "SUCCESS"
           handoff_ok = conclusion("Validate and hand off to Railway") == "SUCCESS"
 
-          if all((ci_ok, tests_ok, security_ok, handoff_ok)):
-              aggregate = "PASS"
-          elif any(conclusion(n) in {"FAILURE", "CANCELLED", "TIMED_OUT"} for n in required):
+          required_failed = any(
+              conclusion(name) in {"FAILURE", "CANCELLED", "TIMED_OUT", "ERROR"}
+              for name in required_names
+          )
+          required_pending = any(
+              conclusion(name) in {"MISSING", "QUEUED", "IN_PROGRESS"}
+              for name in required_names
+          )
+
+          railway = railway_state()
+          for attempt in range(18):
+              if railway == "success":
+                  break
+              if railway in {"failure", "error"}:
+                  break
+              if required_failed or required_pending or not handoff_ok:
+                  break
+              time.sleep(5)
+              railway = railway_state()
+
+          if required_failed:
               aggregate = "FAIL"
+          elif required_pending:
+              aggregate = "PENDING"
+          elif all((ci_ok, tests_ok, security_ok, handoff_ok)):
+              aggregate = "PASS"
           else:
               aggregate = "PENDING"
+
+          if railway == "success":
+              deployment_status = "SUCCESS"
+              deployment_source = "external_verified"
+          elif railway in {"failure", "error"}:
+              deployment_status = "FAIL"
+              deployment_source = "external_verified"
+          else:
+              deployment_status = "PENDING"
+              deployment_source = "github_handoff"
 
           evidence = {
               "schema_version": 1,
@@ -120,32 +152,29 @@ jobs:
                   "status": "PASS" if security_ok else conclusion("Bot Vault Regression")
               },
               "deployment": {
-                  "status": "SUCCESS" if railway_success else (
-                      "PENDING" if handoff_ok else conclusion("Validate and hand off to Railway")
-                  ),
-                  "source": "external_verified" if railway_success else "github_handoff"
+                  "status": deployment_status,
+                  "source": deployment_source,
               },
               "workflows": {
                   name: {
-                      "status": (run or {}).get("status", "MISSING"),
+                      "status": (required.get(name) or {}).get("status", "MISSING"),
                       "conclusion": conclusion(name),
-                      "run_id": (run or {}).get("databaseId")
+                      "run_id": (required.get(name) or {}).get("databaseId"),
                   }
-                  for name, run in required.items()
-              }
+                  for name in required_names
+              },
           }
 
           Path("release-evidence.json").write_text(
               json.dumps(evidence, indent=2, sort_keys=True) + "\n",
-              encoding="utf-8"
+              encoding="utf-8",
           )
-
           print(json.dumps(evidence, indent=2, sort_keys=True))
           PYEOF
 
       - name: Publish release evidence artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-evidence-${{ github.event.workflow_run.head_sha || github.event.sha }}
+          name: release-evidence-${{ github.event.workflow_run.head_sha }}
           path: release-evidence.json
           if-no-files-found: error
