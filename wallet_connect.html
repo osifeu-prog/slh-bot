@@ -103,37 +103,69 @@ async function verifyWithProvider(p,label){
   setStatus("✅ "+label+" — ownership אומתה.", "ok");
   await loadAssets();
 }
-function injectedProvider(){
-  if(window.trustwallet?.ethereum)return window.trustwallet.ethereum;
-  if(Array.isArray(window.ethereum?.providers)){
-    return window.ethereum.providers.find(p=>p?.isTrust||p?.isTrustWallet) ||
-           window.ethereum.providers.find(p=>p?.isMetaMask) ||
-           window.ethereum.providers[0] || null;
+async function discoverMetaMaskProvider(){
+  const announced=[];
+  const handler=(event)=>{
+    const detail=event?.detail||{};
+    if(detail?.provider)announced.push(detail);
+  };
+  window.addEventListener("eip6963:announceProvider",handler);
+  try{
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    await new Promise(resolve=>setTimeout(resolve,700));
+  }finally{
+    window.removeEventListener("eip6963:announceProvider",handler);
   }
-  return window.ethereum||null;
+  const match=announced.find(item=>{
+    const rdns=String(item?.info?.rdns||"").toLowerCase();
+    const name=String(item?.info?.name||"").toLowerCase();
+    return rdns==="io.metamask" || name==="metamask";
+  });
+  if(match?.provider)return match.provider;
+  if(window.ethereum?.isMetaMask)return window.ethereum;
+  if(Array.isArray(window.ethereum?.providers)){
+    return window.ethereum.providers.find(p=>p?.isMetaMask)||null;
+  }
+  return null;
+}
+function normalizeMetaMaskError(e){
+  const code=e?.code ?? e?.rpcCode ?? e?.data?.originalError?.code;
+  if(code===4001 || code==="4001")return "הבקשה נדחתה ב־MetaMask.";
+  if(code===-32002 || code==="-32002")return "יש בקשת MetaMask ממתינה. אשר או דחה אותה בחלון MetaMask.";
+  if(code===-32603 || code==="-32603")return "MetaMask החזיר שגיאת RPC פנימית. ודא שהארנק מחובר ל־BSC 56.";
+  return String(e?.message||e||"שגיאה לא ידועה");
 }
 async function connectMetaMask(){
   try{
-    setStatus("⏳ מתחבר ל־MetaMask…");
-    const injected=injectedProvider();
+    setStatus("⏳ מזהה MetaMask בדפדפן…");
+    const injected=await discoverMetaMaskProvider();
     if(injected){
       provider=injected;
       await verifyWithProvider(provider,"MetaMask");
       return;
     }
+
+    setStatus("📱 MetaMask לא נמצא כספק בדפדפן — מפעיל MetaMask Connect…");
     const mod=await import("https://cdn.jsdelivr.net/npm/@metamask/connect-evm@2.1.1/+esm");
     const createEVMClient=mod?.createEVMClient||mod?.default?.createEVMClient;
     if(typeof createEVMClient!=="function")throw Error("MetaMask Connect EVM SDK לא נטען");
     mmClient=mmClient||await createEVMClient({
-      dapp:{name:"SLH OS",url:location.origin,iconUrl:"https://slh-nft.com/icon-192.png"},
+      dapp:{name:"SLH OS",url:window.location.href,iconUrl:"https://slh-nft.com/icon-192.png"},
       api:{supportedNetworks:{"0x38":"https://bsc-dataseed.binance.org/"}},
-      analytics:{enabled:false}
+      ui:{headless:false,preferExtension:true,showInstallModal:true},
+      analytics:{enabled:false},
+      debug:true
     });
-    const result=await mmClient.connect({chainIds:["0x38"]});
+    const result=await mmClient.connect({chainIds:["0x38"],forceRequest:true});
     provider=mmClient.getProvider();
     if(String(result?.chainId||"").toLowerCase()!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
+    if(!result?.accounts?.[0])throw Error("MetaMask לא החזיר כתובת");
     await verifyWithProvider(provider,"MetaMask");
-  }catch(e){setStatus("❌ MetaMask: "+(e.message||e),"err");}
+  }catch(e){
+    const msg=normalizeMetaMaskError(e);
+    console.error("[MetaMask]",e);
+    setStatus("❌ MetaMask: "+msg,"err");
+  }
 }
 async function openTrust(){
   const target=location.origin+"/wallet-connect";
