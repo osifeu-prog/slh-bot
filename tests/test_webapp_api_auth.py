@@ -57,6 +57,37 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertIn("slh_wallet_handoff=", response.headers.get("Set-Cookie", ""))
         self.assertIn("Path=/", response.headers.get("Set-Cookie", ""))
 
+    def test_wallet_handoff_repeated_deeplink_without_cookie_reenters_valid_session(self):
+        token = "handoff-token-for-test-1234567890"
+        with patch(
+            "core.wallet_handoff.consume_handoff",
+            side_effect=ValueError("WALLET_HANDOFF_ALREADY_CONSUMED"),
+        ) as consume, patch(
+            "core.wallet_handoff.validate_session", return_value="5010371391"
+        ):
+            response = self.client.get(
+                "/wallet-handoff?code="+token+"&next=/slh-smoke"
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], "/slh-smoke")
+        consume.assert_called_once_with(token)
+
+    def test_wallet_handoff_consumed_token_without_valid_session_is_rejected(self):
+        token = "handoff-token-for-test-1234567890"
+        with patch(
+            "core.wallet_handoff.consume_handoff",
+            side_effect=ValueError("WALLET_HANDOFF_ALREADY_CONSUMED"),
+        ), patch(
+            "core.wallet_handoff.validate_session", return_value=None
+        ):
+            response = self.client.get(
+                "/wallet-handoff?code="+token+"&next=/slh-smoke"
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "WALLET_HANDOFF_INVALID"})
+
 
 if __name__ == "__main__":
     unittest.main()
