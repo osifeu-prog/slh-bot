@@ -1231,20 +1231,32 @@ async function initMetaMaskConnectEvm(){
   return __slhMetaMaskConnectClient;
 }
 
-function openBnbInExternalBrowser(){
-  const target=window.location.href;
+async function openBnbInExternalBrowser(){
+  if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
   try{
+    setText('bnbWalletConnectStatus','⏳ מכין מעבר מאובטח ל־MetaMask / Trust Wallet…');
+    const r=await fetch('/api/wallet/bnb/handoff',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:'{}',
+      cache:'no-store'
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.url)throw Error(d.error||('HTTP '+r.status));
+    const separator=String(d.url).includes('?')?'&':'?';
+    const target=String(d.url)+separator+'next=%2Fwallet-connect';
     if(tg?.openLink){
       tg.openLink(target);
-      toast('🌐 פתחתי את SLH OS בדפדפן חיצוני — שם MetaMask יכול להתחבר ישירות');
+      toast('🌐 פתחתי דפדפן חיצוני עם Wallet Session מאובטח');
       return;
     }
-  }catch(_e){}
-  try{
-    const opened=window.open(target,'_blank','noopener');
-    if(opened){toast('🌐 נפתח חלון דפדפן חיצוני');return;}
-  }catch(_e){}
-  window.location.href=target;
+    const opened=window.open(target,'_blank','noopener,noreferrer');
+    if(opened){toast('🌐 נפתח דפדפן חיצוני עם Wallet Session');return;}
+    window.location.href=target;
+  }catch(e){
+    setText('bnbWalletConnectStatus','❌ לא ניתן להכין Wallet Session: '+(e.message||e));
+    toast('❌ Wallet Session: '+(e.message||e));
+  }
 }
 
 async function connectBnbMetaMaskUniversal(){
