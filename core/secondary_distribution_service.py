@@ -73,6 +73,14 @@ def _client(cfg: dict[str, Any]) -> Web3:
         raise ValueError("BSC_CHAIN_ID_NOT_56")
     return web3
 
+def _transaction_sender(web3: Web3, tx_hash: str) -> str:
+    """Read the broadcast transaction sender, treating propagation lag as retryable."""
+    try:
+        tx = web3.eth.get_transaction(tx_hash)
+    except TransactionNotFound as exc:
+        raise ValueError("TRANSACTION_NOT_FOUND_RETRYABLE") from exc
+    return str(tx.get("from") or "")
+
 
 def _encode_transfer(recipient: str, raw_amount: int) -> str:
     return (
@@ -363,7 +371,7 @@ def confirm_secondary_slh_transfer(
     sender = _checksum(row.get("address"), "sender")
     recipient = _checksum(row.get("recipient"), "recipient")
     token = _checksum(row.get("token_contract"), "token")
-    tx_from = str(web3.eth.get_transaction(tx_hash).get("from") or "")
+    tx_from = _transaction_sender(web3, tx_hash)
     if tx_from and tx_from.lower() != sender.lower():
         raise ValueError("TX_SENDER_NOT_BOUND_WALLET")
 
