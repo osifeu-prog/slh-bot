@@ -15,6 +15,14 @@ class MiniAppDeepLinkRegressionTest(unittest.TestCase):
         self.assertIn("overflow-x:hidden", src)
         self.assertIn(".app{width:100%;min-width:0", src)
 
+    def test_owner_quick_send_route_contract(self):
+        src = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn("slh_quick_send", src)
+        self.assertIn("owner_to_tzvika_1", src)
+        self.assertIn("loadQuickSlhSendPreset", src)
+        self.assertIn("startQuickSlhSend", src)
+        self.assertIn("Trezor / WalletConnect", src)
+
 
 if __name__ == "__main__":
     unittest.main()
