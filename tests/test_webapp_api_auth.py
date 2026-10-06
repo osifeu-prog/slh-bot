@@ -10,9 +10,10 @@ class WebAppApiAuthTests(unittest.TestCase):
 
     def test_browser_quick_send_event_decoder_accepts_hexbytes_and_strings(self):
         from hexbytes import HexBytes
+        from web3 import Web3
 
         sender = "0x468328B2a7C9b5629e87844Bb4531e7409400b34"
-        event_topic = webapp.Web3.keccak(
+        event_topic = Web3.keccak(
             text="Transfer(address,address,uint256)"
         ).hex()
         sender_topic = "0x" + "0" * 24 + sender[2:].lower()
