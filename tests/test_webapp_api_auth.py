@@ -222,6 +222,61 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.get_json(), {"error": "OWNER_ONLY"})
 
+    def test_tokenomics_exposes_unified_referral_read_model(self):
+        db = {
+            "users": {
+                "1": {
+                    "referral": {
+                        "count": 3,
+                        "referred_by": "9",
+                    },
+                    "gamification": {"points": 123},
+                }
+            },
+            "commissions": {"1": 4.5},
+        }
+        referral = {
+            "count": 3,
+            "required": 5,
+            "remaining": 2,
+            "offer_open": True,
+            "per_successful_referral": {"credits": 0.9, "points": 10},
+        }
+        with patch("webapp.authenticated_uid", return_value="1"), patch(
+            "webapp.load_db", return_value=db
+        ), patch(
+            "core.profile_manager.get_user",
+            return_value=db["users"]["1"],
+        ), patch(
+            "core.referral_reward.progress",
+            return_value=referral,
+        ), patch(
+            "core.holiday_campaign.eligibility",
+            return_value={"eligible": False, "reason": "CAMPAIGN_EXPIRED"},
+        ), patch(
+            "core.tokenomics.snapshot",
+            return_value={"SLH": {"on_chain": True}},
+        ), patch(
+            "core.tokenomics.rewards_snapshot",
+            return_value={"airdrop_slh": 0},
+        ):
+            response = self.client.get("/api/v1/tokenomics")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["user"]["points"], 123)
+        self.assertEqual(payload["user"]["successful_referrals"], 3)
+        self.assertEqual(payload["referral"]["count"], 3)
+        self.assertEqual(payload["referral"]["required"], 5)
+        self.assertEqual(payload["referral"]["remaining"], 2)
+        self.assertEqual(payload["referral"]["commission_credits"], 4.5)
+        self.assertEqual(payload["referral"]["commission_rate_on_credit_purchases"], 0.10)
+        self.assertEqual(payload["referral"]["per_successful_referral"], {"credits": 0.9, "points": 10})
+        self.assertEqual(payload["referral"]["referred_by"], "9")
+        self.assertEqual(payload["referral"]["link"], "https://t.me/Me_ad_main_bot?start=ref_1")
+        self.assertTrue(payload["read_only"])
+        self.assertEqual(payload["referral"]["commission_scope"], "Credits purchases only; Stars items/VIP are not referral-commissioned")
+
 
 if __name__ == "__main__":
     unittest.main()
