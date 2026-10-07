@@ -275,6 +275,12 @@ def log_runtime_command_evidence(bot_name, bot):
         collisions = snapshot.get("collisions", {})
         if collisions:
             log("[RUNTIME_COMMAND_EVIDENCE] collision_names=" + ", ".join(sorted(collisions)))
+        collisions = snapshot.get("collisions", {})
+        if collisions:
+            log("[RUNTIME_COMMAND_EVIDENCE] collision_names=" + ", ".join(sorted(collisions)))
+            for command, registrations in sorted(collisions.items()):
+                details = "; ".join("index=" + str(item.get("registration_index")) + " module=" + str(item.get("module")) + " function=" + str(item.get("function")) for item in registrations)
+                log(f"[RUNTIME_COMMAND_EVIDENCE] {command}: {details}")
         commands = snapshot.get("commands", {})
         for command in targets:
             registrations = commands.get(f"/{command}", [])
