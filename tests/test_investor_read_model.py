@@ -24,6 +24,7 @@ class InvestorReadModelTests(unittest.TestCase):
                 "other": {"owner_id": "200", "title": "Other task", "reward": 99, "done_by": []},
                 "shared": {"owner_id": "", "title": "System task", "reward": 1, "done_by": ["100"]},
             },
+            "commissions": {"100": 2.7},
             "ledger": [
                 {"uid": "100", "amount": 1000, "reason": "payment:telegram_stars", "time": "t0"},
                 {"uid": "100", "amount": 10, "reason": "task_reward", "time": "t1"},
@@ -51,6 +52,7 @@ class InvestorReadModelTests(unittest.TestCase):
         self.assertEqual(snapshot["wallet"]["credits"], 120)
         self.assertEqual(snapshot["rewards"]["points"], 55)
         self.assertEqual(snapshot["rewards"]["credits"], 11)
+        self.assertEqual(snapshot["referral"]["commission_credits"], 2.7)
         self.assertEqual(snapshot["rewards"]["recent"][0]["reason"], "reward_11")
         self.assertEqual(len(snapshot["rewards"]["recent"]), 10)
         self.assertEqual(snapshot["academy"]["enrolled"], ["academy-101"])

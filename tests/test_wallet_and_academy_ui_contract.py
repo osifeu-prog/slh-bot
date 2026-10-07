@@ -10,6 +10,22 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("get_ton_binding", source)
         self.assertIn("TON_DEPOSITS_OPEN", source)
 
+    def test_wallet_labels_keep_api_ledger_separate_from_live_bsc(self):
+        wallet = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        dashboard = Path("handlers/dashboard_handler.py").read_text(encoding="utf-8")
+        mini = Path("mini_app.html").read_text(encoding="utf-8")
+
+        self.assertIn("API ledger reference (slh-api/Postgres)", wallet)
+        self.assertIn("API ledger SLH", dashboard)
+        self.assertIn("API ledger reference · slh-api/Postgres", mini)
+        self.assertIn("BSC חיה ומאומתת", mini)
+
+    def test_mini_app_uses_canonical_referral_commission_field(self):
+        mini = Path("mini_app.html").read_text(encoding="utf-8")
+        investor = Path("core/investor_read_model.py").read_text(encoding="utf-8")
+        self.assertIn("d.referral?.commission_credits", mini)
+        self.assertIn('"commission_credits": commission_credits', investor)
+
     def test_mini_app_has_no_staking_academy_prerequisite_claim(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("כדי לפתוח Staking: התחל קורס", source)
