@@ -120,7 +120,7 @@ test('accessibility audit has no serious or critical violations', async ({ page 
 });
 
 test('visual baseline: home', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '🏠 בית');
+  await clickPrimaryNav(page, 'בית');
   await assertOrCreateScreenshot(page, testInfo, 'home.png');
 });
 
@@ -153,7 +153,8 @@ test('visual baseline: alpha', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await page.click('#growth .action:nth-child(3)');
+  await clickPrimaryNav(page, 'Grow');
+  await page.getByRole('button', { name: /🎓 Earn/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
 
