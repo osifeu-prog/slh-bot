@@ -8,6 +8,7 @@ SLH<uid> comment, and mutates Credits only through economy_service.record_ton_de
 from __future__ import annotations
 
 import os
+import time
 from decimal import Decimal
 from typing import Iterable
 
@@ -147,6 +148,84 @@ def _find_ton_transaction(treasury: str, tx_hash: str):
     raise ValueError("TON_TX_NOT_FOUND")
 
 
+def _match_deposit_intent(uid, transaction, intent_id=None):
+    """Best-effort audit correlation; never changes settlement eligibility."""
+    try:
+        intents = state_manager.load_db().get("ton_deposit_intents") or {}
+        if not isinstance(intents, dict):
+            return None
+
+        tx_time = int(transaction.get("utime") or 0)
+        if tx_time <= 0:
+            return None
+
+        tx_amount_nano = int(
+            (Decimal(str(transaction.get("amount_ton") or 0)) * NANO)
+        )
+        tx_memo = str(transaction.get("memo") or "").strip().lower()
+        tx_to = normalize_ton_address(str(transaction.get("to") or "").strip())
+        tx_from = normalize_ton_address(str(transaction.get("from") or "").strip())
+
+        candidates = []
+        for candidate_id, intent in intents.items():
+            if intent_id and str(candidate_id) != str(intent_id):
+                continue
+            if not isinstance(intent, dict):
+                continue
+            if str(intent.get("uid")) != str(uid):
+                continue
+            if str(intent.get("status") or "pending") != "pending":
+                continue
+            if int(intent.get("amount_nano") or 0) != tx_amount_nano:
+                continue
+            if str(intent.get("memo") or "").strip().lower() != tx_memo:
+                continue
+            try:
+                intent_to = normalize_ton_address(str(intent.get("treasury") or "").strip())
+                intent_from = normalize_ton_address(str(intent.get("binding_address_raw") or "").strip())
+            except ValueError:
+                continue
+            if intent_to != tx_to or intent_from != tx_from:
+                continue
+
+            created = float(intent.get("created_at_epoch") or 0)
+            expires = float(intent.get("expires_at_epoch") or (created + 1800))
+            if not created or tx_time < created - 120 or tx_time > expires:
+                continue
+            candidates.append((created, str(candidate_id)))
+
+        if not candidates:
+            return None
+
+        candidates.sort()
+        return candidates[0][1]
+    except Exception:
+        return None
+
+
+def _mark_deposit_intent_matched(intent_id, tx_hash, idempotent):
+    if not intent_id:
+        return
+    try:
+        now = time.time()
+
+        def mutate(db):
+            intents = db.setdefault("ton_deposit_intents", {})
+            intent = intents.get(intent_id)
+            if not isinstance(intent, dict):
+                return
+            if str(intent.get("status") or "pending") != "pending":
+                return
+            intent["status"] = "matched"
+            intent["tx_hash"] = str(tx_hash)
+            intent["matched_at_epoch"] = now
+            intent["settlement_idempotent"] = bool(idempotent)
+
+        state_manager.atomic_update(mutate)
+    except Exception as exc:
+        print("[TON_INTENT] audit mark failed:", type(exc).__name__)
+
+
 def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
     bound_raw = normalize_ton_address(binding.get("address_raw") or binding.get("address"))
     sender = transaction.get("from") or ""
@@ -176,6 +255,8 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
     if not tx_hash:
         raise ValueError("INVALID_TX_HASH")
 
+    intent_id = _match_deposit_intent(uid, transaction, transaction.get("deposit_intent_id"))
+
     result = record_ton_deposit(
         uid=uid,
         credits=float(credits),
@@ -191,10 +272,12 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
             "rate": str(rate),
             "utime": transaction.get("utime"),
             "lt": transaction.get("lt"),
+            "deposit_intent_id": intent_id,
         },
     )
 
     idempotent = result is None
+    _mark_deposit_intent_matched(intent_id, tx_hash, idempotent)
     return {
         "ok": True,
         "uid": uid,
@@ -229,7 +312,7 @@ def settle_ton_deposit(uid, tx_hash):
     transaction = _find_ton_transaction(treasury, tx_hash)
     return _settle_observed_transaction(uid, transaction, treasury, rate, binding)
 
-def credit_new_ton_deposits(uid):
+def credit_new_ton_deposits(uid, intent_id=None):
     """Scan recent treasury inbound transactions and credit matching bound deposits.
 
     Normal users require the public TON gate. The configured owner canary may
@@ -288,6 +371,7 @@ def credit_new_ton_deposits(uid):
                 continue
             if transaction["memo"].lower() != expected_memo:
                 continue
+            transaction["deposit_intent_id"] = intent_id
             result = _settle_observed_transaction(uid, transaction, treasury, rate, binding)
         except ValueError as exc:
             if str(exc) in {
