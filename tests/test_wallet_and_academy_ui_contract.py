@@ -26,6 +26,13 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("d.referral?.commission_credits", mini)
         self.assertIn('"commission_credits": commission_credits', investor)
 
+    def test_wallet_html_parse_mode_escapes_command_placeholders(self):
+        source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        self.assertIn("/transfer &lt;uid&gt; &lt;amount&gt;", source)
+        self.assertIn("/gift &lt;uid&gt; &lt;amount&gt;", source)
+        self.assertNotIn("/transfer <uid> <amount>", source)
+        self.assertNotIn("/gift <uid> <amount>", source)
+
     def test_mini_app_has_no_staking_academy_prerequisite_claim(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertNotIn("כדי לפתוח Staking: התחל קורס", source)
