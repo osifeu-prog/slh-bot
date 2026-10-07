@@ -2,7 +2,7 @@ import json
 import state_manager
 
 def init(bot):
-    @bot.message_handler(commands=['brief'])
+    @bot.message_handler(commands=['brief_legacy'])
     def brief(m):
         lines = ["📋 SLH OS — Brief\n"]
 
