@@ -1845,17 +1845,97 @@ def ton_wallet_binding():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    from core.ton_deposit_service import _settings, deposits_are_open, memo_for
+    from core.ton_deposit_service import _settings, deposits_are_open, memo_for, ton_settlement_allowed
     from core.ton_wallet_binding import get_ton_binding
     treasury, rate = _settings()
     deposits_open = deposits_are_open()
-    return jsonify({
-        "binding": get_ton_binding(uid),
+    binding = get_ton_binding(uid)
+    deposit_allowed = bool(binding and ton_settlement_allowed(uid))
+    mode = "public" if deposits_open and deposit_allowed else (
+        "owner_canary" if deposit_allowed else "closed"
+    )
+    return _no_store(jsonify({
+        "binding": binding,
         "deposits_open": deposits_open,
-        "treasury": treasury if deposits_open else None,
-        "credits_per_ton": float(rate) if deposits_open else None,
-        "memo": memo_for(uid) if deposits_open else None,
-    }), 200
+        "deposit_allowed": deposit_allowed,
+        "deposit_mode": mode,
+        "network": "-239",
+        "asset": "GRAM",
+        "treasury": treasury if deposit_allowed else None,
+        "credits_per_gram": float(rate) if deposit_allowed else None,
+        "credits_per_ton": float(rate) if deposit_allowed else None,
+        "memo": memo_for(uid) if deposit_allowed else None,
+    })), 200
+
+
+@app.route("/api/wallet/ton/deposit/prepare", methods=["POST"])
+def ton_wallet_deposit_prepare():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from decimal import Decimal, InvalidOperation
+        from core.ton_deposit_service import NANO, _settings, memo_for, ton_settlement_allowed
+        from core.ton_wallet_binding import get_ton_binding
+        if not get_ton_binding(uid) or not ton_settlement_allowed(uid):
+            return jsonify({"error": "TON_DEPOSITS_CLOSED"}), 403
+
+        payload = request.get_json(silent=True) or {}
+        raw = str(payload.get("amount_gram", "")).strip()
+        if not raw:
+            raise ValueError("GRAM_AMOUNT_REQUIRED")
+        try:
+            amount = Decimal(raw)
+        except InvalidOperation as exc:
+            raise ValueError("INVALID_GRAM_AMOUNT") from exc
+        if not amount.is_finite() or amount <= 0:
+            raise ValueError("INVALID_GRAM_AMOUNT")
+        if amount < Decimal("0.01"):
+            raise ValueError("GRAM_AMOUNT_TOO_SMALL")
+
+        amount_nano = int(amount * NANO)
+        if amount_nano <= 0 or (Decimal(amount_nano) / NANO) != amount:
+            raise ValueError("GRAM_AMOUNT_PRECISION_INVALID")
+
+        treasury, rate = _settings()
+        if not treasury or rate <= 0:
+            raise ValueError("TON_NOT_CONFIGURED")
+
+        return _no_store(jsonify({
+            "status": "ready",
+            "uid": str(uid),
+            "network": "-239",
+            "asset": "GRAM",
+            "amount_gram": str(amount),
+            "amount_nano": str(amount_nano),
+            "treasury": treasury,
+            "memo": memo_for(uid),
+            "credits_per_gram": float(rate),
+            "minimum_gram": "0.01",
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.route("/api/wallet/ton/deposit/reconcile", methods=["POST"])
+def ton_wallet_deposit_reconcile():
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.ton_deposit_service import credit_new_ton_deposits
+        credited = credit_new_ton_deposits(uid)
+        total = sum(float(item.get("credits", 0)) for item in credited)
+        return _no_store(jsonify({
+            "status": "credited" if credited else "pending",
+            "credited": credited,
+            "credits_total": total,
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 403
+    except Exception as exc:
+        print("[TON_RECONCILE] error:", type(exc).__name__, str(exc)[:180])
+        return jsonify({"error": "TON_DEPOSIT_RECONCILE_FAILED"}), 503
 
 
 @app.route("/api/wallet/ton/check", methods=["POST"])
