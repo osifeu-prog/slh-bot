@@ -203,6 +203,29 @@ def _match_deposit_intent(uid, transaction, intent_id=None):
         return None
 
 
+def _record_ton_replay_evidence(uid, tx_hash, transaction):
+    """Record an idempotent replay as audit evidence without touching Credits."""
+    try:
+        now = time.time()
+
+        def mutate(db):
+            evidence = db.setdefault("ton_replay_evidence", {})
+            current = evidence.get(str(uid))
+            if not isinstance(current, dict):
+                current = {}
+            evidence[str(uid)] = {
+                "tx_hash": str(tx_hash),
+                "replay_count": int(current.get("replay_count") or 0) + 1,
+                "first_replay_at_epoch": float(current.get("first_replay_at_epoch") or now),
+                "last_replay_at_epoch": now,
+                "amount_ton": float(Decimal(str(transaction.get("amount_ton") or 0))),
+            }
+
+        state_manager.atomic_update(mutate)
+    except Exception as exc:
+        print("[TON_REPLAY] audit mark failed:", type(exc).__name__)
+
+
 def _mark_deposit_intent_matched(intent_id, tx_hash, idempotent):
     if not intent_id:
         return
@@ -277,6 +300,8 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
     )
 
     idempotent = result is None
+    if idempotent:
+        _record_ton_replay_evidence(uid, tx_hash, transaction)
     _mark_deposit_intent_matched(intent_id, tx_hash, idempotent)
     return {
         "ok": True,
