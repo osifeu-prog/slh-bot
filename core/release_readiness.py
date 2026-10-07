@@ -1,8 +1,9 @@
 """Canonical read-only release readiness checks for SLH OS.
 
 This module never mutates state. It is intentionally conservative:
-runtime safety gates are validated, while external settlement remains
-closed until empirical evidence exists.
+runtime safety gates are validated. BNB remains closed until empirical
+evidence exists; TON may be public-open when its canonical readiness
+contract is valid.
 """
 
 from __future__ import annotations
@@ -74,9 +75,18 @@ def _external_gate_check():
     blockers = []
     notes = []
 
-    # Inspect TON independently so a missing test DB cannot hide a safety violation.
+    # TON is allowed to be public-open when its own readiness contract is valid.
     if os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1":
-        blockers.append("TON_DEPOSITS_OPEN=1; external settlement should remain closed until empirical evidence")
+        try:
+            from core.ton_deposit_service import ton_readiness
+
+            ton = ton_readiness()
+            if not bool(ton.get("effective_open")):
+                blockers.append("TON_DEPOSITS_OPEN=1 but TON readiness is not effective")
+            else:
+                notes.append("TON settlement PUBLIC OPEN; canonical readiness contract is valid")
+        except Exception as exc:
+            blockers.append(f"TON readiness unavailable: {type(exc).__name__}")
 
     try:
         from core.bnb_gate import bnb_readiness
@@ -95,7 +105,7 @@ def _external_gate_check():
         return _check("External settlement gates", "BLOCKED", "; ".join(blockers))
     if notes:
         return _check("External settlement gates", "DEGRADED", "; ".join(notes))
-    return _check("External settlement gates", "GREEN", "BNB/TON deposits are closed pending empirical evidence")
+    return _check("External settlement gates", "GREEN", "; ".join(notes) or "BNB settlement remains closed pending empirical evidence")
 
 
 def _participation_check():
