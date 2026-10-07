@@ -23,6 +23,8 @@ BINPLORER_KEY = "freekey"
 DEFAULT_LIMIT = 100
 TARGET_AMOUNT_WEI = 10**16
 MAX_AGE_SECONDS = 30 * 24 * 60 * 60
+HANDOFF_WINDOW_SECONDS = 12 * 60
+RPC_BATCH_SIZE = 100
 
 
 def _config() -> dict:
@@ -48,6 +50,113 @@ def _parse_int(value) -> int:
     if not raw:
         return 0
     return int(raw, 16) if raw.lower().startswith("0x") else int(raw)
+
+
+def _latest_handoff_timestamp(uid: str) -> int | None:
+    db = state_manager.load_db()
+    rows = db.get("wallet_handoffs", {}) if isinstance(db, dict) else {}
+    candidates = []
+    if isinstance(rows, dict):
+        for row in rows.values():
+            if not isinstance(row, dict) or str(row.get("uid") or "") != str(uid):
+                continue
+            raw = str(row.get("created_at") or "").strip()
+            if not raw:
+                continue
+            try:
+                candidates.append(int(datetime.fromisoformat(raw.replace("Z", "+00:00")).timestamp()))
+            except (TypeError, ValueError):
+                continue
+    return max(candidates) if candidates else None
+
+
+def _rpc_json(w3: Web3, method: str, params: list) -> object:
+    provider = w3.provider
+    response = requests.post(
+        provider.endpoint_uri,
+        json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
+        timeout=8,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("error"):
+        error = payload["error"]
+        raise ValueError(f"RPC_{error.get('code')}: {error.get('message')}")
+    return payload.get("result")
+
+
+def _block_timestamp(w3: Web3, block_number: int) -> int:
+    result = _rpc_json(w3, "eth_getBlockByNumber", [hex(int(block_number)), False])
+    if not isinstance(result, dict):
+        raise ValueError("BSC_RPC_BLOCK_NOT_FOUND")
+    return int(str(result.get("timestamp") or "0"), 16)
+
+
+def _estimate_block_range(w3: Web3, target_ts: int, window_seconds: int) -> tuple[int, int]:
+    latest = int(w3.eth.block_number)
+    latest_ts = _block_timestamp(w3, latest)
+    if latest_ts <= 0 or target_ts > latest_ts:
+        return latest, latest
+    sample_block = max(0, latest - 1000)
+    sample_ts = _block_timestamp(w3, sample_block)
+    seconds_per_block = max(0.25, (latest_ts - sample_ts) / max(1, latest - sample_block))
+    center = int(latest - max(0, latest_ts - target_ts) / seconds_per_block)
+    half = int(window_seconds / seconds_per_block) + 12
+    return max(0, center - half), min(latest, center + half)
+
+
+def _rpc_find_exact_transfers(w3: Web3, sender: str, treasury: str, target_ts: int) -> list[dict]:
+    start, end = _estimate_block_range(w3, target_ts, HANDOFF_WINDOW_SECONDS)
+    candidates = []
+    for batch_start in range(start, end + 1, RPC_BATCH_SIZE):
+        batch_end = min(end, batch_start + RPC_BATCH_SIZE - 1)
+        payload = [
+            {
+                "jsonrpc": "2.0",
+                "id": block,
+                "method": "eth_getBlockByNumber",
+                "params": [hex(block), True],
+            }
+            for block in range(batch_start, batch_end + 1)
+        ]
+        response = requests.post(
+            w3.provider.endpoint_uri,
+            json=payload,
+            timeout=10,
+        )
+        response.raise_for_status()
+        results = response.json()
+        if not isinstance(results, list):
+            raise ValueError("BSC_RPC_BATCH_INVALID_RESPONSE")
+        for item in results:
+            block = item.get("result") if isinstance(item, dict) else None
+            if not isinstance(block, dict):
+                continue
+            block_number = int(str(block.get("number") or "0x0"), 16)
+            block_ts = int(str(block.get("timestamp") or "0x0"), 16)
+            for tx in block.get("transactions") or []:
+                if not isinstance(tx, dict):
+                    continue
+                tx_from = str(tx.get("from") or "")
+                tx_to = str(tx.get("to") or "")
+                try:
+                    value_wei = int(str(tx.get("value") or "0x0"), 16)
+                except (TypeError, ValueError):
+                    continue
+                if (
+                    tx_from.lower() == sender.lower()
+                    and tx_to.lower() == treasury.lower()
+                    and value_wei == TARGET_AMOUNT_WEI
+                ):
+                    candidates.append({
+                        "tx_hash": str(tx.get("hash") or ""),
+                        "timestamp": block_ts,
+                        "block": block_number,
+                        "amount_wei": value_wei,
+                        "from": tx_from,
+                        "to": tx_to,
+                    })
+    return candidates
 
 
 def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
@@ -134,6 +243,41 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     rows.sort(key=lambda item: (item["timestamp"], item["tx_hash"].lower()), reverse=True)
 
     if not rows:
+        handoff_ts = _latest_handoff_timestamp(uid)
+        if handoff_ts:
+            rpc_rows = _rpc_find_exact_transfers(w3, sender, treasury, handoff_ts)
+            rpc_rows = [row for row in rpc_rows if row.get("tx_hash")]
+            rpc_rows.sort(key=lambda item: (abs(item["timestamp"] - handoff_ts), item["tx_hash"].lower()))
+            unsettled_rpc = [
+                row for row in rpc_rows
+                if f"bnb:deposit:{row['tx_hash'].lower()}" not in ledger_keys
+            ]
+            if len(unsettled_rpc) > 1:
+                return {
+                    "status": "AMBIGUOUS",
+                    "scope": "read_only_discovery",
+                    "provider": "BSC_RPC_HANDOFF_WINDOW",
+                    "uid": uid,
+                    "sender": sender,
+                    "treasury": treasury,
+                    "amount_wei": TARGET_AMOUNT_WEI,
+                    "handoff_timestamp": handoff_ts,
+                    "candidates": rpc_rows,
+                }
+            if unsettled_rpc or rpc_rows:
+                candidate = (unsettled_rpc or rpc_rows)[0]
+                return {
+                    "status": "FOUND",
+                    "scope": "read_only_discovery",
+                    "provider": "BSC_RPC_HANDOFF_WINDOW",
+                    "uid": uid,
+                    "sender": sender,
+                    "treasury": treasury,
+                    "amount_wei": TARGET_AMOUNT_WEI,
+                    "handoff_timestamp": handoff_ts,
+                    "candidate": candidate,
+                    "candidates": rpc_rows,
+                }
         return {
             "status": "NOT_FOUND",
             "scope": "read_only_discovery",
@@ -142,6 +286,7 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
             "treasury": treasury,
             "amount_wei": TARGET_AMOUNT_WEI,
             "candidates": [],
+            "handoff_timestamp": _latest_handoff_timestamp(uid),
         }
 
     unsettled = [row for row in rows if not row["already_recorded"]]
