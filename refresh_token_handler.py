@@ -59,7 +59,7 @@ def init(bot, is_admin_func=None):
         def is_admin_func(message):
             return False
 
-    @bot.message_handler(commands=["bots", "botcontrol"])
+    @bot.message_handler(commands=["token_bots"])
     def bots_control(message):
         if not is_admin_func(message):
             bot.reply_to(message, "⛔ פקודה זו לאדמין בלבד")
@@ -89,7 +89,7 @@ def init(bot, is_admin_func=None):
         except KeyError:
             bot.reply_to(
                 message,
-                "❌ Bot alias לא מוכר. השתמש ב-/bots כדי לראות את המיפוי.",
+                "❌ Bot alias לא מוכר. השתמש ב-/token_bots כדי לראות את המיפוי.",
             )
             return
 

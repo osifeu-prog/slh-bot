@@ -44,7 +44,7 @@ def register_learning_path(bot):
         )
         bot.answer_callback_query(call.id)
 
-    @bot.message_handler(commands=['agent_submit'])
+    @bot.message_handler(commands=['learning_agent_submit'])
     def agent_submit(m):
         from core import economy_service
 
@@ -54,7 +54,7 @@ def register_learning_path(bot):
         if len(parts) < 2:
             bot.send_message(
                 m.chat.id,
-                "Usage: /agent_submit <agent_name>"
+                "Usage: /learning_agent_submit <agent_name>"
             )
             return
 
@@ -92,7 +92,7 @@ def register_learning_path(bot):
             )
 
     # 4. Admin: Approve/Reject submissions
-    @bot.message_handler(commands=['agent_approve'])
+    @bot.message_handler(commands=['learning_agent_approve'])
     def agent_approve(m):
         from admin_utils import is_admin
         from core import economy_service
@@ -106,7 +106,7 @@ def register_learning_path(bot):
         if len(parts) < 2:
             bot.reply_to(
                 m,
-                "Usage: /agent_approve <submission_id>"
+                "Usage: /learning_agent_approve <submission_id>"
             )
             return
 
