@@ -7,6 +7,16 @@ TON_DEPOSITS_OPEN = os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
 
 
 
+def _fmt_balance(value):
+    """Render balances without binary floating-point noise."""
+    try:
+        text = f"{float(value):.8f}".rstrip("0").rstrip(".")
+        return text if text else "0"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+
 def _fetch_api_wallet(uid):
     """Fetch on-chain + multi-token balances via shared slh_api_client."""
     from core import slh_api_client
@@ -182,12 +192,12 @@ def register(bot):
             "[בס\"ד]\n\n"
             "💰 SLH Wallet\n\n"
             f"📅 {get_hebrew_date()}\n"
-            f"💳 Credits: {credits}\n"
-            f"🔒 Staked: {staked}\n"
-            f"🪙 SLH Live (מגובה): {live_token_balance}\n"
-            f"⭐ Points: {points} (Level {level})\n"
+            f"💳 Credits: {_fmt_balance(credits)}\n"
+            f"🔒 Staked: {_fmt_balance(staked)}\n"
+            f"🪙 SLH Live (מגובה): {_fmt_balance(live_token_balance)}\n"
+            f"⭐ Points: {points:,} (Level {level})\n"
             f"👥 Referrals: {referral_count}\n"
-            f"💎 Referral commission: {commission}\n\n"
+            f"💎 Referral commission: {_fmt_balance(commission)}\n\n"
         )
         try:
             legacy_unbacked = float(token_balance or 0) - float(live_token_balance or 0)
@@ -204,13 +214,13 @@ def register(bot):
         if api_data and api_data.get("balances"):
             b = api_data["balances"]
             text += "━━━━━━━━━━━━━━\n"
-            text += "🌐 ארנק on-chain (slh-api):\n"
-            text += f"   SLH: {b.get('SLH', 0)}\n"
+            text += "📊 API ledger reference (slh-api/Postgres):\n"
+            text += f"   SLH: {_fmt_balance(b.get('SLH', 0))}\n"
             if b.get('ZVK'): text += f"   ZVK: {b.get('ZVK', 0)}\n"
             if b.get('MNH'): text += f"   MNH: {b.get('MNH', 0)}\n"
             if b.get('REP'): text += f"   REP: {b.get('REP', 0)}\n"
             if b.get('ZUZ'): text += f"   ZUZ: {b.get('ZUZ', 0)}\n"
-            text += f"   ₪ סה\"כ: {api_data.get('total_value_ils', 0)}\n\n"
+            text += f"   ₪ סה\"כ: {_fmt_balance(api_data.get('total_value_ils', 0))}\n\n"
 
         if invite:
             text += f"🔗 קישור ההזמנה האישי שלך:\n{invite}\n\n"
@@ -222,7 +232,7 @@ def register(bot):
         bnb_binding = get_binding(uid)
         ton_binding = get_ton_binding(uid)
         ton_treasury, ton_rate = _settings()
-        ton_open = deposits_are_open() and TON_DEPOSITS_OPEN
+        ton_open = deposits_are_open()
 
         text += (
             "🪙 SLH: /slh · /slh_send · /slh_test\n"
