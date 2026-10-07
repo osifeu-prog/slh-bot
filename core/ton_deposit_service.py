@@ -148,7 +148,7 @@ def _find_ton_transaction(treasury: str, tx_hash: str):
     raise ValueError("TON_TX_NOT_FOUND")
 
 
-def _match_deposit_intent(uid, transaction):
+def _match_deposit_intent(uid, transaction, intent_id=None):
     """Best-effort audit correlation; never changes settlement eligibility."""
     try:
         intents = state_manager.load_db().get("ton_deposit_intents") or {}
@@ -167,7 +167,9 @@ def _match_deposit_intent(uid, transaction):
         tx_from = normalize_ton_address(str(transaction.get("from") or "").strip())
 
         candidates = []
-        for intent_id, intent in intents.items():
+        for candidate_id, intent in intents.items():
+            if intent_id and str(candidate_id) != str(intent_id):
+                continue
             if not isinstance(intent, dict):
                 continue
             if str(intent.get("uid")) != str(uid):
@@ -190,7 +192,7 @@ def _match_deposit_intent(uid, transaction):
             expires = float(intent.get("expires_at_epoch") or (created + 1800))
             if not created or tx_time < created - 120 or tx_time > expires:
                 continue
-            candidates.append((created, str(intent_id)))
+            candidates.append((created, str(candidate_id)))
 
         if not candidates:
             return None
@@ -253,7 +255,7 @@ def _settle_observed_transaction(uid, transaction, treasury, rate, binding):
     if not tx_hash:
         raise ValueError("INVALID_TX_HASH")
 
-    intent_id = _match_deposit_intent(uid, transaction)
+    intent_id = _match_deposit_intent(uid, transaction, transaction.get("deposit_intent_id"))
 
     result = record_ton_deposit(
         uid=uid,
@@ -310,7 +312,7 @@ def settle_ton_deposit(uid, tx_hash):
     transaction = _find_ton_transaction(treasury, tx_hash)
     return _settle_observed_transaction(uid, transaction, treasury, rate, binding)
 
-def credit_new_ton_deposits(uid):
+def credit_new_ton_deposits(uid, intent_id=None):
     """Scan recent treasury inbound transactions and credit matching bound deposits.
 
     Normal users require the public TON gate. The configured owner canary may
@@ -369,6 +371,7 @@ def credit_new_ton_deposits(uid):
                 continue
             if transaction["memo"].lower() != expected_memo:
                 continue
+            transaction["deposit_intent_id"] = intent_id
             result = _settle_observed_transaction(uid, transaction, treasury, rate, binding)
         except ValueError as exc:
             if str(exc) in {
