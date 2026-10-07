@@ -7,14 +7,11 @@ the existing owner-only canary path. This module never signs or broadcasts.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import os
-
 import requests
 from web3 import Web3
 
 import state_manager
 from core.authority import is_owner
-from core.bnb_deposit_service import settle_bnb_deposit
 from core.bnb_gate import bnb_deposits_open, bnb_readiness, bnb_settlement_allowed
 from core.bnb_empirical_smoke import run as run_empirical_smoke
 from core.binance_connector import get_bsc_config
@@ -65,10 +62,15 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     if int(w3.eth.chain_id) != 56:
         raise ValueError("BSC_CHAIN_ID_NOT_56")
 
-    sender = w3.to_checksum_address(str(binding.get("address") or ""))
-    treasury = w3.to_checksum_address(str(cfg.get("treasury_wallet") or ""))
-    if not treasury:
+    sender_raw = str(binding.get("address") or "").strip()
+    treasury_raw = str(cfg.get("treasury_wallet") or "").strip()
+    if not sender_raw:
+        raise ValueError("BNB_WALLET_NOT_VERIFIED")
+    if not treasury_raw:
         raise ValueError("BNB_TREASURY_MISSING")
+
+    sender = w3.to_checksum_address(sender_raw)
+    treasury = w3.to_checksum_address(treasury_raw)
 
     # Ask an indexer only for transaction discovery. The returned candidate is
     # re-checked by verify_bnb_deposit against the canonical BSC RPC below.
