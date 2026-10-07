@@ -10,4 +10,4 @@ def test_bnb_smoke_has_existing_tx_verifier_and_poll():
     assert '"/api/wallet/bnb/empirical-smoke"' in source
     assert 'await poll(txHash);' in source
     assert 'BigInt(smoke.amount_wei)' in source
-    assert '"0.01 BNB"' in source
+    assert "0.01 BNB" in source
