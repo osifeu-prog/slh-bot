@@ -2316,7 +2316,8 @@ def api_tokenomics():
         points = int((user.get("gamification") or {}).get("points", 0) or 0)
         referral_data = user.get("referral") or {}
         referrals = int(referral_data.get("count", 0) or 0)
-        commission = db.get("commissions", {}).get(str(uid), 0)
+        current_db = load_db()
+        commission = current_db.get("commissions", {}).get(str(uid), 0)
         referral = referral_progress(str(uid))
         campaign = eligibility(str(uid))
         referral_link = f"https://t.me/Me_ad_main_bot?start=ref_{uid}"
