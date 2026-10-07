@@ -3,6 +3,7 @@ import state_manager
 import hmac
 import json
 import os
+import secrets
 import time
 from pathlib import Path
 
@@ -2066,6 +2067,32 @@ def ton_wallet_deposit_prepare():
         if not treasury or rate <= 0:
             raise ValueError("TON_NOT_CONFIGURED")
 
+        now = time.time()
+        intent_id = "tondep-" + secrets.token_urlsafe(18)
+        binding_address_raw = str(binding.get("address_raw") or binding.get("address") or "").strip()
+        if not binding_address_raw:
+            raise ValueError("TON_WALLET_NOT_VERIFIED")
+
+        intent = {
+            "uid": str(uid),
+            "status": "pending",
+            "asset": "GRAM",
+            "amount_gram": str(amount),
+            "amount_nano": str(amount_nano),
+            "treasury": treasury,
+            "memo": memo_for(uid),
+            "rate": str(rate),
+            "binding_address_raw": binding_address_raw,
+            "created_at_epoch": now,
+            "expires_at_epoch": now + 1800,
+        }
+
+        def mutate(db):
+            db.setdefault("ton_deposit_intents", {})[intent_id] = intent
+
+        # Evidence is persisted before the client is allowed to open the wallet.
+        state_manager.atomic_update(mutate)
+
         return _no_store(jsonify({
             "status": "ready",
             "uid": str(uid),
@@ -2075,6 +2102,7 @@ def ton_wallet_deposit_prepare():
             "amount_nano": str(amount_nano),
             "treasury": treasury,
             "memo": memo_for(uid),
+            "intent_id": intent_id,
             "credits_per_gram": float(rate),
             "minimum_gram": "0.01",
         })), 200
