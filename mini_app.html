@@ -422,6 +422,18 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="academy" class="screen"><div class="section-title">🎓 Academy & Tasks</div><div class="card"><div id="academyText" class="muted">טוען…</div><div id="tasks" style="margin-top:8px"></div></div><div class="card"><b>מסלול Bitcoin Mastery</b><p class="muted">Academy הוא מסלול למידה נפרד. Staking אינו דורש השלמת קורס. אפשר ללמוד בקצב שלך ולהמשיך לשיעורים לפי הסדר.</p><div class="actions"><button class="action primary" onclick="openAction('/courses','פתיחת Academy')"><b>🎓 פתיחת Academy</b><span>רשימת הקורסים</span></button><button class="action" onclick="openAction('/course_bitcoin_mastery','Bitcoin Mastery')"><b>📘 Bitcoin Mastery</b><span>התחלת הקורס</span></button></div></div></section>
 <section id="control" class="screen">
 <div class="section-title">🧭 SLH OS Control</div>
+<div class="card" id="tonGoLiveCard">
+  <div class="wallet-row">
+    <span><b>🌍 TON Go‑Live Center</b><div class="muted">מסך Owner יחיד לכל מה שצריך לפני פתיחת הפקדות הציבור.</div></span>
+    <span id="tonGoLiveStatus" class="pill pending">בודק…</span>
+  </div>
+  <div id="tonGoLiveBody" style="margin-top:10px">טוען בדיקות…</div>
+  <div class="actions" style="margin-top:10px">
+    <button class="action" type="button" onclick="loadTonGoLive()"><b>↻ בדוק שוב</b><span>Preflight מלא</span></button>
+    <button class="action primary" type="button" id="tonOpenPublicBtn" onclick="prepareTonPublicOpen()" disabled><b>🌍 הכן פתיחה ציבורית</b><span id="tonOpenPublicHint">נעול עד שכל הראיות ירוקות</span></button>
+  </div>
+  <div class="muted" style="margin-top:9px">🔒 הכפתור אינו משנה את Railway ואינו פותח את הציבור לבדו. כשהכול ירוק הוא מכין את פעולת <code>TON_DEPOSITS_OPEN=1</code> לביצוע מבוקר.</div>
+</div>
 <div class="card"><b>🎯 המשימות שלי</b><div id="controlTasks" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>🗳️ Governance</b><div id="controlGov" style="margin-top:8px">טוען…</div></div>
 <div class="card" id="walletHealthCard"><b>👛 Wallet Health · Owner</b><div id="walletHealthSummary" style="margin-top:8px">טוען…</div><div class="muted" style="margin-top:8px">קריאת on-chain בלבד. יתרה אפסית אינה מוכיחה פריצה; סימון אבטחה דורש בדיקה נפרדת.</div></div>
@@ -489,7 +501,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
       <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
       <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
-      <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Control Plane</span></button>
+      <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button>
       <button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button>
     </div>
     <div class="v-row"><button type="button" id="mClose">סגור</button></div>
@@ -2285,8 +2297,81 @@ async function sendTransferViaApi(){
 
 async function loadControl(){
   if(!initData)return;
-  await Promise.allSettled([loadControlTasks(),loadControlGovernance(),loadControlJournal(),loadWalletHealth()]);
+  await Promise.allSettled([loadTonGoLive(),loadControlTasks(),loadControlGovernance(),loadControlJournal(),loadWalletHealth()]);
 }
+async function loadTonGoLive(){
+  const card=$('tonGoLiveCard');
+  const body=$('tonGoLiveBody');
+  const status=$('tonGoLiveStatus');
+  const button=$('tonOpenPublicBtn');
+  const hint=$('tonOpenPublicHint');
+  if(!card||!body||!status)return;
+  try{
+    const r=await fetch('/api/v1/control/ton-go-live',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===403){card.hidden=true;return}
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    const checks=Array.isArray(d.checks)?d.checks:[];
+    const ready=d.status==='READY_TO_OPEN';
+    const open=d.status==='OPEN';
+    status.textContent=open?'🌍 OPEN':ready?'✅ READY':'🔒 BLOCKED';
+    status.classList.toggle('ok',open||ready);
+    status.classList.toggle('pending',!open&&!ready);
+    status.classList.toggle('error',!open&&!ready);
+    if(button){
+      button.disabled=!ready;
+      button.setAttribute('aria-disabled',ready?'false':'true');
+    }
+    if(hint)hint.textContent=ready?'כל הבדיקות עברו — הכנת פעולת פתיחה':'נעול עד שכל הראיות ירוקות';
+    let h='';
+    if(d.owner_canary){
+      h+='<div class="wallet-row"><span>Owner Canary</span><strong>'+esc(d.owner_canary.allowed?'✅ מאושר':'⛔ חסום')+'</strong></div>';
+      h+='<div class="wallet-row"><span>Memo</span><code>'+esc(d.owner_canary.memo||'—')+'</code></div>';
+    }
+    if(d.treasury)h+='<div class="wallet-row"><span>Treasury</span><code style="word-break:break-all">'+esc(d.treasury)+'</code></div>';
+    if(d.credits_per_ton!==null&&d.credits_per_ton!==undefined)h+='<div class="wallet-row"><span>Rate</span><strong>'+fmt(d.credits_per_ton)+' Credits / GRAM</strong></div>';
+    if(d.empirical){
+      h+='<div class="wallet-row"><span>Settlement evidence</span><strong>'+esc(d.empirical.settlement_evidence?'✅':'⏳')+'</strong></div>';
+      h+='<div class="wallet-row"><span>Replay evidence</span><strong>'+esc(d.empirical.replay_evidence?'✅':'⏳')+'</strong></div>';
+    }
+    if(checks.length){
+      h+='<div class="section-title" style="margin-top:12px">📋 מה עוד צריך</div>';
+      h+=checks.map(x=>'<div class="task '+(x.ok?'done':'')+'">'+(x.ok?'✅':'⬜')+' <b>'+esc(x.label)+'</b><div class="muted">'+esc(x.action||'')+'</div></div>').join('');
+    }
+    h+='<div class="muted" style="margin-top:9px">הפעולה הציבורית המדויקת: <code>'+esc(d.open_instruction||'TON_DEPOSITS_OPEN=1')+'</code></div>';
+    body.innerHTML=h;
+  }catch(e){
+    status.textContent='⚠️ לא זמין';
+    status.classList.remove('ok');
+    status.classList.add('pending');
+    button.disabled=true;
+    if(hint)hint.textContent='לא ניתן לבצע preflight כרגע';
+    body.textContent='לא ניתן לטעון את מרכז ה־Go‑Live כרגע.';
+  }
+}
+
+async function prepareTonPublicOpen(){
+  try{
+    const r=await fetch('/api/v1/control/ton-go-live',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    if(d.status!=='READY_TO_OPEN'){
+      toast('🔒 הפתיחה עדיין נעולה: '+(d.next_action||'חסרה ראיית Go-Live'));
+      await loadTonGoLive();
+      return;
+    }
+    const action=String(d.open_instruction||'TON_DEPOSITS_OPEN=1');
+    try{
+      await navigator.clipboard.writeText(action);
+      toast('✅ כל הראיות עברו. פעולת הפתיחה הועתקה ללוח.');
+    }catch(_){
+      toast('✅ כל הראיות עברו. פעולת הפתיחה: '+action);
+    }
+  }catch(e){
+    toast('❌ '+(e.message||e));
+  }
+}
+
 async function loadWalletHealth(){
   const card=$('walletHealthCard'), box=$('walletHealthSummary');
   if(!card||!box)return;

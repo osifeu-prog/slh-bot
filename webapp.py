@@ -1066,6 +1066,171 @@ def stars_store_api():
     })), 200
 
 
+@app.route("/api/v1/control/ton-go-live", methods=["GET"])
+def ton_go_live():
+    """Owner-only read model for the TON public-opening checklist.
+
+    This endpoint is read-only. It never opens deposits, changes variables,
+    writes DB state, or performs a settlement.
+    """
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    from core.authority import is_owner
+    if not is_owner(uid):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+
+    from core.ton_deposit_service import (
+        memo_for,
+        ton_readiness,
+        ton_settlement_allowed,
+    )
+    from core.ton_wallet_binding import get_ton_binding
+
+    readiness = ton_readiness()
+    binding = get_ton_binding(uid)
+    canary_allowed = bool(
+        binding
+        and not readiness.get("effective_open")
+        and ton_settlement_allowed(uid)
+    )
+
+    db = state_manager.load_db()
+    transactions = db.get("transactions", [])
+    transactions = transactions if isinstance(transactions, list) else []
+    ledger = db.get("ledger", [])
+    ledger = ledger if isinstance(ledger, list) else []
+
+    verified_hashes = []
+    for row in transactions:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("uid", "")) != str(uid):
+            continue
+        if str(row.get("type", "")).lower() != "ton":
+            continue
+        meta = row.get("meta") if isinstance(row.get("meta"), dict) else {}
+        if meta.get("source") != "ton_verified_binding_v1":
+            continue
+        tx_hash = str(row.get("tx_hash", "")).strip()
+        if not tx_hash:
+            continue
+        verified_hashes.append(tx_hash.lower())
+
+    settlement_evidence = False
+    for tx_hash in verified_hashes:
+        for row in ledger:
+            if not isinstance(row, dict):
+                continue
+            meta = row.get("meta") if isinstance(row.get("meta"), dict) else {}
+            if (
+                row.get("reason") == "ton:deposit"
+                and str(row.get("uid", "")) == str(uid)
+                and str(meta.get("tx_hash", "")).lower() == tx_hash
+                and meta.get("source") == "ton_verified_binding_v1"
+            ):
+                settlement_evidence = True
+                break
+        if settlement_evidence:
+            break
+
+    replay_evidence = bool(
+        db.get("ton_replay_evidence", {}).get(str(uid))
+        if isinstance(db.get("ton_replay_evidence"), dict)
+        else False
+    )
+
+    checks = [
+        {
+            "id": "identity",
+            "label": "Telegram identity",
+            "ok": True,
+            "action": "המשתמש מאומת דרך Telegram initData.",
+        },
+        {
+            "id": "wallet_binding",
+            "label": "TON wallet binding",
+            "ok": bool(binding),
+            "action": "חבר ואמת TON wallet ב־Wallet." if not binding else "ארנק TON מאומת.",
+        },
+        {
+            "id": "treasury_and_rate",
+            "label": "Treasury + safe rate",
+            "ok": bool(readiness.get("ready")),
+            "action": (
+                "תקן את הגדרות Treasury / Rate לפני פתיחה: "
+                + ", ".join(str(x) for x in readiness.get("reasons", []))
+            ) if not readiness.get("ready") else (
+                "Treasury תקין · Rate בטווח הבטוח."
+            ),
+        },
+        {
+            "id": "owner_canary",
+            "label": "Owner canary authorization",
+            "ok": canary_allowed or bool(readiness.get("effective_open")),
+            "action": "Owner Canary אינו מאושר כרגע." if not canary_allowed and not readiness.get("effective_open")
+            else "Owner Canary מאושר." if not readiness.get("effective_open")
+            else "ה־public gate כבר פעיל.",
+        },
+        {
+            "id": "empirical_settlement",
+            "label": "Empirical TON settlement",
+            "ok": settlement_evidence,
+            "action": (
+                "בצע הפקדת canary אמיתית מהארנק המאומת עם Memo "
+                + memo_for(uid)
+                + " והמתן לזיכוי."
+            ) if not settlement_evidence else "נמצאה ראיית settlement מאומתת.",
+        },
+        {
+            "id": "idempotency",
+            "label": "Replay / idempotency evidence",
+            "ok": replay_evidence,
+            "action": (
+                "הרץ replay של אותו TX hash וודא שאין זיכוי נוסף."
+                if not replay_evidence
+                else "ראיית idempotency קיימת."
+            ),
+        },
+        {
+            "id": "public_gate_closed",
+            "label": "Public gate remains closed",
+            "ok": not bool(readiness.get("flag_open")),
+            "action": (
+                "השאר TON_DEPOSITS_OPEN=0 עד שכל הראיות ירוקות."
+                if readiness.get("flag_open")
+                else "הציבור עדיין חסום — תקין."
+            ),
+        },
+    ]
+
+    machine_ready = all(bool(item["ok"]) for item in checks)
+    return _no_store(jsonify({
+        "uid": str(uid),
+        "status": "OPEN" if readiness.get("effective_open") else "READY_TO_OPEN" if machine_ready else "BLOCKED",
+        "public_gate": {
+            "flag_open": bool(readiness.get("flag_open")),
+            "effective_open": bool(readiness.get("effective_open")),
+        },
+        "owner_canary": {
+            "allowed": canary_allowed,
+            "binding_present": bool(binding),
+            "binding_address": binding.get("address") if binding else None,
+            "memo": memo_for(uid),
+        },
+        "treasury": readiness.get("treasury") if readiness.get("ready") else None,
+        "credits_per_ton": float(readiness.get("rate")) if readiness.get("ready") else None,
+        "empirical": {
+            "settlement_evidence": settlement_evidence,
+            "replay_evidence": replay_evidence,
+        },
+        "checks": checks,
+        "next_action": next((item["action"] for item in checks if not item["ok"]), "כל בדיקות ה־Go-Live עברו."),
+        "open_instruction": "TON_DEPOSITS_OPEN=1",
+    })), 200
+
+
 @app.route("/api/v1/tasks", methods=["GET"])
 def personal_tasks_api():
     """Authenticated read model for the caller's personal tasks."""
