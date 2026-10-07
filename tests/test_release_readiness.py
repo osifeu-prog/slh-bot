@@ -33,6 +33,7 @@ def test_release_report_allows_valid_open_ton(monkeypatch):
     )
 
     import core.bnb_gate as bnb_gate
+    import state_manager
 
     monkeypatch.setattr(
         bnb_gate,
@@ -45,6 +46,7 @@ def test_release_report_allows_valid_open_ton(monkeypatch):
             "reasons": [],
         },
     )
+    monkeypatch.setattr(state_manager, "load_db", lambda: {})
 
     report = build_release_report()
     check = report["checks"]["External settlement gates"]
