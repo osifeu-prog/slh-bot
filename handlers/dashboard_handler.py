@@ -117,6 +117,12 @@ def register(bot):
                 web_app=types.WebAppInfo(
                     url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?v=20260925-dashboard"
                 ),
+            ),
+            types.InlineKeyboardButton(
+                "🖥️ Control Center",
+                web_app=types.WebAppInfo(
+                    url="https://slh-cloud-bot-production.up.railway.app/dashboard?v=20261007-runtime"
+                ),
             )
         )
         bot.send_message(m.chat.id, text, reply_markup=markup)
