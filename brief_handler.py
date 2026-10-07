@@ -22,7 +22,7 @@ def init(bot):
                 roadmap = f.read()
             open_items = roadmap.count("- [ ]")
             done_items = roadmap.count("- [x]")
-            lines.append(f"\n📌 Roadmap: {open_items} open items, {done_items} done")
+            lines.append(f"\\n📌 Roadmap: {open_items} open items, {done_items} done")
         except Exception as e:
             lines.append(f"Roadmap error: {e}")
 
@@ -31,13 +31,13 @@ def init(bot):
             users = len(db.get("students", {}))
             agents = len(state_manager.get_agents())
             tasks = len(db.get("tasks", {}))
-            lines.append(f"\n📊 Status: Users {users}, Agents {agents}, Tasks {tasks}")
+            lines.append(f"\\n📊 Status: Users {users}, Agents {agents}, Tasks {tasks}")
         except Exception as e:
             lines.append(f"Status error: {e}")
 
-        lines.append("\nUse /roadmap for full plan, /journal_read for full history.")
+        lines.append("\\nUse /roadmap for full plan, /journal_read for full history.")
 
-        msg = "\n".join(lines)
+        msg = "\\n".join(lines)
         for i in range(0, len(msg), 3800):
             bot.send_message(m.chat.id, msg[i:i+3800])
 

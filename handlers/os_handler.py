@@ -81,5 +81,5 @@ def register(bot, context=None):
         )
         bot.reply_to(message, header + menu)
 
-    print("✅ os handler registered")
+    print("✅ os + miniapp handler registered")
 
