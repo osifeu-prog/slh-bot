@@ -30,7 +30,30 @@ async function load(){
     $("checks").innerHTML=(v.checks||[]).map(c=>`<div class="check"><span>${c.status==="PASS"?"🟢":"🔴"} ${esc(c.name)}</span><span class="${c.status==="PASS"?"pass":"fail"}">${esc(c.detail)}</span></div>`).join("");
     const dep=d.deployment||{};
     $("deployment").innerHTML=[["Commit",dep.commit],["Branch",dep.branch],["Environment",dep.environment],["Deployment",dep.deployment_id],["Schema",infra.schema_version],["Verified",infra.verified_date_utc]].map(x=>`<div class="detail"><span class="muted">${esc(x[0])}</span><br><b>${esc(x[1]||"—")}</b></div>`).join("");
-    $("runtime").innerHTML=[["Agents",d.agents?.count||0],["Active",d.agents?.active||0],["AI",JSON.stringify(d.ai||{})],["Bots",((d.bots||{}).count??"registry metadata")],["Users",d.users?.count||0],["Scope","READ ONLY"]].map(x=>`<div class="detail"><span class="muted">${esc(x[0])}</span><br><b>${esc(x[1])}</b></div>`).join("");
+    let runtimeEvidence=null;
+    try{
+      const rr=await fetch("/api/runtime-command-evidence?bot=Me_ad_main",{headers:headers()});
+      const rd=await rr.json();
+      if(rr.ok)runtimeEvidence=rd;
+    }catch(_e){}
+    const commandNames=runtimeEvidence?.commands?Object.keys(runtimeEvidence.commands).sort():[];
+    const collisionNames=runtimeEvidence?.collisions?Object.keys(runtimeEvidence.collisions).sort():[];
+    const runtimeRows=[
+      ["Agents",d.agents?.count||0],["Active",d.agents?.active||0],["AI",JSON.stringify(d.ai||{})],
+      ["Bots",((d.bots||{}).count??"registry metadata")],["Users",d.users?.count||0],["Scope","READ ONLY"],
+      ["Telegram handlers",runtimeEvidence?.total_message_handlers??"—"],
+      ["Command registrations",runtimeEvidence?.command_registrations??"—"],
+      ["Unique commands",runtimeEvidence?.unique_commands??"—"],
+      ["Collisions",runtimeEvidence?.collision_count??"—"]
+    ];
+    let runtimeHtml=runtimeRows.map(x=>'<div class="detail"><span class="muted">'+esc(x[0])+'</span><br><b>'+esc(x[1])+'</b></div>').join("");
+    if(runtimeEvidence){
+      runtimeHtml+='<div class="detail"><span class="muted">Live Telegram commands</span><br><b>'+esc(commandNames.length)+'</b><br><details><summary>הצג את כל הפקודות</summary><div>'+commandNames.map(c=>'<code>/'+esc(c.replace(/^\\//,""))+'</code>').join(" · ")+'</div></details></div>';
+      if(collisionNames.length)runtimeHtml+='<div class="detail"><span class="muted">Runtime collisions</span><br><b>'+collisionNames.map(esc).join(", ")+'</b></div>';
+    }else{
+      runtimeHtml+='<div class="detail"><span class="muted">Live Telegram commands</span><br><b>AUTH_REQUIRED / לא נשלף</b></div>';
+    }
+    $("runtime").innerHTML=runtimeHtml;
     const rows=infra.services_inventory||[];
     $("railway").innerHTML=rows.length?`<table class="railway-table"><thead><tr><th>Project</th><th>Service</th><th>Repo</th><th>Status</th><th>Class</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(s.project)}</td><td>${esc(s.service)}</td><td>${esc(s.repo)}</td><td><span class="pill ${statusClass(s.status)}">${esc(s.status||"unknown")}</span></td><td>${esc(s.class)}</td></tr>`).join("")}</tbody></table>`:"אין inventory זמין";
   }catch(e){$("banner").textContent="🔐 "+e.message;$("banner").className="banner bad"}
