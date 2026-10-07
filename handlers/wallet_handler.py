@@ -261,7 +261,10 @@ def register(bot):
                 logo_lines = f.read().strip().splitlines()
             today = datetime.now().strftime("%Y-%m-%d")
             logo_lines = [
-                f"Updated: {today}" if line.startswith("Updated:") else line
+                (
+                    f"🆔 {uid}" if line.startswith("🆔 ") else
+                    f"Updated: {today}" if line.startswith("Updated:") else line
+                )
                 for line in logo_lines
             ]
             logo = "\n".join(logo_lines)
