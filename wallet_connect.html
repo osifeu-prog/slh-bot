@@ -50,7 +50,7 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const initData=tg?.initData||"";
 const headers=initData?{"X-Telegram-Init-Data":initData}:{};
-const smokeMode=location.pathname==="/slh-smoke";
+const smokeMode=location.pathname==="/slh-smoke" || new URLSearchParams(location.search).get("smoke")==="1";
 let binding=null, provider=null, wcProvider=null, mmClient=null, expiryTimer=null;
 let smokeRequestId=null;
 let smokeRunning=false;
@@ -144,6 +144,7 @@ async function connectMetaMask(){
     const injected=await discoverMetaMaskProvider();
     if(injected){
       provider=injected;
+      if(smokeMode){await startSmokeWithProvider(provider,"MetaMask / Trezor");return;}
       await verifyWithProvider(provider,"MetaMask");
       return;
     }
@@ -163,6 +164,7 @@ async function connectMetaMask(){
     provider=mmClient.getProvider();
     if(String(result?.chainId||"").toLowerCase()!=="0x38")throw Error("MetaMask לא חזר ל־BSC 56");
     if(!result?.accounts?.[0])throw Error("MetaMask לא החזיר כתובת");
+    if(smokeMode){await startSmokeWithProvider(provider,"MetaMask / Trezor");return;}
     await verifyWithProvider(provider,"MetaMask");
   }catch(e){
     const msg=normalizeMetaMaskError(e);
@@ -224,6 +226,7 @@ async function connectWalletConnect(){
     });
     await wcProvider.connect();
     provider=wcProvider;
+    if(smokeMode){await startSmokeWithProvider(provider,"WalletConnect");return;}
     await verifyWithProvider(provider,"WalletConnect");
   }catch(e){setStatus("❌ WalletConnect: "+(e.message||e),"err");}
 }
@@ -305,25 +308,33 @@ function openSmokeTrust(){
   location.href=link;
 }
 
-async function startSmoke(){
+async function startSmokeWithProvider(p,label){
   if(!smokeMode||smokeRunning)return;
   smokeRunning=true;
   try{
-    const p=await discoverSmokeProvider();
-    if(!p)throw Error("TRUST_WALLET_PROVIDER_NOT_FOUND");
     provider=p;
     const accounts=await p.request({method:"eth_requestAccounts"});
     const address=accounts?.[0];
-    if(!address)throw Error("לא נבחר ארנק ב־Trust Wallet");
-
+    if(!address)throw Error("לא נבחר ארנק");
     let chain=await p.request({method:"eth_chainId"}).catch(()=>null);
     if(chain!=="0x38"){
-      await p.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});
+      try{
+        await p.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x38"}]});
+      }catch(e){
+        if(e?.code===4902){
+          await p.request({method:"wallet_addEthereumChain",params:[{
+            chainId:"0x38",chainName:"BNB Smart Chain",
+            nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
+            rpcUrls:["https://bsc-dataseed.binance.org/"],
+            blockExplorerUrls:["https://bscscan.com/"]
+          }]});
+        }else throw e;
+      }
       chain=await p.request({method:"eth_chainId"});
     }
-    if(chain!=="0x38")throw Error("Trust Wallet אינו מחובר ל־BSC 56");
+    if(chain!=="0x38")throw Error("הארנק אינו מחובר ל־BSC 56");
     if(String(address).toLowerCase()!==String(binding.address).toLowerCase()){
-      throw Error("כתובת Trust Wallet אינה תואמת לארנק המאומת של צביקה");
+      throw Error("הארנק המחובר שונה מהארנק המאומת");
     }
 
     const cfg=await api("/api/v1/distribution/secondary/smoke-config");
@@ -343,7 +354,7 @@ async function startSmoke(){
       })
     });
 
-    setStatus("⏳ 1 SLH מוכן. Trust Wallet יבקש עכשיו אישור…","ok");
+    setStatus("⏳ 1 SLH מוכן. "+label+" יבקש עכשיו אישור…","ok");
     const txHash=await p.request({
       method:"eth_sendTransaction",
       params:[prepared.tx]
@@ -356,9 +367,7 @@ async function startSmoke(){
     const msg=String(e?.message||e||"");
     if(/4001|user rejected|rejected/i.test(msg)){
       await cancelSmoke();
-      setStatus("העסקה בוטלה ב־Trust Wallet. אפשר לנסות שוב.","warn");
-    }else if(msg==="TRUST_WALLET_PROVIDER_NOT_FOUND"){
-      setStatus("❌ Trust Wallet לא זמין. פתח את הקישור מתוך Trust Wallet.","err");
+      setStatus("העסקה בוטלה בארנק. אפשר לנסות שוב.","warn");
     }else{
       await cancelSmoke();
       setStatus("❌ SLH Smoke: "+msg,"err");
@@ -368,19 +377,36 @@ async function startSmoke(){
   }
 }
 
+async function startSmoke(){
+  if(!smokeMode||smokeRunning)return;
+  const p=await discoverSmokeProvider();
+  if(!p)throw Error("WALLET_PROVIDER_NOT_FOUND");
+  return startSmokeWithProvider(p,"הארנק");
+}
+
 if(smokeMode){
-  $("meta").classList.add("hidden");
+  $("meta").classList.remove("hidden");
+  $("meta").textContent="🦊 MetaMask / Trezor";
   $("trust").classList.remove("hidden");
-  $("trust").textContent="📱 פתח שוב ב־Trust Wallet";
+  $("trust").textContent="📱 Trust Wallet";
   $("trust").onclick=openSmokeTrust;
-  $("wc").classList.add("hidden");
-  $("fresh").classList.add("hidden");
+  $("wc").classList.remove("hidden");
+  $("wc").textContent="🔗 WalletConnect · Trezor / Mobile";
+  $("fresh").classList.remove("hidden");
+  $("fresh").textContent="♻️ צור WalletConnect חדש";
   $("assets").classList.add("hidden");
   document.title="SLH OS · 1 SLH Smoke";
   (async()=>{
     await init();
-    setStatus("⏳ מתחבר ל־Trust Wallet ומכין 1 SLH…","ok");
-    setTimeout(()=>startSmoke(),250);
+    setStatus("בחר את הארנק שממנו תחתום על ה־1 SLH.","ok");
+    setTimeout(async()=>{
+      try{
+        const p=await discoverSmokeProvider();
+        if(p)await startSmokeWithProvider(p,"הארנק המחובר");
+      }catch(e){
+        setStatus("בחר MetaMask / Trezor, Trust Wallet או WalletConnect כדי להמשיך.","warn");
+      }
+    },300);
   })();
 }else{
   init();
