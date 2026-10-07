@@ -2008,12 +2008,12 @@ async function initTonConnect(){
     }
     await __tonSessionMatchesBinding(_tonConnectUI?.wallet);
     await loadWalletBindings().catch(()=>{});
-    __updateTonConnectAction(!!(await (async()=>{try{const r=await fetch('/api/wallet/ton',{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));return !!d.binding}catch(_e){return false}})()));
   }).catch(err=>console.warn('[TON] restore connection failed',err));
   _tonConnectUI.onStatusChange(async wallet=>{
     if(!wallet){
       setText('tonBindingStatus','⚪️ TON לא מחובר');
-      __updateTonConnectAction(true);
+      __updateTonConnectAction(false);
+      loadWalletBindings().catch(()=>{});
       return;
     }
     const proofItem=wallet.connectItems?.tonProof;
