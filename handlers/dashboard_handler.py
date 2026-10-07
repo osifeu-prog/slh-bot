@@ -1,6 +1,15 @@
 from telebot import types
 
 
+def _fmt_balance(value):
+    """Render balances without binary floating-point noise."""
+    try:
+        text = f"{float(value):.8f}".rstrip("0").rstrip(".")
+        return text if text else "0"
+    except (TypeError, ValueError):
+        return str(value)
+
+
 def register(bot):
     @bot.message_handler(commands=["dashboard"])
     def dashboard(m):
@@ -57,18 +66,18 @@ def register(bot):
         text = (
             f"🌟 ה-Dashboard שלך\n\n"
             f"👤 {name} · {identity.get('role', 'USER')}\n"
-            f"💰 Credits: {wallet.get('credits', 0)}\n"
-            f"🔒 Staked: {wallet.get('staked', 0)}\n"
-            f"🪙 SLH Total: {slh_total}\n"
-            f"🟢 Live: {slh_live}\n"
-            f"🔒 Reserved: {slh_reserved}\n"
-            f"💸 Spendable live: {slh_spendable}\n"
+            f"💰 Credits: {_fmt_balance(wallet.get('credits', 0))}\n"
+            f"🔒 Staked: {_fmt_balance(wallet.get('staked', 0))}\n"
+            f"🪙 SLH Total: {_fmt_balance(slh_total)}\n"
+            f"🟢 Live: {_fmt_balance(slh_live)}\n"
+            f"🔒 Reserved: {_fmt_balance(slh_reserved)}\n"
+            f"💸 Spendable live: {_fmt_balance(slh_spendable)}\n"
             f"ℹ️ Provenance: {slh_status}\n\n"
-            f"⛓️ On-chain SLH: {balances.get('SLH', 0)}\n"
+            f"📊 API ledger SLH: {_fmt_balance(balances.get('SLH', 0))}\n"
             f"📚 Academy: {len(enrolled)} enrolled\n"
             f"🎯 Tasks: {completed}/{total} completed\n"
             f"🏁 Alpha: {alpha_status}\n"
-            f"🏆 Points: {rewards.get('points', 0)}\n\n"
+            f"🏆 Points: {int(rewards.get('points', 0) or 0):,}\n\n"
             f"🪙 Exchange: {'OPEN' if ex_status.get('open') else 'CLOSED'}\n"
             f"   Ask: {ex_ask if ex_ask is not None else '—'}\n"
             f"   Bid: {ex_bid if ex_bid is not None else '—'}\n"
