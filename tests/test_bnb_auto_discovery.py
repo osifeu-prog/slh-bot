@@ -127,7 +127,50 @@ def test_discovery_ignores_wrong_amount_and_wrong_recipient():
              bnb_auto_discovery,
              "_ledger_keys",
              return_value=set(),
+         ), patch.object(
+             bnb_auto_discovery,
+             "_latest_handoff_timestamp",
+             return_value=None,
          ):
         result = bnb_auto_discovery.discover_bnb_transfer(UID)
 
     assert result["status"] == "NOT_FOUND"
+
+
+def test_discovery_falls_back_to_bsc_rpc_handoff_window():
+    candidate = {
+        "tx_hash": TX,
+        "timestamp": 1791370800,
+        "block": 123456,
+        "amount_wei": 10**16,
+        "from": SENDER,
+        "to": TREASURY,
+    }
+    with patch.object(bnb_auto_discovery, "get_binding", return_value={"address": SENDER}), \
+         patch.object(bnb_auto_discovery, "_config", return_value=_cfg()), \
+         patch.object(bnb_auto_discovery, "Web3", FakeWeb3), \
+         patch.object(
+             bnb_auto_discovery.requests,
+             "get",
+             return_value=type("R", (), {
+                 "raise_for_status": lambda self: None,
+                 "json": lambda self: [],
+             })(),
+         ), \
+         patch.object(bnb_auto_discovery, "_ledger_keys", return_value=set()), \
+         patch.object(
+             bnb_auto_discovery,
+             "_latest_handoff_timestamp",
+             return_value=1791370800,
+         ), \
+         patch.object(
+             bnb_auto_discovery,
+             "_rpc_find_exact_transfers",
+             return_value=[candidate],
+         ):
+        result = bnb_auto_discovery.discover_bnb_transfer(UID)
+
+    assert result["status"] == "FOUND"
+    assert result["provider"] == "BSC_RPC_HANDOFF_WINDOW"
+    assert result["candidate"]["tx_hash"] == TX
+    assert result["candidate"]["block"] == 123456
