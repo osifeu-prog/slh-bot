@@ -13,3 +13,9 @@ def test_miniapp_contract_contains_new_public_shell():
     source = Path("mini_app.html").read_text(encoding="utf-8")
     for marker in ('id="balance"', 'id="move"', 'id="growth"', 'id="investor"', 'id="profile"'):
         assert marker in source
+
+
+def test_system_check_module_exposes_read_only_contract():
+    source = Path("core/system_checks.py").read_text(encoding="utf-8")
+    for marker in ("def check_db", "def check_commands", "def check_ux", "def check_money", "def check_bnb", "def check_ton"):
+        assert marker in source
