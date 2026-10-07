@@ -44,15 +44,12 @@ def _public_origin():
     return "https://slh-cloud-bot-production.up.railway.app"
 
 
-def _trust_wallet_smoke_url(uid):
+def _wallet_smoke_url(uid):
+    """Open the controlled 1-SLH smoke in an external wallet-capable browser."""
     handoff = create_handoff(uid)
-    target = (
+    return (
         f"{_public_origin()}/wallet-handoff?"
         f"code={quote(str(handoff['token']), safe='')}&next=/slh-smoke"
-    )
-    return (
-        "https://link.trustwallet.com/open_url?coin_id=20000714&url="
-        + quote(target, safe="")
     )
 
 
@@ -170,10 +167,11 @@ def _menu(uid, *, include_test=False):
         owner_address = owner_binding.get("address") if owner_binding else None
         if owner_address:
             try:
-                smoke_url = _trust_wallet_smoke_url(uid)
+                smoke_url = _wallet_smoke_url(uid)
                 markup.add(
                     types.InlineKeyboardButton(
-                        "🧪 שלח 1 SLH אל אוסיף",
+                        "🧪 שלח 1 SLH אל אוסיף · חתימה בארנק",
+
                         url=smoke_url,
                     )
                 )
@@ -270,7 +268,8 @@ def register(bot):
             smoke_url = _trust_wallet_smoke_url(uid)
             markup.add(
                 types.InlineKeyboardButton(
-                    "🧪 פתח Trust Wallet ושלח 1 SLH",
+                    "🧪 פתח 1 SLH Smoke · בחר ארנק",
+
                     url=smoke_url,
                 )
             )
