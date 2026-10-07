@@ -230,9 +230,14 @@ def settle_ton_deposit(uid, tx_hash):
     return _settle_observed_transaction(uid, transaction, treasury, rate, binding)
 
 def credit_new_ton_deposits(uid):
-    """Scan recent treasury inbound transactions and credit matching bound deposits."""
+    """Scan recent treasury inbound transactions and credit matching bound deposits.
+
+    Normal users require the public TON gate. The configured owner canary may
+    also use the same canonical settlement path while the public gate remains
+    closed, so the smoke does not need a separate settlement implementation.
+    """
     uid = str(uid)
-    if not _deposits_open():
+    if not ton_settlement_allowed(uid):
         raise ValueError("TON_DEPOSITS_CLOSED")
 
     binding = get_ton_binding(uid)
