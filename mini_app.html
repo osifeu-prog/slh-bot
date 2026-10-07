@@ -510,11 +510,22 @@ async function shareReferralLink(){
     if(e?.name==="AbortError")return;
   }
   try{
-    await navigator.clipboard.writeText(link);
-    toast("✅ הקישור הועתק. אפשר לשלוח אותו לכל מי שתרצה.");
-  }catch(e){
-    toast("🔗 "+link);
-  }
+    const area=document.createElement("textarea");
+    area.value=link;
+    area.setAttribute("readonly","");
+    area.style.position="fixed";
+    area.style.opacity="0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    const copied=document.execCommand("copy");
+    area.remove();
+    if(copied){
+      toast("✅ הקישור הועתק. אפשר לשלוח אותו לכל מי שתרצה.");
+      return;
+    }
+  }catch(e){}
+  toast("🔗 "+link);
 }
 async function loadRewardsPanel(){
   if(!initData){showAuthGate();return}
