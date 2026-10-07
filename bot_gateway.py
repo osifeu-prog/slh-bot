@@ -257,6 +257,41 @@ def configure_default_mini_app_menu(bot):
     except Exception as exc:
         log(f"[TELEGRAM] Mini App menu button configuration skipped: {type(exc).__name__}")
 
+def log_runtime_command_evidence(bot_name, bot):
+    try:
+        from core.runtime_command_evidence import snapshot_bot
+
+        snapshot = snapshot_bot(bot_name, bot)
+        log(
+            "[RUNTIME_COMMAND_EVIDENCE] "
+            f"bot={bot_name} "
+            f"handlers={snapshot.get('total_message_handlers')} "
+            f"command_registrations={snapshot.get('command_registrations')} "
+            f"unique={snapshot.get('unique_commands')} "
+            f"collisions={snapshot.get('collision_count')}"
+        )
+
+        targets = ("miniapp", "complete", "brief", "rewards", "agent_status")
+        commands = snapshot.get("commands", {})
+        for command in targets:
+            registrations = commands.get(f"/{command}", [])
+            details = "; ".join(
+                "index="
+                + str(item.get("registration_index"))
+                + " module="
+                + str(item.get("module"))
+                + " function="
+                + str(item.get("function"))
+                for item in registrations
+            ) or "NOT_REGISTERED"
+            log(f"[RUNTIME_COMMAND_EVIDENCE] /{command}: {details}")
+    except Exception as exc:
+        log(
+            "[RUNTIME_COMMAND_EVIDENCE] failed: "
+            f"{type(exc).__name__}: {str(exc)[:200]}"
+        )
+
+
 def token_in_use(token, started_tokens):
     token = str(token or "").strip()
     if not token:
@@ -356,6 +391,7 @@ if __name__ == "__main__":
                 handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
                 load_handlers(bot, handler_context)
                 register_runtime_bot("Me_ad_main", bot)
+                log_runtime_command_evidence("Me_ad_main", bot)
                 log("[OK] Bot Me_ad_main started")
                 threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                 started_bots["Me_ad_main"] = bot
@@ -388,6 +424,7 @@ if __name__ == "__main__":
                         handler_context = {"bot_name": bot_name, "is_admin": canonical_is_admin}
                         load_handlers(bot, handler_context)
                         register_runtime_bot(bot_name, bot)
+                        log_runtime_command_evidence(bot_name, bot)
                         log(f"[OK] Bot {bot_name} started")
                         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                         started_bots[bot_name] = bot
