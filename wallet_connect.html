@@ -173,7 +173,7 @@ async function connectMetaMask(){
   }
 }
 async function openTrust(){
-  const target=location.origin+"/wallet-connect";
+  const target=location.origin+"/wallet-connect?smoke=1";
   const link="https://link.trustwallet.com/open_url?coin_id=20000714&url="+encodeURIComponent(target);
   try{if(tg?.openLink){tg.openLink(link);return;}}catch(_e){}
   location.href=link;
@@ -399,14 +399,6 @@ if(smokeMode){
   (async()=>{
     await init();
     setStatus("בחר את הארנק שממנו תחתום על ה־1 SLH.","ok");
-    setTimeout(async()=>{
-      try{
-        const p=await discoverSmokeProvider();
-        if(p)await startSmokeWithProvider(p,"הארנק המחובר");
-      }catch(e){
-        setStatus("בחר MetaMask / Trezor, Trust Wallet או WalletConnect כדי להמשיך.","warn");
-      }
-    },300);
   })();
 }else{
   init();
