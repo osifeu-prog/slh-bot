@@ -235,7 +235,8 @@ def register(bot):
 
         text += (
             "🪙 SLH: /slh · /slh_send · /slh_test\n"
-            "📤 העברת Credits: /transfer <uid> <amount>\n"            "🎁 מתנת Credits: /gift <uid> <amount>\n"
+            "📤 העברת Credits: /transfer &lt;uid&gt; &lt;amount&gt;\n"
+            "🎁 מתנת Credits: /gift &lt;uid&gt; &lt;amount&gt;\n"
             "🎁 מרכז מתנות ו-Airdrop: /gifts\n"
             "⭐ רכישת Credits: /pay\n"
             "📜 היסטוריית תשלומים: /history\n\n"
@@ -278,5 +279,3 @@ def register(bot):
             )
         else:
             bot.reply_to(msg, text)
-
-    print("wallet_handler loaded")
