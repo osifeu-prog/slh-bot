@@ -1082,7 +1082,7 @@ const initialTonBinding=w.ton_binding||null;
 
 setText('tonBindingStatus',initialTonBinding?'✅ מאומת':(w.ton_settlement?.open?'⚪️ לא מאומת':'⛔ Settlement סגור'));
 setText('tonBindingAddress',initialTonBinding?esc(initialTonBinding.address):'אין ארנק TON מאומת');
-setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",w.ton_wallet||'לא מקושר');renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span></div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>`<div class="task ${t.status==='done'?'done':''}">${t.status==='done'?'✅':'⬜'} ${esc(t.title)}</div>`).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','investor','wallet','market','transfer','buy','stake','alpha','academy','exchange','system','control','ai','settings'];show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
+setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet||'לא מקושר'));renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span></div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>`<div class="task ${t.status==='done'?'done':''}">${t.status==='done'?'✅':'⬜'} ${esc(t.title)}</div>`).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','investor','wallet','market','transfer','buy','stake','alpha','academy','exchange','system','control','ai','settings'];show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
 if(__slhSmokeMode&&__slhShowing==='wallet'&&__slhSlhRoute!=='smoke'){
   const notice=$('slhSmokeNotice');if(notice)notice.hidden=false;
   const amount=$('slhSendAmount');if(amount&&!amount.value)amount.value='1';
@@ -1936,6 +1936,32 @@ async function signTonWalletFallback(wallet){
 
 async function __slhApplyTelegramWalletPolicy(){try{if(!__slhTelegramMiniApp)return;const controls=document.getElementById('bnbConnectControls');if(controls)controls.hidden=false;const notice=document.getElementById('bnbTelegramNotice');if(notice)notice.hidden=true;const top=document.getElementById('tonBindingStatusTop');if(top)top.textContent='TON Connect';const wc=document.getElementById('bnbWalletConnectStatus');if(wc&&!wc.textContent)wc.textContent='WalletConnect זמין בתוך Telegram — ניתן לחבר Trust Wallet / MetaMask Mobile.';}catch(_e){}}
 
+async function __tonSessionMatchesBinding(wallet){
+  if(!wallet?.account?.address||!initData)return false;
+  try{
+    const r=await fetch('/api/wallet/ton',{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)return false;
+    const binding=d.binding||null;
+    if(!binding?.address_raw)return false;
+    const {Address}=await __loadTonDepositCore();
+    const current=Address.parse(String(wallet.account.address)).toRawString().toLowerCase();
+    const bound=Address.parse(String(binding.address_raw)).toRawString().toLowerCase();
+    const matches=current===bound;
+    const status=$('tonBindingStatus');
+    if(matches){
+      setText('tonBindingStatus','✅ מחובר · ארנק מאומת');
+      status?.classList.add('ok');
+      status?.classList.remove('pending');
+    }else{
+      setText('tonBindingStatus','⚠️ מחובר ארנק אחר · הארנק המאומת נשמר');
+      status?.classList.remove('ok');
+      status?.classList.add('pending');
+    }
+    return matches;
+  }catch(_e){return false}
+}
+
 async function initTonConnect(){
   if(_tonConnectUI) return _tonConnectUI;
   if(!window.TON_CONNECT_UI?.TonConnectUI) throw Error('TON Connect SDK לא נטען');
@@ -1944,10 +1970,13 @@ async function initTonConnect(){
     buttonRootId:'tonConnectButton',
     restoreConnection:true
   });
-  _tonConnectUI.connectionRestored?.then(restored=>{
+  _tonConnectUI.connectionRestored?.then(async restored=>{
     if(!restored){
       console.log('[TON] No previous connection restored');
+      return;
     }
+    await __tonSessionMatchesBinding(_tonConnectUI?.wallet);
+    await loadWalletBindings().catch(()=>{});
   }).catch(err=>console.warn('[TON] restore connection failed',err));
   _tonConnectUI.onStatusChange(async wallet=>{
     if(!wallet){
@@ -1956,6 +1985,7 @@ async function initTonConnect(){
     }
     const proofItem=wallet.connectItems?.tonProof;
     if(proofItem?.error){
+      if(!_tonChallenge && await __tonSessionMatchesBinding(wallet))return;
       const code=proofItem.error.code;
       const name=proofItem.error.name||'TON_PROOF_ERROR';
       const message=proofItem.error.message||'Wallet did not return a TON Proof';
@@ -1969,11 +1999,20 @@ async function initTonConnect(){
       return;
     }
     if(!proofItem || !proofItem.proof){
+      if(!_tonChallenge && await __tonSessionMatchesBinding(wallet))return;
       console.warn('[TON] wallet connected without tonProof',wallet.walletInfo?.name||'unknown');
+      if(!_tonChallenge){
+        setText('tonBindingStatus','⚠️ חיבור קיים אך נדרש אימות מחדש');
+        return;
+      }
       await signTonWalletFallback(wallet);
       return;
     }
-    if(!_tonChallenge){setText('tonBindingStatus','⚠️ חסר challenge');return}
+    if(!_tonChallenge){
+      if(await __tonSessionMatchesBinding(wallet))return;
+      setText('tonBindingStatus','⚠️ נדרש חיבור TON מחדש');
+      return;
+    }
     try{
       const account=wallet.account||{};
       const body={
@@ -2249,6 +2288,7 @@ function __slhBootWithRetry(attempt){
   if(__slhRefreshTelegramRuntime()){
     hideAuthGate();
     loadMe();
+    initTonConnect().catch(err=>console.warn('[TON] boot restore failed',err));
     trackGrowth('home_view','home',{screen:'home'});
     return;
   }
@@ -2595,7 +2635,7 @@ html[data-text="xl"] .app{zoom:1.22}
   function load(){try{var l=localStorage.getItem(KEY);if(l)pref=Object.assign({},DEF,JSON.parse(l))}catch(_e){}apply();try{if(ok('6.9')&&W.CloudStorage)W.CloudStorage.getItem(KEY,function(err,v){if(!err&&v){try{pref=Object.assign({},DEF,JSON.parse(v));apply();try{localStorage.setItem(KEY,v)}catch(_e){}}catch(_e){}}})}catch(_e){}}
   var sheet=document.getElementById('vSheet');function open(){sheet.classList.add('on');var f=sheet.querySelector('button[aria-pressed="true"]');if(f)f.focus()}function close(){sheet.classList.remove('on')}
   window.openViewSettings=open;sheet.addEventListener('click',function(e){if(e.target===sheet)close()});document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});document.getElementById('vClose').onclick=close;
-  sheet.querySelectorAll('.v-seg').forEach(function(seg){seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;pref[seg.dataset.key]=b.dataset.val;apply();save()})});
+  sheet.querySelectorAll('.v-seg').forEach(function(seg){seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;pref[seg.dataset.key]=b.dataset.val;apply();save();if(seg.dataset.key==='skin'&&typeof window.setUiTheme==='function'){var mapped={night:'calm',paper:'light',tg:'system'}[pref.skin];if(mapped)window.setUiTheme(mapped)}})});
   var home=document.getElementById('vHome'),full=document.getElementById('vFull');if(ok('8.0')&&typeof W.addToHomeScreen==='function'){home.hidden=false;home.onclick=function(){try{W.addToHomeScreen()}catch(_e){}}}if(ok('8.0')&&typeof W.requestFullscreen==='function'){full.hidden=false;full.onclick=function(){try{if(W.isFullscreen){W.exitFullscreen()}else{W.requestFullscreen()}}catch(_e){}}}
   var top=document.querySelector('header.top');if(top){var b=document.createElement('button');b.type='button';b.className='ghost v-open';b.textContent='Aa';b.setAttribute('aria-label','התאמת תצוגה');b.onclick=open;top.appendChild(b)}
   if(W&&ok('7.0')&&W.SettingsButton){try{W.SettingsButton.show();W.SettingsButton.onClick(open)}catch(_e){}}
@@ -3153,7 +3193,24 @@ async function executePreparedTonSwap(){
 }
 try{setTimeout(()=>loadTonSwapAssets(),900)}catch(_e){}
 </script>
-<script id="slh-settings-sync">
+<style id="slh-accessibility-v6">
+/* Canonical theme + accessibility guardrails. */
+html[data-slh-theme="calm"] body,html[data-slh-theme="calm"] .screen{background:#0f1420!important;color:#f4f7fb!important}
+html[data-slh-theme="light"] body,html[data-slh-theme="light"] .screen{background:#f5f7fb!important;color:#172033!important}
+html[data-slh-theme="contrast"] body,html[data-slh-theme="contrast"] .screen{background:#050505!important;color:#fff!important}
+html[data-slh-theme="calm"] :is(.hero,.card,.ai,.slh-v5-settings-card,.slh-v4-card,.slh-swap-card){background:#171d2b!important;color:#f4f7fb!important;border-color:#39465d!important}
+html[data-slh-theme="light"] :is(.hero,.card,.ai,.slh-v5-settings-card,.slh-v4-card,.slh-swap-card){background:#fff!important;color:#172033!important;border-color:#cdd5e1!important}
+html[data-slh-theme="contrast"] :is(.hero,.card,.ai,.slh-v5-settings-card,.slh-v4-card,.slh-swap-card){background:#0d0d0d!important;color:#fff!important;border:2px solid #fff!important}
+html[data-slh-theme="calm"] :is(.muted,.subtitle,.hero-label,.slh-v5-theme span,.slh-v4-security small,.slh-v4-cardhead small){color:#b8c4d6!important}
+html[data-slh-theme="light"] :is(.muted,.subtitle,.hero-label,.slh-v5-theme span,.slh-v4-security small,.slh-v4-cardhead small){color:#4b596d!important}
+html[data-slh-theme="contrast"] :is(.muted,.subtitle,.hero-label,.slh-v5-theme span,.slh-v4-security small,.slh-v4-cardhead small){color:#fff!important}
+:is(button,.action,.nav button,.form-input,.ghost,.copy,.refresh,input,select){min-height:44px}
+:is(button,a,input,select,textarea,[role="button"],summary){font-size:15px}
+.form-input,input,select,textarea{font-size:16px!important;line-height:1.45}
+:is(button,a,input,select,textarea,[role="button"],summary):focus-visible{outline:3px solid var(--v4-btn,#4f46b5)!important;outline-offset:3px}
+button:disabled,[aria-disabled="true"]{cursor:not-allowed;opacity:.62}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style><script id="slh-settings-sync">
 const SLH_THEME_META = {
   calm:{label:'רגוע כהה',description:'כהה, נקי ונוח לעיניים'},
   system:{label:'לפי Telegram',description:'עוקב אחרי ערכת Telegram במכשיר'},
