@@ -73,6 +73,7 @@ def _payments_check():
 
 def _external_gate_check():
     blockers = []
+    degraded = []
     notes = []
 
     # TON is allowed to be public-open when its own readiness contract is valid.
@@ -97,15 +98,18 @@ def _external_gate_check():
         if bool(bnb.get("effective_open")):
             blockers.append("BNB settlement is OPEN before the required empirical deposit smoke")
     except FileNotFoundError:
-        notes.append("BNB DB readiness unavailable in this isolated runtime check")
+        degraded.append("BNB DB readiness unavailable in this isolated runtime check")
     except Exception as exc:
-        notes.append(f"BNB readiness check unavailable: {type(exc).__name__}")
+        degraded.append(f"BNB readiness check unavailable: {type(exc).__name__}")
 
     if blockers:
-        return _check("External settlement gates", "BLOCKED", "; ".join(blockers))
-    if notes:
-        return _check("External settlement gates", "DEGRADED", "; ".join(notes))
-    return _check("External settlement gates", "GREEN", "; ".join(notes) or "BNB settlement remains closed pending empirical evidence")
+        detail = "; ".join(blockers + notes + degraded)
+        return _check("External settlement gates", "BLOCKED", detail)
+    if degraded:
+        detail = "; ".join(notes + degraded)
+        return _check("External settlement gates", "DEGRADED", detail)
+    detail = "; ".join(notes) or "BNB settlement remains closed pending empirical evidence"
+    return _check("External settlement gates", "GREEN", detail)
 
 
 def _participation_check():
