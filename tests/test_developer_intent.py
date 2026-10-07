@@ -21,10 +21,10 @@ class DeveloperIntentTests(unittest.TestCase):
         result = inspect_investor_overview()
         self.assertEqual(result["intent"], "investor_overview")
         self.assertTrue(result["checks"]["canonical_read_model"])
-        self.assertFalse(result["checks"]["telegram_button_or_callback"])
-        self.assertFalse(result["checks"]["mini_app_screen"])
+        self.assertTrue(result["checks"]["telegram_button_or_callback"])
+        self.assertTrue(result["checks"]["mini_app_screen"])
         self.assertTrue(result["checks"]["me_api"])
-        self.assertEqual(result["status"], "partial")
+        self.assertEqual(result["status"], "ready")
 
 
 if __name__ == "__main__":
