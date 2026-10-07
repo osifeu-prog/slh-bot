@@ -26,6 +26,11 @@ class WalletAndAcademyUiContractTests(unittest.TestCase):
         self.assertIn("d.referral?.commission_credits", mini)
         self.assertIn('"commission_credits": commission_credits', investor)
 
+    def test_wallet_logo_uses_current_user_uid_not_static_identity(self):
+        source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
+        self.assertIn('f"🆔 {uid}" if line.startswith("🆔 ") else', source)
+        self.assertNotIn('f"🆔 972500000001"', source)
+
     def test_wallet_html_parse_mode_escapes_command_placeholders(self):
         source = Path("handlers/wallet_handler.py").read_text(encoding="utf-8")
         self.assertIn("/transfer &lt;uid&gt; &lt;amount&gt;", source)
