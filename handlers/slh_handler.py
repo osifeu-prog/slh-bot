@@ -53,6 +53,19 @@ def _wallet_smoke_url(uid):
     )
 
 
+def _trust_wallet_smoke_url(uid):
+    """Backward-compatible legacy Trust Wallet deep link used by regression tests."""
+    handoff = create_handoff(uid)
+    target = (
+        f"{_public_origin()}/wallet-handoff?"
+        f"code={quote(str(handoff['token']), safe='')}&next=/slh-smoke"
+    )
+    return (
+        "https://link.trustwallet.com/open_url?coin_id=20000714&url="
+        + quote(target, safe="")
+    )
+
+
 def _owner_slh_browser_send_url(uid):
     if str(uid) != str(OWNER_TELEGRAM_ID):
         raise PermissionError("OWNER_ONLY")
