@@ -32,6 +32,79 @@ def register(bot):
         if first_line in known_single_commands and cmd != first_line:
             cmd = first_line
 
+        if cmd in ("bnb_find", "bnb_auto_smoke"):
+            if not is_owner(uid):
+                bot.reply_to(msg, "⛔️ OWNER only for BNB empirical automation")
+                return
+            try:
+                from core.bnb_auto_discovery import (
+                    discover_bnb_transfer,
+                    run_owner_auto_smoke,
+                )
+                if cmd == "bnb_find":
+                    result = discover_bnb_transfer(str(uid))
+                else:
+                    result = run_owner_auto_smoke(str(uid))
+
+                status = str(result.get("status") or "UNKNOWN")
+                if status == "FOUND":
+                    c = result.get("candidate") or {}
+                    bot.reply_to(
+                        msg,
+                        "🔎 BNB AUTO DISCOVERY\n"
+                        "Status: FOUND\n"
+                        f"TX: {c.get('tx_hash')}\n"
+                        f"Amount wei: {c.get('amount_wei')}\n"
+                        f"From: {c.get('from')}\n"
+                        f"To: {c.get('to')}\n"
+                        "Discovery is read-only; canonical RPC verification is next.",
+                    )
+                elif status == "PASS":
+                    bot.reply_to(
+                        msg,
+                        "✅ BNB AUTO SMOKE PASS\n"
+                        f"TX: {result.get('tx_hash')}\n"
+                        f"Credits: {result.get('credits')}\n"
+                        f"Amount wei: {result.get('amount_wei')}\n"
+                        f"Confirmations: {result.get('confirmations')}\n"
+                        f"Ledger entries: {result.get('ledger_entries_for_idempotency_key')}\n"
+                        "🔒 Public BNB settlement gate remains CLOSED.",
+                    )
+                elif status == "WAITING_FOR_CONFIRMATIONS":
+                    bot.reply_to(
+                        msg,
+                        "⏳ BNB AUTO SMOKE\n"
+                        "TX found, but confirmations are not yet sufficient.\n"
+                        f"TX: {result.get('tx_hash')}\n"
+                        f"Confirmations: {result.get('confirmations')}/{result.get('required_confirmations')}"
+                    )
+                elif status == "ALREADY_PASS":
+                    bot.reply_to(
+                        msg,
+                        "✅ BNB AUTO SMOKE\n"
+                        "Evidence already PASS; no new settlement was performed.\n"
+                        f"TX: {result.get('evidence', {}).get('tx_hash')}"
+                    )
+                elif status == "NOT_FOUND":
+                    bot.reply_to(
+                        msg,
+                        "🔎 BNB AUTO DISCOVERY\n"
+                        "No exact 0.01 BNB transfer was found in the indexed address history.\n"
+                        "No settlement was performed.",
+                    )
+                elif status == "AMBIGUOUS":
+                    bot.reply_to(
+                        msg,
+                        "⚠️ BNB AUTO DISCOVERY\n"
+                        "Multiple exact candidates were found and none can be selected safely.\n"
+                        "No settlement was performed.",
+                    )
+                else:
+                    bot.reply_to(msg, f"❌ BNB AUTO SMOKE: {status}")
+            except Exception as exc:
+                bot.reply_to(msg, f"❌ BNB AUTO SMOKE: {type(exc).__name__}: {exc}")
+            return
+
         if cmd.startswith("railway"):
             if not is_owner(uid):
                 bot.reply_to(msg, "⛔️ OWNER only for Railway control-plane actions")
