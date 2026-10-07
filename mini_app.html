@@ -1177,6 +1177,144 @@ function renderBnbWalletState(bnb){
   $('uxBnbDot')?.classList.toggle('good',!!bb);
 }
 
+let __tonDepositCore=null;
+let __tonDepositPollTimer=null;
+
+async function __loadTonDepositCore(){
+  if(__tonDepositCore)return __tonDepositCore;
+  __tonDepositCore=await import('https://esm.sh/@ton/core@0.63.1');
+  return __tonDepositCore;
+}
+
+function __bytesToBase64(bytes){
+  let binary='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    binary+=String.fromCharCode(...bytes.subarray(i,Math.min(i+chunk,bytes.length)));
+  }
+  return btoa(binary);
+}
+
+async function __tonCommentPayload(comment){
+  const {beginCell}=await __loadTonDepositCore();
+  const cell=beginCell()
+    .storeUint(0,32)
+    .storeStringTail(String(comment))
+    .endCell();
+  return __bytesToBase64(cell.toBoc());
+}
+
+async function __tonWaitForWallet(ui,timeoutMs=30000){
+  if(ui?.wallet)return ui.wallet;
+  await ui.openModal();
+  const started=Date.now();
+  while(Date.now()-started<timeoutMs){
+    if(ui?.wallet)return ui.wallet;
+    await new Promise(resolve=>setTimeout(resolve,500));
+  }
+  throw Error('TON_WALLET_NOT_CONNECTED');
+}
+
+async function __tonReconcileOnce(){
+  try{
+    const r=await fetch('/api/wallet/ton/deposit/reconcile',{method:'POST',headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(r.status===401){handleApiAuthFailure(r.status,d);return d}
+    if(!r.ok)return d;
+    if(Array.isArray(d.credited)&&d.credited.length){
+      const total=Number(d.credits_total||0);
+      toast('✅ Deposit זוכה אוטומטית: +'+fmt(total)+' Credits');
+      await loadMe();
+    }
+    return d;
+  }catch(_e){
+    return null;
+  }
+}
+
+async function __tonPollDeposit(){
+  if(__tonDepositPollTimer)clearInterval(__tonDepositPollTimer);
+  let attempts=0;
+  const tick=async()=>{
+    attempts++;
+    const d=await __tonReconcileOnce();
+    if(Array.isArray(d?.credited)&&d.credited.length){
+      clearInterval(__tonDepositPollTimer);
+      __tonDepositPollTimer=null;
+      const s=$('tonDepositStatus');
+      if(s)s.textContent='✅ ההפקדה זוהתה וזוכתה אוטומטית.';
+      return;
+    }
+    const s=$('tonDepositStatus');
+    if(s)s.textContent='⏳ העסקה נשלחה. המערכת בודקת את ה־Treasury אוטומטית… ('+attempts+'/24)';
+    if(attempts>=24){
+      clearInterval(__tonDepositPollTimer);
+      __tonDepositPollTimer=null;
+      if(s)s.textContent='⏳ העסקה נשלחה, אך טרם נמצאה ב־Treasury. אין צורך לשלוח שוב; אפשר לרענן מאוחר יותר.';
+    }
+  };
+  await tick();
+  if(!__tonDepositPollTimer) return;
+  __tonDepositPollTimer=setInterval(tick,5000);
+}
+
+async function depositGramFromMiniApp(){
+  if(!initData){showAuthGate();return}
+  const amountEl=$('tonDepositAmount');
+  const amount=String(amountEl?.value||'').trim();
+  if(!amount){toast('הזן כמות GRAM');return}
+  const status=$('tonDepositStatus');
+  try{
+    if(status)status.textContent='⏳ מכין הפקדת GRAM…';
+    const prepResp=await fetch('/api/wallet/ton/deposit/prepare',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      body:JSON.stringify({amount_gram:amount})
+    });
+    const prep=await prepResp.json().catch(()=>({}));
+    if(!prepResp.ok)throw Error(prep.error||('HTTP '+prepResp.status));
+
+    const infoResp=await fetch('/api/wallet/ton',{headers,cache:'no-store'});
+    const info=await infoResp.json().catch(()=>({}));
+    if(!infoResp.ok)throw Error(info.error||('HTTP '+infoResp.status));
+    const binding=info.binding||null;
+    if(!binding)throw Error('TON_WALLET_NOT_VERIFIED');
+
+    const ui=await initTonConnect();
+    const wallet=await __tonWaitForWallet(ui);
+    const account=wallet?.account||{};
+    const {Address}=await __loadTonDepositCore();
+    const currentRaw=Address.parse(String(account.address||'')).toRawString();
+    const boundRaw=String(binding.address_raw||'').trim();
+    if(!boundRaw||currentRaw.toLowerCase()!==boundRaw.toLowerCase()){
+      throw Error('הארנק המחובר שונה מהארנק המאומת');
+    }
+
+    const payload=await __tonCommentPayload(prep.memo);
+    if(status)status.textContent='🔐 אשר בארנק: '+prep.amount_gram+' GRAM → Treasury עם Memo '+prep.memo;
+    await ui.sendTransaction({
+      validUntil:Math.floor(Date.now()/1000)+300,
+      network:'-239',
+      messages:[{
+        address:String(prep.treasury),
+        amount:String(prep.amount_nano),
+        payload
+      }]
+    });
+
+    if(status)status.textContent='✅ העסקה אושרה בארנק. המערכת מחפשת אותה אוטומטית…';
+    await __tonPollDeposit();
+  }catch(e){
+    if(/user rejected|user denied|cancel/i.test(String(e?.message||e))){
+      if(status)status.textContent='העסקה בוטלה בארנק. לא בוצע חיוב.';
+      toast('העסקה בוטלה');
+      return;
+    }
+    if(status)status.textContent='❌ '+(e.message||e);
+    toast('❌ Deposit: '+(e.message||e));
+  }
+}
+
 async function loadWalletBindings(){
   await __slhApplyTelegramWalletPolicy();
   if(!initData) return;
@@ -1198,10 +1336,27 @@ async function loadWalletBindings(){
     // Keep the wallet summary in sync with the authoritative TON binding endpoint.
     setText('ton', tb ? esc(tb.address) : 'לא מקושר');
     if($('tonDepositInfo')){
-      if(!ton.deposits_open){
-        $('tonDepositInfo').innerHTML='<span class="muted">⛔ הפקדות TON סגורות כרגע.</span>';
+      if(!ton.deposit_allowed){
+        $('tonDepositInfo').innerHTML='<span class="muted">⛔ הפקדות GRAM סגורות כרגע.</span>';
       }else{
-        $('tonDepositInfo').innerHTML='<span class="muted">נכס נתמך: <b>TON native בלבד</b></span><br><span class="muted">כתובת אוצר: </span><code style="word-break:break-all">'+esc(ton.treasury||'—')+'</code><br><span class="muted">Memo אישי: </span><code>'+esc(ton.memo||'—')+'</code><br><span class="muted">שער: 1 TON = '+fmt(ton.credits_per_ton||0)+' Credits</span><br><span class="muted">⚠️ USDT/Jetton ב-TON אינם מזוכים במסלול זה.</span>';
+        const modeLabel=ton.deposit_mode==='owner_canary'
+          ? '<span class="pill pending">OWNER CANARY · ציבור סגור</span><br>'
+          : '<span class="pill ok">DEPOSIT OPEN</span><br>';
+        $('tonDepositInfo').innerHTML=
+          modeLabel+
+          '<span class="muted">נכס נתמך: <b>Gram (GRAM)</b></span><br>'+
+          '<span class="muted">האוצר ייבחר אוטומטית: </span><code style="word-break:break-all">'+esc(ton.treasury||'—')+'</code><br>'+
+          '<span class="muted">Memo אישי ייכנס אוטומטית: </span><code>'+esc(ton.memo||'—')+'</code><br>'+
+          '<span class="muted">שער: 1 GRAM = '+fmt(ton.credits_per_gram||0)+' Credits</span>'+
+          '<div style="margin-top:10px">'+
+          '<label class="form-label" for="tonDepositAmount">כמות GRAM</label>'+
+          '<input id="tonDepositAmount" class="form-input" inputmode="decimal" value="0.01" min="0.01" step="0.01" placeholder="0.01">'+
+          '<button class="action primary" type="button" style="width:100%;margin-top:8px" onclick="depositGramFromMiniApp()"><b>💎 הפקד GRAM</b><span>המערכת ממלאת Treasury + Memo אוטומטית</span></button>'+
+          '<div id="tonDepositStatus" class="muted" style="margin-top:8px"></div>'+
+          '</div>'+
+          '<div class="muted" style="margin-top:8px">⚠️ אין צורך להעתיק TX hash. לאחר האישור הארנק, SLH OS מזהה ומזכה אוטומטית.</div>'+
+          '<div class="muted" style="margin-top:4px">⚠️ USDT/Jetton אינם מזוכים במסלול Gram הזה.</div>';
+        __tonReconcileOnce().catch(()=>{});
       }
     }
   }catch(e){
