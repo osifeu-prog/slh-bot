@@ -193,11 +193,16 @@ def get_investor_snapshot(uid):
 
     referral_data = user.get("referral", {}) if isinstance(user.get("referral"), dict) else {}
     referral_count = int(referral_data.get("count", 0) or 0)
+    commissions = db.get("commissions", {})
+    if not isinstance(commissions, dict):
+        commissions = {}
+    commission_credits = commissions.get(uid, 0)
     referral_policy = {
         "count": referral_count,
         "required": 5,
         "remaining": max(0, 5 - referral_count),
         "per_successful_referral": {"credits": 0.9, "points": 10},
+        "commission_credits": commission_credits,
     }
 
     gamification = user.get("gamification", {})
@@ -336,7 +341,8 @@ def get_investor_snapshot(uid):
                 "per_successful_referral",
                 {"credits": 0.9, "points": 10},
             ),
-            "source_of_truth": "core.referral_reward",
+            "commission_credits": commission_credits,
+            "source_of_truth": "core.referral_reward + state/db.json:commissions",
         },
         "airdrop": {
             "status": "not_connected",
