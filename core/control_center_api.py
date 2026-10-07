@@ -35,3 +35,17 @@ def register_control_center(app):
         if uid is None:
             return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
         return jsonify(get_full_system_map())
+
+    @app.route("/api/runtime-command-evidence")
+    def runtime_command_evidence():
+        uid = _admin_uid()
+        if uid is None:
+            return jsonify({"error": "CONTROL_PLANE_AUTH_REQUIRED"}), 401
+
+        from core.runtime_command_evidence import snapshot_runtime
+
+        bot_name = request.args.get("bot", "").strip() or None
+        try:
+            return jsonify(snapshot_runtime(bot_name))
+        except KeyError:
+            return jsonify({"error": "BOT_NOT_REGISTERED"}), 404
