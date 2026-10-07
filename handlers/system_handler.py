@@ -12,6 +12,3 @@ def slh_menu(message, bot):
 def register(bot, context=None):
     COMMANDS["slh"] = slh_menu
 
-    @bot.message_handler(commands=["slh"])
-    def slh_telegram(message):
-        slh_menu(message, bot)

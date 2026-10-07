@@ -210,15 +210,3 @@ def register(bot):
             "💰 Balances/orders/subscriptions were not changed."
         )
 
-    @bot.message_handler(commands=["revenue_audit"])
-    def revenue_audit_cmd(msg):
-        from admin_utils import is_admin
-        if not is_admin(msg):
-            bot.reply_to(msg, "⛔️ Admin only")
-            return
-        data = revenue_summary()
-        lines = [f"📈 Revenue ledger events: {data['events']}"]
-        for currency, total in sorted(data["totals"].items()):
-            lines.append(f"• {currency}: {total:g}")
-        lines.append("Internal Credit spending is not counted as cash revenue.")
-        bot.reply_to(msg, "\n".join(lines))

@@ -59,13 +59,6 @@ def init(bot, is_admin_func=None):
         def is_admin_func(message):
             return False
 
-    @bot.message_handler(commands=["bots", "botcontrol"])
-    def bots_control(message):
-        if not is_admin_func(message):
-            bot.reply_to(message, "⛔ פקודה זו לאדמין בלבד")
-            return
-        bot.reply_to(message, bots_text())
-
     @bot.message_handler(commands=["refreshtoken"])
     def refresh_token_start(message):
         if not is_admin_func(message):
