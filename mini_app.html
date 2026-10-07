@@ -253,7 +253,8 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="ux-status-grid">
 <div class="ux-status-card"><span>💎 TON</span><strong id="homeTonStatus">—</strong></div>
 <div class="ux-status-card"><span>🟡 BNB</span><strong id="homeBnbStatus">—</strong></div>
-<div class="ux-status-card"><span>⚡ SLH</span><strong id="homeSlhStatus">—</strong><span id="tokenOnchain" class="sr-only">—</span></div>
+<div class="ux-status-card"><span>🪙 SLH · פנימי</span><strong id="homeSlhInternalStatus">—</strong></div>
+<div class="ux-status-card"><span>⛓️ SLH · on-chain</span><strong id="homeSlhStatus">—</strong><span id="tokenOnchain">—</span></div>
 </div>
 <div class="section-title">🎯 הצעד הבא</div>
 <div class="next ux-next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div>
@@ -1166,7 +1167,7 @@ function renderPublicShell(d){
 
     setText('homeTonStatus',tonBound?'✅ מחובר':(ton?'🟡 זמין · לא מחובר':'🔒 לא זמין'));
     setText('homeBnbStatus',bnb?'✅ מחובר':'⚪ לא מחובר');
-    setText('homeSlhStatus',fmt(truth.current_live??w.live_token_balance??w.token_balance??0));
+    setText('homeSlhInternalStatus',fmt(truth.current_total??w.token_balance??0));setText('homeSlhStatus',fmt(truth.current_live??w.live_token_balance??w.token_balance??0));
 
     setText('uxBalanceCredits',fmt(w.credits??0));
     setText('uxBalanceSlhTotal',fmt(truth.current_total??w.token_balance??0));
