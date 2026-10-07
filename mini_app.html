@@ -116,7 +116,7 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .action span{color:var(--v4-hint)!important}
 .bottom{background:color-mix(in srgb,var(--v4-panel) 94%,transparent)!important;border-top:1px solid color-mix(in srgb,var(--v4-text) 9%,transparent)!important}
 .bottom button{color:var(--v4-hint)!important}
-.bottom button.active{color:var(--v4-btn)!important}
+.bottom button.active{color:var(--v4-btntext)!important}
 .v4{font-variant-numeric:tabular-nums}
 .slh-v4-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:8px 2px 14px}
 .slh-v4-head h2{margin:2px 0 4px;font-size:24px;letter-spacing:-.03em}
@@ -235,15 +235,42 @@ window.addEventListener('DOMContentLoaded',()=>{
     </div>
   </div>
 </div><div class="app">
-<header class="top"><div class="brand"><div class="logo">⚡</div><div><div class="title">SLH OS</div><div class="subtitle" id="name">מתחבר…</div></div></div><button class="refresh" onclick="refreshAll()">↻</button></header>
+<header class="top"><div class="brand"><div class="logo">⚡</div><div><div class="title">SLH OS</div><div class="subtitle" id="name">מתחבר…</div></div></div><div class="ux-top-actions"><button class="refresh" onclick="refreshAll()" aria-label="רענן">↻</button><button class="profile-launch" onclick="show('profile')" aria-label="פרופיל">👤</button></div></header>
 <div id="slhUxBar" class="ux-summary" aria-label="SLH מצב מהיר">
   <div class="ux-tile"><b id="uxAccountName">SLH OS</b><span id="uxAccountMeta">מצב חשבון</span></div>
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
   <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
-<div class="nav"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
+<div class="nav legacy-nav" aria-hidden="true"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
 <main>
-<section id="home" class="screen"><div class="card" style="border-color:#7c5cff55;background:linear-gradient(145deg,#17152d,#101827)"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b style="font-size:16px">👛 חיבור ארנקים</b><div class="muted" style="margin-top:5px">חבר את הארנק מתוך Telegram כדי לאמת בעלות ולהמשיך למסלולי TON / BNB.</div></div><button class="action primary" type="button" style="white-space:nowrap;min-height:52px" onclick="show('wallet');loadWalletBindings().catch(()=>{})"><b>🔗 התחבר</b><span>Wallet</span></button></div><div class="muted" style="margin-top:9px">TON Connect זמין לחיבור בתוך Telegram. BNB WalletConnect מופיע במסך הארנק כאשר המסלול נתמך.</div></div><div class="card" id="liveNoticeCard" style="border-color:#20d3a755;background:linear-gradient(145deg,#111b1f,#101827);margin-bottom:10px"><b>📣 עדכוני SLH OS</b><div style="margin-top:8px">🎁 <b>Referral פעיל</b> · +0.9 Credits +10 Points לכל הצטרפות מוצלחת · 5 referrals → חודש VIP.</div><div style="margin-top:6px" id="marketNoticeLine">🪙 <b>SLH Exchange פעיל</b> · בודק נזילות ושוק בזמן אמת…</div><div class="muted" style="margin-top:6px">ה־100,000 SLH היה מבצע חד־יומי ב־11/09/2026 ואינו תגמול קבוע.</div></div><div class="hero"><div class="hero-label">היתרה שלך</div><div class="hero-balance" id="credits">—</div><div class="subtitle">Credits · יתרה פנימית</div></div><div class="grid"><div class="card"><div class="metric-label">🪙 SLH · פנימי</div><div class="metric token" id="token">—</div><div class="subtitle">יתרה פנימית</div></div><div class="card"><div class="metric-label">⛓️ SLH · on-chain</div><div class="metric token" id="tokenOnchain">—</div><div class="subtitle">BSC · live</div></div><div class="card"><div class="metric-label">🔒 Staked</div><div class="metric stake" id="staked">—</div></div></div><div class="section-title">הצעד הבא</div><div class="next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div><div class="section-title">פעולות</div><div class="card actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>💳 קנייה</b><span>בחירת חבילה ותשלום דרך Telegram Stars</span></button><button class="action" onclick="show('wallet')"><b>👛 ארנק</b><span>יתרות וסטטוס</span></button><button class="action" onclick="show('transfer')"><b>💸 העברה</b><span>העברת Credits למשתמש אחר</span></button><button class="action" onclick="show('stake')"><b>🔒 Staking</b><span>תנאים ומסלול פעולה</span></button><button class="action" onclick="show('alpha')"><b>🚀 Alpha</b><span>התקדמות וזכאות</span></button><button class="action" onclick="show('academy')"><b>🎓 Academy</b><span>השלמת שיעורים ומשימות</span></button><button class="action" onclick="show('investor')"><b>📊 Investor Overview</b><span>מצב אישי, Rewards, Referral ו־Alpha</span></button><button class="action" onclick="show('settings');loadUiSettings()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button></div><details class="guide"><summary>ℹ️ איך משתמשים במערכת?</summary><p>התחל מהצעד הבא. Wallet מציג מצב, Transfer מטפל בהעברת Credits, Buy מטפל ברכישה, Stake מציג את התנאים, Academy מנהל את הלמידה, Alpha מציג ראיות, ו־AI מסביר מה לעשות הלאה.</p></details></section>
+<section id="home" class="screen">
+<div class="ux-page-head"><div><div class="hero-label">⚡ SLH OS</div><h2>המרכז האישי שלך</h2><p class="muted">כסף, נכסים והתקדמות — במקום אחד פשוט.</p></div></div>
+<div class="hero ux-balance-hero">
+<div class="hero-label">💰 היתרה שלך</div>
+<div class="hero-balance" id="credits">—</div>
+<div class="subtitle">Credits · יתרה פנימית ב־SLH OS</div>
+</div>
+<div class="ux-status-grid">
+<div class="ux-status-card"><span>💎 TON</span><strong id="homeTonStatus">—</strong></div>
+<div class="ux-status-card"><span>🟡 BNB</span><strong id="homeBnbStatus">—</strong></div>
+<div class="ux-status-card"><span>🪙 SLH · פנימי</span><strong id="homeSlhInternalStatus">—</strong></div>
+<div class="ux-status-card"><span>⛓️ SLH · on-chain</span><strong id="homeSlhStatus">—</strong><span id="tokenOnchain">—</span></div>
+</div>
+<div class="section-title">🎯 הצעד הבא</div>
+<div class="next ux-next"><div><b id="nextTitle">בודק מצב…</b><div class="muted" id="nextText">טוען נתונים</div></div><button class="primary copy" id="nextBtn" onclick="nextAction()">פתח</button></div>
+<div class="section-title">⚡ פעולות מהירות</div>
+<div class="ux-action-grid">
+<button class="action primary" onclick="show('move')"><b>➕ הוסף כסף</b><span>Credits · TON · BNB · SLH</span></button>
+<button class="action" onclick="show('move')"><b>📤 שלח</b><span>העבר נכס או Credits</span></button>
+<button class="action" onclick="show('balance')"><b>💰 Balance</b><span>ראה את כל היתרות</span></button>
+<button class="action" onclick="show('growth')"><b>🚀 Grow</b><span>למד · הרווח · התקדם</span></button>
+</div>
+<div class="card ux-activity-card">
+<div class="wallet-card-title"><b>🕘 פעילות אחרונה</b><small>רק אירועים שניתנים לאימות</small></div>
+<div id="homeRecentActivity" class="muted">טוען…</div>
+</div>
+<details class="guide"><summary>ℹ️ איך זה עובד?</summary><p>Credits הם היתרה הפנימית שלך. SLH הוא נכס נפרד. TON ו־BNB הן רשתות/נכסים המשמשים למסלולים on-chain.</p></details>
+</section>
 <section id="investor" class="screen">
 <div class="section-title">📊 Investor Overview</div>
 <div class="card" style="border-color:#7c5cff55;background:linear-gradient(145deg,#17152d,#101827)">
@@ -304,6 +331,61 @@ window.addEventListener('DOMContentLoaded',()=>{
 </div>
 <div class="muted" style="margin-top:10px">Source: <code>core.investor_read_model</code> · <code>/api/v1/me</code> · read-only</div>
 </section>
+<section id="balance" class="screen">
+<div class="section-title">💰 Balance</div>
+<div class="card ux-balance-primary"><div class="hero-label">Credits</div><div class="hero-balance" id="uxBalanceCredits">—</div><div class="muted">יתרה פנימית ב־SLH OS</div></div>
+<div class="section-title">⚡ SLH</div>
+<div class="card">
+<div class="wallet-row"><span class="muted">Internal / Total</span><strong id="uxBalanceSlhTotal">—</strong></div>
+<div class="wallet-row"><span class="muted">Live · on-chain backed</span><strong id="uxBalanceSlhLive">—</strong></div>
+<div class="wallet-row"><span class="muted">Spendable</span><strong id="uxBalanceSlhSpendable">—</strong></div>
+<div class="wallet-row"><span class="muted">Staked</span><strong id="uxBalanceStaked">—</strong></div>
+<div class="wallet-row"><span class="muted">Provenance</span><span id="uxBalanceProvenance" class="pill pending">—</span></div>
+</div>
+<div class="section-title">⛓️ Networks</div>
+<div class="card">
+<div class="wallet-row"><span><b>💎 TON</b><div class="muted">רשת וארנק</div></span><span id="uxBalanceTon" class="pill pending">—</span></div>
+<div class="wallet-row"><span><b>🟡 BNB / BSC</b><div class="muted">רשת וארנק</div></span><span id="uxBalanceBnb" class="pill pending">—</span></div>
+</div>
+<div class="card ux-explain"><b>💡 חשוב לדעת</b><p class="muted">Credits, SLH, TON ו־BNB אינם אותו דבר. Credits הם יתרה פנימית; SLH הוא נכס on-chain; TON ו־BNB הן רשתות/נכסים המשמשים למסלולים שונים.</p></div>
+<div class="ux-action-grid">
+<button class="action primary" onclick="show('move')"><b>🔄 Move</b><span>הוספה, שליחה וקבלה</span></button>
+<button class="action" onclick="show('wallet');loadCombined()"><b>🔎 Advanced Wallet</b><span>Balances · bindings · on-chain</span></button>
+</div>
+</section>
+
+<section id="move" class="screen">
+<div class="section-title">🔄 Move</div>
+<div class="card ux-move-hero"><h2>מה תרצה לעשות?</h2><p class="muted">בחר פעולה. נוביל אותך למסלול המתאים בלי לערבב בין נכסים.</p></div>
+<div class="ux-choice-list">
+<button class="action primary" onclick="show('buy')"><b>➕ Add Funds · Credits</b><span>קנייה מאובטחת דרך Telegram Stars</span></button>
+<button class="action" onclick="show('wallet')"><b>➕ Add Funds · TON / BNB / SLH</b><span>ארנק, חיבור ו־deposit מסלולים</span></button>
+<button class="action" onclick="show('transfer')"><b>📤 Send Credits</b><span>העברה פנימית למשתמש אחר</span></button>
+<button class="action" onclick="show('wallet')"><b>📤 Send SLH on-chain</b><span>הארנק שלך חותם ומשדר</span></button>
+<button class="action" onclick="show('wallet')"><b>📥 Receive</b><span>קבל נכס וראה כתובת/סטטוס</span></button>
+<button class="action" onclick="show('exchange');loadExchange()"><b>🔁 Exchange</b><span>SLH ↔ Credits</span></button>
+</div>
+<div class="card ux-explain"><b>🧭 איך לבחור?</b><p class="muted"><b>Credits</b> = יתרה פנימית. <b>SLH</b> = נכס on-chain. <b>TON / BNB</b> = רשתות/נכסים למסלולים on-chain. לפני כל אישור, בדוק איזה נכס משתנה.</p></div>
+</section>
+
+<section id="profile" class="screen">
+<div class="section-title">👤 Profile</div>
+<div class="card ux-profile-hero"><div class="hero-label">SLH OS · Personal</div><h2 id="uxProfileName">—</h2><div class="muted" id="uxProfileIdentity">—</div></div>
+<div class="section-title">📊 My progress</div>
+<div class="ux-status-grid">
+<div class="ux-status-card"><span>🎓 Academy</span><strong id="uxProfileAcademy">—</strong></div>
+<div class="ux-status-card"><span>🎯 Tasks</span><strong id="uxProfileTasks">—</strong></div>
+<div class="ux-status-card"><span>👥 Referrals</span><strong id="uxProfileReferrals">—</strong></div>
+<div class="ux-status-card"><span>⭐ Points</span><strong id="uxProfilePoints">—</strong></div>
+</div>
+<div class="ux-choice-list">
+<button class="action" onclick="loadRewardsPanel()"><b>🎁 Rewards</b><span>תגמולים, נקודות והפניות</span></button>
+<button class="action" onclick="show('settings');loadUiSettings()"><b>⚙️ Settings</b><span>ערכת תצוגה וסנכרון</span></button>
+<button class="action" onclick="show('ai')"><b>✨ AI Assistant</b><span>שאל מה לעשות הלאה</span></button>
+<button class="action" onclick="openAction('/help','עזרה')"><b>❓ Help</b><span>פתיחה ב־Telegram</span></button>
+</div>
+</section>
+
 <section id="growth" class="screen"><div id="growthHub"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></div></section>
 <section id="market" class="screen"><div class="section-title">🛍 SLH Market</div>
 <div class="card"><b>⭐️ SLH Stars Store</b><p class="muted">רכישה ישירה דרך Telegram Stars. לחיצה על קנייה תפתח את תהליך התשלום בבוט, באמצעות מנגנון ה־Stars וה־fulfillment הקיימים.</p><div id="starsStore"><div class="muted">טוען קטלוג…</div></div></div>
@@ -488,7 +570,13 @@ window.addEventListener('DOMContentLoaded',()=>{
   <details class="guide"><summary>📘 איך זה עובד?</summary><p>שינוי ערכה כאן נשמר בצד השרת. בפעם הבאה ש־Mini App נפתח הוא טוען את אותה בחירה, ופקודת /theme בבוט משנה את אותה הגדרה בדיוק.</p></details>
 </section>
 </main></div>
-<nav class="bottom"><button id="bh" onclick="show('home')">🏠<br>בית</button><button id="bw" onclick="show('wallet');loadCombined()">👛<br>ארנק</button><button id="bt" onclick="show('transfer')">💸<br>העברה</button><button id="bi" onclick="show('ai')">✨<br>AI</button><button id="bmore" onclick="openMoreMenu()">☰<br>עוד</button></nav>
+<nav class="bottom ux-bottom">
+<button id="bh" onclick="show('home')">🏠<br><span>בית</span></button>
+<button id="bb" onclick="show('balance')">💰<br><span>Balance</span></button>
+<button id="bm" onclick="show('move')">🔄<br><span>Move</span></button>
+<button id="bg" onclick="show('growth')">🚀<br><span>Grow</span></button>
+<button id="binv" onclick="show('investor')">📊<br><span>Investor</span></button>
+</nav>
 <div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="v-panel">
     <h3 id="mTitle">עוד ב־SLH OS</h3>
@@ -501,8 +589,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
       <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
       <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
-      <button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button>
-      <button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button>
+      <div id="ownerToolsMenu" class="owner-tools-menu"><button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button><button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button></div>
     </div>
     <div class="v-row"><button type="button" id="mClose">סגור</button></div>
   </div>
@@ -535,7 +622,7 @@ function __slhRender(id){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const scr=$(id);if(scr)scr.classList.add('active');
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
-  const map={home:['nh','bh'],investor:['ni'],wallet:['nw','bw'],market:['nm'],transfer:['nt','bt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],system:['nsys'],control:['ncontrol'],ai:['bi','nai'],settings:['nsettings']};
+  const map={home:['nh','bh'],balance:['bb'],move:['bm'],growth:['bg'],investor:['ni','binv'],profile:[],wallet:['nw'],market:['nm'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
   window.scrollTo(0,0);
   __slhShowing=id;
@@ -878,7 +965,7 @@ async function sendExchangeOrder(side,amount,price){
   }
 }
 function prepareTransfer(){const r=($("recipient")?.value||'').trim();const a=($("amount")?.value||'').trim();if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}const n=Number(a);if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}sendCommand(`/transfer ${r} ${a}`,'העברת Credits')}
-function nextAction(){const n=state.next||{};if(n.screen)show(n.screen);else show('wallet')}
+function nextAction(){const n=state.next||{};const screen=String(n.screen||'').trim();const aliases={wallet:'balance',buy:'move',transfer:'move',stake:'balance',academy:'growth',alpha:'growth',exchange:'move'};if(screen&&$(screen))show(aliases[screen]||screen);else show('balance')}
 async function loadAiReadiness(){
   if(!initData)return;
   try{
@@ -1071,7 +1158,59 @@ async function loadGrowthHub(){
     }
   }catch(e){setHTML('growthRails','<div class="muted">לא ניתן לטעון כרגע את Growth Hub.</div>')}
 }
-async function loadMe(){if(!initData){showAuthGate();setText("name",'פתח מתוך Telegram');show('home');showAuthDiagnostic('Telegram initData חסר','WebApp: '+(!!tg)+' | initData length: 0');return}try{const stamp=Date.now();const r=await fetch('/api/v1/me?_='+stamp,{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok){showAuthDiagnostic('השרת דחה את /api/v1/me','HTTP '+r.status+' | initData length: '+initData.length+' | error: '+(d.detail||d.error||'unknown'));if(handleApiAuthFailure(r.status,d)){throw Error('AUTH_REQUIRED')}throw Error('ME_HTTP_'+r.status)}document.querySelectorAll('[data-slsh-diag="STUCK"]').forEach(function(el){el.remove()});showAuthDiagnostic('האימות הצליח','HTTP 200 | initData length: '+initData.length+' | userId: '+(tg?.initDataUnsafe?.user?.id||'unknown'));state=d;const w=d.wallet||{},id=d.identity||{},ac=d.academy||{},ts=d.tasks||{};renderInvestorOverview(d);
+function renderPublicShell(d){
+  try{
+    const id=d?.identity||{},w=d?.wallet||{},truth=w?.asset_truth||{},ac=d?.academy||{},tasks=d?.tasks||{},ref=d?.referral||{},rewards=d?.rewards||{};
+    const ton=!!w?.ton_settlement?.open;
+    const bnb=!!(w?.bnb_binding&&w.bnb_binding.address);
+    const tonBound=!!(w?.ton_binding&&w.ton_binding.address);
+
+    setText('homeTonStatus',tonBound?'✅ מחובר':(ton?'🟡 זמין · לא מחובר':'🔒 לא זמין'));
+    setText('homeBnbStatus',bnb?'✅ מחובר':'⚪ לא מחובר');
+    setText('homeSlhInternalStatus',fmt(truth.current_total??w.token_balance??0));setText('homeSlhStatus',fmt(truth.current_live??w.live_token_balance??w.token_balance??0));
+
+    setText('uxBalanceCredits',fmt(w.credits??0));
+    setText('uxBalanceSlhTotal',fmt(truth.current_total??w.token_balance??0));
+    setText('uxBalanceSlhLive',fmt(truth.current_live??w.live_token_balance??0));
+    setText('uxBalanceSlhSpendable',fmt(truth.spendable_live??0));
+    setText('uxBalanceStaked',fmt(w.staked??0));
+    setText('uxBalanceProvenance',truth.provenance_status||w.token_balance_status||'unknown');
+    $('uxBalanceProvenance')?.classList.toggle('ok',truth.provenance_status==='live_backed');
+    $('uxBalanceProvenance')?.classList.toggle('pending',truth.provenance_status!=='live_backed');
+
+    setText('uxBalanceTon',tonBound?'✅ Connected':(ton?'🟡 Available':'🔒 Closed'));
+    setText('uxBalanceBnb',bnb?'✅ Verified':'⚪ Not connected');
+    $('uxBalanceTon')?.classList.toggle('ok',tonBound);
+    $('uxBalanceTon')?.classList.toggle('pending',!tonBound);
+    $('uxBalanceBnb')?.classList.toggle('ok',bnb);
+    $('uxBalanceBnb')?.classList.toggle('pending',!bnb);
+
+    setText('uxProfileName',id.display_name||d.name||'Telegram user');
+    setText('uxProfileIdentity','Telegram · '+(id.uid||'—')+' · '+(id.role||'user'));
+    setText('uxProfileAcademy',fmt(ac.completed_courses||0)+'/'+fmt((ac.courses||[]).length||0));
+    setText('uxProfileTasks',fmt(tasks.completed||0)+'/'+fmt((tasks.personal||[]).length||0));
+    setText('uxProfileReferrals',fmt(ref.count||0)+'/'+fmt(ref.required||5));
+    setText('uxProfilePoints',fmt(rewards.points||0));
+
+    const ownerTools=$('ownerToolsMenu');
+    const role=String(id.role||'').toLowerCase();
+    if(ownerTools)ownerTools.hidden=!['owner','admin','developer'].includes(role);
+
+    const recent=Array.isArray(rewards.recent)?rewards.recent:[];
+    const activity=$('homeRecentActivity');
+    if(activity){
+      activity.innerHTML=recent.length
+        ? recent.slice(-4).reverse().map(x=>{
+            const credits=Number(x.credits||0),points=Number(x.points||0);
+            const value=((credits?('+'+fmt(credits)+' C'):'')+(credits&&points?' · ':'')+(points?('+'+fmt(points)+' P'):''));
+            return '<div class="wallet-row"><span>'+esc(String(x.reason||'Reward'))+'</span><strong>'+esc(value||'—')+'</strong></div>';
+          }).join('')
+        : '<div class="muted">אין כרגע אירועי Rewards להצגה.</div>';
+    }
+  }catch(e){console.warn('[SLH UX SHELL]',e)}
+}
+
+async function loadMe(){if(!initData){showAuthGate();setText("name",'פתח מתוך Telegram');show('home');showAuthDiagnostic('Telegram initData חסר','WebApp: '+(!!tg)+' | initData length: 0');return}try{const stamp=Date.now();const r=await fetch('/api/v1/me?_='+stamp,{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok){showAuthDiagnostic('השרת דחה את /api/v1/me','HTTP '+r.status+' | initData length: '+initData.length+' | error: '+(d.detail||d.error||'unknown'));if(handleApiAuthFailure(r.status,d)){throw Error('AUTH_REQUIRED')}throw Error('ME_HTTP_'+r.status)}document.querySelectorAll('[data-slsh-diag="STUCK"]').forEach(function(el){el.remove()});showAuthDiagnostic('האימות הצליח','HTTP 200 | initData length: '+initData.length+' | userId: '+(tg?.initDataUnsafe?.user?.id||'unknown'));state=d;const w=d.wallet||{},id=d.identity||{},ac=d.academy||{},ts=d.tasks||{};renderPublicShell(d);renderInvestorOverview(d);
 setText("name",id.display_name||d.name||'Telegram user');
 setText("credits",fmt(w.credits));
 setText("token",fmt(w.live_token_balance??w.token_balance));
@@ -1082,7 +1221,7 @@ const initialTonBinding=w.ton_binding||null;
 
 setText('tonBindingStatus',initialTonBinding?'✅ מאומת':(w.ton_settlement?.open?'⚪️ לא מאומת':'⛔ Settlement סגור'));
 setText('tonBindingAddress',initialTonBinding?esc(initialTonBinding.address):'אין ארנק TON מאומת');
-setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet||'לא מקושר'));renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span></div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>`<div class="task ${t.status==='done'?'done':''}">${t.status==='done'?'✅':'⬜'} ${esc(t.title)}</div>`).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','investor','wallet','market','transfer','buy','stake','alpha','academy','exchange','system','control','ai','settings'];show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
+setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet||'לא מקושר'));renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span></div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>`<div class="task ${t.status==='done'?'done':''}">${t.status==='done'?'✅':'⬜'} ${esc(t.title)}</div>`).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
 if(__slhSmokeMode&&__slhShowing==='wallet'&&__slhSlhRoute!=='smoke'){
   const notice=$('slhSmokeNotice');if(notice)notice.hidden=false;
   const amount=$('slhSendAmount');if(amount&&!amount.value)amount.value='1';
@@ -2603,7 +2742,36 @@ async function loadSystem(){
   }catch(e){setHTML('sysHealth','Error: '+esc(e.message||e));}
 }
 </script><div id="slh-rewards-widget" style="position:fixed;left:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:6"><button onclick="loadRewardsPanel()">🎁 תגמולים</button><div id="slh-rewards-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);padding:20px"><div class="card" style="max-width:560px;margin:40px auto;max-height:80vh;overflow:auto"><button class="ghost" onclick="show('growth');loadGrowthHub();trackGrowth('reward_view','rewards',{screen:'growth'});document.getElementById('slh-rewards-modal').style.display='none'">⚡ Growth Hub</button><button class="ghost" onclick="document.getElementById('slh-rewards-modal').style.display='none'">✕</button><div id="slh-rewards-body" class="muted">טוען…</div></div></div></div>
-<style id="slh-views">
+<style id="slh-ux-vnext-shell">
+.legacy-nav{display:none!important;pointer-events:none!important}
+.ux-top-actions{display:flex;align-items:center;gap:7px}
+.profile-launch{min-width:44px;min-height:44px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:14px;font-size:20px;cursor:pointer}
+.ux-page-head{margin:8px 0 12px}
+.ux-page-head h2,.ux-profile-hero h2{margin:4px 0 2px;font-size:22px}
+.ux-balance-hero{padding:22px!important;border-inline-start:4px solid var(--accent)}
+.ux-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.ux-status-card{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:13px;display:flex;flex-direction:column;gap:6px;min-height:70px}
+.ux-status-card span{font-size:12px;color:var(--muted)}
+.ux-status-card strong{font-size:16px}
+.ux-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ux-action-grid .action{min-height:72px}
+.ux-activity-card{margin-top:12px}
+.ux-balance-primary{padding:20px}
+.ux-move-hero,.ux-profile-hero{border-inline-start:4px solid var(--accent)}
+.ux-choice-list{display:grid;gap:9px}
+.ux-explain{margin-top:12px}
+.ux-bottom{grid-template-columns:repeat(5,minmax(0,1fr))}
+.ux-bottom button{min-width:0;font-size:11px;line-height:1.15;padding:7px 2px}
+.ux-bottom button span{font-size:11px}
+.owner-tools-menu[hidden]{display:none!important}
+@media(max-width:520px){
+  .ux-status-grid{grid-template-columns:1fr 1fr}
+  .ux-action-grid{grid-template-columns:1fr}
+  .ux-page-head h2,.ux-profile-hero h2{font-size:20px}
+  .ux-bottom button{font-size:10px}
+  .ux-bottom button span{font-size:10px}
+}
+</style><style id="slh-views">
 html[data-skin="paper"],html[data-skin="tg"]{--bg:var(--v-bg);--panel:var(--v-panel);--panel2:var(--v-panel);--line:var(--v-line);--text:var(--v-ink);--muted:var(--v-hint);--accent:var(--v-accent);--accent2:var(--v-accent2)}
 html[data-skin="paper"]{--v-bg:#f3f5f9;--v-panel:#fff;--v-line:#d9dee8;--v-ink:#0e1b2c;--v-hint:#5a6678;--v-accent:#2442d6;--v-accent2:#0e8f7a;--v-soft:#0e1b2c0d;--v-on-accent:#fff}
 html[data-skin="paper"] body,html[data-skin="tg"] body{background:var(--v-bg);color:var(--v-ink)}
@@ -2724,7 +2892,7 @@ html[data-text="xl"] .app{zoom:1.22}
     var fromTelegram=W&&W.initDataUnsafe&&W.initDataUnsafe.start_param;
     var fromUrl=new URLSearchParams(window.location.search).get('screen');
     var raw=String(fromTelegram||fromUrl||'').trim().toLowerCase();
-    var allowed=['home','wallet','market','transfer','buy','stake','alpha','academy','exchange','system','control','ai'];
+    var allowed=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];
     if(allowed.indexOf(raw)<0||raw==='home')return;
     function open(){
       try{

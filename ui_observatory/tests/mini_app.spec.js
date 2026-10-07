@@ -3,14 +3,11 @@ const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
 const screens = [
-  ['home', '🏠 בית'],
-  ['wallet', '👛 ארנק'],
-  ['transfer', '💸 העברה'],
-  ['buy', '💳 קנייה'],
-  ['stake', '🔒 סטייקינג'],
-  ['alpha', '🚀 Alpha'],
-  ['academy', '🎓 Academy'],
-  ['bscswap', '🔄 Swap'],
+  ['home', 'בית', 'bh'],
+  ['balance', 'Balance', 'bb'],
+  ['move', 'Move', 'bm'],
+  ['growth', 'Grow', 'bg'],
+  ['investor', 'Investor', 'binv'],
 ];
 
 async function mockTelegramWebApp(page) {
@@ -67,20 +64,9 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 }
 
 async function clickPrimaryNav(page, label) {
-  const desktopButton = page.locator('.nav').getByRole('button', { name: label, exact: true });
-  if (await desktopButton.isVisible().catch(() => false)) {
-    await desktopButton.click();
-    return;
-  }
-  const screenByLabel = Object.fromEntries(screens.map(([id, text]) => [text, id]));
-  const id = screenByLabel[label];
-  const bottomId = { home: 'bh', wallet: 'bw', transfer: 'bt' }[id];
-  if (bottomId) {
-    await page.locator('#' + bottomId).click();
-    return;
-  }
-  await page.locator('#bmore').click();
-  await page.locator('.more-grid button').filter({ hasText: label }).click();
+  const entry = screens.find(([, text]) => text === label);
+  if (!entry) throw new Error('Unknown primary navigation label: ' + label);
+  await page.locator('#' + entry[2]).click();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -120,7 +106,8 @@ test('interactive controls have usable names and form fields are labelled', asyn
   const unnamed = await page.locator('button').evaluateAll(buttons => buttons.filter(b => !(b.innerText || b.getAttribute('aria-label') || '').trim()).length);
   expect(unnamed).toBe(0);
 
-  await clickPrimaryNav(page, '💸 העברה');
+  await clickPrimaryNav(page, 'Move');
+  await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await expect(page.locator('#recipient')).toHaveAttribute('id', 'recipient');
   await expect(page.locator('label[for="recipient"]')).toBeVisible();
   await expect(page.locator('label[for="amount"]')).toBeVisible();
@@ -133,43 +120,47 @@ test('accessibility audit has no serious or critical violations', async ({ page 
 });
 
 test('visual baseline: home', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '🏠 בית');
+  await clickPrimaryNav(page, 'בית');
   await assertOrCreateScreenshot(page, testInfo, 'home.png');
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '👛 ארנק');
+  await clickPrimaryNav(page, 'Balance');
+  await page.locator('#balance').getByRole('button', { name: /Advanced Wallet/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
 test('visual baseline: transfer', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '💸 העברה');
+  await clickPrimaryNav(page, 'Move');
+  await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
 test('visual baseline: buy', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '💳 קנייה');
+  await clickPrimaryNav(page, 'Move');
+  await page.locator('#move').getByRole('button', { name: /Add Funds · Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
 
 test('visual baseline: staking', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '🔒 סטייקינג');
+  await page.evaluate(() => show('stake'));
   await assertOrCreateScreenshot(page, testInfo, 'stake.png');
 });
 
 test('visual baseline: alpha', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '🚀 Alpha');
+  await page.evaluate(() => show('alpha'));
   await assertOrCreateScreenshot(page, testInfo, 'alpha.png');
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, '🎓 Academy');
+  await clickPrimaryNav(page, 'Grow');
+  await page.getByRole('button', { name: /🎓 Earn/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
 
 
-test('BSC swap screen is reachable and remains execution-gated', async ({ page }) => {
-  await clickPrimaryNav(page, '🔄 Swap');
+test('advanced BSC swap screen remains execution-gated', async ({ page }) => {
+  await page.evaluate(() => show('bscswap'));
   await expect(page.locator('#bscswap')).toHaveClass(/active/);
   await expect(page.locator('#bscSwapBadge')).toHaveText('🔒 CLOSED');
   await expect(page.locator('#bscSwapQuoteButton')).toBeDisabled();
