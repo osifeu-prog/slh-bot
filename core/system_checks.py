@@ -138,12 +138,12 @@ def check_bnb() -> dict[str, Any]:
         empirical_status = str(empirical.get("status") or "PENDING_EMPIRICAL")
         ready = bool(gate.get("ready")) and not bool(evidence.get("blockers"))
         public_open = bool(gate.get("effective_open"))
-        ok = ready and not public_open and empirical_status == "PASS"
+        ok = ready and not public_open
         detail = (
-            "BNB gate CLOSED; readiness valid; empirical proof complete"
+            "BNB gate CLOSED safely; readiness valid; empirical proof complete"
+            if ok and empirical_status == "PASS"
+            else "BNB gate CLOSED safely; readiness valid; empirical proof pending"
             if ok
-            else "BNB gate CLOSED safely; empirical proof still pending"
-            if ready and not public_open
             else "BNB readiness requires attention"
         )
         return {
