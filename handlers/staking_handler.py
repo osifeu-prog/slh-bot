@@ -39,7 +39,7 @@ def register(bot):
                 f"Position: {result['position']['id']}"
             )
         except ValueError:
-            bot.reply_to(msg, "Usage: /stake <amount>\n\n" + ACADEMY_NOTE)
+            bot.reply_to(msg, "שימוש: /stake <amount>\n\n" + ACADEMY_NOTE)
         except Exception as e:
             bot.reply_to(msg, str(e))
 
@@ -154,4 +154,3 @@ def register(bot):
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
         bot.reply_to(msg, "סטייקינג SLH\n\n" + ACADEMY_NOTE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/stake_rewards - תגמולים\n" "/stake_rewards claim <position_id> - מימוש תגמול חדש\n\n" "Academy נשאר פעיל כמסלול למידה נפרד.")
-

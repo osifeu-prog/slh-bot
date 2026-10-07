@@ -11,4 +11,3 @@ def init(bot):
         task_id = parts[1]
         res = agent_complete(uid, task_id)
         bot.reply_to(m, res)
-

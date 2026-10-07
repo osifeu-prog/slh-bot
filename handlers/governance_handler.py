@@ -371,4 +371,3 @@ def register(bot, context=None):
             f"Session #{session_id} נסגר.\n"
             f"תוצאה: {outcome}"
         )
-

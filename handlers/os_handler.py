@@ -78,8 +78,5 @@ def register(bot, context=None):
             "SECURITY: /vault /vault_verify /vault_health /vault_log\n"
             "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"
             "DEV: /e /exec"
-        )
         bot.reply_to(message, header + menu)
-
-    print("✅ os + miniapp handler registered")
 
