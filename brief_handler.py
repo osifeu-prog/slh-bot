@@ -2,7 +2,7 @@ import json
 import state_manager
 
 def init(bot):
-    @bot.message_handler(commands=['brief'])
+    @bot.message_handler(commands=['brief_legacy'])
     def brief(m):
         lines = ["📋 SLH OS — Brief\n"]
 
@@ -13,7 +13,7 @@ def init(bot):
             for entry in journal[-3:]:
                 text = entry.get("text", "")
                 short = text[:200] + "..." if len(text) > 200 else text
-                lines.append(f"• {entry.get('time','')}\n  {short}")
+                lines.append(f"• {entry.get('time','')}\\n  {short}")
         except Exception as e:
             lines.append(f"Journal error: {e}")
 
@@ -40,3 +40,4 @@ def init(bot):
         msg = "\n".join(lines)
         for i in range(0, len(msg), 3800):
             bot.send_message(m.chat.id, msg[i:i+3800])
+

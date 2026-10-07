@@ -81,14 +81,5 @@ def register(bot, context=None):
         )
         bot.reply_to(message, header + menu)
 
-    @bot.message_handler(commands=["miniapp"])
-    def miniapp_cmd(message):
-        markup = types.InlineKeyboardMarkup()
-        btn = types.InlineKeyboardButton(
-            text="🚀 פתח מיני-אפ",
-            web_app=types.WebAppInfo(url=MINI_APP_URL)
-        )
-        markup.add(btn)
-        bot.send_message(message.chat.id, "SLH OS Mini‑App", reply_markup=markup)
+    print("✅ os handler registered")
 
-    print("✅ os + miniapp handler registered")

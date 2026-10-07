@@ -49,7 +49,7 @@ def _parse_proposal_id(value):
 
 
 def register(bot, context=None):
-    @bot.message_handler(commands=["agent_status"])
+    @bot.message_handler(commands=["gov_agent_status"])
     def agent_status_cmd(m):
         gov = _load_gov()
         reg = gov.get("agents_registry", {})
@@ -371,3 +371,4 @@ def register(bot, context=None):
             f"Session #{session_id} נסגר.\n"
             f"תוצאה: {outcome}"
         )
+
