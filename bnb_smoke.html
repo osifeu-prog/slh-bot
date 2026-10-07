@@ -27,6 +27,12 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <div class="row"><span>סכום</span><b>0.01 BNB</b></div>
   <div class="row"><span>Treasury</span><b id="treasury" class="code">—</b></div>
+  <div class="kv">
+    <b>TX שכבר נשלח</b>
+    <div class="muted" style="margin-top:6px">אפשר להדביק כאן TX של 0.01 BNB שכבר נשלח ל-Treasury. לא תתבצע שליחה חדשה.</div>
+    <input id="txHash" class="code" inputmode="text" autocomplete="off" placeholder="0x...64 hex" style="width:100%;box-sizing:border-box;margin-top:10px;padding:12px;border-radius:10px;border:1px solid #394150;background:#0f131b;color:#fff">
+    <button id="verifyExisting" class="secondary">🔎 אמת TX קיים</button>
+  </div>
   <button id="send" class="primary">🦊 MetaMask · שלח 0.01 BNB לבדיקה</button>
   <button id="walletConnectBtn" class="secondary">🔗 WalletConnect · Trust / MetaMask Mobile</button>
   <div class="muted" style="margin-top:8px">זהו כבר דפדפן חיצוני עם Wallet Session פעיל. MetaMask מתחבר כאן ישירות; בטלפון אפשר להשתמש ב־WalletConnect.</div>
@@ -185,11 +191,77 @@ async function connectMetaMaskOrWalletConnect(){
   await connectMetaMask();
 }
 
+async function poll(txHash){
+  const normalized=String(txHash||"").trim();
+  if(!/^0x[a-fA-F0-9]{64}$/.test(normalized))throw Error("TX_HASH_INVALID");
+
+  for(let i=0;i<90;i++){
+    try{
+      const d=await api("/api/wallet/bnb/empirical-smoke",{
+        method:"POST",
+        headers:Object.assign({},headers,{"Content-Type":"application/json"}),
+        body:JSON.stringify({tx_hash:normalized})
+      });
+
+      if(d?.status==="WAITING_FOR_CONFIRMATIONS"){
+        const confirmations=Number(d.confirmations||0);
+        const required=Number(d.required_confirmations||15);
+        setStatus("⏳ "+confirmations+"/"+required+" confirmations…\nTX: "+normalized);
+        await new Promise(resolve=>setTimeout(resolve,5000));
+        continue;
+      }
+
+      if(d?.status==="PASS"){
+        setStatus(
+          "✅ PASS — "+d.credits+" Credits אומתו ונרשמו.\n"+
+          "Confirmations: "+(d.confirmations||15)+"\n"+
+          "Ledger entries: "+(d.ledger_entries_for_idempotency_key||1)+"\n"+
+          "TX: "+normalized+
+          "\n🔒 Settlement ציבורי נשאר CLOSED.",
+          "ok"
+        );
+        $("send").disabled=true;
+        $("verifyExisting").disabled=true;
+        return d;
+      }
+
+      throw Error("BNB_EMPIRICAL_UNEXPECTED_RESPONSE");
+    }catch(e){
+      const message=String(e?.message||e||"");
+      if(message==="INSUFFICIENT_CONFIRMATIONS"||message==="TRANSACTION_NOT_FOUND_RETRYABLE"){
+        setStatus("⏳ עדיין אין 15 confirmations.\nTX: "+normalized);
+        await new Promise(resolve=>setTimeout(resolve,5000));
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  throw Error("אימות 15 confirmations לא הושלם בזמן");
+}
+
+async function verifyExistingTx(){
+  const txHash=String($("txHash")?.value||"").trim();
+  if(!/^0x[a-fA-F0-9]{64}$/.test(txHash)){
+    setStatus("❌ יש להזין TX hash תקין של 64 תווי hex.","err");
+    return;
+  }
+  $("verifyExisting").disabled=true;
+  try{
+    setStatus("🔎 בודק את ה-TX הקיים מול BSC + ה-settlement path…");
+    await poll(txHash);
+  }catch(e){
+    setStatus("❌ "+(e?.message||e),"err");
+    $("verifyExisting").disabled=false;
+  }
+}
+
 async function sendWithProvider(p,label){
   const account=await ensureBsc(p);
   const txHash=await p.request({method:"eth_sendTransaction",params:[{
     from:account,to:smoke.treasury,value:"0x"+BigInt(smoke.amount_wei).toString(16)
   }]});
+  $("txHash").value=txHash;
   setStatus("✅ "+label+" אישר את השליחה. TX: "+txHash+"\n⏳ המערכת ממתינה ל־15 confirmations.","ok");
   await poll(txHash);
 }
@@ -224,6 +296,7 @@ async function walletConnect(){
 }
 
 $("send").onclick=()=>inTelegram?openExternalWalletSession():connectMetaMask();
+$("verifyExisting").onclick=verifyExistingTx;
 $("walletConnectBtn")?.addEventListener("click",walletConnect);
 init();
 </script>
