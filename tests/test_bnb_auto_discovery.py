@@ -22,6 +22,8 @@ class FakeEth:
 
 
 class FakeWeb3:
+    HTTPProvider = staticmethod(lambda _rpc: _rpc)
+
     def __init__(self, _provider):
         self.eth = FakeEth()
 
