@@ -115,6 +115,8 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertTrue(second["idempotent"])
         self.assertEqual(self.db["users"][UID]["wallet"]["credits"], 100)
         self.assertEqual(self.db["used_ton_txs"], [TX])
+        self.assertEqual(self.db["ton_replay_evidence"][UID]["tx_hash"], TX)
+        self.assertEqual(self.db["ton_replay_evidence"][UID]["replay_count"], 1)
 
     def test_unsafe_rate_is_rejected_when_deposits_open(self):
         self.tx_mock.return_value = self._tx()
