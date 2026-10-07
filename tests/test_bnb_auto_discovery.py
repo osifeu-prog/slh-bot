@@ -127,6 +127,10 @@ def test_discovery_ignores_wrong_amount_and_wrong_recipient():
              bnb_auto_discovery,
              "_ledger_keys",
              return_value=set(),
+         ), patch.object(
+             bnb_auto_discovery,
+             "_latest_handoff_timestamp",
+             return_value=None,
          ):
         result = bnb_auto_discovery.discover_bnb_transfer(UID)
 
