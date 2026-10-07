@@ -32,6 +32,20 @@ def test_release_report_allows_valid_open_ton(monkeypatch):
         lambda: {"effective_open": True, "ready": True, "reasons": []},
     )
 
+    import core.bnb_gate as bnb_gate
+
+    monkeypatch.setattr(
+        bnb_gate,
+        "bnb_readiness",
+        lambda db=None: {
+            "effective_open": False,
+            "ready": True,
+            "chain_id": 56,
+            "confirmations_required": 15,
+            "reasons": [],
+        },
+    )
+
     report = build_release_report()
     check = report["checks"]["External settlement gates"]
 
