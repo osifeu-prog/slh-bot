@@ -169,6 +169,7 @@ def log(msg):
 
 try:
     from handlers.loader import load_handlers
+    from core.runtime_command_evidence import register_runtime_bot
     log("import loader OK")
 except Exception as e:
     log(f"FATAL: import loader failed: {traceback.format_exc()}")
@@ -354,6 +355,7 @@ if __name__ == "__main__":
                 from security.permissions import is_admin as canonical_is_admin
                 handler_context = {"bot_name": "Me_ad_main", "is_admin": canonical_is_admin}
                 load_handlers(bot, handler_context)
+                register_runtime_bot("Me_ad_main", bot)
                 log("[OK] Bot Me_ad_main started")
                 threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                 started_bots["Me_ad_main"] = bot
@@ -385,6 +387,7 @@ if __name__ == "__main__":
                         from security.permissions import is_admin as canonical_is_admin
                         handler_context = {"bot_name": bot_name, "is_admin": canonical_is_admin}
                         load_handlers(bot, handler_context)
+                        register_runtime_bot(bot_name, bot)
                         log(f"[OK] Bot {bot_name} started")
                         threading.Thread(target=run_bot, args=(bot,), daemon=True).start()
                         started_bots[bot_name] = bot
