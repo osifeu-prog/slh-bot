@@ -2117,7 +2117,9 @@ def ton_wallet_deposit_reconcile():
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
         from core.ton_deposit_service import credit_new_ton_deposits
-        credited = credit_new_ton_deposits(uid)
+        payload = request.get_json(silent=True) or {}
+        intent_id = str(payload.get("intent_id") or "").strip() or None
+        credited = credit_new_ton_deposits(uid, intent_id=intent_id)
         total = sum(float(item.get("credits", 0)) for item in credited)
         return _no_store(jsonify({
             "status": "credited" if credited else "pending",
