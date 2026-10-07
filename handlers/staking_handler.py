@@ -93,7 +93,7 @@ def register(bot):
             lines.append(f"{pos['amount']} credits | {pos['lock_days']} days | {pos['status']}")
         bot.reply_to(msg, "\n".join(lines))
 
-    @bot.message_handler(commands=["rewards"])
+    @bot.message_handler(commands=["stake_rewards"])
     def rewards_cmd(msg):
         uid = str(msg.from_user.id)
         from core.reward_engine import calculate_reward, claim_reward, accrue
@@ -121,7 +121,7 @@ def register(bot):
             except Exception as e:
                 bot.reply_to(msg, str(e))
             return
-        lines = ["תגמולים צפויים:", "למימוש: /rewards claim <position_id>"]
+        lines = ["תגמולים צפויים:", "למימוש: /stake_rewards claim <position_id>"]
         for pid in positions:
             try:
                 r = calculate_reward(pid)
@@ -153,4 +153,4 @@ def register(bot):
 
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
-        bot.reply_to(msg, "סטייקינג SLH\n\n" + ACADEMY_NOTE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/rewards - תגמולים\n" "/rewards claim <position_id> - מימוש תגמול חדש\n\n" "Academy נשאר פעיל כמסלול למידה נפרד.")
+        bot.reply_to(msg, "סטייקינג SLH\n\n" + ACADEMY_NOTE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/stake_rewards - תגמולים\n" "/stake_rewards claim <position_id> - מימוש תגמול חדש\n\n" "Academy נשאר פעיל כמסלול למידה נפרד.")
