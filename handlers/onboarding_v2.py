@@ -222,6 +222,7 @@ def register(bot, context=None):
             types.InlineKeyboardButton("🔄 רענון", callback_data="refresh_dashboard"),
         )
         markup.add(
+            types.InlineKeyboardButton("📊 Investor Overview", callback_data="investor_overview"),
             types.InlineKeyboardButton(_trade_button_label(user_id), callback_data="trade:home"),
         )
         markup.add(
@@ -435,6 +436,26 @@ def register(bot, context=None):
         except Exception as e:
             bot.answer_callback_query(call.id, "❌ שגיאה")
             bot.send_message(call.message.chat.id, f"❌ Onboarding start failed: {type(e).__name__}")
+
+    @bot.callback_query_handler(func=lambda call: call.data == "investor_overview")
+    def investor_overview(call):
+        bot.answer_callback_query(call.id, "📊 Investor Overview")
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        markup.add(
+            types.InlineKeyboardButton(
+                "📊 פתח Investor Overview",
+                web_app=types.WebAppInfo(
+                    url="https://slh-cloud-bot-production.up.railway.app/mini-app-v4?screen=investor"
+                ),
+            )
+        )
+        markup.add(types.InlineKeyboardButton("⬅️ חזרה", callback_data="goto_dashboard"))
+        bot.send_message(
+            call.message.chat.id,
+            "📊 *Investor Overview*\n\nפתח את המסך הקנוני לקריאת מצב אישי, Wallet/Asset Truth, Rewards, Referral, Academy ו־Alpha.",
+            reply_markup=markup,
+            parse_mode="Markdown",
+        )
 
     @bot.callback_query_handler(func=lambda call: call.data == "continue_course")
     def continue_course(call):
