@@ -14,7 +14,11 @@ from core.identity_resolver import get_display_name
 from core.wallet_binding import get_binding
 from core.ton_wallet_binding import get_ton_binding
 from core.bnb_gate import bnb_readiness
-from core.ton_deposit_service import deposits_are_open as ton_deposits_are_open, _settings as ton_settings
+from core.ton_deposit_service import (
+    deposits_are_open as ton_deposits_are_open,
+    ton_settlement_allowed,
+    _settings as ton_settings,
+)
 
 
 COURSE_FILE = Path("courses.json")
@@ -264,6 +268,15 @@ def get_investor_snapshot(uid):
         and bool(ton_treasury)
         and 100.0 <= ton_rate <= 110.0
     )
+    # Public settlement remains governed by TON_DEPOSITS_OPEN.  The existing
+    # canonical authorization also permits the configured owner canary while
+    # the public gate is closed, so expose that capability separately rather
+    # than conflating it with public settlement state.
+    ton_canary_allowed = bool(
+        ton_binding
+        and ton_settlement_allowed(uid)
+        and not ton_open
+    )
 
     completed_courses = 0
     completed_stages = 0
@@ -310,8 +323,24 @@ def get_investor_snapshot(uid):
             },
             "ton_settlement": {
                 "open": bool(ton_open),
-                "treasury": ton_treasury if ton_open else None,
-                "credits_per_ton": float(ton_rate) if ton_open else None,
+                "owner_canary": bool(ton_canary_allowed),
+                "mode": (
+                    "public"
+                    if ton_open
+                    else "owner_canary"
+                    if ton_canary_allowed
+                    else "closed"
+                ),
+                "treasury": (
+                    ton_treasury
+                    if ton_open or ton_canary_allowed
+                    else None
+                ),
+                "credits_per_ton": (
+                    float(ton_rate)
+                    if ton_open or ton_canary_allowed
+                    else None
+                ),
             },
         },
         "academy": {
