@@ -19,6 +19,11 @@ def register(bot):
             "/e grep <pattern> <path>",
             "/e find <path> ...",
             "/e settlement_status",
+            "/check",
+            "/check_ux",
+            "/check_money",
+            "/check_bnb",
+            "/check_ton",
             "",
             "AGENT:",
             "/agents",
@@ -64,6 +69,12 @@ def register(bot):
 
 /dev בדוק את Investor Overview
 /dev בדוק את הפקודות וה-collisions
+
+/check – מערכת: כל הבדיקות read-only
+/check_ux – Mini App shell
+/check_money – economy / invariants
+/check_bnb – BNB gate/readiness
+/check_ton – TON gate/readiness
 
 /system – System overview
 /status – Railway status

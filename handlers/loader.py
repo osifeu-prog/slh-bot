@@ -108,6 +108,7 @@ def load_handlers(bot, context):
         ("exec", "handlers.exec_handler"),
         ("exec_request", "handlers.exec_request_handler"),
         ("recovery", "handlers.recovery_handler"),
+        ("system_checks", "handlers.system_checks_handler"),
         ("recovery_verify", "handlers.recovery_verify_handler"),
         ("cleanup", "handlers.cleanup_handler"),
         ("autoexec", "handlers.autoexec_handler"),

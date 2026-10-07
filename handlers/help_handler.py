@@ -112,6 +112,14 @@ def register(bot):
 /bot_register <@username> [name] – רישום בוט
 /bot_status <@username> – תקינות בוט
 
+🧪 SYSTEM CHECKS — OWNER / ADMIN / DEVELOPER · READ ONLY
+/check – בדיקת מערכת אחת: DB + commands + Mini App + money + BNB + TON
+/check_ux – בדיקת חוזה ה־Mini App והניווט
+/check_money – Credits / Staking / exchange invariants / revenue ledger
+/check_bnb – readiness + public gate + empirical smoke status
+/check_ton – readiness + public gate + replay evidence
+ℹ️ כל פקודות הבדיקה read-only: לא משנות DB, balances, wallets או gates.
+
 🛠 TOOLS
 /miniapp – Mini App
 /dashboard – Dashboard
