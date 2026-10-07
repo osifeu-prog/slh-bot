@@ -10,8 +10,8 @@ def slh_menu(message, bot):
     )
 
 def register(bot, context=None):
-    COMMANDS["slh"] = slh_menu
+    COMMANDS["system_slh"] = slh_menu
 
-    @bot.message_handler(commands=["slh"])
+    @bot.message_handler(commands=["system_slh"])
     def slh_telegram(message):
         slh_menu(message, bot)

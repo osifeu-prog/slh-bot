@@ -29,7 +29,7 @@ def register(bot):
         lines.append("SLH has no declared minting path in the current model.")
         bot.reply_to(msg, "\n".join(lines))
 
-    @bot.message_handler(commands=["revenue_audit"])
+    @bot.message_handler(commands=["monetization_revenue_audit"])
     def revenue_audit_cmd(msg):
         from admin_utils import is_admin
         if not is_admin(msg):
