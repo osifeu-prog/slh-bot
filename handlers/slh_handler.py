@@ -171,7 +171,6 @@ def _menu(uid, *, include_test=False):
                 markup.add(
                     types.InlineKeyboardButton(
                         "🧪 שלח 1 SLH אל אוסיף · חתימה בארנק",
-
                         url=smoke_url,
                     )
                 )
@@ -265,7 +264,7 @@ def register(bot):
         target = owner_binding.get("address")
         markup = types.InlineKeyboardMarkup()
         try:
-            smoke_url = _trust_wallet_smoke_url(uid)
+            smoke_url = _wallet_smoke_url(uid)
             markup.add(
                 types.InlineKeyboardButton(
                     "🧪 פתח 1 SLH Smoke · בחר ארנק",
