@@ -19,12 +19,21 @@ def test_release_report_shape(monkeypatch):
     assert all(row["status"] in {"GREEN", "DEGRADED", "BLOCKED"} for row in report["checks"].values())
 
 
-def test_release_report_flags_open_ton(monkeypatch):
+def test_release_report_allows_valid_open_ton(monkeypatch):
     monkeypatch.setenv("RUN_BOT", "1")
     monkeypatch.setenv("BOT_TOKEN", "test-token")
     monkeypatch.setenv("TON_DEPOSITS_OPEN", "1")
-    report = build_release_report()
 
+    import core.ton_deposit_service as ton_service
+
+    monkeypatch.setattr(
+        ton_service,
+        "ton_readiness",
+        lambda: {"effective_open": True, "ready": True, "reasons": []},
+    )
+
+    report = build_release_report()
     check = report["checks"]["External settlement gates"]
-    assert check["status"] == "BLOCKED"
-    assert "TON_DEPOSITS_OPEN=1" in check["detail"]
+
+    assert check["status"] == "GREEN"
+    assert "TON settlement PUBLIC OPEN" in check["detail"]
