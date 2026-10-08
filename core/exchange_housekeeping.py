@@ -60,7 +60,7 @@ def preview() -> dict:
             str(order.get("buy_order_id")),
             str(order.get("sell_order_id")),
         }
-        if _is_test_seed(order) or linked.intersection(trade_ids):
+        if is_test_seed(order) or linked.intersection(trade_ids):
             selected_orders.append(order)
 
     return {
