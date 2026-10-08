@@ -6,6 +6,7 @@ from core.authority import get_role
 from core.system_checks import (
     check_bnb,
     check_commands,
+    check_exchange,
     check_db,
     check_money,
     check_ton,
@@ -44,6 +45,7 @@ def _check_output(uid: str) -> str:
     money = check_money(uid)
     bnb = check_bnb()
     ton = check_ton(uid)
+    exchange = check_exchange()
 
     lines = [
         "🧪 SLH SYSTEM CHECK — READ ONLY",
@@ -54,9 +56,10 @@ def _check_output(uid: str) -> str:
         _fmt_check("Money / invariants", money),
         _fmt_check("BNB", bnb),
         _fmt_check("TON", ton),
+        _fmt_check("Internal Exchange", exchange),
         "",
         "🔒 אין שינוי DB / balances / wallets / settlement / gates.",
-        "ℹ️ לפירוט: /check_ux · /check_money · /check_bnb · /check_ton",
+        "ℹ️ לפירוט: /check_ux · /check_money · /check_bnb · /check_ton · /check_exchange",
     ]
     return "\n".join(lines)[:3900]
 
@@ -115,6 +118,34 @@ def register(bot, context=None):
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(message, f"❌ Money check failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["check_exchange", "exchange_check"])
+    def check_exchange_cmd(message):
+        if not _allowed(message):
+            _send_denied(bot, message)
+            return
+        try:
+            result = check_exchange()
+            lines = [
+                "📈 SLH EXCHANGE CHECK — READ ONLY",
+                "",
+                f"Open orders: {result['open_orders']}",
+                f"Open test/seed orders: {result['test_seed_open']}",
+                f"Recent trades: {result['recent_trades']}",
+                f"Test/seed trades: {result['test_seed_trades']}",
+                f"Order book integrity: {'PASS' if result['order_book_integrity'] else 'FAIL'}",
+                f"Trade integrity: {'PASS' if result['trade_integrity'] else 'FAIL'}",
+                f"Money invariants: {'PASS' if result['money_invariants'] else 'FAIL'}",
+                f"Public trading gate: {result['public_gate']}",
+                f"Public trading readiness: {'PASS' if result['public_ready'] else 'FAIL'}",
+                f"Verdict: {result['verdict']}",
+                f"Detail: {result['detail']}",
+                "",
+                "🔒 Read-only: no orders, trades, balances, wallets or gates are changed.",
+            ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(message, f"❌ Exchange check failed safely: {type(exc).__name__}")
 
     @bot.message_handler(commands=["check_bnb", "bnb_check"])
     def check_bnb_cmd(message):

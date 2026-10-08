@@ -1,3 +1,15 @@
+def _exchange_status_line():
+    try:
+        from core.system_checks import check_exchange
+        result = check_exchange()
+        gate = result.get("public_gate", "CLOSED")
+        readiness = "READY" if result.get("public_ready") else "BLOCKED"
+        verdict = result.get("verdict", "BLOCKED")
+        return f"📈 Internal Exchange — gate {gate} · readiness {readiness} · {verdict}"
+    except Exception:
+        return "📈 Internal Exchange — gate CLOSED · readiness UNKNOWN"
+
+
 def register(bot):
     @bot.message_handler(commands=["faq"])
     def faq_cmd(msg):
@@ -18,12 +30,20 @@ def register(bot):
 /profile – פרופיל וארנק
 
 🚀 TRADING TERMINAL
-/trade – מסוף המסחר
+/trade – מסוף מסחר חיצוני · DEX handoff בלבד, ללא חתימה מהשרת
 /token <address> – סורק טוקן
-/swap <chain> <address> – פתיחת מסחר
+/swap <chain> <address> – פתיחת קישור DEX חיצוני
 /portfolio – פורטפוליו
 /trade_model – מודל הכנסות שקוף
 /tradepro – Trade Pro
+
+📊 INTERNAL EXCHANGE
+/exchange – מסחר פנימי SLH/Credits
+/buy_slh <amount> <max_price> – פקודת BUY (נפתח רק כשהשער הציבורי OPEN)
+/sell_slh <amount> <price> – פקודת SELL (נפתח רק כשהשער הציבורי OPEN)
+/orders – הוראות פתוחות
+/trades – עסקאות אחרונות
+/cancel <order_id> – ביטול הוראה קיימת
 
 🛍 MARKET & PRODUCTS
 /shop – קטלוג מוצרים
@@ -142,4 +162,5 @@ def register(bot):
 /deploy – Deploy
 
 💡 לממשק המלא פתח /miniapp. למסחר: /trade."""
+        text = _exchange_status_line() + "\n\n" + text
         bot.reply_to(msg, text)
