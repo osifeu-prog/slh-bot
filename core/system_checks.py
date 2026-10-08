@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -16,7 +15,6 @@ from typing import Any
 
 REQUIRED_DB_KEYS = ("users", "transactions", "ledger")
 REQUIRED_UX_IDS = ("balance", "move", "growth", "investor", "profile", "bh", "bb", "bm", "bg", "binv")
-_TEST_SEED_RE = re.compile(r"(?<![A-Za-z0-9])(test|seed|genesis)(?![A-Za-z0-9])", re.IGNORECASE)
 
 
 def check_db() -> dict[str, Any]:
@@ -93,26 +91,6 @@ def check_ux() -> dict[str, Any]:
 
 
 
-def _is_test_seed(record: Any) -> bool:
-    if not isinstance(record, dict):
-        return False
-    for key in ("test", "is_test", "seed", "is_seed"):
-        if record.get(key) is True:
-            return True
-
-    def walk(value):
-        if isinstance(value, dict):
-            for nested in value.values():
-                yield from walk(nested)
-        elif isinstance(value, (list, tuple, set)):
-            for nested in value:
-                yield from walk(nested)
-        elif isinstance(value, str):
-            yield value
-
-    return any(_TEST_SEED_RE.search(value or "") for value in walk(record))
-
-
 def _decimal(value: Any, default: str = "0") -> Decimal:
     try:
         return Decimal(str(default if value is None else value))
@@ -125,6 +103,7 @@ def check_exchange() -> dict[str, Any]:
     try:
         import state_manager
         from core.exchange_gate import public_open
+        from core.exchange_housekeeping import is_test_seed
         from handlers.exchange_handler import _assert_invariants
 
         db = state_manager.load_db()
@@ -164,9 +143,9 @@ def check_exchange() -> dict[str, Any]:
             }
 
         open_orders = [o for o in orders.values() if isinstance(o, dict) and o.get("status") == "open"]
-        test_seed_open = [o for o in open_orders if _is_test_seed(o)]
+        test_seed_open = [o for o in open_orders if is_test_seed(o)]
         recent_trades = trades[-10:]
-        test_seed_trades = [t for t in trades if _is_test_seed(t)]
+        test_seed_trades = [t for t in trades if is_test_seed(t)]
 
         order_errors = []
         seen_order_ids = set()
