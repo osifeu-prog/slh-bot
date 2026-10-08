@@ -2344,6 +2344,121 @@ def slh_browser_send_config():
         return jsonify({"error": "SLH_BROWSER_SEND_CONFIG_FAILED"}), 502
 
 
+@app.route("/api/v1/wallet/slh/browser-send/verify", methods=["POST"])
+def slh_browser_send_verify():
+    """Verify the exact user-signed SLH transfer described by the wallet handoff."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core.authority import is_owner
+    if not is_owner(uid):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    recipient_raw = str(payload.get("recipient", "")).strip()
+    amount_raw = str(payload.get("amount", "")).strip()
+    if not tx_hash or not recipient_raw or not amount_raw:
+        return jsonify({"error": "VERIFY_INTENT_REQUIRED"}), 400
+
+    try:
+        from decimal import Decimal, InvalidOperation
+        from web3 import Web3
+        from core.binance_connector import get_bsc_config
+
+        recipient = Web3.to_checksum_address(recipient_raw)
+        amount = Decimal(amount_raw)
+        if not amount.is_finite() or amount <= 0:
+            raise ValueError("INVALID_SLH_AMOUNT")
+        if -amount.as_tuple().exponent > 15:
+            raise ValueError("INVALID_TOKEN_PRECISION")
+
+        binding = get_binding(uid)
+        if not binding:
+            return jsonify({"error": "OWNER_BSC_WALLET_NOT_VERIFIED"}), 403
+        sender = Web3.to_checksum_address(str(binding.get("address") or ""))
+
+        db = state_manager.load_db()
+        cfg = {**get_bsc_config(), **(db.get("bsc_settings") or {})}
+        rpc = str(cfg.get("rpc") or "").strip()
+        token = Web3.to_checksum_address(str(cfg.get("token_contract") or "").strip())
+        if not rpc or not token:
+            return jsonify({"error": "BSC_CONFIG_INCOMPLETE"}), 503
+
+        expected_raw = int(amount * (10 ** 15))
+        if Decimal(expected_raw) / (10 ** 15) != amount:
+            raise ValueError("INVALID_TOKEN_PRECISION")
+
+        w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 8}))
+        try:
+            receipt = w3.eth.get_transaction_receipt(tx_hash)
+            tx = w3.eth.get_transaction(tx_hash)
+        except Exception as exc:
+            if type(exc).__name__ == "TransactionNotFound":
+                return jsonify({"error": "TRANSACTION_NOT_FOUND_RETRYABLE", "retryable": True}), 409
+            raise
+
+        if int(receipt.get("status", 0)) != 1:
+            return jsonify({"error": "TRANSACTION_FAILED"}), 400
+        if str(tx.get("to") or "").lower() != token.lower():
+            return jsonify({"error": "TRANSACTION_TARGET_MISMATCH"}), 400
+        if str(tx.get("from") or "").lower() != sender.lower():
+            return jsonify({"error": "TRANSACTION_SENDER_MISMATCH"}), 400
+
+        latest_block = int(w3.eth.block_number)
+        block_number = int(receipt["blockNumber"])
+        confirmations = max(0, latest_block - block_number + 1)
+        if confirmations < 15:
+            return jsonify({
+                "error": "INSUFFICIENT_CONFIRMATIONS",
+                "retryable": True,
+                "confirmations": confirmations,
+                "required_confirmations": 15,
+            }), 409
+
+        transfer_topic = Web3.keccak(text="Transfer(address,address,uint256)").hex()
+        matches = []
+        for log in receipt.get("logs", []):
+            if str(log.get("address") or "").lower() != token.lower():
+                continue
+            topics = log.get("topics") or []
+            if len(topics) < 3 or str(topics[0]).lower().replace("0x", "") != transfer_topic.lower().replace("0x", ""):
+                continue
+            event_from = "0x" + str(topics[1])[-40:]
+            event_to = "0x" + str(topics[2])[-40:]
+            if event_from.lower() != sender.lower() or event_to.lower() != recipient.lower():
+                continue
+            try:
+                matches.append(int(str(log.get("data") or "0x0"), 16))
+            except ValueError:
+                continue
+
+        if len(matches) != 1:
+            return jsonify({"error": "TRANSFER_EVENT_MISMATCH", "matches": len(matches)}), 400
+        if matches[0] != expected_raw:
+            return jsonify({"error": "TRANSFER_AMOUNT_MISMATCH"}), 400
+
+        return _no_store(jsonify({
+            "ok": True,
+            "status": "verified",
+            "tx_hash": tx_hash,
+            "chain_id": 56,
+            "sender": sender,
+            "recipient": recipient,
+            "amount_slh": format(amount, "f"),
+            "amount_raw": str(expected_raw),
+            "token_contract": token,
+            "block": block_number,
+            "confirmations": confirmations,
+            "required_confirmations": 15,
+        })), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH BROWSER SEND] verify error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_BROWSER_SEND_VERIFY_FAILED"}), 502
+
+
 @app.route("/api/v1/wallet/slh/browser-send/settle", methods=["POST"])
 def slh_browser_send_settle():
     """Settle an owner SLH-to-Treasury send into the internal live balance."""
