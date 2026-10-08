@@ -142,5 +142,5 @@ def test_owner_start_reaches_canonical_dashboard(monkeypatch):
 
     assert len(bot.messages) == 1
     assert "המערכת מזהה אותך כבעלים" in bot.messages[0][1]
-    assert "🌟 ה-Dashboard שלך" in bot.messages[0][1]
+    assert "🌟 המרכז האישי שלך" in bot.messages[0][1]
     assert bot.messages[0][2].get("reply_markup") is not None
