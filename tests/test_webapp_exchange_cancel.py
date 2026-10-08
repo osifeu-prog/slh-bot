@@ -80,5 +80,96 @@ class WebAppExchangeCancelTests(unittest.TestCase):
         self.assertEqual(releases[0]["amount"], 40.0)
 
 
+
+class RestWebAppExchangeCancelTests(unittest.TestCase):
+    def test_rest_sell_cancel_uses_canonical_release(self):
+        import webapp as rest_webapp
+
+        db = {
+            "users": {
+                "seller": {
+                    "wallet": {
+                        "token_balance": 100.0,
+                        "live_token_balance": 60.0,
+                        "exchange_reserved_slh": 40.0,
+                        "exchange_reserved_credits": 0.0,
+                        "credits": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {
+                "O1": {
+                    "id": "O1",
+                    "uid": "seller",
+                    "side": "sell",
+                    "original_amount": "40.00000000",
+                    "remaining_amount": "40.00000000",
+                    "limit_price": "1.00000000",
+                    "reserved_slh": "40.00000000",
+                    "reserved_credits": "0.00000000",
+                    "sequence": 1,
+                    "status": "open",
+                }
+            },
+            "slh_token_ledger": [
+                {
+                    "event_id": "exchange:reserve_slh:O1",
+                    "kind": "exchange_reserve",
+                    "reason": "exchange:sell_reserve",
+                    "from_uid": "seller",
+                    "to_uid": "__EXCHANGE_RESERVE__",
+                    "amount": 40.0,
+                    "order_id": "O1",
+                }
+            ],
+        }
+
+        original_uid = rest_webapp.authenticated_uid
+        original_atomic_update = rest_webapp.state_manager.atomic_update
+
+        rest_webapp.authenticated_uid = lambda: "seller"
+        rest_webapp.state_manager.atomic_update = lambda mutate: mutate(db)
+
+        try:
+            response = rest_webapp.app.test_client().delete(
+                "/api/v1/exchange/order/O1"
+            )
+        finally:
+            rest_webapp.authenticated_uid = original_uid
+            rest_webapp.state_manager.atomic_update = original_atomic_update
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {"order_id": "O1", "status": "cancelled"},
+        )
+
+        wallet = db["users"]["seller"]["wallet"]
+        self.assertEqual(wallet["token_balance"], 100.0)
+        self.assertEqual(wallet["live_token_balance"], 60.0)
+        self.assertEqual(wallet["exchange_reserved_slh"], 0.0)
+
+        order = db["exchange_orders"]["O1"]
+        self.assertEqual(order["status"], "cancelled")
+        self.assertEqual(order["remaining_amount"], "0.00000000")
+        self.assertEqual(order["reserved_slh"], "0.00000000")
+
+        releases = [
+            entry
+            for entry in db["slh_token_ledger"]
+            if entry.get("event_id") == "exchange:release_slh:O1"
+        ]
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["kind"], "exchange_release")
+        self.assertEqual(releases[0]["amount"], 40.0)
+
+        legacy = [
+            entry
+            for entry in db["slh_token_ledger"]
+            if entry.get("reason") == "exchange:cancel_release_slh"
+        ]
+        self.assertEqual(legacy, [])
+
+
 if __name__ == "__main__":
     unittest.main()
