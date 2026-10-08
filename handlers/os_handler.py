@@ -51,7 +51,18 @@ def register(bot, context=None):
             llm_detail = "status unavailable"
 
         railway = os.getenv("RAILWAY_ENVIRONMENT", "local")
-        handlers = len([f for f in os.listdir("handlers") if f.endswith(".py")])
+        handlers = "?"
+        commands = "?"
+        collisions = "?"
+        try:
+            from core.runtime_command_evidence import snapshot_runtime
+            runtime = snapshot_runtime("Me_ad_main")
+            handlers = runtime.get("total_message_handlers", "?")
+            commands = runtime.get("unique_commands", "?")
+            collisions = runtime.get("collision_count", "?")
+        except Exception:
+            pass
+
         try:
             from core.agent_registry import STORE
             agents = len(STORE.get_all())
@@ -67,11 +78,11 @@ def register(bot, context=None):
         header = f"""🟢 SLH OS CONTROL CENTER
 {datetime.now():%Y-%m-%d %H:%M:%S}
 🔀 Git: {git_hash} | 🧠 LLM: {llm_state} ({llm_detail}) | 🌐 {railway}
-📂 Handlers: {handlers} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
+📂 Runtime: handlers={handlers} | commands={commands} | collisions={collisions} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
 """
 
         menu = (
-            "CORE: /start /os /status /help /miniapp /dashboard /ask\n"
+            "CORE: /start /os /status /help /miniapp /dashboard /ask\nUI: Mini App is the primary user interface; /dashboard remains a Telegram compatibility surface\n"
             "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"
             "ALPHA: /alpha /academy /share /rewards /task /journal\n"
             "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs /releasecheck\n"
