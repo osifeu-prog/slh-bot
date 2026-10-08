@@ -177,7 +177,7 @@ def register(bot, context=None):
             internal_token = wallet.get("token_balance", 0)
 
         return (
-            f"🌟 {display_name} — ה-Dashboard שלך\n\n"
+            f"🌟 {display_name} — המרכז האישי שלך\n\n"
             f"🧾 כל היתרות:\n"
             f"💰 Credits: {_fmt_balance(wallet.get('credits', 0))}\n"
             f"🔒 Staked: {_fmt_balance(wallet.get('staked', 0))}\n"
@@ -331,7 +331,7 @@ def register(bot, context=None):
                 "אני רובוטוש, העוזר האישי שלך.\n"
                 "👑 המערכת מזהה אותך כבעלים של SLH OS.\n"
                 "🚀 המערכת האישית שלך מוכנה.\n"
-                "🌟 ה-Dashboard שלך\n\n"
+                "🌟 המרכז האישי שלך\n\n"
                 "🔗 הצטרף לקבוצת העדכונים הרשמית:\n"
                 "https://t.me/+9VUA_6jMyQcxMGVk\n\n"
                 f"{invite_line}"
