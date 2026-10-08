@@ -105,7 +105,7 @@ def archive_test_state(actor_uid: str) -> dict:
                 str(order.get("buy_order_id")),
                 str(order.get("sell_order_id")),
             }
-            if _is_test_seed(order) or linked.intersection(selected_trade_ids):
+            if is_test_seed(order) or linked.intersection(selected_trade_ids):
                 selected_orders.append((str(oid), order))
 
         archived_at = _now()
