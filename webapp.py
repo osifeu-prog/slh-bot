@@ -369,7 +369,9 @@ def stars_invoice():
 @app.route("/health")
 def health():
     return "OK", 200
-\n\n@app.route("/api/public/site-status", methods=["GET", "OPTIONS"])
+
+
+@app.route("/api/public/site-status", methods=["GET", "OPTIONS"])
 def public_site_status():
     """Public, read-only system beacon for the canonical SLH website.
 
