@@ -5,7 +5,6 @@ from pathlib import Path
 class TestDeveloperRewardsContract(unittest.TestCase):
     def test_reward_authority_and_tiers_exist(self):
         source = Path("core/developer_rewards.py").read_text(encoding="utf-8")
-        self.assertIn("PR_REWARD", source) if False else None
         self.assertIn("5000.0", source)
         self.assertIn("2500.0", source)
         self.assertIn("PR_NOT_MERGED", source)
