@@ -40,6 +40,67 @@ class WebAppApiAuthTests(unittest.TestCase):
             10**15,
         )
 
+    def test_public_site_status_exposes_only_aggregate_truth(self):
+        exchange = {
+            "public_gate": "OPEN",
+            "public_ready": True,
+            "verdict": "OPEN",
+        }
+        bnb = {"effective_open": False, "ready": True}
+        ton = {"effective_open": True, "ready": True}
+        participation = {"active": False}
+        runtime = {
+            "total_message_handlers": 322,
+            "unique_commands": 352,
+            "collision_count": 0,
+        }
+        with patch("core.system_checks.check_exchange", return_value=exchange), patch(
+            "core.bnb_gate.bnb_readiness", return_value=bnb
+        ), patch(
+            "core.ton_deposit_service.ton_readiness", return_value=ton
+        ), patch(
+            "core.participation_policy.activation_status", return_value=participation
+        ), patch(
+            "core.runtime_command_evidence.snapshot_runtime", return_value=runtime
+        ):
+            response = self.client.get(
+                "/api/public/site-status",
+                headers={"Origin": "https://slh-nft.com"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.headers.get("Access-Control-Allow-Origin"),
+            "https://slh-nft.com",
+        )
+        payload = response.get_json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["ui"]["primary"], "Telegram Mini App")
+        self.assertEqual(payload["exchange"]["verdict"], "OPEN")
+        self.assertEqual(payload["settlement"]["ton"]["gate"], "OPEN")
+        self.assertEqual(payload["settlement"]["bnb"]["gate"], "CLOSED")
+        self.assertEqual(payload["participation"]["release"], "DESIGN_ONLY")
+        self.assertEqual(payload["runtime"], runtime)
+        self.assertNotIn("credits", payload)
+        self.assertNotIn("wallet", payload)
+        self.assertNotIn("secrets", payload)
+
+    def test_public_site_status_options_allows_canonical_site_origin(self):
+        response = self.client.options(
+            "/api/public/site-status",
+            headers={"Origin": "https://slh-nft.com"},
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(
+            response.headers.get("Access-Control-Allow-Origin"),
+            "https://slh-nft.com",
+        )
+        self.assertEqual(
+            response.headers.get("Access-Control-Allow-Methods"),
+            "GET, OPTIONS",
+        )
+
+
     def test_global_endpoints_require_telegram_auth(self):
         endpoints = (
             "/api/stats",
