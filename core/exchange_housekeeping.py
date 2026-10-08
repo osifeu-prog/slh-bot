@@ -93,7 +93,7 @@ def archive_test_state(actor_uid: str) -> dict:
         trade_archive = db.setdefault("exchange_trade_archive", [])
         order_archive = db.setdefault("exchange_order_archive", {})
 
-        selected_trades = [t for t in trades if _is_test_seed(t)]
+        selected_trades = [t for t in trades if is_test_seed(t)]
         selected_trade_ids = {str(t.get("id")) for t in selected_trades}
 
         selected_orders = []
