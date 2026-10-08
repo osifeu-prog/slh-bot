@@ -2289,23 +2289,24 @@ def slh_browser_send_config():
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
-        from decimal import Decimal, InvalidOperation
+        from decimal import Decimal
         from web3 import Web3
         from core.authority import is_owner
         from core.binance_connector import get_bsc_config
+        from core.wallet_handoff import get_handoff_metadata
 
         if not is_owner(uid):
             return jsonify({"error": "OWNER_ONLY"}), 403
 
-        recipient_raw = str(request.args.get("recipient", "")).strip()
-        amount_raw = str(request.args.get("amount", "")).strip()
-        if not recipient_raw or not amount_raw:
-            return jsonify({"error": "SEND_INTENT_REQUIRED"}), 400
-        try:
-            recipient = Web3.to_checksum_address(recipient_raw)
-            amount = Decimal(amount_raw)
-        except (ValueError, InvalidOperation):
-            return jsonify({"error": "INVALID_SEND_INTENT"}), 400
+        handoff = get_handoff_metadata(request.cookies.get("slh_wallet_handoff"))
+        if not handoff or str(handoff.get("uid")) != str(uid):
+            return jsonify({"error": "INVALID_WALLET_SESSION"}), 401
+        metadata = handoff.get("metadata") or {}
+        if metadata.get("kind") != "slh_browser_send":
+            return jsonify({"error": "SEND_INTENT_MISSING"}), 400
+
+        recipient = Web3.to_checksum_address(str(metadata.get("recipient") or ""))
+        amount = Decimal(str(metadata.get("amount") or ""))
         if not amount.is_finite() or amount <= 0:
             return jsonify({"error": "INVALID_SLH_AMOUNT"}), 400
         if -amount.as_tuple().exponent > 15:
@@ -2337,7 +2338,7 @@ def slh_browser_send_config():
             "signing": "user_wallet_only",
             "custody": False,
         })), 200
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, ArithmeticError) as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         print("[SLH BROWSER SEND] config error:", type(exc).__name__, str(exc)[:160])
