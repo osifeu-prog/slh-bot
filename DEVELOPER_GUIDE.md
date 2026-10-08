@@ -55,6 +55,9 @@ Developers are limited to the read-only audit allowlist such as:
 - sed -n
 - awk
 
+Sensitive runtime paths such as `state/`, `.env`, `.env.example`, `.git/` and system roots are denied to `/execr`.
+
+
 Commands outside the audit allowlist require explicit OWNER approval through the execution policy.
 
 ### Important: /exec vs /execr
