@@ -15,6 +15,8 @@ class TestSlhBrowserSendContract(unittest.TestCase):
         self.assertIn('/api/v1/wallet/slh/browser-send-config', webapp)
         self.assertIn('/api/v1/wallet/slh/browser-send/verify', webapp)
         self.assertIn('/api/v1/wallet/slh/browser-send/settle', webapp)
+        self.assertIn('from core.slh_deposit_service import verify_slh_deposit', webapp)
+        self.assertNotIn('TRANSFER_EVENT_MISMATCH', webapp.split('/api/v1/wallet/slh/browser-send/verify', 1)[1].split('/api/v1/wallet/slh/browser-send/settle', 1)[0])
         self.assertIn('/api/v1/wallet/slh/browser-send-config', html)
         self.assertIn('/api/v1/wallet/slh/browser-send/verify', html)
         self.assertIn('/api/v1/wallet/slh/browser-send/settle', html)
