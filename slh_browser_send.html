@@ -45,7 +45,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
   </div>
   <div class="kv">
     <b>שלב 2 · שליחה</b>
-    <button id="send" class="primary" hidden>🔐 אשר ושלח בדיוק 1 SLH</button>
+    <button id="send" class="primary" hidden>🔐 אשר ושלח את הכמות המוצגת</button>
     <div id="quote" class="muted"></div>
   </div>
   <div class="kv">
@@ -145,6 +145,7 @@ async function finalizeProvider(p,label){
   if(account.toLowerCase()!==cfg.sender.toLowerCase())throw Error("החשבון המחובר אינו חשבון ה־Trezor המאומת");
   el("walletStatus").textContent="✅ "+label+" מחובר לחשבון Trezor המאומת: "+account.slice(0,8)+"…"+account.slice(-6);
   el("send").hidden=false;
+  el("send").textContent="🔐 אשר ושלח בדיוק "+cfg.amount_slh+" SLH";
   setStatus("✅ הארנק הנכון מחובר.","ok");
 }
 
@@ -223,7 +224,7 @@ async function prepare(){
 async function send(){
   try{
     await prepare();
-    el("verifyStatus").textContent="⏳ MetaMask/Trezor יבקש אישור. אשר רק אם כתובת היעד נכונה וכמות = 1 SLH.";
+    el("verifyStatus").textContent="⏳ MetaMask/Trezor יבקש אישור. אשר רק אם כתובת היעד וכמות "+cfg.amount_slh+" SLH נכונות.";
     const txHash=await provider.request({method:"eth_sendTransaction",params:[{
       from:account,to:cfg.token_contract,data:quote.data,value:"0x0",
       gas:"0x"+quote.gas.toString(16),gasPrice:"0x"+quote.gasPrice.toString(16)
@@ -240,9 +241,9 @@ async function send(){
 async function verify(txHash){
   for(let i=0;i<90;i++){
     try{
-      const d=await api("/api/v1/wallet/slh/browser-quick-send/verify",{
+      const d=await api("/api/v1/wallet/slh/browser-send/verify",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({tx_hash:txHash})
+        body:JSON.stringify({tx_hash:txHash,recipient:cfg.recipient,amount:cfg.amount_slh})
       });
       if(d.ok){
         el("verifyStatus").textContent="✅ PASS — "+cfg.amount_slh+" SLH הועבר ואומת on-chain · "+d.confirmations+" confirmations";
