@@ -75,7 +75,7 @@ def test_existing_user_start_opens_dashboard(monkeypatch):
     start(msg)
 
     assert len(bot.messages) == 1
-    assert "Dashboard" in bot.messages[0]["text"]
+    assert "המרכז האישי שלך" in bot.messages[0]["text"]
     assert "Credits: 42" in bot.messages[0]["text"]
     assert "סוכנים שלך: 1" in bot.messages[0]["text"]
     assert "🚀 הצטרף ל-SLH" not in bot.messages[0]["text"]
