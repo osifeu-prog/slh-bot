@@ -80,7 +80,10 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(payload["settlement"]["ton"]["gate"], "OPEN")
         self.assertEqual(payload["settlement"]["bnb"]["gate"], "CLOSED")
         self.assertEqual(payload["participation"]["release"], "DESIGN_ONLY")
-        self.assertEqual(payload["runtime"], runtime)
+        self.assertEqual(
+            payload["runtime"],
+            {"handlers": 322, "commands": 352, "collisions": 0},
+        )
         self.assertNotIn("credits", payload)
         self.assertNotIn("wallet", payload)
         self.assertNotIn("secrets", payload)
