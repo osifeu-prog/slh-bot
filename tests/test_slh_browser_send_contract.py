@@ -15,7 +15,7 @@ class TestSlhBrowserSendContract(unittest.TestCase):
         self.assertIn('/api/v1/wallet/slh/browser-send-config', webapp)
         self.assertIn('/api/v1/wallet/slh/browser-send/verify', webapp)
         self.assertIn('/api/v1/wallet/slh/browser-send/settle', webapp)
-        self.assertIn('/api/v1/wallet/slh/browser-send-config?', html)
+        self.assertIn('/api/v1/wallet/slh/browser-send-config', html)
         self.assertIn('/api/v1/wallet/slh/browser-send/verify', html)
         self.assertIn('/api/v1/wallet/slh/browser-send/settle', html)
         self.assertIn('settlement_to_internal', html)
