@@ -63,13 +63,85 @@ AUDIT_COMMAND_PATTERNS = [
 ]
 
 
+AUDIT_FORBIDDEN_PATHS = (
+    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?state(?:/|$)", re.IGNORECASE),
+    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?\\.env(?:\\.|/|$)", re.IGNORECASE),
+    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?\\.git(?:/|$)", re.IGNORECASE),
+    re.compile(r"(^|[\\s'\"=:/])/(?:proc|sys|dev)(?:/|$)", re.IGNORECASE),
+)
+
+AUDIT_ALLOWED_ROOT_FILES = {
+    "README.md",
+    "DEVELOPER_GUIDE.md",
+    "DEVELOPER_ONBOARDING.md",
+    "ARCHITECTURE.md",
+    "API_REFERENCE.md",
+    "ALPHA_CONTROL_PLANE.md",
+}
+
+
+def _audit_path_allowed(path):
+    value = str(path or "").strip().strip("\"'")
+    if not value or value in {".", "./", "/app", "/"}:
+        return False
+    if value.startswith("/"):
+        return False
+    if value in AUDIT_ALLOWED_ROOT_FILES:
+        return True
+    normalized = value.replace("\\\\", "/")
+    return normalized.startswith(("core/", "handlers/", "tests/", "slh_mcp/"))
+
+
+def _audit_paths_safe(cmd):
+    """Reject sensitive runtime paths and unrestricted repository recursion."""
+    if any(pattern.search(cmd) for pattern in AUDIT_FORBIDDEN_PATHS):
+        return False
+
+    try:
+        import shlex
+        tokens = shlex.split(cmd)
+    except ValueError:
+        return False
+
+    if not tokens:
+        return False
+
+    command = tokens[0].lower()
+    args = tokens[1:]
+
+    if command == "find":
+        roots = [x for x in args if not x.startswith("-")]
+        return bool(roots) and _audit_path_allowed(roots[0])
+
+    if command in {"cat", "head", "tail"}:
+        paths = [x for x in args if not x.startswith("-")]
+        return bool(paths) and all(_audit_path_allowed(x) for x in paths)
+
+    if command == "sed":
+        paths = [x for x in args[1:] if not x.startswith("-")]
+        return bool(paths) and all(_audit_path_allowed(x) for x in paths)
+
+    if command == "awk":
+        paths = [x for x in args[1:] if not x.startswith("-")]
+        return all(_audit_path_allowed(x) for x in paths) if paths else True
+
+    if command == "grep":
+        paths = [x for x in args if ("/" in x or x in {".", "./", "/app"})]
+        return all(_audit_path_allowed(x) for x in paths) if paths else True
+
+    return True
+
+
 def is_audit_command(cmd):
     if any(re.search(p, cmd, re.IGNORECASE) for p in AUDIT_COMMAND_PATTERNS):
         # No command chaining, redirection, command substitution or writes.
-        if re.search(r"[;&|`]", cmd) or re.search(r"\$\(", cmd):
+        if re.search(r"[;&|]", cmd) or "`" in cmd or re.search(r"\$\(", cmd):
             return False
-        return not is_dangerous(cmd)
+        if is_dangerous(cmd):
+            return False
+        return _audit_paths_safe(cmd)
     return False
+
 
 
 SECRET_PATTERNS = [
