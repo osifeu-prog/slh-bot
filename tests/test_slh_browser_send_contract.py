@@ -19,6 +19,9 @@ class TestSlhBrowserSendContract(unittest.TestCase):
         self.assertIn('/api/v1/wallet/slh/browser-send/verify', html)
         self.assertIn('/api/v1/wallet/slh/browser-send/settle', html)
         self.assertIn('settlement_to_internal', html)
+        handoff = Path("core/wallet_handoff.py").read_text(encoding="utf-8")
+        self.assertIn("metadata", handoff)
+        self.assertIn("get_handoff_metadata", handoff)
 
 
 if __name__ == "__main__":
