@@ -66,13 +66,18 @@ def _trust_wallet_smoke_url(uid):
     )
 
 
-def _owner_slh_browser_send_url(uid):
+def _owner_slh_browser_send_url(uid, recipient, amount):
     if str(uid) != str(OWNER_TELEGRAM_ID):
         raise PermissionError("OWNER_ONLY")
     handoff = create_handoff(uid)
+    query = urlencode({
+        "recipient": Web3.to_checksum_address(recipient),
+        "amount": str(amount),
+    })
     return (
         f"{_public_origin()}/wallet-handoff?"
-        f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
+        f"code={quote(str(handoff['token']), safe='')}&next="
+        f"{quote('/slh-browser-send?' + query, safe='')}"
     )
 
 
@@ -215,18 +220,18 @@ def register(bot):
 
     @bot.message_handler(commands=["slh_send"])
     def slh_send(message):
-        """Open the real user-signed SLH transfer flow with optional prefill."""
+        """Open the real user-signed SLH transfer flow."""
+        uid = str(message.from_user.id)
         parts = (message.text or "").split()
         if len(parts) not in {1, 3}:
             bot.reply_to(
                 message,
-                "שימוש פשוט:\n"
+                "שימוש:\n"
                 "/slh_send — פתיחת מסלול שליחת SLH\n"
                 "/slh_send <BSC_ADDRESS> <AMOUNT> — פתיחה עם מילוי מראש",
             )
             return
 
-        params = {"screen": "wallet", "slh_route": "send"}
         if len(parts) == 3:
             recipient = parts[1].strip()
             if not _ADDRESS_RE.fullmatch(recipient):
@@ -237,7 +242,39 @@ def register(bot):
             except ValueError:
                 bot.reply_to(message, "❌ כמות SLH לא תקינה. עד 15 ספרות עשרוניות.")
                 return
-            params.update({"recipient": Web3.to_checksum_address(recipient), "amount": amount})
+
+            if uid == str(OWNER_TELEGRAM_ID):
+                try:
+                    browser_url = _owner_slh_browser_send_url(uid, recipient, amount)
+                    markup = types.InlineKeyboardMarkup()
+                    markup.add(
+                        types.InlineKeyboardButton(
+                            "🦊 פתח בדפדפן וחתום עם MetaMask / Trezor",
+                            url=browser_url,
+                        )
+                    )
+                    bot.reply_to(
+                        message,
+                        "🪙 SLH · חתימה חיצונית\n\n"
+                        f"יעד: {Web3.to_checksum_address(recipient)}\n"
+                        f"כמות: {amount} SLH\n"
+                        "🔐 הדף נפתח בדפדפן חיצוני כדי לאפשר MetaMask/Trezor.\n"
+                        "השרת אינו מחזיק מפתח פרטי ואינו חותם.",
+                        reply_markup=markup,
+                    )
+                    return
+                except Exception as exc:
+                    bot.reply_to(message, f"❌ פתיחת Wallet Send נכשלה: {type(exc).__name__}")
+                    return
+
+            params = {
+                "screen": "wallet",
+                "slh_route": "send",
+                "recipient": Web3.to_checksum_address(recipient),
+                "amount": amount,
+            }
+        else:
+            params = {"screen": "wallet", "slh_route": "send"}
 
         markup = types.InlineKeyboardMarkup()
         markup.add(
