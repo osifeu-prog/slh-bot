@@ -7,10 +7,37 @@ orders and trades are not selected merely because they are old.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import re
 
 import state_manager
 from core.audit import log_event
-from core.system_checks import _is_test_seed
+
+
+
+_TEST_SEED_RE = re.compile(
+    r"(?<![A-Za-z0-9])(test|seed|genesis)(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
+
+
+def is_test_seed(record) -> bool:
+    if not isinstance(record, dict):
+        return False
+    for key in ("test", "is_test", "seed", "is_seed"):
+        if record.get(key) is True:
+            return True
+
+    def walk(value):
+        if isinstance(value, dict):
+            for nested in value.values():
+                yield from walk(nested)
+        elif isinstance(value, (list, tuple, set)):
+            for nested in value:
+                yield from walk(nested)
+        elif isinstance(value, str):
+            yield value
+
+    return any(_TEST_SEED_RE.search(value or "") for value in walk(record))
 
 
 def _now() -> str:
@@ -21,7 +48,7 @@ def preview() -> dict:
     db = state_manager.load_db()
     orders = db.get("exchange_orders", {}) or {}
     trades = db.get("exchange_trades", []) or []
-    selected_trades = [t for t in trades if _is_test_seed(t)]
+    selected_trades = [t for t in trades if is_test_seed(t)]
     trade_ids = {str(t.get("id")) for t in selected_trades}
 
     selected_orders = []
@@ -46,6 +73,18 @@ def preview() -> dict:
 
 def archive_test_state(actor_uid: str) -> dict:
     actor_uid = str(actor_uid)
+    before = preview()
+    if not before["test_seed_trades"] and not before["test_seed_orders"]:
+        return {"archived_trades": 0, "archived_orders": 0, "backup": None}
+
+    db_before = state_manager.load_db()
+    from handlers.exchange_handler import _assert_invariants
+    _assert_invariants(db_before)
+    for oid in before["order_ids"]:
+        order = (db_before.get("exchange_orders", {}) or {}).get(oid)
+        if isinstance(order, dict) and order.get("status") == "open":
+            raise ValueError("EXCHANGE_TEST_ORDER_OPEN_CANNOT_ARCHIVE")
+
     backup = state_manager.backup_db()
 
     def mutate(db):
