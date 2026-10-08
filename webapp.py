@@ -2422,10 +2422,15 @@ def slh_browser_send_verify():
             if str(log.get("address") or "").lower() != token.lower():
                 continue
             topics = log.get("topics") or []
-            if len(topics) < 3 or str(topics[0]).lower().replace("0x", "") != transfer_topic.lower().replace("0x", ""):
+            if len(topics) < 3:
                 continue
-            event_from = "0x" + str(topics[1])[-40:]
-            event_to = "0x" + str(topics[2])[-40:]
+            topic0 = _normalize_hex_value(topics[0])
+            if topic0.lower() != transfer_topic.lower():
+                continue
+            event_from = _indexed_topic_address(topics[1])
+            event_to = _indexed_topic_address(topics[2])
+            if not event_from or not event_to:
+                continue
             if event_from.lower() != sender.lower() or event_to.lower() != recipient.lower():
                 continue
             try:
