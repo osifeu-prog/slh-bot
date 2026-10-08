@@ -117,11 +117,7 @@ async function ensureChain(){
 }
 async function init(){
   try{
-    const qs=new URLSearchParams(location.search);
-    const recipient=qs.get("recipient")||"";
-    const amount=qs.get("amount")||"";
-    if(!recipient||!amount)throw Error("SEND_INTENT_MISSING");
-    cfg=await api("/api/v1/wallet/slh/browser-send-config?"+new URLSearchParams({recipient,amount}));
+    cfg=await api("/api/v1/wallet/slh/browser-send-config");
     if(String(cfg.chain_id)!=="56")throw Error("BSC_CHAIN_MISMATCH");
     el("amount").textContent=cfg.amount_slh+" SLH";
     el("recipient").textContent=cfg.recipient;
