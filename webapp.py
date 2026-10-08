@@ -369,6 +369,104 @@ def stars_invoice():
 @app.route("/health")
 def health():
     return "OK", 200
+\n\n@app.route("/api/public/site-status", methods=["GET", "OPTIONS"])
+def public_site_status():
+    """Public, read-only system beacon for the canonical SLH website.
+
+    Deliberately exposes only aggregate, non-user-specific state. It never
+    returns balances, wallets, secrets, credentials, or mutation controls.
+    The endpoint is intended for https://slh-nft.com and https://slh.co.il.
+    """
+    if request.method == "OPTIONS":
+        response = jsonify({"ok": True})
+        origin = request.headers.get("Origin", "")
+        if origin in _AI_ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        return response, 204
+
+    try:
+        from core.bnb_gate import bnb_readiness
+        from core.participation_policy import activation_status
+        from core.runtime_command_evidence import snapshot_runtime
+        from core.system_checks import check_exchange
+        from core.ton_deposit_service import ton_readiness
+
+        exchange = check_exchange()
+        bnb = bnb_readiness()
+        ton = ton_readiness()
+        participation = activation_status()
+
+        runtime = None
+        try:
+            runtime = snapshot_runtime("Me_ad_main")
+        except Exception:
+            runtime = None
+
+        payload = {
+            "ok": True,
+            "schema_version": 1,
+            "service": "SLH OS",
+            "site": "slh-nft.com",
+            "source": "canonical SLH OS read models",
+            "ui": {
+                "primary": "Telegram Mini App",
+                "dashboard_compatibility": True,
+            },
+            "system": {
+                "status": "ONLINE",
+                "updated_at": time.time(),
+            },
+            "exchange": {
+                "gate": str(exchange.get("public_gate") or "CLOSED"),
+                "readiness": bool(exchange.get("public_ready")),
+                "verdict": str(exchange.get("verdict") or "BLOCKED"),
+            },
+            "settlement": {
+                "ton": {
+                    "gate": "OPEN" if bool(ton.get("effective_open")) else "CLOSED",
+                    "ready": bool(ton.get("ready")),
+                },
+                "bnb": {
+                    "gate": "OPEN" if bool(bnb.get("effective_open")) else "CLOSED",
+                    "ready": bool(bnb.get("ready")),
+                },
+            },
+            "participation": {
+                "active": bool(participation.get("active")),
+                "release": "ACTIVE" if bool(participation.get("active")) else "DESIGN_ONLY",
+            },
+            "runtime": ({
+                "handlers": int(runtime.get("total_message_handlers") or 0),
+                "commands": int(runtime.get("unique_commands") or 0),
+                "collisions": int(runtime.get("collision_count") or 0),
+            } if isinstance(runtime, dict) else None),
+            "links": {
+                "website": "https://slh-nft.com/",
+                "mini_app": "https://slh-cloud-bot-production.up.railway.app/mini-app-v4",
+                "telegram_bot": "https://t.me/Me_ad_main_bot",
+            },
+        }
+        response = _no_store(jsonify(payload))
+        origin = request.headers.get("Origin", "")
+        if origin in _AI_ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        return response, 200
+    except Exception as exc:
+        print("[SITE_STATUS] public read error:", type(exc).__name__)
+        response = jsonify({"ok": False, "error": "SITE_STATUS_UNAVAILABLE"})
+        origin = request.headers.get("Origin", "")
+        if origin in _AI_ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+        return response, 503
+
+
 
 
 @app.route("/tonconnect-manifest.json")
