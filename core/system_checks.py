@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -16,6 +15,83 @@ from typing import Any
 
 REQUIRED_DB_KEYS = ("users", "transactions", "ledger")
 REQUIRED_UX_IDS = ("balance", "move", "growth", "investor", "profile", "bh", "bb", "bm", "bg", "binv")
+_TEST_SEED_RE = re.compile(r"(?<![A-Za-z0-9])(test|seed|genesis)(?![A-Za-z0-9])", re.IGNORECASE)
+
+
+def check_db() -> dict[str, Any]:
+    try:
+        import state_manager
+
+        db = state_manager.load_db()
+        missing = [key for key in REQUIRED_DB_KEYS if key not in db]
+        if missing:
+            return {"ok": False, "detail": "missing keys: " + ", ".join(missing)}
+        users = db.get("users")
+        return {
+            "ok": isinstance(users, dict),
+            "detail": f"state/db.json readable · users={len(users) if isinstance(users, dict) else 0}",
+        }
+    except Exception as exc:
+        return {"ok": False, "detail": f"state/db.json unreadable: {type(exc).__name__}"}
+
+
+def check_commands() -> dict[str, Any]:
+    try:
+        from core.runtime_command_evidence import snapshot_runtime
+
+        snapshot = snapshot_runtime("Me_ad_main")
+        collisions = int(snapshot.get("collision_count") or 0)
+        required = {"help", "check", "check_ux", "check_money", "check_bnb", "check_ton", "check_exchange"}
+        registered = set(snapshot.get("commands", {}))
+        missing = sorted("/" + cmd for cmd in required if "/" + cmd not in registered)
+        ok = collisions == 0 and not missing
+        detail = (
+            f"handlers={snapshot.get('total_message_handlers')} "
+            f"commands={snapshot.get('unique_commands')} collisions={collisions}"
+        )
+        if missing:
+            detail += " · missing=" + ", ".join(missing)
+        return {
+            "ok": ok,
+            "detail": detail,
+            "collisions": collisions,
+            "missing": missing,
+        }
+    except KeyError:
+        return {"ok": False, "detail": "runtime bot Me_ad_main is not registered"}
+    except Exception as exc:
+        return {"ok": False, "detail": f"runtime command snapshot failed: {type(exc).__name__}"}
+
+
+def check_ux() -> dict[str, Any]:
+    try:
+        html = Path("mini_app.html").read_text(encoding="utf-8")
+        checks = []
+        for item in REQUIRED_UX_IDS:
+            marker = f'id="{item}"'
+            checks.append({"name": marker, "ok": marker in html})
+        required_text = (
+            "Home",
+            "Balance",
+            "Move",
+            "Grow",
+            "Investor",
+            "SLH · פנימי",
+            "SLH · on-chain",
+        )
+        for item in required_text:
+            checks.append({"name": item, "ok": item in html})
+        ok = all(item["ok"] for item in checks)
+        return {
+            "ok": ok,
+            "detail": "Mini App public shell contract present" if ok else "Mini App shell contract incomplete",
+            "checks": checks,
+        }
+    except Exception as exc:
+        return {"ok": False, "detail": f"Mini App source check failed: {type(exc).__name__}", "checks": []}
+
+
+
 def _decimal(value: Any, default: str = "0") -> Decimal:
     try:
         return Decimal(str(default if value is None else value))
