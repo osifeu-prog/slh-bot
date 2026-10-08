@@ -50,6 +50,12 @@ def preview() -> dict:
     trades = db.get("exchange_trades", []) or []
     selected_trades = [t for t in trades if is_test_seed(t)]
     trade_ids = {str(t.get("id")) for t in selected_trades}
+    linked_order_ids = {
+        str(order_id)
+        for trade in selected_trades
+        for order_id in (trade.get("buy_order_id"), trade.get("sell_order_id"))
+        if order_id
+    }
 
     selected_orders = []
     for oid, order in orders.items():
@@ -60,7 +66,7 @@ def preview() -> dict:
             str(order.get("buy_order_id")),
             str(order.get("sell_order_id")),
         }
-        if is_test_seed(order) or linked.intersection(trade_ids):
+        if is_test_seed(order) or linked.intersection(linked_order_ids):
             selected_orders.append(order)
 
     return {
@@ -95,6 +101,12 @@ def archive_test_state(actor_uid: str) -> dict:
 
         selected_trades = [t for t in trades if is_test_seed(t)]
         selected_trade_ids = {str(t.get("id")) for t in selected_trades}
+        linked_order_ids = {
+            str(order_id)
+            for trade in selected_trades
+            for order_id in (trade.get("buy_order_id"), trade.get("sell_order_id"))
+            if order_id
+        }
 
         selected_orders = []
         for oid, order in list(orders.items()):
@@ -105,7 +117,7 @@ def archive_test_state(actor_uid: str) -> dict:
                 str(order.get("buy_order_id")),
                 str(order.get("sell_order_id")),
             }
-            if is_test_seed(order) or linked.intersection(selected_trade_ids):
+            if is_test_seed(order) or linked.intersection(linked_order_ids):
                 selected_orders.append((str(oid), order))
 
         archived_at = _now()
