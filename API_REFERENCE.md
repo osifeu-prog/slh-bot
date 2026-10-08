@@ -26,6 +26,7 @@ The Mini App is served by the same production service. There is no separate end-
 | `/health` | GET | Service health check |
 | `/api/ai/chat` | POST, OPTIONS | Canonical public AI intake; Telegram identity is used when valid initData is supplied |
 | `/api/v1/ai/readiness` | GET | AI readiness read model |
+| `/api/public/site-status` | GET, OPTIONS | Public aggregate SLH OS truth beacon for `slh-nft.com` / `slh.co.il`; no user balances, secrets, or mutation controls |
 | `/api/v1/me` | GET | Authenticated investor/user snapshot |
 | `/api/v1/system/unified-map` | GET | Unified system map read model |
 | `/api/v1/financial-truth` | GET | Unified financial truth |
