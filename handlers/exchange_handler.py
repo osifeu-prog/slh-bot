@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import state_manager
 from core.exchange_gate import require_public_open
+from core.authority import is_owner
 from core.slh_distribution import (
     reserve_in_db,
     release_reserve_in_db,
@@ -293,6 +294,53 @@ def _place(db, uid, side, amount, price, request_id):
 
 
 def register(bot):
+    @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
+    def exchange_clean_cmd(msg):
+        if not is_owner(msg.from_user.id):
+            bot.reply_to(msg, "⛔ OWNER only")
+            return
+        try:
+            parts = (msg.text or "").split()
+            from core.exchange_housekeeping import archive_test_state, preview
+            if len(parts) == 1:
+                result = preview()
+                text = (
+                    "🧹 SLH EXCHANGE CLEANUP — OWNER ONLY\n\n"
+                    f"Test/seed trades: {result['test_seed_trades']}\n"
+                    f"Linked test/seed orders: {result['test_seed_orders']}\n"
+                )
+                if result["test_seed_trades"] or result["test_seed_orders"]:
+                    text += "\nNothing changed.\nTo archive only classified test/seed state: /exchange_clean CONFIRM"
+                else:
+                    text += "\n✅ No classified test/seed exchange state remains."
+                bot.reply_to(msg, text)
+                return
+
+            if len(parts) != 2 or parts[1] != "CONFIRM":
+                bot.reply_to(
+                    msg,
+                    "שימוש: /exchange_clean — preview בלבד\n"
+                    "או: /exchange_clean CONFIRM — archive קנוני של test/seed בלבד"
+                )
+                return
+
+            result = archive_test_state(str(msg.from_user.id))
+            from core.system_checks import check_exchange
+            after = check_exchange()
+            bot.reply_to(
+                msg,
+                "✅ Exchange test/seed state archived safely.\n"
+                f"Archived trades: {result['archived_trades']}\n"
+                f"Archived orders: {result['archived_orders']}\n"
+                f"Post-check verdict: {after['verdict']}\n"
+                f"Post-check readiness: {'PASS' if after['public_ready'] else 'FAIL'}\n"
+                "🔒 Live customer orders/trades are never selected by this command."
+            )
+        except ValueError as exc:
+            bot.reply_to(msg, "⛔ " + str(exc))
+        except Exception as exc:
+            bot.reply_to(msg, f"❌ Exchange cleanup failed safely: {type(exc).__name__}")
+
     @bot.message_handler(commands=["sell_slh"])
     def sell_slh(msg):
         parts = msg.text.split()
