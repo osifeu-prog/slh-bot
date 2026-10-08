@@ -81,6 +81,19 @@ def _approve_requested(bot, m, uid):
         f"✅ Developer Access approved for {uid}.\n"
         "RBAC role=DEVELOPER, status=active."
     )
+    try:
+        bot.send_message(
+            uid,
+            "✅ אושרת כ-DEVELOPER.\n\n"
+            "שלח /dev_help — יש לך את כל כלי העבודה.\n\n"
+            "המשימה הראשונה שלך:\n"
+            "1. /dev בדוק את Investor Overview שהגדרנו\n"
+            "2. /dev בדוק את הפקודות וה-collisions\n"
+            "3. /check\n\n"
+            "אחרי זה חזור עם 3 דברים שתרצה לשפר."
+        )
+    except Exception as exc:
+        print("[DEV] onboarding message failed:", type(exc).__name__)
     return True
 
 
