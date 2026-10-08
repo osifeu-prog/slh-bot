@@ -6,6 +6,7 @@ import os
 import secrets
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from core.telegram_webapp_auth import validate_init_data
 from core.authority import has_permission, get_role
@@ -408,10 +409,15 @@ def wallet_handoff():
         return jsonify({"error": "MISSING_WALLET_HANDOFF"}), 400
 
     next_path = str(request.args.get("next", "")).strip() or "/wallet-connect"
-    # Only allow fixed internal wallet pages; never accept arbitrary redirect URLs.
+    # Only allow fixed internal wallet page paths. Query parameters are permitted
+    # because the originating Telegram command supplies the transaction intent.
+    parsed_next = urlsplit(next_path)
     allowed_next = {"/wallet-connect", "/slh-smoke", "/bnb-smoke", "/slh-browser-send"}
-    if next_path not in allowed_next:
+    if parsed_next.path not in allowed_next:
         return jsonify({"error": "INVALID_WALLET_HANDOFF_TARGET"}), 400
+    next_location = parsed_next.path + (
+        ("?" + parsed_next.query) if parsed_next.query else ""
+    )
 
     session_cookie = str(request.cookies.get("slh_wallet_handoff") or "").strip()
     try:
@@ -434,7 +440,7 @@ def wallet_handoff():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    response = make_response(redirect(next_path))
+    response = make_response(redirect(next_location))
     response.set_cookie(
         "slh_wallet_handoff",
         code,
@@ -2274,6 +2280,92 @@ def slh_quick_send_config(preset):
     except Exception as exc:
         print("[SLH QUICK SEND] config error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "SLH_QUICK_SEND_CONFIG_FAILED"}), 502
+
+
+@app.route("/api/v1/wallet/slh/browser-send-config", methods=["GET"])
+def slh_browser_send_config():
+    """Resolve a short-lived owner wallet handoff into the exact send intent."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from decimal import Decimal, InvalidOperation
+        from web3 import Web3
+        from core.authority import is_owner
+        from core.binance_connector import get_bsc_config
+
+        if not is_owner(uid):
+            return jsonify({"error": "OWNER_ONLY"}), 403
+
+        recipient_raw = str(request.args.get("recipient", "")).strip()
+        amount_raw = str(request.args.get("amount", "")).strip()
+        if not recipient_raw or not amount_raw:
+            return jsonify({"error": "SEND_INTENT_REQUIRED"}), 400
+        try:
+            recipient = Web3.to_checksum_address(recipient_raw)
+            amount = Decimal(amount_raw)
+        except (ValueError, InvalidOperation):
+            return jsonify({"error": "INVALID_SEND_INTENT"}), 400
+        if not amount.is_finite() or amount <= 0:
+            return jsonify({"error": "INVALID_SLH_AMOUNT"}), 400
+        if -amount.as_tuple().exponent > 15:
+            return jsonify({"error": "INVALID_TOKEN_PRECISION"}), 400
+
+        binding = get_binding(uid)
+        if not binding:
+            return jsonify({"error": "OWNER_BSC_WALLET_NOT_VERIFIED"}), 403
+        sender = Web3.to_checksum_address(str(binding.get("address") or ""))
+
+        db = state_manager.load_db()
+        cfg = {**get_bsc_config(), **(db.get("bsc_settings") or {})}
+        token = str(cfg.get("token_contract") or "").strip()
+        treasury = str(cfg.get("treasury_wallet") or "").strip()
+        if not token:
+            return jsonify({"error": "SLH_TOKEN_CONTRACT_NOT_CONFIGURED"}), 503
+
+        return _no_store(jsonify({
+            "ok": True,
+            "sender": sender,
+            "recipient": recipient,
+            "amount_slh": format(amount, "f"),
+            "chain_id": int(cfg.get("chain_id", 56)),
+            "token_contract": Web3.to_checksum_address(token),
+            "settlement_to_internal": bool(
+                treasury and recipient.lower() == treasury.lower()
+            ),
+            "treasury": treasury or None,
+            "signing": "user_wallet_only",
+            "custody": False,
+        })), 200
+    except (ValueError, TypeError) as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH BROWSER SEND] config error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_BROWSER_SEND_CONFIG_FAILED"}), 502
+
+
+@app.route("/api/v1/wallet/slh/browser-send/settle", methods=["POST"])
+def slh_browser_send_settle():
+    """Settle an owner SLH-to-Treasury send into the internal live balance."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core.authority import is_owner
+    if not is_owner(uid):
+        return jsonify({"error": "OWNER_ONLY"}), 403
+    payload = request.get_json(silent=True) or {}
+    tx_hash = str(payload.get("tx_hash", "")).strip()
+    if not tx_hash:
+        return jsonify({"error": "INVALID_TX_HASH"}), 400
+    try:
+        from core.slh_deposit_service import settle_slh_deposit
+        result = settle_slh_deposit(uid, tx_hash)
+        return _no_store(jsonify(result)), 200
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[SLH BROWSER SEND] settle error:", type(exc).__name__, str(exc)[:160])
+        return jsonify({"error": "SLH_BROWSER_SEND_SETTLE_FAILED"}), 502
 
 
 @app.route("/api/v1/wallet/slh/browser-quick-send", methods=["GET"])
