@@ -1,6 +1,7 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import state_manager
+from core.exchange_gate import require_public_open
 from core.slh_distribution import (
     reserve_in_db,
     release_reserve_in_db,
@@ -241,6 +242,9 @@ def _match(db, incoming):
 
 
 def _place(db, uid, side, amount, price, request_id):
+    # All public order-entry paths (Telegram and Mini App) converge here.
+    # Keep the exchange fail-closed unless the deployment explicitly opens it.
+    require_public_open()
     w = _wallet(db, uid)
     order_id_preview = None
 
