@@ -65,6 +65,7 @@ class ExchangeHousekeepingTests(unittest.TestCase):
         db["exchange_orders"]["O1"]["status"] = "open"
         db["exchange_orders"]["O1"]["remaining_amount"] = "5.00000000"
         db["exchange_orders"]["O1"]["reserved_slh"] = "5.00000000"
+        db["users"]["seller"]["wallet"]["exchange_reserved_slh"] = 5.0
         with patch("state_manager.load_db", return_value=db):
             with self.assertRaisesRegex(ValueError, "EXCHANGE_TEST_ORDER_OPEN_CANNOT_ARCHIVE"):
                 exchange_housekeeping.archive_test_state("owner")
