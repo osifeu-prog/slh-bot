@@ -128,7 +128,7 @@ def archive_test_state(actor_uid: str) -> dict:
             order_archive[oid] = item
             orders.pop(oid, None)
 
-        db["exchange_trades"] = [t for t in trades if not _is_test_seed(t)]
+        db["exchange_trades"] = [t for t in trades if not is_test_seed(t)]
 
         return {
             "archived_trades": len(selected_trades),
