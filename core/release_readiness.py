@@ -49,15 +49,58 @@ def _miniapp_auth_check():
 
 
 def _exchange_check():
+    """Use the same canonical Exchange read-model as /check_exchange."""
     try:
-        import state_manager
-        from handlers.exchange_handler import _assert_invariants
+        from core.system_checks import check_exchange
 
-        db = state_manager.load_db()
-        _assert_invariants(db)
-        return _check("Internal exchange", "GREEN", "wallet/order reserve invariants pass on canonical db")
+        data = check_exchange()
+
+        verdict = str(data.get("verdict") or "BLOCKED")
+        public_gate = str(data.get("public_gate") or "CLOSED")
+        public_ready = bool(data.get("public_ready"))
+        open_orders = int(data.get("open_orders") or 0)
+        recent_trades = int(data.get("recent_trades") or 0)
+        test_seed_trades = int(data.get("test_seed_trades") or 0)
+        order_ok = bool(data.get("order_book_integrity"))
+        trade_ok = bool(data.get("trade_integrity"))
+        money_ok = bool(data.get("money_invariants"))
+
+        if (
+            verdict in {"OPEN", "READY_TO_OPEN"}
+            and bool(data.get("ok"))
+            and order_ok
+            and trade_ok
+            and money_ok
+            and public_ready
+        ):
+            detail = (
+                "canonical exchange checks pass; "
+                f"public gate={public_gate}; "
+                f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                f"open_orders={open_orders}; "
+                f"recent_trades={recent_trades}; "
+                f"test_seed_trades={test_seed_trades}"
+            )
+            return _check("Internal exchange", "GREEN", detail)
+
+        return _check(
+            "Internal exchange",
+            "BLOCKED",
+            (
+                f"canonical exchange verdict={verdict}; "
+                f"public gate={public_gate}; "
+                f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                f"open_orders={open_orders}; "
+                f"recent_trades={recent_trades}; "
+                f"test_seed_trades={test_seed_trades}"
+            ),
+        )
     except Exception as exc:
-        return _check("Internal exchange", "BLOCKED", f"reserve invariant failed: {type(exc).__name__}")
+        return _check(
+            "Internal exchange",
+            "BLOCKED",
+            f"canonical exchange check failed: {type(exc).__name__}",
+        )
 
 
 def _payments_check():
