@@ -50,14 +50,26 @@ def _miniapp_auth_check():
 
 def _exchange_check():
     try:
-        import state_manager
-        from handlers.exchange_handler import _assert_invariants
+        from core.system_checks import check_exchange
 
-        db = state_manager.load_db()
-        _assert_invariants(db)
-        return _check("Internal exchange", "GREEN", "wallet/order reserve invariants pass on canonical db")
+        result = check_exchange()
+        public_ready = bool(result.get("public_ready"))
+        verdict = str(result.get("verdict") or "")
+        detail = str(result.get("detail") or "")
+
+        if public_ready and verdict == "OPEN":
+            return _check("Internal exchange", "GREEN", "public trading gate OPEN; canonical exchange readiness PASS")
+
+        if public_ready and verdict == "READY_TO_OPEN":
+            return _check("Internal exchange", "DEGRADED", "public state clean but trading gate is CLOSED")
+
+        return _check(
+            "Internal exchange",
+            "BLOCKED",
+            detail or f"exchange readiness verdict: {verdict or 'UNKNOWN'}",
+        )
     except Exception as exc:
-        return _check("Internal exchange", "BLOCKED", f"reserve invariant failed: {type(exc).__name__}")
+        return _check("Internal exchange", "BLOCKED", f"exchange readiness check failed: {type(exc).__name__}")
 
 
 def _payments_check():
