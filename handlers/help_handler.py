@@ -20,6 +20,7 @@ def register(bot):
             bot.reply_to(msg, "FAQ לא זמין כרגע.")
 
     @bot.message_handler(commands=["help", "allcommands", "commands", "comands"])
+    def help_cmd(msg):
         try:
             from core.command_catalog import render_help
             text = render_help("Me_ad_main", limit=60)
