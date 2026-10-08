@@ -81,15 +81,11 @@ def register(bot, context=None):
 📂 Runtime: handlers={handlers} | commands={commands} | collisions={collisions} | 🤖 Agents: {agents} | ❤️ AI: {ai_failures} failures
 """
 
-        menu = (
-            "CORE: /start /os /status /help /miniapp /dashboard /ask\nUI: Mini App is the primary user interface; /dashboard remains a Telegram compatibility surface\n"
-            "MONEY: /wallet /market /pay /transfer /stake /exchange /orders /withdraw\n"
-            "ALPHA: /alpha /academy /share /rewards /task /journal\n"
-            "CONTROL: /system /map /services /agents /control /projects /deploy /redeploy /logs /releasecheck\n"
-            "SECURITY: /vault /vault_verify /vault_health /vault_log\n"
-            "CHAIN: /ton_address /ton_balance /ton_claim /settlement_status\n"
-            "DEV: /e /exec"
-        )
-        bot.reply_to(message, header + menu)
+        try:
+            from core.command_catalog import render_compact
+            menu = render_compact("Me_ad_main", limit=60)
+        except Exception:
+            menu = "📘 Runtime Command Catalog לא זמין כרגע."
+        bot.reply_to(message, header + "\n" + menu)
 
     print("✅ os + miniapp handler registered")

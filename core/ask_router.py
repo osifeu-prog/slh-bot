@@ -238,7 +238,11 @@ def route(text, uid=None):
     if intent == "agents":
         return "נסה /agents לרשימת הסוכנים."
     if intent == "help":
-        return "פקודות עיקריות: /start, /join, /courses, /agents, /ask"
+        try:
+            from core.command_catalog import render_compact
+            return render_compact("Me_ad_main", limit=40)
+        except Exception:
+            return "פקודות המערכת אינן זמינות כרגע."
     if intent == "system":
         return "SLH OS היא מערכת AI אוטונומית עם סוכנים, קורסים וכלכלה פנימית."
 
