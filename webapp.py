@@ -3009,6 +3009,7 @@ def api_exchange_cancel(order_id):
         return jsonify({"error": "MISSING_ORDER_ID"}), 400
     try:
         from handlers.exchange_handler import ORDERS_KEY, _wallet, _get, _set, _reserve, _set_reserve, _s, ZERO, _ledger, _assert_invariants
+        from core.slh_distribution import release_reserve_in_db
 
         def mutate(db):
             order = db.setdefault(ORDERS_KEY, {}).get(oid)
@@ -3022,10 +3023,13 @@ def api_exchange_cancel(order_id):
                 reserve = __import__("decimal").Decimal(str(order["reserved_slh"]))
                 if reserve != remaining:
                     raise ValueError("ORDER_RESERVE_MISMATCH")
-                _set_reserve(wallet, "exchange_reserved_slh", _reserve(wallet, "exchange_reserved_slh") - reserve)
-                before = _get(wallet, "token_balance")
-                _set(wallet, "token_balance", before + reserve)
-                _ledger(db, uid, before, reserve, "exchange:cancel_release_slh", {"order_id": oid, "source": "webapp"})
+                release_reserve_in_db(
+                    db,
+                    uid=uid,
+                    amount=reserve,
+                    event_id=f"exchange:release_slh:{oid}",
+                    order_id=oid,
+                )
                 order["reserved_slh"] = _s(ZERO)
             else:
                 reserve = __import__("decimal").Decimal(str(order["reserved_credits"]))
