@@ -66,9 +66,15 @@ def _trust_wallet_smoke_url(uid):
     )
 
 
-def _owner_slh_browser_send_url(uid, recipient, amount):
+def _owner_slh_browser_send_url(uid, recipient=None, amount=None):
     if str(uid) != str(OWNER_TELEGRAM_ID):
         raise PermissionError("OWNER_ONLY")
+    if recipient in (None, "") or amount in (None, ""):
+        quick = get_quick_send_config(uid, "owner_to_tzvika_1")
+        recipient = quick.get("recipient")
+        amount = quick.get("amount_slh")
+    if not recipient or not amount:
+        raise ValueError("SLH_BROWSER_SEND_INTENT_MISSING")
     handoff = create_handoff(uid)
     query = urlencode({
         "recipient": Web3.to_checksum_address(recipient),
