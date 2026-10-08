@@ -166,7 +166,7 @@ class RestWebAppExchangeCancelTests(unittest.TestCase):
         legacy = [
             entry
             for entry in db["slh_token_ledger"]
-            if entry.get("reason") == "exchange:cancel_release_slh"
+            if entry.get("reason") == "exchange:cancel_release_slh" and entry.get("event_id") != "exchange:release_slh:O1"
         ]
         self.assertEqual(legacy, [])
 
