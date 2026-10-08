@@ -2347,7 +2347,7 @@ def slh_browser_send_config():
 
 @app.route("/api/v1/wallet/slh/browser-send/verify", methods=["POST"])
 def slh_browser_send_verify():
-    """Verify the exact user-signed SLH transfer described by the wallet handoff."""
+    """Verify the exact user-signed SLH transfer using the canonical deposit verifier."""
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
@@ -2365,7 +2365,7 @@ def slh_browser_send_verify():
     try:
         from decimal import Decimal, InvalidOperation
         from web3 import Web3
-        from core.binance_connector import get_bsc_config
+        from core.slh_deposit_service import verify_slh_deposit
 
         recipient = Web3.to_checksum_address(recipient_raw)
         amount = Decimal(amount_raw)
@@ -2379,69 +2379,35 @@ def slh_browser_send_verify():
             return jsonify({"error": "OWNER_BSC_WALLET_NOT_VERIFIED"}), 403
         sender = Web3.to_checksum_address(str(binding.get("address") or ""))
 
-        db = state_manager.load_db()
-        cfg = {**get_bsc_config(), **(db.get("bsc_settings") or {})}
-        rpc = str(cfg.get("rpc") or "").strip()
-        token = Web3.to_checksum_address(str(cfg.get("token_contract") or "").strip())
-        if not rpc or not token:
-            return jsonify({"error": "BSC_CONFIG_INCOMPLETE"}), 503
+        verified = verify_slh_deposit(tx_hash)
+        if not verified.get("ok"):
+            error = str(verified.get("error") or "SLH_TX_NOT_VERIFIED")
+            retryable = error == "INSUFFICIENT_CONFIRMATIONS"
+            payload_out = {"error": error, "tx_hash": tx_hash}
+            if retryable:
+                payload_out.update({
+                    "retryable": True,
+                    "confirmations": verified.get("confirmations"),
+                    "required_confirmations": verified.get("required_confirmations"),
+                    "block": verified.get("block"),
+                })
+                return _no_store(jsonify(payload_out)), 409
+            return jsonify(payload_out), 400
 
-        expected_raw = int(amount * (10 ** 15))
-        if Decimal(expected_raw) / (10 ** 15) != amount:
-            raise ValueError("INVALID_TOKEN_PRECISION")
-
-        w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 8}))
-        try:
-            receipt = w3.eth.get_transaction_receipt(tx_hash)
-            tx = w3.eth.get_transaction(tx_hash)
-        except Exception as exc:
-            if type(exc).__name__ == "TransactionNotFound":
-                return jsonify({"error": "TRANSACTION_NOT_FOUND_RETRYABLE", "retryable": True}), 409
-            raise
-
-        if int(receipt.get("status", 0)) != 1:
-            return jsonify({"error": "TRANSACTION_FAILED"}), 400
-        if str(tx.get("to") or "").lower() != token.lower():
-            return jsonify({"error": "TRANSACTION_TARGET_MISMATCH"}), 400
-        if str(tx.get("from") or "").lower() != sender.lower():
+        verified_sender = Web3.to_checksum_address(str(verified.get("from") or ""))
+        verified_recipient = Web3.to_checksum_address(str(verified.get("to") or ""))
+        if verified_sender.lower() != sender.lower():
             return jsonify({"error": "TRANSACTION_SENDER_MISMATCH"}), 400
+        if verified_recipient.lower() != recipient.lower():
+            return jsonify({"error": "TRANSACTION_RECIPIENT_MISMATCH"}), 400
 
-        latest_block = int(w3.eth.block_number)
-        block_number = int(receipt["blockNumber"])
-        confirmations = max(0, latest_block - block_number + 1)
-        if confirmations < 15:
-            return jsonify({
-                "error": "INSUFFICIENT_CONFIRMATIONS",
-                "retryable": True,
-                "confirmations": confirmations,
-                "required_confirmations": 15,
-            }), 409
-
-        transfer_topic = Web3.keccak(text="Transfer(address,address,uint256)").hex()
-        matches = []
-        for log in receipt.get("logs", []):
-            if str(log.get("address") or "").lower() != token.lower():
-                continue
-            topics = log.get("topics") or []
-            if len(topics) < 3:
-                continue
-            topic0 = _normalize_hex_value(topics[0])
-            if topic0.lower() != transfer_topic.lower():
-                continue
-            event_from = _indexed_topic_address(topics[1])
-            event_to = _indexed_topic_address(topics[2])
-            if not event_from or not event_to:
-                continue
-            if event_from.lower() != sender.lower() or event_to.lower() != recipient.lower():
-                continue
-            try:
-                matches.append(int(str(log.get("data") or "0x0"), 16))
-            except ValueError:
-                continue
-
-        if len(matches) != 1:
-            return jsonify({"error": "TRANSFER_EVENT_MISMATCH", "matches": len(matches)}), 400
-        if matches[0] != expected_raw:
+        decimals = int(verified.get("decimals") or 0)
+        if decimals <= 0:
+            return jsonify({"error": "SLH_DECIMALS_UNAVAILABLE"}), 502
+        expected_raw = int(amount * (10 ** decimals))
+        if Decimal(expected_raw) / (Decimal(10) ** decimals) != amount:
+            raise ValueError("INVALID_TOKEN_PRECISION")
+        if int(verified.get("raw_amount", -1)) != expected_raw:
             return jsonify({"error": "TRANSFER_AMOUNT_MISMATCH"}), 400
 
         return _no_store(jsonify({
@@ -2449,16 +2415,16 @@ def slh_browser_send_verify():
             "status": "verified",
             "tx_hash": tx_hash,
             "chain_id": 56,
-            "sender": sender,
-            "recipient": recipient,
+            "sender": verified_sender,
+            "recipient": verified_recipient,
             "amount_slh": format(amount, "f"),
             "amount_raw": str(expected_raw),
-            "token_contract": token,
-            "block": block_number,
-            "confirmations": confirmations,
-            "required_confirmations": 15,
+            "token_contract": verified.get("token_contract"),
+            "block": verified.get("block"),
+            "confirmations": verified.get("confirmations"),
+            "required_confirmations": verified.get("required_confirmations"),
         })), 200
-    except ValueError as exc:
+    except (ValueError, TypeError, ArithmeticError, InvalidOperation) as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         print("[SLH BROWSER SEND] verify error:", type(exc).__name__, str(exc)[:160])
