@@ -146,7 +146,7 @@ def check_exchange() -> dict[str, Any]:
         open_orders = [o for o in orders.values() if isinstance(o, dict) and o.get("status") == "open"]
         test_seed_open = [o for o in open_orders if is_test_seed(o)]
         recent_trades = trades[-10:]
-        test_seed_trades = [t for t in trades if _is_test_seed(t)]
+        test_seed_trades = [t for t in trades if is_test_seed(t)]
 
         order_errors = []
         seen_order_ids = set()
