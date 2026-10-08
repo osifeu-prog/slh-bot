@@ -1310,19 +1310,21 @@ function renderBnbWalletState(bnb){
   const data=bnb&&typeof bnb==='object'?bnb:{};
   const bb=data.binding||null;
   const depositsOpen=data.deposits_open===true;
+  const slhDepositAllowed=data.slh_deposit_allowed===true;
   setText('bnbBindingStatus',bb?(depositsOpen?'✅ מאומת · Deposit פתוח':'🔒 מאומת · Settlement סגור'):(depositsOpen?'⚪️ לא אומת':'⛔ Settlement סגור'));
   $('bnbBindingStatus')?.classList.toggle('ok',!!bb);
   $('bnbBindingStatus')?.classList.toggle('pending',!bb);
   setText('bnbBindingAddress',bb?esc(bb.address):'אין ארנק BNB מאומת');
   const depInfo=$('bnbDepositInfo'),depHash=$('bnbTxHash'),depBtn=$('bnbClaimButton'),slhHash=$('slhTxHash'),slhBtn=$('slhClaimButton'),empBtn=$('bnbEmpiricalSendButton');
   const empirical=data.empirical_smoke&&typeof data.empirical_smoke==='object'?data.empirical_smoke:{};
-  if(depHash)depHash.disabled=!depositsOpen;if(depBtn)depBtn.disabled=!depositsOpen;if(slhHash)slhHash.disabled=!depositsOpen;if(slhBtn)slhBtn.disabled=!depositsOpen;
+  if(depHash)depHash.disabled=!depositsOpen;if(depBtn)depBtn.disabled=!depositsOpen;if(slhHash)slhHash.disabled=!slhDepositAllowed;if(slhBtn)slhBtn.disabled=!slhDepositAllowed;
   if(empBtn)empBtn.disabled=!(!!bb&&empirical.available===true);
   if(depInfo){
     depInfo.className='guide ux-deposit '+(depositsOpen?'open':'closed');
     depInfo.innerHTML=depositsOpen
       ? '<div class="ux-deposit-title"><b>📥 BNB Deposit · LIVE</b><span>SETTLEMENT OPEN</span></div><div class="muted" style="margin-top:6px">הדבק TX hash של העברה ל־Treasury. השרת בודק sender מול הארנק המאומת, transaction success, confirmations ו־idempotency לפני זיכוי.</div>'
-      : '<div class="ux-deposit-title"><b>📥 BNB Deposit · STAGED</b><span>SETTLEMENT CLOSED</span></div><div class="muted" style="margin-top:6px">חיבור הארנק ואימות הבעלות זמינים. זיכוי Credits מהפקדה ייפתח רק לאחר שהשרת מאשר שהשער on-chain פתוח ומוכן.</div>';
+      : '<div class="ux-deposit-title"><b>📥 BNB Deposit · STAGED</b><span>SETTLEMENT CLOSED</span></div><div class="muted" style="margin-top:6px">חיבור הארנק ואימות הבעלות זמינים. זיכוי Credits מהפקדה נעול לציבור.</div>'
+      + (slhDepositAllowed ? '<div class="muted" style="margin-top:7px"><b>⚡ SLH Live deposit · OWNER CANARY</b><br>אפשר לאמת הפקדת SLH אמיתית לחשבון המורשה בלי לפתוח BNB settlement לציבור.</div>' : '');
   }
   setText('uxBnbMini',bb?(depositsOpen?'✅ מאומת · Deposit פתוח':'🔒 מאומת · Settlement סגור'):(depositsOpen?'התחבר כדי לאמת':'🔒 Settlement סגור'));
   $('uxBnbDot')?.classList.toggle('good',!!bb);

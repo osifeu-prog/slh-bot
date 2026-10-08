@@ -1945,9 +1945,11 @@ def bnb_wallet_binding():
     cfg = get_bsc_config()
     db = state_manager.load_db()
     cfg = {**cfg, **db.get("bsc_settings", {})}
+    slh_deposit_allowed = bool(bnb_settlement_allowed(uid, db))
     return jsonify({
         "binding": binding,
         "deposits_open": bool(readiness["effective_open"]),
+        "slh_deposit_allowed": slh_deposit_allowed,
         "readiness": readiness,
         "empirical_smoke": {
             "available": empirical_available,
