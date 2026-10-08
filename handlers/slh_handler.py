@@ -70,22 +70,27 @@ def _owner_slh_browser_send_url(uid, recipient=None, amount=None):
     if str(uid) != str(OWNER_TELEGRAM_ID):
         raise PermissionError("OWNER_ONLY")
     if recipient in (None, "") or amount in (None, ""):
-        quick = get_quick_send_config(uid, "owner_to_tzvika_1")
-        recipient = quick.get("recipient")
-        amount = quick.get("amount_slh")
-    if not recipient or not amount:
-        raise ValueError("SLH_BROWSER_SEND_INTENT_MISSING")
-    handoff = create_handoff(uid)
-    query = urlencode({
-        "recipient": Web3.to_checksum_address(recipient),
-        "amount": str(amount),
-    })
+        # Backward-compatible generic owner wallet handoff used by legacy menu/tests.
+        handoff = create_handoff(uid)
+        return (
+            f"{_public_origin()}/wallet-handoff?"
+            f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
+        )
+
+    recipient = Web3.to_checksum_address(recipient)
+    amount = str(amount)
+    handoff = create_handoff(
+        uid,
+        metadata={
+            "kind": "slh_browser_send",
+            "recipient": recipient,
+            "amount": amount,
+        },
+    )
     return (
         f"{_public_origin()}/wallet-handoff?"
-        f"code={quote(str(handoff['token']), safe='')}&next="
-        f"{quote('/slh-browser-send?' + query, safe='')}"
+        f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
     )
-
 
 
 def _format_amount(value):
@@ -175,7 +180,11 @@ def _menu(uid, *, include_test=False):
     if str(uid) == str(OWNER_TELEGRAM_ID):
         try:
             quick = get_quick_send_config(uid, "owner_to_tzvika_1")
-            browser_url = _owner_slh_browser_send_url(uid)
+            browser_url = _owner_slh_browser_send_url(
+                uid,
+                quick.get("recipient"),
+                quick.get("amount_slh"),
+            )
             markup.add(
                 types.InlineKeyboardButton(
                     f"⚡ שלח 1 SLH ל{quick.get('label', 'איש קשר')} · Trezor",
