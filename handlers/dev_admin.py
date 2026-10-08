@@ -81,6 +81,19 @@ def _approve_requested(bot, m, uid):
         f"✅ Developer Access approved for {uid}.\n"
         "RBAC role=DEVELOPER, status=active."
     )
+    try:
+        bot.send_message(
+            uid,
+            "✅ אושרת כ-DEVELOPER.\n\n"
+            "שלח /dev_help — יש לך את כל כלי העבודה.\n\n"
+            "המשימה הראשונה שלך:\n"
+            "1. /dev בדוק את Investor Overview שהגדרנו\n"
+            "2. /dev בדוק את הפקודות וה-collisions\n"
+            "3. /check\n\n"
+            "אחרי זה חזור עם 3 דברים שתרצה לשפר."
+        )
+    except Exception as exc:
+        print("[DEV] onboarding message failed:", type(exc).__name__)
     return True
 
 
@@ -175,6 +188,61 @@ def register(bot):
             bot.reply_to(m, "Usage: /dev_activate <user_id>")
             return
         _approve_requested(bot, m, parts[1].strip())
+
+    @bot.message_handler(commands=['dev_reward_pr'])
+    def dev_reward_pr(m):
+        if not is_owner(m):
+            bot.reply_to(m, "⛔ OWNER only")
+            return
+        parts = m.text.split()
+        if len(parts) != 3:
+            bot.reply_to(m, "Usage: /dev_reward_pr <user_id> <merged_pr_number>")
+            return
+        uid = _parse_target_uid(parts)
+        if not uid:
+            bot.reply_to(m, "❌ user_id חייב להיות מספר Telegram חיובי.")
+            return
+        if not _target_user_exists(uid):
+            bot.reply_to(m, f"❌ משתמש {uid} לא נמצא.")
+            return
+        try:
+            pr_number = int(parts[2])
+            if pr_number <= 0:
+                raise ValueError
+        except ValueError:
+            bot.reply_to(m, "❌ PR number חייב להיות מספר חיובי.")
+            return
+
+        try:
+            from core.developer_rewards import apply_merged_pr_reward
+            result = apply_merged_pr_reward(uid, pr_number)
+        except (ValueError, RuntimeError, Exception) as exc:
+            bot.reply_to(m, f"❌ Developer PR reward failed safely: {str(exc) or type(exc).__name__}")
+            return
+
+        status = result.get("status")
+        if status == "already_rewarded":
+            bot.reply_to(
+                m,
+                f"ℹ️ PR #{pr_number} כבר תוגמל.\n"
+                f"Reward: {result.get('reward_credits', 0):g} Credits\n"
+                f"Developer contribution #{result.get('contribution_number')}",
+            )
+            return
+
+        milestone = (
+            "\n🏆 3 merged PRs reached — אפשר להתחיל שיחה אישית על SLH bonus."
+            if result.get("milestone_3pr")
+            else ""
+        )
+        bot.reply_to(
+            m,
+            f"✅ PR #{pr_number} אומת כ-MERGED.\n"
+            f"👤 Developer: {uid}\n"
+            f"🎁 Reward: {result.get('reward_credits', 0):g} Credits\n"
+            f"📈 Contribution #{result.get('contribution_number')}\n"
+            f"💰 New balance: {result.get('balance'):g}{milestone}",
+        )
 
     @bot.message_handler(commands=['dev_reward'])
     def dev_reward(m):

@@ -66,15 +66,31 @@ def _trust_wallet_smoke_url(uid):
     )
 
 
-def _owner_slh_browser_send_url(uid):
+def _owner_slh_browser_send_url(uid, recipient=None, amount=None):
     if str(uid) != str(OWNER_TELEGRAM_ID):
         raise PermissionError("OWNER_ONLY")
-    handoff = create_handoff(uid)
+    if recipient in (None, "") or amount in (None, ""):
+        # Backward-compatible generic owner wallet handoff used by legacy menu/tests.
+        handoff = create_handoff(uid)
+        return (
+            f"{_public_origin()}/wallet-handoff?"
+            f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
+        )
+
+    recipient = Web3.to_checksum_address(recipient)
+    amount = str(amount)
+    handoff = create_handoff(
+        uid,
+        metadata={
+            "kind": "slh_browser_send",
+            "recipient": recipient,
+            "amount": amount,
+        },
+    )
     return (
         f"{_public_origin()}/wallet-handoff?"
         f"code={quote(str(handoff['token']), safe='')}&next=/slh-browser-send"
     )
-
 
 
 def _format_amount(value):
@@ -164,7 +180,11 @@ def _menu(uid, *, include_test=False):
     if str(uid) == str(OWNER_TELEGRAM_ID):
         try:
             quick = get_quick_send_config(uid, "owner_to_tzvika_1")
-            browser_url = _owner_slh_browser_send_url(uid)
+            browser_url = _owner_slh_browser_send_url(
+                uid,
+                quick.get("recipient"),
+                quick.get("amount_slh"),
+            )
             markup.add(
                 types.InlineKeyboardButton(
                     f"⚡ שלח 1 SLH ל{quick.get('label', 'איש קשר')} · Trezor",
@@ -215,18 +235,18 @@ def register(bot):
 
     @bot.message_handler(commands=["slh_send"])
     def slh_send(message):
-        """Open the real user-signed SLH transfer flow with optional prefill."""
+        """Open the real user-signed SLH transfer flow."""
+        uid = str(message.from_user.id)
         parts = (message.text or "").split()
         if len(parts) not in {1, 3}:
             bot.reply_to(
                 message,
-                "שימוש פשוט:\n"
+                "שימוש:\n"
                 "/slh_send — פתיחת מסלול שליחת SLH\n"
                 "/slh_send <BSC_ADDRESS> <AMOUNT> — פתיחה עם מילוי מראש",
             )
             return
 
-        params = {"screen": "wallet", "slh_route": "send"}
         if len(parts) == 3:
             recipient = parts[1].strip()
             if not _ADDRESS_RE.fullmatch(recipient):
@@ -237,7 +257,39 @@ def register(bot):
             except ValueError:
                 bot.reply_to(message, "❌ כמות SLH לא תקינה. עד 15 ספרות עשרוניות.")
                 return
-            params.update({"recipient": Web3.to_checksum_address(recipient), "amount": amount})
+
+            if uid == str(OWNER_TELEGRAM_ID):
+                try:
+                    browser_url = _owner_slh_browser_send_url(uid, recipient, amount)
+                    markup = types.InlineKeyboardMarkup()
+                    markup.add(
+                        types.InlineKeyboardButton(
+                            "🦊 פתח בדפדפן וחתום עם MetaMask / Trezor",
+                            url=browser_url,
+                        )
+                    )
+                    bot.reply_to(
+                        message,
+                        "🪙 SLH · חתימה חיצונית\n\n"
+                        f"יעד: {Web3.to_checksum_address(recipient)}\n"
+                        f"כמות: {amount} SLH\n"
+                        "🔐 הדף נפתח בדפדפן חיצוני כדי לאפשר MetaMask/Trezor.\n"
+                        "השרת אינו מחזיק מפתח פרטי ואינו חותם.",
+                        reply_markup=markup,
+                    )
+                    return
+                except Exception as exc:
+                    bot.reply_to(message, f"❌ פתיחת Wallet Send נכשלה: {type(exc).__name__}")
+                    return
+
+            params = {
+                "screen": "wallet",
+                "slh_route": "send",
+                "recipient": Web3.to_checksum_address(recipient),
+                "amount": amount,
+            }
+        else:
+            params = {"screen": "wallet", "slh_route": "send"}
 
         markup = types.InlineKeyboardMarkup()
         markup.add(

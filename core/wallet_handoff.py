@@ -30,7 +30,7 @@ def _hash(token: str) -> str:
     return hashlib.sha256(str(token).encode("utf-8")).hexdigest()
 
 
-def create_handoff(uid: Any) -> dict[str, Any]:
+def create_handoff(uid: Any, metadata: dict[str, Any] | None = None) -> dict[str, Any]:
     target = str(uid).strip()
     if not target.isdigit() or int(target) <= 0:
         raise ValueError("INVALID_USER_ID")
@@ -62,6 +62,7 @@ def create_handoff(uid: Any) -> dict[str, Any]:
             "expires_at": _iso(expires),
             "consumed_at": None,
             "scope": "wallet",
+            "metadata": dict(metadata or {}),
         }
 
     state_manager.atomic_update(mutate)
@@ -104,6 +105,43 @@ def consume_handoff(token: Any) -> str:
         return uid
 
     return state_manager.atomic_update(mutate)
+
+
+def get_handoff_metadata(token: Any) -> dict[str, Any] | None:
+    """Return the non-secret metadata attached to a valid wallet handoff."""
+    raw = str(token or "").strip()
+    if not raw or len(raw) < 20 or len(raw) > 256:
+        return None
+
+    digest = _hash(raw)
+    now = _now()
+    db = state_manager.load_db()
+    rows = db.get(KEY, {}) if isinstance(db, dict) else {}
+    row = rows.get(digest) if isinstance(rows, dict) else None
+    if not isinstance(row, dict):
+        return None
+
+    try:
+        expires = datetime.fromisoformat(
+            str(row.get("expires_at")).replace("Z", "+00:00")
+        )
+    except (TypeError, ValueError):
+        return None
+    if now >= expires:
+        return None
+
+    uid = str(row.get("uid") or "").strip()
+    if not uid.isdigit() or int(uid) <= 0:
+        return None
+
+    metadata = row.get("metadata") or {}
+    return {
+        "uid": uid,
+        "metadata": dict(metadata) if isinstance(metadata, dict) else {},
+        "scope": str(row.get("scope") or "wallet"),
+        "expires_at": row.get("expires_at"),
+        "consumed_at": row.get("consumed_at"),
+    }
 
 
 def validate_session(token: Any) -> str | None:

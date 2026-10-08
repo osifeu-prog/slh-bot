@@ -1,6 +1,62 @@
+from datetime import datetime, timezone
+
+import state_manager
+
+def _maybe_send_followup(bot, uid):
+    uid = str(uid)
+    try:
+        db = state_manager.load_db()
+        request = (db.get("developer_access_requests", {}) or {}).get(uid) or {}
+        if str(request.get("status")) != "approved":
+            return
+
+        reviewed_at = str(request.get("reviewed_at") or "").strip()
+        approved = datetime.fromisoformat(reviewed_at.replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        elapsed = now - approved
+
+        stage = None
+        message = None
+        if elapsed.total_seconds() >= 7 * 24 * 3600 and not request.get("followup_7d_sent_at"):
+            stage = "7d"
+            message = (
+                "🚀 שבוע Developer ראשון הגיע.\n\n"
+                "PR ראשון?\n"
+                "שלח /dev_write <path> <summary> עם תוכן השינוי המלא.\n"
+                "אחרי האישור שלך בידי OWNER, CI ירוץ לפני merge."
+            )
+        elif elapsed.total_seconds() >= 48 * 3600 and not request.get("followup_48h_sent_at"):
+            stage = "48h"
+            message = (
+                "🔎 מה ראית עד עכשיו?\n\n"
+                "3 כיווני עבודה:\n"
+                "1. Investor Overview\n"
+                "2. Feature חדש ב-Mini App\n"
+                "3. שיפור בדיקות קיימות\n\n"
+                "בחר כיוון והצע שינוי דרך /dev_write."
+            )
+
+        if not stage:
+            return
+
+        bot.send_message(uid, message)
+
+        def mark(db2):
+            row = (db2.setdefault("developer_access_requests", {}) or {}).get(uid)
+            if not isinstance(row, dict):
+                return
+            key = "followup_7d_sent_at" if stage == "7d" else "followup_48h_sent_at"
+            row[key] = now.isoformat()
+
+        state_manager.atomic_update(mark)
+    except Exception as exc:
+        print("[DEV] follow-up failed safely:", type(exc).__name__)
+
+
 def register(bot):
     @bot.message_handler(commands=['dev_help'])
     def dev_help(m):
+        _maybe_send_followup(bot, m.from_user.id)
         from core.authority import get_role
         uid = str(m.from_user.id)
         role = get_role(uid)
@@ -42,6 +98,10 @@ def register(bot):
             "/dev_lab_status <request_id>",
             "/dev_ci <request_id>",
             "",
+            "REWARDS:",
+            "Merged PRs are eligible for Credits after OWNER verifies the merge.",
+            "Tier: 5,000 Credits for the first merged PR; 2,500 for each additional merged PR.",
+            "",
             "NATURAL-LANGUAGE READ-ONLY:",
             "/dev בדוק את Investor Overview שהגדרנו",
             "/dev בדוק את הפקודות וה-collisions",
@@ -54,6 +114,7 @@ def register(bot):
 
     @bot.message_handler(commands=['dev'])
     def dev_menu(msg):
+        _maybe_send_followup(bot, msg.from_user.id)
         from core.authority import get_role
         from core.developer_intent import inspect
 
