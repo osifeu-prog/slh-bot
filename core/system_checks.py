@@ -15,7 +15,6 @@ from typing import Any
 
 REQUIRED_DB_KEYS = ("users", "transactions", "ledger")
 REQUIRED_UX_IDS = ("balance", "move", "growth", "investor", "profile", "bh", "bb", "bm", "bg", "binv")
-_TEST_SEED_RE = re.compile(r"(?<![A-Za-z0-9])(test|seed|genesis)(?![A-Za-z0-9])", re.IGNORECASE)
 
 
 def check_db() -> dict[str, Any]:
