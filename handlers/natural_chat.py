@@ -62,8 +62,24 @@ def register(bot, context=None):
         except Exception:
             pass
 
+        # Route Exchange broadcast status and typed prepare/confirm phrases
+        # before the general AI path. Status is canonical/read-only; typed text
+        # can never create a draft or authorize a real broadcast.
+        broadcast_answer = None
         try:
-            answer = route(
+            from handlers.broadcast_handler import route_exchange_broadcast_text
+            broadcast_answer = route_exchange_broadcast_text(msg, user_text)
+        except Exception as exc:
+            lowered = user_text.lower()
+            if "ברודקאסט" in lowered and any(term in lowered for term in ("מסחר", "בורסה", "exchange", "trading")):
+                print("NATURAL CHAT EXCHANGE BROADCAST CHECK FAILED:", type(exc).__name__)
+                broadcast_answer = (
+                    "⛔ לא ניתן לאמת כעת את מצב המסחר הפנימי. "
+                    "לא נוצרה טיוטה ולא נשלחה הודעה. נסה שוב אחרי שהבדיקה הקנונית תחזור."
+                )
+
+        try:
+            answer = broadcast_answer if broadcast_answer is not None else route(
                 user_text,
                 str(msg.from_user.id)
             )
