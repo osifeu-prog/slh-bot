@@ -66,3 +66,39 @@ def test_bnb_opening_evidence_blocks_when_live_rpc_is_not_verified():
     assert status["status"] == "BLOCKED"
     assert status["ready_to_open"] is False
     assert "LIVE_BSC_RPC_UNVERIFIED" in status["blockers"]
+
+
+
+def test_bnb_opening_evidence_rejects_forged_pass_without_complete_evidence():
+    forged = {"status": "PASS", "tx_hash": "not-a-real-hash"}
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "0",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.bnb_gate._empirical_settlement_evidence", return_value=forged
+    ), patch(
+        "core.deposit_monitor.get_onchain_status",
+        return_value={
+            "ok": True,
+            "chain_id": 56,
+            "block": 123,
+            "treasury_wallet": TREASURY,
+            "network": "bsc",
+        },
+    ):
+        status = bnb_opening_evidence()
+
+    assert status["status"] == "BLOCKED"
+    assert status["ready_to_open"] is False
+    assert status["checks"]["wallet_binding"]["status"] == "PENDING_EMPIRICAL"
+    assert status["checks"]["tx_verification"]["status"] == "PENDING_EMPIRICAL"
+
+
+def test_empirical_evidence_shape_rejects_missing_checks():
+    from core.bnb_gate import _empirical_evidence_shape_valid
+
+    assert _empirical_evidence_shape_valid({"status": "PASS"}) is False
