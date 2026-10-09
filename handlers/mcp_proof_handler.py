@@ -36,7 +36,7 @@ def register(bot, context=None):
         except Exception as exc:
             bot.reply_to(m, "AUTONOMY RUNTIME PROOF FAILED: " + type(exc).__name__)
 
-    @bot.message_handler(commands=["mcp_test"])
+    @bot.message_handler(commands=["mcp_test", "mcp"])
     def mcp_test_cmd(m):
         if not is_owner(m.from_user.id):
             bot.reply_to(m, "⛔️ Owner only.")
