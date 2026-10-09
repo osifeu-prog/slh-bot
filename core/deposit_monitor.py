@@ -93,6 +93,9 @@ def verify_bnb_deposit(tx_hash):
     if not receipt or receipt.get("status") != 1:
         return {"ok": False, "status": receipt.get("status") if receipt else None}
 
+    if is_quarantined_bsc_address(tx.get("from")):
+        return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
+
     treasury = w3.to_checksum_address(cfg["treasury_wallet"])
     to_addr = tx.get("to")
     if to_addr is None or str(to_addr).lower() != str(treasury).lower():
