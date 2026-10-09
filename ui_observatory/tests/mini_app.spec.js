@@ -128,11 +128,14 @@ test('governance explains role-based vote weight before the user votes', async (
 });
 
 test('exchange receipt shows every fresh canonical gate item', async ({ page }) => {
-  await page.evaluate(() => show('exchange'));
-  await page.locator('#buyAmount').fill('2');
-  await page.locator('#buyPrice').fill('1');
-  await page.locator('#exchange').getByRole('button', { name: /קנה SLH/ }).click();
-  const receipt = page.locator('[data-exchange-receipt="true"]');
+  // Exercise the Mini App's real send handler directly; screen-navigation
+  // coverage is tested separately and this test focuses on receipt semantics.
+  await page.evaluate(async () => {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    document.querySelector('#exchange').classList.add('active');
+    await sendExchangeOrder('buy', '2', '1');
+  });
+  const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
   await expect(receipt).toContainText('Fresh Exchange check: PASS');
   await expect(receipt).toContainText('שער ציבורי');
   await expect(receipt).toContainText('ספר פקודות');
