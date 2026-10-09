@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_settlement_allowed
 
@@ -224,11 +224,42 @@ def test_bnb_quarantined_treasury_does_not_claim_rpc_failed():
             "forensic_alias": "ZUZ",
             "forensic_read_only": True,
         },
+    ), patch(
+        "core.deposit_monitor.probe_bsc_rpc",
+        return_value={"ok": True, "chain_id": 56, "block": 123, "network": "bsc"},
     ):
         status = bnb_opening_evidence()
 
-    assert status["live_rpc"]["status"] == "NOT_CHECKED"
+    assert status["live_rpc"]["status"] == "PASS"
+    assert status["live_rpc"]["chain_id"] == 56
+    assert status["live_rpc"]["block"] == 123
+    assert status["treasury_snapshot"]["status"] == "NOT_CHECKED"
     assert "LIVE_BSC_RPC_UNVERIFIED" not in status["blockers"]
     assert "BNB_TREASURY_QUARANTINED_ZUZ" in status["blockers"]
     assert status["ready_to_open"] is False
     assert status["status"] == "BLOCKED"
+
+
+def test_probe_bsc_rpc_reads_chain_and_block_without_touching_treasury(monkeypatch):
+    from core import deposit_monitor
+
+    quarantined = "0x693db6c817083818696a7228aebfbd0cd3371f02"
+    config = {**_cfg(), "treasury_wallet": quarantined}
+    fake_w3 = Mock()
+    fake_w3.eth.chain_id = 56
+    fake_w3.eth.block_number = 123456
+    fake_web3_class = Mock(return_value=fake_w3)
+    provider = Mock(return_value=object())
+    fake_web3_class.HTTPProvider = provider
+
+    with patch("core.deposit_monitor.get_bsc_config", return_value=config), patch(
+        "core.deposit_monitor.state_manager.load_db",
+        return_value={"bsc_settings": {"treasury_wallet": quarantined}},
+    ), patch("core.deposit_monitor.Web3", fake_web3_class):
+        result = deposit_monitor.probe_bsc_rpc()
+
+    assert result["ok"] is True
+    assert result["chain_id"] == 56
+    assert result["block"] == 123456
+    assert result["network"] == "bsc"
+    provider.assert_called_once_with(config["rpc"], request_kwargs={"timeout": 5})
