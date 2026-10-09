@@ -84,8 +84,8 @@ def register(bot):
         if subcommand in {"help", "--help"}:
             bot.reply_to(
                 m,
-                "ℹ️ /broadcast status — בדיקה לקריאה בלבד; אינה שולחת הודעה.\\n"
-                "/broadcast <text> — שידור כללי להודעות ניטרליות בלבד.\\n"
+                "ℹ️ /broadcast status — בדיקה לקריאה בלבד; אינה שולחת הודעה.\n"
+                "/broadcast <text> — שידור כללי להודעות ניטרליות בלבד.\n"
                 "להודעת מצב מסחר פנימי: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
                 "תישלח רק אחרי תצוגה מקדימה ואישור קולי נפרד ובדיקת Exchange רעננה.",
             )
@@ -546,10 +546,10 @@ def _exchange_broadcast_status_answer(message, *, now=None):
         else "לא לשדר הודעת ״המסחר הפנימי פתוח״ עד שכל בדיקות ה־Exchange יהיו OPEN/PASS."
     )
     return (
-        "🔎 מוכנות ברודקאסט למסחר פנימי — READ ONLY\\n\\n"
-        f"Fresh canonical Exchange check: {gate} · {proof['status']}\\n"
-        f"פרטים: {proof['detail']}\\n\\n"
-        "לא נשלחה הודעה ולא נוצרה טיוטה.\\n"
+        "🔎 מוכנות ברודקאסט למסחר פנימי — READ ONLY\n\n"
+        f"Fresh canonical Exchange check: {gate} · {proof['status']}\n"
+        f"פרטים: {proof['detail']}\n\n"
+        "לא נשלחה הודעה ולא נוצרה טיוטה.\n"
         f"{next_step}"
     )
 
@@ -584,11 +584,11 @@ def _broadcast_status_reply(uid):
         last_broadcast = "אין שליחת Exchange מתועדת ביומן הקנוני."
 
     return (
-        "🔎 BROADCAST STATUS — READ ONLY\\n"
-        "הפקודה הזו לא שולחת הודעות.\\n"
-        f"Internal Exchange: {gate} · {proof['status']}\\n"
-        f"Exchange draft: {pending_status}\\n"
-        f"Last audited Exchange broadcast: {last_broadcast}\\n"
+        "🔎 BROADCAST STATUS — READ ONLY\n"
+        "הפקודה הזו לא שולחת הודעות.\n"
+        f"Internal Exchange: {gate} · {proof['status']}\n"
+        f"Exchange draft: {pending_status}\n"
+        f"Last audited Exchange broadcast: {last_broadcast}\n"
         "להכנת הודעת מסחר: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
         "נדרשים תצוגה מקדימה ואישור קולי נפרד."
     )
