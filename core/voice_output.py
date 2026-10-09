@@ -82,6 +82,31 @@ def _pcm_to_ogg_opus(pcm_bytes):
     return completed.stdout
 
 
+def _extract_audio_data(result):
+    """Read audio from either SDK convenience output or raw Interactions REST JSON."""
+    if not isinstance(result, dict):
+        return None
+
+    output_audio = result.get("output_audio")
+    if isinstance(output_audio, dict) and output_audio.get("data"):
+        return output_audio["data"]
+
+    # The raw REST Interactions response stores audio in
+    # steps[].content[] rather than exposing the SDK's output_audio property.
+    steps = result.get("steps")
+    if isinstance(steps, list):
+        for step in reversed(steps):
+            if not isinstance(step, dict) or step.get("type") != "model_output":
+                continue
+            blocks = step.get("content")
+            if not isinstance(blocks, list):
+                continue
+            for block in reversed(blocks):
+                if isinstance(block, dict) and block.get("type") == "audio" and block.get("data"):
+                    return block["data"]
+    return None
+
+
 def synthesize_hebrew_voice(text):
     """Return (ogg_opus_bytes, None) or (None, stable_error_code)."""
     api_key = _api_key()
@@ -126,7 +151,7 @@ def synthesize_hebrew_voice(text):
 
     try:
         result = response.json()
-        encoded_audio = result.get("output_audio", {}).get("data")
+        encoded_audio = _extract_audio_data(result)
         if not encoded_audio:
             return None, "TTS_AUDIO_MISSING"
         pcm_bytes = base64.b64decode(encoded_audio, validate=True)
