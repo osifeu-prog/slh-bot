@@ -484,6 +484,14 @@ def secondary_distribution_snapshot(uid: Any) -> dict[str, Any]:
     record = (db.get(REGISTRY_KEY, {}) or {}).get(uid)
     if not isinstance(record, dict) or record.get("status") != "active":
         return {"active": False}
+    if is_quarantined_bsc_address(record.get("address")):
+        return {
+            "active": False,
+            "status": "blocked",
+            "blocked_reason": "BSC_ADDRESS_QUARANTINED_ZUZ",
+            "forensic_alias": "ZUZ",
+            "read_only_forensics": True,
+        }
 
     now = _now()
     completed = _completed_today(db, uid, now)
