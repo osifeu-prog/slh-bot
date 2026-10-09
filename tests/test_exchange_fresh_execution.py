@@ -14,8 +14,8 @@ class ExchangeFreshExecutionTests(unittest.TestCase):
                 "100": {
                     "wallet": {
                         "credits": 10.0,
-                        "token_balance": 0.0,
-                        "live_token_balance": 0.0,
+                        "token_balance": 10.0,
+                        "live_token_balance": 10.0,
                         "exchange_reserved_slh": 0.0,
                         "exchange_reserved_credits": 0.0,
                     }
