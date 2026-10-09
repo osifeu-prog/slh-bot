@@ -80,6 +80,8 @@ KNOWN = {
     "bots": ("CONTROL", "מפת bots"),
     "execr": ("CONTROL", "בקשת ביצוע לאישור"),
     "bnb_smoke": ("CHAIN", "בדיקת BNB מבוקרת"),
+    "bnb_reconcile": ("CHAIN", "בדיקת TX BNB קיים"),
+    "bnb_reconcile_confirm": ("CHAIN", "אישור settlement TX BNB קיים"),
     "academy_progress": ("ACADEMY", "התקדמות בקורס"),
     "miniapp": ("UI", "Mini App"),
     "dashboard": ("UI", "Dashboard"),
