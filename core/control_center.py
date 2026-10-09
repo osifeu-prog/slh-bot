@@ -154,9 +154,23 @@ def _correlate_release_evidence(result):
         result["deployment_verification"] = deployment_source
 
 
+REGISTRY_STALE_AFTER_DAYS = 7
+
+
 def get_infrastructure_snapshot():
-    """Safe, non-secret Control Plane inventory."""
+    """Safe, non-secret inventory with explicit registry freshness metadata."""
     registry = _load_registry()
+    verified_date = registry.get("verified_date_utc")
+    registry_age_days = None
+    registry_stale = True
+    try:
+        verified = datetime.fromisoformat(str(verified_date).replace("Z", "+00:00"))
+        if verified.tzinfo is None:
+            verified = verified.replace(tzinfo=timezone.utc)
+        registry_age_days = (datetime.now(timezone.utc).date() - verified.astimezone(timezone.utc).date()).days
+        registry_stale = registry_age_days < 0 or registry_age_days > REGISTRY_STALE_AFTER_DAYS
+    except (TypeError, ValueError, OverflowError):
+        registry_stale = True
     projects = registry.get("railway_projects", [])
     services = []
 
@@ -181,7 +195,10 @@ def get_infrastructure_snapshot():
 
     return {
         "schema_version": registry.get("schema_version", "missing"),
-        "verified_date_utc": registry.get("verified_date_utc"),
+        "verified_date_utc": verified_date,
+        "registry_age_days": registry_age_days,
+        "registry_stale_after_days": REGISTRY_STALE_AFTER_DAYS,
+        "registry_stale": registry_stale,
         "canonical": registry.get("canonical", {}),
         "projects": len(projects),
         "services": len(services),
