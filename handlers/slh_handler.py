@@ -14,6 +14,7 @@ from telebot import types
 from web3 import Web3
 
 from core.bsc_wallet_read_model import read_bsc_wallet
+from core.bsc_address_policy import require_usable_bsc_address
 from core.distribution_wallet_registry import get_secondary_distribution_wallet
 from core.identity import OWNER_TELEGRAM_ID
 from core.slh_quick_send import get_quick_send_config
@@ -78,6 +79,7 @@ def _owner_slh_browser_send_url(uid, recipient=None, amount=None):
         )
 
     recipient = Web3.to_checksum_address(recipient)
+    require_usable_bsc_address(recipient, role="SLH transfer recipient")
     amount = str(amount)
     handoff = create_handoff(
         uid,
@@ -251,6 +253,12 @@ def register(bot):
             recipient = parts[1].strip()
             if not _ADDRESS_RE.fullmatch(recipient):
                 bot.reply_to(message, "❌ כתובת BSC לא תקינה.")
+                return
+            try:
+                recipient = Web3.to_checksum_address(recipient)
+                require_usable_bsc_address(recipient, role="SLH transfer recipient")
+            except ValueError:
+                bot.reply_to(message, "⛔ הכתובת חסומה לשימוש ב־BNB/SLH ומסומנת ZUZ לצורך מעקב פורנזי.")
                 return
             try:
                 amount = _parse_amount(parts[2])
