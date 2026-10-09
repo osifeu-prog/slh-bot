@@ -464,6 +464,8 @@ def register(bot):
 
             r = state_manager.atomic_update(mutate)
             bot.reply_to(msg, format_execution_receipt("sell", r))
+        except ExchangeFreshCheckBlocked as e:
+            bot.reply_to(msg, format_blocked_execution_receipt("SELL", e.check))
         except ValueError as e:
             bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
@@ -485,6 +487,8 @@ def register(bot):
 
             r = state_manager.atomic_update(mutate)
             bot.reply_to(msg, format_execution_receipt("buy", r))
+        except ExchangeFreshCheckBlocked as e:
+            bot.reply_to(msg, format_blocked_execution_receipt("BUY", e.check))
         except ValueError as e:
             bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
