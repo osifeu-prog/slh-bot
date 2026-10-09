@@ -594,6 +594,45 @@ def _broadcast_status_reply(uid):
     )
 
 
+
+def route_exchange_broadcast_text(message, text, *, now=None):
+    """Keep Exchange broadcast questions read-only in ordinary text chat.
+
+    Typing either prepare or confirm phrases must never create a draft or send
+    a broadcast; those sensitive steps require the separate voice-only path.
+    """
+    phrase = _normalize_voice_phrase(text)
+    prepare_phrases = {_normalize_voice_phrase(x) for x in _PREPARE_VOICE_PHRASES}
+    confirm_phrases = {_normalize_voice_phrase(x) for x in _CONFIRM_VOICE_PHRASES}
+    is_prepare = phrase in prepare_phrases
+    is_confirm = phrase in confirm_phrases
+
+    if not is_prepare and not is_confirm:
+        if _is_exchange_broadcast_query(phrase):
+            return _exchange_broadcast_status_answer(message, now=now)
+        return None
+
+    uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+    if uid != str(OWNER_TELEGRAM_ID):
+        return "⛔ רק OWNER יכול להכין או לאשר ברודקאסט מסחר פנימי."
+    if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+        return "⛔ ברודקאסט מסחר פנימי זמין רק בשיחה הפרטית עם הבוט."
+
+    if is_prepare:
+        return (
+            "🎙️ טקסט רגיל לא יוצר טיוטת ברודקאסט. "
+            "כדי להכין תצוגה מקדימה, שלח הודעה קולית בפרטי ואמור: "
+            "״הכן ברודקאסט למסחר פנימי״.\n"
+            "לא נוצרה טיוטה ולא נשלחה הודעה."
+        )
+    return (
+        "🔒 טקסט רגיל אינו אישור לשליחת ברודקאסט. "
+        "רק אחרי תצוגה מקדימה, אמור את האישור בהודעה קולית פרטית: "
+        "״אשר ושלח ברודקאסט למסחר פנימי״.\n"
+        "לא נשלחה הודעה."
+    )
+
+
 def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
     """Strict owner/private allowlist for preparing or confirming the fixed notice."""
     phrase = _normalize_voice_phrase(transcript)
