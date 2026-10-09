@@ -58,11 +58,13 @@ class CompromisedBscAddressPolicyTests(unittest.TestCase):
 
         self.assertEqual(db, {})
 
-    def test_bsc_execution_refuses_quarantined_transfer_recipient(self):
+    def test_bsc_execution_refuses_quarantined_address_for_every_operational_role(self):
         from core.bsc_execution import _checksum_address
 
-        with self.assertRaisesRegex(ValueError, "BSC_ADDRESS_QUARANTINED_ZUZ"):
-            _checksum_address(BAD_ADDRESS, field="recipient")
+        for role in ("recipient", "sender", "expected_sender", "token", "treasury", "router"):
+            with self.subTest(role=role):
+                with self.assertRaisesRegex(ValueError, "BSC_ADDRESS_QUARANTINED_ZUZ"):
+                    _checksum_address(BAD_ADDRESS, field=role)
 
     def test_bnb_deposit_verification_refuses_quarantined_treasury_before_rpc(self):
         from core import deposit_monitor
