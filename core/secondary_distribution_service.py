@@ -19,6 +19,7 @@ from web3 import Web3
 from web3.exceptions import TransactionNotFound
 
 import state_manager
+from core.bsc_address_policy import is_quarantined_bsc_address, require_usable_bsc_address
 from core.distribution_wallet_registry import (
     AUDIT_KEY,
     REGISTRY_KEY,
@@ -57,6 +58,8 @@ def _checksum(value: Any, field: str) -> str:
     if not raw or not Web3.is_address(raw):
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     address = Web3.to_checksum_address(raw)
+    if field.lower() in {"recipient", "sender", "wallet", "treasury"}:
+        require_usable_bsc_address(address, role=field)
     if address == ZERO_ADDRESS:
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     return address
@@ -138,6 +141,8 @@ def _active_record(db: dict, uid: str) -> dict:
     record = (db.get(REGISTRY_KEY, {}) or {}).get(str(uid))
     if not isinstance(record, dict) or record.get("status") != "active":
         raise ValueError("SECONDARY_DISTRIBUTION_WALLET_NOT_ACTIVE")
+    if is_quarantined_bsc_address(record.get("address")):
+        raise ValueError("BSC_ADDRESS_QUARANTINED_ZUZ")
     return record
 
 
