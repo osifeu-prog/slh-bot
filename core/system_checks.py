@@ -404,8 +404,13 @@ def check_bnb() -> dict[str, Any]:
             "ready": configuration_ready,
             "launch_ready": launch_ready,
             "empirical_status": empirical_status,
+            "evidence_status": str(evidence.get("status") or "UNKNOWN"),
+            "live_rpc_status": str((evidence.get("live_rpc") or {}).get("status") or "UNKNOWN"),
             "confirmations_required": gate.get("confirmations_required"),
-            "blockers": evidence.get("blockers", []),
+            "gate_reasons": list(gate.get("reasons") or []),
+            "blockers": list(evidence.get("blockers") or []),
+            "warnings": list(evidence.get("warnings") or []),
+            "next_action": evidence.get("next_action"),
         }
     except Exception as exc:
         return {
@@ -416,7 +421,13 @@ def check_bnb() -> dict[str, Any]:
             "ready": False,
             "launch_ready": False,
             "empirical_status": "UNKNOWN",
+            "evidence_status": "UNKNOWN",
+            "live_rpc_status": "UNKNOWN",
             "confirmations_required": 0,
+            "gate_reasons": [],
+            "blockers": [],
+            "warnings": [],
+            "next_action": "inspect_read_only_runtime_logs",
         }
 
 
