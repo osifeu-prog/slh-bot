@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from core import governance_store
 import webapp
+from pathlib import Path
 
 
 def governance_db():
@@ -69,6 +70,44 @@ class GovernanceCanonicalFlowTests(unittest.TestCase):
         self.assertEqual(result["weighted_yes"], 3)
         self.assertEqual(result["weighted_no"], 1)
         self.assertEqual(db["governance"]["proposals"][0]["status"], "approved")
+
+    def test_minapp_proposal_endpoint_requires_telegram_auth(self):
+        with patch.object(webapp, "authenticated_uid", return_value=None):
+            response = webapp.app.test_client().post(
+                "/api/v1/governance/proposal",
+                json={"title": "Public proposal", "description": "Test"},
+            )
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json()["error"], "TELEGRAM_AUTH_REQUIRED")
+
+    def test_minapp_proposal_endpoint_creates_canonical_proposal(self):
+        db = governance_db()
+
+        def fake_atomic_update(mutator):
+            return mutator(db)
+
+        with patch.object(webapp, "authenticated_uid", return_value="42"), \
+             patch.object(governance_store, "atomic_update", side_effect=fake_atomic_update):
+            response = webapp.app.test_client().post(
+                "/api/v1/governance/proposal",
+                json={"title": "User proposal", "description": "Visible in Mini App"},
+            )
+
+        self.assertEqual(response.status_code, 201)
+        data = response.get_json()
+        self.assertEqual(data["status"], "created")
+        self.assertEqual(data["proposal"]["id"], 8)
+        self.assertEqual(data["proposal"]["title"], "User proposal")
+        self.assertEqual(db["governance"]["proposals"][-1]["created_by"], "42")
+
+    def test_minapp_has_public_governance_screen_and_vote_controls(self):
+        source = Path("mini_app.html").read_text(encoding="utf-8")
+        self.assertIn('<section id="governance" class="screen">', source)
+        self.assertIn("show('governance')", source)
+        self.assertIn("function submitGovernanceVote", source)
+        self.assertIn("/api/v1/governance/vote", source)
+        self.assertIn("/api/v1/governance/proposal", source)
+        self.assertNotIn("openAction('/vote ", source)
 
     def test_minapp_vote_endpoint_requires_telegram_auth(self):
         with patch.object(webapp, "authenticated_uid", return_value=None):
