@@ -57,14 +57,14 @@ def _is_exchange_status_announcement(text):
     value = str(text or "").lower()
     value = re.sub(r"[^\w\s]", " ", value, flags=re.UNICODE)
     value = re.sub(r"\s+", " ", value).strip()
+    # Deliberately broad: status/market claims cannot use the generic route.
     protected_terms = (
         "exchange",
-        "מסחר פנימי",
-        "בורסה פנימית",
-        "הבורסה הפנימית",
+        "מסחר",
+        "בורסה",
+        "trading gate",
         "internal exchange",
         "slh exchange",
-        "שער המסחר",
     )
     return any(term in value for term in protected_terms)
 
