@@ -160,6 +160,7 @@ def test_confirm_stops_mid_broadcast_when_exchange_gate_closes(monkeypatch):
 
     assert result["status"] == "STOPPED_GATE_CLOSED"
     assert result["sent"] == 25
+    assert result["target_count"] == 31
     assert len(sent) == 25
     assert db["exchange_broadcast_pending"][OWNER]["status"] == "STOPPED_GATE_CLOSED"
 
