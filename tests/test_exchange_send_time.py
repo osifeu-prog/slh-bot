@@ -127,7 +127,7 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
         start = source.index("function exTrade(side)")
         end = source.index("let __secondaryPrepared", start)
         function = source[start:end]
-        self.assertIn("sendExchangeOrder(side, a, pr)", function)
+        self.assertIn("sendExchangeOrder(normalizedSide,a,pr", function)
         self.assertNotIn("openAction(", function)
 
 
