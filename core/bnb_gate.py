@@ -148,15 +148,16 @@ def _empirical_evidence_revalidated(empirical: dict | None, gate: dict) -> bool:
             return False
         if str(verified.get("from") or "").lower() != str(binding.get("address") or "").lower():
             return False
-        if str(verified.get("from") or "").lower() != str(binding.get("address") or "").lower():
-            return False
         if str(verified.get("to") or "").lower() != str(empirical.get("to_treasury") or "").lower():
             return False
         if str(verified.get("to") or "").lower() != str(gate.get("treasury_wallet") or "").lower():
             return False
         if int(verified.get("amount_wei") or 0) != int(empirical.get("amount_wei") or 0):
             return False
-        if int(verified.get("confirmations") or 0) < int(gate.get("confirmations_required") or 15):
+        required_confirmations = int(
+            gate.get("confirmations_required", gate.get("confirmations", 15)) or 15
+        )
+        if int(verified.get("confirmations") or 0) < required_confirmations:
             return False
         db = state_manager.load_db()
         ledger = db.get("ledger", []) if isinstance(db, dict) else []
