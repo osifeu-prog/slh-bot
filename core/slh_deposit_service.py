@@ -98,6 +98,8 @@ def verify_slh_deposit(tx_hash):
                 continue
             sender = _address_from_topic(topics[1])
             recipient = _address_from_topic(topics[2])
+            if is_quarantined_bsc_address(sender) or is_quarantined_bsc_address(recipient):
+                return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
             if recipient.lower() != treasury.lower():
                 continue
             data_value = log.get("data", "0x0")
