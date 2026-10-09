@@ -58,8 +58,7 @@ def _checksum(value: Any, field: str) -> str:
     if not raw or not Web3.is_address(raw):
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     address = Web3.to_checksum_address(raw)
-    if field.lower() in {"recipient", "sender", "wallet", "treasury"}:
-        require_usable_bsc_address(address, role=field)
+    require_usable_bsc_address(address, role=field)
     if address == ZERO_ADDRESS:
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     return address
