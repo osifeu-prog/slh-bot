@@ -136,7 +136,7 @@ def test_confirm_expires_preview_without_settlement(monkeypatch):
     assert target.prepare_existing_bnb_reconcile(UID, TX, now=NOW)["status"] == "PREPARED"
 
     with patch("core.bnb_empirical_smoke.run") as settle:
-        result = target.confirm_existing_bnb_reconcile(UID, now=NOW + timedelta(minutes=6))
+        result = target.confirm_existing_bnb_reconcile(UID, tx_hash=TX, now=NOW + timedelta(minutes=6))
 
     assert result["status"] == "EXPIRED"
     settle.assert_not_called()
