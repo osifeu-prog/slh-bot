@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -209,3 +210,46 @@ def test_natural_language_exchange_broadcast_question_is_read_only(monkeypatch):
     assert "לא נשלחה הודעה" in answer
     assert "exchange_broadcast_pending" not in db
     bot.send_message.assert_not_called()
+
+
+
+def test_voice_prepare_preview_reports_recipient_count_and_audience_fingerprint(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot, message, "הכן ברודקאסט למסחר פנימי", now=NOW
+    )
+
+    record = db["exchange_broadcast_pending"][OWNER]
+    expected_audience = sorted(str(uid) for uid in db["users"] if str(uid).isdigit() and int(uid) > 0)
+    expected_hash = hashlib.sha256("|".join(expected_audience).encode("utf-8")).hexdigest()
+    assert "3 משתמשים" in answer
+    assert record["target_count"] == 3
+    assert record["audience_sha256"] == expected_hash
+    bot.send_message.assert_not_called()
+
+
+def test_confirm_blocks_when_recipient_set_changes_after_preview(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    # A new Telegram user appears after the preview but before confirmation.
+    db["users"]["44"] = {}
+    monkeypatch.setattr(system_checks, "check_exchange_for_execution", lambda current: _fresh_check(True))
+    sent = _install_send(monkeypatch)
+    bot = Mock()
+
+    result = target.send_confirmed_exchange_broadcast(
+        bot, OWNER, now=NOW + timedelta(seconds=5)
+    )
+
+    assert result["status"] == "RECIPIENTS_CHANGED"
+    assert result["sent"] == 0
+    assert sent == []
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "RECIPIENTS_CHANGED"

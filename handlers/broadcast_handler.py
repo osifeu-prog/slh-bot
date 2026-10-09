@@ -258,6 +258,19 @@ def _proof_snapshot(check, checked_at=None):
     return snapshot
 
 
+def _broadcast_audience(db):
+    """Return the stable, eligible numeric Telegram user IDs without exposing them."""
+    users = db.get("users", {})
+    if not isinstance(users, dict):
+        return []
+    return sorted({str(key) for key in users if str(key).isdigit() and int(key) > 0})
+
+
+def _broadcast_audience_hash(audience):
+    """Fingerprint the previewed audience without persisting their IDs in the audit."""
+    return hashlib.sha256("|".join(sorted(str(uid) for uid in audience)).encode("utf-8")).hexdigest()
+
+
 def _append_exchange_broadcast_audit(db, record, status, *, sent=0, failed=0, detail="", check=None, now=None):
     audit = db.setdefault("exchange_broadcast_audit", [])
     if not isinstance(audit, list):
@@ -273,6 +286,7 @@ def _append_exchange_broadcast_audit(db, record, status, *, sent=0, failed=0, de
         "created_at": record.get("created_at"),
         "finished_at": _utc_text(now),
         "target_count": int(record.get("target_count") or 0),
+        "audience_sha256": str(record.get("audience_sha256") or ""),
         "sent": int(sent),
         "failed": int(failed),
         "detail": str(detail or "")[:300],
@@ -300,17 +314,25 @@ def prepare_exchange_broadcast(uid, *, now=None):
         previous = pending_map.get(uid)
         if isinstance(previous, dict) and previous.get("status") == "SENDING":
             return {"status": "IN_PROGRESS", "detail": "A confirmed broadcast is already sending"}
+        audience = _broadcast_audience(db)
+        audience_sha256 = _broadcast_audience_hash(audience)
         record = {
             "draft_id": draft_id,
             "uid": uid,
             "status": "PENDING_CONFIRMATION",
             "created_at": created_at,
             "expires_at": expires_at,
-            "target_count": 0,
+            "target_count": len(audience),
+            "audience_sha256": audience_sha256,
             "message_sha256": hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest(),
         }
         pending_map[uid] = record
-        return {"status": "PREPARED", "draft_id": draft_id, "expires_at": expires_at}
+        return {
+            "status": "PREPARED",
+            "draft_id": draft_id,
+            "expires_at": expires_at,
+            "target_count": len(audience),
+        }
 
     return state_manager.atomic_update(mutate)
 
@@ -392,7 +414,26 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
             _append_exchange_broadcast_audit(db, record, "BLOCKED", detail="Invalid users registry", check=proof, now=current)
             return {"status": "BLOCKED", "detail": "Invalid users registry", "sent": 0}
 
-        audience = sorted({str(key) for key in users if str(key).isdigit() and int(key) > 0})
+        audience = _broadcast_audience(db)
+        expected_count = int(record.get("target_count") or 0)
+        expected_hash = str(record.get("audience_sha256") or "")
+        current_hash = _broadcast_audience_hash(audience)
+        if (
+            expected_count != len(audience)
+            or not expected_hash
+            or expected_hash != current_hash
+        ):
+            detail = "Recipient set changed after preview; prepare a fresh preview"
+            record.update({"status": "RECIPIENTS_CHANGED", "finished_at": current_text, "detail": detail})
+            _append_exchange_broadcast_audit(
+                db, record, "RECIPIENTS_CHANGED", sent=0, failed=0, detail=detail, check=proof, now=current
+            )
+            return {
+                "status": "RECIPIENTS_CHANGED",
+                "detail": detail,
+                "target_count": expected_count,
+                "sent": 0,
+            }
         if not audience:
             record.update({"status": "BLOCKED", "finished_at": current_text})
             _append_exchange_broadcast_audit(db, record, "BLOCKED", detail="Empty recipient set", check=proof, now=current)
@@ -502,6 +543,8 @@ def _exchange_broadcast_reply(result):
         return f"⛔ לא נשלח ברודקאסט: Fresh Exchange check חסם את השליחה. {result.get('detail', '')}"
     if status == "EXPIRED":
         return "⌛ פג תוקף האישור. הכן תצוגה חדשה ואז אשר בנפרד."
+    if status == "RECIPIENTS_CHANGED":
+        return "⚠️ רשימת הנמענים השתנתה מאז התצוגה המקדימה. לא נשלחה הודעה; הכן תצוגה חדשה ובדוק את מספר הנמענים."
     if status == "FORBIDDEN":
         return "⛔ הפעולה זמינה לבעלים בלבד."
     if status == "IN_PROGRESS":
@@ -653,8 +696,11 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         result = prepare_exchange_broadcast(uid, now=now)
         if result.get("status") != "PREPARED":
             return _exchange_broadcast_reply(result)
+        recipient_count = int(result.get("target_count") or 0)
         return (
             "🧾 תצוגה מקדימה בלבד — לא נשלחה הודעה לאף משתמש.\n"
+            f"👥 קהל היעד שננעל לתצוגה הזו: {recipient_count} משתמשים.\n"
+            "אם רשימת המשתמשים תשתנה לפני האישור, השליחה תיחסם ותידרש תצוגה חדשה.\n"
             f"טיוטה בתוקף ל־{EXCHANGE_BROADCAST_TTL_SECONDS // 60} דקות.\n\n"
             f"{EXCHANGE_BROADCAST_TEXT}\n\n"
             "כדי לבצע שליחה אמיתית, אמור עכשיו במפורש: ״אשר ושלח ברודקאסט למסחר פנימי״. "
