@@ -78,3 +78,26 @@ def test_non_owner_is_rejected(monkeypatch):
 
     assert bot.replies == [(message, "⛔ OWNER only")]
     assert loaded == []
+
+
+def test_exchange_status_claim_is_refused_by_generic_broadcast(monkeypatch):
+    bot = FakeBot()
+    target.register(bot)
+
+    loaded = []
+    monkeypatch.setattr(
+        target.state_manager,
+        "load_db",
+        lambda: loaded.append(True) or {"users": {"1": {}}},
+    )
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=target.OWNER_TELEGRAM_ID),
+        text="/broadcast 🟢 SLH OS — המסחר הפנימי פתוח",
+    )
+
+    bot.broadcast_cmd(message)
+
+    assert bot.sent == []
+    assert loaded == []
+    assert len(bot.replies) == 1
+    assert "קולי" in bot.replies[0][1]
