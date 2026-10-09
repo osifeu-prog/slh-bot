@@ -98,21 +98,32 @@ def register(bot):
             from core.control_center import get_infrastructure_snapshot
             infrastructure = get_infrastructure_snapshot()
             non_green = infrastructure.get("non_green", [])
-            if non_green:
-                lines.append("")
+            verified_date = infrastructure.get("verified_date_utc") or "unknown"
+            registry_age = infrastructure.get("registry_age_days")
+            registry_stale = bool(infrastructure.get("registry_stale", True))
+            lines.append("")
+            if registry_stale:
+                age_text = f"{registry_age}d old" if registry_age is not None else "age unknown"
                 lines.append(
-                    f"Federation: ⚠️ {len(non_green)} application services not green"
+                    f"Federation: ⚠️ INVENTORY STALE · verified {verified_date} · {age_text}"
                 )
+                if non_green:
+                    lines.append(
+                        f"Historical non-green records: {len(non_green)} (not live status)"
+                    )
+                lines.append("Details: /health_monitor · refresh inventory from live Railway evidence")
+                lines.append("המלצה: 🟡 מצב הפדרציה החי לא אומת על ידי /doctor.")
+            elif non_green:
                 lines.append(
-                    "Details: /health_monitor"
+                    f"Federation snapshot: ⚠️ {len(non_green)} application services not green · verified {verified_date}"
                 )
-                lines.append(
-                    "המלצה: 🟡 הבוט המרכזי נבדק; שירותי פדרציה דורשים בדיקה."
-                )
+                lines.append("Details: /health_monitor · snapshot is not a live heartbeat")
+                lines.append("המלצה: 🟡 נדרש אימות מצב השירותים מול Railway.")
             else:
-                lines.append("")
-                lines.append("Federation: 🟢 application services green")
-                lines.append("המלצה: ✅ הבוט והפדרציה ללא חריגה מדווחת.")
+                lines.append(
+                    f"Federation snapshot: 🟢 no non-green entries · verified {verified_date}"
+                )
+                lines.append("המלצה: ℹ️ הרישום אינו תחליף לאימות חי מול Railway.")
         except Exception:
             lines.append("")
             lines.append("Federation: ⚪️ לא אומת")
