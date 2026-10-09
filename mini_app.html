@@ -2405,6 +2405,14 @@ function _normalizeEvmAddress(value){
   if(!/^0x[a-fA-F0-9]{40}$/.test(a)) throw Error('כתובת יעד אינה כתובת BSC תקינה');
   return a;
 }
+const __slhZuzQuarantinedAddress='0x693db6c817083818696a7228aebfbd0cd3371f02';
+function __slhIsZuzQuarantinedAddress(value){
+  return String(value||'').trim().toLowerCase()===__slhZuzQuarantinedAddress;
+}
+function __slhRequireSafeTransferRecipient(value){
+  if(__slhIsZuzQuarantinedAddress(value)) throw Error('⛔ היעד חסום לשימוש ב־BNB/SLH (ZUZ — מעקב פורנזי בלבד).');
+  return value;
+}
 function _parseTokenUnits(value,decimals){
   const s=String(value??'').trim();
   if(!/^\d+(\.\d+)?$/.test(s)) throw Error('כמות SLH אינה תקינה');
@@ -2469,7 +2477,7 @@ async function quoteSlhTransfer(){
   if(out)out.textContent='⏳ מחשב יתרת SLH ו־Gas בזמן אמת…';
   if(status)status.textContent='';
   try{
-    const recipient=_normalizeEvmAddress($('slhSendRecipient')?.value);
+    const recipient=__slhRequireSafeTransferRecipient(_normalizeEvmAddress($('slhSendRecipient')?.value));
     const amountText=($('slhSendAmount')?.value||'').trim();
     const provider=await _getSlhTxProvider();
     const account=await _ensureBscProvider(provider);
@@ -2522,6 +2530,7 @@ async function quoteSlhTransfer(){
 }
 async function sendSlhOnChain(){
   try{
+    __slhRequireSafeTransferRecipient(_normalizeEvmAddress($('slhSendRecipient')?.value));
     const q=await quoteSlhTransfer();
     if(!_slhLastQuote)throw Error('חסר אומדן עסקה');
     const txParams={
