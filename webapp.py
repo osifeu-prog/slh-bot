@@ -2166,7 +2166,8 @@ def bnb_wallet_binding():
     from core.bsc_address_policy import is_quarantined_bsc_address, forensic_alias
     configured_treasury = str(cfg.get("treasury_wallet") or "").strip()
     treasury_quarantined = is_quarantined_bsc_address(configured_treasury)
-    slh_deposit_allowed = deposits_open or bool(bnb_settlement_allowed(uid, db))
+    empirical_available = bool(empirical_available and not treasury_quarantined)
+    slh_deposit_allowed = (deposits_open or bool(bnb_settlement_allowed(uid, db))) and not treasury_quarantined
     public_evidence = {
         "status": str(opening_evidence.get("status") or "BLOCKED"),
         "ready_to_open": bool(opening_evidence.get("ready_to_open")),
