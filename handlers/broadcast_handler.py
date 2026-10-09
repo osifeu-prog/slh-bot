@@ -53,11 +53,38 @@ def _send_one(bot, uid, message_text, next_allowed_at):
             time.sleep(retry_after)
 
 
+def _is_exchange_status_announcement(text):
+    value = str(text or "").lower()
+    value = re.sub(r"[^\\w\\s]", " ", value, flags=re.UNICODE)
+    value = re.sub(r"\\s+", " ", value).strip()
+    protected_terms = (
+        "exchange",
+        "מסחר פנימי",
+        "בורסה פנימית",
+        "הבורסה הפנימית",
+        "internal exchange",
+        "slh exchange",
+        "שער המסחר",
+    )
+    return any(term in value for term in protected_terms)
+
+
 def register(bot):
     @bot.message_handler(commands=["broadcast"])
     def broadcast_cmd(m):
         if int(m.from_user.id) != int(OWNER_TELEGRAM_ID):
             bot.reply_to(m, "⛔ OWNER only")
+            return
+
+        parts = (m.text or "").split(maxsplit=1)
+        if len(parts) >= 2 and _is_exchange_status_announcement(parts[1]):
+            bot.reply_to(
+                m,
+                "⛔ הודעות על מצב Exchange/מסחר פנימי חסומות ב־/broadcast הכללי. "
+                "השתמש במסלול הקולי המאובטח: ״הכן ברודקאסט למסחר פנימי״, "
+                "ואחרי סקירת ההודעה אמור ״אשר ושלח ברודקאסט למסחר פנימי״. "
+                "לפני שליחה תתבצע בדיקת Exchange קנונית ורעננה.",
+            )
             return
 
         parts = (m.text or "").split(maxsplit=1)
