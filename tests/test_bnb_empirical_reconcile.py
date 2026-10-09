@@ -118,8 +118,8 @@ def test_confirm_requires_pending_confirmation_and_is_single_use(monkeypatch):
         "confirmations": 20,
         "gate_remained_closed": True,
     }) as settle:
-        result = target.confirm_existing_bnb_reconcile(UID, now=NOW + timedelta(seconds=5))
-        replay = target.confirm_existing_bnb_reconcile(UID, now=NOW + timedelta(seconds=6))
+        result = target.confirm_existing_bnb_reconcile(UID, tx_hash=TX, now=NOW + timedelta(seconds=5))
+        replay = target.confirm_existing_bnb_reconcile(UID, tx_hash=TX, now=NOW + timedelta(seconds=6))
 
     assert result["status"] == "PASS"
     assert result["credits"] == 10.0
@@ -139,4 +139,19 @@ def test_confirm_expires_preview_without_settlement(monkeypatch):
         result = target.confirm_existing_bnb_reconcile(UID, now=NOW + timedelta(minutes=6))
 
     assert result["status"] == "EXPIRED"
+    settle.assert_not_called()
+
+
+
+def test_confirm_requires_exact_tx_hash_match(monkeypatch):
+    db = _db()
+    _patch_valid_preview(monkeypatch, db)
+    assert target.prepare_existing_bnb_reconcile(UID, TX, now=NOW)["status"] == "PREPARED"
+
+    other_tx = "0x" + "cd" * 32
+    with patch("core.bnb_empirical_smoke.run") as settle:
+        result = target.confirm_existing_bnb_reconcile(UID, tx_hash=other_tx, now=NOW + timedelta(seconds=5))
+
+    assert result["status"] == "TX_HASH_MISMATCH"
+    assert db["bnb_empirical_reconcile_pending"][UID]["status"] == "PENDING_CONFIRMATION"
     settle.assert_not_called()
