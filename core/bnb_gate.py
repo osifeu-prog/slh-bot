@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from core.binance_connector import get_bsc_config
+from core.bsc_address_policy import is_quarantined_bsc_address
 import state_manager
 
 CLOSED_MESSAGE = "⛔️ הפקדות BNB/SLH סגורות כרגע. אל תשלח עד להודעה."
@@ -45,10 +46,14 @@ def bnb_readiness(db=None) -> dict:
     treasury = str(cfg.get("treasury_wallet") or "").strip()
     if not treasury:
         reasons.append("BNB_TREASURY_MISSING")
+    elif is_quarantined_bsc_address(treasury):
+        reasons.append("BNB_TREASURY_QUARANTINED_ZUZ")
 
     canonical_treasury = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip()
     if not canonical_treasury:
         reasons.append("BNB_CANONICAL_TREASURY_MISSING")
+    elif is_quarantined_bsc_address(canonical_treasury):
+        reasons.append("BNB_CANONICAL_TREASURY_QUARANTINED_ZUZ")
     elif canonical_treasury.lower() != treasury.lower():
         reasons.append("BNB_CANONICAL_TREASURY_MISMATCH")
 
@@ -213,11 +218,12 @@ def bnb_opening_evidence() -> dict:
         "status": "PASS" if gate.get("ready") and "BSC_RPC_MISSING" not in gate.get("reasons", []) else "FAIL",
     }
     evidence["checks"]["configured_treasury"] = {
-        "status": "PASS" if gate.get("treasury_configured") else "FAIL",
+        "status": "PASS" if gate.get("treasury_configured") and "BNB_TREASURY_QUARANTINED_ZUZ" not in gate.get("reasons", []) else "FAIL",
     }
     evidence["checks"]["canonical_treasury"] = {
         "status": "PASS" if "BNB_CANONICAL_TREASURY_MISSING" not in gate.get("reasons", [])
         and "BNB_CANONICAL_TREASURY_MISMATCH" not in gate.get("reasons", [])
+        and "BNB_CANONICAL_TREASURY_QUARANTINED_ZUZ" not in gate.get("reasons", [])
         else "FAIL",
     }
     evidence["checks"]["confirmations"] = {

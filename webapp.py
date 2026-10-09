@@ -2163,7 +2163,11 @@ def bnb_wallet_binding():
     cfg = get_bsc_config()
     db = state_manager.load_db()
     cfg = {**cfg, **db.get("bsc_settings", {})}
-    slh_deposit_allowed = deposits_open or bool(bnb_settlement_allowed(uid, db))
+    from core.bsc_address_policy import is_quarantined_bsc_address, forensic_alias
+    configured_treasury = str(cfg.get("treasury_wallet") or "").strip()
+    treasury_quarantined = is_quarantined_bsc_address(configured_treasury)
+    empirical_available = bool(empirical_available and not treasury_quarantined)
+    slh_deposit_allowed = (deposits_open or bool(bnb_settlement_allowed(uid, db))) and not treasury_quarantined
     public_evidence = {
         "status": str(opening_evidence.get("status") or "BLOCKED"),
         "ready_to_open": bool(opening_evidence.get("ready_to_open")),
@@ -2185,7 +2189,9 @@ def bnb_wallet_binding():
             "amount_bnb": "0.01",
             "amount_wei": str(10**16),
             "chain_id": 56,
-            "treasury": cfg.get("treasury_wallet"),
+            "treasury": None if treasury_quarantined else (configured_treasury or None),
+            "treasury_blocked": treasury_quarantined,
+            "treasury_forensic_alias": forensic_alias(configured_treasury) if treasury_quarantined else None,
         },
     }), 200
 
@@ -2515,6 +2521,7 @@ def slh_browser_send_config():
         from core.authority import is_owner
         from core.binance_connector import get_bsc_config
         from core.wallet_handoff import get_handoff_metadata
+        from core.bsc_address_policy import require_usable_bsc_address
 
         if not is_owner(uid):
             return jsonify({"error": "OWNER_ONLY"}), 403
@@ -2527,6 +2534,7 @@ def slh_browser_send_config():
             return jsonify({"error": "SEND_INTENT_MISSING"}), 400
 
         recipient = Web3.to_checksum_address(str(metadata.get("recipient") or ""))
+        require_usable_bsc_address(recipient, role="SLH transfer recipient")
         amount = Decimal(str(metadata.get("amount") or ""))
         if not amount.is_finite() or amount <= 0:
             return jsonify({"error": "INVALID_SLH_AMOUNT"}), 400
@@ -2587,8 +2595,10 @@ def slh_browser_send_verify():
         from decimal import Decimal, InvalidOperation
         from web3 import Web3
         from core.slh_deposit_service import verify_slh_deposit
+        from core.bsc_address_policy import require_usable_bsc_address
 
         recipient = Web3.to_checksum_address(recipient_raw)
+        require_usable_bsc_address(recipient, role="SLH transfer recipient")
         amount = Decimal(amount_raw)
         if not amount.is_finite() or amount <= 0:
             raise ValueError("INVALID_SLH_AMOUNT")

@@ -18,6 +18,7 @@ from web3 import Web3
 import state_manager
 from core.bnb_gate import bnb_settlement_allowed
 from core.binance_connector import get_bsc_config
+from core.bsc_address_policy import is_quarantined_bsc_address
 from core.wallet_binding import get_binding
 
 
@@ -46,6 +47,8 @@ def _address_from_topic(topic):
 
 def verify_slh_deposit(tx_hash):
     cfg = _config()
+    if is_quarantined_bsc_address(cfg.get("treasury_wallet")):
+        return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
     if not cfg.get("rpc"):
         return {"ok": False, "error": "BSC_RPC_NOT_CONFIGURED"}
     if not cfg.get("treasury_wallet"):
@@ -95,6 +98,8 @@ def verify_slh_deposit(tx_hash):
                 continue
             sender = _address_from_topic(topics[1])
             recipient = _address_from_topic(topics[2])
+            if is_quarantined_bsc_address(sender) or is_quarantined_bsc_address(recipient):
+                return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
             if recipient.lower() != treasury.lower():
                 continue
             data_value = log.get("data", "0x0")

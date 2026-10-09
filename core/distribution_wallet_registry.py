@@ -18,6 +18,7 @@ from web3 import Web3
 import state_manager
 from core.authority import is_owner
 from core.binance_connector import get_bsc_config
+from core.bsc_address_policy import is_quarantined_bsc_address, require_usable_bsc_address
 from core.wallet_binding import get_binding
 
 REGISTRY_KEY = "secondary_distribution_wallets"
@@ -58,13 +59,25 @@ def get_secondary_distribution_wallet(uid: Any) -> dict[str, Any] | None:
     target = _target_uid(uid)
     db = state_manager.load_db()
     record = (db.get(REGISTRY_KEY, {}) or {}).get(target)
-    return dict(record) if isinstance(record, dict) else None
+    if not isinstance(record, dict):
+        return None
+    result = dict(record)
+    if is_quarantined_bsc_address(result.get("address")):
+        result["status"] = "blocked"
+        result["blocked_reason"] = "BSC_ADDRESS_QUARANTINED_ZUZ"
+        result["forensic_alias"] = "ZUZ"
+    return result
 
 
 def list_secondary_distribution_wallets() -> list[dict[str, Any]]:
     db = state_manager.load_db()
     raw = db.get(REGISTRY_KEY, {}) if isinstance(db, dict) else {}
     rows = [dict(value) for value in raw.values() if isinstance(value, dict)]
+    for row in rows:
+        if is_quarantined_bsc_address(row.get("address")):
+            row["status"] = "blocked"
+            row["blocked_reason"] = "BSC_ADDRESS_QUARANTINED_ZUZ"
+            row["forensic_alias"] = "ZUZ"
     rows.sort(key=lambda row: str(row.get("enabled_at") or row.get("updated_at") or ""))
     return rows
 
@@ -102,6 +115,7 @@ def set_secondary_distribution_wallet(
         raise ValueError("BNB_WALLET_NOT_VERIFIED")
 
     address = Web3.to_checksum_address(str(binding.get("address") or ""))
+    require_usable_bsc_address(address, role="distribution wallet")
     cfg = _bsc_config()
     token_contract = str(cfg.get("token_contract") or "").strip()
     if not token_contract or not Web3.is_address(token_contract):
