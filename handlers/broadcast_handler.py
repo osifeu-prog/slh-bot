@@ -321,7 +321,15 @@ def _terminal_state(uid, draft_id, status, *, sent=0, failed=0, detail="", check
             _append_exchange_broadcast_audit(
                 db, record, status, sent=sent, failed=failed, detail=detail, check=check, now=now
             )
-        return {"status": status, "draft_id": draft_id, "sent": int(sent), "failed": int(failed), "detail": str(detail or "")[:300]}
+        target_count = int(record.get("target_count") or 0) if isinstance(record, dict) else 0
+        return {
+            "status": status,
+            "draft_id": draft_id,
+            "target_count": target_count,
+            "sent": int(sent),
+            "failed": int(failed),
+            "detail": str(detail or "")[:300],
+        }
 
     return state_manager.atomic_update(mutate)
 
