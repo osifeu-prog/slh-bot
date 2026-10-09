@@ -46,7 +46,13 @@ class WebAppApiAuthTests(unittest.TestCase):
             "public_ready": True,
             "verdict": "OPEN",
         }
-        bnb = {"effective_open": False, "ready": True}
+        bnb = {"effective_open": False, "ready": True, "flag_open": False}
+        bnb_evidence = {
+            "status": "BLOCKED",
+            "ready_to_open": False,
+            "gate_open": False,
+            "next_action": "controlled_empirical_reconciliation_before_opening",
+        }
         ton = {"effective_open": True, "ready": True}
         participation = {"active": False}
         runtime = {
@@ -56,6 +62,10 @@ class WebAppApiAuthTests(unittest.TestCase):
         }
         with patch("core.system_checks.check_exchange", return_value=exchange), patch(
             "core.bnb_gate.bnb_readiness", return_value=bnb
+        ), patch(
+            "core.bnb_gate.bnb_opening_evidence", return_value=bnb_evidence
+        ), patch(
+            "core.bnb_gate.bnb_deposits_open", return_value=False
         ), patch(
             "core.ton_deposit_service.ton_readiness", return_value=ton
         ), patch(
@@ -79,6 +89,9 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(payload["exchange"]["verdict"], "OPEN")
         self.assertEqual(payload["settlement"]["ton"]["gate"], "OPEN")
         self.assertEqual(payload["settlement"]["bnb"]["gate"], "CLOSED")
+        self.assertFalse(payload["settlement"]["bnb"]["ready"])
+        self.assertTrue(payload["settlement"]["bnb"]["configuration_ready"])
+        self.assertEqual(payload["settlement"]["bnb"]["evidence_status"], "BLOCKED")
         self.assertEqual(payload["participation"]["release"], "DESIGN_ONLY")
         self.assertEqual(
             payload["runtime"],
@@ -87,6 +100,50 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertNotIn("credits", payload)
         self.assertNotIn("wallet", payload)
         self.assertNotIn("secrets", payload)
+
+
+
+    def test_bnb_wallet_reports_effective_gate_not_stale_operator_flag(self):
+        readiness = {
+            "effective_open": True,
+            "flag_open": True,
+            "ready": True,
+            "chain_id": 56,
+            "confirmations_required": 15,
+            "treasury_configured": True,
+            "reasons": [],
+        }
+        opening_evidence = {
+            "status": "BLOCKED",
+            "ready_to_open": False,
+            "gate_open": False,
+            "next_action": "controlled_empirical_reconciliation_before_opening",
+        }
+        with patch("webapp.authenticated_uid", return_value="224223270"), patch(
+            "core.bnb_gate.bnb_readiness", return_value=readiness
+        ), patch(
+            "core.bnb_gate.bnb_deposits_open", return_value=False
+        ), patch(
+            "core.bnb_gate.bnb_opening_evidence", return_value=opening_evidence
+        ), patch(
+            "core.bnb_gate.bnb_settlement_allowed", return_value=False
+        ), patch(
+            "webapp.get_binding", return_value=None
+        ), patch(
+            "core.binance_connector.get_bsc_config",
+            return_value={"treasury_wallet": "0x1111111111111111111111111111111111111111"},
+        ), patch(
+            "webapp.state_manager.load_db", return_value={"bsc_settings": {}}
+        ):
+            response = self.client.get("/api/wallet/bnb")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["deposits_open"])
+        self.assertFalse(payload["readiness"]["effective_open"])
+        self.assertEqual(payload["opening_evidence"]["status"], "BLOCKED")
+        self.assertFalse(payload["opening_evidence"]["ready_to_open"])
+        self.assertFalse(payload["slh_deposit_allowed"])
 
     def test_public_site_status_options_allows_canonical_site_origin(self):
         response = self.client.options(

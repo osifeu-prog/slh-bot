@@ -390,7 +390,7 @@ def public_site_status():
         return response, 204
 
     try:
-        from core.bnb_gate import bnb_readiness
+        from core.bnb_gate import bnb_opening_evidence, bnb_readiness
         from core.participation_policy import activation_status
         from core.runtime_command_evidence import snapshot_runtime
         from core.system_checks import check_exchange
@@ -398,6 +398,8 @@ def public_site_status():
 
         exchange = check_exchange()
         bnb = bnb_readiness()
+        bnb_evidence = bnb_opening_evidence()
+        bnb_gate_open = bool(bnb_evidence.get("gate_open"))
         ton = ton_readiness()
         participation = activation_status()
 
@@ -432,8 +434,10 @@ def public_site_status():
                     "ready": bool(ton.get("ready")),
                 },
                 "bnb": {
-                    "gate": "OPEN" if bool(bnb.get("effective_open")) else "CLOSED",
-                    "ready": bool(bnb.get("ready")),
+                    "gate": "OPEN" if bnb_gate_open else "CLOSED",
+                    "ready": bool(bnb_evidence.get("ready_to_open")),
+                    "configuration_ready": bool(bnb.get("ready")),
+                    "evidence_status": str(bnb_evidence.get("status") or "BLOCKED"),
                 },
             },
             "participation": {
@@ -2142,25 +2146,38 @@ def bnb_wallet_binding():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
-    from core.bnb_gate import bnb_readiness, bnb_settlement_allowed
+    from core.bnb_gate import bnb_opening_evidence, bnb_readiness, bnb_settlement_allowed
     from core.binance_connector import get_bsc_config
     from core.authority import is_owner
-    readiness = bnb_readiness()
+    readiness = dict(bnb_readiness())
+    opening_evidence = bnb_opening_evidence()
+    deposits_open = bool(opening_evidence.get("gate_open"))
+    # Display the effective public gate, not a stale flag/config-only result.
+    readiness["effective_open"] = deposits_open
     binding = get_binding(uid)
     empirical_available = (
         is_owner(uid)
-        and not readiness["effective_open"]
+        and not deposits_open
         and bnb_settlement_allowed(uid)
     )
     cfg = get_bsc_config()
     db = state_manager.load_db()
     cfg = {**cfg, **db.get("bsc_settings", {})}
-    slh_deposit_allowed = bool(bnb_settlement_allowed(uid, db))
+    slh_deposit_allowed = deposits_open or bool(bnb_settlement_allowed(uid, db))
+    public_evidence = {
+        "status": str(opening_evidence.get("status") or "BLOCKED"),
+        "ready_to_open": bool(opening_evidence.get("ready_to_open")),
+        "gate_open": deposits_open,
+        "next_action": str(opening_evidence.get("next_action") or "controlled_empirical_reconciliation_before_opening"),
+        "blockers": list(opening_evidence.get("blockers") or []),
+        "warnings": list(opening_evidence.get("warnings") or []),
+    }
     return jsonify({
         "binding": binding,
-        "deposits_open": bool(readiness["effective_open"]),
+        "deposits_open": deposits_open,
         "slh_deposit_allowed": slh_deposit_allowed,
         "readiness": readiness,
+        "opening_evidence": public_evidence,
         "empirical_smoke": {
             "available": empirical_available,
             "mode": "owner_canary",

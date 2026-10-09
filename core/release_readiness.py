@@ -133,13 +133,34 @@ def _external_gate_check():
             blockers.append(f"TON readiness unavailable: {type(exc).__name__}")
 
     try:
-        from core.bnb_gate import bnb_readiness
+        from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_readiness
         import state_manager
 
         db = state_manager.load_db()
         bnb = bnb_readiness(db)
-        if bool(bnb.get("effective_open")):
-            blockers.append("BNB settlement is OPEN before the required empirical deposit smoke")
+        flag_open = bool(bnb.get("flag_open"))
+        public_open = bool(bnb_deposits_open())
+        evidence = bnb_opening_evidence()
+        evidence_ready = bool(evidence.get("ready_to_open"))
+
+        if flag_open and not public_open:
+            blockers.append(
+                "BNB_DEPOSITS_OPEN=1 but live empirical evidence is not valid; "
+                "the public gate remains blocked"
+            )
+        elif public_open:
+            notes.append(
+                "BNB settlement PUBLIC OPEN; empirical evidence revalidated against chain and ledger"
+            )
+        elif evidence_ready:
+            degraded.append(
+                "BNB empirical settlement evidence is revalidated, but the public gate remains CLOSED "
+                "pending operator review"
+            )
+        else:
+            degraded.append(
+                "BNB settlement remains CLOSED: empirical settlement proof pending/invalid"
+            )
     except FileNotFoundError:
         degraded.append("BNB DB readiness unavailable in this isolated runtime check")
     except Exception as exc:

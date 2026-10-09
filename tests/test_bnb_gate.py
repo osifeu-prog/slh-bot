@@ -47,7 +47,7 @@ def test_bnb_gate_stays_closed_without_explicit_canonical_treasury():
         assert "BNB_CANONICAL_TREASURY_MISSING" in status["reasons"]
 
 
-def test_bnb_gate_opens_only_when_flag_config_and_canonical_treasury_match():
+def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
     with patch.dict(
         os.environ,
         {
@@ -58,11 +58,39 @@ def test_bnb_gate_opens_only_when_flag_config_and_canonical_treasury_match():
     ), patch(
         "core.bnb_gate._effective_config",
         return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate._empirical_settlement_evidence",
+        return_value={"status": "PASS", "tx_hash": "fixture"},
+    ), patch(
+        "core.bnb_gate._empirical_evidence_revalidated",
+        return_value=True,
     ):
         status = bnb_readiness()
         assert status["ready"] is True
         assert status["effective_open"] is True
         assert bnb_deposits_open() is True
+
+
+def test_bnb_gate_stays_closed_when_empirical_proof_is_missing_even_if_flag_and_config_match():
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "BNB_DEPOSITS_CANARY_UID": "",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate._empirical_settlement_evidence",
+        return_value=None,
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is True
+        assert status["effective_open"] is True
+        assert bnb_deposits_open() is False
 
 
 def test_bnb_gate_closes_on_canonical_treasury_mismatch():
