@@ -2994,6 +2994,12 @@ def api_exchange_order():
         result = state_manager.atomic_update(mutate)
         return jsonify(result), 200
     except ValueError as exc:
+        if str(exc) == "EXCHANGE_FRESH_CHECK_BLOCKED":
+            return jsonify({
+                "error": str(exc),
+                "code": str(exc),
+                "exchange_check": getattr(exc, "check", {}),
+            }), 409
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500

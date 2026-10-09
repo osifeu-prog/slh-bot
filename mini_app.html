@@ -740,7 +740,16 @@ async function loadRewardsPanel(){
 function chooseCreditPack(){const packs=[['100','⭐ 100 Stars → 100 Credits'],['500','⭐ 500 Stars → 550 Credits'],['1000','⭐ 1000 Stars → 1200 Credits']];if(tg&&typeof tg.showPopup==='function'){tg.showPopup({title:'קניית Credits',message:'בחר חבילה',buttons:packs.map(p=>({id:p[0],type:'default',text:p[1]}))},id=>{if(id)buyStars('credit_pack',id)});return}buyStars('credit_pack','100')}
 function openAction(cmd,label){sendCommand(cmd,label)}
 async function loadBook(){try{const t=await(await fetch('/api/v1/exchange/ticker')).json();setText("exPrice",t.has_data?fmt(t.last_price)+' Credits':'טרם בוצעו עסקאות');const w=state.wallet||{};setText("exCredits",fmt(w.credits||0));setText("exSLH",fmt(w.token_balance||0));/*loadBook_no_wallet*/const b=await(await fetch('/api/v1/exchange/orderbook')).json();const rows=(b.orders||[]);setHTML("exBook",rows.length?rows.map(o=>`<div class="wallet-row"><span class="pill ${o.side==='buy'?'ok':''}">${o.side==='buy'?'קנייה':'מכירה'}</span><span>${fmt(o.amount)} SLH</span><strong>${fmt(o.price)}</strong></div>`).join(''):'<div class="muted">אין הזמנות פתוחות</div>');}catch(e){setHTML("exBook",'<div class="muted">לא ניתן לטעון</div>')}}
-function exTrade(side){const a=($("exAmount")?.value||'').trim(),pr=($("exPrice2")?.value||'').trim();if(!(Number(a)>0)||!(Number(pr)>0)){toast('מלא כמות ומחיר');return}const w=state.wallet||{};if(side==='buy'&&Number(w.credits||0)<Number(a)*Number(pr)){toast('אין מספיק Credits');show('buy');return}if(side==='sell'&&Number((state.wallet?.asset_truth?.spendable_live??0))<Number(a)){toast('אין מספיק SLH Live זמין למסחר');return}openAction(`/${side}_slh ${a} ${pr}`,'מסחר')}
+function exTrade(side){
+  const a=($("exAmount")?.value||"").trim();
+  const pr=($("exPrice2")?.value||"").trim();
+  if(!(Number(a)>0)||!(Number(pr)>0)){toast("מלא כמות ומחיר");return}
+  const normalizedSide=String(side||"").trim().toLowerCase();
+  if(!["buy","sell"].includes(normalizedSide)){toast("סוג עסקה לא תקין");return}
+  // Do not authorize from cached balances or open a Telegram handoff here.
+  // The server checks the canonical current state and executes atomically.
+  sendExchangeOrder(normalizedSide,a,pr,{sourceInputId:"exAmount"});
+}
 let __secondaryPrepared=null;
 
 async function loadSecondaryDistribution(){
@@ -941,12 +950,60 @@ function submitOrder(side,aId,pId){
   const a=($(aId)?.value||'').trim();
   const p=($(pId)?.value||'').trim();
   if(!(Number(a)>0)||!(Number(p)>0)){toast('מלא כמות ומחיר');return}
-  sendExchangeOrder(side.replace('_slh',''),a,p);
+  sendExchangeOrder(side.replace('_slh',''),a,p,{sourceInputId:aId});
 }
-async function sendExchangeOrder(side,amount,price){
+let __exchangePendingRequests=Object.create(null);
+function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
+  const check=data.execution_check||{};
+  const tradeIds=Array.isArray(data.trade_ids)?data.trade_ids:[];
+  const host=(sourceInputId&&$(sourceInputId)?.closest('.card'))||$('exchange');
+  if(!host)return;
+  let box=host.querySelector('[data-exchange-receipt="true"]');
+  if(!box){
+    box=document.createElement('div');
+    box.className='guide';
+    box.style.marginTop='10px';
+    box.setAttribute('data-exchange-receipt','true');
+    host.appendChild(box);
+  }
+  const sideLabel=side==='buy'?'BUY':'SELL';
+  const tradeLabel=tradeIds.length
+    ? 'Trade ID: '+tradeIds.map(x=>esc(x)).join(', ')
+    : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
+  box.innerHTML='<b>✅ Fresh Exchange check: '+esc(check.status||'UNKNOWN')+'</b>'+
+    '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
+    '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
+    '<div>Filled: '+esc(data.filled||'0')+' SLH · Remaining: '+esc(data.remaining||'0')+' SLH</div>'+
+    '<div>'+tradeLabel+'</div>'+
+    '<div class="muted" style="margin-top:4px">אימות קנוני בוצע בשרת בתוך פעולת המסחר · '+esc(check.checked_at||'')+'</div>';
+}
+function renderExchangeExecutionBlocked(data,sourceInputId){
+  const check=data.exchange_check||{};
+  const host=(sourceInputId&&$(sourceInputId)?.closest('.card'))||$('exchange');
+  if(!host)return;
+  let box=host.querySelector('[data-exchange-receipt="true"]');
+  if(!box){
+    box=document.createElement('div');
+    box.className='guide';
+    box.style.marginTop='10px';
+    box.setAttribute('data-exchange-receipt','true');
+    host.appendChild(box);
+  }
+  box.innerHTML='<b>⛔ Fresh Exchange check: BLOCKED</b>'+
+    '<div>הפקודה לא בוצעה. אין להמשיך על סמך נתון קודם.</div>'+
+    '<div class="muted">'+esc(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.')+'</div>';
+}
+async function sendExchangeOrder(side,amount,price,options){
+  options=options||{};
   if(!initData){toast('פתח מתוך Telegram');return}
-  const reqId=(crypto&&crypto.randomUUID)?crypto.randomUUID():('x-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));
+  side=String(side||'').trim().toLowerCase();
+  if(!['buy','sell'].includes(side)){toast('סוג עסקה לא תקין');return}
+  if(!(Number(amount)>0)||!(Number(price)>0)){toast('מלא כמות ומחיר תקינים');return}
+  const intent=[side,String(amount).trim(),String(price).trim()].join('|');
+  const reqId=__exchangePendingRequests[intent]||((crypto&&crypto.randomUUID)?crypto.randomUUID():('x-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)));
+  __exchangePendingRequests[intent]=reqId;
   try{
+    toast('⏳ מאמת את מצב Exchange הקנוני ומבצע באותה פעולה בשרת…');
     const resp=await fetch('/api/v1/exchange/order',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},headers),
@@ -954,14 +1011,31 @@ async function sendExchangeOrder(side,amount,price){
     });
     const d=await resp.json().catch(()=>({}));
     if(!resp.ok){
+      if(d.code==='EXCHANGE_FRESH_CHECK_BLOCKED'||d.error==='EXCHANGE_FRESH_CHECK_BLOCKED'){
+        renderExchangeExecutionBlocked(d,options.sourceInputId);
+        toast('⛔ האימות הטרי נכשל — הפקודה לא בוצעה');
+        if(resp.status<500)delete __exchangePendingRequests[intent];
+        if(typeof loadExchange==='function')await loadExchange();
+        return;
+      }
       toast('❌ '+(d.error||('HTTP '+resp.status)));
+      if(resp.status<500)delete __exchangePendingRequests[intent];
       return;
     }
-    toast('✅ '+side+' '+amount+' SLH @ '+price+' C');
-    if(typeof loadBook==='function'){await loadBook()}
-    if(typeof loadMe==='function'){await loadMe()}
+    delete __exchangePendingRequests[intent];
+    renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
+    const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
+    const tradeNote=tradeIds.length?' · Trade '+tradeIds.join(', '):' · ממתין להתאמה';
+    toast('✅ Fresh check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote);
+    if(typeof loadExchange==='function'){
+      await loadExchange();
+    }else{
+      if(typeof loadBook==='function')await loadBook();
+      if(typeof loadMe==='function')await loadMe();
+    }
   }catch(e){
-    toast('❌ שגיאה: '+(e.message||e));
+    // Keep the request ID after a network/5xx-style failure so a retry is idempotent.
+    toast('❌ לא התקבל אישור מהשרת: '+(e.message||e)+'. ניסיון חוזר לאותה פקודה ישתמש באותו מזהה.');
   }
 }
 function prepareTransfer(){const r=($("recipient")?.value||'').trim();const a=($("amount")?.value||'').trim();if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}const n=Number(a);if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}sendCommand(`/transfer ${r} ${a}`,'העברת Credits')}

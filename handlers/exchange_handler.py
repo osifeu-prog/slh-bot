@@ -242,10 +242,35 @@ def _match(db, incoming):
     return filled, remaining
 
 
+class ExchangeFreshCheckBlocked(ValueError):
+    """Order entry was stopped by the fresh canonical exchange check."""
+
+    def __init__(self, check):
+        self.check = {
+            "verdict": str(check.get("verdict") or "BLOCKED"),
+            "public_gate": str(check.get("public_gate") or "CLOSED"),
+            "public_ready": bool(check.get("public_ready")),
+            "execution_ready": bool(check.get("execution_ready")),
+            "order_book_integrity": bool(check.get("order_book_integrity")),
+            "trade_integrity": bool(check.get("trade_integrity")),
+            "money_invariants": bool(check.get("money_invariants")),
+            "open_orders": int(check.get("open_orders") or 0),
+            "detail": str(check.get("detail") or "fresh execution check blocked"),
+        }
+        super().__init__("EXCHANGE_FRESH_CHECK_BLOCKED")
+
+
 def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
-    # Keep the exchange fail-closed unless the deployment explicitly opens it.
+    # A fresh canonical check runs against this exact atomic-update snapshot.
     require_public_open()
+    from core.system_checks import check_exchange_for_execution
+
+    fresh_check = check_exchange_for_execution(db)
+    if not fresh_check.get("execution_ready"):
+        raise ExchangeFreshCheckBlocked(fresh_check)
+    checked_at = _now()
+    trades_before = len(db.get(TRADES_KEY, []))
     w = _wallet(db, uid)
     order_id_preview = None
 
@@ -284,9 +309,27 @@ def _place(db, uid, side, amount, price, request_id):
         pass
 
     filled, remaining = _match(db, order)
+    trade_rows = db.get(TRADES_KEY, [])
+    trade_ids = [
+        str(trade.get("id"))
+        for trade in trade_rows[trades_before:]
+        if isinstance(trade, dict) and trade.get("id")
+    ]
+    execution_check = {
+        "status": "PASS",
+        "checked_at": checked_at,
+        "public_gate": fresh_check.get("public_gate"),
+        "verdict": fresh_check.get("verdict"),
+        "public_ready": bool(fresh_check.get("public_ready")),
+        "order_book_integrity": bool(fresh_check.get("order_book_integrity")),
+        "trade_integrity": bool(fresh_check.get("trade_integrity")),
+        "money_invariants": bool(fresh_check.get("money_invariants")),
+        "open_orders_before": int(fresh_check.get("open_orders") or 0),
+    }
     result = {
         "order_id": order["id"], "filled": _s(filled), "remaining": _s(remaining),
-        "status": order["status"],
+        "status": order["status"], "trade_ids": trade_ids,
+        "execution_check": execution_check,
     }
     db.setdefault(REQUESTS_KEY, {})[request_id] = result
     _assert_invariants(db)

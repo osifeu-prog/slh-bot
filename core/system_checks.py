@@ -98,7 +98,7 @@ def _decimal(value: Any, default: str = "0") -> Decimal:
         return Decimal("NaN")
 
 
-def check_exchange() -> dict[str, Any]:
+def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = False) -> dict[str, Any]:
     """Read-only production-state inspection for the internal exchange."""
     try:
         import state_manager
@@ -106,7 +106,8 @@ def check_exchange() -> dict[str, Any]:
         from core.exchange_housekeeping import is_test_seed
         from handlers.exchange_handler import _assert_invariants
 
-        db = state_manager.load_db()
+        if db is None:
+            db = state_manager.load_db()
         orders = db.get("exchange_orders", {})
         trades = db.get("exchange_trades", [])
         requests = db.get("exchange_requests", {})
@@ -231,11 +232,13 @@ def check_exchange() -> dict[str, Any]:
 
         order_ok = not order_errors
         trade_ok = not trade_errors
+        requests_ok = isinstance(requests, dict)
         clean_for_public = (
             order_ok
             and trade_ok
             and money_ok
-            and len(open_orders) == 0
+            and requests_ok
+            and (for_execution or len(open_orders) == 0)
             and len(test_seed_open) == 0
             and len(test_seed_trades) == 0
         )
@@ -243,23 +246,24 @@ def check_exchange() -> dict[str, Any]:
         verdict = "OPEN" if clean_for_public and gate == "OPEN" else "READY_TO_OPEN" if clean_for_public else "BLOCKED"
 
         details = []
-        if not isinstance(requests, dict):
+        if not requests_ok:
             details.append("exchange_requests is not a dict")
-            order_ok = False
         if order_errors:
             details.append("order_book=" + ",".join(order_errors[:5]))
         if trade_errors:
             details.append("trades=" + ",".join(trade_errors[:5]))
         if not money_ok:
             details.append("money=" + money_detail)
-        if len(open_orders):
+        if len(open_orders) and not for_execution:
             details.append(f"open_orders={len(open_orders)}")
+        elif len(open_orders):
+            details.append(f"live_open_orders={len(open_orders)}")
         if len(test_seed_trades):
             details.append(f"test_seed_trades={len(test_seed_trades)}")
         detail = "public state clean" if not details else " · ".join(details)
 
         public_ready = bool(clean_for_public)
-        ok = order_ok and trade_ok and money_ok
+        ok = order_ok and trade_ok and money_ok and requests_ok
         return {
             "ok": ok,
             "detail": detail,
@@ -290,6 +294,34 @@ def check_exchange() -> dict[str, Any]:
             "verdict": "BLOCKED",
         }
 
+
+
+def check_exchange_for_execution(db: dict[str, Any]) -> dict[str, Any]:
+    """Fresh fail-closed exchange check against the exact state being mutated.
+
+    Unlike launch-readiness, execution readiness allows valid live customer
+    orders to remain in the book. Test/seed orders, invalid trades, broken
+    reserves, a closed public gate, or any failed invariant still block entry.
+    """
+    result = check_exchange(db, for_execution=True)
+    ready = (
+        bool(result.get("ok"))
+        and bool(result.get("public_ready"))
+        and bool(result.get("order_book_integrity"))
+        and bool(result.get("trade_integrity"))
+        and bool(result.get("money_invariants"))
+        and str(result.get("public_gate")) == "OPEN"
+        and str(result.get("verdict")) == "OPEN"
+    )
+    result["execution_ready"] = ready
+    result["ok"] = ready
+    if not ready:
+        result["verdict"] = "BLOCKED"
+        if str(result.get("public_gate")) != "OPEN":
+            result["detail"] = "public exchange gate is CLOSED"
+        elif not result.get("detail") or result.get("detail") == "public state clean":
+            result["detail"] = "fresh execution check blocked"
+    return result
 
 def check_money(uid: str) -> dict[str, Any]:
     checks = []
