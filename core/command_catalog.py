@@ -71,6 +71,16 @@ KNOWN = {
     "check_exchange": ("SYSTEM", "בדיקת Exchange"),
     "check_bnb": ("SYSTEM", "בדיקת BNB"),
     "check_ton": ("SYSTEM", "בדיקת TON"),
+    "check_ux": ("SYSTEM", "בדיקת Mini App"),
+    "biz": ("CONTROL", "תמונת עסק"),
+    "biz_users": ("CONTROL", "כניסות משתמשים"),
+    "biz_revenue": ("CONTROL", "הכנסות מאומתות"),
+    "biz_ai": ("CONTROL", "מצב AI"),
+    "biz_bots": ("CONTROL", "מלאי bots"),
+    "bots": ("CONTROL", "מפת bots"),
+    "execr": ("CONTROL", "בקשת ביצוע לאישור"),
+    "bnb_smoke": ("CHAIN", "בדיקת BNB מבוקרת"),
+    "academy_progress": ("ACADEMY", "התקדמות בקורס"),
     "miniapp": ("UI", "Mini App"),
     "dashboard": ("UI", "Dashboard"),
     "settings": ("UI", "הגדרות"),
@@ -167,8 +177,10 @@ def get_catalog(bot_name="Me_ad_main"):
 
 def render_help(bot_name="Me_ad_main", limit=60):
     """Render a Telegram-safe compact catalog."""
-    catalog = get_catalog(bot_name)
-    catalog = catalog[:limit]
+    full = get_catalog(bot_name)
+    known = [item for item in full if item["known"]]
+    unknown = [item for item in full if not item["known"]]
+    catalog = known + unknown[: max(0, limit - len(known))]
 
     groups = defaultdict(list)
 
@@ -194,11 +206,13 @@ def render_help(bot_name="Me_ad_main", limit=60):
                 f"/{item['command']} — {item['description']}"
             )
 
-    total = len(catalog)
+    hidden = len(full) - len(catalog)
 
-    if total > limit:
+    if hidden > 0:
         lines.append("")
-        lines.append(f"… ועוד {total - limit} פקודות runtime")
+        lines.append(f"… ועוד {hidden} פקודות runtime ללא מטא־דאטה")
+
+    total = len(catalog)
 
     if not total:
         lines.append("")
