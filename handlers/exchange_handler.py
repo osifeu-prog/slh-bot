@@ -320,6 +320,7 @@ def _place(db, uid, side, amount, price, request_id):
         "checked_at": checked_at,
         "public_gate": fresh_check.get("public_gate"),
         "verdict": fresh_check.get("verdict"),
+        "execution_ready": bool(fresh_check.get("execution_ready")),
         "public_ready": bool(fresh_check.get("public_ready")),
         "order_book_integrity": bool(fresh_check.get("order_book_integrity")),
         "trade_integrity": bool(fresh_check.get("trade_integrity")),

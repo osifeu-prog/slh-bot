@@ -1002,7 +1002,10 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
   const flagLabel=value=>value===true?'PASS':value===false?'FAIL':'לא דווח';
   const checkPassed=check.status==='PASS'
+    && check.verdict==='OPEN'
     && check.public_gate==='OPEN'
+    && check.execution_ready===true
+    && typeof check.checked_at==='string' && check.checked_at.trim().length>0
     && check.public_ready===true
     && check.order_book_integrity===true
     && check.trade_integrity===true
@@ -1069,7 +1072,10 @@ async function sendExchangeOrder(side,amount,price,options){
     renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
     const executionCheck=d.execution_check||{};
     const receiptVerified=executionCheck.status==='PASS'
+      && executionCheck.verdict==='OPEN'
       && executionCheck.public_gate==='OPEN'
+      && executionCheck.execution_ready===true
+      && typeof executionCheck.checked_at==='string' && executionCheck.checked_at.trim().length>0
       && executionCheck.public_ready===true
       && executionCheck.order_book_integrity===true
       && executionCheck.trade_integrity===true

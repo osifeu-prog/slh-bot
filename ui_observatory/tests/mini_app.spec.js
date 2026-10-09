@@ -49,6 +49,7 @@ async function mockBackend(page) {
           checked_at: '2026-10-09T09:00:00Z',
           public_gate: 'OPEN',
           verdict: 'OPEN',
+          execution_ready: true,
           public_ready: true,
           order_book_integrity: true,
           trade_integrity: true,
@@ -141,6 +142,39 @@ test('exchange receipt shows every fresh canonical gate item', async ({ page }) 
   await expect(receipt).toContainText('ספר פקודות');
   await expect(receipt).toContainText('תקינות עסקאות');
   await expect(receipt).toContainText('אינווריאנטים כספיים');
+});
+
+test('partial Exchange receipt never shows a green fresh-check status', async ({ page }) => {
+  await page.route('**/api/v1/exchange/order', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        order_id: 'O000000099',
+        filled: '0.00000000',
+        remaining: '2.00000000',
+        status: 'open',
+        trade_ids: [],
+        execution_check: {
+          status: 'PASS',
+          public_gate: 'OPEN',
+          verdict: 'OPEN',
+          public_ready: true,
+          order_book_integrity: true,
+          trade_integrity: true,
+          money_invariants: true
+        }
+      })
+    });
+  });
+  await page.evaluate(async () => {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    document.querySelector('#exchange').classList.add('active');
+    await sendExchangeOrder('buy', '2', '1');
+  });
+  const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
+  await expect(receipt).toContainText('Fresh Exchange receipt incomplete');
+  await expect(receipt).not.toContainText('✅ Fresh Exchange check: PASS');
 });
 
 test('mobile layout has no horizontal overflow', async ({ page }) => {
