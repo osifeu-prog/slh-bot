@@ -15,6 +15,42 @@ ERC20_ABI = [
 ]
 
 
+
+def probe_bsc_rpc():
+    """Read-only health probe that never touches a Treasury or asset contract.
+
+    The independent probe lets diagnostics distinguish an unreachable RPC from
+    an intentionally quarantined Treasury snapshot. It reads only chain ID and
+    latest block number, with a bounded HTTP timeout, and never broadcasts.
+    """
+    try:
+        cfg = get_bsc_config()
+        db = state_manager.load_db()
+        overrides = db.get("bsc_settings") if isinstance(db, dict) else None
+        if isinstance(overrides, dict):
+            cfg = {**cfg, **overrides}
+
+        rpc = str(cfg.get("rpc") or "").strip()
+        if not rpc:
+            return {"ok": False, "error": "BSC_RPC_MISSING"}
+
+        w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 5}))
+        chain_id = int(w3.eth.chain_id)
+        block = int(w3.eth.block_number)
+        return {
+            "ok": True,
+            "chain_id": chain_id,
+            "block": block,
+            "network": str(cfg.get("network") or "bsc"),
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "error": "BSC_RPC_PROBE_FAILED",
+            "error_type": type(exc).__name__,
+        }
+
+
 def get_onchain_status():
     try:
         cfg = get_bsc_config()

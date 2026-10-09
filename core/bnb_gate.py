@@ -240,47 +240,85 @@ def bnb_opening_evidence() -> dict:
         live = {"ok": False, "error": type(exc).__name__}
 
     live_error = str(live.get("error") or "")
+    rpc_result = None
+
     if live.get("ok"):
-        evidence["live_rpc"] = {
-            "status": "PASS",
+        evidence["treasury_snapshot"] = {"status": "PASS"}
+        rpc_result = {
+            "ok": True,
             "chain_id": live.get("chain_id"),
             "block": live.get("block"),
-            "treasury_wallet": live.get("treasury_wallet"),
             "network": live.get("network"),
+            "source": "verified_treasury_snapshot",
         }
-        if int(live.get("chain_id") or 0) != 56:
-            evidence["blockers"].append("LIVE_BSC_CHAIN_ID_NOT_56")
-        configured = str(gate.get("chain_id") or "")
-        if configured != "56":
-            evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
         configured_treasury = str(live.get("treasury_wallet") or "").lower()
         canonical = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip().lower()
         if canonical and configured_treasury != canonical:
             evidence["blockers"].append("LIVE_TREASURY_CANONICAL_MISMATCH")
-    elif live_error == "BSC_ADDRESS_QUARANTINED_ZUZ":
-        # get_onchain_status intentionally refuses to contact RPC for a
-        # quarantined Treasury. Report that the RPC was not checked; do not
-        # label this early safety exit as a network failure.
-        evidence["live_rpc"] = {
-            "status": "NOT_CHECKED",
-            "reason": "TREASURY_QUARANTINED",
-            "forensic_alias": live.get("forensic_alias", "ZUZ"),
-        }
-        quarantined_reasons = [
-            str(reason)
-            for reason in (gate.get("reasons") or [])
-            if "QUARANTINED" in str(reason)
-        ]
-        evidence["blockers"].extend(quarantined_reasons)
-        if not quarantined_reasons:
-            evidence["blockers"].append("BNB_TREASURY_QUARANTINED_ZUZ")
     else:
+        if live_error == "BSC_ADDRESS_QUARANTINED_ZUZ":
+            evidence["treasury_snapshot"] = {
+                "status": "NOT_CHECKED",
+                "reason": "TREASURY_QUARANTINED",
+                "forensic_alias": live.get("forensic_alias", "ZUZ"),
+            }
+            quarantined_reasons = [
+                str(reason)
+                for reason in (gate.get("reasons") or [])
+                if "QUARANTINED" in str(reason)
+            ]
+            evidence["blockers"].extend(quarantined_reasons)
+            if not quarantined_reasons:
+                evidence["blockers"].append("BNB_TREASURY_QUARANTINED_ZUZ")
+        else:
+            evidence["treasury_snapshot"] = {
+                "status": "FAIL",
+                "error_code": "TREASURY_SNAPSHOT_UNAVAILABLE",
+            }
+            evidence["blockers"].append("BNB_TREASURY_SNAPSHOT_UNVERIFIED")
+
+        # get_onchain_status may short-circuit before RPC when the Treasury is
+        # quarantined. Probe only chain ID and latest block independently; never
+        # query or publish the quarantined Treasury's balance or transaction data.
+        try:
+            from core.deposit_monitor import probe_bsc_rpc
+            rpc_result = probe_bsc_rpc()
+        except Exception as exc:
+            rpc_result = {"ok": False, "error_type": type(exc).__name__}
+
+    if isinstance(rpc_result, dict) and rpc_result.get("ok") is True:
+        live_chain_id = int(rpc_result.get("chain_id") or 0)
+        evidence["live_rpc"] = {
+            "status": "PASS",
+            "chain_id": live_chain_id,
+            "block": rpc_result.get("block"),
+            "network": rpc_result.get("network"),
+            "source": rpc_result.get("source") or "independent_chain_probe",
+        }
+        evidence["checks"]["live_chain"] = {
+            "status": "PASS" if live_chain_id == 56 else "FAIL",
+            "chain_id": live_chain_id,
+        }
+        if live_chain_id != 56:
+            evidence["blockers"].append("LIVE_BSC_CHAIN_ID_NOT_56")
+    else:
+        error_code = (
+            str((rpc_result or {}).get("error") or "")
+            if isinstance(rpc_result, dict)
+            else ""
+        )
         evidence["live_rpc"] = {
             "status": "FAIL",
-            "error_code": "LIVE_BSC_RPC_OR_TREASURY_READ_FAILED",
+            "error_code": error_code if error_code in {
+                "BSC_RPC_MISSING", "BSC_RPC_PROBE_FAILED"
+            } else "LIVE_BSC_RPC_PROBE_FAILED",
         }
+        evidence["checks"]["live_chain"] = {"status": "FAIL"}
         evidence["blockers"].append("LIVE_BSC_RPC_UNVERIFIED")
 
+    configured_chain = str(gate.get("chain_id") or "")
+    if configured_chain != "56":
+        evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
     empirical = _empirical_settlement_evidence()
     empirical_valid = _empirical_evidence_revalidated(empirical, _effective_config())
     evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid)
