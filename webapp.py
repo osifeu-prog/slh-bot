@@ -1443,6 +1443,49 @@ def governance_read_api():
         return jsonify({"error": "SERVER_ERROR"}), 500
 
 
+@app.route("/api/v1/governance/proposal", methods=["POST"])
+def governance_proposal_create_api():
+    """Create a user-submitted Governance proposal in canonical state."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    title = str(payload.get("title", "")).strip()
+    description = str(payload.get("description", "")).strip()
+    if not title:
+        return jsonify({"error": "PROPOSAL_TITLE_REQUIRED"}), 400
+    if len(title) > 160:
+        return jsonify({"error": "PROPOSAL_TITLE_TOO_LONG"}), 400
+    if len(description) > 4000:
+        return jsonify({"error": "PROPOSAL_DESCRIPTION_TOO_LONG"}), 400
+
+    try:
+        from core import governance_store
+        proposal = governance_store.create_proposal(
+            title=title,
+            description=description,
+            created_by=str(uid),
+        )
+        safe_proposal = {
+            "id": proposal.get("id"),
+            "title": proposal.get("title", ""),
+            "description": proposal.get("description", ""),
+            "status": proposal.get("status", "open"),
+            "created_at": proposal.get("created_at"),
+            "votes": proposal.get("votes", {}),
+            "my_vote": None,
+        }
+        return _no_store(jsonify({"status": "created", "proposal": safe_proposal})), 201
+    except ValueError as exc:
+        code = str(exc)
+        status = 400
+        return jsonify({"error": code}), status
+    except Exception as exc:
+        print("[GOV] proposal create API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "GOVERNANCE_PROPOSAL_CREATE_FAILED"}), 503
+
+
 @app.route("/api/v1/governance/vote", methods=["POST"])
 def governance_vote_api():
     """Authenticated Mini App vote write through the canonical Governance service."""
