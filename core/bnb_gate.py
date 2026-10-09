@@ -292,7 +292,16 @@ def bnb_opening_evidence() -> dict:
 
 
 def bnb_deposits_open() -> bool:
-    return bool(bnb_readiness()["effective_open"])
+    """Normal BNB settlement requires both operator readiness and live proof.
+
+    The owner canary remains a separate, explicitly scoped path so it can
+    produce the empirical evidence while normal deposits stay closed.
+    """
+    gate = bnb_readiness()
+    if not gate.get("effective_open"):
+        return False
+    empirical = _empirical_settlement_evidence()
+    return _empirical_evidence_revalidated(empirical, _effective_config())
 
 
 def bnb_settlement_allowed(uid, db=None) -> bool:
