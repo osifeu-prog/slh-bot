@@ -740,7 +740,16 @@ async function loadRewardsPanel(){
 function chooseCreditPack(){const packs=[['100','⭐ 100 Stars → 100 Credits'],['500','⭐ 500 Stars → 550 Credits'],['1000','⭐ 1000 Stars → 1200 Credits']];if(tg&&typeof tg.showPopup==='function'){tg.showPopup({title:'קניית Credits',message:'בחר חבילה',buttons:packs.map(p=>({id:p[0],type:'default',text:p[1]}))},id=>{if(id)buyStars('credit_pack',id)});return}buyStars('credit_pack','100')}
 function openAction(cmd,label){sendCommand(cmd,label)}
 async function loadBook(){try{const t=await(await fetch('/api/v1/exchange/ticker')).json();setText("exPrice",t.has_data?fmt(t.last_price)+' Credits':'טרם בוצעו עסקאות');const w=state.wallet||{};setText("exCredits",fmt(w.credits||0));setText("exSLH",fmt(w.token_balance||0));/*loadBook_no_wallet*/const b=await(await fetch('/api/v1/exchange/orderbook')).json();const rows=(b.orders||[]);setHTML("exBook",rows.length?rows.map(o=>`<div class="wallet-row"><span class="pill ${o.side==='buy'?'ok':''}">${o.side==='buy'?'קנייה':'מכירה'}</span><span>${fmt(o.amount)} SLH</span><strong>${fmt(o.price)}</strong></div>`).join(''):'<div class="muted">אין הזמנות פתוחות</div>');}catch(e){setHTML("exBook",'<div class="muted">לא ניתן לטעון</div>')}}
-function exTrade(side){const a=($("exAmount")?.value||'').trim(),pr=($("exPrice2")?.value||'').trim();if(!(Number(a)>0)||!(Number(pr)>0)){toast('מלא כמות ומחיר');return}const w=state.wallet||{};if(side==='buy'&&Number(w.credits||0)<Number(a)*Number(pr)){toast('אין מספיק Credits');show('buy');return}if(side==='sell'&&Number((state.wallet?.asset_truth?.spendable_live??0))<Number(a)){toast('אין מספיק SLH Live זמין למסחר');return}openAction(`/${side}_slh ${a} ${pr}`,'מסחר')}
+function exTrade(side){
+  const a=($("exAmount")?.value||"").trim();
+  const pr=($("exPrice2")?.value||"").trim();
+  if(!(Number(a)>0)||!(Number(pr)>0)){toast("מלא כמות ומחיר");return}
+  const normalizedSide=String(side||"").trim().toLowerCase();
+  if(!["buy","sell"].includes(normalizedSide)){toast("סוג עסקה לא תקין");return}
+  // Do not authorize from cached balances or open a Telegram handoff here.
+  // The server checks the canonical current state and executes atomically.
+  sendExchangeOrder(normalizedSide,a,pr,{sourceInputId:"exAmount"});
+}
 let __secondaryPrepared=null;
 
 async function loadSecondaryDistribution(){
