@@ -179,3 +179,33 @@ def test_expired_exchange_broadcast_confirmation_does_not_send(monkeypatch):
 
     assert result["status"] == "EXPIRED"
     assert sent == []
+
+
+
+def test_natural_language_exchange_broadcast_question_is_read_only(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    monkeypatch.setattr(
+        system_checks,
+        "check_exchange_for_execution",
+        lambda current: _fresh_check(True),
+    )
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot,
+        message,
+        "אפשר כבר לשלוח ברודקאסט למסחר פנימי?",
+        now=NOW,
+    )
+
+    assert answer is not None
+    assert "READ ONLY" in answer
+    assert "OPEN" in answer
+    assert "לא נשלחה הודעה" in answer
+    assert "exchange_broadcast_pending" not in db
+    bot.send_message.assert_not_called()

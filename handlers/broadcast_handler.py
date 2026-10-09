@@ -77,6 +77,19 @@ def register(bot):
             return
 
         parts = (m.text or "").split(maxsplit=1)
+        subcommand = parts[1].strip().lower() if len(parts) >= 2 else ""
+        if subcommand in {"status", "--status"}:
+            bot.reply_to(m, _broadcast_status_reply(str(m.from_user.id)))
+            return
+        if subcommand in {"help", "--help"}:
+            bot.reply_to(
+                m,
+                "ℹ️ /broadcast status — בדיקה לקריאה בלבד; אינה שולחת הודעה.\n"
+                "/broadcast <text> — שידור כללי להודעות ניטרליות בלבד.\n"
+                "להודעת מצב מסחר פנימי: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
+                "תישלח רק אחרי תצוגה מקדימה ואישור קולי נפרד ובדיקת Exchange רעננה.",
+            )
+            return
         if len(parts) >= 2 and _is_exchange_status_announcement(parts[1]):
             bot.reply_to(
                 m,
@@ -498,12 +511,97 @@ def _exchange_broadcast_reply(result):
     return f"⛔ הברודקאסט לא נשלח: {result.get('detail', status)}"
 
 
+def _is_exchange_broadcast_query(phrase):
+    """Recognize questions about the Exchange broadcast without treating them as consent."""
+    broadcast_terms = ("ברודקאסט", "broadcast", "הודעת שידור")
+    exchange_terms = ("מסחר", "בורסה", "exchange", "trading")
+    return any(term in phrase for term in broadcast_terms) and any(term in phrase for term in exchange_terms)
+
+
+def _exchange_broadcast_status_answer(message, *, now=None):
+    """Return a read-only canonical readiness answer; never prepare or send."""
+    uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+    if uid != str(OWNER_TELEGRAM_ID):
+        return "⛔ בדיקת מוכנות לברודקאסט מסחר פנימי זמינה רק ל־OWNER."
+    if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+        return "⛔ בדיקת ברודקאסט מסחר פנימי זמינה רק בשיחה הפרטית עם הבוט."
+
+    try:
+        db = state_manager.load_db()
+        check = _fresh_exchange_check(db)
+    except Exception as exc:
+        check = {
+            "execution_ready": False,
+            "public_gate": "CLOSED",
+            "verdict": "BLOCKED",
+            "detail": f"live state unavailable: {type(exc).__name__}",
+        }
+    proof = _proof_snapshot(check, checked_at=_utc_text(now))
+    ready = _proof_is_green(check)
+    gate = "OPEN" if ready else "CLOSED/BLOCKED"
+    next_step = (
+        "אם תרצה להתחיל, אמור: ״הכן ברודקאסט למסחר פנימי״. זה יפתח תצוגה מקדימה בלבד; "
+        "שליחה תדרוש אישור קולי נפרד ובדיקת Exchange רעננה נוספת."
+        if ready
+        else "לא לשדר הודעת ״המסחר הפנימי פתוח״ עד שכל בדיקות ה־Exchange יהיו OPEN/PASS."
+    )
+    return (
+        "🔎 מוכנות ברודקאסט למסחר פנימי — READ ONLY\n\n"
+        f"Fresh canonical Exchange check: {gate} · {proof['status']}\n"
+        f"פרטים: {proof['detail']}\n\n"
+        "לא נשלחה הודעה ולא נוצרה טיוטה.\n"
+        f"{next_step}"
+    )
+
+
+def _broadcast_status_reply(uid):
+    """Read-only status for /broadcast status; never accesses send APIs."""
+    try:
+        db = state_manager.load_db()
+    except Exception as exc:
+        return f"⛔ BROADCAST STATUS unavailable (read-only): {type(exc).__name__}"
+
+    check = _fresh_exchange_check(db)
+    proof = _proof_snapshot(check)
+    gate = "OPEN" if _proof_is_green(check) else "CLOSED/BLOCKED"
+
+    pending_map = db.get("exchange_broadcast_pending", {})
+    pending = pending_map.get(str(uid)) if isinstance(pending_map, dict) else None
+    pending_status = str(pending.get("status") or "UNKNOWN") if isinstance(pending, dict) else "NONE"
+
+    audit = db.get("exchange_broadcast_audit", [])
+    relevant = [
+        item for item in audit
+        if isinstance(item, dict) and str(item.get("initiated_by") or "") == str(uid)
+    ] if isinstance(audit, list) else []
+    latest = relevant[-1] if relevant else None
+    if latest:
+        last_broadcast = (
+            f"{latest.get('status', 'UNKNOWN')} · sent={latest.get('sent', 0)} "
+            f"failed={latest.get('failed', 0)}"
+        )
+    else:
+        last_broadcast = "אין שליחת Exchange מתועדת ביומן הקנוני."
+
+    return (
+        "🔎 BROADCAST STATUS — READ ONLY\n"
+        "הפקודה הזו לא שולחת הודעות.\n"
+        f"Internal Exchange: {gate} · {proof['status']}\n"
+        f"Exchange draft: {pending_status}\n"
+        f"Last audited Exchange broadcast: {last_broadcast}\n"
+        "להכנת הודעת מסחר: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
+        "נדרשים תצוגה מקדימה ואישור קולי נפרד."
+    )
+
+
 def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
     """Strict owner/private allowlist for preparing or confirming the fixed notice."""
     phrase = _normalize_voice_phrase(transcript)
     is_prepare = phrase in {_normalize_voice_phrase(x) for x in _PREPARE_VOICE_PHRASES}
     is_confirm = phrase in {_normalize_voice_phrase(x) for x in _CONFIRM_VOICE_PHRASES}
     if not is_prepare and not is_confirm:
+        if _is_exchange_broadcast_query(phrase):
+            return _exchange_broadcast_status_answer(message, now=now)
         return None
 
     uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
