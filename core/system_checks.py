@@ -363,28 +363,46 @@ def check_money(uid: str) -> dict[str, Any]:
 
 
 def check_bnb() -> dict[str, Any]:
+    """Report BNB go-live truth, not merely configuration readiness."""
     try:
-        from core.bnb_gate import bnb_opening_evidence, bnb_readiness
+        from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_readiness
 
         gate = bnb_readiness()
         evidence = bnb_opening_evidence()
         empirical = evidence.get("empirical_settlement") or {}
         empirical_status = str(empirical.get("status") or "PENDING_EMPIRICAL")
-        ready = bool(gate.get("ready")) and not bool(evidence.get("blockers"))
-        public_open = bool(gate.get("effective_open"))
-        ok = ready and not public_open
-        detail = (
-            "BNB gate CLOSED safely; readiness valid; empirical proof complete"
-            if ok and empirical_status == "PASS"
-            else "BNB gate CLOSED safely; readiness valid; empirical proof pending"
-            if ok
-            else "BNB readiness requires attention"
+        configuration_ready = bool(gate.get("ready")) and not bool(evidence.get("blockers"))
+        launch_ready = bool(evidence.get("ready_to_open"))
+        flag_open = bool(gate.get("flag_open"))
+        public_open = bool(bnb_deposits_open())
+
+        # Go-live is green only if runtime settlement is actually open and the
+        # persisted proof has been revalidated against live chain + ledger.
+        ok = (
+            public_open
+            and flag_open
+            and configuration_ready
+            and launch_ready
+            and empirical_status == "PASS"
         )
+        if ok:
+            detail = "BNB gate OPEN; empirical settlement proof revalidated against live chain and ledger"
+        elif flag_open and not public_open:
+            detail = "BNB_DEPOSITS_OPEN=1 but live empirical evidence is not valid; runtime gate remains CLOSED"
+        elif not flag_open and launch_ready:
+            detail = "BNB empirical proof revalidated; public gate remains CLOSED pending operator opening"
+        elif configuration_ready:
+            detail = "BNB gate CLOSED safely; configuration ready but empirical settlement proof pending/invalid"
+        else:
+            detail = "BNB readiness requires attention"
+
         return {
             "ok": ok,
             "detail": detail,
             "public_open": public_open,
-            "ready": ready,
+            "flag_open": flag_open,
+            "ready": configuration_ready,
+            "launch_ready": launch_ready,
             "empirical_status": empirical_status,
             "confirmations_required": gate.get("confirmations_required"),
             "blockers": evidence.get("blockers", []),
@@ -394,7 +412,9 @@ def check_bnb() -> dict[str, Any]:
             "ok": False,
             "detail": f"BNB read-only check failed: {type(exc).__name__}",
             "public_open": False,
+            "flag_open": False,
             "ready": False,
+            "launch_ready": False,
             "empirical_status": "UNKNOWN",
             "confirmations_required": 0,
         }
