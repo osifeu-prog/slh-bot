@@ -204,3 +204,31 @@ def test_operator_flag_and_forged_pass_do_not_open_public_bnb_settlement():
     ):
         assert bnb_deposits_open() is False
         assert bnb_settlement_allowed("224223270") is False
+
+
+def test_bnb_quarantined_treasury_does_not_claim_rpc_failed():
+    quarantined = "0x693db6c817083818696a7228aebfbd0cd3371f02"
+    cfg = {**_cfg(), "treasury_wallet": quarantined}
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "0",
+            "SLH_BSC_CANONICAL_TREASURY": quarantined,
+        },
+        clear=False,
+    ), patch("core.bnb_gate._effective_config", return_value=cfg), patch(
+        "core.deposit_monitor.get_onchain_status",
+        return_value={
+            "ok": False,
+            "error": "BSC_ADDRESS_QUARANTINED_ZUZ",
+            "forensic_alias": "ZUZ",
+            "forensic_read_only": True,
+        },
+    ):
+        status = bnb_opening_evidence()
+
+    assert status["live_rpc"]["status"] == "NOT_CHECKED"
+    assert "LIVE_BSC_RPC_UNVERIFIED" not in status["blockers"]
+    assert "BNB_TREASURY_QUARANTINED_ZUZ" in status["blockers"]
+    assert status["ready_to_open"] is False
+    assert status["status"] == "BLOCKED"
