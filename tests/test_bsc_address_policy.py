@@ -119,5 +119,51 @@ class CompromisedBscAddressPolicyTests(unittest.TestCase):
         create_handoff.assert_not_called()
 
 
+    def test_bnb_wallet_api_never_exposes_quarantined_treasury_as_target(self):
+        import webapp
+
+        readiness = {
+            "ready": False,
+            "effective_open": False,
+            "flag_open": False,
+            "chain_id": 56,
+            "confirmations_required": 15,
+            "treasury_configured": True,
+            "reasons": ["BNB_TREASURY_QUARANTINED_ZUZ"],
+        }
+        opening = {
+            "status": "BLOCKED",
+            "ready_to_open": False,
+            "gate_open": False,
+            "next_action": "replace_quarantined_treasury_and_revalidate",
+            "blockers": ["BNB_TREASURY_QUARANTINED_ZUZ"],
+            "warnings": [],
+        }
+        with patch("webapp.authenticated_uid", return_value="test-user"), patch(
+            "core.bnb_gate.bnb_readiness", return_value=readiness
+        ), patch(
+            "core.bnb_gate.bnb_opening_evidence", return_value=opening
+        ), patch(
+            "core.bnb_gate.bnb_settlement_allowed", return_value=False
+        ), patch(
+            "webapp.get_binding", return_value=None
+        ), patch(
+            "core.binance_connector.get_bsc_config",
+            return_value={"treasury_wallet": BAD_ADDRESS},
+        ), patch(
+            "webapp.state_manager.load_db",
+            return_value={"bsc_settings": {"treasury_wallet": BAD_ADDRESS}},
+        ):
+            response = webapp.app.test_client().get("/api/wallet/bnb")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["deposits_open"])
+        self.assertFalse(payload["slh_deposit_allowed"])
+        self.assertIsNone(payload["empirical_smoke"]["treasury"])
+        self.assertTrue(payload["empirical_smoke"]["treasury_blocked"])
+        self.assertEqual(payload["empirical_smoke"]["treasury_forensic_alias"], "ZUZ")
+
+
 if __name__ == "__main__":
     unittest.main()
