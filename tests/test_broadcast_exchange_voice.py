@@ -228,8 +228,8 @@ def test_voice_prepare_preview_reports_recipient_count_and_audience_fingerprint(
 
     record = db["exchange_broadcast_pending"][OWNER]
     expected_audience = sorted(str(uid) for uid in db["users"] if str(uid).isdigit() and int(uid) > 0)
-    expected_hash = hashlib.sha256("\\n".join(expected_audience).encode("utf-8")).hexdigest()
-    assert "3" in answer
+    expected_hash = hashlib.sha256("|".join(expected_audience).encode("utf-8")).hexdigest()
+    assert "3 משתמשים" in answer
     assert record["target_count"] == 3
     assert record["audience_sha256"] == expected_hash
     bot.send_message.assert_not_called()
