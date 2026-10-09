@@ -92,7 +92,13 @@ def register(bot):
                 )
                 return
 
-            answer = route(transcript, uid)
+            # Handle explicitly recognized, read-only owner operations before
+            # general chat. Unknown speech remains conversational; financial
+            # mutations and broadcasts are rejected by the operator router.
+            from core.voice_operator_router import route_voice_operator_request
+
+            operator_answer = route_voice_operator_request(transcript, uid)
+            answer = operator_answer if operator_answer is not None else route(transcript, uid)
             final_answer = _safe_answer(answer)
 
             bot.reply_to(message, final_answer, parse_mode=None)
