@@ -64,6 +64,8 @@ class TestVoiceSTT(unittest.TestCase):
         ) as synthesize, patch(
             "core.authority.get_role",
             return_value="OWNER",
+        ), patch(
+            "handlers.voice_handler.record_turn"
         ):
             register(bot)
             registered["callback"](message)
@@ -115,6 +117,8 @@ class TestVoiceSTT(unittest.TestCase):
         ) as synthesize, patch(
             "core.authority.get_role",
             return_value="USER",
+        ), patch(
+            "handlers.voice_handler.record_turn"
         ):
             register(bot)
             registered["callback"](message)
