@@ -171,13 +171,16 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
         "core.bnb_gate._empirical_settlement_evidence", return_value=empirical
     ), patch(
         "core.deposit_monitor.verify_bnb_deposit", return_value=verified
-    ), patch(
+    ) as live_tx_check, patch(
         "core.wallet_binding.get_binding", return_value={"address": wallet}
-    ), patch(
+    ) as binding_lookup, patch(
         "state_manager.load_db", return_value=db
-    ):
+    ) as ledger_load:
         status = bnb_opening_evidence()
 
+    live_tx_check.assert_called_once_with(tx_hash)
+    binding_lookup.assert_called_once_with("224223270")
+    ledger_load.assert_called_once_with()
     assert status["status"] == "READY_TO_OPEN"
     assert status["ready_to_open"] is True
     assert status["empirical_settlement"]["status"] == "PASS"
