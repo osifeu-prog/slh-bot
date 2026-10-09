@@ -337,6 +337,69 @@ def _place(db, uid, side, amount, price, request_id):
     return result
 
 
+def format_execution_receipt(side, result):
+    """Render an order result alongside its fresh canonical send-time check.
+
+    Missing or partial check data must never be described as a passing receipt.
+    """
+    result = result if isinstance(result, dict) else {}
+    check = result.get("execution_check")
+    check = check if isinstance(check, dict) else {}
+    side_label = str(side or "order").strip().upper()
+    order_id = str(result.get("order_id") or "UNKNOWN")
+    filled = str(result.get("filled") or "0")
+    remaining = str(result.get("remaining") or "0")
+    checked_at = str(check.get("checked_at") or "unavailable")
+    gate = str(check.get("public_gate") or "UNKNOWN")
+    verdict = str(check.get("verdict") or "UNKNOWN")
+
+    required_flags = (
+        "execution_ready",
+        "public_ready",
+        "order_book_integrity",
+        "trade_integrity",
+        "money_invariants",
+    )
+    check_present = bool(check) and checked_at != "unavailable"
+    all_checks_pass = (
+        check.get("status") == "PASS"
+        and gate == "OPEN"
+        and verdict == "OPEN"
+        and all(check.get(flag) is True for flag in required_flags)
+    )
+    if not check_present:
+        check_status = "NOT VERIFIED"
+    elif all_checks_pass:
+        check_status = "PASS"
+    else:
+        check_status = "BLOCKED"
+
+    def _flag(name):
+        if name not in check:
+            return "UNKNOWN"
+        return "PASS" if check.get(name) is True else "FAIL"
+
+    trade_ids = result.get("trade_ids")
+    trade_ids = [str(t) for t in trade_ids if t] if isinstance(trade_ids, list) else []
+    trade_text = ", ".join(trade_ids) if trade_ids else "none (order may remain open)"
+
+    lines = [
+        f"✅ {side_label} #{order_id} | filled {filled} | open {remaining} SLH",
+        f"🔐 Fresh canonical Exchange check: {check_status}",
+        f"🕒 checked_at (UTC): {checked_at}",
+        f"Gate: {gate} | verdict: {verdict}",
+        f"execution_ready: {_flag('execution_ready')}",
+        f"public_ready: {_flag('public_ready')}",
+        f"order_book_integrity: {_flag('order_book_integrity')}",
+        f"trade_integrity: {_flag('trade_integrity')}",
+        f"money_invariants: {_flag('money_invariants')}",
+        f"Trade IDs: {trade_text}",
+    ]
+    if check_status != "PASS":
+        lines.append("⚠️ Receipt does not prove a passing fresh execution check.")
+    return "\n".join(lines)
+
+
 def register(bot):
     @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
     def exchange_clean_cmd(msg):
@@ -400,7 +463,9 @@ def register(bot):
                 return old if old is not None else _place(db, uid, "sell", amount, price, key)
 
             r = state_manager.atomic_update(mutate)
-            bot.reply_to(msg, f"✅ SELL #{r['order_id']} | filled {r['filled']} | open {r['remaining']} SLH")
+            bot.reply_to(msg, format_execution_receipt("sell", r))
+        except ExchangeFreshCheckBlocked as e:
+            bot.reply_to(msg, format_blocked_execution_receipt("SELL", e.check))
         except ValueError as e:
             bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
@@ -421,7 +486,9 @@ def register(bot):
                 return old if old is not None else _place(db, uid, "buy", amount, price, key)
 
             r = state_manager.atomic_update(mutate)
-            bot.reply_to(msg, f"✅ BUY #{r['order_id']} | filled {r['filled']} | open {r['remaining']} SLH")
+            bot.reply_to(msg, format_execution_receipt("buy", r))
+        except ExchangeFreshCheckBlocked as e:
+            bot.reply_to(msg, format_blocked_execution_receipt("BUY", e.check))
         except ValueError as e:
             bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
