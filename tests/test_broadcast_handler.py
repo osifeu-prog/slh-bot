@@ -101,3 +101,43 @@ def test_exchange_status_claim_is_refused_by_generic_broadcast(monkeypatch):
     assert loaded == []
     assert len(bot.replies) == 1
     assert "קולי" in bot.replies[0][1]
+
+
+
+def test_broadcast_status_is_read_only_and_never_sends(monkeypatch):
+    bot = FakeBot()
+    target.register(bot)
+    monkeypatch.setattr(
+        target.state_manager,
+        "load_db",
+        lambda: {
+            "users": {"1": {}},
+            "exchange_broadcast_pending": {},
+            "exchange_broadcast_audit": [],
+        },
+    )
+    monkeypatch.setattr(
+        target,
+        "_fresh_exchange_check",
+        lambda db: {
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "verdict": "OPEN",
+            "public_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "detail": "public state clean",
+        },
+    )
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=target.OWNER_TELEGRAM_ID),
+        text="/broadcast status",
+    )
+
+    bot.broadcast_cmd(message)
+
+    assert bot.sent == []
+    assert len(bot.replies) == 1
+    assert "READ ONLY" in bot.replies[0][1]
+    assert "OPEN" in bot.replies[0][1]
