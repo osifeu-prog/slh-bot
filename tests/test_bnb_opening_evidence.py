@@ -59,14 +59,17 @@ def test_bnb_opening_evidence_blocks_when_live_rpc_is_not_verified():
         clear=False,
     ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
         "core.deposit_monitor.get_onchain_status",
-        return_value={"ok": False, "error": "rpc unavailable"},
+        return_value={"ok": False, "error": "treasury read unavailable"},
+    ), patch(
+        "core.deposit_monitor.probe_bsc_rpc",
+        return_value={"ok": False, "error": "BSC_RPC_PROBE_FAILED"},
     ):
         status = bnb_opening_evidence()
 
     assert status["status"] == "BLOCKED"
     assert status["ready_to_open"] is False
+    assert status["live_rpc"]["status"] == "FAIL"
     assert "LIVE_BSC_RPC_UNVERIFIED" in status["blockers"]
-
 
 
 def test_bnb_opening_evidence_rejects_forged_pass_without_complete_evidence():
