@@ -6,7 +6,10 @@ fail-closed until the BSC network, RPC and treasury are configured correctly.
 from __future__ import annotations
 
 import json
+import math
 import os
+import re
+from datetime import datetime
 from pathlib import Path
 
 from core.binance_connector import get_bsc_config
@@ -80,6 +83,95 @@ def _empirical_settlement_evidence() -> dict | None:
     bnb = evidence.get("bnb") if isinstance(evidence, dict) else None
     return bnb if isinstance(bnb, dict) else None
 
+def _empirical_evidence_shape_valid(empirical: dict | None) -> bool:
+    """Reject incomplete or internally inconsistent persisted smoke evidence."""
+    if not isinstance(empirical, dict) or empirical.get("status") != "PASS":
+        return False
+    tx_hash = str(empirical.get("tx_hash") or "").strip()
+    if not re.fullmatch(r"0x[0-9a-fA-F]{64}", tx_hash):
+        return False
+    try:
+        observed_at = datetime.fromisoformat(
+            str(empirical.get("observed_at") or "").replace("Z", "+00:00")
+        )
+        if observed_at.tzinfo is None:
+            return False
+        amount_wei = int(empirical.get("amount_wei"))
+        confirmations = int(empirical.get("confirmations"))
+        ledger_count = int(empirical.get("ledger_entries_for_idempotency_key"))
+        credits = float(empirical.get("credits"))
+        before = float(empirical.get("balance_before"))
+        after = float(empirical.get("balance_after"))
+        replay_after = float(empirical.get("replay_balance_after"))
+    except (TypeError, ValueError, OverflowError):
+        return False
+    checks = empirical.get("checks")
+    required_checks = (
+        "wallet_binding", "tx_verification", "idempotency",
+        "atomic_ledger", "reconciliation",
+    )
+    if not isinstance(checks, dict) or any(checks.get(key) is not True for key in required_checks):
+        return False
+    numeric = (credits, before, after, replay_after)
+    if not all(math.isfinite(value) for value in numeric):
+        return False
+    if amount_wei <= 0 or confirmations < 1 or ledger_count != 1 or credits <= 0:
+        return False
+    if empirical.get("from_bound_wallet") is not True or empirical.get("gate_remained_closed") is not True:
+        return False
+    if not str(empirical.get("uid") or "").strip() or not str(empirical.get("to_treasury") or "").strip():
+        return False
+    if abs((before + credits) - after) > 1e-9 or abs(replay_after - after) > 1e-9:
+        return False
+    # The smoke's conversion contract is 1,000 internal credits per BNB.
+    expected_credits = (amount_wei / 10**18) * 1000
+    if abs(expected_credits - credits) > max(1e-9, abs(expected_credits) * 1e-9):
+        return False
+    return True
+
+
+def _empirical_evidence_revalidated(empirical: dict | None, gate: dict) -> bool:
+    """Re-check the persisted proof against current wallet, chain and ledger state."""
+    if not _empirical_evidence_shape_valid(empirical):
+        return False
+    try:
+        from core.deposit_monitor import verify_bnb_deposit
+        from core.wallet_binding import get_binding
+
+        uid = str(empirical["uid"])
+        tx_hash = str(empirical["tx_hash"])
+        verified = verify_bnb_deposit(tx_hash)
+        binding = get_binding(uid)
+        if not verified.get("ok") or not binding:
+            return False
+        if str(verified.get("tx_hash") or "").lower() != tx_hash.lower():
+            return False
+        if str(verified.get("from") or "").lower() != str(binding.get("address") or "").lower():
+            return False
+        if str(verified.get("from") or "").lower() != str(binding.get("address") or "").lower():
+            return False
+        if str(verified.get("to") or "").lower() != str(empirical.get("to_treasury") or "").lower():
+            return False
+        if str(verified.get("to") or "").lower() != str(gate.get("treasury_wallet") or "").lower():
+            return False
+        if int(verified.get("amount_wei") or 0) != int(empirical.get("amount_wei") or 0):
+            return False
+        if int(verified.get("confirmations") or 0) < int(gate.get("confirmations_required") or 15):
+            return False
+        db = state_manager.load_db()
+        ledger = db.get("ledger", []) if isinstance(db, dict) else []
+        key = f"bnb:deposit:{tx_hash.lower()}"
+        matching = [
+            entry for entry in ledger
+            if isinstance(entry, dict)
+            and isinstance(entry.get("meta"), dict)
+            and entry["meta"].get("idempotency_key") == key
+        ]
+        return len(matching) == 1
+    except Exception:
+        return False
+
+
 def bnb_opening_evidence() -> dict:
     """Read-only evidence for whether BNB could safely be opened.
 
@@ -147,7 +239,7 @@ def bnb_opening_evidence() -> dict:
         evidence["blockers"].append("LIVE_BSC_RPC_UNVERIFIED")
 
     empirical = _empirical_settlement_evidence()
-    if empirical and empirical.get("status") == "PASS":
+    if _empirical_evidence_revalidated(empirical, _effective_config()):
         for check in (
             "wallet_binding",
             "tx_verification",
@@ -155,13 +247,13 @@ def bnb_opening_evidence() -> dict:
             "atomic_ledger",
             "reconciliation",
         ):
-            evidence["checks"][check] = {"status": "PASS", "source": "state/db.json"}
+            evidence["checks"][check] = {"status": "PASS", "source": "revalidated_state_and_chain"}
         evidence["empirical_settlement"] = {
             "status": "PASS",
             "tx_hash": empirical.get("tx_hash"),
             "observed_at": empirical.get("observed_at"),
         }
-        evidence["next_action"] = "operator_may_open_bnb_settlement"
+        evidence["next_action"] = "operator_may_review_bnb_gate_opening"
     else:
         for check in (
             "wallet_binding",
@@ -171,7 +263,7 @@ def bnb_opening_evidence() -> dict:
             "reconciliation",
         ):
             evidence["checks"][check] = {"status": "PENDING_EMPIRICAL"}
-        evidence["warnings"].append("empirical_settlement_reconciliation_pending")
+        evidence["warnings"].append("empirical_settlement_reconciliation_pending_or_invalid")
         evidence["next_action"] = "controlled_empirical_reconciliation_before_opening"
 
     if evidence["blockers"]:
