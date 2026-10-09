@@ -10,14 +10,13 @@ DB_PATH = BASE_DIR / "state" / "db.json"
 
 
 def _load_gov():
-    return json.loads(GOV_PATH.read_text(encoding="utf-8-sig"))
+    """Read canonical Governance state with legacy fallback inside the store."""
+    return governance_store.load_governance()
 
 
 def _save_gov(gov):
-    GOV_PATH.write_text(
-        json.dumps(gov, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    """Compatibility wrapper: persist Governance to the canonical database."""
+    return governance_store.save_governance(gov)
 
 
 def _load_db():
@@ -70,41 +69,35 @@ def register(bot, context=None):
     @bot.message_handler(commands=["agent_vote"])
     def agent_vote_cmd(m):
         parts = (m.text or "").split(maxsplit=2)
-
         if len(parts) < 3:
             bot.reply_to(m, "שימוש: /agent_vote <id> <approve|pause|revoke>")
             return
-
         aid = parts[1].strip()
         action = parts[2].strip().lower()
-
         if action not in ("approve", "pause", "revoke"):
             bot.reply_to(m, "פעולה חייבת להיות approve / pause / revoke.")
             return
-
-        gov = _load_gov()
-        reg = gov.get("agents_registry", {})
-
-        if aid not in reg:
-            bot.reply_to(m, f"סוכן {aid} לא נמצא.")
-            return
-
         uid = str(m.from_user.id)
-        weight = _get_weight(gov, uid)
-
-        gov.setdefault("individual_agent_votes", {})
-        vote_key = f"agent_{aid}_{uid}"
-
-        gov["individual_agent_votes"][vote_key] = {
-            "agent_id": aid,
-            "voter": uid,
-            "action": action,
-            "weight": weight,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-
-        _save_gov(gov)
-
+        role = _get_role(uid)
+        try:
+            def mutate(gov):
+                reg = gov.get("agents_registry", {})
+                if aid not in reg:
+                    raise ValueError("AGENT_NOT_FOUND")
+                weight = int(gov.get("rules", {}).get("vote_weights", {}).get(role, 1) or 1)
+                votes = gov.setdefault("individual_agent_votes", {})
+                votes[f"agent_{aid}_{uid}"] = {
+                    "agent_id": aid,
+                    "voter": uid,
+                    "action": action,
+                    "weight": weight,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                return weight
+            weight = governance_store.update_governance(mutate)
+        except ValueError as exc:
+            bot.reply_to(m, "סוכן לא נמצא." if str(exc) == "AGENT_NOT_FOUND" else f"שגיאה: {exc}")
+            return
         bot.reply_to(
             m,
             f"הצבעה נרשמה:\n"
@@ -115,49 +108,34 @@ def register(bot, context=None):
     @bot.message_handler(commands=["propose", "gov_propose"])
     def gov_propose_cmd(m):
         body = (m.text or "").split(maxsplit=1)
-
         if len(body) < 2:
             bot.reply_to(m, "שימוש: /gov_propose <title> | <description>")
             return
-
         raw = body[1]
-
         if "|" in raw:
             title, desc = raw.split("|", 1)
         else:
             title, desc = raw, ""
-
         title = title.strip()
         desc = desc.strip()
-
-        gov = _load_gov()
-        proposals = gov.setdefault("proposals", [])
-
-        proposal_id = len(proposals) + 1
-
-        proposals.append({
-            "id": proposal_id,
-            "type": "proposal",
-            "title": title,
-            "description": desc,
-            "status": "open",
-            "created_by": str(m.from_user.id),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "votes": {
-                "yes": 0,
-                "no": 0,
-                "abstain": 0,
-                "weighted_yes": 0,
-                "weighted_no": 0
+        try:
+            proposal = governance_store.create_proposal(
+                title=title,
+                description=desc,
+                created_by=str(m.from_user.id),
+            )
+        except ValueError as exc:
+            messages = {
+                "PROPOSAL_TITLE_REQUIRED": "צריך להזין כותרת להצעה.",
+                "PROPOSAL_CREATOR_REQUIRED": "לא ניתן לזהות את יוצר ההצעה.",
+                "PROPOSALS_INVALID": "מבנה ההצעות אינו תקין.",
             }
-        })
-
-        _save_gov(gov)
-
+            bot.reply_to(m, messages.get(str(exc), f"שגיאה ביצירת הצעה: {exc}"))
+            return
         bot.reply_to(
             m,
-            f"הצעה #{proposal_id} נוצרה:\n"
-            f"📌 {title}"
+            f"הצעה #{proposal['id']} נוצרה במקור האמת הקנוני:\n"
+            f"📌 {proposal['title']}"
         )
 
     @bot.message_handler(commands=["vote", "gov_vote"])
@@ -213,72 +191,54 @@ def register(bot, context=None):
     @bot.message_handler(commands=["tally", "gov_tally"])
     def gov_tally_cmd(m):
         parts = (m.text or "").split()
-
         if len(parts) < 2:
             bot.reply_to(m, "שימוש: /gov_tally <proposal_id>")
             return
-
         try:
             pid = _parse_proposal_id(parts[1])
         except ValueError:
             bot.reply_to(m, "proposal_id חייב להיות מספר.")
             return
-
-        gov = _load_gov()
-        proposals = gov.get("proposals", [])
-
-        if pid < 1 or pid > len(proposals):
-            bot.reply_to(m, "הצעה לא קיימת.")
+        try:
+            result = governance_store.finalize_proposal(proposal_id=pid)
+        except ValueError as exc:
+            messages = {
+                "PROPOSAL_ID_INVALID": "proposal_id חייב להיות מספר.",
+                "PROPOSAL_NOT_FOUND": "הצעה לא קיימת.",
+                "PROPOSAL_CLOSED": "ההצעה כבר נסגרה.",
+                "NO_VOTES": "אין הצבעות.",
+                "PROPOSALS_INVALID": "מבנה ההצעות אינו תקין.",
+                "VOTE_TALLY_INVALID": "נתוני ספירת ההצבעות אינם תקינים.",
+            }
+            bot.reply_to(m, messages.get(str(exc), f"שגיאה בספירת הצבעות: {exc}"))
             return
-
-        proposal = proposals[pid - 1]
-        votes = proposal.get("votes", {})
-
-        weighted_yes = votes.get("weighted_yes", 0)
-        weighted_no = votes.get("weighted_no", 0)
-        total_weight = weighted_yes + weighted_no
-
-        if total_weight == 0:
-            bot.reply_to(m, "אין הצבעות.")
-            return
-
-        threshold = gov.get("rules", {}).get("pass_threshold", 0.6)
-        ratio = weighted_yes / total_weight
-
-        if ratio >= threshold:
-            proposal["status"] = "approved"
-            _save_gov(gov)
-
-            # Bridge: create a developer mission automatically
+        weighted_yes = result["weighted_yes"]
+        weighted_no = result["weighted_no"]
+        ratio = result["ratio"]
+        if result["status"] == "approved":
+            mission_msg = ""
             try:
                 from core.mission_lifecycle import MissionLifecycleService
                 service = MissionLifecycleService()
-                mission_id = f"gov_{proposal['id']}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-                mission_description = proposal.get("title") or proposal.get("description") or f"Proposal {proposal['id']}"
-                mission_result = service.create_mission(
-                    mission_id,
-                    mission_description,
-                    reward=0
-                )
+                mission_id = f"gov_{pid}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+                mission_description = result.get("title") or result.get("description") or f"Proposal {pid}"
+                mission_result = service.create_mission(mission_id, mission_description, reward=0)
                 mission_status = mission_result.get("status") or "unknown"
                 mission_msg = f"\n🎯 משימה נוצרה: {mission_id} [{mission_status}]"
-            except Exception as e:
-                mission_msg = f"\n⚠️ לא ניתן ליצור משימה: {e}"
-
+            except Exception:
+                mission_msg = "\n⚠️ ההצעה אושרה, אבל יצירת המשימה לא אומתה."
             bot.reply_to(
                 m,
-                f"✅ הצעה #{pid} אושרה\n"
+                f"✅ הצעה #{pid} אושרה במקור האמת הקנוני\n"
                 f"כן: {weighted_yes}\n"
                 f"לא: {weighted_no}\n"
                 f"יחס: {ratio:.2f}"
                 + mission_msg
             )
         else:
-            proposal["status"] = "rejected"
-            _save_gov(gov)
             bot.reply_to(
                 m,
-                f"❌ הצעה #{pid} נדחתה\n"
+                f"❌ הצעה #{pid} נדחתה במקור האמת הקנוני\n"
                 f"כן: {weighted_yes}\n"
                 f"לא: {weighted_no}\n"
                 f"יחס: {ratio:.2f}"
@@ -304,32 +264,36 @@ def register(bot, context=None):
     @bot.message_handler(commands=["session_new"])
     def session_new_cmd(m):
         parts = (m.text or "").split(maxsplit=2)
-
         if len(parts) < 3:
             bot.reply_to(m, "שימוש: /session_new <agent_id> <summary>")
             return
-
         agent_id = parts[1].strip()
         summary = parts[2].strip()
-
-        gov = _load_gov()
-
-        if agent_id not in gov.get("agents_registry", {}):
-            bot.reply_to(m, f"סוכן {agent_id} לא נמצא.")
+        try:
+            def mutate(gov):
+                if agent_id not in gov.get("agents_registry", {}):
+                    raise ValueError("AGENT_NOT_FOUND")
+                sessions = gov.setdefault("sessions", [])
+                session_ids = []
+                for item in sessions:
+                    if isinstance(item, dict):
+                        try:
+                            session_ids.append(int(item.get("id", 0)))
+                        except (TypeError, ValueError):
+                            pass
+                session_id = max(session_ids, default=0) + 1
+                sessions.append({
+                    "id": session_id,
+                    "agent_id": agent_id,
+                    "summary": summary,
+                    "status": "active",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                return session_id
+            session_id = governance_store.update_governance(mutate)
+        except ValueError as exc:
+            bot.reply_to(m, "סוכן לא נמצא." if str(exc) == "AGENT_NOT_FOUND" else f"שגיאה: {exc}")
             return
-
-        session_id = len(gov.get("sessions", [])) + 1
-
-        gov.setdefault("sessions", []).append({
-            "id": session_id,
-            "agent_id": agent_id,
-            "summary": summary,
-            "status": "active",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-
-        _save_gov(gov)
-
         bot.reply_to(
             m,
             f"Session #{session_id} נפתח עבור סוכן {agent_id}.\n"
@@ -339,35 +303,53 @@ def register(bot, context=None):
     @bot.message_handler(commands=["session_close"])
     def session_close_cmd(m):
         parts = (m.text or "").split(maxsplit=2)
-
         if len(parts) < 3:
             bot.reply_to(m, "שימוש: /session_close <session_id> <outcome>")
             return
-
         try:
             session_id = int(parts[1])
         except ValueError:
             bot.reply_to(m, "session_id חייב להיות מספר.")
             return
-
-        outcome = parts[2].strip()
-
-        gov = _load_gov()
-        sessions = gov.get("sessions", [])
-
-        if session_id < 1 or session_id > len(sessions):
-            bot.reply_to(m, "Session לא קיים.")
+        if session_id < 1:
+            bot.reply_to(m, "session_id חייב להיות מספר חיובי.")
             return
-
-        session = sessions[session_id - 1]
-        session["status"] = "closed"
-        session["outcome"] = outcome
-        session["closed_at"] = datetime.now(timezone.utc).isoformat()
-
-        _save_gov(gov)
-
+        outcome = parts[2].strip()
+        try:
+            def mutate(gov):
+                sessions = gov.get("sessions", [])
+                if not isinstance(sessions, list):
+                    raise ValueError("SESSIONS_INVALID")
+                session = None
+                for item in sessions:
+                    if not isinstance(item, dict):
+                        continue
+                    try:
+                        item_id = int(item.get("id", 0))
+                    except (TypeError, ValueError):
+                        continue
+                    if item_id == session_id:
+                        session = item
+                        break
+                if session is None:
+                    raise ValueError("SESSION_NOT_FOUND")
+                if session.get("status") == "closed":
+                    raise ValueError("SESSION_CLOSED")
+                session["status"] = "closed"
+                session["outcome"] = outcome
+                session["closed_at"] = datetime.now(timezone.utc).isoformat()
+                return dict(session)
+            governance_store.update_governance(mutate)
+        except ValueError as exc:
+            messages = {
+                "SESSIONS_INVALID": "מבנה הסשנים אינו תקין.",
+                "SESSION_NOT_FOUND": "Session לא קיים.",
+                "SESSION_CLOSED": "Session כבר סגור.",
+            }
+            bot.reply_to(m, messages.get(str(exc), f"שגיאה: {exc}"))
+            return
         bot.reply_to(
             m,
-            f"Session #{session_id} נסגר.\n"
+            f"Session #{session_id} נסגר במקור האמת הקנוני.\n"
             f"תוצאה: {outcome}"
         )

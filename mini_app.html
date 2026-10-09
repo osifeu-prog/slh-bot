@@ -502,6 +502,13 @@ window.addEventListener('DOMContentLoaded',()=>{
 </div>
 </section>
 <section id="academy" class="screen"><div class="section-title">🎓 Academy & Tasks</div><div class="card"><div id="academyText" class="muted">טוען…</div><div id="tasks" style="margin-top:8px"></div></div><div class="card"><b>מסלול Bitcoin Mastery</b><p class="muted">Academy הוא מסלול למידה נפרד. Staking אינו דורש השלמת קורס. אפשר ללמוד בקצב שלך ולהמשיך לשיעורים לפי הסדר.</p><div class="actions"><button class="action primary" onclick="openAction('/courses','פתיחת Academy')"><b>🎓 פתיחת Academy</b><span>רשימת הקורסים</span></button><button class="action" onclick="openAction('/course_bitcoin_mastery','Bitcoin Mastery')"><b>📘 Bitcoin Mastery</b><span>התחלת הקורס</span></button></div></div></section>
+<section id="governance" class="screen">
+<div class="section-title">🗳️ Governance</div>
+<div class="card">
+  <div class="muted">הצעות והצבעות רשמיות של SLH OS. ההצבעה נרשמת בשרת מול מקור האמת הקנוני; ניתן להצביע פעם אחת לכל הצעה פתוחה.</div>
+  <div id="governanceBody" style="margin-top:12px">טוען הצעות…</div>
+</div>
+</section>
 <section id="control" class="screen">
 <div class="section-title">🧭 SLH OS Control</div>
 <div class="card" id="tonGoLiveCard">
@@ -586,7 +593,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('buy');closeMoreMenu()"><b>💳 קנייה</b><span>Credits</span></button>
       <button class="action" onclick="show('stake');closeMoreMenu()"><b>🔒 סטייקינג</b><span>פוזיציות ותנאים</span></button>
       <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
-      <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
+      <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('governance');loadGovernanceScreen();closeMoreMenu()"><b>🗳️ Governance</b><span>הצעות, הצבעה וקבלה</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
       <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
       <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
       <div id="ownerToolsMenu" class="owner-tools-menu"><button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button><button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button></div>
@@ -622,7 +629,7 @@ function __slhRender(id){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const scr=$(id);if(scr)scr.classList.add('active');
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
-  const map={home:['nh','bh'],balance:['bb'],move:['bm'],growth:['bg'],investor:['ni','binv'],profile:[],wallet:['nw'],market:['nm'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],exchange:['nx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
+  const map={home:['nh','bh'],balance:['bb'],move:['bm'],growth:['bg'],investor:['ni','binv'],profile:[],wallet:['nw'],market:['nm'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
   window.scrollTo(0,0);
   __slhShowing=id;
@@ -2720,7 +2727,9 @@ async function completeControlTask(taskId){trackGrowth('task_complete_view','con
   }catch(e){toast('❌ '+(e.message||e))}
 }
 
-async function loadControlGovernance(){
+async function loadGovernanceInto(targetId){
+  const target=$(targetId);
+  if(!target)return;
   try{
     const r=await fetch('/api/v1/governance',{headers,cache:'no-store'});
     const d=await r.json().catch(()=>({}));
@@ -2729,18 +2738,110 @@ async function loadControlGovernance(){
     h+='<div class="wallet-row"><span>Proposals</span><strong>'+fmt(d.proposal_count||0)+'</strong></div>';
     h+='<div class="wallet-row"><span>Open</span><strong>'+fmt(d.open_proposals||0)+'</strong></div>';
     h+='<div class="muted" style="margin-top:8px">מקור אמת: '+esc(d.source_of_truth||'state/db.json')+'</div>';
+    const titleId='govProposalTitle_'+targetId;
+    const descId='govProposalDescription_'+targetId;
+    h+='<div class="section-title" style="margin-top:14px">הצעת נושא חדש</div>';
+    h+='<label for="'+titleId+'">כותרת ההצעה</label><input class="form-input" id="'+titleId+'" maxlength="160" placeholder="מה צריך להחליט?" style="margin-top:6px">';
+    h+='<label for="'+descId+'" style="display:block;margin-top:8px">תיאור ורקע</label><textarea class="form-input" id="'+descId+'" maxlength="4000" rows="3" placeholder="הסבר קצר להצעה ולתוצאה הרצויה" style="margin-top:6px"></textarea>';
+    h+='<button class="action primary" type="button" onclick="submitGovernanceProposal(\''+targetId+'\')" style="width:100%;margin-top:8px"><b>➕ פרסום הצעה</b><span>נשמרת במקור האמת הקנוני</span></button>';
     const ps=Array.isArray(d.proposals)?d.proposals.slice().reverse():[];
     if(ps.length){
-      h+='<div class="section-title" style="margin-top:12px">הצעות אחרונות</div>';
+      h+='<div class="section-title" style="margin-top:16px">הצעות אחרונות</div>';
       h+=ps.map(p=>{
         const v=p.votes||{};
-        return '<div class="task"><b>#'+esc(p.id) +' '+esc(p.title||'')+'</b><div class="muted">'+esc(p.status||'unknown')+' · כן '+fmt(v.yes||0)+' · לא '+fmt(v.no||0)+' · נמנע '+fmt(v.abstain||0)+'</div></div>';
+        const pid=Number(p.id);
+        const validId=Number.isInteger(pid)&&pid>0;
+        const mine=p.my_vote&&typeof p.my_vote==='object'?p.my_vote:null;
+        const status=String(p.status||'unknown');
+        let voteHtml='';
+        if(mine){
+          voteHtml='<div class="guide" style="margin-top:8px"><b>✅ ההצבעה שלך נרשמה</b><div>'+esc(String(mine.choice||''))+' · משקל '+fmt(mine.weight||1)+'</div><div class="muted">'+esc(mine.timestamp||'')+'</div></div>';
+        }else if(status==='open'&&validId){
+          voteHtml='<div class="actions" style="margin-top:8px">'+
+            '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;yes&quot;)"><b>👍 בעד</b></button>'+
+            '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;no&quot;)"><b>👎 נגד</b></button>'+
+            '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;abstain&quot;)"><b>➖ נמנע</b></button>'+
+          '</div>';
+        }
+        return '<div class="task" style="margin-top:10px"><b>#'+esc(p.id)+' '+esc(p.title||'')+'</b>'+
+          '<div class="muted">'+esc(status)+' · כן '+fmt(v.yes||0)+' · לא '+fmt(v.no||0)+' · נמנע '+fmt(v.abstain||0)+'</div>'+
+          (p.description?'<div style="margin-top:6px;white-space:pre-wrap">'+esc(p.description)+'</div>':'')+
+          voteHtml+'</div>';
       }).join('');
     }else{
-      h+='<div class="muted" style="margin-top:8px">אין הצעות להצגה</div>';
+      h+='<div class="muted" style="margin-top:12px">אין הצעות להצגה. אפשר לפרסם הצעה ראשונה בטופס שמעל.</div>';
     }
-    setHTML('controlGov',h);
-  }catch(e){setHTML('controlGov','<div class="muted">Governance לא זמין</div>')}
+    target.innerHTML=h;
+  }catch(e){
+    target.innerHTML='<div class="muted">Governance לא זמין כרגע. בדוק חיבור לשרת ונסה שוב.</div><button class="action" type="button" onclick="'+(targetId==='controlGov'?'loadControlGovernance()':'loadGovernanceScreen()')+'">↻ בדוק שוב</button>';
+  }
+}
+async function loadGovernanceScreen(){
+  return loadGovernanceInto('governanceBody');
+}
+async function loadControlGovernance(){
+  return loadGovernanceInto('controlGov');
+}
+let __governanceVotePending=Object.create(null);
+async function submitGovernanceVote(proposalId,choice){
+  if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
+  const pid=Number(proposalId);
+  const vote=String(choice||'').trim().toLowerCase();
+  if(!Number.isInteger(pid)||pid<1||!['yes','no','abstain'].includes(vote)){
+    toast('נתוני ההצבעה אינם תקינים');return;
+  }
+  const key=String(pid);
+  if(__governanceVotePending[key])return;
+  __governanceVotePending[key]=true;
+  try{
+    toast('⏳ רושם הצבעה במקור האמת הקנוני…');
+    const r=await fetch('/api/v1/governance/vote',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      cache:'no-store',
+      body:JSON.stringify({proposal_id:pid,choice:vote})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    if(d.status==='already_voted')toast('ℹ️ כבר קיימת הצבעה להצעה #'+pid);
+    else toast('✅ ההצבעה נשמרה · משקל '+fmt(d.weight||1)+' · Points +'+fmt(d.points_awarded||0));
+    await Promise.allSettled([loadGovernanceScreen(),loadControlGovernance(),loadMe()]);
+  }catch(e){
+    toast('❌ ההצבעה לא אושרה: '+(e.message||e));
+    await Promise.allSettled([loadGovernanceScreen(),loadControlGovernance()]);
+  }finally{
+    delete __governanceVotePending[key];
+  }
+}
+let __governanceProposalPending=Object.create(null);
+async function submitGovernanceProposal(targetId){
+  if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}
+  const titleInput=$(('govProposalTitle_'+targetId));
+  const descriptionInput=$(('govProposalDescription_'+targetId));
+  const title=(titleInput?.value||'').trim();
+  const description=(descriptionInput?.value||'').trim();
+  if(!title){toast('צריך להזין כותרת להצעה');titleInput?.focus?.();return}
+  if(title.length>160||description.length>4000){toast('ההצעה ארוכה מהמותר');return}
+  if(__governanceProposalPending[targetId])return;
+  __governanceProposalPending[targetId]=true;
+  try{
+    const r=await fetch('/api/v1/governance/proposal',{
+      method:'POST',
+      headers:Object.assign({'Content-Type':'application/json'},headers),
+      cache:'no-store',
+      body:JSON.stringify({title,description})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    if(titleInput)titleInput.value='';
+    if(descriptionInput)descriptionInput.value='';
+    toast('✅ הצעה #'+String(d.proposal?.id||'')+' פורסמה');
+    await Promise.allSettled([loadGovernanceScreen(),loadControlGovernance()]);
+  }catch(e){
+    toast('❌ ההצעה לא פורסמה: '+(e.message||e));
+  }finally{
+    delete __governanceProposalPending[targetId];
+  }
 }
 
 async function loadControlJournal(){

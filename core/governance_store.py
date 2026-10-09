@@ -92,7 +92,11 @@ def record_vote(
     def mutate(db: dict[str, Any]) -> dict[str, Any]:
         gov = _canonical_from_db(db)
         if gov is None:
-            gov = {"source_of_truth": "state/db.json"}
+            # Migrate legacy Governance into the canonical state atomically
+            # with the first write, so a vote cannot miss a legacy proposal.
+            legacy = _read_legacy()
+            gov = dict(legacy) if legacy is not None else {}
+            gov["source_of_truth"] = "state/db.json"
             db["governance"] = gov
 
         proposals = gov.setdefault("proposals", [])
@@ -224,3 +228,134 @@ def update_governance(mutator: Callable[[dict[str, Any]], Any]) -> Any:
         return mutator(gov)
 
     return atomic_update(mutate)
+
+
+
+def create_proposal(
+    *,
+    title: str,
+    description: str = "",
+    created_by: str,
+    now: str | None = None,
+) -> dict[str, Any]:
+    """Create a proposal in canonical Governance state using one atomic update."""
+    title = str(title or "").strip()
+    description = str(description or "").strip()
+    created_by = str(created_by or "").strip()
+    if not title:
+        raise ValueError("PROPOSAL_TITLE_REQUIRED")
+    if not created_by:
+        raise ValueError("PROPOSAL_CREATOR_REQUIRED")
+    timestamp = now or datetime.now(timezone.utc).isoformat()
+
+    def mutate(gov: dict[str, Any]) -> dict[str, Any]:
+        proposals = gov.setdefault("proposals", [])
+        if not isinstance(proposals, list):
+            raise ValueError("PROPOSALS_INVALID")
+        ids = []
+        for item in proposals:
+            if not isinstance(item, dict):
+                continue
+            try:
+                pid = int(item.get("id", 0))
+            except (TypeError, ValueError):
+                continue
+            if pid > 0:
+                ids.append(pid)
+        proposal = {
+            "id": max(ids, default=0) + 1,
+            "type": "proposal",
+            "title": title,
+            "description": description,
+            "status": "open",
+            "created_by": created_by,
+            "created_at": timestamp,
+            "votes": {
+                "yes": 0,
+                "no": 0,
+                "abstain": 0,
+                "weighted_yes": 0,
+                "weighted_no": 0,
+            },
+        }
+        proposals.append(proposal)
+        gov.setdefault("source_of_truth", "state/db.json")
+        return dict(proposal)
+
+    return update_governance(mutate)
+
+
+def finalize_proposal(*, proposal_id: int) -> dict[str, Any]:
+    """Finalize one open proposal in canonical state using weighted votes."""
+    try:
+        proposal_id = int(proposal_id)
+    except (TypeError, ValueError):
+        raise ValueError("PROPOSAL_ID_INVALID")
+    if proposal_id < 1:
+        raise ValueError("PROPOSAL_ID_INVALID")
+
+    def mutate(gov: dict[str, Any]) -> dict[str, Any]:
+        proposals = gov.get("proposals", [])
+        if not isinstance(proposals, list):
+            raise ValueError("PROPOSALS_INVALID")
+        proposal = None
+        for item in proposals:
+            if not isinstance(item, dict):
+                continue
+            try:
+                item_id = int(item.get("id", 0))
+            except (TypeError, ValueError):
+                continue
+            if item_id == proposal_id:
+                proposal = item
+                break
+        if proposal is None:
+            raise ValueError("PROPOSAL_NOT_FOUND")
+        if proposal.get("status") != "open":
+            raise ValueError("PROPOSAL_CLOSED")
+
+        votes = proposal.get("votes", {})
+        if not isinstance(votes, dict):
+            votes = {}
+            proposal["votes"] = votes
+        try:
+            weighted_yes = float(votes.get("weighted_yes", 0) or 0)
+            weighted_no = float(votes.get("weighted_no", 0) or 0)
+        except (TypeError, ValueError):
+            raise ValueError("VOTE_TALLY_INVALID")
+        if weighted_yes < 0 or weighted_no < 0:
+            raise ValueError("VOTE_TALLY_INVALID")
+        total_weight = weighted_yes + weighted_no
+        if total_weight <= 0:
+            raise ValueError("NO_VOTES")
+
+        rules = gov.get("rules", {}) if isinstance(gov.get("rules"), dict) else {}
+        try:
+            threshold = float(rules.get("pass_threshold", 0.6))
+        except (TypeError, ValueError):
+            threshold = 0.6
+        if not 0 <= threshold <= 1:
+            threshold = 0.6
+
+        ratio = weighted_yes / total_weight
+        status = "approved" if ratio >= threshold else "rejected"
+        proposal["status"] = status
+        proposal["tally"] = {
+            "weighted_yes": weighted_yes,
+            "weighted_no": weighted_no,
+            "threshold": threshold,
+            "ratio": ratio,
+            "finalized_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return {
+            "proposal_id": proposal_id,
+            "title": str(proposal.get("title", "")),
+            "description": str(proposal.get("description", "")),
+            "status": status,
+            "weighted_yes": weighted_yes,
+            "weighted_no": weighted_no,
+            "threshold": threshold,
+            "ratio": ratio,
+        }
+
+    return update_governance(mutate)
