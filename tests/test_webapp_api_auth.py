@@ -131,7 +131,7 @@ class WebAppApiAuthTests(unittest.TestCase):
             "webapp.get_binding", return_value=None
         ), patch(
             "core.binance_connector.get_bsc_config",
-            return_value={"treasury_wallet": TREASURY},
+            return_value={"treasury_wallet": "0x1111111111111111111111111111111111111111"},
         ), patch(
             "webapp.state_manager.load_db", return_value={"bsc_settings": {}}
         ):
