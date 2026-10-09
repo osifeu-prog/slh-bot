@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch
 
-from core.bnb_gate import bnb_opening_evidence
+from core.bnb_gate import bnb_deposits_open, bnb_opening_evidence, bnb_settlement_allowed
 
 
 TREASURY = "0x1111111111111111111111111111111111111111"
@@ -187,3 +187,20 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
     assert status["empirical_settlement"]["tx_hash"] == tx_hash
     assert status["gate_open"] is False
     assert status["next_action"] == "operator_may_review_bnb_gate_opening"
+
+
+def test_operator_flag_and_forged_pass_do_not_open_public_bnb_settlement():
+    forged = {"status": "PASS", "tx_hash": "not-a-real-hash"}
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "BNB_DEPOSITS_CANARY_UID": "8789977826",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.bnb_gate._empirical_settlement_evidence", return_value=forged
+    ):
+        assert bnb_deposits_open() is False
+        assert bnb_settlement_allowed("224223270") is False
