@@ -388,6 +388,24 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 <section id="growth" class="screen"><div id="growthHub"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></div></section>
 <section id="market" class="screen"><div class="section-title">🛍 SLH Market</div>
+<div class="card" id="marketAssetGuide">
+  <b>🧭 מדריך קצר: מה מקבלים בכל מסלול?</b>
+  <p class="muted" style="margin-top:6px">התשלום ב־Stars מעניק את המוצר או ההרשאה שמוגדרים בקטלוג, אחרי אישור תשלום. אלה מסלולים שונים — לא כולם מעניקים מטבע או נכס on-chain.</p>
+  <div class="wallet-row"><span>🎓 קורסים מעניקים גישה</span><span>לתוכן הקורס המופיע בקטלוג</span></div>
+  <div class="wallet-row"><span>🤖 Tools / Trade Pro</span><span>תוסף או הרשאה כפי שהוגדרו למוצר</span></div>
+  <div class="wallet-row"><span>⭐ VIP</span><span>מנוי לשירות, לא טוקן</span></div>
+  <div class="wallet-row"><span>🎨 מוצרים דיגיטליים</span><span>חבילת תוכן או הרשאה דיגיטלית</span></div>
+  <div class="guide" style="margin-top:9px">
+    <p><b>Credits הם יתרה פנימית</b> ב־SLH OS; הם אינם SLH on-chain ואינם BNB.</p>
+    <p><b>SLH פנימי:</b> אפשר להגיש הוראת קנייה/מכירה ב־Exchange מול Credits. יתרת SLH פנימית משתנה בהתאם לביצוע ולהתאמה בפועל; אין הבטחה שהוראה תתמלא מיד.</p>
+    <p><b>SLH on-chain:</b> נכס BSC נפרד. אין כאן רכישה ישירה שלו בחנות, ואין לערבב בינו לבין יתרת SLH הפנימית.</p>
+    <p><b>הצבעה:</b> רכישה בחנות אינה מקנה זכות הצבעה אוטומטית. לפי המימוש הנוכחי, משקל ההצבעה נגזר מתפקיד החשבון ולא מיתרת SLH.</p>
+  </div>
+  <div class="actions" style="margin-top:8px">
+    <button class="action" type="button" onclick="show('exchange');loadExchange()"><b>🪙 קנייה / מכירה של SLH פנימי</b><span>Exchange · SLH/Credits · הוראות ועסקאות</span></button>
+    <button class="action" type="button" onclick="show('governance');loadGovernanceScreen()"><b>🗳️ הצעות והצבעות</b><span>צפה בהצעות פתוחות וקבל אישור הצבעה</span></button>
+  </div>
+</div>
 <div class="card"><b>⭐️ SLH Stars Store</b><p class="muted">רכישה ישירה דרך Telegram Stars. לחיצה על קנייה תפתח את תהליך התשלום בבוט, באמצעות מנגנון ה־Stars וה־fulfillment הקיימים.</p><div id="starsStore"><div class="muted">טוען קטלוג…</div></div></div>
 <div class="card"><b>💳 תשלום בכרטיס</b><p class="muted">כרטיסים זמינים רק למוצרים פיזיים/חומרה שהוגדרו מראש. מוצרים דיגיטליים, Credits וקורסים בתוך Telegram ממשיכים דרך Stars.</p><div id="cardStore"><div class="muted">טוען אפשרויות כרטיס…</div></div></div>
 <div class="card"><b>מוצרים ושירותים</b><p class="muted">הקטלוג והחיוב משתמשים במנועי Store הקיימים. Credits ו-Telegram Stars הם מסלולי תשלום נפרדים.</p>
@@ -506,6 +524,11 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="section-title">🗳️ Governance</div>
 <div class="card">
   <div class="muted">הצעות והצבעות רשמיות של SLH OS. ההצבעה נרשמת בשרת מול מקור האמת הקנוני; ניתן להצביע פעם אחת לכל הצעה פתוחה.</div>
+  <div class="guide" id="governanceRulesNotice" style="margin-top:9px">
+    <b>איך ההצבעה עובדת כיום?</b>
+    <p style="margin-top:5px">בחר בעד, נגד או נמנע בהצעה פתוחה. לאחר אישור השרת תוצג קבלה עם הבחירה, המשקל והזמן. ההצבעה נשמרת פעם אחת לכל משתמש בכל הצעה.</p>
+    <p><b>משקל ההצבעה נגזר מתפקיד החשבון</b> לפי כללי Governance הקנוניים, <b>לא מיתרת SLH</b>. רכישת קורס, VIP, מוצר דיגיטלי או SLH אינה מוסיפה אוטומטית זכות הצבעה או משקל נוסף.</p>
+  </div>
   <div id="governanceBody" style="margin-top:12px">טוען הצעות…</div>
 </div>
 </section>
@@ -977,12 +1000,25 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
   const tradeLabel=tradeIds.length
     ? 'Trade ID: '+tradeIds.map(x=>esc(x)).join(', ')
     : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
-  box.innerHTML='<b>✅ Fresh Exchange check: '+esc(check.status||'UNKNOWN')+'</b>'+
+  const flagLabel=value=>value===true?'PASS':value===false?'FAIL':'לא דווח';
+  const checkPassed=check.status==='PASS'
+    && check.public_gate==='OPEN'
+    && check.public_ready===true
+    && check.order_book_integrity===true
+    && check.trade_integrity===true
+    && check.money_invariants===true;
+  box.innerHTML='<b>'+(checkPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק')+'</b>'+
     '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
     '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
     '<div>Filled: '+esc(data.filled||'0')+' SLH · Remaining: '+esc(data.remaining||'0')+' SLH</div>'+
     '<div>'+tradeLabel+'</div>'+
-    '<div class="muted" style="margin-top:4px">אימות קנוני בוצע בשרת בתוך פעולת המסחר · '+esc(check.checked_at||'')+'</div>';
+    '<div class="wallet-row" style="margin-top:8px"><span>שער ציבורי</span><strong>'+esc(check.public_gate||'לא דווח')+'</strong></div>'+
+    '<div class="wallet-row"><span>מוכנות ציבורית</span><strong>'+esc(flagLabel(check.public_ready))+'</strong></div>'+
+    '<div class="wallet-row"><span>ספר פקודות</span><strong>'+esc(flagLabel(check.order_book_integrity))+'</strong></div>'+
+    '<div class="wallet-row"><span>תקינות עסקאות</span><strong>'+esc(flagLabel(check.trade_integrity))+'</strong></div>'+
+    '<div class="wallet-row"><span>אינווריאנטים כספיים</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
+    '<div class="muted" style="margin-top:4px">הבדיקה בוצעה בצד השרת בתוך פעולת המסחר האטומית · '+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
+    (checkPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה לפקודה, אך חסרים שדות אישור. בדוק את Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
 }
 function renderExchangeExecutionBlocked(data,sourceInputId){
   const check=data.exchange_check||{};
@@ -1031,9 +1067,18 @@ async function sendExchangeOrder(side,amount,price,options){
     }
     delete __exchangePendingRequests[intent];
     renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
+    const executionCheck=d.execution_check||{};
+    const receiptVerified=executionCheck.status==='PASS'
+      && executionCheck.public_gate==='OPEN'
+      && executionCheck.public_ready===true
+      && executionCheck.order_book_integrity===true
+      && executionCheck.trade_integrity===true
+      && executionCheck.money_invariants===true;
     const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
     const tradeNote=tradeIds.length?' · Trade '+tradeIds.join(', '):' · ממתין להתאמה';
-    toast('✅ Fresh check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote);
+    toast(receiptVerified
+      ? '✅ Fresh canonical check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote
+      : '⚠️ הפקודה התקבלה, אך קבלת האימות חלקית. בדוק Order ID והיסטוריית עסקאות לפני ניסיון נוסף.');
     if(typeof loadExchange==='function'){
       await loadExchange();
     }else{
@@ -1154,6 +1199,13 @@ async function loadStarsStore(){
     const d=await r.json();
     if(!r.ok)throw Error(d.error||'STORE_HTTP_'+r.status);
     const groups={courses:"🎓 Courses",tools:"🤖 Tools",vip:"⭐️ VIP",emojis:"🎨 Emojis",other:"🛍 Other"};
+    const grantDescriptions={
+      courses:'גישה לתוכן הקורס המפורט בקטלוג; לא SLH on-chain.',
+      tools:'גישה לתוסף או לכלי המוגדרים למוצר; לא מטבע.',
+      vip:'מנוי VIP לפי תנאי המוצר; לא טוקן.',
+      emojis:'חבילת תוכן דיגיטלי; לא מטבע on-chain.',
+      other:'מוצר דיגיטלי או הרשאה כפי שהוגדרו בקטלוג; לא נוצרת יתרת on-chain מעצם הרכישה.'
+    };
     const items=Array.isArray(d.items)?d.items:[];
     const vip=d.vip&&typeof d.vip==='object'?d.vip:{};
     const vipDate=vip.active&&vip.expires_at?new Date(Number(vip.expires_at)*1000).toLocaleDateString('he-IL'):''; 
@@ -1166,7 +1218,8 @@ async function loadStarsStore(){
           const vipStatus=isActiveVip
             ? '<div class="status" style="margin-top:8px"><span class="pill ok">✅ פעיל עד '+esc(vipDate)+'</span></div>'
             : '<button class="action primary" style="width:100%;margin-top:8px" onclick="buyStars(\''+(item.id==='vip_monthly'?'vip_monthly':'store_item')+'\',\''+esc(String(item.id||''))+'\')"><b>'+(item.category==='vip'?'⭐ הירשם':'⭐ קנה עכשיו')+'</b><span>פתיחת תשלום מאובטח ב-Telegram Stars</span></button>';
-          return '<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>'+esc(item.name)+'</b><div class="muted">'+esc(item.type||'digital')+'</div></span><strong>⭐ '+fmt(item.price_stars)+'</strong></div>'+vipStatus+'</div>';
+          const grantDescription=grantDescriptions[item.category]||'המוצר/ההרשאה מוגדרים בקטלוג; לא נוצר נכס on-chain מעצם הרכישה.';
+          return '<div class="card" style="margin-top:8px"><div class="wallet-row"><span><b>'+esc(item.name)+'</b><div class="muted">'+esc(item.type||'digital')+'</div></span><strong>⭐ '+fmt(item.price_stars)+'</strong></div><div class="muted" style="margin-top:5px">'+esc(grantDescription)+'</div>'+vipStatus+'</div>';
         }).join('');
     }).join('');
     el.innerHTML=html||'<div class="muted">אין כרגע מוצרים זמינים ב-Stars.</div>';
