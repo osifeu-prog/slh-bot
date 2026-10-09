@@ -21,6 +21,8 @@ from typing import Any
 from eth_account import Account
 from web3 import Web3
 
+from core.bsc_address_policy import require_usable_bsc_address
+
 DEFAULT_TESTNET_RPC = "https://bsc-testnet-dataseed.bnbchain.org"
 DEFAULT_MAINNET_RPC = "https://bsc-dataseed.bnbchain.org"
 
@@ -129,6 +131,8 @@ def _checksum_address(value: str, *, field: str) -> str:
     if not raw or not Web3.is_address(raw):
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     address = Web3.to_checksum_address(raw)
+    if field.lower() in {"recipient", "destination", "treasury", "wallet"}:
+        require_usable_bsc_address(address, role=field)
     if address == ZERO_ADDRESS:
         raise ValueError(f"INVALID_{field.upper()}_ADDRESS")
     return address
@@ -199,10 +203,10 @@ def _bound_account(uid: str) -> str:
 
 
 def prepare_native_transfer(uid: str, recipient: str, amount: str) -> dict[str, Any]:
+    destination = _checksum_address(recipient, field="recipient")
     cfg = _require_enabled()
     web3 = _client(cfg)
     sender = _bound_account(uid)
-    destination = _checksum_address(recipient, field="recipient")
     if destination == sender:
         raise ValueError("RECIPIENT_EQUALS_SENDER")
 
@@ -264,11 +268,11 @@ def prepare_erc20_transfer(
     *,
     asset: str = "ERC20",
 ) -> dict[str, Any]:
+    destination = _checksum_address(recipient, field="recipient")
     cfg = _require_enabled()
     web3 = _client(cfg)
     sender = _bound_account(uid)
     token = _checksum_address(token_address, field="token")
-    destination = _checksum_address(recipient, field="recipient")
     if destination == sender:
         raise ValueError("RECIPIENT_EQUALS_SENDER")
 
@@ -346,6 +350,7 @@ def prepare_erc20_transfer(
 
 
 def prepare_usdt_transfer(uid: str, recipient: str, amount: str) -> dict[str, Any]:
+    require_usable_bsc_address(recipient, role="recipient")
     cfg = _require_enabled()
     token = cfg.get("usdt_address")
     if not token:
