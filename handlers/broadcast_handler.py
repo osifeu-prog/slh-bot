@@ -55,8 +55,8 @@ def _send_one(bot, uid, message_text, next_allowed_at):
 
 def _is_exchange_status_announcement(text):
     value = str(text or "").lower()
-    value = re.sub(r"[^\\w\\s]", " ", value, flags=re.UNICODE)
-    value = re.sub(r"\\s+", " ", value).strip()
+    value = re.sub(r"[^\w\s]", " ", value, flags=re.UNICODE)
+    value = re.sub(r"\s+", " ", value).strip()
     protected_terms = (
         "exchange",
         "מסחר פנימי",
