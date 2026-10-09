@@ -102,3 +102,30 @@ def test_empirical_evidence_shape_rejects_missing_checks():
     from core.bnb_gate import _empirical_evidence_shape_valid
 
     assert _empirical_evidence_shape_valid({"status": "PASS"}) is False
+
+def test_normal_bnb_gate_stays_closed_when_flag_is_open_but_empirical_proof_is_missing():
+    from core.bnb_gate import bnb_deposits_open
+
+    with patch.dict(os.environ, {"BNB_DEPOSITS_OPEN": "1"}, clear=False), patch(
+        "core.bnb_gate.bnb_readiness",
+        return_value={"effective_open": True},
+    ), patch("core.bnb_gate._empirical_settlement_evidence", return_value=None), patch(
+        "core.bnb_gate._effective_config", return_value=_cfg()
+    ), patch("core.bnb_gate._empirical_evidence_revalidated", return_value=False) as revalidate:
+        assert bnb_deposits_open() is False
+        revalidate.assert_called_once()
+
+
+def test_normal_bnb_gate_requires_and_accepts_revalidated_empirical_proof():
+    from core.bnb_gate import bnb_deposits_open
+
+    proof = {"status": "PASS", "tx_hash": "0x" + "ab" * 32}
+    with patch.dict(os.environ, {"BNB_DEPOSITS_OPEN": "1"}, clear=False), patch(
+        "core.bnb_gate.bnb_readiness",
+        return_value={"effective_open": True},
+    ), patch("core.bnb_gate._empirical_settlement_evidence", return_value=proof), patch(
+        "core.bnb_gate._effective_config", return_value=_cfg()
+    ), patch("core.bnb_gate._empirical_evidence_revalidated", return_value=True) as revalidate:
+        assert bnb_deposits_open() is True
+        revalidate.assert_called_once_with(proof, _cfg())
+
