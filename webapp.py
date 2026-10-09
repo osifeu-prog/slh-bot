@@ -1409,8 +1409,16 @@ def governance_read_api():
             if not isinstance(proposal, dict):
                 continue
             votes = proposal.get("votes", {}) if isinstance(proposal.get("votes"), dict) else {}
+            proposal_id = proposal.get("id")
+            individual_votes = gov.get("individual_votes", {}) if isinstance(gov.get("individual_votes"), dict) else {}
+            my_vote = individual_votes.get(f"p{proposal_id}_{uid}")
             safe_proposals.append({
-                "id": proposal.get("id"),
+                "id": proposal_id,
+                "my_vote": {
+                    "choice": my_vote.get("choice"),
+                    "weight": my_vote.get("weight", 1),
+                    "timestamp": my_vote.get("timestamp"),
+                } if isinstance(my_vote, dict) else None,
                 "title": proposal.get("title", ""),
                 "description": proposal.get("description", ""),
                 "status": proposal.get("status", "unknown"),
@@ -1433,6 +1441,59 @@ def governance_read_api():
     except Exception as exc:
         print("[GOV] read API error:", type(exc).__name__, str(exc)[:200])
         return jsonify({"error": "SERVER_ERROR"}), 500
+
+
+@app.route("/api/v1/governance/vote", methods=["POST"])
+def governance_vote_api():
+    """Authenticated Mini App vote write through the canonical Governance service."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+
+    payload = request.get_json(silent=True) or {}
+    try:
+        proposal_id = int(payload.get("proposal_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "PROPOSAL_ID_INVALID"}), 400
+    if proposal_id < 1:
+        return jsonify({"error": "PROPOSAL_ID_INVALID"}), 400
+
+    choice = str(payload.get("choice", "")).strip().lower()
+    if choice not in {"yes", "no", "abstain"}:
+        return jsonify({"error": "VOTE_CHOICE_INVALID"}), 400
+
+    try:
+        from core import governance_store
+        from core.tokenomics import rewards_snapshot
+
+        result = governance_store.record_vote(
+            proposal_id=proposal_id,
+            voter_uid=str(uid),
+            choice=choice,
+            reward_points=rewards_snapshot().get("vote_points", 0),
+        )
+        return _no_store(jsonify({
+            "status": result["status"],
+            "proposal_id": result["proposal_id"],
+            "choice": result.get("choice"),
+            "weight": result.get("weight", 1),
+            "points_awarded": result.get("points_awarded", 0),
+            "points_after": result.get("points_after"),
+            "slh_context": result.get("slh_context", {}),
+        })), 200
+    except ValueError as exc:
+        code = str(exc)
+        status = 404 if code == "PROPOSAL_NOT_FOUND" else 409 if code == "PROPOSAL_CLOSED" else 400
+        messages = {
+            "PROPOSAL_ID_INVALID": "PROPOSAL_ID_INVALID",
+            "VOTE_CHOICE_INVALID": "VOTE_CHOICE_INVALID",
+            "PROPOSAL_NOT_FOUND": "PROPOSAL_NOT_FOUND",
+            "PROPOSAL_CLOSED": "PROPOSAL_CLOSED",
+        }
+        return jsonify({"error": messages.get(code, code)}), status
+    except Exception as exc:
+        print("[GOV] vote API error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "GOVERNANCE_VOTE_FAILED"}), 503
 
 
 @app.route("/api/v1/journal", methods=["GET", "POST"])
