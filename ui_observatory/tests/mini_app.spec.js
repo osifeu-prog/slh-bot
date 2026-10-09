@@ -37,7 +37,26 @@ async function mockBackend(page) {
   await page.route('**/api/**', async route => {
     const url = new URL(route.request().url());
     let body = {};
-    if (url.pathname === '/api/v1/me') {
+    if (url.pathname === '/api/v1/exchange/order' && route.request().method() === 'POST') {
+      body = {
+        order_id: 'O000000042',
+        filled: '2.00000000',
+        remaining: '0.00000000',
+        status: 'filled',
+        trade_ids: ['T000000043'],
+        execution_check: {
+          status: 'PASS',
+          checked_at: '2026-10-09T09:00:00Z',
+          public_gate: 'OPEN',
+          verdict: 'OPEN',
+          public_ready: true,
+          order_book_integrity: true,
+          trade_integrity: true,
+          money_invariants: true,
+          open_orders_before: 1
+        }
+      };
+    } else if (url.pathname === '/api/v1/me') {
       body = { name: 'UI Test User', credits: 21994384, token_balance: 21650000, staked: 1, points: 110, referrals: 0 };
     } else if (url.pathname.startsWith('/api/wallet/')) {
       body = { name: 'UI Test User', credits: 21994384, staked: 1, token_balance: 21650000, ton_wallet: null };
@@ -90,6 +109,35 @@ test('all primary screens are reachable', async ({ page }) => {
     seen.push(id);
   }
   expect(seen).toEqual(screens.map(([id]) => id));
+});
+
+test('market clearly distinguishes store grants, Credits, internal SLH and on-chain SLH', async ({ page }) => {
+  await page.evaluate(() => show('market'));
+  const guide = page.locator('#marketAssetGuide');
+  await expect(guide).toContainText('קורסים מעניקים גישה');
+  await expect(guide).toContainText('Credits הם יתרה פנימית');
+  await expect(guide).toContainText('רכישה בחנות אינה מקנה זכות הצבעה אוטומטית');
+  await expect(guide.getByRole('button', { name: /הצעות והצבעות/ })).toBeVisible();
+});
+
+test('governance explains role-based vote weight before the user votes', async ({ page }) => {
+  await page.evaluate(() => show('governance'));
+  const notice = page.locator('#governanceRulesNotice');
+  await expect(notice).toContainText('משקל ההצבעה נגזר מתפקיד החשבון');
+  await expect(notice).toContainText('לא מיתרת SLH');
+});
+
+test('exchange receipt shows every fresh canonical gate item', async ({ page }) => {
+  await page.evaluate(() => show('exchange'));
+  await page.locator('#buyAmount').fill('2');
+  await page.locator('#buyPrice').fill('1');
+  await page.locator('#exchange').getByRole('button', { name: /קנה SLH/ }).click();
+  const receipt = page.locator('[data-exchange-receipt="true"]');
+  await expect(receipt).toContainText('Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('שער ציבורי');
+  await expect(receipt).toContainText('ספר פקודות');
+  await expect(receipt).toContainText('תקינות עסקאות');
+  await expect(receipt).toContainText('אינווריאנטים כספיים');
 });
 
 test('mobile layout has no horizontal overflow', async ({ page }) => {
