@@ -161,7 +161,19 @@ def register(bot, context=None):
                 f"Public gate: {'OPEN' if result['public_open'] else 'CLOSED'}",
                 f"Readiness: {'PASS' if result['ready'] else 'BLOCKED'}",
                 f"Empirical smoke: {result['empirical_status']}",
+                f"Evidence status: {result.get('evidence_status', 'UNKNOWN')}",
+                f"Live RPC: {result.get('live_rpc_status', 'UNKNOWN')}",
                 f"Confirmations required: {result['confirmations_required']}",
+            ]
+            for reason in result.get("gate_reasons", [])[:5]:
+                lines.append(f"Gate reason: {reason}")
+            for reason in result.get("blockers", [])[:5]:
+                lines.append(f"Blocker: {reason}")
+            for warning in result.get("warnings", [])[:3]:
+                lines.append(f"Warning: {warning}")
+            if result.get("next_action"):
+                lines.append(f"Next action: {result['next_action']}")
+            lines += [
                 "",
                 "⛔️ אין שליחה, broadcast, claim או gate change.",
             ]

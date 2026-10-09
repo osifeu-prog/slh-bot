@@ -128,3 +128,66 @@ def test_check_bnb_is_green_only_when_public_gate_and_proof_are_valid(monkeypatc
     assert result["ok"] is True
     assert result["launch_ready"] is True
     assert result["empirical_status"] == "PASS"
+
+
+
+def test_check_bnb_exposes_read_only_blocker_diagnostics(monkeypatch):
+    import core.bnb_gate as bnb_gate
+    import core.system_checks as checks
+
+    monkeypatch.setattr(
+        bnb_gate,
+        "bnb_readiness",
+        lambda: {
+            "ready": False,
+            "effective_open": False,
+            "flag_open": False,
+            "confirmations_required": 15,
+            "reasons": ["BNB_CANONICAL_TREASURY_MISSING"],
+        },
+    )
+    monkeypatch.setattr(
+        bnb_gate,
+        "bnb_opening_evidence",
+        lambda: {
+            "status": "BLOCKED",
+            "ready_to_open": False,
+            "blockers": ["LIVE_BSC_RPC_UNVERIFIED"],
+            "warnings": ["empirical_settlement_reconciliation_pending_or_invalid"],
+            "live_rpc": {"status": "FAIL"},
+            "next_action": "controlled_empirical_reconciliation_before_opening",
+            "empirical_settlement": {},
+        },
+    )
+    monkeypatch.setattr(bnb_gate, "bnb_deposits_open", lambda: False)
+
+    result = checks.check_bnb()
+
+    assert result["public_open"] is False
+    assert result["gate_reasons"] == ["BNB_CANONICAL_TREASURY_MISSING"]
+    assert result["blockers"] == ["LIVE_BSC_RPC_UNVERIFIED"]
+    assert result["warnings"] == ["empirical_settlement_reconciliation_pending_or_invalid"]
+    assert result["live_rpc_status"] == "FAIL"
+    assert result["next_action"] == "controlled_empirical_reconciliation_before_opening"
+
+
+def test_infrastructure_snapshot_marks_old_registry_stale(monkeypatch):
+    import core.control_center as control_center
+
+    monkeypatch.setattr(
+        control_center,
+        "_load_registry",
+        lambda: {
+            "schema_version": "1.0",
+            "verified_date_utc": "2000-01-01",
+            "canonical": {},
+            "railway_projects": [],
+            "github_unmapped": [],
+        },
+    )
+
+    snapshot = control_center.get_infrastructure_snapshot()
+
+    assert snapshot["registry_stale"] is True
+    assert snapshot["registry_age_days"] is not None
+    assert snapshot["registry_age_days"] > snapshot["registry_stale_after_days"]
