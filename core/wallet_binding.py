@@ -11,6 +11,7 @@ from eth_account import Account
 from eth_account.messages import encode_defunct
 from web3 import Web3
 
+from core.bsc_address_policy import is_quarantined_bsc_address, require_usable_bsc_address
 import state_manager
 
 CHAIN = "bsc"
@@ -48,6 +49,7 @@ def challenge_message(uid, address, nonce):
 def issue_challenge(uid, address):
     uid = str(uid)
     address = normalize_address(address)
+    require_usable_bsc_address(address, role="wallet binding")
     nonce = secrets.token_urlsafe(32)
     expires_at = _now() + timedelta(seconds=CHALLENGE_TTL_SECONDS)
     message = challenge_message(uid, address, nonce)
@@ -85,6 +87,7 @@ def _signature_bytes(signature):
 def verify_signature(uid, address, signature):
     uid = str(uid)
     address = normalize_address(address)
+    require_usable_bsc_address(address, role="wallet binding")
     if not isinstance(signature, str) or not signature.strip():
         raise ValueError("INVALID_SIGNATURE")
 
@@ -170,5 +173,7 @@ def get_binding(uid):
     db = state_manager.load_db()
     for binding in db.get("wallet_bindings", {}).values():
         if str(binding.get("uid")) == uid and binding.get("chain") == CHAIN:
+            if is_quarantined_bsc_address(binding.get("address")):
+                return None
             return binding
     return None
