@@ -168,7 +168,20 @@ def _empirical_evidence_revalidated(empirical: dict | None, gate: dict) -> bool:
             and isinstance(entry.get("meta"), dict)
             and entry["meta"].get("idempotency_key") == key
         ]
-        return len(matching) == 1
+        if len(matching) != 1:
+            return False
+        entry = matching[0]
+        if str(entry.get("uid") or "") != uid:
+            return False
+        if entry.get("reason") != "bnb:deposit":
+            return False
+        if abs(float(entry.get("amount", 0)) - float(empirical["credits"])) > 1e-9:
+            return False
+        if abs(float(entry.get("before", 0)) - float(empirical["balance_before"])) > 1e-9:
+            return False
+        if abs(float(entry.get("after", 0)) - float(empirical["balance_after"])) > 1e-9:
+            return False
+        return True
     except Exception:
         return False
 
