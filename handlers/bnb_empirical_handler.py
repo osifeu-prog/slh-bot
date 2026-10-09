@@ -254,7 +254,7 @@ def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
     return state_manager.atomic_update(mutate)
 
 
-def confirm_existing_bnb_reconcile(uid, *, now=None):
+def confirm_existing_bnb_reconcile(uid, *, tx_hash=None, now=None):
     """Explicitly settle a prepared existing TX once; public BNB stays closed."""
     uid = str(uid or "").strip()
     if not is_owner(uid):
@@ -272,7 +272,13 @@ def confirm_existing_bnb_reconcile(uid, *, now=None):
     if record.get("status") != "PENDING_CONFIRMATION":
         return {"status": "ALREADY_HANDLED"}
     reconcile_id = str(record.get("reconcile_id") or "")
-    tx_hash = str(record.get("tx_hash") or "")
+    stored_tx_hash = str(record.get("tx_hash") or "")
+    provided_tx_hash = str(tx_hash or "").strip()
+    if not _TX_HASH_RE.fullmatch(provided_tx_hash):
+        return {"status": "INVALID_TX_HASH"}
+    if provided_tx_hash.lower() != stored_tx_hash.lower():
+        return {"status": "TX_HASH_MISMATCH"}
+    tx_hash = stored_tx_hash
     try:
         expires_at = _utc_now(record.get("expires_at"))
     except Exception:
@@ -379,7 +385,7 @@ def _preview_reply(result):
             f"סכום מאומת: {amount:.8f} BNB · confirmations: {result.get('confirmations')}/{result.get('required_confirmations')}\n"
             f"Settlement משוער אם האישור יעבור: +{credits:.8f} Credits פעם אחת.\n"
             "השער הציבורי יישאר CLOSED.\n"
-            "לאישור מפורש של ה־TX הזה בלבד, שלח /bnb_reconcile_confirm בתוך 5 דקות."
+            f"לאישור מפורש של ה־TX הזה בלבד, שלח בתוך 5 דקות: /bnb_reconcile_confirm {result.get('tx_hash', '')}"
         )
     details = {
         "INVALID_TX_HASH": "פורמט TX hash לא תקין.",
@@ -448,7 +454,15 @@ def register(bot):
         if denial:
             bot.reply_to(message, denial)
             return
-        result = confirm_existing_bnb_reconcile(uid)
+        parts = (getattr(message, "text", "") or "").split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(
+                message,
+                "שימוש: /bnb_reconcile_confirm <exact_tx_hash>\\n"
+                "האישור חייב לכלול בדיוק את ה־TX שהופיע בתצוגה המקדימה.",
+            )
+            return
+        result = confirm_existing_bnb_reconcile(uid, tx_hash=parts[1].strip())
         bot.reply_to(message, _confirm_reply(result), parse_mode=None)
 
     @bot.message_handler(commands=["bnb_smoke", "bnbtest"])
