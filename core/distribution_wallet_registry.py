@@ -73,6 +73,11 @@ def list_secondary_distribution_wallets() -> list[dict[str, Any]]:
     db = state_manager.load_db()
     raw = db.get(REGISTRY_KEY, {}) if isinstance(db, dict) else {}
     rows = [dict(value) for value in raw.values() if isinstance(value, dict)]
+    for row in rows:
+        if is_quarantined_bsc_address(row.get("address")):
+            row["status"] = "blocked"
+            row["blocked_reason"] = "BSC_ADDRESS_QUARANTINED_ZUZ"
+            row["forensic_alias"] = "ZUZ"
     rows.sort(key=lambda row: str(row.get("enabled_at") or row.get("updated_at") or ""))
     return rows
 
