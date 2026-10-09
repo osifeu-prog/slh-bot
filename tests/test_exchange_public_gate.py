@@ -37,13 +37,13 @@ class ExchangePublicGateTests(unittest.TestCase):
                 db, "seller", "sell",
                 exchange_handler._dec("5", "amount"),
                 exchange_handler._dec("2", "price"),
-                "test-open-sell",
+                "req-open-sell",
             )
             buy = exchange_handler._place(
                 db, "buyer", "buy",
                 exchange_handler._dec("5", "amount"),
                 exchange_handler._dec("2", "price"),
-                "test-open-buy",
+                "req-open-buy",
             )
         self.assertEqual(sell["status"], "open")
         self.assertEqual(buy["status"], "filled")
