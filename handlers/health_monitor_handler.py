@@ -56,17 +56,24 @@ def register(bot, context=None):
             for name, status in checks:
                 lines.append(f'{"🟢" if status == "OK" else "🔴"} {name}')
 
+            verified_date = infrastructure.get("verified_date_utc") or "unknown"
+            registry_age = infrastructure.get("registry_age_days")
+            registry_stale = bool(infrastructure.get("registry_stale", True))
+            age_text = f"{registry_age}d old" if registry_age is not None else "age unknown"
             lines.extend([
                 "",
                 f"Users: {snapshot.get('users', {}).get('count', 0)}",
                 f"Agents: {snapshot.get('agents', {}).get('count', 0)}",
-                f"Railway application services not green: {len(non_green)}",
+                f"Federation inventory: {'STALE' if registry_stale else 'recent snapshot'}",
+                f"Inventory verified: {verified_date} ({age_text})",
+                f"Snapshot non-green application entries: {len(non_green)}",
+                "Note: registry statuses are a snapshot, not a live Railway heartbeat.",
             ])
 
             for service in non_green[:8]:
                 lines.append(
                     f"• {service.get('project', '?')}/{service.get('service', '?')}"
-                    f" [{service.get('status', 'unknown')}]"
+                    f" [snapshot: {service.get('status', 'unknown')}]"
                 )
 
             bot.reply_to(m, "\n".join(lines))
