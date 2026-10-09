@@ -1,8 +1,10 @@
+import io
 import os
 import requests
 
 from core.ask_router import route
 from core.conversation_memory import record_turn
+from core.voice_output import synthesize_hebrew_voice
 
 GROQ_STT_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 DEFAULT_STT_MODEL = "whisper-large-v3-turbo"
@@ -66,6 +68,38 @@ def _safe_answer(value, limit=3500):
     return text or "⚠️ לא התקבלה תשובה."
 
 
+
+def _voice_reply_allowed(uid, message):
+    if str(os.getenv("SLH_VOICE_REPLY_ENABLED", "1")).strip().lower() not in {"1", "true", "yes", "on"}:
+        return False
+    if not uid or str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+        return False
+    try:
+        from core.authority import get_role
+        return get_role(uid) in {"OWNER", "ADMIN", "DEVELOPER"}
+    except Exception:
+        return False
+
+
+def _send_spoken_reply(bot, message, uid, text):
+    # Always preserve the normal text reply. TTS is an optional second channel.
+    if not _voice_reply_allowed(uid, message):
+        return
+    audio, error = synthesize_hebrew_voice(text)
+    if error or not audio:
+        print("[VOICE] spoken reply unavailable:", error or "TTS_EMPTY_AUDIO")
+        return
+    try:
+        voice_file = io.BytesIO(audio)
+        voice_file.name = "slh-reply.ogg"
+        bot.send_voice(
+            message.chat.id,
+            voice_file,
+            reply_to_message_id=getattr(message, "message_id", None),
+        )
+    except Exception as exc:
+        print("[VOICE] Telegram voice delivery failed:", type(exc).__name__)
+
 def register(bot):
     @bot.message_handler(content_types=["voice"])
     def handle_voice(message):
@@ -109,6 +143,8 @@ def register(bot):
                 and not final_answer.startswith("מנוע ה-AI לא זמין כרגע")
             ):
                 record_turn(uid, transcript, final_answer, intent="voice")
+
+            _send_spoken_reply(bot, message, uid, final_answer)
 
         except Exception as exc:
             print("[VOICE] handler error:", type(exc).__name__)
