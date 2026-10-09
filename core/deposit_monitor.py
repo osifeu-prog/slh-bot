@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from web3 import Web3
 from core.binance_connector import get_bsc_config
+from core.bsc_address_policy import is_quarantined_bsc_address, forensic_alias
 import state_manager
 
 
@@ -20,6 +21,16 @@ def get_onchain_status():
         db = state_manager.load_db()
         if "bsc_settings" in db:
             cfg = {**cfg, **db["bsc_settings"]}
+
+        if is_quarantined_bsc_address(cfg.get("treasury_wallet")):
+            return {
+                "ok": False,
+                "error": "BSC_ADDRESS_QUARANTINED_ZUZ",
+                "treasury_wallet": None,
+                "forensic_alias": forensic_alias(cfg.get("treasury_wallet")),
+                "forensic_read_only": True,
+                "token_contract": cfg.get("token_contract"),
+            }
 
         if not cfg.get("treasury_wallet") or not cfg.get("token_contract"):
             return {
@@ -68,6 +79,8 @@ def verify_bnb_deposit(tx_hash):
     cfg = get_bsc_config()
     db = state_manager.load_db()
     cfg = {**cfg, **db.get("bsc_settings", {})}
+    if is_quarantined_bsc_address(cfg.get("treasury_wallet")):
+        return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
     try:
         if int(w3.eth.chain_id) != 56:
