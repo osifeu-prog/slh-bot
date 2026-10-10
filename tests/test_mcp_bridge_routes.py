@@ -99,5 +99,79 @@ class MCPBridgeRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+    def test_exchange_gate_status_returns_only_canonical_gate_value(self):
+        with patch(
+            "core.mcp_bridge_routes.has_permission", return_value=True
+        ), patch(
+            "core.railway_control.exchange_gate_variable_status",
+            return_value={
+                "variable": "SLH_EXCHANGE_PUBLIC_OPEN",
+                "configured": "0",
+                "configured_open": False,
+                "source": "railway_service_production",
+            },
+        ):
+            response = self.client.get(
+                "/internal/mcp/v1/exchange-gate",
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {"status": "PASS", "configured": "0", "configured_open": False},
+        )
+
+    def test_exchange_gate_close_is_fixed_and_close_only(self):
+        result = {
+            "status": "DEPLOY_TRIGGERED",
+            "configured": "0",
+            "commit": "a" * 40,
+            "deployment_id": "dep-safe-123",
+            "service": "slh-cloud-bot",
+            "environment": "production",
+        }
+        with patch(
+            "core.mcp_bridge_routes.has_permission", return_value=True
+        ), patch(
+            "core.railway_control.close_exchange_gate", return_value=result
+        ) as close:
+            response = self.client.post(
+                "/internal/mcp/v1/exchange-gate/close",
+                json={"projectId": "attacker", "value": "1"},
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.get_json(),
+            {
+                "status": "DEPLOY_TRIGGERED",
+                "configured": "0",
+                "commit": "a" * 40,
+                "deployment_id": "dep-safe-123",
+            },
+        )
+        close.assert_called_once_with()
+        self.assertEqual(
+            self.client.post(
+                "/internal/mcp/v1/exchange-gate/open",
+                headers={"Authorization": "Bearer bridge-test"},
+            ).status_code,
+            404,
+        )
+
+    def test_exchange_gate_close_requires_privileged_bridge_identity(self):
+        with patch(
+            "core.mcp_bridge_routes.has_permission", return_value=False
+        ), patch("core.railway_control.close_exchange_gate") as close:
+            response = self.client.post(
+                "/internal/mcp/v1/exchange-gate/close",
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+        self.assertEqual(response.status_code, 403)
+        close.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
