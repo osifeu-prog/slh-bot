@@ -137,6 +137,16 @@ def verify_bnb_deposit(tx_hash):
     if to_addr is None or str(to_addr).lower() != str(treasury).lower():
         return {"ok": False, "to": str(to_addr), "treasury": str(treasury)}
 
+    sender = str(tx.get("from") or "")
+    if sender and sender.lower() == str(treasury).lower():
+        return {
+            "ok": False,
+            "error": "BNB_SELF_TRANSFER_NOT_DEPOSIT",
+            "from": sender,
+            "to": str(to_addr),
+            "tx_hash": str(tx_hash),
+        }
+
     block = int(receipt.get("blockNumber", 0))
     latest_block = int(w3.eth.block_number)
     confirmations = max(0, latest_block - block + 1)
