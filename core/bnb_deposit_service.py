@@ -8,6 +8,8 @@ This module does not broadcast transactions or expose private keys.
 import os
 from decimal import Decimal
 
+import state_manager
+
 from core.bnb_gate import bnb_deposits_open, bnb_readiness
 from core.deposit_monitor import verify_bnb_deposit
 from core.wallet_binding import get_binding
