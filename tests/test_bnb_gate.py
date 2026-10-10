@@ -225,3 +225,61 @@ def test_bnb_readiness_fails_closed_when_wallet_binding_registry_is_missing():
         assert status["ready"] is False
         assert status["effective_open"] is False
         assert "BNB_WALLET_BINDINGS_UNVERIFIED" in status["reasons"]
+
+
+def test_bnb_readiness_fails_closed_when_binding_address_is_malformed():
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={
+            "wallet_bindings": {
+                "malformed-key": {
+                    "uid": "owner",
+                    "chain": "bsc",
+                    "address": "not-an-evm-address",
+                }
+            }
+        },
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is False
+        assert status["effective_open"] is False
+        assert "BNB_WALLET_BINDINGS_UNVERIFIED" in status["reasons"]
+
+
+def test_bnb_readiness_fails_closed_when_binding_chain_is_missing():
+    bound_wallet = "0x2222222222222222222222222222222222222222"
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={
+            "wallet_bindings": {
+                bound_wallet.lower(): {
+                    "uid": "owner",
+                    "address": bound_wallet,
+                }
+            }
+        },
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is False
+        assert status["effective_open"] is False
+        assert "BNB_WALLET_BINDINGS_UNVERIFIED" in status["reasons"]
