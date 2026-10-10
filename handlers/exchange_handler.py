@@ -1,7 +1,7 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import state_manager
-from core.exchange_gate import require_public_open
+from core.exchange_gate import require_public_open  # compatibility/test seam; execution uses the fresh canonical check
 from core.authority import is_owner
 from core.slh_distribution import (
     reserve_in_db,
@@ -245,8 +245,10 @@ def _match(db, incoming):
 class ExchangeFreshCheckBlocked(ValueError):
     """Order entry was stopped by the fresh canonical exchange check."""
 
-    def __init__(self, check):
+    def __init__(self, check, checked_at=None):
         self.check = {
+            "status": "BLOCKED",
+            "checked_at": str(checked_at or _now()),
             "verdict": str(check.get("verdict") or "BLOCKED"),
             "public_gate": str(check.get("public_gate") or "CLOSED"),
             "public_ready": bool(check.get("public_ready")),
@@ -262,14 +264,14 @@ class ExchangeFreshCheckBlocked(ValueError):
 
 def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
-    # A fresh canonical check runs against this exact atomic-update snapshot.
-    require_public_open()
+    # Do not short-circuit with a separate gate exception: the fresh canonical
+    # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
     from core.system_checks import check_exchange_for_execution
 
+    checked_at = _now()
     fresh_check = check_exchange_for_execution(db)
     if not fresh_check.get("execution_ready"):
-        raise ExchangeFreshCheckBlocked(fresh_check)
-    checked_at = _now()
+        raise ExchangeFreshCheckBlocked(fresh_check, checked_at=checked_at)
     trades_before = len(db.get(TRADES_KEY, []))
     w = _wallet(db, uid)
     order_id_preview = None
@@ -398,6 +400,48 @@ def format_execution_receipt(side, result):
     if check_status != "PASS":
         lines.append("⚠️ Receipt does not prove a passing fresh execution check.")
     return "\n".join(lines)
+
+
+def format_blocked_execution_receipt(side, check):
+    """Render a fail-closed order-entry receipt for Telegram."""
+    check = check if isinstance(check, dict) else {}
+    side_label = str(side or "order").strip().upper()
+    checked_at = str(check.get("checked_at") or "unavailable")
+    gate = str(check.get("public_gate") or "UNKNOWN")
+    verdict = str(check.get("verdict") or "UNKNOWN")
+    detail = str(check.get("detail") or "fresh canonical check did not pass")
+    check_status = (
+        "BLOCKED"
+        if check.get("status") == "BLOCKED" and checked_at != "unavailable"
+        else "NOT VERIFIED"
+    )
+
+    def _flag(name):
+        if name not in check:
+            return "UNKNOWN"
+        return "PASS" if check.get(name) is True else "FAIL"
+
+    lines = [
+        f"⛔ {side_label} not executed",
+        f"🔐 Fresh canonical Exchange check: {check_status}",
+        f"🕒 checked_at (UTC): {checked_at}",
+        f"Gate: {gate} | verdict: {verdict}",
+        f"execution_ready: {_flag('execution_ready')}",
+        f"public_ready: {_flag('public_ready')}",
+        f"order_book_integrity: {_flag('order_book_integrity')}",
+        f"trade_integrity: {_flag('trade_integrity')}",
+        f"money_invariants: {_flag('money_invariants')}",
+        f"Reason: {detail}",
+    ]
+    if check_status == "BLOCKED":
+        lines.append(
+            "No order was placed or balances changed. Refresh Exchange state before trying again."
+        )
+    else:
+        lines.append(
+            "The server did not provide a complete fresh-check receipt; do not retry until the order/history is checked."
+        )
+    return "\\n".join(lines)
 
 
 def register(bot):

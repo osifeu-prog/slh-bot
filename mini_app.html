@@ -1045,7 +1045,8 @@ function renderExchangeExecutionBlocked(data,sourceInputId){
   }
   box.innerHTML='<b>⛔ Fresh Exchange check: BLOCKED</b>'+
     '<div>הפקודה לא בוצעה. אין להמשיך על סמך נתון קודם.</div>'+
-    '<div class="muted">'+esc(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.')+'</div>';
+    '<div class="muted">'+esc(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.')+'</div>'+
+    '<div class="muted">זמן האימות הקנוני: '+esc(check.checked_at||'לא דווח')+'</div>';
 }
 async function sendExchangeOrder(side,amount,price,options){
   options=options||{};
