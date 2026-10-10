@@ -235,6 +235,11 @@ def bnb_opening_evidence() -> dict:
         "warnings": [],
     }
 
+    # Static readiness failures must also block the launch evidence summary.
+    for reason in gate.get("reasons", []):
+        if reason not in evidence["blockers"]:
+            evidence["blockers"].append(reason)
+
     evidence["checks"]["configured_chain"] = {
         "status": "PASS" if gate.get("chain_id") == 56 else "FAIL",
         "chain_id": gate.get("chain_id"),
