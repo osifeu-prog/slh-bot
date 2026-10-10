@@ -463,10 +463,7 @@ def register(bot):
         if action == "status":
             import os
             from core.exchange_gate import public_open
-            from core.railway_control import (
-                exchange_gate_variable_status,
-                safe_railway_error_code,
-            )
+            from core.exchange_gate_bridge import exchange_gate_status
             from core.system_checks import check_exchange_for_execution
 
             runtime_env = (os.getenv("SLH_EXCHANGE_PUBLIC_OPEN", "0") or "0").strip()
@@ -479,12 +476,12 @@ def register(bot):
                     "open_orders": "UNKNOWN",
                 }
             try:
-                railway = exchange_gate_variable_status()
+                railway = exchange_gate_status()
                 configured = railway.get("configured", "UNKNOWN")
                 railway_problem = None
             except Exception as exc:
                 configured = "UNKNOWN"
-                railway_problem = safe_railway_error_code(exc)
+                railway_problem = getattr(exc, "code", "MCP_BRIDGE_ERROR")
 
             runtime_open = public_open()
             verified_closed = (
@@ -524,8 +521,8 @@ def register(bot):
             return
 
         try:
-            from core.railway_control import close_exchange_gate, safe_railway_error_code
-            result = close_exchange_gate()
+            from core.exchange_gate_bridge import close_exchange_gate_via_mcp
+            result = close_exchange_gate_via_mcp()
             bot.reply_to(
                 msg,
                 "🛡️ EXCHANGE CLOSE REQUEST ACCEPTED\n"
@@ -536,17 +533,18 @@ def register(bot):
                 "The close is NOT marked complete until /exchange_gate status reports CLOSED VERIFIED after the service restarts. Do not announce or use Exchange before that verification."
             )
         except Exception as exc:
-            from core.railway_control import safe_railway_error_code
-            code = safe_railway_error_code(exc)
+            code = getattr(exc, "code", "MCP_BRIDGE_ERROR")
             hint = ""
             if code == "RAILWAY_CONTROL_TOKEN_MISSING":
-                hint = " Add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram."
+                hint = " The Control Plane service needs its Railway API credential; do not add that credential to the bot or paste it into Telegram."
             elif code == "RAILWAY_ACCESS_DENIED":
-                hint = " The configured Railway token lacks access to slh-cloud-bot Production."
+                hint = " The Control Plane Railway credential lacks access to slh-cloud-bot Production."
+            elif code in {"MCP_BRIDGE_NOT_CONFIGURED", "MCP_BRIDGE_AUTH_FAILED", "CONTROL_PLANE_AUTH_FAILED"}:
+                hint = " Verify the existing bot-to-MCP bridge URL and matching bridge credential in the services; never paste the credential into chat."
             bot.reply_to(
                 msg,
                 f"⛔ Exchange close not verified: {code}.{hint} "
-                "Run /exchange_gate status after credential setup; do not assume the live gate is closed."
+                "Run /exchange_gate status; do not assume the live gate is closed."
             )
 
     @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
