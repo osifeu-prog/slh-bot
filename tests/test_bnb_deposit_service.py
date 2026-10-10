@@ -25,7 +25,7 @@ class BnbDepositServiceTests(unittest.TestCase):
             bnb_deposit_service.settle_bnb_deposit("u1", "0xtx")
         record.assert_not_called()
 
-    @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
+    @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "APPLIED", "balance_after": 1234})
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
     @patch.object(bnb_deposit_service.state_manager, "load_db")
@@ -39,21 +39,20 @@ class BnbDepositServiceTests(unittest.TestCase):
         self.assertFalse(result["idempotent"])
         record.assert_called_once()
 
-    @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
+    @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "DUPLICATE", "balance_after": 1234})
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
-    @patch.object(bnb_deposit_service.state_manager, "load_db")
-    def test_replayed_transaction_is_detected_from_canonical_ledger(self, load_db, get_binding, verify, record):
+    def test_replayed_transaction_returns_duplicate_from_atomic_ledger(self, get_binding, verify, record):
         get_binding.return_value = {"uid": "u1", "address": "0xBound"}
         verify.return_value = {"ok": True, "from": "0xBound", "to": "0xTreasury", "amount_bnb": 2.5, "amount_wei": 2500000000000000000}
-        entry = {"meta": {"idempotency_key": "bnb:deposit:0xtx"}}
-        load_db.return_value = {"ledger": [entry]}
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertTrue(result["idempotent"])
-        self.assertIsNone(result["balance_after"])
-        record.assert_not_called()
+        self.assertEqual(result["settlement_status"], "DUPLICATE")
+        self.assertEqual(result["credits"], 0.0)
+        self.assertEqual(result["balance_after"], 1234)
+        record.assert_called_once()
 
-    @patch.object(bnb_deposit_service, "record_transaction", return_value=1234)
+    @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "APPLIED", "balance_after": 1234})
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
     @patch.object(bnb_deposit_service.state_manager, "load_db")
@@ -89,6 +88,15 @@ class BnbDepositServiceTests(unittest.TestCase):
         verify.assert_not_called()
         record.assert_not_called()
 
+    @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "CONFLICT", "balance_after": 1234})
+    @patch.object(bnb_deposit_service, "verify_bnb_deposit")
+    @patch.object(bnb_deposit_service, "get_binding")
+    def test_idempotency_conflict_fails_closed(self, get_binding, verify, record):
+        get_binding.return_value = {"uid": "u1", "address": "0xBound"}
+        verify.return_value = {"ok": True, "from": "0xBound", "to": "0xTreasury", "amount_bnb": 2.5, "amount_wei": 2500000000000000000}
+        with self.assertRaisesRegex(ValueError, "BNB_DEPOSIT_IDEMPOTENCY_CONFLICT"):
+            bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
+        record.assert_called_once()
 
 if __name__ == "__main__":
     unittest.main()
