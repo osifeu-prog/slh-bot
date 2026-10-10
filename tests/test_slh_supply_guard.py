@@ -105,8 +105,9 @@ class SlhDepositSupplyIntegrationTests(unittest.TestCase):
     @mock.patch("core.slh_deposit_service._config")
     @mock.patch("core.slh_deposit_service.Web3")
     @mock.patch("core.slh_deposit_service.assert_supply_unchanged")
+    @mock.patch("core.slh_deposit_service.is_quarantined_bsc_address", return_value=False)
     def test_deposit_verification_stops_before_reading_transaction_on_supply_mismatch(
-        self, guard, web3_class, config
+        self, quarantine, guard, web3_class, config
     ):
         config.return_value = {
             "rpc": "https://rpc.example.invalid",
