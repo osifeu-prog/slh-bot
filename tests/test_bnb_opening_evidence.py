@@ -136,6 +136,13 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
         "to_treasury": TREASURY,
     }
     db = {
+        "wallet_bindings": {
+            wallet.lower(): {
+                "uid": "224223270",
+                "chain": "bsc",
+                "address": wallet,
+            }
+        },
         "ledger": [{
             "uid": "224223270",
             "reason": "bnb:deposit",
