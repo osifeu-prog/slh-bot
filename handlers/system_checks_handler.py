@@ -86,6 +86,31 @@ def _go_live_report_output(uid: str) -> str:
     bnb = check_bnb()
     ton = check_ton(uid)
 
+    # Include the bounded live Telegram → MCP → Control Plane proof in this
+    # single owner report. This check is read-only and never exposes secrets.
+    try:
+        from handlers.mcp_proof_handler import read_mcp_proof
+
+        mcp_proof = read_mcp_proof()
+    except Exception as exc:
+        mcp_proof = {
+            "ok": False,
+            "status": "ERROR",
+            "detail": f"MCP proof failed safely ({type(exc).__name__})",
+        }
+    mcp_ok = mcp_proof.get("ok") is True and mcp_proof.get("status") == "PASS"
+    mcp_runtime = mcp_proof.get("runtime")
+    mcp_runtime = mcp_runtime if isinstance(mcp_runtime, dict) else {}
+    mcp_detail = str(
+        mcp_proof.get("detail") or mcp_proof.get("status") or "MCP proof unavailable"
+    ).replace("\\n", " ")[:160]
+    mcp_runtime_detail = (
+        f"runtime_state={mcp_runtime.get('state', 'UNKNOWN')} · "
+        f"running={mcp_runtime.get('running', 'UNKNOWN')} · "
+        f"boot_ok={mcp_runtime.get('boot_ok', 'UNKNOWN')} · "
+        f"agent_count={mcp_runtime.get('agent_count', 'UNKNOWN')}"
+    )
+
     try:
         import state_manager
         execution = check_exchange_for_execution(state_manager.load_db())
@@ -119,6 +144,10 @@ def _go_live_report_output(uid: str) -> str:
         _fmt_check("Commands", commands),
         _fmt_check("Mini App UX", ux),
         _fmt_check("Money / invariants", money),
+        "",
+        f"{_release_icon('GREEN' if mcp_ok else 'BLOCKED')} "
+        f"Automation bridge (Telegram → MCP → Control Plane): "
+        f"{'PASS' if mcp_ok else 'BLOCKED'} · {mcp_detail} · {mcp_runtime_detail}",
     ]
 
     execution_ready = execution.get("execution_ready") is True
