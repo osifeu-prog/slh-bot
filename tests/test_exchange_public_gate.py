@@ -25,8 +25,17 @@ class ExchangePublicGateTests(unittest.TestCase):
         db = self._db()
         with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
             self.assertFalse(public_open())
-            with self.assertRaisesRegex(ValueError, "EXCHANGE_PUBLIC_CLOSED"):
-                exchange_handler._place(db, "seller", "sell", exchange_handler._dec("1", "amount"), exchange_handler._dec("2", "price"), "test-closed")
+            with self.assertRaises(exchange_handler.ExchangeFreshCheckBlocked) as blocked:
+                exchange_handler._place(
+                    db, "seller", "sell",
+                    exchange_handler._dec("1", "amount"),
+                    exchange_handler._dec("2", "price"),
+                    "test-closed",
+                )
+            self.assertEqual(blocked.exception.check["status"], "BLOCKED")
+            self.assertEqual(blocked.exception.check["public_gate"], "CLOSED")
+            self.assertFalse(blocked.exception.check["execution_ready"])
+            self.assertTrue(blocked.exception.check["checked_at"])
         self.assertEqual(db["exchange_orders"], {})
         self.assertEqual(db["slh_token_ledger"], [])
 
