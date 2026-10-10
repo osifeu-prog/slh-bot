@@ -206,7 +206,19 @@ def _utc_text(value=None):
 def _normalize_voice_phrase(value):
     value = str(value or "").lower()
     value = re.sub(r"[^\w\s]", " ", value, flags=re.UNICODE)
+    # Hebrew STT commonly adds the definite article or a politeness filler.
+    # Normalize only known intent words; sending still requires an explicit
+    # confirmation phrase from the allowlist below.
+    for article_form, bare_form in (
+        ("הברודקאסט", "ברודקאסט"),
+        ("הפנימי", "פנימי"),
+        ("המסחר", "מסחר"),
+        ("הבורסה", "בורסה"),
+    ):
+        value = value.replace(article_form, bare_form)
+    value = re.sub(r"\bבבקשה\b", " ", value, flags=re.UNICODE)
     return re.sub(r"\s+", " ", value).strip()
+
 
 
 def _proof_is_green(check):

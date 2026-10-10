@@ -270,3 +270,45 @@ def test_voice_broadcast_draft_expires_without_sending(monkeypatch):
     assert sent == []
     assert db["exchange_broadcast_pending"][owner]["status"] == "EXPIRED"
     assert db["exchange_broadcast_audit"][-1]["status"] == "EXPIRED"
+
+
+
+def test_voice_prepare_accepts_common_stt_article_and_politeness_variant(monkeypatch):
+    owner = str(broadcast_handler.OWNER_TELEGRAM_ID)
+    db = _broadcast_db()
+
+    monkeypatch.setattr(broadcast_handler.state_manager, "atomic_update", lambda mutate: mutate(db))
+    monkeypatch.setattr(broadcast_handler.state_manager, "load_db", lambda: db)
+
+    answer = broadcast_handler.route_exchange_broadcast_voice(
+        object(),
+        _voice_message(int(owner)),
+        "תכין בבקשה הודעת ברודקאסט למסחר הפנימי",
+        now="2026-10-10T00:00:00Z",
+    )
+
+    assert "תצוגה מקדימה בלבד" in answer
+    assert "לא נשלחה הודעה לאף משתמש" in answer
+    assert db["exchange_broadcast_pending"][owner]["status"] == "PENDING_CONFIRMATION"
+    assert db["exchange_broadcast_audit"] == []
+
+
+def test_voice_confirmation_accepts_common_stt_article_variant(monkeypatch):
+    owner = str(broadcast_handler.OWNER_TELEGRAM_ID)
+    called = []
+
+    def confirm(bot, uid, *, now=None):
+        called.append((uid, now))
+        return {"status": "SENT", "sent": 1, "failed": 0, "target_count": 1}
+
+    monkeypatch.setattr(broadcast_handler, "send_confirmed_exchange_broadcast", confirm)
+
+    answer = broadcast_handler.route_exchange_broadcast_voice(
+        object(),
+        _voice_message(int(owner)),
+        "אני מאשר לשלוח את הברודקאסט למסחר הפנימי",
+        now="2026-10-10T00:00:01Z",
+    )
+
+    assert called == [(owner, "2026-10-10T00:00:01Z")]
+    assert answer
