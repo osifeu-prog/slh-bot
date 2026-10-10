@@ -117,6 +117,9 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         self.assertIn("Runtime env: 1", reply)
         self.assertIn("Effective gate: OPEN", reply)
         self.assertIn("RAILWAY_CONTROL_TOKEN_MISSING", reply)
+        self.assertIn("Control Plane service is missing its Railway API credential", reply)
+        self.assertIn("never add it to the bot", reply)
+        self.assertNotIn("add a Railway Project Access Token", reply)
         self.assertIn("🔴 OPEN", reply)
 
 if __name__ == "__main__":
