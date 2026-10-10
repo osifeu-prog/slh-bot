@@ -61,7 +61,9 @@ class VoiceOperatorRouterTests(unittest.TestCase):
 
         bnb_check.assert_not_called()
         self.assertIn("לא בוצעה פעולה", answer)
-        self.assertIn("BNB נשאר CLOSED", answer)
+        self.assertIn("בדוק BNB", answer)
+        self.assertIn("בדוק את הבורסה", answer)
+        self.assertNotIn("BNB נשאר CLOSED", answer)
 
     def test_full_system_check_uses_canonical_read_models_only(self):
         sample = {"ok": True, "detail": "PASS"}
