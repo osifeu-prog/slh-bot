@@ -92,6 +92,31 @@ class VoiceOperatorRouterTests(unittest.TestCase):
         self.assertIn("Internal Exchange", answer)
         self.assertIn("לא בוצעו שינויים", answer)
 
+    def test_owner_can_request_read_only_mcp_control_plane_proof_by_voice(self):
+        result = {
+            "ok": True,
+            "detail": "Telegram → MCP → Control Plane PASS · runtime_state=running · agent_count=4",
+        }
+        with patch("core.authority.get_role", return_value="OWNER"), patch(
+            "handlers.mcp_proof_handler.read_mcp_proof", return_value=result
+        ) as proof:
+            answer = route_voice_operator_request("בדוק חיבורי האוטומציה", "8789977826")
+
+        proof.assert_called_once_with()
+        self.assertIn("MCP Control Plane", answer)
+        self.assertIn("Telegram", answer)
+        self.assertIn("agent_count=4", answer)
+        self.assertIn("READ ONLY", answer)
+
+    def test_non_privileged_account_cannot_probe_mcp_control_plane(self):
+        with patch("core.authority.get_role", return_value="USER"), patch(
+            "handlers.mcp_proof_handler.read_mcp_proof"
+        ) as proof:
+            answer = route_voice_operator_request("בדוק חיבורי האוטומציה", "224223270")
+
+        proof.assert_not_called()
+        self.assertIn("OWNER/ADMIN/DEVELOPER", answer)
+
 
 if __name__ == "__main__":
     unittest.main()
