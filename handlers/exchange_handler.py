@@ -464,7 +464,7 @@ def register(bot):
             import os
             from core.exchange_gate import public_open
             from core.railway_control import (
-                exchange_gate_variable_status,
+                control_plane_exchange_gate_status,
                 safe_railway_error_code,
             )
             from core.system_checks import check_exchange_for_execution
@@ -479,7 +479,7 @@ def register(bot):
                     "open_orders": "UNKNOWN",
                 }
             try:
-                railway = exchange_gate_variable_status()
+                railway = control_plane_exchange_gate_status()
                 configured = railway.get("configured", "UNKNOWN")
                 railway_problem = None
             except Exception as exc:
@@ -516,6 +516,10 @@ def register(bot):
                     lines.append("One-time setup required: add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram.")
                 elif railway_problem == "RAILWAY_ACCESS_DENIED":
                     lines.append("The configured Railway token lacks access to this project/service. Use a token with access to slh-cloud-bot Production.")
+                elif railway_problem == "CONTROL_PLANE_BRIDGE_AUTH_FAILED":
+                    lines.append("The authenticated Control Plane bridge rejected the request. Keep Exchange closed and verify the shared bridge configuration.")
+                elif railway_problem == "CONTROL_PLANE_BRIDGE_UNAVAILABLE":
+                    lines.append("The Control Plane bridge is unavailable. Keep Exchange closed; do not infer the Railway value.")
             lines += [
                 "",
                 "Closing blocks new Buy/Sell orders; it does not cancel existing open orders or reverse prior trades.",
@@ -524,8 +528,8 @@ def register(bot):
             return
 
         try:
-            from core.railway_control import close_exchange_gate, safe_railway_error_code
-            result = close_exchange_gate()
+            from core.railway_control import request_exchange_gate_close, safe_railway_error_code
+            result = request_exchange_gate_close()
             bot.reply_to(
                 msg,
                 "🛡️ EXCHANGE CLOSE REQUEST ACCEPTED\n"
@@ -543,6 +547,10 @@ def register(bot):
                 hint = " Add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram."
             elif code == "RAILWAY_ACCESS_DENIED":
                 hint = " The configured Railway token lacks access to slh-cloud-bot Production."
+            elif code == "CONTROL_PLANE_BRIDGE_AUTH_FAILED":
+                hint = " The authenticated Control Plane bridge rejected the request; verify the shared bridge configuration."
+            elif code == "CONTROL_PLANE_BRIDGE_UNAVAILABLE":
+                hint = " The Control Plane bridge is unavailable; no close is verified."
             bot.reply_to(
                 msg,
                 f"⛔ Exchange close not verified: {code}.{hint} "

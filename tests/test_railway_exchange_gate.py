@@ -1,8 +1,24 @@
+import json
 import os
 import unittest
 from unittest.mock import patch
 
 from core import railway_control
+
+
+
+class _FakeJsonResponse:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def read(self):
+        return json.dumps(self.payload).encode("utf-8")
 
 
 class RailwayExchangeGateControlTests(unittest.TestCase):
@@ -99,6 +115,62 @@ class RailwayExchangeGateControlTests(unittest.TestCase):
             headers = railway_control._auth_headers(prefer_account_token=True)
         self.assertEqual(headers.get("Authorization"), "Bearer workspace-token")
         self.assertNotIn("Project-Access-Token", headers)
+
+
+    def test_control_plane_status_uses_fixed_authenticated_bridge(self):
+        payload = {
+            "ok": True,
+            "variable": "SLH_EXCHANGE_PUBLIC_OPEN",
+            "configured": "0",
+            "configured_open": False,
+            "source": "railway_service_production",
+        }
+        with (
+            patch.dict(os.environ, {"SLH_MCP_BRIDGE_TOKEN": "bridge-secret"}, clear=False),
+            patch("core.railway_control.urllib.request.urlopen", return_value=_FakeJsonResponse(payload)) as urlopen,
+        ):
+            status = railway_control.control_plane_exchange_gate_status()
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, railway_control.SLH_EXCHANGE_CONTROL_PLANE_URL)
+        self.assertEqual(request.get_method(), "GET")
+        self.assertEqual(request.get_header("Authorization"), "Bearer bridge-secret")
+        self.assertEqual(status["configured"], "0")
+        self.assertEqual(status["source"], "railway_control_plane_bridge")
+        self.assertNotIn("bridge-secret", str(status))
+
+    def test_control_plane_close_sends_close_only_action(self):
+        payload = {
+            "ok": True,
+            "status": "DEPLOY_TRIGGERED",
+            "previous": "1",
+            "configured": "0",
+            "commit": "a" * 40,
+            "deployment_id": "dep-456",
+            "service": "slh-cloud-bot",
+            "environment": "production",
+        }
+        with (
+            patch.dict(os.environ, {"SLH_MCP_BRIDGE_TOKEN": "bridge-secret"}, clear=False),
+            patch("core.railway_control.urllib.request.urlopen", return_value=_FakeJsonResponse(payload)) as urlopen,
+        ):
+            result = railway_control.request_exchange_gate_close()
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.full_url, railway_control.SLH_EXCHANGE_CONTROL_PLANE_URL)
+        self.assertEqual(request.get_method(), "POST")
+        self.assertEqual(json.loads(request.data.decode("utf-8")), {"action": "close"})
+        self.assertEqual(request.get_header("Authorization"), "Bearer bridge-secret")
+        self.assertEqual(result["configured"], "0")
+        self.assertEqual(result["deployment_id"], "dep-456")
+
+    def test_control_plane_bridge_requires_shared_token(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(
+                railway_control.RailwayControlError,
+                "CONTROL_PLANE_BRIDGE_TOKEN_MISSING",
+            ):
+                railway_control.control_plane_exchange_gate_status()
 
     def test_safe_error_codes_never_echo_error_payload(self):
         cases = [

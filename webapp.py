@@ -366,6 +366,75 @@ def stars_invoice():
         return jsonify({"error": "INVOICE_FAILED"}), 502
 
 
+def _exchange_gate_control_authorized():
+    expected = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
+    if not expected:
+        return jsonify({"error": "EXCHANGE_CONTROL_NOT_CONFIGURED"}), 503
+    authorization = str(request.headers.get("Authorization", "") or "").strip()
+    scheme, _, supplied = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, expected):
+        return jsonify({"error": "EXCHANGE_CONTROL_AUTH_REQUIRED"}), 401
+    return None
+
+
+@app.route("/api/internal/exchange-gate", methods=["GET", "POST"])
+def internal_exchange_gate_control():
+    """Authenticated bridge for owner-only Exchange gate status and close-only control.
+
+    The Railway credential remains in the Control Plane service. GET reveals
+    only the single configured gate value; POST accepts only an explicit close.
+    """
+    auth_error = _exchange_gate_control_authorized()
+    if auth_error is not None:
+        return auth_error
+
+    from core.railway_control import (
+        close_exchange_gate,
+        exchange_gate_variable_status,
+        safe_railway_error_code,
+    )
+
+    if request.method == "GET":
+        try:
+            result = exchange_gate_variable_status()
+            safe = {
+                "ok": True,
+                "variable": "SLH_EXCHANGE_PUBLIC_OPEN",
+                "configured": result.get("configured", "UNKNOWN"),
+                "configured_open": result.get("configured_open") is True,
+                "source": "railway_service_production",
+            }
+            response = jsonify(safe)
+            response.headers["Cache-Control"] = "no-store"
+            return response, 200
+        except Exception as exc:
+            return jsonify({"ok": False, "error": safe_railway_error_code(exc)}), 503
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or payload.get("action") != "close" or set(payload.keys()) != {"action"}:
+        return jsonify({"error": "CLOSE_ONLY_ACTION_REQUIRED"}), 400
+
+    try:
+        result = close_exchange_gate()
+        if result.get("configured") != "0" or result.get("status") != "DEPLOY_TRIGGERED":
+            return jsonify({"error": "EXCHANGE_GATE_CLOSE_NOT_VERIFIED"}), 503
+        safe = {
+            "ok": True,
+            "status": "DEPLOY_TRIGGERED",
+            "previous": result.get("previous", "UNKNOWN"),
+            "configured": "0",
+            "commit": str(result.get("commit") or ""),
+            "deployment_id": str(result.get("deployment_id") or ""),
+            "service": "slh-cloud-bot",
+            "environment": "production",
+        }
+        response = jsonify(safe)
+        response.headers["Cache-Control"] = "no-store"
+        return response, 202
+    except Exception as exc:
+        return jsonify({"ok": False, "error": safe_railway_error_code(exc)}), 503
+
+
 @app.route("/health")
 def health():
     return "OK", 200
