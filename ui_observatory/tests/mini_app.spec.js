@@ -132,6 +132,81 @@ test('governance explains role-based vote weight before the user votes', async (
   await expect(notice).toContainText('לא מיתרת SLH');
 });
 
+test('visible Governance entry records a vote and shows the canonical receipt', async ({ page }) => {
+  let voteRecorded = false;
+  let submittedVote = null;
+  const proposal = {
+    id: 7,
+    title: 'Canonical UI test proposal',
+    description: 'Exercise the visible Governance path with mocked canonical responses.',
+    status: 'open',
+    votes: { yes: voteRecorded ? 1 : 0, no: 0, abstain: 0, weighted_yes: voteRecorded ? 1 : 0, weighted_no: 0 },
+    my_vote: null,
+  };
+
+  await page.route('**/api/v1/governance', async route => {
+    const currentProposal = {
+      ...proposal,
+      votes: { ...proposal.votes, yes: voteRecorded ? 1 : 0, weighted_yes: voteRecorded ? 1 : 0 },
+      my_vote: voteRecorded
+        ? { choice: 'yes', weight: 1, timestamp: '2026-10-10T08:00:00Z' }
+        : null,
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        agents: 2,
+        proposal_count: 1,
+        open_proposals: 1,
+        source_of_truth: 'state/db.json',
+        proposals: [currentProposal],
+      }),
+    });
+  });
+
+  await page.route('**/api/v1/governance/vote', async route => {
+    submittedVote = route.request().postDataJSON();
+    voteRecorded = true;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'recorded',
+        proposal_id: 7,
+        choice: submittedVote.choice,
+        weight: 1,
+        points_awarded: 5,
+        timestamp: '2026-10-10T08:00:00Z',
+      }),
+    });
+  });
+
+  // Begin on Home and use the visible user flow: Buy tile → Governance button → Vote.
+  const buyTile = page.locator('.ux-tile.actionable').filter({ hasText: 'Buy' });
+  await expect(buyTile).toBeVisible();
+  await buyTile.click();
+  await expect(page.locator('#market')).toHaveClass(/active/);
+
+  const governanceEntry = page.locator('#marketAssetGuide').getByRole('button', { name: /הצעות והצבעות/ });
+  await expect(governanceEntry).toBeVisible();
+  await governanceEntry.click();
+  await expect(page.locator('#governance')).toHaveClass(/active/);
+  await expect(page.locator('#governanceBody')).toContainText('Canonical UI test proposal');
+
+  const voteRequestPromise = page.waitForRequest(request =>
+    request.url().endsWith('/api/v1/governance/vote') && request.method() === 'POST'
+  );
+  await page.locator('#governanceBody').getByRole('button', { name: /בעד/ }).click();
+  const voteRequest = await voteRequestPromise;
+
+  expect(submittedVote).toEqual({ proposal_id: 7, choice: 'yes' });
+  expect(voteRequest.postDataJSON()).toEqual({ proposal_id: 7, choice: 'yes' });
+  await expect(page.locator('#governance')).toHaveClass(/active/);
+  await expect(page.locator('#governanceBody')).toContainText('ההצבעה שלך נרשמה');
+  await expect(page.locator('#governanceBody')).toContainText('yes · משקל 1');
+});
+
 test('exchange receipt shows every fresh canonical gate item', async ({ page }) => {
   // Exercise the Mini App's real send handler directly; screen-navigation
   // coverage is tested separately and this test focuses on receipt semantics.
