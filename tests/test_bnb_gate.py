@@ -59,6 +59,9 @@ def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
         "core.bnb_gate._effective_config",
         return_value=_cfg(),
     ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"wallet_bindings": {}},
+    ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value={"status": "PASS", "tx_hash": "fixture"},
     ), patch(
@@ -83,6 +86,9 @@ def test_bnb_gate_stays_closed_when_empirical_proof_is_missing_even_if_flag_and_
     ), patch(
         "core.bnb_gate._effective_config",
         return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"wallet_bindings": {}},
     ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value=None,
@@ -131,10 +137,91 @@ def test_bnb_readiness_uses_state_db_override():
             "bsc_settings": {
                 "treasury_wallet": TREASURY,
                 "confirmations": 20,
-            }
+            },
+            "wallet_bindings": {},
         },
     ):
         status = bnb_readiness()
         assert status["ready"] is True
         assert status["confirmations_required"] == 20
         assert status["effective_open"] is True
+
+
+
+def test_bnb_readiness_blocks_treasury_matching_verified_bound_wallet():
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={
+            "wallet_bindings": {
+                TREASURY.lower(): {
+                    "uid": "owner",
+                    "chain": "bsc",
+                    "address": TREASURY,
+                }
+            }
+        },
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is False
+        assert status["effective_open"] is False
+        assert "BNB_TREASURY_MATCHES_BOUND_WALLET" in status["reasons"]
+
+
+def test_bnb_readiness_allows_distinct_treasury_and_bound_wallet():
+    bound_wallet = "0x2222222222222222222222222222222222222222"
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={
+            "wallet_bindings": {
+                bound_wallet.lower(): {
+                    "uid": "owner",
+                    "chain": "bsc",
+                    "address": bound_wallet,
+                }
+            }
+        },
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is True
+        assert status["effective_open"] is True
+        assert "BNB_TREASURY_MATCHES_BOUND_WALLET" not in status["reasons"]
+
+def test_bnb_readiness_fails_closed_when_wallet_binding_registry_is_missing():
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={},
+    ):
+        status = bnb_readiness()
+        assert status["ready"] is False
+        assert status["effective_open"] is False
+        assert "BNB_WALLET_BINDINGS_UNVERIFIED" in status["reasons"]

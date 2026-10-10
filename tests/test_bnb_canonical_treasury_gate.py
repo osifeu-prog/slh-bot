@@ -30,7 +30,9 @@ class BnbCanonicalTreasuryGateTests(unittest.TestCase):
                 "SLH_BSC_CANONICAL_TREASURY": self.cfg()["treasury_wallet"],
             },
             clear=False,
-        ), patch("core.bnb_gate._effective_config", return_value=self.cfg()):
+        ), patch("core.bnb_gate._effective_config", return_value=self.cfg()), patch(
+            "core.bnb_gate.state_manager.load_db", return_value={"wallet_bindings": {}}
+        ):
             status = bnb_readiness()
         self.assertTrue(status["effective_open"])
 

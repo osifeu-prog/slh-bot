@@ -183,7 +183,7 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
 
     live_tx_check.assert_called_once_with(tx_hash)
     binding_lookup.assert_called_once_with("224223270")
-    ledger_load.assert_called_once_with()
+    assert ledger_load.call_count == 2
     assert status["status"] == "READY_TO_OPEN"
     assert status["ready_to_open"] is True
     assert status["empirical_settlement"]["status"] == "PASS"

@@ -57,6 +57,36 @@ def bnb_readiness(db=None) -> dict:
     elif canonical_treasury.lower() != treasury.lower():
         reasons.append("BNB_CANONICAL_TREASURY_MISMATCH")
 
+    # A deposit Treasury must not also be a verified depositor wallet. Such a
+    # binding makes that wallet's transfer a self-transfer, not a deposit.
+    readiness_db = db
+    if readiness_db is None:
+        try:
+            readiness_db = state_manager.load_db()
+        except Exception:
+            readiness_db = None
+    if readiness_db is None:
+        reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+    else:
+        wallet_bindings = readiness_db.get("wallet_bindings")
+        if not isinstance(wallet_bindings, dict):
+            # Missing is not equivalent to an explicitly verified empty registry.
+            reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+        else:
+            for binding in wallet_bindings.values():
+                if not isinstance(binding, dict):
+                    reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    break
+                if str(binding.get("chain") or "bsc").lower() != "bsc":
+                    continue
+                bound_address = str(binding.get("address") or "").strip()
+                if not bound_address:
+                    reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    break
+                if treasury and bound_address.lower() == treasury.lower():
+                    reasons.append("BNB_TREASURY_MATCHES_BOUND_WALLET")
+                    break
+
     try:
         confirmations = int(cfg.get("confirmations") or 15)
     except (TypeError, ValueError):
@@ -209,6 +239,11 @@ def bnb_opening_evidence() -> dict:
         "blockers": [],
         "warnings": [],
     }
+
+    # Static readiness failures must also block the launch evidence summary.
+    for reason in gate.get("reasons", []):
+        if reason not in evidence["blockers"]:
+            evidence["blockers"].append(reason)
 
     evidence["checks"]["configured_chain"] = {
         "status": "PASS" if gate.get("chain_id") == 56 else "FAIL",
