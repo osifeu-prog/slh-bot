@@ -1,4 +1,4 @@
-"""Bounded voice-driven operator checks.
+""""Bounded voice-driven operator checks.
 
 This router permits only canonical read-only checks. It never changes balances,
 orders, wallets, settlement gates, broadcasts, or device commands.
@@ -129,8 +129,9 @@ def route_voice_operator_request(text: str, uid: str | int | None) -> str | None
     if _contains_any(normalized, _MUTATION_VERBS) and _contains_any(normalized, _FINANCIAL_SCOPES):
         return (
             "⛔ לא בוצעה פעולה. פקודות קוליות לשינוי יתרות, להעברת נכסים, לפתיחת שערים "
-            "או לשליחת ברודקאסט עדיין חסומות. BNB נשאר CLOSED עד להוכחת settlement "
-            "מאומתת ולאישור נפרד.\nאפשר לומר: ״בדוק BNB״ או ״בדוק את הבורסה״ לקבלת בדיקה לקריאה בלבד."
+            "או לשליחת ברודקאסט חסומות דרך הנתיב הקולי הכללי. מצב השער נבדק בנפרד ואינו משתנה "
+            "בעקבות בקשת שינוי קולית.\nאפשר לומר: ״בדוק BNB״ או ״בדוק את הבורסה״ לקבלת בדיקה "
+            "קנונית ועדכנית לקריאה בלבד."
         )
 
     kind = next(
