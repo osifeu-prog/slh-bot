@@ -735,13 +735,20 @@ async function loadRewardsPanel(){
     const required=Number(rwd.required||5);
     const remaining=Math.max(0,Number(rwd.remaining||Math.max(0,required-count)));
     const commission=Number(rwd.commission_credits||0);
+    const attribution=rwd.attribution||{};
     const offerText=rwd.offer_open
       ? "✅ 5 successful referrals → 1 VIP month"
       : "⛔️ מבצע 5 referrals → VIP הסתיים";
     let h="";
     h+='<div class="section-title">🎁 תגמולים</div>';
     h+='<div class="wallet-row"><span>נקודות</span><strong>'+fmt(u.points||0)+'</strong></div>';
-    h+='<div class="wallet-row"><span>הפניות מוצלחות</span><strong>'+fmt(count)+'</strong></div>';
+    h+='<div class="wallet-row"><span>הפניות מוצלחות לתגמול</span><strong>'+fmt(count)+'</strong></div>';
+    h+='<div class="guide" style="margin-top:9px"><b>📊 מעקב הפניות</b>';
+    h+='<div class="wallet-row"><span>התחלות Telegram ייחודיות דרך הקישור</span><strong>'+fmt(attribution.unique_starts||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>בתהליך הצטרפות</span><strong>'+fmt(attribution.pending_joins||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>השלימו הצטרפות מאז הפעלת המעקב</span><strong>'+fmt(attribution.converted_joins||0)+'</strong></div>';
+    h+='<div class="wallet-row"><span>חשבונות קיימים שפתחו את הקישור</span><strong>'+fmt(attribution.existing_user_starts||0)+'</strong></div>';
+    h+='<div class="muted" style="margin-top:5px">הנתונים סופרים פתיחת הבוט עם פרמטר referral — לא לחיצות גולמיות בפייסבוק. כניסות היסטוריות שלא נשמרו לא ניתנות לשחזור.</div></div>';
     h+='<div class="wallet-row"><span>לשלב הבא</span><strong>'+fmt(remaining)+' נשארו</strong></div>';
     h+='<div class="wallet-row"><span>Referral לכל הצטרפות</span><strong>+'+fmt(per.credits||0)+' Credits · +'+fmt(per.points||0)+' Points</strong></div>';
     h+='<div class="wallet-row"><span>עמלת Referral שנצברה</span><strong>'+fmt(commission)+' Credits</strong></div>';
