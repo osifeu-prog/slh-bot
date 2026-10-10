@@ -33,6 +33,11 @@ _ALIASES = {
         "בדיקת חיבור אוטומציה", "בדוק חיבור mcp", "בדוק mcp",
         "mcp status", "check mcp", "check automation",
     ),
+    "go_live": (
+        "בדוק דוח go live", "דוח go live", "בדוק go live",
+        "בדוק מוכנות להשקה", "דוח מוכנות להשקה", "go live report",
+        "release report", "check go live",
+    ),
     "system": (
         "בדוק את כל המערכת", "בדוק כל המערכת", "בדוק את המערכת",
         "בדוק מערכת", "בדיקת מערכת", "מצב מערכת", "system check",
@@ -85,6 +90,17 @@ def _run_check(kind: str, uid: str) -> str:
             + _safe_result("MCP Control Plane", result)
             + _READ_ONLY_FOOTER
         )
+
+    if kind == "go_live":
+        try:
+            from handlers.system_checks_handler import _go_live_report_output
+
+            return _go_live_report_output(uid)
+        except Exception as exc:
+            return (
+                f"⛔ דוח Go-Live נכשל בבטחה ({type(exc).__name__})."
+                + _READ_ONLY_FOOTER
+            )
 
     from core import system_checks
 
