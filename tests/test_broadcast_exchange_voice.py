@@ -253,3 +253,49 @@ def test_confirm_blocks_when_recipient_set_changes_after_preview(monkeypatch):
     assert result["sent"] == 0
     assert sent == []
     assert db["exchange_broadcast_pending"][OWNER]["status"] == "RECIPIENTS_CHANGED"
+
+def test_voice_prepare_accepts_common_stt_polite_variant(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot, message, "תכין לי הודעת ברודקאסט למסחר הפנימי", now=NOW
+    )
+
+    assert answer is not None
+    assert "תצוגה מקדימה בלבד" in answer
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "PENDING_CONFIRMATION"
+    bot.send_message.assert_not_called()
+
+
+def test_voice_confirm_accepts_common_explicit_stt_variant(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    monkeypatch.setattr(
+        system_checks,
+        "check_exchange_for_execution",
+        lambda current: _fresh_check(True),
+    )
+    sent = _install_send(monkeypatch)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot, message, "מאשר לשלוח את הברודקאסט למסחר הפנימי", now=NOW + timedelta(seconds=5)
+    )
+
+    assert answer is not None
+    assert "נשלח" in answer
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "SENT"
+    assert sent
+    assert all(text == target.EXCHANGE_BROADCAST_TEXT for _, text in sent)
+
