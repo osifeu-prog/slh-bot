@@ -155,10 +155,15 @@ def mark_join_completed(
     return state_manager.atomic_update(mutate)
 
 
-def referral_start_stats(referrer_uid: str) -> dict[str, int]:
+def referral_start_stats(
+    referrer_uid: str,
+    *,
+    db: dict[str, Any] | None = None,
+) -> dict[str, int]:
     """Return aggregate-only unique start and conversion counts for a referrer."""
     uid = str(referrer_uid or "").strip()
-    db = state_manager.load_db()
+    if db is None:
+        db = state_manager.load_db()
     events = db.get("referral_start_events")
     if not isinstance(events, dict):
         events = {}
