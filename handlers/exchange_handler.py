@@ -550,7 +550,6 @@ def register(bot):
             )
 
     @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
-    @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
     def exchange_clean_cmd(msg):
         if not is_owner(msg.from_user.id):
             bot.reply_to(msg, "⛔ OWNER only")
