@@ -63,7 +63,6 @@ class BnbDepositServiceTests(unittest.TestCase):
             "amount_bnb": 0.12345678901234568,
             "amount_wei": 123456789012345678,
         }
-        load_db.return_value = {"ledger": []}
         result = bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         self.assertEqual(result["amount_wei"], 123456789012345678)
         self.assertEqual(result["credits"], 123.45678901234568)
