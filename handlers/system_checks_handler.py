@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from core.authority import get_role
+from core.release_readiness import build_release_report
 from core.system_checks import (
     check_bnb,
     check_commands,
     check_exchange,
+    check_exchange_for_execution,
     check_db,
     check_money,
     check_ton,
@@ -64,7 +66,130 @@ def _check_output(uid: str) -> str:
     return "\n".join(lines)[:3900]
 
 
+
+def _release_icon(status: str) -> str:
+    return {
+        "GREEN": "✅",
+        "DEGRADED": "🟡",
+        "BLOCKED": "⛔️",
+    }.get(str(status or "").upper(), "⚪️")
+
+
+def _go_live_report_output(uid: str) -> str:
+    """One-message, read-only launch report with explicit fail-closed gates."""
+    report = build_release_report()
+    db = check_db()
+    commands = check_commands()
+    ux = check_ux()
+    money = check_money(uid)
+    bnb = check_bnb()
+    ton = check_ton(uid)
+
+    try:
+        import state_manager
+        execution = check_exchange_for_execution(state_manager.load_db())
+    except Exception as exc:
+        execution = {
+            "execution_ready": False,
+            "public_gate": "UNKNOWN",
+            "verdict": "BLOCKED",
+            "detail": f"fresh preflight failed: {type(exc).__name__}",
+        }
+
+    overall = str(report.get("overall_status") or "UNKNOWN").upper()
+    lines = [
+        "🧭 SLH OS GO-LIVE REPORT — READ ONLY",
+        "",
+        f"Overall release readiness: {_release_icon(overall)} {overall}",
+        "",
+        "Release gates:",
+    ]
+    for name, row in (report.get("checks") or {}).items():
+        status = str(row.get("status") or "BLOCKED").upper()
+        detail = str(row.get("detail") or "no detail").replace("\n", " ")
+        lines.append(
+            f"{_release_icon(status)} {name}: {status} · {detail[:180]}"
+        )
+
+    lines += [
+        "",
+        "System integrity:",
+        _fmt_check("DB", db),
+        _fmt_check("Commands", commands),
+        _fmt_check("Mini App UX", ux),
+        _fmt_check("Money / invariants", money),
+    ]
+
+    execution_ready = execution.get("execution_ready") is True
+    execution_status = "PASS" if execution_ready else "BLOCKED"
+    lines += [
+        "",
+        f"{_release_icon('GREEN' if execution_ready else 'BLOCKED')} "
+        f"Current Exchange execution preflight: {execution_status}",
+        f"Gate: {execution.get('public_gate', 'UNKNOWN')} · "
+        f"Verdict: {execution.get('verdict', 'UNKNOWN')} · "
+        f"{str(execution.get('detail') or 'no detail')[:160]}",
+        "This preflight is only a snapshot. Every Buy/Sell order rechecks "
+        "canonically inside the atomic mutation and returns an execution receipt.",
+    ]
+
+    if bnb.get("ok"):
+        bnb_icon = "✅"
+        bnb_state = "OPEN · empirical settlement PASS"
+    elif not bnb.get("public_open") and bnb.get("ready") and not bnb.get("launch_ready"):
+        bnb_icon = "🟡"
+        bnb_state = (
+            "SAFE CLOSED · configuration PASS · empirical settlement "
+            + str(bnb.get("empirical_status") or "PENDING_EMPIRICAL")
+        )
+    else:
+        bnb_icon = "⛔️"
+        bnb_state = (
+            "CLOSED · readiness requires attention · empirical settlement "
+            + str(bnb.get("empirical_status") or "UNKNOWN")
+        )
+    lines += [
+        "",
+        f"{bnb_icon} BNB: {bnb_state}",
+        f"TON: {'✅ OPEN' if ton.get('ok') else ('🟡 SAFE CLOSED' if ton.get('ready') and not ton.get('public_open') else '⛔️ NEEDS REVIEW')} · "
+        f"gate={'OPEN' if ton.get('public_open') else 'CLOSED'} · "
+        f"readiness={'PASS' if ton.get('ready') else 'BLOCKED'} · "
+        f"rate={ton.get('rate', 'unknown')} Credits/TON · "
+        f"replay={ton.get('replay_evidence', 'unknown')}",
+        "",
+        "🔒 No orders, broadcasts, transfers, claims or gate changes were made.",
+        "⛔️ BNB stays closed until live empirical settlement evidence is revalidated.",
+        "ℹ️ Participation / public investment stays DESIGN ONLY unless separate approvals pass.",
+    ]
+
+    if bnb.get("next_action"):
+        lines.append("BNB evidence next step: " + str(bnb["next_action"])[:180])
+    for blocker in (bnb.get("blockers") or [])[:3]:
+        lines.append("BNB blocker: " + str(blocker)[:160])
+
+    return "\n".join(lines)[:3900]
+
+
+
 def register(bot, context=None):
+    @bot.message_handler(commands=["go_live_report", "release_report"])
+    def go_live_report_cmd(message):
+        if not _allowed(message):
+            _send_denied(bot, message)
+            return
+        try:
+            bot.reply_to(
+                message,
+                _go_live_report_output(str(message.from_user.id)),
+                parse_mode=None,
+            )
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"❌ Go-Live report failed safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
+
     @bot.message_handler(commands=["check", "checks"])
     def check_cmd(message):
         if not _allowed(message):
