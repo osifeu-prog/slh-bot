@@ -59,6 +59,9 @@ def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
         "core.bnb_gate._effective_config",
         return_value=_cfg(),
     ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"wallet_bindings": {}},
+    ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value={"status": "PASS", "tx_hash": "fixture"},
     ), patch(
@@ -83,6 +86,9 @@ def test_bnb_gate_stays_closed_when_empirical_proof_is_missing_even_if_flag_and_
     ), patch(
         "core.bnb_gate._effective_config",
         return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"wallet_bindings": {}},
     ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value=None,
