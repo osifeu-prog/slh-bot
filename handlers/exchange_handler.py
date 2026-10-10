@@ -461,51 +461,70 @@ def register(bot):
             return
 
         if action == "status":
+            import os
+            from core.exchange_gate import public_open
+            from core.railway_control import (
+                exchange_gate_variable_status,
+                safe_railway_error_code,
+            )
+            from core.system_checks import check_exchange_for_execution
+
+            runtime_env = (os.getenv("SLH_EXCHANGE_PUBLIC_OPEN", "0") or "0").strip()
             try:
-                import os
-                from core.railway_control import exchange_gate_variable_status
-                from core.exchange_gate import public_open
-                from core.system_checks import check_exchange_for_execution
-
+                check = check_exchange_for_execution(state_manager.load_db())
+            except Exception:
+                check = {
+                    "public_gate": "UNKNOWN",
+                    "execution_ready": None,
+                    "open_orders": "UNKNOWN",
+                }
+            try:
                 railway = exchange_gate_variable_status()
-                runtime_env = (os.getenv("SLH_EXCHANGE_PUBLIC_OPEN", "0") or "0").strip()
-                db = state_manager.load_db()
-                check = check_exchange_for_execution(db)
                 configured = railway.get("configured", "UNKNOWN")
-                runtime_open = public_open()
-                verified_closed = (
-                    configured == "0"
-                    and runtime_env == "0"
-                    and runtime_open is False
-                    and check.get("public_gate") == "CLOSED"
-                    and check.get("execution_ready") is False
-                )
-                if verified_closed:
-                    state = "✅ CLOSED VERIFIED"
-                elif configured == "0" and runtime_env == "1":
-                    state = "🟡 DEPLOY REQUIRED / RUNTIME STILL OPEN"
-                elif check.get("public_gate") == "OPEN" or check.get("execution_ready") is True:
-                    state = "🔴 OPEN — DO NOT TRADE"
-                else:
-                    state = "🟡 NOT VERIFIED — KEEP CLOSED"
-
-                bot.reply_to(
-                    msg,
-                    "🛡️ SLH EXCHANGE GATE — OWNER / READ ONLY\n"
-                    f"Railway Production variable: {configured}\n"
-                    f"Runtime env: {runtime_env if runtime_env in {'0', '1'} else 'INVALID'}\n"
-                    f"Effective gate: {check.get('public_gate', 'UNKNOWN')}\n"
-                    f"execution_ready: {bool(check.get('execution_ready'))}\n"
-                    f"Open orders: {check.get('open_orders', 'UNKNOWN')}\n"
-                    f"Status: {state}\n\n"
-                    "Close blocks new Buy/Sell orders; it does not cancel existing open orders or reverse prior trades."
-                )
+                railway_problem = None
             except Exception as exc:
-                bot.reply_to(msg, f"⛔ Exchange gate status not verified: {type(exc).__name__}. Treat gate as NOT VERIFIED.")
+                configured = "UNKNOWN"
+                railway_problem = safe_railway_error_code(exc)
+
+            runtime_open = public_open()
+            verified_closed = (
+                configured == "0"
+                and runtime_env == "0"
+                and runtime_open is False
+                and check.get("public_gate") == "CLOSED"
+                and check.get("execution_ready") is False
+            )
+            if verified_closed:
+                state = "✅ CLOSED VERIFIED"
+            elif check.get("public_gate") == "OPEN" or check.get("execution_ready") is True:
+                state = "🔴 OPEN — DO NOT TRADE"
+            else:
+                state = "🟡 NOT VERIFIED — KEEP CLOSED"
+
+            lines = [
+                "🛡️ SLH EXCHANGE GATE — OWNER / READ ONLY",
+                f"Railway Production variable: {configured}",
+                f"Runtime env: {runtime_env if runtime_env in {'0', '1'} else 'INVALID'}",
+                f"Effective gate: {check.get('public_gate', 'UNKNOWN')}",
+                f"execution_ready: {check.get('execution_ready', 'UNKNOWN')}",
+                f"Open orders: {check.get('open_orders', 'UNKNOWN')}",
+                f"Status: {state}",
+            ]
+            if railway_problem:
+                lines.append(f"Railway API diagnostic: {railway_problem}")
+                if railway_problem == "RAILWAY_CONTROL_TOKEN_MISSING":
+                    lines.append("One-time setup required: add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram.")
+                elif railway_problem == "RAILWAY_ACCESS_DENIED":
+                    lines.append("The configured Railway token lacks access to this project/service. Use a token with access to slh-cloud-bot Production.")
+            lines += [
+                "",
+                "Closing blocks new Buy/Sell orders; it does not cancel existing open orders or reverse prior trades.",
+            ]
+            bot.reply_to(msg, "\n".join(lines))
             return
 
         try:
-            from core.railway_control import close_exchange_gate
+            from core.railway_control import close_exchange_gate, safe_railway_error_code
             result = close_exchange_gate()
             bot.reply_to(
                 msg,
@@ -517,10 +536,17 @@ def register(bot):
                 "The close is NOT marked complete until /exchange_gate status reports CLOSED VERIFIED after the service restarts. Do not announce or use Exchange before that verification."
             )
         except Exception as exc:
+            from core.railway_control import safe_railway_error_code
+            code = safe_railway_error_code(exc)
+            hint = ""
+            if code == "RAILWAY_CONTROL_TOKEN_MISSING":
+                hint = " Add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram."
+            elif code == "RAILWAY_ACCESS_DENIED":
+                hint = " The configured Railway token lacks access to slh-cloud-bot Production."
             bot.reply_to(
                 msg,
-                f"⛔ Exchange close not verified: {type(exc).__name__}. "
-                "Run /exchange_gate status; do not assume the live gate is closed."
+                f"⛔ Exchange close not verified: {code}.{hint} "
+                "Run /exchange_gate status after credential setup; do not assume the live gate is closed."
             )
 
     @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])

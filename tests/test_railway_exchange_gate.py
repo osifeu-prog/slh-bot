@@ -71,6 +71,7 @@ class RailwayExchangeGateControlTests(unittest.TestCase):
             railway_control.SLH_BOT_SERVICE_ID,
             railway_control.SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
             commit,
+            prefer_account_token=True,
         )
 
     def test_close_does_not_deploy_if_railway_value_cannot_be_verified(self):
@@ -88,6 +89,28 @@ class RailwayExchangeGateControlTests(unittest.TestCase):
                 railway_control.close_exchange_gate()
         deploy.assert_not_called()
 
+
+
+    def test_account_token_is_preferred_for_exchange_control_when_both_exist(self):
+        with patch.dict(os.environ, {
+            "RAILWAY_PROJECT_TOKEN": "project-token",
+            "RAILWAY_API_TOKEN": "workspace-token",
+        }, clear=False):
+            headers = railway_control._auth_headers(prefer_account_token=True)
+        self.assertEqual(headers.get("Authorization"), "Bearer workspace-token")
+        self.assertNotIn("Project-Access-Token", headers)
+
+    def test_safe_error_codes_never_echo_error_payload(self):
+        cases = [
+            ("Railway token is not configured", "RAILWAY_CONTROL_TOKEN_MISSING"),
+            ("Railway API HTTP 401: secret body", "RAILWAY_AUTHENTICATION_FAILED"),
+            ("Railway API HTTP 403: permission denied", "RAILWAY_ACCESS_DENIED"),
+            ("Railway API connection failed: timeout", "RAILWAY_API_UNREACHABLE"),
+        ]
+        for message, expected in cases:
+            actual = railway_control.safe_railway_error_code(RuntimeError(message))
+            self.assertEqual(actual, expected)
+            self.assertNotIn("secret body", actual)
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,24 +16,73 @@ class RailwayControlError(RuntimeError):
     pass
 
 
-def _auth_headers():
+def _auth_headers(*, prefer_account_token=False):
+    account_token = os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
     project_token = os.getenv("RAILWAY_PROJECT_TOKEN") or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
+
+    # Cross-service Railway administration should prefer the account/workspace
+    # token when one is configured; fall back to a project token scoped to the
+    # target service's project. Never print or return either credential.
+    token = account_token if prefer_account_token and account_token else None
+    if token:
+        return {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "SLH-Control-Plane/1.0",
+        }
     if project_token:
-        return {            "Project-Access-Token": project_token,            "Content-Type": "application/json",            "Accept": "application/json",            "User-Agent": "SLH-Control-Plane/1.0",        }
-    token = os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
-    if not token:
-        raise RailwayControlError(
-            "Railway token is not configured. Add RAILWAY_API_TOKEN for account/workspace control."
-        )
-    return {        "Authorization": "Bearer " + token,        "Content-Type": "application/json",        "Accept": "application/json",        "User-Agent": "SLH-Control-Plane/1.0",    }
+        return {
+            "Project-Access-Token": project_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "SLH-Control-Plane/1.0",
+        }
+    if account_token:
+        return {
+            "Authorization": "Bearer " + account_token,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "SLH-Control-Plane/1.0",
+        }
+    raise RailwayControlError(
+        "RAILWAY_CONTROL_TOKEN_MISSING: configure RAILWAY_PROJECT_TOKEN for the target project "
+        "or RAILWAY_API_TOKEN for account/workspace control."
+    )
 
 
-def graphql(query, variables=None):
+def safe_railway_error_code(exc):
+    """Map Railway API exceptions to short, non-secret diagnostic codes."""
+    message = str(exc or "").strip().lower()
+    if "token_missing" in message or "token is not configured" in message:
+        return "RAILWAY_CONTROL_TOKEN_MISSING"
+    if "http 401" in message or "unauthorized" in message or "authentication" in message:
+        return "RAILWAY_AUTHENTICATION_FAILED"
+    if "http 403" in message or "forbidden" in message or "permission denied" in message or "not authorized" in message:
+        return "RAILWAY_ACCESS_DENIED"
+    if "http 404" in message or "not found" in message:
+        return "RAILWAY_TARGET_NOT_FOUND"
+    if "connection failed" in message or "timed out" in message or "timeout" in message:
+        return "RAILWAY_API_UNREACHABLE"
+    if "variable_read_failed" in message:
+        return "RAILWAY_VARIABLE_READ_FAILED"
+    if "variable_verify_failed" in message:
+        return "RAILWAY_VARIABLE_VERIFY_FAILED"
+    if "variable_update_rejected" in message:
+        return "RAILWAY_VARIABLE_UPDATE_REJECTED"
+    if "graphql" in message or "validation" in message or "cannot query field" in message:
+        return "RAILWAY_GRAPHQL_SCHEMA_OR_REQUEST_ERROR"
+    if "exchange_gate_deploy_id_missing" in message:
+        return "RAILWAY_DEPLOY_ID_MISSING"
+    return "RAILWAY_API_ERROR"
+
+
+def graphql(query, variables=None, *, prefer_account_token=False):
     payload = json.dumps({"query": query, "variables": variables or {}}).encode()
     req = urllib.request.Request(
         ENDPOINT,
         data=payload,
-        headers=_auth_headers(),
+        headers=_auth_headers(prefer_account_token=prefer_account_token),
         method="POST",
     )
     try:
@@ -101,7 +150,7 @@ def project(project_id):
     return data.get("project")
 
 
-def deploy(service_id, environment_id, commit_sha=None):
+def deploy(service_id, environment_id, commit_sha=None, *, prefer_account_token=False):
     query = """
         mutation($serviceId: String!, $environmentId: String!, $commitSha: String) {
           serviceInstanceDeployV2(
@@ -115,7 +164,7 @@ def deploy(service_id, environment_id, commit_sha=None):
         "serviceId": service_id,
         "environmentId": environment_id,
         "commitSha": commit_sha,
-    })
+    }, prefer_account_token=prefer_account_token)
     deployment = data["serviceInstanceDeployV2"]
     return {"id": deployment}
 
@@ -219,6 +268,7 @@ def exchange_gate_variable_status():
             "environmentId": SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
             "serviceId": SLH_BOT_SERVICE_ID,
         },
+        prefer_account_token=True,
     )
     values = data.get("variables")
     if not isinstance(values, dict):
@@ -260,6 +310,7 @@ def close_exchange_gate():
                 "skipDeploys": True,
             }
         },
+        prefer_account_token=True,
     )
     if mutation.get("variableUpsert") is False:
         raise RailwayControlError("EXCHANGE_GATE_VARIABLE_UPDATE_REJECTED")
@@ -276,6 +327,7 @@ def close_exchange_gate():
         SLH_BOT_SERVICE_ID,
         SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
         commit_sha,
+        prefer_account_token=True,
     )
     deployment_id = str((deployment or {}).get("id") or "")
     if not deployment_id:
