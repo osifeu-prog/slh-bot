@@ -187,7 +187,7 @@ async def telegram_exchange_gate_status(request: Request):
             "status": "PASS",
             "configured": configured,
             "configured_open": configured == "1",
-        }), 200
+        })
     except Exception as exc:
         return JSONResponse({
             "status": "ERROR",
