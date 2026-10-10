@@ -72,6 +72,20 @@ def runtime_status() -> dict:
     return _request("/internal/mcp/v1/runtime/status")
 
 
+def exchange_gate_status() -> dict:
+    """Read only the canonical Exchange gate variable through Control Plane."""
+    return _request("/internal/mcp/v1/exchange-gate")
+
+
+def exchange_gate_close() -> dict:
+    """Request the fixed, close-only Exchange gate operation through Control Plane."""
+    return _request(
+        "/internal/mcp/v1/exchange-gate/close",
+        method="POST",
+        payload={},
+    )
+
+
 def self_test() -> bool:
     """Verify the authenticated MCP -> Control Plane bridge without mutating state."""
     if not enabled():
