@@ -82,6 +82,8 @@ def test_join_completion_marks_pending_referral_converted_once(monkeypatch):
     referral_attribution.record_referral_start(
         "200", "100", is_new_user=True, now="2026-10-10T10:00:00+00:00"
     )
+    # The canonical join flow has already persisted the user profile at this point.
+    db["users"]["200"] = {"name": "New User", "joined": True}
 
     first = referral_attribution.mark_join_completed(
         "200", now="2026-10-10T11:00:00+00:00"
