@@ -46,7 +46,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
             "environment": "production",
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
-             patch("core.railway_control.close_exchange_gate", return_value=result) as close:
+             patch("core.exchange_gate_bridge.close_exchange_gate_via_mcp", return_value=result) as close:
             self.command(_message("/exchange_gate close"))
 
         close.assert_called_once_with()
@@ -58,7 +58,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
 
     def test_close_is_rejected_outside_private_chat(self):
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
-             patch("core.railway_control.close_exchange_gate") as close:
+             patch("core.exchange_gate_bridge.close_exchange_gate_via_mcp") as close:
             self.command(_message("/exchange_gate close", chat_type="group"))
 
         close.assert_not_called()
@@ -66,7 +66,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
 
     def test_non_owner_cannot_close(self):
         with patch("handlers.exchange_handler.is_owner", return_value=False), \
-             patch("core.railway_control.close_exchange_gate") as close:
+             patch("core.exchange_gate_bridge.close_exchange_gate_via_mcp") as close:
             self.command(_message("/exchange_gate close", uid=999))
 
         close.assert_not_called()
@@ -80,7 +80,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
              patch.dict("os.environ", {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False), \
-             patch("core.railway_control.exchange_gate_variable_status", return_value={"configured": "0"}), \
+             patch("core.exchange_gate_bridge.exchange_gate_status", return_value={"configured": "0"}), \
              patch("handlers.exchange_handler.state_manager.load_db", return_value={"users": {}}), \
              patch("core.system_checks.check_exchange_for_execution", return_value=closed_check):
             self.command(_message("/exchange_gate status"))
@@ -91,7 +91,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
 
 
     def test_status_keeps_runtime_diagnostic_when_railway_api_token_is_missing(self):
-        from core.railway_control import RailwayControlError
+        from core.exchange_gate_bridge import ExchangeGateBridgeError
 
         open_check = {
             "public_gate": "OPEN",
@@ -100,7 +100,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
              patch.dict("os.environ", {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False), \
-             patch("core.railway_control.exchange_gate_variable_status", side_effect=RailwayControlError("RAILWAY_CONTROL_TOKEN_MISSING: no token")), \
+             patch("core.exchange_gate_bridge.exchange_gate_status", side_effect=ExchangeGateBridgeError("RAILWAY_CONTROL_TOKEN_MISSING")), \
              patch("handlers.exchange_handler.state_manager.load_db", return_value={"users": {}}), \
              patch("core.system_checks.check_exchange_for_execution", return_value=open_check):
             self.command(_message("/exchange_gate status"))
