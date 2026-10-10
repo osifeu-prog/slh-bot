@@ -445,6 +445,85 @@ def format_blocked_execution_receipt(side, check):
 
 
 def register(bot):
+    @bot.message_handler(commands=["exchange_gate"])
+    def exchange_gate_cmd(msg):
+        if not is_owner(msg.from_user.id):
+            bot.reply_to(msg, "⛔ OWNER only")
+            return
+        if str(getattr(getattr(msg, "chat", None), "type", "")).lower() != "private":
+            bot.reply_to(msg, "⛔ פקודת Exchange gate זמינה רק בפרטי.")
+            return
+
+        parts = (msg.text or "").split()
+        action = parts[1].lower() if len(parts) > 1 else "status"
+        if len(parts) > 2 or action not in {"status", "close"}:
+            bot.reply_to(msg, "שימוש: /exchange_gate status  או  /exchange_gate close")
+            return
+
+        if action == "status":
+            try:
+                import os
+                from core.railway_control import exchange_gate_variable_status
+                from core.exchange_gate import public_open
+                from core.system_checks import check_exchange_for_execution
+
+                railway = exchange_gate_variable_status()
+                runtime_env = (os.getenv("SLH_EXCHANGE_PUBLIC_OPEN", "0") or "0").strip()
+                db = state_manager.load_db()
+                check = check_exchange_for_execution(db)
+                configured = railway.get("configured", "UNKNOWN")
+                runtime_open = public_open()
+                verified_closed = (
+                    configured == "0"
+                    and runtime_env == "0"
+                    and runtime_open is False
+                    and check.get("public_gate") == "CLOSED"
+                    and check.get("execution_ready") is False
+                )
+                if verified_closed:
+                    state = "✅ CLOSED VERIFIED"
+                elif configured == "0" and runtime_env == "1":
+                    state = "🟡 DEPLOY REQUIRED / RUNTIME STILL OPEN"
+                elif check.get("public_gate") == "OPEN" or check.get("execution_ready") is True:
+                    state = "🔴 OPEN — DO NOT TRADE"
+                else:
+                    state = "🟡 NOT VERIFIED — KEEP CLOSED"
+
+                bot.reply_to(
+                    msg,
+                    "🛡️ SLH EXCHANGE GATE — OWNER / READ ONLY\n"
+                    f"Railway Production variable: {configured}\n"
+                    f"Runtime env: {runtime_env if runtime_env in {'0', '1'} else 'INVALID'}\n"
+                    f"Effective gate: {check.get('public_gate', 'UNKNOWN')}\n"
+                    f"execution_ready: {bool(check.get('execution_ready'))}\n"
+                    f"Open orders: {check.get('open_orders', 'UNKNOWN')}\n"
+                    f"Status: {state}\n\n"
+                    "Close blocks new Buy/Sell orders; it does not cancel existing open orders or reverse prior trades."
+                )
+            except Exception as exc:
+                bot.reply_to(msg, f"⛔ Exchange gate status not verified: {type(exc).__name__}. Treat gate as NOT VERIFIED.")
+            return
+
+        try:
+            from core.railway_control import close_exchange_gate
+            result = close_exchange_gate()
+            bot.reply_to(
+                msg,
+                "🛡️ EXCHANGE CLOSE REQUEST ACCEPTED\n"
+                "Railway Production variable verified: SLH_EXCHANGE_PUBLIC_OPEN=0\n"
+                "Deployment triggered for slh-cloud-bot.\n"
+                f"Commit: {result['commit'][:12]}\n"
+                f"Deployment ID: {result['deployment_id']}\n\n"
+                "The close is NOT marked complete until /exchange_gate status reports CLOSED VERIFIED after the service restarts. Do not announce or use Exchange before that verification."
+            )
+        except Exception as exc:
+            bot.reply_to(
+                msg,
+                f"⛔ Exchange close not verified: {type(exc).__name__}. "
+                "Run /exchange_gate status; do not assume the live gate is closed."
+            )
+
+    @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
     @bot.message_handler(commands=["exchange_clean", "exchange_cleanup"])
     def exchange_clean_cmd(msg):
         if not is_owner(msg.from_user.id):
