@@ -100,6 +100,10 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('#authGate')).toBeHidden();
   await expect(page.locator('.app')).toBeVisible();
   await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
+  // Wait for asynchronous boot/loadMe work to settle before user-driven navigation;
+  // otherwise its initial-screen render can race a click and reset the active screen.
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#home')).toHaveClass(/active/);
 });
 
 test('all primary screens are reachable', async ({ page }) => {
@@ -142,6 +146,56 @@ test('exchange receipt shows every fresh canonical gate item', async ({ page }) 
   await expect(receipt).toContainText('ספר פקודות');
   await expect(receipt).toContainText('תקינות עסקאות');
   await expect(receipt).toContainText('אינווריאנטים כספיים');
+});
+
+test('visible Buy button submits directly through the fresh Exchange endpoint', async ({ page }) => {
+  await page.evaluate(() => show('move'));
+  const exchangeButton = page.locator('#move').getByRole('button', { name: /Exchange/ });
+  await expect(exchangeButton).toBeVisible();
+  await exchangeButton.click();
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+
+  await page.locator('#buyAmount').fill('2');
+  await page.locator('#buyPrice').fill('1');
+  const requestPromise = page.waitForRequest(request =>
+    request.url().endsWith('/api/v1/exchange/order') && request.method() === 'POST'
+  );
+  await page.locator('#exchange').getByRole('button', { name: /קנה SLH/ }).click();
+  const request = await requestPromise;
+  const payload = request.postDataJSON();
+
+  expect(payload.side).toBe('buy');
+  expect(payload.amount).toBe('2');
+  expect(payload.price).toBe('1');
+  expect(payload.client_request_id).toBeTruthy();
+  await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
+    .toContainText('Fresh Exchange check: PASS');
+  expect(page.url()).toContain('/mini-app');
+});
+
+test('visible Sell button submits directly through the fresh Exchange endpoint', async ({ page }) => {
+  await page.evaluate(() => show('move'));
+  const exchangeButton = page.locator('#move').getByRole('button', { name: /Exchange/ });
+  await expect(exchangeButton).toBeVisible();
+  await exchangeButton.click();
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+
+  await page.locator('#sellAmount').fill('2');
+  await page.locator('#sellPrice').fill('1');
+  const requestPromise = page.waitForRequest(request =>
+    request.url().endsWith('/api/v1/exchange/order') && request.method() === 'POST'
+  );
+  await page.locator('#exchange').getByRole('button', { name: /מכור SLH/ }).click();
+  const request = await requestPromise;
+  const payload = request.postDataJSON();
+
+  expect(payload.side).toBe('sell');
+  expect(payload.amount).toBe('2');
+  expect(payload.price).toBe('1');
+  expect(payload.client_request_id).toBeTruthy();
+  await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
+    .toContainText('Fresh Exchange check: PASS');
+  expect(page.url()).toContain('/mini-app');
 });
 
 test('partial Exchange receipt never shows a green fresh-check status', async ({ page }) => {
