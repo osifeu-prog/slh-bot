@@ -513,7 +513,7 @@ def register(bot):
             if railway_problem:
                 lines.append(f"Railway API diagnostic: {railway_problem}")
                 if railway_problem == "RAILWAY_CONTROL_TOKEN_MISSING":
-                    lines.append("One-time setup required: add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram.")
+                    lines.append("The Control Plane service is missing its Railway API credential. Configure it only in the authorized Control Plane service; never add it to the bot or paste it into Telegram.")
                 elif railway_problem == "RAILWAY_ACCESS_DENIED":
                     lines.append("The configured Railway token lacks access to this project/service. Use a token with access to slh-cloud-bot Production.")
                 elif railway_problem == "CONTROL_PLANE_BRIDGE_AUTH_FAILED":
@@ -544,7 +544,7 @@ def register(bot):
             code = safe_railway_error_code(exc)
             hint = ""
             if code == "RAILWAY_CONTROL_TOKEN_MISSING":
-                hint = " Add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram."
+                hint = " The Control Plane service needs its Railway API credential; configure it only there, never in the bot or in Telegram."
             elif code == "RAILWAY_ACCESS_DENIED":
                 hint = " The configured Railway token lacks access to slh-cloud-bot Production."
             elif code == "CONTROL_PLANE_BRIDGE_AUTH_FAILED":
