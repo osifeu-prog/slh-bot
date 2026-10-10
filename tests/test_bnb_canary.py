@@ -15,7 +15,7 @@ class BNBCanaryTests(unittest.TestCase):
                  "amount_bnb": 0.001,
                  "block": 123,
                  "confirmations": 15,
-             }),              patch.object(service.state_manager, "load_db", return_value={"ledger": [], "users": {"8789977826": {"wallet": {"credits": 7.19}}}}),              patch.object(service, "record_transaction", return_value=8.19):
+             }),              patch.object(service.state_manager, "load_db", return_value={"ledger": [], "users": {"8789977826": {"wallet": {"credits": 7.19}}}}),              patch.object(service, "record_transaction", return_value={"status": "APPLIED", "balance_after": 8.19}):
             result = service.settle_bnb_deposit("8789977826", "0xTX")
 
         self.assertTrue(result["ok"])
@@ -27,19 +27,7 @@ class BNBCanaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "BNB_DEPOSITS_CLOSED"):
                 service.settle_bnb_deposit("123456789", "0xTX")
 
-    def test_replay_is_noop_before_credit_mutation(self):
-        key = "bnb:deposit:0xtx"
-        db = {
-            "ledger": [{
-                "uid": "8789977826",
-                "before": 7.19,
-                "amount": 1.0,
-                "after": 8.19,
-                "reason": "bnb:deposit",
-                "meta": {"idempotency_key": key},
-            }],
-            "users": {"8789977826": {"wallet": {"credits": 8.19}}},
-        }
+    def test_replay_reports_duplicate_from_atomic_credit_mutation(self):
         with patch.object(service, "bnb_deposits_open", return_value=True),              patch.object(service, "get_binding", return_value={"address": "0xabc"}),              patch.object(service, "verify_bnb_deposit", return_value={
                  "ok": True,
                  "from": "0xabc",
@@ -48,12 +36,18 @@ class BNBCanaryTests(unittest.TestCase):
                  "amount_bnb": 0.001,
                  "block": 123,
                  "confirmations": 15,
-             }),              patch.object(service.state_manager, "load_db", return_value=db),              patch.object(service, "record_transaction") as record:
+             }),              patch.object(service, "record_transaction", return_value={
+                 "status": "DUPLICATE",
+                 "balance_after": 8.19,
+                 "credits_applied": 0.0,
+             }) as record:
             result = service.settle_bnb_deposit("8789977826", "0xTX")
 
         self.assertTrue(result["idempotent"])
+        self.assertEqual(result["settlement_status"], "DUPLICATE")
         self.assertEqual(result["credits"], 0.0)
-        record.assert_not_called()
+        self.assertEqual(result["balance_after"], 8.19)
+        record.assert_called_once()
 
 
 if __name__ == "__main__":
