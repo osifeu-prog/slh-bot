@@ -90,5 +90,27 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         self.assertIn("execution_ready: False", reply)
 
 
+    def test_status_keeps_runtime_diagnostic_when_railway_api_token_is_missing(self):
+        from core.railway_control import RailwayControlError
+
+        open_check = {
+            "public_gate": "OPEN",
+            "execution_ready": True,
+            "open_orders": 0,
+        }
+        with patch("handlers.exchange_handler.is_owner", return_value=True), \
+             patch.dict("os.environ", {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False), \
+             patch("core.railway_control.exchange_gate_variable_status", side_effect=RailwayControlError("RAILWAY_CONTROL_TOKEN_MISSING: no token")), \
+             patch("handlers.exchange_handler.state_manager.load_db", return_value={"users": {}}), \
+             patch("core.system_checks.check_exchange_for_execution", return_value=open_check):
+            self.command(_message("/exchange_gate status"))
+
+        reply = self.bot.replies[-1]
+        self.assertIn("Railway Production variable: UNKNOWN", reply)
+        self.assertIn("Runtime env: 1", reply)
+        self.assertIn("Effective gate: OPEN", reply)
+        self.assertIn("RAILWAY_CONTROL_TOKEN_MISSING", reply)
+        self.assertIn("🔴 OPEN", reply)
+
 if __name__ == "__main__":
     unittest.main()
