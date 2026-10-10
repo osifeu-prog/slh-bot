@@ -28,6 +28,11 @@ _ALIASES = {
         "בדוק ux", "בדיקת ux", "בדוק כפתורים", "בדוק ממשק",
         "בדיקת ממשק", "check ux",
     ),
+    "mcp": (
+        "בדוק חיבורי האוטומציה", "בדוק חיבור אוטומציה",
+        "בדיקת חיבור אוטומציה", "בדוק חיבור mcp", "בדוק mcp",
+        "mcp status", "check mcp", "check automation",
+    ),
     "system": (
         "בדוק את כל המערכת", "בדוק כל המערכת", "בדוק את המערכת",
         "בדוק מערכת", "בדיקת מערכת", "מצב מערכת", "system check",
@@ -68,6 +73,19 @@ def _safe_result(name: str, result: Any) -> str:
 
 
 def _run_check(kind: str, uid: str) -> str:
+    if kind == "mcp":
+        try:
+            from handlers.mcp_proof_handler import read_mcp_proof
+
+            result = read_mcp_proof()
+        except Exception as exc:
+            result = {"ok": False, "detail": f"MCP proof failed safely ({type(exc).__name__})"}
+        return (
+            "🔎 SLH OS — בדיקת חיבור האוטומציה הקולית (READ ONLY)\n"
+            + _safe_result("MCP Control Plane", result)
+            + _READ_ONLY_FOOTER
+        )
+
     from core import system_checks
 
     checks = {
