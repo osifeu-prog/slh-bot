@@ -68,16 +68,21 @@ def bnb_readiness(db=None) -> dict:
     if readiness_db is None:
         reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
     else:
-        wallet_bindings = readiness_db.get("wallet_bindings", {})
+        wallet_bindings = readiness_db.get("wallet_bindings")
         if not isinstance(wallet_bindings, dict):
+            # Missing is not equivalent to an explicitly verified empty registry.
             reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
         else:
             for binding in wallet_bindings.values():
                 if not isinstance(binding, dict):
-                    continue
+                    reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    break
                 if str(binding.get("chain") or "bsc").lower() != "bsc":
                     continue
                 bound_address = str(binding.get("address") or "").strip()
+                if not bound_address:
+                    reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    break
                 if treasury and bound_address.lower() == treasury.lower():
                     reasons.append("BNB_TREASURY_MATCHES_BOUND_WALLET")
                     break
