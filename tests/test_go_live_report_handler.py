@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import state_manager
 import handlers.system_checks_handler as handler
+import handlers.mcp_proof_handler as mcp_handler
 
 
 class _FakeBot:
@@ -108,11 +109,29 @@ def test_go_live_report_explains_safe_closed_gates_and_send_time_check(monkeypat
         },
     )
     monkeypatch.setattr(state_manager, "load_db", lambda: {"users": {}})
+    monkeypatch.setattr(
+        mcp_handler,
+        "read_mcp_proof",
+        lambda: {
+            "ok": True,
+            "status": "PASS",
+            "detail": "Telegram → MCP → Control Plane PASS",
+            "runtime": {
+                "state": "ONLINE",
+                "running": True,
+                "boot_ok": True,
+                "agent_count": 3,
+            },
+        },
+    )
 
     message = SimpleNamespace(from_user=SimpleNamespace(id=8789977826))
     report_handler(message)
     output = bot.replies[-1][1]
 
+    assert "Automation bridge (Telegram → MCP → Control Plane): PASS" in output
+    assert "runtime_state=ONLINE" in output
+    assert "agent_count=3" in output
     assert "Overall release readiness: 🟡 DEGRADED" in output
     assert "Current Exchange execution preflight: PASS" in output
     assert "BNB: SAFE CLOSED" in output
