@@ -176,4 +176,62 @@ def register_mcp_bridge_routes(app):
         result = lifecycle.complete_mission(str(mission_id))
         return jsonify(result), 200
 
+
+    @app.route("/internal/mcp/v1/exchange-gate", methods=["GET"])
+    def mcp_bridge_exchange_gate_status():
+        _subject, error = _require("agents.view_self")
+        if error:
+            return error
+        try:
+            from core.railway_control import (
+                exchange_gate_variable_status,
+                safe_railway_error_code,
+            )
+            result = exchange_gate_variable_status()
+            configured = str(result.get("configured") or "UNKNOWN")
+            if configured not in {"0", "1", "MISSING", "INVALID"}:
+                configured = "UNKNOWN"
+            return jsonify({
+                "status": "PASS",
+                "configured": configured,
+                "configured_open": configured == "1",
+            }), 200
+        except Exception as exc:
+            from core.railway_control import safe_railway_error_code
+            return jsonify({
+                "status": "ERROR",
+                "error": safe_railway_error_code(exc),
+            }), 502
+
+    @app.route("/internal/mcp/v1/exchange-gate/close", methods=["POST"])
+    def mcp_bridge_exchange_gate_close():
+        _subject, error = _require("agents.manage")
+        if error:
+            return error
+        try:
+            from core.railway_control import close_exchange_gate, safe_railway_error_code
+            result = close_exchange_gate()
+            if (
+                result.get("status") != "DEPLOY_TRIGGERED"
+                or result.get("configured") != "0"
+                or not result.get("deployment_id")
+                or not result.get("commit")
+            ):
+                return jsonify({
+                    "status": "ERROR",
+                    "error": "EXCHANGE_GATE_CLOSE_NOT_VERIFIED",
+                }), 502
+            return jsonify({
+                "status": "DEPLOY_TRIGGERED",
+                "configured": "0",
+                "commit": str(result["commit"]),
+                "deployment_id": str(result["deployment_id"]),
+            }), 200
+        except Exception as exc:
+            from core.railway_control import safe_railway_error_code
+            return jsonify({
+                "status": "ERROR",
+                "error": safe_railway_error_code(exc),
+            }), 502
+
     return app
