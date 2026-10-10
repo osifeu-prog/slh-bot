@@ -9,6 +9,7 @@ MQTT_BROKER = _MB
 from core.mqtt_config import PORT as _MP
 MQTT_PORT = _MP
 import state_manager
+from core.authority import is_owner
 
 
 def _device_owner_id(device):
@@ -55,7 +56,7 @@ def register_esp_handler(bot):
         if not dev:
             bot.reply_to(msg, f"Device {device_id} not found.")
             return
-        if _device_owner_id(dev) != str(msg.from_user.id):
+        if _device_owner_id(dev) != str(msg.from_user.id) and not is_owner(msg.from_user.id):
             bot.reply_to(msg, "אין לך הרשאה למכשיר זה")
             return
 
