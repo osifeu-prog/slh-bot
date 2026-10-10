@@ -189,3 +189,5 @@ def test_telegram_blocked_receipt_is_timestamped_and_never_claims_success():
     assert "checked_at (UTC): 2026-10-10T13:00:00+00:00" in receipt
     assert "No order was placed or balances changed." in receipt
     assert "Fresh canonical Exchange check: PASS" not in receipt
+    assert "\n" in receipt
+    assert "\\n" not in receipt
