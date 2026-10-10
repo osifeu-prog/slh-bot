@@ -53,6 +53,7 @@ def _wire_exchange_test(monkeypatch, db, check):
         lambda: (_ for _ in ()).throw(
             AssertionError("the stale public-gate guard must not short-circuit the fresh check")
         ),
+        raising=False,
     )
     monkeypatch.setattr(system_checks, "check_exchange_for_execution", check)
     return webapp.app.test_client()
