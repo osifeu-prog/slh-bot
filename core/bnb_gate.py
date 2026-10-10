@@ -15,6 +15,7 @@ from pathlib import Path
 from core.binance_connector import get_bsc_config
 from core.bsc_address_policy import is_quarantined_bsc_address
 import state_manager
+from web3 import Web3
 
 CLOSED_MESSAGE = "⛔️ הפקדות BNB/SLH סגורות כרגע. אל תשלח עד להודעה."
 
@@ -77,10 +78,12 @@ def bnb_readiness(db=None) -> dict:
                 if not isinstance(binding, dict):
                     reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
                     break
-                if str(binding.get("chain") or "bsc").lower() != "bsc":
-                    continue
+                binding_chain = str(binding.get("chain") or "").strip().lower()
+                if binding_chain != "bsc":
+                    reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    break
                 bound_address = str(binding.get("address") or "").strip()
-                if not bound_address:
+                if not Web3.is_address(bound_address):
                     reasons.append("BNB_WALLET_BINDINGS_UNVERIFIED")
                     break
                 if treasury and bound_address.lower() == treasury.lower():
