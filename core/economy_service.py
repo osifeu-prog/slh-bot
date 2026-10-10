@@ -24,7 +24,7 @@ def get_balance_safe(uid):
     return user.get("wallet", {}).get("credits", 0)
 
 
-def record_transaction(uid, amount, reason="unknown", meta=None):
+def record_transaction(uid, amount, reason="unknown", meta=None, *, return_details=False):
     uid = str(uid)
 
     if not isinstance(amount, (int, float)):
@@ -45,8 +45,43 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
         idempotency_key = meta.get("idempotency_key")
         if idempotency_key:
             for entry in ledger:
-                if entry.get("meta", {}).get("idempotency_key") == idempotency_key:
+                existing_meta = entry.get("meta") or {}
+                if existing_meta.get("idempotency_key") != idempotency_key:
+                    continue
+
+                if not return_details:
                     return entry["after"]
+
+                conflict = (
+                    str(entry.get("uid")) != uid
+                    or str(entry.get("reason")) != str(reason)
+                    or float(entry.get("amount", 0) or 0) != float(amount)
+                )
+                for field in ("tx_hash", "bnb_amount_wei", "from", "to"):
+                    if field not in meta:
+                        continue
+                    if field not in existing_meta:
+                        conflict = True
+                        break
+                    old_value, new_value = existing_meta.get(field), meta.get(field)
+                    if field in {"tx_hash", "from", "to"}:
+                        matches = str(old_value or "").lower() == str(new_value or "").lower()
+                    else:
+                        try:
+                            matches = int(old_value) == int(new_value)
+                        except (TypeError, ValueError):
+                            matches = False
+                    if not matches:
+                        conflict = True
+                        break
+
+                wallet = users.get(uid, {}).get("wallet", {})
+                return {
+                    "status": "CONFLICT" if conflict else "DUPLICATE",
+                    "balance_after": wallet.get("credits"),
+                    "credits_applied": 0.0,
+                    "existing_uid": str(entry.get("uid")),
+                }
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
@@ -69,6 +104,13 @@ def record_transaction(uid, amount, reason="unknown", meta=None):
             "meta": meta,
         })
 
+        if return_details:
+            return {
+                "status": "APPLIED",
+                "balance_after": after,
+                "credits_applied": amount,
+                "existing_uid": uid,
+            }
         return after
 
     return state_manager.atomic_update(mutate)
