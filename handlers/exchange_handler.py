@@ -441,7 +441,7 @@ def format_blocked_execution_receipt(side, check):
         lines.append(
             "The server did not provide a complete fresh-check receipt; do not retry until the order/history is checked."
         )
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 
 def register(bot):
