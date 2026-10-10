@@ -71,6 +71,7 @@ class RailwayExchangeGateControlTests(unittest.TestCase):
             railway_control.SLH_BOT_SERVICE_ID,
             railway_control.SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
             commit,
+            prefer_account_token=True,
         )
 
     def test_close_does_not_deploy_if_railway_value_cannot_be_verified(self):
