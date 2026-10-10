@@ -72,6 +72,16 @@ def safe_railway_error_code(exc):
         return "RAILWAY_VARIABLE_UPDATE_REJECTED"
     if "graphql" in message or "validation" in message or "cannot query field" in message:
         return "RAILWAY_GRAPHQL_SCHEMA_OR_REQUEST_ERROR"
+    if "control_plane_bridge_token_missing" in message:
+        return "CONTROL_PLANE_BRIDGE_TOKEN_MISSING"
+    if "control_plane_bridge_unavailable" in message or "control_plane_unavailable" in message:
+        return "CONTROL_PLANE_BRIDGE_UNAVAILABLE"
+    if "exchange_control_auth_required" in message or "control_plane_http_401" in message:
+        return "CONTROL_PLANE_BRIDGE_AUTH_FAILED"
+    if "control_plane_http_404" in message or "control_plane_bridge_not_found" in message:
+        return "CONTROL_PLANE_BRIDGE_NOT_FOUND"
+    if "close_only_action_required" in message:
+        return "CONTROL_PLANE_CLOSE_ONLY"
     if "exchange_gate_deploy_id_missing" in message:
         return "RAILWAY_DEPLOY_ID_MISSING"
     return "RAILWAY_API_ERROR"
@@ -339,6 +349,103 @@ def close_exchange_gate():
         "configured": after["configured"],
         "commit": commit_sha,
         "deployment_id": deployment_id,
+        "service": "slh-cloud-bot",
+        "environment": "production",
+    }
+
+
+# The Railway credential stays on the Control Plane service, never on the bot.
+# This endpoint is fixed and only supports reading the configured gate or
+# requesting a close; no caller-provided URL, service, variable, or value.
+SLH_EXCHANGE_CONTROL_PLANE_URL = (
+    "https://web-production-22f28.up.railway.app/api/internal/exchange-gate"
+)
+
+
+def _exchange_gate_bridge_request(method, payload=None):
+    token = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
+    if not token:
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_TOKEN_MISSING")
+
+    body = None
+    headers = {
+        "Accept": "application/json",
+        "Authorization": "Bearer " + token,
+        "User-Agent": "SLH-Exchange-Gate-Bridge/1",
+    }
+    if payload is not None:
+        body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+
+    req = urllib.request.Request(
+        SLH_EXCHANGE_CONTROL_PLANE_URL,
+        data=body,
+        headers=headers,
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        code = ""
+        try:
+            body_json = json.loads(exc.read().decode("utf-8", errors="replace"))
+            candidate = str(body_json.get("error") or "")
+            if candidate and len(candidate) <= 96 and all(c.isupper() or c.isdigit() or c == "_" for c in candidate):
+                code = candidate
+        except Exception:
+            pass
+        if code:
+            raise RailwayControlError(code) from exc
+        if exc.code in {401, 403}:
+            raise RailwayControlError("CONTROL_PLANE_BRIDGE_AUTH_FAILED") from exc
+        if exc.code == 404:
+            raise RailwayControlError("CONTROL_PLANE_BRIDGE_NOT_FOUND") from exc
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_HTTP_ERROR") from exc
+    except urllib.error.URLError as exc:
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_UNAVAILABLE") from exc
+    except Exception as exc:
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_UNAVAILABLE") from exc
+
+    try:
+        data = json.loads(raw or "{}")
+    except json.JSONDecodeError as exc:
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_INVALID_RESPONSE") from exc
+    if not isinstance(data, dict):
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_INVALID_RESPONSE")
+    if data.get("ok") is not True:
+        candidate = str(data.get("error") or "CONTROL_PLANE_BRIDGE_FAILED")
+        if candidate and len(candidate) <= 96 and all(c.isupper() or c.isdigit() or c == "_" for c in candidate):
+            raise RailwayControlError(candidate)
+        raise RailwayControlError("CONTROL_PLANE_BRIDGE_FAILED")
+    return data
+
+
+def control_plane_exchange_gate_status():
+    """Read only the single allowlisted Railway gate variable via the Control Plane."""
+    data = _exchange_gate_bridge_request("GET")
+    configured = str(data.get("configured") or "UNKNOWN")
+    if configured not in {"0", "1", "MISSING", "INVALID"}:
+        configured = "UNKNOWN"
+    return {
+        "variable": "SLH_EXCHANGE_PUBLIC_OPEN",
+        "configured": configured,
+        "configured_open": configured == "1",
+        "source": "railway_control_plane_bridge",
+    }
+
+
+def request_exchange_gate_close():
+    """Ask the Control Plane to set only SLH_EXCHANGE_PUBLIC_OPEN=0 and deploy."""
+    data = _exchange_gate_bridge_request("POST", {"action": "close"})
+    if data.get("configured") != "0" or data.get("status") != "DEPLOY_TRIGGERED":
+        raise RailwayControlError("EXCHANGE_GATE_CLOSE_NOT_VERIFIED")
+    return {
+        "status": data["status"],
+        "previous": data.get("previous", "UNKNOWN"),
+        "configured": "0",
+        "commit": str(data.get("commit") or ""),
+        "deployment_id": str(data.get("deployment_id") or ""),
         "service": "slh-cloud-bot",
         "environment": "production",
     }
