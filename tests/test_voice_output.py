@@ -24,7 +24,7 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False), patch(
             "core.voice_output.requests.post", return_value=response
         ) as post, patch(
-            "core.voice_output._pcm_to_ogg_opus", return_value=b"ogg-opus-bytes"
+            "core.voice_output._wav_to_ogg_opus", return_value=b"ogg-opus-bytes"
         ) as convert:
             audio, error = synthesize_hebrew_voice("שער הבורסה פתוח")
 
@@ -35,11 +35,11 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         self.assertEqual(args.args[0], "https://generativelanguage.googleapis.com/v1beta/interactions")
         self.assertEqual(args.kwargs["headers"]["x-goog-api-key"], "test-key")
         payload = args.kwargs["json"]
-        self.assertEqual(payload["model"], "gemini-3.1-flash-tts-preview")
+        self.assertEqual(payload["model"], "gemini-3.8-flash-lite-tts")
         self.assertEqual(payload["input"], "שער הבורסה פתוח")
-        self.assertEqual(payload["response_format"], {"type": "audio"})
+        self.assertEqual(payload["response_format"], {"type": "audio", "mime_type": "audio/wav"})
         self.assertEqual(payload["generation_config"]["speech_config"], [{"voice": "Kore"}])
-        convert.assert_called_once_with(b"raw-pcm")
+        convert.assert_called_once_with(b"raw-wav")
 
     def test_http_error_is_reported_without_leaking_provider_body(self):
         response = Mock()
@@ -66,7 +66,7 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False), patch(
             "core.voice_output.requests.post", return_value=response
         ) as post, patch(
-            "core.voice_output._pcm_to_ogg_opus", return_value=b"ogg-opus-bytes"
+            "core.voice_output._wav_to_ogg_opus", return_value=b"ogg-opus-bytes"
         ):
             audio, error = synthesize_hebrew_voice(long_text)
 
@@ -87,7 +87,7 @@ class TestHebrewVoiceOutput(unittest.TestCase):
                         {
                             "type": "audio",
                             "mime_type": "audio/wav",
-                            "data": base64.b64encode(b"raw-rest-pcm").decode("ascii"),
+                            "data": base64.b64encode(b"raw-rest-wav").decode("ascii"),
                         },
                     ],
                 }
@@ -97,13 +97,33 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False), patch(
             "core.voice_output.requests.post", return_value=response
         ), patch(
-            "core.voice_output._pcm_to_ogg_opus", return_value=b"ogg-opus-bytes"
+            "core.voice_output._wav_to_ogg_opus", return_value=b"ogg-opus-bytes"
         ) as convert:
             audio, error = synthesize_hebrew_voice("תשובה קולית בעברית")
 
         self.assertEqual(audio, b"ogg-opus-bytes")
         self.assertIsNone(error)
-        convert.assert_called_once_with(b"raw-rest-pcm")
+        convert.assert_called_once_with(b"raw-rest-wav")
+
+
+    def test_unexpected_audio_format_fails_closed(self):
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "output_audio": {
+                "data": base64.b64encode(b"not-wav").decode("ascii"),
+                "mime_type": "audio/mp3",
+            }
+        }
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False), patch(
+            "core.voice_output.requests.post", return_value=response
+        ), patch("core.voice_output._wav_to_ogg_opus") as convert:
+            audio, error = synthesize_hebrew_voice("בדיקת מערכת")
+
+        self.assertIsNone(audio)
+        self.assertEqual(error, "TTS_UNSUPPORTED_AUDIO_FORMAT")
+        convert.assert_not_called()
 
 
 if __name__ == "__main__":
