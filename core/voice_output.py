@@ -4,17 +4,15 @@ The caller must keep a text response as the reliable fallback. Provider errors
 are represented by stable codes; response bodies and secrets are never logged.
 """
 import base64
-import io
 import os
 import re
 import subprocess
-import wave
 
 import requests
 
 
 GEMINI_TTS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
-DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+DEFAULT_TTS_MODEL = "gemini-3.8-flash-lite-tts"
 DEFAULT_TTS_TIMEOUT = 30
 MAX_SPEECH_TEXT_CHARS = 680
 
@@ -42,17 +40,10 @@ def _speech_text(value):
     return text[:MAX_SPEECH_TEXT_CHARS]
 
 
-def _pcm_to_ogg_opus(pcm_bytes):
-    """Wrap Gemini's 24 kHz mono PCM in WAV and transcode it to Telegram voice."""
-    if not pcm_bytes:
+def _wav_to_ogg_opus(wav_bytes):
+    """Transcode Gemini's WAV output to Telegram-compatible OGG Opus."""
+    if not wav_bytes:
         raise ValueError("TTS_EMPTY_AUDIO")
-
-    wav_buffer = io.BytesIO()
-    with wave.open(wav_buffer, "wb") as wav_file:
-        wav_file.setnchannels(1)
-        wav_file.setsampwidth(2)
-        wav_file.setframerate(24000)
-        wav_file.writeframes(pcm_bytes)
 
     command = [
         "ffmpeg",
@@ -71,7 +62,7 @@ def _pcm_to_ogg_opus(pcm_bytes):
     ]
     completed = subprocess.run(
         command,
-        input=wav_buffer.getvalue(),
+        input=wav_bytes,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         timeout=25,
@@ -83,16 +74,18 @@ def _pcm_to_ogg_opus(pcm_bytes):
 
 
 def _extract_audio_data(result):
-    """Read audio from either SDK convenience output or raw Interactions REST JSON."""
+    """Return (base64 audio, MIME type) from SDK-style or raw REST responses."""
     if not isinstance(result, dict):
-        return None
+        return None, None
 
     output_audio = result.get("output_audio")
     if isinstance(output_audio, dict) and output_audio.get("data"):
-        return output_audio["data"]
+        return (
+            output_audio["data"],
+            str(output_audio.get("mime_type") or "audio/wav").lower(),
+        )
 
-    # The raw REST Interactions response stores audio in
-    # steps[].content[] rather than exposing the SDK's output_audio property.
+    # Raw REST Interactions responses store audio in steps[].content[].
     steps = result.get("steps")
     if isinstance(steps, list):
         for step in reversed(steps):
@@ -103,8 +96,11 @@ def _extract_audio_data(result):
                 continue
             for block in reversed(blocks):
                 if isinstance(block, dict) and block.get("type") == "audio" and block.get("data"):
-                    return block["data"]
-    return None
+                    return (
+                        block["data"],
+                        str(block.get("mime_type") or "audio/wav").lower(),
+                    )
+    return None, None
 
 
 def synthesize_hebrew_voice(text):
@@ -126,7 +122,7 @@ def synthesize_hebrew_voice(text):
     payload = {
         "model": model,
         "input": spoken_text,
-        "response_format": {"type": "audio"},
+        "response_format": {"type": "audio", "mime_type": "audio/wav"},
         "generation_config": {"speech_config": [{"voice": "Kore"}]},
     }
     headers = {
@@ -151,15 +147,17 @@ def synthesize_hebrew_voice(text):
 
     try:
         result = response.json()
-        encoded_audio = _extract_audio_data(result)
+        encoded_audio, mime_type = _extract_audio_data(result)
         if not encoded_audio:
             return None, "TTS_AUDIO_MISSING"
-        pcm_bytes = base64.b64decode(encoded_audio, validate=True)
+        if mime_type not in {"audio/wav", "audio/x-wav"}:
+            return None, "TTS_UNSUPPORTED_AUDIO_FORMAT"
+        wav_bytes = base64.b64decode(encoded_audio, validate=True)
     except (ValueError, TypeError, AttributeError):
         return None, "TTS_INVALID_RESPONSE"
 
     try:
-        return _pcm_to_ogg_opus(pcm_bytes), None
+        return _wav_to_ogg_opus(wav_bytes), None
     except FileNotFoundError:
         return None, "TTS_FFMPEG_MISSING"
     except subprocess.TimeoutExpired:
