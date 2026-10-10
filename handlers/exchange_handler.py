@@ -1,7 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import state_manager
-from core.exchange_gate import require_public_open
 from core.authority import is_owner
 from core.slh_distribution import (
     reserve_in_db,
