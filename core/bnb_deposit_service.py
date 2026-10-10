@@ -8,8 +8,6 @@ This module does not broadcast transactions or expose private keys.
 import os
 from decimal import Decimal
 
-import state_manager
-
 from core.bnb_gate import bnb_deposits_open, bnb_readiness
 from core.deposit_monitor import verify_bnb_deposit
 from core.wallet_binding import get_binding
@@ -55,26 +53,7 @@ def settle_bnb_deposit(uid, tx_hash):
     amount_bnb = float(verified.get("amount_bnb", 0))
     idempotency_key = f"bnb:deposit:{tx_hash.lower()}"
 
-    before_db = state_manager.load_db()
-    already_recorded = any(
-        entry.get("meta", {}).get("idempotency_key") == idempotency_key
-        for entry in before_db.get("ledger", [])
-    )
-
-    if already_recorded:
-        return {
-            "ok": True,
-            "uid": uid,
-            "tx_hash": tx_hash,
-            "amount_bnb": amount_bnb,
-            "amount_wei": amount_wei,
-            "credits": 0.0,
-            "balance_after": before_db.get("users", {}).get(uid, {}).get("wallet", {}).get("credits"),
-            "idempotent": True,
-            "binding": bound,
-        }
-
-    balance_after = record_transaction(
+    settlement = record_transaction(
         uid,
         credits,
         reason="bnb:deposit",
@@ -88,7 +67,13 @@ def settle_bnb_deposit(uid, tx_hash):
             "block": verified.get("block"),
             "confirmations": verified.get("confirmations"),
         },
+        return_details=True,
     )
+    settlement_status = str(settlement.get("status", "")).upper()
+    if settlement_status == "CONFLICT":
+        raise ValueError("BNB_DEPOSIT_IDEMPOTENCY_CONFLICT")
+    if settlement_status not in {"APPLIED", "DUPLICATE"}:
+        raise ValueError("BNB_DEPOSIT_RECORD_FAILED")
 
     return {
         "ok": True,
@@ -96,8 +81,9 @@ def settle_bnb_deposit(uid, tx_hash):
         "tx_hash": tx_hash,
         "amount_bnb": amount_bnb,
         "amount_wei": amount_wei,
-        "credits": credits,
-        "balance_after": balance_after,
-        "idempotent": already_recorded,
+        "credits": credits if settlement_status == "APPLIED" else 0.0,
+        "balance_after": settlement.get("balance_after"),
+        "idempotent": settlement_status == "DUPLICATE",
+        "settlement_status": settlement_status,
         "binding": bound,
     }
