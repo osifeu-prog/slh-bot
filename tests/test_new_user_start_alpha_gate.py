@@ -97,6 +97,9 @@ def test_new_user_start_with_valid_referral_opens_alpha(monkeypatch):
     start(Message("200", "/start ref_100"))
 
     assert db["pending_referrals"]["200"] == "100"
+    assert db["referral_start_events"]["200"]["referrer_uid"] == "100"
+    assert db["referral_start_events"]["200"]["status"] == "PENDING_JOIN"
+    assert db["users"]["100"]["referral"].get("count", 0) == 0
     assert any("הצטרף למסלול ה-Alpha" in msg[1] for msg in bot.messages)
 
     join_cb = next(
