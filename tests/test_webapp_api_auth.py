@@ -372,6 +372,14 @@ class WebAppApiAuthTests(unittest.TestCase):
             "core.referral_reward.progress",
             return_value=referral,
         ), patch(
+            "core.referral_attribution.referral_start_stats",
+            return_value={
+                "unique_starts": 4,
+                "pending_joins": 2,
+                "converted_joins": 1,
+                "existing_user_starts": 1,
+            },
+        ), patch(
             "core.holiday_campaign.eligibility",
             return_value={"eligible": False, "reason": "CAMPAIGN_EXPIRED"},
         ), patch(
@@ -395,6 +403,15 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertEqual(payload["referral"]["per_successful_referral"], {"credits": 0.9, "points": 10})
         self.assertEqual(payload["referral"]["referred_by"], "9")
         self.assertEqual(payload["referral"]["link"], "https://t.me/Me_ad_main_bot?start=ref_1")
+        self.assertEqual(
+            payload["referral"]["attribution"],
+            {
+                "unique_starts": 4,
+                "pending_joins": 2,
+                "converted_joins": 1,
+                "existing_user_starts": 1,
+            },
+        )
         self.assertTrue(payload["read_only"])
         self.assertEqual(payload["referral"]["commission_scope"], "Credits purchases only; Stars items/VIP are not referral-commissioned")
 

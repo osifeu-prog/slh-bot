@@ -57,6 +57,27 @@ async function mockBackend(page) {
           open_orders_before: 1
         }
       };
+    } else if (url.pathname === '/api/v1/tokenomics') {
+      body = {
+        user: { points: 110, successful_referrals: 1 },
+        referral: {
+          link: 'https://t.me/Me_ad_main_bot?start=ref_999999999',
+          count: 1,
+          required: 5,
+          remaining: 4,
+          per_successful_referral: { credits: 0.9, points: 10 },
+          commission_credits: 0,
+          offer_open: true,
+          attribution: {
+            unique_starts: 3,
+            pending_joins: 1,
+            converted_joins: 1,
+            existing_user_starts: 1
+          }
+        },
+        rewards: { airdrop_slh: 0, historical_holiday_airdrop_slh: 0 },
+        tokenomics: {}
+      };
     } else if (url.pathname === '/api/v1/me') {
       body = { name: 'UI Test User', credits: 21994384, token_balance: 21650000, staked: 1, points: 110, referrals: 0 };
     } else if (url.pathname.startsWith('/api/wallet/')) {
@@ -114,6 +135,17 @@ test('all primary screens are reachable', async ({ page }) => {
     seen.push(id);
   }
   expect(seen).toEqual(screens.map(([id]) => id));
+});
+
+test('referral panel separates unique starts from completed referrals', async ({ page }) => {
+  await page.locator('#slh-rewards-widget > button').click();
+  const panel = page.locator('#slh-rewards-body');
+  await expect(panel).toContainText('התחלות Telegram ייחודיות דרך הקישור');
+  await expect(panel).toContainText('בתהליך הצטרפות');
+  await expect(panel).toContainText('השלימו הצטרפות מאז הפעלת המעקב');
+  await expect(panel).toContainText('חשבונות קיימים שפתחו את הקישור');
+  await expect(panel).toContainText('3');
+  await expect(panel).toContainText('הנתונים סופרים פתיחת הבוט עם פרמטר referral');
 });
 
 test('market clearly distinguishes store grants, Credits, internal SLH and on-chain SLH', async ({ page }) => {

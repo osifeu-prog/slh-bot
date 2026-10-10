@@ -223,6 +223,19 @@ def register(bot):
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
 
+            # Persist the completion timestamp only after profile + Academy have
+            # passed. This marks referral attribution as converted, but never
+            # awards or mutates Credits/Points itself.
+            try:
+                from core.referral_attribution import mark_join_completed
+                join_attribution = mark_join_completed(uid)
+                print(
+                    f"JOIN ATTRIBUTION COMPLETE: uid={uid} "
+                    f"status={join_attribution.get('status')}"
+                )
+            except Exception as e:
+                print("JOIN ATTRIBUTION TIMESTAMP FAILED:", type(e).__name__)
+
             user_states.pop(uid, None)
 
             bot.reply_to(
