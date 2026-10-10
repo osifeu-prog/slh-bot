@@ -282,10 +282,25 @@ def register(bot, context=None):
             print("HOLIDAY CAMPAIGN ENTRY FAILED:", e)
 
         parts = (m.text or "").split(maxsplit=1)
-        if is_new and len(parts) > 1 and parts[1].startswith("ref_"):
+        if len(parts) > 1 and parts[1].startswith("ref_"):
             ref_uid = parts[1][4:].strip()
-            if ref_uid and ref_uid != user_id and user_exists(ref_uid):
-                _set_pending_referral(user_id, ref_uid)
+            if ref_uid.isdigit() and ref_uid != user_id and user_exists(ref_uid):
+                if is_new:
+                    _set_pending_referral(user_id, ref_uid)
+                # Track a unique referral start without awarding anything. Preserve
+                # the first pending referrer and never reattribute an existing account.
+                attribution_referrer = (
+                    _get_pending_referral(user_id) if is_new else ref_uid
+                ) or ref_uid
+                try:
+                    from core.referral_attribution import record_referral_start
+                    record_referral_start(
+                        user_id,
+                        str(attribution_referrer),
+                        is_new_user=is_new,
+                    )
+                except Exception as exc:
+                    print("REFERRAL ATTRIBUTION FAILED:", type(exc).__name__)
 
         # Existing accounts should resume their personal system directly.
         # Do this before the new-user Alpha onboarding card is rendered.
