@@ -118,17 +118,6 @@ class ExchangeGateBridgeClientTests(unittest.TestCase):
 
 
 class ExchangeGateMCPRoutesTests(unittest.TestCase):
-    def _client(self, extra_env=None):
-        from starlette.testclient import TestClient
-        from slh_mcp.server import build_mcp_app
-
-        env = {
-            "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
-            "SLH_MCP_BRIDGE_PRINCIPAL_ID": str(OWNER_TELEGRAM_ID),
-        }
-        env.update(extra_env or {})
-        return patch.dict(os.environ, env, clear=False), TestClient(build_mcp_app())
-
     def test_status_route_requires_bridge_auth(self):
         from starlette.testclient import TestClient
         from slh_mcp.server import build_mcp_app
