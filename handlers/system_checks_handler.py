@@ -137,6 +137,9 @@ def _go_live_report_output(uid: str) -> str:
     if bnb.get("ok"):
         bnb_icon = "✅"
         bnb_state = "OPEN · empirical settlement PASS"
+    elif not bnb.get("public_open") and bnb.get("ready") and bnb.get("launch_ready"):
+        bnb_icon = "🟡"
+        bnb_state = "SAFE CLOSED · configuration PASS · empirical settlement PASS · pending operator review"
     elif not bnb.get("public_open") and bnb.get("ready") and not bnb.get("launch_ready"):
         bnb_icon = "🟡"
         bnb_state = (
@@ -159,7 +162,13 @@ def _go_live_report_output(uid: str) -> str:
         f"replay={ton.get('replay_evidence', 'unknown')}",
         "",
         "🔒 No orders, broadcasts, transfers, claims or gate changes were made.",
-        "⛔️ BNB stays closed until live empirical settlement evidence is revalidated.",
+        (
+            "✅ BNB public gate OPEN; live empirical settlement evidence is currently revalidated."
+            if bnb.get("public_open") and bnb.get("launch_ready")
+            else "🟡 BNB remains safely CLOSED pending explicit operator review; live empirical settlement evidence is PASS and revalidated."
+            if bnb.get("launch_ready")
+            else "⛔️ BNB stays closed until live empirical settlement evidence is revalidated and all blockers are cleared."
+        ),
         "ℹ️ Participation / public investment stays DESIGN ONLY unless separate approvals pass.",
     ]
 

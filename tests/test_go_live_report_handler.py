@@ -120,3 +120,80 @@ def test_go_live_report_explains_safe_closed_gates_and_send_time_check(monkeypat
     assert "TON: 🟡 SAFE CLOSED" in output
     assert "No orders, broadcasts, transfers, claims or gate changes were made." in output
     assert "Every Buy/Sell order rechecks canonically inside the atomic mutation" in output
+
+
+
+def test_go_live_report_reports_revalidated_bnb_as_safe_closed_pending_operator_review(monkeypatch):
+    bot = _FakeBot()
+    report_handler = _go_live_handler(bot)
+
+    monkeypatch.setattr(handler, "_allowed", lambda message: True)
+    monkeypatch.setattr(
+        handler,
+        "build_release_report",
+        lambda: {
+            "overall_status": "DEGRADED",
+            "checks": {
+                "Internal exchange": {"status": "GREEN", "detail": "canonical checks pass"},
+                "External settlement gates": {
+                    "status": "DEGRADED",
+                    "detail": "BNB evidence revalidated; public gate remains CLOSED pending operator review",
+                },
+                "Participation": {"status": "GREEN", "detail": "disabled by default"},
+            },
+        },
+    )
+    monkeypatch.setattr(handler, "check_db", lambda: {"ok": True, "detail": "DB readable"})
+    monkeypatch.setattr(handler, "check_commands", lambda: {"ok": True, "detail": "collisions=0"})
+    monkeypatch.setattr(handler, "check_ux", lambda: {"ok": True, "detail": "Mini App shell present"})
+    monkeypatch.setattr(handler, "check_money", lambda uid: {"ok": True, "detail": "invariants PASS"})
+    monkeypatch.setattr(
+        handler,
+        "check_bnb",
+        lambda: {
+            "ok": False,
+            "public_open": False,
+            "ready": True,
+            "launch_ready": True,
+            "empirical_status": "PASS",
+            "evidence_status": "READY_TO_OPEN",
+            "live_rpc_status": "PASS",
+            "blockers": [],
+            "next_action": "operator_may_review_bnb_gate_opening",
+            "gate_reasons": [],
+        },
+    )
+    monkeypatch.setattr(
+        handler,
+        "check_ton",
+        lambda uid: {
+            "ok": False,
+            "public_open": False,
+            "ready": True,
+            "rate": "100",
+            "replay_evidence": "present",
+        },
+    )
+    monkeypatch.setattr(
+        handler,
+        "check_exchange_for_execution",
+        lambda db: {
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "verdict": "OPEN",
+            "detail": "public state clean",
+        },
+    )
+    monkeypatch.setattr(state_manager, "load_db", lambda: {"users": {}})
+
+    message = SimpleNamespace(from_user=SimpleNamespace(id=8789977826))
+    report_handler(message)
+    output = bot.replies[-1][1]
+
+    assert "🟡 BNB: SAFE CLOSED" in output
+    assert "SAFE CLOSED · configuration PASS · empirical settlement PASS · pending operator review" in output
+    assert "empirical settlement PASS" in output
+    assert "pending operator review" in output
+    assert "live empirical settlement evidence is PASS and revalidated" in output
+    assert "stays closed until live empirical settlement evidence is revalidated" not in output
+    assert "No orders, broadcasts, transfers, claims or gate changes were made." in output
