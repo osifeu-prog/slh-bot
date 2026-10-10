@@ -61,6 +61,7 @@ def _check_output(uid: str) -> str:
         _fmt_check("Internal Exchange", exchange),
         "",
         "🔒 אין שינוי DB / balances / wallets / settlement / gates.",
+        "🧭 לדוח Go-Live מאוחד: /go_live_report\n"
         "ℹ️ לפירוט: /check_ux · /check_money · /check_bnb · /check_ton · /check_exchange",
     ]
     return "\n".join(lines)[:3900]
