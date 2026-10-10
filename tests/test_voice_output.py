@@ -18,7 +18,7 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         response = Mock()
         response.status_code = 200
         response.json.return_value = {
-            "output_audio": {"data": base64.b64encode(b"raw-pcm").decode("ascii")}
+            "output_audio": {"data": base64.b64encode(b"raw-wav").decode("ascii"), "mime_type": "audio/wav"}
         }
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=False), patch(
@@ -59,7 +59,7 @@ class TestHebrewVoiceOutput(unittest.TestCase):
         response = Mock()
         response.status_code = 200
         response.json.return_value = {
-            "output_audio": {"data": base64.b64encode(b"raw-pcm").decode("ascii")}
+            "output_audio": {"data": base64.b64encode(b"raw-wav").decode("ascii"), "mime_type": "audio/wav"}
         }
         long_text = ("בדיקת מערכת. " * 200)
 
