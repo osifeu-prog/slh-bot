@@ -103,7 +103,7 @@ def _go_live_report_output(uid: str) -> str:
     mcp_runtime = mcp_runtime if isinstance(mcp_runtime, dict) else {}
     mcp_detail = str(
         mcp_proof.get("detail") or mcp_proof.get("status") or "MCP proof unavailable"
-    ).replace("\\n", " ")[:160]
+    ).replace("\n", " ")[:160]
     mcp_runtime_detail = (
         f"runtime_state={mcp_runtime.get('state', 'UNKNOWN')} · "
         f"running={mcp_runtime.get('running', 'UNKNOWN')} · "
