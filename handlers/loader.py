@@ -5,6 +5,7 @@ def load_handlers(bot, context):
     print("📦 Loading modular handlers...")
 
     modules = [
+        ("md_collector", "handlers.md_collector"),
         ("dashboard", "handlers.dashboard_handler"),
         ("os", "handlers.os_handler"),
         ("market", "handlers.market_handler"),
