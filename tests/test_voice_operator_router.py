@@ -117,6 +117,29 @@ class VoiceOperatorRouterTests(unittest.TestCase):
         proof.assert_not_called()
         self.assertIn("OWNER/ADMIN/DEVELOPER", answer)
 
+    def test_owner_can_request_full_read_only_go_live_report_by_voice(self):
+        report = "🧭 SLH OS GO-LIVE REPORT — READ ONLY\n✅ Internal Exchange: GREEN\n\n🔒 READ ONLY — לא בוצעו שינויים, לא נשלחו עסקאות ולא שונו שערים."
+        with patch("core.authority.get_role", return_value="OWNER"), patch(
+            "handlers.system_checks_handler._go_live_report_output",
+            return_value=report,
+        ) as go_live:
+            answer = route_voice_operator_request("בדוק דוח Go-Live", "8789977826")
+
+        go_live.assert_called_once_with("8789977826")
+        self.assertIn("GO-LIVE REPORT", answer)
+        self.assertIn("READ ONLY", answer)
+        self.assertIn("Internal Exchange", answer)
+        self.assertIn("לא נשלחו עסקאות", answer)
+
+    def test_non_privileged_account_cannot_request_go_live_report_by_voice(self):
+        with patch("core.authority.get_role", return_value="USER"), patch(
+            "handlers.system_checks_handler._go_live_report_output"
+        ) as go_live:
+            answer = route_voice_operator_request("בדוק דוח Go-Live", "224223270")
+
+        go_live.assert_not_called()
+        self.assertIn("OWNER/ADMIN/DEVELOPER", answer)
+
 
 if __name__ == "__main__":
     unittest.main()
