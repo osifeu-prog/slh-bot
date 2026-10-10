@@ -210,7 +210,7 @@ async def telegram_exchange_gate_close(request: Request):
             "configured": "0",
             "commit": commit,
             "deployment_id": deployment_id,
-        }), 200
+        })
     except Exception as exc:
         return JSONResponse({
             "status": "ERROR",
