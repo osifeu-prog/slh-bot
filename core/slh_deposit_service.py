@@ -177,6 +177,14 @@ def verify_slh_deposit(tx_hash):
                 return {"ok": False, "error": "BSC_ADDRESS_QUARANTINED_ZUZ"}
             if recipient.lower() != treasury.lower():
                 continue
+            if sender.lower() == recipient.lower():
+                return {
+                    "ok": False,
+                    "error": "SLH_SELF_TRANSFER_NOT_DEPOSIT",
+                    "tx_hash": tx_hash,
+                    "token_contract": token_contract,
+                    "treasury_wallet": treasury,
+                }
             data_value = log.get("data", "0x0")
             raw_value = int(data_value.hex(), 16) if hasattr(data_value, "hex") else int(str(data_value), 16)
             matches.append({
