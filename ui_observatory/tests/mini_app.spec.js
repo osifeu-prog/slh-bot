@@ -100,6 +100,10 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('#authGate')).toBeHidden();
   await expect(page.locator('.app')).toBeVisible();
   await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
+  // Wait for asynchronous boot/loadMe work to settle before user-driven navigation;
+  // otherwise its initial-screen render can race a click and reset the active screen.
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#home')).toHaveClass(/active/);
 });
 
 test('all primary screens are reachable', async ({ page }) => {
