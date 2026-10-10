@@ -264,8 +264,8 @@ class ExchangeFreshCheckBlocked(ValueError):
 
 def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
-    # A fresh canonical check runs against this exact atomic-update snapshot.
-    require_public_open()
+    # Do not short-circuit with a separate gate exception: the fresh canonical
+    # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
