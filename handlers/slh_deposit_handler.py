@@ -3,14 +3,14 @@
 This route only settles an already-confirmed on-chain transfer from the user's
 verified BNB/BSC wallet to the configured SLH Treasury. It never sends funds.
 """
-from core.bnb_gate import CLOSED_MESSAGE, bnb_settlement_allowed
 
 
 def register(bot):
     @bot.message_handler(commands=["claim_slh"])
     def claim_slh_cmd(msg):
-        if not bnb_settlement_allowed(msg.from_user.id):
-            bot.reply_to(msg, CLOSED_MESSAGE)
+        from core.slh_deposit_service import SLH_CLOSED_MESSAGE, slh_settlement_allowed
+        if not slh_settlement_allowed(msg.from_user.id):
+            bot.reply_to(msg, SLH_CLOSED_MESSAGE)
             return
 
         parts = (msg.text or "").split(maxsplit=1)

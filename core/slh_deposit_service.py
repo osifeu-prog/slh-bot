@@ -11,16 +11,17 @@ No token minting, burning, or synthetic balance creation occurs here.
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 
 from web3 import Web3
 
 import state_manager
-from core.bnb_gate import bnb_settlement_allowed
+from core.bnb_gate import bnb_readiness
 from core.binance_connector import get_bsc_config
 from core.bsc_address_policy import is_quarantined_bsc_address
 from core.wallet_binding import get_binding
-from core.slh_supply_guard import assert_supply_unchanged
+from core.slh_supply_guard import _configured_baseline, assert_supply_unchanged
 
 
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
@@ -36,6 +37,70 @@ def _config():
     except (OSError, json.JSONDecodeError):
         db = {}
     return {**cfg, **db.get("bsc_settings", {})}
+
+
+SLH_CLOSED_MESSAGE = "⛔️ הפקדות SLH סגורות כרגע. אל תשלח SLH עד להודעה."
+
+
+def slh_deposit_readiness(db=None) -> dict:
+    """Read-only SLH-specific gate; it does not depend on the public BNB flag."""
+    reasons = []
+    try:
+        infrastructure = bnb_readiness(db)
+    except Exception:
+        infrastructure = {}
+        reasons.append("BSC_READINESS_UNAVAILABLE")
+
+    if infrastructure.get("ready") is not True:
+        infra_reasons = infrastructure.get("reasons")
+        if isinstance(infra_reasons, list) and infra_reasons:
+            reasons.extend(str(reason) for reason in infra_reasons)
+        elif "BSC_READINESS_UNAVAILABLE" not in reasons:
+            reasons.append("BSC_INFRA_NOT_READY")
+
+    try:
+        cfg = _config()
+    except Exception:
+        cfg = {}
+        reasons.append("SLH_CONFIG_UNAVAILABLE")
+
+    if not Web3.is_address(str(cfg.get("token_contract") or "")):
+        reasons.append("SLH_TOKEN_CONTRACT_INVALID")
+    if not Web3.is_address(str(cfg.get("treasury_wallet") or "")):
+        reasons.append("SLH_TREASURY_INVALID")
+
+    try:
+        _configured_baseline()
+    except ValueError:
+        reasons.append("SLH_SUPPLY_BASELINE_NOT_CONFIGURED")
+    except Exception:
+        reasons.append("SLH_SUPPLY_BASELINE_UNAVAILABLE")
+
+    flag_open = os.getenv("SLH_DEPOSITS_OPEN", "0").strip() == "1"
+    canary_uid = os.getenv("SLH_DEPOSITS_CANARY_UID", "").strip()
+    canary_configured = canary_uid.isdigit()
+    return {
+        "flag_open": flag_open,
+        "ready": not reasons,
+        "effective_open": flag_open and not reasons,
+        "canary_configured": canary_configured,
+        "reasons": reasons,
+    }
+
+
+def slh_settlement_allowed(uid, db=None) -> bool:
+    """Allow SLH settlement only through its own flag or its own configured canary."""
+    try:
+        readiness = slh_deposit_readiness(db)
+    except Exception:
+        return False
+    if readiness.get("ready") is not True:
+        return False
+    if readiness.get("effective_open") is True:
+        return True
+    canary_uid = os.getenv("SLH_DEPOSITS_CANARY_UID", "").strip()
+    return bool(canary_uid.isdigit() and str(uid).strip() == canary_uid)
+
 
 
 def _address_from_topic(topic):
@@ -179,7 +244,7 @@ def verify_slh_deposit(tx_hash):
 
 def settle_slh_deposit(uid, tx_hash):
     uid = str(uid)
-    if not bnb_settlement_allowed(uid):
+    if not slh_settlement_allowed(uid):
         raise ValueError("SLH_SETTLEMENT_CLOSED")
     uid = str(uid)
     tx_hash = str(tx_hash or "").strip()

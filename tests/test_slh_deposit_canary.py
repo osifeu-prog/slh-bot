@@ -21,7 +21,7 @@ class SlhDepositCanaryTests(unittest.TestCase):
             "treasury_wallet": "0x9999999999999999999999999999999999999999",
         }
 
-    def test_canary_can_settle_real_slh_when_public_bnb_gate_is_closed(self):
+    def test_configured_slh_canary_can_settle_when_public_slh_gate_is_closed(self):
         db = {
             "users": {
                 "owner": {"wallet": {"token_balance": 0.0, "live_token_balance": 0.0}}
@@ -29,7 +29,7 @@ class SlhDepositCanaryTests(unittest.TestCase):
         }
         address = "0x1111111111111111111111111111111111111111"
 
-        with patch.object(slh_deposit_service, "bnb_settlement_allowed", return_value=True),              patch.object(slh_deposit_service, "get_binding", return_value={"address": address}),              patch.object(slh_deposit_service, "verify_slh_deposit", return_value=self._verified(address)),              patch.object(slh_deposit_service.state_manager, "atomic_update", side_effect=lambda fn: fn(db)):
+        with patch.object(slh_deposit_service, "slh_settlement_allowed", return_value=True),              patch.object(slh_deposit_service, "get_binding", return_value={"address": address}),              patch.object(slh_deposit_service, "verify_slh_deposit", return_value=self._verified(address)),              patch.object(slh_deposit_service.state_manager, "atomic_update", side_effect=lambda fn: fn(db)):
             result = slh_deposit_service.settle_slh_deposit("owner", "0xabc")
 
         self.assertEqual(result["status"], "applied")
@@ -38,7 +38,7 @@ class SlhDepositCanaryTests(unittest.TestCase):
         self.assertEqual(db["users"]["owner"]["wallet"]["live_token_balance"], 1.0)
 
     def test_closed_gate_without_canary_rejects_before_verification(self):
-        with patch.object(slh_deposit_service, "bnb_settlement_allowed", return_value=False),              patch.object(slh_deposit_service, "get_binding") as get_binding:
+        with patch.object(slh_deposit_service, "slh_settlement_allowed", return_value=False),              patch.object(slh_deposit_service, "get_binding") as get_binding:
             with self.assertRaisesRegex(ValueError, "SLH_SETTLEMENT_CLOSED"):
                 slh_deposit_service.settle_slh_deposit("owner", "0xabc")
             get_binding.assert_not_called()
