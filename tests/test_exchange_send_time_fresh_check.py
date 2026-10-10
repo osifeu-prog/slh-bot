@@ -163,3 +163,28 @@ def test_same_client_request_id_returns_original_receipt_without_duplicate_order
     assert len(db["exchange_orders"]) == 1
     # Idempotent retries replay the first receipt; they are not new executions.
     assert len(calls) == 1
+
+
+def test_telegram_blocked_receipt_is_timestamped_and_never_claims_success():
+    from handlers.exchange_handler import format_blocked_execution_receipt
+
+    receipt = format_blocked_execution_receipt(
+        "BUY",
+        {
+            "status": "BLOCKED",
+            "checked_at": "2026-10-10T13:00:00+00:00",
+            "verdict": "BLOCKED",
+            "public_gate": "CLOSED",
+            "public_ready": False,
+            "execution_ready": False,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "detail": "public exchange gate is CLOSED",
+        },
+    )
+
+    assert "Fresh canonical Exchange check: BLOCKED" in receipt
+    assert "checked_at (UTC): 2026-10-10T13:00:00+00:00" in receipt
+    assert "No order was placed or balances changed." in receipt
+    assert "Fresh canonical Exchange check: PASS" not in receipt
