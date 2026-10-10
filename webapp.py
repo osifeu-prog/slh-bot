@@ -2998,6 +2998,7 @@ def api_tokenomics():
         from core.holiday_campaign import GRANT_AMOUNT, eligibility
         from core import profile_manager
         from core.referral_reward import OFFER_ENDS_AT, progress as referral_progress
+        from core.referral_attribution import referral_start_stats
 
         user = profile_manager.get_user(str(uid)) or {}
         points = int((user.get("gamification") or {}).get("points", 0) or 0)
@@ -3006,6 +3007,7 @@ def api_tokenomics():
         current_db = load_db()
         commission = current_db.get("commissions", {}).get(str(uid), 0)
         referral = referral_progress(str(uid))
+        referral_attribution = referral_start_stats(str(uid), db=current_db)
         campaign = eligibility(str(uid))
         referral_link = f"https://t.me/Me_ad_main_bot?start=ref_{uid}"
         return jsonify({
@@ -3032,8 +3034,9 @@ def api_tokenomics():
                 "offer_ends_at": int(OFFER_ENDS_AT),
                 "milestone": "5 successful referrals → 1 VIP month",
                 "commission_scope": "Credits purchases only; Stars items/VIP are not referral-commissioned",
+                "attribution": referral_attribution,
             },
-            "source_of_truth": "core/tokenomics.py + core/referral_reward.py + canonical reward engines",
+            "source_of_truth": "core/tokenomics.py + core/referral_reward.py + core/referral_attribution.py + canonical reward engines",
             "read_only": True,
         }), 200
     except Exception as exc:
