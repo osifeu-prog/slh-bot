@@ -245,8 +245,10 @@ def _match(db, incoming):
 class ExchangeFreshCheckBlocked(ValueError):
     """Order entry was stopped by the fresh canonical exchange check."""
 
-    def __init__(self, check):
+    def __init__(self, check, checked_at=None):
         self.check = {
+            "status": "BLOCKED",
+            "checked_at": str(checked_at or _now()),
             "verdict": str(check.get("verdict") or "BLOCKED"),
             "public_gate": str(check.get("public_gate") or "CLOSED"),
             "public_ready": bool(check.get("public_ready")),
@@ -266,10 +268,10 @@ def _place(db, uid, side, amount, price, request_id):
     require_public_open()
     from core.system_checks import check_exchange_for_execution
 
+    checked_at = _now()
     fresh_check = check_exchange_for_execution(db)
     if not fresh_check.get("execution_ready"):
-        raise ExchangeFreshCheckBlocked(fresh_check)
-    checked_at = _now()
+        raise ExchangeFreshCheckBlocked(fresh_check, checked_at=checked_at)
     trades_before = len(db.get(TRADES_KEY, []))
     w = _wallet(db, uid)
     order_id_preview = None
