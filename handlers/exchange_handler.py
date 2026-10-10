@@ -510,9 +510,11 @@ def register(bot):
             if railway_problem:
                 lines.append(f"Railway API diagnostic: {railway_problem}")
                 if railway_problem == "RAILWAY_CONTROL_TOKEN_MISSING":
-                    lines.append("One-time setup required: add a Railway Project Access Token scoped to slh-cloud-bot Production, or a workspace API token, to this service's Railway variables. Never paste the token into Telegram.")
+                    lines.append("The Control Plane service is missing its Railway API credential. Configure it only in the authorized Control Plane service; never paste it into Telegram or add it to the bot.")
                 elif railway_problem == "RAILWAY_ACCESS_DENIED":
-                    lines.append("The configured Railway token lacks access to this project/service. Use a token with access to slh-cloud-bot Production.")
+                    lines.append("The Control Plane Railway credential lacks access to slh-cloud-bot Production.")
+                elif railway_problem in {"MCP_BRIDGE_NOT_CONFIGURED", "MCP_BRIDGE_AUTH_FAILED", "CONTROL_PLANE_AUTH_FAILED"}:
+                    lines.append("Verify SLH_MCP_URL and the matching bot-to-MCP bridge credential in the relevant services; never paste the credential into chat.")
             lines += [
                 "",
                 "Closing blocks new Buy/Sell orders; it does not cancel existing open orders or reverse prior trades.",
