@@ -47,7 +47,13 @@ def _wire_exchange_test(monkeypatch, db, check):
 
     monkeypatch.setattr(webapp, "authenticated_uid", lambda: "buyer")
     monkeypatch.setattr(webapp.state_manager, "atomic_update", lambda mutate: mutate(db))
-    monkeypatch.setattr(exchange_handler, "require_public_open", lambda: None)
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_public_open",
+        lambda: (_ for _ in ()).throw(
+            AssertionError("the stale public-gate guard must not short-circuit the fresh check")
+        ),
+    )
     monkeypatch.setattr(system_checks, "check_exchange_for_execution", check)
     return webapp.app.test_client()
 
