@@ -1,4 +1,4 @@
-""""Bounded voice-driven operator checks.
+"""Bounded voice-driven operator checks.
 
 This router permits only canonical read-only checks. It never changes balances,
 orders, wallets, settlement gates, broadcasts, or device commands.
