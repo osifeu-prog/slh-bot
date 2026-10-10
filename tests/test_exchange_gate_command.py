@@ -8,12 +8,14 @@ from handlers import exchange_handler
 class _FakeBot:
     def __init__(self):
         self.handlers = {}
+        self.registrations = []
         self.replies = []
 
     def message_handler(self, commands=None, **kwargs):
         def decorate(fn):
             for command in commands or []:
                 self.handlers[command] = fn
+                self.registrations.append(command)
             return fn
         return decorate
 
@@ -35,6 +37,11 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         exchange_handler.register(self.bot)
         self.command = self.bot.handlers["exchange_gate"]
 
+
+    def test_exchange_cleanup_commands_register_once(self):
+        self.assertEqual(self.bot.registrations.count("exchange_clean"), 1)
+        self.assertEqual(self.bot.registrations.count("exchange_cleanup"), 1)
+
     def test_close_is_owner_private_and_reports_deployment_not_false_success(self):
         result = {
             "status": "DEPLOY_TRIGGERED",
@@ -46,7 +53,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
             "environment": "production",
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
-             patch("core.railway_control.close_exchange_gate", return_value=result) as close:
+             patch("core.railway_control.request_exchange_gate_close", return_value=result) as close:
             self.command(_message("/exchange_gate close"))
 
         close.assert_called_once_with()
@@ -58,7 +65,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
 
     def test_close_is_rejected_outside_private_chat(self):
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
-             patch("core.railway_control.close_exchange_gate") as close:
+             patch("core.railway_control.request_exchange_gate_close") as close:
             self.command(_message("/exchange_gate close", chat_type="group"))
 
         close.assert_not_called()
@@ -80,7 +87,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
              patch.dict("os.environ", {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False), \
-             patch("core.railway_control.exchange_gate_variable_status", return_value={"configured": "0"}), \
+             patch("core.railway_control.control_plane_exchange_gate_status", return_value={"configured": "0"}), \
              patch("handlers.exchange_handler.state_manager.load_db", return_value={"users": {}}), \
              patch("core.system_checks.check_exchange_for_execution", return_value=closed_check):
             self.command(_message("/exchange_gate status"))
@@ -100,7 +107,7 @@ class ExchangeGateTelegramCommandTests(unittest.TestCase):
         }
         with patch("handlers.exchange_handler.is_owner", return_value=True), \
              patch.dict("os.environ", {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False), \
-             patch("core.railway_control.exchange_gate_variable_status", side_effect=RailwayControlError("RAILWAY_CONTROL_TOKEN_MISSING: no token")), \
+             patch("core.railway_control.control_plane_exchange_gate_status", side_effect=RailwayControlError("RAILWAY_CONTROL_TOKEN_MISSING: no token")), \
              patch("handlers.exchange_handler.state_manager.load_db", return_value={"users": {}}), \
              patch("core.system_checks.check_exchange_for_execution", return_value=open_check):
             self.command(_message("/exchange_gate status"))
