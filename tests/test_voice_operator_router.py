@@ -118,7 +118,7 @@ class VoiceOperatorRouterTests(unittest.TestCase):
         self.assertIn("OWNER/ADMIN/DEVELOPER", answer)
 
     def test_owner_can_request_full_read_only_go_live_report_by_voice(self):
-        report = "🧭 SLH OS GO-LIVE REPORT — READ ONLY\n✅ Internal Exchange: GREEN"
+        report = "🧭 SLH OS GO-LIVE REPORT — READ ONLY\n✅ Internal Exchange: GREEN\n\n🔒 READ ONLY — לא בוצעו שינויים, לא נשלחו עסקאות ולא שונו שערים."
         with patch("core.authority.get_role", return_value="OWNER"), patch(
             "handlers.system_checks_handler._go_live_report_output",
             return_value=report,
