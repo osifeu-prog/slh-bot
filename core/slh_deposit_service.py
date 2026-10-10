@@ -20,6 +20,7 @@ from core.bnb_gate import bnb_settlement_allowed
 from core.binance_connector import get_bsc_config
 from core.bsc_address_policy import is_quarantined_bsc_address
 from core.wallet_binding import get_binding
+from core.slh_supply_guard import assert_supply_unchanged
 
 
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
@@ -57,6 +58,15 @@ def verify_slh_deposit(tx_hash):
         return {"ok": False, "error": "SLH_TOKEN_NOT_CONFIGURED"}
 
     w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
+    try:
+        assert_supply_unchanged(w3, cfg["token_contract"])
+    except ValueError as exc:
+        return {
+            "ok": False,
+            "error": str(exc),
+            "token_contract": cfg["token_contract"],
+        }
+
     try:
         receipt = w3.eth.get_transaction_receipt(tx_hash)
     except Exception as exc:
