@@ -609,7 +609,7 @@ def _exchange_broadcast_status_answer(message, *, now=None):
     )
 
 
-def _broadcast_status_reply(uid):
+def _broadcast_status_reply(uid, *, now=None):
     """Read-only status for /broadcast status; never accesses send APIs."""
     try:
         db = state_manager.load_db()
@@ -623,6 +623,18 @@ def _broadcast_status_reply(uid):
     pending_map = db.get("exchange_broadcast_pending", {})
     pending = pending_map.get(str(uid)) if isinstance(pending_map, dict) else None
     pending_status = str(pending.get("status") or "UNKNOWN") if isinstance(pending, dict) else "NONE"
+    if isinstance(pending, dict) and pending_status == "PENDING_CONFIRMATION":
+        try:
+            expires_at = _utc_now(pending.get("expires_at"))
+            current_time = _utc_now(now)
+        except Exception:
+            # A malformed/missing expiry can never be presented as confirmable.
+            pending_status = "EXPIRED (invalid expiry; confirmation blocked)"
+        else:
+            if current_time >= expires_at:
+                pending_status = "EXPIRED (confirmation window elapsed)"
+            else:
+                pending_status = f"PENDING_CONFIRMATION · expires {expires_at.isoformat()}"
 
     audit = db.get("exchange_broadcast_audit", [])
     relevant = [
