@@ -190,7 +190,7 @@ def test_go_live_report_reports_revalidated_bnb_as_safe_closed_pending_operator_
     report_handler(message)
     output = bot.replies[-1][1]
 
-    assert "BNB: 🟡 SAFE CLOSED" in output
+    assert "🟡 BNB: SAFE CLOSED" in output
     assert "SAFE CLOSED · configuration PASS · empirical settlement PASS · pending operator review" in output
     assert "empirical settlement PASS" in output
     assert "pending operator review" in output
