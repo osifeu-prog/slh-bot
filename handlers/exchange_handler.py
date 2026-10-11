@@ -1,6 +1,7 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 import json
+import math
 import time
 import urllib.request
 import state_manager
@@ -23,6 +24,7 @@ EXCHANGE_PUBLIC_STATUS_URL = "https://slh-cloud-bot-production.up.railway.app/ap
 EXCHANGE_PUBLIC_STATUS_TIMEOUT_SECONDS = 4
 EXCHANGE_PUBLIC_STATUS_ATTEMPTS = 6
 EXCHANGE_PUBLIC_STATUS_POLL_SECONDS = 2
+EXCHANGE_PUBLIC_STATUS_MAX_AGE_SECONDS = 120
 
 
 def _fetch_public_exchange_status():
@@ -72,23 +74,37 @@ def _fetch_public_exchange_status():
     verdict = str(exchange.get("verdict") or "UNKNOWN")
     readiness = exchange.get("readiness") is True
     updated_at = system.get("updated_at")
+    timestamp_fresh = False
+    try:
+        timestamp = float(updated_at)
+        age_seconds = time.time() - timestamp
+        timestamp_fresh = (
+            math.isfinite(timestamp)
+            and -5 <= age_seconds <= EXCHANGE_PUBLIC_STATUS_MAX_AGE_SECONDS
+        )
+    except (TypeError, ValueError, OverflowError):
+        timestamp_fresh = False
+
     verified = (
         str(system.get("status") or "").upper() == "ONLINE"
         and gate == "OPEN"
         and readiness
         and verdict == "OPEN"
+        and timestamp_fresh
     )
+    if verified:
+        detail = "canonical public runtime proof passed"
+    elif not timestamp_fresh:
+        detail = "canonical public runtime timestamp is missing, stale, or from the future"
+    else:
+        detail = "canonical public runtime did not confirm ONLINE + OPEN + READY"
     return {
         "verified": verified,
         "gate": gate,
         "readiness": readiness,
         "verdict": verdict,
         "updated_at": updated_at,
-        "detail": (
-            "canonical public runtime proof passed"
-            if verified
-            else "canonical public runtime did not confirm ONLINE + OPEN + READY"
-        ),
+        "detail": detail,
     }
 
 
