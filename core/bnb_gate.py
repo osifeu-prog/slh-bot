@@ -107,11 +107,12 @@ def bnb_readiness(db=None) -> dict:
 
 
 
-def _empirical_settlement_evidence() -> dict | None:
-    try:
-        db = state_manager.load_db()
-    except Exception:
-        return None
+def _empirical_settlement_evidence(db=None) -> dict | None:
+    if db is None:
+        try:
+            db = state_manager.load_db()
+        except Exception:
+            return None
     evidence = db.get("settlement_evidence", {}) if isinstance(db, dict) else {}
     bnb = evidence.get("bnb") if isinstance(evidence, dict) else None
     return bnb if isinstance(bnb, dict) else None
@@ -401,7 +402,7 @@ def bnb_opening_evidence() -> dict:
     configured_chain = str(gate.get("chain_id") or "")
     if configured_chain != "56":
         evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
-    empirical = _empirical_settlement_evidence()
+    empirical = _empirical_settlement_evidence(current_db) if db_readable else None
     empirical_valid = (
         _empirical_evidence_revalidated(empirical, _effective_config(current_db), db=current_db)
         if db_readable
