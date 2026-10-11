@@ -1,0 +1,30 @@
+name: SLH BNB Credit Reversal Tests
+
+on:
+  pull_request:
+    paths:
+      - 'core/credit_adjustment_service.py'
+      - 'tests/test_credit_adjustment_service.py'
+      - 'state_manager.py'
+      - '.github/workflows/bnb-credit-reversal.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  credit-reversal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project dependencies and pytest
+        run: python -m pip install --disable-pip-version-check -r requirements.txt pytest
+      - name: Run focused credit reversal tests
+        run: python -m pytest -q tests/test_credit_adjustment_service.py
