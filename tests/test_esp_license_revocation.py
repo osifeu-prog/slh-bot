@@ -39,6 +39,13 @@ def seeded_state():
                 "activation_code": "keep-this-unrelated-code",
                 "mqtt_password": "keep-this-unrelated-password",
             },
+            "new_license_purchase_same_device": {
+                "kind": "device_license",
+                "device_id": DEVICE_ID,
+                "license_id": "SLH-LIC-FEDCBA654321",
+                "activation_code": "new-license-activation",
+                "mqtt_password": "new-device-password",
+            },
         },
         "ledger": [{"uid": OWNER_UID, "amount": 1.0, "reason": "unrelated"}],
         "esp_license_security_audit": [],
@@ -95,6 +102,9 @@ def test_owner_revocation_removes_esp_secrets_from_license_purchase_and_device_s
     unrelated = db["purchases"]["unrelated_purchase"]
     assert unrelated["activation_code"] == "keep-this-unrelated-code"
     assert unrelated["mqtt_password"] == "keep-this-unrelated-password"
+    new_license = db["purchases"]["new_license_purchase_same_device"]
+    assert new_license["activation_code"] == "new-license-activation"
+    assert new_license["mqtt_password"] == "new-device-password"
 
     device = devices["devices"][DEVICE_ID]
     assert device["license_status"] == "revoked"
