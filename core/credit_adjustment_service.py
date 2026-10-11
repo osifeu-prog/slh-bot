@@ -155,6 +155,20 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
     source_index, source = source_matches[0]
     source_meta = source["meta"]
 
+    # A repeated call must independently re-check the recorded treasury identity
+    # and the original credit calculation; matching two mutable ledger fields is
+    # not sufficient proof of a valid reversal.
+    cfg = _effective_config(db)
+    configured_treasury = str(cfg.get("treasury_wallet") or "").strip().lower()
+    canonical_treasury = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip().lower()
+    if (
+        not canonical_treasury
+        or configured_treasury != canonical_treasury
+        or str(source_meta.get("from") or "").strip().lower() != canonical_treasury
+        or str(source_meta.get("to") or "").strip().lower() != canonical_treasury
+    ):
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+
     audits = db.get("credit_adjustment_audit", [])
     if not isinstance(audits, list):
         raise ValueError("CREDIT_ADJUSTMENT_AUDIT_UNREADABLE")
@@ -179,6 +193,14 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         source_amount = _decimal(source.get("amount"), "SOURCE_AMOUNT_INVALID")
         source_before = _decimal(source.get("before"), "SOURCE_BALANCE_INVALID")
         source_after = _decimal(source.get("after"), "SOURCE_BALANCE_INVALID")
+        expected_source_amount = Decimal(source_amount_wei) * _CREDITS_PER_BNB / _WEI_PER_BNB
+        expected_source_amount = Decimal(str(float(expected_source_amount)))
+        if (
+            source_amount_wei <= 0
+            or source_amount != expected_source_amount
+            or float(source_before) + float(source_amount) != float(source_after)
+        ):
+            raise ValueError("SOURCE_CREDITS_DO_NOT_MATCH_ONCHAIN_AMOUNT")
         correction_before = _decimal(prior.get("before"), "REVERSAL_BEFORE_INVALID")
         correction_amount = _decimal(prior.get("amount"), "REVERSAL_AMOUNT_INVALID")
         correction_after = _decimal(prior.get("after"), "REVERSAL_AFTER_INVALID")
@@ -203,6 +225,9 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         and meta.get("source_ledger_index") == source_index
         and meta.get("gate_remained_closed") is True
         and meta.get("chain_id") == 56
+        and str(meta.get("treasury") or "").strip().lower() == canonical_treasury
+        and str(meta.get("from") or "").strip().lower() == canonical_treasury
+        and str(meta.get("to") or "").strip().lower() == canonical_treasury
         and amount_wei > 0
         and amount_wei == source_amount_wei
         and meta_block > 0
@@ -236,6 +261,7 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         and correction_before == source_after
         and correction_after == source_before
         and nominal == source_amount
+        and correction_amount == Decimal(str(float(source_before) - float(source_after)))
         and balance == correction_after
         and abs(float(correction_before) + float(correction_amount) - float(correction_after)) <= 1e-9
     ):
@@ -444,6 +470,7 @@ def reverse_invalid_bnb_deposit(
                 "confirmations": proof["confirmations"],
                 "required_confirmations": proof["required_confirmations"],
                 "amount_wei": proof["amount_wei"],
+                "treasury": proof["treasury"],
                 "from": proof["from"],
                 "to": proof["to"],
                 "gate_remained_closed": True,
