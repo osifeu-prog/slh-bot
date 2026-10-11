@@ -1,6 +1,7 @@
 """Regression tests for automatic post-deploy Exchange runtime verification."""
 
 import json
+import time
 from unittest.mock import Mock, patch
 
 import handlers.exchange_handler as exchange
@@ -16,7 +17,7 @@ def _public_payload(
 ):
     return {
         "ok": ok,
-        "system": {"status": system_status, "updated_at": 1791760000.0},
+        "system": {"status": system_status, "updated_at": time.time()},
         "exchange": {
             "gate": gate,
             "readiness": readiness,
@@ -31,7 +32,7 @@ def _green_public_result():
         "gate": "OPEN",
         "readiness": True,
         "verdict": "OPEN",
-        "updated_at": 1791760000.0,
+        "updated_at": time.time(),
         "detail": "canonical public runtime proof passed",
     }
 
@@ -90,6 +91,8 @@ def test_fetch_public_exchange_status_fails_closed_for_non_green_runtime_payload
         _public_payload(gate="CLOSED", readiness=False, verdict="BLOCKED"),
         _public_payload(gate="OPEN", readiness=False, verdict="OPEN"),
         _public_payload(gate="OPEN", readiness=True, verdict="READY_TO_OPEN"),
+        {**_public_payload(), "system": {"status": "ONLINE", "updated_at": time.time() - 121}},
+        {**_public_payload(), "system": {"status": "ONLINE", "updated_at": time.time() + 10}},
     ]
 
     for payload in cases:
