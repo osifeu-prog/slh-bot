@@ -288,7 +288,9 @@ def reverse_invalid_bnb_deposit(
         # balances so before + amount == after remains exact in binary float.
         after = source_before
         reversal_amount = float(after) - float(current_balance)
-        if float(current_balance) + reversal_amount != float(after):
+        # Legacy Credits are stored as binary floats; require ledger arithmetic
+        # to reconcile within a sub-nanocredit tolerance, not bitwise equality.
+        if abs((float(current_balance) + reversal_amount) - float(after)) > 1e-9:
             raise ValueError("REVERSAL_FLOAT_ARITHMETIC_INVALID")
         wallet["credits"] = float(after)
         reversal = {
