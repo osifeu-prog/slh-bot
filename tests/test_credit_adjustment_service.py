@@ -94,7 +94,9 @@ def test_reversal_appends_audited_compensation_without_editing_source(monkeypatc
     assert db["ledger"][0] == original_source
     assert len(db["ledger"]) == 2
     assert db["ledger"][1]["reason"] == "accounting:invalid_bnb_deposit_reversal"
-    assert db["ledger"][1]["amount"] == -10.0
+    assert abs(db["ledger"][1]["amount"] + 10.0) < 1e-9
+    assert db["ledger"][1]["before"] + db["ledger"][1]["amount"] == db["ledger"][1]["after"]
+    assert db["ledger"][1]["meta"]["nominal_credits_reversed"] == 10.0
     assert db["ledger"][1]["meta"]["source_idempotency_key"] == SOURCE_KEY
     assert db["ledger"][1]["meta"]["idempotency_key"] == CORRECTION_KEY
     assert len(db["credit_adjustment_audit"]) == 1
