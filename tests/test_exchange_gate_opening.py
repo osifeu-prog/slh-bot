@@ -251,3 +251,47 @@ def test_generic_voice_mutation_does_not_match_exchange_gate_open_route():
 
     assert answer is None
     open_gate.assert_not_called()
+
+
+
+def test_open_gate_restores_closed_configuration_if_deployment_fails():
+    proof = _fresh_opening_proof()
+    statuses = iter([
+        {"configured": "0", "configured_open": False},
+        {"configured": "1", "configured_open": True},
+        {"configured": "0", "configured_open": False},
+    ])
+    graphql_results = iter([
+        {"variableUpsert": True},
+        {"variableUpsert": True},
+    ])
+    deploy_results = iter([
+        railway_control.RailwayControlError("DEPLOY_REQUEST_FAILED"),
+        {"id": "deployment-close-reconcile"},
+    ])
+
+    def fake_graphql(query, variables=None, *, prefer_account_token=False):
+        assert "variableUpsert" in query
+        return next(graphql_results)
+
+    def fake_deploy(*args, **kwargs):
+        value = next(deploy_results)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    with patch.object(
+        railway_control,
+        "exchange_gate_variable_status",
+        side_effect=lambda: next(statuses),
+    ), patch.object(railway_control, "graphql", side_effect=fake_graphql) as graphql, patch.object(
+        railway_control, "latest_github_commit", return_value="c" * 40
+    ), patch.object(railway_control, "deploy", side_effect=fake_deploy) as deploy:
+        with pytest.raises(
+            railway_control.RailwayControlError,
+            match="EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK",
+        ):
+            railway_control.open_exchange_gate(proof)
+
+    assert [call.args[1]["input"]["value"] for call in graphql.call_args_list] == ["1", "0"]
+    assert deploy.call_count == 2
