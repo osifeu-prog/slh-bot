@@ -206,7 +206,9 @@ def reverse_invalid_bnb_deposit(
         raise ValueError("SOURCE_SENDER_DOES_NOT_MATCH_ONCHAIN")
     if str(meta.get("to") or "").lower() != proof["to"].lower():
         raise ValueError("SOURCE_RECEIVER_DOES_NOT_MATCH_ONCHAIN")
-    if source_before + source_amount != source_after:
+    # Match the canonical float-backed ledger arithmetic exactly; Decimal
+    # string addition can differ from a valid stored float by a few ULPs.
+    if float(source_before) + float(source_amount) != float(source_after):
         raise ValueError("SOURCE_LEDGER_ARITHMETIC_INVALID")
 
     timestamp = (
@@ -281,7 +283,10 @@ def reverse_invalid_bnb_deposit(
         if current_balance < source_amount:
             raise ValueError("INSUFFICIENT_CREDITS_FOR_REVERSAL")
 
-        after = current_balance - source_amount
+        # No intervening owner ledger rows exist and the wallet still equals
+        # the source row's after-balance. Restore its recorded before-balance
+        # exactly to avoid introducing a second floating-point rounding drift.
+        after = source_before
         wallet["credits"] = float(after)
         reversal = {
             "time": timestamp,
