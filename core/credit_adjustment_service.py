@@ -283,16 +283,19 @@ def reverse_invalid_bnb_deposit(
         if current_balance < source_amount:
             raise ValueError("INSUFFICIENT_CREDITS_FOR_REVERSAL")
 
-        # No intervening owner ledger rows exist and the wallet still equals
-        # the source row's after-balance. Restore its recorded before-balance
-        # exactly to avoid introducing a second floating-point rounding drift.
+        # Restore the exact recorded pre-credit balance. Because the legacy
+        # ledger uses floats, derive its numeric delta from the two stored
+        # balances so before + amount == after remains exact in binary float.
         after = source_before
+        reversal_amount = float(after) - float(current_balance)
+        if float(current_balance) + reversal_amount != float(after):
+            raise ValueError("REVERSAL_FLOAT_ARITHMETIC_INVALID")
         wallet["credits"] = float(after)
         reversal = {
             "time": timestamp,
             "uid": uid,
             "before": float(current_balance),
-            "amount": -float(source_amount),
+            "amount": reversal_amount,
             "after": float(after),
             "reason": _CORRECTION_REASON,
             "meta": {
@@ -303,6 +306,7 @@ def reverse_invalid_bnb_deposit(
                 "tx_hash": tx_hash.lower(),
                 "actor_uid": actor_uid,
                 "adjustment_basis": "verified BSC transaction sender and receiver both equal canonical treasury",
+                "nominal_credits_reversed": float(source_amount),
                 "chain_id": proof["chain_id"],
                 "block": proof["block"],
                 "confirmations": proof["confirmations"],
@@ -325,7 +329,8 @@ def reverse_invalid_bnb_deposit(
             "tx_hash": tx_hash.lower(),
             "source_idempotency_key": source_key,
             "correction_idempotency_key": correction_key,
-            "amount": -float(source_amount),
+            "amount": reversal_amount,
+            "nominal_credits_reversed": float(source_amount),
             "balance_before": float(current_balance),
             "balance_after": float(after),
             "chain_id": proof["chain_id"],
