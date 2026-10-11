@@ -3184,7 +3184,7 @@ def api_exchange_order():
     if not request_id:
         return jsonify({"error": "MISSING_REQUEST_ID"}), 400
     try:
-        from handlers.exchange_handler import _dec, _place, REQUESTS_KEY
+        from handlers.exchange_handler import _dec, _place, REQUESTS_KEY, ORDERS_KEY
         amount = _dec(payload.get("amount"), "amount")
         price = _dec(payload.get("price"), "price")
         key = f"WEBAPP-EXCHANGE-{uid}-{request_id}"
