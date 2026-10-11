@@ -421,11 +421,11 @@ def internal_exchange_gate_control():
             return jsonify({"error": "EXCHANGE_OPENING_PROOF_INVALID"}), 400
         try:
             result = open_exchange_gate(payload.get("proof"))
-            if result.get("configured") != "1" or result.get("status") != "DEPLOY_TRIGGERED":
+            if result.get("configured") != "1" or result.get("status") != "DEPLOYMENT_SUCCESS":
                 return jsonify({"error": "EXCHANGE_GATE_OPEN_NOT_VERIFIED"}), 503
             safe = {
                 "ok": True,
-                "status": "DEPLOY_TRIGGERED",
+                "status": "DEPLOYMENT_SUCCESS",
                 "previous": result.get("previous", "UNKNOWN"),
                 "configured": "1",
                 "commit": str(result.get("commit") or ""),
@@ -436,7 +436,7 @@ def internal_exchange_gate_control():
             }
             response = jsonify(safe)
             response.headers["Cache-Control"] = "no-store"
-            return response, 202
+            return response, 200
         except Exception as exc:
             code = safe_railway_error_code(exc)
             status = 400 if code == "EXCHANGE_OPENING_PROOF_INVALID" else 503
