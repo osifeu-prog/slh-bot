@@ -391,6 +391,7 @@ def internal_exchange_gate_control():
     from core.railway_control import (
         close_exchange_gate,
         exchange_gate_variable_status,
+        open_exchange_gate,
         safe_railway_error_code,
     )
 
@@ -411,8 +412,37 @@ def internal_exchange_gate_control():
             return jsonify({"ok": False, "error": safe_railway_error_code(exc)}), 503
 
     payload = request.get_json(silent=True)
-    if not isinstance(payload, dict) or payload.get("action") != "close" or set(payload.keys()) != {"action"}:
-        return jsonify({"error": "CLOSE_ONLY_ACTION_REQUIRED"}), 400
+    if not isinstance(payload, dict):
+        return jsonify({"error": "EXCHANGE_GATE_ACTION_INVALID"}), 400
+
+    if payload.get("action") == "open":
+        if set(payload.keys()) != {"action", "proof"}:
+            return jsonify({"error": "EXCHANGE_OPENING_PROOF_INVALID"}), 400
+        try:
+            result = open_exchange_gate(payload.get("proof"))
+            if result.get("configured") != "1" or result.get("status") != "DEPLOY_TRIGGERED":
+                return jsonify({"error": "EXCHANGE_GATE_OPEN_NOT_VERIFIED"}), 503
+            safe = {
+                "ok": True,
+                "status": "DEPLOY_TRIGGERED",
+                "previous": result.get("previous", "UNKNOWN"),
+                "configured": "1",
+                "commit": str(result.get("commit") or ""),
+                "deployment_id": str(result.get("deployment_id") or ""),
+                "proof_checked_at": str(result.get("proof_checked_at") or ""),
+                "service": "slh-cloud-bot",
+                "environment": "production",
+            }
+            response = jsonify(safe)
+            response.headers["Cache-Control"] = "no-store"
+            return response, 202
+        except Exception as exc:
+            code = safe_railway_error_code(exc)
+            status = 400 if code == "EXCHANGE_OPENING_PROOF_INVALID" else 503
+            return jsonify({"ok": False, "error": code}), status
+
+    if payload.get("action") != "close" or set(payload.keys()) != {"action"}:
+        return jsonify({"error": "EXCHANGE_GATE_ACTION_INVALID"}), 400
 
     try:
         result = close_exchange_gate()
