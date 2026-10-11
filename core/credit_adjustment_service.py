@@ -321,11 +321,8 @@ def reverse_invalid_bnb_deposit(
     if existing_result is not None:
         return existing_result
 
-    # Chain proof is obtained independently of any caller-supplied evidence.
-    proof = _verify_self_transfer_for_reversal(tx_hash, initial_db)
-    if bnb_deposits_open():
-        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
-
+    # Validate the source ledger record before any RPC request. Invalid or
+    # malformed persisted metadata should fail closed without external calls.
     source_matches = [
         (index, row) for index, row in enumerate(initial_ledger)
         if isinstance(row, dict)
@@ -355,6 +352,10 @@ def reverse_invalid_bnb_deposit(
     # whose wei amount produces a non-terminating decimal Credits display.
     if source_wei <= 0 or source_amount != Decimal(str(float(expected_credits))):
         raise ValueError("SOURCE_CREDITS_DO_NOT_MATCH_ONCHAIN_AMOUNT")
+    # Only request live chain proof after the local ledger record passes validation.
+    proof = _verify_self_transfer_for_reversal(tx_hash, initial_db)
+    if bnb_deposits_open():
+        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
     if source_wei != int(proof["amount_wei"]):
         raise ValueError("SOURCE_AMOUNT_DOES_NOT_MATCH_ONCHAIN")
     if str(meta.get("from") or "").lower() != proof["from"].lower():
