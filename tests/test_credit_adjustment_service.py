@@ -13,6 +13,7 @@ from core import credit_adjustment_service as target
 UID = "test-owner-1"
 TX = "0x" + "ab" * 32
 TREASURY = "0x1111111111111111111111111111111111111111"
+OWNER_WALLET = "0x2222222222222222222222222222222222222222"
 SOURCE_KEY = f"bnb:deposit:{TX}"
 CORRECTION_KEY = f"accounting:reversal:{TX}"
 
@@ -20,6 +21,9 @@ CORRECTION_KEY = f"accounting:reversal:{TX}"
 def _db():
     return {
         "users": {UID: {"wallet": {"credits": 18.091775}}},
+        "wallet_bindings": {
+            "bsc:test-owner": {"uid": UID, "chain": "bsc", "address": OWNER_WALLET}
+        },
         "ledger": [
             {
                 "time": "2026-10-10T08:58:47.536038+00:00",
@@ -32,8 +36,8 @@ def _db():
                     "tx_hash": TX,
                     "idempotency_key": SOURCE_KEY,
                     "bnb_amount_wei": 10**16,
-                    "from": TREASURY,
-                    "to": TREASURY,
+                    "from": OWNER_WALLET,
+                    "to": OWNER_WALLET,
                 },
             }
         ],
@@ -51,8 +55,8 @@ def _proof():
         "tx_hash": TX,
         "chain_id": 56,
         "receipt_status": 1,
-        "from": TREASURY,
-        "to": TREASURY,
+        "from": OWNER_WALLET,
+        "to": OWNER_WALLET,
         "treasury": TREASURY,
         "amount_wei": 10**16,
         "block": 123,
@@ -67,7 +71,7 @@ def _patch_runtime(monkeypatch, db):
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
-    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda tx, snapshot: _proof())
+    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda _uid, _tx, _snapshot: _proof())
 
 
 def _apply(db, expected="18.091775"):
@@ -183,8 +187,8 @@ def test_existing_reversal_with_corrupt_chain_metadata_fails_closed(
 @pytest.mark.parametrize(
     ("location", "field", "bad_value"),
     [
-        ("source_meta", "from", "0x2222222222222222222222222222222222222222"),
-        ("source_meta", "to", "0x2222222222222222222222222222222222222222"),
+        ("source_meta", "from", "0x3333333333333333333333333333333333333333"),
+        ("source_meta", "to", "0x3333333333333333333333333333333333333333"),
         ("correction_meta", "treasury", "0x2222222222222222222222222222222222222222"),
         ("source_meta", "bnb_amount_wei", 2 * 10**16),
         ("source", "amount", 9.0),
@@ -232,7 +236,7 @@ def _patch_file_backed_runtime(monkeypatch, db_path):
     monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
-    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda tx, snapshot: _proof())
+    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda _uid, _tx, _snapshot: _proof())
     monkeypatch.setattr(target.state_manager, "DB_FILE", str(db_path))
     monkeypatch.setattr(target.state_manager, "_LOCK_PATH", str(db_path) + ".lock")
     monkeypatch.setattr(target.state_manager, "_ensure_backup_scheduler", lambda: None)
@@ -371,7 +375,7 @@ def _web3_stub(fake_w3):
     return StubWeb3
 
 
-def _fake_web3_transaction(*, sender=TREASURY, recipient=TREASURY, status=1, value=10**16, block=100):
+def _fake_web3_transaction(*, sender=OWNER_WALLET, recipient=OWNER_WALLET, status=1, value=10**16, block=100):
     fake = Mock()
     fake.eth.chain_id = 56
     fake.eth.block_number = 200
@@ -388,7 +392,7 @@ def _fake_web3_transaction(*, sender=TREASURY, recipient=TREASURY, status=1, val
     return fake
 
 
-def test_live_forensic_verifier_proves_confirmed_canonical_treasury_self_transfer(monkeypatch):
+def test_live_forensic_verifier_proves_confirmed_bound_owner_self_transfer(monkeypatch):
     fake = _fake_web3_transaction()
     config = {
         "chain_id": 56,
@@ -401,12 +405,13 @@ def test_live_forensic_verifier_proves_confirmed_canonical_treasury_self_transfe
     monkeypatch.setattr(target, "Web3", _web3_stub(fake))
 
     with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": TREASURY}, clear=False):
-        proof = target._verify_self_transfer_for_reversal(TX, _db())
+        proof = target._verify_self_transfer_for_reversal(UID, TX, _db())
 
     assert proof["tx_hash"] == TX
     assert proof["chain_id"] == 56
-    assert proof["from"].lower() == TREASURY.lower()
-    assert proof["to"].lower() == TREASURY.lower()
+    assert proof["from"].lower() == OWNER_WALLET.lower()
+    assert proof["to"].lower() == OWNER_WALLET.lower()
+    assert proof["treasury"].lower() == TREASURY.lower()
     assert proof["amount_wei"] == 10**16
     assert proof["confirmations"] == 101
     fake.eth.get_transaction.assert_called_once_with(TX)
@@ -414,7 +419,7 @@ def test_live_forensic_verifier_proves_confirmed_canonical_treasury_self_transfe
 
 
 def test_live_forensic_verifier_rejects_external_sender(monkeypatch):
-    external = "0x2222222222222222222222222222222222222222"
+    external = "0x3333333333333333333333333333333333333333"
     fake = _fake_web3_transaction(sender=external)
     config = {
         "chain_id": 56,
@@ -427,8 +432,43 @@ def test_live_forensic_verifier_rejects_external_sender(monkeypatch):
     monkeypatch.setattr(target, "Web3", _web3_stub(fake))
 
     with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": TREASURY}, clear=False):
-        with pytest.raises(ValueError, match="BNB_TX_NOT_TREASURY_SELF_TRANSFER"):
-            target._verify_self_transfer_for_reversal(TX, _db())
+        with pytest.raises(ValueError, match="BNB_TX_NOT_OWNER_SELF_TRANSFER"):
+            target._verify_self_transfer_for_reversal(UID, TX, _db())
+
+
+
+def test_live_forensic_verifier_rejects_a_normal_transfer_to_treasury(monkeypatch):
+    fake = _fake_web3_transaction(sender=OWNER_WALLET, recipient=TREASURY)
+    config = {
+        "chain_id": 56,
+        "rpc": "https://rpc.invalid",
+        "treasury_wallet": TREASURY,
+        "confirmations": 15,
+    }
+    monkeypatch.setattr(target, "_effective_config", lambda _db: config)
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+    monkeypatch.setattr(target, "Web3", _web3_stub(fake))
+
+    with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": TREASURY}, clear=False):
+        with pytest.raises(ValueError, match="BNB_TX_NOT_OWNER_SELF_TRANSFER"):
+            target._verify_self_transfer_for_reversal(UID, TX, _db())
+
+
+def test_live_forensic_verifier_rejects_treasury_aliasing_bound_wallet(monkeypatch):
+    fake = _fake_web3_transaction()
+    config = {
+        "chain_id": 56,
+        "rpc": "https://rpc.invalid",
+        "treasury_wallet": OWNER_WALLET,
+        "confirmations": 15,
+    }
+    monkeypatch.setattr(target, "_effective_config", lambda _db: config)
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+    monkeypatch.setattr(target, "Web3", _web3_stub(fake))
+
+    with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": OWNER_WALLET}, clear=False):
+        with pytest.raises(ValueError, match="BNB_TREASURY_MATCHES_BOUND_WALLET"):
+            target._verify_self_transfer_for_reversal(UID, TX, _db())
 
 
 def test_live_forensic_verifier_rejects_failed_receipt(monkeypatch):
@@ -445,7 +485,7 @@ def test_live_forensic_verifier_rejects_failed_receipt(monkeypatch):
 
     with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": TREASURY}, clear=False):
         with pytest.raises(ValueError, match="BNB_TX_NOT_SUCCESSFUL"):
-            target._verify_self_transfer_for_reversal(TX, _db())
+            target._verify_self_transfer_for_reversal(UID, TX, _db())
 
 
 
@@ -465,7 +505,7 @@ def test_reversal_accepts_canonical_float_rounding_for_non_round_bnb_amount(monk
     db["users"][UID]["wallet"]["credits"] = after
     proof = {**_proof(), "amount_wei": amount_wei}
     _patch_runtime(monkeypatch, db)
-    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda _tx, _db: proof)
+    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda _uid, _tx, _db: proof)
 
     result = target.reverse_invalid_bnb_deposit(
         actor_uid=UID,
