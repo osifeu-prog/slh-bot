@@ -333,6 +333,38 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
     ):
         raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
 
+    # Idempotency must not turn old proof into permanent authorization. Re-check
+    # the current BSC configuration and live transaction before returning success.
+    try:
+        current_cfg = _effective_config(db)
+        current_chain_id = _exact_nonnegative_int(current_cfg.get("chain_id"))
+        current_confirmations = _exact_nonnegative_int(current_cfg.get("confirmations") or 15)
+        current_rpc = str(current_cfg.get("rpc") or "").strip()
+        if (
+            current_chain_id != 56
+            or not current_rpc
+            or current_confirmations < 1
+            or current_confirmations != meta_required_confirmations
+        ):
+            raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+        live_proof = _verify_self_transfer_for_reversal(uid, tx_hash, db)
+        if (
+            _normalise_hash(live_proof.get("tx_hash")) != tx_hash.lower()
+            or live_proof.get("chain_id") != 56
+            or live_proof.get("receipt_status") != 1
+            or _exact_nonnegative_int(live_proof.get("amount_wei")) != amount_wei
+            or _exact_nonnegative_int(live_proof.get("block")) != meta_block
+            or _exact_nonnegative_int(live_proof.get("required_confirmations")) != current_confirmations
+            or _exact_nonnegative_int(live_proof.get("confirmations")) < current_confirmations
+            or str(live_proof.get("from") or "").strip().lower() != bound_owner_wallet
+            or str(live_proof.get("to") or "").strip().lower() != bound_owner_wallet
+            or str(live_proof.get("treasury") or "").strip().lower() != canonical_treasury
+            or str(live_proof.get("bound_wallet") or "").strip().lower() != bound_owner_wallet
+        ):
+            raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT") from None
+
     return {
         "status": "ALREADY_REVERSED",
         "uid": uid,
