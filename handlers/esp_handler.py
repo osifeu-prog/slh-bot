@@ -353,6 +353,62 @@ def register_esp_handler(bot):
             text = logo + "\n\n" + text
         bot.reply_to(msg, text)
 
+    @bot.message_handler(commands=["esp_revoke_license"])
+    def esp_revoke_license(msg):
+        uid = str(getattr(getattr(msg, "from_user", None), "id", "") or "")
+        if not is_owner(uid):
+            bot.reply_to(msg, "⛔ הפעולה מותרת לבעלים בלבד.")
+            return
+        chat_type = str(getattr(getattr(msg, "chat", None), "type", "") or "")
+        if chat_type != "private":
+            bot.reply_to(msg, "🔒 ביטול רישיון מותר רק בצ׳אט פרטי עם הבוט.")
+            return
+        parts = str(getattr(msg, "text", "") or "").split()
+        if len(parts) != 2:
+            bot.reply_to(
+                msg,
+                "שימוש: /esp_revoke_license <license_id>\n"
+                "הפקודה מבטלת רישיון ספציפי ומסירה את סודות ההפעלה מהעותקים התואמים. "
+                "לא תוצג סיסמה או הפעלה מחדש בצ׳אט."
+            )
+            return
+        try:
+            from core.esp_license import revoke_license
+            result = revoke_license(parts[1], actor_uid=uid)
+        except Exception as exc:
+            print("[ESP_LICENSE_REVOKE] failed:", type(exc).__name__)
+            bot.reply_to(msg, "❌ ביטול הרישיון לא הושלם. אין להניח שהסנכרון הושלם.")
+            return
+
+        status = str((result or {}).get("status") or "UNKNOWN")
+        suffix = str((result or {}).get("license_id_suffix") or "")
+        if status == "REVOKED":
+            fields = ", ".join((result or {}).get("secrets_removed") or []) or "no secret copies found"
+            count = int((result or {}).get("purchase_records_scrubbed") or 0)
+            bot.reply_to(
+                msg,
+                f"✅ רישיון …{suffix} בוטל ונרשם ב-audit.\n"
+                f"סודות שהוסרו: {fields}. רשומות רכישה שנוקו: {count}.\n"
+                "לא שונו יתרות או Ledger."
+            )
+        elif status == "REVOKED_DEVICE_SYNC_PENDING":
+            bot.reply_to(
+                msg,
+                f"🟡 רישיון …{suffix} בוטל במקור האמת ונוקו עותקי הרכישה, "
+                "אך סנכרון devices.json לא אומת. אין להפעיל מחדש; נדרשת בדיקת Owner."
+            )
+        elif status == "ALREADY_REVOKED":
+            bot.reply_to(msg, f"✅ רישיון …{suffix} כבר מבוטל.")
+        else:
+            safe_messages = {
+                "INVALID_LICENSE_ID": "מזהה רישיון לא תקין.",
+                "FORBIDDEN": "⛔ הפעולה מותרת לבעלים בלבד.",
+                "LICENSE_NOT_FOUND": "הרישיון לא נמצא.",
+                "LICENSE_RECORD_INVALID": "רשומת הרישיון אינה תקינה; לא בוצע ביטול.",
+                "LICENSE_AUDIT_REGISTRY_INVALID": "רישום ה-audit אינו תקין; לא בוצע ביטול.",
+            }
+            bot.reply_to(msg, safe_messages.get(status, "❌ הביטול נחסם; לא ניתן לאשר שהסתיים."))
+
     @bot.message_handler(commands=["esp"])
     def esp_cmd(msg):
         bot.reply_to(
@@ -362,6 +418,7 @@ def register_esp_handler(bot):
 /esp_status - מצב מכשירי ESP
 /esp_ping - בדיקת חיבור
 /esp_activate - הפעלת רישיון
+/esp_revoke_license <license_id> - ביטול Owner-only בצ׳אט פרטי
 /esp_start - התחלת משימה
 /esp_stop - עצירת משימה
 /esp_progress - דיווח התקדמות
