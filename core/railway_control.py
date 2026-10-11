@@ -370,8 +370,8 @@ def close_exchange_gate():
 
 
 # The Railway credential stays on the Control Plane service, never on the bot.
-# This endpoint is fixed and only supports reading the configured gate or
-# requesting a close; no caller-provided URL, service, variable, or value.
+# This fixed endpoint supports status reads, explicit closes, and opening only
+# with fresh canonical launch proof; no caller-provided URL/service/variable/value.
 SLH_EXCHANGE_CONTROL_PLANE_URL = (
     "https://web-production-22f28.up.railway.app/api/internal/exchange-gate"
 )
