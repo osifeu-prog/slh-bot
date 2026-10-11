@@ -253,3 +253,47 @@ def test_legacy_partial_confirmation_without_duplicate_ack_sends_nothing(monkeyp
     assert result["status"] == "DUPLICATE_ACK_REQUIRED"
     assert bot.sent == []
     assert db["exchange_broadcast_pending"][uid]["status"] == "PENDING_CONFIRMATION"
+
+
+
+def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
+    import hashlib
+
+    uid = str(target.OWNER_TELEGRAM_ID)
+    message_hash = hashlib.sha256(target.EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
+    db = _exchange_broadcast_db(["1", "2"])
+    db["exchange_broadcast_pending"][uid] = {
+        "draft_id": "fresh-draft",
+        "uid": uid,
+        "status": "PENDING_CONFIRMATION",
+        "created_at": "2026-10-11T10:00:00+00:00",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "target_count": 2,
+        "audience_sha256": target._broadcast_audience_hash(["1", "2"]),
+        "message_sha256": message_hash,
+        "audience_scope": "all",
+        "requires_duplicate_ack": False,
+    }
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+    monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    })
+    bot = FakeBot([None, RuntimeError("blocked")])
+
+    result = target.send_confirmed_exchange_broadcast(bot, uid)
+
+    assert result["status"] == "PARTIAL"
+    assert result["sent"] == 1
+    assert result["failed"] == 1
+    assert bot.sent == [("1", target.EXCHANGE_BROADCAST_TEXT), ("2", target.EXCHANGE_BROADCAST_TEXT)]
+    audit = db["exchange_broadcast_audit"][-1]
+    assert audit["failed_recipient_uids"] == ["2"]
+    assert audit["audience_scope"] == "all"
