@@ -33,8 +33,17 @@ def _effective_config(db=None) -> dict:
 
 
 def bnb_readiness(db=None) -> dict:
+    db_readable = True
+    if db is None:
+        try:
+            db = state_manager.load_db()
+        except Exception:
+            db = {}
+            db_readable = False
     cfg = _effective_config(db)
     reasons: list[str] = []
+    if not db_readable:
+        reasons.append("BNB_WALLET_BINDING_REGISTRY_UNAVAILABLE")
     chain_id = cfg.get("chain_id")
     if int(chain_id or 0) != 56:
         reasons.append("BSC_CHAIN_ID_NOT_56")
@@ -48,6 +57,25 @@ def bnb_readiness(db=None) -> dict:
         reasons.append("BNB_TREASURY_MISSING")
     elif is_quarantined_bsc_address(treasury):
         reasons.append("BNB_TREASURY_QUARANTINED_ZUZ")
+
+    # A deposit Treasury must be a distinct address, not a user's bound wallet.
+    # Otherwise native transfers can be self-transfers that do not fund Treasury.
+    bindings = db.get("wallet_bindings", {}) if isinstance(db, dict) else {}
+    if not isinstance(bindings, dict):
+        reasons.append("BNB_WALLET_BINDINGS_INVALID")
+    elif treasury:
+        for binding in bindings.values():
+            if not isinstance(binding, dict):
+                continue
+            bound_address = str(binding.get("address") or "").strip()
+            chain = str(binding.get("chain") or "bsc").strip().lower()
+            if (
+                bound_address
+                and chain in {"bsc", "bnb", "56", "bsc-mainnet"}
+                and bound_address.lower() == treasury.lower()
+            ):
+                reasons.append("BNB_TREASURY_MATCHES_BOUND_WALLET")
+                break
 
     canonical_treasury = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip()
     if not canonical_treasury:
@@ -135,8 +163,14 @@ def _empirical_evidence_shape_valid(empirical: dict | None) -> bool:
     return True
 
 
-def _empirical_evidence_revalidated(empirical: dict | None, gate: dict) -> bool:
-    """Re-check the persisted proof against current wallet, chain and ledger state."""
+def _empirical_evidence_revalidated(
+    empirical: dict | None, gate: dict, db: dict | None = None
+) -> bool:
+    """Re-check persisted proof against current wallet, chain and ledger state.
+
+    Callers that already hold an atomic-update snapshot may pass it so the
+    ledger comparison uses the same state being evaluated.
+    """
     if not _empirical_evidence_shape_valid(empirical):
         return False
     try:
@@ -164,7 +198,8 @@ def _empirical_evidence_revalidated(empirical: dict | None, gate: dict) -> bool:
         )
         if int(verified.get("confirmations") or 0) < required_confirmations:
             return False
-        db = state_manager.load_db()
+        if db is None:
+            db = state_manager.load_db()
         ledger = db.get("ledger", []) if isinstance(db, dict) else []
         key = f"bnb:deposit:{tx_hash.lower()}"
         matching = [
@@ -220,12 +255,30 @@ def bnb_opening_evidence() -> dict:
         "status": "PASS" if "BSC_RPC_MISSING" not in gate.get("reasons", []) else "FAIL",
     }
     evidence["checks"]["configured_treasury"] = {
-        "status": "PASS" if gate.get("treasury_configured") and "BNB_TREASURY_QUARANTINED_ZUZ" not in gate.get("reasons", []) else "FAIL",
+        "status": "PASS"
+        if gate.get("treasury_configured")
+        and not any(
+            reason in gate.get("reasons", [])
+            for reason in (
+                "BNB_TREASURY_QUARANTINED_ZUZ",
+                "BNB_TREASURY_MATCHES_BOUND_WALLET",
+                "BNB_WALLET_BINDING_REGISTRY_UNAVAILABLE",
+                "BNB_WALLET_BINDINGS_INVALID",
+            )
+        )
+        else "FAIL",
     }
+    if "BNB_TREASURY_MATCHES_BOUND_WALLET" in gate.get("reasons", []):
+        evidence["blockers"].append("BNB_TREASURY_MATCHES_BOUND_WALLET")
+    if "BNB_WALLET_BINDING_REGISTRY_UNAVAILABLE" in gate.get("reasons", []):
+        evidence["blockers"].append("BNB_WALLET_BINDING_REGISTRY_UNAVAILABLE")
+    if "BNB_WALLET_BINDINGS_INVALID" in gate.get("reasons", []):
+        evidence["blockers"].append("BNB_WALLET_BINDINGS_INVALID")
     evidence["checks"]["canonical_treasury"] = {
         "status": "PASS" if "BNB_CANONICAL_TREASURY_MISSING" not in gate.get("reasons", [])
         and "BNB_CANONICAL_TREASURY_MISMATCH" not in gate.get("reasons", [])
         and "BNB_CANONICAL_TREASURY_QUARANTINED_ZUZ" not in gate.get("reasons", [])
+        and "BNB_TREASURY_MATCHES_BOUND_WALLET" not in gate.get("reasons", [])
         else "FAIL",
     }
     evidence["checks"]["confirmations"] = {
@@ -320,7 +373,7 @@ def bnb_opening_evidence() -> dict:
     if configured_chain != "56":
         evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
     empirical = _empirical_settlement_evidence()
-    empirical_valid = _empirical_evidence_revalidated(empirical, _effective_config())
+    empirical_valid = _empirical_evidence_revalidated(empirical, _effective_config(), db=state_manager.load_db())
     evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid)
     if empirical_valid:
         for check in (
