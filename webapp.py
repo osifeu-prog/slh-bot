@@ -379,10 +379,11 @@ def _exchange_gate_control_authorized():
 
 @app.route("/api/internal/exchange-gate", methods=["GET", "POST"])
 def internal_exchange_gate_control():
-    """Authenticated bridge for owner-only Exchange gate status and close-only control.
+    """Authenticated bridge for the fixed internal Exchange gate.
 
     The Railway credential remains in the Control Plane service. GET reveals
-    only the single configured gate value; POST accepts only an explicit close.
+    only the configured gate value; POST accepts close or an opening request
+    carrying fresh canonical launch proof, never caller-selected resources.
     """
     auth_error = _exchange_gate_control_authorized()
     if auth_error is not None:
