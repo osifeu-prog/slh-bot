@@ -127,6 +127,46 @@ def _offline_fallback(text, uid=None):
     )
 
 
+
+def _academy_catalog_answer():
+    """Answer Academy questions from the live canonical course catalog."""
+    try:
+        from core import academy_manager
+
+        courses = academy_manager.get_courses()
+        if not isinstance(courses, dict) or not courses:
+            return (
+                "לא הצלחתי לקרוא קטלוג Academy עדכני. "
+                "כדי לא למסור רשימה ישנה, פתח /courses ונסה שוב."
+            )
+
+        lines = ["🎓 Academy — הקורסים שמוגדרים כרגע במערכת:"]
+        for course_id, course in courses.items():
+            if not isinstance(course, dict):
+                continue
+            title = str(course.get("title") or course.get("name") or course_id).strip()
+            stages = course.get("stages", [])
+            stage_count = len(stages) if isinstance(stages, list) else 0
+            access = "בתשלום דרך Stars" if course.get("access") == "paid" else "חינם"
+            lines.append(
+                f"📘 {title} — {stage_count} שיעורים · {access}\n"
+                f"/course_{course_id}"
+            )
+
+        if len(lines) == 1:
+            return (
+                "קטלוג Academy נטען אך אין בו קורסים תקינים כרגע. "
+                "פתח /courses כדי לבדוק את הממשק."
+            )
+        lines.append("\nלרשימה האינטראקטיבית: /courses · להתקדמות: /academy_progress")
+        return "\n\n".join(lines)
+    except Exception as exc:
+        print("[ASK] academy catalog read failed:", type(exc).__name__)
+        return (
+            "לא הצלחתי לקרוא קטלוג Academy עדכני. "
+            "כדי לא למסור רשימה ישנה, פתח /courses ונסה שוב."
+        )
+
 def route(text, uid=None):
     raw_text = str(text or "")
     is_pasted_log = bool(re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", raw_text))
@@ -232,7 +272,7 @@ def route(text, uid=None):
     if intent == "greeting":
         return "שלום! איך אוכל לעזור?"
     if intent == "courses":
-        return ("🎓 Academy – Bitcoin Mastery\n\n" "ה-Academy הוא מסלול לימודי נפרד. אין צורך להשלים קורס כדי לבצע Staking.\n\n" "1. /course_bitcoin_mastery\n" "2. /lesson bitcoin_mastery 1\n" "3. כשסיימת: /finish bitcoin_mastery 1\n" "4. חזור על 2–3 עבור שיעורים 2 ו-3.\n" "5. /academy_progress\n\n" "Staking זמין בנפרד דרך /stake <amount>.")
+        return _academy_catalog_answer()
     if intent == "dashboard":
         return f"📊 אין Dashboard נפרד למשתמשים. הממשק הקיים הוא SLH Market Mini App:\n{MINI_APP_URL}"
     if intent == "agents":
