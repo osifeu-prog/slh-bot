@@ -50,6 +50,42 @@ def _db():
     }
 
 
+def test_resolver_ignores_explicit_non_bsc_bindings(monkeypatch):
+    db = _db()
+    # The owner can have both BSC and TON bindings, and other users can have
+    # non-BSC bindings. They must not make the BSC identity ambiguous.
+    db["wallet_bindings"]["ton:test-owner"] = {
+        "uid": UID, "chain": "ton", "address": "EQ-owner-ton-wallet"
+    }
+    db["wallet_bindings"]["ton:other-user"] = {
+        "uid": "other-user", "chain": "ton", "address": "EQ-other-ton-wallet"
+    }
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+
+    assert target._resolve_owner_bsc_wallet(UID, db, TREASURY) == OWNER_WALLET
+
+
+def test_resolver_still_rejects_duplicate_bsc_treasury_alias(monkeypatch):
+    db = _db()
+    db["wallet_bindings"]["bsc:other-user"] = {
+        "uid": "other-user", "chain": "bsc", "address": TREASURY
+    }
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+
+    with pytest.raises(ValueError, match="BNB_TREASURY_BINDING_NOT_UNIQUE"):
+        target._resolve_owner_bsc_wallet(UID, db, TREASURY)
+
+
+def test_resolver_fails_closed_on_unclassified_wallet_binding():
+    db = _db()
+    db["wallet_bindings"]["unknown:other-user"] = {
+        "uid": "other-user", "address": "0x2222222222222222222222222222222222222222"
+    }
+
+    with pytest.raises(ValueError, match="BNB_WALLET_BINDINGS_UNVERIFIED"):
+        target._resolve_owner_bsc_wallet(UID, db, TREASURY)
+
+
 def _proof():
     return {
         "tx_hash": TX,
