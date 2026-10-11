@@ -92,7 +92,7 @@ def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
     ), patch(
         "core.bnb_gate._empirical_evidence_revalidated",
         return_value=True,
-    ):
+    ), patch("core.bnb_gate.state_manager.load_db", return_value={}):
         status = bnb_readiness()
         assert status["ready"] is True
         assert status["effective_open"] is True
@@ -114,7 +114,7 @@ def test_bnb_gate_stays_closed_when_empirical_proof_is_missing_even_if_flag_and_
     ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value=None,
-    ):
+    ), patch("core.bnb_gate.state_manager.load_db", return_value={}):
         status = bnb_readiness()
         assert status["ready"] is True
         assert status["effective_open"] is True
