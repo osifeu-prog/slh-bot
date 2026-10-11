@@ -205,7 +205,7 @@ def test_successful_deployment_without_live_open_proof_never_prepares_or_announc
 
     assert "DEPLOYMENT SUCCESS" in result
     assert "RUNTIME NOT VERIFIED" in result
-    assert "do not announce" in result.lower()
+    assert "אין להכריז" in result
     assert "OPEN VERIFIED" not in result
     assert "מסחר פנימי פתוח" not in result
     prepare.assert_not_called()
