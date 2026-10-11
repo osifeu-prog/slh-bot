@@ -1,4 +1,3 @@
-import copy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -87,7 +86,7 @@ def test_owner_revocation_removes_esp_secrets_from_license_purchase_and_device_s
     revoked = db["esp_licenses"][LICENSE_ID]
     assert revoked["status"] == "revoked"
     assert revoked["revoked_at"]
-    assert revoked["activation_code"] if False else "activation_code" not in revoked
+    assert "activation_code" not in revoked
     assert "mqtt_password" not in revoked
 
     purchase = db["purchases"]["purchase:telegram_buy:8789977826:190947"]
@@ -185,3 +184,75 @@ def test_get_license_returns_the_current_device_license_not_a_revoked_old_one():
         result = esp_license.get_license(DEVICE_ID)
 
     assert result["license_id"] == new_id
+
+def test_owner_command_requires_private_chat_and_never_replies_with_secrets():
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    from handlers.esp_handler import register_esp_handler
+
+    bot = Mock()
+    handlers = {}
+
+    def decorator(**kwargs):
+        def register(callback):
+            for command in kwargs.get("commands", []):
+                handlers[command] = callback
+            return callback
+        return register
+
+    bot.message_handler.side_effect = decorator
+    message = SimpleNamespace(
+        text=f"/esp_revoke_license {LICENSE_ID}",
+        from_user=SimpleNamespace(id=int(OWNER_UID)),
+        chat=SimpleNamespace(type="private"),
+    )
+    safe_result = {
+        "status": "REVOKED",
+        "device_id": DEVICE_ID,
+        "license_id_suffix": LICENSE_ID[-6:],
+        "secrets_removed": ["activation_code", "mqtt_password"],
+        "purchase_records_scrubbed": 1,
+    }
+
+    with patch("handlers.esp_handler.is_owner", return_value=True), patch(
+        "core.esp_license.revoke_license", return_value=safe_result
+    ) as revoke:
+        register_esp_handler(bot)
+        handlers["esp_revoke_license"](message)
+
+    revoke.assert_called_once_with(LICENSE_ID, actor_uid=OWNER_UID)
+    reply = bot.reply_to.call_args.args[1]
+    assert SECRET_PASSWORD not in reply
+    assert SECRET_ACTIVATION not in reply
+    assert "REVOKED" in reply
+
+
+def test_owner_command_refuses_non_private_chat():
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    from handlers.esp_handler import register_esp_handler
+
+    bot = Mock()
+    handlers = {}
+
+    def decorator(**kwargs):
+        def register(callback):
+            for command in kwargs.get("commands", []):
+                handlers[command] = callback
+            return callback
+        return register
+
+    bot.message_handler.side_effect = decorator
+    message = SimpleNamespace(
+        text=f"/esp_revoke_license {LICENSE_ID}",
+        from_user=SimpleNamespace(id=int(OWNER_UID)),
+        chat=SimpleNamespace(type="supergroup"),
+    )
+    with patch("handlers.esp_handler.is_owner", return_value=True), patch(
+        "core.esp_license.revoke_license"
+    ) as revoke:
+        register_esp_handler(bot)
+        handlers["esp_revoke_license"](message)
+
+    revoke.assert_not_called()
+    assert "פרטי" in bot.reply_to.call_args.args[1]
