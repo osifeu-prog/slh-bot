@@ -183,3 +183,71 @@ def test_open_gate_refuses_when_current_gate_is_not_closed_without_mutating_rail
 
     graphql.assert_not_called()
     deploy.assert_not_called()
+
+
+
+def test_owner_private_voice_phrase_routes_to_guarded_exchange_open_helper():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    route = getattr(exchange_handler, "route_exchange_gate_voice", None)
+    assert callable(route), "owner-only Exchange gate voice route is missing"
+    bot = object()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=8789977826),
+        chat=SimpleNamespace(type="private"),
+    )
+
+    with patch.object(
+        exchange_handler,
+        "_request_guarded_exchange_gate_open",
+        return_value="OPENING_REQUEST_ACCEPTED",
+    ) as open_gate:
+        answer = route(
+            bot,
+            message,
+            "פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת",
+        )
+
+    assert answer == "OPENING_REQUEST_ACCEPTED"
+    open_gate.assert_called_once_with()
+
+
+def test_non_owner_cannot_request_exchange_gate_open_by_voice():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    route = getattr(exchange_handler, "route_exchange_gate_voice", None)
+    assert callable(route), "owner-only Exchange gate voice route is missing"
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=224223270),
+        chat=SimpleNamespace(type="private"),
+    )
+
+    with patch.object(exchange_handler, "_request_guarded_exchange_gate_open") as open_gate:
+        answer = route(
+            object(),
+            message,
+            "פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת",
+        )
+
+    assert "OWNER" in answer
+    open_gate.assert_not_called()
+
+
+def test_generic_voice_mutation_does_not_match_exchange_gate_open_route():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    route = getattr(exchange_handler, "route_exchange_gate_voice", None)
+    assert callable(route), "owner-only Exchange gate voice route is missing"
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=8789977826),
+        chat=SimpleNamespace(type="private"),
+    )
+
+    with patch.object(exchange_handler, "_request_guarded_exchange_gate_open") as open_gate:
+        answer = route(object(), message, "פתח BNB")
+
+    assert answer is None
+    open_gate.assert_not_called()
