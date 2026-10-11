@@ -302,6 +302,29 @@ def test_later_owner_ledger_activity_fails_without_mutation(monkeypatch):
     assert db == before
 
 
+@pytest.mark.parametrize(
+    "invalid_wei",
+    [True, 1.5, -1, "not-an-integer"],
+)
+def test_initial_reversal_rejects_non_integer_source_amount_metadata_without_mutation(
+    monkeypatch, invalid_wei
+):
+    db = _db()
+    db["ledger"][0]["meta"]["bnb_amount_wei"] = invalid_wei
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setattr(
+        target,
+        "_verify_self_transfer_for_reversal",
+        lambda *_args: (_ for _ in ()).throw(AssertionError("chain verifier must not run")),
+    )
+
+    with pytest.raises(ValueError, match="SOURCE_DEPOSIT_INVALID"):
+        _apply(db)
+
+    assert db == before
+
+
 def test_non_owner_cannot_reverse(monkeypatch):
     db = _db()
     before = deepcopy(db)
