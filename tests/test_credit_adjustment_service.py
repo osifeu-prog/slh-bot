@@ -119,6 +119,23 @@ def test_repeated_reversal_is_idempotent(monkeypatch):
 
 
 
+def test_existing_reversal_fails_closed_if_treasury_becomes_quarantined(monkeypatch):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+
+    assert _apply(db)["status"] == "APPLIED"
+    before_retry = deepcopy(db)
+
+    # A policy change must invalidate an idempotent retry, not silently bless
+    # persisted evidence that now points to a quarantined treasury.
+    monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: True)
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == before_retry
+
+
 def test_existing_reversal_with_inconsistent_audit_fails_closed(monkeypatch):
     db = _db()
     _patch_runtime(monkeypatch, db)
