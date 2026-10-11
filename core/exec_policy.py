@@ -169,8 +169,8 @@ _ASSIGNMENT = re.compile(
 # fallback to standalone 12/24-word lowercase ASCII lines to limit false
 # positives in ordinary prose. This is best-effort, not a wallet phrase parser.
 _SEED_PHRASE_LINE = re.compile(
-    r"(?im)^\s*(?:(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){11}[a-z]{2,12}\s*$"
-    r"|^\s*(?:(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){23}[a-z]{2,12}\s*$"
+    r"(?im)^\s*(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){11}[a-z]{2,12}\s*$"
+    r"|^\s*(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){23}[a-z]{2,12}\s*$"
 )
 
 
