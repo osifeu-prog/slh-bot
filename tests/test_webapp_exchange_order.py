@@ -1,0 +1,153 @@
+import unittest
+from unittest.mock import patch
+
+import webapp
+
+
+class WebAppExchangeOrderIntentTests(unittest.TestCase):
+    def setUp(self):
+        self.client = webapp.app.test_client()
+        self.db = {
+            "users": {
+                "buyer": {
+                    "wallet": {
+                        "credits": 100.0,
+                        "token_balance": 0.0,
+                        "live_token_balance": 0.0,
+                        "exchange_reserved_slh": 0.0,
+                        "exchange_reserved_credits": 0.0,
+                    }
+                },
+                "seller": {
+                    "wallet": {
+                        "credits": 0.0,
+                        "token_balance": 10.0,
+                        "live_token_balance": 10.0,
+                        "exchange_reserved_slh": 0.0,
+                        "exchange_reserved_credits": 0.0,
+                    }
+                },
+            },
+            "exchange_orders": {},
+            "exchange_trades": [],
+            "exchange_requests": {},
+            "exchange_sequence": 0,
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+        self.original_uid = webapp.authenticated_uid
+        self.original_atomic_update = webapp.state_manager.atomic_update
+        webapp.authenticated_uid = lambda: "buyer"
+        webapp.state_manager.atomic_update = lambda mutate: mutate(self.db)
+
+    def tearDown(self):
+        webapp.authenticated_uid = self.original_uid
+        webapp.state_manager.atomic_update = self.original_atomic_update
+
+    @staticmethod
+    def passing_check():
+        return {
+            "ok": True,
+            "verdict": "OPEN",
+            "public_gate": "OPEN",
+            "public_ready": True,
+            "execution_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "open_orders": 0,
+            "detail": "public state clean",
+        }
+
+    def submit(self, *, side="buy", amount="2", price="3", request_id="req-1"):
+        return self.client.post(
+            "/api/v1/exchange/order",
+            json={
+                "side": side,
+                "amount": amount,
+                "price": price,
+                "client_request_id": request_id,
+            },
+        )
+
+    def test_fresh_canonical_check_runs_in_order_submission_and_receipt(self):
+        with patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=self.passing_check(),
+        ) as fresh_check:
+            response = self.submit()
+
+        self.assertEqual(response.status_code, 200)
+        fresh_check.assert_called_once_with(self.db)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "open")
+        self.assertEqual(payload["execution_check"]["status"], "PASS")
+        self.assertEqual(payload["execution_check"]["public_gate"], "OPEN")
+        self.assertTrue(payload["execution_check"]["execution_ready"])
+        self.assertTrue(payload["execution_check"]["money_invariants"])
+        self.assertTrue(payload["execution_check"]["checked_at"])
+        self.assertEqual(len(self.db["exchange_orders"]), 1)
+
+    def test_failed_fresh_check_blocks_without_creating_order_or_debiting_wallet(self):
+        blocked = {
+            **self.passing_check(),
+            "ok": False,
+            "verdict": "BLOCKED",
+            "public_gate": "CLOSED",
+            "public_ready": False,
+            "execution_ready": False,
+            "detail": "public exchange gate is CLOSED",
+        }
+        before_credits = self.db["users"]["buyer"]["wallet"]["credits"]
+
+        with patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=blocked,
+        ):
+            response = self.submit()
+
+        self.assertEqual(response.status_code, 409)
+        payload = response.get_json()
+        self.assertEqual(payload["code"], "EXCHANGE_FRESH_CHECK_BLOCKED")
+        self.assertEqual(payload["exchange_check"]["public_gate"], "CLOSED")
+        self.assertEqual(self.db["exchange_orders"], {})
+        self.assertEqual(
+            self.db["users"]["buyer"]["wallet"]["credits"],
+            before_credits,
+        )
+        self.assertEqual(
+            self.db["users"]["buyer"]["wallet"]["exchange_reserved_credits"],
+            0.0,
+        )
+
+    def test_reused_request_id_with_different_order_intent_is_rejected(self):
+        with patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=self.passing_check(),
+        ):
+            first = self.submit(
+                side="buy", amount="2", price="3", request_id="same-request"
+            )
+            second = self.submit(
+                side="sell", amount="1", price="2", request_id="same-request"
+            )
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 409)
+        self.assertEqual(
+            second.get_json()["code"],
+            "EXCHANGE_IDEMPOTENCY_KEY_REUSED",
+        )
+        self.assertEqual(len(self.db["exchange_orders"]), 1)
+        only_order = next(iter(self.db["exchange_orders"].values()))
+        self.assertEqual(only_order["side"], "buy")
+        self.assertEqual(only_order["original_amount"], "2.00000000")
+        self.assertEqual(only_order["limit_price"], "3.00000000")
+        self.assertEqual(
+            self.db["users"]["buyer"]["wallet"]["credits"],
+            94.0,
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
