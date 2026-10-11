@@ -41,6 +41,20 @@ def _idempotency_key(tx_hash):
     return f"bnb:deposit:{str(tx_hash or '').lower()}"
 
 
+def _current_pass_evidence(db, evidence):
+    """Only a currently revalidated PASS may block a new reconciliation."""
+    if not isinstance(evidence, dict) or evidence.get("status") != "PASS":
+        return False
+    try:
+        from core.bnb_gate import _effective_config, _empirical_evidence_revalidated
+
+        return _empirical_evidence_revalidated(
+            evidence, _effective_config(db), db=db
+        ) is True
+    except Exception:
+        return False
+
+
 def _matching_ledger_entries(db, tx_hash):
     ledger = db.get("ledger", []) if isinstance(db, dict) else []
     if not isinstance(ledger, list):
@@ -79,7 +93,7 @@ def _inspect_existing_bnb_tx(uid, tx_hash):
         db = state_manager.load_db()
         evidence_root = db.get("settlement_evidence", {}) if isinstance(db, dict) else {}
         existing = evidence_root.get("bnb") if isinstance(evidence_root, dict) else None
-        if isinstance(existing, dict) and existing.get("status") == "PASS":
+        if _current_pass_evidence(db, existing):
             return {"status": "ALREADY_COMPLETED"}
 
         binding = get_binding(uid)
@@ -224,7 +238,7 @@ def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
     def mutate(db):
         evidence_root = db.get("settlement_evidence", {})
         existing = evidence_root.get("bnb") if isinstance(evidence_root, dict) else None
-        if isinstance(existing, dict) and existing.get("status") == "PASS":
+        if _current_pass_evidence(db_now, existing):
             return {"status": "ALREADY_COMPLETED"}
         matching = _matching_ledger_entries(db, tx_hash)
         if matching is None:
