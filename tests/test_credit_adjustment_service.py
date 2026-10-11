@@ -131,6 +131,37 @@ def test_existing_reversal_with_inconsistent_audit_fails_closed(monkeypatch):
     assert db == corrupted
 
 
+@pytest.mark.parametrize(
+    ("location", "field", "bad_value"),
+    [
+        ("meta", "block", 124),
+        ("audit", "block", 124),
+        ("meta", "confirmations", 19),
+        ("audit", "confirmations", 19),
+        ("meta", "required_confirmations", 16),
+        ("audit", "required_confirmations", 16),
+        ("meta", "amount_wei", "not-an-integer"),
+        ("meta", "amount_wei", True),
+        ("audit", "block", "not-an-integer"),
+    ],
+)
+def test_existing_reversal_with_corrupt_chain_metadata_fails_closed(
+    monkeypatch, location, field, bad_value
+):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    assert _apply(db)["status"] == "APPLIED"
+
+    row = db["ledger"][1]["meta"] if location == "meta" else db["credit_adjustment_audit"][0]
+    row[field] = bad_value
+    corrupted = deepcopy(db)
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == corrupted
+
+
 def test_malformed_audit_fails_before_any_in_memory_mutation(monkeypatch):
     db = _db()
     db["credit_adjustment_audit"] = {"unexpected": "object"}
