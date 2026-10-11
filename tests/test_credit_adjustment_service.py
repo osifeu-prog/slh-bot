@@ -177,6 +177,49 @@ def test_existing_reversal_fails_closed_if_treasury_becomes_quarantined(monkeypa
     assert db == before_retry
 
 
+@pytest.mark.parametrize(
+    ("config_field", "bad_value"),
+    [("chain_id", 1), ("confirmations", 16), ("rpc", "")],
+)
+def test_existing_reversal_rechecks_current_bsc_configuration(
+    monkeypatch, config_field, bad_value
+):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    assert _apply(db)["status"] == "APPLIED"
+    before_retry = deepcopy(db)
+    config = {
+        "chain_id": 56,
+        "rpc": "https://rpc.invalid",
+        "treasury_wallet": TREASURY,
+        "confirmations": 15,
+    }
+    config[config_field] = bad_value
+    monkeypatch.setattr(target, "_effective_config", lambda _db: config)
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == before_retry
+
+
+def test_existing_reversal_rechecks_live_chain_proof(monkeypatch):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    assert _apply(db)["status"] == "APPLIED"
+    before_retry = deepcopy(db)
+    monkeypatch.setattr(
+        target,
+        "_verify_self_transfer_for_reversal",
+        lambda *_args: {**_proof(), "block": 124},
+    )
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == before_retry
+
+
 def test_existing_reversal_with_inconsistent_audit_fails_closed(monkeypatch):
     db = _db()
     _patch_runtime(monkeypatch, db)
