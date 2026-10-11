@@ -47,6 +47,17 @@ def _normalise_hash(value):
     return result
 
 
+def _exact_nonnegative_int(value):
+    """Parse persisted integer metadata without truncating floats or accepting booleans."""
+    if isinstance(value, bool):
+        raise ValueError("INVALID_INTEGER_METADATA")
+    if isinstance(value, int) and value >= 0:
+        return value
+    if isinstance(value, str) and re.fullmatch(r"[0-9]+", value):
+        return int(value)
+    raise ValueError("INVALID_INTEGER_METADATA")
+
+
 def _verify_self_transfer_for_reversal(tx_hash, db):
     """Read-only live BSC verification; only a confirmed treasury self-transfer qualifies."""
     cfg = _effective_config(db)
@@ -157,6 +168,14 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
     audit = matching_audits[0]
 
     try:
+        amount_wei = _exact_nonnegative_int(meta.get("amount_wei"))
+        source_amount_wei = _exact_nonnegative_int(source_meta.get("bnb_amount_wei"))
+        meta_block = _exact_nonnegative_int(meta.get("block"))
+        audit_block = _exact_nonnegative_int(audit.get("block"))
+        meta_confirmations = _exact_nonnegative_int(meta.get("confirmations"))
+        audit_confirmations = _exact_nonnegative_int(audit.get("confirmations"))
+        meta_required_confirmations = _exact_nonnegative_int(meta.get("required_confirmations"))
+        audit_required_confirmations = _exact_nonnegative_int(audit.get("required_confirmations"))
         source_amount = _decimal(source.get("amount"), "SOURCE_AMOUNT_INVALID")
         source_before = _decimal(source.get("before"), "SOURCE_BALANCE_INVALID")
         source_after = _decimal(source.get("after"), "SOURCE_BALANCE_INVALID")
@@ -184,7 +203,15 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         and meta.get("source_ledger_index") == source_index
         and meta.get("gate_remained_closed") is True
         and meta.get("chain_id") == 56
-        and int(meta.get("amount_wei") or 0) == int(source_meta.get("bnb_amount_wei") or 0)
+        and amount_wei > 0
+        and amount_wei == source_amount_wei
+        and meta_block > 0
+        and meta_block == audit_block
+        and meta_confirmations > 0
+        and meta_confirmations == audit_confirmations
+        and meta_required_confirmations > 0
+        and meta_required_confirmations == audit_required_confirmations
+        and meta_confirmations >= meta_required_confirmations
         and str(meta.get("from") or "").lower() == str(source_meta.get("from") or "").lower()
         and str(meta.get("to") or "").lower() == str(source_meta.get("to") or "").lower()
     )
@@ -195,6 +222,9 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         and audit.get("source_idempotency_key") == source_key
         and audit.get("gate_remained_closed") is True
         and audit.get("chain_id") == 56
+        and audit.get("block") == meta_block
+        and audit.get("confirmations") == meta_confirmations
+        and audit.get("required_confirmations") == meta_required_confirmations
         and audit_before == correction_before
         and audit_after == correction_after
         and audit_amount == correction_amount
@@ -435,6 +465,7 @@ def reverse_invalid_bnb_deposit(
             "chain_id": proof["chain_id"],
             "block": proof["block"],
             "confirmations": proof["confirmations"],
+            "required_confirmations": proof["required_confirmations"],
             "gate_remained_closed": True,
         })
         return {
