@@ -444,6 +444,111 @@ def format_blocked_execution_receipt(side, check):
     return "\n".join(lines)
 
 
+def _request_guarded_exchange_gate_open():
+    """Open only after a fresh canonical launch check against the current runtime DB."""
+    try:
+        db = state_manager.load_db()
+        from core.system_checks import check_exchange
+
+        check = check_exchange(db, for_execution=False)
+    except Exception as exc:
+        return f"⛔ Exchange נשאר סגור. בדיקת המוכנות נכשלה: {type(exc).__name__}."
+
+    if (
+        check.get("public_gate") == "OPEN"
+        and check.get("verdict") == "OPEN"
+        and check.get("public_ready") is True
+        and check.get("order_book_integrity") is True
+        and check.get("trade_integrity") is True
+        and check.get("money_invariants") is True
+    ):
+        return "✅ ה־Exchange כבר OPEN לפי בדיקה קנונית. לא בוצע שינוי נוסף."
+
+    clean = (
+        check.get("ok") is True
+        and check.get("public_gate") == "CLOSED"
+        and check.get("verdict") == "READY_TO_OPEN"
+        and check.get("public_ready") is True
+        and check.get("order_book_integrity") is True
+        and check.get("trade_integrity") is True
+        and check.get("money_invariants") is True
+        and check.get("open_orders") == 0
+        and check.get("test_seed_open") == 0
+        and check.get("test_seed_trades") == 0
+    )
+    if not clean:
+        return (
+            "⛔ Exchange gate נשאר CLOSED — לא בוצע שינוי.\n"
+            f"Fresh canonical check: gate={check.get('public_gate', 'UNKNOWN')} · "
+            f"verdict={check.get('verdict', 'UNKNOWN')} · "
+            f"public_ready={check.get('public_ready', 'UNKNOWN')}\n"
+            f"Orders={check.get('open_orders', 'UNKNOWN')} · "
+            f"test/seed orders={check.get('test_seed_open', 'UNKNOWN')} · "
+            f"test/seed trades={check.get('test_seed_trades', 'UNKNOWN')}\n"
+            f"פרטים: {str(check.get('detail') or 'הבדיקה לא עמדה בכל התנאים')[:240]}"
+        )
+
+    proof = {
+        "status": "PASS",
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "public_gate": "CLOSED",
+        "verdict": "READY_TO_OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+    }
+    try:
+        from core.railway_control import request_exchange_gate_open, safe_railway_error_code
+
+        result = request_exchange_gate_open(proof)
+    except Exception as exc:
+        from core.railway_control import safe_railway_error_code
+
+        code = safe_railway_error_code(exc)
+        return (
+            f"⛔ בקשת פתיחה לא אושרה: {code}. Exchange נשאר CLOSED או לא אומת; "
+            "לא נשלח ברודקאסט."
+        )
+
+    return (
+        "🛡️ EXCHANGE OPEN REQUEST ACCEPTED\n"
+        "בדיקת מוכנות קנונית טרייה: PASS · gate היה CLOSED · אין פקודות פתוחות או test/seed state.\n"
+        "הוגדרה בקשה לפתיחה דרך ה־Control Plane לשער הפנימי בלבד.\n"
+        f"Commit: {result['commit'][:12]}\n"
+        f"Deployment ID: {result['deployment_id']}\n\n"
+        "⚠️ זו בקשת Deploy, עדיין לא אישור שהמסחר זמין. אחרי שהבוט חוזר Online, "
+        "בדוק /exchange_gate status; רק OPEN VERIFIED מאפשר להמשיך לברודקאסט. "
+        "BNB ו־TON לא שונו."
+    )
+
+
+def route_exchange_gate_voice(bot, message, transcript):
+    """Handle only one explicit owner/private voice request for guarded Exchange opening."""
+    from handlers.broadcast_handler import _normalize_voice_phrase
+
+    phrase = _normalize_voice_phrase(transcript)
+    allowed = {
+        _normalize_voice_phrase("פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת"),
+        _normalize_voice_phrase("פתח את המסחר הפנימי אם בדיקת המוכנות הקנונית עוברת"),
+        _normalize_voice_phrase("פתח מסחר פנימי רק אם בדיקת המוכנות הקנונית עוברת"),
+        _normalize_voice_phrase("פתח את המסחר הפנימי רק אם בדיקת המוכנות הקנונית עוברת"),
+        _normalize_voice_phrase("פתח מסחר פנימי אם בדיקת מוכנות קנונית עוברת"),
+    }
+    if phrase not in allowed:
+        return None
+
+    uid = getattr(getattr(message, "from_user", None), "id", None)
+    if not is_owner(uid):
+        return "⛔ רק OWNER יכול לבקש פתיחת Exchange."
+    if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+        return "⛔ פתיחת Exchange בקול זמינה רק בשיחה הפרטית עם הבוט."
+    return _request_guarded_exchange_gate_open()
+
+
 def register(bot):
     @bot.message_handler(commands=["exchange_gate"])
     def exchange_gate_cmd(msg):
@@ -456,8 +561,12 @@ def register(bot):
 
         parts = (msg.text or "").split()
         action = parts[1].lower() if len(parts) > 1 else "status"
-        if len(parts) > 2 or action not in {"status", "close"}:
-            bot.reply_to(msg, "שימוש: /exchange_gate status  או  /exchange_gate close")
+        if len(parts) > 2 or action not in {"status", "open", "close"}:
+            bot.reply_to(msg, "שימוש: /exchange_gate status  או  /exchange_gate open  או  /exchange_gate close")
+            return
+
+        if action == "open":
+            bot.reply_to(msg, _request_guarded_exchange_gate_open())
             return
 
         if action == "status":
@@ -494,10 +603,26 @@ def register(bot):
                 and check.get("public_gate") == "CLOSED"
                 and check.get("execution_ready") is False
             )
+            verified_open = (
+                configured == "1"
+                and runtime_env == "1"
+                and runtime_open is True
+                and check.get("public_gate") == "OPEN"
+                and check.get("verdict") == "OPEN"
+                and check.get("execution_ready") is True
+                and check.get("public_ready") is True
+                and check.get("order_book_integrity") is True
+                and check.get("trade_integrity") is True
+                and check.get("money_invariants") is True
+            )
             if verified_closed:
                 state = "✅ CLOSED VERIFIED"
-            elif check.get("public_gate") == "OPEN" or check.get("execution_ready") is True:
-                state = "🔴 OPEN — DO NOT TRADE"
+            elif verified_open:
+                state = "✅ OPEN VERIFIED — EXECUTION CHECKS PASS"
+            elif runtime_open is True or runtime_env == "1":
+                state = "🔴 RUNTIME OPEN BUT NOT READY — CLOSE / DO NOT TRADE"
+            elif configured == "1":
+                state = "🟡 OPEN CONFIGURED — RUNTIME NOT VERIFIED; DO NOT ANNOUNCE"
             else:
                 state = "🟡 NOT VERIFIED — KEEP CLOSED"
 
