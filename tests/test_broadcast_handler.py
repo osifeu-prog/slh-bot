@@ -297,3 +297,65 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
     audit = db["exchange_broadcast_audit"][-1]
     assert audit["failed_recipient_uids"] == ["2"]
     assert audit["audience_scope"] == "all"
+
+def test_exchange_broadcast_blocked_by_immediate_pre_send_recheck(monkeypatch):
+    import hashlib
+
+    uid = str(target.OWNER_TELEGRAM_ID)
+    db = _exchange_broadcast_db(["101", "202"])
+    audience = target._broadcast_audience(db)
+    message_hash = hashlib.sha256(target.EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
+    db["exchange_broadcast_pending"][uid] = {
+        "draft_id": "last-moment-gate-close",
+        "uid": uid,
+        "status": "PENDING_CONFIRMATION",
+        "created_at": "2026-10-11T10:00:00+00:00",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "target_count": len(audience),
+        "audience_sha256": target._broadcast_audience_hash(audience),
+        "message_sha256": message_hash,
+        "audience_scope": "all",
+        "retry_of_draft_id": None,
+        "requires_duplicate_ack": False,
+        "failed_recipient_uids": [],
+    }
+    passing = {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    }
+    blocked = {
+        **passing,
+        "execution_ready": False,
+        "public_gate": "CLOSED",
+        "verdict": "BLOCKED",
+        "public_ready": False,
+        "detail": "public exchange gate is CLOSED",
+    }
+    checks = [passing, blocked]
+    calls = []
+
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    def sequential_check(snapshot):
+        calls.append(snapshot)
+        return checks.pop(0)
+
+    monkeypatch.setattr(target, "_fresh_exchange_check", sequential_check)
+    bot = FakeBot()
+
+    result = target.send_confirmed_exchange_broadcast(bot, uid)
+
+    assert result["status"] == "BLOCKED"
+    assert len(calls) == 2
+    assert bot.sent == []
+    assert db["exchange_broadcast_pending"][uid]["status"] == "BLOCKED"
+    assert db["exchange_broadcast_audit"][-1]["status"] == "BLOCKED"
+    assert db["exchange_broadcast_audit"][-1]["sent"] == 0
+

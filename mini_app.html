@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="stake" class="screen"><div class="section-title">🔒 Staking Live</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking מבצע פעולה אמיתית על יתרת Credits באמצעות אותו מנגנון אטומי של המערכת.</p><label class="form-label" for="stakeAmount">כמות Credits</label><input id="stakeAmount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 10"><label class="form-label" for="stakeDays">תקופת נעילה (ימים)</label><input id="stakeDays" class="form-input" inputmode="numeric" value="30"><button class="action primary" style="width:100%;margin-top:10px" onclick="submitStake()"><b>🔒 בצע Staking</b><span>העברה אטומית + Position ID + ledger</span></button></div><div class="card"><b>📊 הפוזיציות שלי</b><div id="stakePositions" class="muted" style="margin-top:8px">טוען…</div></div><div class="card"><b>ℹ️ איך זה עובד</b><p class="muted">ה־UID נלקח מהאימות של Telegram בצד השרת. בקשת Mini App מקבלת מזהה חד־פעמי, כך ש־Retry לא ייצור staking כפול.</p></div></section>
 <section id="alpha" class="screen"><div class="section-title">🚀 Alpha Readiness</div><div class="card" id="alphaBox">טוען…</div><details class="guide"><summary>📘 מה זה Alpha?</summary><p>המסך מציג ראיות מצב בלבד. זכאות והקצאה סופית תלויות במדיניות רשמית. כאשר המדיניות חסרה, לא מוצג סכום הקצאה.</p></details></section>
 <section id="exchange" class="screen"><div class="section-title">🪙 SLH Exchange</div>
-<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק…</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH/CREDITS</strong></div><div class="wallet-row"><span class="muted">SLH Live שלך</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
+<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">נבדק לאחרונה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH/CREDITS</strong></div><div class="wallet-row"><span class="muted">SLH Live שלך</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
 <div class="card"><b>📈 קנייה</b><p class="muted">Limit order — כמות SLH ומחיר מקסימלי ב־Credits.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מקסימלי ב-Credits ל-SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
 <div class="card"><b>📉 מכירה</b><p class="muted">Limit order — כמות SLH ומחיר מבוקש.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב-Credits ל-SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
 <div class="card"><b>📖 ספר פקודות חי</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
@@ -928,16 +928,41 @@ async function loadBscAssets(){
 }
 function updateMarketNotice(ex){
   const line=$("marketNoticeLine"); const li=$("exLiquidityNotice"); const engine=$("exEngineStatus");
-  const orders=Number(ex?.status?.total_orders||0), trades=Number(ex?.status?.total_trades||0);
-  if(engine)engine.textContent='🟢 פעיל';
+  const gateEl=$("exCanonicalGate"); const checkedEl=$("exGateCheckedAt");
+  const status=ex?.status||{};
+  const orders=Number(status.total_orders||0), trades=Number(status.total_trades||0);
+  const gateKnown=typeof status.open==="boolean"
+    && (status.public_gate==="OPEN"||status.public_gate==="CLOSED")
+    && typeof status.checked_at==="string" && status.checked_at.trim().length>0;
+  const gateOpen=gateKnown && status.open===true
+    && status.public_gate==="OPEN" && status.verdict==="OPEN"
+    && status.execution_ready===true && status.public_ready===true
+    && status.order_book_integrity===true && status.trade_integrity===true
+    && status.money_invariants===true;
+  const gateLabel=gateOpen?"OPEN · PASS":gateKnown
+    ? String(status.public_gate||"CLOSED")+" · "+String(status.verdict||"BLOCKED")
+    : "לא אומת";
+  if(engine)engine.textContent=gateOpen?"🟢 פתוח למסחר":gateKnown?"🔒 חסום למסחר":"⚪ לא אומת";
+  if(gateEl)gateEl.textContent=gateLabel;
+  if(checkedEl)checkedEl.textContent=gateKnown?status.checked_at:"—";
   if(li){
-    li.innerHTML=orders||trades
-      ? '🟢 <b>שוק חי</b> · '+orders+' הוראות פתוחות · '+trades+' עסקאות'
-      : '🟠 <b>מנוע המסחר פעיל, אך אין כרגע Orders/Trades.</b><br>המסך אינו מזייף נזילות. כדי להתחיל התאמות אמיתיות דרושות הוראות Buy/Sell אמיתיות.';
+    if(gateOpen){
+      li.innerHTML=orders||trades
+        ? '🟢 <b>שער המסחר מאומת ופתוח</b> · '+orders+' הוראות פתוחות · '+trades+' עסקאות'
+        : '🟠 <b>שער המסחר פתוח, אך אין כרגע Orders/Trades.</b><br>אין כאן נתוני נזילות מדומים; התאמות יתחילו רק מול פקודות אמיתיות.';
+    }else if(gateKnown){
+      li.innerHTML='🔒 <b>המסחר חסום כרגע</b> · '+esc(gateLabel)+'<br>'+esc(status.detail||'הפקודות ייחסמו עד שהבדיקה הקנונית תהיה תקינה.');
+    }else{
+      li.innerHTML='⚪ <b>לא ניתן לאמת כרגע את מצב המסחר.</b><br>אין להסתמך על סטטוס קודם; רענן ונסה שוב.';
+    }
   }
-  if(line)line.innerHTML=orders||trades
-    ? '🪙 <b>SLH Exchange חי</b> · '+orders+' Orders · '+trades+' Trades'
-    : '🪙 <b>SLH Exchange פעיל</b> · המנוע זמין, אך ספר הפקודות ריק כרגע.';
+  if(line)line.innerHTML=gateOpen
+    ? (orders||trades
+        ? '🪙 <b>SLH Exchange פתוח</b> · '+orders+' Orders · '+trades+' Trades'
+        : '🪙 <b>שער SLH Exchange פתוח</b> · ספר הפקודות ריק כרגע.')
+    : gateKnown
+      ? '🔒 <b>SLH Exchange חסום</b> · '+esc(gateLabel)
+      : '⚪ <b>SLH Exchange לא אומת</b> · אין להסתמך על סטטוס קודם.';
 }
 async function loadExchangeMyOrders(){
   const el=$("myOrders");if(!el)return;
@@ -970,7 +995,7 @@ async function loadExchange(){
     if($("exSLH"))setText("exSLH",fmt(w.live_token_balance??w.token_balance??0));
     if($("exCredits"))setText("exCredits",fmt(w.credits||0));
     if($("exLast"))setText("exLast",t?.has_data?fmt(t.last_price):'—');
-    if($("exEngineStatus"))setText("exEngineStatus",'🟢 פעיל');
+    
     updateMarketNotice(ex);
     const orders=b.orders||[];
     const el=$("orderbook");
@@ -981,7 +1006,11 @@ async function loadExchange(){
     await loadExchangeMyOrders();
   }catch(e){
     const el=$("orderbook");if(el)el.innerHTML='<div class="muted">לא ניתן לטעון את ספר הפקודות</div>';
-    const li=$("exLiquidityNotice");if(li)li.textContent='⚠️ לא ניתן לאמת כרגע את מצב השוק.';
+    const li=$("exLiquidityNotice");if(li)li.textContent='⚪ לא ניתן לאמת כרגע את מצב המסחר; אין להסתמך על סטטוס קודם.';
+    setText("exEngineStatus","⚪ לא אומת");
+    setText("exCanonicalGate","לא אומת");
+    setText("exGateCheckedAt","—");
+    const line=$("marketNoticeLine");if(line)line.textContent="⚪ SLH Exchange לא אומת";
   }
 }
 function submitOrder(side,aId,pId){

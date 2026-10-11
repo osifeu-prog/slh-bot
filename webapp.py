@@ -462,10 +462,24 @@ def public_site_status():
         from core.bnb_gate import bnb_opening_evidence, bnb_readiness
         from core.participation_policy import activation_status
         from core.runtime_command_evidence import snapshot_runtime
-        from core.system_checks import check_exchange
+        from core.system_checks import check_exchange, check_exchange_for_execution
         from core.ton_deposit_service import ton_readiness
 
-        exchange = check_exchange()
+        # Keep live order-entry readiness distinct from clean-launch readiness.
+        # check_exchange() may report READY_TO_OPEN when real customer orders exist;
+        # that must not be shown as the live execution verdict.
+        exchange_launch = check_exchange()
+        exchange_execution = check_exchange_for_execution(state_manager.load_db())
+        execution_public_gate = str(exchange_execution.get("public_gate") or "CLOSED")
+        execution_ready = (
+            exchange_execution.get("execution_ready") is True
+            and execution_public_gate == "OPEN"
+            and exchange_execution.get("verdict") == "OPEN"
+            and exchange_execution.get("public_ready") is True
+            and exchange_execution.get("order_book_integrity") is True
+            and exchange_execution.get("trade_integrity") is True
+            and exchange_execution.get("money_invariants") is True
+        )
         bnb = bnb_readiness()
         bnb_evidence = bnb_opening_evidence()
         bnb_gate_open = bool(bnb_evidence.get("gate_open"))
@@ -493,9 +507,11 @@ def public_site_status():
                 "updated_at": time.time(),
             },
             "exchange": {
-                "gate": str(exchange.get("public_gate") or "CLOSED"),
-                "readiness": bool(exchange.get("public_ready")),
-                "verdict": str(exchange.get("verdict") or "BLOCKED"),
+                "gate": "OPEN" if execution_ready else "CLOSED",
+                "readiness": execution_ready,
+                "verdict": "OPEN" if execution_ready else "BLOCKED",
+                "launch_readiness": bool(exchange_launch.get("public_ready")),
+                "launch_verdict": str(exchange_launch.get("verdict") or "BLOCKED"),
             },
             "settlement": {
                 "ton": {
