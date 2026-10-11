@@ -656,7 +656,7 @@ def _request_guarded_exchange_gate_open():
         if configured != "1":
             return (
                 f"🟡 EXCHANGE OPEN — NOT VERIFIED: Control Plane configured={configured}.\n"
-                "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה."
+                "אין להכריז על פתיחת המסחר. לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה."
             )
 
         live = _wait_for_public_exchange_open()
