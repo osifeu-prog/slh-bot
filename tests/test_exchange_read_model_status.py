@@ -104,6 +104,18 @@ class ExchangeReadModelGateTruthTests(unittest.TestCase):
         self.assertFalse(summary["status"]["execution_ready"])
         self.assertIn("unreadable", summary["status"]["detail"].lower())
 
+    def test_missing_optional_exchange_requests_key_uses_canonical_checker(self):
+        db = _valid_db()
+        db.pop("exchange_requests", None)
+        with patch.object(target, "_load_db", return_value=db), patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=_check(True),
+        ) as canonical_check:
+            summary = target.get_exchange_summary()
+
+        canonical_check.assert_called_once_with(db)
+        self.assertTrue(summary["status"]["open"])
+
     def test_invalid_canonical_exchange_shapes_fail_closed(self):
         db = _valid_db()
         db["exchange_orders"] = []
