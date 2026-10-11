@@ -238,7 +238,7 @@ def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
     def mutate(db):
         evidence_root = db.get("settlement_evidence", {})
         existing = evidence_root.get("bnb") if isinstance(evidence_root, dict) else None
-        if _current_pass_evidence(db_now, existing):
+        if _current_pass_evidence(db, existing):
             return {"status": "ALREADY_COMPLETED"}
         matching = _matching_ledger_entries(db, tx_hash)
         if matching is None:
@@ -325,7 +325,7 @@ def confirm_existing_bnb_reconcile(uid, *, tx_hash=None, now=None):
             return {"status": "EXPIRED"}
         evidence_root = db_now.get("settlement_evidence", {})
         existing = evidence_root.get("bnb") if isinstance(evidence_root, dict) else None
-        if isinstance(existing, dict) and existing.get("status") == "PASS":
+        if _current_pass_evidence(db_now, existing):
             return {"status": "ALREADY_COMPLETED"}
         matching = _matching_ledger_entries(db_now, tx_hash)
         if matching is None:
