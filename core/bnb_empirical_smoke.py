@@ -42,8 +42,19 @@ def run(uid: str, tx_hash: str) -> dict:
         raise BNBEmpiricalSmokeError("INVALID_TX_HASH")
 
     existing = _existing_evidence()
+    stale_existing = None
     if existing and existing.get("status") == "PASS":
-        raise BNBEmpiricalSmokeError("BNB_EMPIRICAL_SMOKE_ALREADY_COMPLETED")
+        from core.bnb_gate import _effective_config, _empirical_evidence_revalidated
+
+        current_db = state_manager.load_db()
+        current = _empirical_evidence_revalidated(
+            existing, _effective_config(current_db), db=current_db
+        )
+        if current:
+            raise BNBEmpiricalSmokeError("BNB_EMPIRICAL_SMOKE_ALREADY_COMPLETED")
+        # A stale PASS is not authority to block future proof, but it must be
+        # preserved in an audit when a different, valid TX replaces it.
+        stale_existing = dict(existing)
 
     binding = get_binding(uid)
     if not binding:
@@ -122,7 +133,43 @@ def run(uid: str, tx_hash: str) -> dict:
     }
 
     def persist(db):
-        db.setdefault("settlement_evidence", {})["bnb"] = evidence
+        root = db.setdefault("settlement_evidence", {})
+        if not isinstance(root, dict):
+            root = {}
+            db["settlement_evidence"] = root
+        previous = root.get("bnb")
+        if (
+            stale_existing
+            and isinstance(previous, dict)
+            and str(previous.get("tx_hash") or "").lower()
+                == str(stale_existing.get("tx_hash") or "").lower()
+            and previous.get("status") == "PASS"
+        ):
+            audit = db.setdefault("settlement_evidence_audit", [])
+            if not isinstance(audit, list):
+                audit = []
+                db["settlement_evidence_audit"] = audit
+            already_audited = any(
+                isinstance(item, dict)
+                and str(item.get("previous_tx_hash") or "").lower()
+                    == str(previous.get("tx_hash") or "").lower()
+                and item.get("disposition") == "INVALIDATED_BY_REVALIDATION"
+                for item in audit
+            )
+            if not already_audited:
+                audit.append({
+                    "asset": "BNB",
+                    "event": "STALE_SETTLEMENT_EVIDENCE_INVALIDATED",
+                    "previous_tx_hash": str(previous.get("tx_hash") or ""),
+                    "previous_status": str(previous.get("status") or ""),
+                    "disposition": "INVALIDATED_BY_REVALIDATION",
+                    "detected_at": evidence["observed_at"],
+                    "reason": "Persisted PASS failed current chain/ledger revalidation.",
+                    "previous_evidence": dict(previous),
+                    "runtime_balance_unchanged_by_audit": True,
+                })
+                del audit[:-100]
+        root["bnb"] = evidence
         return evidence
 
     state_manager.atomic_update(persist)
