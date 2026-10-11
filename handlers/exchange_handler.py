@@ -1,5 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
+import json
+import time
+import urllib.request
 import state_manager
 from core.exchange_gate import require_public_open  # compatibility/test seam; execution uses the fresh canonical check
 from core.authority import is_owner
@@ -15,6 +18,152 @@ REQUESTS_KEY = "exchange_requests"
 SEQ_KEY = "exchange_sequence"
 SCALE = Decimal("0.00000001")
 ZERO = Decimal("0")
+
+EXCHANGE_PUBLIC_STATUS_URL = "https://slh-cloud-bot-production.up.railway.app/api/public/site-status"
+EXCHANGE_PUBLIC_STATUS_TIMEOUT_SECONDS = 4
+EXCHANGE_PUBLIC_STATUS_ATTEMPTS = 6
+EXCHANGE_PUBLIC_STATUS_POLL_SECONDS = 2
+
+
+def _fetch_public_exchange_status():
+    """Read the current public canonical beacon with cache bypass; never mutates state."""
+    blocked = {
+        "verified": False,
+        "gate": "UNKNOWN",
+        "readiness": False,
+        "verdict": "UNKNOWN",
+        "updated_at": None,
+        "detail": "public runtime status unavailable",
+    }
+    request = urllib.request.Request(
+        EXCHANGE_PUBLIC_STATUS_URL,
+        headers={
+            "Accept": "application/json",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(
+            request, timeout=EXCHANGE_PUBLIC_STATUS_TIMEOUT_SECONDS
+        ) as response:
+            status = getattr(response, "status", None)
+            if status is None:
+                getcode = getattr(response, "getcode", None)
+                status = getcode() if callable(getcode) else 200
+            if status != 200:
+                return {**blocked, "detail": f"public runtime status HTTP {status}"}
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        return {**blocked, "detail": f"public runtime probe failed: {type(exc).__name__}"}
+
+    if not isinstance(payload, dict) or payload.get("ok") is not True:
+        return {**blocked, "detail": "public runtime status returned no canonical proof"}
+
+    system = payload.get("system")
+    exchange = payload.get("exchange")
+    if not isinstance(system, dict):
+        system = {}
+    if not isinstance(exchange, dict):
+        exchange = {}
+
+    gate = str(exchange.get("gate") or "UNKNOWN")
+    verdict = str(exchange.get("verdict") or "UNKNOWN")
+    readiness = exchange.get("readiness") is True
+    updated_at = system.get("updated_at")
+    verified = (
+        str(system.get("status") or "").upper() == "ONLINE"
+        and gate == "OPEN"
+        and readiness
+        and verdict == "OPEN"
+    )
+    return {
+        "verified": verified,
+        "gate": gate,
+        "readiness": readiness,
+        "verdict": verdict,
+        "updated_at": updated_at,
+        "detail": (
+            "canonical public runtime proof passed"
+            if verified
+            else "canonical public runtime did not confirm ONLINE + OPEN + READY"
+        ),
+    }
+
+
+def _wait_for_public_exchange_open(
+    *, attempts=EXCHANGE_PUBLIC_STATUS_ATTEMPTS,
+    delay_seconds=EXCHANGE_PUBLIC_STATUS_POLL_SECONDS,
+):
+    """Retry a read-only live proof briefly after deployment routing changes."""
+    try:
+        total_attempts = max(1, min(10, int(attempts)))
+        delay = max(0.0, float(delay_seconds))
+    except (TypeError, ValueError):
+        total_attempts = EXCHANGE_PUBLIC_STATUS_ATTEMPTS
+        delay = EXCHANGE_PUBLIC_STATUS_POLL_SECONDS
+
+    result = {
+        "verified": False,
+        "gate": "UNKNOWN",
+        "readiness": False,
+        "verdict": "UNKNOWN",
+        "updated_at": None,
+        "detail": "public runtime verification was not attempted",
+    }
+    for index in range(total_attempts):
+        result = _fetch_public_exchange_status()
+        if result.get("verified") is True:
+            return result
+        if index + 1 < total_attempts and delay > 0:
+            time.sleep(delay)
+    return result
+
+
+def _prepare_verified_exchange_broadcast_preview():
+    """Prepare the fixed announcement only after a separate live OPEN proof; never sends."""
+    from handlers.broadcast_handler import (
+        EXCHANGE_BROADCAST_TEXT,
+        EXCHANGE_BROADCAST_TTL_SECONDS,
+        OWNER_TELEGRAM_ID,
+        _exchange_broadcast_reply,
+        prepare_exchange_broadcast,
+    )
+
+    draft = prepare_exchange_broadcast(str(OWNER_TELEGRAM_ID))
+    if draft.get("status") != "PREPARED":
+        return (
+            "\n\n⚠️ Exchange אומת כפתוח, אך לא נוצרה טיוטת ברודקאסט.\n"
+            + _exchange_broadcast_reply(draft)
+            + "\nלא נשלחה הודעה לאף משתמש."
+        )
+
+    recipient_count = int(draft.get("target_count") or 0)
+    if draft.get("audience_scope") == "failed_only":
+        target_note = "✅ ניסיון חוזר ממוקד: רק נמענים שנכשלו בשידור הקודם."
+        confirmation = "אשר ושלח ברודקאסט למסחר פנימי"
+    elif draft.get("requires_duplicate_ack") is True:
+        target_note = (
+            f"⚠️ אזהרת כפילות: השידור ההיסטורי נשלח ל־{draft.get('previous_sent', 0)} "
+            f"משתמשים ונכשל ל־{draft.get('previous_failed', 0)}. "
+            "לא נשמרו מזהי הנכשלים, לכן אישור רגיל לא ישלח הודעה."
+        )
+        confirmation = "אשר ושלח ברודקאסט מלא למרות כפילויות"
+    else:
+        target_note = "קהל היעד הרגיל ננעל לתצוגה הזו."
+        confirmation = "אשר ושלח ברודקאסט למסחר פנימי"
+
+    return (
+        "\n\n🧾 תצוגה מקדימה בלבד — לא נשלחה הודעה לאף משתמש.\n"
+        f"👥 קהל היעד שננעל לתצוגה הזו: {recipient_count} משתמשים.\n"
+        f"{target_note}\n"
+        "אם רשימת הנמענים תשתנה לפני האישור, השליחה תיחסם ותידרש תצוגה חדשה.\n"
+        f"טיוטה בתוקף ל־{EXCHANGE_BROADCAST_TTL_SECONDS // 60} דקות.\n\n"
+        f"{EXCHANGE_BROADCAST_TEXT}\n\n"
+        f"כדי לבצע שליחה אמיתית, אמור עכשיו במפורש: ״{confirmation}״.\n"
+        "שלב האישור נשאר נפרד; רגע לפני השליחה יתבצעו שוב בדיקת Exchange קנונית ואימות קהל היעד."
+    )
 
 
 def _now():
@@ -445,7 +594,7 @@ def format_blocked_execution_receipt(side, check):
 
 
 def _request_guarded_exchange_gate_open():
-    """Open only after a fresh canonical launch check against the current runtime DB."""
+    """Open only with fresh launch proof, then verify the new live runtime before previewing."""
     try:
         db = state_manager.load_db()
         from core.system_checks import check_exchange
@@ -454,15 +603,62 @@ def _request_guarded_exchange_gate_open():
     except Exception as exc:
         return f"⛔ Exchange נשאר סגור. בדיקת המוכנות נכשלה: {type(exc).__name__}."
 
-    if (
-        check.get("public_gate") == "OPEN"
-        and check.get("verdict") == "OPEN"
+    runtime_open = check.get("public_gate") == "OPEN"
+    runtime_clean = (
+        check.get("verdict") == "OPEN"
         and check.get("public_ready") is True
         and check.get("order_book_integrity") is True
         and check.get("trade_integrity") is True
         and check.get("money_invariants") is True
-    ):
-        return "✅ ה־Exchange כבר OPEN לפי בדיקה קנונית. לא בוצע שינוי נוסף."
+    )
+
+    if runtime_open:
+        if not runtime_clean:
+            return (
+                "🔴 EXCHANGE OPEN — RUNTIME NOT READY / DO NOT TRADE OR ANNOUNCE.\n"
+                f"verdict={check.get('verdict', 'UNKNOWN')} · "
+                f"public_ready={check.get('public_ready', 'UNKNOWN')} · "
+                f"orders={check.get('open_orders', 'UNKNOWN')}\n"
+                f"פרטים: {str(check.get('detail') or 'הבדיקה הקנונית לא עברה')[:240]}\n"
+                "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה."
+            )
+
+        try:
+            from core.railway_control import (
+                control_plane_exchange_gate_status,
+                safe_railway_error_code,
+            )
+            configured = control_plane_exchange_gate_status().get("configured")
+        except Exception as exc:
+            from core.railway_control import safe_railway_error_code
+            code = safe_railway_error_code(exc)
+            return (
+                f"🟡 EXCHANGE OPEN — NOT VERIFIED ACROSS CONTROL PLANE ({code}).\n"
+                "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה."
+            )
+
+        if configured != "1":
+            return (
+                f"🟡 EXCHANGE OPEN — NOT VERIFIED: Control Plane configured={configured}.\n"
+                "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה."
+            )
+
+        live = _wait_for_public_exchange_open()
+        if live.get("verified") is not True:
+            return (
+                "🟡 EXCHANGE OPEN — RUNTIME NOT VERIFIED / DO NOT ANNOUNCE.\n"
+                f"בדיקת runtime קנונית: gate={live.get('gate', 'UNKNOWN')} · "
+                f"readiness={live.get('readiness', False)} · "
+                f"verdict={live.get('verdict', 'UNKNOWN')}.\n"
+                f"פרטים: {live.get('detail', 'No live proof')}\n"
+                "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה. בדוק /exchange_gate status."
+            )
+
+        return (
+            "✅ EXCHANGE OPEN VERIFIED — EXECUTION CHECKS PASS\n"
+            "ה־runtime החי אומת מול מקור האמת הקנוני. לא בוצע שינוי בשער.\n"
+            + _prepare_verified_exchange_broadcast_preview()
+        )
 
     clean = (
         check.get("ok") is True
@@ -514,16 +710,27 @@ def _request_guarded_exchange_gate_open():
             "לא נשלח ברודקאסט."
         )
 
-    return (
-        "🛡️ EXCHANGE DEPLOYMENT SUCCESS\n"
-        "בדיקת מוכנות קנונית טרייה: PASS · gate היה CLOSED · אין פקודות פתוחות או test/seed state.\n"
-        "הפריסה הסתיימה ב־SUCCESS עבור שער ה־Exchange הפנימי בלבד.\n"
-        f"Commit: {result['commit'][:12]}\n"
-        f"Deployment ID: {result['deployment_id']}\n\n"
-        "⚠️ עדיין צריך לוודא שה־runtime החדש עלה עם השער הפעיל: בדוק /exchange_gate status. "
-        "רק OPEN VERIFIED מאפשר להכריז על זמינות ולשלוח ברודקאסט. BNB ו־TON לא שונו."
-    )
+    live = _wait_for_public_exchange_open()
+    if live.get("verified") is not True:
+        return (
+            "🟡 EXCHANGE DEPLOYMENT SUCCESS — RUNTIME NOT VERIFIED.\n"
+            "Railway דיווח על פריסה שהסתיימה ב־SUCCESS, אך מקור האמת החי עדיין לא אישר "
+            "ONLINE + OPEN + READY.\n"
+            f"פרטים: {live.get('detail', 'No live proof')} · "
+            f"gate={live.get('gate', 'UNKNOWN')} · readiness={live.get('readiness', False)} · "
+            f"verdict={live.get('verdict', 'UNKNOWN')}.\n"
+            "לא נוצרה טיוטת ברודקאסט ולא נשלחה הודעה. אין להכריז שהמסחר פתוח; "
+            "בדוק /exchange_gate status. BNB ו־TON לא שונו."
+        )
 
+    return (
+        "✅ EXCHANGE OPEN VERIFIED — EXECUTION CHECKS PASS\n"
+        "בדיקת המוכנות לפני הפתיחה עברה, הפריסה הסתיימה ב־SUCCESS, וה־runtime החדש "
+        "אישר ONLINE + OPEN + READY ממקור האמת הקנוני.\n"
+        f"Commit: {result['commit'][:12]}\n"
+        f"Deployment ID: {result['deployment_id']}\n"
+        + _prepare_verified_exchange_broadcast_preview()
+    )
 
 def route_exchange_gate_voice(bot, message, transcript):
     """Handle only one explicit owner/private voice request for guarded Exchange opening."""
