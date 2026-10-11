@@ -81,8 +81,14 @@ def _resolve_owner_bsc_wallet(uid, db, treasury):
     for binding in bindings.values():
         if not isinstance(binding, dict):
             raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
-        if str(binding.get("chain") or "").strip().lower() != "bsc":
+        chain = str(binding.get("chain") or "").strip().lower()
+        if not chain:
+            # An unclassified binding cannot safely be excluded from BSC checks.
             raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+        if chain != "bsc":
+            # This resolver validates BSC identity only. Explicitly classified
+            # TON/other-chain bindings must not invalidate a valid BSC binding.
+            continue
 
         address = str(binding.get("address") or "").strip()
         if not re.fullmatch(r"0x[0-9a-fA-F]{40}", address):
