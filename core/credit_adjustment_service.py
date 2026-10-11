@@ -47,8 +47,8 @@ def _normalise_hash(value):
     return result
 
 
-def _verify_self_transfer_for_reversal(tx_hash, db):
-    """Read-only live BSC verification; only a confirmed treasury self-transfer qualifies."""
+def _verify_self_transfer_for_reversal(uid, tx_hash, db):
+    """Read-only live BSC verification of a confirmed bound-owner self-transfer."""
     cfg = _effective_config(db)
     rpc = str(cfg.get("rpc") or "").strip()
     treasury = str(cfg.get("treasury_wallet") or "").strip()
@@ -62,6 +62,29 @@ def _verify_self_transfer_for_reversal(tx_hash, db):
         raise ValueError("BNB_CANONICAL_TREASURY_MISMATCH")
     if is_quarantined_bsc_address(treasury):
         raise ValueError("BSC_TREASURY_QUARANTINED")
+
+    # A reversal qualifies only when the transaction is a self-transfer from
+    # the target user's independently verified BSC wallet. The treasury is
+    # context/configuration, not the transaction sender/receiver.
+    uid = str(uid or "").strip()
+    bindings = db.get("wallet_bindings", {})
+    if not isinstance(bindings, dict):
+        raise ValueError("BNB_OWNER_WALLET_NOT_BOUND")
+    owner_bindings = [
+        binding for binding in bindings.values()
+        if isinstance(binding, dict)
+        and str(binding.get("uid") or "").strip() == uid
+        and str(binding.get("chain") or "").strip().lower() == "bsc"
+    ]
+    if len(owner_bindings) != 1:
+        raise ValueError("BNB_OWNER_WALLET_NOT_BOUND")
+    owner_wallet = str(owner_bindings[0].get("address") or "").strip()
+    if not re.fullmatch(r"0x[0-9a-fA-F]{40}", owner_wallet):
+        raise ValueError("BNB_OWNER_WALLET_INVALID")
+    if owner_wallet.lower() == treasury.lower():
+        raise ValueError("BNB_TREASURY_MATCHES_BOUND_WALLET")
+    if is_quarantined_bsc_address(owner_wallet):
+        raise ValueError("BSC_OWNER_WALLET_QUARANTINED")
 
     try:
         w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 5}))
@@ -79,8 +102,8 @@ def _verify_self_transfer_for_reversal(tx_hash, db):
         recipient = str(tx.get("to") or "").strip()
         if not sender or not recipient:
             raise ValueError("BNB_TX_ADDRESSES_MISSING")
-        if sender.lower() != treasury.lower() or recipient.lower() != treasury.lower():
-            raise ValueError("BNB_TX_NOT_TREASURY_SELF_TRANSFER")
+        if sender.lower() != owner_wallet.lower() or recipient.lower() != owner_wallet.lower():
+            raise ValueError("BNB_TX_NOT_OWNER_SELF_TRANSFER")
 
         block = int(receipt.get("blockNumber") or 0)
         latest_block = int(w3.eth.block_number)
@@ -167,7 +190,7 @@ def reverse_invalid_bnb_deposit(
         }
 
     # Chain proof is obtained independently of any caller-supplied evidence.
-    proof = _verify_self_transfer_for_reversal(tx_hash, initial_db)
+    proof = _verify_self_transfer_for_reversal(uid, tx_hash, initial_db)
     if bnb_deposits_open():
         raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
 
@@ -307,7 +330,7 @@ def reverse_invalid_bnb_deposit(
                 "source_ledger_index": live_index,
                 "tx_hash": tx_hash.lower(),
                 "actor_uid": actor_uid,
-                "adjustment_basis": "verified BSC transaction sender and receiver both equal canonical treasury",
+                "adjustment_basis": "verified BSC transaction sender and receiver both equal the bound owner wallet, distinct from the canonical treasury",
                 "nominal_credits_reversed": float(source_amount),
                 "chain_id": proof["chain_id"],
                 "block": proof["block"],
