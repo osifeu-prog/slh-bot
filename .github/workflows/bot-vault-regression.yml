@@ -5,8 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  # Include stacked PRs targeting feature branches, not only main.
   pull_request:
-    branches: [main]
   push:
     branches: [main, "feat/**"]
 

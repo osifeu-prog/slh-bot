@@ -5,9 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  # Run for every PR base branch, including stacked/feature-targeting PRs.
   pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
