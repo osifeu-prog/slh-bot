@@ -10,7 +10,6 @@ _REQUIRED_DB_TYPES = {
     "users": dict,
     "exchange_orders": dict,
     "exchange_trades": list,
-    "exchange_requests": dict,
 }
 
 
