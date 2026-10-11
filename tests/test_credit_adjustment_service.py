@@ -62,6 +62,7 @@ def _proof():
 
 
 def _patch_runtime(monkeypatch, db):
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
@@ -162,6 +163,39 @@ def test_existing_reversal_with_corrupt_chain_metadata_fails_closed(
     assert db == corrupted
 
 
+@pytest.mark.parametrize(
+    ("location", "field", "bad_value"),
+    [
+        ("source_meta", "from", "0x2222222222222222222222222222222222222222"),
+        ("source_meta", "to", "0x2222222222222222222222222222222222222222"),
+        ("source_meta", "bnb_amount_wei", 2 * 10**16),
+        ("source", "amount", 9.0),
+        ("source", "after", 18.5),
+        ("correction", "amount", -9.0),
+    ],
+)
+def test_existing_reversal_with_corrupt_treasury_or_credit_math_fails_closed(
+    monkeypatch, location, field, bad_value
+):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    assert _apply(db)["status"] == "APPLIED"
+
+    if location == "source_meta":
+        row = db["ledger"][0]["meta"]
+    elif location == "source":
+        row = db["ledger"][0]
+    else:
+        row = db["ledger"][1]
+    row[field] = bad_value
+    corrupted = deepcopy(db)
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == corrupted
+
+
 def test_malformed_audit_fails_before_any_in_memory_mutation(monkeypatch):
     db = _db()
     db["credit_adjustment_audit"] = {"unexpected": "object"}
@@ -175,6 +209,7 @@ def test_malformed_audit_fails_before_any_in_memory_mutation(monkeypatch):
 
 
 def _patch_file_backed_runtime(monkeypatch, db_path):
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
     monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda tx, snapshot: _proof())
