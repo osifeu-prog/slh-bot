@@ -3192,19 +3192,45 @@ def api_exchange_order():
         def mutate(db):
             old = db.setdefault(REQUESTS_KEY, {}).get(key)
             if old is not None:
+                # An idempotent replay may return the original receipt only when
+                # the same key is bound to the same canonical order intent.
+                if not isinstance(old, dict):
+                    raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID")
+                old_order_id = str(old.get("order_id") or "")
+                orders = db.get(ORDERS_KEY, {})
+                old_order = orders.get(old_order_id) if isinstance(orders, dict) else None
+                if not isinstance(old_order, dict):
+                    raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID")
+                try:
+                    old_amount = _dec(old_order.get("original_amount"), "amount")
+                    old_price = _dec(old_order.get("limit_price"), "price")
+                except ValueError as exc:
+                    raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID") from exc
+                same_intent = (
+                    str(old_order.get("uid")) == str(uid)
+                    and str(old_order.get("client_request_id") or "") == key
+                    and str(old_order.get("side") or "").strip().lower() == side
+                    and old_amount == amount
+                    and old_price == price
+                )
+                if not same_intent:
+                    raise ValueError("EXCHANGE_IDEMPOTENCY_KEY_REUSED")
                 return old
             return _place(db, str(uid), side, amount, price, key)
 
         result = state_manager.atomic_update(mutate)
         return jsonify(result), 200
     except ValueError as exc:
-        if str(exc) == "EXCHANGE_FRESH_CHECK_BLOCKED":
+        code = str(exc)
+        if code == "EXCHANGE_FRESH_CHECK_BLOCKED":
             return jsonify({
-                "error": str(exc),
-                "code": str(exc),
+                "error": code,
+                "code": code,
                 "exchange_check": getattr(exc, "check", {}),
             }), 409
-        return jsonify({"error": str(exc)}), 400
+        if code in {"EXCHANGE_IDEMPOTENCY_KEY_REUSED", "EXCHANGE_REQUEST_RECORD_INVALID"}:
+            return jsonify({"error": code, "code": code}), 409
+        return jsonify({"error": code}), 400
     except Exception as exc:
         return jsonify({"error": "INTERNAL_ERROR", "type": type(exc).__name__}), 500
 
