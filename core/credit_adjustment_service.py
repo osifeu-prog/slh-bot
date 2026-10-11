@@ -464,7 +464,10 @@ def reverse_invalid_bnb_deposit(
             or int(proof.get("confirmations") or 0) < current_required
         ):
             raise ValueError("BNB_CONFIRMATION_POLICY_CHANGED_DURING_VERIFICATION")
-        current_owner_wallet = _resolve_owner_bsc_wallet(uid, db, current_treasury)
+        try:
+            current_owner_wallet = _resolve_owner_bsc_wallet(uid, db, current_treasury)
+        except ValueError:
+            raise ValueError("BNB_WALLET_BINDING_CHANGED_DURING_VERIFICATION") from None
         if current_owner_wallet.lower() != str(proof.get("bound_wallet") or "").lower():
             raise ValueError("BNB_WALLET_BINDING_CHANGED_DURING_VERIFICATION")
         if (
