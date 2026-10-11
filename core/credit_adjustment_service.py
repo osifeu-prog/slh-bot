@@ -344,7 +344,7 @@ def reverse_invalid_bnb_deposit(
         source_amount = _decimal(source.get("amount"), "SOURCE_AMOUNT_INVALID")
         source_before = _decimal(source.get("before"), "SOURCE_BALANCE_INVALID")
         source_after = _decimal(source.get("after"), "SOURCE_BALANCE_INVALID")
-        source_wei = int(meta.get("bnb_amount_wei") or 0)
+        source_wei = _exact_nonnegative_int(meta.get("bnb_amount_wei"))
     except (TypeError, ValueError, OverflowError):
         raise ValueError("SOURCE_DEPOSIT_INVALID") from None
 
