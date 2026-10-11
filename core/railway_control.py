@@ -8,6 +8,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+from datetime import datetime, timezone
 
 ENDPOINT = "https://backboard.railway.com/graphql/v2"
 
@@ -84,6 +85,20 @@ def safe_railway_error_code(exc):
         return "CONTROL_PLANE_CLOSE_ONLY"
     if "exchange_gate_deploy_id_missing" in message:
         return "RAILWAY_DEPLOY_ID_MISSING"
+    if "exchange_opening_proof_invalid" in message:
+        return "EXCHANGE_OPENING_PROOF_INVALID"
+    if "exchange_gate_not_closed" in message:
+        return "EXCHANGE_GATE_NOT_CLOSED"
+    if "exchange_gate_open_failed_rolled_back" in message:
+        return "EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK"
+    if "exchange_gate_open_compensation_failed" in message:
+        return "EXCHANGE_GATE_OPEN_COMPENSATION_FAILED"
+    if "exchange_gate_open_verify_failed" in message:
+        return "EXCHANGE_GATE_OPEN_VERIFY_FAILED"
+    if "exchange_gate_open_deploy_id_missing" in message:
+        return "EXCHANGE_GATE_OPEN_DEPLOY_ID_MISSING"
+    if "exchange_gate_open_not_verified" in message:
+        return "EXCHANGE_GATE_OPEN_NOT_VERIFIED"
     return "RAILWAY_API_ERROR"
 
 
@@ -446,6 +461,177 @@ def request_exchange_gate_close():
         "configured": "0",
         "commit": str(data.get("commit") or ""),
         "deployment_id": str(data.get("deployment_id") or ""),
+        "service": "slh-cloud-bot",
+        "environment": "production",
+    }
+
+
+
+EXCHANGE_OPENING_PROOF_MAX_AGE_SECONDS = 120
+
+
+def validate_exchange_opening_proof(proof, *, now=None):
+    """Validate a fresh, launch-clean Exchange snapshot before any gate mutation."""
+    if not isinstance(proof, dict):
+        raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID")
+
+    try:
+        checked_at = datetime.fromisoformat(
+            str(proof.get("checked_at") or "").replace("Z", "+00:00")
+        )
+        current = now if now is not None else datetime.now(timezone.utc)
+        if not isinstance(current, datetime) or current.tzinfo is None:
+            raise ValueError("timezone-aware current time required")
+        if checked_at.tzinfo is None:
+            raise ValueError("timezone-aware proof timestamp required")
+        age = (current.astimezone(timezone.utc) - checked_at.astimezone(timezone.utc)).total_seconds()
+    except Exception as exc:
+        raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID") from exc
+
+    if age < 0 or age > EXCHANGE_OPENING_PROOF_MAX_AGE_SECONDS:
+        raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID")
+
+    if (
+        proof.get("status") != "PASS"
+        or proof.get("public_gate") != "CLOSED"
+        or proof.get("verdict") != "READY_TO_OPEN"
+        or proof.get("public_ready") is not True
+        or proof.get("order_book_integrity") is not True
+        or proof.get("trade_integrity") is not True
+        or proof.get("money_invariants") is not True
+    ):
+        raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID")
+
+    for field in ("open_orders", "test_seed_open", "test_seed_trades"):
+        value = proof.get(field)
+        if type(value) is not int or value != 0:
+            raise RailwayControlError("EXCHANGE_OPENING_PROOF_INVALID")
+
+    return {
+        "status": "PASS",
+        "checked_at": checked_at.astimezone(timezone.utc).isoformat(),
+        "public_gate": "CLOSED",
+        "verdict": "READY_TO_OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "open_orders": 0,
+        "test_seed_open": 0,
+        "test_seed_trades": 0,
+    }
+
+
+def _set_exchange_gate_variable(value):
+    """Set only the allowlisted Exchange gate variable; never exposes other variables."""
+    if value not in {"0", "1"}:
+        raise RailwayControlError("EXCHANGE_GATE_VALUE_INVALID")
+    mutation = graphql(
+        """
+        mutation setSLHExchangeGate($input: VariableUpsertInput!) {
+          variableUpsert(input: $input)
+        }
+        """,
+        {
+            "input": {
+                "projectId": SLH_BOT_PROJECT_ID,
+                "environmentId": SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
+                "serviceId": SLH_BOT_SERVICE_ID,
+                "name": SLH_EXCHANGE_GATE_VARIABLE,
+                "value": value,
+                "skipDeploys": True,
+            }
+        },
+        prefer_account_token=True,
+    )
+    if mutation.get("variableUpsert") is False:
+        raise RailwayControlError("RAILWAY_VARIABLE_UPDATE_REJECTED")
+
+
+def _exchange_gate_commit_sha():
+    commit_sha = str(os.getenv("RAILWAY_GIT_COMMIT_SHA") or "").strip()
+    if len(commit_sha) != 40 or any(ch not in "0123456789abcdefABCDEF" for ch in commit_sha):
+        commit_sha = latest_github_commit()
+    if len(str(commit_sha or "")) != 40 or any(ch not in "0123456789abcdefABCDEF" for ch in str(commit_sha)):
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_COMMIT_INVALID")
+    return str(commit_sha)
+
+
+def _compensate_exchange_gate_closed(commit_sha):
+    """Best-effort fail-closed compensation, including a reconciliation deployment."""
+    _set_exchange_gate_variable("0")
+    restored = exchange_gate_variable_status()
+    if restored.get("configured") != "0":
+        return False
+    deployment = deploy(
+        SLH_BOT_SERVICE_ID,
+        SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
+        commit_sha,
+        prefer_account_token=True,
+    )
+    return bool(str((deployment or {}).get("id") or ""))
+
+
+def open_exchange_gate(proof):
+    """Open only the fixed internal Exchange gate after validating fresh launch evidence."""
+    validated = validate_exchange_opening_proof(proof)
+    before = exchange_gate_variable_status()
+    if before.get("configured") != "0":
+        raise RailwayControlError("EXCHANGE_GATE_NOT_CLOSED")
+
+    # Resolve the exact revision before mutating configuration so a failed
+    # commit lookup cannot leave an open value waiting for a later deployment.
+    commit_sha = _exchange_gate_commit_sha()
+
+    try:
+        _set_exchange_gate_variable("1")
+        after = exchange_gate_variable_status()
+        if after.get("configured") != "1":
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_VERIFY_FAILED")
+
+        deployment = deploy(
+            SLH_BOT_SERVICE_ID,
+            SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
+            commit_sha,
+            prefer_account_token=True,
+        )
+        deployment_id = str((deployment or {}).get("id") or "")
+        if not deployment_id:
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_DEPLOY_ID_MISSING")
+    except Exception as exc:
+        try:
+            compensated = _compensate_exchange_gate_closed(commit_sha)
+        except Exception as rollback_exc:
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_COMPENSATION_FAILED") from rollback_exc
+        if not compensated:
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_COMPENSATION_FAILED") from exc
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK") from exc
+
+    return {
+        "status": "DEPLOY_TRIGGERED",
+        "previous": before.get("configured", "UNKNOWN"),
+        "configured": after["configured"],
+        "commit": commit_sha,
+        "deployment_id": deployment_id,
+        "proof_checked_at": validated["checked_at"],
+        "service": "slh-cloud-bot",
+        "environment": "production",
+    }
+
+
+def request_exchange_gate_open(proof):
+    """Request opening through the authenticated Control Plane with fresh proof."""
+    validated = validate_exchange_opening_proof(proof)
+    data = _exchange_gate_bridge_request("POST", {"action": "open", "proof": validated})
+    if data.get("configured") != "1" or data.get("status") != "DEPLOY_TRIGGERED":
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_NOT_VERIFIED")
+    return {
+        "status": data["status"],
+        "previous": data.get("previous", "UNKNOWN"),
+        "configured": "1",
+        "commit": str(data.get("commit") or ""),
+        "deployment_id": str(data.get("deployment_id") or ""),
+        "proof_checked_at": validated["checked_at"],
         "service": "slh-cloud-bot",
         "environment": "production",
     }
