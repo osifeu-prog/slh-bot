@@ -620,7 +620,7 @@ def register(bot):
             elif verified_open:
                 state = "✅ OPEN VERIFIED — EXECUTION CHECKS PASS"
             elif runtime_open is True or runtime_env == "1":
-                state = "🔴 RUNTIME OPEN BUT NOT READY — CLOSE / DO NOT TRADE"
+                state = "🔴 OPEN — RUNTIME NOT READY / DO NOT TRADE"
             elif configured == "1":
                 state = "🟡 OPEN CONFIGURED — RUNTIME NOT VERIFIED; DO NOT ANNOUNCE"
             else:
