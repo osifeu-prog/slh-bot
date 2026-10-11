@@ -167,20 +167,25 @@ def get_license(device_id):
     return None
 
 
-def _contains_license_identity(value, license_id, device_id):
+def _contains_license_identity(value, license_id, device_id=None):
+    """Match purchase records by exact license ID, never device ID alone.
+
+    A device can receive a replacement license. Revoking an old license must
+    not erase credentials from the new license's purchase record just because
+    both records refer to the same physical device.
+    """
+    target = str(license_id or "").strip().upper()
     if isinstance(value, dict):
-        if str(value.get("license_id") or "") == license_id:
+        if str(value.get("license_id") or "").strip().upper() == target:
             return True
-        if str(value.get("license_key") or "") == license_id:
-            return True
-        if device_id and str(value.get("device_id") or "") == device_id:
+        if str(value.get("license_key") or "").strip().upper() == target:
             return True
         return any(
-            _contains_license_identity(child, license_id, device_id)
+            _contains_license_identity(child, target)
             for child in value.values()
         )
     if isinstance(value, list):
-        return any(_contains_license_identity(child, license_id, device_id) for child in value)
+        return any(_contains_license_identity(child, target) for child in value)
     return False
 
 
