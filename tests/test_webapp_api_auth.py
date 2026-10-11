@@ -60,7 +60,19 @@ class WebAppApiAuthTests(unittest.TestCase):
             "unique_commands": 352,
             "collision_count": 0,
         }
-        with patch("core.system_checks.check_exchange", return_value=exchange), patch(
+        canonical_db = {"users": {}, "exchange_orders": {}, "exchange_trades": []}
+        execution = {
+            **exchange,
+            "execution_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+        }
+        with patch("webapp.state_manager.load_db", return_value=canonical_db), patch(
+            "core.system_checks.check_exchange", return_value=exchange
+        ), patch(
+            "core.system_checks.check_exchange_for_execution", return_value=execution
+        ), patch(
             "core.bnb_gate.bnb_readiness", return_value=bnb
         ), patch(
             "core.bnb_gate.bnb_opening_evidence", return_value=bnb_evidence
@@ -100,6 +112,69 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertNotIn("credits", payload)
         self.assertNotIn("wallet", payload)
         self.assertNotIn("secrets", payload)
+
+
+
+    def test_public_site_status_uses_live_execution_readiness_separately_from_launch_readiness(self):
+        launch_check = {
+            "public_gate": "OPEN",
+            "public_ready": False,
+            "verdict": "READY_TO_OPEN",
+            "detail": "live_open_orders=1",
+        }
+        execution_check = {
+            "ok": True,
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "public_ready": True,
+            "verdict": "OPEN",
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "detail": "public state clean",
+        }
+        bnb = {"effective_open": False, "ready": True, "flag_open": False}
+        bnb_evidence = {
+            "status": "BLOCKED",
+            "ready_to_open": False,
+            "gate_open": False,
+            "next_action": "controlled_empirical_reconciliation_before_opening",
+        }
+        ton = {"effective_open": True, "ready": True}
+        participation = {"active": False}
+        runtime = {"total_message_handlers": 340, "unique_commands": 371, "collision_count": 0}
+
+        canonical_db = {"users": {}, "exchange_orders": {}, "exchange_trades": []}
+        with patch("webapp.state_manager.load_db", return_value=canonical_db), patch(
+            "core.system_checks.check_exchange", return_value=launch_check
+        ) as launch_mock, patch(
+            "core.system_checks.check_exchange_for_execution", return_value=execution_check
+        ) as execution_mock, patch(
+            "core.bnb_gate.bnb_readiness", return_value=bnb
+        ), patch(
+            "core.bnb_gate.bnb_opening_evidence", return_value=bnb_evidence
+        ), patch(
+            "core.bnb_gate.bnb_deposits_open", return_value=False
+        ), patch(
+            "core.ton_deposit_service.ton_readiness", return_value=ton
+        ), patch(
+            "core.participation_policy.activation_status", return_value=participation
+        ), patch(
+            "core.runtime_command_evidence.snapshot_runtime", return_value=runtime
+        ):
+            response = self.client.get("/api/public/site-status")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["exchange"]["gate"], "OPEN")
+        self.assertEqual(payload["exchange"]["verdict"], "OPEN")
+        self.assertTrue(payload["exchange"]["readiness"])
+        self.assertFalse(payload["exchange"]["launch_readiness"])
+        self.assertEqual(payload["exchange"]["launch_verdict"], "READY_TO_OPEN")
+        execution_mock.assert_called_once_with(canonical_db)
+        launch_mock.assert_called_once_with()
+        self.assertEqual(payload["settlement"]["bnb"]["gate"], "CLOSED")
+        self.assertEqual(payload["participation"]["release"], "DESIGN_ONLY")
 
 
 
