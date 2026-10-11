@@ -91,7 +91,7 @@ def test_opening_proof_requires_timezone_aware_timestamp():
 def test_internal_exchange_gate_endpoint_accepts_only_authenticated_fresh_opening_proof():
     proof = _fresh_opening_proof()
     result = {
-        "status": "DEPLOY_TRIGGERED",
+        "status": "DEPLOYMENT_SUCCESS",
         "previous": "0",
         "configured": "1",
         "commit": "a" * 40,
@@ -110,11 +110,11 @@ def test_internal_exchange_gate_endpoint_accepts_only_authenticated_fresh_openin
             headers={"Authorization": "Bearer bridge-test-secret"},
         )
 
-    assert response.status_code == 202
+    assert response.status_code == 200
     payload = response.get_json()
     assert payload["ok"] is True
     assert payload["configured"] == "1"
-    assert payload["status"] == "DEPLOY_TRIGGERED"
+    assert payload["status"] == "DEPLOYMENT_SUCCESS"
     assert payload["deployment_id"] == "deployment-open"
     open_gate.assert_called_once_with(proof)
 
@@ -150,7 +150,9 @@ def test_open_gate_sets_only_allowlisted_variable_and_deploys_fixed_production_t
         railway_control, "latest_github_commit", return_value="b" * 40
     ), patch.object(
         railway_control, "deploy", return_value={"id": "deployment-open"}
-    ) as deploy:
+    ) as deploy, patch.object(
+        railway_control, "deployment_status", return_value={"status": "SUCCESS"}
+    ) as deployment_status:
         result = railway_control.open_exchange_gate(proof)
 
     mutation = graphql.call_args.args[0]
@@ -165,9 +167,10 @@ def test_open_gate_sets_only_allowlisted_variable_and_deploys_fixed_production_t
         "b" * 40,
         prefer_account_token=True,
     )
-    assert result["status"] == "DEPLOY_TRIGGERED"
+    assert result["status"] == "DEPLOYMENT_SUCCESS"
     assert result["configured"] == "1"
     assert result["deployment_id"] == "deployment-open"
+    deployment_status.assert_called_once_with("deployment-open", prefer_account_token=True)
 
 
 def test_open_gate_refuses_when_current_gate_is_not_closed_without_mutating_railway():
@@ -287,7 +290,9 @@ def test_open_gate_restores_closed_configuration_if_deployment_fails():
         side_effect=lambda: next(statuses),
     ), patch.object(railway_control, "graphql", side_effect=fake_graphql) as graphql, patch.object(
         railway_control, "latest_github_commit", return_value="c" * 40
-    ), patch.object(railway_control, "deploy", side_effect=fake_deploy) as deploy:
+    ), patch.object(railway_control, "deploy", side_effect=fake_deploy) as deploy, patch.object(
+        railway_control, "deployment_status", return_value={"status": "SUCCESS"}
+    ):
         with pytest.raises(
             railway_control.RailwayControlError,
             match="EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK",
