@@ -166,6 +166,7 @@ def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
         or configured_treasury != canonical_treasury
         or str(source_meta.get("from") or "").strip().lower() != canonical_treasury
         or str(source_meta.get("to") or "").strip().lower() != canonical_treasury
+        or is_quarantined_bsc_address(configured_treasury)
     ):
         raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
 
