@@ -60,7 +60,19 @@ class WebAppApiAuthTests(unittest.TestCase):
             "unique_commands": 352,
             "collision_count": 0,
         }
-        with patch("core.system_checks.check_exchange", return_value=exchange), patch(
+        canonical_db = {"users": {}, "exchange_orders": {}, "exchange_trades": []}
+        execution = {
+            **exchange,
+            "execution_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+        }
+        with patch("webapp.state_manager.load_db", return_value=canonical_db), patch(
+            "core.system_checks.check_exchange", return_value=exchange
+        ), patch(
+            "core.system_checks.check_exchange_for_execution", return_value=execution
+        ), patch(
             "core.bnb_gate.bnb_readiness", return_value=bnb
         ), patch(
             "core.bnb_gate.bnb_opening_evidence", return_value=bnb_evidence
