@@ -8,6 +8,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+import time
 from datetime import datetime, timezone
 
 ENDPOINT = "https://backboard.railway.com/graphql/v2"
@@ -229,7 +230,7 @@ def canonical_up(commit_sha=None):
         "deployment_id": deployment.get("id"),
     }
 
-def deployment_status(deployment_id):
+def deployment_status(deployment_id, *, prefer_account_token=False):
     deployment_id = str(deployment_id).strip()
     if not deployment_id:
         raise RailwayControlError("INVALID_DEPLOYMENT_ID")
@@ -248,6 +249,7 @@ def deployment_status(deployment_id):
         }
         """,
         {"id": deployment_id},
+        prefer_account_token=prefer_account_token,
     )
     deployment = data.get("deployment")
     if not isinstance(deployment, dict):
@@ -377,7 +379,7 @@ SLH_EXCHANGE_CONTROL_PLANE_URL = (
 )
 
 
-def _exchange_gate_bridge_request(method, payload=None):
+def _exchange_gate_bridge_request(method, payload=None, *, timeout_seconds=15):
     token = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
     if not token:
         raise RailwayControlError("CONTROL_PLANE_BRIDGE_TOKEN_MISSING")
@@ -399,7 +401,7 @@ def _exchange_gate_bridge_request(method, payload=None):
         method=method,
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
             raw = response.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as exc:
         code = ""
@@ -557,19 +559,48 @@ def _exchange_gate_commit_sha():
     return str(commit_sha)
 
 
+EXCHANGE_GATE_DEPLOY_WAIT_SECONDS = 120
+EXCHANGE_GATE_DEPLOY_POLL_SECONDS = 2
+
+
+def _wait_for_deployment_success(deployment_id):
+    """Wait for a terminal successful deployment or raise a safe status code."""
+    deployment_id = str(deployment_id or "").strip()
+    if not deployment_id:
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_DEPLOY_ID_MISSING")
+
+    deadline = time.monotonic() + EXCHANGE_GATE_DEPLOY_WAIT_SECONDS
+    in_progress = {"WAITING", "QUEUED", "INITIALIZING", "BUILDING", "DEPLOYING"}
+    while True:
+        state = deployment_status(deployment_id, prefer_account_token=True)
+        status = str(state.get("status") or "").strip().upper()
+        if status == "SUCCESS":
+            return state
+        if status not in in_progress:
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_DEPLOY_FAILED")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RailwayControlError("EXCHANGE_GATE_OPEN_DEPLOY_TIMEOUT")
+        time.sleep(min(EXCHANGE_GATE_DEPLOY_POLL_SECONDS, remaining))
+
+
 def _compensate_exchange_gate_closed(commit_sha):
-    """Best-effort fail-closed compensation, including a reconciliation deployment."""
+    """Fail closed and verify the reconciliation deployment reached SUCCESS."""
     _set_exchange_gate_variable("0")
     restored = exchange_gate_variable_status()
     if restored.get("configured") != "0":
-        return False
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_COMPENSATION_FAILED")
     deployment = deploy(
         SLH_BOT_SERVICE_ID,
         SLH_BOT_PRODUCTION_ENVIRONMENT_ID,
         commit_sha,
         prefer_account_token=True,
     )
-    return bool(str((deployment or {}).get("id") or ""))
+    deployment_id = str((deployment or {}).get("id") or "")
+    if not deployment_id:
+        raise RailwayControlError("EXCHANGE_GATE_OPEN_COMPENSATION_FAILED")
+    _wait_for_deployment_success(deployment_id)
+    return True
 
 
 def open_exchange_gate(proof):
@@ -598,6 +629,7 @@ def open_exchange_gate(proof):
         deployment_id = str((deployment or {}).get("id") or "")
         if not deployment_id:
             raise RailwayControlError("EXCHANGE_GATE_OPEN_DEPLOY_ID_MISSING")
+        _wait_for_deployment_success(deployment_id)
     except Exception as exc:
         try:
             compensated = _compensate_exchange_gate_closed(commit_sha)
@@ -608,7 +640,7 @@ def open_exchange_gate(proof):
         raise RailwayControlError("EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK") from exc
 
     return {
-        "status": "DEPLOY_TRIGGERED",
+        "status": "DEPLOYMENT_SUCCESS",
         "previous": before.get("configured", "UNKNOWN"),
         "configured": after["configured"],
         "commit": commit_sha,
@@ -622,8 +654,12 @@ def open_exchange_gate(proof):
 def request_exchange_gate_open(proof):
     """Request opening through the authenticated Control Plane with fresh proof."""
     validated = validate_exchange_opening_proof(proof)
-    data = _exchange_gate_bridge_request("POST", {"action": "open", "proof": validated})
-    if data.get("configured") != "1" or data.get("status") != "DEPLOY_TRIGGERED":
+    data = _exchange_gate_bridge_request(
+        "POST",
+        {"action": "open", "proof": validated},
+        timeout_seconds=260,
+    )
+    if data.get("configured") != "1" or data.get("status") != "DEPLOYMENT_SUCCESS":
         raise RailwayControlError("EXCHANGE_GATE_OPEN_NOT_VERIFIED")
     return {
         "status": data["status"],
