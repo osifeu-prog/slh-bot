@@ -1,6 +1,7 @@
 """Regression tests for the dormant owner-only BNB self-transfer credit reversal."""
 from copy import deepcopy
 from datetime import datetime, timezone
+import json
 import os
 from unittest.mock import Mock, patch
 
@@ -114,6 +115,95 @@ def test_repeated_reversal_is_idempotent(monkeypatch):
     assert db["users"][UID]["wallet"]["credits"] == 8.091775
     assert len(db["ledger"]) == 2
     assert len(db["credit_adjustment_audit"]) == 1
+
+
+
+def test_existing_reversal_with_inconsistent_audit_fails_closed(monkeypatch):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    assert _apply(db)["status"] == "APPLIED"
+    db["credit_adjustment_audit"][0]["balance_after"] = 999
+    corrupted = deepcopy(db)
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == corrupted
+
+
+def test_malformed_audit_fails_before_any_in_memory_mutation(monkeypatch):
+    db = _db()
+    db["credit_adjustment_audit"] = {"unexpected": "object"}
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(ValueError, match="CREDIT_ADJUSTMENT_AUDIT_UNREADABLE"):
+        _apply(db)
+
+    assert db == before
+
+
+def _patch_file_backed_runtime(monkeypatch, db_path):
+    monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
+    monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
+    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda tx, snapshot: _proof())
+    monkeypatch.setattr(target.state_manager, "DB_FILE", str(db_path))
+    monkeypatch.setattr(target.state_manager, "_LOCK_PATH", str(db_path) + ".lock")
+    monkeypatch.setattr(target.state_manager, "_ensure_backup_scheduler", lambda: None)
+    monkeypatch.setattr(target.state_manager, "_notify_owner", lambda _message: None)
+
+
+def test_real_atomic_update_persists_reversal_to_temp_db(monkeypatch, tmp_path):
+    db_path = tmp_path / "db.json"
+    original = _db()
+    db_path.write_text(json.dumps(original), encoding="utf-8")
+    _patch_file_backed_runtime(monkeypatch, db_path)
+
+    result = _apply(original)
+
+    persisted = json.loads(db_path.read_text(encoding="utf-8"))
+    assert result["status"] == "APPLIED"
+    assert persisted["users"][UID]["wallet"]["credits"] == 8.091775
+    assert len(persisted["ledger"]) == 2
+    assert len(persisted["credit_adjustment_audit"]) == 1
+    assert persisted["ledger"][0] == original["ledger"][0]
+
+
+def test_post_replace_save_error_is_reconciled_from_disk_not_blindly_retried(
+    monkeypatch, tmp_path
+):
+    db_path = tmp_path / "db.json"
+    original = _db()
+    db_path.write_text(json.dumps(original), encoding="utf-8")
+    _patch_file_backed_runtime(monkeypatch, db_path)
+    real_write = target.state_manager._atomic_write_json_unlocked
+
+    def write_then_raise(path, data):
+        real_write(path, data)
+        raise OSError("injected post-replace failure")
+
+    monkeypatch.setattr(
+        target.state_manager, "_atomic_write_json_unlocked", write_then_raise
+    )
+    with pytest.raises(OSError, match="injected post-replace failure"):
+        _apply(original)
+
+    # The caller sees an error, but atomic replace already committed. Read disk
+    # before deciding what to do; the next idempotent call must not debit twice.
+    persisted = json.loads(db_path.read_text(encoding="utf-8"))
+    assert persisted["users"][UID]["wallet"]["credits"] == 8.091775
+    assert len(persisted["ledger"]) == 2
+    assert len(persisted["credit_adjustment_audit"]) == 1
+
+    monkeypatch.setattr(
+        target.state_manager, "_atomic_write_json_unlocked", real_write
+    )
+    retry = _apply(persisted)
+    assert retry["status"] == "ALREADY_REVERSED"
+    reloaded = json.loads(db_path.read_text(encoding="utf-8"))
+    assert reloaded["users"][UID]["wallet"]["credits"] == 8.091775
+    assert len(reloaded["ledger"]) == 2
+    assert len(reloaded["credit_adjustment_audit"]) == 1
 
 
 def test_stale_balance_fails_without_mutation(monkeypatch):
