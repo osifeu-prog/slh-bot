@@ -47,8 +47,40 @@ def _normalise_hash(value):
     return result
 
 
+def _resolve_owner_bsc_wallet(uid, db, treasury):
+    """Resolve the unique bound BSC wallet and reject every unsafe registry row."""
+    if not isinstance(db, dict):
+        raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+    bindings = db.get("wallet_bindings")
+    if not isinstance(bindings, dict):
+        raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+
+    owner_wallets = []
+    for binding in bindings.values():
+        if not isinstance(binding, dict):
+            raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+        if str(binding.get("chain") or "").strip().lower() != "bsc":
+            raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+
+        address = str(binding.get("address") or "").strip()
+        if not re.fullmatch(r"0x[0-9a-fA-F]{40}", address):
+            raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+        if is_quarantined_bsc_address(address):
+            raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
+        if address.lower() == str(treasury or "").strip().lower():
+            raise ValueError("BNB_TREASURY_MATCHES_BOUND_WALLET")
+
+        if str(binding.get("uid") or "").strip() == str(uid):
+            owner_wallets.append(address)
+
+    if len(owner_wallets) != 1:
+        raise ValueError("BNB_OWNER_WALLET_NOT_UNIQUE")
+    return owner_wallets[0]
+
+
 def _verify_self_transfer_for_reversal(uid, tx_hash, db):
     """Read-only live BSC verification of a confirmed bound-owner self-transfer."""
+    uid = str(uid or "").strip()
     cfg = _effective_config(db)
     rpc = str(cfg.get("rpc") or "").strip()
     treasury = str(cfg.get("treasury_wallet") or "").strip()
@@ -63,28 +95,7 @@ def _verify_self_transfer_for_reversal(uid, tx_hash, db):
     if is_quarantined_bsc_address(treasury):
         raise ValueError("BSC_TREASURY_QUARANTINED")
 
-    # A reversal qualifies only when the transaction is a self-transfer from
-    # the target user's independently verified BSC wallet. The treasury is
-    # context/configuration, not the transaction sender/receiver.
-    uid = str(uid or "").strip()
-    bindings = db.get("wallet_bindings", {})
-    if not isinstance(bindings, dict):
-        raise ValueError("BNB_OWNER_WALLET_NOT_BOUND")
-    owner_bindings = [
-        binding for binding in bindings.values()
-        if isinstance(binding, dict)
-        and str(binding.get("uid") or "").strip() == uid
-        and str(binding.get("chain") or "").strip().lower() == "bsc"
-    ]
-    if len(owner_bindings) != 1:
-        raise ValueError("BNB_OWNER_WALLET_NOT_BOUND")
-    owner_wallet = str(owner_bindings[0].get("address") or "").strip()
-    if not re.fullmatch(r"0x[0-9a-fA-F]{40}", owner_wallet):
-        raise ValueError("BNB_OWNER_WALLET_INVALID")
-    if owner_wallet.lower() == treasury.lower():
-        raise ValueError("BNB_TREASURY_MATCHES_BOUND_WALLET")
-    if is_quarantined_bsc_address(owner_wallet):
-        raise ValueError("BSC_OWNER_WALLET_QUARANTINED")
+    owner_wallet = _resolve_owner_bsc_wallet(uid, db, treasury)
 
     try:
         w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 5}))
@@ -102,7 +113,10 @@ def _verify_self_transfer_for_reversal(uid, tx_hash, db):
         recipient = str(tx.get("to") or "").strip()
         if not sender or not recipient:
             raise ValueError("BNB_TX_ADDRESSES_MISSING")
-        if sender.lower() != owner_wallet.lower() or recipient.lower() != owner_wallet.lower():
+        if (
+            sender.lower() != owner_wallet.lower()
+            or recipient.lower() != owner_wallet.lower()
+        ):
             raise ValueError("BNB_TX_NOT_OWNER_SELF_TRANSFER")
 
         block = int(receipt.get("blockNumber") or 0)
@@ -122,6 +136,7 @@ def _verify_self_transfer_for_reversal(uid, tx_hash, db):
             "from": sender,
             "to": recipient,
             "treasury": treasury,
+            "bound_wallet": owner_wallet,
             "amount_wei": amount_wei,
             "block": block,
             "confirmations": confirmations,
@@ -247,6 +262,39 @@ def reverse_invalid_bnb_deposit(
             raise ValueError("DB_UNREADABLE")
         if bnb_deposits_open():
             raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+
+        # Revalidate mutable context against the live proof inside the atomic
+        # write. A valid proof cannot be applied after the Treasury or binding
+        # changes between RPC verification and ledger mutation.
+        current_cfg = _effective_config(db)
+        current_treasury = str(current_cfg.get("treasury_wallet") or "").strip()
+        current_canonical = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip()
+        current_chain_id = int(current_cfg.get("chain_id") or 0)
+        current_required = int(current_cfg.get("confirmations") or 15)
+        if (
+            current_chain_id != 56
+            or not str(current_cfg.get("rpc") or "").strip()
+            or not current_treasury
+            or not current_canonical
+            or current_treasury.lower() != current_canonical.lower()
+            or current_treasury.lower() != str(proof.get("treasury") or "").lower()
+        ):
+            raise ValueError("BNB_CANONICAL_TREASURY_CHANGED_DURING_VERIFICATION")
+        if (
+            current_required < 1
+            or current_required != int(proof.get("required_confirmations") or 0)
+            or int(proof.get("confirmations") or 0) < current_required
+        ):
+            raise ValueError("BNB_CONFIRMATION_POLICY_CHANGED_DURING_VERIFICATION")
+        current_owner_wallet = _resolve_owner_bsc_wallet(uid, db, current_treasury)
+        if current_owner_wallet.lower() != str(proof.get("bound_wallet") or "").lower():
+            raise ValueError("BNB_WALLET_BINDING_CHANGED_DURING_VERIFICATION")
+        if (
+            str(proof.get("from") or "").lower() != current_owner_wallet.lower()
+            or str(proof.get("to") or "").lower() != current_owner_wallet.lower()
+        ):
+            raise ValueError("BNB_TX_NOT_OWNER_SELF_TRANSFER")
+
         ledger = db.get("ledger", [])
         if not isinstance(ledger, list):
             raise ValueError("LEDGER_UNREADABLE")
@@ -330,7 +378,7 @@ def reverse_invalid_bnb_deposit(
                 "source_ledger_index": live_index,
                 "tx_hash": tx_hash.lower(),
                 "actor_uid": actor_uid,
-                "adjustment_basis": "verified BSC transaction sender and receiver both equal the bound owner wallet, distinct from the canonical treasury",
+                "adjustment_basis": "verified BSC transaction sender and receiver both equal the bound owner wallet, distinct from canonical Treasury",
                 "nominal_credits_reversed": float(source_amount),
                 "chain_id": proof["chain_id"],
                 "block": proof["block"],
