@@ -373,7 +373,7 @@ def bnb_opening_evidence() -> dict:
     if configured_chain != "56":
         evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
     empirical = _empirical_settlement_evidence()
-    empirical_valid = _empirical_evidence_revalidated(empirical, _effective_config(), db=state_manager.load_db())
+    empirical_valid = _empirical_evidence_revalidated(empirical, _effective_config())
     evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid)
     if empirical_valid:
         for check in (
