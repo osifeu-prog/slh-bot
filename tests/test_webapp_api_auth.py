@@ -132,7 +132,10 @@ class WebAppApiAuthTests(unittest.TestCase):
         participation = {"active": False}
         runtime = {"total_message_handlers": 340, "unique_commands": 371, "collision_count": 0}
 
-        with patch("core.system_checks.check_exchange", return_value=launch_check) as launch_mock, patch(
+        canonical_db = {"users": {}, "exchange_orders": {}, "exchange_trades": []}
+        with patch("webapp.state_manager.load_db", return_value=canonical_db), patch(
+            "core.system_checks.check_exchange", return_value=launch_check
+        ) as launch_mock, patch(
             "core.system_checks.check_exchange_for_execution", return_value=execution_check
         ) as execution_mock, patch(
             "core.bnb_gate.bnb_readiness", return_value=bnb
@@ -156,7 +159,7 @@ class WebAppApiAuthTests(unittest.TestCase):
         self.assertTrue(payload["exchange"]["readiness"])
         self.assertFalse(payload["exchange"]["launch_readiness"])
         self.assertEqual(payload["exchange"]["launch_verdict"], "READY_TO_OPEN")
-        execution_mock.assert_called_once_with()
+        execution_mock.assert_called_once_with(canonical_db)
         launch_mock.assert_called_once_with()
         self.assertEqual(payload["settlement"]["bnb"]["gate"], "CLOSED")
         self.assertEqual(payload["participation"]["release"], "DESIGN_ONLY")
