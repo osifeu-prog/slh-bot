@@ -82,3 +82,76 @@ def test_smoke_is_owner_only():
             assert str(exc) == "BNB_EMPIRICAL_SMOKE_OWNER_ONLY"
         else:
             raise AssertionError("owner-only smoke must reject non-owner")
+
+
+def test_stale_pass_evidence_does_not_block_new_valid_smoke_and_is_audited():
+    old_tx = "0x" + "cd" * 32
+    db = {
+        "users": {UID: {"wallet": {"credits": 8.0}}},
+        "ledger": [],
+        "settlement_evidence": {
+            "bnb": {
+                "status": "PASS",
+                "tx_hash": old_tx,
+                "uid": UID,
+                "credits": 10.0,
+            }
+        },
+    }
+    balances = iter([8.0, 18.0, 18.0])
+    settled_calls = []
+
+    def settle(uid, tx_hash):
+        settled_calls.append(tx_hash)
+        if len(settled_calls) == 1:
+            db["ledger"].append({
+                "uid": uid,
+                "reason": "bnb:deposit",
+                "amount": 10.0,
+                "before": 8.0,
+                "after": 18.0,
+                "meta": {"idempotency_key": f"bnb:deposit:{tx_hash.lower()}"},
+            })
+            return {"credits": 10.0, "amount_wei": 10**16, "idempotent": False}
+        return {"credits": 10.0, "amount_wei": 10**16, "idempotent": True}
+
+    with patch.object(bnb_empirical_smoke, "is_owner", return_value=True), patch.object(
+        bnb_empirical_smoke, "bnb_deposits_open", side_effect=[False, False]
+    ), patch.object(
+        bnb_empirical_smoke, "_existing_evidence", return_value=db["settlement_evidence"]["bnb"]
+    ), patch(
+        "core.bnb_gate._effective_config", return_value={"treasury_wallet": TREASURY}
+    ), patch(
+        "core.bnb_gate._empirical_evidence_revalidated", return_value=False
+    ), patch.object(
+        bnb_empirical_smoke, "get_binding", return_value={"address": ADDRESS}
+    ), patch.object(
+        bnb_empirical_smoke,
+        "verify_bnb_deposit",
+        return_value={
+            "ok": True,
+            "from": ADDRESS,
+            "to": TREASURY,
+            "amount_bnb": 0.01,
+            "amount_wei": 10**16,
+            "confirmations": 15,
+        },
+    ), patch.object(
+        bnb_empirical_smoke, "get_balance_safe", side_effect=lambda _uid: next(balances)
+    ), patch.object(
+        bnb_empirical_smoke, "settle_bnb_deposit", side_effect=settle
+    ), patch.object(
+        bnb_empirical_smoke.state_manager, "load_db", return_value=db
+    ), patch.object(
+        bnb_empirical_smoke.state_manager, "atomic_update", side_effect=lambda fn: fn(db)
+    ):
+        result = bnb_empirical_smoke.run(UID, TX)
+
+    assert result["status"] == "PASS"
+    assert db["settlement_evidence"]["bnb"]["tx_hash"] == TX
+    assert settled_calls == [TX, TX]
+    assert len(db["settlement_evidence_audit"]) == 1
+    assert db["settlement_evidence_audit"][0]["previous_tx_hash"] == old_tx
+    assert db["settlement_evidence_audit"][0]["previous_status"] == "PASS"
+    assert db["settlement_evidence_audit"][0]["disposition"] == "INVALIDATED_BY_REVALIDATION"
+    assert db["settlement_evidence_audit"][0]["runtime_balance_unchanged_by_audit"] is True
