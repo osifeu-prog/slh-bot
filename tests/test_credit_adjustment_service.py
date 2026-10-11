@@ -220,7 +220,7 @@ def test_live_forensic_verifier_proves_confirmed_bound_owner_self_transfer(monke
 
 
 def test_live_forensic_verifier_rejects_external_sender(monkeypatch):
-    external = "0x2222222222222222222222222222222222222222"
+    external = "0x3333333333333333333333333333333333333333"
     fake = _fake_web3_transaction(sender=external)
     config = {
         "chain_id": 56,
