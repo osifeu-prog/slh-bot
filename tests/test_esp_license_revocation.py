@@ -224,7 +224,7 @@ def test_owner_command_requires_private_chat_and_never_replies_with_secrets():
     reply = bot.reply_to.call_args.args[1]
     assert SECRET_PASSWORD not in reply
     assert SECRET_ACTIVATION not in reply
-    assert "REVOKED" in reply
+    assert "בוטל" in reply
 
 
 def test_owner_command_refuses_non_private_chat():
