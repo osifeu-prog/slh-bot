@@ -145,8 +145,8 @@ def is_audit_command(cmd):
 
 
 SECRET_PATTERNS = [
-    # Telegram bot tokens
-    re.compile(r"\b\d{8,12}:AA[A-Za-z0-9_-]{30,}"),
+    # Telegram bot tokens: token body is opaque; do not rely on a fixed prefix.
+    re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b"),
     # OpenAI / Anthropic / Groq style keys
     re.compile(r"\b(?:sk-|gsk_)[A-Za-z0-9_-]{20,}"),
     # Google API keys: classic AIza... and new AQ. format (Gemini)
@@ -158,10 +158,19 @@ SECRET_PATTERNS = [
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----"),
 ]
 
-# NAME=value / NAME: value for secret-looking names -> keep the name, hide the value
+# Match secret-looking names in NAME=value and JSON/YAML-like "NAME": "value"
+# output. Accept quotes around the key as well as around the value.
 _ASSIGNMENT = re.compile(
-    r"(?i)\b([A-Z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|PRIVATE_KEY|DATABASE_URL|REDIS_URL)[A-Z0-9_]*)"
-    r"(\s*[:=]\s*[\"']?)([^\s\"',}]{8,})"
+    r"""(?i)(["']?\b[A-Z0-9_]*(?:API_KEY|TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|DATABASE_URL|REDIS_URL|ACTIVATION_CODE|MQTT_USERNAME|SEED(?:[ _-]?PHRASE)?|MNEMONIC)[A-Z0-9_]*["']?)"""
+    r"""(\s*[:=]\s*["']?)([^\s"',}]{8,})"""
+)
+
+# A recovery phrase may be printed as a bare line with no label. Restrict this
+# fallback to standalone 12/24-word lowercase ASCII lines to limit false
+# positives in ordinary prose. This is best-effort, not a wallet phrase parser.
+_SEED_PHRASE_LINE = re.compile(
+    r"(?im)^\s*(?:(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){11}[a-z]{2,12}\s*$"
+    r"|^\s*(?:(?:[\"']?(?:SEED(?:[ _-]?PHRASE)?|MNEMONIC)[\"']?\s*[:=]\s*)?(?:[a-z]{2,12}\s+){23}[a-z]{2,12}\s*$"
 )
 
 
@@ -171,6 +180,7 @@ def redact_secrets(text):
     text = str(text)
     for pattern in SECRET_PATTERNS:
         text = pattern.sub("[REDACTED]", text)
+    text = _SEED_PHRASE_LINE.sub("[REDACTED RECOVERY PHRASE]", text)
     return _ASSIGNMENT.sub(lambda m: f"{m.group(1)}{m.group(2)}[REDACTED]", text)
 
 
