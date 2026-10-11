@@ -47,6 +47,34 @@ def test_bnb_gate_stays_closed_without_explicit_canonical_treasury():
         assert "BNB_CANONICAL_TREASURY_MISSING" in status["reasons"]
 
 
+
+def test_bnb_gate_rejects_treasury_that_matches_a_verified_wallet_binding():
+    db = {
+        "wallet_bindings": {
+            TREASURY.lower(): {
+                "uid": "8789977826",
+                "chain": "bsc",
+                "address": TREASURY,
+            }
+        }
+    }
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ):
+        status = bnb_readiness(db)
+        assert status["ready"] is False
+        assert status["effective_open"] is False
+        assert "BNB_TREASURY_MATCHES_BOUND_WALLET" in status["reasons"]
+
+
 def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
     with patch.dict(
         os.environ,
