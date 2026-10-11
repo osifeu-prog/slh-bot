@@ -126,9 +126,10 @@ def register(bot):
                 )
                 return
 
-            # Handle explicitly recognized, read-only owner operations before
-            # general chat. Unknown speech remains conversational; financial
-            # mutations and broadcasts are rejected by the operator router.
+            # Handle only two narrow, allowlisted Exchange voice flows first:
+            # opening requires a fresh canonical launch proof; broadcast uses a
+            # separate prepare/confirm flow with send-time gate rechecks.
+            # Other financial mutations remain denied by the general operator router.
             from handlers.exchange_handler import route_exchange_gate_voice
             from handlers.broadcast_handler import route_exchange_broadcast_voice
             from core.voice_operator_router import route_voice_operator_request
