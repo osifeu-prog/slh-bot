@@ -257,6 +257,6 @@ def test_already_open_runtime_not_canonical_never_prepares_preview(monkeypatch):
         result = exchange._request_guarded_exchange_gate_open()
 
     assert "NOT VERIFIED" in result
-    assert "do not announce" in result.lower()
+    assert "אין להכריז" in result
     probe.assert_not_called()
     prepare.assert_not_called()
