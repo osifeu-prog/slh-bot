@@ -245,3 +245,34 @@ def test_live_forensic_verifier_rejects_failed_receipt(monkeypatch):
     with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": TREASURY}, clear=False):
         with pytest.raises(ValueError, match="BNB_TX_NOT_SUCCESSFUL"):
             target._verify_self_transfer_for_reversal(TX, _db())
+
+
+
+def test_reversal_accepts_canonical_float_rounding_for_non_round_bnb_amount(monkeypatch):
+    from decimal import Decimal
+
+    db = _db()
+    amount_wei = 123456789012345678
+    credits = float(Decimal(amount_wei) * Decimal("1000") / Decimal(10**18))
+    before = 8.091775
+    after = before + credits
+    source = db["ledger"][0]
+    source["before"] = before
+    source["amount"] = credits
+    source["after"] = after
+    source["meta"]["bnb_amount_wei"] = amount_wei
+    db["users"][UID]["wallet"]["credits"] = after
+    proof = {**_proof(), "amount_wei": amount_wei}
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setattr(target, "_verify_self_transfer_for_reversal", lambda _tx, _db: proof)
+
+    result = target.reverse_invalid_bnb_deposit(
+        actor_uid=UID,
+        uid=UID,
+        tx_hash=TX,
+        expected_current_balance=str(after),
+    )
+
+    assert result["status"] == "APPLIED"
+    assert result["amount_reversed"] == credits
+    assert db["users"][UID]["wallet"]["credits"] == before
