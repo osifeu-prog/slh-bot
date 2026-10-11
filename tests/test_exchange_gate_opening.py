@@ -295,3 +295,79 @@ def test_open_gate_restores_closed_configuration_if_deployment_fails():
 
     assert [call.args[1]["input"]["value"] for call in graphql.call_args_list] == ["1", "0"]
     assert deploy.call_count == 2
+
+
+
+def test_open_gate_waits_for_terminal_success_before_returning():
+    proof = _fresh_opening_proof()
+    statuses = iter([
+        {"configured": "0", "configured_open": False},
+        {"configured": "1", "configured_open": True},
+    ])
+    deploy_states = iter([
+        {"status": "BUILDING"},
+        {"status": "DEPLOYING"},
+        {"status": "SUCCESS"},
+    ])
+
+    with patch.object(
+        railway_control, "exchange_gate_variable_status", side_effect=lambda: next(statuses)
+    ), patch.object(
+        railway_control, "graphql", return_value={"variableUpsert": True}
+    ), patch.object(
+        railway_control, "latest_github_commit", return_value="d" * 40
+    ), patch.object(
+        railway_control, "deploy", return_value={"id": "deployment-open"}
+    ), patch.object(
+        railway_control, "deployment_status", side_effect=lambda *_args, **_kwargs: next(deploy_states)
+    ) as deployment_status, patch.object(
+        railway_control.time, "sleep", return_value=None
+    ):
+        result = railway_control.open_exchange_gate(proof)
+
+    assert deployment_status.call_count == 3
+    assert result["status"] == "DEPLOYMENT_SUCCESS"
+
+
+def test_open_gate_rolls_back_and_verifies_closed_deployment_when_deploy_fails():
+    proof = _fresh_opening_proof()
+    statuses = iter([
+        {"configured": "0", "configured_open": False},
+        {"configured": "1", "configured_open": True},
+        {"configured": "0", "configured_open": False},
+    ])
+    deploys = iter([
+        {"id": "deployment-open"},
+        {"id": "deployment-close"},
+    ])
+    deploy_states = iter([
+        {"status": "FAILED"},
+        {"status": "SUCCESS"},
+    ])
+    graphql_calls = []
+
+    def fake_graphql(query, variables=None, *, prefer_account_token=False):
+        graphql_calls.append(variables["input"]["value"])
+        return {"variableUpsert": True}
+
+    with patch.object(
+        railway_control, "exchange_gate_variable_status", side_effect=lambda: next(statuses)
+    ), patch.object(
+        railway_control, "graphql", side_effect=fake_graphql
+    ), patch.object(
+        railway_control, "latest_github_commit", return_value="e" * 40
+    ), patch.object(
+        railway_control, "deploy", side_effect=lambda *_args, **_kwargs: next(deploys)
+    ) as deploy, patch.object(
+        railway_control, "deployment_status", side_effect=lambda *_args, **_kwargs: next(deploy_states)
+    ), patch.object(
+        railway_control.time, "sleep", return_value=None
+    ):
+        with pytest.raises(
+            railway_control.RailwayControlError,
+            match="EXCHANGE_GATE_OPEN_FAILED_ROLLED_BACK",
+        ):
+            railway_control.open_exchange_gate(proof)
+
+    assert graphql_calls == ["1", "0"]
+    assert deploy.call_count == 2
