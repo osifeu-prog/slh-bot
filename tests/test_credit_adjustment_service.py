@@ -168,6 +168,7 @@ def test_existing_reversal_with_corrupt_chain_metadata_fails_closed(
     [
         ("source_meta", "from", "0x2222222222222222222222222222222222222222"),
         ("source_meta", "to", "0x2222222222222222222222222222222222222222"),
+        ("correction_meta", "treasury", "0x2222222222222222222222222222222222222222"),
         ("source_meta", "bnb_amount_wei", 2 * 10**16),
         ("source", "amount", 9.0),
         ("source", "after", 18.5),
@@ -183,6 +184,8 @@ def test_existing_reversal_with_corrupt_treasury_or_credit_math_fails_closed(
 
     if location == "source_meta":
         row = db["ledger"][0]["meta"]
+    elif location == "correction_meta":
+        row = db["ledger"][1]["meta"]
     elif location == "source":
         row = db["ledger"][0]
     else:
