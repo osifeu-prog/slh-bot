@@ -322,7 +322,7 @@ def test_open_gate_waits_for_terminal_success_before_returning():
     ), patch.object(
         railway_control, "deployment_status", side_effect=lambda *_args, **_kwargs: next(deploy_states)
     ) as deployment_status, patch.object(
-        railway_control.time, "sleep", return_value=None
+        time, "sleep", return_value=None
     ):
         result = railway_control.open_exchange_gate(proof)
 
@@ -362,7 +362,7 @@ def test_open_gate_rolls_back_and_verifies_closed_deployment_when_deploy_fails()
     ) as deploy, patch.object(
         railway_control, "deployment_status", side_effect=lambda *_args, **_kwargs: next(deploy_states)
     ), patch.object(
-        railway_control.time, "sleep", return_value=None
+        time, "sleep", return_value=None
     ):
         with pytest.raises(
             railway_control.RailwayControlError,
