@@ -297,8 +297,8 @@ def test_voice_confirmation_accepts_common_stt_article_variant(monkeypatch):
     owner = str(broadcast_handler.OWNER_TELEGRAM_ID)
     called = []
 
-    def confirm(bot, uid, *, now=None):
-        called.append((uid, now))
+    def confirm(bot, uid, *, now=None, duplicate_acknowledged=False):
+        called.append((uid, now, duplicate_acknowledged))
         return {"status": "SENT", "sent": 1, "failed": 0, "target_count": 1}
 
     monkeypatch.setattr(broadcast_handler, "send_confirmed_exchange_broadcast", confirm)
@@ -310,5 +310,5 @@ def test_voice_confirmation_accepts_common_stt_article_variant(monkeypatch):
         now="2026-10-10T00:00:01Z",
     )
 
-    assert called == [(owner, "2026-10-10T00:00:01Z")]
+    assert called == [(owner, "2026-10-10T00:00:01Z", False)]
     assert answer

@@ -182,6 +182,11 @@ _PREPARE_VOICE_PHRASES = {
     "הכן לי הודעת ברודקאסט למסחר פנימי",
     "תכין לי הודעת ברודקאסט למסחר פנימי",
 }
+_DUPLICATE_ACK_VOICE_PHRASES = {
+    "אשר ושלח ברודקאסט מלא למרות כפילויות",
+    "אני מאשר שליחה חוזרת לכל הקהל למרות כפילויות",
+    "אני מאשר לשלוח שוב לכולם למרות שחלק כבר קיבלו",
+}
 _CONFIRM_VOICE_PHRASES = {
     "אשר ושלח ברודקאסט למסחר פנימי",
     "מאשר ושלח ברודקאסט למסחר פנימי",
@@ -190,6 +195,7 @@ _CONFIRM_VOICE_PHRASES = {
     "אשר ושלח את הברודקאסט למסחר פנימי",
     "אני מאשר לשלוח את הברודקאסט למסחר פנימי",
     "אני מאשר שלח ברודקאסט למסחר פנימי",
+    *_DUPLICATE_ACK_VOICE_PHRASES,
 }
 
 
@@ -285,8 +291,58 @@ def _broadcast_audience(db):
 
 
 def _broadcast_audience_hash(audience):
-    """Fingerprint the previewed audience without persisting their IDs in the audit."""
+    """Fingerprint the previewed audience without exposing IDs in user-facing output."""
     return hashlib.sha256("|".join(sorted(str(uid) for uid in audience)).encode("utf-8")).hexdigest()
+
+
+def _latest_exchange_broadcast_audit(db, uid):
+    audit = db.get("exchange_broadcast_audit", [])
+    if not isinstance(audit, list):
+        return None
+    message_hash = hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
+    relevant = [
+        item for item in audit
+        if isinstance(item, dict)
+        and str(item.get("initiated_by") or "") == str(uid)
+        and item.get("message_sha256") == message_hash
+    ]
+    return relevant[-1] if relevant else None
+
+
+def _audience_for_record(db, record):
+    """Resolve exactly the previewed audience, including safe failed-only retries."""
+    current_audience = _broadcast_audience(db)
+    if str(record.get("audience_scope") or "all") != "failed_only":
+        return current_audience
+
+    retry_id = str(record.get("retry_of_draft_id") or "")
+    audit = db.get("exchange_broadcast_audit", [])
+    if not isinstance(audit, list):
+        return None
+    previous = next((
+        item for item in audit
+        if isinstance(item, dict)
+        and str(item.get("draft_id") or "") == retry_id
+        and str(item.get("initiated_by") or "") == str(record.get("uid") or "")
+    ), None)
+    if not isinstance(previous, dict):
+        return None
+    failed_ids = previous.get("failed_recipient_uids")
+    try:
+        expected_failed = int(previous.get("failed") or 0)
+    except (TypeError, ValueError):
+        return None
+    if (
+        previous.get("status") != "PARTIAL"
+        or previous.get("message_sha256") != hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
+        or not isinstance(failed_ids, list)
+        or expected_failed != len(failed_ids)
+        or len(set(str(value) for value in failed_ids)) != len(failed_ids)
+        or any(not str(value).isdigit() or int(value) <= 0 for value in failed_ids)
+    ):
+        return None
+    available = set(current_audience)
+    return sorted({str(value) for value in failed_ids if str(value) in available})
 
 
 def _append_exchange_broadcast_audit(db, record, status, *, sent=0, failed=0, detail="", check=None, now=None):
@@ -305,8 +361,14 @@ def _append_exchange_broadcast_audit(db, record, status, *, sent=0, failed=0, de
         "finished_at": _utc_text(now),
         "target_count": int(record.get("target_count") or 0),
         "audience_sha256": str(record.get("audience_sha256") or ""),
+        "audience_scope": str(record.get("audience_scope") or "all"),
+        "retry_of_draft_id": record.get("retry_of_draft_id"),
         "sent": int(sent),
         "failed": int(failed),
+        "failed_recipient_uids": [
+            str(value) for value in (record.get("failed_recipient_uids") or [])
+            if str(value).isdigit() and int(value) > 0
+        ],
         "detail": str(detail or "")[:300],
         "fresh_exchange_check": check or record.get("pre_send_check") or record.get("claim_check"),
         "message_sha256": hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest(),
@@ -332,7 +394,45 @@ def prepare_exchange_broadcast(uid, *, now=None):
         previous = pending_map.get(uid)
         if isinstance(previous, dict) and previous.get("status") == "SENDING":
             return {"status": "IN_PROGRESS", "detail": "A confirmed broadcast is already sending"}
-        audience = _broadcast_audience(db)
+
+        previous_audit = _latest_exchange_broadcast_audit(db, uid)
+        all_audience = _broadcast_audience(db)
+        audience = all_audience
+        audience_scope = "all"
+        retry_of_draft_id = None
+        requires_duplicate_ack = False
+        previous_sent = 0
+        previous_failed = 0
+
+        if isinstance(previous_audit, dict) and previous_audit.get("status") == "PARTIAL":
+            try:
+                previous_sent = int(previous_audit.get("sent") or 0)
+                previous_failed = int(previous_audit.get("failed") or 0)
+            except (TypeError, ValueError):
+                previous_sent, previous_failed = 0, 0
+            failed_ids = previous_audit.get("failed_recipient_uids")
+            valid_failed_ids = (
+                isinstance(failed_ids, list)
+                and len(failed_ids) == previous_failed
+                and len(set(str(value) for value in failed_ids)) == len(failed_ids)
+                and all(str(value).isdigit() and int(value) > 0 for value in failed_ids)
+            )
+            if previous_failed > 0 and valid_failed_ids:
+                available = set(all_audience)
+                audience = sorted({str(value) for value in failed_ids if str(value) in available})
+                if not audience:
+                    return {
+                        "status": "NO_FAILED_RECIPIENTS",
+                        "detail": "No recorded failed recipients remain eligible; no new draft was created",
+                        "previous_failed": previous_failed,
+                    }
+                audience_scope = "failed_only"
+                retry_of_draft_id = str(previous_audit.get("draft_id") or "")
+            elif previous_failed > 0:
+                # A historical PARTIAL audit with counts only cannot identify safe retry targets.
+                # Require a distinct, explicit voice acknowledgement before a full repeat.
+                requires_duplicate_ack = True
+
         audience_sha256 = _broadcast_audience_hash(audience)
         record = {
             "draft_id": draft_id,
@@ -343,6 +443,12 @@ def prepare_exchange_broadcast(uid, *, now=None):
             "target_count": len(audience),
             "audience_sha256": audience_sha256,
             "message_sha256": hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest(),
+            "audience_scope": audience_scope,
+            "retry_of_draft_id": retry_of_draft_id,
+            "requires_duplicate_ack": requires_duplicate_ack,
+            "previous_sent": previous_sent,
+            "previous_failed": previous_failed,
+            "failed_recipient_uids": [],
         }
         pending_map[uid] = record
         return {
@@ -350,12 +456,17 @@ def prepare_exchange_broadcast(uid, *, now=None):
             "draft_id": draft_id,
             "expires_at": expires_at,
             "target_count": len(audience),
+            "audience_scope": audience_scope,
+            "retry_of_draft_id": retry_of_draft_id,
+            "requires_duplicate_ack": requires_duplicate_ack,
+            "previous_sent": previous_sent,
+            "previous_failed": previous_failed,
         }
 
     return state_manager.atomic_update(mutate)
 
 
-def _terminal_state(uid, draft_id, status, *, sent=0, failed=0, detail="", check=None, now=None):
+def _terminal_state(uid, draft_id, status, *, sent=0, failed=0, failed_recipient_uids=None, detail="", check=None, now=None):
     finished_at = _utc_text(now)
 
     def mutate(db):
@@ -368,6 +479,10 @@ def _terminal_state(uid, draft_id, status, *, sent=0, failed=0, detail="", check
                 "sent": int(sent),
                 "failed": int(failed),
                 "detail": str(detail or "")[:300],
+                "failed_recipient_uids": [
+                    str(value) for value in (failed_recipient_uids or [])
+                    if str(value).isdigit() and int(value) > 0
+                ],
             })
             if check is not None:
                 record["last_exchange_check"] = check
@@ -382,12 +497,15 @@ def _terminal_state(uid, draft_id, status, *, sent=0, failed=0, detail="", check
             "sent": int(sent),
             "failed": int(failed),
             "detail": str(detail or "")[:300],
+            "previous_sent": int(record.get("previous_sent") or 0) if isinstance(record, dict) else 0,
+            "previous_failed": int(record.get("previous_failed") or 0) if isinstance(record, dict) else 0,
         }
 
     return state_manager.atomic_update(mutate)
 
 
-def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
+
+def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowledged=False):
     """Claim one voice-confirmed draft, re-check the live exchange, then send.
 
     The claim is atomic and single-use. Exchange readiness is checked against
@@ -407,6 +525,13 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
             return {"status": "NOT_PENDING", "detail": "No prepared broadcast"}
         if record.get("status") != "PENDING_CONFIRMATION":
             return {"status": "ALREADY_HANDLED", "detail": "This draft is no longer pending"}
+        if record.get("requires_duplicate_ack") is True and not duplicate_acknowledged:
+            return {
+                "status": "DUPLICATE_ACK_REQUIRED",
+                "detail": "Historical partial delivery has no recipient-level failure list; a full repeat requires explicit voice acknowledgement",
+                "previous_sent": int(record.get("previous_sent") or 0),
+                "previous_failed": int(record.get("previous_failed") or 0),
+            }
         try:
             expires_at = _utc_now(record.get("expires_at"))
         except Exception:
@@ -432,7 +557,14 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
             _append_exchange_broadcast_audit(db, record, "BLOCKED", detail="Invalid users registry", check=proof, now=current)
             return {"status": "BLOCKED", "detail": "Invalid users registry", "sent": 0}
 
-        audience = _broadcast_audience(db)
+        audience = _audience_for_record(db, record)
+        if audience is None:
+            detail = "Retry audit no longer proves the original failed-recipient set"
+            record.update({"status": "RECIPIENTS_CHANGED", "finished_at": current_text, "detail": detail})
+            _append_exchange_broadcast_audit(
+                db, record, "RECIPIENTS_CHANGED", sent=0, failed=0, detail=detail, check=proof, now=current
+            )
+            return {"status": "RECIPIENTS_CHANGED", "detail": detail, "target_count": int(record.get("target_count") or 0), "sent": 0}
         expected_count = int(record.get("target_count") or 0)
         expected_hash = str(record.get("audience_sha256") or "")
         current_hash = _broadcast_audience_hash(audience)
@@ -509,6 +641,7 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
 
     sent = 0
     failed = 0
+    failed_recipient_uids = []
     next_allowed_at = time.monotonic()
     latest_check = proof
 
@@ -540,11 +673,13 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None):
             sent += 1
         else:
             failed += 1
+            failed_recipient_uids.append(str(recipient))
 
     status = "SENT" if sent == target_count and failed == 0 else "PARTIAL"
     detail = "All recipients sent" if status == "SENT" else "Some recipients could not be reached"
     return _terminal_state(
-        uid, draft_id, status, sent=sent, failed=failed, detail=detail,
+        uid, draft_id, status, sent=sent, failed=failed,
+        failed_recipient_uids=failed_recipient_uids, detail=detail,
         check=latest_check,
     )
 
@@ -554,7 +689,16 @@ def _exchange_broadcast_reply(result):
     if status == "SENT":
         return f"✅ ברודקאסט המסחר הפנימי נשלח ל־{result.get('sent', 0)} משתמשים. בדיקת Exchange רעננה עברה לפני השליחה."
     if status == "PARTIAL":
-        return f"🟡 ברודקאסט חלקי: נשלחו {result.get('sent', 0)}; נכשלו {result.get('failed', 0)}. בדיקת Exchange נרשמה."
+        return f"🟡 ברודקאסט חלקי: נשלחו {result.get('sent', 0)}; נכשלו {result.get('failed', 0)}. בדיקת Exchange נרשמה. אפשר להכין ניסיון חוזר לנמענים שנכשלו בלבד."
+    if status == "DUPLICATE_ACK_REQUIRED":
+        return (
+            f"⚠️ לא נשלח ברודקאסט. ביומן ההיסטורי חסרה רשימת הנמענים שנכשלו; "
+            f"השידור הקודם הגיע ל־{result.get('previous_sent', 0)} ונכשל ל־{result.get('previous_failed', 0)}. "
+            "שליחה רגילה תיצור כפילויות, ולכן נדרש אישור קולי נפרד ומפורש: "
+            "״אשר ושלח ברודקאסט מלא למרות כפילויות״."
+        )
+    if status == "NO_FAILED_RECIPIENTS":
+        return "ℹ️ לא נוצרה טיוטה: אין נמענים שנכשלו ונשארו זכאים לניסיון חוזר."
     if status == "STOPPED_GATE_CLOSED":
         return f"⛔ נעצר באמצע כי בדיקת Exchange כבר לא ירוקה. נשלחו {result.get('sent', 0)} מתוך {result.get('target_count', 'היעד')}. לא נשלחו הודעות נוספות."
     if status == "BLOCKED":
@@ -656,11 +800,21 @@ def _broadcast_status_reply(uid, *, now=None):
     else:
         last_broadcast = "אין שליחת Exchange מתועדת ביומן הקנוני."
 
+    duplicate_notice = ""
+    if isinstance(pending, dict) and pending.get("requires_duplicate_ack") is True:
+        duplicate_notice = (
+            f"\n⚠️ זיהוי כפילות: שידור קודם הגיע ל־{int(pending.get('previous_sent') or 0)} "
+            f"ונכשל ל־{int(pending.get('previous_failed') or 0)}. "
+            "אישור רגיל חסום; יש לאשר במפורש שידור מלא חוזר."
+        )
+    elif isinstance(pending, dict) and pending.get("audience_scope") == "failed_only":
+        duplicate_notice = "\n✅ הטיוטה מיועדת רק לנמענים שנכשלו בשידור הקודם."
+
     return (
         "🔎 BROADCAST STATUS — READ ONLY\n"
         "הפקודה הזו לא שולחת הודעות.\n"
         f"Internal Exchange: {gate} · {proof['status']}\n"
-        f"Exchange draft: {pending_status}\n"
+        f"Exchange draft: {pending_status}{duplicate_notice}\n"
         f"Last audited Exchange broadcast: {last_broadcast}\n"
         "להכנת הודעת מסחר: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
         "נדרשים תצוגה מקדימה ואישור קולי נפרד."
@@ -727,15 +881,34 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         if result.get("status") != "PREPARED":
             return _exchange_broadcast_reply(result)
         recipient_count = int(result.get("target_count") or 0)
+        if result.get("audience_scope") == "failed_only":
+            target_note = "✅ ניסיון חוזר ממוקד: רק נמענים שנכשלו בשידור הקודם."
+            confirmation = "״אשר ושלח ברודקאסט למסחר פנימי״."
+        elif result.get("requires_duplicate_ack"):
+            target_note = (
+                f"⚠️ אזהרת כפילות: השידור ההיסטורי נשלח ל־{result.get('previous_sent', 0)} "
+                f"משתמשים ונכשל ל־{result.get('previous_failed', 0)}. "
+                "לא נשמרו מזהי הנכשלים, לכן אי אפשר לבודד אותם. אישור רגיל לא ישלח הודעה."
+            )
+            confirmation = "״אשר ושלח ברודקאסט מלא למרות כפילויות״."
+        else:
+            target_note = "קהל היעד הרגיל ננעל לתצוגה הזו."
+            confirmation = "״אשר ושלח ברודקאסט למסחר פנימי״."
         return (
             "🧾 תצוגה מקדימה בלבד — לא נשלחה הודעה לאף משתמש.\n"
             f"👥 קהל היעד שננעל לתצוגה הזו: {recipient_count} משתמשים.\n"
-            "אם רשימת המשתמשים תשתנה לפני האישור, השליחה תיחסם ותידרש תצוגה חדשה.\n"
+            f"{target_note}\n"
+            "אם רשימת הנמענים הרלוונטית תשתנה לפני האישור, השליחה תיחסם ותידרש תצוגה חדשה.\n"
             f"טיוטה בתוקף ל־{EXCHANGE_BROADCAST_TTL_SECONDS // 60} דקות.\n\n"
             f"{EXCHANGE_BROADCAST_TEXT}\n\n"
-            "כדי לבצע שליחה אמיתית, אמור עכשיו במפורש: ״אשר ושלח ברודקאסט למסחר פנימי״. "
+            f"כדי לבצע שליחה אמיתית, אמור עכשיו במפורש: {confirmation} "
             "ברגע האישור תתבצע בדיקת Exchange קנונית רעננה; אם השער לא OPEN וכל האינווריאנטים לא PASS, לא תישלח הודעה."
         )
 
-    result = send_confirmed_exchange_broadcast(bot, uid, now=now)
+    duplicate_acknowledged = phrase in {
+        _normalize_voice_phrase(item) for item in _DUPLICATE_ACK_VOICE_PHRASES
+    }
+    result = send_confirmed_exchange_broadcast(
+        bot, uid, now=now, duplicate_acknowledged=duplicate_acknowledged
+    )
     return _exchange_broadcast_reply(result)
