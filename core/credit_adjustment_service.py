@@ -59,14 +59,25 @@ def _exact_nonnegative_int(value):
 
 
 def _resolve_owner_bsc_wallet(uid, db, treasury):
-    """Resolve the unique bound BSC wallet and reject every unsafe registry row."""
+    """Resolve the exact owner binding for the invalid Treasury self-transfer case.
+
+    This forensic-only resolver intentionally permits the misconfiguration being
+    corrected, but only when the target user's unique BSC binding is also the
+    canonical Treasury and no other binding aliases that address.
+    """
     if not isinstance(db, dict):
         raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
     bindings = db.get("wallet_bindings")
     if not isinstance(bindings, dict):
         raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
 
+    uid = str(uid or "").strip()
+    treasury_key = str(treasury or "").strip().lower()
+    if not re.fullmatch(r"0x[0-9a-f]{40}", treasury_key):
+        raise ValueError("BNB_CANONICAL_TREASURY_MISMATCH")
+
     owner_wallets = []
+    treasury_bindings = []
     for binding in bindings.values():
         if not isinstance(binding, dict):
             raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
@@ -78,19 +89,25 @@ def _resolve_owner_bsc_wallet(uid, db, treasury):
             raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
         if is_quarantined_bsc_address(address):
             raise ValueError("BNB_WALLET_BINDINGS_UNVERIFIED")
-        if address.lower() == str(treasury or "").strip().lower():
-            raise ValueError("BNB_TREASURY_MATCHES_BOUND_WALLET")
 
-        if str(binding.get("uid") or "").strip() == str(uid):
+        binding_uid = str(binding.get("uid") or "").strip()
+        if address.lower() == treasury_key:
+            treasury_bindings.append(binding_uid)
+        if binding_uid == uid:
             owner_wallets.append(address)
 
     if len(owner_wallets) != 1:
         raise ValueError("BNB_OWNER_WALLET_NOT_UNIQUE")
-    return owner_wallets[0]
+    owner_wallet = owner_wallets[0]
+    if owner_wallet.lower() != treasury_key:
+        raise ValueError("BNB_SELF_TRANSFER_NOT_TREASURY_ALIAS")
+    if treasury_bindings != [uid]:
+        raise ValueError("BNB_TREASURY_BINDING_NOT_UNIQUE")
+    return owner_wallet
 
 
 def _verify_self_transfer_for_reversal(uid, tx_hash, db):
-    """Read-only live BSC verification of a confirmed bound-owner self-transfer."""
+    """Read-only proof of a confirmed self-transfer by the user bound to Treasury."""
     cfg = _effective_config(db)
     rpc = str(cfg.get("rpc") or "").strip()
     treasury = str(cfg.get("treasury_wallet") or "").strip()
@@ -540,7 +557,7 @@ def reverse_invalid_bnb_deposit(
                 "source_ledger_index": live_index,
                 "tx_hash": tx_hash.lower(),
                 "actor_uid": actor_uid,
-                "adjustment_basis": "verified BSC transaction sender and receiver both equal the bound owner wallet, distinct from canonical Treasury",
+                "adjustment_basis": "verified BSC sender and receiver equal the bound owner wallet; that wallet aliases canonical Treasury in the invalid deposit event",
                 "nominal_credits_reversed": float(source_amount),
                 "chain_id": proof["chain_id"],
                 "block": proof["block"],
