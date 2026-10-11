@@ -1,6 +1,6 @@
 import unittest
 
-from core.exec_policy import is_audit_command
+from core.exec_policy import is_audit_command, redact_secrets
 
 
 class ExecAuditBoundaryTests(unittest.TestCase):
@@ -29,6 +29,34 @@ class ExecAuditBoundaryTests(unittest.TestCase):
     def test_chaining_remains_blocked(self):
         self.assertFalse(is_audit_command("cat core/authority.py && pwd"))
         self.assertFalse(is_audit_command("grep token core/ | head"))
+
+    def test_redacts_credentials_in_json_with_quoted_keys(self):
+        password = "device-password-value-123"
+        activation = "SLH-ACT-0123456789"
+        bridge_token = "bridge-token-value-123456"
+        payload = (
+            '{"mqtt_password": "' + password + '", '
+            '"activation_code": "' + activation + '", '
+            '"SLH_MCP_BRIDGE_TOKEN": "' + bridge_token + '"}'
+        )
+
+        redacted = redact_secrets(payload)
+
+        for secret in (password, activation, bridge_token):
+            self.assertNotIn(secret, redacted)
+        self.assertIn('"mqtt_password": "[REDACTED]"', redacted)
+        self.assertIn('"activation_code": "[REDACTED]"', redacted)
+        self.assertIn('"SLH_MCP_BRIDGE_TOKEN": "[REDACTED]"', redacted)
+
+    def test_redacts_unlabelled_telegram_bot_token(self):
+        token = "123456789:ZXABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdef"
+        self.assertNotIn(token, redact_secrets("runtime output: " + token))
+
+    def test_redacts_standalone_seed_phrase_and_labelled_mnemonic(self):
+        phrase = "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima"
+        self.assertNotIn(phrase, redact_secrets(phrase))
+        labelled = "mnemonic: " + phrase
+        self.assertNotIn(phrase, redact_secrets(labelled))
 
 
 if __name__ == "__main__":
