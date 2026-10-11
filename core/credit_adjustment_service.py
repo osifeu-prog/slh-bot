@@ -110,6 +110,115 @@ def _verify_self_transfer_for_reversal(tx_hash, db):
         raise ValueError("BNB_FORENSIC_RPC_FAILED") from None
 
 
+
+def _existing_reversal_result(db, *, uid, tx_hash, correction_key, source_key):
+    """Return an idempotent result only when ledger, wallet, and audit agree."""
+    ledger = db.get("ledger", [])
+    if not isinstance(ledger, list):
+        raise ValueError("LEDGER_UNREADABLE")
+
+    corrections = [
+        row for row in ledger
+        if isinstance(row, dict)
+        and isinstance(row.get("meta"), dict)
+        and row["meta"].get("idempotency_key") == correction_key
+    ]
+    if not corrections:
+        return None
+    if len(corrections) != 1:
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+
+    prior = corrections[0]
+    meta = prior.get("meta")
+    source_matches = [
+        (index, row) for index, row in enumerate(ledger)
+        if isinstance(row, dict)
+        and str(row.get("uid")) == uid
+        and row.get("reason") == "bnb:deposit"
+        and isinstance(row.get("meta"), dict)
+        and str(row["meta"].get("tx_hash") or "").lower() == tx_hash.lower()
+        and row["meta"].get("idempotency_key") == source_key
+    ]
+    if len(source_matches) != 1:
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+    source_index, source = source_matches[0]
+    source_meta = source["meta"]
+
+    audits = db.get("credit_adjustment_audit", [])
+    if not isinstance(audits, list):
+        raise ValueError("CREDIT_ADJUSTMENT_AUDIT_UNREADABLE")
+    matching_audits = [
+        row for row in audits
+        if isinstance(row, dict)
+        and row.get("correction_idempotency_key") == correction_key
+    ]
+    if len(matching_audits) != 1:
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+    audit = matching_audits[0]
+
+    try:
+        source_amount = _decimal(source.get("amount"), "SOURCE_AMOUNT_INVALID")
+        source_before = _decimal(source.get("before"), "SOURCE_BALANCE_INVALID")
+        source_after = _decimal(source.get("after"), "SOURCE_BALANCE_INVALID")
+        correction_before = _decimal(prior.get("before"), "REVERSAL_BEFORE_INVALID")
+        correction_amount = _decimal(prior.get("amount"), "REVERSAL_AMOUNT_INVALID")
+        correction_after = _decimal(prior.get("after"), "REVERSAL_AFTER_INVALID")
+        nominal = _decimal(meta.get("nominal_credits_reversed"), "REVERSAL_NOMINAL_INVALID")
+        audit_before = _decimal(audit.get("balance_before"), "REVERSAL_AUDIT_INVALID")
+        audit_after = _decimal(audit.get("balance_after"), "REVERSAL_AUDIT_INVALID")
+        audit_amount = _decimal(audit.get("amount"), "REVERSAL_AUDIT_INVALID")
+        audit_nominal = _decimal(audit.get("nominal_credits_reversed"), "REVERSAL_AUDIT_INVALID")
+        balance = _decimal(
+            db.get("users", {}).get(uid, {}).get("wallet", {}).get("credits"),
+            "REVERSAL_WALLET_INVALID",
+        )
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT") from None
+
+    expected_meta = (
+        str(prior.get("uid")) == uid
+        and prior.get("reason") == _CORRECTION_REASON
+        and str(meta.get("tx_hash") or "").lower() == tx_hash.lower()
+        and meta.get("source_idempotency_key") == source_key
+        and meta.get("source_reason") == "bnb:deposit"
+        and meta.get("source_ledger_index") == source_index
+        and meta.get("gate_remained_closed") is True
+        and meta.get("chain_id") == 56
+        and int(meta.get("amount_wei") or 0) == int(source_meta.get("bnb_amount_wei") or 0)
+        and str(meta.get("from") or "").lower() == str(source_meta.get("from") or "").lower()
+        and str(meta.get("to") or "").lower() == str(source_meta.get("to") or "").lower()
+    )
+    expected_audit = (
+        audit.get("event") == "INVALID_BNB_SELF_TRANSFER_REVERSED"
+        and str(audit.get("uid")) == uid
+        and str(audit.get("tx_hash") or "").lower() == tx_hash.lower()
+        and audit.get("source_idempotency_key") == source_key
+        and audit.get("gate_remained_closed") is True
+        and audit.get("chain_id") == 56
+        and audit_before == correction_before
+        and audit_after == correction_after
+        and audit_amount == correction_amount
+        and audit_nominal == nominal
+    )
+    if not (
+        expected_meta
+        and expected_audit
+        and correction_before == source_after
+        and correction_after == source_before
+        and nominal == source_amount
+        and balance == correction_after
+        and abs(float(correction_before) + float(correction_amount) - float(correction_after)) <= 1e-9
+    ):
+        raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
+
+    return {
+        "status": "ALREADY_REVERSED",
+        "uid": uid,
+        "tx_hash": tx_hash.lower(),
+        "correction_idempotency_key": correction_key,
+        "balance_after": prior.get("after"),
+    }
+
 def reverse_invalid_bnb_deposit(
     *,
     actor_uid,
@@ -146,25 +255,15 @@ def reverse_invalid_bnb_deposit(
     initial_ledger = initial_db.get("ledger", [])
     if not isinstance(initial_ledger, list):
         raise ValueError("LEDGER_UNREADABLE")
-    existing_corrections = [
-        row for row in initial_ledger
-        if isinstance(row, dict)
-        and isinstance(row.get("meta"), dict)
-        and row["meta"].get("idempotency_key") == correction_key
-    ]
-    if existing_corrections:
-        if len(existing_corrections) != 1:
-            raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
-        prior = existing_corrections[0]
-        if str(prior.get("uid")) != uid or prior.get("reason") != _CORRECTION_REASON:
-            raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
-        return {
-            "status": "ALREADY_REVERSED",
-            "uid": uid,
-            "tx_hash": tx_hash.lower(),
-            "correction_idempotency_key": correction_key,
-            "balance_after": prior.get("after"),
-        }
+    existing_result = _existing_reversal_result(
+        initial_db,
+        uid=uid,
+        tx_hash=tx_hash,
+        correction_key=correction_key,
+        source_key=source_key,
+    )
+    if existing_result is not None:
+        return existing_result
 
     # Chain proof is obtained independently of any caller-supplied evidence.
     proof = _verify_self_transfer_for_reversal(tx_hash, initial_db)
@@ -228,25 +327,15 @@ def reverse_invalid_bnb_deposit(
         if not isinstance(ledger, list):
             raise ValueError("LEDGER_UNREADABLE")
 
-        corrections = [
-            row for row in ledger
-            if isinstance(row, dict)
-            and isinstance(row.get("meta"), dict)
-            and row["meta"].get("idempotency_key") == correction_key
-        ]
-        if corrections:
-            if len(corrections) != 1:
-                raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
-            prior = corrections[0]
-            if str(prior.get("uid")) != uid or prior.get("reason") != _CORRECTION_REASON:
-                raise ValueError("CREDIT_ADJUSTMENT_IDEMPOTENCY_CONFLICT")
-            return {
-                "status": "ALREADY_REVERSED",
-                "uid": uid,
-                "tx_hash": tx_hash.lower(),
-                "correction_idempotency_key": correction_key,
-                "balance_after": prior.get("after"),
-            }
+        existing_result = _existing_reversal_result(
+            db,
+            uid=uid,
+            tx_hash=tx_hash,
+            correction_key=correction_key,
+            source_key=source_key,
+        )
+        if existing_result is not None:
+            return existing_result
 
         live_matches = [
             (index, row) for index, row in enumerate(ledger)
@@ -283,6 +372,16 @@ def reverse_invalid_bnb_deposit(
         if current_balance < source_amount:
             raise ValueError("INSUFFICIENT_CREDITS_FOR_REVERSAL")
 
+        audits = db.get("credit_adjustment_audit", [])
+        if not isinstance(audits, list):
+            raise ValueError("CREDIT_ADJUSTMENT_AUDIT_UNREADABLE")
+        if any(
+            isinstance(row, dict)
+            and row.get("correction_idempotency_key") == correction_key
+            for row in audits
+        ):
+            raise ValueError("CREDIT_ADJUSTMENT_AUDIT_IDEMPOTENCY_CONFLICT")
+
         # Restore the exact recorded pre-credit balance. Because the legacy
         # ledger uses floats, derive its numeric delta from the two stored
         # balances so before + amount == after remains exact in binary float.
@@ -292,6 +391,7 @@ def reverse_invalid_bnb_deposit(
         # to reconcile within a sub-nanocredit tolerance, not bitwise equality.
         if abs((float(current_balance) + reversal_amount) - float(after)) > 1e-9:
             raise ValueError("REVERSAL_FLOAT_ARITHMETIC_INVALID")
+        audits = db.setdefault("credit_adjustment_audit", [])
         wallet["credits"] = float(after)
         reversal = {
             "time": timestamp,
@@ -320,9 +420,6 @@ def reverse_invalid_bnb_deposit(
             },
         }
         ledger.append(reversal)
-        audits = db.setdefault("credit_adjustment_audit", [])
-        if not isinstance(audits, list):
-            raise ValueError("CREDIT_ADJUSTMENT_AUDIT_UNREADABLE")
         audits.append({
             "event": "INVALID_BNB_SELF_TRANSFER_REVERSED",
             "time": timestamp,
