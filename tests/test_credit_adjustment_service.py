@@ -57,6 +57,7 @@ def _proof():
         "from": OWNER_WALLET,
         "to": OWNER_WALLET,
         "treasury": TREASURY,
+        "bound_wallet": OWNER_WALLET,
         "amount_wei": 10**16,
         "block": 123,
         "confirmations": 20,
@@ -65,6 +66,7 @@ def _proof():
 
 
 def _patch_runtime(monkeypatch, db):
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
@@ -266,9 +268,11 @@ def test_live_forensic_verifier_rejects_treasury_aliasing_bound_wallet(monkeypat
     monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
     monkeypatch.setattr(target, "Web3", _web3_stub(fake))
 
+    db = _db()
+    db["bsc_settings"]["treasury_wallet"] = OWNER_WALLET
     with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": OWNER_WALLET}, clear=False):
         with pytest.raises(ValueError, match="BNB_TREASURY_MATCHES_BOUND_WALLET"):
-            target._verify_self_transfer_for_reversal(UID, TX, _db())
+            target._verify_self_transfer_for_reversal(UID, TX, db)
 
 
 def test_live_forensic_verifier_rejects_failed_receipt(monkeypatch):
@@ -287,6 +291,29 @@ def test_live_forensic_verifier_rejects_failed_receipt(monkeypatch):
         with pytest.raises(ValueError, match="BNB_TX_NOT_SUCCESSFUL"):
             target._verify_self_transfer_for_reversal(UID, TX, _db())
 
+
+
+def test_reversal_refuses_wallet_binding_change_between_proof_and_atomic_mutation(monkeypatch):
+    initial_db = _db()
+    changed_db = deepcopy(initial_db)
+    changed_db["wallet_bindings"]["bsc:test-owner"]["address"] = (
+        "0x3333333333333333333333333333333333333333"
+    )
+    before = deepcopy(changed_db)
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
+    monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: initial_db)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(changed_db))
+    monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
+    monkeypatch.setattr(
+        target, "_verify_self_transfer_for_reversal",
+        lambda _uid, _tx, _snapshot: _proof(),
+    )
+
+    with pytest.raises(ValueError, match="BNB_WALLET_BINDING_CHANGED_DURING_VERIFICATION"):
+        _apply(initial_db)
+
+    assert changed_db == before
 
 
 def test_reversal_accepts_canonical_float_rounding_for_non_round_bnb_amount(monkeypatch):
