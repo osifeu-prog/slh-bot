@@ -36,7 +36,7 @@ class ExchangeGateControlPlaneBridgeTests(unittest.TestCase):
         self.assertNotIn("BOT_TOKEN", str(response.get_json()))
         self.assertNotIn("RAILWAY_API_TOKEN", str(response.get_json()))
 
-    def test_bridge_is_close_only_and_requires_explicit_action(self):
+    def test_bridge_requires_fresh_proof_to_open_and_explicit_action_to_close(self):
         close_result = {
             "status": "DEPLOY_TRIGGERED",
             "previous": "1",
@@ -56,7 +56,7 @@ class ExchangeGateControlPlaneBridgeTests(unittest.TestCase):
             )
             close.assert_not_called()
             self.assertEqual(opened.status_code, 400)
-            self.assertEqual(opened.get_json(), {"error": "CLOSE_ONLY_ACTION_REQUIRED"})
+            self.assertEqual(opened.get_json(), {"error": "EXCHANGE_OPENING_PROOF_INVALID"})
 
             closed = self.client.post(
                 "/api/internal/exchange-gate",
