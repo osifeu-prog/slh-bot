@@ -13,7 +13,7 @@ from core import credit_adjustment_service as target
 UID = "test-owner-1"
 TX = "0x" + "ab" * 32
 TREASURY = "0x1111111111111111111111111111111111111111"
-OWNER_WALLET = "0x2222222222222222222222222222222222222222"
+OWNER_WALLET = TREASURY
 SOURCE_KEY = f"bnb:deposit:{TX}"
 CORRECTION_KEY = f"accounting:reversal:{TX}"
 
@@ -438,8 +438,11 @@ def test_live_forensic_verifier_rejects_external_sender(monkeypatch):
 
 
 
-def test_live_forensic_verifier_rejects_a_normal_transfer_to_treasury(monkeypatch):
-    fake = _fake_web3_transaction(sender=OWNER_WALLET, recipient=TREASURY)
+def test_live_forensic_verifier_rejects_a_transfer_that_is_not_treasury_self_transfer(monkeypatch):
+    fake = _fake_web3_transaction(
+        sender=OWNER_WALLET,
+        recipient="0x3333333333333333333333333333333333333333",
+    )
     config = {
         "chain_id": 56,
         "rpc": "https://rpc.invalid",
@@ -455,12 +458,13 @@ def test_live_forensic_verifier_rejects_a_normal_transfer_to_treasury(monkeypatc
             target._verify_self_transfer_for_reversal(UID, TX, _db())
 
 
-def test_live_forensic_verifier_rejects_treasury_aliasing_bound_wallet(monkeypatch):
+def test_live_forensic_verifier_rejects_when_owner_binding_does_not_alias_treasury(monkeypatch):
+    other_treasury = "0x3333333333333333333333333333333333333333"
     fake = _fake_web3_transaction()
     config = {
         "chain_id": 56,
         "rpc": "https://rpc.invalid",
-        "treasury_wallet": OWNER_WALLET,
+        "treasury_wallet": other_treasury,
         "confirmations": 15,
     }
     monkeypatch.setattr(target, "_effective_config", lambda _db: config)
@@ -468,9 +472,9 @@ def test_live_forensic_verifier_rejects_treasury_aliasing_bound_wallet(monkeypat
     monkeypatch.setattr(target, "Web3", _web3_stub(fake))
 
     db = _db()
-    db["bsc_settings"]["treasury_wallet"] = OWNER_WALLET
-    with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": OWNER_WALLET}, clear=False):
-        with pytest.raises(ValueError, match="BNB_TREASURY_MATCHES_BOUND_WALLET"):
+    db["bsc_settings"]["treasury_wallet"] = other_treasury
+    with patch.dict(os.environ, {"SLH_BSC_CANONICAL_TREASURY": other_treasury}, clear=False):
+        with pytest.raises(ValueError, match="BNB_SELF_TRANSFER_NOT_TREASURY_ALIAS"):
             target._verify_self_transfer_for_reversal(UID, TX, db)
 
 
