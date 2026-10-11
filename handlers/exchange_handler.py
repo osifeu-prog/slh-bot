@@ -515,14 +515,13 @@ def _request_guarded_exchange_gate_open():
         )
 
     return (
-        "🛡️ EXCHANGE OPEN REQUEST ACCEPTED\n"
+        "🛡️ EXCHANGE DEPLOYMENT SUCCESS\n"
         "בדיקת מוכנות קנונית טרייה: PASS · gate היה CLOSED · אין פקודות פתוחות או test/seed state.\n"
-        "הוגדרה בקשה לפתיחה דרך ה־Control Plane לשער הפנימי בלבד.\n"
+        "הפריסה הסתיימה ב־SUCCESS עבור שער ה־Exchange הפנימי בלבד.\n"
         f"Commit: {result['commit'][:12]}\n"
         f"Deployment ID: {result['deployment_id']}\n\n"
-        "⚠️ זו בקשת Deploy, עדיין לא אישור שהמסחר זמין. אחרי שהבוט חוזר Online, "
-        "בדוק /exchange_gate status; רק OPEN VERIFIED מאפשר להמשיך לברודקאסט. "
-        "BNB ו־TON לא שונו."
+        "⚠️ עדיין צריך לוודא שה־runtime החדש עלה עם השער הפעיל: בדוק /exchange_gate status. "
+        "רק OPEN VERIFIED מאפשר להכריז על זמינות ולשלוח ברודקאסט. BNB ו־TON לא שונו."
     )
 
 
