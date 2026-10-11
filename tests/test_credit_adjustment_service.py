@@ -9,8 +9,8 @@ import pytest
 from core import credit_adjustment_service as target
 
 
-UID = "8789977826"
-TX = "0xb854868fbe753a346d6c053e4344080cceb8521a11dbaba09ec49a85caa496eb"
+UID = "test-owner-1"
+TX = "0x" + "ab" * 32
 TREASURY = "0x1111111111111111111111111111111111111111"
 SOURCE_KEY = f"bnb:deposit:{TX}"
 CORRECTION_KEY = f"accounting:reversal:{TX}"
