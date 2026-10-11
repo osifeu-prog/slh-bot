@@ -239,6 +239,45 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   await expect(page.locator('#governanceBody')).toContainText('yes · משקל 1');
 });
 
+test('Exchange overview shows canonical gate truth, not a hardcoded green status', async ({ page }) => {
+  await page.route('**/api/v1/exchange/summary', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ticker: { last_price: '1.00000000', has_data: true },
+        orderbook: { best_bid: '1.00000000', best_ask: null, orders: [{ id: 'O1', side: 'buy', amount: '1.00000000', price: '1.00000000' }] },
+        trades: { trades: [{ id: 'T1', slh_amount: '1.00000000', price: '1.00000000', timestamp: '2026-10-11T10:00:00Z' }] },
+        status: {
+          open: false,
+          public_gate: 'CLOSED',
+          verdict: 'BLOCKED',
+          execution_ready: false,
+          public_ready: false,
+          order_book_integrity: true,
+          trade_integrity: true,
+          money_invariants: true,
+          checked_at: '2026-10-11T10:00:00+00:00',
+          detail: 'public exchange gate is CLOSED',
+          total_orders: 1,
+          total_trades: 1,
+          sequence: 1
+        }
+      })
+    });
+  });
+  await page.evaluate(async () => {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    document.querySelector('#exchange').classList.add('active');
+    await loadExchange();
+  });
+  await expect(page.locator('#exEngineStatus')).toContainText('חסום למסחר');
+  await expect(page.locator('#exCanonicalGate')).toContainText('CLOSED');
+  await expect(page.locator('#exGateCheckedAt')).toContainText('2026-10-11T10:00:00+00:00');
+  await expect(page.locator('#exLiquidityNotice')).toContainText('המסחר חסום כרגע');
+  await expect(page.locator('#exEngineStatus')).not.toContainText('🟢 פעיל');
+});
+
 test('exchange receipt shows every fresh canonical gate item', async ({ page }) => {
   // Exercise the Mini App's real send handler directly; screen-navigation
   // coverage is tested separately and this test focuses on receipt semantics.
