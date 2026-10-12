@@ -2,6 +2,7 @@ import json
 
 from handlers.owner_control_center_handler import (
     CALLBACK_TTL_SECONDS,
+    _git_sha,
     callback_data,
     format_report,
     next_safe_step,
@@ -25,6 +26,22 @@ def test_next_safe_step_is_selection_only():
     assert step["id"] == "verify_runtime_sha"
     assert step["status"] == "UNKNOWN"
     assert "Railway" in step["reason"]
+    assert "viewer אינה זמינה" not in step["reason"]
+
+
+def test_git_sha_prefers_railway_injected_commit(monkeypatch):
+    expected = "9adb0ed89ebe2ab16019e290e64ffe564bfca995"
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", expected)
+    monkeypatch.delenv("GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SOURCE_VERSION", raising=False)
+    assert _git_sha() == expected
+
+
+def test_git_sha_rejects_invalid_environment_value(monkeypatch):
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "unknown")
+    monkeypatch.delenv("GIT_COMMIT", raising=False)
+    monkeypatch.delenv("SOURCE_VERSION", raising=False)
+    assert _git_sha() != "unknown"
 
 
 def test_report_persistence_and_format(tmp_path):
