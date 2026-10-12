@@ -748,11 +748,11 @@ def _request_guarded_exchange_gate_open():
         + _prepare_verified_exchange_broadcast_preview()
     )
 
-def route_exchange_gate_voice(bot, message, transcript):
-    """Handle only one explicit owner/private voice request for guarded Exchange opening."""
+def _matches_exchange_gate_open_phrase(text):
+    """Exact phrase allowlist shared by owner voice and typed-text controls."""
     from handlers.broadcast_handler import _normalize_voice_phrase
 
-    phrase = _normalize_voice_phrase(transcript)
+    phrase = _normalize_voice_phrase(str(text or ""))
     allowed = {
         _normalize_voice_phrase("פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת"),
         _normalize_voice_phrase("פתח את המסחר הפנימי אם בדיקת המוכנות הקנונית עוברת"),
@@ -760,7 +760,30 @@ def route_exchange_gate_voice(bot, message, transcript):
         _normalize_voice_phrase("פתח את המסחר הפנימי רק אם בדיקת המוכנות הקנונית עוברת"),
         _normalize_voice_phrase("פתח מסחר פנימי אם בדיקת מוכנות קנונית עוברת"),
     }
-    if phrase not in allowed:
+    return phrase in allowed
+
+
+def _is_exchange_gate_text_message(message):
+    """Pure filter: do not perform an operation while Telegram evaluates handlers."""
+    return _matches_exchange_gate_open_phrase(getattr(message, "text", ""))
+
+
+def route_exchange_gate_text(bot, message, text):
+    """Route one exact typed owner request to the same guarded open path as voice."""
+    if not _matches_exchange_gate_open_phrase(text):
+        return None
+
+    uid = getattr(getattr(message, "from_user", None), "id", None)
+    if not is_owner(uid):
+        return "⛔ רק OWNER יכול לבקש פתיחת Exchange."
+    if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+        return "⛔ פתיחת Exchange זמינה רק בשיחה הפרטית עם הבוט."
+    return _request_guarded_exchange_gate_open()
+
+
+def route_exchange_gate_voice(bot, message, transcript):
+    """Handle only an exact owner/private voice request for guarded Exchange opening."""
+    if not _matches_exchange_gate_open_phrase(transcript):
         return None
 
     uid = getattr(getattr(message, "from_user", None), "id", None)
@@ -772,6 +795,12 @@ def route_exchange_gate_voice(bot, message, transcript):
 
 
 def register(bot):
+    @bot.message_handler(func=_is_exchange_gate_text_message, content_types=["text"])
+    def exchange_gate_text_cmd(msg):
+        answer = route_exchange_gate_text(bot, msg, getattr(msg, "text", "") or "")
+        if answer is not None:
+            bot.reply_to(msg, answer, parse_mode=None)
+
     @bot.message_handler(commands=["exchange_gate"])
     def exchange_gate_cmd(msg):
         if not is_owner(msg.from_user.id):
