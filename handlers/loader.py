@@ -30,6 +30,7 @@ def load_handlers(bot, context):
         ("withdraw", "handlers.withdraw_request_handler"),
         ("slh", "handlers.slh_handler"),
         ("bnb_empirical", "handlers.bnb_empirical_handler"),
+        ("bnb_gate_control", "handlers.bnb_gate_control_handler"),
         ("legacy_wallet", "handlers.legacy_wallet_handler"),
         ("arcade", "handlers.arcade_handler"),
         ("share", "handlers.share_handler"),
