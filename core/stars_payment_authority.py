@@ -97,6 +97,16 @@ def record_vip_subscription_payment(
         orders = db.setdefault("vip_subscriptions", {})
         existing = orders.get(charge_id)
         if existing is not None:
+            # A charge reference is immutable: reject a replay that tries to
+            # bind the same Telegram charge to a different user or amount.
+            if str(existing.get("uid", "")) != uid:
+                raise ValueError("VIP_CHARGE_UID_CONFLICT")
+            try:
+                existing_stars = int(existing.get("stars_paid"))
+            except (TypeError, ValueError) as exc:
+                raise ValueError("VIP_CHARGE_AMOUNT_CONFLICT") from exc
+            if existing_stars != stars_paid:
+                raise ValueError("VIP_CHARGE_AMOUNT_CONFLICT")
             return existing, False
 
         users = db.setdefault("users", {})
@@ -136,8 +146,24 @@ def record_vip_subscription_payment(
 
     record, created = state_manager.atomic_update(activate_and_mark)
 
-    # A completed replay is a no-op: do not re-run fulfillment or record
-    # subscription revenue a second time. Pending replays remain recoverable.
+    # Reconcile external payment revenue on every delivery/replay. The ledger
+    # is idempotent by source+reference, so this repairs a transient write
+    # failure without creating a second revenue event. If writing still fails,
+    # exit before fulfillment so a later replay can retry the ledger step.
+    _record_revenue(
+        source="telegram_stars_subscription",
+        amount=int(record.get("stars_paid", stars_paid)),
+        reference=str(record.get("charge_id") or charge_id),
+        uid=str(record.get("uid") or uid),
+        meta={
+            "kind": "vip_monthly",
+            "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+            "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
+        },
+    )
+
+    # A completed replay has now reconciled the revenue ledger, but must not
+    # re-run fulfillment or extend the subscription again.
     if not created and str(record.get("fulfillment_status", "pending")) == "completed":
         return {
             "status": "duplicate",
@@ -147,19 +173,6 @@ def record_vip_subscription_payment(
             "fulfillment_status": "completed",
             "bundle": record.get("bundle"),
         }
-
-    if created:
-        _record_revenue(
-            source="telegram_stars_subscription",
-            amount=stars_paid,
-            reference=charge_id,
-            uid=uid,
-            meta={
-                "kind": "vip_monthly",
-                "subscription_period": VIP_SUBSCRIPTION_PERIOD,
-                "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
-            },
-        )
 
     bundle = apply_vip_benefits(
         uid=uid,
