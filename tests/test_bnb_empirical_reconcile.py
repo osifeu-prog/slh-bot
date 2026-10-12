@@ -389,3 +389,35 @@ def test_discovery_reports_unavailable_not_not_found_when_indexer_fails(monkeypa
 
     assert result["status"] == "DISCOVERY_UNAVAILABLE"
     assert result["candidates"] == []
+
+def test_auto_discovery_reports_safe_rpc_phase_code_without_leaking_exception_text(monkeypatch):
+    import core.bnb_auto_discovery as discovery
+
+    secretish = "provider rejected response https://private-rpc.invalid/key=do-not-leak"
+
+    class FakeEth:
+        @property
+        def chain_id(self):
+            raise ValueError(secretish)
+
+    class FakeWeb3:
+        HTTPProvider = staticmethod(lambda _rpc: object())
+
+        def __init__(self, _provider):
+            self.eth = FakeEth()
+
+    monkeypatch.setattr(target, "is_owner", lambda uid: str(uid) == UID)
+    monkeypatch.setattr(discovery, "get_binding", lambda _uid: {"address": ADDRESS})
+    monkeypatch.setattr(
+        discovery,
+        "_config",
+        lambda: {"rpc": "https://rpc.invalid", "treasury_wallet": TREASURY},
+    )
+    monkeypatch.setattr(discovery, "Web3", FakeWeb3)
+
+    result = target.prepare_auto_existing_bnb_reconcile(UID, now=NOW)
+
+    assert result["status"] == "DISCOVERY_UNAVAILABLE"
+    assert result["detail"] == "BSC_RPC_CHAIN_ID_READ_FAILED"
+    assert "do-not-leak" not in str(result)
+    assert "private-rpc.invalid" not in str(result)

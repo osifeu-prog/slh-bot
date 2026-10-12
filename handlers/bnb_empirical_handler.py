@@ -41,6 +41,14 @@ def _idempotency_key(tx_hash):
     return f"bnb:deposit:{str(tx_hash or '').lower()}"
 
 
+def _safe_discovery_error_code(error, fallback):
+    """Expose stable uppercase diagnostic codes only, never provider text."""
+    value = str(error or "").strip()
+    if re.fullmatch(r"(?:BNB|BSC)_[A-Z0-9_]{1,80}", value):
+        return value
+    return fallback
+
+
 def _current_pass_evidence(db, evidence):
     """A stored PASS blocks reconciliation only if it revalidates now."""
     if not isinstance(evidence, dict) or evidence.get("status") != "PASS":
@@ -276,12 +284,32 @@ def prepare_auto_existing_bnb_reconcile(uid, *, now=None):
         return {"status": "FORBIDDEN"}
 
     try:
-        from core.bnb_auto_discovery import discover_bnb_transfer
+        from core.bnb_auto_discovery import BNBDiscoveryError, discover_bnb_transfer
+    except Exception:
+        return {
+            "status": "DISCOVERY_UNAVAILABLE",
+            "detail": "BNB_DISCOVERY_IMPORT_FAILED",
+            "scope": "read_only_discovery",
+        }
+
+    try:
         discovered = discover_bnb_transfer(uid)
-    except Exception as exc:
+    except BNBDiscoveryError as exc:
+        return {
+            "status": "DISCOVERY_UNAVAILABLE",
+            "detail": exc.code,
+            "scope": "read_only_discovery",
+        }
+    except ValueError as exc:
         return {
             "status": "DISCOVERY_FAILED",
-            "detail": type(exc).__name__,
+            "detail": _safe_discovery_error_code(exc, "BNB_DISCOVERY_VALIDATION_FAILED"),
+            "scope": "read_only_discovery",
+        }
+    except Exception:
+        return {
+            "status": "DISCOVERY_UNAVAILABLE",
+            "detail": "BNB_DISCOVERY_INTERNAL_ERROR",
             "scope": "read_only_discovery",
         }
 
@@ -385,9 +413,9 @@ def _auto_preview_reply(result):
             "צריך לזהות את ה־TX המדויק לפני השלב הבא."
             + suffix
         )
-    if status == "DISCOVERY_FAILED":
+    if status in {"DISCOVERY_FAILED", "DISCOVERY_UNAVAILABLE"}:
         return (
-            "⛔ גילוי ההעברה הקיימת לא הצליח. לא בוצעה עסקה ולא שונו יתרות. "
+            "⛔ גילוי ההעברה הקיימת לא הושלם. לא בוצעה עסקה ולא שונו יתרות. "
             f"קוד אבחון: {str((result or {}).get('detail') or status)[:80]}. "
             "BNB נשאר CLOSED."
         )
