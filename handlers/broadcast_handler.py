@@ -295,25 +295,94 @@ def _broadcast_audience_hash(audience):
     return hashlib.sha256("|".join(sorted(str(uid) for uid in audience)).encode("utf-8")).hexdigest()
 
 
+def _trusted_utc_timestamp(value):
+    """Parse only timezone-qualified timestamps; naive local/UTC guesses are unsafe."""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except (TypeError, ValueError, OverflowError):
+            return None
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        return None
+    try:
+        if value.utcoffset() is None:
+            return None
+        return value.astimezone(timezone.utc)
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def _user_created_at(user):
+    """Return a trustworthy persisted creation timestamp, or None if it cannot be proven."""
+    if not isinstance(user, dict):
+        return None
+    profile = user.get("profile")
+    candidates = (
+        user.get("joined"),
+        user.get("joined_at"),
+        user.get("created_at"),
+        profile.get("created") if isinstance(profile, dict) else None,
+        profile.get("created_at") if isinstance(profile, dict) else None,
+    )
+    for value in candidates:
+        parsed = _trusted_utc_timestamp(value)
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _new_audience_since(db, cutoff_value):
+    """Select only users demonstrably created after a prior delivery; fail closed on ambiguity."""
+    cutoff = _trusted_utc_timestamp(cutoff_value)
+    users = db.get("users") if isinstance(db, dict) else None
+    if cutoff is None or not isinstance(users, dict):
+        return None
+    audience = []
+    for raw_uid, user in users.items():
+        uid = str(raw_uid)
+        if not uid.isdigit() or int(uid) <= 0:
+            continue
+        created_at = _user_created_at(user)
+        if created_at is not None and created_at > cutoff:
+            audience.append(uid)
+    return sorted(set(audience))
+
+
 def _latest_exchange_broadcast_audit(db, uid):
+    """Return the latest actual delivery outcome, not a blocked/expired draft audit."""
     audit = db.get("exchange_broadcast_audit", [])
     if not isinstance(audit, list):
         return None
     message_hash = hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
-    relevant = [
-        item for item in audit
-        if isinstance(item, dict)
-        and str(item.get("initiated_by") or "") == str(uid)
-        and item.get("message_sha256") == message_hash
-    ]
+    relevant = []
+    for item in audit:
+        if (
+            not isinstance(item, dict)
+            or str(item.get("initiated_by") or "") != str(uid)
+            or item.get("message_sha256") != message_hash
+        ):
+            continue
+        status = str(item.get("status") or "").upper()
+        if status in {"SENT", "PARTIAL"}:
+            relevant.append(item)
+        elif status == "STOPPED_GATE_CLOSED":
+            try:
+                if int(item.get("sent") or 0) > 0:
+                    relevant.append(item)
+            except (TypeError, ValueError):
+                # Treat an uncertain, possibly-partial delivery as a prior delivery.
+                relevant.append(item)
     return relevant[-1] if relevant else None
 
 
 def _audience_for_record(db, record):
-    """Resolve exactly the previewed audience, including safe failed-only retries."""
+    """Resolve exactly the previewed audience, including safe retry cohorts."""
     current_audience = _broadcast_audience(db)
-    if str(record.get("audience_scope") or "all") != "failed_only":
+    scope = str(record.get("audience_scope") or "all")
+    if scope == "all":
         return current_audience
+    if scope not in {"failed_only", "new_users_only"}:
+        return None
 
     retry_id = str(record.get("retry_of_draft_id") or "")
     audit = db.get("exchange_broadcast_audit", [])
@@ -325,8 +394,17 @@ def _audience_for_record(db, record):
         and str(item.get("draft_id") or "") == retry_id
         and str(item.get("initiated_by") or "") == str(record.get("uid") or "")
     ), None)
-    if not isinstance(previous, dict):
+    if (
+        not isinstance(previous, dict)
+        or previous.get("status") not in {"PARTIAL", "STOPPED_GATE_CLOSED"}
+        or previous.get("message_sha256") != hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
+    ):
         return None
+
+    if scope == "new_users_only":
+        # A timestamp-verified cohort is recomputed at confirmation time.
+        return _new_audience_since(db, previous.get("finished_at"))
+
     failed_ids = previous.get("failed_recipient_uids")
     try:
         expected_failed = int(previous.get("failed") or 0)
@@ -334,7 +412,6 @@ def _audience_for_record(db, record):
         return None
     if (
         previous.get("status") != "PARTIAL"
-        or previous.get("message_sha256") != hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest()
         or not isinstance(failed_ids, list)
         or expected_failed != len(failed_ids)
         or len(set(str(value) for value in failed_ids)) != len(failed_ids)
@@ -404,20 +481,36 @@ def prepare_exchange_broadcast(uid, *, now=None):
         previous_sent = 0
         previous_failed = 0
 
-        if isinstance(previous_audit, dict) and previous_audit.get("status") == "PARTIAL":
+        if isinstance(previous_audit, dict) and previous_audit.get("status") in {"PARTIAL", "STOPPED_GATE_CLOSED"}:
             try:
                 previous_sent = int(previous_audit.get("sent") or 0)
                 previous_failed = int(previous_audit.get("failed") or 0)
+                previous_target = int(previous_audit.get("target_count") or 0)
             except (TypeError, ValueError):
-                previous_sent, previous_failed = 0, 0
+                return {
+                    "status": "SAFE_RETRY_UNAVAILABLE",
+                    "detail": "Historical delivery counts are invalid; a full-audience retry is blocked",
+                }
+
+            previous_status = str(previous_audit.get("status") or "")
+            prior_delivery = previous_sent > 0 or previous_status == "PARTIAL"
+            if not prior_delivery:
+                return {
+                    "status": "SAFE_RETRY_UNAVAILABLE",
+                    "detail": "A stopped or partial historical delivery cannot be reconciled safely",
+                }
+
             failed_ids = previous_audit.get("failed_recipient_uids")
             valid_failed_ids = (
-                isinstance(failed_ids, list)
+                previous_status == "PARTIAL"
+                and previous_failed > 0
+                and isinstance(failed_ids, list)
                 and len(failed_ids) == previous_failed
                 and len(set(str(value) for value in failed_ids)) == len(failed_ids)
                 and all(str(value).isdigit() and int(value) > 0 for value in failed_ids)
+                and previous_sent + previous_failed == previous_target
             )
-            if previous_failed > 0 and valid_failed_ids:
+            if valid_failed_ids:
                 available = set(all_audience)
                 audience = sorted({str(value) for value in failed_ids if str(value) in available})
                 if not audience:
@@ -428,10 +521,27 @@ def prepare_exchange_broadcast(uid, *, now=None):
                     }
                 audience_scope = "failed_only"
                 retry_of_draft_id = str(previous_audit.get("draft_id") or "")
-            elif previous_failed > 0:
-                # A historical PARTIAL audit with counts only cannot identify safe retry targets.
-                # Require a distinct, explicit voice acknowledgement before a full repeat.
-                requires_duplicate_ack = True
+            else:
+                # Missing/inconsistent recipient-level evidence: never fall back to all users.
+                # A new-user cohort requires timezone-qualified creation timestamps after
+                # the last delivery finished; naive timestamps are not considered proof.
+                audience = _new_audience_since(db, previous_audit.get("finished_at"))
+                if audience is None:
+                    return {
+                        "status": "SAFE_RETRY_UNAVAILABLE",
+                        "detail": "Cannot verify the prior delivery cutoff and user creation times; no draft was created",
+                        "previous_sent": previous_sent,
+                        "previous_failed": previous_failed,
+                    }
+                if not audience:
+                    return {
+                        "status": "NO_SAFE_NEW_RECIPIENTS",
+                        "detail": "No users can be proven to have joined after the prior delivery; no draft was created",
+                        "previous_sent": previous_sent,
+                        "previous_failed": previous_failed,
+                    }
+                audience_scope = "new_users_only"
+                retry_of_draft_id = str(previous_audit.get("draft_id") or "")
 
         audience_sha256 = _broadcast_audience_hash(audience)
         record = {
@@ -525,13 +635,26 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
             return {"status": "NOT_PENDING", "detail": "No prepared broadcast"}
         if record.get("status") != "PENDING_CONFIRMATION":
             return {"status": "ALREADY_HANDLED", "detail": "This draft is no longer pending"}
-        if record.get("requires_duplicate_ack") is True and not duplicate_acknowledged:
+        # Legacy drafts that offered a full repeat with duplicate acknowledgement are unsafe.
+        # Never let the old confirmation phrase bypass the new recipient-safety policy.
+        if record.get("requires_duplicate_ack") is True:
             return {
-                "status": "DUPLICATE_ACK_REQUIRED",
-                "detail": "Historical partial delivery has no recipient-level failure list; a full repeat requires explicit voice acknowledgement",
+                "status": "SAFE_RETRY_REQUIRED",
+                "detail": "Legacy full-audience retry disabled; prepare a safe failed-only or verified-new-user preview",
                 "previous_sent": int(record.get("previous_sent") or 0),
                 "previous_failed": int(record.get("previous_failed") or 0),
             }
+        latest_delivery = _latest_exchange_broadcast_audit(db, uid)
+        if isinstance(latest_delivery, dict) and latest_delivery.get("status") in {"PARTIAL", "STOPPED_GATE_CLOSED"}:
+            safe_scope = str(record.get("audience_scope") or "all") in {"failed_only", "new_users_only"}
+            retry_matches = str(record.get("retry_of_draft_id") or "") == str(latest_delivery.get("draft_id") or "")
+            if not (safe_scope and retry_matches):
+                return {
+                    "status": "SAFE_RETRY_REQUIRED",
+                    "detail": "Historical partial delivery requires a verified safe-recipient preview; full-audience confirmation is blocked",
+                    "previous_sent": int(latest_delivery.get("sent") or 0),
+                    "previous_failed": int(latest_delivery.get("failed") or 0),
+                }
         try:
             expires_at = _utc_now(record.get("expires_at"))
         except Exception:
@@ -690,12 +813,22 @@ def _exchange_broadcast_reply(result):
         return f"✅ ברודקאסט המסחר הפנימי נשלח ל־{result.get('sent', 0)} משתמשים. בדיקת Exchange רעננה עברה לפני השליחה."
     if status == "PARTIAL":
         return f"🟡 ברודקאסט חלקי: נשלחו {result.get('sent', 0)}; נכשלו {result.get('failed', 0)}. בדיקת Exchange נרשמה. אפשר להכין ניסיון חוזר לנמענים שנכשלו בלבד."
-    if status == "DUPLICATE_ACK_REQUIRED":
+    if status in {"DUPLICATE_ACK_REQUIRED", "SAFE_RETRY_REQUIRED"}:
         return (
-            f"⚠️ לא נשלח ברודקאסט. ביומן ההיסטורי חסרה רשימת הנמענים שנכשלו; "
-            f"השידור הקודם הגיע ל־{result.get('previous_sent', 0)} ונכשל ל־{result.get('previous_failed', 0)}. "
-            "שליחה רגילה תיצור כפילויות, ולכן נדרש אישור קולי נפרד ומפורש: "
-            "״אשר ושלח ברודקאסט מלא למרות כפילויות״."
+            f"⛔ לא נשלח ברודקאסט. ביומן ההיסטורי נשלחו {result.get('previous_sent', 0)} "
+            f"והיו {result.get('previous_failed', 0)} כישלונות, אך אין ראיה בטוחה לקהל מלא לניסיון חוזר. "
+            "אישור כפילויות ישן אינו עוקף את החסימה. הכן תצוגה חדשה לנמענים שנכשלו בוודאות "
+            "או למשתמשים שתאריך יצירת חשבונם מאומת לאחר השידור הקודם."
+        )
+    if status == "SAFE_RETRY_UNAVAILABLE":
+        return (
+            "⛔ לא נוצרה טיוטה. אי אפשר לאמת בבטחה את נתוני השידור הקודם או את תאריך הצטרפות המשתמשים. "
+            "נדרשת ראיה ברמת הנמען; לא נשלחה הודעה."
+        )
+    if status == "NO_SAFE_NEW_RECIPIENTS":
+        return (
+            "ℹ️ לא נוצרה טיוטה: אין משתמשים שתאריך יצירת חשבונם מוכיח שהצטרפו לאחר השידור הקודם. "
+            "השליחה חסומה כדי למנוע כפילויות."
         )
     if status == "NO_FAILED_RECIPIENTS":
         return "ℹ️ לא נוצרה טיוטה: אין נמענים שנכשלו ונשארו זכאים לניסיון חוזר."
@@ -884,13 +1017,16 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         if result.get("audience_scope") == "failed_only":
             target_note = "✅ ניסיון חוזר ממוקד: רק נמענים שנכשלו בשידור הקודם."
             confirmation = "״אשר ושלח ברודקאסט למסחר פנימי״."
-        elif result.get("requires_duplicate_ack"):
+        elif result.get("audience_scope") == "new_users_only":
             target_note = (
-                f"⚠️ אזהרת כפילות: השידור ההיסטורי נשלח ל־{result.get('previous_sent', 0)} "
-                f"משתמשים ונכשל ל־{result.get('previous_failed', 0)}. "
-                "לא נשמרו מזהי הנכשלים, לכן אי אפשר לבודד אותם. אישור רגיל לא ישלח הודעה."
+                "✅ קהל מצומצם בלבד: רק משתמשים עם חותמת יצירה מאומתת באזור זמן "
+                "שנוצרו אחרי סיום השידור הקודם. משתמשים שלא ניתן לאמת — מוחרגים."
             )
-            confirmation = "״אשר ושלח ברודקאסט מלא למרות כפילויות״."
+            confirmation = "״אשר ושלח ברודקאסט למסחר פנימי״."
+        elif result.get("requires_duplicate_ack"):
+            # Compatibility with an older draft schema; sending such a draft is blocked.
+            target_note = "⛔ טיוטה ישנה עם סיכון לכפילויות אינה ניתנת לאישור."
+            confirmation = "הכן תצוגה חדשה עם קהל בטוח."
         else:
             target_note = "קהל היעד הרגיל ננעל לתצוגה הזו."
             confirmation = "״אשר ושלח ברודקאסט למסחר פנימי״."
