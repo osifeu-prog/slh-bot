@@ -460,3 +460,24 @@ def test_voice_prepare_accepts_natural_request_prefix_and_only_previews(monkeypa
     assert "תצוגה מקדימה בלבד" in reply
     assert "לא נשלחה הודעה" in reply
     assert bot.sent == []
+
+
+def test_voice_prepare_prefix_recognizer_rejects_negation_and_questions():
+    assert target._is_explicit_prepare_intent(
+        "אני רוצה שתכין לי ברודקאסט למסחר פנימי"
+    )
+    assert target._is_explicit_prepare_intent(
+        "אני רוצה להכין לי ברודקאסט למסחר פנימי"
+    )
+    assert target._is_explicit_prepare_intent(
+        "תוכל להכין לי ברודקאסט למסחר פנימי"
+    )
+    assert not target._is_explicit_prepare_intent(
+        "אני לא רוצה שתכין לי ברודקאסט למסחר פנימי"
+    )
+    assert not target._is_explicit_prepare_intent(
+        "האם אפשר להכין לי ברודקאסט למסחר פנימי"
+    )
+    assert not target._is_explicit_prepare_intent(
+        "תכין לי ברודקאסט בלבד"
+    )
