@@ -1,81 +1,126 @@
-"""User feedback handler - deterministic, no LLM."""
-from future import annotations
+"""Explicit, opt-in bug report and suggestion commands (no LLM required)."""
+from __future__ import annotations
+
 import os
 from datetime import datetime, timezone
+
 import state_manager
 
 OWNER_UID = os.getenv("SLH_OWNER_UID", "8789977826").strip()
+MAX_REPORT_LENGTH = 2000
 
-CATEGORIES = [
-    ("ack", ["כן", "אוקיי", "בסדר", "מאשר", "ok", "yes"]),
+_CATEGORIES = [
     ("bug", ["לא עובד", "שגיאה", "באג", "תקלה", "error", "bug", "broken", "תקוע"]),
-    ("feature", ["תוסיפו", "רעיון", "הצעה", "feature", "suggestion"]),
-    ("question", ["איך", "מה זה", "למה", "מתי", "?", "how", "what", "why"]),
-    ("complaint", ["לא טוב", "בעיה", "גרוע", "bad"]),
+    ("feature", ["תוסיפו", "רעיון", "הצעה", "feature", "suggestion", "idea"]),
+    ("question", ["איך", "מה זה", "למה", "מתי", "איפה", "האם", "?", "how", "what", "why"]),
+    ("complaint", ["לא טוב", "בעיה", "גרוע", "bad", "disappointed"]),
 ]
 
-REPLIES = {
-    "ack": "✅ קיבלתי. תודה שאישרת!",
-    "bug": "🐞 תודה על הדיווח! העברתי לבעלים.",
-    "feature": "💡 רעיון מעניין! העברתי לבעלים.",
-    "question": "❓ קיבלתי. הבעלים יענה בהקדם.",
-    "complaint": "🙏 תודה על המשוב. העברתי לבעלים.",
-    "general": "📩 קיבלתי את הודעתך. תודה!",
+_REPLIES = {
+    "bug": "🐞 תודה על הדיווח! שמרתי אותו והעברתי לבעלים לבדיקה.",
+    "feature": "💡 תודה על ההצעה! שמרתי אותה והעברתי לבעלים לבדיקה.",
+    "question": "❓ תודה. שמרתי את השאלה להעברה לבעלים.",
+    "complaint": "🙏 תודה על המשוב. שמרתי אותו להעברה לבעלים.",
+    "general": "📩 תודה. שמרתי את ההודעה להעברה לבעלים.",
 }
 
-def _classify(text):
+
+def _classify(text: str) -> str:
     low = (text or "").strip().lower()
-    for cat, keywords in CATEGORIES:
-        for kw in keywords:
-            if kw in low:
-                return cat
+    for category, keywords in _CATEGORIES:
+        if any(keyword in low for keyword in keywords):
+            return category
     return "general"
 
-def _record(uid, username, first_name, text, category):
+
+def _record(uid, username, first_name, text, category) -> dict:
+    safe_text = str(text or "").strip()[:MAX_REPORT_LENGTH]
+
     def mutate(db):
-        fb = db.setdefault("user_feedback", [])
-        fb.append({
-            "id": len(fb) + 1,
+        feedback = db.setdefault("user_feedback", [])
+        if not isinstance(feedback, list):
+            raise ValueError("USER_FEEDBACK_STORE_INVALID")
+        next_id = max(
+            (int(item.get("id", 0) or 0) for item in feedback if isinstance(item, dict)),
+            default=0,
+        ) + 1
+        entry = {
+            "id": next_id,
             "uid": str(uid),
-            "username": username or "",
-            "first_name": first_name or "",
-            "text": text[:2000],
-            "category": category,
+            "username": str(username or "")[:128],
+            "first_name": str(first_name or "")[:128],
+            "text": safe_text,
+            "category": str(category),
             "status": "NEW",
             "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-        if len(fb) > 1000:
-            del fb[:-1000]
-        return {"ok": True, "id": fb[-1]["id"], "total": len(fb)}
+        }
+        feedback.append(entry)
+        if len(feedback) > 1000:
+            del feedback[:-1000]
+        return {"ok": True, "id": next_id, "total": len(feedback)}
+
     return state_manager.atomic_update(mutate)
 
-def _notify_owner(bot, uid, first_name, username, text, category, fid):
-    if not OWNER_UID or not OWNER_UID.isdigit():
+
+def _notify_owner(bot, uid, first_name, username, text, category, feedback_id):
+    owner_uid = OWNER_UID
+    if not owner_uid or not owner_uid.isdigit() or str(uid) == owner_uid:
         return
-    icon = {"ack": "✅", "bug": "🐞", "feature": "💡", "question": "❓", "complaint": "🙏", "general": "📩"}.get(category, "📩")
+    icon = {"bug": "🐞", "feature": "💡", "question": "❓", "complaint": "🙏"}.get(category, "📩")
+    body = (
+        f"{icon} דיווח חדש #{feedback_id}\n"
+        f"סוג: {category}\n"
+        f"מאת: {str(first_name or 'משתמש')[:128]} (@{str(username or '—')[:128]})\n"
+        f"UID: {uid}\n"
+        "──────────\n"
+        f"{str(text or '')[:800]}"
+    )
     try:
-        bot.send_message(int(OWNER_UID),
-            f"{icon} משוב #{fid}\\nסוג: {category}\\nמאת: {first_name} (@{username or '-'})\\nUID: {uid}\\n----\\n{text[:800]}",
-        )
-    except Exception as e:
-        print(f"NOTIFY_FAIL: {e}")
+        bot.send_message(int(owner_uid), body)
+    except Exception as exc:
+        # Persisted feedback is the source of truth even if the alert cannot be delivered.
+        print(f"USER_FEEDBACK_NOTIFY_FAIL: {type(exc).__name__}")
+
 
 def register(bot):
-    @bot.message_handler(func=lambda m: m.text and not m.text.startswith("/") and m.chat.type == "private", content_types=["text"])
-    def handle_feedback(m):
+    """Register explicit commands only; ordinary conversation remains available to AI handlers."""
+    @bot.message_handler(commands=["bugreport", "suggest"], content_types=["text"])
+    def handle_feedback(message):
         try:
-            uid = str(m.from_user.id)
-            text = (m.text or "").strip()
-            if not text or uid == OWNER_UID:
+            raw = str(getattr(message, "text", "") or "").strip()
+            command, _, body = raw.partition(" ")
+            command = command.split("@", 1)[0].lower().lstrip("/")
+            report = body.strip()[:MAX_REPORT_LENGTH]
+            if not report:
+                command_example = "/suggest" if command == "suggest" else "/bugreport"
+                bot.reply_to(
+                    message,
+                    f"📝 הוסף פרטים אחרי הפקודה. לדוגמה: {command_example} הכפתור לא עובד",
+                    parse_mode=None,
+                )
                 return
-            category = _classify(text)
-            result = _record(uid, m.from_user.username or "", m.from_user.first_name or "", text, category)
-            fid = result.get("id", 0)
+
+            user = getattr(message, "from_user", None)
+            uid = str(getattr(user, "id", "") or "")
+            if not uid.isdigit():
+                bot.reply_to(message, "⛔ לא הצלחתי לאמת את חשבון Telegram. לא נשמר דיווח.", parse_mode=None)
+                return
+            username = str(getattr(user, "username", "") or "")
+            first_name = str(getattr(user, "first_name", "") or "")
+            category = "feature" if command == "suggest" else "bug"
+            result = _record(uid, username, first_name, report, category)
+            feedback_id = result.get("id", 0)
+            bot.reply_to(
+                message,
+                f"{_REPLIES[category]}\nמספר דיווח: #{feedback_id}",
+                parse_mode=None,
+            )
+            _notify_owner(bot, uid, first_name, username, report, category, feedback_id)
+        except Exception as exc:
+            print(f"USER_FEEDBACK_HANDLER_ERROR: {type(exc).__name__}")
             try:
-                bot.reply_to(m, REPLIES.get(category, REPLIES["general"]), parse_mode=None)
-            except Exception as e:
-                print(f"REPLY_FAIL: {e}")
-            _notify_owner(bot, uid, m.from_user.first_name or "", m.from_user.username or "", text, category, fid)
-        except Exception as e:
-            print(f"ERROR: {e}")
-    print("✅ user_feedback handler registered")
+                bot.reply_to(message, "⛔ לא הצלחתי לשמור את הדיווח. נסה שוב מאוחר יותר.", parse_mode=None)
+            except Exception:
+                pass
+
+    print("✅ opt-in bugreport/suggest handler registered")
