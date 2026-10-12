@@ -25,6 +25,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["status"], "FAIL")
         self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
         self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", codes)
+        correction = next(item for item in report["findings"] if item["code"] == "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW")
+        self.assertEqual(correction["correction_delta"], "10000")
 
     def test_normal_release_balances_reserve(self):
         db = {
