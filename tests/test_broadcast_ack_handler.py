@@ -110,3 +110,32 @@ def test_ack_handler_registers_only_the_exact_callback():
 
     assert registered["filter"](_call(data="ack_seen")) is True
     assert registered["filter"](_call(data="other")) is False
+
+
+def test_repeated_ack_callback_does_not_send_duplicate_followup(monkeypatch):
+    registered = {}
+
+    def decorator(**kwargs):
+        def wrap(fn):
+            registered["callback"] = fn
+            return fn
+        return wrap
+
+    bot = SimpleNamespace(
+        callback_query_handler=decorator,
+        answer_callback_query=Mock(),
+        send_message=Mock(),
+    )
+    outcomes = iter([
+        {"status": "ACKED", "total_acks": 1},
+        {"status": "ALREADY_ACKED", "total_acks": 1},
+    ])
+    monkeypatch.setattr(target, "_record_ack", lambda *args: next(outcomes))
+    target.register(bot)
+
+    registered["callback"](_call())
+    registered["callback"](_call())
+
+    assert bot.answer_callback_query.call_count == 2
+    bot.send_message.assert_called_once()
+    assert "כבר נרשם" in bot.answer_callback_query.call_args.args[1]
