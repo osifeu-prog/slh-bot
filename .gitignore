@@ -81,3 +81,7 @@ state/agent_economy.json
 recovery/
 slh_bot_probe.ps1
 audit.jsonl
+
+# Runtime uploads and sender metadata are private and must never enter Git.
+journal.json
+state/uploads/
