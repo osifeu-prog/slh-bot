@@ -346,7 +346,7 @@ if __name__ == "__main__":
     heartbeat_thread.start()
 
     # Read-only exchange reserve reconciliation; no ledger/balance/gate mutations.
-    if os.getenv("SLH_EXCHANGE_RECONCILIATION_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}:
+    if os.getenv("RUN_BOT") == "1" and os.getenv("SLH_EXCHANGE_RECONCILIATION_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}:
         def run_exchange_reconciliation():
             try:
                 from core.slh_exchange_reconciliation import run_periodic
