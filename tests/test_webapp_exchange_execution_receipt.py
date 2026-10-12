@@ -121,6 +121,33 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
         self.assertNotIn("✅ SELL", message)
         self.assertNotIn("EXCHANGE_FRESH_CHECK_BLOCKED", message)
 
+    def test_local_check_without_fresh_live_proof_is_not_a_green_receipt(self):
+        receipt = exchange_handler.format_execution_receipt(
+            "buy",
+            {
+                "order_id": "OLOCAL",
+                "filled": "0.00000000",
+                "remaining": "2.00000000",
+                "trade_ids": [],
+                "execution_check": {
+                    "status": "PASS",
+                    "checked_at": "2026-10-12T16:02:00+00:00",
+                    "public_gate": "OPEN",
+                    "verdict": "OPEN",
+                    "execution_ready": True,
+                    "public_ready": True,
+                    "order_book_integrity": True,
+                    "trade_integrity": True,
+                    "money_invariants": True,
+                },
+            },
+        )
+
+        self.assertIn("Fresh canonical Exchange check: PASS", receipt)
+        self.assertIn("Fresh live runtime confirmation: NOT VERIFIED", receipt)
+        self.assertNotIn("✅ BUY", receipt)
+        self.assertIn("Fresh live runtime gate proof is missing", receipt)
+
     def test_missing_legacy_execution_proof_is_not_presented_as_success(self):
         receipt = exchange_handler.format_execution_receipt(
             "buy",
