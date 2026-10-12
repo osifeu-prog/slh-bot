@@ -245,7 +245,7 @@ def test_new_user_retry_blocks_if_verified_cohort_changes_after_preview(monkeypa
         sent=27,
         failed=5,
     )
-    db = _exchange_broadcast_db([str(i) for i in range(1, 33)] + ["33"])
+    db = _exchange_broadcast_db([str(i) for i in range(1, 33)] + ["33"], [failed])
     db["users"]["33"] = {"joined": "2026-10-12T11:00:01+00:00"}
     uid = str(target.OWNER_TELEGRAM_ID)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
