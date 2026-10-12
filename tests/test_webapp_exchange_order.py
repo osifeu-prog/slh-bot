@@ -179,5 +179,81 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         fresh_check.assert_called_once_with(self.db)
 
 
+    def test_frozen_account_cannot_submit_buy_or_sell_without_side_effects(self):
+        buyer = self.db["users"]["buyer"]
+        buyer["frozen"] = True
+        buyer["wallet"]["token_balance"] = 10.0
+        buyer["wallet"]["live_token_balance"] = 10.0
+        wallet_before = dict(buyer["wallet"])
+        ledger_before = list(self.db["ledger"])
+
+        with patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=self.passing_check(),
+        ) as fresh_check:
+            for side in ("buy", "sell"):
+                response = self.submit(
+                    side=side, amount="1", price="1", request_id=f"frozen-{side}"
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.get_json()["error"], "ACCOUNT_FROZEN")
+
+        fresh_check.assert_not_called()
+        self.assertEqual(self.db["exchange_orders"], {})
+        self.assertEqual(self.db["exchange_trades"], [])
+        self.assertEqual(self.db["exchange_requests"], {})
+        self.assertEqual(buyer["wallet"], wallet_before)
+        self.assertEqual(self.db["ledger"], ledger_before)
+
+    def test_frozen_resting_order_is_not_matched(self):
+        from handlers.exchange_handler import _match
+
+        frozen_sell = {
+            "id": "O-FROZEN", "uid": "seller", "side": "sell",
+            "original_amount": "1.00000000",
+            "remaining_amount": "1.00000000",
+            "limit_price": "1.00000000",
+            "reserved_slh": "1.00000000",
+            "reserved_credits": "0.00000000",
+            "sequence": 1, "status": "open",
+        }
+        incoming_buy = {
+            "id": "O-BUY", "uid": "buyer", "side": "buy",
+            "original_amount": "1.00000000",
+            "remaining_amount": "1.00000000",
+            "limit_price": "1.00000000",
+            "reserved_slh": "0.00000000",
+            "reserved_credits": "1.00000000",
+            "sequence": 2, "status": "open",
+        }
+        db = {
+            "users": {
+                "buyer": {"wallet": {
+                    "credits": 0.0, "token_balance": 0.0,
+                    "live_token_balance": 0.0, "exchange_reserved_slh": 0.0,
+                    "exchange_reserved_credits": 1.0,
+                }},
+                "seller": {"frozen": True, "wallet": {
+                    "credits": 0.0, "token_balance": 1.0,
+                    "live_token_balance": 1.0, "exchange_reserved_slh": 1.0,
+                    "exchange_reserved_credits": 0.0,
+                }},
+            },
+            "exchange_orders": {"O-FROZEN": frozen_sell, "O-BUY": incoming_buy},
+            "exchange_trades": [],
+            "exchange_sequence": 2,
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+
+        filled, remaining = _match(db, incoming_buy)
+
+        self.assertEqual(filled, 0)
+        self.assertEqual(remaining, 1)
+        self.assertEqual(db["exchange_trades"], [])
+        self.assertEqual(frozen_sell["status"], "open")
+        self.assertEqual(incoming_buy["status"], "open")
+
+
 if __name__ == "__main__":
     unittest.main()
