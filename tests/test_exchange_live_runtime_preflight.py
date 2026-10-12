@@ -109,6 +109,77 @@ class FreshLiveExchangePreflightTests(unittest.TestCase):
         fetch.assert_not_called()
         self.assertEqual(db, before)
 
+    def test_successful_order_persists_live_proof_in_the_receipt(self):
+        db = {
+            "users": {
+                "buyer": {
+                    "wallet": {
+                        "credits": 50.0,
+                        "token_balance": 0.0,
+                        "live_token_balance": 0.0,
+                        "exchange_reserved_slh": 0.0,
+                        "exchange_reserved_credits": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {},
+            "exchange_trades": [],
+            "exchange_requests": {},
+            "exchange_sequence": 0,
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+        proof = {
+            "status": "PASS",
+            "checked_at": "2026-10-12T16:02:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+        }
+        local_check = {
+            "ok": True,
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "public_ready": True,
+            "verdict": "OPEN",
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "open_orders": 0,
+        }
+
+        with patch.object(state_manager, "load_db", return_value=db), patch.object(
+            state_manager, "atomic_update", side_effect=lambda mutate: mutate(db)
+        ), patch(
+            "core.railway_control.control_plane_exchange_gate_status",
+            return_value={"configured": "1"},
+        ), patch.object(
+            exchange_handler, "_fetch_public_exchange_status", return_value=_runtime_open()
+        ), patch.object(
+            exchange_handler, "is_frozen_account", return_value=False
+        ), patch(
+            "core.system_checks.check_exchange_for_execution", return_value=local_check
+        ), patch.object(exchange_handler, "_match", return_value=(exchange_handler.ZERO, exchange_handler.Decimal("1.00000000"))):
+            result = exchange_handler.execute_exchange_order(
+                uid="buyer",
+                side="buy",
+                amount=exchange_handler.Decimal("1"),
+                price=exchange_handler.Decimal("1"),
+                request_id="req-live-proof",
+            )
+
+        receipt = db["exchange_requests"]["req-live-proof"]["execution_check"]
+        self.assertEqual(result["order_id"], "O0000000001")
+        self.assertEqual(receipt["live_runtime_check"], "PASS")
+        self.assertEqual(receipt["live_railway_gate"], "1")
+        self.assertEqual(receipt["live_public_gate"], "OPEN")
+        self.assertEqual(receipt["live_public_verdict"], "OPEN")
+        self.assertEqual(receipt["live_public_readiness"], True)
+        self.assertEqual(receipt["live_public_updated_at"], 1791830000.0)
+
+
     def test_replay_returns_existing_receipt_without_requiring_current_open_gate(self):
         existing = {
             "order_id": "O0000000007",
