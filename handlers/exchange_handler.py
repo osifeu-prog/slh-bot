@@ -159,13 +159,15 @@ def _prepare_verified_exchange_broadcast_preview():
     if draft.get("audience_scope") == "failed_only":
         target_note = "✅ ניסיון חוזר ממוקד: רק נמענים שנכשלו בשידור הקודם."
         confirmation = "אשר ושלח ברודקאסט למסחר פנימי"
-    elif draft.get("requires_duplicate_ack") is True:
+    elif draft.get("audience_scope") == "new_users_only":
         target_note = (
-            f"⚠️ אזהרת כפילות: השידור ההיסטורי נשלח ל־{draft.get('previous_sent', 0)} "
-            f"משתמשים ונכשל ל־{draft.get('previous_failed', 0)}. "
-            "לא נשמרו מזהי הנכשלים, לכן אישור רגיל לא ישלח הודעה."
+            "✅ קהל מצומצם בלבד: רק משתמשים עם חותמת יצירה מאומתת באזור זמן "
+            "שנוצרו אחרי סיום השידור הקודם. משתמשים שלא ניתן לאמת — מוחרגים."
         )
-        confirmation = "אשר ושלח ברודקאסט מלא למרות כפילויות"
+        confirmation = "אשר ושלח ברודקאסט למסחר פנימי"
+    elif draft.get("requires_duplicate_ack") is True:
+        target_note = "⛔ טיוטה ישנה עם סיכון לכפילויות אינה ניתנת לאישור; נדרשת תצוגה חדשה."
+        confirmation = "הכן תצוגה חדשה עם קהל בטוח"
     else:
         target_note = "קהל היעד הרגיל ננעל לתצוגה הזו."
         confirmation = "אשר ושלח ברודקאסט למסחר פנימי"
