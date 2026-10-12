@@ -299,3 +299,44 @@ def test_voice_confirm_accepts_common_explicit_stt_variant(monkeypatch):
     assert sent
     assert all(text == target.EXCHANGE_BROADCAST_TEXT for _, text in sent)
 
+
+
+
+def test_voice_prepare_accepts_clear_broadcast_paraphrase_as_preview_only(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    # Voice transcription may add words while retaining an explicit prepare intent.
+    answer = target.route_exchange_broadcast_voice(
+        bot, message, "תכין לי הודעה לברודקאסט על המסחר הפנימי", now=NOW
+    )
+
+    assert answer is not None
+    assert target.EXCHANGE_BROADCAST_TEXT in answer
+    assert "תצוגה מקדימה בלבד" in answer
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "PENDING_CONFIRMATION"
+    bot.send_message.assert_not_called()
+
+
+def test_voice_prepare_does_not_accept_negative_instruction(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot, message, "אל תכין ברודקאסט למסחר פנימי", now=NOW
+    )
+
+    assert answer is not None
+    assert "READ ONLY" in answer
+    assert "exchange_broadcast_pending" not in db
+    bot.send_message.assert_not_called()

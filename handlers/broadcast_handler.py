@@ -860,10 +860,36 @@ def route_exchange_broadcast_text(message, text, *, now=None):
     )
 
 
+def _is_explicit_prepare_intent(phrase):
+    """Recognize clear preparation paraphrases while never treating questions or negations as intent."""
+    phrase = _normalize_voice_phrase(phrase)
+    words = phrase.split()
+    if not words or words[0] in {"אל", "לא", "האם", "אפשר", "כדאי", "למה", "why", "can", "could"}:
+        return False
+
+    prepare_verbs = {
+        "הכן", "תכין", "תכיני", "הכין", "צור", "צרי", "תיצור", "תייצר",
+        "prepare", "draft", "create",
+    }
+    if words[0] not in prepare_verbs:
+        return False
+
+    has_broadcast = any(term in phrase for term in (
+        "ברודקאסט", "ברודקסט", "ברוד קאסט", "broadcast", "הודעת שידור"
+    ))
+    has_exchange = any(term in phrase for term in (
+        "מסחר", "בורסה", "exchange", "trading"
+    ))
+    return has_broadcast and has_exchange
+
+
 def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
-    """Strict owner/private allowlist for preparing or confirming the fixed notice."""
+    """Strict owner/private flow: tolerant draft intent; exact explicit send confirmation."""
     phrase = _normalize_voice_phrase(transcript)
-    is_prepare = phrase in {_normalize_voice_phrase(x) for x in _PREPARE_VOICE_PHRASES}
+    is_prepare = (
+        phrase in {_normalize_voice_phrase(x) for x in _PREPARE_VOICE_PHRASES}
+        or _is_explicit_prepare_intent(phrase)
+    )
     is_confirm = phrase in {_normalize_voice_phrase(x) for x in _CONFIRM_VOICE_PHRASES}
     if not is_prepare and not is_confirm:
         if _is_exchange_broadcast_query(phrase):
