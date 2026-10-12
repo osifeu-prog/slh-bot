@@ -218,7 +218,9 @@ def _finish_reconcile(uid, reconcile_id, status, *, detail="", settlement=None, 
     return state_manager.atomic_update(mutate)
 
 
-def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
+def prepare_existing_bnb_reconcile(
+    uid, tx_hash, *, now=None, confirmation_source="manual_tx_hash"
+):
     """Preview a previously submitted BNB TX. Does not settle or send anything."""
     uid = str(uid or "").strip()
     tx_hash = str(tx_hash or "").strip()
@@ -232,6 +234,7 @@ def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
         "reconcile_id": reconcile_id,
         "uid": uid,
         "tx_hash": tx_hash,
+        "confirmation_source": str(confirmation_source or "manual_tx_hash"),
         "status": "PENDING_CONFIRMATION",
         "created_at": current.isoformat(),
         "expires_at": (current + timedelta(seconds=RECONCILE_TTL_SECONDS)).isoformat(),
@@ -343,7 +346,12 @@ def prepare_auto_existing_bnb_reconcile(uid, *, now=None):
     # treat it as a new deposit or run the first-pass credit path. Prove it with
     # the dedicated idempotent replay, which must leave the current balance
     # unchanged and keeps the public BNB gate closed.
-    preview = prepare_existing_bnb_reconcile(uid, tx_hash, now=now)
+    preview = prepare_existing_bnb_reconcile(
+        uid,
+        tx_hash,
+        now=now,
+        confirmation_source="auto_existing_0_01_canary",
+    )
     if str(preview.get("status") or "").upper() == "ALREADY_SETTLED":
         try:
             from core.bnb_empirical_smoke import reconcile_existing_settlement
@@ -907,3 +915,117 @@ def register(bot):
             )
         except Exception as exc:
             bot.reply_to(message, f"❌ BNB return button failed: {type(exc).__name__}")
+
+
+
+def _is_bnb_existing_transfer_prepare_intent(phrase):
+    """Recognize only an explicit request to inspect an already-sent BNB transfer."""
+    from handlers.broadcast_handler import _normalize_voice_phrase
+
+    normalized = _normalize_voice_phrase(str(phrase or ""))
+    request_prefixes = (
+        "אני רוצה ש",
+        "אני מבקש ש",
+        "אני מבקשת ש",
+        "אני רוצה ",
+        "תוכל ",
+        "תוכלי ",
+        "אפשר ",
+    )
+    for prefix in request_prefixes:
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix):].strip()
+            break
+
+    words = normalized.split()
+    if not words or words[0] in {"לא", "אל", "למה", "why", "should"}:
+        return False
+
+    has_action = words[0] in {
+        "בדוק", "בדקי", "הכן", "תכין", "תכיני", "חפש", "חפשי", "מצא", "מצאי",
+        "לבדוק", "להכין", "לחפש", "למצוא", "reconcile", "prepare", "check", "find",
+    }
+    has_bnb = any(term in normalized for term in ("bnb", "בי אן בי"))
+    has_transfer = any(term in normalized for term in (
+        "העברה", "העברת", "transaction", "transfer", "settlement", "reconcile"
+    ))
+    has_existing = any(term in normalized for term in (
+        "קיימת", "הקיימת", "קיים", "הקיים", "שכבר שלחתי", "כבר שלחתי", "existing", "already sent"
+    ))
+    return has_action and has_bnb and has_transfer and has_existing
+
+
+def route_bnb_existing_tx_voice(bot, message, transcript, *, now=None):
+    """Two-step owner/private voice flow for a previously sent exact 0.01 BNB transfer.
+
+    The first voice intent only discovers and previews. Settlement can occur only
+    after a separate exact voice confirmation tied to this preview's pending TX.
+    Public BNB remains CLOSED throughout this evidence flow.
+    """
+    from handlers.broadcast_handler import _normalize_voice_phrase
+
+    phrase = _normalize_voice_phrase(str(transcript or ""))
+    prepare_phrases = {
+        _normalize_voice_phrase("הכן בדיקת BNB מההעברה הקיימת"),
+        _normalize_voice_phrase("בדוק את ההעברה הקיימת ב BNB"),
+        _normalize_voice_phrase("מצא העברת BNB קיימת"),
+        _normalize_voice_phrase("הכן reconciliation להעברת BNB קיימת"),
+    }
+    confirm_phrases = {
+        _normalize_voice_phrase("אשר את העברת BNB הקיימת"),
+        _normalize_voice_phrase("מאשר את העברת BNB הקיימת"),
+        _normalize_voice_phrase("אני מאשר את העברת BNB הקיימת"),
+        _normalize_voice_phrase("אשר את ההעברה הקיימת של BNB"),
+        _normalize_voice_phrase("מאשר את ההעברה הקיימת של BNB"),
+    }
+    is_prepare = (
+        phrase in prepare_phrases
+        or _is_bnb_existing_transfer_prepare_intent(phrase)
+    )
+    is_confirm = phrase in confirm_phrases
+    if not is_prepare and not is_confirm:
+        return None
+
+    uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+    if not is_owner(uid):
+        return "⛔ OWNER בלבד: בדיקת/אישור BNB קולי מיועדים לבעלים בלבד."
+    if str(getattr(getattr(message, "chat", None), "type", "") or "").lower() != "private":
+        return "⛔ בדיקת/אישור BNB קולי זמינים רק בשיחה הפרטית עם הבוט."
+
+    if is_prepare:
+        result = prepare_auto_existing_bnb_reconcile(uid, now=now)
+        reply = _auto_preview_reply(result)
+        if str(result.get("status") or "").upper() == "PREPARED":
+            reply += (
+                "\n\nלאישור קולי מפורש בתוך 5 דקות, ורק אם סכום ה־TX והכתובת בתצוגה נכונים, "
+                "אמור בדיוק: ״אשר את העברת BNB הקיימת״.\n"
+                "האישור יבדוק מחדש את אותה העברה; הוא לא ישדר BNB ולא יפתח את השער הציבורי."
+            )
+        return reply
+
+    try:
+        db = state_manager.load_db()
+    except Exception:
+        return "⛔ מצב BNB אינו קריא. לא בוצע settlement; השער נשאר CLOSED."
+
+    pending_root = db.get("bnb_empirical_reconcile_pending", {}) if isinstance(db, dict) else {}
+    pending = pending_root.get(uid) if isinstance(pending_root, dict) else None
+    if not isinstance(pending, dict) or pending.get("status") != "PENDING_CONFIRMATION":
+        return "⛔ אין תצוגת BNB פעילה לאישור. אמור קודם: ״הכן בדיקת BNB מההעברה הקיימת״."
+    if pending.get("confirmation_source") != "auto_existing_0_01_canary":
+        return (
+            "⛔ האישור הקולי דורש תצוגה מקדימה אוטומטית שמקורה בגילוי ההעברה הקיימת של 0.01 BNB. "
+            "לא בוצע settlement."
+        )
+    try:
+        amount_wei = int(pending.get("amount_wei") or 0)
+    except (TypeError, ValueError, OverflowError):
+        amount_wei = 0
+    if amount_wei != 10**16:
+        return "⛔ סכום ה־TX שבתצוגה אינו תואם בדיוק ל־0.01 BNB. לא בוצע settlement."
+    tx_hash = str(pending.get("tx_hash") or "").strip()
+    if not _TX_HASH_RE.fullmatch(tx_hash):
+        return "⛔ ה־TX שבתצוגה אינו תקין. לא בוצע settlement."
+
+    result = confirm_existing_bnb_reconcile(uid, tx_hash=tx_hash, now=now)
+    return _confirm_reply(result)
