@@ -47,7 +47,7 @@ def _install_db(monkeypatch, db):
 def _install_send(monkeypatch):
     sent = []
 
-    def send_one(bot, uid, text, next_allowed_at):
+    def send_one(bot, uid, text, next_allowed_at, *, reply_markup=None):
         bot.send_message(uid, text)
         sent.append((str(uid), text))
         return True, next_allowed_at
