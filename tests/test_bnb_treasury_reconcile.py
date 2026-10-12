@@ -153,7 +153,7 @@ def test_confirmation_is_rejected_if_canonical_environment_target_changes(monkey
     monkeypatch.setattr(reconcile, "is_owner", lambda _uid: True)
 
     preview = reconcile.prepare_bnb_treasury_reconcile(OWNER_UID, now=NOW)
-    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", "0x1111111111111111111111111111111111111111")
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", "0x2222222222222222222222222222222222222222")
     result = reconcile.confirm_bnb_treasury_reconcile(
         OWNER_UID, preview["confirmation_id"], now=NOW
     )
