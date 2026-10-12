@@ -133,7 +133,7 @@ class VIPRevenueRecoveryTests(unittest.TestCase):
                 charge_id: {
                     "charge_id": charge_id,
                     "uid": "1",
-                    "stars_paid": VIP_MONTHLY_STARS,
+                    "stars_paid": VIP_MONTHLY_STARS - 1,
                     "fulfillment_status": "completed",
                     "launch_offer_qualified": False,
                 }
