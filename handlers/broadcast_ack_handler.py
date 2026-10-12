@@ -3,7 +3,7 @@
 Handles the "ack_seen" callback button without involving any LLM.
 Logs each ACK with timestamp so the operator can see who responded.
 """
-from future import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 
