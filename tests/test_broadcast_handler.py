@@ -238,6 +238,46 @@ def test_exchange_broadcast_legacy_partial_uses_only_verified_new_users(monkeypa
     assert pending["audience_sha256"] == target._broadcast_audience_hash(["33", "34"])
 
 
+def test_new_user_retry_blocks_if_verified_cohort_changes_after_preview(monkeypatch):
+    failed = _partial_audit(
+        draft_id="legacy-partial",
+        target_count=32,
+        sent=27,
+        failed=5,
+    )
+    db = _exchange_broadcast_db([str(i) for i in range(1, 33)] + ["33"])
+    db["users"]["33"] = {"joined": "2026-10-12T11:00:01+00:00"}
+    uid = str(target.OWNER_TELEGRAM_ID)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    preview = target.prepare_exchange_broadcast(uid)
+
+    assert preview["status"] == "PREPARED"
+    assert preview["audience_scope"] == "new_users_only"
+    assert preview["target_count"] == 1
+
+    # A second post-delivery account appears after the preview was locked.
+    db["users"]["34"] = {"joined": "2026-10-12T11:00:05+00:00"}
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    })
+    bot = FakeBot()
+
+    result = target.send_confirmed_exchange_broadcast(bot, uid)
+
+    assert result["status"] == "RECIPIENTS_CHANGED"
+    assert bot.sent == []
+    assert db["exchange_broadcast_pending"][uid]["status"] == "RECIPIENTS_CHANGED"
+
+
 def test_legacy_partial_confirmation_with_duplicate_ack_still_sends_nothing(monkeypatch):
     failed = _partial_audit(
         draft_id="legacy-partial",
