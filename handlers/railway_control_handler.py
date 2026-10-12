@@ -114,6 +114,32 @@ def _updated_config(raw, target):
     return json.dumps(updated, separators=(",", ":"), ensure_ascii=False), previous
 
 
+def _update_and_redeploy(ctx, raw_new):
+    result = _graphql(
+        ctx,
+        "mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) "
+        "{ variableCollectionUpsert(input: $input) }",
+        {"input": {
+            "projectId": ctx["project_id"],
+            "environmentId": ctx["environment_id"],
+            "serviceId": ctx["service_id"],
+            "variables": {"SLH_BSC_CONFIG": raw_new},
+            "skipDeploys": True,
+        }},
+    )
+    if result.get("variableCollectionUpsert") is not True:
+        raise RuntimeError("RAILWAY_VARIABLE_UPSERT_UNCONFIRMED")
+    deployed = _graphql(
+        ctx,
+        "mutation serviceInstanceRedeploy($serviceId: String!, $environmentId: String!) "
+        "{ serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId) }",
+        {"serviceId": ctx["service_id"], "environmentId": ctx["environment_id"]},
+    )
+    if deployed.get("serviceInstanceRedeploy") is not True:
+        return "VARIABLE_UPDATED_DEPLOY_UNCONFIRMED"
+    return "DEPLOY_TRIGGERED"
+
+
 def _runtime_state():
     try:
         from core.binance_connector import get_bsc_config
@@ -269,26 +295,9 @@ def apply_railway_vars(uid, code):
 
         raw_new, _previous = _updated_config(s["raw"], s["canonical"])
         ctx = s["ctx"]
-        result = _graphql(ctx,
-            "mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) "
-            "{ variableCollectionUpsert(input: $input) }",
-            {"input": {
-                "projectId": ctx["project_id"],
-                "environmentId": ctx["environment_id"],
-                "serviceId": ctx["service_id"],
-                "variables": {"SLH_BSC_CONFIG": raw_new},
-                "skipDeploys": True,
-            }},
-        )
-        if result.get("variableCollectionUpsert") is not True:
-            raise RuntimeError("RAILWAY_VARIABLE_UPSERT_UNCONFIRMED")
-        deployed = _graphql(ctx,
-            "mutation serviceInstanceRedeploy($serviceId: String!, $environmentId: String!) "
-            "{ serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId) }",
-            {"serviceId": ctx["service_id"], "environmentId": ctx["environment_id"]},
-        )
-        if deployed.get("serviceInstanceRedeploy") is not True:
-            return _finish(uid, code, "VARIABLE_UPDATED_DEPLOY_UNCONFIRMED")
+        deployment_status = _update_and_redeploy(ctx, raw_new)
+        if deployment_status != "DEPLOY_TRIGGERED":
+            return _finish(uid, code, deployment_status)
         return _finish(uid, code, "DEPLOY_TRIGGERED")
     except Exception as exc:
         return _finish(uid, code, "BLOCKED", str(exc)[:120])
