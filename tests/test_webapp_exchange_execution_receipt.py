@@ -88,6 +88,21 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
         self.assertNotIn("✅ SELL", message)
         self.assertNotIn("EXCHANGE_FRESH_CHECK_BLOCKED", message)
 
+    def test_missing_legacy_execution_proof_is_not_presented_as_success(self):
+        receipt = exchange_handler.format_execution_receipt(
+            "buy",
+            {
+                "order_id": "OLEGACY",
+                "filled": "0.00000000",
+                "remaining": "2.00000000",
+                "trade_ids": [],
+            },
+        )
+
+        self.assertIn("Fresh canonical Exchange check: NOT VERIFIED", receipt)
+        self.assertIn("Receipt does not prove a passing fresh execution check", receipt)
+        self.assertNotIn("✅ BUY", receipt)
+
 
 if __name__ == "__main__":
     unittest.main()
