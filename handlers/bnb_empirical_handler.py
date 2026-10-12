@@ -988,7 +988,7 @@ def route_bnb_existing_tx_voice(bot, message, transcript, *, now=None):
 
     uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
     if not is_owner(uid):
-        return "⛔ בדיקת/אישור BNB קולי מיועדים לבעלים בלבד."
+        return "⛔ OWNER בלבד: בדיקת/אישור BNB קולי מיועדים לבעלים בלבד."
     if str(getattr(getattr(message, "chat", None), "type", "") or "").lower() != "private":
         return "⛔ בדיקת/אישור BNB קולי זמינים רק בשיחה הפרטית עם הבוט."
 
