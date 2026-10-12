@@ -123,3 +123,38 @@ def test_voice_bnb_reconciliation_ignores_unrelated_status_phrase():
         Mock(), _message(), "בדוק BNB"
     )
     assert answer is None
+
+
+def test_prepare_existing_bnb_reconcile_persists_voice_confirmation_source(monkeypatch):
+    db = {
+        "settlement_evidence": {},
+        "ledger": [],
+        "bnb_empirical_reconcile_pending": {},
+    }
+    monkeypatch.setattr(
+        target,
+        "_inspect_existing_bnb_tx",
+        lambda uid, tx_hash: {
+            "status": "OK",
+            "tx_hash": TX_HASH,
+            "amount_wei": 10**16,
+            "amount_bnb": 0.01,
+            "estimated_credits": 10,
+            "confirmations": 20,
+            "required_confirmations": 15,
+            "sender": "0x1111111111111111111111111111111111111111",
+            "treasury": "0x2222222222222222222222222222222222222222",
+        },
+    )
+    monkeypatch.setattr(target, "_current_pass_evidence", lambda *args, **kwargs: False)
+    monkeypatch.setattr(target, "_matching_ledger_entries", lambda *args, **kwargs: [])
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    result = target.prepare_existing_bnb_reconcile(
+        OWNER_UID,
+        TX_HASH,
+        confirmation_source="auto_existing_0_01_canary",
+    )
+
+    assert result["status"] == "PREPARED"
+    assert db["bnb_empirical_reconcile_pending"][OWNER_UID]["confirmation_source"] == "auto_existing_0_01_canary"
