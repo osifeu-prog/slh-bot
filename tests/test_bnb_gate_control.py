@@ -58,10 +58,27 @@ def test_invalid_db_shape_fails_closed(monkeypatch):
     assert target.bnb_deposits_open() is False
 
 
-def test_env_closed_cannot_be_overridden_by_allow(monkeypatch):
+def test_allow_override_is_unknown_and_fails_closed_even_when_everything_else_is_green(monkeypatch):
     db = _db("allow")
-    _wire_gate(monkeypatch, db, ready=False, evidence=True)
-    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
+    _wire_gate(monkeypatch, db, ready=True, evidence=True)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+
+    assert target.bnb_deposits_open() is False
+
+
+def test_unknown_override_value_fails_closed_even_when_everything_else_is_green(monkeypatch):
+    db = _db("yes")
+    _wire_gate(monkeypatch, db, ready=True, evidence=True)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+
+    assert target.bnb_deposits_open() is False
+
+
+def test_missing_bsc_settings_fail_closed(monkeypatch):
+    db = _db()
+    db.pop("bsc_settings")
+    _wire_gate(monkeypatch, _db(), ready=True, evidence=True)
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
 
     assert target.bnb_deposits_open() is False
 
