@@ -15,7 +15,7 @@ import re
 import state_manager
 
 from core.authority import is_owner
-from core.bnb_deposit_service import settle_bnb_deposit
+from core.bnb_deposit_service import CREDITS_PER_BNB, settle_bnb_deposit
 from core.bnb_gate import bnb_deposits_open
 from core.deposit_monitor import verify_bnb_deposit
 from core.economy_service import get_balance_safe
