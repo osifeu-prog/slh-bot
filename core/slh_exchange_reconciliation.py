@@ -22,8 +22,11 @@ def _records(value):
 
 
 def _amount(value):
+    if value is None or value == "":
+        return None
     try:
-        return Decimal(str(value or 0))
+        amount = Decimal(str(value))
+        return amount if amount.is_finite() else None
     except (InvalidOperation, ValueError, TypeError):
         return None
 
@@ -112,14 +115,39 @@ def audit_db(db):
             if "correction" in str(e.get("reason", "")).lower()
             or "correction" in str(e.get("kind", "")).lower()
         ]
-        reserve_total = sum((_amount(e.get("amount")) or Decimal(0) for e in reserve_events), Decimal(0))
-        release_total = sum((_amount(e.get("amount")) or Decimal(0) for e in normal_releases), Decimal(0))
-        correction_total = sum((_amount(e.get("amount")) or Decimal(0) for e in order_corrections), Decimal(0))
+        amount_groups = {
+            "reserve": reserve_events,
+            "normal_release": normal_releases,
+            "correction": order_corrections,
+        }
+        parsed_amounts = {
+            name: [(event, _amount(event.get("amount"))) for event in group]
+            for name, group in amount_groups.items()
+        }
+        invalid_amounts = [
+            {"event_id": str(event.get("event_id") or (
+                event.get("meta", {}).get("event_id")
+                if isinstance(event.get("meta"), dict) else ""
+            ) or ""), "group": name}
+            for name, rows in parsed_amounts.items()
+            for event, amount in rows
+            if amount is None
+        ]
+        if invalid_amounts:
+            findings.append({
+                "code": "INVALID_RESERVE_LEDGER_AMOUNT",
+                "order_id": oid,
+                "events": invalid_amounts,
+                "note": "Missing or non-finite amounts prevent reliable reserve reconciliation.",
+            })
+        reserve_total = sum((amount for _, amount in parsed_amounts["reserve"] if amount is not None), Decimal(0))
+        release_total = sum((amount for _, amount in parsed_amounts["normal_release"] if amount is not None), Decimal(0))
+        correction_total = sum((amount for _, amount in parsed_amounts["correction"] if amount is not None), Decimal(0))
         if not normal_releases:
             findings.append({
                 "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
                 "order_id": oid,
-                "uid_suffix": str(order.get("uid_suffix") or ""),
+                "uid_suffix": str(order.get("uid_suffix") or str(order.get("uid") or order.get("user_id") or "")[-4:]),
                 "reserve_delta": str(reserve_total),
                 "correction_delta": str(correction_total),
                 "note": "Manual correction is evidence to review, not proof of normal reserve release.",
@@ -128,7 +156,13 @@ def audit_db(db):
             findings.append({
                 "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
                 "order_id": oid,
-                "event_ids": sorted(str(e.get("event_id") or (e.get("meta") or {}).get("event_id") or "") for e in order_corrections),
+                "event_ids": sorted(
+                    str(e.get("event_id") or (
+                        e.get("meta", {}).get("event_id")
+                        if isinstance(e.get("meta"), dict) else ""
+                    ) or "")
+                    for e in order_corrections
+                ),
                 "correction_delta": str(correction_total),
             })
         if reserve_total + release_total != 0 and not order_corrections:
