@@ -146,7 +146,7 @@ def inspect_bnb_treasury_reconcile(uid):
             "code": blocker,
             "current_treasury": current,
             "canonical_treasury": target or "",
-            "public_bnb_gate": "CLOSED" if not _gate_flag_closed() or os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "0" else "UNVERIFIED",
+            "public_bnb_gate": "CLOSED" if _gate_flag_closed() else "UNVERIFIED",
         }
     return {
         "status": "ALREADY_CANONICAL" if current.lower() == target.lower() else "CONFIG_MISMATCH",
