@@ -427,3 +427,36 @@ def test_exchange_broadcast_blocked_by_immediate_pre_send_recheck(monkeypatch):
     assert db["exchange_broadcast_audit"][-1]["status"] == "BLOCKED"
     assert db["exchange_broadcast_audit"][-1]["sent"] == 0
 
+
+
+def test_voice_prepare_accepts_natural_request_prefix_and_only_previews(monkeypatch):
+    uid = str(target.OWNER_TELEGRAM_ID)
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=int(uid)),
+        chat=types.SimpleNamespace(type="private"),
+    )
+    prepared = {
+        "status": "PREPARED",
+        "draft_id": "draft-test",
+        "target_count": 2,
+        "audience_scope": "all",
+        "requires_duplicate_ack": False,
+    }
+    calls = []
+    monkeypatch.setattr(
+        target,
+        "prepare_exchange_broadcast",
+        lambda requested_uid, *, now=None: calls.append(requested_uid) or prepared,
+    )
+    bot = FakeBot()
+
+    reply = target.route_exchange_broadcast_voice(
+        bot,
+        message,
+        "אני רוצה שתכין לי ברודקאסט למסחר פנימי",
+    )
+
+    assert calls == [uid]
+    assert "תצוגה מקדימה בלבד" in reply
+    assert "לא נשלחה הודעה" in reply
+    assert bot.sent == []
