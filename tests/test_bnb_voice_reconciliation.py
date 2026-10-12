@@ -158,3 +158,30 @@ def test_prepare_existing_bnb_reconcile_persists_voice_confirmation_source(monke
 
     assert result["status"] == "PREPARED"
     assert db["bnb_empirical_reconcile_pending"][OWNER_UID]["confirmation_source"] == "auto_existing_0_01_canary"
+
+
+def test_auto_discovery_preview_marks_pending_tx_for_voice_confirmation(monkeypatch):
+    from core import bnb_auto_discovery
+
+    monkeypatch.setattr(target, "is_owner", lambda uid: uid == OWNER_UID)
+    monkeypatch.setattr(
+        bnb_auto_discovery,
+        "discover_bnb_transfer",
+        lambda uid: {
+            "status": "FOUND",
+            "candidate": {"tx_hash": TX_HASH},
+            "candidates": [{"tx_hash": TX_HASH}],
+        },
+    )
+    calls = []
+
+    def prepare(uid, tx_hash, *, now=None, confirmation_source="manual_tx_hash"):
+        calls.append((uid, tx_hash, now, confirmation_source))
+        return {"status": "PREPARED", "tx_hash": tx_hash}
+
+    monkeypatch.setattr(target, "prepare_existing_bnb_reconcile", prepare)
+
+    result = target.prepare_auto_existing_bnb_reconcile(OWNER_UID)
+
+    assert result["status"] == "PREPARED"
+    assert calls == [(OWNER_UID, TX_HASH, None, "auto_existing_0_01_canary")]
