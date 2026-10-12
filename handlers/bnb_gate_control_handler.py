@@ -89,10 +89,13 @@ def _write_deny(*, uid: str) -> dict:
         settings = db.get("bsc_settings")
         if not isinstance(settings, dict):
             return {"status": "DB_SETTINGS_INVALID"}
-        settings[_OVERRIDE_KEY] = "deny"
-        audit = db.setdefault("bnb_gate_override_audit", [])
+        audit = db.get("bnb_gate_override_audit")
+        if audit is None:
+            audit = []
+            db["bnb_gate_override_audit"] = audit
         if not isinstance(audit, list):
             return {"status": "DB_AUDIT_INVALID"}
+        settings[_OVERRIDE_KEY] = "deny"
         audit.append({
             "audit_id": uuid.uuid4().hex,
             "uid": str(uid),
@@ -142,8 +145,15 @@ def _confirm(uid: str, cid: str) -> dict:
     result = _write_deny(uid=uid)
     if result.get("status") != "OK":
         return result
-    if bnb_deposits_open():
-        return {"status": "INVARIANT_FAILURE_GATE_STILL_OPEN"}
+    try:
+        persisted = state_manager.load_db()
+        settings = persisted.get("bsc_settings") if isinstance(persisted, dict) else None
+        if not isinstance(settings, dict) or settings.get(_OVERRIDE_KEY) != "deny":
+            return {"status": "INVARIANT_FAILURE_OVERRIDE_NOT_PERSISTED"}
+        if bnb_deposits_open():
+            return {"status": "INVARIANT_FAILURE_GATE_STILL_OPEN"}
+    except Exception:
+        return {"status": "INVARIANT_FAILURE_STATE_UNVERIFIED"}
     return {"status": "OK", "public_gate": "CLOSED"}
 
 
