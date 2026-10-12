@@ -39,7 +39,6 @@ class FrozenAccountCanonicalLedgerTests(unittest.TestCase):
                     },
                 },
             },
-            "slh_token_ledger": [],
         }
 
     def test_frozen_sender_cannot_p2p_transfer_slh(self):
