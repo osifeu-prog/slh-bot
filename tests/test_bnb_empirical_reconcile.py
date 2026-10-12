@@ -155,3 +155,92 @@ def test_confirm_requires_exact_tx_hash_match(monkeypatch):
     assert result["status"] == "TX_HASH_MISMATCH"
     assert db["bnb_empirical_reconcile_pending"][UID]["status"] == "PENDING_CONFIRMATION"
     settle.assert_not_called()
+
+
+
+def test_auto_discovery_prepares_preview_for_one_exact_existing_transfer_without_settlement(monkeypatch):
+    discovery = {
+        "status": "FOUND",
+        "candidate": {"tx_hash": TX},
+        "candidates": [{"tx_hash": TX}],
+        "provider": "test",
+        "scope": "read_only_discovery",
+    }
+    preview = {"status": "PREPARED", "tx_hash": TX, "reconcile_id": "preview-1"}
+
+    with patch(
+        "core.bnb_auto_discovery.discover_bnb_transfer",
+        return_value=discovery,
+    ) as discover, patch.object(
+        target,
+        "prepare_existing_bnb_reconcile",
+        return_value=preview,
+    ) as prepare, patch(
+        "core.bnb_empirical_smoke.run"
+    ) as settle:
+        result = target.prepare_auto_existing_bnb_reconcile(UID, now=NOW)
+
+    assert result == preview
+    discover.assert_called_once_with(UID)
+    prepare.assert_called_once_with(UID, TX, now=NOW)
+    settle.assert_not_called()
+
+
+def test_auto_discovery_returns_not_found_without_creating_preview_or_settlement(monkeypatch):
+    discovery = {
+        "status": "NOT_FOUND",
+        "scope": "read_only_discovery",
+        "candidates": [],
+    }
+
+    with patch(
+        "core.bnb_auto_discovery.discover_bnb_transfer",
+        return_value=discovery,
+    ) as discover, patch.object(
+        target,
+        "prepare_existing_bnb_reconcile",
+    ) as prepare, patch(
+        "core.bnb_empirical_smoke.run"
+    ) as settle:
+        result = target.prepare_auto_existing_bnb_reconcile(UID, now=NOW)
+
+    assert result["status"] == "NOT_FOUND"
+    assert result["candidates"] == []
+    discover.assert_called_once_with(UID)
+    prepare.assert_not_called()
+    settle.assert_not_called()
+
+
+def test_auto_discovery_fails_closed_on_ambiguous_existing_transfers(monkeypatch):
+    discovery = {
+        "status": "AMBIGUOUS",
+        "scope": "read_only_discovery",
+        "candidates": [{"tx_hash": TX}, {"tx_hash": "0x" + "cd" * 32}],
+    }
+
+    with patch(
+        "core.bnb_auto_discovery.discover_bnb_transfer",
+        return_value=discovery,
+    ) as discover, patch.object(
+        target,
+        "prepare_existing_bnb_reconcile",
+    ) as prepare, patch(
+        "core.bnb_empirical_smoke.run"
+    ) as settle:
+        result = target.prepare_auto_existing_bnb_reconcile(UID, now=NOW)
+
+    assert result["status"] == "AMBIGUOUS"
+    assert len(result["candidates"]) == 2
+    discover.assert_called_once_with(UID)
+    prepare.assert_not_called()
+    settle.assert_not_called()
+
+
+def test_auto_discovery_requires_owner_before_querying_chain(monkeypatch):
+    monkeypatch.setattr(target, "is_owner", lambda _uid: False)
+
+    with patch("core.bnb_auto_discovery.discover_bnb_transfer") as discover:
+        result = target.prepare_auto_existing_bnb_reconcile("42", now=NOW)
+
+    assert result["status"] == "FORBIDDEN"
+    discover.assert_not_called()
