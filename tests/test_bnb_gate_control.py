@@ -140,3 +140,25 @@ def test_expired_close_confirmation_cannot_mutate_gate(monkeypatch):
     assert result["status"] == "EXPIRED"
     assert "bnb_deposits_override" not in db["bsc_settings"]
     assert db.get("bnb_gate_override_audit", []) == []
+
+
+def test_env_closed_cannot_be_overridden_when_readiness_helpers_are_live(monkeypatch):
+    import core.bnb_gate as target
+
+    db = _db("allow")
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target, "_effective_config", lambda snapshot=None: {
+        "network": "bsc",
+        "rpc": "https://rpc.invalid",
+        "chain_id": 56,
+        "confirmations": 15,
+        "treasury_wallet": "0x1111111111111111111111111111111111111111",
+    })
+    monkeypatch.setattr(target, "_empirical_settlement_evidence", lambda snapshot=None: {"status": "PASS"})
+    monkeypatch.setattr(target, "_empirical_evidence_revalidated", lambda *args, **kwargs: True)
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", "0x1111111111111111111111111111111111111111")
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
+
+    assert target.bnb_readiness(db)["ready"] is True
+    assert target.bnb_readiness(db)["effective_open"] is False
+    assert target.bnb_deposits_open() is False
