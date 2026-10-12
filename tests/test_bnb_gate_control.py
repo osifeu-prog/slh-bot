@@ -85,3 +85,58 @@ def test_open_requires_env_readiness_and_revalidated_evidence(monkeypatch):
     _wire_gate(monkeypatch, db, ready=True, evidence=True)
 
     assert target.bnb_deposits_open() is True
+
+
+def test_owner_close_control_requires_confirmation_and_writes_audit(monkeypatch):
+    import handlers.bnb_gate_control_handler as control
+
+    db = _db()
+    monkeypatch.setattr(control, "is_owner", lambda uid: str(uid) == OWNER_UID)
+    monkeypatch.setattr(control.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(control.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    preview = control._prepare(OWNER_UID, "close")
+    assert preview["status"] == "PREPARED"
+    assert "bnb_deposits_override" not in db["bsc_settings"]
+
+    result = control._confirm(OWNER_UID, preview["confirmation_id"])
+    assert result["status"] == "OK"
+    assert db["bsc_settings"]["bnb_deposits_override"] == "deny"
+    assert db["bnb_gate_override_audit"][-1]["uid"] == OWNER_UID
+    assert db["bnb_gate_override_audit"][-1]["action"] == "deny"
+
+
+def test_non_owner_cannot_prepare_or_confirm_gate_change(monkeypatch):
+    import handlers.bnb_gate_control_handler as control
+
+    db = _db()
+    monkeypatch.setattr(control, "is_owner", lambda uid: str(uid) == OWNER_UID)
+    monkeypatch.setattr(control.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(control.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    preview = control._prepare("5010371391", "close")
+    assert preview["status"] == "FORBIDDEN"
+    result = control._confirm("5010371391", "not-a-confirmation")
+    assert result["status"] == "FORBIDDEN"
+    assert "bnb_deposits_override" not in db["bsc_settings"]
+    assert db.get("bnb_gate_override_audit", []) == []
+
+
+def test_expired_close_confirmation_cannot_mutate_gate(monkeypatch):
+    import handlers.bnb_gate_control_handler as control
+    from datetime import timedelta
+
+    db = _db()
+    monkeypatch.setattr(control, "is_owner", lambda uid: str(uid) == OWNER_UID)
+    monkeypatch.setattr(control.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(control.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    preview = control._prepare(OWNER_UID, "close")
+    control._PENDING[preview["confirmation_id"]]["expires_at"] = (
+        control._utc_now() - timedelta(seconds=1)
+    )
+    result = control._confirm(OWNER_UID, preview["confirmation_id"])
+
+    assert result["status"] == "EXPIRED"
+    assert "bnb_deposits_override" not in db["bsc_settings"]
+    assert db.get("bnb_gate_override_audit", []) == []
