@@ -476,17 +476,38 @@ def bnb_opening_evidence() -> dict:
 
 
 def bnb_deposits_open() -> bool:
-    """Public BNB deposits require both the operator flag and revalidated proof.
+    """Public BNB deposits — fail-closed, close-only operator override.
 
-    Owner-canary settlement remains separately authorized while the public
-    gate is closed; a persisted status=PASS record alone can never open it.
+    The DB override may close the gate, never open it. Opening requires a
+    readable canonical DB, a valid settings mapping, the normal env/readiness
+    gate, and a live revalidation of empirical chain + ledger proof.
     """
-    gate = bnb_readiness()
+    try:
+        db = state_manager.load_db()
+    except Exception:
+        return False
+
+    if not isinstance(db, dict):
+        return False
+
+    settings = db.get("bsc_settings")
+    if not isinstance(settings, dict):
+        # Missing or malformed gate settings cannot prove the gate is safe.
+        return False
+
+    override = str(settings.get("bnb_deposits_override") or "").strip().lower()
+    if override not in ("", "auto"):
+        # "deny", "allow", typos, and all unknown values fail closed.
+        return False
+
+    # Re-use one canonical DB snapshot for readiness and empirical evidence.
+    gate = bnb_readiness(db)
     if not bool(gate.get("effective_open")):
         return False
-    empirical = _empirical_settlement_evidence()
-    return _empirical_evidence_revalidated(empirical, _effective_config())
 
+    empirical = _empirical_settlement_evidence(db)
+    config = _effective_config(db)
+    return _empirical_evidence_revalidated(empirical, config, db=db)
 
 def bnb_settlement_allowed(uid, db=None) -> bool:
     """Allow normal settlement only when OPEN, or owner canary while the gate stays closed.
