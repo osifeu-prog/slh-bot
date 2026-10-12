@@ -283,3 +283,46 @@ def test_bnb_readiness_fails_closed_when_binding_chain_is_missing():
         assert status["ready"] is False
         assert status["effective_open"] is False
         assert "BNB_WALLET_BINDINGS_UNVERIFIED" in status["reasons"]
+
+
+
+def test_bnb_deposits_open_fails_closed_when_bsc_settings_is_missing():
+    with patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"users": {}, "wallet_bindings": {}},
+    ), patch(
+        "core.bnb_gate.bnb_readiness",
+        return_value={"effective_open": True},
+    ), patch(
+        "core.bnb_gate._empirical_settlement_evidence",
+        return_value={"status": "PASS"},
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate._empirical_evidence_revalidated",
+        return_value=True,
+    ) as revalidate:
+        assert bnb_deposits_open() is False
+        revalidate.assert_not_called()
+
+
+def test_bnb_deposits_open_fails_closed_when_bsc_settings_is_empty():
+    with patch(
+        "core.bnb_gate.state_manager.load_db",
+        return_value={"users": {}, "wallet_bindings": {}, "bsc_settings": {}},
+    ), patch(
+        "core.bnb_gate.bnb_readiness",
+        return_value={"effective_open": True},
+    ), patch(
+        "core.bnb_gate._empirical_settlement_evidence",
+        return_value={"status": "PASS"},
+    ), patch(
+        "core.bnb_gate._effective_config",
+        return_value=_cfg(),
+    ), patch(
+        "core.bnb_gate._empirical_evidence_revalidated",
+        return_value=True,
+    ) as revalidate:
+        assert bnb_deposits_open() is False
+        revalidate.assert_not_called()
