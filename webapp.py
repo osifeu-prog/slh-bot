@@ -3262,8 +3262,10 @@ def api_exchange_order():
                 )
                 if not same_intent:
                     raise ValueError("EXCHANGE_IDEMPOTENCY_KEY_REUSED")
-                return old
-            return _place(db, str(uid), side, amount, price, key)
+                # Return a response-only marker; never mutate the stored original receipt.
+                return {**old, "idempotent_replay": True}
+            # The stored receipt remains canonical and unmodified; mark only this response.
+            return {**_place(db, str(uid), side, amount, price, key), "idempotent_replay": False}
 
         result = state_manager.atomic_update(mutate)
         return jsonify(result), 200
