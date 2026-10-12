@@ -110,8 +110,18 @@ def test_rest_buy_fails_closed_before_any_order_or_balance_mutation(monkeypatch)
     }
 
     monkeypatch.setattr(webapp, "authenticated_uid", lambda: "buyer")
+    monkeypatch.setattr(webapp.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(webapp.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(exchange_handler, "require_public_open", lambda: None)
+    monkeypatch.setattr(exchange_handler, "require_fresh_live_exchange_proof", lambda: {
+        "status": "PASS",
+        "checked_at": "2026-10-12T16:00:00+00:00",
+        "railway_configured": "1",
+        "public_gate": "OPEN",
+        "public_verdict": "OPEN",
+        "public_readiness": True,
+        "public_updated_at": 1791830000.0,
+    })
     monkeypatch.setattr("core.system_checks.check_exchange_for_execution", lambda snapshot: blocked_check)
 
     response = webapp.app.test_client().post(
