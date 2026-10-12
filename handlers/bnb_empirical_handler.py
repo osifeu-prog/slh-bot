@@ -44,7 +44,7 @@ def _idempotency_key(tx_hash):
 def _safe_discovery_error_code(error, fallback):
     """Expose stable uppercase diagnostic codes only, never provider text."""
     value = str(error or "").strip()
-    if re.fullmatch(r"[A-Z][A-Z0-9_:-]{0,99}", value):
+    if re.fullmatch(r"(?:BNB|BSC)_[A-Z0-9_]{1,80}", value):
         return value
     return fallback
 
