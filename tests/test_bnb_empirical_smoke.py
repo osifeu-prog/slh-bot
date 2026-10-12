@@ -254,6 +254,7 @@ def test_existing_settlement_replay_rejects_ambiguous_ledger_without_replay():
          }), \
          patch("core.bnb_gate.bnb_readiness", return_value={"ready": True, "confirmations_required": 15}), \
          patch("core.bnb_gate.bnb_settlement_allowed", return_value=True), \
+         patch("core.bnb_gate._effective_config", return_value={"treasury_wallet": TREASURY}), \
          patch.object(bnb_empirical_smoke, "settle_bnb_deposit") as replay:
         result = bnb_empirical_smoke.reconcile_existing_settlement(UID, TX)
 
