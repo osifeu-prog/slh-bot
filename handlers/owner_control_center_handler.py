@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
 import uuid
@@ -15,13 +16,14 @@ from core.authority import is_owner
 
 CALLBACK_TTL_SECONDS = 30 * 60
 REPORT_PATH = Path("state/control_center/last_report.json")
+_SHA_RE = re.compile(r"^[0-9a-f]{40}$", re.IGNORECASE)
 
 SAFE_NEXT_STEPS = [
     {
         "id": "verify_runtime_sha",
         "title": "אימות SHA של הפריסה החיה מול GitHub",
         "status": "UNKNOWN",
-        "reason": "נדרש אימות פריסה חי; הרשאת Railway viewer אינה זמינה כרגע.",
+        "reason": "תהליך הבוט אינו שואל את Railway על פריסות חיות; האימות זמין דרך בקרת Railway החיצונית.",
     },
     {
         "id": "stars_retry_audit",
@@ -73,13 +75,19 @@ def next_safe_step():
 
 
 def _git_sha():
+    """Prefer Railway's injected source SHA; fall back to a local Git checkout."""
+    for key in ("RAILWAY_GIT_COMMIT_SHA", "GIT_COMMIT", "SOURCE_VERSION"):
+        value = os.getenv(key, "").strip()
+        if _SHA_RE.fullmatch(value):
+            return value.lower()
     try:
-        return subprocess.check_output(
+        value = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
             stderr=subprocess.DEVNULL,
             timeout=3,
             text=True,
         ).strip()
+        return value.lower() if _SHA_RE.fullmatch(value) else "UNKNOWN"
     except Exception:
         return "UNKNOWN"
 
@@ -103,7 +111,7 @@ def build_report():
             {
                 "name": "railway_deployment_sha",
                 "status": "UNKNOWN",
-                "evidence": "לא אומת מול Railway; אין להסיק שהפריסה תואמת ל-GitHub.",
+                "evidence": "תהליך הבוט אינו קורא את מטא־נתוני הפריסה של Railway; אין להסיק מכך שהפריסה שגויה או תואמת.",
             },
             {
                 "name": "financial_gates",
