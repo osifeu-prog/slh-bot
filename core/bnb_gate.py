@@ -491,13 +491,11 @@ def bnb_deposits_open() -> bool:
         return False
 
     settings = db.get("bsc_settings")
-    if settings is not None and not isinstance(settings, dict):
+    if not isinstance(settings, dict):
+        # Missing or malformed gate settings cannot prove the gate is safe.
         return False
 
-    override = (
-        str(settings.get("bnb_deposits_override") or "").strip().lower()
-        if isinstance(settings, dict) else ""
-    )
+    override = str(settings.get("bnb_deposits_override") or "").strip().lower()
     if override:
         # "deny", "allow", typos, and all unknown values fail closed.
         return False
