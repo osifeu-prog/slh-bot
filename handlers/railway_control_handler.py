@@ -272,17 +272,22 @@ def apply_railway_vars(uid, code):
         result = _graphql(ctx,
             "mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) "
             "{ variableCollectionUpsert(input: $input) }",
-            {"input": {"projectId": ctx["project_id"], "environmentId": ctx["environment_id"],
-                       "serviceId": ctx["service_id"], "variables": {"SLH_BSC_CONFIG": raw_new}}},
+            {"input": {
+                "projectId": ctx["project_id"],
+                "environmentId": ctx["environment_id"],
+                "serviceId": ctx["service_id"],
+                "variables": {"SLH_BSC_CONFIG": raw_new},
+                "skipDeploys": True,
+            }},
         )
         if result.get("variableCollectionUpsert") is not True:
             raise RuntimeError("RAILWAY_VARIABLE_UPSERT_UNCONFIRMED")
         deployed = _graphql(ctx,
-            "mutation serviceInstanceDeploy($serviceId: String!, $environmentId: String!) "
-            "{ serviceInstanceDeploy(serviceId: $serviceId, environmentId: $environmentId) }",
+            "mutation serviceInstanceRedeploy($serviceId: String!, $environmentId: String!) "
+            "{ serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId) }",
             {"serviceId": ctx["service_id"], "environmentId": ctx["environment_id"]},
         )
-        if deployed.get("serviceInstanceDeploy") is not True:
+        if deployed.get("serviceInstanceRedeploy") is not True:
             return _finish(uid, code, "VARIABLE_UPDATED_DEPLOY_UNCONFIRMED")
         return _finish(uid, code, "DEPLOY_TRIGGERED")
     except Exception as exc:
