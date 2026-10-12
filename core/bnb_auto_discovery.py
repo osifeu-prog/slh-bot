@@ -181,21 +181,29 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     sender = w3.to_checksum_address(sender_raw)
     treasury = w3.to_checksum_address(treasury_raw)
 
-    # Ask an indexer only for transaction discovery. The returned candidate is
-    # re-checked by verify_bnb_deposit against the canonical BSC RPC below.
-    response = requests.get(
-        f"{BINPLORER_URL}/getAddressTransactions/{sender}",
-        params={
-            "apiKey": BINPLORER_KEY,
-            "limit": max(1, min(int(limit), DEFAULT_LIMIT)),
-            "showZeroValues": "false",
-        },
-        timeout=10,
-    )
-    response.raise_for_status()
-    data = response.json()
-    if not isinstance(data, list):
-        raise ValueError("BNB_DISCOVERY_INVALID_INDEX_RESPONSE")
+    # The indexer is a discovery hint only. If it is unavailable or returns
+    # an unexpected payload, continue to the bounded canonical-RPC fallback
+    # below instead of aborting before on-chain discovery can run.
+    indexer_unavailable = False
+    try:
+        response = requests.get(
+            f"{BINPLORER_URL}/getAddressTransactions/{sender}",
+            params={
+                "apiKey": BINPLORER_KEY,
+                "limit": max(1, min(int(limit), DEFAULT_LIMIT)),
+                "showZeroValues": "false",
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, list):
+            indexer_unavailable = True
+            data = []
+    except Exception:
+        # Do not expose indexer URLs, credentials, or raw third-party responses.
+        indexer_unavailable = True
+        data = []
 
     now = int(datetime.now(timezone.utc).timestamp())
     rows = []
@@ -245,7 +253,23 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     if not rows:
         handoff_ts = _latest_handoff_timestamp(uid)
         if handoff_ts:
-            rpc_rows = _rpc_find_exact_transfers(w3, sender, treasury, handoff_ts)
+            try:
+                rpc_rows = _rpc_find_exact_transfers(w3, sender, treasury, handoff_ts)
+            except Exception:
+                # If the bounded RPC fallback cannot complete, discovery is
+                # unavailable; never convert an incomplete scan into NOT_FOUND.
+                return {
+                    "status": "DISCOVERY_UNAVAILABLE",
+                    "scope": "read_only_discovery",
+                    "provider": "BSC_RPC_HANDOFF_WINDOW",
+                    "uid": uid,
+                    "sender": sender,
+                    "treasury": treasury,
+                    "amount_wei": TARGET_AMOUNT_WEI,
+                    "handoff_timestamp": handoff_ts,
+                    "candidates": [],
+                    "detail": "BSC_RPC_HANDOFF_SCAN_FAILED",
+                }
             rpc_rows = [row for row in rpc_rows if row.get("tx_hash")]
             rpc_rows.sort(key=lambda item: (abs(item["timestamp"] - handoff_ts), item["tx_hash"].lower()))
             unsettled_rpc = [
@@ -278,6 +302,23 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
                     "candidate": candidate,
                     "candidates": rpc_rows,
                 }
+        if indexer_unavailable:
+            return {
+                "status": "DISCOVERY_UNAVAILABLE",
+                "scope": "read_only_discovery",
+                "provider": "BSC_RPC_HANDOFF_WINDOW",
+                "uid": uid,
+                "sender": sender,
+                "treasury": treasury,
+                "amount_wei": TARGET_AMOUNT_WEI,
+                "candidates": [],
+                "handoff_timestamp": handoff_ts,
+                "detail": (
+                    "INDEXER_UNAVAILABLE_NO_HANDOFF_WINDOW"
+                    if not handoff_ts
+                    else "INDEXER_UNAVAILABLE_NO_RPC_MATCH"
+                ),
+            }
         return {
             "status": "NOT_FOUND",
             "scope": "read_only_discovery",
@@ -286,7 +327,7 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
             "treasury": treasury,
             "amount_wei": TARGET_AMOUNT_WEI,
             "candidates": [],
-            "handoff_timestamp": _latest_handoff_timestamp(uid),
+            "handoff_timestamp": handoff_ts,
         }
 
     unsettled = [row for row in rows if not row["already_recorded"]]
