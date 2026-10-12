@@ -165,6 +165,8 @@ def _partial_audit(*, draft_id, target_count, sent, failed, failed_recipient_uid
         "sent": sent,
         "failed": failed,
         "failed_recipient_uids": failed_recipient_uids,
+        "created_at": "2026-10-12T10:55:00+00:00",
+        "finished_at": "2026-10-12T11:00:00+00:00",
         "audience_sha256": "previous-hash",
         "message_sha256": hashlib.sha256(target.EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest(),
     }
@@ -191,7 +193,7 @@ def test_exchange_broadcast_retry_preview_targets_only_known_failed_recipients(m
     assert pending["requires_duplicate_ack"] is False
 
 
-def test_exchange_broadcast_legacy_partial_preview_requires_duplicate_ack(monkeypatch):
+def test_exchange_broadcast_legacy_partial_without_recipient_ids_fails_closed(monkeypatch):
     failed = _partial_audit(
         draft_id="legacy-partial",
         target_count=32,
@@ -203,16 +205,81 @@ def test_exchange_broadcast_legacy_partial_preview_requires_duplicate_ack(monkey
 
     result = target.prepare_exchange_broadcast(str(target.OWNER_TELEGRAM_ID))
 
+    assert result["status"] == "NO_SAFE_NEW_RECIPIENTS"
+    assert "exchange_broadcast_pending" in db
+    assert str(target.OWNER_TELEGRAM_ID) not in db["exchange_broadcast_pending"]
+
+
+def test_exchange_broadcast_legacy_partial_uses_only_verified_new_users(monkeypatch):
+    failed = _partial_audit(
+        draft_id="legacy-partial",
+        target_count=32,
+        sent=27,
+        failed=5,
+    )
+    db = _exchange_broadcast_db([str(i) for i in range(1, 33)] + ["33", "34", "35", "36"], [failed])
+    db["users"]["33"] = {"joined": "2026-10-12T11:00:01+00:00"}
+    db["users"]["34"] = {"profile": {"created_at": "2026-10-12T11:00:05+00:00"}}
+    db["users"]["35"] = {"joined": "2026-10-12T10:59:59+00:00"}
+    db["users"]["36"] = {"joined": "2026-10-12T11:10:00"}
+
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    result = target.prepare_exchange_broadcast(str(target.OWNER_TELEGRAM_ID))
+
     assert result["status"] == "PREPARED"
-    assert result["target_count"] == 32
+    assert result["target_count"] == 2
+    assert result["audience_scope"] == "new_users_only"
+    assert result["retry_of_draft_id"] == "legacy-partial"
+    assert result["requires_duplicate_ack"] is False
     pending = db["exchange_broadcast_pending"][str(target.OWNER_TELEGRAM_ID)]
-    assert pending["audience_scope"] == "all"
-    assert pending["requires_duplicate_ack"] is True
-    assert pending["previous_sent"] == 27
-    assert pending["previous_failed"] == 5
+    assert pending["audience_scope"] == "new_users_only"
+    assert pending["target_count"] == 2
+    assert pending["audience_sha256"] == target._broadcast_audience_hash(["33", "34"])
 
 
-def test_legacy_partial_confirmation_without_duplicate_ack_sends_nothing(monkeypatch):
+def test_new_user_retry_blocks_if_verified_cohort_changes_after_preview(monkeypatch):
+    failed = _partial_audit(
+        draft_id="legacy-partial",
+        target_count=32,
+        sent=27,
+        failed=5,
+    )
+    db = _exchange_broadcast_db([str(i) for i in range(1, 33)] + ["33"], [failed])
+    db["users"]["33"] = {"joined": "2026-10-12T11:00:01+00:00"}
+    uid = str(target.OWNER_TELEGRAM_ID)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    assert target._latest_exchange_broadcast_audit(db, uid) == failed
+    preview = target.prepare_exchange_broadcast(uid)
+
+    assert preview["status"] == "PREPARED"
+    assert preview["audience_scope"] == "new_users_only"
+    assert preview["target_count"] == 1
+
+    # A second post-delivery account appears after the preview was locked.
+    db["users"]["34"] = {"joined": "2026-10-12T11:00:05+00:00"}
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    })
+    bot = FakeBot()
+
+    result = target.send_confirmed_exchange_broadcast(bot, uid)
+
+    assert result["status"] == "RECIPIENTS_CHANGED"
+    assert bot.sent == []
+    assert db["exchange_broadcast_pending"][uid]["status"] == "RECIPIENTS_CHANGED"
+
+
+def test_legacy_partial_confirmation_with_duplicate_ack_still_sends_nothing(monkeypatch):
     failed = _partial_audit(
         draft_id="legacy-partial",
         target_count=2,
@@ -248,9 +315,10 @@ def test_legacy_partial_confirmation_without_duplicate_ack_sends_nothing(monkeyp
     })
     bot = FakeBot()
 
-    result = target.send_confirmed_exchange_broadcast(bot, uid)
+    # Even the legacy explicit duplicate acknowledgement cannot bypass the new safety gate.
+    result = target.send_confirmed_exchange_broadcast(bot, uid, duplicate_acknowledged=True)
 
-    assert result["status"] == "DUPLICATE_ACK_REQUIRED"
+    assert result["status"] == "SAFE_RETRY_REQUIRED"
     assert bot.sent == []
     assert db["exchange_broadcast_pending"][uid]["status"] == "PENDING_CONFIRMATION"
 
