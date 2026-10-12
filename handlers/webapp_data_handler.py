@@ -64,7 +64,7 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
     from handlers.exchange_handler import (
         ExchangeFreshCheckBlocked,
         _dec,
-        _place,
+        execute_exchange_order,
         format_blocked_execution_receipt,
         format_execution_receipt,
     )
@@ -76,15 +76,14 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
     # One logical Mini App action gets one idempotency key.
     request_id = f"WEBAPP-EXCHANGE-{uid}-{side}-{amount_text}-{price_text}-{nonce}"
 
-    def mutate(db):
-        requests = db.setdefault("exchange_requests", {})
-        existing = requests.get(request_id)
-        if existing is not None:
-            return existing
-        return _place(db, uid, side, amount, price, request_id)
-
     try:
-        result = state_manager.atomic_update(mutate)
+        result = execute_exchange_order(
+            uid=uid,
+            side=side,
+            amount=amount,
+            price=price,
+            request_id=request_id,
+        )
     except ExchangeFreshCheckBlocked as exc:
         bot.send_message(
             chat_id,
