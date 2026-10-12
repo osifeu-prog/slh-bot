@@ -74,3 +74,29 @@ def test_graphql_uses_project_access_token_header(monkeypatch):
     headers = {key.lower(): value for key, value in captured["headers"].items()}
     assert headers.get("project-access-token") == "test-token"
     assert "authorization" not in headers
+
+
+def test_variable_update_requests_one_explicit_redeploy(monkeypatch):
+    calls = []
+    ctx = {
+        "token": "scoped-token",
+        "project_id": "project",
+        "environment_id": "environment",
+        "service_id": "service",
+    }
+
+    def fake_graphql(_ctx, query, variables=None):
+        calls.append((query, variables))
+        if "variableCollectionUpsert" in query:
+            return {"variableCollectionUpsert": True}
+        if "serviceInstanceRedeploy" in query:
+            return {"serviceInstanceRedeploy": True}
+        raise AssertionError("unexpected mutation")
+
+    monkeypatch.setattr(target, "_graphql", fake_graphql)
+    result = target._update_and_redeploy(ctx, '{"treasury_wallet":"0x' + "0" * 40 + '"}', "target-config")
+    assert result == "DEPLOY_TRIGGERED"
+    assert len(calls) == 2
+    assert calls[0][1]["input"]["skipDeploys"] is True
+    assert calls[0][1]["input"]["variables"] == {"SLH_BSC_CONFIG": "target-config"}
+    assert "serviceInstanceRedeploy" in calls[1][0]
