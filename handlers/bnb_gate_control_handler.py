@@ -159,6 +159,9 @@ def register(bot):
     @bot.message_handler(commands=["bnb_gate_status"])
     def bnb_gate_status(message):
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+        if getattr(getattr(message, "chat", None), "type", None) != "private":
+            bot.reply_to(message, "⛔️ Use this command in a private chat.", parse_mode=None)
+            return
         if not is_owner(uid):
             bot.reply_to(message, "⛔️ OWNER only.", parse_mode=None)
             return
@@ -167,6 +170,9 @@ def register(bot):
     @bot.message_handler(commands=["bnb_gate_close"])
     def bnb_gate_close(message):
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+        if getattr(getattr(message, "chat", None), "type", None) != "private":
+            bot.reply_to(message, "⛔️ Use this command in a private chat.", parse_mode=None)
+            return
         if not is_owner(uid):
             bot.reply_to(message, "⛔️ OWNER only.", parse_mode=None)
             return
@@ -187,6 +193,9 @@ def register(bot):
     @bot.message_handler(commands=["bnb_gate_auto"])
     def bnb_gate_auto(message):
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+        if getattr(getattr(message, "chat", None), "type", None) != "private":
+            bot.reply_to(message, "⛔️ Use this command in a private chat.", parse_mode=None)
+            return
         if not is_owner(uid):
             bot.reply_to(message, "⛔️ OWNER only.", parse_mode=None)
             return
@@ -206,6 +215,9 @@ def register(bot):
 
     @bot.message_handler(commands=["bnb_gate_close_confirm"])
     def bnb_gate_close_confirm(message):
+        if getattr(getattr(message, "chat", None), "type", None) != "private":
+            bot.reply_to(message, "⛔️ Use this command in a private chat.", parse_mode=None)
+            return
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
         parts = (getattr(message, "text", "") or "").split()
         if len(parts) != 2:
@@ -224,6 +236,9 @@ def register(bot):
 
     @bot.message_handler(commands=["bnb_gate_auto_confirm"])
     def bnb_gate_auto_confirm(message):
+        if getattr(getattr(message, "chat", None), "type", None) != "private":
+            bot.reply_to(message, "⛔️ Use this command in a private chat.", parse_mode=None)
+            return
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
         parts = (getattr(message, "text", "") or "").split()
         if len(parts) != 2:
