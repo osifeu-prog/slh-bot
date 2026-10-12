@@ -99,6 +99,7 @@ def load_handlers(bot, context):
         ("governance", "handlers.governance_canonical_handler"),
         ("community_groups", "handlers.community_group_handler"),
         ("broadcast", "handlers.broadcast_handler"),
+        ("broadcast_ack", "handlers.broadcast_ack_handler"),
         ("firewall", "handlers.firewall_handler"),
         ("staking", "handlers.staking_handler"),
         ("staking_revenue", "handlers.staking_revenue_handler"),
