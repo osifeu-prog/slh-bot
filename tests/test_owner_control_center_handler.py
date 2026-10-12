@@ -162,3 +162,86 @@ def test_unavailable_live_action_queue_fails_closed():
     assert "TimeoutError" in rendered
     assert report["next_safe_step"]["status"] == "UNKNOWN"
 
+def test_ai_provider_degradation_appears_as_owner_action(monkeypatch):
+    import handlers.owner_control_center_handler as handler
+
+    state = {
+        "available": True,
+        "overall": "DEGRADED",
+        "blockers": [],
+        "warnings": [],
+        "current_state": {"bnb_settlement": "CLOSED", "ton_settlement": "CLOSED"},
+        "readiness": {"runtime": "DEGRADED"},
+        "actions": [
+            {
+                "id": "collect_ci_evidence",
+                "title": "איסוף ראיות CI עדכניות",
+                "status": "SAFE_PROPOSAL",
+                "reason": "Collect current CI evidence.",
+                "safe": True,
+                "mutation": False,
+                "owner_required": False,
+            }
+        ],
+    }
+    ai = {
+        "available": True,
+        "status": "DEGRADED",
+        "last_request_status": "DEGRADED",
+        "last_provider": "",
+        "reason_code": "all_providers_failed",
+        "checked_at": "2026-10-12T17:00:00+00:00",
+        "age_minutes": 2,
+        "providers": {
+            "gemini": {"status": "RATE_LIMITED", "model": "gemini-2.5-flash", "reason_code": "quota_or_rate_limit"},
+            "groq": {"status": "RATE_LIMITED", "model": "openai/gpt-oss-20b", "reason_code": "quota_or_rate_limit"},
+        },
+    }
+    monkeypatch.setattr(handler, "_load_release_state", lambda: state)
+    monkeypatch.setattr(handler, "_load_ai_health", lambda now=None: ai)
+
+    report = handler.build_report()
+    rendered = handler.format_report(report)
+
+    assert report["next_safe_step"]["id"] == "restore_ai_provider_availability"
+    assert "AI provider health" in rendered
+    assert "AI: DEGRADED" in rendered
+    assert "שחזור זמינות ספקי AI" in rendered
+    assert "אל תשתף מפתחות" in rendered
+
+
+def test_ai_health_stale_status_is_not_promoted_to_active_issue(monkeypatch):
+    import handlers.owner_control_center_handler as handler
+
+    state = {
+        "available": True,
+        "overall": "GREEN",
+        "blockers": [],
+        "warnings": [],
+        "current_state": {},
+        "readiness": {},
+        "actions": [],
+    }
+    ai = {
+        "available": True,
+        "status": "STALE",
+        "last_request_status": "DEGRADED",
+        "last_provider": "",
+        "reason_code": "all_providers_failed",
+        "checked_at": "2026-10-12T10:00:00+00:00",
+        "age_minutes": 600,
+        "providers": {},
+    }
+    monkeypatch.setattr(handler, "_load_release_state", lambda: state)
+    monkeypatch.setattr(handler, "_load_ai_health", lambda now=None: ai)
+
+    report = handler.build_report()
+    rendered = handler.format_report(report)
+
+    assert report["next_safe_step"]["id"] == "manual_review" or report["next_safe_step"]["id"] == "none"
+    assert "AI: STALE" in rendered
+    assert not any(
+        item.get("id") == "restore_ai_provider_availability"
+        for item in report["release_state"]["actions"]
+    )
+
