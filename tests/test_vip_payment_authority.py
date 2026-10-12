@@ -107,9 +107,11 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
             return copy.deepcopy(fn(db))
 
         bundle = {"status": "completed", "launch_offer_qualified": False}
-        with patch.object(authority.state_manager, "atomic_update", side_effect=atomic_update), \\
-             patch.object(authority.revenue_ledger, "record") as record_revenue, \\
-             patch.object(authority, "apply_vip_benefits", return_value=bundle):
+        with (
+            patch.object(authority.state_manager, "atomic_update", side_effect=atomic_update),
+            patch.object(authority.revenue_ledger, "record") as record_revenue,
+            patch.object(authority, "apply_vip_benefits", return_value=bundle),
+        ):
             result = authority.record_vip_subscription_payment(
                 uid="1",
                 stars_paid=499,
