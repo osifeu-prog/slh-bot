@@ -132,6 +132,75 @@ def _load_release_state():
             "actions": [],
         }
 
+def _load_ai_health(now=None):
+    """Read last-known LLM status only; never call a provider or expose error bodies."""
+    try:
+        from core.llm_health import load_health
+
+        raw = load_health()
+        request = raw.get("last_request") if isinstance(raw, dict) else None
+        request = request if isinstance(request, dict) else None
+        providers = raw.get("providers", {}) if isinstance(raw, dict) else {}
+        providers = providers if isinstance(providers, dict) else {}
+        checked_at = str((request or {}).get("checked_at") or "")
+        timestamp = datetime.fromisoformat(checked_at.replace("Z", "+00:00")) if checked_at else None
+        if timestamp is not None and timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+        current = now or datetime.now(timezone.utc)
+        age_minutes = None
+        if timestamp is not None:
+            age_minutes = max(0, int((current - timestamp.astimezone(timezone.utc)).total_seconds() // 60))
+
+        raw_status = str((request or {}).get("status") or "UNKNOWN").upper()
+        if timestamp is None or age_minutes is None:
+            status = "UNKNOWN"
+        elif age_minutes > 60:
+            status = "STALE"
+        elif raw_status == "DEGRADED":
+            status = "DEGRADED"
+        elif raw_status == "HEALTHY":
+            status = "HEALTHY"
+        else:
+            status = "UNKNOWN"
+
+        providers_out = {}
+        for name in ("gemini", "ollama", "groq"):
+            item = providers.get(name)
+            if not isinstance(item, dict):
+                continue
+            providers_out[name] = {
+                "status": str(item.get("status") or "UNKNOWN")[:30],
+                "model": str(item.get("model") or "")[:80],
+                "reason_code": str(item.get("reason_code") or "unknown")[:40],
+                "checked_at": str(item.get("checked_at") or "")[:40],
+            }
+
+        last_provider = str((request or {}).get("provider") or "")
+        last_reason = str((request or {}).get("reason_code") or "unknown")
+        return {
+            "available": True,
+            "status": status,
+            "last_request_status": raw_status,
+            "last_provider": last_provider,
+            "reason_code": last_reason,
+            "checked_at": checked_at or None,
+            "age_minutes": age_minutes,
+            "providers": providers_out,
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "status": "UNKNOWN",
+            "error": type(exc).__name__,
+            "last_request_status": "UNKNOWN",
+            "last_provider": "",
+            "reason_code": "unknown",
+            "checked_at": None,
+            "age_minutes": None,
+            "providers": {},
+        }
+
+
 def callback_data(action, issued_at=None):
     """Timestamped callback payload so old inline buttons expire."""
     stamp = int(time.time() if issued_at is None else issued_at)
@@ -217,6 +286,26 @@ def build_report():
     """Build a read-only snapshot and surface the current release action queue."""
     now = datetime.now(timezone.utc).isoformat()
     release_state = _load_release_state()
+    ai_health = _load_ai_health()
+    if release_state.get("available") is True and ai_health.get("status") == "DEGRADED":
+        ai_action = {
+            "id": "restore_ai_provider_availability",
+            "title": "שחזור זמינות ספקי AI",
+            "status": "OWNER_REQUIRED",
+            "reason": (
+                "בקשת ה־AI האחרונה נכשלה בכל הספקים. בדוק מכסות/מגבלות Gemini ו־Groq "
+                "או חיבור Ollama. אל תשתף מפתחות API."
+            ),
+            "safe": False,
+            "mutation": False,
+            "owner_required": True,
+        }
+        existing_actions = release_state.get("actions", [])
+        if not isinstance(existing_actions, list):
+            existing_actions = []
+        release_state["actions"] = [ai_action] + [
+            item for item in existing_actions if not (isinstance(item, dict) and item.get("id") == ai_action["id"])
+        ]
     queue_status = (
         release_state.get("overall", "UNKNOWN")
         if release_state.get("available") is True
@@ -258,7 +347,17 @@ def build_report():
                 "status": queue_status,
                 "evidence": queue_evidence,
             },
+            {
+                "name": "AI provider health",
+                "status": ai_health.get("status", "UNKNOWN"),
+                "evidence": (
+                    "last request=" + str(ai_health.get("last_request_status", "UNKNOWN"))
+                    + "; reason=" + str(ai_health.get("reason_code", "unknown"))
+                    + "; checked_at=" + str(ai_health.get("checked_at") or "not recorded")
+                ),
+            },
         ],
+        "ai_health": ai_health,
         "release_state": release_state,
         "safety": {
             "mode": "READ_ONLY",
@@ -307,6 +406,23 @@ def format_report(report):
         f"{c.get('name')}: {c.get('status')} — {c.get('evidence', '')}"
         for c in checks
     )
+
+    ai = report.get("ai_health")
+    if isinstance(ai, dict):
+        ai_status = str(ai.get("status") or "UNKNOWN").upper()
+        if ai_status == "DEGRADED":
+            lines.append("🤖 AI: DEGRADED — בקשת ה־AI האחרונה נכשלה בכל הספקים.")
+            lines.append("   בדוק מכסות/מגבלות Gemini ו־Groq או חיבור Ollama; אין לשתף מפתחות.")
+        elif ai_status == "HEALTHY":
+            lines.append(
+                "🤖 AI: HEALTHY — הבקשה האחרונה הצליחה דרך "
+                + str(ai.get("last_provider") or "ספק לא ידוע")
+                + "."
+            )
+        elif ai_status == "STALE":
+            lines.append("🤖 AI: STALE — אין בדיקת בקשת AI עדכנית בשעה האחרונה.")
+        else:
+            lines.append("🤖 AI: UNKNOWN — עדיין לא נשמרה תוצאת בקשת AI מאומתת.")
 
     release = report.get("release_state")
     if isinstance(release, dict):
