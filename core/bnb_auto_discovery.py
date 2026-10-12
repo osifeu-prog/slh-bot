@@ -205,6 +205,11 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     except Exception as exc:
         raise BNBDiscoveryError("BSC_ADDRESS_VALIDATION_FAILED") from exc
 
+    # A verified depositor wallet cannot also be the canonical Treasury.
+    # A self-transfer is not a deposit; fail before indexer/RPC discovery.
+    if sender.lower() == treasury.lower():
+        raise BNBDiscoveryError("BNB_TREASURY_MATCHES_BOUND_WALLET")
+
     # The indexer is a discovery hint only. If it is unavailable or returns
     # an unexpected payload, continue to the bounded canonical-RPC fallback
     # below instead of aborting before on-chain discovery can run.
