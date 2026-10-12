@@ -132,6 +132,7 @@ def register(bot):
             # Other financial mutations remain denied by the general operator router.
             from handlers.exchange_handler import route_exchange_gate_voice
             from handlers.broadcast_handler import route_exchange_broadcast_voice
+            from handlers.bnb_empirical_handler import route_bnb_treasury_config_voice
             from core.voice_operator_router import route_voice_operator_request
 
             gate_answer = route_exchange_gate_voice(bot, message, transcript)
@@ -142,8 +143,14 @@ def register(bot):
                 if broadcast_answer is not None:
                     answer = broadcast_answer
                 else:
-                    operator_answer = route_voice_operator_request(transcript, uid)
-                    answer = operator_answer if operator_answer is not None else route(transcript, uid)
+                    treasury_answer = route_bnb_treasury_config_voice(
+                        bot, message, transcript
+                    )
+                    if treasury_answer is not None:
+                        answer = treasury_answer
+                    else:
+                        operator_answer = route_voice_operator_request(transcript, uid)
+                        answer = operator_answer if operator_answer is not None else route(transcript, uid)
             final_answer = _safe_answer(answer)
 
             bot.reply_to(message, final_answer, parse_mode=None)
