@@ -536,6 +536,7 @@ def format_execution_receipt(side, result):
         and verdict == "OPEN"
         and all(check.get(flag) is True for flag in required_flags)
     )
+    receipt_icon = "✅" if all_checks_pass else "⚠️"
     if not check_present:
         check_status = "NOT VERIFIED"
     elif all_checks_pass:
@@ -553,7 +554,7 @@ def format_execution_receipt(side, result):
     trade_text = ", ".join(trade_ids) if trade_ids else "none (order may remain open)"
 
     lines = [
-        f"✅ {side_label} #{order_id} | filled {filled} | open {remaining} SLH",
+        f"{receipt_icon} {side_label} #{order_id} | filled {filled} | open {remaining} SLH",
         f"🔐 Fresh canonical Exchange check: {check_status}",
         f"🕒 checked_at (UTC): {checked_at}",
         f"Gate: {gate} | verdict: {verdict}",
