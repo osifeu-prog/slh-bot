@@ -311,12 +311,60 @@ def prepare_auto_existing_bnb_reconcile(uid, *, now=None):
         return {"status": "INVALID_DISCOVERED_TX_HASH", "scope": "read_only_discovery"}
 
     # Existing preview path revalidates through canonical BSC RPC, wallet binding,
-    # treasury and confirmations. It does not perform settlement.
-    return prepare_existing_bnb_reconcile(uid, tx_hash, now=now)
+    # treasury and confirmations. If the ledger already contains this TX, do not
+    # treat it as a new deposit or run the first-pass credit path. Prove it with
+    # the dedicated idempotent replay, which must leave the current balance
+    # unchanged and keeps the public BNB gate closed.
+    preview = prepare_existing_bnb_reconcile(uid, tx_hash, now=now)
+    if str(preview.get("status") or "").upper() == "ALREADY_SETTLED":
+        try:
+            from core.bnb_empirical_smoke import reconcile_existing_settlement
+
+            proof = reconcile_existing_settlement(uid, tx_hash)
+        except Exception as exc:
+            return {
+                "status": "REPLAY_FAILED",
+                "tx_hash": tx_hash,
+                "detail": type(exc).__name__,
+                "scope": "existing_ledger_replay",
+            }
+        if not isinstance(proof, dict):
+            return {
+                "status": "REPLAY_RESULT_INVALID",
+                "tx_hash": tx_hash,
+                "scope": "existing_ledger_replay",
+            }
+        proof["tx_hash"] = str(proof.get("tx_hash") or tx_hash)
+        proof["scope"] = "existing_ledger_replay"
+        return proof
+    return preview
 
 
 def _auto_preview_reply(result):
     status = str((result or {}).get("status") or "BLOCKED")
+    if status in {"PASS", "ALREADY_PASS"}:
+        if result.get("gate_remained_closed") is not True:
+            return (
+                "⛔ הוכחת BNB לא סומנה כ־PASS כי לא הוכח שהשער נשאר סגור. "
+                "לא לפתוח שימוש ציבורי; יש לבדוק את הדוח הקנוני."
+            )
+        tx_hash = str(result.get("tx_hash") or "")
+        heading = "PASS" if status == "PASS" else "ALREADY PASS"
+        lines = [
+            f"✅ BNB — הוכחת העברה קיימת: {heading}",
+            f"TX: {tx_hash}",
+            "ה־ledger הקנוני וה־BSC RPC אומתו מחדש.",
+            "Replay: DUPLICATE · Credits חדשים מה־replay: 0",
+            "היתרה הנוכחית נשארה ללא שינוי.",
+            "🔒 שער BNB הציבורי נשאר CLOSED.",
+            "לא נשלחה עסקת BNB חדשה ולא נוצר זיכוי נוסף.",
+        ]
+        return "\\n".join(lines)
+    if status == "ALREADY_COMPLETED":
+        return (
+            "✅ הוכחת BNB קיימת ונבדקה מחדש מול ה־BSC וה־ledger. "
+            "שער BNB הציבורי נשאר CLOSED; לא נשלחה עסקה חדשה ולא נוצר זיכוי נוסף."
+        )
     if status == "PREPARED":
         return (
             "🔎 נמצאה העברה קיימת שמתאימה לבדיקה; לא נשלחה עסקת BNB חדשה.\n"
