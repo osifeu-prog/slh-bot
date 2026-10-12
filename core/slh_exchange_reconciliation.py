@@ -38,11 +38,33 @@ def audit_db(db):
 
     legacy_ledger = _records(db.get("ledger", []))
     token_ledger = _records(db.get("slh_token_ledger", []))
-    events = [event for _, event in legacy_ledger + token_ledger]
-    event_ids = [str(event.get("event_id")) for event in events if event.get("event_id")]
-    duplicate_event_ids = sorted(event_id for event_id, count in Counter(event_ids).items() if count > 1)
+
+    # The same logical event can be mirrored in both ledgers. Detect duplicates
+    # within each source, then de-duplicate mirrored records for amount totals.
+    duplicate_event_ids = set()
+    for source in (legacy_ledger, token_ledger):
+        source_ids = []
+        for _, event in source:
+            meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
+            event_id = event.get("event_id") or meta.get("event_id")
+            if event_id:
+                source_ids.append(str(event_id))
+        duplicate_event_ids.update(
+            event_id for event_id, count in Counter(source_ids).items() if count > 1
+        )
     if duplicate_event_ids:
-        findings.append({"code": "DUPLICATE_LEDGER_EVENT_ID", "event_ids": duplicate_event_ids})
+        findings.append({"code": "DUPLICATE_LEDGER_EVENT_ID", "event_ids": sorted(duplicate_event_ids)})
+
+    events = []
+    seen_event_ids = set()
+    for _, event in legacy_ledger + token_ledger:
+        meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
+        event_id = event.get("event_id") or meta.get("event_id")
+        if event_id and str(event_id) in seen_event_ids:
+            continue
+        if event_id:
+            seen_event_ids.add(str(event_id))
+        events.append(event)
 
     known_order_ids = set(orders)
     corrections = []
