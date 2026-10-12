@@ -412,29 +412,115 @@ def _match(db, incoming):
 
 
 class ExchangeFreshCheckBlocked(ValueError):
-    """Order entry was stopped by the fresh canonical exchange check."""
+    """Order entry was stopped by a fresh local or live canonical check."""
 
     def __init__(self, check, checked_at=None):
         self.check = {
             "status": "BLOCKED",
-            "checked_at": str(checked_at or _now()),
+            "checked_at": str(checked_at or check.get("checked_at") or _now()),
             "verdict": str(check.get("verdict") or "BLOCKED"),
-            "public_gate": str(check.get("public_gate") or "CLOSED"),
-            "public_ready": bool(check.get("public_ready")),
-            "execution_ready": bool(check.get("execution_ready")),
-            "order_book_integrity": bool(check.get("order_book_integrity")),
-            "trade_integrity": bool(check.get("trade_integrity")),
-            "money_invariants": bool(check.get("money_invariants")),
+            "public_gate": str(check.get("public_gate") or "UNKNOWN"),
+            "public_ready": check.get("public_ready"),
+            "execution_ready": check.get("execution_ready") is True,
+            "order_book_integrity": check.get("order_book_integrity"),
+            "trade_integrity": check.get("trade_integrity"),
+            "money_invariants": check.get("money_invariants"),
             "open_orders": int(check.get("open_orders") or 0),
             "detail": str(check.get("detail") or "fresh execution check blocked"),
         }
+        for field in (
+            "railway_configured",
+            "live_runtime_check",
+            "live_checked_at",
+            "live_public_updated_at",
+            "live_public_readiness",
+            "live_public_verdict",
+        ):
+            if field in check:
+                self.check[field] = check[field]
         super().__init__("EXCHANGE_FRESH_CHECK_BLOCKED")
 
 
-def _place(db, uid, side, amount, price, request_id):
-    # All public order-entry paths (Telegram and Mini App) converge here.
-    # Do not short-circuit with a separate gate exception: the fresh canonical
-    # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
+def require_fresh_live_exchange_proof():
+    """Require an uncached public runtime beacon and the Railway gate before a new order."""
+    attempted_at = _now()
+    try:
+        from core.railway_control import control_plane_exchange_gate_status
+
+        control_plane = control_plane_exchange_gate_status(timeout_seconds=4)
+        configured = str(control_plane.get("configured") or "UNKNOWN")
+    except Exception as exc:
+        raise ExchangeFreshCheckBlocked(
+            {
+                "checked_at": attempted_at,
+                "public_gate": "UNKNOWN",
+                "verdict": "BLOCKED",
+                "execution_ready": False,
+                "detail": f"Railway gate proof unavailable: {type(exc).__name__}",
+                "railway_configured": "UNKNOWN",
+                "live_runtime_check": "BLOCKED",
+                "live_checked_at": attempted_at,
+            },
+            checked_at=attempted_at,
+        ) from None
+
+    if configured != "1":
+        gate = "CLOSED" if configured == "0" else "UNKNOWN"
+        raise ExchangeFreshCheckBlocked(
+            {
+                "checked_at": attempted_at,
+                "public_gate": gate,
+                "verdict": "BLOCKED",
+                "execution_ready": False,
+                "detail": f"Railway Exchange gate is not configured OPEN (configured={configured})",
+                "railway_configured": configured,
+                "live_runtime_check": "BLOCKED",
+                "live_checked_at": attempted_at,
+            },
+            checked_at=attempted_at,
+        )
+
+    live = _fetch_public_exchange_status()
+    if live.get("verified") is not True:
+        gate = str(live.get("gate") or "UNKNOWN")
+        if gate not in {"OPEN", "CLOSED"}:
+            gate = "UNKNOWN"
+        raise ExchangeFreshCheckBlocked(
+            {
+                "checked_at": attempted_at,
+                "public_gate": gate,
+                "verdict": "BLOCKED",
+                "public_ready": live.get("readiness") is True,
+                "execution_ready": False,
+                "detail": str(live.get("detail") or "fresh public runtime proof did not pass"),
+                "railway_configured": configured,
+                "live_runtime_check": "BLOCKED",
+                "live_checked_at": attempted_at,
+                "live_public_updated_at": live.get("updated_at"),
+                "live_public_readiness": live.get("readiness") is True,
+                "live_public_verdict": str(live.get("verdict") or "UNKNOWN"),
+            },
+            checked_at=attempted_at,
+        )
+
+    # Timestamp is captured after both independent checks complete.
+    return {
+        "status": "PASS",
+        "checked_at": _now(),
+        "railway_configured": configured,
+        "public_gate": str(live.get("gate") or "OPEN"),
+        "public_verdict": str(live.get("verdict") or "OPEN"),
+        "public_readiness": live.get("readiness") is True,
+        "public_updated_at": live.get("updated_at"),
+        "public_detail": str(live.get("detail") or ""),
+    }
+
+
+def _place(db, uid, side, amount, price, request_id, live_proof=None):
+    # Internal atomic order path. Public entry points must call
+    # execute_exchange_order(), which verifies live state before opening this
+    # transaction; this function still runs the local DB/environment check
+    # against the exact snapshot that will be mutated.
     if is_frozen_account(db, uid):
         raise ValueError("ACCOUNT_FROZEN")
 
@@ -501,6 +587,16 @@ def _place(db, uid, side, amount, price, request_id):
         "money_invariants": bool(fresh_check.get("money_invariants")),
         "open_orders_before": int(fresh_check.get("open_orders") or 0),
     }
+    if isinstance(live_proof, dict) and live_proof.get("status") == "PASS":
+        execution_check.update({
+            "live_runtime_check": "PASS",
+            "live_checked_at": str(live_proof.get("checked_at") or ""),
+            "live_railway_gate": str(live_proof.get("railway_configured") or "UNKNOWN"),
+            "live_public_gate": str(live_proof.get("public_gate") or "UNKNOWN"),
+            "live_public_verdict": str(live_proof.get("public_verdict") or "UNKNOWN"),
+            "live_public_readiness": live_proof.get("public_readiness") is True,
+            "live_public_updated_at": live_proof.get("public_updated_at"),
+        })
     result = {
         "order_id": order["id"], "filled": _s(filled), "remaining": _s(remaining),
         "status": order["status"], "trade_ids": trade_ids,
@@ -509,6 +605,61 @@ def _place(db, uid, side, amount, price, request_id):
     db.setdefault(REQUESTS_KEY, {})[request_id] = result
     _assert_invariants(db)
     return result
+
+
+def _existing_exchange_request(request_id):
+    """Read an idempotent receipt without creating a database mutation."""
+    db = state_manager.load_db()
+    requests = db.get(REQUESTS_KEY, {}) if isinstance(db, dict) else {}
+    return requests.get(str(request_id)) if isinstance(requests, dict) else None
+
+
+def execute_exchange_order(*, uid, side, amount, price, request_id):
+    """Execute one Buy/Sell only after live gate proof, preserving replay receipts.
+
+    Network calls happen before the atomic DB mutation. The final local invariant
+    check remains inside _place() against the exact DB snapshot being changed.
+    """
+    request_id = str(request_id or "").strip()
+    if not request_id:
+        raise ValueError("EXCHANGE_REQUEST_ID_REQUIRED")
+    side = str(side or "").strip().lower()
+    if side not in {"buy", "sell"}:
+        raise ValueError("INVALID_EXCHANGE_SIDE")
+
+    existing = _existing_exchange_request(request_id)
+    if existing is not None:
+        return existing
+
+    try:
+        live_proof = require_fresh_live_exchange_proof()
+    except ExchangeFreshCheckBlocked:
+        # A concurrent replay may have committed while the live proof was read.
+        # Return its saved receipt rather than misreporting a prior order as new
+        # or encouraging the client to submit a duplicate.
+        existing = _existing_exchange_request(request_id)
+        if existing is not None:
+            return existing
+        raise
+
+    def mutate(db):
+        requests = db.setdefault(REQUESTS_KEY, {})
+        if not isinstance(requests, dict):
+            raise ValueError("EXCHANGE_REQUEST_STORE_INVALID")
+        existing_result = requests.get(request_id)
+        if existing_result is not None:
+            return existing_result
+        return _place(
+            db,
+            str(uid),
+            side,
+            amount,
+            price,
+            request_id,
+            live_proof=live_proof,
+        )
+
+    return state_manager.atomic_update(mutate)
 
 
 def format_execution_receipt(side, result):
@@ -541,7 +692,15 @@ def format_execution_receipt(side, result):
         and verdict == "OPEN"
         and all(check.get(flag) is True for flag in required_flags)
     )
-    receipt_icon = "✅" if all_checks_pass else "⚠️"
+    live_check_pass = (
+        check.get("live_runtime_check") == "PASS"
+        and check.get("live_railway_gate") == "1"
+        and check.get("live_public_gate") == "OPEN"
+        and check.get("live_public_verdict") == "OPEN"
+        and check.get("live_public_readiness") is True
+        and bool(check.get("live_checked_at"))
+    )
+    receipt_icon = "✅" if all_checks_pass and live_check_pass else "⚠️"
     if not check_present:
         check_status = "NOT VERIFIED"
     elif all_checks_pass:
@@ -568,10 +727,16 @@ def format_execution_receipt(side, result):
         f"order_book_integrity: {_flag('order_book_integrity')}",
         f"trade_integrity: {_flag('trade_integrity')}",
         f"money_invariants: {_flag('money_invariants')}",
+        f"🌐 Fresh live runtime confirmation: {'PASS' if live_check_pass else 'NOT VERIFIED'}",
+        f"Railway configured gate: {str(check.get('live_railway_gate') or 'UNKNOWN')}",
+        f"Live public gate/verdict: {str(check.get('live_public_gate') or 'UNKNOWN')} / {str(check.get('live_public_verdict') or 'UNKNOWN')}",
+        f"Live public beacon updated_at: {str(check.get('live_public_updated_at') or 'unavailable')}",
         f"Trade IDs: {trade_text}",
     ]
     if check_status != "PASS":
         lines.append("⚠️ Receipt does not prove a passing fresh execution check.")
+    elif not live_check_pass:
+        lines.append("⚠️ Fresh live runtime gate proof is missing; do not use this as a verified new-order receipt.")
     return "\n".join(lines)
 
 
@@ -604,6 +769,9 @@ def format_blocked_execution_receipt(side, check):
         f"order_book_integrity: {_flag('order_book_integrity')}",
         f"trade_integrity: {_flag('trade_integrity')}",
         f"money_invariants: {_flag('money_invariants')}",
+        f"🌐 Fresh live runtime confirmation: {str(check.get('live_runtime_check') or 'NOT VERIFIED')}",
+        f"Railway configured gate: {str(check.get('railway_configured') or 'UNKNOWN')}",
+        f"Live public gate/verdict: {str(check.get('public_gate') or 'UNKNOWN')} / {str(check.get('live_public_verdict') or 'UNKNOWN')}",
         f"Reason: {detail}",
     ]
     if check_status == "BLOCKED":
@@ -998,11 +1166,9 @@ def register(bot):
             amount, price = _dec(parts[1], "amount"), _dec(parts[2], "price")
             uid, key = str(msg.from_user.id), _request_key(msg.from_user.id, msg.message_id)
 
-            def mutate(db):
-                old = db.setdefault(REQUESTS_KEY, {}).get(key)
-                return old if old is not None else _place(db, uid, "sell", amount, price, key)
-
-            r = state_manager.atomic_update(mutate)
+            r = execute_exchange_order(
+                uid=uid, side="sell", amount=amount, price=price, request_id=key
+            )
             bot.reply_to(msg, format_execution_receipt("sell", r))
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("SELL", e.check))
@@ -1021,11 +1187,9 @@ def register(bot):
             amount, price = _dec(parts[1], "amount"), _dec(parts[2], "price")
             uid, key = str(msg.from_user.id), _request_key(msg.from_user.id, msg.message_id)
 
-            def mutate(db):
-                old = db.setdefault(REQUESTS_KEY, {}).get(key)
-                return old if old is not None else _place(db, uid, "buy", amount, price, key)
-
-            r = state_manager.atomic_update(mutate)
+            r = execute_exchange_order(
+                uid=uid, side="buy", amount=amount, price=price, request_id=key
+            )
             bot.reply_to(msg, format_execution_receipt("buy", r))
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("BUY", e.check))
