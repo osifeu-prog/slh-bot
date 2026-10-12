@@ -330,8 +330,8 @@ def _auto_preview_reply(result):
     if status == "AMBIGUOUS":
         candidates = (result or {}).get("candidates") or []
         hashes = [str(x.get("tx_hash") or "") for x in candidates if isinstance(x, dict) and x.get("tx_hash")]
-        listed = "\\n".join(hashes[:5])
-        suffix = f"\\nמועמדים:\\n{listed}" if listed else ""
+        listed = "\n".join(hashes[:5])
+        suffix = f"\nמועמדים:\n{listed}" if listed else ""
         return (
             "⛔ נמצאו כמה העברות קיימות אפשריות. לא נוצר preview ולא בוצע settlement. "
             "צריך לזהות את ה־TX המדויק לפני השלב הבא."
@@ -567,7 +567,7 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(
                 message,
-                "שימוש: /bnb_reconcile_confirm <exact_tx_hash>\\n"
+                "שימוש: /bnb_reconcile_confirm <exact_tx_hash>\n"
                 "האישור חייב לכלול בדיוק את ה־TX שהופיע בתצוגה המקדימה.",
             )
             return
