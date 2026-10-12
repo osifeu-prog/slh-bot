@@ -285,3 +285,14 @@ def test_auto_discovery_revalidates_existing_credited_tx_without_new_credits(mon
     prepare.assert_called_once_with(UID, TX, now=NOW)
     reconcile.assert_called_once_with(UID, TX)
     first_pass.assert_not_called()
+
+
+def test_auto_preview_reply_uses_real_newlines_for_pass():
+    message = target._auto_preview_reply({
+        "status": "PASS",
+        "tx_hash": TX,
+        "gate_remained_closed": True,
+    })
+
+    assert "\n" in message
+    assert "\\n" not in message
