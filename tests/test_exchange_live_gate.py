@@ -49,6 +49,7 @@ def test_rest_buy_checks_the_same_atomic_db_snapshot_and_returns_receipt(monkeyp
     checked_snapshots = []
 
     monkeypatch.setattr(webapp, "authenticated_uid", lambda: "buyer")
+    monkeypatch.setattr(webapp.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(webapp.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(exchange_handler, "require_public_open", lambda: None)
 
