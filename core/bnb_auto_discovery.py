@@ -26,6 +26,14 @@ MAX_AGE_SECONDS = 30 * 24 * 60 * 60
 HANDOFF_WINDOW_SECONDS = 12 * 60
 RPC_BATCH_SIZE = 100
 
+class BNBDiscoveryError(RuntimeError):
+    """Safe, allowlisted preflight failure; provider text is never exposed."""
+
+    def __init__(self, code: str):
+        self.code = str(code or "BNB_DISCOVERY_INTERNAL_ERROR")
+        super().__init__(self.code)
+
+
 
 def _config() -> dict:
     cfg = dict(get_bsc_config())
@@ -162,13 +170,26 @@ def _rpc_find_exact_transfers(w3: Web3, sender: str, treasury: str, target_ts: i
 def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     """Read-only discovery of exact native BNB transfers for a bound wallet."""
     uid = str(uid)
-    binding = get_binding(uid)
+    try:
+        binding = get_binding(uid)
+    except Exception as exc:
+        raise BNBDiscoveryError("BNB_WALLET_BINDING_READ_FAILED") from exc
     if not binding:
         raise ValueError("BNB_WALLET_NOT_VERIFIED")
 
-    cfg = _config()
-    w3 = Web3(Web3.HTTPProvider(cfg["rpc"]))
-    if int(w3.eth.chain_id) != 56:
+    try:
+        cfg = _config()
+    except Exception as exc:
+        raise BNBDiscoveryError("BSC_CONFIG_READ_FAILED") from exc
+    rpc = str(cfg.get("rpc") or "").strip()
+    if not rpc:
+        raise BNBDiscoveryError("BSC_RPC_NOT_CONFIGURED")
+    try:
+        w3 = Web3(Web3.HTTPProvider(rpc))
+        chain_id = int(w3.eth.chain_id)
+    except Exception as exc:
+        raise BNBDiscoveryError("BSC_RPC_CHAIN_ID_READ_FAILED") from exc
+    if chain_id != 56:
         raise ValueError("BSC_CHAIN_ID_NOT_56")
 
     sender_raw = str(binding.get("address") or "").strip()
@@ -178,8 +199,11 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     if not treasury_raw:
         raise ValueError("BNB_TREASURY_MISSING")
 
-    sender = w3.to_checksum_address(sender_raw)
-    treasury = w3.to_checksum_address(treasury_raw)
+    try:
+        sender = w3.to_checksum_address(sender_raw)
+        treasury = w3.to_checksum_address(treasury_raw)
+    except Exception as exc:
+        raise BNBDiscoveryError("BSC_ADDRESS_VALIDATION_FAILED") from exc
 
     # The indexer is a discovery hint only. If it is unavailable or returns
     # an unexpected payload, continue to the bounded canonical-RPC fallback
@@ -207,7 +231,10 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
 
     now = int(datetime.now(timezone.utc).timestamp())
     rows = []
-    ledger_keys = _ledger_keys()
+    try:
+        ledger_keys = _ledger_keys()
+    except Exception as exc:
+        raise BNBDiscoveryError("BNB_LEDGER_READ_FAILED") from exc
 
     for row in data:
         if not isinstance(row, dict):
@@ -251,7 +278,10 @@ def discover_bnb_transfer(uid: str, *, limit: int = DEFAULT_LIMIT) -> dict:
     rows.sort(key=lambda item: (item["timestamp"], item["tx_hash"].lower()), reverse=True)
 
     if not rows:
-        handoff_ts = _latest_handoff_timestamp(uid)
+        try:
+            handoff_ts = _latest_handoff_timestamp(uid)
+        except Exception as exc:
+            raise BNBDiscoveryError("BNB_HANDOFF_TIMESTAMP_READ_FAILED") from exc
         if handoff_ts:
             try:
                 rpc_rows = _rpc_find_exact_transfers(w3, sender, treasury, handoff_ts)
