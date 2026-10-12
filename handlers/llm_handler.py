@@ -232,6 +232,29 @@ def _load_canonical_faq(question=""):
         return ""
 
 
+
+def _record_llm_provider(provider, result, model=""):
+    """Record bounded health state without surfacing keys, prompts, or raw provider errors."""
+    try:
+        from core.llm_health import classify_provider_result, record_provider_result
+
+        status, reason = classify_provider_result(provider, result)
+        record_provider_result(provider, status, model=model, reason_code=reason)
+        return status
+    except Exception:
+        return "UNKNOWN"
+
+
+def _record_llm_request(status, provider="", reason_code="unknown"):
+    try:
+        from core.llm_health import record_request_result
+
+        record_request_result(status, provider=provider, reason_code=reason_code)
+    except Exception:
+        # Health telemetry must never change the answer path.
+        return
+
+
 def query_llm_with_context(question, uid=None, skip_checks=False):
     question = _sanitize_unknown_commands(question)
     faq = _load_canonical_faq(question)
@@ -315,20 +338,24 @@ USER QUESTION:
     # Primary: Gemini (own AI model)
     try:
         result = ask_gemini(prompt)
+        gemini_status = _record_llm_provider("gemini", result, (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"))
         if result and not (
             result.startswith("Gemini Error:")
             or result in {"GEMINI_API_KEY missing", "GEMINI_COOLDOWN"}
         ):
+            _record_llm_request("HEALTHY", "gemini", "request_succeeded")
             return result
         print("[LLM] Gemini failed, falling back to Groq:", result[:120])
-    except Exception as e:
-        print("[LLM] Gemini exception:", e)
+    except Exception:
+        gemini_status = _record_llm_provider("gemini", "Gemini Error: provider exception", (os.getenv("GEMINI_MODEL") or "gemini-2.5-flash"))
+        print("[LLM] Gemini exception: provider error")
 
     # Local AI: user's own Ollama server, when configured.
     # This path has no per-token provider quota and does not replace the
     # existing cloud fallbacks when the local endpoint is absent/unavailable.
     try:
         result = ask_ollama(prompt)
+        ollama_status = _record_llm_provider("ollama", result, (os.getenv("OLLAMA_MODEL") or "qwen3:8b"))
         if result and not (
             result.startswith("OLLAMA_ERROR:")
             or result.startswith("OLLAMA_HTTP_")
@@ -338,24 +365,31 @@ USER QUESTION:
                 "OLLAMA_EMPTY_RESPONSE",
             }
         ):
+            _record_llm_request("HEALTHY", "ollama", "request_succeeded")
             return result
         if result != "OLLAMA_NOT_CONFIGURED":
-            print("[LLM] Ollama unavailable/cooldown:", result)
-    except Exception as e:
-        print("[LLM] Ollama exception:", type(e).__name__)
+            print("[LLM] Ollama unavailable/cooldown:", str(result)[:80])
+    except Exception:
+        ollama_status = _record_llm_provider("ollama", "OLLAMA_ERROR: provider exception", (os.getenv("OLLAMA_MODEL") or "qwen3:8b"))
+        print("[LLM] Ollama exception: provider error)
 
     # Final cloud fallback: Groq
     try:
         result = ask_groq(prompt)
+        groq_status = _record_llm_provider("groq", result, "openai/gpt-oss-20b")
         if result and not (
             result.startswith("LLM Error:")
             or result in {"GROQ_API_KEY missing", "GROQ_COOLDOWN"}
         ):
+            _record_llm_request("HEALTHY", "groq", "request_succeeded")
             return result
-        print("[LLM] Groq unavailable/cooldown:", result[:120])
+        print("[LLM] Groq unavailable/cooldown:", str(result)[:120])
+        _record_llm_request("DEGRADED", "", "all_providers_failed")
         return "🧠 ה־AI אינו זמין כרגע. אפשר להשתמש בפקודה המתאימה ישירות; לא בוצעה שום פעולה או שינוי ביתרה."
-    except Exception as e:
-        print("[LLM] fallback exception:", type(e).__name__)
+    except Exception:
+        _record_llm_provider("groq", "LLM Error: provider exception", "openai/gpt-oss-20b")
+        _record_llm_request("DEGRADED", "", "all_providers_failed")
+        print("[LLM] fallback exception: provider error")
         return "🧠 ה־AI אינו זמין כרגע. לא בוצעה שום פעולה או שינוי ביתרה."
 
 
