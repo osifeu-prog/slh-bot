@@ -252,6 +252,8 @@ def _request_key(uid, message_id):
 
 
 def _new_order(db, uid, side, amount, price, request_id):
+    if _is_frozen_account(db, uid):
+        raise ValueError("ACCOUNT_FROZEN")
     seq = _next(db)
     oid = f"O{seq:010d}"
     order = {
@@ -429,10 +431,20 @@ class ExchangeFreshCheckBlocked(ValueError):
         super().__init__("EXCHANGE_FRESH_CHECK_BLOCKED")
 
 
+def _is_frozen_account(db, uid) -> bool:
+    """Frozen accounts cannot place new orders."""
+    u = db.get("users", {}).get(str(uid), {})
+    return isinstance(u, dict) and u.get("frozen") is True
+
+
 def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
     # Do not short-circuit with a separate gate exception: the fresh canonical
     # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
+
+    if _is_frozen_account(db, uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
