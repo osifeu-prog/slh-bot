@@ -97,6 +97,23 @@ def _snapshot():
     }
 
 
+def _updated_config(raw, target):
+    if not ADDR.fullmatch(str(target or "").strip()):
+        raise ValueError("TREASURY_TARGET_INVALID")
+    try:
+        config = json.loads(raw)
+    except (TypeError, ValueError):
+        raise ValueError("SLH_BSC_CONFIG_INVALID_JSON") from None
+    if not isinstance(config, dict):
+        raise ValueError("SLH_BSC_CONFIG_NOT_OBJECT")
+    previous = str(config.get("treasury_wallet") or "").strip()
+    if not ADDR.fullmatch(previous):
+        raise ValueError("TREASURY_IN_CONFIG_INVALID_OR_MISSING")
+    updated = dict(config)
+    updated["treasury_wallet"] = target
+    return json.dumps(updated, separators=(",", ":"), ensure_ascii=False), previous
+
+
 def _runtime_state():
     try:
         from core.binance_connector import get_bsc_config
@@ -250,9 +267,7 @@ def apply_railway_vars(uid, code):
         if s["config_hash"] != record["config_hash"] or s["current"].lower() != record["previous_treasury"].lower():
             raise RuntimeError("SLH_BSC_CONFIG_CHANGED_AFTER_PREVIEW")
 
-        new_config = dict(s["config"])
-        new_config["treasury_wallet"] = s["canonical"]
-        raw_new = json.dumps(new_config, separators=(",", ":"), ensure_ascii=False)
+        raw_new, _previous = _updated_config(s["raw"], s["canonical"])
         ctx = s["ctx"]
         result = _graphql(ctx,
             "mutation variableCollectionUpsert($input: VariableCollectionUpsertInput!) "
