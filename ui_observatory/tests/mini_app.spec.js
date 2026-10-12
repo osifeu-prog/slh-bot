@@ -453,3 +453,20 @@ test('advanced BSC swap screen remains execution-gated', async ({ page }) => {
   await expect(page.locator('#bscSwapSendButton')).toBeDisabled();
   await expect(page.locator('#bscSwapGateText')).toHaveText('Execution סגור · אין חתימה או שידור');
 });
+
+
+test('home has one-tap shortcuts to internal Exchange and governance voting', async ({ page }) => {
+  const home = page.locator('#home');
+  const exchange = home.getByRole('button', { name: /מסחר פנימי/ });
+  const governance = home.getByRole('button', { name: /הצעות והצבעות/ });
+
+  await expect(exchange).toBeVisible();
+  await expect(governance).toBeVisible();
+
+  await exchange.click();
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+
+  await page.evaluate(() => show('home'));
+  await governance.click();
+  await expect(page.locator('#governance')).toHaveClass(/active/);
+});
