@@ -61,7 +61,13 @@ def register(bot, context=None):
 
 
 def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
-    from handlers.exchange_handler import _dec, _place
+    from handlers.exchange_handler import (
+        ExchangeFreshCheckBlocked,
+        _dec,
+        _place,
+        format_blocked_execution_receipt,
+        format_execution_receipt,
+    )
 
     amount = _dec(amount_text, "amount")
     price = _dec(price_text, "price")
@@ -77,15 +83,18 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
             return existing
         return _place(db, uid, side, amount, price, request_id)
 
-    result = state_manager.atomic_update(mutate)
-    bot.send_message(
-        chat_id,
-        "✅ " + ("BUY" if side == "buy" else "SELL") +
-        f" #{result['order_id']}\n"
-        f"בוצע: {result['filled']} SLH\n"
-        f"פתוח: {result['remaining']} SLH\n"
-        f"סטטוס: {result['status']}"
-    )
+    try:
+        result = state_manager.atomic_update(mutate)
+    except ExchangeFreshCheckBlocked as exc:
+        bot.send_message(
+            chat_id,
+            format_blocked_execution_receipt(side, exc.check),
+        )
+        return
+
+    # Use the same evidence-bearing receipt as the direct Telegram order path.
+    # Missing/legacy execution proof is explicitly marked NOT VERIFIED there.
+    bot.send_message(chat_id, format_execution_receipt(side, result))
 
 
 def _transfer(bot, chat_id, uid, recipient_uid, amount_text, message_id):
