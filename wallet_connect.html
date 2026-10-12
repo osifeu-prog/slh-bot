@@ -25,7 +25,7 @@ button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;font-
 <div class="muted">⏱️ <b>QR / WalletConnect URI זמני</b>: צריך לאשר את החיבור בזמן שההזמנה פעילה. אם היא פגה, פשוט צור הזמנה חדשה.</div>
 <div id="identity" class="muted">בודק הרשאת Wallet Session…</div>
 <div id="wallet" class="hidden">
-  <div class="row"><span>ארנק מאומת</span><b id="address" class="code">—</b></div>
+  <div class="row"><span id="addressLabel">סטטוס ארנק</span><b id="address" class="code">—</b></div>
   <div class="row"><span>רשת</span><b>BSC · 56</b></div>
   <button id="meta" class="primary">🦊 MetaMask · Connect & Verify</button>
   <button id="trust" class="secondary">📱 פתח ב־Trust Wallet</button>
@@ -67,18 +67,30 @@ async function init(){
   try{
     const d=await api("/api/wallet/bnb");
     binding=d.binding||null;
-    if(!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
-    $("address").textContent=binding.address;
+    // First-time binding starts with a valid handoff session but no wallet binding.
+    // The separate smoke flow deliberately remains gated by an existing binding.
+    if(smokeMode&&!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
+    $("address").textContent=binding?.address||"עדיין לא אומת";
     $("wallet").classList.remove("hidden");
-    $("identity").textContent="✅ Wallet Session פעיל. אפשר לחבר ולחתום על ownership.";
-    setStatus("בחר ארנק לחיבור.", "ok");
+    if(binding?.address){
+      $("identity").textContent="✅ Wallet Session פעיל. כבר קיים ארנק BNB מאומת בחשבון.";
+      $("addressLabel").textContent="ארנק מאומת";
+      setStatus("חבר את אותו ארנק כדי לצפות בנתוני BSC.", "ok");
+    }else{
+      $("identity").textContent="✅ Wallet Session תקף. עדיין אין ארנק BNB מאומת — אפשר להתחיל כאן.";
+      $("addressLabel").textContent="סטטוס ארנק";
+      setStatus("בחר MetaMask או WalletConnect. אשר חתימת הודעה בלבד — לא עסקה.", "warn");
+    }
   }catch(e){
-    $("identity").textContent="❌ אין Wallet Session תקף. פתח את SLH OS מתוך Telegram ובחר Trust Wallet.";
-    setStatus(String(e.message||e), "err");
+    const code=String(e?.message||e||"");
+    $("identity").textContent="❌ אין הרשאת Wallet Session תקפה. חזור ל־SLH OS בתוך Telegram ובחר ״פתח בדפדפן חיצוני״ כדי ליצור חיבור מאובטח חדש.";
+    setStatus(code==="BNB_WALLET_NOT_VERIFIED"&&smokeMode
+      ?"בדיקת העברה דורשת אימות בעלות קודם. חזור למסך Wallet Connect והשלם אימות ארנק."
+      :"לא ניתן לאמת את ההפעלה. "+code,"err");
   }
 }
 async function verifyWithProvider(p,label){
-  if(!binding?.address)throw Error("BNB_WALLET_NOT_VERIFIED");
+  if(!p||typeof p.request!=="function")throw Error("WALLET_PROVIDER_UNAVAILABLE");
   let chain=await p.request({method:"eth_chainId"});
   if(chain!=="0x38"){
     try{
@@ -93,17 +105,38 @@ async function verifyWithProvider(p,label){
         }]});
       }else throw e;
     }
+    chain=await p.request({method:"eth_chainId"});
+    if(chain!=="0x38")throw Error("הארנק לא התחבר ל־BNB Smart Chain (56)");
   }
   const accounts=await p.request({method:"eth_requestAccounts"});
   const address=accounts?.[0];
   if(!address)throw Error("לא נבחר ארנק");
-  if(address.toLowerCase()!==binding.address.toLowerCase())throw Error("הארנק המחובר שונה מהארנק המאומת");
-  const ch=await api("/api/wallet/bnb/challenge",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),body:JSON.stringify({address})});
+  // If a verified binding exists, preserve it and reject a different address.
+  // If none exists, treat this as the first-time ownership proof.
+  if(binding?.address&&address.toLowerCase()!==binding.address.toLowerCase()){
+    throw Error("הארנק המחובר שונה מהארנק המאומת בחשבון");
+  }
+  setStatus(binding?.address
+    ?"⏳ מאמת את הארנק הקיים…"
+    :"⏳ שלב 2/2: מבקש חתימת הודעה מהארנק. זו אינה עסקה.", "warn");
+  const ch=await api("/api/wallet/bnb/challenge",{
+    method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},headers),
+    body:JSON.stringify({address})
+  });
+  if(!ch?.message)throw Error(ch?.error||"BNB_CHALLENGE_FAILED");
   const signature=await p.request({method:"personal_sign",params:[ch.message,address]});
-  const vr=await api("/api/wallet/bnb/verify",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},headers),body:JSON.stringify({address,signature})});
+  const vr=await api("/api/wallet/bnb/verify",{
+    method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},headers),
+    body:JSON.stringify({address,signature})
+  });
   binding=vr.binding||binding;
+  if(!binding?.address)throw Error("BNB_VERIFICATION_RESPONSE_INVALID");
   $("address").textContent=binding.address;
-  setStatus("✅ "+label+" — ownership אומתה.", "ok");
+  $("addressLabel").textContent="ארנק מאומת";
+  $("identity").textContent="✅ Wallet Session פעיל והבעלות אומתה.";
+  setStatus("✅ "+label+" — הבעלות אומתה. לא נשלחה עסקה ולא הועבר BNB.", "ok");
   await loadAssets();
 }
 async function discoverMetaMaskProvider(){
