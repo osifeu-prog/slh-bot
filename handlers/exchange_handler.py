@@ -8,6 +8,7 @@ import state_manager
 from core.exchange_gate import require_public_open  # compatibility/test seam; execution uses the fresh canonical check
 from core.authority import is_owner
 from core.slh_distribution import (
+    is_frozen_account,
     reserve_in_db,
     release_reserve_in_db,
     settle_reserve_in_db,
@@ -327,6 +328,7 @@ def _match(db, incoming):
         and o.get("status") == "open"
         and o.get("side") != incoming["side"]
         and str(o.get("uid")) != uid
+        and not is_frozen_account(db, o.get("uid"))
     ]
 
     if incoming["side"] == "buy":
@@ -433,6 +435,9 @@ def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
     # Do not short-circuit with a separate gate exception: the fresh canonical
     # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
+    if is_frozen_account(db, uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()

@@ -31,6 +31,12 @@ def _users(db):
     return db.setdefault("users", {})
 
 
+def is_frozen_account(db, uid):
+    """Return True only when the user's account is explicitly frozen."""
+    user = db.get("users", {}).get(str(uid), {})
+    return isinstance(user, dict) and user.get("frozen") is True
+
+
 def _wallet(db, uid):
     user = _users(db).get(str(uid))
     if not user:
@@ -62,6 +68,8 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
         raise ValueError("SENDER_NOT_FOUND")
     if not recipient:
         raise ValueError("RECIPIENT_NOT_FOUND")
+    if is_frozen_account(db, from_uid):
+        raise ValueError("ACCOUNT_FROZEN")
 
     ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     existing = _find_event(ledger, event_id)
@@ -112,6 +120,9 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
     if not event_id:
         raise ValueError("EVENT_ID_REQUIRED")
 
+    if is_frozen_account(db, uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
     ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     existing = _find_event(ledger, event_id)
     if existing:
@@ -120,7 +131,6 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
                 or existing.get("kind") != "exchange_reserve"):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
-
     wallet = _wallet(db, uid)
     total_before = Decimal(str(wallet.get("token_balance", 0) or 0))
     available = Decimal(str(wallet.get("live_token_balance", 0) or 0))
@@ -203,6 +213,9 @@ def settle_reserve_in_db(
     if seller_uid == buyer_uid:
         raise ValueError("SELF_TRANSFER")
 
+    if is_frozen_account(db, seller_uid) or is_frozen_account(db, buyer_uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
     ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     existing = _find_event(ledger, event_id)
     if existing:
@@ -215,7 +228,6 @@ def settle_reserve_in_db(
         ):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
-
     seller = _wallet(db, seller_uid)
     buyer = _wallet(db, buyer_uid)
     seller_reserve_before = Decimal(str(seller.get(EXCHANGE_RESERVE_KEY, 0) or 0))
