@@ -8,7 +8,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
         db = {
             "exchange_order_archive": {
                 "O0000000009": {
-                    "id": "O0000000009", "uid": "6526198118", "side": "sell",
+                    "id": "O0000000009", "uid": "6526198118", "uid_suffix": "8118", "side": "sell",
                     "status": "cancelled", "original_amount": "10000", "remaining_amount": "0"
                 }
             },
@@ -25,6 +25,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["status"], "FAIL")
         self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
         self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", codes)
+        missing_release = next(item for item in report["findings"] if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE")
+        self.assertEqual(missing_release["uid_suffix"], "8118")
         correction = next(item for item in report["findings"] if item["code"] == "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW")
         self.assertEqual(correction["correction_delta"], "10000")
 
@@ -44,6 +46,11 @@ class ExchangeReconciliationTests(unittest.TestCase):
         report = audit_db(db)
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["finding_count"], 0)
+
+    def test_no_matched_reserves_is_unknown_not_pass(self):
+        report = audit_db({"exchange_orders": {}, "ledger": [], "slh_token_ledger": []})
+        self.assertEqual(report["status"], "UNKNOWN")
+        self.assertIn("NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND", {item["code"] for item in report["findings"]})
 
     def test_audit_never_mutates_input(self):
         db = {"exchange_orders": {}, "ledger": [], "slh_token_ledger": []}
