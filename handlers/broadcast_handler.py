@@ -359,7 +359,7 @@ def _latest_exchange_broadcast_audit(db, uid):
         if (
             not isinstance(item, dict)
             or str(item.get("initiated_by") or "") != str(uid)
-            or item.get("message_sha256") != message_hash
+            or item.get("message_sha256") not in {"", None, message_hash}
         ):
             continue
         status = str(item.get("status") or "").upper()
@@ -482,6 +482,11 @@ def prepare_exchange_broadcast(uid, *, now=None):
         previous_failed = 0
 
         if isinstance(previous_audit, dict) and previous_audit.get("status") in {"PARTIAL", "STOPPED_GATE_CLOSED"}:
+            if previous_audit.get("message_sha256") != hashlib.sha256(EXCHANGE_BROADCAST_TEXT.encode("utf-8")).hexdigest():
+                return {
+                    "status": "SAFE_RETRY_UNAVAILABLE",
+                    "detail": "Historical delivery record does not prove it was this exact announcement; no retry draft was created",
+                }
             try:
                 previous_sent = int(previous_audit.get("sent") or 0)
                 previous_failed = int(previous_audit.get("failed") or 0)
