@@ -486,7 +486,7 @@ def bnb_deposits_open() -> bool:
         db = state_manager.load_db()
     except Exception:
         return False
-    if not isinstance(db, dict):
+    if not isinstance(db, dict) or not isinstance(db.get("users"), dict):
         return False
 
     settings = db.get("bsc_settings")
