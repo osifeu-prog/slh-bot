@@ -27,6 +27,25 @@ class ExchangeFreshExecutionTests(unittest.TestCase):
             "exchange_sequence": 0,
             "ledger": [],
         }
+        self.load_db_patcher = patch(
+            "webapp.state_manager.load_db", return_value=self.db
+        )
+        self.load_db_patcher.start()
+        self.addCleanup(self.load_db_patcher.stop)
+        self.live_proof_patcher = patch(
+            "handlers.exchange_handler.require_fresh_live_exchange_proof",
+            return_value={
+            "status": "PASS",
+            "checked_at": "2026-10-12T16:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+        },
+        )
+        self.live_proof_patcher.start()
+        self.addCleanup(self.live_proof_patcher.stop)
 
     @staticmethod
     def passed_check():

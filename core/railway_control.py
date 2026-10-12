@@ -438,9 +438,12 @@ def _exchange_gate_bridge_request(method, payload=None, *, timeout_seconds=15):
     return data
 
 
-def control_plane_exchange_gate_status():
-    """Read only the single allowlisted Railway gate variable via the Control Plane."""
-    data = _exchange_gate_bridge_request("GET")
+def control_plane_exchange_gate_status(*, timeout_seconds=15):
+    """Read only the single allowlisted Railway gate variable via the Control Plane.
+
+    Callers that guard a user action may select a shorter fail-closed timeout.
+    """
+    data = _exchange_gate_bridge_request("GET", timeout_seconds=timeout_seconds)
     configured = str(data.get("configured") or "UNKNOWN")
     if configured not in {"0", "1", "MISSING", "INVALID"}:
         configured = "UNKNOWN"
