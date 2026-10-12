@@ -244,3 +244,44 @@ def test_auto_discovery_requires_owner_before_querying_chain(monkeypatch):
 
     assert result["status"] == "FORBIDDEN"
     discover.assert_not_called()
+
+
+
+def test_auto_discovery_revalidates_existing_credited_tx_without_new_credits(monkeypatch):
+    discovery = {
+        "status": "FOUND",
+        "candidate": {"tx_hash": TX},
+        "candidates": [{"tx_hash": TX}],
+        "scope": "read_only_discovery",
+    }
+    proof = {
+        "status": "PASS",
+        "tx_hash": TX,
+        "credits": 10.0,
+        "gate_remained_closed": True,
+        "settlement_result_idempotent": True,
+        "settlement_result_status": "DUPLICATE",
+    }
+
+    with patch(
+        "core.bnb_auto_discovery.discover_bnb_transfer",
+        return_value=discovery,
+    ) as discover, patch.object(
+        target,
+        "prepare_existing_bnb_reconcile",
+        return_value={"status": "ALREADY_SETTLED", "tx_hash": TX},
+    ) as prepare, patch(
+        "core.bnb_empirical_smoke.reconcile_existing_settlement",
+        return_value=proof,
+    ) as reconcile, patch(
+        "core.bnb_empirical_smoke.run"
+    ) as first_pass:
+        result = target.prepare_auto_existing_bnb_reconcile(UID, now=NOW)
+
+    assert result["status"] == "PASS"
+    assert result["gate_remained_closed"] is True
+    assert result["settlement_result_idempotent"] is True
+    discover.assert_called_once_with(UID)
+    prepare.assert_called_once_with(UID, TX, now=NOW)
+    reconcile.assert_called_once_with(UID, TX)
+    first_pass.assert_not_called()
