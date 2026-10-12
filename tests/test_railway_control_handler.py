@@ -50,3 +50,27 @@ def test_status_does_not_print_secrets_when_token_missing(monkeypatch):
     assert "RAILWAY_CREDENTIALS_MISSING" in result
     assert "Bearer " not in result
     assert "token_contract" not in result
+
+
+def test_graphql_uses_project_access_token_header(monkeypatch):
+    captured = {}
+
+    class Response:
+        def __enter__(self):
+            return self
+        def __exit__(self, *_args):
+            return False
+        def read(self):
+            return b'{"data": {"ok": true}}'
+
+    def fake_urlopen(request, timeout):
+        captured["headers"] = dict(request.header_items())
+        captured["timeout"] = timeout
+        return Response()
+
+    monkeypatch.setattr(target.urllib.request, "urlopen", fake_urlopen)
+    ctx = {"token": "test-token", "project_id": "p", "environment_id": "e", "service_id": "s"}
+    assert target._graphql(ctx, "query { ok }") == {"ok": True}
+    headers = {key.lower(): value for key, value in captured["headers"].items()}
+    assert headers.get("project-access-token") == "test-token"
+    assert "authorization" not in headers
