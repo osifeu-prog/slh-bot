@@ -421,3 +421,38 @@ def test_auto_discovery_reports_safe_rpc_phase_code_without_leaking_exception_te
     assert result["detail"] == "BSC_RPC_CHAIN_ID_READ_FAILED"
     assert "do-not-leak" not in str(result)
     assert "private-rpc.invalid" not in str(result)
+
+
+def test_discovery_rejects_treasury_that_aliases_bound_wallet_before_indexer_call(monkeypatch):
+    import core.bnb_auto_discovery as discovery
+
+    class FakeEth:
+        chain_id = 56
+
+    class FakeWeb3:
+        HTTPProvider = staticmethod(lambda _rpc: object())
+
+        def __init__(self, _provider):
+            self.eth = FakeEth()
+
+        @staticmethod
+        def to_checksum_address(address):
+            return str(address)
+
+    monkeypatch.setattr(discovery, "get_binding", lambda _uid: {"address": TREASURY})
+    monkeypatch.setattr(
+        discovery,
+        "_config",
+        lambda: {"rpc": "https://rpc.invalid", "treasury_wallet": TREASURY},
+    )
+    monkeypatch.setattr(discovery, "Web3", FakeWeb3)
+
+    with patch.object(discovery.requests, "get") as indexer:
+        try:
+            discovery.discover_bnb_transfer(UID)
+        except discovery.BNBDiscoveryError as exc:
+            assert exc.code == "BNB_TREASURY_MATCHES_BOUND_WALLET"
+        else:
+            raise AssertionError("Treasury/bound-wallet alias must fail closed before discovery")
+
+        indexer.assert_not_called()
