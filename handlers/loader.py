@@ -13,6 +13,7 @@ def load_handlers(bot, context):
         ("ui_settings", "handlers.ui_settings_handler"),
         ("business_control", "handlers.business_control_handler"),
         ("bot_system_control", "handlers.bot_system_control_handler"),
+        ("owner_control_center", "handlers.owner_control_center_handler"),
         ("trade_terminal", "handlers.trade_terminal_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
