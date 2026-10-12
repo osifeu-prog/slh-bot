@@ -123,5 +123,7 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
         self.assertEqual(record_revenue.call_args.kwargs["reference"], "charge-pending")
         self.assertEqual(result["status"], "duplicate")
         self.assertEqual(result["fulfillment_status"], "completed")
-\n\nif __name__ == "__main__":
+
+
+if __name__ == "__main__":
     unittest.main()
