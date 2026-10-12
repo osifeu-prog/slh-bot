@@ -159,7 +159,7 @@ class VIPRevenueRecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "VIP_CHARGE_AMOUNT_CONFLICT"):
                 record_vip_subscription_payment(
                     uid="1",
-                    stars_paid=VIP_MONTHLY_STARS + 1,
+                    stars_paid=VIP_MONTHLY_STARS,
                     charge_id=charge_id,
                     now=2000,
                 )
