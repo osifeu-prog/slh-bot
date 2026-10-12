@@ -243,5 +243,51 @@
     ],
     "title": "טוקנים ב-AI — שיטת עבודה בהשראת בלוקצ׳יין",
     "access": "free"
+  },
+  "governance_game_theory": {
+    "title": "ממשל, תורת המשחקים וכלכלה מבוזרת",
+    "access": "free",
+    "stages": [
+      {
+        "id": 1,
+        "name": "מבוא: אמון, כסף ומערכות",
+        "lesson": "lessons/governance_game_theory/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "יסודות תורת המשחקים",
+        "lesson": "lessons/governance_game_theory/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "תמריצים ושיתוף פעולה",
+        "lesson": "lessons/governance_game_theory/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "ממשל, הצבעות וקבלת החלטות",
+        "lesson": "lessons/governance_game_theory/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "DAO, זהות וסיכוני ריכוזיות",
+        "lesson": "lessons/governance_game_theory/5.txt"
+      },
+      {
+        "id": 6,
+        "name": "כלכלה, תגמולים ועמידות",
+        "lesson": "lessons/governance_game_theory/6.txt"
+      },
+      {
+        "id": 7,
+        "name": "אבטחה, סיכונים והגנות",
+        "lesson": "lessons/governance_game_theory/7.txt"
+      },
+      {
+        "id": 8,
+        "name": "מעבדת Sandbox ופרויקט מסכם",
+        "lesson": "lessons/governance_game_theory/8.txt"
+      }
+    ]
   }
 }
