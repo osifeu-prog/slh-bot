@@ -52,6 +52,23 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["status"], "UNKNOWN")
         self.assertIn("NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND", {item["code"] for item in report["findings"]})
 
+    def test_invalid_reserve_amount_fails_closed(self):
+        db = {
+            "exchange_orders": {
+                "O2": {"id": "O2", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": None, "reason": "exchange:sell_reserve",
+                 "meta": {"order_id": "O2", "event_id": "reserve:O2"}},
+                {"uid": "42", "amount": 100, "reason": "exchange:cancel_release",
+                 "meta": {"order_id": "O2", "event_id": "release:O2"}},
+            ],
+            "slh_token_ledger": [],
+        }
+        report = audit_db(db)
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("INVALID_RESERVE_LEDGER_AMOUNT", {item["code"] for item in report["findings"]})
+
     def test_audit_never_mutates_input(self):
         db = {"exchange_orders": {}, "ledger": [], "slh_token_ledger": []}
         before = repr(db)
