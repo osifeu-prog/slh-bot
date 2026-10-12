@@ -242,6 +242,16 @@ def test_existing_settlement_replay_rejects_ambiguous_ledger_without_replay():
     with patch.object(bnb_empirical_smoke, "is_owner", return_value=True), \
          patch.object(bnb_empirical_smoke.state_manager, "load_db", return_value=db), \
          patch.object(bnb_empirical_smoke, "bnb_deposits_open", return_value=False), \
+         patch.object(bnb_empirical_smoke, "get_binding", return_value={"address": ADDRESS}), \
+         patch.object(bnb_empirical_smoke, "verify_bnb_deposit", return_value={
+             "ok": True,
+             "tx_hash": TX,
+             "from": ADDRESS,
+             "to": TREASURY,
+             "amount_bnb": 0.01,
+             "amount_wei": 10**16,
+             "confirmations": 15,
+         }), \
          patch("core.bnb_gate.bnb_readiness", return_value={"ready": True, "confirmations_required": 15}), \
          patch("core.bnb_gate.bnb_settlement_allowed", return_value=True), \
          patch.object(bnb_empirical_smoke, "settle_bnb_deposit") as replay:
