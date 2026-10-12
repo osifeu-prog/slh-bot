@@ -5,8 +5,7 @@ import pytest
 import handlers.railway_control_handler as target
 
 
-def test_replace_logic_preserves_non_treasury_fields():
-    # Exercise the same config transformation used at apply time without API access.
+def test_replace_treasury_preserves_all_other_config_fields():
     original = {
         "network": "bsc",
         "rpc": "https://bsc-dataseed.binance.org/",
@@ -16,12 +15,21 @@ def test_replace_logic_preserves_non_treasury_fields():
         "confirmations": 15,
         "treasury_wallet": "0x468328B2a7C9b5629e87844Bb4531e7409400b34",
     }
-    new = dict(original)
-    new["treasury_wallet"] = "0x03bf3BfB8752203353645321869FE1e90C7C300F"
-    assert new["treasury_wallet"] != original["treasury_wallet"]
+    target_address = "0x03bf3BfB8752203353645321869FE1e90C7C300F"
+    updated_raw, previous = target._updated_config(json.dumps(original), target_address)
+    updated = json.loads(updated_raw)
+    assert previous == original["treasury_wallet"]
+    assert updated["treasury_wallet"] == target_address
     for key in original:
         if key != "treasury_wallet":
-            assert new[key] == original[key]
+            assert updated[key] == original[key]
+
+
+def test_replace_treasury_rejects_invalid_json_and_target():
+    with pytest.raises(ValueError, match="SLH_BSC_CONFIG_INVALID_JSON"):
+        target._updated_config("{", "0x" + "1" * 40)
+    with pytest.raises(ValueError, match="TREASURY_TARGET_INVALID"):
+        target._updated_config('{"treasury_wallet":"0x' + "0" * 40 + '"}', "not-address")
 
 
 def test_missing_project_token_is_blocked(monkeypatch):
