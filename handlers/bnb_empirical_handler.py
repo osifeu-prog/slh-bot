@@ -268,6 +268,87 @@ def prepare_existing_bnb_reconcile(uid, tx_hash, *, now=None):
     return state_manager.atomic_update(mutate)
 
 
+
+def prepare_auto_existing_bnb_reconcile(uid, *, now=None):
+    """Discover one already-sent exact 0.01 BNB canary, then prepare—not settle—a preview."""
+    uid = str(uid or "").strip()
+    if not is_owner(uid):
+        return {"status": "FORBIDDEN"}
+
+    try:
+        from core.bnb_auto_discovery import discover_bnb_transfer
+        discovered = discover_bnb_transfer(uid)
+    except Exception as exc:
+        return {
+            "status": "DISCOVERY_FAILED",
+            "detail": type(exc).__name__,
+            "scope": "read_only_discovery",
+        }
+
+    if not isinstance(discovered, dict):
+        return {"status": "DISCOVERY_INVALID", "scope": "read_only_discovery"}
+
+    status = str(discovered.get("status") or "DISCOVERY_INVALID")
+    if status != "FOUND":
+        candidates = discovered.get("candidates", [])
+        safe_candidates = []
+        if isinstance(candidates, list):
+            for item in candidates[:5]:
+                if isinstance(item, dict):
+                    candidate_hash = str(item.get("tx_hash") or "").strip()
+                    if _TX_HASH_RE.fullmatch(candidate_hash):
+                        safe_candidates.append({"tx_hash": candidate_hash})
+        return {
+            "status": status,
+            "scope": "read_only_discovery",
+            "candidates": safe_candidates,
+            "detail": str(discovered.get("detail") or "")[:120],
+        }
+
+    candidate = discovered.get("candidate")
+    tx_hash = str(candidate.get("tx_hash") or "").strip() if isinstance(candidate, dict) else ""
+    if not _TX_HASH_RE.fullmatch(tx_hash):
+        return {"status": "INVALID_DISCOVERED_TX_HASH", "scope": "read_only_discovery"}
+
+    # Existing preview path revalidates through canonical BSC RPC, wallet binding,
+    # treasury and confirmations. It does not perform settlement.
+    return prepare_existing_bnb_reconcile(uid, tx_hash, now=now)
+
+
+def _auto_preview_reply(result):
+    status = str((result or {}).get("status") or "BLOCKED")
+    if status == "PREPARED":
+        return (
+            "🔎 נמצאה העברה קיימת שמתאימה לבדיקה; לא נשלחה עסקת BNB חדשה.\n"
+            + _preview_reply(result)
+        )
+    if status == "NOT_FOUND":
+        return (
+            "🔎 לא נמצאה העברה קיימת שמתאימה בדיוק ל־0.01 BNB מהארנק המאומת ל־Treasury הקנוני.\n"
+            "לא נשלחה עסקה, לא שונו יתרות, ו־BNB נשאר CLOSED. אין לבצע העברה נוספת רק כדי לצבוע את הדוח בירוק."
+        )
+    if status == "AMBIGUOUS":
+        candidates = (result or {}).get("candidates") or []
+        hashes = [str(x.get("tx_hash") or "") for x in candidates if isinstance(x, dict) and x.get("tx_hash")]
+        listed = "\n".join(hashes[:5])
+        suffix = f"\nמועמדים:\n{listed}" if listed else ""
+        return (
+            "⛔ נמצאו כמה העברות קיימות אפשריות. לא נוצר preview ולא בוצע settlement. "
+            "צריך לזהות את ה־TX המדויק לפני השלב הבא."
+            + suffix
+        )
+    if status == "DISCOVERY_FAILED":
+        return (
+            "⛔ גילוי ההעברה הקיימת לא הצליח. לא בוצעה עסקה ולא שונו יתרות. "
+            f"קוד אבחון: {str((result or {}).get('detail') or status)[:80]}. "
+            "BNB נשאר CLOSED."
+        )
+    if status == "FORBIDDEN":
+        return "⛔ BNB reconciliation זמין לבעלים בלבד."
+    if status == "DISCOVERY_INVALID":
+        return "⛔ מקור גילוי ההעברה החזיר תוצאה לא תקינה. לא בוצע settlement; BNB נשאר CLOSED."
+    return _preview_reply(result)
+
 def confirm_existing_bnb_reconcile(uid, *, tx_hash=None, now=None):
     """Explicitly settle a prepared existing TX once; public BNB stays closed."""
     uid = str(uid or "").strip()
@@ -402,6 +483,11 @@ def _preview_reply(result):
             f"לאישור מפורש של ה־TX הזה בלבד, שלח בתוך 5 דקות: /bnb_reconcile_confirm {result.get('tx_hash', '')}"
         )
     details = {
+        "DISCOVERY_FAILED": "לא ניתן היה לגלות ולאמת את ההעברה הקיימת כרגע.",
+        "DISCOVERY_INVALID": "מקור הגילוי החזיר תוצאה לא תקינה.",
+        "INVALID_DISCOVERED_TX_HASH": "המערכת לא קיבלה TX hash תקין ממסלול הגילוי.",
+        "NOT_FOUND": "לא נמצאה העברה קיימת מדויקת; לא לשלוח BNB חדש רק לצורך בדיקה.",
+        "AMBIGUOUS": "נמצאו כמה מועמדים; נדרש לזהות את ה-TX המדויק. לא בוצע settlement.",
         "INVALID_TX_HASH": "פורמט TX hash לא תקין.",
         "BNB_CONFIGURATION_NOT_READY": "תצורת BNB/treasury אינה מוכנה.",
         "TX_NOT_VERIFIED": "העסקה לא אומתה ברשת BSC/לפי treasury הנוכחי.",
@@ -445,6 +531,15 @@ def _confirm_reply(result):
 
 
 def register(bot):
+    @bot.message_handler(commands=["bnb_reconcile_auto"])
+    def bnb_reconcile_auto(message):
+        uid, denial = _private_owner_command(message)
+        if denial:
+            bot.reply_to(message, denial)
+            return
+        result = prepare_auto_existing_bnb_reconcile(uid)
+        bot.reply_to(message, _auto_preview_reply(result), parse_mode=None)
+
     @bot.message_handler(commands=["bnb_reconcile"])
     def bnb_reconcile_preview(message):
         uid, denial = _private_owner_command(message)
@@ -472,7 +567,7 @@ def register(bot):
         if len(parts) < 2:
             bot.reply_to(
                 message,
-                "שימוש: /bnb_reconcile_confirm <exact_tx_hash>\\n"
+                "שימוש: /bnb_reconcile_confirm <exact_tx_hash>\n"
                 "האישור חייב לכלול בדיוק את ה־TX שהופיע בתצוגה המקדימה.",
             )
             return

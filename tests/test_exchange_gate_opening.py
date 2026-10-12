@@ -377,3 +377,113 @@ def test_open_gate_rolls_back_and_verifies_closed_deployment_when_deploy_fails()
 
     assert graphql_calls == ["1", "0"]
     assert deploy.call_count == 2
+
+
+def test_owner_private_text_phrase_routes_to_guarded_exchange_open_helper():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    route = getattr(exchange_handler, "route_exchange_gate_text", None)
+    assert callable(route), "owner-only Exchange typed-text route is missing"
+    bot = object()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=8789977826),
+        chat=SimpleNamespace(type="private"),
+    )
+
+    with patch.object(
+        exchange_handler,
+        "_request_guarded_exchange_gate_open",
+        return_value="OPENING_REQUEST_ACCEPTED",
+    ) as open_gate:
+        answer = route(
+            bot,
+            message,
+            "פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת",
+        )
+
+    assert answer == "OPENING_REQUEST_ACCEPTED"
+    open_gate.assert_called_once_with()
+
+
+def test_non_owner_cannot_request_exchange_gate_open_by_typed_text():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    route = getattr(exchange_handler, "route_exchange_gate_text", None)
+    assert callable(route), "owner-only Exchange typed-text route is missing"
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=42),
+        chat=SimpleNamespace(type="private"),
+    )
+
+    with patch.object(exchange_handler, "_request_guarded_exchange_gate_open") as open_gate:
+        answer = route(
+            object(),
+            message,
+            "פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת",
+        )
+
+    assert "OWNER" in answer
+    open_gate.assert_not_called()
+
+
+def test_register_wires_only_the_allowlisted_typed_exchange_phrase_before_fallback():
+    from types import SimpleNamespace
+    import handlers.exchange_handler as exchange_handler
+
+    class FakeBot:
+        def __init__(self):
+            self.registered = []
+            self.replies = []
+
+        def message_handler(self, *args, **kwargs):
+            def decorator(fn):
+                self.registered.append((kwargs, fn))
+                return fn
+            return decorator
+
+        def __getattr__(self, name):
+            if name.endswith("_handler"):
+                return self.message_handler
+            raise AttributeError(name)
+
+        def reply_to(self, message, text, **kwargs):
+            self.replies.append((message, text, kwargs))
+
+    bot = FakeBot()
+    exchange_handler.register(bot)
+    entry = next(
+        (
+            (options, fn) for options, fn in bot.registered
+            if fn.__name__ == "exchange_gate_text_cmd"
+        ),
+        None,
+    )
+    assert entry is not None, "exact Exchange typed-text handler is not registered"
+    options, fn = entry
+    predicate = options.get("func")
+    assert callable(predicate), "typed-text handler needs an exact phrase predicate"
+
+    allowed = SimpleNamespace(
+        text="פתח מסחר פנימי אם בדיקת המוכנות הקנונית עוברת",
+        from_user=SimpleNamespace(id=8789977826),
+        chat=SimpleNamespace(type="private"),
+    )
+    unrelated = SimpleNamespace(
+        text="פתח BNB",
+        from_user=SimpleNamespace(id=8789977826),
+        chat=SimpleNamespace(type="private"),
+    )
+    assert predicate(allowed) is True
+    assert predicate(unrelated) is False
+
+    with patch.object(
+        exchange_handler,
+        "_request_guarded_exchange_gate_open",
+        return_value="GUARDED_RESULT",
+    ) as open_gate:
+        fn(allowed)
+
+    open_gate.assert_called_once_with()
+    assert bot.replies and bot.replies[-1][1] == "GUARDED_RESULT"
