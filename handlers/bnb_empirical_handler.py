@@ -606,7 +606,188 @@ def _confirm_reply(result):
     )
 
 
+def _treasury_reconcile_status_reply(result):
+    status = str((result or {}).get("status") or "BLOCKED")
+    current = str((result or {}).get("current_treasury") or "UNKNOWN")
+    target = str((result or {}).get("canonical_treasury") or "UNKNOWN")
+    if status == "ALREADY_CANONICAL":
+        return (
+            "✅ BNB Treasury כבר תואם לכתובת הקנונית שמוגדרת ב־Railway.\n"
+            f"Treasury: {target}\n"
+            "שער BNB נשאר CLOSED. לא בוצעו שינויים."
+        )
+    if status == "CONFIG_MISMATCH":
+        return (
+            "🟡 נמצאה אי־התאמה בהגדרת BNB Treasury.\n"
+            f"Current Treasury: {current}\n"
+            f"Canonical Railway Treasury: {target}\n"
+            "הבדיקה לקריאה בלבד. כדי להכין תצוגה לאישור, השתמש ב־/bnb_treasury_reconcile."
+        )
+    if status == "BLOCKED":
+        return (
+            "⛔ בדיקת BNB Treasury חסומה; לא בוצע שינוי.\n"
+            f"קוד: {str((result or {}).get('code') or 'UNKNOWN')}.\n"
+            "שער BNB נשאר CLOSED."
+        )
+    return f"BNB Treasury status: {status}. No changes."
+
+
+def _treasury_reconcile_preview_reply(result):
+    status = str((result or {}).get("status") or "BLOCKED")
+    if status == "PREPARED":
+        return (
+            "🔎 BNB Treasury — תצוגה לפני תיקון (עדיין לא בוצע שינוי).\n\n"
+            f"כתובת נוכחית: {result.get('previous_treasury', 'UNKNOWN')}\n"
+            f"כתובת קנונית מ־Railway: {result.get('canonical_treasury', 'UNKNOWN')}\n"
+            f"תוקף עד: {result.get('expires_at', 'UNKNOWN')} UTC\n\n"
+            "האישור ישנה רק את bsc_settings.treasury_wallet, יירשם audit, ולא יפתח BNB. "
+            "אין שליחת TX, אין זיכוי Credits ואין שינוי ledger.\n"
+            "לאישור בתוך 5 דקות, אמור בפרטי: ״אשר תיקון הגדרת Treasury BNB״\n"
+            f"או שלח: /bnb_treasury_reconcile_confirm {result.get('confirmation_id', '')}"
+        )
+    if status == "ALREADY_CANONICAL":
+        return _treasury_reconcile_status_reply(result) + (
+            "\nהשלב הבא לבדיקת העברה קיימת בלבד: /bnb_reconcile_auto"
+        )
+    if status == "BLOCKED":
+        code = str((result or {}).get("code") or "UNKNOWN")
+        if code == "BNB_TREASURY_MATCHES_BOUND_WALLET":
+            detail = "הכתובת הקנונית תואמת לארנק מפקיד מאומת; זה היה self-transfer ולא הפקדה."
+        elif code == "BNB_DEPOSITS_OPEN_FLAG_NOT_ZERO":
+            detail = "דגל ההפקדות אינו מוגדר במפורש כ־0; שום הגדרה לא שונתה."
+        else:
+            detail = "נדרשת בדיקה של קוד האבחון לפני המשך."
+        return f"⛔ לא נוצר תיקון. {detail}\nקוד: {code}.\nשער BNB נשאר CLOSED."
+    return f"⛔ BNB Treasury reconcile: {status}. לא שונו יתרות או ledger."
+
+
+def _treasury_reconcile_confirm_reply(result):
+    status = str((result or {}).get("status") or "BLOCKED")
+    if status == "RECONCILED":
+        return (
+            "✅ BNB Treasury config תוקן ואומת.\n"
+            f"כתובת קודמת: {result.get('previous_treasury', 'UNKNOWN')}\n"
+            f"כתובת קנונית: {result.get('treasury_wallet', 'UNKNOWN')}\n"
+            "עודכן רק bsc_settings.treasury_wallet ונרשם audit.\n"
+            "🔒 שער BNB הציבורי נשאר CLOSED. לא נשלחה עסקה, ולא שונו יתרות או ledger.\n\n"
+            "כעת אפשר לבדוק העברה קיימת בלי לשלוח כסף נוסף: /bnb_reconcile_auto"
+        )
+    if status == "EXPIRED":
+        return "⌛ תצוגת Treasury פגה. הכן חדשה עם /bnb_treasury_reconcile. לא בוצע שינוי."
+    if status == "NOT_PENDING":
+        return "⛔ אין תצוגת Treasury שממתינה לאישור הזה. הכן תחילה /bnb_treasury_reconcile."
+    if status == "VERIFY_FAILED":
+        return (
+            "🔴 עדכון Treasury נכשל באימות שלאחר הכתיבה. אין לפתוח BNB או לבצע הפקדה. "
+            f"קוד: {result.get('code', status)}. נדרשת בדיקה קנונית."
+        )
+    if status == "BLOCKED":
+        return (
+            "⛔ תיקון Treasury לא בוצע או נחסם בבדיקה חוזרת. "
+            f"קוד: {result.get('code', 'UNKNOWN')}. שער BNB נשאר CLOSED."
+        )
+    return f"⛔ Treasury reconcile: {status}. BNB remains CLOSED."
+
+
+def route_bnb_treasury_config_voice(bot, message, transcript, *, now=None):
+    """Exact owner/private voice flow; ambiguous BNB Treasury mutations are denied."""
+    from handlers.broadcast_handler import _normalize_voice_phrase
+
+    phrase = _normalize_voice_phrase(str(transcript or ""))
+    prepare_phrases = {
+        _normalize_voice_phrase("הכן תיקון הגדרת Treasury BNB"),
+        _normalize_voice_phrase("הכן תיקון BNB Treasury"),
+        _normalize_voice_phrase("prepare BNB treasury repair"),
+    }
+    confirm_phrases = {
+        _normalize_voice_phrase("אשר תיקון הגדרת Treasury BNB"),
+        _normalize_voice_phrase("אשר תיקון BNB Treasury"),
+        _normalize_voice_phrase("confirm BNB treasury repair"),
+    }
+    status_phrases = {
+        _normalize_voice_phrase("בדוק הגדרת Treasury BNB"),
+        _normalize_voice_phrase("בדוק BNB Treasury"),
+        _normalize_voice_phrase("check BNB treasury"),
+    }
+    if phrase not in prepare_phrases | confirm_phrases | status_phrases:
+        treasury_context = "treasury" in phrase and "bnb" in phrase
+        mutation_terms = (
+            "תקן", "אשר", "שנה", "עדכן", "הכן", "repair", "confirm", "change", "update", "prepare"
+        )
+        if treasury_context and any(term in phrase for term in mutation_terms):
+            return (
+                "⛔ לא בוצעה פעולת Treasury: פקודת הקול לא התאימה לביטוי המדויק. "
+                "אמור ״הכן תיקון הגדרת Treasury BNB״ או ״אשר תיקון הגדרת Treasury BNB״."
+            )
+        return None
+
+    uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+    chat_type = str(getattr(getattr(message, "chat", None), "type", "") or "").lower()
+    if not is_owner(uid):
+        return "⛔ תיקון BNB Treasury זמין לבעלים בלבד."
+    if chat_type != "private":
+        return "⛔ תיקון BNB Treasury זמין רק בשיחה הפרטית עם הבוט."
+
+    from core.bnb_treasury_reconcile import (
+        confirm_bnb_treasury_reconcile,
+        inspect_bnb_treasury_reconcile,
+        prepare_bnb_treasury_reconcile,
+    )
+    if phrase in prepare_phrases:
+        return _treasury_reconcile_preview_reply(
+            prepare_bnb_treasury_reconcile(uid, now=now)
+        )
+    if phrase in confirm_phrases:
+        return _treasury_reconcile_confirm_reply(
+            confirm_bnb_treasury_reconcile(uid, now=now)
+        )
+    return _treasury_reconcile_status_reply(inspect_bnb_treasury_reconcile(uid))
+
+
 def register(bot):
+    @bot.message_handler(commands=["bnb_treasury_status"])
+    def bnb_treasury_status(message):
+        uid, denial = _private_owner_command(message)
+        if denial:
+            bot.reply_to(message, denial)
+            return
+        from core.bnb_treasury_reconcile import inspect_bnb_treasury_reconcile
+        bot.reply_to(
+            message,
+            _treasury_reconcile_status_reply(inspect_bnb_treasury_reconcile(uid)),
+            parse_mode=None,
+        )
+
+    @bot.message_handler(commands=["bnb_treasury_reconcile"])
+    def bnb_treasury_reconcile_preview(message):
+        uid, denial = _private_owner_command(message)
+        if denial:
+            bot.reply_to(message, denial)
+            return
+        from core.bnb_treasury_reconcile import prepare_bnb_treasury_reconcile
+        bot.reply_to(
+            message,
+            _treasury_reconcile_preview_reply(prepare_bnb_treasury_reconcile(uid)),
+            parse_mode=None,
+        )
+
+    @bot.message_handler(commands=["bnb_treasury_reconcile_confirm"])
+    def bnb_treasury_reconcile_confirm(message):
+        uid, denial = _private_owner_command(message)
+        if denial:
+            bot.reply_to(message, denial)
+            return
+        parts = (getattr(message, "text", "") or "").split(maxsplit=1)
+        confirmation_id = parts[1].strip() if len(parts) > 1 else None
+        from core.bnb_treasury_reconcile import confirm_bnb_treasury_reconcile
+        bot.reply_to(
+            message,
+            _treasury_reconcile_confirm_reply(
+                confirm_bnb_treasury_reconcile(uid, confirmation_id)
+            ),
+            parse_mode=None,
+        )
+
     @bot.message_handler(commands=["bnb_reconcile_auto"])
     def bnb_reconcile_auto(message):
         uid, denial = _private_owner_command(message)
