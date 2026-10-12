@@ -211,5 +211,53 @@ class FreshLiveExchangePreflightTests(unittest.TestCase):
         self.assertEqual(result, existing)
 
 
+    def test_rest_order_endpoint_blocks_before_mutation_when_railway_gate_is_closed(self):
+        import copy
+        import webapp as rest_webapp
+
+        db = {"exchange_requests": {}, "exchange_orders": {}}
+        before = copy.deepcopy(db)
+        original_uid = rest_webapp.authenticated_uid
+        original_load_db = rest_webapp.state_manager.load_db
+        original_atomic_update = rest_webapp.state_manager.atomic_update
+        rest_webapp.authenticated_uid = lambda: "buyer"
+        rest_webapp.state_manager.load_db = lambda: db
+        rest_webapp.state_manager.atomic_update = lambda mutate: mutate(db)
+        try:
+            with patch(
+                "core.railway_control.control_plane_exchange_gate_status",
+                return_value={"configured": "0"},
+            ), patch.object(
+                exchange_handler,
+                "_place",
+                return_value={
+                    "order_id": "O999",
+                    "filled": "1.00000000",
+                    "remaining": "0.00000000",
+                    "status": "filled",
+                    "trade_ids": ["T999"],
+                    "execution_check": {"status": "PASS"},
+                },
+            ) as place:
+                response = rest_webapp.app.test_client().post(
+                    "/api/v1/exchange/order",
+                    json={
+                        "side": "buy",
+                        "amount": "1",
+                        "price": "1",
+                        "client_request_id": "rest-closed-gate",
+                    },
+                )
+        finally:
+            rest_webapp.authenticated_uid = original_uid
+            rest_webapp.state_manager.load_db = original_load_db
+            rest_webapp.state_manager.atomic_update = original_atomic_update
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.get_json().get("error"), "EXCHANGE_FRESH_CHECK_BLOCKED")
+        place.assert_not_called()
+        self.assertEqual(db, before)
+
+
 if __name__ == "__main__":
     unittest.main()
