@@ -250,6 +250,7 @@ def test_new_user_retry_blocks_if_verified_cohort_changes_after_preview(monkeypa
     uid = str(target.OWNER_TELEGRAM_ID)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
 
+    assert target._latest_exchange_broadcast_audit(db, uid) == failed
     preview = target.prepare_exchange_broadcast(uid)
 
     assert preview["status"] == "PREPARED"
