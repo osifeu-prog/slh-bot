@@ -496,7 +496,7 @@ def bnb_deposits_open() -> bool:
         return False
 
     override = str(settings.get("bnb_deposits_override") or "").strip().lower()
-    if override:
+    if override not in ("", "auto"):
         # "deny", "allow", typos, and all unknown values fail closed.
         return False
 
