@@ -18,15 +18,18 @@ ADDR = re.compile(r"^0x[0-9a-fA-F]{40}$")
 
 
 def _ids():
+    # Do not reuse Railway-injected RAILWAY_* metadata for the integration's
+    # credentials or target scope. These explicit SLH_* values must be managed
+    # by the operator and independently match a scoped Project Token.
     values = {
-        "token": str(os.getenv("RAILWAY_TOKEN") or "").strip(),
-        "project_id": str(os.getenv("RAILWAY_PROJECT_ID") or "").strip(),
-        "environment_id": str(os.getenv("RAILWAY_ENVIRONMENT_ID") or "").strip(),
-        "service_id": str(os.getenv("RAILWAY_SERVICE_ID") or "").strip(),
+        "token": str(os.getenv("SLH_RAILWAY_TOKEN") or "").strip(),
+        "project_id": str(os.getenv("SLH_RAILWAY_PROJECT_ID") or "").strip(),
+        "environment_id": str(os.getenv("SLH_RAILWAY_ENVIRONMENT_ID") or "").strip(),
+        "service_id": str(os.getenv("SLH_RAILWAY_SERVICE_ID") or "").strip(),
     }
     missing = [key.upper() for key, value in values.items() if not value]
     if missing:
-        raise RuntimeError("RAILWAY_CREDENTIALS_MISSING:" + ",".join(missing))
+        raise RuntimeError("SLH_RAILWAY_CREDENTIALS_MISSING:" + ",".join(missing))
     return values
 
 
