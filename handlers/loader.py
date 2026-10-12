@@ -79,6 +79,7 @@ def load_handlers(bot, context):
         ("endday", "handlers.endday_handler"),
         ("brief", "handlers.brief_handler"),
         ("releasecheck", "handlers.releasecheck_handler"),
+        ("railway_control", "handlers.railway_control_handler"),
         ("claim", "handlers.claim_handler"),
         ("slh_deposit", "handlers.slh_deposit_handler"),
         ("morning", "handlers.morning_handler"),
