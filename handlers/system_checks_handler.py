@@ -360,7 +360,7 @@ def register(bot, context=None):
         if len(parts) != 2:
             bot.reply_to(
                 message,
-                "שימוש: /bnb_reconcile_existing <TX_HASH קיים>\\n"
+                "שימוש: /bnb_reconcile_existing <TX_HASH קיים>\n"
                 "הפקודה בודקת העברה שכבר זוכתה; היא לא שולחת BNB ולא פותחת את השער.",
                 parse_mode=None,
             )
@@ -403,7 +403,7 @@ def register(bot, context=None):
                     "No gate change was requested by this command.",
                     "No new BNB transaction was broadcast by this command.",
                 ]
-            bot.reply_to(message, "\\n".join(lines)[:3900], parse_mode=None)
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(
                 message,
