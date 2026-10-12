@@ -371,7 +371,7 @@ USER QUESTION:
             print("[LLM] Ollama unavailable/cooldown:", str(result)[:80])
     except Exception:
         ollama_status = _record_llm_provider("ollama", "OLLAMA_ERROR: provider exception", (os.getenv("OLLAMA_MODEL") or "qwen3:8b"))
-        print("[LLM] Ollama exception: provider error)
+        print("[LLM] Ollama exception: provider error")
 
     # Final cloud fallback: Groq
     try:
