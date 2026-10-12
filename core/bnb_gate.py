@@ -142,7 +142,10 @@ def _empirical_evidence_shape_valid(empirical: dict | None) -> bool:
         before = float(empirical.get("balance_before"))
         after = float(empirical.get("balance_after"))
         replay_after = float(empirical.get("replay_balance_after"))
+        proof_mode = str(empirical.get("proof_mode") or "fresh_first_pass_and_replay")
     except (TypeError, ValueError, OverflowError):
+        return False
+    if proof_mode not in {"fresh_first_pass_and_replay", "existing_ledger_plus_live_replay"}:
         return False
     checks = empirical.get("checks")
     required_checks = (
@@ -162,6 +165,22 @@ def _empirical_evidence_shape_valid(empirical: dict | None) -> bool:
         return False
     if abs((before + credits) - after) > 1e-9 or abs(replay_after - after) > 1e-9:
         return False
+    if proof_mode == "existing_ledger_plus_live_replay":
+        try:
+            current_before = float(empirical.get("current_replay_balance_before"))
+            current_after = float(empirical.get("current_replay_balance_after"))
+        except (TypeError, ValueError, OverflowError):
+            return False
+        if not all(math.isfinite(value) for value in (current_before, current_after)):
+            return False
+        if abs(current_before - current_after) > 1e-9:
+            return False
+        if empirical.get("replay_observed_unchanged") is not True:
+            return False
+        if empirical.get("settlement_result_idempotent") is not True:
+            return False
+        if empirical.get("settlement_result_status") != "DUPLICATE":
+            return False
     # The smoke's conversion contract is 1,000 internal credits per BNB.
     expected_credits = (amount_wei / 10**18) * 1000
     if abs(expected_credits - credits) > max(1e-9, abs(expected_credits) * 1e-9):
@@ -225,6 +244,17 @@ def _empirical_evidence_revalidated(empirical: dict | None, gate: dict, db=None)
             return False
         if abs(float(entry.get("after", 0)) - float(empirical["balance_after"])) > 1e-9:
             return False
+        proof_mode = str(empirical.get("proof_mode") or "fresh_first_pass_and_replay")
+        if proof_mode == "existing_ledger_plus_live_replay":
+            meta = entry.get("meta") or {}
+            if str(meta.get("tx_hash") or "").lower() != tx_hash.lower():
+                return False
+            if int(meta.get("bnb_amount_wei") or 0) != int(empirical["amount_wei"]):
+                return False
+            if str(meta.get("from") or "").lower() != str(verified.get("from") or "").lower():
+                return False
+            if str(meta.get("to") or "").lower() != str(verified.get("to") or "").lower():
+                return False
         return True
     except Exception:
         return False
