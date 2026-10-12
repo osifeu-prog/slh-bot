@@ -487,15 +487,18 @@ def bnb_deposits_open() -> bool:
     except Exception:
         return False
 
-    if not isinstance(db, dict) or not isinstance(db.get("users"), dict):
+    if not isinstance(db, dict):
         return False
 
     settings = db.get("bsc_settings")
-    if not isinstance(settings, dict):
+    if settings is not None and not isinstance(settings, dict):
         return False
 
-    override = str(settings.get("bnb_deposits_override") or "").strip().lower()
-    if override not in ("", "auto"):
+    override = (
+        str(settings.get("bnb_deposits_override") or "").strip().lower()
+        if isinstance(settings, dict) else ""
+    )
+    if override:
         # "deny", "allow", typos, and all unknown values fail closed.
         return False
 
