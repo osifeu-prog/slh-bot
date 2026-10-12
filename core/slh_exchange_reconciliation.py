@@ -72,7 +72,8 @@ def audit_db(db):
         reason = str(event.get("reason", "")).lower()
         kind = str(event.get("kind", "")).lower()
         if "correction" in reason or "correction" in kind:
-            oid = str(event.get("order_id") or (event.get("meta") or {}).get("order_id") or "")
+            meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
+            oid = str(event.get("order_id") or meta.get("order_id") or "")
             if oid:
                 corrections.append((oid, event))
                 if oid not in known_order_ids:
@@ -119,6 +120,7 @@ def audit_db(db):
                 "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
                 "order_id": oid,
                 "uid": str(order.get("uid") or order.get("user_id") or ""),
+                "uid_suffix": str(order.get("uid_suffix") or ""),
                 "reserve_delta": str(reserve_total),
                 "correction_delta": str(correction_total),
                 "note": "Manual correction is evidence to review, not proof of normal reserve release.",
@@ -139,8 +141,19 @@ def audit_db(db):
                 "net_delta": str(reserve_total + release_total),
             })
 
+    if checked == 0:
+        findings.append({
+            "code": "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND",
+            "note": "No eligible reserve records were matched; the audit cannot claim PASS.",
+        })
+
+    status = "FAIL" if any(
+        item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
+        for item in findings
+    ) else ("UNKNOWN" if checked == 0 else "PASS")
+
     return {
-        "status": "PASS" if not findings else "FAIL",
+        "status": status,
         "read_only": True,
         "checked_cancelled_sell_orders": checked,
         "finding_count": len(findings),
