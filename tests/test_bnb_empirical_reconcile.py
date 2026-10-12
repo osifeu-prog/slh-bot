@@ -296,3 +296,96 @@ def test_auto_preview_reply_uses_real_newlines_for_pass():
 
     assert "\n" in message
     assert "\\n" not in message
+def test_discovery_falls_back_to_rpc_when_indexer_response_is_invalid(monkeypatch):
+    import core.bnb_auto_discovery as discovery
+
+    class FakeEth:
+        chain_id = 56
+
+    class FakeWeb3:
+        HTTPProvider = staticmethod(lambda _rpc: object())
+
+        def __init__(self, _provider):
+            self.eth = FakeEth()
+
+        @staticmethod
+        def to_checksum_address(address):
+            return address
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"error": "indexer response is not a transaction list"}
+
+    rpc_candidate = {
+        "tx_hash": TX,
+        "timestamp": int(NOW.timestamp()),
+        "block": 123,
+        "amount_wei": 10**16,
+        "from": ADDRESS,
+        "to": TREASURY,
+    }
+
+    monkeypatch.setattr(discovery, "get_binding", lambda _uid: {"address": ADDRESS})
+    monkeypatch.setattr(
+        discovery,
+        "_config",
+        lambda: {"rpc": "https://rpc.invalid", "treasury_wallet": TREASURY},
+    )
+    monkeypatch.setattr(discovery, "Web3", FakeWeb3)
+    monkeypatch.setattr(discovery.requests, "get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(discovery, "_latest_handoff_timestamp", lambda _uid: int(NOW.timestamp()))
+    monkeypatch.setattr(discovery, "_ledger_keys", lambda: set())
+    monkeypatch.setattr(
+        discovery,
+        "_rpc_find_exact_transfers",
+        lambda _w3, _sender, _treasury, _target_ts: [rpc_candidate],
+    )
+
+    result = discovery.discover_bnb_transfer(UID)
+
+    assert result["status"] == "FOUND"
+    assert result["provider"] == "BSC_RPC_HANDOFF_WINDOW"
+    assert result["candidate"]["tx_hash"] == TX
+
+
+def test_discovery_reports_unavailable_not_not_found_when_indexer_fails(monkeypatch):
+    import core.bnb_auto_discovery as discovery
+
+    class FakeEth:
+        chain_id = 56
+
+    class FakeWeb3:
+        HTTPProvider = staticmethod(lambda _rpc: object())
+
+        def __init__(self, _provider):
+            self.eth = FakeEth()
+
+        @staticmethod
+        def to_checksum_address(address):
+            return address
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"error": "indexer response is not a transaction list"}
+
+    monkeypatch.setattr(discovery, "get_binding", lambda _uid: {"address": ADDRESS})
+    monkeypatch.setattr(
+        discovery,
+        "_config",
+        lambda: {"rpc": "https://rpc.invalid", "treasury_wallet": TREASURY},
+    )
+    monkeypatch.setattr(discovery, "Web3", FakeWeb3)
+    monkeypatch.setattr(discovery.requests, "get", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(discovery, "_latest_handoff_timestamp", lambda _uid: None)
+    monkeypatch.setattr(discovery, "_ledger_keys", lambda: set())
+
+    result = discovery.discover_bnb_transfer(UID)
+
+    assert result["status"] == "DISCOVERY_UNAVAILABLE"
+    assert result["candidates"] == []
