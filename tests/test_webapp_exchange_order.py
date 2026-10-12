@@ -35,9 +35,26 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
             "ledger": [],
             "slh_token_ledger": [],
         }
+        from handlers import exchange_handler
+
         self.original_uid = webapp.authenticated_uid
         self.original_load_db = webapp.state_manager.load_db
         self.original_atomic_update = webapp.state_manager.atomic_update
+        self.live_proof_patch = patch.object(
+            exchange_handler,
+            "require_fresh_live_exchange_proof",
+            return_value={
+            "status": "PASS",
+            "checked_at": "2026-10-12T16:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+        },
+        )
+        self.live_proof_patch.start()
+        self.addCleanup(self.live_proof_patch.stop)
         webapp.authenticated_uid = lambda: "buyer"
         webapp.state_manager.load_db = lambda: self.db
         webapp.state_manager.atomic_update = lambda mutate: mutate(self.db)
