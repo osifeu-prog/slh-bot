@@ -27,6 +27,11 @@ class ExchangeFreshExecutionTests(unittest.TestCase):
             "exchange_sequence": 0,
             "ledger": [],
         }
+        self.load_db_patcher = patch(
+            "webapp.state_manager.load_db", return_value=self.db
+        )
+        self.load_db_patcher.start()
+        self.addCleanup(self.load_db_patcher.stop)
 
     @staticmethod
     def passed_check():
