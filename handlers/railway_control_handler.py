@@ -34,7 +34,7 @@ def _graphql(ctx, query, variables=None):
     payload = json.dumps({"query": query, "variables": variables or {}}).encode()
     request = urllib.request.Request(
         API_URL, data=payload, method="POST",
-        headers={"Authorization": "Bearer " + ctx["token"],
+        headers={"Project-Access-Token": ctx["token"],
                  "Content-Type": "application/json", "Accept": "application/json"},
     )
     try:
