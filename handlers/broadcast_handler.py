@@ -1001,13 +1001,37 @@ def route_exchange_broadcast_text(message, text, *, now=None):
 def _is_explicit_prepare_intent(phrase):
     """Recognize clear preparation paraphrases while never treating questions or negations as intent."""
     phrase = _normalize_voice_phrase(phrase)
+
+    # Speech-to-text commonly preserves polite lead-ins. Strip only known,
+    # affirmative request prefixes, then require a preparation verb plus both
+    # the broadcast and Exchange concepts. This path creates a preview only.
+    request_prefixes = (
+        "אני רוצה ש",
+        "אני מבקש ש",
+        "אני מבקשת ש",
+        "אני צריך ש",
+        "אני צריכה ש",
+        "אני מעוניין ש",
+        "אני מעוניינת ש",
+        "אני רוצה ",
+        "תוכל ",
+        "תוכלי ",
+    )
+    for prefix in request_prefixes:
+        if phrase.startswith(prefix):
+            phrase = phrase[len(prefix):].strip()
+            break
+
     words = phrase.split()
-    if not words or words[0] in {"אל", "לא", "האם", "אפשר", "כדאי", "למה", "why", "can", "could"}:
+    if not words or words[0] in {
+        "אל", "לא", "האם", "אפשר", "כדאי", "למה", "why", "can", "could",
+        "should", "please",
+    }:
         return False
 
     prepare_verbs = {
         "הכן", "תכין", "תכיני", "הכין", "צור", "צרי", "תיצור", "תייצר",
-        "prepare", "draft", "create",
+        "להכין", "ליצור", "prepare", "draft", "create",
     }
     if words[0] not in prepare_verbs:
         return False
