@@ -33,23 +33,43 @@ def test_replace_treasury_rejects_invalid_json_and_target():
 
 
 def test_missing_project_token_is_blocked(monkeypatch):
-    monkeypatch.delenv("RAILWAY_TOKEN", raising=False)
-    monkeypatch.setenv("RAILWAY_PROJECT_ID", "project")
-    monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "environment")
-    monkeypatch.setenv("RAILWAY_SERVICE_ID", "service")
+    monkeypatch.delenv("SLH_RAILWAY_TOKEN", raising=False)
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "project")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "environment")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "service")
     with pytest.raises(RuntimeError, match="RAILWAY_CREDENTIALS_MISSING"):
         target._ids()
 
 
 def test_status_does_not_print_secrets_when_token_missing(monkeypatch):
-    monkeypatch.delenv("RAILWAY_TOKEN", raising=False)
-    monkeypatch.setenv("RAILWAY_PROJECT_ID", "project")
-    monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "environment")
-    monkeypatch.setenv("RAILWAY_SERVICE_ID", "service")
+    monkeypatch.delenv("SLH_RAILWAY_TOKEN", raising=False)
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "project")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "environment")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "service")
     result = target.railway_status_reply()
     assert "RAILWAY_CREDENTIALS_MISSING" in result
     assert "Bearer " not in result
     assert "token_contract" not in result
+
+
+def test_ids_prefer_slh_prefixed_config_over_railway_runtime_names(monkeypatch):
+    monkeypatch.setenv("SLH_RAILWAY_TOKEN", "project-scoped-token")
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "slh-project")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "slh-production")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "slh-bot-service")
+    # Railway's own injected identifiers must not override the explicit SLH scope.
+    monkeypatch.setenv("RAILWAY_PROJECT_ID", "railway-injected-project")
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "railway-injected-environment")
+    monkeypatch.setenv("RAILWAY_SERVICE_ID", "railway-injected-service")
+
+    ctx = target._ids()
+
+    assert ctx == {
+        "token": "project-scoped-token",
+        "project_id": "slh-project",
+        "environment_id": "slh-production",
+        "service_id": "slh-bot-service",
+    }
 
 
 def test_graphql_uses_project_access_token_header(monkeypatch):
