@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from core.authority import get_role
+from core.authority import get_role, is_owner
 from core.release_readiness import build_release_report
 from core.system_checks import (
     check_bnb,
@@ -344,6 +344,72 @@ def register(bot, context=None):
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(message, f"❌ BNB check failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bnb_reconcile_existing"])
+    def bnb_reconcile_existing_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(
+                message,
+                "⛔ OWNER ONLY — הקפד שרק בעל המערכת יוכל לאמת מחדש settlement קיים.",
+                parse_mode=None,
+            )
+            return
+
+        parts = (getattr(message, "text", "") or "").strip().split()
+        if len(parts) != 2:
+            bot.reply_to(
+                message,
+                "שימוש: /bnb_reconcile_existing <TX_HASH קיים>\n"
+                "הפקודה בודקת העברה שכבר זוכתה; היא לא שולחת BNB ולא פותחת את השער.",
+                parse_mode=None,
+            )
+            return
+
+        tx_hash = parts[1].strip()
+        try:
+            from core.bnb_empirical_smoke import reconcile_existing_settlement
+
+            result = reconcile_existing_settlement(uid, tx_hash)
+            status = str(result.get("status") or "UNKNOWN").upper()
+            if status == "PASS" and result.get("gate_remained_closed") is True:
+                lines = [
+                    "✅ BNB EXISTING SETTLEMENT PROOF: PASS",
+                    f"TX: {tx_hash}",
+                    "Live settlement replay: DUPLICATE",
+                    f"Original Credits entry: {result.get('credits', 'UNKNOWN')}",
+                    "Current balance unchanged by replay.",
+                    "Public BNB gate: CLOSED (left closed)",
+                    "לא נשלחה עסקת BNB חדשה ולא נוצר זיכוי נוסף.",
+                ]
+            elif status == "ALREADY_PASS" and result.get("gate_remained_closed") is True:
+                lines = [
+                    "✅ BNB EXISTING SETTLEMENT PROOF: ALREADY_PASS",
+                    f"TX: {result.get('tx_hash') or tx_hash}",
+                    "Evidence was revalidated against live chain and ledger.",
+                    "Public BNB gate: CLOSED (left closed)",
+                    "לא נשלחה עסקת BNB חדשה ולא נוצר זיכוי נוסף.",
+                ]
+            elif status == "GATE_OPEN":
+                lines = [
+                    "⛔ BNB RECONCILIATION STOPPED: GATE_ALREADY_OPEN",
+                    "הפקודה לא שינתה את השער. נדרשת בדיקה מיידית לפני שימוש ציבורי.",
+                    "לא נשלחה עסקת BNB חדשה.",
+                ]
+            else:
+                lines = [
+                    f"🟡 BNB existing settlement proof: {status}",
+                    str(result.get("detail") or "No proof was accepted; review the reported status."),
+                    "No gate change was requested by this command.",
+                    "No new BNB transaction was broadcast by this command.",
+                ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"❌ BNB existing settlement reconciliation failed safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
 
     @bot.message_handler(commands=["check_ton", "ton_check_status"])
     def check_ton_cmd(message):
