@@ -119,7 +119,6 @@ def audit_db(db):
             findings.append({
                 "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
                 "order_id": oid,
-                "uid": str(order.get("uid") or order.get("user_id") or ""),
                 "uid_suffix": str(order.get("uid_suffix") or ""),
                 "reserve_delta": str(reserve_total),
                 "correction_delta": str(correction_total),
@@ -129,7 +128,7 @@ def audit_db(db):
             findings.append({
                 "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
                 "order_id": oid,
-                "event_ids": sorted(str(e.get("event_id") or "") for e in order_corrections),
+                "event_ids": sorted(str(e.get("event_id") or (e.get("meta") or {}).get("event_id") or "") for e in order_corrections),
                 "correction_delta": str(correction_total),
             })
         if reserve_total + release_total != 0 and not order_corrections:
