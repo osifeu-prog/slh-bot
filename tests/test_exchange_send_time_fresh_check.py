@@ -46,6 +46,7 @@ def _wire_exchange_test(monkeypatch, db, check):
     import handlers.exchange_handler as exchange_handler
 
     monkeypatch.setattr(webapp, "authenticated_uid", lambda: "buyer")
+    monkeypatch.setattr(webapp.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(webapp.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(
         exchange_handler,
