@@ -15,7 +15,7 @@ def _db(override=None):
                 "confirmations": 15}
     if override is not None:
         settings["bnb_deposits_override"] = override
-    return {"bsc_settings": settings, "wallet_bindings": {},
+    return {"users": {"1": {}}, "bsc_settings": settings, "wallet_bindings": {},
             "settlement_evidence": {"bnb": {"status": "PASS"}}, "ledger": []}
 
 
