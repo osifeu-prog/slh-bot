@@ -148,18 +148,20 @@ def record_vip_subscription_payment(
             "bundle": record.get("bundle"),
         }
 
-    if created:
-        _record_revenue(
-            source="telegram_stars_subscription",
-            amount=stars_paid,
-            reference=charge_id,
-            uid=uid,
-            meta={
-                "kind": "vip_monthly",
-                "subscription_period": VIP_SUBSCRIPTION_PERIOD,
-                "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
-            },
-        )
+    # Retry revenue recording while fulfillment is pending. The ledger is
+    # idempotent on (source, reference), so replays recover a failed write
+    # without double-counting a charge. Completed replays returned above.
+    _record_revenue(
+        source="telegram_stars_subscription",
+        amount=stars_paid,
+        reference=charge_id,
+        uid=uid,
+        meta={
+            "kind": "vip_monthly",
+            "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+            "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
+        },
+    )
 
     bundle = apply_vip_benefits(
         uid=uid,

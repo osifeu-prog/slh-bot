@@ -81,5 +81,49 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
         fulfill.assert_not_called()
 
 
+
+    def test_pending_duplicate_retries_revenue_recording(self):
+        import copy
+
+        import core.stars_payment_authority as authority
+
+        db = {
+            "users": {"1": {"wallet": {"credits": 0}, "permissions": ["vip_access"]}},
+            "vip_subscriptions": {
+                "charge-pending": {
+                    "charge_id": "charge-pending",
+                    "uid": "1",
+                    "stars_paid": 499,
+                    "started_at": 1,
+                    "expires_at": 2,
+                    "status": "ACTIVE",
+                    "launch_offer_qualified": False,
+                    "fulfillment_status": "pending",
+                }
+            },
+        }
+
+        def atomic_update(fn):
+            return copy.deepcopy(fn(db))
+
+        bundle = {"status": "completed", "launch_offer_qualified": False}
+        with (
+            patch.object(authority.state_manager, "atomic_update", side_effect=atomic_update),
+            patch.object(authority.revenue_ledger, "record") as record_revenue,
+            patch.object(authority, "apply_vip_benefits", return_value=bundle),
+        ):
+            result = authority.record_vip_subscription_payment(
+                uid="1",
+                stars_paid=499,
+                charge_id="charge-pending",
+                now=1793473199,
+            )
+
+        record_revenue.assert_called_once()
+        self.assertEqual(record_revenue.call_args.kwargs["reference"], "charge-pending")
+        self.assertEqual(result["status"], "duplicate")
+        self.assertEqual(result["fulfillment_status"], "completed")
+
+
 if __name__ == "__main__":
     unittest.main()

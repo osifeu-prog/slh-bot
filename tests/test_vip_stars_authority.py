@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 
 class VIPStarsAuthorityTests(unittest.TestCase):
-    def test_vip_charge_is_idempotent_and_reconciles_revenue(self):
+    def test_vip_charge_replay_retries_revenue_without_extending_subscription(self):
         from core import stars_payment_authority
 
         db = {"users": {}}
@@ -11,7 +11,8 @@ class VIPStarsAuthorityTests(unittest.TestCase):
         def atomic_update(fn):
             return fn(db)
 
-        with patch.object(stars_payment_authority.state_manager, "atomic_update", side_effect=atomic_update),              patch.object(stars_payment_authority.revenue_ledger, "record") as revenue:
+        with patch.object(stars_payment_authority.state_manager, "atomic_update", side_effect=atomic_update), \
+             patch.object(stars_payment_authority.revenue_ledger, "record") as revenue:
             first = stars_payment_authority.record_vip_subscription_payment(
                 uid="100",
                 stars_paid=499,
@@ -29,7 +30,11 @@ class VIPStarsAuthorityTests(unittest.TestCase):
         self.assertEqual(second["status"], "duplicate")
         self.assertEqual(db["users"]["100"]["vip_access_until"], 1000 + 2592000)
         self.assertEqual(len(db["vip_subscriptions"]), 1)
-        self.assertEqual(revenue.call_count, 1)
+        self.assertEqual(revenue.call_count, 2)
+        self.assertEqual(
+            [call.kwargs["reference"] for call in revenue.call_args_list],
+            ["vip-charge-1", "vip-charge-1"],
+        )
 
     def test_vip_wrong_amount_is_rejected_before_state_change(self):
         from core import stars_payment_authority
