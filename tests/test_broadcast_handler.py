@@ -427,3 +427,57 @@ def test_exchange_broadcast_blocked_by_immediate_pre_send_recheck(monkeypatch):
     assert db["exchange_broadcast_audit"][-1]["status"] == "BLOCKED"
     assert db["exchange_broadcast_audit"][-1]["sent"] == 0
 
+
+
+
+def test_broadcast_status_warns_legacy_full_retry_is_blocked(monkeypatch):
+    bot = FakeBot()
+    target.register(bot)
+    uid = str(target.OWNER_TELEGRAM_ID)
+    db = {
+        "users": {"1": {}, "2": {}},
+        "exchange_broadcast_pending": {
+            uid: {
+                "status": "EXPIRED",
+                "requires_duplicate_ack": True,
+                "previous_sent": 27,
+                "previous_failed": 5,
+            }
+        },
+        "exchange_broadcast_audit": [
+            {
+                "draft_id": "prior-partial",
+                "initiated_by": uid,
+                "status": "PARTIAL",
+                "sent": 27,
+                "failed": 5,
+            }
+        ],
+    }
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(
+        target,
+        "_fresh_exchange_check",
+        lambda _db: {
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "verdict": "OPEN",
+            "public_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "detail": "public state clean",
+        },
+    )
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=target.OWNER_TELEGRAM_ID),
+        text="/broadcast status",
+    )
+
+    bot.broadcast_cmd(message)
+
+    reply = bot.replies[-1][1]
+    assert bot.sent == []
+    assert "הטיוטה הישנה אינה ניתנת לאישור" in reply
+    assert "אין לשלוח שוב לכל הקהל" in reply
+    assert "יש לאשר במפורש שידור מלא חוזר" not in reply
