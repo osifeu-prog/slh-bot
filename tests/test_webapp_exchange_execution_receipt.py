@@ -43,10 +43,29 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
                 "trade_integrity": True,
                 "money_invariants": True,
                 "open_orders_before": 1,
+                "live_runtime_check": "PASS",
+                "live_checked_at": "2026-10-12T16:00:00+00:00",
+                "live_railway_gate": "1",
+                "live_public_gate": "OPEN",
+                "live_public_verdict": "OPEN",
+                "live_public_readiness": True,
+                "live_public_updated_at": 1791830000.0,
             },
         }
 
-        with patch.object(exchange_handler, "_place", return_value=result):
+        with patch.object(
+            exchange_handler,
+            "require_fresh_live_exchange_proof",
+            return_value={
+                "status": "PASS",
+                "checked_at": "2026-10-12T16:00:00+00:00",
+                "railway_configured": "1",
+                "public_gate": "OPEN",
+                "public_verdict": "OPEN",
+                "public_readiness": True,
+                "public_updated_at": 1791830000.0,
+            },
+        ), patch.object(exchange_handler, "_place", return_value=result):
             webapp_data_handler._exchange_order(
                 self.bot, 123, "456", "buy_slh", "2", "1", "nonce-1"
             )
@@ -54,6 +73,8 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
         self.assertEqual(len(self.bot.messages), 1)
         message = self.bot.messages[0][1]
         self.assertIn("Fresh canonical Exchange check: PASS", message)
+        self.assertIn("Fresh live runtime confirmation: PASS", message)
+        self.assertIn("Railway configured gate: 1", message)
         self.assertIn("execution_ready: PASS", message)
         self.assertIn("money_invariants: PASS", message)
         self.assertIn("T0000000042", message)
@@ -74,7 +95,19 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
             check, checked_at="2026-10-12T16:01:00+00:00"
         )
 
-        with patch.object(exchange_handler, "_place", side_effect=blocked):
+        with patch.object(
+            exchange_handler,
+            "require_fresh_live_exchange_proof",
+            return_value={
+                "status": "PASS",
+                "checked_at": "2026-10-12T16:01:00+00:00",
+                "railway_configured": "1",
+                "public_gate": "OPEN",
+                "public_verdict": "OPEN",
+                "public_readiness": True,
+                "public_updated_at": 1791830000.0,
+            },
+        ), patch.object(exchange_handler, "_place", side_effect=blocked):
             webapp_data_handler._exchange_order(
                 self.bot, 123, "456", "sell_slh", "2", "1", "nonce-2"
             )
