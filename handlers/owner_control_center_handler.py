@@ -178,7 +178,7 @@ def _keyboard():
 
 
 def register(bot):
-    @bot.message_handler(commands=["control", "control_center"])
+    @bot.message_handler(commands=["control_center"])
     def control_command(message):
         if not is_owner(message.from_user.id):
             bot.reply_to(message, "⛔️ הפקודה מיועדת לבעלים בלבד.")
@@ -196,7 +196,7 @@ def register(bot):
             return
         action = parse_callback(call.data)
         if action is None:
-            bot.answer_callback_query(call.id, "הכפתור פג תוקף. שלח /control מחדש.")
+            bot.answer_callback_query(call.id, "הכפתור פג תוקף. שלח /control_center מחדש.")
             return
 
         bot.answer_callback_query(call.id)

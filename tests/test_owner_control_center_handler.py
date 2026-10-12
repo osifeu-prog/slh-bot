@@ -8,6 +8,7 @@ from handlers.owner_control_center_handler import (
     parse_callback,
     save_report,
     load_last_report,
+    register,
 )
 
 
@@ -46,3 +47,26 @@ def test_report_persistence_and_format(tmp_path):
 
 def test_missing_report_returns_none(tmp_path):
     assert load_last_report(path=tmp_path / "missing.json") is None
+
+
+def test_owner_control_center_does_not_claim_existing_control_command():
+    class RecordingBot:
+        def __init__(self):
+            self.message_commands = []
+
+        def message_handler(self, commands=None, **_kwargs):
+            def decorator(fn):
+                self.message_commands.extend(commands or [])
+                return fn
+            return decorator
+
+        def callback_query_handler(self, func=None, **_kwargs):
+            def decorator(fn):
+                return fn
+            return decorator
+
+    bot = RecordingBot()
+    register(bot)
+
+    assert "control_center" in bot.message_commands
+    assert "control" not in bot.message_commands
