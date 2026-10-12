@@ -17,6 +17,13 @@ class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
     def setUp(self):
         self.bot = _Bot()
         self.db = {"exchange_requests": {}}
+        self.load_patch = patch.object(
+            webapp_data_handler.state_manager,
+            "load_db",
+            return_value=self.db,
+        )
+        self.load_patch.start()
+        self.addCleanup(self.load_patch.stop)
         self.atomic_patch = patch.object(
             webapp_data_handler.state_manager,
             "atomic_update",
