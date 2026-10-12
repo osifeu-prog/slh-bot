@@ -169,5 +169,62 @@ class TestVoiceSTT(unittest.TestCase):
         )
 
 
+
+    def test_voice_handler_routes_bnb_existing_transfer_flow_before_general_ai(self):
+        registered = {}
+
+        def handler_decorator(**kwargs):
+            def wrap(fn):
+                registered["callback"] = fn
+                return fn
+            return wrap
+
+        bot = Mock()
+        bot.message_handler.side_effect = handler_decorator
+        bot.get_file.return_value = SimpleNamespace(file_path="telegram/voice.ogg")
+        bot.download_file.return_value = b"ogg-bytes"
+        message = SimpleNamespace(
+            message_id=789,
+            from_user=SimpleNamespace(id=8789977826),
+            chat=SimpleNamespace(id=8789977826, type="private"),
+            voice=SimpleNamespace(file_id="voice-file", file_unique_id="voice-unique"),
+        )
+
+        with patch(
+            "handlers.voice_handler.transcribe_voice",
+            return_value=("הכן בדיקת BNB מההעברה הקיימת", None),
+        ), patch(
+            "handlers.exchange_handler.route_exchange_gate_voice",
+            return_value=None,
+        ), patch(
+            "handlers.broadcast_handler.route_exchange_broadcast_voice",
+            return_value=None,
+        ), patch(
+            "handlers.bnb_empirical_handler.route_bnb_existing_tx_voice",
+            return_value="BNB PREVIEW ONLY",
+        ) as bnb_flow, patch(
+            "handlers.bnb_empirical_handler.route_bnb_treasury_config_voice"
+        ) as treasury_route, patch(
+            "core.voice_operator_router.route_voice_operator_request"
+        ) as operator_route, patch(
+            "handlers.voice_handler.route"
+        ) as conversational_route, patch(
+            "handlers.voice_handler.synthesize_hebrew_voice",
+            return_value=(None, "TTS_DISABLED"),
+        ), patch(
+            "handlers.voice_handler.record_turn"
+        ):
+            register(bot)
+            registered["callback"](message)
+
+        bnb_flow.assert_called_once_with(
+            bot, message, "הכן בדיקת BNB מההעברה הקיימת"
+        )
+        treasury_route.assert_not_called()
+        operator_route.assert_not_called()
+        conversational_route.assert_not_called()
+        bot.reply_to.assert_called_once_with(message, "BNB PREVIEW ONLY", parse_mode=None)
+
+
 if __name__ == "__main__":
     unittest.main()
