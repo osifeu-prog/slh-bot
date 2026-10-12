@@ -7,7 +7,7 @@ import core.bnb_treasury_reconcile as reconcile
 
 OWNER_UID = "8789977826"
 OWNER_WALLET = "0x468328B2a7C9b5629e87844Bb4531e7409400b34"
-CANONICAL_TREASURY = "0x693db6c817083818696a7228aebfbd0cd3371f02"
+CANONICAL_TREASURY = "0x1111111111111111111111111111111111111111"  # safe, non-quarantined test fixture only
 NOW = datetime(2026, 10, 12, 12, 0, tzinfo=timezone.utc)
 
 
@@ -177,3 +177,22 @@ def test_expired_preview_cannot_change_treasury(monkeypatch):
 
     assert result["status"] == "EXPIRED"
     assert db["bsc_settings"]["treasury_wallet"].lower() == OWNER_WALLET.lower()
+
+
+def test_known_quarantined_zuz_treasury_is_never_previewed_or_applied(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _bind_state(monkeypatch, db)
+    _env(monkeypatch, treasury="0x693db6c817083818696a7228aebfbd0cd3371f02")
+    monkeypatch.setattr(reconcile, "is_owner", lambda _uid: True)
+
+    preview = reconcile.prepare_bnb_treasury_reconcile(OWNER_UID, now=NOW)
+    status = reconcile.inspect_bnb_treasury_reconcile(OWNER_UID)
+
+    assert preview["status"] == "BLOCKED"
+    assert preview["code"] == "BNB_CANONICAL_TREASURY_QUARANTINED_ZUZ"
+    assert status["status"] == "BLOCKED"
+    assert status["code"] == "BNB_CANONICAL_TREASURY_QUARANTINED_ZUZ"
+    assert db["bsc_settings"]["treasury_wallet"] == before["bsc_settings"]["treasury_wallet"]
+    assert db["ledger"] == before["ledger"]
+    assert db["slh_token_ledger"] == before["slh_token_ledger"]
