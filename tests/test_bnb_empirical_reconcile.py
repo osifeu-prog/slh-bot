@@ -182,7 +182,7 @@ def test_auto_discovery_prepares_preview_for_one_exact_existing_transfer_without
 
     assert result == preview
     discover.assert_called_once_with(UID)
-    prepare.assert_called_once_with(UID, TX, now=NOW)
+    prepare.assert_called_once_with(UID, TX, now=NOW, confirmation_source="auto_existing_0_01_canary")
     settle.assert_not_called()
 
 
