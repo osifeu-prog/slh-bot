@@ -49,8 +49,10 @@ def _status_report() -> str:
         if not isinstance(db, dict):
             raise ValueError("DB_INVALID")
         settings = db.get("bsc_settings")
-        if not isinstance(settings, dict):
-            raise ValueError("BNB_SETTINGS_MISSING")
+        if settings is None:
+            settings = {}
+        elif not isinstance(settings, dict):
+            raise ValueError("BNB_SETTINGS_INVALID")
         readiness = bnb_readiness(db)
         evidence = _empirical_settlement_evidence(db) or {}
         config = _effective_config(db)
