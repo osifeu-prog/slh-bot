@@ -56,6 +56,19 @@ def _wire_exchange_test(monkeypatch, db, check):
         ),
         raising=False,
     )
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: {
+            "status": "PASS",
+            "checked_at": "2026-10-12T16:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+        },
+    )
     monkeypatch.setattr(system_checks, "check_exchange_for_execution", check)
     return webapp.app.test_client()
 
