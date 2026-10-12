@@ -32,7 +32,25 @@ def _retry_after_seconds(exc):
     return None
 
 
-def _send_one(bot, uid, message_text, next_allowed_at):
+def _exchange_broadcast_reply_markup():
+    """Build the optional ACK button shown on future Exchange announcements."""
+    try:
+        from telebot import types as telebot_types
+
+        keyboard = telebot_types.InlineKeyboardMarkup()
+        keyboard.add(
+            telebot_types.InlineKeyboardButton(
+                "✅ ראיתי — פתח את האפליקציה",
+                callback_data="ack_seen",
+            )
+        )
+        return keyboard
+    except Exception:
+        # A presentation-only control must never take down a guarded broadcast.
+        return None
+
+
+def _send_one(bot, uid, message_text, next_allowed_at, *, reply_markup=None):
     """Send one message while enforcing the global broadcast pacing."""
     delay = next_allowed_at - time.monotonic()
     if delay > 0:
@@ -41,7 +59,10 @@ def _send_one(bot, uid, message_text, next_allowed_at):
     attempts = 0
     while True:
         try:
-            bot.send_message(uid, message_text)
+            if reply_markup is None:
+                bot.send_message(uid, message_text)
+            else:
+                bot.send_message(uid, message_text, reply_markup=reply_markup)
             return True, time.monotonic() + BROADCAST_MIN_INTERVAL
 
         except Exception as exc:
@@ -772,6 +793,7 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
     failed_recipient_uids = []
     next_allowed_at = time.monotonic()
     latest_check = proof
+    ack_markup = _exchange_broadcast_reply_markup()
 
     for index, recipient in enumerate(audience):
         if index > 0 and index % EXCHANGE_BROADCAST_CHECK_INTERVAL == 0:
@@ -794,7 +816,13 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
                 )
 
         try:
-            ok, next_allowed_at = _send_one(bot, recipient, EXCHANGE_BROADCAST_TEXT, next_allowed_at)
+            ok, next_allowed_at = _send_one(
+                bot,
+                recipient,
+                EXCHANGE_BROADCAST_TEXT,
+                next_allowed_at,
+                reply_markup=ack_markup,
+            )
         except Exception:
             ok, next_allowed_at = False, time.monotonic()
         if ok:

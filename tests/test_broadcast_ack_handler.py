@@ -4,56 +4,138 @@ from unittest.mock import Mock
 import handlers.broadcast_ack_handler as target
 
 
-def _registered_handler():
+def _call(data="ack_seen", uid=12345, chat_type="private"):
+    return SimpleNamespace(
+        id="callback-1",
+        data=data,
+        from_user=SimpleNamespace(id=uid, username="tester", first_name="Tester"),
+        message=SimpleNamespace(chat=SimpleNamespace(id=uid, type=chat_type)),
+    )
+
+
+def test_ack_is_idempotent_for_repeated_clicks(monkeypatch):
+    db = {}
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+
+    first = target._record_ack("12345", "tester", "Tester")
+    original = db["broadcast_acks"]["12345"]["first_at"]
+    second = target._record_ack("12345", "tester", "Tester")
+
+    assert first["status"] == "ACKED"
+    assert second["status"] == "ALREADY_ACKED"
+    assert second["total_acks"] == 1
+    assert db["broadcast_acks"]["12345"]["count"] == 1
+    assert db["broadcast_acks"]["12345"]["first_at"] == original
+
+
+def test_ack_callback_confirms_once_and_links_to_mini_app(monkeypatch):
     registered = {}
 
     class Bot:
+        callback_query_handler = lambda self, **kwargs: lambda fn: registered.setdefault("callback", fn) or fn
         answer_callback_query = Mock()
         send_message = Mock()
 
-        def callback_query_handler(self, **kwargs):
-            registered["filter"] = kwargs["func"]
-
-            def decorate(fn):
-                registered["handler"] = fn
-                return fn
-
-            return decorate
-
     bot = Bot()
-    target.register(bot)
-    return bot, registered
+    registered_args = {}
 
+    def decorator(**kwargs):
+        registered_args.update(kwargs)
+        def wrap(fn):
+            registered["callback"] = fn
+            return fn
+        return wrap
 
-def test_ack_callback_records_and_confirms_seen(monkeypatch):
-    bot, registered = _registered_handler()
-    saved = []
+    bot.callback_query_handler = decorator
     monkeypatch.setattr(
         target,
         "_record_ack",
-        lambda uid, username, first_name: saved.append(
-            (uid, username, first_name)
-        ) or {"ok": True, "total_acks": 1},
+        lambda uid, username, first_name: {"status": "ACKED", "total_acks": 3},
     )
-    call = SimpleNamespace(
-        data="ack_seen",
-        id="callback-1",
-        from_user=SimpleNamespace(id=12345, username="member", first_name="Member"),
-        message=SimpleNamespace(chat=SimpleNamespace(id=12345)),
+    target.register(bot)
+
+    call = _call()
+    registered["callback"](call)
+
+    assert callable(registered_args["func"])
+    assert registered_args["func"](call) is True
+    bot.answer_callback_query.assert_called_once()
+    bot.send_message.assert_called_once_with(
+        12345,
+        "✅ ראיתי אותך.\n\n"
+        "🚀 פתח את ה-Mini App:\n"
+        "https://slh-cloud-bot-production.up.railway.app/mini-app-v4",
     )
 
-    assert registered["filter"](call) is True
-    registered["handler"](call)
 
-    assert saved == [("12345", "member", "Member")]
-    bot.answer_callback_query.assert_called_once_with("callback-1", '✅ תודה! נרשמת (1 סה"כ)')
+def test_ack_callback_does_not_record_or_message_groups(monkeypatch):
+    registered = {}
+
+    def decorator(**kwargs):
+        def wrap(fn):
+            registered["callback"] = fn
+            return fn
+        return wrap
+
+    bot = SimpleNamespace(
+        callback_query_handler=decorator,
+        answer_callback_query=Mock(),
+        send_message=Mock(),
+    )
+    writes = []
+    monkeypatch.setattr(
+        target,
+        "_record_ack",
+        lambda *args: writes.append(args) or {"status": "ACKED", "total_acks": 1},
+    )
+    target.register(bot)
+
+    call = _call(chat_type="group")
+    registered["callback"](call)
+
+    assert writes == []
+    bot.answer_callback_query.assert_called_once()
+    bot.send_message.assert_not_called()
+
+
+def test_ack_handler_registers_only_the_exact_callback():
+    registered = {}
+
+    def decorator(**kwargs):
+        registered["filter"] = kwargs["func"]
+        return lambda fn: fn
+
+    bot = SimpleNamespace(callback_query_handler=decorator, answer_callback_query=Mock(), send_message=Mock())
+    target.register(bot)
+
+    assert registered["filter"](_call(data="ack_seen")) is True
+    assert registered["filter"](_call(data="other")) is False
+
+
+def test_repeated_ack_callback_does_not_send_duplicate_followup(monkeypatch):
+    registered = {}
+
+    def decorator(**kwargs):
+        def wrap(fn):
+            registered["callback"] = fn
+            return fn
+        return wrap
+
+    bot = SimpleNamespace(
+        callback_query_handler=decorator,
+        answer_callback_query=Mock(),
+        send_message=Mock(),
+    )
+    outcomes = iter([
+        {"status": "ACKED", "total_acks": 1},
+        {"status": "ALREADY_ACKED", "total_acks": 1},
+    ])
+    monkeypatch.setattr(target, "_record_ack", lambda *args: next(outcomes))
+    target.register(bot)
+
+    registered["callback"](_call())
+    registered["callback"](_call())
+
+    assert bot.answer_callback_query.call_count == 2
     bot.send_message.assert_called_once()
-    assert bot.send_message.call_args.args[0] == 12345
-    assert "mini-app-v4" in bot.send_message.call_args.args[1]
-
-
-def test_ack_callback_ignores_unrelated_callbacks():
-    _, registered = _registered_handler()
-    unrelated = SimpleNamespace(data="not_ack_seen")
-
-    assert registered["filter"](unrelated) is False
+    assert "כבר נרשם" in bot.answer_callback_query.call_args.args[1]

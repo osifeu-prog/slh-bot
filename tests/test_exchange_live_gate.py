@@ -226,7 +226,7 @@ def test_voice_confirm_rechecks_fresh_exchange_and_sends_fixed_notice(monkeypatc
 
     sent = []
 
-    def send_one(bot, uid, message, next_allowed):
+    def send_one(bot, uid, message, next_allowed, *, reply_markup=None):
         sent.append((uid, message))
         return True, next_allowed
 

@@ -7,6 +7,7 @@ class FakeBot:
     def __init__(self, scripted=None):
         self.scripted = list(scripted or [])
         self.sent = []
+        self.send_options = []
         self.replies = []
 
     def message_handler(self, commands):
@@ -15,8 +16,9 @@ class FakeBot:
             return fn
         return decorator
 
-    def send_message(self, uid, message):
+    def send_message(self, uid, message, **kwargs):
         self.sent.append((uid, message))
+        self.send_options.append(kwargs)
         if self.scripted:
             action = self.scripted.pop(0)
             if isinstance(action, Exception):
@@ -355,6 +357,7 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
         "detail": "public state clean",
     })
     bot = FakeBot([None, RuntimeError("blocked")])
+    monkeypatch.setattr(target, "_exchange_broadcast_reply_markup", lambda: "ACK_MARKUP")
 
     result = target.send_confirmed_exchange_broadcast(bot, uid)
 
@@ -362,6 +365,10 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
     assert result["sent"] == 1
     assert result["failed"] == 1
     assert bot.sent == [("1", target.EXCHANGE_BROADCAST_TEXT), ("2", target.EXCHANGE_BROADCAST_TEXT)]
+    assert bot.send_options == [
+        {"reply_markup": "ACK_MARKUP"},
+        {"reply_markup": "ACK_MARKUP"},
+    ]
     audit = db["exchange_broadcast_audit"][-1]
     assert audit["failed_recipient_uids"] == ["2"]
     assert audit["audience_scope"] == "all"
