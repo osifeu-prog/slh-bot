@@ -359,7 +359,7 @@ def _auto_preview_reply(result):
             "🔒 שער BNB הציבורי נשאר CLOSED.",
             "לא נשלחה עסקת BNB חדשה ולא נוצר זיכוי נוסף.",
         ]
-        return "\\n".join(lines)
+        return "\n".join(lines)
     if status == "ALREADY_COMPLETED":
         return (
             "✅ הוכחת BNB קיימת ונבדקה מחדש מול ה־BSC וה־ledger. "
