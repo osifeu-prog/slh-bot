@@ -210,6 +210,18 @@ def register(bot):
                 "אל תאפשר הפקדות; נדרשת בדיקת runtime/DB.",
                 parse_mode=None,
             )
+        elif result.get("status") == "INVARIANT_FAILURE_OVERRIDE_NOT_PERSISTED":
+            bot.reply_to(
+                message,
+                "🚨 לא ניתן לאמת שה-override נשמר. התייחס לשער כלא מאומת וסגור הפקדות עד לבדיקת runtime/DB.",
+                parse_mode=None,
+            )
+        elif result.get("status") == "INVARIANT_FAILURE_STATE_UNVERIFIED":
+            bot.reply_to(
+                message,
+                "🚨 הכתיבה דווחה אך מצב השער לא אומת בקריאה חוזרת. אין להסתמך על הודעה זו כאישור לסגירה; בדוק runtime/DB.",
+                parse_mode=None,
+            )
         else:
             bot.reply_to(message, f"⛔️ לא בוצע: {result.get('status')}", parse_mode=None)
 
