@@ -75,8 +75,9 @@ class FrozenAccountCanonicalLedgerTests(unittest.TestCase):
         for frozen_uid in ("frozen", "buyer"):
             with self.subTest(frozen_uid=frozen_uid):
                 db = copy.deepcopy(self.db)
-                if frozen_uid != "frozen":
-                    db["users"][frozen_uid]["frozen"] = True
+                if frozen_uid == "buyer":
+                    db["users"]["frozen"].pop("frozen", None)
+                    db["users"]["buyer"]["frozen"] = True
                 before = copy.deepcopy(db)
                 with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
                     distribution.settle_reserve_in_db(
