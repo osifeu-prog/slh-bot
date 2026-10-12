@@ -87,3 +87,78 @@ def test_owner_control_center_does_not_claim_existing_control_command():
 
     assert "control_center" in bot.message_commands
     assert "control" not in bot.message_commands
+
+def test_live_action_queue_is_shown_by_control_center_report(monkeypatch):
+    import handlers.owner_control_center_handler as handler
+
+    state = {
+        "available": True,
+        "overall": "DEGRADED",
+        "blockers": ["system_check"],
+        "warnings": ["new_user_e2e_pending"],
+        "current_state": {"bnb_settlement": "CLOSED", "ton_settlement": "CLOSED"},
+        "readiness": {"runtime": "DEGRADED"},
+        "actions": [
+            {
+                "id": "collect_ci_evidence",
+                "title": "איסוף ראיות CI עדכניות",
+                "status": "SAFE_PROPOSAL",
+                "reason": "CI evidence is not yet correlated.",
+                "safe": True,
+                "mutation": False,
+                "owner_required": False,
+            },
+            {
+                "id": "complete_bnb_opening_evidence",
+                "title": "השלמת ראיות BNB — השער נשאר סגור עד אימות ואישור",
+                "status": "OWNER_REQUIRED",
+                "reason": "BNB proof remains incomplete.",
+                "safe": False,
+                "mutation": True,
+                "owner_required": True,
+            },
+        ],
+    }
+    monkeypatch.setattr(handler, "_load_release_state", lambda: state)
+
+    report = handler.build_report()
+    rendered = handler.format_report(report)
+
+    assert report["next_safe_step"]["id"] == "collect_ci_evidence"
+    assert "תור הפעולות הנוכחי" in rendered
+    assert "איסוף ראיות CI עדכניות" in rendered
+    assert "נדרש אישור OWNER" in rendered
+    assert "לא נשלחה עסקה" in rendered
+
+
+def test_unavailable_live_action_queue_fails_closed():
+    import handlers.owner_control_center_handler as handler
+
+    report = {
+        "run_id": "test",
+        "timestamp_utc": "2026-10-12T00:00:00+00:00",
+        "runtime": {"git_sha": "abc"},
+        "checks": [],
+        "release_state": {
+            "available": False,
+            "overall": "UNKNOWN",
+            "error": "TimeoutError",
+            "blockers": [],
+            "warnings": [],
+            "current_state": {},
+            "readiness": {},
+            "actions": [],
+        },
+        "next_safe_step": handler.next_safe_step({
+            "available": False,
+            "overall": "UNKNOWN",
+            "error": "TimeoutError",
+            "actions": [],
+        }),
+    }
+    rendered = handler.format_report(report)
+
+    assert "תור הפעולות לא אומת" in rendered
+    assert "TimeoutError" in rendered
+    assert report["next_safe_step"]["status"] == "UNKNOWN"
+

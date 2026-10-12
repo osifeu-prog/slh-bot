@@ -40,6 +40,98 @@ SAFE_NEXT_STEPS = [
 ]
 
 
+
+_ACTION_TITLES = {
+    "collect_ci_evidence": "איסוף ראיות CI עדכניות",
+    "collect_new_user_join_e2e_evidence": "בדיקת הצטרפות מלאה למשתמש חדש",
+    "complete_bnb_opening_evidence": "השלמת ראיות BNB — השער נשאר סגור עד אימות ואישור",
+}
+
+
+def _action_title(action):
+    action = str(action or "").strip()
+    return _ACTION_TITLES.get(action, action.replace("_", " ").strip().capitalize() or "פעולה לא ידועה")
+
+
+def _load_release_state():
+    """Read the existing Control Center's action queue; never executes proposed actions."""
+    try:
+        from core.control_center import get_release_state
+
+        raw = get_release_state()
+        if not isinstance(raw, dict):
+            raise ValueError("INVALID_RELEASE_STATE")
+
+        proposals = {}
+        for key in ("auto_actions", "owner_actions"):
+            items = raw.get(key, [])
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if isinstance(item, dict):
+                    action = str(item.get("action") or "").strip()
+                    if action:
+                        proposals[action] = item
+
+        actions = []
+        raw_actions = raw.get("next_actions", [])
+        if isinstance(raw_actions, list):
+            for raw_action in raw_actions[:10]:
+                action = str(raw_action or "").strip()
+                if not action:
+                    continue
+                proposal = proposals.get(action, {})
+                mutation = proposal.get("mutation") is True
+                owner_required = proposal.get("owner_required") is True
+                safe = proposal.get("safe") is True
+                if mutation or owner_required:
+                    action_status = "OWNER_REQUIRED"
+                elif safe:
+                    action_status = "SAFE_PROPOSAL"
+                else:
+                    action_status = "REVIEW_REQUIRED"
+                reason = str(proposal.get("reason") or "נדרשת בדיקת ראיות לפני ביצוע.")[:220]
+                actions.append({
+                    "id": action,
+                    "title": _action_title(action),
+                    "status": action_status,
+                    "reason": reason,
+                    "safe": safe,
+                    "mutation": mutation,
+                    "owner_required": owner_required,
+                })
+
+        def _strings(key):
+            value = raw.get(key, [])
+            if not isinstance(value, list):
+                return []
+            return [str(item)[:180] for item in value[:8] if item is not None]
+
+        current = raw.get("current_state", {})
+        current = current if isinstance(current, dict) else {}
+        readiness = raw.get("readiness", {})
+        readiness = readiness if isinstance(readiness, dict) else {}
+        return {
+            "available": True,
+            "overall": str(raw.get("overall") or "UNKNOWN").upper(),
+            "blockers": _strings("blockers"),
+            "warnings": _strings("warnings"),
+            "current_state": {str(k): str(v)[:60] for k, v in list(current.items())[:8]},
+            "readiness": {str(k): str(v)[:60] for k, v in list(readiness.items())[:8]},
+            "actions": actions,
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "overall": "UNKNOWN",
+            "error": type(exc).__name__,
+            "blockers": [],
+            "warnings": [],
+            "current_state": {},
+            "readiness": {},
+            "actions": [],
+        }
+
 def callback_data(action, issued_at=None):
     """Timestamped callback payload so old inline buttons expire."""
     stamp = int(time.time() if issued_at is None else issued_at)
@@ -65,13 +157,42 @@ def parse_callback(data, now=None):
     return action
 
 
-def next_safe_step():
-    """Select the first unresolved safe task; selection does not execute it."""
-    return next(
-        (item for item in SAFE_NEXT_STEPS if item["status"] != "PASS"),
-        {"id": "none", "title": "אין כרגע שלב בטוח ממתין", "status": "PASS",
-         "reason": "כל השלבים ברשימה הושלמו."},
-    ).copy()
+def next_safe_step(release_state=None):
+    """Select one item from the read-only live action queue; never executes it."""
+    if release_state is None:
+        return next(
+            (item for item in SAFE_NEXT_STEPS if item["status"] != "PASS"),
+            {"id": "none", "title": "אין כרגע שלב בטוח ממתין", "status": "PASS",
+             "reason": "כל השלבים ברשימה הושלמו."},
+        ).copy()
+
+    if release_state.get("available") is not True:
+        return {
+            "id": "release_action_queue",
+            "title": "בדיקת תור הפעולות אינה זמינה",
+            "status": "UNKNOWN",
+            "reason": "הדוח לא יוצר פעולות על סמך מצב לא מאומת. שגיאה: "
+                      + str(release_state.get("error") or "UNKNOWN"),
+        }
+
+    actions = release_state.get("actions", [])
+    if isinstance(actions, list) and actions:
+        return dict(actions[0])
+
+    if release_state.get("overall") == "GREEN":
+        return {
+            "id": "none",
+            "title": "אין כרגע פעולות פתוחות בתור הבקרה",
+            "status": "PASS",
+            "reason": "תור הפעולות לא החזיר צעדים ממתינים.",
+        }
+
+    return {
+        "id": "manual_review",
+        "title": "נדרשת סקירת מצב הבקרה",
+        "status": "REVIEW_REQUIRED",
+        "reason": "מצב המערכת אינו GREEN, אך לא התקבלה פעולה ממוקדת בתור.",
+    }
 
 
 def _git_sha():
@@ -93,8 +214,22 @@ def _git_sha():
 
 
 def build_report():
-    """Build a read-only snapshot; external deployment/gate states stay UNKNOWN."""
+    """Build a read-only snapshot and surface the current release action queue."""
     now = datetime.now(timezone.utc).isoformat()
+    release_state = _load_release_state()
+    queue_status = (
+        release_state.get("overall", "UNKNOWN")
+        if release_state.get("available") is True
+        else "UNKNOWN"
+    )
+    queue_evidence = (
+        f"blockers={len(release_state.get('blockers', []))}; "
+        f"warnings={len(release_state.get('warnings', []))}; "
+        f"actions={len(release_state.get('actions', []))}; "
+        "proposals are display-only"
+        if release_state.get("available") is True
+        else "read-only action queue unavailable: " + str(release_state.get("error", "UNKNOWN"))
+    )
     report = {
         "run_id": uuid.uuid4().hex[:12],
         "timestamp_utc": now,
@@ -116,17 +251,24 @@ def build_report():
             {
                 "name": "financial_gates",
                 "status": "UNKNOWN",
-                "evidence": "השערים לא נקראו ולא שונו על ידי מרכז הבקרה.",
+                "evidence": "מרכז הבקרה אינו משנה שערים; מצב הפתיחה דורש אימות פקודה נפרדת.",
+            },
+            {
+                "name": "release_action_queue",
+                "status": queue_status,
+                "evidence": queue_evidence,
             },
         ],
+        "release_state": release_state,
         "safety": {
             "mode": "READ_ONLY",
             "transactions_created": False,
             "balances_mutated": False,
             "gates_changed": False,
             "deploy_or_merge": False,
+            "actions_executed": False,
         },
-        "next_safe_step": next_safe_step(),
+        "next_safe_step": next_safe_step(release_state),
     }
     return report
 
@@ -165,6 +307,43 @@ def format_report(report):
         f"{c.get('name')}: {c.get('status')} — {c.get('evidence', '')}"
         for c in checks
     )
+
+    release = report.get("release_state")
+    if isinstance(release, dict):
+        lines.append("")
+        if release.get("available") is True:
+            lines.append("📌 תור הפעולות הנוכחי — הצעות בלבד:")
+            if release.get("blockers"):
+                lines.append("⛔ חוסמים: " + " · ".join(release["blockers"][:3]))
+            if release.get("warnings"):
+                lines.append("⚠️ אזהרות: " + " · ".join(release["warnings"][:3]))
+            actions = release.get("actions", [])
+            if actions:
+                for action in actions[:5]:
+                    owner = " · נדרש אישור OWNER" if action.get("owner_required") or action.get("mutation") else ""
+                    lines.append(
+                        f"➡️ {action.get('title', action.get('id', 'פעולה'))}"
+                        f" [{action.get('status', 'UNKNOWN')}]"
+                    )
+                    lines.append("   " + str(action.get("reason") or "")[:180] + owner)
+            else:
+                lines.append("✅ אין פעולות ממתינות בתור הפעולות.")
+            gates = release.get("current_state", {})
+            if gates:
+                labels = {
+                    "alpha": "Alpha",
+                    "bnb_settlement": "BNB settlement",
+                    "ton_settlement": "TON settlement",
+                }
+                lines.append("🔒 שערים (מצב מדווח): " + " · ".join(
+                    f"{labels.get(k, k)}={v}" for k, v in list(gates.items())[:4]
+                ))
+        else:
+            lines.append(
+                "⚠️ תור הפעולות לא אומת; לא נוצרה המלצה על סמך נתונים חסרים. "
+                "שגיאה: " + str(release.get("error", "UNKNOWN"))
+            )
+
     lines.extend([
         "",
         "🛡️ לא נשלחה עסקה, לא שונתה יתרה, לא נפתח שער ולא בוצעה פריסה.",
@@ -191,9 +370,11 @@ def register(bot):
         if not is_owner(message.from_user.id):
             bot.reply_to(message, "⛔️ הפקודה מיועדת לבעלים בלבד.")
             return
+        # Show the current read-only action queue immediately; do not persist on menu open.
+        report = build_report()
         bot.reply_to(
             message,
-            "🧭 SLH מרכז בקרה\nבחר פעולה. גרסה ראשונה: קריאה בלבד; לא משנה כספים או פריסה.",
+            format_report(report) + "\n\nבחר פעולה להמשך.",
             reply_markup=_keyboard(),
         )
 
@@ -224,14 +405,14 @@ def register(bot):
             else:
                 bot.send_message(call.message.chat.id, format_report(report), reply_markup=_keyboard())
         elif action == "next":
-            step = next_safe_step()
+            step = next_safe_step(_load_release_state())
             bot.send_message(
                 call.message.chat.id,
-                "➡️ השלב הבא בתור הבטוח\n"
+                "➡️ השלב הבא בתור הפעולות\n"
                 f"מצב: {step['status']}\n"
                 f"משימה: {step['title']}\n"
                 f"נימוק: {step['reason']}\n\n"
-                "הכפתור בוחר משימה בלבד — אינו משנה קוד, פריסה או נתונים.",
+                "הכפתור מציג הצעה בלבד — אינו משנה קוד, פריסה, שערים או נתונים.",
                 reply_markup=_keyboard(),
             )
 
