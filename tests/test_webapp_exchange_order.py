@@ -36,12 +36,15 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
             "slh_token_ledger": [],
         }
         self.original_uid = webapp.authenticated_uid
+        self.original_load_db = webapp.state_manager.load_db
         self.original_atomic_update = webapp.state_manager.atomic_update
         webapp.authenticated_uid = lambda: "buyer"
+        webapp.state_manager.load_db = lambda: self.db
         webapp.state_manager.atomic_update = lambda mutate: mutate(self.db)
 
     def tearDown(self):
         webapp.authenticated_uid = self.original_uid
+        webapp.state_manager.load_db = self.original_load_db
         webapp.state_manager.atomic_update = self.original_atomic_update
 
     @staticmethod
