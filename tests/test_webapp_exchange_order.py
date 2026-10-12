@@ -149,5 +149,35 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         )
 
 
+    def test_idempotent_retry_is_marked_as_replay_without_second_execution(self):
+        request_id = "retry-after-network"
+        key = f"WEBAPP-EXCHANGE-buyer-{request_id}"
+        with patch(
+            "core.system_checks.check_exchange_for_execution",
+            return_value=self.passing_check(),
+        ) as fresh_check:
+            first = self.submit(request_id=request_id)
+            stored_receipt_before_retry = dict(self.db["exchange_requests"][key])
+            credits_after_first = self.db["users"]["buyer"]["wallet"]["credits"]
+            sequence_after_first = self.db["exchange_sequence"]
+            second = self.submit(request_id=request_id)
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        first_payload = first.get_json()
+        second_payload = second.get_json()
+        self.assertIs(first_payload.get("idempotent_replay"), False)
+        self.assertIs(second_payload.get("idempotent_replay"), True)
+        self.assertEqual(first_payload["order_id"], second_payload["order_id"])
+        self.assertEqual(self.db["exchange_requests"][key], stored_receipt_before_retry)
+        self.assertEqual(len(self.db["exchange_orders"]), 1)
+        self.assertEqual(self.db["exchange_sequence"], sequence_after_first)
+        self.assertEqual(
+            self.db["users"]["buyer"]["wallet"]["credits"],
+            credits_after_first,
+        )
+        fresh_check.assert_called_once_with(self.db)
+
+
 if __name__ == "__main__":
     unittest.main()

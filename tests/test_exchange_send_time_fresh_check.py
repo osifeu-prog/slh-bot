@@ -160,7 +160,17 @@ def test_same_client_request_id_returns_original_receipt_without_duplicate_order
 
     assert first.status_code == 200
     assert second.status_code == 200
-    assert second.get_json() == first.get_json()
+    first_payload = first.get_json()
+    second_payload = second.get_json()
+    assert first_payload["idempotent_replay"] is False
+    assert second_payload["idempotent_replay"] is True
+    assert {
+        key: value for key, value in second_payload.items()
+        if key != "idempotent_replay"
+    } == {
+        key: value for key, value in first_payload.items()
+        if key != "idempotent_replay"
+    }
     assert len(db["exchange_orders"]) == 1
     # Idempotent retries replay the first receipt; they are not new executions.
     assert len(calls) == 1

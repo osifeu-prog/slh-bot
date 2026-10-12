@@ -1034,6 +1034,7 @@ function submitOrder(side,aId,pId){
 let __exchangePendingRequests=Object.create(null);
 function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
   const check=data.execution_check||{};
+  const idempotentReplay=data.idempotent_replay===true;
   const tradeIds=Array.isArray(data.trade_ids)?data.trade_ids:[];
   const host=(sourceInputId&&$(sourceInputId)?.closest('.card'))||$('exchange');
   if(!host)return;
@@ -1059,7 +1060,10 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     && check.order_book_integrity===true
     && check.trade_integrity===true
     && check.money_invariants===true;
-  box.innerHTML='<b>'+(checkPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק')+'</b>'+
+  const receiptHeading=idempotentReplay
+    ? '↩️ קבלה חוזרת — אותה פקודה, ללא ביצוע נוסף'
+    : (checkPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק');
+  box.innerHTML='<b>'+receiptHeading+'</b>'+
     '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
     '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
     '<div>Filled: '+esc(data.filled||'0')+' SLH · Remaining: '+esc(data.remaining||'0')+' SLH</div>'+
@@ -1069,7 +1073,7 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     '<div class="wallet-row"><span>ספר פקודות</span><strong>'+esc(flagLabel(check.order_book_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>תקינות עסקאות</span><strong>'+esc(flagLabel(check.trade_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>אינווריאנטים כספיים</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
-    '<div class="muted" style="margin-top:4px">הבדיקה בוצעה בצד השרת בתוך פעולת המסחר האטומית · '+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
+    '<div class="muted" style="margin-top:4px">'+(idempotentReplay?'קבלה חוזרת של הפקודה המקורית · זמן האימות המקורי: ':'בדיקה שבוצעה בצד השרת בתוך פעולת המסחר האטומית · ')+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
     (checkPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה לפקודה, אך חסרים שדות אישור. בדוק את Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
 }
 function renderExchangeExecutionBlocked(data,sourceInputId){
@@ -1132,9 +1136,13 @@ async function sendExchangeOrder(side,amount,price,options){
       && executionCheck.money_invariants===true;
     const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
     const tradeNote=tradeIds.length?' · Trade '+tradeIds.join(', '):' · ממתין להתאמה';
-    toast(receiptVerified
-      ? '✅ Fresh canonical check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote
-      : '⚠️ הפקודה התקבלה, אך קבלת האימות חלקית. בדוק Order ID והיסטוריית עסקאות לפני ניסיון נוסף.');
+    if(d.idempotent_replay===true){
+      toast('↩️ קבלה חוזרת · '+String(d.order_id||'Order')+' · לא נוצרה פקודה חדשה ולא בוצע חיוב נוסף.');
+    }else{
+      toast(receiptVerified
+        ? '✅ Fresh canonical check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote
+        : '⚠️ הפקודה התקבלה, אך קבלת האימות חלקית. בדוק Order ID והיסטוריית העסקאות לפני ניסיון נוסף.');
+    }
     if(typeof loadExchange==='function'){
       await loadExchange();
     }else{
