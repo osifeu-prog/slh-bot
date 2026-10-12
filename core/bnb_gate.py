@@ -494,6 +494,9 @@ def bnb_deposits_open() -> bool:
     if not isinstance(settings, dict):
         # Missing or malformed gate settings cannot prove the gate is safe.
         return False
+    if not settings:
+        # Empty settings cannot prove the gate is safe.
+        return False
 
     override = str(settings.get("bnb_deposits_override") or "").strip().lower()
     if override not in ("", "auto"):
