@@ -206,6 +206,12 @@ def _f(x):
     return float(Decimal(x).quantize(SCALE))
 
 
+def _is_frozen_account(db, uid):
+    """Return True only when the user's account is explicitly frozen."""
+    user = db.get("users", {}).get(str(uid), {})
+    return isinstance(user, dict) and user.get("frozen") is True
+
+
 def _wallet(db, uid):
     user = db.get("users", {}).get(str(uid))
     if not user:
@@ -327,6 +333,7 @@ def _match(db, incoming):
         and o.get("status") == "open"
         and o.get("side") != incoming["side"]
         and str(o.get("uid")) != uid
+        and not _is_frozen_account(db, o.get("uid"))
     ]
 
     if incoming["side"] == "buy":
@@ -433,6 +440,9 @@ def _place(db, uid, side, amount, price, request_id):
     # All public order-entry paths (Telegram and Mini App) converge here.
     # Do not short-circuit with a separate gate exception: the fresh canonical
     # result must report OPEN/BLOCKED for this exact atomic-update snapshot.
+    if _is_frozen_account(db, uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
