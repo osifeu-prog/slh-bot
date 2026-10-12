@@ -57,6 +57,19 @@ def test_rest_buy_checks_the_same_atomic_db_snapshot_and_returns_receipt(monkeyp
         checked_snapshots.append(snapshot)
         return _green_exchange_check()
 
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: {
+            "status": "PASS",
+            "checked_at": "2026-10-12T16:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+        },
+    )
     monkeypatch.setattr("core.system_checks.check_exchange_for_execution", check)
 
     response = webapp.app.test_client().post(
