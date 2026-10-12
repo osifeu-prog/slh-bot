@@ -883,6 +883,27 @@ def _is_explicit_prepare_intent(phrase):
     return has_broadcast and has_exchange
 
 
+def _is_explicit_broadcast_confirmation_attempt(phrase):
+    """Detect a near-miss send confirmation only to return guidance; never authorizes sending."""
+    phrase = _normalize_voice_phrase(phrase)
+    words = phrase.split()
+    if not words:
+        return False
+
+    # Questions and negations stay on the read-only path.
+    blocked_terms = {"אל", "לא", "האם", "אפשר", "כדאי", "למה", "why", "can", "could", "should"}
+    if any(word in blocked_terms for word in words):
+        return False
+
+    has_ack = any(term in phrase for term in ("אשר", "מאשר", "מאשרת", "confirm", "approve"))
+    has_send = any(term in phrase for term in ("שלח", "לשלוח", "שליחה", "send"))
+    has_broadcast = any(term in phrase for term in (
+        "ברודקאסט", "ברודקסט", "ברוד קאסט", "broadcast", "הודעת שידור"
+    ))
+    has_exchange = any(term in phrase for term in ("מסחר", "בורסה", "exchange", "trading"))
+    return has_ack and has_send and has_broadcast and has_exchange
+
+
 def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
     """Strict owner/private flow: tolerant draft intent; exact explicit send confirmation."""
     phrase = _normalize_voice_phrase(transcript)
@@ -891,7 +912,12 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         or _is_explicit_prepare_intent(phrase)
     )
     is_confirm = phrase in {_normalize_voice_phrase(x) for x in _CONFIRM_VOICE_PHRASES}
-    if not is_prepare and not is_confirm:
+    near_miss_confirm = (
+        not is_prepare
+        and not is_confirm
+        and _is_explicit_broadcast_confirmation_attempt(phrase)
+    )
+    if not is_prepare and not is_confirm and not near_miss_confirm:
         if _is_exchange_broadcast_query(phrase):
             return _exchange_broadcast_status_answer(message, now=now)
         return None
@@ -901,6 +927,17 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         return "⛔ רק OWNER יכול להכין או לאשר ברודקאסט מסחר פנימי."
     if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
         return "⛔ ברודקאסט מסחר פנימי זמין רק בשיחה הפרטית עם הבוט."
+
+    if near_miss_confirm:
+        return (
+            "⚠️ לא נשלח ברודקאסט: התמלול לא תאם לנוסח האישור המדויק. "
+            "לא נשלחה הודעה ולא שונתה הטיוטה.\n"
+            "אמור בדיוק את נוסח האישור שמופיע בתצוגה המקדימה: "
+            "״אשר ושלח ברודקאסט למסחר פנימי״.\n"
+            "אם התצוגה מציגה אזהרת כפילות, נדרש האישור המפורש: "
+            "״אשר ושלח ברודקאסט מלא למרות כפילויות״.\n"
+            "אם הטיוטה בת חמש הדקות פגה, הכן תצוגה חדשה תחילה."
+        )
 
     if is_prepare:
         result = prepare_exchange_broadcast(uid, now=now)

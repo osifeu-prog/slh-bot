@@ -340,3 +340,30 @@ def test_voice_prepare_does_not_accept_negative_instruction(monkeypatch):
     assert "READ ONLY" in answer
     assert "exchange_broadcast_pending" not in db
     bot.send_message.assert_not_called()
+
+
+def test_near_miss_voice_confirmation_gives_exact_retry_and_never_sends(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    sent = _install_send(monkeypatch)
+    bot = Mock()
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private", id=int(OWNER)),
+    )
+
+    answer = target.route_exchange_broadcast_voice(
+        bot,
+        message,
+        "אשר ושלח ברודקאסט למסחר הפנימי בבקשה עכשיו",
+        now=NOW + timedelta(seconds=5),
+    )
+
+    assert answer is not None
+    assert "לא נשלח" in answer
+    assert "אשר ושלח ברודקאסט למסחר פנימי" in answer
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "PENDING_CONFIRMATION"
+    assert sent == []
+    bot.send_message.assert_not_called()
+
