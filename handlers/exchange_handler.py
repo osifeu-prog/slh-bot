@@ -432,6 +432,7 @@ class ExchangeFreshCheckBlocked(ValueError):
             "railway_configured",
             "live_runtime_check",
             "live_checked_at",
+            "live_public_gate",
             "live_public_updated_at",
             "live_public_readiness",
             "live_public_verdict",
@@ -476,6 +477,7 @@ def require_fresh_live_exchange_proof():
                 "railway_configured": configured,
                 "live_runtime_check": "BLOCKED",
                 "live_checked_at": attempted_at,
+                "live_public_gate": gate,
             },
             checked_at=attempted_at,
         )
@@ -496,6 +498,7 @@ def require_fresh_live_exchange_proof():
                 "railway_configured": configured,
                 "live_runtime_check": "BLOCKED",
                 "live_checked_at": attempted_at,
+                "live_public_gate": gate,
                 "live_public_updated_at": live.get("updated_at"),
                 "live_public_readiness": live.get("readiness") is True,
                 "live_public_verdict": str(live.get("verdict") or "UNKNOWN"),
@@ -529,7 +532,18 @@ def _place(db, uid, side, amount, price, request_id, live_proof=None):
     checked_at = _now()
     fresh_check = check_exchange_for_execution(db)
     if not fresh_check.get("execution_ready"):
-        raise ExchangeFreshCheckBlocked(fresh_check, checked_at=checked_at)
+        blocked_check = dict(fresh_check)
+        if isinstance(live_proof, dict) and live_proof.get("status") == "PASS":
+            blocked_check.update({
+                "railway_configured": str(live_proof.get("railway_configured") or "UNKNOWN"),
+                "live_runtime_check": "PASS",
+                "live_checked_at": str(live_proof.get("checked_at") or ""),
+                "live_public_gate": str(live_proof.get("public_gate") or "UNKNOWN"),
+                "live_public_updated_at": live_proof.get("public_updated_at"),
+                "live_public_readiness": live_proof.get("public_readiness") is True,
+                "live_public_verdict": str(live_proof.get("public_verdict") or "UNKNOWN"),
+            })
+        raise ExchangeFreshCheckBlocked(blocked_check, checked_at=checked_at)
     trades_before = len(db.get(TRADES_KEY, []))
     w = _wallet(db, uid)
     order_id_preview = None
@@ -607,29 +621,80 @@ def _place(db, uid, side, amount, price, request_id, live_proof=None):
     return result
 
 
-def _existing_exchange_request(request_id):
-    """Read an idempotent receipt without creating a database mutation."""
-    db = state_manager.load_db()
+def _validate_existing_exchange_request_intent(
+    db, existing, *, uid, side, amount, price, request_id
+):
+    """Validate REST idempotency keys against the originally stored order intent."""
+    if not isinstance(existing, dict):
+        raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID")
+    old_order_id = str(existing.get("order_id") or "")
+    orders = db.get(ORDERS_KEY, {}) if isinstance(db, dict) else {}
+    old_order = orders.get(old_order_id) if isinstance(orders, dict) else None
+    if not isinstance(old_order, dict):
+        raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID")
+    try:
+        old_amount = _dec(old_order.get("original_amount"), "amount")
+        old_price = _dec(old_order.get("limit_price"), "price")
+    except ValueError as exc:
+        raise ValueError("EXCHANGE_REQUEST_RECORD_INVALID") from exc
+
+    same_intent = (
+        str(old_order.get("uid")) == str(uid)
+        and str(old_order.get("client_request_id") or "") == str(request_id)
+        and str(old_order.get("side") or "").strip().lower() == str(side).lower()
+        and old_amount == amount
+        and old_price == price
+    )
+    if not same_intent:
+        raise ValueError("EXCHANGE_IDEMPOTENCY_KEY_REUSED")
+    return existing
+
+
+def _existing_exchange_request(
+    request_id, *, uid=None, side=None, amount=None, price=None,
+    strict_replay=False, db=None
+):
+    """Read an idempotent receipt and optionally validate the original intent."""
+    db = state_manager.load_db() if db is None else db
     requests = db.get(REQUESTS_KEY, {}) if isinstance(db, dict) else {}
-    return requests.get(str(request_id)) if isinstance(requests, dict) else None
+    existing = requests.get(str(request_id)) if isinstance(requests, dict) else None
+    if existing is not None and strict_replay:
+        return _validate_existing_exchange_request_intent(
+            db, existing, uid=uid, side=side, amount=amount, price=price,
+            request_id=request_id,
+        )
+    return existing
 
 
-def execute_exchange_order(*, uid, side, amount, price, request_id):
+def execute_exchange_order(
+    *, uid, side, amount, price, request_id,
+    strict_replay=False, include_replay_marker=False,
+):
     """Execute one Buy/Sell only after live gate proof, preserving replay receipts.
 
     Network calls happen before the atomic DB mutation. The final local invariant
-    check remains inside _place() against the exact DB snapshot being changed.
+    check remains inside _place() against the exact snapshot being changed.
+    Strict REST replays also retain the original request-intent binding.
     """
     request_id = str(request_id or "").strip()
     if not request_id:
         raise ValueError("EXCHANGE_REQUEST_ID_REQUIRED")
+    uid = str(uid)
     side = str(side or "").strip().lower()
     if side not in {"buy", "sell"}:
         raise ValueError("INVALID_EXCHANGE_SIDE")
 
-    existing = _existing_exchange_request(request_id)
+    def response(result, replayed):
+        if include_replay_marker and isinstance(result, dict):
+            return {**result, "idempotent_replay": bool(replayed)}
+        return result
+
+    existing = _existing_exchange_request(
+        request_id, uid=uid, side=side, amount=amount, price=price,
+        strict_replay=strict_replay,
+    )
     if existing is not None:
-        return existing
+        return response(existing, True)
 
     try:
         live_proof = require_fresh_live_exchange_proof()
@@ -637,10 +702,15 @@ def execute_exchange_order(*, uid, side, amount, price, request_id):
         # A concurrent replay may have committed while the live proof was read.
         # Return its saved receipt rather than misreporting a prior order as new
         # or encouraging the client to submit a duplicate.
-        existing = _existing_exchange_request(request_id)
+        existing = _existing_exchange_request(
+            request_id, uid=uid, side=side, amount=amount, price=price,
+            strict_replay=strict_replay,
+        )
         if existing is not None:
-            return existing
+            return response(existing, True)
         raise
+
+    replayed = {"value": False}
 
     def mutate(db):
         requests = db.setdefault(REQUESTS_KEY, {})
@@ -648,18 +718,20 @@ def execute_exchange_order(*, uid, side, amount, price, request_id):
             raise ValueError("EXCHANGE_REQUEST_STORE_INVALID")
         existing_result = requests.get(request_id)
         if existing_result is not None:
+            if strict_replay:
+                existing_result = _validate_existing_exchange_request_intent(
+                    db, existing_result, uid=uid, side=side, amount=amount,
+                    price=price, request_id=request_id,
+                )
+            replayed["value"] = True
             return existing_result
+        replayed["value"] = False
         return _place(
-            db,
-            str(uid),
-            side,
-            amount,
-            price,
-            request_id,
-            live_proof=live_proof,
+            db, uid, side, amount, price, request_id, live_proof=live_proof
         )
 
-    return state_manager.atomic_update(mutate)
+    result = state_manager.atomic_update(mutate)
+    return response(result, replayed["value"])
 
 
 def format_execution_receipt(side, result):
@@ -755,7 +827,7 @@ def format_blocked_execution_receipt(side, check):
     )
 
     def _flag(name):
-        if name not in check:
+        if name not in check or check.get(name) is None:
             return "UNKNOWN"
         return "PASS" if check.get(name) is True else "FAIL"
 
@@ -771,7 +843,7 @@ def format_blocked_execution_receipt(side, check):
         f"money_invariants: {_flag('money_invariants')}",
         f"🌐 Fresh live runtime confirmation: {str(check.get('live_runtime_check') or 'NOT VERIFIED')}",
         f"Railway configured gate: {str(check.get('railway_configured') or 'UNKNOWN')}",
-        f"Live public gate/verdict: {str(check.get('public_gate') or 'UNKNOWN')} / {str(check.get('live_public_verdict') or 'UNKNOWN')}",
+        f"Live public gate/verdict: {str(check.get('live_public_gate') or check.get('public_gate') or 'UNKNOWN')} / {str(check.get('live_public_verdict') or 'UNKNOWN')}",
         f"Reason: {detail}",
     ]
     if check_status == "BLOCKED":
