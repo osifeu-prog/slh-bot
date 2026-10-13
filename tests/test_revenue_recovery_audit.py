@@ -43,6 +43,9 @@ class RevenueRecoveryAuditTests(unittest.TestCase):
                 "p1": {"total_received": 0},
                 "p2": {"total_received": 0},
             },
+            "ledger": [
+                {"reason": "revenue_share:claimable", "amount": 2.5, "meta": {}}
+            ],
         }
         original = json.dumps(db, ensure_ascii=False).encode()
         db_path.write_bytes(original)
@@ -56,6 +59,15 @@ class RevenueRecoveryAuditTests(unittest.TestCase):
                         'w["revenue_share_claimable"] = 0; '
                         'd["revenue_share_pool"] = {"total_distributed": 0}; '
                         'd["revenue_distributions"] = {}'
+                    ),
+                },
+                {
+                    "time": _epoch("2026-10-05T16:25:00Z"),
+                    "source": "e",
+                    "result": "exit_0",
+                    "cmd": (
+                        'from core.staking_revenue_share import distribute_revenue; '
+                        'result = distribute_revenue(Decimal("50"), Decimal("5"), "2026-W40-real")'
                     ),
                 },
                 {
@@ -74,7 +86,11 @@ class RevenueRecoveryAuditTests(unittest.TestCase):
         self.assertIn("USERS WITH NONZERO CLAIMABLE: 0", report)
         self.assertIn("Explicit combined distribution reset commands: 1", report)
         self.assertIn("Audit references to db_20261005T152922.733019Z.json: 1", report)
-        self.assertIn("HISTORICAL PAYOUT AMOUNTS NOT RECONSTRUCTED", report)
+        self.assertIn("Explicit distribute_revenue(...) call expressions: 1", report)
+        self.assertIn("Audit records with 2026-W40-real label: 1", report)
+        self.assertIn("LEDGER ROWS TAGGED REVENUE-SHARE/DISTRIBUTION: 1", report)
+        self.assertIn("HISTORICAL DISTRIBUTION/ACCRUAL AMOUNTS NOT RECONSTRUCTED", report)
+        self.assertIn("do not prove a Credits transfer or cash payout", report)
         self.assertEqual(db_path.read_bytes(), original)
 
     def test_report_handles_missing_or_invalid_db_without_writes(self):
