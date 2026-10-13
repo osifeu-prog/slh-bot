@@ -54,7 +54,7 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
             "public_updated_at": datetime.now(timezone.utc).timestamp(),
         },
         )
-        self.live_proof_patch.start()
+        self.live_proof_mock = self.live_proof_patch.start()
         self.addCleanup(self.live_proof_patch.stop)
         webapp.authenticated_uid = lambda: "buyer"
         webapp.state_manager.load_db = lambda: self.db
@@ -107,7 +107,7 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         self.assertTrue(payload["execution_check"]["execution_ready"])
         self.assertTrue(payload["execution_check"]["money_invariants"])
         self.assertTrue(payload["execution_check"]["checked_at"])
-        self.live_proof_patch.assert_called_once_with()
+        self.live_proof_mock.assert_called_once_with()
         execution_check = payload["execution_check"]
         self.assertEqual(execution_check["live_runtime_check"], "PASS")
         self.assertEqual(execution_check["live_railway_gate"], "1")
@@ -142,7 +142,7 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["code"], "EXCHANGE_FRESH_CHECK_BLOCKED")
         self.assertEqual(payload["exchange_check"]["public_gate"], "CLOSED")
-        self.live_proof_patch.assert_called_once_with()
+        self.live_proof_mock.assert_called_once_with()
         self.assertEqual(payload["exchange_check"]["live_runtime_check"], "PASS")
         self.assertEqual(self.db["exchange_orders"], {})
         self.assertEqual(
