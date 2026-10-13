@@ -307,7 +307,11 @@ def purchase_item(
 
                 if commission > 0:
                     ref_user = users[referrer_uid]
-                    ref_wallet = ref_user.setdefault("wallet", {})
+                    ref_wallet_value = ref_user.get("wallet")
+                    ref_wallet_is_valid = (
+                        ref_wallet_value is None or isinstance(ref_wallet_value, dict)
+                    )
+                    ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
 
                     ref_before = ref_wallet.get("credits", 0)
                     treasury = users.get(TREASURY_UID)
@@ -324,9 +328,16 @@ def purchase_item(
 
                     # Fail closed: an unfunded referral commission creates no
                     # recipient ledger row and no synthetic Treasury account.
-                    if not math.isfinite(treasury_before) or treasury_before < commission:
+                    if (
+                        not ref_wallet_is_valid
+                        or not math.isfinite(treasury_before)
+                        or treasury_before < commission
+                    ):
                         commission = 0
                     else:
+                        if not isinstance(ref_wallet_value, dict):
+                            ref_wallet = {}
+                            ref_user["wallet"] = ref_wallet
                         ref_after = ref_before + commission
                         treasury_after = round(treasury_before - commission, 2)
                         treasury_wallet["credits"] = treasury_after
@@ -626,7 +637,11 @@ def record_stars_payment(
 
                 if commission > 0:
                     ref_user = users[referrer_uid]
-                    ref_wallet = ref_user.setdefault("wallet", {})
+                    ref_wallet_value = ref_user.get("wallet")
+                    ref_wallet_is_valid = (
+                        ref_wallet_value is None or isinstance(ref_wallet_value, dict)
+                    )
+                    ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
 
                     ref_before = ref_wallet.get("credits", 0)
                     treasury = users.get(TREASURY_UID)
@@ -643,9 +658,16 @@ def record_stars_payment(
 
                     # A Stars payment remains recorded, but an unfunded referral
                     # commission must not invent a recipient ledger balance.
-                    if not math.isfinite(treasury_before) or treasury_before < commission:
+                    if (
+                        not ref_wallet_is_valid
+                        or not math.isfinite(treasury_before)
+                        or treasury_before < commission
+                    ):
                         commission = 0
                     else:
+                        if not isinstance(ref_wallet_value, dict):
+                            ref_wallet = {}
+                            ref_user["wallet"] = ref_wallet
                         ref_after = ref_before + commission
                         treasury_after = round(treasury_before - commission, 2)
                         treasury_wallet["credits"] = treasury_after
