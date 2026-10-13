@@ -491,22 +491,15 @@ def audit_db(db):
                 release_events.append(event)
             if correction:
                 correction_events.append(event)
+        # Missing-ID classification is only acceptable when the paired rows
+        # are unique, tied to this terminal order, and contain no correction.
         if (
             len(reserve_events) != 1
             or len(release_events) != 1
             or correction_events
-            or any(_event_id(event) for event in reserve_events + release_events) is False
+            or not any(not _event_id(event) for event in reserve_events + release_events)
         ):
-            # Missing-ID classification is only acceptable when the paired
-            # rows are uniquely tied to this terminal order; it cannot excuse
-            # a correction or absent reserve/release evidence.
-            if (
-                len(reserve_events) != 1
-                or len(release_events) != 1
-                or correction_events
-                or not any(not _event_id(event) for event in reserve_events + release_events)
-            ):
-                return False
+            return False
         parsed_reserve = [(_amount(event.get("amount")), event) for event in reserve_events]
         parsed_release = [(_amount(event.get("amount")), event) for event in release_events]
         if any(amount is None for amount, _ in parsed_reserve + parsed_release):
