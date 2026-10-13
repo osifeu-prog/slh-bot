@@ -20,12 +20,7 @@ class RailwayControlError(RuntimeError):
 
 def _auth_headers(*, prefer_account_token=False):
     account_token = os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
-    project_token = (
-        os.getenv("SLH_RAILWAY_TOKEN")
-        or os.getenv("RAILWAY_PROJECT_TOKEN")
-        or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
-        or os.getenv("RAILWAY_TOKEN")
-    )
+    project_token = os.getenv("RAILWAY_PROJECT_TOKEN") or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
 
     # Cross-service Railway administration should prefer the account/workspace
     # token when one is configured; fall back to a project token scoped to the
