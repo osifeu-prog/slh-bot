@@ -14,7 +14,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
             },
             "ledger": [
                 {"uid": "6526198118", "amount": -10000, "reason": "exchange:sell_reserve",
-                 "meta": {"order_id": "O0000000009"}},
+                 "event_id": "reserve:O0000000009", "meta": {"order_id": "O0000000009"}},
                 {"uid": "6526198118", "amount": 10000, "reason": "exchange:missed_release_correction",
                  "meta": {"order_id": "O0000000009", "event_id": "correction:O0000000009"}},
             ],
@@ -37,9 +37,9 @@ class ExchangeReconciliationTests(unittest.TestCase):
             },
             "ledger": [
                 {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
-                 "meta": {"order_id": "O1"}},
+                 "event_id": "reserve:O1", "meta": {"order_id": "O1"}},
                 {"uid": "42", "amount": 100, "reason": "exchange:cancel_release",
-                 "meta": {"order_id": "O1"}},
+                 "event_id": "release:O1", "meta": {"order_id": "O1"}},
             ],
             "slh_token_ledger": [],
         }
@@ -105,6 +105,154 @@ class ExchangeReconciliationTests(unittest.TestCase):
         before = repr(db)
         audit_db(db)
         self.assertEqual(repr(db), before)
+
+
+    def test_mirrored_events_across_ledgers_are_not_silently_deduplicated(self):
+        db = {
+            "exchange_orders": {
+                "O3": {"id": "O3", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "event_id": "shared-reserve-O3", "meta": {"order_id": "O3"}},
+                {"uid": "42", "amount": 100, "reason": "exchange:cancel_release",
+                 "event_id": "shared-release-O3", "meta": {"order_id": "O3"}},
+            ],
+            "slh_token_ledger": [
+                {"amount": 100, "reason": "exchange:sell_reserve",
+                 "kind": "exchange_reserve", "event_id": "shared-reserve-O3", "order_id": "O3"},
+                {"amount": 100, "reason": "exchange:cancel_release_slh",
+                 "kind": "exchange_release", "event_id": "shared-release-O3", "order_id": "O3"},
+            ],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW", codes)
+        self.assertIn("MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW", codes)
+        self.assertEqual(
+            len([item for item in report["findings"]
+                 if item["code"] == "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW"]),
+            2,
+        )
+
+    def test_release_in_token_ledger_does_not_balance_credits_ledger_reserve(self):
+        db = {
+            "exchange_orders": {
+                "O4": {"id": "O4", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "event_id": "reserve:O4", "meta": {"order_id": "O4"}},
+            ],
+            "slh_token_ledger": [
+                {"amount": 100, "reason": "exchange:cancel_release_slh",
+                 "kind": "exchange_release", "event_id": "release:O4", "order_id": "O4"},
+            ],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+        delta = next(item for item in report["findings"]
+                     if item["code"] == "RESERVE_DELTA_NOT_ZERO")
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW", codes)
+        self.assertEqual(delta["ledger"], "ledger")
+        self.assertEqual(delta["net_delta"], "-100")
+
+    def test_missing_reserve_event_id_fails_closed_even_if_amounts_balance(self):
+        db = {
+            "exchange_orders": {
+                "O5": {"id": "O5", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "meta": {"order_id": "O5"}},
+                {"uid": "42", "amount": 100, "reason": "exchange:cancel_release",
+                 "event_id": "release:O5", "meta": {"order_id": "O5"}},
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        missing = [item for item in report["findings"]
+                   if item["code"] == "LEDGER_EVENT_ID_MISSING"]
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertTrue(any(item["ledger"] == "ledger" and item["order_id"] == "O5"
+                            and item["group"] == "reserve" for item in missing))
+
+    def test_non_finite_reserve_amounts_fail_closed(self):
+        for amount in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(amount=amount):
+                db = {
+                    "exchange_orders": {
+                        "O6": {"id": "O6", "uid": "42", "side": "sell", "status": "cancelled"}
+                    },
+                    "ledger": [
+                        {"uid": "42", "amount": amount, "reason": "exchange:sell_reserve",
+                         "event_id": "reserve:O6", "meta": {"order_id": "O6"}},
+                        {"uid": "42", "amount": 100, "reason": "exchange:cancel_release",
+                         "event_id": "release:O6", "meta": {"order_id": "O6"}},
+                    ],
+                    "slh_token_ledger": [],
+                }
+
+                report = audit_db(db)
+                self.assertEqual(report["status"], "FAIL")
+                self.assertIn("INVALID_RESERVE_LEDGER_AMOUNT",
+                              {item["code"] for item in report["findings"]})
+
+    def test_duplicate_event_id_within_one_ledger_is_reported(self):
+        db = {
+            "exchange_orders": {
+                "O7": {"id": "O7", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "event_id": "same-id", "meta": {"order_id": "O7"}},
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "event_id": "same-id", "meta": {"order_id": "O7"}},
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        duplicate = next(item for item in report["findings"]
+                         if item["code"] == "DUPLICATE_LEDGER_EVENT_ID")
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(duplicate["ledger"], "ledger")
+        self.assertIn("same-id", duplicate["event_ids"])
+
+    def test_duplicate_non_exchange_event_ids_do_not_poison_reserve_audit(self):
+        db = {
+            "exchange_orders": {},
+            "ledger": [
+                {
+                    "uid": "42",
+                    "amount": -10,
+                    "reason": "p2p_credits:send",
+                    "event_id": "p2p_credits:8789977826:8789977826:195236",
+                },
+                {
+                    "uid": "42",
+                    "amount": 10,
+                    "reason": "p2p_credits:receive",
+                    "event_id": "p2p_credits:8789977826:8789977826:195236",
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "UNKNOWN")
+        self.assertNotIn("DUPLICATE_LEDGER_EVENT_ID", codes)
 
 
 if __name__ == "__main__":
