@@ -103,3 +103,40 @@ def test_funded_credit_purchase_records_balanced_commission_ledger(monkeypatch):
     assert treasury_event["amount"] == -2.0
     assert treasury_event["after"] == 0.0
     assert db["commissions"]["referrer"] == 2.0
+
+
+
+def test_insufficient_treasury_does_not_create_missing_referrer_wallet_on_purchase(monkeypatch):
+    db = _db(treasury_balance=0.5)
+    db["users"]["referrer"].pop("wallet")
+    _use_memory_db(monkeypatch, db)
+
+    result = economy_service.purchase_item(
+        uid="buyer", item="ask_credit", price=20, commission_rate=0.10
+    )
+
+    assert result["commission"] == 0
+    assert "wallet" not in db["users"]["referrer"]
+    assert [row["reason"] for row in db["ledger"]] == ["purchase:ask_credit"]
+    assert db.get("commissions", {}) == {}
+
+
+def test_insufficient_treasury_does_not_create_missing_referrer_wallet_on_stars(monkeypatch):
+    db = _db(treasury_balance=0.5)
+    db["users"]["referrer"].pop("wallet")
+    _use_memory_db(monkeypatch, db)
+
+    result = economy_service.record_stars_payment(
+        uid="buyer",
+        credits=100,
+        stars_paid=100,
+        currency="XTR",
+        telegram_payment_charge_id="test-charge-missing-ref-wallet",
+        commission_rate=0.10,
+    )
+
+    assert result["status"] == "applied"
+    assert result["commission"] == 0
+    assert "wallet" not in db["users"]["referrer"]
+    assert [row["reason"] for row in db["ledger"]] == ["payment:telegram_stars"]
+    assert db.get("commissions", {}) == {}
