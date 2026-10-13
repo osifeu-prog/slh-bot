@@ -89,13 +89,27 @@ def audit_db(db):
 
     def _is_exchange_audit_event(event):
         reserve, release, correction = _event_groups(event)
-        if reserve or correction:
-            return True
-        if not release:
-            return False
         reason = str(event.get("reason") or "").lower()
         kind = str(event.get("kind") or "").lower()
         order_id = _order_id(event)
+
+        if reserve:
+            return True
+
+        if correction:
+            # The general Credits ledger also contains non-exchange corrections.
+            # Only include corrections evidenced as exchange/reserve-specific,
+            # or explicitly attached to a known exchange order.
+            event_id = _event_id(event).lower()
+            evidence = " ".join((reason, kind, event_id))
+            reserve_correction = any(
+                marker in evidence
+                for marker in ("exchange", "reserve", "missed_release")
+            )
+            return order_id in known_order_ids or reserve_correction
+
+        if not release:
+            return False
         return (
             order_id in known_order_ids
             or reason.startswith("exchange:")
@@ -140,11 +154,10 @@ def audit_db(db):
         relevant = False
         order_ids = set()
         for event in paired:
-            reserve, release, correction = _event_groups(event)
             oid = _order_id(event)
             if oid:
                 order_ids.add(oid)
-            if reserve or correction or (oid in known_order_ids and release):
+            if _is_exchange_audit_event(event):
                 relevant = True
         if relevant:
             findings.append({
@@ -161,7 +174,7 @@ def audit_db(db):
         for _, event in source:
             reserve, release, correction = _event_groups(event)
             oid = _order_id(event)
-            related = reserve or correction or (oid in known_order_ids and release)
+            related = _is_exchange_audit_event(event)
             if related and not _event_id(event):
                 findings.append({
                     "code": "LEDGER_EVENT_ID_MISSING",
@@ -169,7 +182,7 @@ def audit_db(db):
                     "order_id": oid or None,
                     "group": "correction" if correction else "reserve" if reserve else "normal_release",
                 })
-            if correction and oid and oid not in known_order_ids:
+            if correction and related and oid and oid not in known_order_ids:
                 findings.append({
                     "code": "ORPHAN_RESERVE_CORRECTION",
                     "ledger": ledger_name,
