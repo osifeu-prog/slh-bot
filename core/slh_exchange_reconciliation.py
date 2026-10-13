@@ -31,71 +31,150 @@ def _amount(value):
         return None
 
 
-def _ledger_delta(event, amount, group):
-    """Normalize reserve/release direction across the legacy and SLH token ledgers.
+def _ledger_delta(event, amount, group, ledger_name):
+    """Normalize reserve/release sign inside one ledger's own accounting domain.
 
-    The legacy Credits ledger stores signed amounts (reserve negative, release
-    positive). The canonical SLH token ledger stores positive magnitudes and
-    uses kind=exchange_reserve / exchange_release to identify direction.
+    The Credits ledger uses signed deltas. The SLH token ledger stores positive
+    magnitudes and identifies direction with kind=exchange_reserve/release.
+    Callers must never add deltas from the two ledgers together.
     """
-    kind = str(event.get("kind") or "").strip().lower()
-    if group == "reserve" and kind == "exchange_reserve":
-        return -abs(amount)
-    if group == "normal_release" and kind == "exchange_release":
-        return abs(amount)
+    if ledger_name == "slh_token_ledger":
+        kind = str(event.get("kind") or "").strip().lower()
+        if group == "reserve" and kind == "exchange_reserve":
+            return -abs(amount)
+        if group == "normal_release" and kind == "exchange_release":
+            return abs(amount)
     return amount
 
 
 def audit_db(db):
-    """Return a stable, read-only audit report for exchange sell reserves."""
+    """Return a read-only reserve report with ledger domains kept separate."""
     findings = []
     orders = {}
     for key, order in _records(db.get("exchange_orders", {})) + _records(db.get("exchange_order_archive", {})):
         oid = str(order.get("order_id") or order.get("id") or key)
         orders[oid] = order
 
-    legacy_ledger = _records(db.get("ledger", []))
-    token_ledger = _records(db.get("slh_token_ledger", []))
-
-    # The same logical event can be mirrored in both ledgers. Detect duplicates
-    # within each source, then de-duplicate mirrored records for amount totals.
-    duplicate_event_ids = set()
-    for source in (legacy_ledger, token_ledger):
-        source_ids = []
-        for _, event in source:
-            meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
-            event_id = event.get("event_id") or meta.get("event_id")
-            if event_id:
-                source_ids.append(str(event_id))
-        duplicate_event_ids.update(
-            event_id for event_id, count in Counter(source_ids).items() if count > 1
-        )
-    if duplicate_event_ids:
-        findings.append({"code": "DUPLICATE_LEDGER_EVENT_ID", "event_ids": sorted(duplicate_event_ids)})
-
-    events = []
-    seen_event_ids = set()
-    for _, event in legacy_ledger + token_ledger:
-        meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
-        event_id = event.get("event_id") or meta.get("event_id")
-        if event_id and str(event_id) in seen_event_ids:
-            continue
-        if event_id:
-            seen_event_ids.add(str(event_id))
-        events.append(event)
-
+    sources = (
+        ("ledger", _records(db.get("ledger", []))),
+        ("slh_token_ledger", _records(db.get("slh_token_ledger", []))),
+    )
     known_order_ids = set(orders)
-    for event in events:
-        reason = str(event.get("reason", "")).lower()
-        kind = str(event.get("kind", "")).lower()
-        if "correction" in reason or "correction" in kind:
-            meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
-            oid = str(event.get("order_id") or meta.get("order_id") or "")
-            if oid and oid not in known_order_ids:
+
+    def _meta(event):
+        value = event.get("meta")
+        return value if isinstance(value, dict) else {}
+
+    def _event_id(event):
+        value = event.get("event_id") or _meta(event).get("event_id")
+        return str(value).strip() if value is not None and str(value).strip() else ""
+
+    def _order_id(event):
+        return str(event.get("order_id") or _meta(event).get("order_id") or "")
+
+    def _event_groups(event):
+        reason = str(event.get("reason") or "").lower()
+        kind = str(event.get("kind") or "").lower()
+        correction = "correction" in reason or "correction" in kind
+        reserve = (
+            "sell_reserve" in reason
+            or "sell_reserve" in kind
+            or kind == "exchange_reserve"
+        )
+        release = (
+            ("release" in reason or "release" in kind)
+            and not correction
+        )
+        return reserve, release, correction
+
+    def _is_exchange_audit_event(event):
+        reserve, release, correction = _event_groups(event)
+        if reserve or correction:
+            return True
+        if not release:
+            return False
+        reason = str(event.get("reason") or "").lower()
+        kind = str(event.get("kind") or "").lower()
+        order_id = _order_id(event)
+        return (
+            order_id in known_order_ids
+            or reason.startswith("exchange:")
+            or kind.startswith("exchange_")
+        )
+
+    # Detect duplicates within each source independently. Do not silently
+    # de-duplicate equal IDs across the Credits and SLH token domains.
+    for ledger_name, source in sources:
+        source_ids = [
+            _event_id(event)
+            for _, event in source
+            if _event_id(event) and _is_exchange_audit_event(event)
+        ]
+        duplicates = sorted(
+            event_id
+            for event_id, count in Counter(source_ids).items()
+            if count > 1
+        )
+        if duplicates:
+            findings.append({
+                "code": "DUPLICATE_LEDGER_EVENT_ID",
+                "ledger": ledger_name,
+                "event_ids": duplicates,
+            })
+
+    source_id_maps = {}
+    for ledger_name, source in sources:
+        by_id = {}
+        for _, event in source:
+            event_id = _event_id(event)
+            if event_id and _is_exchange_audit_event(event):
+                by_id.setdefault(event_id, []).append(event)
+        source_id_maps[ledger_name] = by_id
+
+    shared_ids = set(source_id_maps["ledger"]) & set(source_id_maps["slh_token_ledger"])
+    for event_id in sorted(shared_ids):
+        paired = (
+            source_id_maps["ledger"][event_id]
+            + source_id_maps["slh_token_ledger"][event_id]
+        )
+        relevant = False
+        order_ids = set()
+        for event in paired:
+            reserve, release, correction = _event_groups(event)
+            oid = _order_id(event)
+            if oid:
+                order_ids.add(oid)
+            if reserve or correction or (oid in known_order_ids and release):
+                relevant = True
+        if relevant:
+            findings.append({
+                "code": "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW",
+                "event_id": event_id,
+                "ledgers": ["ledger", "slh_token_ledger"],
+                "order_ids": sorted(order_ids),
+                "note": "Shared event IDs are not de-duplicated across accounting domains.",
+            })
+
+    # Corrections remain unresolved evidence. Missing IDs are also findings for
+    # exchange reserve/release/correction rows; they are never silently ignored.
+    for ledger_name, source in sources:
+        for _, event in source:
+            reserve, release, correction = _event_groups(event)
+            oid = _order_id(event)
+            related = reserve or correction or (oid in known_order_ids and release)
+            if related and not _event_id(event):
+                findings.append({
+                    "code": "LEDGER_EVENT_ID_MISSING",
+                    "ledger": ledger_name,
+                    "order_id": oid or None,
+                    "group": "correction" if correction else "reserve" if reserve else "normal_release",
+                })
+            if correction and oid and oid not in known_order_ids:
                 findings.append({
                     "code": "ORPHAN_RESERVE_CORRECTION",
+                    "ledger": ledger_name,
                     "order_id": oid,
-                    "event_id": event.get("event_id"),
+                    "event_id": _event_id(event) or None,
                 })
 
     checked = 0
@@ -104,103 +183,133 @@ def audit_db(db):
         status = str(order.get("status", "")).lower()
         if side != "sell" or status not in {"cancelled", "canceled", "closed", "expired"}:
             continue
-        order_events = []
-        for event in events:
-            meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
-            event_oid = str(event.get("order_id") or meta.get("order_id") or "")
-            if event_oid == oid:
-                order_events.append(event)
-        reserve_events = [
-            e for e in order_events
-            if "sell_reserve" in str(e.get("reason", "")).lower()
-            or "sell_reserve" in str(e.get("kind", "")).lower()
-        ]
-        if not reserve_events:
+
+        per_ledger = {}
+        active_ledgers = []
+        for ledger_name, source in sources:
+            order_events = [
+                event for _, event in source
+                if _order_id(event) == oid
+            ]
+            reserve_events = []
+            normal_releases = []
+            order_corrections = []
+            for event in order_events:
+                reserve, release, correction = _event_groups(event)
+                if reserve:
+                    reserve_events.append(event)
+                if release:
+                    normal_releases.append(event)
+                if correction:
+                    order_corrections.append(event)
+            if reserve_events or normal_releases or order_corrections:
+                active_ledgers.append(ledger_name)
+            if reserve_events:
+                per_ledger[ledger_name] = {
+                    "reserve": reserve_events,
+                    "normal_release": normal_releases,
+                    "correction": order_corrections,
+                }
+            elif order_corrections:
+                # Corrections without a reserve in this same ledger are still
+                # reported as unresolved, never used to balance another ledger.
+                per_ledger[ledger_name] = {
+                    "reserve": [],
+                    "normal_release": normal_releases,
+                    "correction": order_corrections,
+                }
+
+        if not any(groups["reserve"] for groups in per_ledger.values()):
             continue
         checked += 1
-        normal_releases = [
-            e for e in order_events
-            if ("release" in str(e.get("reason", "")).lower()
-                or "release" in str(e.get("kind", "")).lower())
-            and "correction" not in str(e.get("reason", "")).lower()
-            and "correction" not in str(e.get("kind", "")).lower()
-        ]
-        order_corrections = [
-            e for e in order_events
-            if "correction" in str(e.get("reason", "")).lower()
-            or "correction" in str(e.get("kind", "")).lower()
-        ]
-        amount_groups = {
-            "reserve": reserve_events,
-            "normal_release": normal_releases,
-            "correction": order_corrections,
-        }
-        parsed_amounts = {
-            name: [(event, _amount(event.get("amount"))) for event in group]
-            for name, group in amount_groups.items()
-        }
-        invalid_amounts = [
-            {"event_id": str(event.get("event_id") or (
-                event.get("meta", {}).get("event_id")
-                if isinstance(event.get("meta"), dict) else ""
-            ) or ""), "group": name}
-            for name, rows in parsed_amounts.items()
-            for event, amount in rows
-            if amount is None
-        ]
-        if invalid_amounts:
+        if len(active_ledgers) > 1:
             findings.append({
-                "code": "INVALID_RESERVE_LEDGER_AMOUNT",
+                "code": "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
                 "order_id": oid,
-                "events": invalid_amounts,
-                "note": "Missing or non-finite amounts prevent reliable reserve reconciliation.",
+                "ledgers": active_ledgers,
+                "note": "Credits and SLH token entries are checked independently and never netted together.",
             })
 
-        reserve_total = sum(
-            (_ledger_delta(event, amount, "reserve")
-             for event, amount in parsed_amounts["reserve"] if amount is not None),
-            Decimal(0),
-        )
-        release_total = sum(
-            (_ledger_delta(event, amount, "normal_release")
-             for event, amount in parsed_amounts["normal_release"] if amount is not None),
-            Decimal(0),
-        )
-        correction_total = sum(
-            (amount for _, amount in parsed_amounts["correction"] if amount is not None),
-            Decimal(0),
-        )
-        if not normal_releases:
-            findings.append({
-                "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
-                "order_id": oid,
-                "uid_suffix": str(order.get("uid_suffix") or str(order.get("uid") or order.get("user_id") or "")[-4:]),
-                "reserve_delta": str(reserve_total),
-                "correction_delta": str(correction_total),
-                "note": "Manual correction is evidence to review, not proof of normal reserve release.",
-            })
-        if order_corrections:
-            findings.append({
-                "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
-                "order_id": oid,
-                "event_ids": sorted(
-                    str(e.get("event_id") or (
-                        e.get("meta", {}).get("event_id")
-                        if isinstance(e.get("meta"), dict) else ""
-                    ) or "")
-                    for e in order_corrections
+        for ledger_name, groups in per_ledger.items():
+            reserve_events = groups["reserve"]
+            normal_releases = groups["normal_release"]
+            order_corrections = groups["correction"]
+            amount_groups = {
+                "reserve": reserve_events,
+                "normal_release": normal_releases,
+                "correction": order_corrections,
+            }
+            parsed_amounts = {
+                name: [(event, _amount(event.get("amount"))) for event in group]
+                for name, group in amount_groups.items()
+            }
+            invalid_amounts = [
+                {
+                    "event_id": _event_id(event),
+                    "group": group_name,
+                }
+                for group_name, rows in parsed_amounts.items()
+                for event, amount in rows
+                if amount is None
+            ]
+            if invalid_amounts:
+                findings.append({
+                    "code": "INVALID_RESERVE_LEDGER_AMOUNT",
+                    "ledger": ledger_name,
+                    "order_id": oid,
+                    "events": invalid_amounts,
+                    "note": "Missing or non-finite amounts prevent reliable reserve reconciliation.",
+                })
+
+            reserve_total = sum(
+                (
+                    _ledger_delta(event, amount, "reserve", ledger_name)
+                    for event, amount in parsed_amounts["reserve"]
+                    if amount is not None
                 ),
-                "correction_delta": str(correction_total),
-            })
-        net_delta = reserve_total + release_total
-        if net_delta != 0 and not order_corrections:
-            findings.append({
-                "code": "RESERVE_DELTA_NOT_ZERO",
-                "order_id": oid,
-                "reserve_delta": str(reserve_total),
-                "normal_release_delta": str(release_total),
-                "net_delta": str(net_delta),
-            })
+                Decimal(0),
+            )
+            release_total = sum(
+                (
+                    _ledger_delta(event, amount, "normal_release", ledger_name)
+                    for event, amount in parsed_amounts["normal_release"]
+                    if amount is not None
+                ),
+                Decimal(0),
+            )
+            correction_total = sum(
+                (amount for _, amount in parsed_amounts["correction"] if amount is not None),
+                Decimal(0),
+            )
+
+            if reserve_events and not normal_releases:
+                findings.append({
+                    "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
+                    "ledger": ledger_name,
+                    "order_id": oid,
+                    "uid_suffix": str(order.get("uid_suffix") or str(order.get("uid") or order.get("user_id") or "")[-4:]),
+                    "reserve_delta": str(reserve_total),
+                    "correction_delta": str(correction_total),
+                    "note": "Manual correction is evidence to review, not proof of normal reserve release.",
+                })
+            if order_corrections:
+                findings.append({
+                    "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
+                    "ledger": ledger_name,
+                    "order_id": oid,
+                    "event_ids": sorted(_event_id(event) for event in order_corrections),
+                    "correction_delta": str(correction_total),
+                })
+            net_delta = reserve_total + release_total
+            if reserve_events and net_delta != 0 and not order_corrections:
+                findings.append({
+                    "code": "RESERVE_DELTA_NOT_ZERO",
+                    "ledger": ledger_name,
+                    "order_id": oid,
+                    "reserve_delta": str(reserve_total),
+                    "normal_release_delta": str(release_total),
+                    "net_delta": str(net_delta),
+                })
 
     if checked == 0:
         findings.append({
