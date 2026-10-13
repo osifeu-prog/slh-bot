@@ -62,6 +62,55 @@ def audit_db(db):
     )
     known_order_ids = set(orders)
 
+    def _uid(order):
+        return str(order.get("uid") or order.get("user_id") or "")
+
+    # Cache expected current reserves per account. Values are never emitted in
+    # findings; only consistency booleans are added for safe operator triage.
+    open_sell_reserve_by_uid = {}
+    open_sell_reserve_unknown_uids = set()
+    for order in orders.values():
+        if str(order.get("side") or "").lower() != "sell" or str(order.get("status") or "").lower() != "open":
+            continue
+        uid = _uid(order)
+        if not uid:
+            continue
+        amount = _amount(order.get("reserved_slh"))
+        if amount is None:
+            open_sell_reserve_unknown_uids.add(uid)
+            continue
+        open_sell_reserve_by_uid[uid] = open_sell_reserve_by_uid.get(uid, Decimal(0)) + amount
+
+    def _current_order_context(order_id):
+        oid = str(order_id or "")
+        order = orders.get(oid)
+        if not isinstance(order, dict):
+            return {}
+        uid = _uid(order)
+        users = db.get("users", {})
+        user = users.get(uid) if uid and isinstance(users, dict) else None
+        wallet = user.get("wallet") if isinstance(user, dict) else None
+        wallet = wallet if isinstance(wallet, dict) else {}
+        remaining = _amount(order.get("remaining_amount"))
+        order_reserve = _amount(order.get("reserved_slh"))
+        wallet_reserve = (
+            _amount(wallet.get("exchange_reserved_slh", 0))
+            if isinstance(user, dict) else None
+        )
+        expected_open_reserve = open_sell_reserve_by_uid.get(uid, Decimal(0))
+        reserve_match = (
+            wallet_reserve == expected_open_reserve
+            if uid and wallet_reserve is not None and uid not in open_sell_reserve_unknown_uids
+            else None
+        )
+        return {
+            "order_status": str(order.get("status") or "UNKNOWN").upper(),
+            "order_remaining_is_zero": remaining == 0 if remaining is not None else None,
+            "order_reserved_slh_is_zero": order_reserve == 0 if order_reserve is not None else None,
+            "wallet_reserved_slh_is_zero": wallet_reserve == 0 if wallet_reserve is not None else None,
+            "wallet_reserve_matches_open_orders": reserve_match,
+        }
+
     def _meta(event):
         value = event.get("meta")
         return value if isinstance(value, dict) else {}
@@ -331,6 +380,12 @@ def audit_db(db):
             "note": "No eligible reserve records were matched; the audit cannot claim PASS.",
         })
 
+    # Attach sanitized, present-day context to order-linked findings. This
+    # improves diagnosis but never suppresses a ledger finding or changes status.
+    for item in findings:
+        if item.get("order_id"):
+            item.update(_current_order_context(item["order_id"]))
+
     status = "FAIL" if any(
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
@@ -361,6 +416,11 @@ def _safe_log_finding(item, index):
         "ledgers",
         "order_id",
         "order_ids",
+        "order_status",
+        "order_remaining_is_zero",
+        "order_reserved_slh_is_zero",
+        "wallet_reserved_slh_is_zero",
+        "wallet_reserve_matches_open_orders",
         "group",
         "uid_suffix",
         "reserve_delta",
