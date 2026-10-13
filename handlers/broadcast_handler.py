@@ -853,17 +853,20 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
             "verdict": "BLOCKED",
             "detail": f"live state unreadable: {type(exc).__name__}",
         }
+    if not _proof_is_green(live_check):
+        proof = _proof_snapshot(live_check, checked_at=_utc_text(now))
+        return _terminal_state(
+            uid, draft_id, "BLOCKED", detail=proof["detail"], check=proof, now=now
+        )
+
     live_runtime = _fresh_live_exchange_proof()
     combined_check = _proof_with_live_runtime(live_check, live_runtime)
     proof = _proof_snapshot(combined_check, checked_at=_utc_text(now))
-    if not _proof_is_green(live_check) or live_runtime.get("status") != "PASS":
-        detail = (
-            live_runtime.get("detail")
-            if live_runtime.get("status") != "PASS"
-            else proof.get("detail", "fresh canonical Exchange check blocked")
-        )
+    if live_runtime.get("status") != "PASS":
         return _terminal_state(
-            uid, draft_id, "BLOCKED", detail=detail, check=proof, now=now
+            uid, draft_id, "BLOCKED",
+            detail=live_runtime.get("detail") or "Fresh live Exchange proof blocked",
+            check=proof, now=now
         )
 
     def store_pre_send(db):
@@ -894,15 +897,18 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
                     "verdict": "BLOCKED",
                     "detail": f"live state unreadable: {type(exc).__name__}",
                 }
+            if not _proof_is_green(live_check):
+                latest_check = _proof_snapshot(live_check)
+                return _terminal_state(
+                    uid, draft_id, "STOPPED_GATE_CLOSED", sent=sent, failed=failed,
+                    detail=f"Exchange gate re-check blocked: {latest_check['detail']}",
+                    check=latest_check,
+                )
             live_runtime = _fresh_live_exchange_proof()
             combined_check = _proof_with_live_runtime(live_check, live_runtime)
             latest_check = _proof_snapshot(combined_check)
-            if not _proof_is_green(live_check) or live_runtime.get("status") != "PASS":
-                failure_detail = (
-                    live_runtime.get("detail")
-                    if live_runtime.get("status") != "PASS"
-                    else latest_check.get("detail", "fresh canonical Exchange check blocked")
-                )
+            if live_runtime.get("status") != "PASS":
+                failure_detail = live_runtime.get("detail") or "Fresh live Exchange proof blocked"
                 return _terminal_state(
                     uid, draft_id, "STOPPED_GATE_CLOSED", sent=sent, failed=failed,
                     detail=f"Exchange live re-check blocked: {failure_detail}",
