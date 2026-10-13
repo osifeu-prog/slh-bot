@@ -384,15 +384,15 @@ def _safe_log_finding(item, index):
         if isinstance(value, list):
             limit = 4 if key in {"ledgers", "order_ids"} else 3
             safe[key] = [
-                str(entry).replace("\\n", " ").replace("\\r", " ")[:80]
+                str(entry).replace("\n", " ").replace("\\r", " ")[:80]
                 for entry in value[:limit]
                 if entry is not None
             ]
         elif isinstance(value, (str, int, float, bool)):
-            rendered = str(value).replace("\\n", " ").replace("\\r", " ")
+            rendered = str(value).replace("\n", " ").replace("\\r", " ")
             safe[key] = rendered[:100] if isinstance(value, str) else value
         else:
-            safe[key] = str(value).replace("\\n", " ").replace("\\r", " ")[:100]
+            safe[key] = str(value).replace("\n", " ").replace("\\r", " ")[:100]
     return safe
 
 
