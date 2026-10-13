@@ -245,6 +245,19 @@ def test_voice_confirm_rechecks_fresh_exchange_and_sends_fixed_notice(monkeypatc
 
     monkeypatch.setattr(broadcast_handler, "_fresh_exchange_check", green)
     monkeypatch.setattr(
+        broadcast_handler,
+        "_fresh_reserve_audit",
+        lambda _db: {
+            "status": "PASS",
+            "audit_status": "PASS",
+            "checked_at": "2026-10-13T08:00:00+00:00",
+            "read_only": True,
+            "finding_count": 0,
+            "checked_cancelled_sell_orders": 3,
+            "detail": "read-only reserve audit PASS",
+        },
+    )
+    monkeypatch.setattr(
         exchange_handler,
         "require_fresh_live_exchange_proof",
         lambda: {

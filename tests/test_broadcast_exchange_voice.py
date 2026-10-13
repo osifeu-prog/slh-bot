@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import handlers.broadcast_handler as target
 import core.system_checks as system_checks
 import handlers.exchange_handler as exchange_handler
+import core.slh_exchange_reconciliation as reserve_reconciliation
 
 
 OWNER = str(target.OWNER_TELEGRAM_ID)
@@ -60,6 +61,17 @@ def _install_db(monkeypatch, db):
         exchange_handler,
         "require_fresh_live_exchange_proof",
         lambda: _live_proof(True),
+    )
+    monkeypatch.setattr(
+        reserve_reconciliation,
+        "audit_db",
+        lambda _db: {
+            "status": "PASS",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 3,
+            "finding_count": 0,
+            "findings": [],
+        },
     )
 
 
@@ -448,3 +460,39 @@ def test_confirm_stops_during_broadcast_when_fresh_live_runtime_proof_closes(mon
     assert len(sent) == 25
     assert len(calls) == 2
     assert db["exchange_broadcast_pending"][OWNER]["status"] == "STOPPED_GATE_CLOSED"
+
+
+def test_broadcast_blocks_before_any_recipient_when_reserve_audit_fails(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    monkeypatch.setattr(
+        system_checks,
+        "check_exchange_for_execution",
+        lambda _db: _fresh_check(True),
+    )
+    monkeypatch.setattr(
+        reserve_reconciliation,
+        "audit_db",
+        lambda _db: {
+            "status": "FAIL",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 7,
+            "finding_count": 11,
+            "findings": [{"code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"}],
+        },
+    )
+    sent = _install_send(monkeypatch)
+
+    result = target.send_confirmed_exchange_broadcast(
+        Mock(), OWNER, now=NOW + timedelta(seconds=5)
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["sent"] == 0
+    assert sent == []
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "BLOCKED"
+    receipt = db["exchange_broadcast_audit"][-1]["fresh_exchange_check"]
+    assert receipt["reserve_audit_check"] == "BLOCKED"
+    assert receipt["reserve_audit_status"] == "FAIL"
+    assert receipt["reserve_audit_finding_count"] == 11
