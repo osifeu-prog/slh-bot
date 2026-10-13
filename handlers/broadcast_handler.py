@@ -374,6 +374,14 @@ def _fresh_reserve_audit(db):
     findings = raw_findings if isinstance(raw_findings, list) else []
     blocking_findings = raw_blocking if isinstance(raw_blocking, list) else []
     historical_findings = raw_historical if isinstance(raw_historical, list) else []
+    if (
+        not isinstance(raw_findings, list)
+        or not findings_valid
+        or not _valid_count(raw_finding_count)
+        or raw_finding_count != len(raw_findings)
+    ):
+        count_valid = False
+        finding_count = max(finding_count, len(findings), 1)
     finding_codes = [
         str(item.get("code") or "").strip()[:80]
         for item in findings
@@ -449,7 +457,7 @@ def _fresh_reserve_audit(db):
     elif passed:
         detail = (
             f"current reserve readiness PASS; full historical audit {audit_status} "
-            f"retains {historical_count} finding(s) as reviewed, nonblocking history"
+            f"retains {historical_count} finding(s) as classified nonblocking history; full audit remains {audit_status}"
         )
     elif not lists_valid:
         detail = (
