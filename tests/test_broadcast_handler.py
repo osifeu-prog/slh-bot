@@ -2,6 +2,7 @@ import types
 
 import handlers.broadcast_handler as target
 import handlers.exchange_handler as exchange_handler
+import core.slh_exchange_reconciliation as reserve_reconciliation
 
 
 def _install_reserve_audit_pass(monkeypatch):
@@ -579,3 +580,23 @@ def test_broadcast_status_warns_legacy_full_retry_is_blocked(monkeypatch):
     assert "הטיוטה הישנה אינה ניתנת לאישור" in reply
     assert "אין לשלוח שוב לכל הקהל" in reply
     assert "יש לאשר במפורש שידור מלא חוזר" not in reply
+
+
+def test_fresh_reserve_audit_blocks_inconsistent_pass_report(monkeypatch):
+    monkeypatch.setattr(
+        reserve_reconciliation,
+        "audit_db",
+        lambda _db: {
+            "status": "PASS",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 3,
+            "finding_count": 0,
+            "findings": [{"code": "CONTRADICTORY_FINDING"}],
+        },
+    )
+
+    result = target._fresh_reserve_audit({})
+
+    assert result["status"] == "BLOCKED"
+    assert result["finding_count"] >= 1
+    assert "CONTRADICTORY_FINDING" in result["detail"]
