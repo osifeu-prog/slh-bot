@@ -63,6 +63,131 @@ def _event_epoch(value):
         return 0.0
 
 
+def _call_body(text, open_index):
+    """Return a balanced call body while respecting nested parentheses and strings."""
+    depth = 0
+    quote = None
+    escaped = False
+    for index in range(open_index, len(text)):
+        char = text[index]
+        if quote:
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in ("'", '"'):
+            quote = char
+        elif char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth == 0:
+                return text[open_index + 1:index]
+    return ""
+
+
+def _split_call_args(body):
+    """Split function arguments only on commas at top level."""
+    parts = []
+    start = 0
+    stack = []
+    quote = None
+    escaped = False
+    pairs = {")": "(", "]": "[", "}": "{"}
+    for index, char in enumerate(body):
+        if quote:
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in ("'", '"'):
+            quote = char
+        elif char in "([{":
+            stack.append(char)
+        elif char in ")]}":
+            if stack and stack[-1] == pairs[char]:
+                stack.pop()
+        elif char == "," and not stack:
+            parts.append(body[start:index].strip())
+            start = index + 1
+    tail = body[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def _literal_amount(expression):
+    """Expose only numeric literals, never arbitrary code or variable contents."""
+    expr = str(expression or "").strip()
+    decimal_match = re.fullmatch(
+        r"""Decimal\s*\(\s*(['"])([-+]?\d+(?:\.\d+)?)\1\s*\)""",
+        expr,
+        re.IGNORECASE,
+    )
+    if decimal_match:
+        return decimal_match.group(2)
+    if re.fullmatch(r"[-+]?\d+(?:\.\d+)?", expr):
+        return expr
+    return "dynamic"
+
+
+def _call_arguments_summary(command, open_index):
+    body = _call_body(command, open_index)
+    args = _split_call_args(body)
+    gross = _literal_amount(args[0]) if len(args) > 0 else "unknown"
+    costs = _literal_amount(args[1]) if len(args) > 1 else "unknown"
+    labels = list(dict.fromkeys(re.findall(
+        r"""(?i)(?:test-\d{4}-\d{2}-\d{2}|\d{4}-W\d{2}-real)""",
+        command,
+    )))
+    period = labels[0] if len(labels) == 1 else ("multiple" if labels else "dynamic")
+    return "gross=" + gross + " costs=" + costs + " period=" + period
+
+
+def _snapshot_summary(path, data):
+    if not isinstance(data, dict):
+        return path.name + ": INVALID_ROOT"
+    distributions = data.get("revenue_distributions", {})
+    if not isinstance(distributions, dict):
+        distributions = {}
+    pool = data.get("revenue_share_pool", {})
+    if not isinstance(pool, dict):
+        pool = {}
+    claimable = []
+    users = data.get("users", {})
+    if isinstance(users, dict):
+        for user in users.values():
+            if not isinstance(user, dict):
+                continue
+            wallet = user.get("wallet", {})
+            if isinstance(wallet, dict):
+                amount = _decimal(wallet.get("revenue_share_claimable", 0))
+                if amount:
+                    claimable.append(amount)
+    positions = data.get("stake_positions", {})
+    received = [
+        _decimal(position.get("total_received", 0))
+        for position in positions.values()
+        if isinstance(positions, dict) and isinstance(position, dict)
+    ] if isinstance(positions, dict) else []
+    nonzero_received = [amount for amount in received if amount]
+    return (
+        path.name
+        + ": distributions=" + str(len(distributions))
+        + " pool_total_distributed=" + format(_decimal(pool.get("total_distributed")), "f")
+        + " claimable_users=" + str(len(claimable))
+        + " claimable_total=" + format(sum(claimable, Decimal("0")), "f")
+        + " positions_received=" + str(len(nonzero_received))
+        + " positions_received_total=" + format(sum(nonzero_received, Decimal("0")), "f")
+    )
+
+
 def _audit_paths(root):
     return (
         root / "state" / "exec_audit.json",
@@ -201,6 +326,26 @@ def build_revenue_recovery_report(root="."):
         lines.append("TARGET " + filename + ": " + ("FOUND" if exists else "MISSING"))
 
     lines.append("")
+    lines.append("BACKUP REVENUE-STATE SCAN (read-only summaries):")
+    snapshot_paths = []
+    for folder in backup_roots:
+        if folder.is_dir():
+            snapshot_paths.extend(
+                path for path in folder.glob("db_*.json") if path.is_file()
+            )
+    snapshot_paths = sorted(
+        set(snapshot_paths), key=lambda path: path.stat().st_mtime, reverse=True
+    )[:8]
+    if not snapshot_paths:
+        lines.append("No db_*.json snapshots in known backup paths.")
+    for path in snapshot_paths:
+        snapshot, snapshot_status = _read_json(path)
+        if snapshot_status == "OK":
+            lines.append("SNAPSHOT " + _snapshot_summary(path, snapshot))
+        else:
+            lines.append("SNAPSHOT " + path.name + ": " + snapshot_status)
+
+    lines.append("")
     lines.append("EXEC AUDIT EVIDENCE (classified; raw commands not printed):")
     records = 0
     dist_refs = 0
@@ -209,6 +354,7 @@ def build_revenue_recovery_report(root="."):
     engine_refs = 0
     engine_calls = 0
     engine_call_times = []
+    engine_call_details = []
     test_period_refs = 0
     real_period_refs = 0
     total_received_refs = 0
@@ -234,7 +380,8 @@ def build_revenue_recovery_report(root="."):
             records += 1
             if any(term in low for term in REVENUE_FIELDS):
                 dist_refs += 1
-            calls_in_command = len(_ENGINE_CALL_RE.findall(low))
+            call_matches = list(_ENGINE_CALL_RE.finditer(cmd))
+            calls_in_command = len(call_matches)
             if "distribute_revenue" in low:
                 engine_refs += 1
             if calls_in_command:
@@ -244,6 +391,13 @@ def build_revenue_recovery_report(root="."):
                     str(row.get("result") or "unknown"),
                     calls_in_command,
                 ))
+                for match in call_matches:
+                    open_index = cmd.find("(", match.start())
+                    engine_call_details.append((
+                        timestamp,
+                        str(row.get("result") or "unknown"),
+                        _call_arguments_summary(cmd, open_index),
+                    ))
             if "test-2026-10-05" in low:
                 test_period_refs += 1
             if "2026-w40-real" in low:
@@ -281,7 +435,12 @@ def build_revenue_recovery_report(root="."):
         for timestamp, result, count in engine_call_times[:6]:
             dt = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
             details.append(dt + " result=" + result + " calls=" + str(count))
-        lines.append("Engine call records UTC (command exit is not payout proof): " + " | ".join(details))
+        lines.append("Engine call records UTC (exit status is not payout proof): " + " | ".join(details))
+    if engine_call_details:
+        lines.append("Engine call parameters (literal values only; dynamic expressions are not evaluated):")
+        for timestamp, result, summary in engine_call_details[:6]:
+            dt = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+            lines.append(dt + " exit=" + result + " " + summary)
     lines.append("Explicit combined distribution reset commands: " + str(reset_refs))
     for name, count in snapshot_refs.items():
         lines.append("Audit references to " + name + ": " + str(count))
