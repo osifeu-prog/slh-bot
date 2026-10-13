@@ -19,7 +19,7 @@ from core.stars_price_authority import (
 
 
 def _record_revenue(*, source: str, amount: int, reference: str, uid: str, meta: dict):
-    revenue_ledger.record(
+    return revenue_ledger.record(
         source=source,
         amount=int(amount),
         currency=TELEGRAM_STARS_CURRENCY,
@@ -38,7 +38,7 @@ def record_stars_payment(**kwargs):
     result = economy_service.record_stars_payment(**kwargs)
 
     if result.get("status") in {"applied", "duplicate"}:
-        _record_revenue(
+        revenue_result = _record_revenue(
             source="telegram_stars",
             amount=int(kwargs.get("stars_paid", 0)),
             reference=str(kwargs.get("telegram_payment_charge_id", "")),
@@ -49,6 +49,15 @@ def record_stars_payment(**kwargs):
                 "provider_charge_id": kwargs.get("provider_payment_charge_id"),
             },
         )
+        if isinstance(revenue_result, dict) and revenue_result.get("status") == "conflict":
+            # The wallet transaction has already committed in the primary
+            # authority; preserve it and surface the accounting conflict for
+            # operator review rather than retrying or rewriting revenue.
+            result = dict(result)
+            result["revenue_status"] = "conflict"
+            result["revenue_conflicting_fields"] = list(
+                revenue_result.get("conflicting_fields") or []
+            )
 
     return result
 
@@ -94,27 +103,93 @@ def record_vip_subscription_payment(
     now_dt = datetime.fromtimestamp(now, tz=ZoneInfo("Asia/Jerusalem"))
 
     def activate_and_mark(db):
-        orders = db.setdefault("vip_subscriptions", {})
+        users = db.get("users", {})
+        orders = db.get("vip_subscriptions", {})
+        if not isinstance(users, dict) or not isinstance(orders, dict):
+            return None, False, ["state_shape"]
+
+        revenue_args = {
+            "source": "telegram_stars_subscription",
+            "amount": stars_paid,
+            "currency": TELEGRAM_STARS_CURRENCY,
+            "reference": charge_id,
+            "uid": uid,
+            "meta": {
+                "kind": "vip_monthly",
+                "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+            },
+        }
+
         existing = orders.get(charge_id)
         if existing is not None:
-            return existing, False
+            if not isinstance(existing, dict):
+                return None, False, ["subscription_shape"]
+            conflicts = []
+            if str(existing.get("uid")) != uid:
+                conflicts.append("uid")
+            try:
+                stored_stars = int(existing.get("stars_paid"))
+            except (TypeError, ValueError, OverflowError):
+                stored_stars = None
+            if stored_stars != stars_paid:
+                conflicts.append("stars_paid")
+            conflicts.extend(
+                "revenue." + field
+                for field in revenue_ledger.conflicting_fields_in_db(db, **revenue_args)
+            )
+            if conflicts:
+                return None, False, sorted(set(conflicts))
 
-        users = db.setdefault("users", {})
-        user = users.setdefault(uid, {})
-        previous = int(user.get("vip_access_until", 0) or 0)
+            # A legitimate replay can recover a missing revenue event atomically,
+            # but conflicting immutable fields stop before any subscription mutation.
+            revenue_result = revenue_ledger.record_in_db(db, **revenue_args)
+            if revenue_result.get("status") == "conflict":
+                conflicts = [
+                    "revenue." + field
+                    for field in revenue_result.get("conflicting_fields", [])
+                ]
+                return None, False, conflicts
+            return dict(existing), False, []
+
+        existing_user = users.get(uid, {})
+        if not isinstance(existing_user, dict):
+            return None, False, ["user_shape"]
+        user = dict(existing_user)
+        permissions_value = existing_user.get("permissions", [])
+        if permissions_value is None:
+            permissions_value = []
+        if not isinstance(permissions_value, list):
+            return None, False, ["permissions_shape"]
+        permissions = list(permissions_value)
+
+        previous = int(existing_user.get("vip_access_until", 0) or 0)
         start = max(now, previous)
         until = start + VIP_SUBSCRIPTION_PERIOD
-
+        vip_bundle = existing_user.get("vip_bundle")
+        vip_bundle = vip_bundle if isinstance(vip_bundle, dict) else {}
         already_qualified = bool(
-            user.get("vip_launch_offer_qualified")
-            or user.get("vip_bundle", {}).get("launch_offer_qualified")
+            existing_user.get("vip_launch_offer_qualified")
+            or vip_bundle.get("launch_offer_qualified")
         )
         launch_offer_qualified = already_qualified or is_launch_offer_open(now_dt)
 
-        perms = user.setdefault("permissions", [])
-        if "vip_access" not in perms:
-            perms.append("vip_access")
+        revenue_args["meta"] = {
+            **revenue_args["meta"],
+            "launch_offer_qualified": bool(launch_offer_qualified),
+        }
+        revenue_conflicts = revenue_ledger.conflicting_fields_in_db(db, **revenue_args)
+        if revenue_conflicts:
+            return None, False, ["revenue." + field for field in revenue_conflicts]
+        revenue_result = revenue_ledger.record_in_db(db, **revenue_args)
+        if revenue_result.get("status") == "conflict":
+            return None, False, [
+                "revenue." + field
+                for field in revenue_result.get("conflicting_fields", [])
+            ]
 
+        if "vip_access" not in permissions:
+            permissions.append("vip_access")
+        user["permissions"] = permissions
         if launch_offer_qualified:
             user["vip_launch_offer_qualified"] = True
 
@@ -130,11 +205,28 @@ def record_vip_subscription_payment(
             "launch_offer_qualified": bool(launch_offer_qualified),
             "fulfillment_status": "pending",
         }
-        orders[charge_id] = record
         user["vip_access_until"] = until
-        return record, True
-
-    record, created = state_manager.atomic_update(activate_and_mark)
+        users[uid] = user
+        db["vip_subscriptions"] = orders
+        orders[charge_id] = record
+        return dict(record), True, []
+    record, created, conflict_fields = state_manager.atomic_update(activate_and_mark)
+    if conflict_fields:
+        return {
+            "status": "conflict",
+            "created": False,
+            "charge_id": charge_id,
+            "conflicting_fields": list(conflict_fields),
+            "fulfillment_status": "blocked",
+        }
+    if not isinstance(record, dict):
+        return {
+            "status": "conflict",
+            "created": False,
+            "charge_id": charge_id,
+            "conflicting_fields": ["subscription_state_unavailable"],
+            "fulfillment_status": "blocked",
+        }
 
     # A completed replay is a no-op: do not re-run fulfillment or record
     # subscription revenue a second time. Pending replays remain recoverable.
@@ -147,21 +239,6 @@ def record_vip_subscription_payment(
             "fulfillment_status": "completed",
             "bundle": record.get("bundle"),
         }
-
-    # Retry revenue recording while fulfillment is pending. The ledger is
-    # idempotent on (source, reference), so replays recover a failed write
-    # without double-counting a charge. Completed replays returned above.
-    _record_revenue(
-        source="telegram_stars_subscription",
-        amount=stars_paid,
-        reference=charge_id,
-        uid=uid,
-        meta={
-            "kind": "vip_monthly",
-            "subscription_period": VIP_SUBSCRIPTION_PERIOD,
-            "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
-        },
-    )
 
     bundle = apply_vip_benefits(
         uid=uid,

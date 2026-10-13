@@ -484,19 +484,45 @@ def _notify(uid: str, text: str):
 
 def _fulfill(order: dict) -> dict:
     order_id = str(order["order_id"])
-    if order.get("status") == "FULFILLED":
-        return {"status": "duplicate", "order": order}
 
     def claim(db):
-        current = db.setdefault("card_orders", {}).get(order_id)
-        if not current:
+        orders = db.get("card_orders", {})
+        if not isinstance(orders, dict):
+            return {}, "STATE_CONFLICT"
+        current = orders.get(order_id)
+        if not isinstance(current, dict):
             raise KeyError("CARD_ORDER_NOT_FOUND")
-        if current.get("status") == "FULFILLED":
+
+        current_status = str(current.get("status") or "").upper()
+        if current_status not in {"PAID", "RECOVERABLE", "FULFILLING", "FULFILLED"}:
+            return dict(current), "NOT_PAID"
+
+        # Provider payment was already verified before this fulfillment path.
+        # Reconcile revenue in this same atomic write, before inventory/order
+        # mutation or grant. A conflicting source/reference never grants the item.
+        revenue_result = revenue_ledger.record_in_db(
+            db,
+            source="payplus_card",
+            amount=float(current["amount"]),
+            currency="ILS",
+            reference=str(current.get("transaction_uid") or order_id),
+            uid=str(current["uid"]),
+            meta={
+                "order_id": order_id,
+                "item_id": str(current["item_id"]),
+                "provider": "payplus",
+            },
+        )
+        if revenue_result.get("status") == "conflict":
+            return dict(current), "REVENUE_CONFLICT"
+
+        if current_status == "FULFILLED":
             return dict(current), "DUPLICATE"
-        if current.get("status") == "FULFILLING":
+        if current_status == "FULFILLING":
             started = float(current.get("fulfillment_started_at", 0) or 0)
             if started and time.time() - started < 15 * 60:
                 return dict(current), "IN_PROGRESS"
+
         current["status"] = "FULFILLING"
         current["fulfillment_started_at"] = time.time()
         current["updated_at"] = time.time()
@@ -504,6 +530,17 @@ def _fulfill(order: dict) -> dict:
         return dict(current), "CLAIMED"
 
     claimed, claim_status = state_manager.atomic_update(claim)
+    if claim_status == "REVENUE_CONFLICT":
+        _notify(
+            str(claimed.get("uid") or order.get("uid") or ""),
+            "⚠️ התשלום בכרטיס התקבל, אך נמצאה אי־התאמה בספר ההכנסות. "
+            "לא בוצעה אספקה נוספת. אל תשלם שוב; פנה לתמיכה לבדיקה.",
+        )
+        return {"status": "revenue_conflict", "order": claimed}
+    if claim_status == "STATE_CONFLICT":
+        return {"status": "revenue_conflict", "order": claimed, "reason": "CARD_ORDERS_STATE_INVALID"}
+    if claim_status == "NOT_PAID":
+        return {"status": "not_paid", "order": claimed}
     if claim_status == "DUPLICATE":
         return {"status": "duplicate", "order": claimed}
     if claim_status == "IN_PROGRESS":
@@ -531,18 +568,6 @@ def _fulfill(order: dict) -> dict:
             fulfilled_at=time.time(),
             updated_at=time.time(),
             error=None,
-        )
-        revenue_ledger.record(
-            source="payplus_card",
-            amount=float(order["amount"]),
-            currency="ILS",
-            reference=str(order.get("transaction_uid") or order_id),
-            uid=str(order["uid"]),
-            meta={
-                "order_id": order_id,
-                "item_id": order["item_id"],
-                "provider": "payplus",
-            },
         )
         _notify(
             str(order["uid"]),
@@ -579,7 +604,13 @@ def handle_payplus_callback(body: dict, supplied_hash: str, user_agent: str) -> 
         raise ValueError("CARD_ORDER_NOT_FOUND")
 
     if order.get("status") == "FULFILLED":
-        return {"status": "duplicate", "order_id": order["order_id"]}
+        # Reconcile a missing revenue event on an exact replay, but never grant
+        # the product again. _fulfill checks the existing revenue row fail-closed.
+        result = _fulfill(order)
+        return {
+            "status": result.get("status", "duplicate"),
+            "order_id": order["order_id"],
+        }
 
     try:
         verification = _verify_provider_transaction(order, body)

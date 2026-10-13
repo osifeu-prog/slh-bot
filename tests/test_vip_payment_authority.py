@@ -119,8 +119,9 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
                 now=1793473199,
             )
 
-        record_revenue.assert_called_once()
-        self.assertEqual(record_revenue.call_args.kwargs["reference"], "charge-pending")
+        record_revenue.assert_not_called()
+        self.assertEqual(len(db.get("revenue_ledger", [])), 1)
+        self.assertEqual(db["revenue_ledger"][0]["reference"], "charge-pending")
         self.assertEqual(result["status"], "duplicate")
         self.assertEqual(result["fulfillment_status"], "completed")
 

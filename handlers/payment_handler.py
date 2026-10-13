@@ -201,6 +201,15 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
+            if result.get("status") == "conflict":
+                print("[VIP] Stars charge/revenue conflict; benefits blocked for review")
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ נמצאה אי־התאמה בפרטי תשלום VIP שכבר נרשם. לא בוצעה הפעלה נוספת. "
+                    "אל תשלם שוב; פנה ל-/paysupport לבדיקה.",
+                )
+                return
+
             if result["status"] == "duplicate":
                 message = (
                     "ℹ️ תשלום VIP כבר עובד. החבילה נשמרת כל עוד המנוי פעיל."
@@ -243,6 +252,14 @@ def register_payment_handlers(bot):
                 print(f"[PAY] STAR item fulfillment failed: {type(e).__name__}")
                 bot.send_message(m.chat.id, "⚠️ Payment was received but fulfillment failed safely. Please contact /paysupport.")
                 return
+            if result["status"] == "CONFLICT":
+                print("[PAY] Telegram Stars item charge conflict; fulfillment blocked")
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ התשלום התקבל אך פרטי החיוב אינם תואמים לרשומה קיימת. לא בוצעה אספקה. "
+                    "אל תנסה לשלם שוב; פנה ל-/paysupport לבדיקה.",
+                )
+                return
             if result["status"] == "DUPLICATE":
                 bot.send_message(m.chat.id, "ℹ️ This item payment was already processed.")
                 return
@@ -280,8 +297,25 @@ def register_payment_handlers(bot):
                 referrer_uid=referrer_uid,
                 meta={"source": "telegram_successful_payment", "invoice_payload": payload, "package_id": package[0]},
             )
-            if result["status"] == "duplicate":
+            result_status = str(result.get("status") or "").lower()
+            if result_status == "conflict":
+                print("[PAY] Telegram Stars charge replay conflict; manual review required")
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ נמצאה אי־התאמה בפרטי תשלום שכבר נרשם. לא בוצע זיכוי נוסף בבקשה זו. "
+                    "אל תנסה לשלם שוב; פנה ל-/paysupport לבדיקה.",
+                )
+                return
+            if result_status == "duplicate":
                 bot.send_message(m.chat.id, "ℹ️ This payment was already processed.")
+                return
+            if result.get("revenue_status") == "conflict":
+                print("[PAY] Stars revenue ledger conflict after primary payment commit; manual review required")
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ התשלום נרשם, אך קיימת אי־התאמה בספר ההכנסות. אל תשלם שוב. "
+                    "פנה ל-/paysupport כדי שנבדוק את הרישום לפני כל פעולה נוספת.",
+                )
                 return
             bot.send_message(m.chat.id, f"✅ Payment received! {package[2]} credits added.\nYour balance: {result['credits']} credits.")
         except Exception as e:
