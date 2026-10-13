@@ -52,9 +52,15 @@ def audit_db(db):
     """Return a read-only reserve report with ledger domains kept separate."""
     findings = []
     orders = {}
-    for key, order in _records(db.get("exchange_orders", {})) + _records(db.get("exchange_order_archive", {})):
+    order_source_by_id = {}
+    for key, order in _records(db.get("exchange_orders", {})):
         oid = str(order.get("order_id") or order.get("id") or key)
         orders[oid] = order
+        order_source_by_id[oid] = "active"
+    for key, order in _records(db.get("exchange_order_archive", {})):
+        oid = str(order.get("order_id") or order.get("id") or key)
+        orders[oid] = order
+        order_source_by_id[oid] = "archive"
 
     sources = (
         ("ledger", _records(db.get("ledger", []))),
@@ -69,7 +75,9 @@ def audit_db(db):
     # findings; only consistency booleans are added for safe operator triage.
     open_sell_reserve_by_uid = {}
     open_sell_reserve_unknown_uids = set()
-    for order in orders.values():
+    for oid, order in orders.items():
+        if order_source_by_id.get(oid) != "active":
+            continue
         if str(order.get("side") or "").lower() != "sell" or str(order.get("status") or "").lower() != "open":
             continue
         uid = _uid(order)
@@ -103,12 +111,22 @@ def audit_db(db):
             if uid and wallet_reserve is not None and uid not in open_sell_reserve_unknown_uids
             else None
         )
+        try:
+            from core.exchange_housekeeping import is_test_seed
+            test_seed = bool(is_test_seed(order))
+        except Exception:
+            # Classification is diagnostic only; never allow it to affect audit status.
+            test_seed = None
+        archived = order_source_by_id.get(oid) == "archive"
         return {
             "order_status": str(order.get("status") or "UNKNOWN").upper(),
             "order_remaining_is_zero": remaining == 0 if remaining is not None else None,
             "order_reserved_slh_is_zero": order_reserve == 0 if order_reserve is not None else None,
             "wallet_reserved_slh_is_zero": wallet_reserve == 0 if wallet_reserve is not None else None,
             "wallet_reserve_matches_open_orders": reserve_match,
+            "order_is_archived": archived,
+            "order_is_test_seed": test_seed,
+            "order_is_archived_test_seed": archived and test_seed is True and str(order.get("archive_reason") or "") == "test_seed_retirement",
         }
 
 
@@ -430,6 +448,9 @@ def _safe_log_finding(item, index):
         "order_reserved_slh_is_zero",
         "wallet_reserved_slh_is_zero",
         "wallet_reserve_matches_open_orders",
+        "order_is_archived",
+        "order_is_test_seed",
+        "order_is_archived_test_seed",
         "group",
         "uid_suffix",
         "reserve_delta",

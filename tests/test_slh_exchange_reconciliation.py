@@ -425,5 +425,59 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertNotIn("wallet_exchange_reserved_slh", finding)
 
 
+
+    def test_audit_context_classifies_archived_seed_orders_safely(self):
+        db = {
+            "users": {
+                "seller": {
+                    "wallet": {
+                        "token_balance": 5.0,
+                        "live_token_balance": 5.0,
+                        "exchange_reserved_slh": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O_TEST_1": {
+                    "id": "O_TEST_1",
+                    "uid": "seller",
+                    "side": "sell",
+                    "status": "cancelled",
+                    "original_amount": "5",
+                    "remaining_amount": "0",
+                    "reserved_slh": "0",
+                    "reserved_credits": "0",
+                    "test": True,
+                    "archived_at": "2026-10-13T00:00:00+00:00",
+                    "archive_reason": "test_seed_retirement",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "seller",
+                    "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "event_id": "reserve:O_TEST_1",
+                    "meta": {"order_id": "O_TEST_1"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+        )
+
+        self.assertTrue(finding["order_is_archived"])
+        self.assertTrue(finding["order_is_test_seed"])
+        self.assertTrue(finding["order_is_archived_test_seed"])
+        self.assertNotIn("uid", finding)
+        self.assertNotIn("token_balance", finding)
+        self.assertNotIn("wallet_reserved_slh", finding)
+
+
 if __name__ == "__main__":
     unittest.main()
