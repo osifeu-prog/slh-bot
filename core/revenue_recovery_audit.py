@@ -73,7 +73,7 @@ def _call_body(text, open_index):
         if quote:
             if escaped:
                 escaped = False
-            elif char == "\\\\":
+            elif ord(char) == 92:
                 escaped = True
             elif char == quote:
                 quote = None
@@ -101,7 +101,7 @@ def _split_call_args(body):
         if quote:
             if escaped:
                 escaped = False
-            elif char == "\\\\":
+            elif ord(char) == 92:
                 escaped = True
             elif char == quote:
                 quote = None
