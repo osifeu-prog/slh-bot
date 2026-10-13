@@ -207,6 +207,7 @@ def record_vip_subscription_payment(
         }
         user["vip_access_until"] = until
         users[uid] = user
+        db["vip_subscriptions"] = orders
         orders[charge_id] = record
         return dict(record), True, []
     record, created, conflict_fields = state_manager.atomic_update(activate_and_mark)
