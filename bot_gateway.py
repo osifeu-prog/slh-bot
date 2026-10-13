@@ -344,6 +344,23 @@ if __name__ == "__main__":
         name="mqtt-device-heartbeat-listener",
     )
     heartbeat_thread.start()
+
+    # Read-only exchange reserve reconciliation; no ledger/balance/gate mutations.
+    if os.getenv("RUN_BOT") == "1" and os.getenv("SLH_EXCHANGE_RECONCILIATION_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}:
+        def run_exchange_reconciliation():
+            try:
+                from core.slh_exchange_reconciliation import run_periodic
+                run_periodic(log)
+            except Exception as exc:
+                log(f"[SLH_EXCHANGE_RECONCILIATION] startup failed: {type(exc).__name__}: {str(exc)[:200]}")
+
+        reconciliation_thread = threading.Thread(
+            target=run_exchange_reconciliation,
+            daemon=True,
+            name="slh-exchange-readonly-reconciliation",
+        )
+        reconciliation_thread.start()
+        log("[SLH_EXCHANGE_RECONCILIATION] read-only periodic audit thread started")
     try:
         from core.deposit_monitor import get_onchain_status
         chain = get_onchain_status()
