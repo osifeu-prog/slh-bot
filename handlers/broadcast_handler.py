@@ -374,6 +374,11 @@ def _fresh_reserve_audit(db):
     findings = raw_findings if isinstance(raw_findings, list) else []
     blocking_findings = raw_blocking if isinstance(raw_blocking, list) else []
     historical_findings = raw_historical if isinstance(raw_historical, list) else []
+    finding_codes = [
+        str(item.get("code") or "").strip()[:80]
+        for item in findings
+        if isinstance(item, dict) and str(item.get("code") or "").strip()
+    ]
 
     def _finding_key(item):
         return (
@@ -415,8 +420,22 @@ def _fresh_reserve_audit(db):
         and classifications_match
     )
 
+    status_consistent = (
+        (audit_status == "PASS" and finding_count == 0)
+        or (
+            audit_status == "FAIL"
+            and finding_count > 0
+            and any(code != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND" for code in finding_codes)
+        )
+        or (
+            audit_status == "UNKNOWN"
+            and checked_orders == 0
+            and finding_codes == ["NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"]
+        )
+    )
     passed = (
         report.get("read_only") is True
+        and status_consistent
         and audit_status in {"PASS", "FAIL"}
         and operational_status == "PASS"
         and count_valid
@@ -433,7 +452,13 @@ def _fresh_reserve_audit(db):
             f"retains {historical_count} finding(s) as reviewed, nonblocking history"
         )
     elif not lists_valid:
-        detail = "reserve audit classification/count evidence is inconsistent; broadcast blocked"
+        detail = (
+            "reserve audit classification/count evidence is inconsistent"
+            + (f" ({', '.join(finding_codes[:4])})" if finding_codes else "")
+            + "; broadcast blocked"
+        )
+    elif not status_consistent:
+        detail = "reserve audit full-status/count evidence is inconsistent; broadcast blocked"
     elif operational_status != "PASS":
         detail = (
             f"operational reserve readiness {operational_status}; "
