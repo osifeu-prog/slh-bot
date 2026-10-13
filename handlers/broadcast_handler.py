@@ -286,6 +286,71 @@ def _fresh_exchange_check(db):
         }
 
 
+def _fresh_reserve_audit(db):
+    """Return a read-only reserve-audit result; only an explicit clean PASS is green."""
+    try:
+        from core.slh_exchange_reconciliation import audit_db
+
+        report = audit_db(db)
+    except Exception as exc:
+        report = {
+            "status": "UNKNOWN",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 0,
+            "finding_count": 1,
+            "detail": f"reserve audit failed: {type(exc).__name__}",
+        }
+    if not isinstance(report, dict):
+        report = {
+            "status": "UNKNOWN",
+            "read_only": False,
+            "checked_cancelled_sell_orders": 0,
+            "finding_count": 1,
+            "detail": "invalid reserve audit result",
+        }
+
+    audit_status = str(report.get("status") or "UNKNOWN").upper()
+    try:
+        finding_count = max(0, int(report.get("finding_count") or 0))
+    except (TypeError, ValueError, OverflowError):
+        finding_count = 1
+    try:
+        checked_orders = max(0, int(report.get("checked_cancelled_sell_orders") or 0))
+    except (TypeError, ValueError, OverflowError):
+        checked_orders = 0
+    passed = report.get("read_only") is True and audit_status == "PASS" and finding_count == 0
+    detail = (
+        "read-only reserve audit PASS"
+        if passed
+        else str(report.get("detail") or f"reserve audit {audit_status} ({finding_count} finding(s)); broadcast blocked")
+    )
+    return {
+        "status": "PASS" if passed else "BLOCKED",
+        "audit_status": audit_status,
+        "checked_at": _utc_text(),
+        "read_only": report.get("read_only") is True,
+        "finding_count": finding_count,
+        "checked_cancelled_sell_orders": checked_orders,
+        "detail": detail[:300],
+    }
+
+
+def _proof_with_reserve_audit(check, audit):
+    """Attach a concise, read-only reserve-audit receipt to the send-time proof."""
+    combined = dict(check) if isinstance(check, dict) else {}
+    audit = audit if isinstance(audit, dict) else {}
+    combined.update({
+        "reserve_audit_check": "PASS" if audit.get("status") == "PASS" else "BLOCKED",
+        "reserve_audit_status": str(audit.get("audit_status") or "UNKNOWN"),
+        "reserve_audit_checked_at": str(audit.get("checked_at") or ""),
+        "reserve_audit_read_only": audit.get("read_only") is True,
+        "reserve_audit_finding_count": audit.get("finding_count", 1),
+        "reserve_audit_checked_cancelled_sell_orders": audit.get("checked_cancelled_sell_orders", 0),
+        "reserve_audit_detail": str(audit.get("detail") or "No reserve-audit evidence")[:300],
+    })
+    return combined
+
+
 def _fresh_live_exchange_proof():
     """Require the same uncached Railway + public runtime proof used by Buy/Sell."""
     try:
@@ -374,12 +439,22 @@ def _proof_snapshot(check, checked_at=None):
         "live_public_readiness",
         "live_public_updated_at",
         "live_runtime_detail",
+        "reserve_audit_check",
+        "reserve_audit_status",
+        "reserve_audit_checked_at",
+        "reserve_audit_read_only",
+        "reserve_audit_finding_count",
+        "reserve_audit_checked_cancelled_sell_orders",
+        "reserve_audit_detail",
     ):
         if isinstance(check, dict) and field in check:
             snapshot[field] = check[field]
     if "live_runtime_check" in snapshot and snapshot["live_runtime_check"] != "PASS":
         snapshot["status"] = "BLOCKED"
         snapshot["detail"] = snapshot.get("live_runtime_detail") or snapshot["detail"]
+    if "reserve_audit_check" in snapshot and snapshot["reserve_audit_check"] != "PASS":
+        snapshot["status"] = "BLOCKED"
+        snapshot["detail"] = snapshot.get("reserve_audit_detail") or snapshot["detail"]
     return snapshot
 
 
@@ -780,6 +855,19 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
             )
             return {"status": "BLOCKED", "detail": proof["detail"], "check": proof, "sent": 0}
 
+        reserve_audit = _fresh_reserve_audit(db)
+        proof = _proof_snapshot(
+            _proof_with_reserve_audit(check, reserve_audit),
+            checked_at=current_text,
+        )
+        if reserve_audit.get("status") != "PASS":
+            detail = reserve_audit.get("detail") or "Exchange reserve audit did not return PASS"
+            record.update({"status": "BLOCKED", "finished_at": current_text, "claim_check": proof})
+            _append_exchange_broadcast_audit(
+                db, record, "BLOCKED", detail=detail, check=proof, now=current
+            )
+            return {"status": "BLOCKED", "detail": detail, "check": proof, "sent": 0}
+
         users = db.get("users", {})
         if not isinstance(users, dict):
             record.update({"status": "BLOCKED", "finished_at": current_text})
@@ -859,8 +947,17 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
             uid, draft_id, "BLOCKED", detail=proof["detail"], check=proof, now=now
         )
 
+    reserve_audit = _fresh_reserve_audit(live_db)
+    combined_check = _proof_with_reserve_audit(live_check, reserve_audit)
+    proof = _proof_snapshot(combined_check, checked_at=_utc_text(now))
+    if reserve_audit.get("status") != "PASS":
+        detail = reserve_audit.get("detail") or "Exchange reserve audit did not return PASS"
+        return _terminal_state(
+            uid, draft_id, "BLOCKED", detail=detail, check=proof, now=now
+        )
+
     live_runtime = _fresh_live_exchange_proof()
-    combined_check = _proof_with_live_runtime(live_check, live_runtime)
+    combined_check = _proof_with_live_runtime(combined_check, live_runtime)
     proof = _proof_snapshot(combined_check, checked_at=_utc_text(now))
     if live_runtime.get("status") != "PASS":
         return _terminal_state(
@@ -904,8 +1001,18 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
                     detail=f"Exchange gate re-check blocked: {latest_check['detail']}",
                     check=latest_check,
                 )
+            reserve_audit = _fresh_reserve_audit(live_db)
+            combined_check = _proof_with_reserve_audit(live_check, reserve_audit)
+            latest_check = _proof_snapshot(combined_check)
+            if reserve_audit.get("status") != "PASS":
+                failure_detail = reserve_audit.get("detail") or "Exchange reserve audit did not return PASS"
+                return _terminal_state(
+                    uid, draft_id, "STOPPED_GATE_CLOSED", sent=sent, failed=failed,
+                    detail=f"Exchange reserve audit re-check blocked: {failure_detail}",
+                    check=latest_check,
+                )
             live_runtime = _fresh_live_exchange_proof()
-            combined_check = _proof_with_live_runtime(live_check, live_runtime)
+            combined_check = _proof_with_live_runtime(combined_check, live_runtime)
             latest_check = _proof_snapshot(combined_check)
             if live_runtime.get("status") != "PASS":
                 failure_detail = live_runtime.get("detail") or "Fresh live Exchange proof blocked"
