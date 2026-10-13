@@ -201,6 +201,15 @@ def register_payment_handlers(bot):
                 bot.send_message(m.chat.id, "❌ תשלום VIP לא תקין.")
                 return
 
+            if result.get("status") == "conflict":
+                print("[VIP] Stars charge/revenue conflict; benefits blocked for review")
+                bot.send_message(
+                    m.chat.id,
+                    "⚠️ נמצאה אי־התאמה בפרטי תשלום VIP שכבר נרשם. לא בוצעה הפעלה נוספת. "
+                    "אל תשלם שוב; פנה ל-/paysupport לבדיקה.",
+                )
+                return
+
             if result["status"] == "duplicate":
                 message = (
                     "ℹ️ תשלום VIP כבר עובד. החבילה נשמרת כל עוד המנוי פעיל."
