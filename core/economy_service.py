@@ -307,49 +307,69 @@ def purchase_item(
 
                 if commission > 0:
                     ref_user = users[referrer_uid]
-                    ref_wallet = ref_user.setdefault("wallet", {})
+                    ref_wallet_value = ref_user.get("wallet")
+                    ref_wallet_is_valid = (
+                        ref_wallet_value is None or isinstance(ref_wallet_value, dict)
+                    )
+                    ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
 
                     ref_before = ref_wallet.get("credits", 0)
-                    ref_after = ref_before + commission
+                    treasury = users.get(TREASURY_UID)
+                    treasury_wallet = (
+                        treasury.get("wallet")
+                        if isinstance(treasury, dict)
+                        and isinstance(treasury.get("wallet"), dict)
+                        else {}
+                    )
+                    try:
+                        treasury_before = float(treasury_wallet.get("credits", 0) or 0)
+                    except (TypeError, ValueError, OverflowError):
+                        treasury_before = 0.0
 
-                    _t = users.setdefault(TREASURY_UID, {"wallet": {"credits": 0.0}})
-                    _tw = _t.setdefault("wallet", {})
-                    _tb = float(_tw.get("credits", 0) or 0)
-                    if _tb < commission:
+                    # Fail closed: an unfunded referral commission creates no
+                    # recipient ledger row and no synthetic Treasury account.
+                    if (
+                        not ref_wallet_is_valid
+                        or not math.isfinite(treasury_before)
+                        or treasury_before < commission
+                    ):
                         commission = 0
                     else:
-                        _tw["credits"] = round(_tb - commission, 2)
+                        if not isinstance(ref_wallet_value, dict):
+                            ref_wallet = {}
+                            ref_user["wallet"] = ref_wallet
+                        ref_after = ref_before + commission
+                        treasury_after = round(treasury_before - commission, 2)
+                        treasury_wallet["credits"] = treasury_after
                         ledger.append({
                             "time": datetime.now(timezone.utc).isoformat(),
                             "uid": TREASURY_UID,
-                            "before": _tb,
+                            "before": treasury_before,
                             "amount": -commission,
-                            "after": _tw["credits"],
+                            "after": treasury_after,
                             "reason": "referral:commission:debit",
                             "meta": {"to_uid": referrer_uid, "source_uid": uid},
                         })
-                        ref_after = ref_before + commission
                         ref_wallet["credits"] = ref_after
+                        ledger.append({
+                            "time": datetime.now(timezone.utc).isoformat(),
+                            "uid": referrer_uid,
+                            "before": ref_before,
+                            "amount": commission,
+                            "after": ref_after,
+                            "reason": "referral:commission",
+                            "meta": {
+                                **meta,
+                                "source_uid": uid,
+                                "purchase_item": item,
+                            },
+                        })
 
-                    ledger.append({
-                        "time": datetime.now(timezone.utc).isoformat(),
-                        "uid": referrer_uid,
-                        "before": ref_before,
-                        "amount": commission,
-                        "after": ref_after,
-                        "reason": "referral:commission",
-                        "meta": {
-                            **meta,
-                            "source_uid": uid,
-                            "purchase_item": item,
-                        },
-                    })
-
-                    commissions = db.setdefault("commissions", {})
-                    commissions[referrer_uid] = (
-                        commissions.get(referrer_uid, 0)
-                        + commission
-                    )
+                        commissions = db.setdefault("commissions", {})
+                        commissions[referrer_uid] = (
+                            commissions.get(referrer_uid, 0)
+                            + commission
+                        )
 
         return {
             "item": item,
@@ -617,48 +637,68 @@ def record_stars_payment(
 
                 if commission > 0:
                     ref_user = users[referrer_uid]
-                    ref_wallet = ref_user.setdefault("wallet", {})
+                    ref_wallet_value = ref_user.get("wallet")
+                    ref_wallet_is_valid = (
+                        ref_wallet_value is None or isinstance(ref_wallet_value, dict)
+                    )
+                    ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
 
                     ref_before = ref_wallet.get("credits", 0)
-                    ref_after = ref_before + commission
+                    treasury = users.get(TREASURY_UID)
+                    treasury_wallet = (
+                        treasury.get("wallet")
+                        if isinstance(treasury, dict)
+                        and isinstance(treasury.get("wallet"), dict)
+                        else {}
+                    )
+                    try:
+                        treasury_before = float(treasury_wallet.get("credits", 0) or 0)
+                    except (TypeError, ValueError, OverflowError):
+                        treasury_before = 0.0
 
-                    _t = users.setdefault(TREASURY_UID, {"wallet": {"credits": 0.0}})
-                    _tw = _t.setdefault("wallet", {})
-                    _tb = float(_tw.get("credits", 0) or 0)
-                    if _tb < commission:
+                    # A Stars payment remains recorded, but an unfunded referral
+                    # commission must not invent a recipient ledger balance.
+                    if (
+                        not ref_wallet_is_valid
+                        or not math.isfinite(treasury_before)
+                        or treasury_before < commission
+                    ):
                         commission = 0
                     else:
-                        _tw["credits"] = round(_tb - commission, 2)
+                        if not isinstance(ref_wallet_value, dict):
+                            ref_wallet = {}
+                            ref_user["wallet"] = ref_wallet
+                        ref_after = ref_before + commission
+                        treasury_after = round(treasury_before - commission, 2)
+                        treasury_wallet["credits"] = treasury_after
                         ledger.append({
                             "time": datetime.now(timezone.utc).isoformat(),
                             "uid": TREASURY_UID,
-                            "before": _tb,
+                            "before": treasury_before,
                             "amount": -commission,
-                            "after": _tw["credits"],
+                            "after": treasury_after,
                             "reason": "referral:commission:debit",
                             "meta": {"to_uid": referrer_uid, "source_uid": uid},
                         })
-                        ref_after = ref_before + commission
                         ref_wallet["credits"] = ref_after
+                        ledger.append({
+                            "time": now,
+                            "uid": referrer_uid,
+                            "before": ref_before,
+                            "amount": commission,
+                            "after": ref_after,
+                            "reason": "referral:commission",
+                            "meta": {
+                                "source_uid": uid,
+                                "charge_id": charge_id,
+                            },
+                        })
 
-                    ledger.append({
-                        "time": now,
-                        "uid": referrer_uid,
-                        "before": ref_before,
-                        "amount": commission,
-                        "after": ref_after,
-                        "reason": "referral:commission",
-                        "meta": {
-                            "source_uid": uid,
-                            "charge_id": charge_id,
-                        },
-                    })
-
-                    commissions = db.setdefault("commissions", {})
-                    commissions[referrer_uid] = (
-                        commissions.get(referrer_uid, 0)
-                        + commission
-                    )
+                        commissions = db.setdefault("commissions", {})
+                        commissions[referrer_uid] = (
+                            commissions.get(referrer_uid, 0)
+                            + commission
+                        )
 
         return {
             "status": "applied",
