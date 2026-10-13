@@ -1071,7 +1071,9 @@ def _broadcast_status_reply(uid, *, now=None):
         duplicate_notice = (
             f"\n⚠️ זיהוי כפילות: שידור קודם הגיע ל־{int(pending.get('previous_sent') or 0)} "
             f"ונכשל ל־{int(pending.get('previous_failed') or 0)}. "
-            "אישור רגיל חסום; יש לאשר במפורש שידור מלא חוזר."
+            "⛔ הטיוטה הישנה אינה ניתנת לאישור. אין לשלוח שוב לכל הקהל; "
+            "הכן תצוגה חדשה, ורק לנמענים שנכשלו וניתן לזהותם או למשתמשים חדשים שניתן לאמת. "
+            "אם אין קהל בטוח, השליחה תיחסם."
         )
     elif isinstance(pending, dict) and pending.get("audience_scope") == "failed_only":
         duplicate_notice = "\n✅ הטיוטה מיועדת רק לנמענים שנכשלו בשידור הקודם."
