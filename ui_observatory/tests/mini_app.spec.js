@@ -470,3 +470,57 @@ test('home has one-tap shortcuts to internal Exchange and governance voting', as
   await governance.click();
   await expect(page.locator('#governance')).toHaveClass(/active/);
 });
+
+
+test('exchange receipt never claims fresh PASS without live runtime proof', async ({ page }) => {
+  await page.evaluate(() => show('exchange'));
+  await page.evaluate(() => sendExchangeOrder('buy', '2', '1'));
+  const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
+  await expect(receipt).toBeVisible();
+  await expect(receipt).toContainText('Fresh Exchange receipt incomplete');
+  await expect(receipt).not.toContainText('Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('Live runtime confirmation');
+  await expect(receipt).toContainText('NOT VERIFIED');
+});
+
+test('exchange receipt shows fresh PASS only when Railway and live beacon proof are present', async ({ page }) => {
+  await page.route('**/api/v1/exchange/order', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        order_id: 'O000000099',
+        filled: '2.00000000',
+        remaining: '0.00000000',
+        status: 'filled',
+        trade_ids: ['T000000100'],
+        execution_check: {
+          status: 'PASS',
+          checked_at: '2026-10-13T10:00:02Z',
+          public_gate: 'OPEN',
+          verdict: 'OPEN',
+          execution_ready: true,
+          public_ready: true,
+          order_book_integrity: true,
+          trade_integrity: true,
+          money_invariants: true,
+          open_orders_before: 1,
+          live_runtime_check: 'PASS',
+          live_checked_at: '2026-10-13T10:00:01Z',
+          live_railway_gate: '1',
+          live_public_gate: 'OPEN',
+          live_public_verdict: 'OPEN',
+          live_public_readiness: true,
+          live_public_updated_at: 1791885600
+        }
+      })
+    });
+  });
+  await page.evaluate(() => show('exchange'));
+  await page.evaluate(() => sendExchangeOrder('buy', '2', '1'));
+  const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
+  await expect(receipt).toBeVisible();
+  await expect(receipt).toContainText('Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('Live runtime confirmation');
+  await expect(receipt).toContainText('PASS');
+});
