@@ -20,29 +20,32 @@ def _github_check():
     token = str(os.getenv("GIT_TOKEN") or os.getenv("GITHUB_TOKEN") or "").strip()
     if not token:
         return "BLOCKED", "GITHUB_TOKEN_MISSING"
-    request = urllib.request.Request(
-        GITHUB_API + "/repos/" + GITHUB_REPO,
-        headers={
-            "Authorization": "Bearer " + token,
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "SLH-Connections-Status",
-        },
-        method="GET",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
-                if isinstance(data, dict) and data.get("full_name", "").lower() == GITHUB_REPO:
-                    return "PASS", "REPOSITORY_READ_OK"
-                return "BLOCKED", "GITHUB_RESPONSE_INVALID"
-            return "BLOCKED", "GITHUB_HTTP_" + str(response.status)
-    except urllib.error.HTTPError as exc:
-        return "BLOCKED", "GITHUB_HTTP_" + str(exc.code)
-    except Exception as exc:
-        return "UNKNOWN", "GITHUB_REQUEST_FAILED_" + type(exc).__name__
 
+    headers = {
+        "Authorization": "Bearer " + token,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "SLH-Connections-Status",
+    }
+    # /user requires authentication even if the target repository is public.
+    for endpoint in ("/user", "/repos/" + GITHUB_REPO):
+        request = urllib.request.Request(GITHUB_API + endpoint, headers=headers, method="GET")
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                if response.status != 200:
+                    return "BLOCKED", "GITHUB_HTTP_" + str(response.status)
+                data = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            return "BLOCKED", "GITHUB_HTTP_" + str(exc.code)
+        except Exception as exc:
+            return "UNKNOWN", "GITHUB_REQUEST_FAILED_" + type(exc).__name__
+        if not isinstance(data, dict):
+            return "BLOCKED", "GITHUB_RESPONSE_INVALID"
+        if endpoint == "/user" and not str(data.get("login") or "").strip():
+            return "BLOCKED", "GITHUB_AUTH_RESPONSE_INVALID"
+        if endpoint.startswith("/repos/") and str(data.get("full_name") or "").lower() != GITHUB_REPO:
+            return "BLOCKED", "GITHUB_REPOSITORY_READ_FAILED"
+    return "PASS", "AUTHENTICATED_REPOSITORY_READ_OK"
 
 def _railway_check():
     # Reuse the existing explicitly scoped Project Token validation. Do not
