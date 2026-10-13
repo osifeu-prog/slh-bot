@@ -30,7 +30,7 @@ AUDIT_MATCH_TERMS = REVENUE_FIELDS + (
     "test-2026-10-05",
     "2026-w40-real",
 )
-_ENGINE_CALL_RE = re.compile(r"\\bdistribute_revenue\\s*\\(", re.IGNORECASE)
+_ENGINE_CALL_RE = re.compile(r"\bdistribute_revenue\s*\(", re.IGNORECASE)
 _DELETE_OR_MOVE_RE = re.compile(
     r"(?:os\.remove\s*\(|\.unlink\s*\(|rmtree\s*\(|"
     r"shutil\.move\s*\(|os\.rename\s*\(|"
