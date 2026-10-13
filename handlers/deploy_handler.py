@@ -161,8 +161,6 @@ def _credentials_for_target(target):
         os.getenv("RAILWAY_API_TOKEN")
         or os.getenv("RAILWAY_API_TOKEN_SLH")
     )
-    if account_token:
-        return account_token, "account"
 
     candidates = [
         os.getenv("SLH_RAILWAY_TOKEN"),
@@ -187,6 +185,10 @@ def _credentials_for_target(target):
             return token, "project"
         saw_scope_mismatch = True
 
+    if account_token:
+        # Broader account/workspace credentials are a fallback for cross-project
+        # targets only; a correctly scoped project token takes precedence above.
+        return account_token, "account"
     if saw_scope_mismatch:
         raise RuntimeError("RAILWAY_PROJECT_TOKEN_SCOPE_MISMATCH")
     if seen:
