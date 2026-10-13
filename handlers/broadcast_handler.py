@@ -1192,7 +1192,7 @@ def _exchange_reserve_audit_reply(bot, message, *, now=None):
     read_only = report.get("read_only") is True
 
     def safe_text(value, limit=100):
-        value = re.sub(r"\s+", " ", str(value or "")).strip()
+        value = re.sub(r"\s+", " ", str(value if value is not None else "")).strip()
         value = value.replace("|", "/")
         return value[:limit]
 
