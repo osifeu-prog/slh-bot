@@ -346,6 +346,34 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertTrue(all(len(line) < 4000 for line in details))
 
 
+    def test_cancelled_buy_credit_release_does_not_poison_sell_reserve_audit(self):
+        # This audit proves SLH SELL reserve releases only. A legacy BUY order
+        # releases Credits, and must not be mistaken for an SLH reserve event.
+        db = {
+            "exchange_orders": {
+                "O_BUY": {
+                    "id": "O_BUY", "uid": "42", "side": "buy",
+                    "status": "cancelled", "original_amount": "100",
+                    "remaining_amount": "0", "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "42", "amount": 100,
+                    "reason": "exchange:cancel_release_credits",
+                    "meta": {"order_id": "O_BUY"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "UNKNOWN")
+        self.assertNotIn("LEDGER_EVENT_ID_MISSING", codes)
+        self.assertNotIn("DUPLICATE_LEDGER_EVENT_ID", codes)
+
 
 
     def test_findings_include_sanitized_order_and_wallet_state_for_triage(self):
