@@ -4,6 +4,22 @@ import handlers.broadcast_handler as target
 import handlers.exchange_handler as exchange_handler
 
 
+def _install_reserve_audit_pass(monkeypatch):
+    monkeypatch.setattr(
+        target,
+        "_fresh_reserve_audit",
+        lambda _db: {
+            "status": "PASS",
+            "audit_status": "PASS",
+            "checked_at": "2026-10-13T08:00:00+00:00",
+            "read_only": True,
+            "finding_count": 0,
+            "checked_cancelled_sell_orders": 3,
+            "detail": "read-only reserve audit PASS",
+        },
+    )
+
+
 class FakeBot:
     def __init__(self, scripted=None):
         self.scripted = list(scripted or [])
@@ -269,6 +285,7 @@ def test_new_user_retry_blocks_if_verified_cohort_changes_after_preview(monkeypa
     db["users"]["33"] = {"joined": "2026-10-12T11:00:01+00:00"}
     uid = str(target.OWNER_TELEGRAM_ID)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+    _install_reserve_audit_pass(monkeypatch)
 
     assert target._latest_exchange_broadcast_audit(db, uid) == failed
     preview = target.prepare_exchange_broadcast(uid)
@@ -364,6 +381,7 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
     }
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+    _install_reserve_audit_pass(monkeypatch)
     monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
         "execution_ready": True,
         "public_gate": "OPEN",
@@ -436,6 +454,7 @@ def test_exchange_broadcast_blocked_by_immediate_pre_send_recheck(monkeypatch):
 
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
+    _install_reserve_audit_pass(monkeypatch)
 
     def sequential_check(snapshot):
         calls.append(snapshot)
