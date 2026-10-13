@@ -1,6 +1,7 @@
 import types
 
 import handlers.broadcast_handler as target
+import handlers.exchange_handler as exchange_handler
 
 
 class FakeBot:
@@ -26,6 +27,23 @@ class FakeBot:
 
     def reply_to(self, message, text):
         self.replies.append((message, text))
+
+
+def _install_live_exchange_pass(monkeypatch):
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: {
+            "status": "PASS",
+            "checked_at": "2026-10-13T08:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+            "detail": "canonical public runtime proof passed",
+        },
+    )
 
 
 def test_retry_after_parsing():
@@ -356,6 +374,7 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
         "money_invariants": True,
         "detail": "public state clean",
     })
+    _install_live_exchange_pass(monkeypatch)
     bot = FakeBot([None, RuntimeError("blocked")])
     monkeypatch.setattr(target, "_exchange_broadcast_reply_markup", lambda: "ACK_MARKUP")
 
@@ -488,3 +507,56 @@ def test_voice_prepare_prefix_recognizer_rejects_negation_and_questions():
     assert not target._is_explicit_prepare_intent(
         "תכין לי ברודקאסט בלבד"
     )
+
+
+def test_broadcast_status_warns_legacy_full_retry_is_blocked(monkeypatch):
+    bot = FakeBot()
+    target.register(bot)
+    uid = str(target.OWNER_TELEGRAM_ID)
+    db = {
+        "users": {"1": {}, "2": {}},
+        "exchange_broadcast_pending": {
+            uid: {
+                "status": "EXPIRED",
+                "requires_duplicate_ack": True,
+                "previous_sent": 27,
+                "previous_failed": 5,
+            }
+        },
+        "exchange_broadcast_audit": [
+            {
+                "draft_id": "prior-partial",
+                "initiated_by": uid,
+                "status": "PARTIAL",
+                "sent": 27,
+                "failed": 5,
+            }
+        ],
+    }
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(
+        target,
+        "_fresh_exchange_check",
+        lambda _db: {
+            "execution_ready": True,
+            "public_gate": "OPEN",
+            "verdict": "OPEN",
+            "public_ready": True,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "detail": "public state clean",
+        },
+    )
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=target.OWNER_TELEGRAM_ID),
+        text="/broadcast status",
+    )
+
+    bot.broadcast_cmd(message)
+
+    reply = bot.replies[-1][1]
+    assert bot.sent == []
+    assert "הטיוטה הישנה אינה ניתנת לאישור" in reply
+    assert "אין לשלוח שוב לכל הקהל" in reply
+    assert "יש לאשר במפורש שידור מלא חוזר" not in reply

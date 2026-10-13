@@ -244,6 +244,20 @@ def test_voice_confirm_rechecks_fresh_exchange_and_sends_fixed_notice(monkeypatc
         return _green_exchange_check()
 
     monkeypatch.setattr(broadcast_handler, "_fresh_exchange_check", green)
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: {
+            "status": "PASS",
+            "checked_at": "2026-10-13T08:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+            "detail": "canonical public runtime proof passed",
+        },
+    )
 
     prepared = broadcast_handler.prepare_exchange_broadcast(owner, now=now)
     assert prepared["status"] == "PREPARED"

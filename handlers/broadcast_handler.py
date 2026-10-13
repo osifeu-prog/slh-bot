@@ -286,6 +286,71 @@ def _fresh_exchange_check(db):
         }
 
 
+def _fresh_live_exchange_proof():
+    """Require the same uncached Railway + public runtime proof used by Buy/Sell."""
+    try:
+        from handlers.exchange_handler import require_fresh_live_exchange_proof
+
+        result = require_fresh_live_exchange_proof()
+    except Exception as exc:
+        return {
+            "status": "BLOCKED",
+            "checked_at": _utc_text(),
+            "railway_configured": "UNKNOWN",
+            "public_gate": "UNKNOWN",
+            "public_verdict": "UNKNOWN",
+            "public_readiness": False,
+            "public_updated_at": None,
+            "detail": f"fresh live Exchange proof failed: {type(exc).__name__}",
+        }
+
+    if not isinstance(result, dict):
+        result = {}
+    checked_at = str(result.get("checked_at") or "")
+    railway_configured = str(result.get("railway_configured") or "UNKNOWN")
+    public_gate = str(result.get("public_gate") or "UNKNOWN")
+    public_verdict = str(result.get("public_verdict") or "UNKNOWN")
+    public_readiness = result.get("public_readiness") is True
+    passed = (
+        result.get("status") == "PASS"
+        and bool(checked_at)
+        and railway_configured == "1"
+        and public_gate == "OPEN"
+        and public_verdict == "OPEN"
+        and public_readiness
+    )
+    return {
+        "status": "PASS" if passed else "BLOCKED",
+        "checked_at": checked_at,
+        "railway_configured": railway_configured,
+        "public_gate": public_gate,
+        "public_verdict": public_verdict,
+        "public_readiness": public_readiness,
+        "public_updated_at": result.get("public_updated_at"),
+        "detail": str(
+            result.get("detail")
+            or ("canonical public runtime proof passed" if passed else "live runtime proof did not confirm OPEN/PASS")
+        )[:300],
+    }
+
+
+def _proof_with_live_runtime(check, live):
+    """Join local invariant evidence with separate live runtime proof for audit receipts."""
+    combined = dict(check) if isinstance(check, dict) else {}
+    live = live if isinstance(live, dict) else {}
+    combined.update({
+        "live_runtime_check": "PASS" if live.get("status") == "PASS" else "BLOCKED",
+        "live_checked_at": str(live.get("checked_at") or ""),
+        "live_railway_gate": str(live.get("railway_configured") or "UNKNOWN"),
+        "live_public_gate": str(live.get("public_gate") or "UNKNOWN"),
+        "live_public_verdict": str(live.get("public_verdict") or "UNKNOWN"),
+        "live_public_readiness": live.get("public_readiness") is True,
+        "live_public_updated_at": live.get("public_updated_at"),
+        "live_runtime_detail": str(live.get("detail") or "No live runtime proof")[:300],
+    })
+    return combined
+
+
 def _proof_snapshot(check, checked_at=None):
     fields = (
         "public_gate",
@@ -300,6 +365,21 @@ def _proof_snapshot(check, checked_at=None):
     snapshot["status"] = "PASS" if _proof_is_green(check) else "BLOCKED"
     snapshot["checked_at"] = checked_at or _utc_text()
     snapshot["detail"] = str((check or {}).get("detail") or "No detail")[:300] if isinstance(check, dict) else "invalid check"
+    for field in (
+        "live_runtime_check",
+        "live_checked_at",
+        "live_railway_gate",
+        "live_public_gate",
+        "live_public_verdict",
+        "live_public_readiness",
+        "live_public_updated_at",
+        "live_runtime_detail",
+    ):
+        if isinstance(check, dict) and field in check:
+            snapshot[field] = check[field]
+    if "live_runtime_check" in snapshot and snapshot["live_runtime_check"] != "PASS":
+        snapshot["status"] = "BLOCKED"
+        snapshot["detail"] = snapshot.get("live_runtime_detail") or snapshot["detail"]
     return snapshot
 
 
@@ -773,10 +853,20 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
             "verdict": "BLOCKED",
             "detail": f"live state unreadable: {type(exc).__name__}",
         }
-    proof = _proof_snapshot(live_check, checked_at=_utc_text(now))
     if not _proof_is_green(live_check):
+        proof = _proof_snapshot(live_check, checked_at=_utc_text(now))
         return _terminal_state(
             uid, draft_id, "BLOCKED", detail=proof["detail"], check=proof, now=now
+        )
+
+    live_runtime = _fresh_live_exchange_proof()
+    combined_check = _proof_with_live_runtime(live_check, live_runtime)
+    proof = _proof_snapshot(combined_check, checked_at=_utc_text(now))
+    if live_runtime.get("status") != "PASS":
+        return _terminal_state(
+            uid, draft_id, "BLOCKED",
+            detail=live_runtime.get("detail") or "Fresh live Exchange proof blocked",
+            check=proof, now=now
         )
 
     def store_pre_send(db):
@@ -807,11 +897,21 @@ def send_confirmed_exchange_broadcast(bot, uid, *, now=None, duplicate_acknowled
                     "verdict": "BLOCKED",
                     "detail": f"live state unreadable: {type(exc).__name__}",
                 }
-            latest_check = _proof_snapshot(live_check)
             if not _proof_is_green(live_check):
+                latest_check = _proof_snapshot(live_check)
                 return _terminal_state(
                     uid, draft_id, "STOPPED_GATE_CLOSED", sent=sent, failed=failed,
                     detail=f"Exchange gate re-check blocked: {latest_check['detail']}",
+                    check=latest_check,
+                )
+            live_runtime = _fresh_live_exchange_proof()
+            combined_check = _proof_with_live_runtime(live_check, live_runtime)
+            latest_check = _proof_snapshot(combined_check)
+            if live_runtime.get("status") != "PASS":
+                failure_detail = live_runtime.get("detail") or "Fresh live Exchange proof blocked"
+                return _terminal_state(
+                    uid, draft_id, "STOPPED_GATE_CLOSED", sent=sent, failed=failed,
+                    detail=f"Exchange live re-check blocked: {failure_detail}",
                     check=latest_check,
                 )
 
@@ -971,7 +1071,9 @@ def _broadcast_status_reply(uid, *, now=None):
         duplicate_notice = (
             f"\n⚠️ זיהוי כפילות: שידור קודם הגיע ל־{int(pending.get('previous_sent') or 0)} "
             f"ונכשל ל־{int(pending.get('previous_failed') or 0)}. "
-            "אישור רגיל חסום; יש לאשר במפורש שידור מלא חוזר."
+            "⛔ הטיוטה הישנה אינה ניתנת לאישור. אין לשלוח שוב לכל הקהל; "
+            "הכן תצוגה חדשה, ורק לנמענים שנכשלו וניתן לזהותם או למשתמשים חדשים שניתן לאמת. "
+            "אם אין קהל בטוח, השליחה תיחסם."
         )
     elif isinstance(pending, dict) and pending.get("audience_scope") == "failed_only":
         duplicate_notice = "\n✅ הטיוטה מיועדת רק לנמענים שנכשלו בשידור הקודם."
