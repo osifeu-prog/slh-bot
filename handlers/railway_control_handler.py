@@ -5,6 +5,7 @@ import json
 import os
 import re
 import uuid
+import urllib.error
 import urllib.request
 
 import state_manager
@@ -334,7 +335,107 @@ def _format(result):
     return "⛔ Railway operation blocked safely: " + str(result.get("detail") or status)
 
 
+def connections_status_reply():
+    """Read-only check of runtime connection configuration and API reachability.
+
+    Never returns credential values. The only remote calls are a GitHub GET and
+    a Railway projectToken GraphQL query; this function performs no mutations.
+    """
+    lines = ["🔗 SLH CONNECTIONS — READ ONLY"]
+
+    github_token = (
+        os.getenv("GITHUB_TOKEN")
+        or os.getenv("GH_TOKEN")
+        or os.getenv("GITHUB_TOKEN_SLH")
+        or os.getenv("GIT_TOKEN")
+    )
+    git_writer_token = os.getenv("GIT_TOKEN") or os.getenv("GITHUB_TOKEN")
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "SLH-Connections-Status",
+    }
+    if github_token:
+        headers["Authorization"] = "Bearer " + github_token
+
+    request = urllib.request.Request(
+        "https://api.github.com/repos/osifeu-prog/slh-bot",
+        headers=headers,
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=8) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        if str(body.get("full_name") or "").lower() == "osifeu-prog/slh-bot":
+            github_read = "PASS"
+        else:
+            github_read = "UNEXPECTED_RESPONSE"
+    except urllib.error.HTTPError as exc:
+        github_read = "HTTP_" + str(int(exc.code))
+    except Exception as exc:
+        github_read = "UNREACHABLE_" + type(exc).__name__
+
+    lines.append("GitHub API read: " + github_read)
+    lines.append(
+        "GitHub write credential (/git commit): "
+        + ("CONFIGURED (write permission not tested)" if git_writer_token else "MISSING")
+    )
+    lines.append(
+        "Railway account token (/deploy, /logs): "
+        + ("CONFIGURED (not probed here)" if (
+            os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
+        ) else "MISSING — RAILWAY_API_TOKEN")
+    )
+    lines.append(
+        "Railway core control token: "
+        + ("CONFIGURED (not probed here)" if (
+            os.getenv("RAILWAY_API_TOKEN")
+            or os.getenv("RAILWAY_API_TOKEN_SLH")
+            or os.getenv("RAILWAY_PROJECT_TOKEN")
+            or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
+        ) else "MISSING")
+    )
+
+    try:
+        ctx = _ids()
+        scope = _graphql(
+            ctx,
+            "query { projectToken { projectId environmentId } }",
+        ).get("projectToken")
+        if not isinstance(scope, dict):
+            railway_scoped = "BLOCKED — RAILWAY_PROJECT_TOKEN_REQUIRED"
+        elif (
+            str(scope.get("projectId") or "") != ctx["project_id"]
+            or str(scope.get("environmentId") or "") != ctx["environment_id"]
+        ):
+            railway_scoped = "BLOCKED — RAILWAY_TOKEN_SCOPE_MISMATCH"
+        else:
+            railway_scoped = "PASS — scoped project/environment verified"
+    except Exception as exc:
+        code = str(exc or "").split(":", 1)[0]
+        if not code or len(code) > 72 or not re.fullmatch(r"[A-Z0-9_]+", code):
+            code = "RAILWAY_CHECK_FAILED"
+        railway_scoped = "BLOCKED — " + code
+
+    lines.append("SLH scoped Railway integration: " + railway_scoped)
+    lines.extend([
+        "",
+        "No secrets printed. No variables, balances, ledgers, gates, or deployments changed.",
+    ])
+    return "\n".join(lines)
+
+
 def register(bot):
+    @bot.message_handler(commands=["connections_status"])
+    def connections_status(message):
+        uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER only", parse_mode=None)
+            return
+        if str(getattr(getattr(message, "chat", None), "type", "") or "").lower() != "private":
+            bot.reply_to(message, "⛔ Connection status is available in private chat only.", parse_mode=None)
+            return
+        bot.reply_to(message, connections_status_reply(), parse_mode=None)
+
     @bot.message_handler(commands=["railway_status"])
     def railway_status(message):
         uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
