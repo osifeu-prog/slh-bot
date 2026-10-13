@@ -600,3 +600,79 @@ def test_fresh_reserve_audit_blocks_inconsistent_pass_report(monkeypatch):
     assert result["status"] == "BLOCKED"
     assert result["finding_count"] >= 1
     assert "CONTRADICTORY_FINDING" in result["detail"]
+
+
+def test_broadcast_status_blocks_preview_when_reserve_audit_fails(monkeypatch):
+    uid = str(target.OWNER_TELEGRAM_ID)
+    db = {
+        "users": {uid: {}},
+        "exchange_broadcast_pending": {},
+        "exchange_broadcast_audit": [],
+    }
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    })
+    monkeypatch.setattr(target, "_fresh_reserve_audit", lambda _db: {
+        "status": "BLOCKED",
+        "audit_status": "FAIL",
+        "checked_at": "2026-10-13T09:00:00+00:00",
+        "read_only": True,
+        "finding_count": 11,
+        "checked_cancelled_sell_orders": 7,
+        "detail": "reserve audit FAIL (11 findings)",
+    })
+
+    reply = target._broadcast_status_reply(uid)
+
+    assert "Reserve audit: BLOCKED" in reply
+    assert "11 findings" in reply
+    assert "הכן ברודקאסט למסחר פנימי" not in reply
+    assert "לא לשדר" in reply
+
+
+def test_voice_broadcast_readiness_blocks_when_reserve_audit_fails(monkeypatch):
+    uid = target.OWNER_TELEGRAM_ID
+    db = {
+        "users": {str(uid): {}},
+        "exchange_broadcast_pending": {},
+        "exchange_broadcast_audit": [],
+    }
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(target, "_fresh_exchange_check", lambda _db: {
+        "execution_ready": True,
+        "public_gate": "OPEN",
+        "verdict": "OPEN",
+        "public_ready": True,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "detail": "public state clean",
+    })
+    monkeypatch.setattr(target, "_fresh_reserve_audit", lambda _db: {
+        "status": "BLOCKED",
+        "audit_status": "FAIL",
+        "checked_at": "2026-10-13T09:00:00+00:00",
+        "read_only": True,
+        "finding_count": 11,
+        "checked_cancelled_sell_orders": 7,
+        "detail": "reserve audit FAIL (11 findings)",
+    })
+    message = types.SimpleNamespace(
+        from_user=types.SimpleNamespace(id=uid),
+        chat=types.SimpleNamespace(type="private"),
+    )
+
+    reply = target._exchange_broadcast_status_answer(message)
+
+    assert "Reserve audit: BLOCKED" in reply
+    assert "11 findings" in reply
+    assert "הכן ברודקאסט למסחר פנימי" not in reply
+    assert "לא לשדר" in reply
