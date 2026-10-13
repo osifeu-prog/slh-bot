@@ -375,5 +375,55 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertNotIn("DUPLICATE_LEDGER_EVENT_ID", codes)
 
 
+
+    def test_findings_include_sanitized_order_and_wallet_state_for_triage(self):
+        db = {
+            "users": {
+                "seller": {
+                    "wallet": {
+                        "token_balance": 5.0,
+                        "live_token_balance": 5.0,
+                        "exchange_reserved_slh": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {
+                "O0000000006": {
+                    "id": "O0000000006",
+                    "uid": "seller",
+                    "side": "sell",
+                    "status": "cancelled",
+                    "original_amount": "5",
+                    "remaining_amount": "0",
+                    "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "seller",
+                    "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O0000000006"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+        )
+
+        self.assertEqual(finding["order_status"], "CANCELLED")
+        self.assertTrue(finding["order_remaining_is_zero"])
+        self.assertTrue(finding["order_reserved_slh_is_zero"])
+        self.assertTrue(finding["wallet_reserved_slh_is_zero"])
+        self.assertTrue(finding["wallet_reserve_matches_open_orders"])
+        self.assertNotIn("uid", finding)
+        self.assertNotIn("wallet_exchange_reserved_slh", finding)
+
+
 if __name__ == "__main__":
     unittest.main()
