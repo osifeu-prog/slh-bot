@@ -6,7 +6,7 @@ from core.authority import is_owner
 
 
 REGISTRY_FILE = "control_plane_registry.json"
-RAILWAY_API_URL = "https://backboard.railway.app/graphql/v2"
+RAILWAY_API_URL = "https://backboard.railway.com/graphql/v2"
 
 
 def _load_registry():
@@ -107,14 +107,20 @@ def _resolve_target(name, include_infrastructure=False):
     return None, name
 
 
-def _graphql(token, query, variables):
+def _graphql(token, query, variables, *, token_type="account"):
+    """Call Railway GraphQL using the header appropriate for the token scope."""
+    headers = {"Content-Type": "application/json"}
+    if token_type == "project":
+        headers["Project-Access-Token"] = token
+    elif token_type == "account":
+        headers["Authorization"] = "Bearer " + token
+    else:
+        raise ValueError("INVALID_RAILWAY_TOKEN_TYPE")
+
     response = requests.post(
         RAILWAY_API_URL,
         json={"query": query, "variables": variables},
-        headers={
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json",
-        },
+        headers=headers,
         timeout=20,
     )
     response.raise_for_status()
@@ -127,7 +133,68 @@ def _graphql(token, query, variables):
     return data.get("data") or {}
 
 
-def _latest_deployment(token, target):
+def _project_token_scope(token):
+    """Inspect a project token using a read-only query, without exposing it."""
+    data = _graphql(
+        token,
+        "query { projectToken { projectId environmentId } }",
+        {},
+        token_type="project",
+    )
+    scope = data.get("projectToken")
+    if not isinstance(scope, dict):
+        raise RuntimeError("RAILWAY_PROJECT_TOKEN_SCOPE_UNAVAILABLE")
+    return (
+        str(scope.get("projectId") or ""),
+        str(scope.get("environmentId") or ""),
+    )
+
+
+def _credentials_for_target(target):
+    """Choose credentials only when their scope is sufficient for this target.
+
+    Account/workspace tokens can target multiple projects. Project tokens are
+    accepted only after a read-only scope query proves that both project and
+    environment match the resolved registry target.
+    """
+    account_token = (
+        os.getenv("RAILWAY_API_TOKEN")
+        or os.getenv("RAILWAY_API_TOKEN_SLH")
+    )
+    if account_token:
+        return account_token, "account"
+
+    candidates = [
+        os.getenv("SLH_RAILWAY_TOKEN"),
+        os.getenv("RAILWAY_PROJECT_TOKEN"),
+        os.getenv("RAILWAY_PROJECT_TOKEN_SLH"),
+        os.getenv("RAILWAY_TOKEN"),
+    ]
+    expected_project = str(target.get("railway_project_id") or "")
+    expected_environment = str(target.get("railway_environment_id") or "")
+    saw_scope_mismatch = False
+    seen = set()
+    for candidate in candidates:
+        token = str(candidate or "").strip()
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        try:
+            project_id, environment_id = _project_token_scope(token)
+        except Exception:
+            continue
+        if project_id == expected_project and environment_id == expected_environment:
+            return token, "project"
+        saw_scope_mismatch = True
+
+    if saw_scope_mismatch:
+        raise RuntimeError("RAILWAY_PROJECT_TOKEN_SCOPE_MISMATCH")
+    if seen:
+        raise RuntimeError("RAILWAY_PROJECT_TOKEN_VALIDATION_FAILED")
+    raise RuntimeError("RAILWAY_CONTROL_TOKEN_MISSING")
+
+
+def _latest_deployment(token, target, *, token_type="account"):
     query = """
     query Deployments($serviceId: String!, $projectId: String!, $environmentId: String!) {
       deployments(
@@ -175,6 +242,7 @@ def _latest_deployment(token, target):
             "serviceId": target["railway_service_id"],
             "environmentId": target["railway_environment_id"],
         },
+        token_type=token_type,
     )
     edges = ((data.get("deployments") or {}).get("edges") or [])
     if not edges:
@@ -204,11 +272,6 @@ def register(bot):
         if not is_owner(m):
             return
 
-        token = os.getenv("RAILWAY_API_TOKEN")
-        if not token:
-            bot.reply_to(m, "RAILWAY_API_TOKEN not set")
-            return
-
         parts = m.text.split(maxsplit=1)
         target_arg = parts[1].strip() if len(parts) > 1 else ""
         target, resolved_name = _resolve_target(target_arg)
@@ -222,6 +285,12 @@ def register(bot):
                     + (target_arg or "slh_main")
                     + "\nUse /projects",
                 )
+            return
+
+        try:
+            token, token_type = _credentials_for_target(target)
+        except Exception as exc:
+            bot.reply_to(m, f"Railway access blocked: {type(exc).__name__}: {str(exc)[:180]}")
             return
 
         command = (m.text or "").split(maxsplit=1)[0].lstrip("/").lower()
@@ -250,6 +319,7 @@ def register(bot):
                     "serviceId": target["railway_service_id"],
                     "environmentId": target["railway_environment_id"],
                 },
+                token_type=token_type,
             )
             result = (
                 data.get("serviceInstanceRedeploy")
@@ -270,11 +340,6 @@ def register(bot):
         if not is_owner(m):
             return
 
-        token = os.getenv("RAILWAY_API_TOKEN")
-        if not token:
-            bot.reply_to(m, "RAILWAY_API_TOKEN not set")
-            return
-
         try:
             targets = _release_truth_targets()
             expected = ""
@@ -284,7 +349,8 @@ def register(bot):
 
             rows = []
             for name, target in sorted(targets.items()):
-                dep = _latest_deployment(token, target)
+                token, token_type = _credentials_for_target(target)
+                dep = _latest_deployment(token, target, token_type=token_type)
                 commit = str((dep.get("meta") or {}).get("commitHash") or "").lower()
                 rows.append((name, dep.get("status"), commit, dep.get("id")))
 
@@ -325,11 +391,6 @@ def register(bot):
         if not is_owner(m):
             return
 
-        token = os.getenv("RAILWAY_API_TOKEN")
-        if not token:
-            bot.reply_to(m, "RAILWAY_API_TOKEN not set")
-            return
-
         parts = m.text.split()
         target_arg = parts[1] if len(parts) > 1 else ""
         stream = parts[2].lower() if len(parts) > 2 else "deploy"
@@ -349,7 +410,8 @@ def register(bot):
             return
 
         try:
-            deployment = _latest_deployment(token, target)
+            token, token_type = _credentials_for_target(target)
+            deployment = _latest_deployment(token, target, token_type=token_type)
             operation = "deploymentLogs" if stream == "deploy" else "buildLogs"
             query = f"""
             query DeploymentLogs($deploymentId: String!, $limit: Int) {{
@@ -364,6 +426,7 @@ def register(bot):
                 token,
                 query,
                 {"deploymentId": deployment["id"], "limit": 60},
+                token_type=token_type,
             )
             entries = data.get(operation) or []
             entries = entries[-30:]
