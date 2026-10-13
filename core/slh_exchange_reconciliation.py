@@ -97,10 +97,19 @@ def audit_db(db):
         if reserve:
             return True
 
+        # BUY-order cancellation releases Credits, not SLH. This audit is
+        # intentionally limited to SLH SELL reserves; counting a Credits release
+        # here creates a false missing-event-ID finding for unrelated BUY orders.
+        if "credits" in reason or "credits" in kind:
+            return False
+        order = orders.get(order_id)
+        if isinstance(order, dict) and str(order.get("side") or "").lower() == "buy":
+            return False
+
         if correction:
-            # The general Credits ledger also contains non-exchange corrections.
+            # The general ledger also contains non-exchange corrections.
             # Only include corrections evidenced as exchange/reserve-specific,
-            # or explicitly attached to a known exchange order.
+            # or explicitly attached to a known SELL order.
             event_id = _event_id(event).lower()
             evidence = " ".join((reason, kind, event_id))
             reserve_correction = any(
@@ -113,8 +122,8 @@ def audit_db(db):
             return False
         return (
             order_id in known_order_ids
-            or reason.startswith("exchange:")
-            or kind.startswith("exchange_")
+            or reason in {"exchange:cancel_release", "exchange:cancel_release_slh"}
+            or kind in {"exchange_release"}
         )
 
     # Detect duplicates within each source independently. Do not silently
