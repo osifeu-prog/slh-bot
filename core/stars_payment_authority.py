@@ -19,7 +19,7 @@ from core.stars_price_authority import (
 
 
 def _record_revenue(*, source: str, amount: int, reference: str, uid: str, meta: dict):
-    revenue_ledger.record(
+    return revenue_ledger.record(
         source=source,
         amount=int(amount),
         currency=TELEGRAM_STARS_CURRENCY,
@@ -38,7 +38,7 @@ def record_stars_payment(**kwargs):
     result = economy_service.record_stars_payment(**kwargs)
 
     if result.get("status") in {"applied", "duplicate"}:
-        _record_revenue(
+        revenue_result = _record_revenue(
             source="telegram_stars",
             amount=int(kwargs.get("stars_paid", 0)),
             reference=str(kwargs.get("telegram_payment_charge_id", "")),
@@ -49,6 +49,15 @@ def record_stars_payment(**kwargs):
                 "provider_charge_id": kwargs.get("provider_payment_charge_id"),
             },
         )
+        if isinstance(revenue_result, dict) and revenue_result.get("status") == "conflict":
+            # The wallet transaction has already committed in the primary
+            # authority; preserve it and surface the accounting conflict for
+            # operator review rather than retrying or rewriting revenue.
+            result = dict(result)
+            result["revenue_status"] = "conflict"
+            result["revenue_conflicting_fields"] = list(
+                revenue_result.get("conflicting_fields") or []
+            )
 
     return result
 

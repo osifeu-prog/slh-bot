@@ -92,24 +92,97 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
     order_id = "stars:" + charge_id
 
     def create_order(db):
-        users = db.setdefault("users", {})
-        if uid not in users:
+        from core import revenue_ledger
+
+        users = db.get("users", {})
+        if not isinstance(users, dict) or uid not in users:
             raise ValueError("USER_NOT_FOUND")
 
-        orders = db.setdefault("star_item_orders", {})
+        orders = db.get("star_item_orders", {})
+        if not isinstance(orders, dict):
+            return {
+                "status": "CONFLICT",
+                "order_id": order_id,
+                "conflicting_fields": ["star_item_orders_shape"],
+            }
+
         existing = orders.get(order_id)
+        revenue_args = {
+            "source": "telegram_stars_item",
+            "amount": stars_paid,
+            "currency": "XTR",
+            "reference": charge_id,
+            "uid": uid,
+            "meta": {"kind": "telegram_stars_item", "item_id": item_id},
+        }
+
         if existing:
+            if not isinstance(existing, dict):
+                return {
+                    "status": "CONFLICT",
+                    "order_id": order_id,
+                    "conflicting_fields": ["order_shape"],
+                }
+            order_conflicts = []
+            if str(existing.get("uid")) != uid:
+                order_conflicts.append("uid")
+            if str(existing.get("item_id")) != str(item_id):
+                order_conflicts.append("item_id")
+            try:
+                stored_stars = int(existing.get("stars_paid"))
+            except (TypeError, ValueError, OverflowError):
+                stored_stars = None
+            if stored_stars != stars_paid:
+                order_conflicts.append("stars_paid")
+            if order_conflicts:
+                return {
+                    "status": "CONFLICT",
+                    "order_id": order_id,
+                    "conflicting_fields": order_conflicts,
+                }
+
+            # Reconcile missing revenue on a legitimate replay, but reject an
+            # immutable-field mismatch before fulfillment or inventory changes.
+            revenue_result = revenue_ledger.record_in_db(db, **revenue_args)
+            if revenue_result.get("status") == "conflict":
+                return {
+                    "status": "CONFLICT",
+                    "order_id": order_id,
+                    "conflicting_fields": [
+                        f"revenue.{field}"
+                        for field in revenue_result.get("conflicting_fields", [])
+                    ],
+                }
             return existing
 
         reservation = None
+        inventory_product = None
+        inventory_before = None
         if item.get("type") == "hardware":
-            products = db.setdefault("products", {})
-            product = products.get(item_id)
-            inventory = int(product.get("inventory", 0)) if product else 0
+            products = db.get("products", {})
+            product = products.get(item_id) if isinstance(products, dict) else None
+            inventory = int(product.get("inventory", 0)) if isinstance(product, dict) else 0
             if product is None or inventory <= 0:
                 raise ValueError("OUT_OF_STOCK")
-            product["inventory"] = inventory - 1
+            inventory_product = product
+            inventory_before = inventory
             reservation = {"item_id": item_id, "quantity": 1}
+
+        # Atomic revenue preflight/record happens before reserving inventory or
+        # creating an order. A conflict therefore produces no fulfillment state.
+        revenue_result = revenue_ledger.record_in_db(db, **revenue_args)
+        if revenue_result.get("status") == "conflict":
+            return {
+                "status": "CONFLICT",
+                "order_id": order_id,
+                "conflicting_fields": [
+                    f"revenue.{field}"
+                    for field in revenue_result.get("conflicting_fields", [])
+                ],
+            }
+
+        if inventory_product is not None:
+            inventory_product["inventory"] = inventory_before - 1
 
         order = {
             "order_id": order_id,
@@ -123,10 +196,17 @@ def purchase_item_with_stars(uid, item_id, stars_paid, charge_id):
             "inventory_reservation": reservation,
             "fulfillment": None,
         }
-        orders[order_id] = order
+        db.setdefault("star_item_orders", {})[order_id] = order
         return order
 
     order = state_manager.atomic_update(create_order)
+    if order.get("status") == "CONFLICT":
+        return {
+            "status": "CONFLICT",
+            "order_id": order_id,
+            "item_id": item_id,
+            "conflicting_fields": order.get("conflicting_fields", []),
+        }
     if order.get("status") == "FULFILLED":
         # Entitlement was already granted. Reconcile the revenue ledger on
         # replay so a transient ledger failure cannot leave a permanently

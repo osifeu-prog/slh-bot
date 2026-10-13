@@ -42,6 +42,34 @@ class StarsRevenueReconciliationTests(unittest.TestCase):
             },
         )
 
+    def test_conflicting_charge_does_not_record_revenue(self):
+        with patch.object(
+            stars_payment_authority.economy_service,
+            "record_stars_payment",
+            return_value={
+                "status": "conflict",
+                "uid": "test-user",
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": "replay-charge",
+                "conflicting_fields": ["uid"],
+            },
+        ):
+            with patch.object(
+                stars_payment_authority.revenue_ledger,
+                "record",
+            ) as record:
+                result = stars_payment_authority.record_stars_payment(
+                    uid="test-user",
+                    credits=100,
+                    stars_paid=100,
+                    currency="XTR",
+                    telegram_payment_charge_id="replay-charge",
+                )
+
+        self.assertEqual(result["status"], "conflict")
+        record.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

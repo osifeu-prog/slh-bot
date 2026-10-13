@@ -401,22 +401,167 @@ def record_stars_payment(
         raise ValueError("INVALID_CHARGE_ID")
 
     def mutate(db):
-        users = db.setdefault("users", {})
+        from core import revenue_ledger
+
+        users = db.get("users", {})
+        transactions = db.get("transactions", [])
+        if not isinstance(users, dict) or not isinstance(transactions, list):
+            return {
+                "status": "conflict",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+                "conflicting_fields": ["payment_state_shape"],
+            }
+
+        revenue_meta = {
+            "kind": "telegram_stars_gross",
+            "payment_meta": dict(meta or {}),
+            "provider_charge_id": provider_charge_id,
+        }
+        revenue_conflicts = revenue_ledger.conflicting_fields_in_db(
+            db,
+            source="telegram_stars",
+            amount=stars_paid,
+            currency=currency,
+            reference=charge_id,
+            uid=uid,
+            meta=revenue_meta,
+        )
+        if revenue_conflicts:
+            return {
+                "status": "conflict",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+                "conflicting_fields": [f"revenue.{field}" for field in revenue_conflicts],
+            }
+
+        # A charge ID is immutable. Exact replays are no-ops; conflicting
+        # immutable payment fields must stop before any wallet/ledger change.
+        for tx in transactions:
+            if not isinstance(tx, dict):
+                continue
+            if str(tx.get("telegram_payment_charge_id", "")) != charge_id:
+                continue
+
+            expected = {
+                "uid": uid,
+                "credits": credits,
+                "stars_paid": stars_paid,
+                "currency": currency,
+                "provider_payment_charge_id": provider_charge_id,
+            }
+            conflicting_fields = []
+            for field, expected_value in expected.items():
+                actual = tx.get(field)
+                if field == "uid":
+                    matches = actual is not None and str(actual) == str(expected_value)
+                elif field == "credits":
+                    try:
+                        actual_number = float(actual)
+                        expected_number = float(expected_value)
+                        matches = (
+                            math.isfinite(actual_number)
+                            and actual_number == expected_number
+                        )
+                    except (TypeError, ValueError, OverflowError):
+                        matches = False
+                elif field == "stars_paid":
+                    try:
+                        matches = (
+                            not isinstance(actual, bool)
+                            and int(actual) == int(expected_value)
+                        )
+                    except (TypeError, ValueError, OverflowError):
+                        matches = False
+                elif field == "provider_payment_charge_id":
+                    actual_provider = (
+                        str(actual).strip() if actual not in (None, "") else None
+                    )
+                    expected_provider = (
+                        str(expected_value).strip()
+                        if expected_value not in (None, "")
+                        else None
+                    )
+                    matches = actual_provider == expected_provider
+                else:
+                    matches = (
+                        actual is not None
+                        and str(actual) == str(expected_value)
+                    )
+
+                if not matches:
+                    conflicting_fields.append(field)
+
+            if conflicting_fields:
+                return {
+                    "status": "conflict",
+                    "uid": uid,
+                    "credits": 0,
+                    "credits_applied": 0,
+                    "charge_id": charge_id,
+                    "conflicting_fields": conflicting_fields,
+                }
+
+            revenue_result = revenue_ledger.record_in_db(
+                db,
+                source="telegram_stars",
+                amount=stars_paid,
+                currency=currency,
+                reference=charge_id,
+                uid=uid,
+                meta=revenue_meta,
+            )
+            if revenue_result.get("status") == "conflict":
+                return {
+                    "status": "conflict",
+                    "uid": uid,
+                    "credits": 0,
+                    "credits_applied": 0,
+                    "charge_id": charge_id,
+                    "conflicting_fields": [
+                        f"revenue.{field}"
+                        for field in revenue_result.get("conflicting_fields", [])
+                    ],
+                }
+
+            return {
+                "status": "duplicate",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+            }
 
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
 
+        revenue_result = revenue_ledger.record_in_db(
+            db,
+            source="telegram_stars",
+            amount=stars_paid,
+            currency=currency,
+            reference=charge_id,
+            uid=uid,
+            meta=revenue_meta,
+        )
+        if revenue_result.get("status") == "conflict":
+            return {
+                "status": "conflict",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+                "conflicting_fields": [
+                    f"revenue.{field}"
+                    for field in revenue_result.get("conflicting_fields", [])
+                ],
+            }
+
         transactions = db.setdefault("transactions", [])
-
-        for tx in transactions:
-            if str(tx.get("telegram_payment_charge_id", "")) == charge_id:
-                return {
-                    "status": "duplicate",
-                    "uid": uid,
-                    "credits": 0,
-                    "charge_id": charge_id,
-                }
-
         user = users[uid]
         wallet = user.setdefault("wallet", {})
 
