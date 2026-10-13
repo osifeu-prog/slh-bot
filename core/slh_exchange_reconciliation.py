@@ -408,22 +408,153 @@ def audit_db(db):
             "note": "No eligible reserve records were matched; the audit cannot claim PASS.",
         })
 
-    # Add sanitized current-state context, without suppressing findings or changing the audit result.
+    # Add sanitized current-state context, without suppressing findings or changing
+    # the complete historical audit result.
     for item in findings:
         if item.get("order_id"):
             item.update(_current_order_context(item["order_id"]))
+
+    terminal_statuses = {"cancelled", "canceled", "closed", "expired"}
+
+    def _current_reserve_state_is_proven(order_id):
+        order = orders.get(str(order_id))
+        if not isinstance(order, dict):
+            return False
+        context = _current_order_context(order_id)
+        return (
+            str(order.get("side") or "").lower() == "sell"
+            and str(order.get("status") or "").lower() in terminal_statuses
+            and context.get("order_remaining_is_zero") is True
+            and context.get("order_reserved_slh_is_zero") is True
+            and context.get("wallet_reserved_slh_is_zero") is True
+            and context.get("wallet_reserve_matches_open_orders") is True
+        )
+
+    def _archived_test_seed_finding_is_nonblocking(item):
+        raw_ids = []
+        if item.get("order_id"):
+            raw_ids = [str(item.get("order_id"))]
+        elif isinstance(item.get("order_ids"), list):
+            raw_ids = [str(oid) for oid in item["order_ids"] if oid]
+        if not raw_ids:
+            return False
+        for oid in raw_ids:
+            order = orders.get(oid)
+            context = _current_order_context(oid)
+            if (
+                not isinstance(order, dict)
+                or order_source_by_id.get(oid) != "archive"
+                or context.get("order_is_archived_test_seed") is not True
+                or not _current_reserve_state_is_proven(oid)
+            ):
+                return False
+        return True
+
+    def _legacy_balanced_cancelled_order_is_nonblocking(item):
+        if item.get("code") != "LEDGER_EVENT_ID_MISSING":
+            return False
+        if item.get("group") not in {"reserve", "normal_release"}:
+            return False
+        oid = str(item.get("order_id") or "")
+        ledger_name = str(item.get("ledger") or "")
+        order = orders.get(oid)
+        if (
+            not oid
+            or ledger_name not in {"ledger", "slh_token_ledger"}
+            or not isinstance(order, dict)
+            or order_source_by_id.get(oid) != "active"
+            or str(order.get("side") or "").lower() != "sell"
+            or str(order.get("status") or "").lower() not in terminal_statuses
+            or not _current_reserve_state_is_proven(oid)
+        ):
+            return False
+        context = _current_order_context(oid)
+        # Do not infer "legacy" from missing IDs alone. It must be an ordinary,
+        # non-seed order with a proved empty current reserve and matching order book.
+        if context.get("order_is_test_seed") is not False:
+            return False
+        ledger_source = dict(sources).get(ledger_name)
+        if not isinstance(ledger_source, list):
+            return False
+        order_events = [
+            event for _, event in ledger_source
+            if _order_id(event) == oid and _is_exchange_audit_event(event)
+        ]
+        reserve_events = []
+        release_events = []
+        correction_events = []
+        for event in order_events:
+            reserve, release, correction = _event_groups(event)
+            if reserve:
+                reserve_events.append(event)
+            if release:
+                release_events.append(event)
+            if correction:
+                correction_events.append(event)
+        if (
+            len(reserve_events) != 1
+            or len(release_events) != 1
+            or correction_events
+            or any(_event_id(event) for event in reserve_events + release_events) is False
+        ):
+            # Missing-ID classification is only acceptable when the paired
+            # rows are uniquely tied to this terminal order; it cannot excuse
+            # a correction or absent reserve/release evidence.
+            if (
+                len(reserve_events) != 1
+                or len(release_events) != 1
+                or correction_events
+                or not any(not _event_id(event) for event in reserve_events + release_events)
+            ):
+                return False
+        parsed_reserve = [(_amount(event.get("amount")), event) for event in reserve_events]
+        parsed_release = [(_amount(event.get("amount")), event) for event in release_events]
+        if any(amount is None for amount, _ in parsed_reserve + parsed_release):
+            return False
+        reserve_total = sum(
+            (_ledger_delta(event, amount, "reserve", ledger_name) for amount, event in parsed_reserve),
+            Decimal(0),
+        )
+        release_total = sum(
+            (_ledger_delta(event, amount, "normal_release", ledger_name) for amount, event in parsed_release),
+            Decimal(0),
+        )
+        return reserve_total + release_total == 0
+
+    blocking_findings = []
+    historical_findings = []
+    for item in findings:
+        if _archived_test_seed_finding_is_nonblocking(item):
+            item["operational_classification"] = "HISTORICAL_ARCHIVED_TEST_SEED"
+            historical_findings.append(item)
+        elif _legacy_balanced_cancelled_order_is_nonblocking(item):
+            item["operational_classification"] = "LEGACY_BALANCED_CANCELLED_ORDER"
+            historical_findings.append(item)
+        else:
+            item["operational_classification"] = "BLOCKING"
+            blocking_findings.append(item)
 
     status = "FAIL" if any(
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
     ) else ("UNKNOWN" if checked == 0 else "PASS")
+    operational_status = (
+        "UNKNOWN" if checked == 0
+        else "BLOCKED" if blocking_findings
+        else "PASS"
+    )
 
     return {
         "status": status,
+        "operational_status": operational_status,
         "read_only": True,
         "checked_cancelled_sell_orders": checked,
         "finding_count": len(findings),
         "findings": findings,
+        "blocking_finding_count": len(blocking_findings),
+        "blocking_findings": blocking_findings,
+        "historical_finding_count": len(historical_findings),
+        "historical_findings": historical_findings,
     }
 
 
@@ -451,6 +582,7 @@ def _safe_log_finding(item, index):
         "order_is_archived",
         "order_is_test_seed",
         "order_is_archived_test_seed",
+        "operational_classification",
         "group",
         "uid_suffix",
         "reserve_delta",
@@ -512,6 +644,9 @@ def run_periodic(log, interval_seconds=None):
             log(
                 "[SLH_EXCHANGE_RECONCILIATION] "
                 f"status={report['status']} "
+                f"operational_status={report.get('operational_status', 'UNKNOWN')} "
+                f"blocking_finding_count={report.get('blocking_finding_count', len(findings))} "
+                f"historical_finding_count={report.get('historical_finding_count', 0)} "
                 f"checked_cancelled_sell_orders={report['checked_cancelled_sell_orders']} "
                 f"finding_count={report['finding_count']} "
                 f"logged_finding_count={len(findings)}"
