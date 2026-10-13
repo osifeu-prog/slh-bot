@@ -346,8 +346,6 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertTrue(all(len(line) < 4000 for line in details))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
     def test_findings_include_sanitized_order_and_wallet_state_for_triage(self):
@@ -397,3 +395,7 @@ if __name__ == "__main__":
         self.assertTrue(finding["wallet_reserve_matches_open_orders"])
         self.assertNotIn("uid", finding)
         self.assertNotIn("wallet_exchange_reserved_slh", finding)
+
+
+if __name__ == "__main__":
+    unittest.main()
