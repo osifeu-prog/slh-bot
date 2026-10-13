@@ -30,7 +30,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
         correction = next(item for item in report["findings"] if item["code"] == "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW")
         self.assertEqual(correction["correction_delta"], "10000")
 
-    def test_normal_release_balances_reserve(self):
+    def test_normal_release_balances_legacy_ledger_reserve(self):
         db = {
             "exchange_orders": {
                 "O1": {"id": "O1", "uid": "42", "side": "sell", "status": "cancelled"}
@@ -42,6 +42,37 @@ class ExchangeReconciliationTests(unittest.TestCase):
                  "meta": {"order_id": "O1"}},
             ],
             "slh_token_ledger": [],
+        }
+        report = audit_db(db)
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["finding_count"], 0)
+
+    def test_canonical_token_ledger_positive_amounts_balance_by_event_kind(self):
+        db = {
+            "exchange_orders": {
+                "O2": {"id": "O2", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [],
+            "slh_token_ledger": [
+                {
+                    "event_id": "exchange:reserve_slh:O2",
+                    "from_uid": "42",
+                    "to_uid": "__EXCHANGE_RESERVE__",
+                    "amount": 100.0,
+                    "reason": "exchange:sell_reserve",
+                    "kind": "exchange_reserve",
+                    "order_id": "O2",
+                },
+                {
+                    "event_id": "exchange:release_slh:O2",
+                    "from_uid": "__EXCHANGE_RESERVE__",
+                    "to_uid": "42",
+                    "amount": 100.0,
+                    "reason": "exchange:cancel_release_slh",
+                    "kind": "exchange_release",
+                    "order_id": "O2",
+                },
+            ],
         }
         report = audit_db(db)
         self.assertEqual(report["status"], "PASS")
