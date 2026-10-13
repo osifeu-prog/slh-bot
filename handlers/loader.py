@@ -94,6 +94,7 @@ def load_handlers(bot, context):
         ("exec_log", "handlers.exec_log_handler"),
         ("snapshot", "handlers.snapshot_handler"),
         ("user", "handlers.user_handler"),
+        ("connections_status", "handlers.connections_status_handler"),
         ("services", "handlers.services_handler"),
         ("voting", "handlers.ai_voting_handler"),
         ("governance", "handlers.governance_canonical_handler"),
