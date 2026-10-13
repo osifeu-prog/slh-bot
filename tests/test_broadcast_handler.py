@@ -1,6 +1,7 @@
 import types
 
 import handlers.broadcast_handler as target
+import handlers.exchange_handler as exchange_handler
 
 
 class FakeBot:
@@ -26,6 +27,23 @@ class FakeBot:
 
     def reply_to(self, message, text):
         self.replies.append((message, text))
+
+
+def _install_live_exchange_pass(monkeypatch):
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: {
+            "status": "PASS",
+            "checked_at": "2026-10-13T08:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1791830000.0,
+            "detail": "canonical public runtime proof passed",
+        },
+    )
 
 
 def test_retry_after_parsing():
@@ -356,6 +374,7 @@ def test_exchange_broadcast_partial_persists_failed_recipient_ids(monkeypatch):
         "money_invariants": True,
         "detail": "public state clean",
     })
+    _install_live_exchange_pass(monkeypatch)
     bot = FakeBot([None, RuntimeError("blocked")])
     monkeypatch.setattr(target, "_exchange_broadcast_reply_markup", lambda: "ACK_MARKUP")
 
