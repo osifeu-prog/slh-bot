@@ -1034,6 +1034,34 @@ function submitOrder(side,aId,pId){
   sendExchangeOrder(side.replace('_slh',''),a,p,{sourceInputId:aId});
 }
 let __exchangePendingRequests=Object.create(null);
+function hasFreshExchangeExecutionProof(check){
+  if(!check||typeof check!=='object')return false;
+  const checkedAtMs=Date.parse(String(check.checked_at||''));
+  const liveCheckedAtMs=Date.parse(String(check.live_checked_at||''));
+  const timestampsAreClose=Number.isFinite(checkedAtMs)
+    && Number.isFinite(liveCheckedAtMs)
+    && Math.abs(checkedAtMs-liveCheckedAtMs)<=30000;
+  const hasLiveBeaconTimestamp=check.live_public_updated_at!==undefined
+    && check.live_public_updated_at!==null
+    && Number.isFinite(Number(check.live_public_updated_at));
+  return check.status==='PASS'
+    && check.verdict==='OPEN'
+    && check.public_gate==='OPEN'
+    && check.execution_ready===true
+    && typeof check.checked_at==='string' && check.checked_at.trim().length>0
+    && check.public_ready===true
+    && check.order_book_integrity===true
+    && check.trade_integrity===true
+    && check.money_invariants===true
+    && check.live_runtime_check==='PASS'
+    && check.live_railway_gate==='1'
+    && check.live_public_gate==='OPEN'
+    && check.live_public_verdict==='OPEN'
+    && check.live_public_readiness===true
+    && typeof check.live_checked_at==='string' && check.live_checked_at.trim().length>0
+    && hasLiveBeaconTimestamp
+    && timestampsAreClose;
+}
 function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
   const check=data.execution_check||{};
   const idempotentReplay=data.idempotent_replay===true;
@@ -1053,18 +1081,13 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     ? 'Trade ID: '+tradeIds.map(x=>esc(x)).join(', ')
     : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
   const flagLabel=value=>value===true?'PASS':value===false?'FAIL':'לא דווח';
-  const checkPassed=check.status==='PASS'
-    && check.verdict==='OPEN'
-    && check.public_gate==='OPEN'
-    && check.execution_ready===true
-    && typeof check.checked_at==='string' && check.checked_at.trim().length>0
-    && check.public_ready===true
-    && check.order_book_integrity===true
-    && check.trade_integrity===true
-    && check.money_invariants===true;
+  const liveProofPassed=hasFreshExchangeExecutionProof(check);
   const receiptHeading=idempotentReplay
     ? '↩️ קבלה חוזרת — אותה פקודה, ללא ביצוע נוסף'
-    : (checkPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק');
+    : (liveProofPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק');
+  const livePublicUpdatedAt=check.live_public_updated_at===undefined||check.live_public_updated_at===null
+    ? 'לא דווח'
+    : String(check.live_public_updated_at);
   box.innerHTML='<b>'+receiptHeading+'</b>'+
     '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
     '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
@@ -1075,8 +1098,12 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     '<div class="wallet-row"><span>ספר פקודות</span><strong>'+esc(flagLabel(check.order_book_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>תקינות עסקאות</span><strong>'+esc(flagLabel(check.trade_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>אינווריאנטים כספיים</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
+    '<div class="wallet-row"><span>Live runtime confirmation</span><strong>'+ (liveProofPassed?'PASS':'NOT VERIFIED') +'</strong></div>'+
+    '<div class="wallet-row"><span>Railway gate / live gate</span><strong>'+esc(String(check.live_railway_gate||'UNKNOWN')+' / '+String(check.live_public_gate||'UNKNOWN'))+'</strong></div>'+
+    '<div class="wallet-row"><span>Live verdict / readiness</span><strong>'+esc(String(check.live_public_verdict||'UNKNOWN')+' / '+flagLabel(check.live_public_readiness))+'</strong></div>'+
     '<div class="muted" style="margin-top:4px">'+(idempotentReplay?'קבלה חוזרת של הפקודה המקורית · זמן האימות המקורי: ':'בדיקה שבוצעה בצד השרת בתוך פעולת המסחר האטומית · ')+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
-    (checkPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה לפקודה, אך חסרים שדות אישור. בדוק את Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
+    '<div class="muted">Live checked_at: '+esc(check.live_checked_at||'לא דווח')+' · Beacon updated_at (epoch): '+esc(livePublicUpdatedAt)+'</div>'+
+    (liveProofPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה, אך קבלת האימות החי חסרה או אינה עקבית בזמן. בדוק Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
 }
 function renderExchangeExecutionBlocked(data,sourceInputId){
   const check=data.exchange_check||{};
@@ -1127,15 +1154,7 @@ async function sendExchangeOrder(side,amount,price,options){
     delete __exchangePendingRequests[intent];
     renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
     const executionCheck=d.execution_check||{};
-    const receiptVerified=executionCheck.status==='PASS'
-      && executionCheck.verdict==='OPEN'
-      && executionCheck.public_gate==='OPEN'
-      && executionCheck.execution_ready===true
-      && typeof executionCheck.checked_at==='string' && executionCheck.checked_at.trim().length>0
-      && executionCheck.public_ready===true
-      && executionCheck.order_book_integrity===true
-      && executionCheck.trade_integrity===true
-      && executionCheck.money_invariants===true;
+    const receiptVerified=hasFreshExchangeExecutionProof(executionCheck);
     const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
     const tradeNote=tradeIds.length?' · Trade '+tradeIds.join(', '):' · ממתין להתאמה';
     if(d.idempotent_replay===true){
