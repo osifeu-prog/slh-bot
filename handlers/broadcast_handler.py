@@ -287,7 +287,7 @@ def _fresh_exchange_check(db):
 
 
 def _fresh_reserve_audit(db):
-    """Return a read-only reserve-audit result; only an explicit clean PASS is green."""
+    """Return a read-only reserve-audit result; only explicit consistent PASS is green."""
     try:
         from core.slh_exchange_reconciliation import audit_db
 
@@ -298,6 +298,7 @@ def _fresh_reserve_audit(db):
             "read_only": True,
             "checked_cancelled_sell_orders": 0,
             "finding_count": 1,
+            "findings": [],
             "detail": f"reserve audit failed: {type(exc).__name__}",
         }
     if not isinstance(report, dict):
@@ -306,24 +307,74 @@ def _fresh_reserve_audit(db):
             "read_only": False,
             "checked_cancelled_sell_orders": 0,
             "finding_count": 1,
+            "findings": [],
             "detail": "invalid reserve audit result",
         }
 
     audit_status = str(report.get("status") or "UNKNOWN").upper()
-    try:
-        finding_count = max(0, int(report.get("finding_count") or 0))
-    except (TypeError, ValueError, OverflowError):
-        finding_count = 1
-    try:
-        checked_orders = max(0, int(report.get("checked_cancelled_sell_orders") or 0))
-    except (TypeError, ValueError, OverflowError):
-        checked_orders = 0
-    passed = report.get("read_only") is True and audit_status == "PASS" and finding_count == 0
-    detail = (
-        "read-only reserve audit PASS"
-        if passed
-        else str(report.get("detail") or f"reserve audit {audit_status} ({finding_count} finding(s)); broadcast blocked")
+    raw_finding_count = report.get("finding_count")
+    count_valid = (
+        isinstance(raw_finding_count, int)
+        and not isinstance(raw_finding_count, bool)
+        and raw_finding_count >= 0
     )
+    finding_count = raw_finding_count if count_valid else 1
+
+    raw_checked_orders = report.get("checked_cancelled_sell_orders")
+    checked_orders_valid = (
+        isinstance(raw_checked_orders, int)
+        and not isinstance(raw_checked_orders, bool)
+        and raw_checked_orders >= 0
+    )
+    checked_orders = raw_checked_orders if checked_orders_valid else 0
+
+    raw_findings = report.get("findings")
+    findings_valid = isinstance(raw_findings, list) and all(
+        isinstance(item, dict) and bool(str(item.get("code") or "").strip())
+        for item in raw_findings
+    )
+    findings = raw_findings if isinstance(raw_findings, list) else []
+    finding_codes = [
+        str(item.get("code")).strip()[:80]
+        for item in findings
+        if isinstance(item, dict) and str(item.get("code") or "").strip()
+    ]
+    if not findings_valid:
+        finding_count = max(finding_count, 1)
+    else:
+        finding_count = max(finding_count, len(findings))
+        if count_valid and raw_finding_count != len(findings):
+            count_valid = False
+            finding_count = max(finding_count, 1)
+
+    passed = (
+        report.get("read_only") is True
+        and audit_status == "PASS"
+        and count_valid
+        and raw_finding_count == 0
+        and findings_valid
+        and len(findings) == 0
+        and checked_orders_valid
+        and checked_orders > 0
+    )
+    if passed:
+        detail = "read-only reserve audit PASS"
+    elif audit_status != "PASS" and report.get("detail"):
+        detail = str(report.get("detail"))
+    elif finding_codes:
+        detail = (
+            f"reserve audit {audit_status} ({finding_count} finding(s): "
+            f"{', '.join(finding_codes[:4])}); broadcast blocked"
+        )
+    elif not findings_valid:
+        detail = "reserve audit has malformed findings evidence; broadcast blocked"
+    elif not count_valid:
+        detail = "reserve audit count/evidence mismatch; broadcast blocked"
+    elif not checked_orders_valid or checked_orders <= 0:
+        detail = "reserve audit did not verify any cancelled sell-order reserves; broadcast blocked"
+    else:
+        detail = f"reserve audit {audit_status} ({finding_count} finding(s)); broadcast blocked"
+
     return {
         "status": "PASS" if passed else "BLOCKED",
         "audit_status": audit_status,
@@ -333,7 +384,6 @@ def _fresh_reserve_audit(db):
         "checked_cancelled_sell_orders": checked_orders,
         "detail": detail[:300],
     }
-
 
 def _proof_with_reserve_audit(check, audit):
     """Attach a concise, read-only reserve-audit receipt to the send-time proof."""
