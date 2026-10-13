@@ -541,7 +541,7 @@ def test_voice_exchange_reserve_audit_query_shows_all_findings_read_only(monkeyp
 
     assert reply is not None
     messages = [call.args[1] for call in bot.send_message.call_args_list]
-    delivered = "\\n".join(messages)
+    delivered = "\n".join(messages)
     assert "Reserve audit: FAIL" in delivered
     assert "finding_count=2" in delivered
     assert "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE" in delivered
