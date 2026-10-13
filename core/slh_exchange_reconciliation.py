@@ -31,6 +31,21 @@ def _amount(value):
         return None
 
 
+def _ledger_delta(event, amount, group):
+    """Normalize reserve/release direction across the legacy and SLH token ledgers.
+
+    The legacy Credits ledger stores signed amounts (reserve negative, release
+    positive). The canonical SLH token ledger stores positive magnitudes and
+    uses kind=exchange_reserve / exchange_release to identify direction.
+    """
+    kind = str(event.get("kind") or "").strip().lower()
+    if group == "reserve" and kind == "exchange_reserve":
+        return -abs(amount)
+    if group == "normal_release" and kind == "exchange_release":
+        return abs(amount)
+    return amount
+
+
 def audit_db(db):
     """Return a stable, read-only audit report for exchange sell reserves."""
     findings = []
@@ -70,18 +85,18 @@ def audit_db(db):
         events.append(event)
 
     known_order_ids = set(orders)
-    corrections = []
     for event in events:
         reason = str(event.get("reason", "")).lower()
         kind = str(event.get("kind", "")).lower()
         if "correction" in reason or "correction" in kind:
             meta = event.get("meta") if isinstance(event.get("meta"), dict) else {}
             oid = str(event.get("order_id") or meta.get("order_id") or "")
-            if oid:
-                corrections.append((oid, event))
-                if oid not in known_order_ids:
-                    findings.append({"code": "ORPHAN_RESERVE_CORRECTION", "order_id": oid,
-                                     "event_id": event.get("event_id")})
+            if oid and oid not in known_order_ids:
+                findings.append({
+                    "code": "ORPHAN_RESERVE_CORRECTION",
+                    "order_id": oid,
+                    "event_id": event.get("event_id"),
+                })
 
     checked = 0
     for oid, order in sorted(orders.items()):
@@ -140,9 +155,21 @@ def audit_db(db):
                 "events": invalid_amounts,
                 "note": "Missing or non-finite amounts prevent reliable reserve reconciliation.",
             })
-        reserve_total = sum((amount for _, amount in parsed_amounts["reserve"] if amount is not None), Decimal(0))
-        release_total = sum((amount for _, amount in parsed_amounts["normal_release"] if amount is not None), Decimal(0))
-        correction_total = sum((amount for _, amount in parsed_amounts["correction"] if amount is not None), Decimal(0))
+
+        reserve_total = sum(
+            (_ledger_delta(event, amount, "reserve")
+             for event, amount in parsed_amounts["reserve"] if amount is not None),
+            Decimal(0),
+        )
+        release_total = sum(
+            (_ledger_delta(event, amount, "normal_release")
+             for event, amount in parsed_amounts["normal_release"] if amount is not None),
+            Decimal(0),
+        )
+        correction_total = sum(
+            (amount for _, amount in parsed_amounts["correction"] if amount is not None),
+            Decimal(0),
+        )
         if not normal_releases:
             findings.append({
                 "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
@@ -165,13 +192,14 @@ def audit_db(db):
                 ),
                 "correction_delta": str(correction_total),
             })
-        if reserve_total + release_total != 0 and not order_corrections:
+        net_delta = reserve_total + release_total
+        if net_delta != 0 and not order_corrections:
             findings.append({
                 "code": "RESERVE_DELTA_NOT_ZERO",
                 "order_id": oid,
                 "reserve_delta": str(reserve_total),
                 "normal_release_delta": str(release_total),
-                "net_delta": str(reserve_total + release_total),
+                "net_delta": str(net_delta),
             })
 
     if checked == 0:
