@@ -1139,6 +1139,153 @@ def _exchange_broadcast_reply(result):
     return f"⛔ הברודקאסט לא נשלח: {result.get('detail', status)}"
 
 
+def _is_exchange_reserve_audit_query(phrase):
+    """Recognize exact read-only owner diagnostics; never treat them as send consent."""
+    allowed = {
+        "בדוק את כל ממצאי רזרבות המסחר",
+        "הצג את כל ממצאי רזרבות המסחר",
+        "בדוק את כל ממצאי ביקורת רזרבות המסחר",
+        "show all exchange reserve audit findings",
+        "show exchange reserve audit",
+    }
+    normalized = {_normalize_voice_phrase(item) for item in allowed}
+    return phrase in normalized
+
+
+def _exchange_reserve_audit_reply(bot, message, *, now=None):
+    """Send the canonical full reserve audit to the owner privately, without DB mutation."""
+    uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+    if uid != str(OWNER_TELEGRAM_ID):
+        return "⛔ דוח רזרבות המסחר זמין ל־OWNER בלבד."
+    if str(getattr(getattr(message, "chat", None), "type", "") or "").lower() != "private":
+        return "⛔ דוח רזרבות המסחר זמין רק בשיחה הפרטית עם הבוט."
+
+    try:
+        db = state_manager.load_db()
+        from core.slh_exchange_reconciliation import audit_db
+        report = audit_db(db)
+    except Exception as exc:
+        return (
+            "⛔ Exchange reserve audit — UNKNOWN · READ ONLY\n"
+            f"לא ניתן לקרוא את הדוח: {type(exc).__name__}. לא בוצע שינוי במערכת."
+        )
+
+    if not isinstance(report, dict):
+        report = {"status": "UNKNOWN", "read_only": False, "findings": []}
+
+    status = str(report.get("status") or "UNKNOWN").upper()
+    raw_findings = report.get("findings")
+    findings = raw_findings if isinstance(raw_findings, list) else []
+    raw_count = report.get("finding_count")
+    count = (
+        raw_count
+        if isinstance(raw_count, int) and not isinstance(raw_count, bool) and raw_count >= 0
+        else len(findings)
+    )
+    checked = report.get("checked_cancelled_sell_orders")
+    checked_text = (
+        str(checked)
+        if isinstance(checked, int) and not isinstance(checked, bool) and checked >= 0
+        else "UNKNOWN"
+    )
+    checked_at = _utc_text(now)
+    read_only = report.get("read_only") is True
+
+    def safe_text(value, limit=100):
+        value = re.sub(r"\s+", " ", str(value if value is not None else "")).strip()
+        value = value.replace("|", "/")
+        return value[:limit]
+
+    rows = []
+    for index, item in enumerate(findings, start=1):
+        if not isinstance(item, dict):
+            rows.append(f"{index:02d} MALFORMED_FINDING")
+            continue
+
+        code = safe_text(item.get("code") or "UNKNOWN_CODE", 80)
+        parts = [f"{index:02d} {code}"]
+
+        order_id = safe_text(item.get("order_id") or "", 32)
+        order_ids = item.get("order_ids")
+        if order_id:
+            parts.append(f"order={order_id}")
+        elif isinstance(order_ids, list) and order_ids:
+            parts.append("orders=" + ",".join(safe_text(value, 24) for value in order_ids[:4]))
+
+        ledger = safe_text(item.get("ledger") or "", 32)
+        if ledger:
+            parts.append(f"ledger={ledger}")
+        ledgers = item.get("ledgers")
+        if isinstance(ledgers, list) and ledgers:
+            parts.append("ledgers=" + "+".join(safe_text(value, 24) for value in ledgers[:3]))
+
+        suffix = safe_text(item.get("uid_suffix") or "", 8)
+        if suffix and suffix.isdigit():
+            parts.append(f"uid…{suffix}")
+
+        for key, label in (
+            ("reserve_delta", "R"),
+            ("normal_release_delta", "release"),
+            ("net_delta", "net"),
+            ("correction_delta", "corr"),
+        ):
+            if key in item:
+                parts.append(f"{label}={safe_text(item.get(key), 32)}")
+
+        event_ids = []
+        if item.get("event_id"):
+            event_ids.append(safe_text(item.get("event_id"), 90))
+        extra_ids = item.get("event_ids")
+        if isinstance(extra_ids, list):
+            event_ids.extend(safe_text(value, 90) for value in extra_ids[:3] if value)
+        if event_ids:
+            parts.append("event=" + ",".join(event_ids))
+
+        rows.append(" | ".join(parts))
+
+    if not rows:
+        rows = ["אין ממצאים בדוח. PASS תקף רק אם סטטוס הביקורת הוא PASS והראיות שלמות."]
+
+    # Keep each Telegram message below its 4096-character limit. Every finding is
+    # included; long reports are sent as consecutive read-only parts.
+    row_limit = 3100
+    groups = []
+    current_rows = []
+    current_size = 0
+    for row in rows:
+        row = row[:500]
+        added = len(row) + (1 if current_rows else 0)
+        if current_rows and current_size + added > row_limit:
+            groups.append(current_rows)
+            current_rows = []
+            current_size = 0
+        current_rows.append(row)
+        current_size += len(row) + (1 if len(current_rows) > 1 else 0)
+    if current_rows:
+        groups.append(current_rows)
+
+    try:
+        for part_number, group in enumerate(groups, start=1):
+            header = (
+                "🔎 SLH OS — Exchange reserve audit · READ ONLY\n"
+                f"Reserve audit: {status} · finding_count={count} · listed={len(findings)}\n"
+                f"checked_cancelled_sell_orders={checked_text} · read_only={read_only}\n"
+                f"Checked at: {checked_at} · Part {part_number}/{len(groups)}"
+            )
+            bot.send_message(uid, header + "\n\n" + "\n".join(group), parse_mode=None)
+    except Exception as exc:
+        return (
+            "⚠️ דוח רזרבות המסחר לא נשלח במלואו עקב שגיאת Telegram "
+            f"({type(exc).__name__}). לא שונו פקודות, יתרות, ספרי ledger או שערים."
+        )
+
+    return (
+        f"✅ דוח רזרבות המסחר נשלח בפרטי ב־{len(groups)} חלקים · "
+        f"{len(findings)} ממצאים · {status} · READ ONLY. "
+        "לא שונו פקודות, יתרות, ספרי ledger או שערים."
+    )
+
+
 def _is_exchange_broadcast_query(phrase):
     """Recognize questions about the Exchange broadcast without treating them as consent."""
     broadcast_terms = ("ברודקאסט", "broadcast", "הודעת שידור")
@@ -1400,6 +1547,8 @@ def route_exchange_broadcast_voice(bot, message, transcript, *, now=None):
         and _is_explicit_broadcast_confirmation_attempt(phrase)
     )
     if not is_prepare and not is_confirm and not near_miss_confirm:
+        if _is_exchange_reserve_audit_query(phrase):
+            return _exchange_reserve_audit_reply(bot, message, now=now)
         if _is_exchange_broadcast_query(phrase):
             return _exchange_broadcast_status_answer(message, now=now)
         return None
