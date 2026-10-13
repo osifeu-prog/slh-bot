@@ -6,6 +6,7 @@ ledgers, freezes, or exchange gates.
 from __future__ import annotations
 
 from collections import Counter
+import json
 from decimal import Decimal, InvalidOperation
 import os
 import time
@@ -349,6 +350,66 @@ def run_once():
     return audit_db(db)
 
 
+def _safe_log_finding(item, index):
+    """Keep operational logs useful without emitting arbitrary DB fields."""
+    if not isinstance(item, dict):
+        return {"index": index, "code": "MALFORMED_FINDING"}
+
+    allowed = (
+        "code",
+        "ledger",
+        "ledgers",
+        "order_id",
+        "order_ids",
+        "group",
+        "uid_suffix",
+        "reserve_delta",
+        "normal_release_delta",
+        "release_delta",
+        "net_delta",
+        "correction_delta",
+        "event_id",
+        "event_ids",
+    )
+    safe = {"index": index}
+    for key in allowed:
+        if key not in item or item[key] is None:
+            continue
+        value = item[key]
+        if key == "uid_suffix":
+            suffix = "".join(char for char in str(value) if char.isdigit())[-4:]
+            if suffix:
+                safe[key] = suffix
+            continue
+        if isinstance(value, list):
+            limit = 4 if key in {"ledgers", "order_ids"} else 3
+            safe[key] = [
+                str(entry).replace("\n", " ").replace("\\r", " ")[:80]
+                for entry in value[:limit]
+                if entry is not None
+            ]
+        elif isinstance(value, (str, int, float, bool)):
+            rendered = str(value).replace("\n", " ").replace("\\r", " ")
+            safe[key] = rendered[:100] if isinstance(value, str) else value
+        else:
+            safe[key] = str(value).replace("\n", " ").replace("\\r", " ")[:100]
+    return safe
+
+
+def _reserve_audit_log_chunks(findings, chunk_size=5):
+    """Format every finding as bounded, sanitized one-line JSON chunks."""
+    if not isinstance(findings, list):
+        return []
+    safe_findings = [
+        _safe_log_finding(item, index)
+        for index, item in enumerate(findings, start=1)
+    ]
+    return [
+        json.dumps(safe_findings[offset:offset + chunk_size], ensure_ascii=False, separators=(",", ":"))
+        for offset in range(0, len(safe_findings), chunk_size)
+    ]
+
+
 def run_periodic(log, interval_seconds=None):
     """Log read-only findings periodically; callers should run this in a daemon thread."""
     configured = interval_seconds or int(os.getenv("SLH_EXCHANGE_RECONCILIATION_INTERVAL_SECONDS", "900"))
@@ -356,13 +417,21 @@ def run_periodic(log, interval_seconds=None):
     while True:
         try:
             report = run_once()
+            findings = report.get("findings")
+            findings = findings if isinstance(findings, list) else []
             log(
                 "[SLH_EXCHANGE_RECONCILIATION] "
                 f"status={report['status']} "
                 f"checked_cancelled_sell_orders={report['checked_cancelled_sell_orders']} "
                 f"finding_count={report['finding_count']} "
-                f"findings={report['findings'][:20]}"
+                f"logged_finding_count={len(findings)}"
             )
+            chunks = _reserve_audit_log_chunks(findings)
+            for part_number, chunk in enumerate(chunks, start=1):
+                log(
+                    "[SLH_EXCHANGE_RECONCILIATION_DETAILS] "
+                    f"part={part_number}/{len(chunks)} findings={chunk}"
+                )
         except Exception as exc:
             log(f"[SLH_EXCHANGE_RECONCILIATION] status=UNKNOWN error={type(exc).__name__}: {str(exc)[:200]}")
         time.sleep(interval)

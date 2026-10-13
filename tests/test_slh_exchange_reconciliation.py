@@ -1,4 +1,7 @@
 import unittest
+from unittest.mock import patch
+
+import core.slh_exchange_reconciliation as reconciliation
 
 from core.slh_exchange_reconciliation import audit_db
 
@@ -298,6 +301,49 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(missing["ledger"], "ledger")
         self.assertEqual(missing["order_id"], "O8")
         self.assertEqual(missing["group"], "correction")
+
+
+    def test_periodic_audit_logs_all_findings_in_safe_bounded_chunks(self):
+        class StopPeriodicLoop(Exception):
+            pass
+
+        findings = [
+            {
+                "code": f"FINDING_{index:02d}",
+                "order_id": f"O{index:010d}",
+                "ledger": "ledger",
+                "event_id": f"event:{index:02d}",
+                "uid": "private-full-user-id",
+                "note": "private note must not be logged",
+            }
+            for index in range(23)
+        ]
+        report = {
+            "status": "FAIL",
+            "checked_cancelled_sell_orders": 7,
+            "finding_count": len(findings),
+            "findings": findings,
+        }
+        messages = []
+
+        with patch.object(reconciliation, "run_once", return_value=report):
+            with patch.object(reconciliation.time, "sleep", side_effect=StopPeriodicLoop):
+                with self.assertRaises(StopPeriodicLoop):
+                    reconciliation.run_periodic(messages.append, interval_seconds=60)
+
+        details = [
+            line for line in messages
+            if line.startswith("[SLH_EXCHANGE_RECONCILIATION_DETAILS]")
+        ]
+        self.assertEqual(len(details), 5)
+        joined = "\n".join(messages)
+        for index in range(23):
+            self.assertIn(f"FINDING_{index:02d}", joined)
+            self.assertIn(f"event:{index:02d}", joined)
+        self.assertIn("finding_count=23", joined)
+        self.assertNotIn("private-full-user-id", joined)
+        self.assertNotIn("private note must not be logged", joined)
+        self.assertTrue(all(len(line) < 4000 for line in details))
 
 
 if __name__ == "__main__":
