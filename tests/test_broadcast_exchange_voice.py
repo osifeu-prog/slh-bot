@@ -496,3 +496,74 @@ def test_broadcast_blocks_before_any_recipient_when_reserve_audit_fails(monkeypa
     assert receipt["reserve_audit_check"] == "BLOCKED"
     assert receipt["reserve_audit_status"] == "FAIL"
     assert receipt["reserve_audit_finding_count"] == 11
+
+
+def test_voice_exchange_reserve_audit_query_shows_all_findings_read_only(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    monkeypatch.setattr(target.state_manager, "atomic_update", lambda _mutator: (_ for _ in ()).throw(AssertionError("audit must be read-only")))
+    report = {
+        "status": "FAIL",
+        "read_only": True,
+        "checked_cancelled_sell_orders": 7,
+        "finding_count": 2,
+        "findings": [
+            {
+                "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
+                "ledger": "ledger",
+                "order_id": "O0000000006",
+                "uid_suffix": "7826",
+                "reserve_delta": "-5.0",
+                "normal_release_delta": "0",
+            },
+            {
+                "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
+                "ledger": "slh_token_ledger",
+                "order_id": "O0000000009",
+                "event_ids": ["correction:missed_release:O0000000009"],
+                "correction_delta": "10000.0",
+            },
+        ],
+    }
+    monkeypatch.setattr(reserve_reconciliation, "audit_db", lambda current: report)
+    message = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="private"),
+    )
+    bot = Mock()
+
+    reply = target.route_exchange_broadcast_voice(
+        bot,
+        message,
+        "בדוק את כל ממצאי רזרבות המסחר",
+        now=NOW,
+    )
+
+    assert reply is not None
+    assert "Reserve audit: FAIL" in reply
+    assert "finding_count=2" in reply
+    assert "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE" in reply
+    assert "O0000000006" in reply
+    assert "uid…7826" in reply
+    assert "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW" in reply
+    assert "correction:missed_release:O0000000009" in reply
+    assert "READ ONLY" in reply
+    assert bot.reply_to.call_count == 0
+
+
+def test_voice_exchange_reserve_audit_query_rejects_non_owner_and_groups():
+    bot = Mock()
+    transcript = "בדוק את כל ממצאי רזרבות המסחר"
+
+    non_owner = SimpleNamespace(
+        from_user=SimpleNamespace(id=42),
+        chat=SimpleNamespace(type="private"),
+    )
+    assert "OWNER" in target.route_exchange_broadcast_voice(bot, non_owner, transcript)
+
+    group_owner = SimpleNamespace(
+        from_user=SimpleNamespace(id=int(OWNER)),
+        chat=SimpleNamespace(type="group"),
+    )
+    assert "פרטית" in target.route_exchange_broadcast_voice(bot, group_owner, transcript)
+    bot.reply_to.assert_not_called()
