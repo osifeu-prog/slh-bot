@@ -126,7 +126,7 @@ def test_connections_status_is_read_only_and_redacts_tokens(monkeypatch):
     for key in (
         "GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN_SLH",
         "RAILWAY_API_TOKEN", "RAILWAY_API_TOKEN_SLH",
-        "RAILWAY_PROJECT_TOKEN", "RAILWAY_PROJECT_TOKEN_SLH",
+        "RAILWAY_PROJECT_TOKEN", "RAILWAY_PROJECT_TOKEN_SLH", "RAILWAY_TOKEN",
         "SLH_RAILWAY_TOKEN", "SLH_RAILWAY_PROJECT_ID",
         "SLH_RAILWAY_ENVIRONMENT_ID", "SLH_RAILWAY_SERVICE_ID",
     ):
@@ -158,7 +158,8 @@ def test_connections_status_is_read_only_and_redacts_tokens(monkeypatch):
     assert captured["timeout"] == 8
     assert "GitHub API read: PASS" in result
     assert "GitHub write credential (/git commit): MISSING" in result
-    assert "Railway account token (/deploy, /logs): MISSING" in result
+    assert "Railway account/workspace token (cross-project targets): MISSING" in result
+    assert "Railway project token candidate (single project/environment): MISSING" in result
     assert "SLH scoped Railway integration: BLOCKED" in result
     assert "No secrets printed" in result
     assert "Bearer " not in result
@@ -213,6 +214,91 @@ def test_connections_status_validates_railway_scope_without_mutations(monkeypatc
     assert "railway-secret-value" not in result
     assert "variableCollectionUpsert" not in repr(captured)
     assert "serviceInstanceRedeploy" not in repr(captured)
+
+
+def test_connections_status_validates_standard_railway_token_scope(monkeypatch):
+    for key in (
+        "SLH_RAILWAY_TOKEN", "RAILWAY_PROJECT_TOKEN", "RAILWAY_PROJECT_TOKEN_SLH",
+        "RAILWAY_API_TOKEN", "RAILWAY_API_TOKEN_SLH",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("RAILWAY_TOKEN", "project-token-secret")
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "project-1")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "environment-1")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "service-1")
+
+    class Response:
+        def __enter__(self):
+            return self
+        def __exit__(self, *_args):
+            return False
+        def read(self):
+            return b'{"full_name":"osifeu-prog/slh-bot"}'
+
+    monkeypatch.setattr(
+        target.urllib.request, "urlopen",
+        lambda request, timeout: Response(),
+    )
+    calls = []
+
+    def fake_graphql(ctx, query, variables=None):
+        calls.append(query)
+        assert ctx["token"] == "project-token-secret"
+        assert "mutation" not in query.lower()
+        return {
+            "projectToken": {
+                "projectId": "project-1",
+                "environmentId": "environment-1",
+            }
+        }
+
+    monkeypatch.setattr(target, "_graphql", fake_graphql)
+    result = target.connections_status_reply()
+
+    assert "Railway account/workspace token (cross-project targets): MISSING" in result
+    assert "Railway project token candidate (single project/environment): CONFIGURED" in result
+    assert "SLH scoped Railway integration: PASS" in result
+    assert "project-token-secret" not in result
+    assert calls and all("projectToken" in query for query in calls)
+
+
+def test_connections_status_blocks_project_token_with_wrong_scope(monkeypatch):
+    for key in (
+        "SLH_RAILWAY_TOKEN", "RAILWAY_PROJECT_TOKEN", "RAILWAY_PROJECT_TOKEN_SLH",
+        "RAILWAY_API_TOKEN", "RAILWAY_API_TOKEN_SLH",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("RAILWAY_TOKEN", "wrong-scope-secret")
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "expected-project")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "expected-environment")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "service-1")
+
+    class Response:
+        def __enter__(self):
+            return self
+        def __exit__(self, *_args):
+            return False
+        def read(self):
+            return b'{"full_name":"osifeu-prog/slh-bot"}'
+
+    monkeypatch.setattr(
+        target.urllib.request, "urlopen",
+        lambda request, timeout: Response(),
+    )
+    monkeypatch.setattr(
+        target, "_graphql",
+        lambda ctx, query, variables=None: {
+            "projectToken": {
+                "projectId": "other-project",
+                "environmentId": "other-environment",
+            }
+        },
+    )
+
+    result = target.connections_status_reply()
+
+    assert "SLH scoped Railway integration: BLOCKED — RAILWAY_TOKEN_SCOPE_MISMATCH" in result
+    assert "wrong-scope-secret" not in result
 
 
 def test_connections_status_route_is_owner_only_and_private(monkeypatch):
