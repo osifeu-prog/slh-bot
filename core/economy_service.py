@@ -401,11 +401,24 @@ def record_stars_payment(
         raise ValueError("INVALID_CHARGE_ID")
 
     def mutate(db):
-        users = db.setdefault("users", {})
-        transactions = db.setdefault("transactions", [])
+        users = db.get("users")
+        if not isinstance(users, dict):
+            users = {}
 
-        # A charge ID is immutable. Exact replays are no-ops; conflicting
-        # immutable payment fields must stop before any wallet/ledger change.
+        transactions = db.get("transactions", [])
+        if not isinstance(transactions, list):
+            return {
+                "status": "conflict",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+                "conflicting_fields": ["transactions_shape"],
+            }
+
+        # Check historical transaction evidence before touching any state.
+        # The charge ID and immutable payment fields must all agree.
+        matching_transaction = None
         for tx in transactions:
             if not isinstance(tx, dict):
                 continue
@@ -471,6 +484,55 @@ def record_stars_payment(
                     "conflicting_fields": conflicting_fields,
                 }
 
+            matching_transaction = tx
+            break
+
+        from core import revenue_ledger
+
+        revenue_match = revenue_ledger.classify_event_in_db(
+            db,
+            source="telegram_stars",
+            amount=stars_paid,
+            currency=currency,
+            reference=charge_id,
+            uid=uid,
+        )
+        if revenue_match["status"] == "conflict":
+            return {
+                "status": "conflict",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+                "conflict_domain": "revenue_ledger",
+                "conflicting_fields": revenue_match.get("conflicting_fields", []),
+            }
+
+        def record_revenue_event(timestamp):
+            if revenue_match["status"] != "new":
+                return
+            revenue_rows = db.setdefault("revenue_ledger", [])
+            if not isinstance(revenue_rows, list):
+                raise ValueError("REVENUE_LEDGER_MALFORMED")
+            revenue_rows.append({
+                "timestamp": timestamp,
+                "source": "telegram_stars",
+                "amount": float(stars_paid),
+                "currency": currency,
+                "reference": charge_id,
+                "uid": uid,
+                "meta": {
+                    "kind": "telegram_stars_gross",
+                    "payment_meta": dict(meta or {}),
+                    "provider_charge_id": provider_charge_id,
+                },
+            })
+
+        if matching_transaction is not None:
+            # Recovery path: a previously processed charge may be missing only
+            # its revenue event. Restore that event atomically without re-crediting.
+            if revenue_match["status"] == "new":
+                record_revenue_event(datetime.now(timezone.utc).isoformat())
             return {
                 "status": "duplicate",
                 "uid": uid,
@@ -481,6 +543,11 @@ def record_stars_payment(
 
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
+
+        # No matching transaction or conflicting revenue event exists. Begin
+        # the atomic balance, payment ledger, transaction and revenue update.
+        users = db.setdefault("users", {})
+        transactions = db.setdefault("transactions", [])
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
@@ -517,6 +584,10 @@ def record_stars_payment(
                 "currency": currency,
             },
         })
+
+        # Persist external Stars revenue in the same atomic update as Credits.
+        # This keeps ledger mismatch from being discovered after wallet mutation.
+        record_revenue_event(now)
 
         commission = 0
 
