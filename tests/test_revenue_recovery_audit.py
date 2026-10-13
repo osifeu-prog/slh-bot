@@ -49,6 +49,15 @@ class RevenueRecoveryAuditTests(unittest.TestCase):
         }
         original = json.dumps(db, ensure_ascii=False).encode()
         db_path.write_bytes(original)
+        backup_path = self.state / "backups" / "db_snapshot_fixture.json"
+        snapshot = {
+            "users": {"u1": {"wallet": {"revenue_share_claimable": 3}}},
+            "revenue_distributions": {"fixture-period": {"total_distributed": 2}},
+            "revenue_share_pool": {"total_distributed": 2, "surplus_accumulated": 1},
+            "stake_positions": {"p1": {"total_received": 4}},
+        }
+        snapshot_bytes = json.dumps(snapshot, ensure_ascii=False).encode()
+        backup_path.write_bytes(snapshot_bytes)
         (self.state / "exec_audit.json").write_text(
             json.dumps([
                 {
@@ -87,11 +96,21 @@ class RevenueRecoveryAuditTests(unittest.TestCase):
         self.assertIn("Explicit combined distribution reset commands: 1", report)
         self.assertIn("Audit references to db_20261005T152922.733019Z.json: 1", report)
         self.assertIn("Explicit distribute_revenue(...) call expressions: 1", report)
+        self.assertIn(
+            "gross=50 costs=5 period=2026-W40-real",
+            report,
+        )
+        self.assertIn(
+            "SNAPSHOT db_snapshot_fixture.json: distributions=1 pool_total_distributed=2 "
+            "claimable_users=1 claimable_total=3 positions_received=1 positions_received_total=4",
+            report,
+        )
         self.assertIn("Audit records with 2026-W40-real label: 1", report)
         self.assertIn("LEDGER ROWS TAGGED REVENUE-SHARE/DISTRIBUTION: 1", report)
         self.assertIn("HISTORICAL DISTRIBUTION/ACCRUAL AMOUNTS NOT RECONSTRUCTED", report)
         self.assertIn("do not prove a Credits transfer or cash payout", report)
         self.assertEqual(db_path.read_bytes(), original)
+        self.assertEqual(backup_path.read_bytes(), snapshot_bytes)
 
     def test_report_handles_missing_or_invalid_db_without_writes(self):
         report_missing = "\n".join(build_revenue_recovery_report(self.root))
