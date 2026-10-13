@@ -540,14 +540,17 @@ def test_voice_exchange_reserve_audit_query_shows_all_findings_read_only(monkeyp
     )
 
     assert reply is not None
-    assert "Reserve audit: FAIL" in reply
-    assert "finding_count=2" in reply
-    assert "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE" in reply
-    assert "O0000000006" in reply
-    assert "uid…7826" in reply
-    assert "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW" in reply
-    assert "correction:missed_release:O0000000009" in reply
-    assert "READ ONLY" in reply
+    messages = [call.args[1] for call in bot.send_message.call_args_list]
+    delivered = "\\n".join(messages)
+    assert "Reserve audit: FAIL" in delivered
+    assert "finding_count=2" in delivered
+    assert "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE" in delivered
+    assert "O0000000006" in delivered
+    assert "uid…7826" in delivered
+    assert "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW" in delivered
+    assert "correction:missed_release:O0000000009" in delivered
+    assert "READ ONLY" in delivered
+    assert "לא שונו פקודות" in reply
     assert bot.reply_to.call_count == 0
 
 
