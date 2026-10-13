@@ -197,3 +197,75 @@ def test_conflicting_revenue_event_blocks_new_payment_without_any_mutation(monke
     assert result["status"] == "conflict"
     assert "revenue.uid" in result["conflicting_fields"]
     assert db == before
+
+
+
+def test_reconciliation_replay_ignores_only_unavailable_provider_charge_id(monkeypatch):
+    db = make_db()
+    before = copy.deepcopy(db)
+    monkeypatch.setattr(
+        economy_service.state_manager,
+        "atomic_update",
+        lambda mutate: mutate(db),
+    )
+
+    result = economy_service.record_stars_payment(
+        uid="100",
+        credits=100,
+        stars_paid=100,
+        currency="XTR",
+        telegram_payment_charge_id="charge-immutable-1",
+        provider_payment_charge_id=None,
+        provider_payment_charge_id_unavailable=True,
+    )
+
+    assert result["status"] == "duplicate"
+    assert result["credits"] == 0
+    assert db == before
+
+
+def test_reconciliation_replay_still_rejects_amount_mismatch_when_provider_id_unavailable(monkeypatch):
+    db = make_db()
+    before = copy.deepcopy(db)
+    monkeypatch.setattr(
+        economy_service.state_manager,
+        "atomic_update",
+        lambda mutate: mutate(db),
+    )
+
+    result = economy_service.record_stars_payment(
+        uid="100",
+        credits=250,
+        stars_paid=100,
+        currency="XTR",
+        telegram_payment_charge_id="charge-immutable-1",
+        provider_payment_charge_id=None,
+        provider_payment_charge_id_unavailable=True,
+    )
+
+    assert result["status"] == "conflict"
+    assert "credits" in result["conflicting_fields"]
+    assert db == before
+
+
+def test_direct_replay_remains_strict_when_provider_id_unavailable_flag_is_not_set(monkeypatch):
+    db = make_db()
+    before = copy.deepcopy(db)
+    monkeypatch.setattr(
+        economy_service.state_manager,
+        "atomic_update",
+        lambda mutate: mutate(db),
+    )
+
+    result = economy_service.record_stars_payment(
+        uid="100",
+        credits=100,
+        stars_paid=100,
+        currency="XTR",
+        telegram_payment_charge_id="charge-immutable-1",
+        provider_payment_charge_id=None,
+    )
+
+    assert result["status"] == "conflict"
+    assert "provider_payment_charge_id" in result["conflicting_fields"]
+    assert db == before
