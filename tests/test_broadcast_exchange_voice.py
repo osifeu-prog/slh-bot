@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import handlers.broadcast_handler as target
 import core.system_checks as system_checks
+import handlers.exchange_handler as exchange_handler
 
 
 OWNER = str(target.OWNER_TELEGRAM_ID)
@@ -35,6 +36,19 @@ def _fresh_check(ready=True):
     }
 
 
+def _live_proof(ready=True):
+    return {
+        "status": "PASS" if ready else "BLOCKED",
+        "checked_at": NOW.isoformat(),
+        "railway_configured": "1",
+        "public_gate": "OPEN" if ready else "CLOSED",
+        "public_verdict": "OPEN" if ready else "BLOCKED",
+        "public_readiness": bool(ready),
+        "public_updated_at": 1791830000.0,
+        "detail": "canonical public runtime proof passed" if ready else "live runtime proof blocked",
+    }
+
+
 def _install_db(monkeypatch, db):
     monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
 
@@ -42,6 +56,11 @@ def _install_db(monkeypatch, db):
         return mutator(db)
 
     monkeypatch.setattr(target.state_manager, "atomic_update", atomic_update)
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: _live_proof(True),
+    )
 
 
 def _install_send(monkeypatch):
@@ -367,3 +386,54 @@ def test_near_miss_voice_confirmation_gives_exact_retry_and_never_sends(monkeypa
     assert sent == []
     bot.send_message.assert_not_called()
 
+
+
+def test_confirm_blocks_when_fresh_live_runtime_proof_is_not_open(monkeypatch):
+    db = _db()
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        lambda: _live_proof(False),
+    )
+    sent = _install_send(monkeypatch)
+
+    result = target.send_confirmed_exchange_broadcast(
+        Mock(), OWNER, now=NOW + timedelta(seconds=5)
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["sent"] == 0
+    assert sent == []
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "BLOCKED"
+
+
+def test_confirm_stops_during_broadcast_when_fresh_live_runtime_proof_closes(monkeypatch):
+    user_ids = ("8789977826",) + tuple(str(i) for i in range(100, 130))
+    db = _db(user_ids)
+    _install_db(monkeypatch, db)
+    target.prepare_exchange_broadcast(OWNER, now=NOW)
+    live_proofs = iter([_live_proof(True), _live_proof(False)])
+    calls = []
+
+    def check_live_runtime():
+        calls.append(True)
+        return next(live_proofs)
+
+    monkeypatch.setattr(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        check_live_runtime,
+    )
+    sent = _install_send(monkeypatch)
+
+    result = target.send_confirmed_exchange_broadcast(
+        Mock(), OWNER, now=NOW + timedelta(seconds=5)
+    )
+
+    assert result["status"] == "STOPPED_GATE_CLOSED"
+    assert result["sent"] == 25
+    assert len(sent) == 25
+    assert len(calls) == 2
+    assert db["exchange_broadcast_pending"][OWNER]["status"] == "STOPPED_GATE_CLOSED"
