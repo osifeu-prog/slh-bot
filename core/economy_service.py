@@ -391,6 +391,7 @@ def record_stars_payment(
     referrer_uid=None,
     commission_rate=0.10,
     meta=None,
+    provider_payment_charge_id_unavailable=False,
 ):
     """
     Atomic Telegram Stars payment authority.
@@ -472,8 +473,13 @@ def record_stars_payment(
                 "credits": credits,
                 "stars_paid": stars_paid,
                 "currency": currency,
-                "provider_payment_charge_id": provider_charge_id,
             }
+            # Telegram getStarTransactions does not expose
+            # provider_payment_charge_id. Ignore this comparison only when the
+            # caller explicitly marks the field unavailable; direct payment
+            # callbacks retain strict comparison by default.
+            if not provider_payment_charge_id_unavailable:
+                expected["provider_payment_charge_id"] = provider_charge_id
             conflicting_fields = []
             for field, expected_value in expected.items():
                 actual = tx.get(field)

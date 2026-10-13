@@ -32,19 +32,27 @@ def test_reconciliation_reports_conflicting_fields_without_exposing_raw_payload(
         "resolve_credit_pack",
         lambda credits, stars: SimpleNamespace(credits=credits, stars=stars),
     )
-    monkeypatch.setattr(
-        stars_payment_authority,
-        "record_stars_payment",
-        lambda **kwargs: {
+    captured = {}
+
+    def fake_record_stars_payment(**kwargs):
+        captured.update(kwargs)
+        return {
             "status": "conflict",
             "credits": 0,
             "credits_applied": 0,
             "conflicting_fields": ["credits", "revenue.uid"],
-        },
+        }
+
+    monkeypatch.setattr(
+        stars_payment_authority,
+        "record_stars_payment",
+        fake_record_stars_payment,
     )
 
     result = fulfillment_recovery.reconcile_telegram_stars()
 
+    assert captured["provider_payment_charge_id"] is None
+    assert captured["provider_payment_charge_id_unavailable"] is True
     assert result["attempted"] == 1
     assert result["success"] == 0
     assert result["failed"] == 1
