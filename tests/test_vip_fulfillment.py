@@ -181,7 +181,7 @@ class VIPReplayIdempotencyTests(unittest.TestCase):
         self.assertEqual(history[0]["charge_id"], "charge-1")
         self.assertEqual(history[0]["credits"], 300)
 
-    def test_completed_vip_replay_does_not_refill_or_record_revenue(self):
+    def test_completed_vip_replay_does_not_refill_or_duplicate_revenue(self):
         from core.stars_payment_authority import (
             VIP_MONTHLY_STARS,
             record_vip_subscription_payment,
@@ -220,7 +220,9 @@ class VIPReplayIdempotencyTests(unittest.TestCase):
         self.assertEqual(second["status"], "duplicate")
         self.assertEqual(second["fulfillment_status"], "completed")
         apply.assert_called_once()
-        revenue.assert_called_once()
+        revenue.assert_not_called()
+        self.assertEqual(len(db["revenue_ledger"]), 1)
+        self.assertEqual(db["revenue_ledger"][0]["reference"], "charge-replay-1")
         self.assertEqual(db["vip_subscriptions"]["charge-replay-1"]["expires_at"], 1000 + 2592000)
 
 
