@@ -67,10 +67,15 @@ def _install_db(monkeypatch, db):
         "audit_db",
         lambda _db: {
             "status": "PASS",
+            "operational_status": "PASS",
             "read_only": True,
             "checked_cancelled_sell_orders": 3,
             "finding_count": 0,
             "findings": [],
+            "blocking_finding_count": 0,
+            "blocking_findings": [],
+            "historical_finding_count": 0,
+            "historical_findings": [],
         },
     )
 

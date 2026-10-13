@@ -287,7 +287,7 @@ def _fresh_exchange_check(db):
 
 
 def _fresh_reserve_audit(db):
-    """Return a read-only reserve-audit result; only explicit consistent PASS is green."""
+    """Require internally consistent operational proof; preserve full audit findings."""
     try:
         from core.slh_exchange_reconciliation import audit_db
 
@@ -295,95 +295,203 @@ def _fresh_reserve_audit(db):
     except Exception as exc:
         report = {
             "status": "UNKNOWN",
+            "operational_status": "UNKNOWN",
             "read_only": True,
             "checked_cancelled_sell_orders": 0,
             "finding_count": 1,
             "findings": [],
+            "blocking_finding_count": 1,
+            "blocking_findings": [],
+            "historical_finding_count": 0,
+            "historical_findings": [],
             "detail": f"reserve audit failed: {type(exc).__name__}",
         }
     if not isinstance(report, dict):
         report = {
             "status": "UNKNOWN",
+            "operational_status": "UNKNOWN",
             "read_only": False,
             "checked_cancelled_sell_orders": 0,
             "finding_count": 1,
             "findings": [],
+            "blocking_finding_count": 1,
+            "blocking_findings": [],
+            "historical_finding_count": 0,
+            "historical_findings": [],
             "detail": "invalid reserve audit result",
         }
 
     audit_status = str(report.get("status") or "UNKNOWN").upper()
+    operational_status = str(report.get("operational_status") or "UNKNOWN").upper()
+
+    def _valid_count(value):
+        return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
     raw_finding_count = report.get("finding_count")
+    raw_blocking_count = report.get("blocking_finding_count")
+    raw_historical_count = report.get("historical_finding_count")
     count_valid = (
-        isinstance(raw_finding_count, int)
-        and not isinstance(raw_finding_count, bool)
-        and raw_finding_count >= 0
+        _valid_count(raw_finding_count)
+        and _valid_count(raw_blocking_count)
+        and _valid_count(raw_historical_count)
     )
-    finding_count = raw_finding_count if count_valid else 1
+    finding_count = raw_finding_count if _valid_count(raw_finding_count) else 1
+    blocking_count = raw_blocking_count if _valid_count(raw_blocking_count) else 1
+    historical_count = raw_historical_count if _valid_count(raw_historical_count) else 0
 
     raw_checked_orders = report.get("checked_cancelled_sell_orders")
-    checked_orders_valid = (
-        isinstance(raw_checked_orders, int)
-        and not isinstance(raw_checked_orders, bool)
-        and raw_checked_orders >= 0
-    )
+    checked_orders_valid = _valid_count(raw_checked_orders)
     checked_orders = raw_checked_orders if checked_orders_valid else 0
 
     raw_findings = report.get("findings")
+    raw_blocking = report.get("blocking_findings")
+    raw_historical = report.get("historical_findings")
     findings_valid = isinstance(raw_findings, list) and all(
-        isinstance(item, dict) and bool(str(item.get("code") or "").strip())
+        isinstance(item, dict)
+        and bool(str(item.get("code") or "").strip())
+        and item.get("operational_classification") in {
+            "BLOCKING",
+            "HISTORICAL_ARCHIVED_TEST_SEED",
+            "LEGACY_BALANCED_CANCELLED_ORDER",
+        }
         for item in raw_findings
     )
+    blocking_valid = isinstance(raw_blocking, list) and all(
+        isinstance(item, dict)
+        and bool(str(item.get("code") or "").strip())
+        and item.get("operational_classification") == "BLOCKING"
+        for item in raw_blocking
+    )
+    historical_valid = isinstance(raw_historical, list) and all(
+        isinstance(item, dict)
+        and bool(str(item.get("code") or "").strip())
+        and item.get("operational_classification") in {
+            "HISTORICAL_ARCHIVED_TEST_SEED",
+            "LEGACY_BALANCED_CANCELLED_ORDER",
+        }
+        for item in raw_historical
+    )
     findings = raw_findings if isinstance(raw_findings, list) else []
+    blocking_findings = raw_blocking if isinstance(raw_blocking, list) else []
+    historical_findings = raw_historical if isinstance(raw_historical, list) else []
+    if (
+        not isinstance(raw_findings, list)
+        or not findings_valid
+        or not _valid_count(raw_finding_count)
+        or raw_finding_count != len(raw_findings)
+    ):
+        count_valid = False
+        finding_count = max(finding_count, len(findings), 1)
     finding_codes = [
-        str(item.get("code")).strip()[:80]
+        str(item.get("code") or "").strip()[:80]
         for item in findings
         if isinstance(item, dict) and str(item.get("code") or "").strip()
     ]
-    if not findings_valid:
-        finding_count = max(finding_count, 1)
-    else:
-        finding_count = max(finding_count, len(findings))
-        if count_valid and raw_finding_count != len(findings):
-            count_valid = False
-            finding_count = max(finding_count, 1)
 
+    def _finding_key(item):
+        return (
+            str(item.get("code") or ""),
+            str(item.get("ledger") or ""),
+            str(item.get("order_id") or ""),
+            str(item.get("group") or ""),
+            str(item.get("event_id") or ""),
+            tuple(str(value) for value in item.get("order_ids", []))
+            if isinstance(item.get("order_ids"), list) else (),
+            str(item.get("operational_classification") or ""),
+        )
+
+    classified_blocking = [
+        item for item in findings
+        if item.get("operational_classification") == "BLOCKING"
+    ]
+    classified_historical = [
+        item for item in findings
+        if item.get("operational_classification") in {
+            "HISTORICAL_ARCHIVED_TEST_SEED",
+            "LEGACY_BALANCED_CANCELLED_ORDER",
+        }
+    ]
+    classifications_match = (
+        sorted(_finding_key(item) for item in blocking_findings)
+        == sorted(_finding_key(item) for item in classified_blocking)
+        and sorted(_finding_key(item) for item in historical_findings)
+        == sorted(_finding_key(item) for item in classified_historical)
+    )
+    lists_valid = (
+        findings_valid
+        and blocking_valid
+        and historical_valid
+        and len(findings) == finding_count
+        and len(blocking_findings) == blocking_count
+        and len(historical_findings) == historical_count
+        and blocking_count + historical_count == finding_count
+        and classifications_match
+    )
+
+    status_consistent = (
+        (audit_status == "PASS" and finding_count == 0)
+        or (
+            audit_status == "FAIL"
+            and finding_count > 0
+            and any(code != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND" for code in finding_codes)
+        )
+        or (
+            audit_status == "UNKNOWN"
+            and checked_orders == 0
+            and finding_codes == ["NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"]
+        )
+    )
     passed = (
         report.get("read_only") is True
-        and audit_status == "PASS"
+        and status_consistent
+        and audit_status in {"PASS", "FAIL"}
+        and operational_status == "PASS"
         and count_valid
-        and raw_finding_count == 0
-        and findings_valid
-        and len(findings) == 0
+        and lists_valid
+        and blocking_count == 0
         and checked_orders_valid
         and checked_orders > 0
     )
-    if passed:
-        detail = "read-only reserve audit PASS"
-    elif audit_status != "PASS" and report.get("detail"):
-        detail = str(report.get("detail"))
-    elif finding_codes:
+    if passed and historical_count == 0:
+        detail = "current reserve readiness PASS; full historical reserve audit PASS"
+    elif passed:
         detail = (
-            f"reserve audit {audit_status} ({finding_count} finding(s): "
-            f"{', '.join(finding_codes[:4])}); broadcast blocked"
+            f"current reserve readiness PASS; full historical audit {audit_status} "
+            f"retains {historical_count} finding(s) as classified nonblocking history; full audit remains {audit_status}"
         )
-    elif not findings_valid:
-        detail = "reserve audit has malformed findings evidence; broadcast blocked"
-    elif not count_valid:
-        detail = "reserve audit count/evidence mismatch; broadcast blocked"
+    elif not lists_valid:
+        detail = (
+            "reserve audit classification/count evidence is inconsistent"
+            + (f" ({', '.join(finding_codes[:4])})" if finding_codes else "")
+            + "; broadcast blocked"
+        )
+    elif not status_consistent:
+        detail = "reserve audit full-status/count evidence is inconsistent; broadcast blocked"
+    elif operational_status != "PASS":
+        detail = (
+            f"operational reserve readiness {operational_status}; "
+            f"{blocking_count} blocking finding(s); broadcast blocked"
+        )
+    elif audit_status == "UNKNOWN":
+        detail = "reserve audit returned UNKNOWN; broadcast blocked"
     elif not checked_orders_valid or checked_orders <= 0:
         detail = "reserve audit did not verify any cancelled sell-order reserves; broadcast blocked"
     else:
-        detail = f"reserve audit {audit_status} ({finding_count} finding(s)); broadcast blocked"
+        detail = f"reserve audit {audit_status}; broadcast blocked"
 
     return {
         "status": "PASS" if passed else "BLOCKED",
         "audit_status": audit_status,
+        "operational_status": operational_status,
         "checked_at": _utc_text(),
         "read_only": report.get("read_only") is True,
         "finding_count": finding_count,
+        "blocking_finding_count": blocking_count,
+        "historical_finding_count": historical_count,
         "checked_cancelled_sell_orders": checked_orders,
         "detail": detail[:300],
     }
+
 
 def _proof_with_reserve_audit(check, audit):
     """Attach a concise, read-only reserve-audit receipt to the send-time proof."""
@@ -395,6 +503,9 @@ def _proof_with_reserve_audit(check, audit):
         "reserve_audit_checked_at": str(audit.get("checked_at") or ""),
         "reserve_audit_read_only": audit.get("read_only") is True,
         "reserve_audit_finding_count": audit.get("finding_count", 1),
+        "reserve_audit_blocking_finding_count": audit.get("blocking_finding_count", 1),
+        "reserve_audit_historical_finding_count": audit.get("historical_finding_count", 0),
+        "reserve_audit_operational_status": str(audit.get("operational_status") or "UNKNOWN"),
         "reserve_audit_checked_cancelled_sell_orders": audit.get("checked_cancelled_sell_orders", 0),
         "reserve_audit_detail": str(audit.get("detail") or "No reserve-audit evidence")[:300],
     })
@@ -494,6 +605,9 @@ def _proof_snapshot(check, checked_at=None):
         "reserve_audit_checked_at",
         "reserve_audit_read_only",
         "reserve_audit_finding_count",
+        "reserve_audit_blocking_finding_count",
+        "reserve_audit_historical_finding_count",
+        "reserve_audit_operational_status",
         "reserve_audit_checked_cancelled_sell_orders",
         "reserve_audit_detail",
     ):
