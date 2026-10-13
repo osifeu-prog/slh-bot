@@ -86,13 +86,29 @@ def test_standard_railway_token_wrong_scope_fails_closed(monkeypatch):
 
 def test_account_token_remains_available_for_cross_project_targets(monkeypatch):
     monkeypatch.setenv("RAILWAY_API_TOKEN", "account-secret")
-    monkeypatch.delenv("RAILWAY_API_TOKEN_SLH", raising=False)
+    for key in ("RAILWAY_API_TOKEN_SLH", "SLH_RAILWAY_TOKEN", "RAILWAY_PROJECT_TOKEN",
+                "RAILWAY_PROJECT_TOKEN_SLH", "RAILWAY_TOKEN"):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setattr(
         target, "_project_token_scope",
-        lambda _token: (_ for _ in ()).throw(AssertionError("project scope query should not run")),
+        lambda _token: (_ for _ in ()).throw(AssertionError("no project candidate should run")),
     )
 
     assert target._credentials_for_target({
         "railway_project_id": "p1",
         "railway_environment_id": "e1",
     }) == ("account-secret", "account")
+
+
+def test_matching_project_token_is_preferred_over_account_token(monkeypatch):
+    monkeypatch.setenv("RAILWAY_API_TOKEN", "account-secret")
+    for key in ("RAILWAY_API_TOKEN_SLH", "SLH_RAILWAY_TOKEN", "RAILWAY_PROJECT_TOKEN",
+                "RAILWAY_PROJECT_TOKEN_SLH"):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("RAILWAY_TOKEN", "project-secret")
+    monkeypatch.setattr(target, "_project_token_scope", lambda _token: ("p1", "e1"))
+
+    assert target._credentials_for_target({
+        "railway_project_id": "p1",
+        "railway_environment_id": "e1",
+    }) == ("project-secret", "project")
