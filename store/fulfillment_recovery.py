@@ -146,7 +146,10 @@ def reconcile_telegram_stars(limit: int = 100, uid: str | None = None) -> dict:
                         "reconciled": True,
                     },
                 )
-                ok = result.get("status") in {"applied", "duplicate"}
+                ok = (
+                    result.get("status") in {"applied", "duplicate"}
+                    and result.get("revenue_status") != "conflict"
+                )
 
             else:
                 skipped += 1
@@ -157,12 +160,28 @@ def reconcile_telegram_stars(limit: int = 100, uid: str | None = None) -> dict:
             else:
                 failed += 1
 
-            details.append({
+            detail = {
                 "uid": tx_uid,
                 "charge_id": charge_id,
                 "payload": invoice_payload[:120],
                 "status": result.get("status") or result.get("fulfillment_status"),
-            })
+            }
+            conflicts = (
+                result.get("conflicting_fields")
+                or result.get("revenue_conflicting_fields")
+                or []
+            )
+            if isinstance(conflicts, (list, tuple, set)):
+                safe_fields = [str(field)[:80] for field in list(conflicts)[:8] if field]
+            elif conflicts:
+                safe_fields = [str(conflicts)[:80]]
+            else:
+                safe_fields = []
+            if result.get("revenue_status") == "conflict" and not safe_fields:
+                safe_fields = ["revenue.conflict_fields_unavailable"]
+            if safe_fields:
+                detail["conflicting_fields"] = safe_fields
+            details.append(detail)
         except Exception as exc:
             failed += 1
             details.append({
