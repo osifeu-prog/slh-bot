@@ -228,6 +228,51 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(duplicate["ledger"], "ledger")
         self.assertIn("same-id", duplicate["event_ids"])
 
+
+    def test_non_exchange_corrections_without_order_ids_do_not_poison_reserve_audit(self):
+        db = {
+            "exchange_orders": {},
+            "ledger": [
+                {"uid": "42", "amount": 0, "reason": "rewards:correction"},
+                {"uid": "42", "amount": 0, "kind": "referral_correction"},
+                {"uid": "42", "amount": 0, "reason": "profile:manual correction"},
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "UNKNOWN")
+        self.assertIn("NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND", codes)
+        self.assertNotIn("LEDGER_EVENT_ID_MISSING", codes)
+        self.assertNotIn("ORPHAN_RESERVE_CORRECTION", codes)
+
+    def test_exchange_reserve_correction_without_event_id_still_fails_closed(self):
+        db = {
+            "exchange_orders": {
+                "O8": {"id": "O8", "uid": "42", "side": "sell", "status": "cancelled"}
+            },
+            "ledger": [
+                {"uid": "42", "amount": -100, "reason": "exchange:sell_reserve",
+                 "event_id": "reserve:O8", "meta": {"order_id": "O8"}},
+                {"uid": "42", "amount": 100, "reason": "exchange:missed_release_correction",
+                 "meta": {"order_id": "O8"}},
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+        missing = next(item for item in report["findings"]
+                       if item["code"] == "LEDGER_EVENT_ID_MISSING")
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", codes)
+        self.assertEqual(missing["ledger"], "ledger")
+        self.assertEqual(missing["order_id"], "O8")
+        self.assertEqual(missing["group"], "correction")
+
     def test_duplicate_non_exchange_event_ids_do_not_poison_reserve_audit(self):
         db = {
             "exchange_orders": {},
