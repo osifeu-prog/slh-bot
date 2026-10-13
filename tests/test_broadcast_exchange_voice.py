@@ -393,6 +393,11 @@ def test_confirm_blocks_when_fresh_live_runtime_proof_is_not_open(monkeypatch):
     _install_db(monkeypatch, db)
     target.prepare_exchange_broadcast(OWNER, now=NOW)
     monkeypatch.setattr(
+        system_checks,
+        "check_exchange_for_execution",
+        lambda current: _fresh_check(True),
+    )
+    monkeypatch.setattr(
         exchange_handler,
         "require_fresh_live_exchange_proof",
         lambda: _live_proof(False),
@@ -414,6 +419,12 @@ def test_confirm_stops_during_broadcast_when_fresh_live_runtime_proof_closes(mon
     db = _db(user_ids)
     _install_db(monkeypatch, db)
     target.prepare_exchange_broadcast(OWNER, now=NOW)
+    local_checks = iter([_fresh_check(True)] * 20)
+    monkeypatch.setattr(
+        system_checks,
+        "check_exchange_for_execution",
+        lambda current: next(local_checks),
+    )
     live_proofs = iter([_live_proof(True), _live_proof(False)])
     calls = []
 
