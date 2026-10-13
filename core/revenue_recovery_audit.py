@@ -24,6 +24,13 @@ REVENUE_FIELDS = (
     "revenue_share_pool",
     "revenue_share_claimable",
 )
+AUDIT_MATCH_TERMS = REVENUE_FIELDS + (
+    "distribute_revenue",
+    "total_received",
+    "test-2026-10-05",
+    "2026-w40-real",
+)
+_ENGINE_CALL_RE = re.compile(r"\\bdistribute_revenue\\s*\\(", re.IGNORECASE)
 _DELETE_OR_MOVE_RE = re.compile(
     r"(?:os\.remove\s*\(|\.unlink\s*\(|rmtree\s*\(|"
     r"shutil\.move\s*\(|os\.rename\s*\(|"
@@ -109,6 +116,25 @@ def build_revenue_recovery_report(root="."):
         ]
         nonzero_received = [amount for amount in received_values if amount != 0]
 
+        ledger_marker_rows = []
+        ledger = db.get("ledger", [])
+        if isinstance(ledger, list):
+            for entry in ledger:
+                if not isinstance(entry, dict):
+                    continue
+                reason = str(entry.get("reason") or "").lower()
+                meta = entry.get("meta") or {}
+                try:
+                    meta_text = json.dumps(meta, ensure_ascii=False, sort_keys=True).lower()
+                except (TypeError, ValueError):
+                    meta_text = ""
+                marker_text = reason + " " + meta_text
+                if any(token in marker_text for token in (
+                    "revenue_share", "revenue share",
+                    "revenue_distribution", "revenue distribution",
+                )):
+                    ledger_marker_rows.append(entry)
+
         lines.extend([
             "CURRENT DISTRIBUTION KEYS: " + str(len(distributions)),
             "CURRENT POOL total_distributed: "
@@ -120,6 +146,8 @@ def build_revenue_recovery_report(root="."):
             "POSITIONS WITH NONZERO total_received: " + str(len(nonzero_received)),
             "SUM POSITION total_received: "
             + format(sum(nonzero_received, Decimal("0")), "f"),
+            "LEDGER ROWS TAGGED REVENUE-SHARE/DISTRIBUTION: "
+            + str(len(ledger_marker_rows)),
         ])
         if distributions:
             lines.append(
@@ -178,6 +206,12 @@ def build_revenue_recovery_report(root="."):
     dist_refs = 0
     reset_refs = 0
     snapshot_refs = {name: 0 for name in TARGET_SNAPSHOTS}
+    engine_refs = 0
+    engine_calls = 0
+    engine_call_times = []
+    test_period_refs = 0
+    real_period_refs = 0
+    total_received_refs = 0
     file_ops = 0
     file_op_times = []
     audit_status = []
@@ -194,12 +228,28 @@ def build_revenue_recovery_report(root="."):
                 continue
             cmd = str(row.get("cmd") or "")
             low = cmd.lower()
-            if not any(term in low for term in REVENUE_FIELDS):
+            if not any(term in low for term in AUDIT_MATCH_TERMS):
                 if not any(name.lower() in low for name in TARGET_SNAPSHOTS):
                     continue
             records += 1
             if any(term in low for term in REVENUE_FIELDS):
                 dist_refs += 1
+            calls_in_command = len(_ENGINE_CALL_RE.findall(low))
+            if "distribute_revenue" in low:
+                engine_refs += 1
+            if calls_in_command:
+                engine_calls += calls_in_command
+                engine_call_times.append((
+                    timestamp,
+                    str(row.get("result") or "unknown"),
+                    calls_in_command,
+                ))
+            if "test-2026-10-05" in low:
+                test_period_refs += 1
+            if "2026-w40-real" in low:
+                real_period_refs += 1
+            if "total_received" in low:
+                total_received_refs += 1
             if (
                 "revenue_distributions" in low
                 and re.search(r"revenue_distributions[^\n]{0,20}=\s*\{\s*\}", low)
@@ -221,6 +271,17 @@ def build_revenue_recovery_report(root="."):
     lines.append("Audit files: " + ", ".join(audit_status))
     lines.append("Matching Oct-05 evidence records: " + str(records))
     lines.append("Revenue-field references: " + str(dist_refs))
+    lines.append("Distribution engine references: " + str(engine_refs))
+    lines.append("Explicit distribute_revenue(...) call expressions: " + str(engine_calls))
+    lines.append("Audit records with test-2026-10-05 label: " + str(test_period_refs))
+    lines.append("Audit records with 2026-W40-real label: " + str(real_period_refs))
+    lines.append("Audit records referencing total_received: " + str(total_received_refs))
+    if engine_call_times:
+        details = []
+        for timestamp, result, count in engine_call_times[:6]:
+            dt = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+            details.append(dt + " result=" + result + " calls=" + str(count))
+        lines.append("Engine call records UTC (command exit is not payout proof): " + " | ".join(details))
     lines.append("Explicit combined distribution reset commands: " + str(reset_refs))
     for name, count in snapshot_refs.items():
         lines.append("Audit references to " + name + ": " + str(count))
@@ -236,7 +297,11 @@ def build_revenue_recovery_report(root="."):
         "this report searches only the available exec audit files."
     )
     lines.append("")
-    lines.append("VERDICT: HISTORICAL PAYOUT AMOUNTS NOT RECONSTRUCTED")
+    lines.append("VERDICT: HISTORICAL DISTRIBUTION/ACCRUAL AMOUNTS NOT RECONSTRUCTED")
+    lines.append(
+        "Important: Revenue Share engine calls update internal claimable fields; "
+        "these records alone do not prove a Credits transfer or cash payout."
+    )
     lines.append("Next safe step: inspect independent snapshots/exports before any repair.")
     return lines
 
