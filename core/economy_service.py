@@ -402,20 +402,85 @@ def record_stars_payment(
 
     def mutate(db):
         users = db.setdefault("users", {})
+        transactions = db.setdefault("transactions", [])
+
+        # A charge ID is immutable. Exact replays are no-ops; conflicting
+        # immutable payment fields must stop before any wallet/ledger change.
+        for tx in transactions:
+            if not isinstance(tx, dict):
+                continue
+            if str(tx.get("telegram_payment_charge_id", "")) != charge_id:
+                continue
+
+            expected = {
+                "uid": uid,
+                "credits": credits,
+                "stars_paid": stars_paid,
+                "currency": currency,
+                "provider_payment_charge_id": provider_charge_id,
+            }
+            conflicting_fields = []
+            for field, expected_value in expected.items():
+                actual = tx.get(field)
+                if field == "uid":
+                    matches = actual is not None and str(actual) == str(expected_value)
+                elif field == "credits":
+                    try:
+                        actual_number = float(actual)
+                        expected_number = float(expected_value)
+                        matches = (
+                            math.isfinite(actual_number)
+                            and actual_number == expected_number
+                        )
+                    except (TypeError, ValueError, OverflowError):
+                        matches = False
+                elif field == "stars_paid":
+                    try:
+                        matches = (
+                            not isinstance(actual, bool)
+                            and int(actual) == int(expected_value)
+                        )
+                    except (TypeError, ValueError, OverflowError):
+                        matches = False
+                elif field == "provider_payment_charge_id":
+                    actual_provider = (
+                        str(actual).strip() if actual not in (None, "") else None
+                    )
+                    expected_provider = (
+                        str(expected_value).strip()
+                        if expected_value not in (None, "")
+                        else None
+                    )
+                    matches = actual_provider == expected_provider
+                else:
+                    matches = (
+                        actual is not None
+                        and str(actual) == str(expected_value)
+                    )
+
+                if not matches:
+                    conflicting_fields.append(field)
+
+            if conflicting_fields:
+                return {
+                    "status": "conflict",
+                    "uid": uid,
+                    "credits": 0,
+                    "credits_applied": 0,
+                    "charge_id": charge_id,
+                    "conflicting_fields": conflicting_fields,
+                }
+
+            return {
+                "status": "duplicate",
+                "uid": uid,
+                "credits": 0,
+                "credits_applied": 0,
+                "charge_id": charge_id,
+            }
 
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
-
-        transactions = db.setdefault("transactions", [])
-
-        for tx in transactions:
-            if str(tx.get("telegram_payment_charge_id", "")) == charge_id:
-                return {
-                    "status": "duplicate",
-                    "uid": uid,
-                    "credits": 0,
-                    "charge_id": charge_id,
-                }
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
