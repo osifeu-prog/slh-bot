@@ -120,3 +120,145 @@ def test_variable_update_requests_one_explicit_redeploy(monkeypatch):
     assert calls[0][1]["input"]["skipDeploys"] is True
     assert calls[0][1]["input"]["variables"] == {"SLH_BSC_CONFIG": "target-config"}
     assert "serviceInstanceRedeploy" in calls[1][0]
+
+
+def test_connections_status_is_read_only_and_redacts_tokens(monkeypatch):
+    for key in (
+        "GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN_SLH",
+        "RAILWAY_API_TOKEN", "RAILWAY_API_TOKEN_SLH",
+        "RAILWAY_PROJECT_TOKEN", "RAILWAY_PROJECT_TOKEN_SLH",
+        "SLH_RAILWAY_TOKEN", "SLH_RAILWAY_PROJECT_ID",
+        "SLH_RAILWAY_ENVIRONMENT_ID", "SLH_RAILWAY_SERVICE_ID",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return b'{"full_name":"osifeu-prog/slh-bot"}'
+
+    captured = {}
+
+    def fake_urlopen(request, timeout):
+        captured["method"] = request.get_method()
+        captured["url"] = request.full_url
+        captured["timeout"] = timeout
+        return Response()
+
+    monkeypatch.setattr(target.urllib.request, "urlopen", fake_urlopen)
+    result = target.connections_status_reply()
+
+    assert captured["method"] == "GET"
+    assert captured["url"] == "https://api.github.com/repos/osifeu-prog/slh-bot"
+    assert captured["timeout"] == 8
+    assert "GitHub API read: PASS" in result
+    assert "GitHub write credential (/git commit): MISSING" in result
+    assert "Railway account token (/deploy, /logs): MISSING" in result
+    assert "SLH scoped Railway integration: BLOCKED" in result
+    assert "No secrets printed" in result
+    assert "Bearer " not in result
+
+
+def test_connections_status_validates_railway_scope_without_mutations(monkeypatch):
+    monkeypatch.setenv("GITHUB_TOKEN", "github-secret-value")
+    monkeypatch.setenv("GIT_TOKEN", "git-secret-value")
+    monkeypatch.setenv("SLH_RAILWAY_TOKEN", "railway-secret-value")
+    monkeypatch.setenv("SLH_RAILWAY_PROJECT_ID", "project-1")
+    monkeypatch.setenv("SLH_RAILWAY_ENVIRONMENT_ID", "environment-1")
+    monkeypatch.setenv("SLH_RAILWAY_SERVICE_ID", "service-1")
+    monkeypatch.delenv("RAILWAY_API_TOKEN", raising=False)
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return b'{"full_name":"osifeu-prog/slh-bot"}'
+
+    captured = []
+
+    def fake_urlopen(request, timeout):
+        captured.append(("github", request.get_method(), request.full_url))
+        return Response()
+
+    def fake_graphql(ctx, query, variables=None):
+        captured.append(("railway", query))
+        assert ctx["token"] == "railway-secret-value"
+        assert "query" in query.lower()
+        assert "mutation" not in query.lower()
+        return {
+            "projectToken": {
+                "projectId": "project-1",
+                "environmentId": "environment-1",
+            }
+        }
+
+    monkeypatch.setattr(target.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(target, "_graphql", fake_graphql)
+    result = target.connections_status_reply()
+
+    assert "GitHub API read: PASS" in result
+    assert "GitHub write credential (/git commit): CONFIGURED" in result
+    assert "SLH scoped Railway integration: PASS" in result
+    assert "github-secret-value" not in result
+    assert "git-secret-value" not in result
+    assert "railway-secret-value" not in result
+    assert "variableCollectionUpsert" not in repr(captured)
+    assert "serviceInstanceRedeploy" not in repr(captured)
+
+
+def test_connections_status_route_is_owner_only_and_private(monkeypatch):
+    from types import SimpleNamespace
+
+    class FakeBot:
+        def __init__(self):
+            self.handlers = {}
+            self.replies = []
+
+        def message_handler(self, commands):
+            def decorator(fn):
+                for command in commands:
+                    self.handlers[command] = fn
+                return fn
+            return decorator
+
+        def reply_to(self, message, text, parse_mode=None):
+            self.replies.append((message, text, parse_mode))
+
+    bot = FakeBot()
+    target.register(bot)
+    monkeypatch.setattr(target, "is_owner", lambda uid: str(uid) == "42")
+    monkeypatch.setattr(target, "connections_status_reply", lambda: "SAFE_CONNECTION_REPORT")
+    handler = bot.handlers["connections_status"]
+
+    owner_private = SimpleNamespace(
+        from_user=SimpleNamespace(id=42),
+        chat=SimpleNamespace(type="private"),
+        text="/connections_status",
+    )
+    handler(owner_private)
+    assert bot.replies[-1][1] == "SAFE_CONNECTION_REPORT"
+
+    non_owner = SimpleNamespace(
+        from_user=SimpleNamespace(id=99),
+        chat=SimpleNamespace(type="private"),
+        text="/connections_status",
+    )
+    handler(non_owner)
+    assert bot.replies[-1][1] == "⛔ OWNER only"
+
+    owner_group = SimpleNamespace(
+        from_user=SimpleNamespace(id=42),
+        chat=SimpleNamespace(type="group"),
+        text="/connections_status",
+    )
+    handler(owner_group)
+    assert bot.replies[-1][1] == "⛔ Connection status is available in private chat only."
