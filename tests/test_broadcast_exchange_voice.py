@@ -515,6 +515,7 @@ def test_voice_exchange_reserve_audit_query_shows_all_findings_read_only(monkeyp
                 "uid_suffix": "7826",
                 "reserve_delta": "-5.0",
                 "normal_release_delta": "0",
+                "correction_delta": 0,
             },
             {
                 "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
@@ -547,6 +548,7 @@ def test_voice_exchange_reserve_audit_query_shows_all_findings_read_only(monkeyp
     assert "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE" in delivered
     assert "O0000000006" in delivered
     assert "uid…7826" in delivered
+    assert "corr=0" in delivered
     assert "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW" in delivered
     assert "correction:missed_release:O0000000009" in delivered
     assert "READ ONLY" in delivered
