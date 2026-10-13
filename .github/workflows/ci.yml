@@ -170,3 +170,8 @@ jobs:
           python -m pip install --disable-pip-version-check paho-mqtt
           python -m unittest tests.test_mqtt_listener tests.test_mcp_mqtt -v
           echo "MQTT listener + MCP status contracts: OK"
+
+      - name: Run read-only revenue recovery audit tests
+        run: |
+          python -m unittest tests.test_revenue_recovery_audit -v
+          echo "Revenue recovery audit: OK"
