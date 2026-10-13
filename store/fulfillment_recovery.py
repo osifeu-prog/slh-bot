@@ -139,6 +139,7 @@ def reconcile_telegram_stars(limit: int = 100, uid: str | None = None) -> dict:
                     currency="XTR",
                     telegram_payment_charge_id=charge_id,
                     provider_payment_charge_id=None,
+                    provider_payment_charge_id_unavailable=True,
                     referrer_uid=None,
                     meta={
                         "source": "telegram_star_reconciliation",
