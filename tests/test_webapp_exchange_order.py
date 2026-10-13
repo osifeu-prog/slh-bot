@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 import webapp
@@ -45,12 +46,12 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
             "require_fresh_live_exchange_proof",
             return_value={
             "status": "PASS",
-            "checked_at": "2026-10-12T16:00:00+00:00",
+            "checked_at": datetime.now(timezone.utc).isoformat(),
             "railway_configured": "1",
             "public_gate": "OPEN",
             "public_verdict": "OPEN",
             "public_readiness": True,
-            "public_updated_at": 1791830000.0,
+            "public_updated_at": datetime.now(timezone.utc).timestamp(),
         },
         )
         self.live_proof_patch.start()
@@ -106,6 +107,17 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         self.assertTrue(payload["execution_check"]["execution_ready"])
         self.assertTrue(payload["execution_check"]["money_invariants"])
         self.assertTrue(payload["execution_check"]["checked_at"])
+        self.live_proof_patch.assert_called_once_with()
+        execution_check = payload["execution_check"]
+        self.assertEqual(execution_check["live_runtime_check"], "PASS")
+        self.assertEqual(execution_check["live_railway_gate"], "1")
+        self.assertEqual(execution_check["live_public_gate"], "OPEN")
+        self.assertEqual(execution_check["live_public_verdict"], "OPEN")
+        self.assertIs(execution_check["live_public_readiness"], True)
+        self.assertIsInstance(execution_check["live_public_updated_at"], (int, float))
+        checked_at = datetime.fromisoformat(execution_check["checked_at"].replace("Z", "+00:00"))
+        live_checked_at = datetime.fromisoformat(execution_check["live_checked_at"].replace("Z", "+00:00"))
+        self.assertLessEqual(abs((checked_at - live_checked_at).total_seconds()), 30)
         self.assertEqual(len(self.db["exchange_orders"]), 1)
 
     def test_failed_fresh_check_blocks_without_creating_order_or_debiting_wallet(self):
@@ -130,11 +142,59 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
         payload = response.get_json()
         self.assertEqual(payload["code"], "EXCHANGE_FRESH_CHECK_BLOCKED")
         self.assertEqual(payload["exchange_check"]["public_gate"], "CLOSED")
+        self.live_proof_patch.assert_called_once_with()
+        self.assertEqual(payload["exchange_check"]["live_runtime_check"], "PASS")
         self.assertEqual(self.db["exchange_orders"], {})
         self.assertEqual(
             self.db["users"]["buyer"]["wallet"]["credits"],
             before_credits,
         )
+        self.assertEqual(
+            self.db["users"]["buyer"]["wallet"]["exchange_reserved_credits"],
+            0.0,
+        )
+
+    def test_unavailable_live_proof_blocks_before_local_check_or_money_mutation(self):
+        from handlers import exchange_handler
+        from handlers.exchange_handler import ExchangeFreshCheckBlocked
+
+        before_credits = self.db["users"]["buyer"]["wallet"]["credits"]
+        checked_at = datetime.now(timezone.utc).isoformat()
+        blocked = ExchangeFreshCheckBlocked({
+            "checked_at": checked_at,
+            "public_gate": "UNKNOWN",
+            "verdict": "BLOCKED",
+            "public_ready": False,
+            "execution_ready": False,
+            "order_book_integrity": False,
+            "trade_integrity": False,
+            "money_invariants": False,
+            "detail": "public runtime probe failed",
+            "railway_configured": "1",
+            "live_runtime_check": "BLOCKED",
+            "live_checked_at": checked_at,
+            "live_public_gate": "UNKNOWN",
+        })
+
+        with patch.object(
+            exchange_handler,
+            "require_fresh_live_exchange_proof",
+            side_effect=blocked,
+        ) as live_check, patch(
+            "core.system_checks.check_exchange_for_execution"
+        ) as local_check:
+            response = self.submit(request_id="live-proof-unavailable")
+
+        self.assertEqual(response.status_code, 409)
+        payload = response.get_json()
+        self.assertEqual(payload["code"], "EXCHANGE_FRESH_CHECK_BLOCKED")
+        self.assertEqual(payload["exchange_check"]["live_runtime_check"], "BLOCKED")
+        live_check.assert_called_once_with()
+        local_check.assert_not_called()
+        self.assertEqual(self.db["exchange_orders"], {})
+        self.assertEqual(self.db["exchange_trades"], [])
+        self.assertEqual(self.db["exchange_requests"], {})
+        self.assertEqual(self.db["users"]["buyer"]["wallet"]["credits"], before_credits)
         self.assertEqual(
             self.db["users"]["buyer"]["wallet"]["exchange_reserved_credits"],
             0.0,
