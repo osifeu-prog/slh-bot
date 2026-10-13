@@ -1157,6 +1157,7 @@ def _exchange_broadcast_status_answer(message, *, now=None):
     try:
         db = state_manager.load_db()
         check = _fresh_exchange_check(db)
+        reserve_audit = _fresh_reserve_audit(db)
     except Exception as exc:
         check = {
             "execution_ready": False,
@@ -1164,18 +1165,33 @@ def _exchange_broadcast_status_answer(message, *, now=None):
             "verdict": "BLOCKED",
             "detail": f"live state unavailable: {type(exc).__name__}",
         }
+        reserve_audit = {
+            "status": "BLOCKED",
+            "audit_status": "UNKNOWN",
+            "finding_count": 1,
+            "detail": f"reserve audit unavailable: {type(exc).__name__}",
+        }
     proof = _proof_snapshot(check, checked_at=_utc_text(now))
-    ready = _proof_is_green(check)
+    reserve_status = (
+        "PASS"
+        if isinstance(reserve_audit, dict) and reserve_audit.get("status") == "PASS"
+        else "BLOCKED"
+    )
+    reserve_detail = str(
+        (reserve_audit or {}).get("detail") or "No clean reserve-audit evidence"
+    )[:300]
+    ready = _proof_is_green(check) and reserve_status == "PASS"
     gate = "OPEN" if ready else "CLOSED/BLOCKED"
     next_step = (
         "אם תרצה להתחיל, אמור: ״הכן ברודקאסט למסחר פנימי״. זה יפתח תצוגה מקדימה בלבד; "
-        "שליחה תדרוש אישור קולי נפרד ובדיקת Exchange רעננה נוספת."
+        "שליחה תדרוש אישור קולי נפרד ובדיקת Exchange ורזרבות רעננה נוספת."
         if ready
-        else "לא לשדר הודעת ״המסחר הפנימי פתוח״ עד שכל בדיקות ה־Exchange יהיו OPEN/PASS."
+        else "⛔ לא לשדר הודעת ״המסחר הפנימי פתוח״ עד שבדיקת Exchange וביקורת הרזרבות יחזירו OPEN/PASS."
     )
     return (
         "🔎 מוכנות ברודקאסט למסחר פנימי — READ ONLY\n\n"
         f"Fresh canonical Exchange check: {gate} · {proof['status']}\n"
+        f"Reserve audit: {reserve_status} · {reserve_detail}\n"
         f"פרטים: {proof['detail']}\n\n"
         "לא נשלחה הודעה ולא נוצרה טיוטה.\n"
         f"{next_step}"
@@ -1186,12 +1202,22 @@ def _broadcast_status_reply(uid, *, now=None):
     """Read-only status for /broadcast status; never accesses send APIs."""
     try:
         db = state_manager.load_db()
+        check = _fresh_exchange_check(db)
+        reserve_audit = _fresh_reserve_audit(db)
     except Exception as exc:
         return f"⛔ BROADCAST STATUS unavailable (read-only): {type(exc).__name__}"
 
-    check = _fresh_exchange_check(db)
     proof = _proof_snapshot(check)
-    gate = "OPEN" if _proof_is_green(check) else "CLOSED/BLOCKED"
+    reserve_status = (
+        "PASS"
+        if isinstance(reserve_audit, dict) and reserve_audit.get("status") == "PASS"
+        else "BLOCKED"
+    )
+    reserve_detail = str(
+        (reserve_audit or {}).get("detail") or "No clean reserve-audit evidence"
+    )[:300]
+    ready = _proof_is_green(check) and reserve_status == "PASS"
+    gate = "OPEN" if ready else "CLOSED/BLOCKED"
 
     pending_map = db.get("exchange_broadcast_pending", {})
     pending = pending_map.get(str(uid)) if isinstance(pending_map, dict) else None
@@ -1235,14 +1261,21 @@ def _broadcast_status_reply(uid, *, now=None):
     elif isinstance(pending, dict) and pending.get("audience_scope") == "failed_only":
         duplicate_notice = "\n✅ הטיוטה מיועדת רק לנמענים שנכשלו בשידור הקודם."
 
+    next_step = (
+        "להכנת הודעת מסחר: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
+        "נדרשים תצוגה מקדימה ואישור קולי נפרד."
+        if ready
+        else "⛔ לא לשדר כרגע ולא להכין טיוטת קהל: נדרש Exchange OPEN/PASS וגם Reserve audit PASS."
+    )
+
     return (
         "🔎 BROADCAST STATUS — READ ONLY\n"
         "הפקודה הזו לא שולחת הודעות.\n"
         f"Internal Exchange: {gate} · {proof['status']}\n"
+        f"Reserve audit: {reserve_status} · {reserve_detail}\n"
         f"Exchange draft: {pending_status}{duplicate_notice}\n"
         f"Last audited Exchange broadcast: {last_broadcast}\n"
-        "להכנת הודעת מסחר: אמור בפרטי ״הכן ברודקאסט למסחר פנימי״; "
-        "נדרשים תצוגה מקדימה ואישור קולי נפרד."
+        f"{next_step}"
     )
 
 
