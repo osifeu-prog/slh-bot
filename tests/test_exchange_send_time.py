@@ -32,12 +32,28 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
                 },
             },
             "transactions": [],
-            "ledger": [],
+            "ledger": [
+                {
+                    "uid": "buyer", "before": 1.0, "amount": -1.0, "after": 0.0,
+                    "reason": "exchange:sell_reserve", "meta": {"order_id": "O_LEGACY"},
+                },
+                {
+                    "uid": "buyer", "before": 0.0, "amount": 1.0, "after": 1.0,
+                    "reason": "exchange:cancel_release", "meta": {"order_id": "O_LEGACY"},
+                },
+            ],
             "slh_token_ledger": [],
-            "exchange_orders": {},
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "buyer", "side": "sell",
+                    "original_amount": "1.00000000", "remaining_amount": "0.00000000",
+                    "limit_price": "1.00000000", "reserved_slh": "0.00000000",
+                    "reserved_credits": "0.00000000", "sequence": 1, "status": "cancelled",
+                }
+            },
             "exchange_trades": [],
             "exchange_requests": {},
-            "exchange_sequence": 0,
+            "exchange_sequence": 1,
         }
 
     def test_execution_check_requires_explicit_open_gate(self):
