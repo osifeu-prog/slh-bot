@@ -154,24 +154,23 @@ class RevenueReportingFilterTests(unittest.TestCase):
 
     def test_reportable_filter_is_read_only_and_rejects_invalid_rows(self):
         original = copy.deepcopy(self.db)
-        db = {
-            "revenue_ledger": self.db["revenue_ledger"] + [
-                {
-                    "source": "telegram_stars",
-                    "amount": 50,
-                    "currency": "XTR",
-                    "reference": "",
-                    "uid": "5001",
-                },
-                {
-                    "source": "telegram_stars_item",
-                    "amount": -5,
-                    "currency": "XTR",
-                    "reference": "charge-negative",
-                    "uid": "5002",
-                },
-            ]
-        }
+        db = copy.deepcopy(self.db)
+        db["revenue_ledger"].extend([
+            {
+                "source": "telegram_stars",
+                "amount": 50,
+                "currency": "XTR",
+                "reference": "",
+                "uid": "5001",
+            },
+            {
+                "source": "telegram_stars_item",
+                "amount": -5,
+                "currency": "XTR",
+                "reference": "charge-negative",
+                "uid": "5002",
+            },
+        ])
         self.assertEqual(len(revenue_ledger.reportable_rows(db, currency="XTR")), 6)
         self.assertEqual(self.db, original)
 
