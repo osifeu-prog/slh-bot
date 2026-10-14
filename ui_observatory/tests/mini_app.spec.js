@@ -177,12 +177,18 @@ test('More menu searches secondary screens and opens the chosen destination', as
   await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('chart deep link opens the Exchange screen directly', async ({ page }) => {
+test('chart deep link opens and focuses the market chart on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/mini-app?screen=exchange&chart=1');
   await page.waitForLoadState('networkidle');
   await expect(page.locator('#exchange')).toHaveClass(/active/);
+  await expect(page.locator('#exMarketPulse')).toBeVisible();
   await expect(page.locator('#exPriceChart')).toBeVisible();
   await expect(page.locator('#exChartMeta')).toContainText('אין יצירת נתוני מחיר מדומים');
+  await expect.poll(
+    () => page.locator('#exMarketPulse').evaluate(el => el.getBoundingClientRect().top),
+    { timeout: 4000 }
+  ).toBeLessThan(60);
 });
 
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
