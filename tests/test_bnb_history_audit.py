@@ -19,10 +19,14 @@ class FakeEth:
         self.receipt = {"status": status, "blockNumber": 80}
 
     def get_transaction(self, tx_hash):
-        return dict(self.tx)
+        result = dict(self.tx)
+        result["hash"] = tx_hash
+        return result
 
     def get_transaction_receipt(self, tx_hash):
-        return dict(self.receipt)
+        result = dict(self.receipt)
+        result["transactionHash"] = tx_hash
+        return result
 
 
 def _fake_web3(eth):
