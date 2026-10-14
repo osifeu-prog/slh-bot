@@ -533,7 +533,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="card"><b>📊 עסקאות אחרונות</b><div id="recentTrades" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>📋 ההוראות שלי</b><div id="myOrders" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>⚙️ פעולות בורסה</b><div class="actions" style="margin-top:8px"><button class="action" onclick="loadExchange()"><b>↻ רענן שוק</b><span>ספר הוראות · עסקאות · ההוראות שלי · יתרות</span></button><button class="action" onclick="sendCommand('/orders','ההוראות שלי')"><b>🤖 ההוראות בבוט</b><span>מציג את ההוראות שלך בבוט</span></button><button class="action" onclick="sendCommand('/trades','עסקאות')"><b>📜 העסקאות בבוט</b><span>מציג היסטוריית עסקאות בבוט</span></button></div></div>
-<div class="card"><b>🔐 כללי מסחר</b><p class="muted">Sell שומר SLH Live ברזרבה; Buy שומר Credits. התאמה מסלקת SLH ו־Credits דרך מנגנון אטומי. ביטול הוראה משחרר את הרזרבה. אין mint ואין יצירת יתרה מלאכותית.</p></div>
+<div class="card"><b>🔐 כללי מסחר</b><p class="muted">במכירה נשמרת יתרת SLH Live ברזרבה; בקנייה נשמרים Credits. בעת התאמה מתבצע סילוק אטומי של SLH ו־Credits. ביטול הוראה משחרר את הרזרבה. אין הנפקה ואין יצירת יתרה מלאכותית.</p></div>
 </section>
 <section id="bscswap" class="screen">
 <div class="section-title">🔄 BSC Swap</div>
@@ -1004,6 +1004,8 @@ function exchangeStatusDetail(detail){
   const live=raw.match(/^live_open_orders=([0-9]+)$/);
   if(live)return "קיימות "+live[1]+" הוראות פתוחות.";
   if(raw.includes("public exchange gate is CLOSED"))return "שער המסחר מוגדר כסגור.";
+  if(raw.includes("public runtime probe failed"))return "לא ניתן לאמת כרגע את סביבת ההרצה החיה. רענן ונסה שוב.";
+  if(raw.includes("Railway Exchange gate is not configured OPEN"))return "שער המסחר ב־Railway אינו מוגדר כפתוח.";
   if(raw.includes("order_book="))return "נמצאו אי־התאמות בספר ההוראות.";
   if(raw.includes("trades="))return "נמצאו אי־התאמות ברישומי העסקאות.";
   if(raw.includes("money="))return "נמצאה אי־התאמה ביתרות או ברזרבות.";
@@ -1298,6 +1300,17 @@ function hasFreshExchangeExecutionProof(check){
     && hasLiveBeaconTimestamp
     && timestampsAreClose;
 }
+function exchangeOrderStatusLabel(value){
+  const status=String(value||"").trim().toLowerCase();
+  return ({open:"פתוחה",filled:"הושלמה",cancelled:"בוטלה",accepted:"התקבלה"})[status]||"לא ידוע";
+}
+function exchangeGateValueLabel(value){
+  const gate=String(value??"").trim().toUpperCase();
+  if(gate==="OPEN"||gate==="1")return "פתוח";
+  if(gate==="CLOSED"||gate==="0")return "סגור";
+  if(gate==="BLOCKED")return "חסום";
+  return "לא ידוע";
+}
 function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
   const check=data.execution_check||{};
   const idempotentReplay=data.idempotent_replay===true;
@@ -1312,34 +1325,34 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     box.setAttribute('data-exchange-receipt','true');
     host.appendChild(box);
   }
-  const sideLabel=side==='buy'?'BUY':'SELL';
+  const sideLabel=side==='buy'?'קנייה':'מכירה';
   const tradeLabel=tradeIds.length
-    ? 'Trade ID: '+tradeIds.map(x=>esc(x)).join(', ')
+    ? 'מזהה עסקה: '+tradeIds.map(x=>esc(x)).join(', ')
     : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
-  const flagLabel=value=>value===true?'PASS':value===false?'FAIL':'לא דווח';
+  const flagLabel=value=>value===true?'עבר':value===false?'נכשל':'לא דווח';
   const liveProofPassed=hasFreshExchangeExecutionProof(check);
   const receiptHeading=idempotentReplay
     ? '↩️ קבלה חוזרת — אותה פקודה, ללא ביצוע נוסף'
-    : (liveProofPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק');
+    : (liveProofPassed?'✅ בדיקת המסחר העדכנית: עברה':'⚠️ קבלת אימות המסחר אינה שלמה — אין להציג אישור ירוק');
   const livePublicUpdatedAt=check.live_public_updated_at===undefined||check.live_public_updated_at===null
     ? 'לא דווח'
     : String(check.live_public_updated_at);
   box.innerHTML='<b>'+receiptHeading+'</b>'+
     '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
-    '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
-    '<div>Filled: '+esc(data.filled||'0')+' SLH · Remaining: '+esc(data.remaining||'0')+' SLH</div>'+
+    '<div>מזהה הוראה: '+esc(data.order_id||'—')+' · מצב: '+esc(exchangeOrderStatusLabel(data.status))+'</div>'+
+    '<div>בוצע: '+esc(data.filled||'0')+' SLH · נותר לביצוע: '+esc(data.remaining||'0')+' SLH</div>'+
     '<div>'+tradeLabel+'</div>'+
-    '<div class="wallet-row" style="margin-top:8px"><span>שער ציבורי</span><strong>'+esc(check.public_gate||'לא דווח')+'</strong></div>'+
+    '<div class="wallet-row" style="margin-top:8px"><span>שער ציבורי</span><strong>'+esc(exchangeGateValueLabel(check.public_gate))+'</strong></div>'+
     '<div class="wallet-row"><span>מוכנות ציבורית</span><strong>'+esc(flagLabel(check.public_ready))+'</strong></div>'+
     '<div class="wallet-row"><span>ספר פקודות</span><strong>'+esc(flagLabel(check.order_book_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>תקינות עסקאות</span><strong>'+esc(flagLabel(check.trade_integrity))+'</strong></div>'+
-    '<div class="wallet-row"><span>אינווריאנטים כספיים</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
-    '<div class="wallet-row"><span>Live runtime confirmation</span><strong>'+ (liveProofPassed?'PASS':'NOT VERIFIED') +'</strong></div>'+
-    '<div class="wallet-row"><span>Railway gate / live gate</span><strong>'+esc(String(check.live_railway_gate||'UNKNOWN')+' / '+String(check.live_public_gate||'UNKNOWN'))+'</strong></div>'+
-    '<div class="wallet-row"><span>Live verdict / readiness</span><strong>'+esc(String(check.live_public_verdict||'UNKNOWN')+' / '+flagLabel(check.live_public_readiness))+'</strong></div>'+
+    '<div class="wallet-row"><span>איזון יתרות כספיות</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
+    '<div class="wallet-row"><span>אימות סביבת ההרצה בזמן אמת</span><strong>'+ (liveProofPassed?'עבר':'לא אומת') +'</strong></div>'+
+    '<div class="wallet-row"><span>שער Railway / שער ציבורי חי</span><strong>'+esc(exchangeGateValueLabel(check.live_railway_gate)+' / '+exchangeGateValueLabel(check.live_public_gate))+'</strong></div>'+
+    '<div class="wallet-row"><span>מצב השער החי / מוכנות</span><strong>'+esc(exchangeGateValueLabel(check.live_public_verdict)+' / '+flagLabel(check.live_public_readiness))+'</strong></div>'+
     '<div class="muted" style="margin-top:4px">'+(idempotentReplay?'קבלה חוזרת של הפקודה המקורית · זמן האימות המקורי: ':'בדיקה שבוצעה בצד השרת בתוך פעולת המסחר האטומית · ')+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
-    '<div class="muted">Live checked_at: '+esc(check.live_checked_at||'לא דווח')+' · Beacon updated_at (epoch): '+esc(livePublicUpdatedAt)+'</div>'+
-    (liveProofPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה, אך קבלת האימות החי חסרה או אינה עקבית בזמן. בדוק Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
+    '<div class="muted">זמן אימות סביבת ההרצה: '+esc(check.live_checked_at||'לא דווח')+' · זמן עדכון אות המצב (epoch): '+esc(livePublicUpdatedAt)+'</div>'+
+    (liveProofPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה, אך קבלת האימות החי חסרה או אינה עקבית בזמן. בדוק את מזהה ההוראה ואת היסטוריית העסקאות לפני ניסיון נוסף; אל תיצור הוראה חדשה על סמך קבלה חלקית.</div>');
 }
 function renderExchangeExecutionBlocked(data,sourceInputId){
   const check=data.exchange_check||{};
@@ -1353,9 +1366,9 @@ function renderExchangeExecutionBlocked(data,sourceInputId){
     box.setAttribute('data-exchange-receipt','true');
     host.appendChild(box);
   }
-  box.innerHTML='<b>⛔ Fresh Exchange check: BLOCKED</b>'+
+  box.innerHTML='<b>⛔ בדיקת המסחר העדכנית חסומה</b>'+
     '<div>הפקודה לא בוצעה. אין להמשיך על סמך נתון קודם.</div>'+
-    '<div class="muted">'+esc(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.')+'</div>'+
+    '<div class="muted">'+esc(exchangeStatusDetail(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.'))+'</div>'+
     '<div class="muted">זמן האימות הקנוני: '+esc(check.checked_at||'לא דווח')+'</div>';
 }
 async function sendExchangeOrder(side,amount,price,options){
