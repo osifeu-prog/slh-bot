@@ -14,6 +14,7 @@ import urllib.parse
 import urllib.request
 
 import state_manager
+from core import revenue_ledger
 
 
 def _telegram(method: str, params: dict | None = None):
@@ -42,22 +43,8 @@ def _fetch_transactions(max_pages: int = 20) -> list[dict]:
 
 
 def _is_testish(row: dict) -> bool:
-    meta = row.get("meta") or {}
-    if meta.get("test") is True or meta.get("is_test") is True:
-        return True
-    uid = str(row.get("uid") or "").strip().lower()
-    reference = str(
-        row.get("reference")
-        or row.get("charge_id")
-        or row.get("telegram_payment_charge_id")
-        or ""
-    ).strip().lower()
-    return (
-        uid.startswith("test")
-        or reference.startswith("test")
-        or "boundary-test" in reference
-        or reference.startswith("fakepay")
-    )
+    """Share the report filters' canonical synthetic-record classification."""
+    return revenue_ledger.is_testish(row)
 
 
 def _local_records(db: dict) -> tuple[dict[str, dict], set[str], set[str], set[str]]:
