@@ -214,6 +214,7 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .bottom.ux-bottom button{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:48px;padding:7px 3px;border:1px solid transparent;border-radius:12px;background:transparent!important;color:var(--v4-hint)!important;font-size:20px;line-height:1.05;touch-action:manipulation;transition:background-color .16s,border-color .16s,color .16s}
 .bottom.ux-bottom button span{display:block;font-size:10px;font-weight:800;line-height:1.15;white-space:nowrap}
 .bottom.ux-bottom button.active{background:var(--v4-btn)!important;color:var(--v4-btntext)!important;border-color:color-mix(in srgb,var(--v4-btn) 80%,transparent)!important;box-shadow:0 3px 12px color-mix(in srgb,var(--v4-btn) 20%,transparent)}
+.bottom.ux-bottom button[aria-expanded="true"]{background:var(--v4-soft)!important;border-color:color-mix(in srgb,var(--v4-text) 18%,transparent)!important}
 .bottom.ux-bottom button:focus-visible,.slh-more-search:focus-visible,.v-sheet button:focus-visible{outline:3px solid var(--v4-btn);outline-offset:2px}
 .bottom.ux-bottom button:active{transform:scale(.97)}
 .slh-more-search-label{display:block;margin:10px 0 5px;font-size:11px;font-weight:800;color:var(--v4-text)}
@@ -3522,14 +3523,14 @@ html[data-text="xl"] .app{zoom:1.22}
   window.openMoreMenu=function(){
     if(m){m.classList.add('on');m.setAttribute('aria-hidden','false');}
     var button=document.getElementById('bmore');
-    if(button){button.classList.add('active');button.setAttribute('aria-expanded','true');}
+    if(button)button.setAttribute('aria-expanded','true');
     var input=document.getElementById('moreSearch');
     if(input&&window.matchMedia&&window.matchMedia('(pointer: fine)').matches)input.focus();
   };
   window.closeMoreMenu=function(){
     if(m){m.classList.remove('on');m.setAttribute('aria-hidden','true');}
     var button=document.getElementById('bmore');
-    if(button){button.classList.remove('active');button.setAttribute('aria-expanded','false');}
+    if(button)button.setAttribute('aria-expanded','false');
     var input=document.getElementById('moreSearch');
     if(input){input.value='';window.filterMoreTools('');}
   };
