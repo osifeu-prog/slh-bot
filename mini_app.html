@@ -3566,13 +3566,24 @@ html[data-text="xl"] .app{zoom:1.22}
   try{
     var W=window.Telegram&&window.Telegram.WebApp;
     var fromTelegram=W&&W.initDataUnsafe&&W.initDataUnsafe.start_param;
-    var fromUrl=new URLSearchParams(window.location.search).get('screen');
+    var urlParams=new URLSearchParams(window.location.search);
+    var fromUrl=urlParams.get('screen');
+    var openChart=urlParams.get('chart')==='1';
     var raw=String(fromTelegram||fromUrl||'').trim().toLowerCase();
     var allowed=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];
     if(allowed.indexOf(raw)<0||raw==='home')return;
     function open(){
       try{
-        if(typeof window.show==='function'){window.show(raw);return}
+        if(typeof window.show==='function'){
+          window.show(raw);
+          if(raw==='exchange'&&openChart){
+            setTimeout(function(){
+              var chart=document.getElementById('exMarketPulse');
+              if(chart)chart.scrollIntoView({behavior:'auto',block:'start'});
+            },120);
+          }
+          return;
+        }
         setTimeout(open,150);
       }catch(_e){}
     }
