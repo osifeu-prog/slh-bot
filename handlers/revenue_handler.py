@@ -181,7 +181,7 @@ def register(bot):
 
         lines.append("")
         lines.append("ℹ️ Internal Credit spending is not cash revenue.")
-        lines.append("ℹ️ Fake/test payment records are excluded because this view uses revenue_ledger.")
+        lines.append("ℹ️ Totals require matching local payment/order evidence; test/fake and unmatched rows are excluded.")
 
         bot.reply_to(msg, "\n".join(lines))
 
@@ -212,11 +212,15 @@ def register(bot):
             f"📈 Revenue ledger verified events: {data['events']}",
             f"Raw ledger rows: {data.get('raw_events', data['events'])}",
             f"Excluded test/legacy events: {data.get('excluded_test_events', 0)}",
+            f"Excluded unmatched/invalid events: {data.get('excluded_unverified_events', 0)}",
         ]
         for currency, total in sorted(data["totals"].items()):
             lines.append(f"• Verified {currency}: {total:g}")
         for currency, total in sorted(data.get("excluded_test_totals", {}).items()):
             lines.append(f"• Excluded test/legacy {currency}: {total:g}")
+        for currency, total in sorted(data.get("excluded_unverified_totals", {}).items()):
+            lines.append(f"• Excluded unmatched/invalid {currency}: {total:g}")
+        lines.append("XTR totals require matching local payment/order evidence; live Telegram reconciliation is separate.")
         lines.append("Internal Credit spending is not counted as cash revenue.")
         bot.reply_to(msg, "\n".join(lines))
 
