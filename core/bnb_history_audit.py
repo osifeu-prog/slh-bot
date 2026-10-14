@@ -76,7 +76,6 @@ def _valid_audited_reversal(
     tx_hash: str,
     sender: str,
     destination: str,
-    treasury: str,
     amount_wei: int,
     block_number: int,
     confirmations_required: int,
@@ -158,6 +157,7 @@ def _valid_audited_reversal(
     )):
         return False
 
+    historical_treasury = str(meta.get("treasury") or "").strip()
     return bool(
         correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
         and str(correction.get("uid") or "") == source_uid
@@ -169,12 +169,12 @@ def _valid_audited_reversal(
         and meta.get("gate_remained_closed") is True
         and reversal_chain == 56
         and audit_chain == 56
-        and str(meta.get("treasury") or "").lower() == treasury.lower()
+        and _same_address(historical_treasury, sender)
+        and _same_address(historical_treasury, destination)
         and _same_address(meta.get("from"), bound_wallet)
         and _same_address(meta.get("to"), bound_wallet)
         and _same_address(sender, bound_wallet)
         and _same_address(destination, bound_wallet)
-        and _same_address(destination, treasury)
         and _same_address(source_meta.get("from"), sender)
         and _same_address(source_meta.get("to"), destination)
         and source_wei == amount_wei == reversal_wei
@@ -415,9 +415,18 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
 
         unique_issues = sorted(set(issues))
         reported_issues = list(unique_issues)
-        if unique_issues == ["SELF_TRANSFER_NOT_A_DEPOSIT"] and bound and _valid_audited_reversal(
-            db, ledger, source_index, row, tx_hash, sender, destination,
-            treasury, amount_wei, block_number, confirmations_required, confirmations, bound,
+        reversible_issues = set(unique_issues)
+        if (
+            "SELF_TRANSFER_NOT_A_DEPOSIT" in reversible_issues
+            and reversible_issues <= {
+                "SELF_TRANSFER_NOT_A_DEPOSIT",
+                "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+            }
+            and bound
+            and _valid_audited_reversal(
+                db, ledger, source_index, row, tx_hash, sender, destination,
+                amount_wei, block_number, confirmations_required, confirmations, bound,
+            )
         ):
             status = "RESOLVED_BY_AUDITED_REVERSAL"
             reported_issues = [
