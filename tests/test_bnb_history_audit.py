@@ -113,8 +113,6 @@ def test_rpc_returning_a_different_transaction_hash_blocks_audit():
 
 
 def test_transaction_without_a_mined_block_is_not_confirmed_by_large_tip_height():
-    result = _run(_db(), FakeEth())
-    result["findings"][0]["confirmations"] = 0  # no reliance on test-computed pseudo-confirmations
     bad_block = FakeEth()
     bad_block.receipt["blockNumber"] = 0
     result = _run(_db(), bad_block)
