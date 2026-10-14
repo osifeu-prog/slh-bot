@@ -282,8 +282,12 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
     ]
     findings = []
     binding_cache = {}
+    config = config if isinstance(config, dict) else {}
     treasury = str(config.get("treasury_wallet") or "").strip().lower()
-    required_confirmations = int(config.get("confirmations") or 15)
+    try:
+        required_confirmations = int(config.get("confirmations") or 15)
+    except (TypeError, ValueError, OverflowError):
+        required_confirmations = 0
 
     for index, entry in deposits:
         issues = []
