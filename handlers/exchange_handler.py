@@ -874,6 +874,9 @@ def _request_guarded_exchange_gate_open():
         and check.get("order_book_integrity") is True
         and check.get("trade_integrity") is True
         and check.get("money_invariants") is True
+        and check.get("supply_provenance_integrity") is True
+        and check.get("supply_provenance_status") == "PASS"
+        and check.get("supply_provenance_findings") == 0
     )
 
     if runtime_open:
@@ -932,6 +935,9 @@ def _request_guarded_exchange_gate_open():
         and check.get("order_book_integrity") is True
         and check.get("trade_integrity") is True
         and check.get("money_invariants") is True
+        and check.get("supply_provenance_integrity") is True
+        and check.get("supply_provenance_status") == "PASS"
+        and check.get("supply_provenance_findings") == 0
         and check.get("open_orders") == 0
         and check.get("test_seed_open") == 0
         and check.get("test_seed_trades") == 0
@@ -957,6 +963,9 @@ def _request_guarded_exchange_gate_open():
         "order_book_integrity": True,
         "trade_integrity": True,
         "money_invariants": True,
+        "supply_provenance_integrity": True,
+        "supply_provenance_status": "PASS",
+        "supply_provenance_findings": 0,
         "open_orders": 0,
         "test_seed_open": 0,
         "test_seed_trades": 0,
