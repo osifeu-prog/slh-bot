@@ -462,6 +462,12 @@ def bnb_opening_evidence() -> dict:
         ][:10],
     }
     history_valid = str(history_audit.get("status") or "").upper() == "PASS"
+    evidence["checks"]["historical_deposits"] = {
+        "status": "PASS" if history_valid else "FAIL",
+        "rows_found": int(history_audit.get("rows_found") or 0),
+        "rows_checked": int(history_audit.get("rows_checked") or 0),
+        "failed_rows": int(history_audit.get("failed_rows") or 0),
+    }
     if not history_valid:
         evidence["blockers"].append("BNB_DEPOSIT_HISTORY_RECONCILIATION_REQUIRED")
 
@@ -498,6 +504,10 @@ def bnb_opening_evidence() -> dict:
             evidence["checks"][check] = {"status": "PENDING_EMPIRICAL"}
         evidence["warnings"].append("empirical_settlement_reconciliation_pending_or_invalid")
         evidence["next_action"] = "controlled_empirical_reconciliation_before_opening"
+
+    if not history_valid:
+        evidence["warnings"].append("historical_bnb_deposit_audit_blocked")
+        evidence["next_action"] = "historical_bnb_deposits_review_required"
 
     if evidence["blockers"]:
         return evidence
