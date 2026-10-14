@@ -759,6 +759,7 @@ function __slhRender(id){
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
   const map={home:['nh','bh'],balance:[],move:[],growth:[],investor:['ni'],profile:[],wallet:['nw','bw'],market:['nm','bmarket'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx','bx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
+  if(!['home','wallet','exchange','market'].includes(id)) $('bmore')?.classList.add('active');
   document.querySelectorAll('.bottom button').forEach(function(button){if(button.classList.contains('active'))button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   window.scrollTo(0,0);
   __slhShowing=id;
