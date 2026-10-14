@@ -135,7 +135,12 @@ def verify_bnb_deposit(tx_hash):
     treasury = w3.to_checksum_address(cfg["treasury_wallet"])
     to_addr = tx.get("to")
     if to_addr is None or str(to_addr).lower() != str(treasury).lower():
-        return {"ok": False, "to": str(to_addr), "treasury": str(treasury)}
+        return {
+            "ok": False,
+            "error": "BNB_TX_RECIPIENT_MISMATCH",
+            "to": str(to_addr),
+            "treasury": str(treasury),
+        }
 
     sender = str(tx.get("from") or "")
     if sender and sender.lower() == str(treasury).lower():
