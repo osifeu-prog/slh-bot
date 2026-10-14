@@ -132,9 +132,9 @@ class RevenueReportingFilterTests(unittest.TestCase):
         ):
             business = business_control_handler._business_summary()
             period = business_control_handler._revenue_report(30)
-        self.assertIn("Verified revenue: 1122 XTR", business)
+        self.assertIn("Verified gross receipts (not profit): 1122 XTR", business)
         self.assertIn("Revenue events: 6", business)
-        self.assertIn("אירועי הכנסה שעברו אימות מקומי: 6", period)
+        self.assertIn("אירועי תקבול ברוטו שעברו אימות מקומי: 6", period)
         self.assertIn("XTR: 1122", period)
         self.assertNotIn("1222", business + period)
         self.assertNotIn("1299", business + period)
