@@ -22,6 +22,13 @@ def settle_bnb_deposit(uid, tx_hash):
     uid = str(uid)
     canary_uid = os.getenv("BNB_DEPOSITS_CANARY_UID", "").strip()
     canary_allowed = bool(canary_uid) and uid == canary_uid and bool(bnb_readiness().get("ready"))
+    if canary_allowed:
+        try:
+            from core.bnb_history_audit import audit_bnb_deposit_history
+
+            canary_allowed = audit_bnb_deposit_history(state_manager.load_db()).get("status") == "PASS"
+        except Exception:
+            canary_allowed = False
     if not (bnb_deposits_open() or canary_allowed):
         raise ValueError("BNB_DEPOSITS_CLOSED")
     if not isinstance(tx_hash, str) or not tx_hash.strip():
