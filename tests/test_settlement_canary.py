@@ -6,7 +6,7 @@ from core import ton_deposit_service
 
 
 def test_bnb_canary_does_not_open_gate_but_allows_owner_settlement():
-    db = {}
+    db = {"ledger": []}
     with patch.dict(os.environ, {
         "BNB_DEPOSITS_OPEN": "0",
         "BNB_DEPOSITS_CANARY_UID": "8789977826",
