@@ -49,3 +49,94 @@ def test_exchange_chart_guide_explains_internal_trade_based_candles():
     assert "עסקאות פנימיות שהושלמו" in html
     assert "לא מחיר DEX" in html
     assert "לא לבצע הפקדה או עסקה אמיתית רק כדי לייצר נר" in html
+
+
+def _mock_paid_course_access(monkeypatch, *, progress=None, user=None, owner=False):
+    from core import academy_manager, authority, profile_manager
+
+    monkeypatch.setattr(
+        academy_manager,
+        "get_courses",
+        lambda: {"paid_course": {"access": "paid", "stages": [{"id": 1}]}},
+    )
+    monkeypatch.setattr(
+        academy_manager,
+        "get_course",
+        lambda uid, course_id: progress or {},
+    )
+    monkeypatch.setattr(
+        profile_manager,
+        "user_exists",
+        lambda uid: user is not None,
+    )
+    monkeypatch.setattr(
+        profile_manager,
+        "get_user",
+        lambda uid: user or {},
+    )
+    monkeypatch.setattr(authority, "is_owner", lambda uid: owner)
+
+
+def test_unpaid_user_cannot_read_or_complete_paid_course(monkeypatch):
+    from core import academy_manager, lesson_engine
+
+    _mock_paid_course_access(
+        monkeypatch,
+        progress={},
+        user={"vip_access_until": 0},
+        owner=False,
+    )
+    monkeypatch.setattr(
+        academy_manager,
+        "complete_stage",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("unpaid course completion must be blocked")
+        ),
+    )
+
+    assert lesson_engine.has_course_access("unpaid-user", "paid_course") is False
+    assert lesson_engine.can_access_lesson("unpaid-user", "paid_course", 1) is False
+    result = lesson_engine.complete_lesson("unpaid-user", "paid_course", 1)
+    assert result["ok"] is False
+    assert result["error"] == "course_locked"
+
+
+def test_enrolled_user_can_access_paid_course(monkeypatch):
+    from core import lesson_engine
+
+    _mock_paid_course_access(
+        monkeypatch,
+        progress={"stage": 0, "completed": []},
+        user=None,
+        owner=False,
+    )
+
+    assert lesson_engine.has_course_access("buyer", "paid_course") is True
+    assert lesson_engine.can_access_lesson("buyer", "paid_course", 1) is True
+
+
+def test_active_vip_can_access_paid_course(monkeypatch):
+    import time
+    from core import lesson_engine
+
+    _mock_paid_course_access(
+        monkeypatch,
+        progress={},
+        user={"vip_access_until": int(time.time()) + 3600},
+        owner=False,
+    )
+
+    assert lesson_engine.has_course_access("vip-user", "paid_course") is True
+
+
+def test_owner_can_access_paid_course(monkeypatch):
+    from core import lesson_engine
+
+    _mock_paid_course_access(
+        monkeypatch,
+        progress={},
+        user=None,
+        owner=True,
+    )
+
+    assert lesson_engine.has_course_access("owner", "paid_course") is True
