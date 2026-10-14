@@ -1228,7 +1228,7 @@ function renderExchangeCandles(candles,tf){
     const isUp=cl>=o,color=isUp?'#16a34a':'#ef4444';
     const bodyY=Math.min(yo,yc),bodyH=Math.max(1.5,Math.abs(yc-yo));
     const volumeH=maxVolume>0?(v/maxVolume)*(volumeBottom-volumeTop):0;
-    const title=esc(formatCandleTime(c.time,tf)+' · O '+exchangePriceLabel(o)+' · H '+exchangePriceLabel(h)+' · L '+exchangePriceLabel(l)+' · C '+exchangePriceLabel(cl)+' · Volume '+fmt(v)+' SLH');
+    const title=esc(formatCandleTime(c.time,tf)+' · פתיחה '+exchangePriceLabel(o)+' · גבוה '+exchangePriceLabel(h)+' · נמוך '+exchangePriceLabel(l)+' · סגירה '+exchangePriceLabel(cl)+' · נפח '+fmt(v)+' SLH');
     return '<g><title>'+title+'</title>'+
       '<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+yh.toFixed(2)+'" y2="'+yl.toFixed(2)+'" stroke="'+color+'" stroke-width="1.5"/>'+
       '<rect x="'+(x-candleWidth/2).toFixed(2)+'" y="'+bodyY.toFixed(2)+'" width="'+candleWidth.toFixed(2)+'" height="'+bodyH.toFixed(2)+'" fill="'+color+'" rx=".5"/>'+
@@ -1239,18 +1239,18 @@ function renderExchangeCandles(candles,tf){
     ?'<text x="'+((left+right)/2)+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="middle" font-size="10">'+esc(formatCandleTime(valid[0].time,tf))+'</text>'
     :'<text x="'+left+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="start" font-size="10">'+esc(formatCandleTime(valid[0].time,tf))+'</text>'+
      '<text x="'+right+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="end" font-size="10">'+esc(formatCandleTime(valid[valid.length-1].time,tf))+'</text>';
-  host.innerHTML='<svg class="slh-ex-candle-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף נרות SLH מול Credits בטווח '+esc(tf)+'">'+
-    '<title>SLH/Credits · OHLC</title><desc>גרף מבוסס עסקאות פנימיות שהושלמו בלבד; volume הוא סכום כמות SLH בעסקאות בכל נר.</desc>'+
+  host.innerHTML='<svg class="slh-ex-candle-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף נרות SLH מול Credits בטווח '+esc(exchangeTimeframeLabel(tf))+'">'+
+    '<title>נרות SLH מול Credits</title><desc>גרף נרות המבוסס על עסקאות פנימיות שהושלמו בלבד; הנפח הוא סכום כמות SLH בעסקאות בכל נר.</desc>'+
     grid+'<line x1="'+left+'" x2="'+right+'" y1="'+volumeTop+'" y2="'+volumeTop+'" stroke="currentColor" stroke-opacity=".18"/>'+
     '<text x="5" y="'+(volumeTop+11)+'" fill="currentColor" fill-opacity=".72" font-size="10">נפח</text>'+shapes+timeLabels+'</svg>';
-  if(status){status.textContent=valid.length+' נרות · '+tf;status.classList.toggle('ok',valid.length>0);status.classList.toggle('pending',valid.length===0)}
-  if(meta)meta.textContent='מוצגים '+valid.length+' נרות בטווח '+tf+' · O/H/L/C = פתיחה/גבוה/נמוך/סגירה · נפח = סכום SLH בעסקאות שהושלמו. זו היסטוריה פנימית, לא מחיר DEX.';
+  if(status){status.textContent=valid.length+' נרות · '+exchangeTimeframeLabel(tf);status.classList.toggle('ok',valid.length>0);status.classList.toggle('pending',valid.length===0)}
+  if(meta)meta.textContent='מוצגים '+valid.length+' נרות בטווח '+exchangeTimeframeLabel(tf)+' · פתיחה/גבוה/נמוך/סגירה · נפח = סכום SLH בעסקאות שהושלמו. זו היסטוריה פנימית, לא מחיר חיצוני.';
 }
 async function loadExchangeCandles(tf){
   const chosen=['1m','15m','1h','1d'].includes(String(tf||''))?String(tf):__chartTF;
   const host=$('exPriceChart');
   const status=$('exChartStatus');
-  if(status){status.textContent='טוען '+chosen;status.classList.remove('ok');status.classList.add('pending')}
+  if(status){status.textContent='טוען נתוני '+exchangeTimeframeLabel(chosen);status.classList.remove('ok');status.classList.add('pending')}
   try{
     const response=await fetch('/api/v1/exchange/candles?interval='+encodeURIComponent(chosen)+'&limit=200',{headers,cache:'no-store'});
     const payload=await response.json().catch(()=>({}));
