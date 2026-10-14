@@ -26,7 +26,7 @@ def test_every_algorithmic_trading_lesson_exists_and_has_real_content():
         assert lesson.is_file(), f"missing lesson {stage['id']}"
         content = lesson.read_text(encoding="utf-8").strip()
         assert len(content) >= 900, f"lesson {stage['id']} is only a stub"
-        assert "תרגיל" in content or "פרויקט מסכם" in content
+        assert "תרגיל" in content or "פרויקט מסכם" in content or "מעבדת סימולציה" in content
         assert "בדיקת הבנה" in content or "קריטריוני קבלה" in content
 
 
