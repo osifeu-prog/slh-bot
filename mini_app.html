@@ -207,6 +207,25 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 @media(max-width:360px){.slh-ex-book-grid{grid-template-columns:1fr}.slh-ex-book-level{font-size:11px;padding:9px 6px}}
 </style>
 
+
+<style id="slh-ux-v6-navigation">
+/* Core navigation: make the product's highest-value destinations obvious and touch-friendly. */
+.bottom.ux-bottom{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;min-height:68px;padding-top:7px;padding-bottom:calc(7px + env(safe-area-inset-bottom,0px))}
+.bottom.ux-bottom button{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:48px;padding:7px 3px;border:1px solid transparent;border-radius:12px;background:transparent!important;color:var(--v4-hint)!important;font-size:20px;line-height:1.05;touch-action:manipulation;transition:background-color .16s,border-color .16s,color .16s}
+.bottom.ux-bottom button span{display:block;font-size:10px;font-weight:800;line-height:1.15;white-space:nowrap}
+.bottom.ux-bottom button.active{background:var(--v4-btn)!important;color:var(--v4-btntext)!important;border-color:color-mix(in srgb,var(--v4-btn) 80%,transparent)!important;box-shadow:0 3px 12px color-mix(in srgb,var(--v4-btn) 20%,transparent)}
+.bottom.ux-bottom button:focus-visible,.slh-more-search:focus-visible,.v-sheet button:focus-visible{outline:3px solid var(--v4-btn);outline-offset:2px}
+.bottom.ux-bottom button:active{transform:scale(.97)}
+.slh-more-search-label{display:block;margin:10px 0 5px;font-size:11px;font-weight:800;color:var(--v4-text)}
+.slh-more-search{width:100%;min-height:46px;margin-bottom:9px;background:var(--v4-soft)!important;color:var(--v4-text)!important;border:1px solid color-mix(in srgb,var(--v4-text) 15%,transparent)!important;border-radius:13px!important}
+.slh-more-search::placeholder{color:var(--v4-hint);opacity:.85}
+.slh-more-search-empty{padding:14px;border:1px dashed color-mix(in srgb,var(--v4-text) 18%,transparent);border-radius:12px;margin-bottom:8px;color:var(--v4-hint);font-size:12px;line-height:1.6;text-align:center}
+.v-sheet .v-panel{max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.v-sheet[aria-hidden="true"]{visibility:hidden;pointer-events:none}
+.v-sheet.on[aria-hidden="false"]{visibility:visible;pointer-events:auto}
+@media(max-width:360px){.bottom.ux-bottom{gap:2px}.bottom.ux-bottom button{font-size:18px;padding-inline:1px}.bottom.ux-bottom button span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.bottom.ux-bottom button{transition:none!important}}
+</style>
 </head>
 <body>
 <!-- SLH SPARK NEURAL ELECTRIC SPLASH -->
@@ -673,17 +692,20 @@ window.addEventListener('DOMContentLoaded',()=>{
   <details class="guide"><summary>📘 איך זה עובד?</summary><p>שינוי ערכה כאן נשמר בצד השרת. בפעם הבאה ש־Mini App נפתח הוא טוען את אותה בחירה, ופקודת /theme בבוט משנה את אותה הגדרה בדיוק.</p></details>
 </section>
 </main></div>
-<nav class="bottom ux-bottom">
-<button id="bh" onclick="show('home')">🏠<br><span>בית</span></button>
-<button id="bb" onclick="show('balance')">💰<br><span>Balance</span></button>
-<button id="bm" onclick="show('move')">🔄<br><span>Move</span></button>
-<button id="bg" onclick="show('growth')">🚀<br><span>Grow</span></button>
-<button id="binv" onclick="show('investor')">📊<br><span>Investor</span></button>
+<nav class="bottom ux-bottom" aria-label="ניווט ראשי">
+<button id="bh" type="button" aria-label="בית" aria-current="page" onclick="show('home')">🏠<span>בית</span></button>
+<button id="bw" type="button" aria-label="ארנק ופורטפוליו" onclick="show('wallet');loadCombined()">👛<span>ארנק</span></button>
+<button id="bx" type="button" aria-label="בורסה ומסחר פנימי" onclick="show('exchange');loadExchange()">🪙<span>בורסה</span></button>
+<button id="bmarket" type="button" aria-label="שוק ורכישה" onclick="show('market')">🛍️<span>שוק</span></button>
+<button id="bmore" type="button" aria-label="כלים נוספים" aria-haspopup="dialog" aria-controls="mSheet" aria-expanded="false" onclick="window.openMoreMenu?.()">☰<span>עוד</span></button>
 </nav>
-<div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+<div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle" aria-hidden="true">
   <div class="v-panel">
-    <h3 id="mTitle">עוד ב־SLH OS</h3>
-    <p class="v-sub">כל המסכים הנוספים במקום אחד — בלי גלילה אופקית.</p>
+    <h3 id="mTitle">כל הכלים ב־SLH OS</h3>
+    <p class="v-sub">חפש מסך או פעולה. פעולות רגישות יישארו מוגנות לפי הרשאות.</p>
+    <label class="slh-more-search-label" for="moreSearch">חיפוש מהיר</label>
+    <input id="moreSearch" class="form-input slh-more-search" type="search" inputmode="search" autocomplete="off" placeholder="חפש ארנק, מסחר, קורסים…" aria-label="חיפוש במסכי SLH OS" oninput="filterMoreTools(this.value)">
+    <div id="moreSearchEmpty" class="slh-more-search-empty" role="status" aria-live="polite" hidden>לא נמצאו מסכים תואמים. נסה מונח אחר.</div>
     <div class="more-grid">
       <button class="action" onclick="show('market');closeMoreMenu()"><b>🛍 שוק</b><span>מוצרים ותשלומים</span></button>
       <button class="action" onclick="show('buy');closeMoreMenu()"><b>💳 קנייה</b><span>Credits</span></button>
@@ -691,12 +713,21 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('governance');loadGovernanceScreen();closeMoreMenu()"><b>🗳️ Governance</b><span>הצעות, הצבעה וקבלה</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
       <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
-      <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
+      <button class="action" onclick="show('wallet');loadCombined();closeMoreMenu()"><b>👛 ארנק ופורטפוליו</b><span>יתרות, חיבורים ונכסים</span></button>
+      <button class="action" onclick="show('balance');closeMoreMenu()"><b>💰 כל היתרות</b><span>Credits ונכסים</span></button>
+      <button class="action" onclick="show('move');closeMoreMenu()"><b>🔄 שליחה וקבלה</b><span>בחר מסלול לפי הנכס</span></button>
+      <button class="action" onclick="show('transfer');closeMoreMenu()"><b>📤 העברת Credits</b><span>העברה פנימית</span></button>
+      <button class="action" onclick="show('growth');closeMoreMenu()"><b>🚀 מרכז הצמיחה</b><span>משימות, הפניות והתקדמות</span></button>
+      <button class="action" onclick="show('profile');closeMoreMenu()"><b>👤 הפרופיל שלי</b><span>התקדמות והעדפות</span></button>
+      <button class="action" onclick="show('investor');closeMoreMenu()"><b>📊 תמונת חשבון</b><span>נתוני חשבון לקריאה בלבד</span></button>
+      <button class="action" onclick="show('ai');closeMoreMenu()"><b>✨ עוזר SLH AI</b><span>שאלות והכוונה</span></button>
+      <button class="action" onclick="show('tonswap');loadTonSwapAssets();closeMoreMenu()"><b>💎 TON Swap</b><span>מסלול TON</span></button>
+      <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מצב מערכת</b><span>תקינות וסטטוס</span></button>
       <div id="ownerToolsMenu" class="owner-tools-menu"><button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button><button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button></div>
     </div>
     <div class="v-row"><button type="button" id="mClose">סגור</button></div>
   </div>
-</div><div id="toast" class="toast"></div>
+</div><div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 (function(){
   window.addEventListener("error",function(e){
@@ -725,8 +756,9 @@ function __slhRender(id){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const scr=$(id);if(scr)scr.classList.add('active');
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
-  const map={home:['nh','bh'],balance:['bb'],move:['bm'],growth:['bg'],investor:['ni','binv'],profile:[],wallet:['nw'],market:['nm'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
+  const map={home:['nh','bh'],balance:[],move:[],growth:[],investor:['ni'],profile:[],wallet:['nw','bw'],market:['nm','bmarket'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx','bx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
+  document.querySelectorAll('.bottom button').forEach(function(button){if(button.classList.contains('active'))button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   window.scrollTo(0,0);
   __slhShowing=id;
   __slhSetBack();
@@ -3475,8 +3507,32 @@ html[data-text="xl"] .app{zoom:1.22}
 <script>
 (function(){
   var m=document.getElementById('mSheet'),c=document.getElementById('mClose');
-  window.openMoreMenu=function(){if(m)m.classList.add('on');};
-  window.closeMoreMenu=function(){if(m)m.classList.remove('on');};
+  window.filterMoreTools=function(query){
+    var q=String(query||'').trim().toLocaleLowerCase('he');
+    var buttons=Array.prototype.slice.call(document.querySelectorAll('#mSheet .more-grid > button, #mSheet .owner-tools-menu button'));
+    var visible=0;
+    buttons.forEach(function(button){
+      var matches=!q||button.textContent.toLocaleLowerCase('he').indexOf(q)!==-1;
+      button.hidden=!matches;
+      if(matches)visible+=1;
+    });
+    var empty=document.getElementById('moreSearchEmpty');
+    if(empty)empty.hidden=visible>0;
+  };
+  window.openMoreMenu=function(){
+    if(m){m.classList.add('on');m.setAttribute('aria-hidden','false');}
+    var button=document.getElementById('bmore');
+    if(button){button.classList.add('active');button.setAttribute('aria-expanded','true');}
+    var input=document.getElementById('moreSearch');
+    if(input&&window.matchMedia&&window.matchMedia('(pointer: fine)').matches)input.focus();
+  };
+  window.closeMoreMenu=function(){
+    if(m){m.classList.remove('on');m.setAttribute('aria-hidden','true');}
+    var button=document.getElementById('bmore');
+    if(button){button.classList.remove('active');button.setAttribute('aria-expanded','false');}
+    var input=document.getElementById('moreSearch');
+    if(input){input.value='';window.filterMoreTools('');}
+  };
   if(c)c.onclick=window.closeMoreMenu;
   if(m)m.addEventListener('click',function(e){if(e.target===m)window.closeMoreMenu();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')window.closeMoreMenu();});
