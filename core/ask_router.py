@@ -200,10 +200,21 @@ def route(text, uid=None):
     # Live operational state must come from deterministic checks, not a language
     # model with partial context. Offer the exact check paths instead of guessing.
     if is_system_state_question(raw_text):
+        try:
+            from core.authority import has_permission
+            can_run_operational_checks = bool(uid) and has_permission(str(uid), "exec.audit")
+        except Exception:
+            can_run_operational_checks = False
+        if can_run_operational_checks:
+            return (
+                "כדי לשמור על דיוק, לא אסיק מצב חי מהקשר חלקי. "
+                "בדוק דרך /e alpha_status, /check_exchange או /check_bnb; "
+                "לנתיב נוסף פתח /help. אם תשלח את הפלט, אסכם PASS/FAIL/UNKNOWN."
+            )
         return (
-            "כדי לשמור על דיוק, לא אסיק מצב חי מהקשר חלקי. "
-            "בדוק דרך /e alpha_status, /check_exchange או /check_bnb; "
-            "לנתיב נוסף פתח /help. אם תשלח את הפלט, אסכם PASS/FAIL/UNKNOWN."
+            "אין לי אימות חי מלא של מצב המערכת מתוך השיחה הזאת, ולכן לא אנחש. "
+            "בדיקות תפעוליות מלאות דורשות הרשאה מתאימה; אני יכול להסביר את המנגנון "
+            "או לעזור לפרש פלט בדיקה שאושר לשיתוף."
         )
 
     # Build canonical project context for every AI session without exposing secrets.
