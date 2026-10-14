@@ -1042,7 +1042,59 @@ def route_exchange_gate_voice(bot, message, transcript):
     return _request_guarded_exchange_gate_open()
 
 
+def build_exchange_chart_url(base_url=None):
+    """Build a validated HTTPS Mini App deep link for the internal Exchange screen."""
+    import os
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+    configured = base_url if base_url is not None else os.getenv("SLH_MINI_APP_URL", "")
+    base = str(configured or "").strip()
+    if not base:
+        base = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+
+    parsed = urlsplit(base)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        parsed = urlsplit("https://slh-cloud-bot-production.up.railway.app/mini-app-v4")
+
+    path = parsed.path or "/mini-app-v4"
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+        if key not in {"screen", "chart"}
+    ]
+    query.extend((("screen", "exchange"), ("chart", "1")))
+    return urlunsplit((parsed.scheme, parsed.netloc, path, urlencode(query), ""))
+
+
 def register(bot):
+    @bot.message_handler(commands=["chart"])
+    def exchange_chart_cmd(msg):
+        try:
+            from telebot import types
+
+            url = build_exchange_chart_url()
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "📈 פתח את בורסת SLH",
+                    web_app=types.WebAppInfo(url=url),
+                )
+            )
+            bot.reply_to(
+                msg,
+                "📈 SLH Exchange — גרף מחיר\n\n"
+                "פתיחת מסך הבורסה ישירות בתוך Telegram. "
+                "הנרות מבוססים על עסקאות פנימיות שהושלמו בלבד; "
+                "כאשר יש מעט עסקאות, ההיסטוריה תהיה דלילה. "
+                "זה אינו מחיר DEX או הצהרה על נזילות חיצונית.",
+                reply_markup=markup,
+            )
+        except Exception:
+            bot.reply_to(
+                msg,
+                "❌ לא הצלחתי לפתוח את קישור הבורסה. פתח את /miniapp ונווט אל 🪙 בורסה.",
+            )
+
     @bot.message_handler(func=_is_exchange_gate_text_message, content_types=["text"])
     def exchange_gate_text_cmd(msg):
         answer = route_exchange_gate_text(bot, msg, getattr(msg, "text", "") or "")
