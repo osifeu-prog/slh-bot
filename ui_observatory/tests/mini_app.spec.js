@@ -322,7 +322,7 @@ test('visible Buy button submits directly through the fresh Exchange endpoint', 
   expect(payload.price).toBe('1');
   expect(payload.client_request_id).toBeTruthy();
   await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
-    .toContainText('Fresh Exchange check: PASS');
+    .toContainText('בדיקת המסחר העדכנית: עברה');
   expect(page.url()).toContain('/mini-app');
 });
 
@@ -347,7 +347,7 @@ test('visible Sell button submits directly through the fresh Exchange endpoint',
   expect(payload.price).toBe('1');
   expect(payload.client_request_id).toBeTruthy();
   await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
-    .toContainText('Fresh Exchange check: PASS');
+    .toContainText('בדיקת המסחר העדכנית: עברה');
   expect(page.url()).toContain('/mini-app');
 });
 
@@ -380,8 +380,8 @@ test('partial Exchange receipt never shows a green fresh-check status', async ({
     await sendExchangeOrder('buy', '2', '1');
   });
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
-  await expect(receipt).toContainText('Fresh Exchange receipt incomplete');
-  await expect(receipt).not.toContainText('✅ Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('קבלת אימות המסחר אינה שלמה');
+  await expect(receipt).not.toContainText('✅ בדיקת המסחר העדכנית: עברה');
 });
 
 test('mobile layout has no horizontal overflow', async ({ page }) => {
