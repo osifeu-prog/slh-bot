@@ -48,7 +48,7 @@ _SYSTEM_STATE_PATTERNS = (
         r"|(?:פתוח|סגור|מוכן|פעיל|מאומת|ready|blocked).{0,25}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת)",
         re.IGNORECASE,
     ),
-    re.compile(r"\\b(?:alpha_open|launch_state|readiness|gate_status|system status|runtime status)\\b", re.IGNORECASE),
+    re.compile(r"\b(?:alpha_open|launch_state|readiness|gate_status|system status|runtime status)\b", re.IGNORECASE),
     re.compile(r"(?:כמה משתמשים|כמה כסף יש במערכת|יתרות מערכת|סיכום הכנסות|האם ההכנסות|האם הבורסה פתוחה)", re.IGNORECASE),
 )
 
