@@ -66,6 +66,59 @@ class CompromisedBscAddressPolicyTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "BSC_ADDRESS_QUARANTINED_ZUZ"):
                     _checksum_address(BAD_ADDRESS, field=role)
 
+    def test_bnb_deposit_verification_returns_explicit_recipient_mismatch(self):
+        from core import deposit_monitor
+
+        treasury = "0x1111111111111111111111111111111111111111"
+        wrong_recipient = "0x2222222222222222222222222222222222222222"
+
+        class FakeEth:
+            chain_id = 56
+            block_number = 100
+
+            @staticmethod
+            def get_transaction(tx_hash):
+                return {
+                    "from": "0x3333333333333333333333333333333333333333",
+                    "to": wrong_recipient,
+                    "value": 10**16,
+                }
+
+            @staticmethod
+            def get_transaction_receipt(tx_hash):
+                return {"status": 1, "blockNumber": 90}
+
+        class FakeWeb3:
+            HTTPProvider = staticmethod(lambda *args, **kwargs: object())
+
+            def __init__(self, provider):
+                self.eth = FakeEth()
+
+            @staticmethod
+            def to_checksum_address(address):
+                return address
+
+            @staticmethod
+            def from_wei(value, unit):
+                return value / 10**18
+
+        config = {
+            "network": "bsc",
+            "rpc": "https://example.invalid",
+            "chain_id": 56,
+            "confirmations": 15,
+            "treasury_wallet": treasury,
+            "token_contract": "0xACb0A09414CEA1C879c67bB7A877E4e19480f022",
+        }
+        with patch("core.deposit_monitor.get_bsc_config", return_value=config), patch(
+            "core.deposit_monitor.state_manager.load_db",
+            return_value={"bsc_settings": {}},
+        ), patch("core.deposit_monitor.Web3", FakeWeb3):
+            result = deposit_monitor.verify_bnb_deposit(TX_HASH)
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"], "BNB_TX_RECIPIENT_MISMATCH")
+
     def test_bnb_deposit_verification_refuses_quarantined_treasury_before_rpc(self):
         from core import deposit_monitor
 
