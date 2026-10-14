@@ -148,3 +148,39 @@ def test_cross_ledger_correction_is_counted_once_for_balance_continuity():
     mismatches = [f for f in result["findings"] if f["code"] == "TOKEN_BALANCE_CURRENT_MISMATCH"]
     assert gaps == []
     assert mismatches == []
+
+
+def test_exchange_public_readiness_is_blocked_by_unreconciled_mint(monkeypatch):
+    from core.system_checks import check_exchange
+    from core import exchange_gate
+
+    db = {
+        "users": {
+            "owner": {"wallet": {
+                "credits": 0, "token_balance": 0, "live_token_balance": 0,
+                "exchange_reserved_slh": 0, "exchange_reserved_credits": 0,
+            }},
+        },
+        "exchange_orders": {},
+        "exchange_trades": [],
+        "exchange_requests": {},
+        "exchange_sequence": 0,
+        "ledger": [],
+        "slh_token_ledger": [{
+            "timestamp": "2026-09-09T18:06:29+00:00",
+            "event_id": "bootstrap-owner",
+            "from_uid": "mint", "to_uid": "owner",
+            "amount": 22000000, "reason": "owner_issuance_bootstrap",
+            "before_to": None, "after_to": None,
+        }],
+    }
+    monkeypatch.setattr(exchange_gate, "public_open", lambda: False)
+
+    result = check_exchange(db)
+
+    assert result["supply_provenance_integrity"] is False
+    assert result["supply_provenance_status"] == "FAIL"
+    assert result["supply_provenance_findings"] > 0
+    assert result["public_ready"] is False
+    assert result["verdict"] == "BLOCKED"
+    assert result["ok"] is False
