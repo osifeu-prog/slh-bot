@@ -430,13 +430,48 @@ def bnb_opening_evidence() -> dict:
     configured_chain = str(gate.get("chain_id") or "")
     if configured_chain != "56":
         evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
+    # A single empirical smoke must not override contradictory historical credits.
+    try:
+        from core.bnb_history_audit import audit_bnb_deposit_history
+
+        history_audit = audit_bnb_deposit_history(current_db if db_readable else None)
+    except Exception as exc:
+        history_audit = {
+            "status": "BLOCKED",
+            "rows_found": 0,
+            "rows_checked": 0,
+            "failed_rows": 0,
+            "blockers": [f"HISTORY_AUDIT_FAILED:{type(exc).__name__}"],
+            "findings": [],
+        }
+    evidence["historical_deposit_audit"] = {
+        "status": str(history_audit.get("status") or "BLOCKED"),
+        "rows_found": int(history_audit.get("rows_found") or 0),
+        "rows_checked": int(history_audit.get("rows_checked") or 0),
+        "failed_rows": int(history_audit.get("failed_rows") or 0),
+        "blockers": list(history_audit.get("blockers") or [])[:8],
+        "findings": [
+            {
+                "time": item.get("time"),
+                "tx_suffix": item.get("tx_suffix"),
+                "status": item.get("status"),
+                "issues": list(item.get("issues") or [])[:6],
+            }
+            for item in (history_audit.get("findings") or [])
+            if isinstance(item, dict) and item.get("status") != "PASS"
+        ][:10],
+    }
+    history_valid = str(history_audit.get("status") or "").upper() == "PASS"
+    if not history_valid:
+        evidence["blockers"].append("BNB_DEPOSIT_HISTORY_RECONCILIATION_REQUIRED")
+
     empirical = _empirical_settlement_evidence(current_db) if db_readable else None
     empirical_valid = (
         _empirical_evidence_revalidated(empirical, _effective_config(current_db), db=current_db)
         if db_readable
         else False
     )
-    evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid)
+    evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid and history_valid)
     if empirical_valid:
         for check in (
             "wallet_binding",
@@ -510,7 +545,14 @@ def bnb_deposits_open() -> bool:
 
     empirical = _empirical_settlement_evidence(db)
     config = _effective_config(db)
-    return _empirical_evidence_revalidated(empirical, config, db=db)
+    if not _empirical_evidence_revalidated(empirical, config, db=db):
+        return False
+    try:
+        from core.bnb_history_audit import audit_bnb_deposit_history
+
+        return audit_bnb_deposit_history(db).get("status") == "PASS"
+    except Exception:
+        return False
 
 def bnb_settlement_allowed(uid, db=None) -> bool:
     """Allow normal settlement only when OPEN, or owner canary while the gate stays closed.
@@ -523,8 +565,13 @@ def bnb_settlement_allowed(uid, db=None) -> bool:
         return True
 
     canary_uid = str(os.getenv("BNB_DEPOSITS_CANARY_UID", "")).strip()
-    return bool(
-        canary_uid
-        and uid == canary_uid
-        and bnb_readiness(db).get("ready")
-    )
+    if not (canary_uid and uid == canary_uid and bnb_readiness(db).get("ready")):
+        return False
+    try:
+        if db is None:
+            db = state_manager.load_db()
+        from core.bnb_history_audit import audit_bnb_deposit_history
+
+        return audit_bnb_deposit_history(db).get("status") == "PASS"
+    except Exception:
+        return False
