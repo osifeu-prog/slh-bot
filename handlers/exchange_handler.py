@@ -1288,6 +1288,7 @@ def register(bot):
             query = dict(parse_qsl(parts.query, keep_blank_values=True))
             # The Mini App already supports screen=exchange as a start destination.
             query["screen"] = "exchange"
+            query["chart"] = "1"
             url = urlunsplit((
                 parts.scheme,
                 parts.netloc,

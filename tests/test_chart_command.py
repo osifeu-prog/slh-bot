@@ -51,7 +51,7 @@ class ChartCommandTests(unittest.TestCase):
         parts = urlsplit(button.web_app.url)
         self.assertEqual(parts.scheme, "https")
         self.assertEqual(parts.netloc, "example.test")
-        self.assertEqual(parse_qs(parts.query), {"lang": ["he"], "screen": ["exchange"]})
+        self.assertEqual(parse_qs(parts.query), {"lang": ["he"], "screen": ["exchange"], "chart": ["1"]})
 
     def test_chart_command_uses_secure_default_when_url_is_not_configured(self):
         bot = FakeBot()
@@ -65,7 +65,7 @@ class ChartCommandTests(unittest.TestCase):
         button = reply["reply_markup"].keyboard[0][0]
         self.assertEqual(
             button.web_app.url,
-            "https://slh-cloud-bot-production.up.railway.app/mini-app-v4?screen=exchange",
+            "https://slh-cloud-bot-production.up.railway.app/mini-app-v4?screen=exchange&chart=1",
         )
 
     def test_chart_command_fails_closed_for_non_https_url(self):

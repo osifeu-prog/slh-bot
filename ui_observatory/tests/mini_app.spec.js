@@ -144,6 +144,15 @@ test('all primary screens are reachable', async ({ page }) => {
   expect(seen).toEqual(screens.map(([id]) => id));
 });
 
+test('Exchange chart deep link opens the chart directly in Hebrew Mini App', async ({ page }) => {
+  await page.goto('/mini-app?screen=exchange&chart=1');
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+  const chart = page.locator('#exMarketPulse');
+  await expect(chart).toBeVisible();
+  await expect.poll(() => chart.evaluate(el => el.getBoundingClientRect().top)).toBeLessThan(50);
+});
+
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
   await page.locator('#slh-rewards-widget > button').click();
   const panel = page.locator('#slh-rewards-body');
