@@ -4,10 +4,9 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 const screens = [
   ['home', 'בית', 'bh'],
-  ['balance', 'Balance', 'bb'],
-  ['move', 'Move', 'bm'],
-  ['growth', 'Grow', 'bg'],
-  ['investor', 'Investor', 'binv'],
+  ['wallet', 'ארנק', 'bw'],
+  ['exchange', 'בורסה', 'bx'],
+  ['market', 'שוק', 'bmarket'],
 ];
 
 async function mockTelegramWebApp(page) {
@@ -134,7 +133,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('#home')).toHaveClass(/active/);
 });
 
-test('all primary screens are reachable', async ({ page }) => {
+test('all primary destinations are reachable', async ({ page }) => {
   const seen = [];
   for (const [id, label] of screens) {
     await clickPrimaryNav(page, label);
@@ -142,6 +141,22 @@ test('all primary screens are reachable', async ({ page }) => {
     seen.push(id);
   }
   expect(seen).toEqual(screens.map(([id]) => id));
+});
+
+test('More menu searches secondary screens and opens the chosen destination', async ({ page }) => {
+  await page.locator('#bmore').click();
+  await expect(page.locator('#mSheet')).toHaveClass(/on/);
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'false');
+  await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'true');
+
+  await page.locator('#moreSearch').fill('TON Swap');
+  await expect(page.locator('#mSheet .more-grid > button:visible')).toHaveCount(1);
+  await expect(page.locator('#moreSearchEmpty')).toBeHidden();
+  await page.locator('#mSheet .more-grid > button:visible').filter({ hasText: 'TON Swap' }).click();
+
+  await expect(page.locator('#tonswap')).toHaveClass(/active/);
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
@@ -398,7 +413,7 @@ test('interactive controls have usable names and form fields are labelled', asyn
   const unnamed = await page.locator('button').evaluateAll(buttons => buttons.filter(b => !(b.innerText || b.getAttribute('aria-label') || '').trim()).length);
   expect(unnamed).toBe(0);
 
-  await clickPrimaryNav(page, 'Move');
+  await page.evaluate(() => show('move'));
   await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await expect(page.locator('#recipient')).toHaveAttribute('id', 'recipient');
   await expect(page.locator('label[for="recipient"]')).toBeVisible();
@@ -417,19 +432,19 @@ test('visual baseline: home', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, 'Balance');
+  await page.evaluate(() => show('balance'));
   await page.locator('#balance').getByRole('button', { name: /Advanced Wallet/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
 test('visual baseline: transfer', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, 'Move');
+  await page.evaluate(() => show('move'));
   await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
 test('visual baseline: buy', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, 'Move');
+  await page.evaluate(() => show('move'));
   await page.locator('#move').getByRole('button', { name: /Add Funds · Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
@@ -445,7 +460,7 @@ test('visual baseline: alpha', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, 'Grow');
+  await page.evaluate(() => show('growth'));
   await page.getByRole('button', { name: /🎓 Earn/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
