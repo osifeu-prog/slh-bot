@@ -103,6 +103,88 @@ def test_self_transfer_is_not_accepted_as_a_historical_deposit():
     assert "SELF_TRANSFER_NOT_A_DEPOSIT" in result["findings"][0]["issues"]
 
 
+def _add_audited_reversal(db):
+    correction_key = f"accounting:reversal:{TX_HASH.lower()}"
+    source_key = f"bnb:deposit:{TX_HASH.lower()}"
+    source = db["ledger"][0]
+    source_meta = source["meta"]
+    source_meta["from"] = SENDER
+    source_meta["to"] = SENDER
+    db["bsc_settings"]["treasury_wallet"] = SENDER
+    correction = {
+        "time": "2026-10-12T13:14:00+00:00",
+        "uid": "owner",
+        "before": 28.091775,
+        "amount": -10.0,
+        "after": 18.091775,
+        "reason": "accounting:invalid_bnb_deposit_reversal",
+        "meta": {
+            "idempotency_key": correction_key,
+            "source_idempotency_key": source_key,
+            "source_reason": "bnb:deposit",
+            "source_ledger_index": 0,
+            "tx_hash": TX_HASH.lower(),
+            "nominal_credits_reversed": 10.0,
+            "chain_id": 56,
+            "block": 80,
+            "confirmations": 15,
+            "required_confirmations": 15,
+            "amount_wei": AMOUNT_WEI,
+            "treasury": SENDER,
+            "from": SENDER,
+            "to": SENDER,
+            "gate_remained_closed": True,
+        },
+    }
+    db["ledger"].append(correction)
+    db["credit_adjustment_audit"] = [{
+        "event": "INVALID_BNB_SELF_TRANSFER_REVERSED",
+        "uid": "owner",
+        "tx_hash": TX_HASH.lower(),
+        "source_idempotency_key": source_key,
+        "correction_idempotency_key": correction_key,
+        "amount": -10.0,
+        "nominal_credits_reversed": 10.0,
+        "balance_before": 28.091775,
+        "balance_after": 18.091775,
+        "chain_id": 56,
+        "block": 80,
+        "confirmations": 15,
+        "required_confirmations": 15,
+        "gate_remained_closed": True,
+    }]
+    db["users"]["owner"]["wallet"]["credits"] = 18.091775
+    return db
+
+
+def test_self_transfer_stays_blocked_without_audited_reversal_even_if_destination_is_treasury():
+    db = _db(sender=SENDER, destination=SENDER)
+    db["bsc_settings"]["treasury_wallet"] = SENDER
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "BLOCKED"
+    assert "SELF_TRANSFER_NOT_A_DEPOSIT" in result["findings"][0]["issues"]
+
+
+def test_complete_persisted_reversal_resolves_only_the_source_self_transfer():
+    db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+    assert "RESOLVED_BY_AUDITED_REVERSAL" in result["findings"][0]["issues"]
+
+
+def test_corrupt_reversal_audit_does_not_resolve_self_transfer():
+    db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
+    db["credit_adjustment_audit"][0]["balance_after"] = 999.0
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "BLOCKED"
+    assert "SELF_TRANSFER_NOT_A_DEPOSIT" in result["findings"][0]["issues"]
+
+
 def test_duplicate_idempotency_key_blocks_audit():
     db = _db(duplicate=True)
     result = _run(db, FakeEth())
