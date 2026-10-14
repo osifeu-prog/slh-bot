@@ -1,6 +1,37 @@
 import os
 import json
+import subprocess
 from pathlib import Path
+
+
+def _git_status_label(repo_dir="."):
+    """Report Git state only when the deployed runtime can actually inspect it."""
+    root = Path(repo_dir)
+    if not (root / ".git").exists():
+        return "⚪️ לא ניתן לאמת Git מתוך image הפרודקשן"
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            timeout=3,
+            check=False,
+        )
+    except Exception:
+        return "⚪️ מצב Git לא אומת"
+    if result.returncode != 0:
+        return "⚪️ מצב Git לא אומת"
+    return "🟡 יש שינויים מקומיים" if result.stdout.strip() else "🟢 clean"
+
+
+def _overall_health_label(checks):
+    values = [str(value) for key, value in checks.items() if key != "Health"]
+    if any("🔴" in value for value in values):
+        return "🔴 נמצאו כשלים בבדיקות"
+    if any(marker in value for value in values for marker in ("🟡", "⚪️", "⚠️")):
+        return "🟡 חלק מהבדיקות דורשות אימות"
+    return "🟢 כל הבדיקות שנכללו עברו"
 
 def register_doctor_handlers(bot):
     @bot.message_handler(commands=["doctor"])
@@ -26,7 +57,7 @@ def generate_health_report(bot, uid=None):
     railway_env = os.getenv("RAILWAY_ENVIRONMENT", "local")
     checks["Railway"] = f"🟢 {railway_env}" if railway_env == "production" else f"🟡 {railway_env}"
 
-    checks["Git"] = "🟢 clean"
+    checks["Git"] = _git_status_label()
 
     try:
         db_path = Path("state/db.json")
@@ -76,8 +107,6 @@ def generate_health_report(bot, uid=None):
     lock_path = Path("state/db.json.lock")
     checks["Lock"] = "🟢 תקין" if lock_path.exists() else "🟢 אין נעילה פעילה"
 
-    checks["Health"] = "🟢 תקין"
-
     try:
         from core.control_center import get_infrastructure_snapshot
         infrastructure = get_infrastructure_snapshot()
@@ -90,18 +119,17 @@ def generate_health_report(bot, uid=None):
     except Exception:
         checks["Federation"] = "⚪️ not verified"
 
-    for key, val in checks.items():
-        lines.append(f"{key}: {val}")
-
+    checks["Health"] = _overall_health_label(checks)
+    lines = ["🩺 SLH HEALTH REPORT", ""] + [
+        f"{key}: {val}" for key, val in checks.items()
+    ]
     lines.append("")
     lines.append("המלצה:")
-    if any("🔴" in str(v) for v in checks.values()):
-        lines.append("❌ יש בעיות ברכיב קריטי")
-    elif "not green" in str(checks.get("Federation", "")):
-        lines.append("🟡 הבוט המרכזי נבדק; שירותי הפדרציה דורשים בדיקה.")
-    elif "not verified" in str(checks.get("Federation", "")):
-        lines.append("🟡 הבוט נבדק מקומית; הפדרציה לא אומתה.")
+    if "🔴" in checks["Health"]:
+        lines.append("❌ נמצאו כשלים בבדיקות; אין להציג את המערכת כתקינה.")
+    elif "🟡" in checks["Health"]:
+        lines.append("🟡 חלק מהבדיקות דורשות אימות. מצב ירוק מלא לא הוכח.")
     else:
-        lines.append("✅ הבוט והפדרציה ללא חריגה מדווחת.")
+        lines.append("✅ כל הבדיקות שנכללו בדוח עברו.")
 
     return "\n".join(lines)
