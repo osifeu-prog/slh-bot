@@ -172,7 +172,35 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .slh-swap-result{margin-top:10px;padding:11px;border-radius:13px;background:var(--v4-soft);font-size:11px;line-height:1.6;word-break:break-word}.slh-swap-result b{font-weight:900}
 .slh-swap-code{direction:ltr;text-align:left;font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
 @media(max-width:520px){.slh-swap-grid{grid-template-columns:1fr}.slh-swap-actions{grid-template-columns:1fr}}
-</style></head>
+</style>
+<style id="slh-exchange-market-ux-v1">
+.slh-ex-pulse-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.slh-ex-pulse-head b{display:block;font-size:15px}
+.slh-ex-pulse-head .muted{font-size:11px;margin-top:3px;line-height:1.5}
+.slh-ex-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:13px}
+.slh-ex-metric{background:var(--v4-soft);border:1px solid color-mix(in srgb,var(--v4-text) 7%,transparent);border-radius:12px;padding:10px;min-width:0}
+.slh-ex-metric span{display:block;color:var(--v4-hint);font-size:10px;line-height:1.4}
+.slh-ex-metric strong{display:block;font-size:13px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.slh-ex-chart{width:100%;min-height:105px;margin-top:10px;overflow:hidden;border-radius:12px;background:var(--v4-soft)}
+.slh-ex-chart svg{display:block;width:100%;height:auto;min-height:105px}
+.slh-ex-chart-empty{display:flex;align-items:center;justify-content:center;text-align:center;min-height:105px;padding:16px;font-size:12px;line-height:1.6;color:var(--v4-hint)}
+.slh-ex-chart-foot{font-size:10px;line-height:1.6;color:var(--v4-hint);margin-top:7px}
+.slh-ex-book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
+.slh-ex-book-side{min-width:0}
+.slh-ex-book-side-title{font-size:11px;font-weight:800;padding:5px 2px 8px;border-bottom:1px solid color-mix(in srgb,var(--v4-text) 10%,transparent);margin-bottom:3px}
+.slh-ex-book-level{position:relative;display:flex;justify-content:space-between;align-items:center;gap:5px;min-width:0;overflow:hidden;padding:9px 6px;border-bottom:1px solid color-mix(in srgb,var(--v4-text) 6%,transparent);font-size:11px;font-variant-numeric:tabular-nums}
+.slh-ex-depth-bar{position:absolute;inset-block:0;inset-inline-end:0;pointer-events:none;opacity:.13}
+.slh-ex-book-level.buy .slh-ex-depth-bar{background:#16a34a}
+.slh-ex-book-level.sell .slh-ex-depth-bar{background:#ef4444}
+.slh-ex-book-level span:not(.slh-ex-depth-bar){position:relative;z-index:1;min-width:0}
+.slh-ex-book-price{font-weight:800;white-space:nowrap}
+.slh-ex-book-amount{text-align:end;overflow-wrap:anywhere}
+.slh-ex-book-amount small{display:block;color:var(--v4-hint);font-size:9px;font-weight:400}
+@media(max-width:520px){.slh-ex-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.slh-ex-book-grid{gap:7px}.slh-ex-book-level{font-size:10px;padding:8px 4px}}
+@media(max-width:360px){.slh-ex-book-grid{grid-template-columns:1fr}.slh-ex-book-level{font-size:11px;padding:9px 6px}}
+</style>
+
+</head>
 <body>
 <!-- SLH SPARK NEURAL ELECTRIC SPLASH -->
 <div id="slh-splash" style="position:fixed;inset:0;z-index:9999;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;direction:ltr;transition:opacity .6s ease,visibility .6s;">
@@ -468,6 +496,22 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="alpha" class="screen"><div class="section-title">🚀 Alpha Readiness</div><div class="card" id="alphaBox">טוען…</div><details class="guide"><summary>📘 מה זה Alpha?</summary><p>המסך מציג ראיות מצב בלבד. זכאות והקצאה סופית תלויות במדיניות רשמית. כאשר המדיניות חסרה, לא מוצג סכום הקצאה.</p></details></section>
 <section id="exchange" class="screen"><div class="section-title">🪙 SLH Exchange</div>
 <div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">נבדק לאחרונה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH/CREDITS</strong></div><div class="wallet-row"><span class="muted">SLH Live שלך</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
+
+<div class="card slh-ex-pulse" id="exMarketPulse">
+  <div class="slh-ex-pulse-head">
+    <div><b>📊 תמונת שוק</b><div class="muted">SLH/Credits · עסקאות פנימיות שהושלמו בלבד</div></div>
+    <span class="pill pending" id="exChartStatus">טוען נתונים</span>
+  </div>
+  <div class="slh-ex-metrics">
+    <div class="slh-ex-metric"><span>Best Bid · קנייה</span><strong id="exBestBid">—</strong></div>
+    <div class="slh-ex-metric"><span>Best Ask · מכירה</span><strong id="exBestAsk">—</strong></div>
+    <div class="slh-ex-metric"><span>מרווח מחיר</span><strong id="exSpread">—</strong></div>
+    <div class="slh-ex-metric"><span>עסקאות בהיסטוריה</span><strong id="exTradeCount">—</strong></div>
+  </div>
+  <div class="slh-ex-chart" id="exPriceChart" aria-live="polite"><div class="slh-ex-chart-empty">טוען נתוני עסקאות...</div></div>
+  <div class="slh-ex-chart-foot" id="exChartMeta">הנתונים מגיעים מרישומי עסקאות פנימיות. אין כאן מחיר DEX או מחיר חיצוני.</div>
+</div>
+
 <div class="card"><b>📈 קנייה</b><p class="muted">Limit order — כמות SLH ומחיר מקסימלי ב־Credits.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מקסימלי ב-Credits ל-SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
 <div class="card"><b>📉 מכירה</b><p class="muted">Limit order — כמות SLH ומחיר מבוקש.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב-Credits ל-SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
 <div class="card"><b>📖 ספר פקודות חי</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
@@ -995,6 +1039,113 @@ async function cancelExchangeOrder(id){
     toast('✅ הוראה בוטלה והרזרבה שוחררה'); await loadExchange();
   }catch(e){toast('❌ ביטול נכשל: '+(e.message||e))}
 }
+
+function exchangePriceLabel(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:8}):'—';
+}
+function renderExchangeOrderbook(orders){
+  const el=$("orderbook");if(!el)return;
+  const valid=(Array.isArray(orders)?orders:[]).filter(o=>
+    o&&["buy","sell"].includes(String(o.side))&&Number(o.price)>0&&Number(o.amount)>0
+  );
+  if(!valid.length){
+    el.innerHTML='<div class="muted">אין הזמנות פתוחות — אין כאן נתוני דמה.</div>';
+    return;
+  }
+  const grouped={buy:new Map(),sell:new Map()};
+  valid.forEach(o=>{
+    const price=Number(o.price),amount=Number(o.amount),key=price.toFixed(8);
+    const row=grouped[o.side].get(key)||{price,amount:0,count:0};
+    row.amount+=amount;row.count+=1;grouped[o.side].set(key,row);
+  });
+  const bids=Array.from(grouped.buy.values()).sort((a,b)=>b.price-a.price);
+  const asks=Array.from(grouped.sell.values()).sort((a,b)=>a.price-b.price);
+  const all=bids.concat(asks);
+  const maxDepth=Math.max(1,...all.map(x=>x.amount));
+  const renderSide=(side,rows)=>{
+    const title=side==='buy'?'קנייה · מחיר גבוה קודם':'מכירה · מחיר נמוך קודם';
+    const body=rows.slice(0,8).map(row=>{
+      const width=Math.max(4,Math.min(100,row.amount/maxDepth*100));
+      return '<div class="slh-ex-book-level '+side+'"><span class="slh-ex-depth-bar" style="width:'+width.toFixed(2)+'%"></span>'+
+        '<span class="slh-ex-book-price">'+exchangePriceLabel(row.price)+' C</span>'+
+        '<span class="slh-ex-book-amount">'+fmt(row.amount)+' SLH<small>'+row.count+' הוראות</small></span></div>';
+    }).join('');
+    return '<div class="slh-ex-book-side"><div class="slh-ex-book-side-title">'+title+'</div>'+
+      (body||'<div class="muted" style="font-size:11px;padding:8px 2px">אין הצעות בצד זה</div>')+'</div>';
+  };
+  el.innerHTML='<div class="slh-ex-book-grid">'+renderSide('buy',bids)+renderSide('sell',asks)+'</div>'+
+    (valid.length>16?'<div class="muted" style="font-size:10px;margin-top:8px">הגרף מציג עד 8 רמות מחיר לכל צד; נתוני ה־Best Bid/Ask מחושבים מכל ההוראות הפתוחות שהתקבלו.</div>':'');
+}
+function renderExchangeMarketPulse(orders,trades){
+  const validOrders=(Array.isArray(orders)?orders:[]).filter(o=>
+    o&&["buy","sell"].includes(String(o.side))&&Number(o.price)>0&&Number(o.amount)>0
+  );
+  const bids=validOrders.filter(o=>o.side==='buy').sort((a,b)=>Number(b.price)-Number(a.price));
+  const asks=validOrders.filter(o=>o.side==='sell').sort((a,b)=>Number(a.price)-Number(b.price));
+  const bid=bids.length?Number(bids[0].price):null;
+  const ask=asks.length?Number(asks[0].price):null;
+  setText('exBestBid',bid===null?'אין הצעת קנייה':exchangePriceLabel(bid)+' C');
+  setText('exBestAsk',ask===null?'אין הצעת מכירה':exchangePriceLabel(ask)+' C');
+  if(bid!==null&&ask!==null){
+    const spread=ask-bid;
+    if(spread<0){
+      setText('exSpread','הוראות חופפות');
+    }else{
+      const mid=(ask+bid)/2;
+      const pct=mid>0?(spread/mid*100):0;
+      setText('exSpread',exchangePriceLabel(spread)+' C · '+pct.toLocaleString('en-US',{maximumFractionDigits:2})+'%');
+    }
+  }else{
+    setText('exSpread','אין שני צדדים');
+  }
+  const validTrades=(Array.isArray(trades)?trades:[]).filter(t=>
+    t&&Number.isFinite(Number(t.price))&&Number(t.price)>0&&Number.isFinite(Number(t.slh_amount))&&Number(t.slh_amount)>0
+  );
+  const points=validTrades.slice(-40);
+  setText('exTradeCount',String(validTrades.length)+' / 100');
+  const status=$('exChartStatus');
+  const host=$('exPriceChart');
+  const meta=$('exChartMeta');
+  if(!host)return;
+  if(!points.length){
+    if(status){status.textContent='אין עסקאות';status.classList.remove('ok');status.classList.add('pending')}
+    host.innerHTML='<div class="slh-ex-chart-empty">עדיין אין עסקאות פנימיות שהושלמו.<br>הגרף יופיע לאחר ביצוע עסקאות אמיתיות.</div>';
+    if(meta)meta.textContent='לא נוצרים נתוני מחיר מדומים. מוצגות רק עסקאות שמופיעות ביומן הפנימי.';
+    return;
+  }
+  const prices=points.map(p=>Number(p.price));
+  const rawMin=Math.min(...prices),rawMax=Math.max(...prices);
+  const pad=rawMax>rawMin?(rawMax-rawMin)*0.12:Math.max(Math.abs(rawMax)*0.02,0.00000001);
+  const low=rawMin-pad,high=rawMax+pad;
+  const width=640,left=76,right=626,top=18,bottom=154;
+  const xAt=i=>points.length>1?left+i*(right-left)/(points.length-1):(left+right)/2;
+  const yAt=p=>bottom-((p-low)/(high-low))*(bottom-top);
+  const coords=points.map((p,i)=>({x:xAt(i),y:yAt(Number(p.price)),price:Number(p.price),timestamp:String(p.timestamp||'').replace('T',' ').slice(0,19)}));
+  const ticks=[high,(high+low)/2,low];
+  const grid=ticks.map((v,i)=>{
+    const y=top+i*(bottom-top)/2;
+    return '<line x1="'+left+'" x2="'+right+'" y1="'+y+'" y2="'+y+'" stroke="currentColor" stroke-opacity=".12" stroke-dasharray="3 4"/>'+
+      '<text x="7" y="'+(y+4)+'" fill="currentColor" fill-opacity=".7" font-size="11">'+esc(exchangePriceLabel(v))+'</text>';
+  }).join('');
+  const path=coords.length>1?'<path d="'+coords.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ')+'" fill="none" stroke="var(--v4-btn)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>':'';
+  const dots=coords.map(p=>'<circle cx="'+p.x.toFixed(2)+'" cy="'+p.y.toFixed(2)+'" r="4" fill="var(--v4-btn)" stroke="var(--v4-panel)" stroke-width="2"><title>'+esc(exchangePriceLabel(p.price)+' Credits · '+p.timestamp)+'</title></circle>').join('');
+  const labels=coords.length>1
+    ?'<text x="'+left+'" y="183" fill="currentColor" fill-opacity=".7" font-size="10" text-anchor="start">מוקדם יותר</text><text x="'+right+'" y="183" fill="currentColor" fill-opacity=".7" font-size="10" text-anchor="end">מאוחר יותר</text>'
+    :'<text x="'+((left+right)/2)+'" y="183" fill="currentColor" fill-opacity=".7" font-size="10" text-anchor="middle">העסקה האחרונה</text>';
+  host.innerHTML='<svg viewBox="0 0 '+width+' 198" role="img" aria-label="מחירי עסקאות פנימיות SLH מול Credits">'+
+    '<title>מחירי עסקאות פנימיות SLH/Credits</title><desc>רק מחירים מעסקאות שהושלמו; אין כאן מחיר שוק חיצוני.</desc>'+
+    grid+path+dots+labels+'</svg>';
+  if(status){
+    status.textContent=points.length>1?'מחירי עסקאות · '+points.length+' נקודות':'עסקה אחת · אין עדיין מגמה';
+    status.classList.toggle('ok',points.length>1);
+    status.classList.toggle('pending',points.length<=1);
+  }
+  if(meta)meta.textContent=points.length>1
+    ?'הגרף מציג עד 40 מהעסקאות הפנימיות האחרונות, בסדר כרונולוגי. הוא אינו מציג נרות, מחיר DEX או הצעת מחיר חיצונית.'
+    :'נרשמה עסקה פנימית אחת בלבד. נקודה זו אינה מספיקה כדי להסיק מגמת מחיר.';
+}
+
 async function loadExchange(){
   try{
     if(typeof loadMe==='function')await loadMe();
@@ -1012,9 +1163,9 @@ async function loadExchange(){
     
     updateMarketNotice(ex);
     const orders=b.orders||[];
-    const el=$("orderbook");
-    if(el)el.innerHTML=orders.length?orders.slice(0,40).map(o=>'<div class="wallet-row"><span class="pill '+(o.side==='buy'?'ok':'')+'">'+(o.side==='buy'?'קנייה':'מכירה')+'</span><span>'+fmt(o.amount)+' SLH</span><strong>'+fmt(o.price)+' C</strong></div>').join(''):'<div class="muted">אין הזמנות פתוחות — אין כאן נתוני דמה.</div>';
+    renderExchangeOrderbook(orders);
     const trades=m.trades||[];
+    renderExchangeMarketPulse(orders,trades);
     const te=$("recentTrades");
     if(te)te.innerHTML=trades.length?trades.slice(-20).reverse().map(x=>'<div class="wallet-row"><span>'+fmt(x.slh_amount)+' SLH</span><strong>'+fmt(x.price)+' C</strong><span class="muted">'+esc((x.timestamp||'').slice(0,19))+'</span></div>').join(''):'<div class="muted">אין עסקאות שבוצעו עדיין.</div>';
     await loadExchangeMyOrders();
