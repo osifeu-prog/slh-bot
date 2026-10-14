@@ -296,7 +296,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
   <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
-<div class="nav legacy-nav" aria-hidden="true"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
+<div class="nav legacy-nav" aria-hidden="true"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange')" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
 <main>
 <section id="home" class="screen">
 <div class="ux-page-head"><div><div class="hero-label">⚡ SLH OS</div><h2>המרכז האישי שלך</h2><p class="muted">כסף, נכסים והתקדמות — במקום אחד פשוט.</p></div></div>
@@ -319,7 +319,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="show('move')"><b>📤 שלח</b><span>העבר נכס או Credits</span></button>
 <button class="action" onclick="show('balance')"><b>💰 Balance</b><span>ראה את כל היתרות</span></button>
 <button class="action" onclick="show('growth')"><b>🚀 Grow</b><span>למד · הרווח · התקדם</span></button>
-<button class="action" type="button" onclick="show('exchange');loadExchange()"><b>🪙 מסחר פנימי</b><span>Exchange · SLH ↔ Credits</span></button>
+<button class="action" type="button" onclick="show('exchange')"><b>🪙 מסחר פנימי</b><span>Exchange · SLH ↔ Credits</span></button>
 <button class="action" type="button" onclick="show('governance');loadGovernanceScreen()"><b>🗳️ הצעות והצבעות</b><span>ראה הצעות פעילות והצבע לפי זכאות</span></button>
 </div>
 <div class="card ux-activity-card">
@@ -420,7 +420,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="show('transfer')"><b>📤 Send Credits</b><span>העברה פנימית למשתמש אחר</span></button>
 <button class="action" onclick="show('wallet')"><b>📤 Send SLH on-chain</b><span>הארנק שלך חותם ומשדר</span></button>
 <button class="action" onclick="show('wallet')"><b>📥 Receive</b><span>קבל נכס וראה כתובת/סטטוס</span></button>
-<button class="action" onclick="show('exchange');loadExchange()"><b>🔁 Exchange</b><span>SLH ↔ Credits</span></button>
+<button class="action" onclick="show('exchange')"><b>🔁 Exchange</b><span>SLH ↔ Credits</span></button>
 </div>
 <div class="card ux-explain"><b>🧭 איך לבחור?</b><p class="muted"><b>Credits</b> = יתרה פנימית. <b>SLH</b> = נכס on-chain. <b>TON / BNB</b> = רשתות/נכסים למסלולים on-chain. לפני כל אישור, בדוק איזה נכס משתנה.</p></div>
 </section>
@@ -459,7 +459,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     <p><b>הצבעה:</b> רכישה בחנות אינה מקנה זכות הצבעה אוטומטית. לפי המימוש הנוכחי, משקל ההצבעה נגזר מתפקיד החשבון ולא מיתרת SLH.</p>
   </div>
   <div class="actions" style="margin-top:8px">
-    <button class="action" type="button" onclick="show('exchange');loadExchange()"><b>🪙 קנייה / מכירה של SLH פנימי</b><span>Exchange · SLH/Credits · הוראות ועסקאות</span></button>
+    <button class="action" type="button" onclick="show('exchange')"><b>🪙 קנייה / מכירה של SLH פנימי</b><span>Exchange · SLH/Credits · הוראות ועסקאות</span></button>
     <button class="action" type="button" onclick="show('governance');loadGovernanceScreen()"><b>🗳️ הצעות והצבעות</b><span>צפה בהצעות פתוחות וקבל אישור הצבעה</span></button>
   </div>
 </div>
@@ -475,7 +475,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="openAction('/buystars emoji_bitcoin','Emoji Bitcoin')"><b>₿ Emoji Bitcoin</b><span>25 Stars</span></button>
 <button class="action" onclick="openAction('/buystars emoji_slh','Emoji SLH')"><b>⚡ Emoji SLH</b><span>50 Stars</span></button>
 <button class="action" onclick="openAction('/buystars emoji_vip','Emoji VIP')"><b>⭐ Emoji VIP</b><span>100 Stars</span></button>
-<button class="action" onclick="show('exchange');loadExchange()"><b>🪙 SLH Exchange</b><span>קנייה ומכירה מול Credits</span></button>
+<button class="action" onclick="show('exchange')"><b>🪙 SLH Exchange</b><span>קנייה ומכירה מול Credits</span></button>
 
 </div></div>
 <div class="card"><b>🎁 Referral</b><p class="muted">כל ההפניות, התגמולים והעמלה שלך — בתוך ה־Mini App.</p><button class="action primary" onclick="loadRewardsPanel()"><b>🔗 שתף והזמן</b><span>קישור אישי + תגמולים</span></button></div>
@@ -521,12 +521,12 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="buy" class="screen"><div class="section-title">💳 קניית Credits</div><div class="card"><b>רכישה דרך Telegram Stars</b><p class="muted">ה־Mini App מסביר את התהליך; התשלום עצמו נשאר תחת סמכות הבוט.</p><div class="actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>בחר חבילה</b><span>פתיחת תהליך הרכישה</span></button><button class="action" onclick="showGuide('buyguide')"><b>איך זה עובד?</b><span>מדריך קצר</span></button></div><details id="buyguide" class="guide"><summary>📘 מדריך קנייה</summary><p>בחר חבילה → בדוק מחיר וכמות → אשר תשלום ב־Telegram → המתן לאישור. אל תסתמך על צילום מסך כתחליף לאישור המערכת.</p></details></div></section>
 <section id="stake" class="screen"><div class="section-title">🔒 Staking Live</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking מבצע פעולה אמיתית על יתרת Credits באמצעות אותו מנגנון אטומי של המערכת.</p><label class="form-label" for="stakeAmount">כמות Credits</label><input id="stakeAmount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 10"><label class="form-label" for="stakeDays">תקופת נעילה (ימים)</label><input id="stakeDays" class="form-input" inputmode="numeric" value="30"><button class="action primary" style="width:100%;margin-top:10px" onclick="submitStake()"><b>🔒 בצע Staking</b><span>העברה אטומית + Position ID + ledger</span></button></div><div class="card"><b>📊 הפוזיציות שלי</b><div id="stakePositions" class="muted" style="margin-top:8px">טוען…</div></div><div class="card"><b>ℹ️ איך זה עובד</b><p class="muted">ה־UID נלקח מהאימות של Telegram בצד השרת. בקשת Mini App מקבלת מזהה חד־פעמי, כך ש־Retry לא ייצור staking כפול.</p></div></section>
 <section id="alpha" class="screen"><div class="section-title">🚀 Alpha Readiness</div><div class="card" id="alphaBox">טוען…</div><details class="guide"><summary>📘 מה זה Alpha?</summary><p>המסך מציג ראיות מצב בלבד. זכאות והקצאה סופית תלויות במדיניות רשמית. כאשר המדיניות חסרה, לא מוצג סכום הקצאה.</p></details></section>
-<section id="exchange" class="screen"><div class="section-title">🪙 SLH Exchange</div>
-<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">נבדק לאחרונה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH/CREDITS</strong></div><div class="wallet-row"><span class="muted">SLH Live שלך</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
+<section id="exchange" class="screen"><div class="section-title">🪙 מסחר פנימי ב־SLH</div>
+<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">זמן הבדיקה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH / Credits</strong></div><div class="wallet-row"><span class="muted">יתרת SLH Live זמינה</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
 
 <div class="card slh-ex-pulse" id="exMarketPulse">
   <div class="slh-ex-pulse-head">
-    <div><b>📊 תמונת שוק</b><div class="muted">SLH/Credits · נרות מעסקאות פנימיות שהושלמו</div></div>
+    <div><b>📊 תמונת שוק</b><div class="muted">SLH מול Credits · נרות מעסקאות פנימיות שהושלמו</div></div>
     <div class="slh-ex-chart-control-group">
       <span class="pill pending" id="exChartStatus">טוען נתונים</span>
       <div id="chartTimeframes" class="slh-ex-chart-controls" role="group" aria-label="טווח זמן לגרף">
@@ -538,8 +538,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     </div>
   </div>
   <div class="slh-ex-metrics">
-    <div class="slh-ex-metric"><span>Best Bid · קנייה</span><strong id="exBestBid">—</strong></div>
-    <div class="slh-ex-metric"><span>Best Ask · מכירה</span><strong id="exBestAsk">—</strong></div>
+    <div class="slh-ex-metric"><span>מחיר קנייה מיטבי</span><strong id="exBestBid">—</strong></div>
+    <div class="slh-ex-metric"><span>מחיר מכירה מיטבי</span><strong id="exBestAsk">—</strong></div>
     <div class="slh-ex-metric"><span>מרווח מחיר</span><strong id="exSpread">—</strong></div>
     <div class="slh-ex-metric"><span>עסקאות בהיסטוריה</span><strong id="exTradeCount">—</strong></div>
   </div>
@@ -547,9 +547,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div class="slh-ex-chart-foot" id="exChartMeta">כל נר מסכם עסקאות פנימיות שהושלמו בטווח שנבחר. אין כאן מחיר DEX או מחיר חיצוני.</div>
 </div>
 
-<div class="card"><b>📈 קנייה</b><p class="muted">Limit order — כמות SLH ומחיר מקסימלי ב־Credits.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מקסימלי ב-Credits ל-SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
-<div class="card"><b>📉 מכירה</b><p class="muted">Limit order — כמות SLH ומחיר מבוקש.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב-Credits ל-SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
-<div class="card"><b>📖 ספר פקודות חי</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
+<div class="card"><b>📈 קנייה</b><p class="muted">הוראת קנייה במחיר מוגבל — כמות SLH ומחיר מרבי ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מרבי ב־Credits לכל SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
+<div class="card"><b>📉 מכירה</b><p class="muted">הוראת מכירה במחיר מוגדר — כמות SLH ומחיר מבוקש ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב־Credits לכל SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
+<div class="card"><b>📖 ספר ההוראות בזמן אמת</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>📊 עסקאות אחרונות</b><div id="recentTrades" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>📋 ההוראות שלי</b><div id="myOrders" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>⚙️ פעולות בורסה</b><div class="actions" style="margin-top:8px"><button class="action" onclick="loadExchange()"><b>↻ רענן שוק</b><span>Book · Trades · Orders · balances</span></button><button class="action" onclick="sendCommand('/orders','ההוראות שלי')"><b>🤖 Telegram Orders</b><span>מציג את ההוראות שלך בבוט</span></button><button class="action" onclick="sendCommand('/trades','עסקאות')"><b>📜 Telegram Trades</b><span>מציג היסטוריית עסקאות בבוט</span></button></div></div>
@@ -713,7 +713,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       <button class="action" onclick="show('stake');closeMoreMenu()"><b>🔒 סטייקינג</b><span>פוזיציות ותנאים</span></button>
       <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('governance');loadGovernanceScreen();closeMoreMenu()"><b>🗳️ Governance</b><span>הצעות, הצבעה וקבלה</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
-      <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
+      <button class="action" onclick="show('exchange');closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
       <button class="action" onclick="show('wallet');loadCombined();closeMoreMenu()"><b>👛 ארנק ופורטפוליו</b><span>יתרות, חיבורים ונכסים</span></button>
       <button class="action" onclick="show('balance');closeMoreMenu()"><b>💰 כל היתרות</b><span>Credits ונכסים</span></button>
       <button class="action" onclick="show('move');closeMoreMenu()"><b>🔄 שליחה וקבלה</b><span>בחר מסלול לפי הנכס</span></button>
@@ -1069,7 +1069,7 @@ function updateMarketNotice(ex){
         : '🪙 <b>שער SLH Exchange פתוח</b> · ספר הפקודות ריק כרגע.')
     : gateKnown
       ? '🔒 <b>SLH Exchange חסום</b> · '+esc(gateLabel)
-      : '⚪ <b>SLH Exchange לא אומת</b> · אין להסתמך על סטטוס קודם.';
+      : '⚪ <b>המסחר הפנימי ב־SLH לא אומת</b> · אין להסתמך על סטטוס קודם.';
 }
 async function loadExchangeMyOrders(){
   const el=$("myOrders");if(!el)return;
@@ -1281,7 +1281,7 @@ async function loadExchange(){
     setText("exEngineStatus","⚪ לא אומת");
     setText("exCanonicalGate","לא אומת");
     setText("exGateCheckedAt","—");
-    const line=$("marketNoticeLine");if(line)line.textContent="⚪ SLH Exchange לא אומת";
+    const line=$("marketNoticeLine");if(line)line.textContent="⚪ המסחר הפנימי ב־SLH לא אומת";
   }
 }
 function submitOrder(side,aId,pId){
