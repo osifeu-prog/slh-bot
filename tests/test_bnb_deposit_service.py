@@ -25,6 +25,18 @@ class BnbDepositServiceTests(unittest.TestCase):
             bnb_deposit_service.settle_bnb_deposit("u1", "0xtx")
         record.assert_not_called()
 
+    @patch.object(bnb_deposit_service, "record_transaction")
+    @patch.object(bnb_deposit_service, "verify_bnb_deposit")
+    @patch.object(bnb_deposit_service, "get_binding")
+    def test_invalid_verification_without_error_never_credits(self, get_binding, verify, record):
+        get_binding.return_value = {"uid": "u1", "address": "0xBound"}
+        # This reproduces the legacy shape returned for a recipient mismatch:
+        # ok=False with diagnostic fields but no "error" key.
+        verify.return_value = {"ok": False, "to": "0xBound", "treasury": "0xOther"}
+        with self.assertRaisesRegex(ValueError, "BNB_TX_NOT_VERIFIED"):
+            bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
+        record.assert_not_called()
+
     @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "APPLIED", "balance_after": 1234})
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
