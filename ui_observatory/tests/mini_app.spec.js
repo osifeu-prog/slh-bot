@@ -279,7 +279,7 @@ test('Exchange overview shows canonical gate truth, not a hardcoded green status
     await loadExchange();
   });
   await expect(page.locator('#exEngineStatus')).toContainText('חסום למסחר');
-  await expect(page.locator('#exCanonicalGate')).toContainText('CLOSED');
+  await expect(page.locator('#exCanonicalGate')).toContainText('סגור · חסום');
   await expect(page.locator('#exGateCheckedAt')).toContainText('2026-10-11T10:00:00+00:00');
   await expect(page.locator('#exLiquidityNotice')).toContainText('המסחר חסום כרגע');
   await expect(page.locator('#exEngineStatus')).not.toContainText('🟢 פעיל');
