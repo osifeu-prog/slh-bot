@@ -104,6 +104,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         import state_manager
         from core.exchange_gate import public_open
         from core.exchange_housekeeping import is_test_seed
+        from core.slh_supply_provenance import audit_db as audit_slh_supply_provenance
         from handlers.exchange_handler import _assert_invariants
 
         if db is None:
@@ -142,6 +143,12 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
                 "public_ready": False,
                 "verdict": "BLOCKED",
             }
+
+        supply_provenance = audit_slh_supply_provenance(db)
+        supply_provenance_ok = (
+            supply_provenance.get("status") == "PASS"
+            and int(supply_provenance.get("blocker_count") or 0) == 0
+        )
 
         open_orders = [o for o in orders.values() if isinstance(o, dict) and o.get("status") == "open"]
         test_seed_open = [o for o in open_orders if is_test_seed(o)]
@@ -241,6 +248,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             and (for_execution or len(open_orders) == 0)
             and len(test_seed_open) == 0
             and len(test_seed_trades) == 0
+            and supply_provenance_ok
         )
         gate = "OPEN" if public_open() else "CLOSED"
         verdict = "OPEN" if clean_for_public and gate == "OPEN" else "READY_TO_OPEN" if clean_for_public else "BLOCKED"
@@ -260,10 +268,12 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             details.append(f"live_open_orders={len(open_orders)}")
         if len(test_seed_trades):
             details.append(f"test_seed_trades={len(test_seed_trades)}")
+        if not supply_provenance_ok:
+            details.append(f"slh_supply_provenance=BLOCKED findings={supply_provenance.get('finding_count', 'UNKNOWN')}")
         detail = "public state clean" if not details else " · ".join(details)
 
         public_ready = bool(clean_for_public)
-        ok = order_ok and trade_ok and money_ok and requests_ok
+        ok = order_ok and trade_ok and money_ok and requests_ok and supply_provenance_ok
         return {
             "ok": ok,
             "detail": detail,
@@ -274,6 +284,9 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             "order_book_integrity": order_ok,
             "trade_integrity": trade_ok,
             "money_invariants": money_ok,
+            "supply_provenance_integrity": supply_provenance_ok,
+            "supply_provenance_status": str(supply_provenance.get("status") or "UNKNOWN"),
+            "supply_provenance_findings": int(supply_provenance.get("finding_count") or 0),
             "public_gate": gate,
             "public_ready": public_ready,
             "verdict": verdict,
