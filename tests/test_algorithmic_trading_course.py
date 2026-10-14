@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from handlers.lesson_handler import _split_message
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -25,9 +27,20 @@ def test_every_algorithmic_trading_lesson_exists_and_has_real_content():
         lesson = ROOT / stage["lesson"]
         assert lesson.is_file(), f"missing lesson {stage['id']}"
         content = lesson.read_text(encoding="utf-8").strip()
-        assert len(content) >= 900, f"lesson {stage['id']} is only a stub"
+        words = len(content.split())
+        assert words >= 1400, f"lesson {stage['id']} has only {words} words"
         assert "תרגיל" in content or "פרויקט מסכם" in content or "מעבדת סימולציה" in content
         assert "בדיקת הבנה" in content or "קריטריוני קבלה" in content
+
+
+def test_lesson_text_is_split_into_telegram_safe_chunks():
+    source = ("כותרת חשובה\\n\\n" + ("זו פסקה לימודית שמכילה מילים רבות. " * 140)) * 3
+    chunks = _split_message(source)
+    assert len(chunks) > 1
+    assert all(0 < len(chunk) <= 3500 for chunk in chunks)
+    source_words = source.split()
+    chunk_words = [word for chunk in chunks for word in chunk.split()]
+    assert chunk_words == source_words
 
 
 def test_exchange_chart_guide_explains_internal_trade_based_candles():
