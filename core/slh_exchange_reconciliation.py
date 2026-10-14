@@ -546,6 +546,12 @@ def audit_db(db):
         item for item in findings
         if str(item.get("code") or "") in RELEASE_GATE_BLOCKER_CODES
     ]
+    if checked == 0:
+        # No matched reserve history is not evidence of a clean release.
+        release_blocking_findings.append({
+            "code": "RESERVE_HISTORY_NOT_PROVEN",
+            "note": "The audit could not match any cancelled sell reserve history.",
+        })
     release_readiness_status = "BLOCKED" if release_blocking_findings else "PASS"
 
     status = "FAIL" if any(
