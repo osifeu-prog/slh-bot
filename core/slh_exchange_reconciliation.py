@@ -552,9 +552,12 @@ def audit_db(db):
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
     ) else ("UNKNOWN" if checked == 0 else "PASS")
+    # Operational reserve consistency and financial-release permission are
+    # separate decisions. Archived seed state can be operationally retired yet
+    # still require accounting review before public trading is enabled.
     operational_status = (
         "UNKNOWN" if checked == 0
-        else "BLOCKED" if blocking_findings or release_blocking_findings
+        else "BLOCKED" if blocking_findings
         else "PASS"
     )
 
