@@ -176,6 +176,19 @@ def test_complete_persisted_reversal_resolves_only_the_source_self_transfer():
     assert "RESOLVED_BY_AUDITED_REVERSAL" in result["findings"][0]["issues"]
 
 
+def test_valid_reversal_remains_resolved_after_treasury_rotation():
+    db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
+    # The treasury has since been rotated away from the historically recorded
+    # self-transfer address. The persisted reversal must still reconcile from
+    # its own historical metadata, not require the current treasury to match.
+    db["bsc_settings"]["treasury_wallet"] = TREASURY
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+
+
 def test_corrupt_reversal_audit_does_not_resolve_self_transfer():
     db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
     db["credit_adjustment_audit"][0]["balance_after"] = 999.0
