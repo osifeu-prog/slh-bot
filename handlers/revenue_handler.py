@@ -168,10 +168,10 @@ def register(bot):
             bucket["stars"] += float(row.get("amount", 0) or 0)
 
         lines = [
-            "📊 SLH Revenue — canonical external payments",
-            f"💰 Real Telegram Stars: {total_stars:g}",
+            "📊 SLH gross receipts — canonical external payments (not profit)",
+            f"💰 Verified gross Telegram Stars receipts: {total_stars:g}",
             f"👥 Paying customers: {paying_customers}",
-            f"🧾 Confirmed revenue events: {len(rows)}",
+            f"🧾 Confirmed gross-receipt events: {len(rows)}",
         ]
 
         for label, bucket in sorted(by_product.items()):
@@ -180,6 +180,7 @@ def register(bot):
             )
 
         lines.append("")
+        lines.append("ℹ️ These are gross receipts, not profit; fees, costs, refunds and liabilities are not netted.")
         lines.append("ℹ️ Internal Credit spending is not cash revenue.")
         lines.append("ℹ️ Totals require matching local payment/order evidence; test/fake and unmatched rows are excluded.")
 
