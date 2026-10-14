@@ -112,8 +112,26 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 
 async function clickPrimaryNav(page, label) {
   const entry = screens.find(([, text]) => text === label);
-  if (!entry) throw new Error('Unknown primary navigation label: ' + label);
-  await page.locator('#' + entry[2]).click();
+  if (entry) {
+    await page.locator('#' + entry[2]).click();
+    return;
+  }
+
+  const secondary = {
+    'Balance': ['balance', 'כל היתרות'],
+    'Move': ['move', 'שליחה וקבלה'],
+    'Grow': ['growth', 'מרכז הצמיחה'],
+    'Investor': ['investor', 'תמונת חשבון'],
+  }[label];
+  if (!secondary) throw new Error('Unknown navigation label: ' + label);
+
+  await page.locator('#bmore').click();
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'false');
+  await page.locator('#moreSearch').fill(secondary[1]);
+  const target = page.locator('#mSheet .more-grid > button:visible').filter({ hasText: secondary[1] });
+  await expect(target).toHaveCount(1);
+  await target.click();
+  await expect(page.locator('#' + secondary[0])).toHaveClass(/active/);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -432,19 +450,18 @@ test('visual baseline: home', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await page.evaluate(() => show('balance'));
-  await page.locator('#balance').getByRole('button', { name: /Advanced Wallet/i }).click();
+  await clickPrimaryNav(page, 'ארנק');
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
 test('visual baseline: transfer', async ({ page }, testInfo) => {
-  await page.evaluate(() => show('move'));
+  await clickPrimaryNav(page, 'Move');
   await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'transfer.png');
 });
 
 test('visual baseline: buy', async ({ page }, testInfo) => {
-  await page.evaluate(() => show('move'));
+  await clickPrimaryNav(page, 'Move');
   await page.locator('#move').getByRole('button', { name: /Add Funds · Credits/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'buy.png');
 });
@@ -460,7 +477,7 @@ test('visual baseline: alpha', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: academy', async ({ page }, testInfo) => {
-  await page.evaluate(() => show('growth'));
+  await clickPrimaryNav(page, 'Grow');
   await page.getByRole('button', { name: /🎓 Earn/i }).click();
   await assertOrCreateScreenshot(page, testInfo, 'academy.png');
 });
