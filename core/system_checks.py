@@ -370,6 +370,7 @@ def check_bnb() -> dict[str, Any]:
         gate = bnb_readiness()
         evidence = bnb_opening_evidence()
         empirical = evidence.get("empirical_settlement") or {}
+        historical = evidence.get("historical_deposit_audit") or {}
         empirical_status = str(empirical.get("status") or "PENDING_EMPIRICAL")
         configuration_ready = bool(gate.get("ready")) and not bool(evidence.get("blockers"))
         launch_ready = bool(evidence.get("ready_to_open"))
@@ -405,6 +406,9 @@ def check_bnb() -> dict[str, Any]:
             "launch_ready": launch_ready,
             "empirical_status": empirical_status,
             "evidence_status": str(evidence.get("status") or "UNKNOWN"),
+            "historical_deposits_status": str(historical.get("status") or "UNKNOWN"),
+            "historical_deposits_found": int(historical.get("rows_found") or 0),
+            "historical_deposits_failed": int(historical.get("failed_rows") or 0),
             "live_rpc_status": str((evidence.get("live_rpc") or {}).get("status") or "UNKNOWN"),
             "confirmations_required": gate.get("confirmations_required"),
             "gate_reasons": list(gate.get("reasons") or []),
