@@ -5,6 +5,7 @@ payout reference only after completing the payout out of band.
 """
 
 import math
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -13,10 +14,18 @@ import state_manager
 from core.authority import is_owner, has_permission
 
 MIN_WITHDRAW = 1.0
+
+
+def withdrawals_open():
+    """Withdrawals are disabled unless the operator explicitly enables them."""
+    return os.getenv("WITHDRAWALS_OPEN", "0").strip() == "1"
+
+
 _TON_FRIENDLY = re.compile(r"^(?:EQ|UQ|kQ|0Q)[A-Za-z0-9_-]{46}$")
 _TON_RAW = re.compile(r"^-?[0-9]:[0-9a-fA-F]{64}$")
 
 _ERRORS = {
+    "WITHDRAWALS_CLOSED": "⛔ משיכות סגורות כרגע. ה-Credits לא שונו.",
     "INVALID_AMOUNT": "❌ כמות לא תקינה (מינימום 1 credit)",
     "INVALID_ADDRESS": "❌ כתובת TON לא תקינה",
     "USER_NOT_FOUND": "❌ משתמש לא נמצא",
@@ -61,6 +70,8 @@ def _next_request_id(db, requests):
 
 def create_withdrawal(db, uid, amount, address):
     """Atomically hold Credits and create a pending manual withdrawal request."""
+    if not withdrawals_open():
+        raise ValueError("WITHDRAWALS_CLOSED")
     if (
         isinstance(amount, bool)
         or not isinstance(amount, (int, float))
@@ -139,6 +150,8 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
 
     action = str(action or "").strip().lower()
     if action == "approve":
+        if not withdrawals_open():
+            raise ValueError("WITHDRAWALS_CLOSED")
         payout_ref = str(ref or "").strip()
         if not payout_ref or len(payout_ref) > 256:
             raise ValueError("REF_REQUIRED")
