@@ -7,6 +7,7 @@ TREASURY = "0x1111111111111111111111111111111111111111"
 SENDER = "0x2222222222222222222222222222222222222222"
 TX_HASH = "0x" + "a" * 64
 AMOUNT_WEI = 10**16
+OWNER_UID = "8789977826"
 
 
 class FakeEth:
@@ -124,6 +125,7 @@ def _add_audited_reversal(db):
             "source_reason": "bnb:deposit",
             "source_ledger_index": 0,
             "tx_hash": TX_HASH.lower(),
+            "actor_uid": OWNER_UID,
             "nominal_credits_reversed": 10.0,
             "chain_id": 56,
             "block": 80,
@@ -140,6 +142,7 @@ def _add_audited_reversal(db):
     db["credit_adjustment_audit"] = [{
         "event": "INVALID_BNB_SELF_TRANSFER_REVERSED",
         "uid": "owner",
+        "actor_uid": OWNER_UID,
         "tx_hash": TX_HASH.lower(),
         "source_idempotency_key": source_key,
         "correction_idempotency_key": correction_key,
