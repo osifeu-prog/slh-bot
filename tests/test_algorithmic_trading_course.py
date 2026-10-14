@@ -34,7 +34,7 @@ def test_every_algorithmic_trading_lesson_exists_and_has_real_content():
 
 
 def test_lesson_text_is_split_into_telegram_safe_chunks():
-    source = ("כותרת חשובה\\n\\n" + ("זו פסקה לימודית שמכילה מילים רבות. " * 140)) * 3
+    source = ("כותרת חשובה\n\n" + ("זו פסקה לימודית שמכילה מילים רבות. " * 140)) * 3
     chunks = _split_message(source)
     assert len(chunks) > 1
     assert all(0 < len(chunk) <= 3500 for chunk in chunks)
