@@ -153,8 +153,8 @@ class RevenueReportingFilterTests(unittest.TestCase):
         self.assertEqual(self.db, before)
 
     def test_reportable_filter_is_read_only_and_rejects_invalid_rows(self):
-        original = copy.deepcopy(self.db)
         db = copy.deepcopy(self.db)
+        before = copy.deepcopy(db)
         db["revenue_ledger"].extend([
             {
                 "source": "telegram_stars",
@@ -172,7 +172,7 @@ class RevenueReportingFilterTests(unittest.TestCase):
             },
         ])
         self.assertEqual(len(revenue_ledger.reportable_rows(db, currency="XTR")), 6)
-        self.assertEqual(self.db, original)
+        self.assertEqual(db, before)
 
 
 if __name__ == "__main__":
