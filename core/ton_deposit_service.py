@@ -30,6 +30,11 @@ def _deposits_open() -> bool:
     return os.getenv("TON_DEPOSITS_OPEN", "0").strip() == "1"
 
 
+def _canary_settlement_open() -> bool:
+    """A canary settlement requires its own explicit operator opt-in."""
+    return os.getenv("TON_DEPOSITS_CANARY_SETTLEMENT_OPEN", "0").strip() == "1"
+
+
 def _settings():
     settings = state_manager.load_db().get("ton_settings", {}) or {}
     wallet = os.getenv("TON_WALLET", "").strip() or settings.get("wallet")
@@ -83,7 +88,8 @@ def ton_settlement_allowed(uid) -> bool:
         return True
     canary_uid = str(os.getenv("TON_DEPOSITS_CANARY_UID", "")).strip()
     return bool(
-        canary_uid
+        _canary_settlement_open()
+        and canary_uid
         and uid == canary_uid
         and readiness["ready"]
     )

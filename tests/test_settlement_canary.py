@@ -26,6 +26,7 @@ def test_ton_canary_allows_explicit_settlement_when_closed():
     with patch.dict(os.environ, {
         "TON_DEPOSITS_OPEN": "0",
         "TON_DEPOSITS_CANARY_UID": "8789977826",
+        "TON_DEPOSITS_CANARY_SETTLEMENT_OPEN": "1",
     }, clear=False), patch.object(
         ton_deposit_service,
         "ton_readiness",
