@@ -127,11 +127,20 @@ def register(bot):
         uid = str(call.from_user.id)
 
         if not lesson_engine.can_access_lesson(uid, course_id, stage):
-            bot.answer_callback_query(
-                call.id,
-                "🔒 יש להשלים קודם את השיעור הקודם",
-                show_alert=False,
-            )
+            if not lesson_engine.has_course_access(uid, course_id):
+                from handlers.academy_handler import _paid_course_lock
+                locked = _paid_course_lock(uid, course_id)
+                bot.answer_callback_query(call.id, "🔒 הקורס בתשלום")
+                bot.send_message(
+                    call.message.chat.id,
+                    locked or "🔒 אין לך הרשאה לקורס הזה."
+                )
+            else:
+                bot.answer_callback_query(
+                    call.id,
+                    "🔒 יש להשלים קודם את השיעור הקודם",
+                    show_alert=False,
+                )
             return
 
         lesson = lesson_engine.get_lesson(course_id, stage)
@@ -173,16 +182,25 @@ def register(bot):
         )
 
         bot.answer_callback_query(call.id)
-        bot.send_message(
-            call.message.chat.id,
+        from handlers.lesson_handler import _split_message
+        message_text = (
             f"📘 {lesson['name']}\n\n{lesson['content']}\n\n"
             + (
                 "✅ השיעור כבר הושלם — ניתן לחזור אליו בכל עת."
                 if completed else
                 "סיימת? לחץ על הכפתור למטה. 👇"
-            ),
-            reply_markup=markup,
+            )
         )
+        chunks = _split_message(message_text)
+        for index, chunk in enumerate(chunks):
+            if index == len(chunks) - 1:
+                bot.send_message(
+                    call.message.chat.id,
+                    chunk,
+                    reply_markup=markup,
+                )
+            else:
+                bot.send_message(call.message.chat.id, chunk)
 
     @bot.callback_query_handler(
         func=lambda c: c.data.startswith("slh_finish_")
@@ -219,7 +237,16 @@ def register(bot):
             return
 
         if not result.get("ok"):
-            bot.answer_callback_query(call.id, "לא ניתן להשלים את השיעור")
+            if result.get("error") == "course_locked":
+                from handlers.academy_handler import _paid_course_lock
+                locked = _paid_course_lock(uid, course_id)
+                bot.answer_callback_query(call.id, "🔒 הקורס בתשלום")
+                bot.send_message(
+                    call.message.chat.id,
+                    locked or "🔒 אין לך הרשאה לקורס הזה."
+                )
+            else:
+                bot.answer_callback_query(call.id, "לא ניתן להשלים את השיעור")
             return
 
         reward = result.get("reward", {})

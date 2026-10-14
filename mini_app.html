@@ -547,6 +547,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div class="slh-ex-chart-foot" id="exChartMeta">כל נר מסכם עסקאות פנימיות שהושלמו בטווח שנבחר. אין כאן מחיר DEX או מחיר חיצוני.</div>
 </div>
 
+<details class="guide" id="exchangeChartGuide" style="margin-top:10px">
+  <summary>📘 איך נוצרים הנרות בגרף?</summary>
+  <p>כל נר מסכם עסקאות פנימיות שהושלמו בתקופת הזמן שנבחרה. עצם הצבת הוראת קנייה או מכירה אינה יוצרת נר; נדרשת התאמה שבוצעה ונרשמה כעסקה.</p>
+  <p><b>Open</b> — מחיר העסקה הראשונה בתקופה. <b>High</b> — המחיר הגבוה ביותר. <b>Low</b> — המחיר הנמוך ביותר. <b>Close</b> — מחיר העסקה האחרונה. <b>Volume</b> — נפח SLH שדווח עבור העסקאות בתקופה.</p>
+  <p>ספר הפקודות מציג הוראות שטרם הותאמו. Bid הוא מחיר הקנייה הגבוה ביותר, Ask הוא מחיר המכירה הנמוך ביותר, וה־Spread הוא ההפרש ביניהם. הוראת Limit עשויה להמתין ולא להתבצע אם אין הצעה נגדית מתאימה.</p>
+  <p><b>חשוב:</b> זהו גרף של עסקאות פנימיות בלבד — לא מחיר DEX, לא הוכחה לנזילות חיצונית ולא הבטחה שניתן לקנות או למכור בכמות או במחיר מסוימים. כשאין עסקאות, אין נתון עסקאות חדש. לצורך לימוד ותרגול יש להשתמש בסימולציה, ולא לבצע הפקדה או עסקה אמיתית רק כדי לייצר נר.</p>
+  <p>פקודות: <code>/chart</code> לפתיחת הגרף, <code>/orders</code> להצגת ההוראות, <code>/trades</code> להצגת עסקאות שהושלמו.</p>
+</details>
 <div class="card"><b>📈 קנייה</b><p class="muted">הוראת קנייה במחיר מוגבל — כמות SLH ומחיר מרבי ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מרבי ב־Credits לכל SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
 <div class="card"><b>📉 מכירה</b><p class="muted">הוראת מכירה במחיר מוגדר — כמות SLH ומחיר מבוקש ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב־Credits לכל SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
 <div class="card"><b>📖 ספר ההוראות בזמן אמת</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>

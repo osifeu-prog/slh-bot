@@ -31,13 +31,48 @@ def get_lesson(course_id, stage):
     return None
 
 
+def has_course_access(uid, course_id):
+    """Central server-side gate for course content and completion."""
+    course = academy_manager.get_courses().get(course_id)
+    if not course:
+        return False
+
+    if course.get("access") != "paid":
+        return True
+
+    # Owner, existing enrollment, and active VIP are the canonical grants.
+    try:
+        from core.authority import is_owner
+        if is_owner(uid):
+            return True
+    except Exception:
+        pass
+
+    try:
+        if academy_manager.get_course(str(uid), course_id):
+            return True
+    except Exception:
+        return False
+
+    try:
+        import time
+        from core import profile_manager
+        if profile_manager.user_exists(str(uid)):
+            user = profile_manager.get_user(str(uid)) or {}
+            return int(user.get("vip_access_until", 0) or 0) > time.time()
+    except Exception:
+        return False
+
+    return False
+
+
 def can_access_lesson(uid, course_id, stage):
     try:
         stage = int(stage)
     except (TypeError, ValueError):
         return False
 
-    if stage < 1:
+    if stage < 1 or not has_course_access(uid, course_id):
         return False
 
     # A lesson cannot be entered until the course itself has been started.
@@ -66,6 +101,20 @@ def complete_lesson(uid, course_id, stage):
             "already_completed": False,
             "ok": False,
             "error": "invalid_stage"
+        }
+
+    if course_id not in academy_manager.get_courses():
+        return {
+            "already_completed": False,
+            "ok": False,
+            "error": "course_not_found"
+        }
+
+    if not has_course_access(uid, course_id):
+        return {
+            "already_completed": False,
+            "ok": False,
+            "error": "course_locked"
         }
 
     progress = academy_manager.get_course(uid, course_id)
