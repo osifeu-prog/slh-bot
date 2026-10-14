@@ -680,7 +680,6 @@ class ExchangeReconciliationTests(unittest.TestCase):
                 }
             },
             "exchange_trades": [],
-            "exchange_orders": {},
             "ledger": [
                 {
                     "uid": "seller", "amount": -10000.0,
