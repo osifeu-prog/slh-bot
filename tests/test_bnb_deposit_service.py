@@ -16,6 +16,14 @@ class BnbDepositServiceTests(unittest.TestCase):
         self.addCleanup(gate.stop)
 
     @patch.object(bnb_deposit_service, "record_transaction")
+    @patch.object(bnb_deposit_service, "verify_bnb_deposit", return_value={"ok": False, "to": "0xwrong", "treasury": "0xexpected"})
+    @patch.object(bnb_deposit_service, "get_binding", return_value={"uid": "u1", "address": "0xBound"})
+    def test_settlement_rejects_recipient_mismatch_without_error_text(self, get_binding, verify, record):
+        with self.assertRaisesRegex(ValueError, "BNB_TX_NOT_VERIFIED"):
+            bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
+        record.assert_not_called()
+
+    @patch.object(bnb_deposit_service, "record_transaction")
     @patch.object(bnb_deposit_service, "verify_bnb_deposit")
     @patch.object(bnb_deposit_service, "get_binding")
     def test_settlement_requires_bound_sender(self, get_binding, verify, record):
