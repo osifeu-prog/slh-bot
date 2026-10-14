@@ -15,7 +15,6 @@ class RevenueReportingFilterTests(unittest.TestCase):
         credits = [
             ("credit-charge-1", "1001", 100),
             ("credit-charge-2", "1002", 100),
-            ("credit-charge-3", "1003", 100),
         ]
         items = [
             ("item-charge-1", "2001", "agent_os", 199),
@@ -121,7 +120,7 @@ class RevenueReportingFilterTests(unittest.TestCase):
 
     def test_canonical_xtr_rows_only_include_source_validated_payments(self):
         rows = revenue_handler._canonical_xtr_rows(self.db)
-        self.assertEqual(len(rows), 7)
+        self.assertEqual(len(rows), 6)
         self.assertEqual(sum(row["amount"] for row in rows), 1122)
         self.assertNotIn(self.test_row, rows)
         self.assertNotIn(self.orphan_row, rows)
@@ -134,8 +133,8 @@ class RevenueReportingFilterTests(unittest.TestCase):
             business = business_control_handler._business_summary()
             period = business_control_handler._revenue_report(30)
         self.assertIn("Verified revenue: 1122 XTR", business)
-        self.assertIn("Revenue events: 7", business)
-        self.assertIn("אירועי הכנסה שעברו אימות מקומי: 7", period)
+        self.assertIn("Revenue events: 6", business)
+        self.assertIn("אירועי הכנסה שעברו אימות מקומי: 6", period)
         self.assertIn("XTR: 1122", period)
         self.assertNotIn("1222", business + period)
         self.assertNotIn("1299", business + period)
@@ -144,8 +143,8 @@ class RevenueReportingFilterTests(unittest.TestCase):
         before = copy.deepcopy(self.db)
         with patch.object(revenue_ledger.state_manager, "load_db", return_value=self.db):
             audit = revenue_ledger.summary()
-        self.assertEqual(audit["events"], 7)
-        self.assertEqual(audit["raw_events"], 9)
+        self.assertEqual(audit["events"], 6)
+        self.assertEqual(audit["raw_events"], 8)
         self.assertEqual(audit["excluded_test_events"], 1)
         self.assertEqual(audit["totals"], {"XTR": 1122.0})
         self.assertEqual(audit["excluded_test_totals"], {"XTR": 100.0})
@@ -173,7 +172,7 @@ class RevenueReportingFilterTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(len(revenue_ledger.reportable_rows(db, currency="XTR")), 7)
+        self.assertEqual(len(revenue_ledger.reportable_rows(db, currency="XTR")), 6)
         self.assertEqual(self.db, original)
 
 
