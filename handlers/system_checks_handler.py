@@ -326,6 +326,9 @@ def register(bot, context=None):
                 f"Readiness: {'PASS' if result['ready'] else 'BLOCKED'}",
                 f"Empirical smoke: {result['empirical_status']}",
                 f"Evidence status: {result.get('evidence_status', 'UNKNOWN')}",
+                f"Historical BNB deposits: {result.get('historical_deposits_status', 'UNKNOWN')} · "
+                f"checked={result.get('historical_deposits_found', 0)} · "
+                f"needs review={result.get('historical_deposits_failed', 0)}",
                 f"Live RPC: {result.get('live_rpc_status', 'UNKNOWN')}",
                 f"Confirmations required: {result['confirmations_required']}",
             ]
@@ -344,6 +347,49 @@ def register(bot, context=None):
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(message, f"❌ BNB check failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["check_bnb_deposits"])
+    def check_bnb_deposits_cmd(message):
+        if not _allowed(message):
+            _send_denied(bot, message)
+            return
+        try:
+            import state_manager
+            from core.bnb_history_audit import audit_bnb_deposit_history
+
+            result = audit_bnb_deposit_history(state_manager.load_db())
+            status = str(result.get("status") or "BLOCKED").upper()
+            lines = [
+                "🧾 BNB DEPOSIT HISTORY — READ ONLY",
+                "",
+                f"Status: {status}",
+                f"Rows found: {result.get('rows_found', 0)}",
+                f"Rows checked: {result.get('rows_checked', 0)}",
+                f"Rows needing review: {result.get('failed_rows', 0)}",
+            ]
+            for reason in result.get("blockers", [])[:8]:
+                lines.append(f"Blocker: {reason}")
+            for item in result.get("findings", [])[:12]:
+                if not isinstance(item, dict):
+                    continue
+                issues = ", ".join(str(x) for x in (item.get("issues") or [])[:5])
+                lines.append(
+                    f"{str(item.get('time') or 'time unknown')[:25]} · "
+                    f"TX …{item.get('tx_suffix', 'MISSING')} · "
+                    f"{item.get('status', 'UNKNOWN')} · {issues or 'PASS'}"
+                )
+            lines += [
+                "",
+                "🔒 No DB, ledger, balance, config or gate changes.",
+                "If any row is blocked, keep BNB CLOSED pending reviewed reconciliation.",
+            ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"❌ BNB history audit failed safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
 
     @bot.message_handler(commands=["bnb_reconcile_existing"])
     def bnb_reconcile_existing_cmd(message):
