@@ -70,8 +70,7 @@ def _users_report(days):
 
 def _revenue_report(days):
     db = state_manager.load_db()
-    rows = db.get("revenue_ledger", [])
-    rows = rows if isinstance(rows, list) else []
+    rows = revenue_ledger.reportable_rows(db)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     period = []
     for row in rows:
@@ -105,8 +104,8 @@ def _revenue_report(days):
         lines.append("• כרגע אין אירועי הכנסה מאומתים בתקופה.")
     lines += [
         "",
-        "מקור: revenue_ledger.",
-        "הוצאה פנימית של Credits אינה נחשבת להכנסה כספית.",
+        "מקור: revenue_ledger עם התאמה לרשומת התשלום/ההזמנה המקומית.",
+        "אימות חי מול Telegram מבוצע בנפרד; הוצאה פנימית של Credits אינה הכנסה כספית.",
     ]
     return "\n".join(lines)
 
