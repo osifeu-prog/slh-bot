@@ -14,6 +14,62 @@ KEY = "revenue_ledger"
 IMMUTABLE_FIELDS = ("amount", "currency", "uid")
 
 
+def is_testish(row):
+    """Identify known synthetic/legacy test rows without changing the ledger."""
+    if not isinstance(row, dict):
+        return False
+    meta = row.get("meta")
+    if not isinstance(meta, dict):
+        meta = {}
+    if meta.get("test") is True or meta.get("is_test") is True:
+        return True
+    uid = str(row.get("uid") or "").strip().lower()
+    reference = str(
+        row.get("reference")
+        or row.get("charge_id")
+        or row.get("telegram_payment_charge_id")
+        or ""
+    ).strip().lower()
+    return (
+        uid.startswith("test")
+        or reference.startswith("test")
+        or "boundary-test" in reference
+        or reference.startswith("fakepay")
+    )
+
+
+def reportable_rows(db, *, currency=None):
+    """Return valid, non-test external revenue rows for display only.
+
+    This is a read-only filter. It never modifies the supplied DB or ledger.
+    """
+    rows = db.get(KEY, []) if isinstance(db, dict) else []
+    if not isinstance(rows, list):
+        return []
+    wanted_currency = str(currency).strip().upper() if currency is not None else None
+    reportable = []
+    for row in rows:
+        if not isinstance(row, dict) or is_testish(row):
+            continue
+        row_currency = str(row.get("currency") or "").strip()
+        if not row_currency:
+            continue
+        if wanted_currency is not None and row_currency.upper() != wanted_currency:
+            continue
+        raw_amount = row.get("amount", 0)
+        if isinstance(raw_amount, bool):
+            continue
+        try:
+            amount = float(raw_amount or 0)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if not math.isfinite(amount) or amount <= 0:
+            continue
+        if not str(row.get("reference") or "").strip():
+            continue
+        reportable.append(row)
+    return reportable
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -159,10 +215,34 @@ def record(*, source, amount, currency, reference, uid=None, meta=None):
 
 
 def summary():
+    """Summarize reportable revenue and separately expose excluded test rows."""
     db = state_manager.load_db()
-    rows = db.get(KEY, [])
+    raw_rows = db.get(KEY, [])
+    raw_rows = raw_rows if isinstance(raw_rows, list) else []
+    rows = reportable_rows(db)
     totals = {}
-    for row in rows if isinstance(rows, list) else []:
+    for row in rows:
         cur = str(row.get("currency", "UNKNOWN"))
         totals[cur] = totals.get(cur, 0) + float(row.get("amount", 0) or 0)
-    return {"events": len(rows) if isinstance(rows, list) else 0, "totals": totals}
+
+    excluded_test_rows = [
+        row for row in raw_rows
+        if isinstance(row, dict) and is_testish(row)
+    ]
+    excluded_test_totals = {}
+    for row in excluded_test_rows:
+        cur = str(row.get("currency") or "UNKNOWN")
+        try:
+            amount = float(row.get("amount", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if math.isfinite(amount):
+            excluded_test_totals[cur] = excluded_test_totals.get(cur, 0) + amount
+
+    return {
+        "events": len(rows),
+        "totals": totals,
+        "raw_events": len(raw_rows),
+        "excluded_test_events": len(excluded_test_rows),
+        "excluded_test_totals": excluded_test_totals,
+    }
