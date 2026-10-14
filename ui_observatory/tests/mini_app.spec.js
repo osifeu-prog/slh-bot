@@ -294,11 +294,11 @@ test('exchange receipt shows every fresh canonical gate item', async ({ page }) 
     await sendExchangeOrder('buy', '2', '1');
   });
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
-  await expect(receipt).toContainText('Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('בדיקת המסחר העדכנית: עברה');
   await expect(receipt).toContainText('שער ציבורי');
   await expect(receipt).toContainText('ספר פקודות');
   await expect(receipt).toContainText('תקינות עסקאות');
-  await expect(receipt).toContainText('אינווריאנטים כספיים');
+  await expect(receipt).toContainText('איזון יתרות כספיות');
 });
 
 test('visible Buy button submits directly through the fresh Exchange endpoint', async ({ page }) => {
@@ -516,7 +516,7 @@ test('exchange receipt shows fresh PASS only when Railway and live beacon proof 
   await page.evaluate(() => sendExchangeOrder('buy', '2', '1'));
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
   await expect(receipt).toBeVisible();
-  await expect(receipt).toContainText('Fresh Exchange check: PASS');
-  await expect(receipt).toContainText('Live runtime confirmation');
-  await expect(receipt).toContainText('PASS');
+  await expect(receipt).toContainText('בדיקת המסחר העדכנית: עברה');
+  await expect(receipt).toContainText('אימות סביבת ההרצה בזמן אמת');
+  await expect(receipt).toContainText('פתוח');
 });
