@@ -1007,6 +1007,8 @@ def transfer_credits(
         sender = users.get(sender_uid)
         if not sender:
             raise ValueError("SENDER_NOT_FOUND")
+        if isinstance(sender, dict) and sender.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
         recipient = users.get(recipient_uid)
         if not recipient:
             raise ValueError("RECIPIENT_NOT_FOUND")
