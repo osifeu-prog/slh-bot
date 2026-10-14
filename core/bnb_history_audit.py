@@ -57,6 +57,136 @@ def _binding_for_uid(db: dict, uid: str) -> tuple[str | None, str | None]:
     return address, None
 
 
+def _valid_audited_reversal(
+    db: dict,
+    ledger: list,
+    source_index: int,
+    source: dict,
+    tx_hash: str,
+    sender: str,
+    destination: str,
+    treasury: str,
+    amount_wei: int,
+    block_number: int,
+    confirmations_required: int,
+    bound_wallet: str,
+) -> bool:
+    """Recognize only the exact, persisted reversal contract from credit_adjustment_service."""
+    correction_key = f"accounting:reversal:{tx_hash.lower()}"
+    source_key = f"bnb:deposit:{tx_hash.lower()}"
+    correction_matches = [
+        (index, row) for index, row in enumerate(ledger)
+        if isinstance(row, dict)
+        and isinstance(row.get("meta"), dict)
+        and row["meta"].get("idempotency_key") == correction_key
+    ]
+    if len(correction_matches) != 1:
+        return False
+    correction_index, correction = correction_matches[0]
+    if correction_index <= source_index:
+        return False
+
+    # The original reversal callable is intentionally limited to accounts with
+    # no ledger activity between the source credit and its compensation.
+    source_uid = str(source.get("uid") or "")
+    for row in ledger[source_index + 1:correction_index]:
+        if isinstance(row, dict) and str(row.get("uid") or "") == source_uid:
+            return False
+
+    meta = correction.get("meta")
+    if not isinstance(meta, dict):
+        return False
+    audits = db.get("credit_adjustment_audit")
+    if not isinstance(audits, list):
+        return False
+    matching_audits = [
+        row for row in audits
+        if isinstance(row, dict) and row.get("correction_idempotency_key") == correction_key
+    ]
+    if len(matching_audits) != 1:
+        return False
+    audit = matching_audits[0]
+
+    source_meta = source.get("meta")
+    if not isinstance(source_meta, dict):
+        return False
+    source_before = _finite_number(source.get("before"))
+    source_amount = _finite_number(source.get("amount"))
+    source_after = _finite_number(source.get("after"))
+    reversal_before = _finite_number(correction.get("before"))
+    reversal_amount = _finite_number(correction.get("amount"))
+    reversal_after = _finite_number(correction.get("after"))
+    nominal = _finite_number(meta.get("nominal_credits_reversed"))
+    audit_before = _finite_number(audit.get("balance_before"))
+    audit_amount = _finite_number(audit.get("amount"))
+    audit_after = _finite_number(audit.get("balance_after"))
+    audit_nominal = _finite_number(audit.get("nominal_credits_reversed"))
+    try:
+        source_wei = int(source_meta.get("bnb_amount_wei") or 0)
+        reversal_wei = int(meta.get("amount_wei") or 0)
+        reversal_block = int(meta.get("block") or 0)
+        audit_block = int(audit.get("block") or 0)
+        reversal_confirms = int(meta.get("confirmations") or 0)
+        audit_confirms = int(audit.get("confirmations") or 0)
+        reversal_required = int(meta.get("required_confirmations") or 0)
+        audit_required = int(audit.get("required_confirmations") or 0)
+        reversal_chain = int(meta.get("chain_id") or 0)
+        audit_chain = int(audit.get("chain_id") or 0)
+        audit_source_index = int(meta.get("source_ledger_index"))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+    if any(value is None for value in (
+        source_before, source_amount, source_after, reversal_before,
+        reversal_amount, reversal_after, nominal, audit_before,
+        audit_amount, audit_after, audit_nominal,
+    )):
+        return False
+
+    return bool(
+        correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
+        and str(correction.get("uid") or "") == source_uid
+        and source_uid
+        and str(meta.get("tx_hash") or "").lower() == tx_hash.lower()
+        and meta.get("source_idempotency_key") == source_key
+        and meta.get("source_reason") == "bnb:deposit"
+        and audit_source_index == source_index
+        and meta.get("gate_remained_closed") is True
+        and reversal_chain == 56
+        and audit_chain == 56
+        and str(meta.get("treasury") or "").lower() == treasury.lower()
+        and _same_address(meta.get("from"), bound_wallet)
+        and _same_address(meta.get("to"), bound_wallet)
+        and _same_address(sender, bound_wallet)
+        and _same_address(destination, bound_wallet)
+        and _same_address(destination, treasury)
+        and _same_address(source_meta.get("from"), sender)
+        and _same_address(source_meta.get("to"), destination)
+        and source_wei == amount_wei == reversal_wei
+        and reversal_block == audit_block == block_number
+        and reversal_confirms >= reversal_required >= 1
+        and reversal_required == audit_required == confirmations_required
+        and reversal_confirms == audit_confirms
+        and correction_index > source_index
+        and source_before is not None and source_amount is not None and source_after is not None
+        and reversal_before is not None and reversal_amount is not None and reversal_after is not None
+        and abs((source_before + source_amount) - source_after) <= EPSILON
+        and abs(reversal_before - source_after) <= EPSILON
+        and abs(reversal_after - source_before) <= EPSILON
+        and abs(reversal_amount - (reversal_after - reversal_before)) <= EPSILON
+        and abs(nominal - source_amount) <= EPSILON
+        and abs(audit_before - reversal_before) <= EPSILON
+        and abs(audit_amount - reversal_amount) <= EPSILON
+        and abs(audit_after - reversal_after) <= EPSILON
+        and abs(audit_nominal - nominal) <= EPSILON
+        and audit.get("event") == "INVALID_BNB_SELF_TRANSFER_REVERSED"
+        and str(audit.get("uid") or "") == source_uid
+        and str(audit.get("tx_hash") or "").lower() == tx_hash.lower()
+        and audit.get("source_idempotency_key") == source_key
+        and audit.get("gate_remained_closed") is True
+    )
+
+
 def audit_bnb_deposit_history(db: dict | None) -> dict:
     """Audit all ledger entries with reason=bnb:deposit against BSC RPC.
 
