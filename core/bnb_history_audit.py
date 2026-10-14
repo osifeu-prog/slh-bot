@@ -69,6 +69,7 @@ def _valid_audited_reversal(
     amount_wei: int,
     block_number: int,
     confirmations_required: int,
+    observed_confirmations: int,
     bound_wallet: str,
 ) -> bool:
     """Recognize only the exact, persisted reversal contract from credit_adjustment_service."""
@@ -165,6 +166,7 @@ def _valid_audited_reversal(
         and source_wei == amount_wei == reversal_wei
         and reversal_block == audit_block == block_number
         and reversal_confirms >= reversal_required >= 1
+        and reversal_confirms <= observed_confirmations
         and reversal_required == audit_required == confirmations_required
         and reversal_confirms == audit_confirms
         and correction_index > source_index
@@ -404,7 +406,7 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
         reported_issues = list(unique_issues)
         if unique_issues == ["SELF_TRANSFER_NOT_A_DEPOSIT"] and bound and _valid_audited_reversal(
             db, ledger, source_index, row, tx_hash, sender, destination,
-            treasury, amount_wei, block_number, confirmations_required, bound,
+            treasury, amount_wei, block_number, confirmations_required, confirmations, bound,
         ):
             status = "RESOLVED_BY_AUDITED_REVERSAL"
             reported_issues = [
