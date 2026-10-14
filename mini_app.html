@@ -1047,7 +1047,7 @@ function exchangePriceLabel(value){
 function renderExchangeOrderbook(orders){
   const el=$("orderbook");if(!el)return;
   const valid=(Array.isArray(orders)?orders:[]).filter(o=>
-    o&&["buy","sell"].includes(String(o.side))&&Number(o.price)>0&&Number(o.amount)>0
+    o&&["buy","sell"].includes(String(o.side))&&Number.isFinite(Number(o.price))&&Number(o.price)>0&&Number.isFinite(Number(o.amount))&&Number(o.amount)>0
   );
   if(!valid.length){
     el.innerHTML='<div class="muted">אין הזמנות פתוחות — אין כאן נתוני דמה.</div>';
@@ -1062,7 +1062,7 @@ function renderExchangeOrderbook(orders){
   const bids=Array.from(grouped.buy.values()).sort((a,b)=>b.price-a.price);
   const asks=Array.from(grouped.sell.values()).sort((a,b)=>a.price-b.price);
   const all=bids.concat(asks);
-  const maxDepth=Math.max(1,...all.map(x=>x.amount));
+  const maxDepth=all.reduce((max,x)=>Math.max(max,x.amount),1);
   const renderSide=(side,rows)=>{
     const title=side==='buy'?'קנייה · מחיר גבוה קודם':'מכירה · מחיר נמוך קודם';
     const body=rows.slice(0,8).map(row=>{
@@ -1079,7 +1079,7 @@ function renderExchangeOrderbook(orders){
 }
 function renderExchangeMarketPulse(orders,trades){
   const validOrders=(Array.isArray(orders)?orders:[]).filter(o=>
-    o&&["buy","sell"].includes(String(o.side))&&Number(o.price)>0&&Number(o.amount)>0
+    o&&["buy","sell"].includes(String(o.side))&&Number.isFinite(Number(o.price))&&Number(o.price)>0&&Number.isFinite(Number(o.amount))&&Number(o.amount)>0
   );
   const bids=validOrders.filter(o=>o.side==='buy').sort((a,b)=>Number(b.price)-Number(a.price));
   const asks=validOrders.filter(o=>o.side==='sell').sort((a,b)=>Number(a.price)-Number(b.price));
@@ -1171,6 +1171,9 @@ async function loadExchange(){
     await loadExchangeMyOrders();
   }catch(e){
     const el=$("orderbook");if(el)el.innerHTML='<div class="muted">לא ניתן לטעון את ספר הפקודות</div>';
+    const chart=$("exPriceChart");if(chart)chart.innerHTML='<div class="slh-ex-chart-empty">נתוני השוק לא זמינים כרגע. רענן כדי לבצע בדיקה חדשה.</div>';
+    const chartStatus=$("exChartStatus");if(chartStatus){chartStatus.textContent='לא אומת';chartStatus.classList.remove('ok');chartStatus.classList.add('pending')}
+    setText("exBestBid","—");setText("exBestAsk","—");setText("exSpread","—");setText("exTradeCount","—");
     const li=$("exLiquidityNotice");if(li)li.textContent='⚪ לא ניתן לאמת כרגע את מצב המסחר; אין להסתמך על סטטוס קודם.';
     setText("exEngineStatus","⚪ לא אומת");
     setText("exCanonicalGate","לא אומת");
