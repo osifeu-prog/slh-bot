@@ -1069,6 +1069,10 @@ def build_exchange_chart_url(base_url=None):
 def register(bot):
     @bot.message_handler(commands=["chart"])
     def exchange_chart_cmd(msg):
+        chat_type = str(getattr(getattr(msg, "chat", None), "type", "")).lower()
+        if chat_type != "private":
+            bot.reply_to(msg, "פתח את /chart בשיחה הפרטית עם הבוט כדי לפתוח את Mini App.")
+            return
         try:
             from telebot import types
 
