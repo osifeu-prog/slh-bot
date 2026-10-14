@@ -33,5 +33,6 @@ def test_more_dialog_exposes_accessible_open_and_closed_states():
 
 def test_active_destination_and_toast_state_are_announced():
     html = HTML.read_text(encoding="utf-8")
+    assert "if(!['home','wallet','exchange','market'].includes(id)) $('bmore')?.classList.add('active')" in html
     assert "button.setAttribute('aria-current','page')" in html
     assert 'id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"' in html
