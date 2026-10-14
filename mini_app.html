@@ -1148,7 +1148,7 @@ function renderExchangeCandles(candles,tf){
     if(!c||!Number.isFinite(Number(c.time))||Number(c.time)<0)return false;
     const o=Number(c.open),h=Number(c.high),l=Number(c.low),cl=Number(c.close),v=Number(c.volume);
     return [o,h,l,cl,v].every(Number.isFinite)&&o>0&&h>0&&l>0&&cl>0&&v>=0&&l<=Math.min(o,cl)&&h>=Math.max(o,cl);
-  }).sort((a,b)=>Number(a.time)-Number(b.time);
+  }).sort((a,b)=>Number(a.time)-Number(b.time));
   if(!valid.length){
     if(status){status.textContent='אין נתונים לטווח';status.classList.remove('ok');status.classList.add('pending')}
     host.innerHTML='<div class="slh-ex-chart-empty">אין עסקאות פנימיות שהושלמו בטווח הזה.<br>הגרף יתמלא כשיצטברו עסקאות אמיתיות.</div>';
