@@ -29,6 +29,15 @@ def _same_address(left: Any, right: Any) -> bool:
     )
 
 
+def _normalized_tx_hash(value: Any) -> str:
+    if hasattr(value, "hex") and not isinstance(value, str):
+        value = value.hex()
+    result = str(value or "").strip().lower()
+    if result and not result.startswith("0x"):
+        result = "0x" + result
+    return result
+
+
 def _finite_number(value: Any) -> float | None:
     if isinstance(value, bool):
         return None
@@ -360,6 +369,8 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             amount_wei = int(tx.get("value") or 0)
             receipt_status = int(receipt.get("status") or 0)
             block_number = int(receipt.get("blockNumber") or 0)
+            returned_tx_hash = _normalized_tx_hash(tx.get("hash"))
+            receipt_tx_hash = _normalized_tx_hash(receipt.get("transactionHash"))
             confirmations = max(0, latest_block - block_number + 1)
         except Exception:
             issues.append("TX_LOOKUP_FAILED")
@@ -385,6 +396,10 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
 
         if receipt_status != 1:
             issues.append("TX_RECEIPT_NOT_SUCCESSFUL")
+        if returned_tx_hash != tx_hash.lower() or receipt_tx_hash != tx_hash.lower():
+            issues.append("TX_HASH_MISMATCH")
+        if block_number <= 0:
+            issues.append("TX_BLOCK_NUMBER_INVALID")
         if not destination:
             issues.append("TX_DESTINATION_MISSING")
         if sender and destination and sender.lower() == destination.lower():
