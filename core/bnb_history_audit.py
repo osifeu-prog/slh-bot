@@ -210,7 +210,19 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
                 "issues": issues,
             })
             blockers.update(issues)
-            continue
+            # A failed RPC lookup is an unresolved financial record. Stop the
+            # sweep rather than making many more slow requests to a bad node.
+            blockers.add("HISTORICAL_AUDIT_INCOMPLETE")
+            return {
+                "scope": "read_only",
+                "status": "BLOCKED",
+                "rows_found": len(rows),
+                "rows_checked": checked,
+                "failed_rows": sum(1 for item in findings if item.get("status") != "PASS")
+                + (len(rows) - checked),
+                "blockers": sorted(blockers),
+                "findings": findings,
+            }
 
         if receipt_status != 1:
             issues.append("TX_RECEIPT_NOT_SUCCESSFUL")
