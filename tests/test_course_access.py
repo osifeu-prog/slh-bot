@@ -41,9 +41,11 @@ def test_active_vip_unlocks_paid_course():
     from handlers import academy_handler as ah
     with patch("core.authority.is_owner", return_value=False), \
          patch.object(ah.academy_manager, "get_course", return_value=None), \
+         patch("core.profile_manager.user_exists", return_value=True), \
          patch("core.profile_manager.get_user", return_value={"vip_access_until": int(time.time()) + 3600}):
         assert ah._paid_course_lock("100", "ethereum") is None
     with patch("core.authority.is_owner", return_value=False), \
          patch.object(ah.academy_manager, "get_course", return_value=None), \
+         patch("core.profile_manager.user_exists", return_value=True), \
          patch("core.profile_manager.get_user", return_value={"vip_access_until": int(time.time()) - 10}):
         assert ah._paid_course_lock("100", "ethereum") is not None

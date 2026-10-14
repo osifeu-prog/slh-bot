@@ -120,5 +120,15 @@
     "grant": {
       "physical": "bill_20_ils"
     }
+  },
+  "course_algo_trading": {
+    "name": "קורס: מסחר אלגוריתמי, כוחות השוק ופסיכולוגיה",
+    "price": 0,
+    "stars_only": true,
+    "type": "course",
+    "grant": {
+      "course": "algo_trading_999"
+    },
+    "price_stars": 150
   }
 }
