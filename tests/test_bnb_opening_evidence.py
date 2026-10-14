@@ -180,6 +180,9 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
     ), patch(
         "core.bnb_gate._empirical_settlement_evidence", return_value=empirical
     ), patch(
+        "core.bnb_history_audit.audit_bnb_deposit_history",
+        return_value={"scope": "read_only", "status": "PASS", "rows_found": 1, "rows_checked": 1, "failed_rows": 0, "blockers": [], "findings": []},
+    ), patch(
         "core.deposit_monitor.verify_bnb_deposit", return_value=verified
     ) as live_tx_check, patch(
         "core.wallet_binding.get_binding", return_value={"address": wallet}
