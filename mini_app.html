@@ -1033,6 +1033,19 @@ async function loadBscAssets(){
     if(grid)grid.innerHTML='';
   }
 }
+function exchangeStatusDetail(detail){
+  const raw=String(detail||"").trim();
+  if(!raw||raw==="public state clean")return "בדיקות תקינות ההוראות, העסקאות והיתרות עברו.";
+  const live=raw.match(/^live_open_orders=([0-9]+)$/);
+  if(live)return "קיימות "+live[1]+" הוראות פתוחות.";
+  if(raw.includes("public exchange gate is CLOSED"))return "שער המסחר מוגדר כסגור.";
+  if(raw.includes("public runtime probe failed"))return "לא ניתן לאמת כרגע את סביבת ההרצה החיה. רענן ונסה שוב.";
+  if(raw.includes("Railway Exchange gate is not configured OPEN"))return "שער המסחר ב־Railway אינו מוגדר כפתוח.";
+  if(raw.includes("order_book="))return "נמצאו אי־התאמות בספר ההוראות.";
+  if(raw.includes("trades="))return "נמצאו אי־התאמות ברישומי העסקאות.";
+  if(raw.includes("money="))return "נמצאה אי־התאמה ביתרות או ברזרבות.";
+  return "בדיקת הבטיחות לא עברה. רענן את המסך ובדוק את סטטוס המסחר בבוט.";
+}
 function updateMarketNotice(ex){
   const line=$("marketNoticeLine"); const li=$("exLiquidityNotice"); const engine=$("exEngineStatus");
   const gateEl=$("exCanonicalGate"); const checkedEl=$("exGateCheckedAt");
@@ -1046,8 +1059,8 @@ function updateMarketNotice(ex){
     && status.execution_ready===true && status.public_ready===true
     && status.order_book_integrity===true && status.trade_integrity===true
     && status.money_invariants===true;
-  const gateLabel=gateOpen?"OPEN · PASS":gateKnown
-    ? String(status.public_gate||"CLOSED")+" · "+String(status.verdict||"BLOCKED")
+  const gateLabel=gateOpen?"פתוח · תקין":gateKnown
+    ? (status.public_gate==="CLOSED"?"סגור · חסום":"נדרשת בדיקה")
     : "לא אומת";
   if(engine)engine.textContent=gateOpen?"🟢 פתוח למסחר":gateKnown?"🔒 חסום למסחר":"⚪ לא אומת";
   if(gateEl)gateEl.textContent=gateLabel;
@@ -1056,19 +1069,19 @@ function updateMarketNotice(ex){
     if(gateOpen){
       li.innerHTML=orders||trades
         ? '🟢 <b>שער המסחר מאומת ופתוח</b> · '+orders+' הוראות פתוחות · '+trades+' עסקאות'
-        : '🟠 <b>שער המסחר פתוח, אך אין כרגע Orders/Trades.</b><br>אין כאן נתוני נזילות מדומים; התאמות יתחילו רק מול פקודות אמיתיות.';
+        : '🟠 <b>שער המסחר פתוח, אך אין כרגע הוראות או עסקאות.</b><br>אין כאן נתוני נזילות מדומים; התאמות יתחילו רק מול פקודות אמיתיות.';
     }else if(gateKnown){
-      li.innerHTML='🔒 <b>המסחר חסום כרגע</b> · '+esc(gateLabel)+'<br>'+esc(status.detail||'הפקודות ייחסמו עד שהבדיקה הקנונית תהיה תקינה.');
+      li.innerHTML='🔒 <b>המסחר חסום כרגע</b> · '+esc(gateLabel)+'<br>'+esc(exchangeStatusDetail(status.detail));
     }else{
       li.innerHTML='⚪ <b>לא ניתן לאמת כרגע את מצב המסחר.</b><br>אין להסתמך על סטטוס קודם; רענן ונסה שוב.';
     }
   }
   if(line)line.innerHTML=gateOpen
     ? (orders||trades
-        ? '🪙 <b>SLH Exchange פתוח</b> · '+orders+' Orders · '+trades+' Trades'
-        : '🪙 <b>שער SLH Exchange פתוח</b> · ספר הפקודות ריק כרגע.')
+        ? '🪙 <b>המסחר הפנימי ב־SLH פתוח</b> · '+orders+' הוראות · '+trades+' עסקאות'
+        : '🪙 <b>שער המסחר הפנימי פתוח</b> · ספר הפקודות ריק כרגע.')
     : gateKnown
-      ? '🔒 <b>SLH Exchange חסום</b> · '+esc(gateLabel)
+      ? '🔒 <b>המסחר הפנימי ב־SLH חסום</b> · '+esc(gateLabel)
       : '⚪ <b>המסחר הפנימי ב־SLH לא אומת</b> · אין להסתמך על סטטוס קודם.';
 }
 async function loadExchangeMyOrders(){
@@ -1077,8 +1090,8 @@ async function loadExchangeMyOrders(){
     const r=await fetch('/api/v1/exchange/my-orders',{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
     const rows=d.orders||[];
-    el.innerHTML=rows.length?rows.map(o=>'<div class="wallet-row"><span><b>'+esc(o.side==='buy'?'BUY':'SELL')+'</b> · '+esc(o.amount)+' SLH @ '+esc(o.price)+' C</span><button class="ghost" type="button" onclick="cancelExchangeOrder(\''+esc(o.id)+'\')">✖ ביטול</button></div>').join(''):'<div class="muted">אין לך הוראות פתוחות כרגע</div>';
-  }catch(e){el.innerHTML='<div class="muted">לא ניתן לטעון הוראות</div>'}
+    el.innerHTML=rows.length?rows.map(o=>'<div class="wallet-row"><span><b>'+esc(o.side==='buy'?'קנייה':'מכירה')+'</b> · '+esc(o.amount)+' SLH במחיר '+esc(o.price)+' Credits לכל SLH</span><button class="ghost" type="button" onclick="cancelExchangeOrder(\''+esc(o.id)+'\')">✖ ביטול</button></div>').join(''):'<div class="muted">אין לך הוראות פתוחות כרגע</div>';
+  }catch(e){el.innerHTML='<div class="muted">לא ניתן לטעון את ההוראות כרגע</div>'}
 }
 async function cancelExchangeOrder(id){
   if(!id)return;
@@ -1086,7 +1099,7 @@ async function cancelExchangeOrder(id){
     const r=await fetch('/api/v1/exchange/order/'+encodeURIComponent(id),{method:'DELETE',headers});const d=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
     toast('✅ הוראה בוטלה והרזרבה שוחררה'); await loadExchange();
-  }catch(e){toast('❌ ביטול נכשל: '+(e.message||e))}
+  }catch(e){toast('❌ לא ניתן לבטל את ההוראה כרגע. רענן ובדוק את מצבה.')}
 }
 
 function exchangePriceLabel(value){
