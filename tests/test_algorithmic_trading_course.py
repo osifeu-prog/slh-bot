@@ -17,7 +17,7 @@ def test_algorithmic_trading_course_is_registered_and_paid_in_stars():
     item = items["course_algo_trading"]
     assert item["type"] == "course"
     assert item["stars_only"] is True
-    assert item["price_stars"] == 299
+    assert item["price_stars"] == 150
     assert item["grant"]["course"] == "algo_trading_999"
 
 
