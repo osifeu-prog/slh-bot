@@ -177,6 +177,14 @@ test('More menu searches secondary screens and opens the chosen destination', as
   await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'false');
 });
 
+test('chart deep link opens the Exchange screen directly', async ({ page }) => {
+  await page.goto('/mini-app?screen=exchange&chart=1');
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+  await expect(page.locator('#exPriceChart')).toBeVisible();
+  await expect(page.locator('#exChartMeta')).toContainText('אין כאן מחיר DEX');
+});
+
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
   await page.locator('#slh-rewards-widget > button').click();
   const panel = page.locator('#slh-rewards-body');
