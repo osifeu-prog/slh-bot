@@ -1104,7 +1104,7 @@ async function cancelExchangeOrder(id){
 
 function exchangePriceLabel(value){
   const n=Number(value);
-  return Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:8}):'—';
+  return Number.isFinite(n)?n.toLocaleString('he-IL',{maximumFractionDigits:8}):'—';
 }
 function renderExchangeOrderbook(orders){
   const el=$("orderbook");if(!el)return;
@@ -1130,14 +1130,14 @@ function renderExchangeOrderbook(orders){
     const body=rows.slice(0,8).map(row=>{
       const width=Math.max(4,Math.min(100,row.amount/maxDepth*100));
       return '<div class="slh-ex-book-level '+side+'"><span class="slh-ex-depth-bar" style="width:'+width.toFixed(2)+'%"></span>'+
-        '<span class="slh-ex-book-price">'+exchangePriceLabel(row.price)+' C</span>'+
+        '<span class="slh-ex-book-price">'+exchangePriceLabel(row.price)+' Credits</span>'+
         '<span class="slh-ex-book-amount">'+fmt(row.amount)+' SLH<small>'+row.count+' הוראות</small></span></div>';
     }).join('');
     return '<div class="slh-ex-book-side"><div class="slh-ex-book-side-title">'+title+'</div>'+
       (body||'<div class="muted" style="font-size:11px;padding:8px 2px">אין הצעות בצד זה</div>')+'</div>';
   };
   el.innerHTML='<div class="slh-ex-book-grid">'+renderSide('buy',bids)+renderSide('sell',asks)+'</div>'+
-    (valid.length>16?'<div class="muted" style="font-size:10px;margin-top:8px">הגרף מציג עד 8 רמות מחיר לכל צד; נתוני ה־Best Bid/Ask מחושבים מכל ההוראות הפתוחות שהתקבלו.</div>':'');
+    (valid.length>16?'<div class="muted" style="font-size:10px;margin-top:8px">מוצגות עד 8 רמות מחיר לכל צד; המחירים המיטביים מחושבים מכל ההוראות הפתוחות שהתקבלו.</div>':'');
 }
 let __chartTF = '1h';
 function renderExchangeMarketPulse(orders,trades){
@@ -1148,8 +1148,8 @@ function renderExchangeMarketPulse(orders,trades){
   const asks=validOrders.filter(o=>o.side==='sell').sort((a,b)=>Number(a.price)-Number(b.price));
   const bid=bids.length?Number(bids[0].price):null;
   const ask=asks.length?Number(asks[0].price):null;
-  setText('exBestBid',bid===null?'אין הצעת קנייה':exchangePriceLabel(bid)+' C');
-  setText('exBestAsk',ask===null?'אין הצעת מכירה':exchangePriceLabel(ask)+' C');
+  setText('exBestBid',bid===null?'אין הצעת קנייה':exchangePriceLabel(bid)+' Credits');
+  setText('exBestAsk',ask===null?'אין הצעת מכירה':exchangePriceLabel(ask)+' Credits');
   if(bid!==null&&ask!==null){
     const spread=ask-bid;
     if(spread<0){
@@ -1157,7 +1157,7 @@ function renderExchangeMarketPulse(orders,trades){
     }else{
       const mid=(ask+bid)/2;
       const pct=mid>0?(spread/mid*100):0;
-      setText('exSpread',exchangePriceLabel(spread)+' C · '+pct.toLocaleString('en-US',{maximumFractionDigits:2})+'%');
+      setText('exSpread',exchangePriceLabel(spread)+' Credits לכל SLH · '+pct.toLocaleString('he-IL',{maximumFractionDigits:2})+'%');
     }
   }else{
     setText('exSpread','אין שני צדדים');
@@ -1165,7 +1165,7 @@ function renderExchangeMarketPulse(orders,trades){
   const validTrades=(Array.isArray(trades)?trades:[]).filter(t=>
     t&&Number.isFinite(Number(t.price))&&Number(t.price)>0&&Number.isFinite(Number(t.slh_amount))&&Number(t.slh_amount)>0
   );
-  setText('exTradeCount',String(validTrades.length)+' / 100');
+  setText('exTradeCount',String(validTrades.length)+' מתוך 100');
 }
 function setChartTF(tf){
   const allowed=['1m','15m','1h','1d'];
@@ -1177,6 +1177,9 @@ function setChartTF(tf){
     button.style.opacity=active?'1':'0.55';
   });
   return loadExchangeCandles(__chartTF);
+}
+function exchangeTimeframeLabel(tf){
+  return ({"1m":"דקה","15m":"15 דקות","1h":"שעה","1d":"יום"})[String(tf)]||"שעה";
 }
 function formatCandleTime(epoch,tf){
   const date=new Date(Number(epoch)*1000);
