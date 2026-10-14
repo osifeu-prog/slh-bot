@@ -209,10 +209,11 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             "blockers": ["LEDGER_UNREADABLE"], "findings": [],
         }
 
-    rows = [
-        item for item in ledger
+    indexed_rows = [
+        (index, item) for index, item in enumerate(ledger)
         if isinstance(item, dict) and item.get("reason") == "bnb:deposit"
     ]
+    rows = [item for _index, item in indexed_rows]
     if len(rows) > MAX_AUDIT_ROWS:
         return {
             "scope": "read_only", "status": "BLOCKED",
@@ -284,7 +285,10 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
         if not isinstance(meta, dict):
             continue
         value = str(meta.get("tx_hash") or "").strip().lower()
-        if value:
+        # A legitimate reversal intentionally refers to the source TX hash.
+        # Count hashes among deposit credits only; correction records are
+        # separately validated against their own idempotency/audit keys.
+        if value and item.get("reason") == "bnb:deposit":
             hash_counts[value] = hash_counts.get(value, 0) + 1
         key = str(meta.get("idempotency_key") or "")
         if key:
@@ -294,7 +298,7 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
     blockers: set[str] = set()
     checked = 0
 
-    for row in rows:
+    for source_index, row in indexed_rows:
         checked += 1
         meta = row.get("meta")
         meta = meta if isinstance(meta, dict) else {}
@@ -397,7 +401,17 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             issues.append("TX_SENDER_NOT_CURRENTLY_BOUND")
 
         unique_issues = sorted(set(issues))
-        if unique_issues:
+        reported_issues = list(unique_issues)
+        if unique_issues == ["SELF_TRANSFER_NOT_A_DEPOSIT"] and bound and _valid_audited_reversal(
+            db, ledger, source_index, row, tx_hash, sender, destination,
+            treasury, amount_wei, block_number, confirmations_required, bound,
+        ):
+            status = "RESOLVED_BY_AUDITED_REVERSAL"
+            reported_issues = [
+                "SELF_TRANSFER_NOT_A_DEPOSIT",
+                "RESOLVED_BY_AUDITED_REVERSAL",
+            ]
+        elif unique_issues:
             status = "BLOCKED"
             blockers.update(unique_issues)
         else:
@@ -407,14 +421,14 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             "time": str(row.get("time") or "")[:40],
             "tx_suffix": suffix,
             "status": status,
-            "issues": unique_issues,
+            "issues": reported_issues,
             "confirmations": confirmations,
             "credits_match_chain": posted is not None and expected_credits is not None
             and abs(posted - expected_credits) <= max(EPSILON, abs(expected_credits) * 1e-9),
             "sender_equals_destination": bool(sender and destination and sender.lower() == destination.lower()),
         })
 
-    failed = sum(1 for item in findings if item.get("status") != "PASS")
+    failed = sum(1 for item in findings if item.get("status") == "BLOCKED")
     return {
         "scope": "read_only",
         "status": "BLOCKED" if failed or blockers else "PASS",
