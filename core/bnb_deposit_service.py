@@ -33,8 +33,9 @@ def settle_bnb_deposit(uid, tx_hash):
         raise ValueError("BNB_WALLET_NOT_VERIFIED")
 
     verified = verify_bnb_deposit(tx_hash)
-    if not verified.get("ok"):
-        raise ValueError(verified.get("error", "BNB_TX_NOT_VERIFIED"))
+    if not isinstance(verified, dict) or verified.get("ok") is not True:
+        error = verified.get("error") if isinstance(verified, dict) else None
+        raise ValueError(str(error or "BNB_TX_NOT_VERIFIED"))
 
     sender = str(verified.get("from", ""))
     bound = str(binding.get("address", ""))
