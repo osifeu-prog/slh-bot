@@ -185,6 +185,16 @@ def test_corrupt_reversal_audit_does_not_resolve_self_transfer():
     assert "SELF_TRANSFER_NOT_A_DEPOSIT" in result["findings"][0]["issues"]
 
 
+def test_non_integer_reversal_metadata_does_not_resolve_self_transfer():
+    db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
+    db["ledger"][1]["meta"]["block"] = 80.5
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+
+
 def test_duplicate_idempotency_key_blocks_audit():
     db = _db(duplicate=True)
     result = _run(db, FakeEth())
