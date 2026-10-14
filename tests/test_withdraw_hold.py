@@ -1,6 +1,8 @@
 import math
+import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from handlers.withdraw_request_handler import create_withdrawal, resolve_withdrawal
 
@@ -15,6 +17,40 @@ def make_db(credits=10.0):
 
 
 class WithdrawTests(unittest.TestCase):
+    def setUp(self):
+        self.gate_patch = patch.dict(os.environ, {"WITHDRAWALS_OPEN": "1"}, clear=False)
+        self.gate_patch.start()
+        self.addCleanup(self.gate_patch.stop)
+
+    def test_closed_gate_does_not_hold_credits_or_create_a_request(self):
+        db = make_db()
+        before = {
+            "credits": db["users"]["1"]["wallet"]["credits"],
+            "ledger": list(db["ledger"]),
+            "request_store_absent": "withdrawal_requests" not in db,
+        }
+        with patch.dict(os.environ, {"WITHDRAWALS_OPEN": "0"}, clear=False):
+            with self.assertRaisesRegex(ValueError, "WITHDRAWALS_CLOSED"):
+                create_withdrawal(db, "1", 4.0, ADDR)
+
+        self.assertEqual(db["users"]["1"]["wallet"]["credits"], before["credits"])
+        self.assertEqual(db["ledger"], before["ledger"])
+        self.assertTrue(before["request_store_absent"])
+        self.assertNotIn("withdrawal_requests", db)
+
+    def test_closed_gate_blocks_approval_but_allows_safe_rejection_refund(self):
+        db = make_db()
+        req_id = create_withdrawal(db, "1", 4.0, ADDR)
+        with patch.dict(os.environ, {"WITHDRAWALS_OPEN": "0"}, clear=False):
+            with self.assertRaisesRegex(ValueError, "WITHDRAWALS_CLOSED"):
+                resolve_withdrawal(db, req_id, "approve", "9", "manual-payout-ref")
+            self.assertEqual(db["withdrawal_requests"][req_id]["status"], "pending")
+            result = resolve_withdrawal(db, req_id, "reject", "9")
+
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(db["users"]["1"]["wallet"]["credits"], 10.0)
+        self.assertEqual(db["ledger"][-1]["reason"], "withdraw:refund")
+
     def test_hold_deducts_credits_and_records_idempotent_ledger_entry(self):
         db = make_db()
         req_id = create_withdrawal(db, "1", 4.0, ADDR)
