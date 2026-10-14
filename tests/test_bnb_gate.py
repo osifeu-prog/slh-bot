@@ -60,7 +60,7 @@ def test_bnb_gate_opens_only_with_flag_config_and_revalidated_empirical_proof():
         return_value=_cfg(),
     ), patch(
         "core.bnb_gate.state_manager.load_db",
-        return_value={"users": {}, "bsc_settings": _cfg(), "wallet_bindings": {}},
+        return_value={"users": {}, "bsc_settings": _cfg(), "wallet_bindings": {}, "ledger": []},
     ), patch(
         "core.bnb_gate._empirical_settlement_evidence",
         return_value={"status": "PASS", "tx_hash": "fixture"},
