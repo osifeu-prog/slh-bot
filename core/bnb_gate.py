@@ -569,12 +569,29 @@ def bnb_opening_evidence() -> dict:
     if configured_chain != "56":
         evidence["blockers"].append("CONFIGURED_BSC_CHAIN_ID_NOT_56")
     empirical = _empirical_settlement_evidence(current_db) if db_readable else None
+    effective_config = _effective_config(current_db)
     empirical_valid = (
-        _empirical_evidence_revalidated(empirical, _effective_config(current_db), db=current_db)
+        _empirical_evidence_revalidated(empirical, effective_config, db=current_db)
         if db_readable
         else False
     )
-    evidence["gate_open"] = bool(gate.get("effective_open") and empirical_valid)
+    historical_audit = _audit_historical_bnb_deposits(current_db, effective_config)
+    evidence["historical_deposits"] = {
+        "status": "PASS" if historical_audit.get("ok") else "FAIL",
+        "rows_checked": int(historical_audit.get("rows_checked") or 0),
+        "finding_count": int(historical_audit.get("finding_count") or len(historical_audit.get("findings") or [])),
+        "findings": list(historical_audit.get("findings") or []),
+    }
+    evidence["checks"]["historical_deposits"] = {
+        "status": "PASS" if historical_audit.get("ok") else "FAIL",
+        "rows_checked": int(historical_audit.get("rows_checked") or 0),
+        "finding_count": int(historical_audit.get("finding_count") or len(historical_audit.get("findings") or [])),
+    }
+    if not historical_audit.get("ok") and "HISTORICAL_BNB_DEPOSIT_LEDGER_REVALIDATION_FAILED" not in evidence["blockers"]:
+        evidence["blockers"].append("HISTORICAL_BNB_DEPOSIT_LEDGER_REVALIDATION_FAILED")
+    evidence["gate_open"] = bool(
+        gate.get("effective_open") and empirical_valid and historical_audit.get("ok")
+    )
     if empirical_valid:
         for check in (
             "wallet_binding",
@@ -648,7 +665,10 @@ def bnb_deposits_open() -> bool:
 
     empirical = _empirical_settlement_evidence(db)
     config = _effective_config(db)
-    return _empirical_evidence_revalidated(empirical, config, db=db)
+    if not _empirical_evidence_revalidated(empirical, config, db=db):
+        return False
+    historical_audit = _audit_historical_bnb_deposits(db, config)
+    return bool(historical_audit.get("ok"))
 
 def bnb_settlement_allowed(uid, db=None) -> bool:
     """Allow normal settlement only when OPEN, or owner canary while the gate stays closed.
