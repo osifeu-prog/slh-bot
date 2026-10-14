@@ -39,6 +39,17 @@ def _finite_number(value: Any) -> float | None:
     return result if math.isfinite(result) else None
 
 
+def _exact_nonnegative_int(value: Any) -> int | None:
+    """Parse persisted integer metadata without truncating floats or accepting booleans."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value >= 0:
+        return value
+    if isinstance(value, str) and re.fullmatch(r"[0-9]+", value):
+        return int(value)
+    return None
+
+
 def _binding_for_uid(db: dict, uid: str) -> tuple[str | None, str | None]:
     registry = db.get("wallet_bindings")
     if not isinstance(registry, dict):
@@ -122,19 +133,22 @@ def _valid_audited_reversal(
     audit_amount = _finite_number(audit.get("amount"))
     audit_after = _finite_number(audit.get("balance_after"))
     audit_nominal = _finite_number(audit.get("nominal_credits_reversed"))
-    try:
-        source_wei = int(source_meta.get("bnb_amount_wei") or 0)
-        reversal_wei = int(meta.get("amount_wei") or 0)
-        reversal_block = int(meta.get("block") or 0)
-        audit_block = int(audit.get("block") or 0)
-        reversal_confirms = int(meta.get("confirmations") or 0)
-        audit_confirms = int(audit.get("confirmations") or 0)
-        reversal_required = int(meta.get("required_confirmations") or 0)
-        audit_required = int(audit.get("required_confirmations") or 0)
-        reversal_chain = int(meta.get("chain_id") or 0)
-        audit_chain = int(audit.get("chain_id") or 0)
-        audit_source_index = int(meta.get("source_ledger_index"))
-    except (TypeError, ValueError, OverflowError):
+    source_wei = _exact_nonnegative_int(source_meta.get("bnb_amount_wei"))
+    reversal_wei = _exact_nonnegative_int(meta.get("amount_wei"))
+    reversal_block = _exact_nonnegative_int(meta.get("block"))
+    audit_block = _exact_nonnegative_int(audit.get("block"))
+    reversal_confirms = _exact_nonnegative_int(meta.get("confirmations"))
+    audit_confirms = _exact_nonnegative_int(audit.get("confirmations"))
+    reversal_required = _exact_nonnegative_int(meta.get("required_confirmations"))
+    audit_required = _exact_nonnegative_int(audit.get("required_confirmations"))
+    reversal_chain = _exact_nonnegative_int(meta.get("chain_id"))
+    audit_chain = _exact_nonnegative_int(audit.get("chain_id"))
+    audit_source_index = _exact_nonnegative_int(meta.get("source_ledger_index"))
+    if any(value is None for value in (
+        source_wei, reversal_wei, reversal_block, audit_block,
+        reversal_confirms, audit_confirms, reversal_required,
+        audit_required, reversal_chain, audit_chain, audit_source_index,
+    )):
         return False
 
     if any(value is None for value in (
@@ -380,10 +394,7 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
         if is_quarantined_bsc_address(sender) or is_quarantined_bsc_address(destination):
             issues.append("QUARANTINED_ADDRESS_IN_DEPOSIT")
 
-        try:
-            stored_amount_wei = int(meta.get("bnb_amount_wei") or 0)
-        except (TypeError, ValueError, OverflowError):
-            stored_amount_wei = 0
+        stored_amount_wei = _exact_nonnegative_int(meta.get("bnb_amount_wei")) or 0
         if stored_amount_wei <= 0 or stored_amount_wei != amount_wei:
             issues.append("STORED_AMOUNT_WEI_MISMATCH")
 
