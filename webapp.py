@@ -2245,7 +2245,7 @@ def bnb_wallet_empirical_smoke():
                     "required_confirmations": verified.get("required_confirmations"),
                     "block": verified.get("block"),
                 })), 202
-            return jsonify({"error": verified.get("error", "BNB_TX_NOT_VERIFIED")}), 400
+            return jsonify({"error": str(verified.get("error") or "BNB_TX_NOT_VERIFIED")}), 400
 
         from core.bnb_empirical_smoke import run
         result = run(uid, tx_hash)
