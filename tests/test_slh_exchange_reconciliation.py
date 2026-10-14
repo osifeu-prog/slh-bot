@@ -86,6 +86,10 @@ class ExchangeReconciliationTests(unittest.TestCase):
     def test_no_matched_reserves_is_unknown_not_pass(self):
         report = audit_db({"exchange_orders": {}, "ledger": [], "slh_token_ledger": []})
         self.assertEqual(report["status"], "UNKNOWN")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn("RESERVE_HISTORY_NOT_PROVEN", {
+            item["code"] for item in report["release_blocking_findings"]
+        })
         self.assertIn("NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND", {item["code"] for item in report["findings"]})
 
     def test_invalid_reserve_amount_fails_closed(self):
