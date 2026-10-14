@@ -95,13 +95,13 @@ def _revenue_report(days):
         "💰 SLH REVENUE",
         "",
         f"תקופה: {days} ימים",
-        f"אירועי הכנסה מאומתים: {len(period)}",
+        f"אירועי הכנסה שעברו אימות מקומי: {len(period)}",
         f"לקוחות משלמים: {len(customers)}",
     ]
     for currency, total in sorted(totals.items()):
         lines.append(f"• {currency}: {total:g}")
     if not period:
-        lines.append("• כרגע אין אירועי הכנסה מאומתים בתקופה.")
+        lines.append("• אין אירועי הכנסה שעברו אימות מקומי בתקופה.")
     lines += [
         "",
         "מקור: revenue_ledger עם התאמה לרשומת התשלום/ההזמנה המקומית.",
