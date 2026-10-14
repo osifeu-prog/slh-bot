@@ -100,6 +100,29 @@ def test_clean_historical_bnb_deposit_passes():
     assert result["findings"][0]["credits_match_chain"] is True
 
 
+def test_rpc_returning_a_different_transaction_hash_blocks_audit():
+    class WrongHashEth(FakeEth):
+        def get_transaction(self, tx_hash):
+            result = super().get_transaction(tx_hash)
+            result["hash"] = "0x" + "b" * 64
+            return result
+
+    result = _run(_db(), WrongHashEth())
+    assert result["status"] == "BLOCKED"
+    assert "TX_HASH_MISMATCH" in result["findings"][0]["issues"]
+
+
+def test_transaction_without_a_mined_block_is_not_confirmed_by_large_tip_height():
+    result = _run(_db(), FakeEth())
+    result["findings"][0]["confirmations"] = 0  # no reliance on test-computed pseudo-confirmations
+    bad_block = FakeEth()
+    bad_block.receipt["blockNumber"] = 0
+    result = _run(_db(), bad_block)
+
+    assert result["status"] == "BLOCKED"
+    assert "TX_BLOCK_NUMBER_INVALID" in result["findings"][0]["issues"]
+
+
 def test_self_transfer_is_not_accepted_as_a_historical_deposit():
     db = _db(sender=SENDER, destination=SENDER)
     result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
