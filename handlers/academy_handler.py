@@ -20,32 +20,12 @@ def _access_label(data):
 
 
 def _paid_course_lock(uid, course_id):
-    """Return a lock message if the course is paid and the user is not enrolled.
-
-    Enrollment for paid courses happens only through the store grant
-    (Stars purchase or VIP), which calls academy_manager.start_course directly.
-    Users who already started the course keep access. The owner is never locked.
-    """
+    """Return a purchase message when the central course authority denies access."""
     course = academy_manager.get_courses().get(course_id) or {}
     if course.get("access") != "paid":
         return None
-    try:
-        from core.authority import is_owner
-        if is_owner(uid):
-            return None
-    except Exception:
-        pass
-    if academy_manager.get_course(uid, course_id):
+    if lesson_engine.has_course_access(uid, course_id):
         return None
-    # Active VIP includes every course (VIP = all benefits).
-    try:
-        import time
-        from core import profile_manager
-        user = profile_manager.get_user(str(uid)) or {}
-        if int(user.get("vip_access_until", 0) or 0) > time.time():
-            return None
-    except Exception:
-        pass
     item = course.get("store_item", "")
     price = _stars_price(item)
     return (
@@ -156,7 +136,9 @@ def register(bot):
 
         if not result.get("ok"):
             error = result.get("error")
-            if error == "sequential_access":
+            if error == "course_locked":
+                message = _paid_course_lock(uid, course_id) or "🔒 אין לך הרשאה לקורס הזה."
+            elif error == "sequential_access":
                 message = "🔒 השלב נעול. יש להשלים קודם את השלב הקודם."
             elif error == "course_not_started":
                 message = "❌ הקורס עדיין לא התחיל. התחל דרך /courses"
