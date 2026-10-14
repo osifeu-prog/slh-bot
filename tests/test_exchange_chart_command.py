@@ -53,10 +53,19 @@ def test_chart_command_is_registered_and_returns_a_telegram_web_app_button(monke
     register(bot)
     assert "chart" in bot.handlers
 
-    bot.handlers["chart"](msg)
-
+    group_msg = SimpleNamespace(
+        text="/chart",
+        from_user=SimpleNamespace(id=123),
+        chat=SimpleNamespace(type="group"),
+    )
+    bot.handlers["chart"](group_msg)
     assert len(bot.replies) == 1
-    _, reply_text, options = bot.replies[0]
+    assert "שיחה הפרטית" in bot.replies[0][1]
+    assert "reply_markup" not in bot.replies[0][2]
+
+    bot.handlers["chart"](msg)
+    assert len(bot.replies) == 2
+    _, reply_text, options = bot.replies[1]
     assert "עסקאות פנימיות שהושלמו בלבד" in reply_text
     markup = options["reply_markup"]
     button = markup.keyboard[0][0]
