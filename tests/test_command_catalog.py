@@ -67,7 +67,7 @@ def test_help_metadata_covers_existing_runtime_commands():
     commands = [
         "/check_ux",
         "/check_bnb_deposits",
-        "/biz,
+        "/biz",
         "/biz_users",
         "/biz_revenue",
         "/biz_ai",
