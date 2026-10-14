@@ -260,6 +260,144 @@ def _empirical_evidence_revalidated(empirical: dict | None, gate: dict, db=None)
         return False
 
 
+
+def _audit_historical_bnb_deposits(db, config) -> dict:
+    """Revalidate every persisted BNB credit against its chain transaction.
+
+    This is read-only. A valid current smoke proof must not conceal a separate
+    historical ledger row whose transaction, wallet, destination, amount, or
+    idempotency record no longer validates.
+    """
+    if not isinstance(db, dict):
+        return {"ok": False, "rows_checked": 0, "findings": [{"index": None, "issues": ["DB_UNREADABLE"]}]}
+
+    ledger = db.get("ledger")
+    if not isinstance(ledger, list):
+        return {"ok": False, "rows_checked": 0, "findings": [{"index": None, "issues": ["LEDGER_SHAPE_INVALID"]}]}
+
+    deposits = [
+        (index, entry)
+        for index, entry in enumerate(ledger)
+        if isinstance(entry, dict) and str(entry.get("reason") or "") == "bnb:deposit"
+    ]
+    findings = []
+    binding_cache = {}
+    treasury = str(config.get("treasury_wallet") or "").strip().lower()
+    required_confirmations = int(config.get("confirmations") or 15)
+
+    for index, entry in deposits:
+        issues = []
+        meta = entry.get("meta")
+        if not isinstance(meta, dict):
+            meta = {}
+            issues.append("DEPOSIT_META_INVALID")
+
+        tx_hash = str(meta.get("tx_hash") or "").strip()
+        if not re.fullmatch(r"0x[0-9a-fA-F]{64}", tx_hash):
+            issues.append("TX_HASH_INVALID")
+            tx_hash = ""
+
+        if tx_hash:
+            idempotency_key = f"bnb:deposit:{tx_hash.lower()}"
+            if str(meta.get("idempotency_key") or "").lower() != idempotency_key:
+                issues.append("IDEMPOTENCY_KEY_MISMATCH")
+            matching_keys = [
+                item for item in ledger
+                if isinstance(item, dict)
+                and isinstance(item.get("meta"), dict)
+                and str(item["meta"].get("idempotency_key") or "").lower() == idempotency_key
+            ]
+            if len(matching_keys) != 1:
+                issues.append("IDEMPOTENCY_KEY_NOT_UNIQUE")
+
+            try:
+                from core.deposit_monitor import verify_bnb_deposit
+                verified = verify_bnb_deposit(tx_hash)
+            except Exception:
+                verified = {"ok": False}
+
+            if not isinstance(verified, dict) or verified.get("ok") is not True:
+                issues.append("CHAIN_TX_NOT_VERIFIED")
+            else:
+                verified_hash = str(verified.get("tx_hash") or "").strip()
+                sender = str(verified.get("from") or "").strip()
+                receiver = str(verified.get("to") or "").strip()
+                try:
+                    amount_wei = int(verified.get("amount_wei") or 0)
+                    confirmations = int(verified.get("confirmations") or 0)
+                except (TypeError, ValueError, OverflowError):
+                    amount_wei = 0
+                    confirmations = 0
+
+                uid = str(entry.get("uid") or "").strip()
+                if not verified_hash or verified_hash.lower() != tx_hash.lower():
+                    issues.append("CHAIN_TX_HASH_MISMATCH")
+                if not uid:
+                    issues.append("DEPOSIT_UID_MISSING")
+                else:
+                    if uid not in binding_cache:
+                        try:
+                            from core.wallet_binding import get_binding
+                            binding_cache[uid] = get_binding(uid)
+                        except Exception:
+                            binding_cache[uid] = None
+                    binding = binding_cache[uid]
+                    bound_address = str(binding.get("address") or "").strip() if isinstance(binding, dict) else ""
+                    if not bound_address or sender.lower() != bound_address.lower():
+                        issues.append("CHAIN_SENDER_BINDING_MISMATCH")
+                if not treasury or receiver.lower() != treasury:
+                    issues.append("CHAIN_TREASURY_MISMATCH")
+                if str(meta.get("from") or "").strip().lower() != sender.lower():
+                    issues.append("LEDGER_SENDER_MISMATCH")
+                if str(meta.get("to") or "").strip().lower() != receiver.lower():
+                    issues.append("LEDGER_RECEIVER_MISMATCH")
+                try:
+                    stored_wei = int(meta.get("bnb_amount_wei") or 0)
+                except (TypeError, ValueError, OverflowError):
+                    stored_wei = 0
+                if amount_wei <= 0 or stored_wei != amount_wei:
+                    issues.append("LEDGER_AMOUNT_WEI_MISMATCH")
+                if confirmations < required_confirmations:
+                    issues.append("CONFIRMATIONS_INSUFFICIENT")
+
+                expected_credits = (amount_wei / 10**18) * 1000 if amount_wei > 0 else None
+                raw_credits = entry.get("amount")
+                raw_before = entry.get("before")
+                raw_after = entry.get("after")
+                if any(isinstance(value, bool) for value in (raw_credits, raw_before, raw_after)):
+                    credits = before = after = float("nan")
+                else:
+                    try:
+                        credits = float(raw_credits)
+                        before = float(raw_before)
+                        after = float(raw_after)
+                    except (TypeError, ValueError, OverflowError):
+                        credits = before = after = float("nan")
+                if not all(math.isfinite(value) for value in (credits, before, after)):
+                    issues.append("LEDGER_BALANCE_FIELDS_INVALID")
+                elif expected_credits is None or abs(credits - expected_credits) > max(1e-9, abs(expected_credits) * 1e-9):
+                    issues.append("LEDGER_CREDITS_MISMATCH")
+                elif abs((before + credits) - after) > 1e-9:
+                    issues.append("LEDGER_BALANCE_DELTA_MISMATCH")
+        else:
+            # Never try to infer which on-chain transaction an old credit row meant.
+            pass
+
+        if issues:
+            findings.append({
+                "index": index,
+                "tx_suffix": tx_hash[-8:] if tx_hash else None,
+                "issues": sorted(set(issues)),
+            })
+
+    return {
+        "ok": not findings,
+        "rows_checked": len(deposits),
+        "finding_count": len(findings),
+        "findings": findings,
+    }
+
+
 def bnb_opening_evidence() -> dict:
     """Read-only evidence for whether BNB could safely be opened.
 
