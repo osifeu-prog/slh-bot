@@ -23,12 +23,28 @@ class BNBCanaryTests(unittest.TestCase):
         self.assertEqual(result["credits"], 1.0)
 
     def test_owner_canary_is_blocked_when_historical_bnb_audit_fails(self):
-        with patch.dict(os.environ, {"BNB_DEPOSITS_OPEN": "0", "BNB_DEPOSITS_CANARY_UID": "8789977826"}, clear=False), \\
-             patch.object(service, "bnb_deposits_open", return_value=False), \\
-             patch.object(service, "bnb_readiness", return_value={"ready": True}), \\
-             patch.object(service.state_manager, "load_db", return_value={"ledger": [], "users": {"8789977826": {"wallet": {"credits": 7.19}}}}), \\
-             patch("core.bnb_history_audit.audit_bnb_deposit_history", return_value={"status": "BLOCKED"}), \\
-             patch.object(service, "verify_bnb_deposit") as verify:
+        with (
+            patch.dict(
+                os.environ,
+                {"BNB_DEPOSITS_OPEN": "0", "BNB_DEPOSITS_CANARY_UID": "8789977826"},
+                clear=False,
+            ),
+            patch.object(service, "bnb_deposits_open", return_value=False),
+            patch.object(service, "bnb_readiness", return_value={"ready": True}),
+            patch.object(
+                service.state_manager,
+                "load_db",
+                return_value={
+                    "ledger": [],
+                    "users": {"8789977826": {"wallet": {"credits": 7.19}}},
+                },
+            ),
+            patch(
+                "core.bnb_history_audit.audit_bnb_deposit_history",
+                return_value={"status": "BLOCKED"},
+            ),
+            patch.object(service, "verify_bnb_deposit") as verify,
+        ):
             with self.assertRaisesRegex(ValueError, "BNB_DEPOSITS_CLOSED"):
                 service.settle_bnb_deposit("8789977826", "0xTX")
         verify.assert_not_called()
