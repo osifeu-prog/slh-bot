@@ -86,12 +86,19 @@ def register(bot):
             bot.reply_to(m, "❌ קורס לא נמצא")
             return
 
+        if not lesson_engine.has_course_access(uid, course_id):
+            from handlers.academy_handler import _paid_course_lock
+            locked = _paid_course_lock(uid, course_id)
+            bot.reply_to(
+                m,
+                locked or "🔒 אין לך הרשאה לקורס הזה."
+            )
+            return
+
         if not lesson_engine.can_access_lesson(uid, course_id, stage):
             progress = academy_manager.get_course(uid, course_id) or {}
             completed = set(progress.get("completed", []) or [])
-            if stage in completed:
-                pass
-            else:
+            if stage not in completed:
                 bot.reply_to(
                     m,
                     "🔒 השיעור נעול. יש להשלים קודם את השיעור הקודם."
@@ -180,7 +187,10 @@ def register(bot):
 
         if not result.get("ok"):
             error = result.get("error")
-            if error == "course_not_started":
+            if error == "course_locked":
+                from handlers.academy_handler import _paid_course_lock
+                message = _paid_course_lock(uid, course_id) or "🔒 אין לך הרשאה לקורס הזה."
+            elif error == "course_not_started":
                 message = "❌ הקורס עדיין לא התחיל. התחל דרך /academy"
             elif error == "sequential_access":
                 message = "🔒 אי אפשר להשלים את השלב הזה עדיין. יש להשלים קודם את השלב הקודם."
