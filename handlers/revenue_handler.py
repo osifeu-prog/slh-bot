@@ -11,16 +11,7 @@ from core.revenue_ledger import summary as revenue_summary
 
 
 def _canonical_xtr_rows(db):
-    rows = db.get("revenue_ledger", [])
-    if not isinstance(rows, list):
-        return []
-    return [
-        row for row in rows
-        if isinstance(row, dict)
-        and str(row.get("currency", "")) == "XTR"
-        and float(row.get("amount", 0) or 0) > 0
-        and str(row.get("reference", "")).strip()
-    ]
+    return revenue_ledger.reportable_rows(db, currency="XTR")
 
 
 def _label(row):
@@ -217,9 +208,15 @@ def register(bot):
             bot.reply_to(msg, "⛔️ Admin only")
             return
         data = revenue_summary()
-        lines = [f"📈 Revenue ledger events: {data['events']}"]
+        lines = [
+            f"📈 Revenue ledger verified events: {data['events']}",
+            f"Raw ledger rows: {data.get('raw_events', data['events'])}",
+            f"Excluded test/legacy events: {data.get('excluded_test_events', 0)}",
+        ]
         for currency, total in sorted(data["totals"].items()):
-            lines.append(f"• {currency}: {total:g}")
+            lines.append(f"• Verified {currency}: {total:g}")
+        for currency, total in sorted(data.get("excluded_test_totals", {}).items()):
+            lines.append(f"• Excluded test/legacy {currency}: {total:g}")
         lines.append("Internal Credit spending is not counted as cash revenue.")
         bot.reply_to(msg, "\n".join(lines))
 
