@@ -458,7 +458,7 @@ def bnb_opening_evidence() -> dict:
                 "issues": list(item.get("issues") or [])[:6],
             }
             for item in (history_audit.get("findings") or [])
-            if isinstance(item, dict) and item.get("status") != "PASS"
+            if isinstance(item, dict) and item.get("status") not in {"PASS", "RESOLVED_BY_AUDITED_REVERSAL"}
         ][:10],
     }
     history_valid = str(history_audit.get("status") or "").upper() == "PASS"
