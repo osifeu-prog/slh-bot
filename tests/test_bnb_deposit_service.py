@@ -32,9 +32,14 @@ class BnbDepositServiceTests(unittest.TestCase):
         get_binding.return_value = {"uid": "u1", "address": "0xBound"}
         # This reproduces the legacy shape returned for a recipient mismatch:
         # ok=False with diagnostic fields but no "error" key.
-        verify.return_value = {"ok": False, "to": "0xBound", "treasury": "0xOther"}
-        with self.assertRaisesRegex(ValueError, "BNB_TX_NOT_VERIFIED"):
-            bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
+        verify.side_effect = [
+            {"ok": False, "to": "0xBound", "treasury": "0xOther"},
+            {"ok": False, "error": None, "to": "0xBound", "treasury": "0xOther"},
+        ]
+        # Both the omitted-error and explicit-null-error legacy shapes must fail closed.
+        for _ in range(2):
+            with self.assertRaisesRegex(ValueError, "BNB_TX_NOT_VERIFIED"):
+                bnb_deposit_service.settle_bnb_deposit("u1", "0xTX")
         record.assert_not_called()
 
     @patch.object(bnb_deposit_service, "record_transaction", return_value={"status": "APPLIED", "balance_after": 1234})
