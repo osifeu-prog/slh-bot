@@ -92,10 +92,10 @@ def _revenue_report(days):
             customers.add(str(row["uid"]))
 
     lines = [
-        "💰 SLH REVENUE",
+        "💰 SLH GROSS RECEIPTS (NOT PROFIT)",
         "",
         f"תקופה: {days} ימים",
-        f"אירועי הכנסה שעברו אימות מקומי: {len(period)}",
+        f"אירועי תקבול ברוטו שעברו אימות מקומי: {len(period)}",
         f"לקוחות משלמים: {len(customers)}",
     ]
     for currency, total in sorted(totals.items()):
@@ -105,7 +105,7 @@ def _revenue_report(days):
     lines += [
         "",
         "מקור: revenue_ledger עם התאמה לרשומת התשלום/ההזמנה המקומית.",
-        "אימות חי מול Telegram מבוצע בנפרד; הוצאה פנימית של Credits אינה הכנסה כספית.",
+        "הסכומים הם תקבולים ברוטו, לא רווח; עמלות, עלויות, החזרים והתחייבויות לא קוזזו. אימות חי מול Telegram בנפרד.",
     ]
     return "\n".join(lines)
 
@@ -210,7 +210,7 @@ def _business_summary():
     return (
         "📊 SLH BUSINESS CONTROL\n\n"
         f"👥 Users: {len(users)}\n"
-        f"💰 Verified revenue: {xtr:g} XTR\n"
+        f"💰 Verified gross receipts (not profit): {xtr:g} XTR\n"
         f"🧾 Revenue events: {len(revenue_rows)}\n"
         f"👑 Active VIP: {active_vip}\n"
         f"🛍 Fulfilled Stars orders: {fulfilled}\n"
