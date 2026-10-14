@@ -1270,6 +1270,57 @@ def register(bot):
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
 
+    @bot.message_handler(commands=["chart"])
+    def chart_cmd(msg):
+        """Open the Exchange chart in the authenticated Telegram Mini App."""
+        import os
+        from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+        from telebot import types
+
+        base = (os.getenv("SLH_MINI_APP_URL") or "").strip()
+        if not base:
+            base = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+
+        try:
+            parts = urlsplit(base)
+            if parts.scheme.lower() != "https" or not parts.netloc:
+                raise ValueError("Mini App URL must use HTTPS")
+            query = dict(parse_qsl(parts.query, keep_blank_values=True))
+            # The Mini App already supports screen=exchange as a start destination.
+            query["screen"] = "exchange"
+            url = urlunsplit((
+                parts.scheme,
+                parts.netloc,
+                parts.path,
+                urlencode(query),
+                parts.fragment,
+            ))
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "📈 פתח גרף מחיר",
+                    web_app=types.WebAppInfo(url=url),
+                )
+            )
+        except Exception:
+            bot.reply_to(
+                msg,
+                "לא ניתן להכין קישור מאובטח לגרף כרגע. בדוק את הגדרת SLH Mini App URL.",
+            )
+            return
+
+        bot.reply_to(
+            msg,
+            "📈 <b>מסחר פנימי ב־SLH — גרף מחיר</b>\n\n"
+            "פתח את מסך הבורסה כדי לראות:\n"
+            "• גרף נרות לפי עסקאות פנימיות שהושלמו\n"
+            "• ספר הוראות עם עומק לפי רמות מחיר\n"
+            "• מחיר אחרון, מחיר קנייה מיטבי ומחיר מכירה מיטבי\n\n"
+            "הנתונים משקפים את ה־Exchange הפנימי, ואינם מחיר DEX חיצוני.",
+            parse_mode="HTML",
+            reply_markup=markup,
+        )
+
     @bot.message_handler(commands=["orders"])
     def orders_cmd(msg):
         db = state_manager.load_db()
