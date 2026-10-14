@@ -9,7 +9,7 @@ def test_primary_navigation_prioritizes_home_wallet_exchange_and_market():
     for element_id in ("bh", "bw", "bx", "bmarket", "bmore"):
         assert f'id="{element_id}"' in html
     assert 'aria-label="בורסה ומסחר פנימי"' in html
-    assert "show('exchange');loadExchange()" in html
+    assert `onclick="show('exchange')"` in html
 
 
 def test_more_menu_search_covers_secondary_screens():
