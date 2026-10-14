@@ -152,6 +152,35 @@ class RevenueReportingFilterTests(unittest.TestCase):
         self.assertEqual(audit["excluded_unverified_totals"], {"XTR": 77.0})
         self.assertEqual(self.db, before)
 
+    def test_store_rows_require_an_explicit_matching_item_id(self):
+        original_item = next(
+            row for row in self.db["revenue_ledger"]
+            if row.get("source") == "telegram_stars_item"
+        )
+        reference = original_item["reference"]
+        amount = original_item["amount"]
+
+        for invalid_item_id in ("", "different-item"):
+            with self.subTest(item_id=invalid_item_id or "<missing>"):
+                db = copy.deepcopy(self.db)
+                row = next(
+                    item for item in db["revenue_ledger"]
+                    if item.get("reference") == reference
+                    and item.get("source") == "telegram_stars_item"
+                )
+                row["meta"]["item_id"] = invalid_item_id
+                before = copy.deepcopy(db)
+
+                reportable = revenue_ledger.reportable_rows(db, currency="XTR")
+                refs = {item["reference"] for item in reportable}
+                self.assertNotIn(reference, refs)
+                self.assertEqual(len(reportable), 5)
+                self.assertEqual(
+                    sum(item["amount"] for item in reportable),
+                    1122 - amount,
+                )
+                self.assertEqual(db, before)
+
     def test_reportable_filter_is_read_only_and_rejects_invalid_rows(self):
         db = copy.deepcopy(self.db)
         db["revenue_ledger"].extend([
