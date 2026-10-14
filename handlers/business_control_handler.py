@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 
 import state_manager
 
+from core import revenue_ledger
+
 MAX_MESSAGE = 3800
 
 
@@ -185,17 +187,16 @@ def _registered_bot_count():
 def _business_summary():
     db = state_manager.load_db()
     users = db.get("users", {})
-    revenue = db.get("revenue_ledger", [])
     orders = db.get("star_item_orders", {})
     vip = db.get("vip_subscriptions", {})
     users = users if isinstance(users, dict) else {}
-    revenue = revenue if isinstance(revenue, list) else []
+    revenue_rows = revenue_ledger.reportable_rows(db)
     orders = orders if isinstance(orders, dict) else {}
     vip = vip if isinstance(vip, dict) else {}
     xtr = sum(
         float(r.get("amount", 0) or 0)
-        for r in revenue
-        if isinstance(r, dict) and str(r.get("currency", "")) == "XTR"
+        for r in revenue_rows
+        if str(r.get("currency", "")).strip().upper() == "XTR"
     )
     active_vip = sum(
         1
@@ -211,7 +212,7 @@ def _business_summary():
         "📊 SLH BUSINESS CONTROL\n\n"
         f"👥 Users: {len(users)}\n"
         f"💰 Verified revenue: {xtr:g} XTR\n"
-        f"🧾 Revenue events: {len(revenue)}\n"
+        f"🧾 Revenue events: {len(revenue_rows)}\n"
         f"👑 Active VIP: {active_vip}\n"
         f"🛍 Fulfilled Stars orders: {fulfilled}\n"
         f"🤖 Registered bots: {_registered_bot_count()}\n\n"
