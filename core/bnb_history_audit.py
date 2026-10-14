@@ -158,8 +158,17 @@ def _valid_audited_reversal(
         return False
 
     historical_treasury = str(meta.get("treasury") or "").strip()
+    actor_uid = str(meta.get("actor_uid") or "").strip()
+    try:
+        from core.authority import is_owner
+
+        authorized_actor = bool(actor_uid and is_owner(actor_uid))
+    except Exception:
+        authorized_actor = False
     return bool(
-        correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
+        authorized_actor
+        and audit.get("actor_uid") == actor_uid
+        and correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
         and str(correction.get("uid") or "") == source_uid
         and source_uid
         and str(meta.get("tx_hash") or "").lower() == tx_hash.lower()
