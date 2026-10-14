@@ -44,8 +44,8 @@ _SYSTEM_STATE_PATTERNS = (
     re.compile(r"(?:מה המצב|מצב המערכת|סטטוס המערכת|סטטוס הפרויקט|מה הסטטוס|האם סגרנו)", re.IGNORECASE),
     re.compile(r"(?:סטטוס|מצב|status|readiness).{0,25}(?:מערכת|פרויקט|exchange|בורסה|bnb|ton|הפקדות|מסחר|gate)", re.IGNORECASE),
     re.compile(
-        r"(?:האם|אפשר כבר|האם כבר).{0,35}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת).{0,25}(?:פתוח|סגור|מוכן|פעיל|עובד|מאומת|ready|blocked)"
-        r"|(?:פתוח|סגור|מוכן|פעיל|עובד|מאומת|ready|blocked).{0,25}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת)",
+        r"(?:האם|אפשר כבר|האם כבר).{0,35}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת).{0,25}(?:פתוח|סגור|מוכן|פעיל|מאומת|ready|blocked)"
+        r"|(?:פתוח|סגור|מוכן|פעיל|מאומת|ready|blocked).{0,25}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת)",
         re.IGNORECASE,
     ),
     re.compile(r"\\b(?:alpha_open|launch_state|readiness|gate_status|system status|runtime status)\\b", re.IGNORECASE),
