@@ -182,7 +182,7 @@ test('chart deep link opens the Exchange screen directly', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await expect(page.locator('#exchange')).toHaveClass(/active/);
   await expect(page.locator('#exPriceChart')).toBeVisible();
-  await expect(page.locator('#exChartMeta')).toContainText('אין כאן מחיר DEX');
+  await expect(page.locator('#exChartMeta')).toContainText('אין יצירת נתוני מחיר מדומים');
 });
 
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
