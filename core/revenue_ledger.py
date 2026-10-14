@@ -63,6 +63,7 @@ def _has_xtr_payment_evidence(db, row, amount):
 
     if source == "telegram_stars":
         transactions = db.get("transactions", [])
+        transactions = transactions if isinstance(transactions, list) else []
         ledger = db.get("ledger", [])
         tx_match = any(
             isinstance(tx, dict)
@@ -70,7 +71,7 @@ def _has_xtr_payment_evidence(db, row, amount):
             and str(tx.get("uid") or "").strip() == uid
             and str(tx.get("currency") or "").strip().upper() == "XTR"
             and _same_stars_amount(tx.get("stars_paid"), amount)
-            for tx in transactions if isinstance(transactions, list)
+            for tx in transactions
         )
         if not tx_match:
             return False
