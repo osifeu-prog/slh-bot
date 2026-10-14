@@ -104,6 +104,17 @@ def test_open_requires_env_readiness_and_revalidated_evidence(monkeypatch):
     assert target.bnb_deposits_open() is True
 
 
+def test_unresolved_history_prevents_gate_open(monkeypatch):
+    db = _db()
+    _wire_gate(monkeypatch, db, ready=True, evidence=True)
+    monkeypatch.setattr(
+        "core.bnb_history_audit.audit_bnb_deposit_history",
+        lambda snapshot: {"status": "BLOCKED", "blockers": ["SELF_TRANSFER_NOT_A_DEPOSIT"]},
+    )
+
+    assert target.bnb_deposits_open() is False
+
+
 def test_owner_close_control_requires_confirmation_and_writes_audit(monkeypatch):
     import handlers.bnb_gate_control_handler as control
 
