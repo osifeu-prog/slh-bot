@@ -123,6 +123,10 @@ def _has_xtr_payment_evidence(db, row, amount):
         meta = row.get("meta")
         meta = meta if isinstance(meta, dict) else {}
         wanted_item = str(meta.get("item_id") or "").strip()
+        # An order reference + amount is not enough to prove which store item
+        # was purchased. Missing item metadata must remain unverified.
+        if not wanted_item:
+            return False
         for item in orders.values():
             if not isinstance(item, dict):
                 continue
@@ -136,7 +140,7 @@ def _has_xtr_payment_evidence(db, row, amount):
                 continue
             if not _same_stars_amount(item.get("stars_paid"), amount):
                 continue
-            if wanted_item and str(item.get("item_id") or "").strip() != wanted_item:
+            if str(item.get("item_id") or "").strip() != wanted_item:
                 continue
             return True
         return False
