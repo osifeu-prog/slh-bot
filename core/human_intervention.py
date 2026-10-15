@@ -102,6 +102,18 @@ def is_read_only_command(command):
         return False
     if not tokens or tokens[0].startswith("/") or tokens[0].startswith("./"):
         return False
+    # Reads of canonical state, dotenv files, repository internals or system
+    # procfs are not in the unattended-read allowlist.
+    sensitive_fragments = (
+        ".env", "state/", "db.json", ".git/", "/proc/", "/sys/",
+        "credentials", "secrets", "private_key",
+    )
+    if any(
+        fragment in token.replace("\\\\", "/").lower()
+        for token in tokens[1:]
+        for fragment in sensitive_fragments
+    ):
+        return False
     name = tokens[0]
     if name in {
         "pwd", "whoami", "ls", "stat", "file", "head", "tail", "cat",
