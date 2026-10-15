@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
 
@@ -87,6 +88,7 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
             or first_replay <= 0
             or last_replay < first_replay
             or evidence_amount <= 0
+            or first_replay < settled_at_epoch
         ):
             return False
 
@@ -124,8 +126,16 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
         if not isinstance(meta, dict):
             return False
 
+        transaction_time = datetime.fromisoformat(
+            str(transaction.get("timestamp") or "").replace("Z", "+00:00")
+        )
+        if transaction_time.tzinfo is None:
+            return False
+        settled_at_epoch = transaction_time.timestamp()
+
         ton_amount = Decimal(str(transaction.get("ton_amount") or 0))
         credits = Decimal(str(transaction.get("credits") or 0))
+        expected_credits = (ton_amount * rate).quantize(Decimal("0.01"))
         ledger_amount = Decimal(str(ledger.get("amount") or 0))
         before = Decimal(str(ledger.get("before") or 0))
         after = Decimal(str(ledger.get("after") or 0))
@@ -141,6 +151,7 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
             and ton_amount == evidence_amount
             and ledger_ton_amount == ton_amount
             and credits > 0
+            and credits == expected_credits
             and ledger_amount == credits
             and abs((before + ledger_amount) - after) <= Decimal("0.00000001")
             and str(meta.get("memo") or "").strip().lower() == memo_for(uid).lower()
