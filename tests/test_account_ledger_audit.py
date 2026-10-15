@@ -8,7 +8,7 @@ UID = "owner-1"
 
 def _db():
     return {
-        "users": {UID: {"wallet": {"credits": 8.0}}},
+        "users": {UID: {"wallet": {"credits": 3.0}}},
         "ledger": [
             {"uid": UID, "before": 1.0, "amount": 2.0, "after": 3.0,
              "reason": "store:purchase", "meta": {"event_id": "e1"}},
@@ -20,24 +20,39 @@ def _db():
     }
 
 
-def test_audit_reports_continuity_gap_and_heuristic_mixed_domain_without_mutation():
+def test_audit_does_not_compare_slh_rows_as_credits_without_mutation():
     db = _db()
     before = deepcopy(db)
 
     result = audit_account_ledger(db, UID)
 
     assert result["scope"] == "read_only"
-    assert result["status"] == "BLOCKED"
+    assert result["status"] == "PASS"
     assert result["rows_checked"] == 2
-    assert result["continuity_break_count"] == 1
+    assert result["credits_sequence_rows_checked"] == 1
+    assert result["non_credits_rows_skipped"] == 1
+    assert result["continuity_break_count"] == 0
     assert result["arithmetic_error_count"] == 0
     assert result["current_balance_matches_tail"] is True
-    assert result["findings"][0]["type"] == "POSSIBLE_MIXED_DOMAIN_BOUNDARY"
-    assert result["findings"][0]["source_evidence_required"] is True
     assert result["domain_hints_are_authoritative"] is False
     assert result["financial_mutation_performed"] is False
     assert result["gate_changed"] is False
     assert db == before
+
+
+def test_same_unknown_domain_gap_still_blocks_account_audit():
+    db = _db()
+    db["ledger"][2]["reason"] = "store:p2p_sale"
+    db["ledger"][2]["before"] = 7.0
+    db["ledger"][2]["amount"] = 1.0
+    db["ledger"][2]["after"] = 8.0
+    db["users"][UID]["wallet"]["credits"] = 8.0
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["continuity_break_count"] == 1
+    assert result["status"] == "BLOCKED"
+    assert result["findings"][0]["type"] == "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
 
 
 def test_audit_separates_row_arithmetic_errors_from_sequence_gaps():
