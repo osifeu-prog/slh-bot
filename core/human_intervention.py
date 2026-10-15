@@ -171,6 +171,54 @@ def create_execution_request(actor_uid, command, source="run_gated"):
     return state_manager.atomic_update(mutate)
 
 
+def create_registered_action_request(actor_uid, action_key, parameters=None, source="typed_action"):
+    """Create a pending request for one server-defined callable action.
+
+    Only the handler's fixed dispatch table may interpret action_key. No dynamic
+    imports or callable names are accepted from the request.
+    """
+    actor_uid = str(actor_uid)
+    action_key = str(action_key or "").strip()
+    allowed = {"alpha_open", "railway_up"}
+    if not is_owner(actor_uid):
+        raise PermissionError("OWNER_ONLY")
+    if action_key not in allowed:
+        raise ValueError("UNREGISTERED_ACTION")
+    parameters = parameters if isinstance(parameters, dict) else {}
+    request_id, now = _new_id(), time.time()
+    command = "registered-action:" + action_key
+
+    def mutate(db):
+        state = _ensure_state(db)
+        required = _effective_settings(state)["action_execution"]
+        status = "pending_execution" if required else "approved_for_execution"
+        record = {
+            "id": request_id, "kind": "registered_action",
+            "action_key": action_key, "parameters": parameters,
+            "command": command, "command_sha256": _command_hash(command),
+            "source": str(source or "unknown")[:120],
+            "requested_by": actor_uid, "created_at": now,
+            "expires_at": now + EXECUTION_TTL_SECONDS, "status": status,
+            "execution_approval_required": required,
+        }
+        state["requests"][request_id] = record
+        _event(
+            state, actor=actor_uid, action="action_execution",
+            request_id=request_id, decision="requested", result=status,
+            details={"source": record["source"], "action_key": action_key},
+        )
+        if not required:
+            record["execution_approved_by"] = "policy_disabled"
+            record["execution_approved_at"] = now
+            _event(
+                state, actor=actor_uid, action="action_execution",
+                request_id=request_id, decision="not_required", result="policy_disabled",
+            )
+        return {"id": request_id, "requires_approval": required, "status": status}
+
+    return state_manager.atomic_update(mutate)
+
+
 def create_preapproved_execution(actor_uid, command, source, approved_by):
     """Record an already-confirmed owner approval, such as /execr approval."""
     if not is_owner(approved_by):
