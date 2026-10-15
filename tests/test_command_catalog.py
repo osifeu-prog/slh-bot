@@ -88,6 +88,20 @@ def test_help_metadata_covers_existing_runtime_commands():
     assert all(item["known"] for item in by_command.values())
     assert all(item["description"] != "Runtime command — metadata pending" for item in by_command.values())
 
+def test_exchange_reserve_command_has_catalog_metadata():
+    commands = ["/check_exchange_reserves"]
+
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value={"commands": commands},
+    ):
+        catalog = command_catalog.get_catalog("Me_ad_main")
+
+    by_command = {item["command"]: item for item in catalog}
+    item = by_command["check_exchange_reserves"]
+    assert item["known"] is True
+    assert item["description"] != "Runtime command — metadata pending"
+
 
 def test_exchange_status_alias_has_catalog_metadata():
     commands = ["/exchange_status"]
