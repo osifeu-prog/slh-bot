@@ -147,14 +147,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
   await page.waitForFunction(() => window.Telegram?.WebApp?.initData === 'ui-test-init-data');
-  const __slhAuthDiag = await page.evaluate(() => ({
-    telegramInitData: window.Telegram?.WebApp?.initData || '',
-    appInitData: typeof initData === 'undefined' ? '__undefined__' : String(initData || ''),
-    tgAvailable: typeof tg !== 'undefined' && !!tg,
-    authGateDisplay: getComputedStyle(document.querySelector('#authGate')).display,
-    appDisplay: getComputedStyle(document.querySelector('.app')).display
-  }));
-  console.log('[SLH AUTH DIAG]', JSON.stringify({ ...__slhAuthDiag, pageErrors: __slhPageErrors }));
   await expect(page.locator('#authGate')).toBeHidden();
   await expect(page.locator('.app')).toBeVisible();
   await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
@@ -322,11 +314,11 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   expect(sharePayload.text).toContain('ההשתתפות נרשמה');
   expect(sharePayload.text).not.toContain('yes');
   expect(sharePayload.text).not.toContain('8789977826');
-  expect(sharePayload.url).toBe('https://t.me/Me_ad_main_bot');
+  expect(sharePayload.url).toBe('https://t.me/Me_ad_main_bot?startapp=home');
 });
 
 test('completed personal task receipt can be shared without account identifiers', async ({ page }) => {
-  await page.route('**/api/v1/me', async route => {
+  await page.route('**/api/v1/me*', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -364,7 +356,7 @@ test('completed personal task receipt can be shared without account identifiers'
   expect(payload.text).not.toContain('999999999');
   expect(payload.text).not.toContain('8789977826');
   expect(payload.text).not.toContain('Credits');
-  expect(payload.url).toBe('https://t.me/Me_ad_main_bot');
+  expect(payload.url).toBe('https://t.me/Me_ad_main_bot?startapp=home');
 });
 
 test('Exchange overview shows canonical gate truth, not a hardcoded green status', async ({ page }) => {
