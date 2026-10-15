@@ -407,6 +407,15 @@ def test_historical_self_transfer_with_valid_compensation_is_reconciled_only_for
     assert result["reconciled_count"] == 1
     assert result["finding_count"] == 0
     assert result["findings"] == []
+
+    # Even with a reconciled compensation and explicit history approval, never
+    # classify the old row as cleared while the normal operator flag is already 1.
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+    blocked = _audit_historical_bnb_deposits(db, _cfg())
+    assert blocked["ok"] is False
+    assert blocked["reconciled_count"] == 0
+    assert blocked["finding_count"] == 1
+    assert "CHAIN_TX_NOT_VERIFIED" in blocked["findings"][0]["issues"]
     valid_compensation.assert_called_once_with(db, 0, db["ledger"][0], _cfg())
 
 
@@ -591,6 +600,7 @@ def test_full_historical_audit_accepts_only_real_compensating_entry_with_approva
 
     monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "1")
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
     monkeypatch.setattr("core.bnb_gate._effective_config", lambda _db: _cfg())
     monkeypatch.setattr("core.historical_bnb_credit_reversal._effective_config", lambda _db: _cfg())
     monkeypatch.setattr("core.historical_bnb_credit_reversal.is_quarantined_bsc_address", lambda _address: False)
