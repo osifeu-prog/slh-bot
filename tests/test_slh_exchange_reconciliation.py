@@ -718,7 +718,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
             for item in report["release_blocking_findings"]
         ))
 
-    def test_balanced_legacy_cancel_remains_proven_with_unrelated_open_sell_reserve(self):
+    def test_balanced_cancel_is_operationally_nonblocking_but_missing_ids_block_release(self):
         # The terminal order owns no reserve, while a different open order
         # legitimately reserves 1 SLH. The wallet reserve must match active
         # open orders; it need not be zero for this terminal order to reconcile.
@@ -761,10 +761,12 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         report = audit_db(db)
 
-        self.assertEqual(report["status"], "FAIL")  # Legacy IDs remain visible.
+        self.assertEqual(report["status"], "FAIL")  # Missing IDs remain visible.
         self.assertEqual(report["operational_status"], "PASS")
-        self.assertEqual(report["release_readiness_status"], "PASS")
-        self.assertEqual(report["release_blocking_finding_count"], 0)
+        # A balanced ledger pair may be operationally retired, but missing
+        # timestamps/event IDs cannot prove it predates the policy cutoff.
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertEqual(report["release_blocking_finding_count"], 2)
         self.assertGreater(report["historical_finding_count"], 0)
         self.assertTrue(all(
             item["operational_classification"] == "LEGACY_BALANCED_CANCELLED_ORDER"
