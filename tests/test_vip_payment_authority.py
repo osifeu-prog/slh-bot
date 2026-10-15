@@ -153,7 +153,7 @@ class VIPAnnualPaymentAuthorityTests(unittest.TestCase):
         cashback, referral = self._patch_loyalty()
         with (
             patch.object(authority.state_manager, "atomic_update", side_effect=atomic_update),
-            patch.object(authority.apply_vip_benefits, "__call__", return_value={"status": "completed", "launch_offer_qualified": False}) if False else patch.object(authority, "apply_vip_benefits", return_value={"status": "completed", "launch_offer_qualified": False}),
+            patch.object(authority, "apply_vip_benefits", return_value={"status": "completed", "launch_offer_qualified": False}),
             cashback,
             referral,
         ):
