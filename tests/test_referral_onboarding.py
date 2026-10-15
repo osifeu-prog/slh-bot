@@ -232,7 +232,7 @@ def test_parallel_persisted_referral_settlement_is_idempotent_and_awards_vip_onc
         assert referrer["gamification"]["points"] == 10
         assert float(referrer["wallet"]["credits"]) == 0.9
         point_events = [
-            x for x in referrer["gamification"].get("points_ledger", [])
+            x for x in referrer.get("points_ledger", [])
             if x.get("meta", {}).get("idempotency_key") == "ref:200"
         ]
         assert len(point_events) == 1
