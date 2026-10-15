@@ -208,6 +208,23 @@ def _validate_source(row, meta, proof, uid, tx_hash):
         raise ValueError("SOURCE_CHAIN_PROOF_INVALID")
     if proof.get("amount_wei") != amount_wei:
         raise ValueError("SOURCE_AMOUNT_WEI_MISMATCH")
+    stored_block = meta.get("block")
+    stored_confirmations = meta.get("confirmations")
+    if (
+        isinstance(stored_block, bool) or not isinstance(stored_block, int)
+        or stored_block <= 0 or stored_block != proof.get("block")
+    ):
+        raise ValueError("SOURCE_BLOCK_MISMATCH")
+    required_confirmations = proof.get("required_confirmations")
+    if (
+        isinstance(stored_confirmations, bool)
+        or not isinstance(stored_confirmations, int)
+        or isinstance(required_confirmations, bool)
+        or not isinstance(required_confirmations, int)
+        or stored_confirmations < required_confirmations
+        or stored_confirmations > int(proof.get("confirmations") or 0)
+    ):
+        raise ValueError("SOURCE_CONFIRMATIONS_INVALID")
     bound = str(proof.get("bound_wallet") or "").strip()
     if not bound or not _same(proof.get("from"), bound) or not _same(proof.get("to"), bound):
         raise ValueError("SOURCE_NOT_BOUND_WALLET_SELF_TRANSFER")
