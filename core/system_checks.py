@@ -272,8 +272,12 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             sell_order = orders.get(str(trade.get("sell_order_id")))
             if not isinstance(buy_order, dict) or buy_order.get("side") != "buy":
                 trade_errors.append(f"trade:{tid}:bad_buy_order")
+            elif str(buy_order.get("uid") or buy_order.get("user_id") or "") != buyer_uid:
+                trade_errors.append(f"trade:{tid}:buyer_order_owner_mismatch")
             if not isinstance(sell_order, dict) or sell_order.get("side") != "sell":
                 trade_errors.append(f"trade:{tid}:bad_sell_order")
+            elif str(sell_order.get("uid") or sell_order.get("user_id") or "") != seller_uid:
+                trade_errors.append(f"trade:{tid}:seller_order_owner_mismatch")
 
         try:
             _assert_invariants(db)
