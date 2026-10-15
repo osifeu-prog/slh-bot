@@ -91,7 +91,7 @@ def _valid_audited_reversal(
     observed_confirmations: int,
     bound_wallet: str,
 ) -> bool:
-    """Recognize only the exact, persisted reversal contract from credit_adjustment_service."""
+    """Recognize a fully reconciled owner-authorized source credit reversal."""
     correction_key = f"accounting:reversal:{tx_hash.lower()}"
     source_key = f"bnb:deposit:{tx_hash.lower()}"
     correction_matches = [
@@ -106,30 +106,25 @@ def _valid_audited_reversal(
     if correction_index <= source_index:
         return False
 
-    # The original reversal callable is intentionally limited to accounts with
-    # no ledger activity between the source credit and its compensation.
     source_uid = str(source.get("uid") or "")
-    for row in ledger[source_index + 1:correction_index]:
-        if isinstance(row, dict) and str(row.get("uid") or "") == source_uid:
-            return False
-
+    if not source_uid:
+        return False
     meta = correction.get("meta")
-    if not isinstance(meta, dict):
+    source_meta = source.get("meta")
+    if not isinstance(meta, dict) or not isinstance(source_meta, dict):
         return False
     audits = db.get("credit_adjustment_audit")
     if not isinstance(audits, list):
         return False
     matching_audits = [
         row for row in audits
-        if isinstance(row, dict) and row.get("correction_idempotency_key") == correction_key
+        if isinstance(row, dict)
+        and row.get("correction_idempotency_key") == correction_key
     ]
     if len(matching_audits) != 1:
         return False
     audit = matching_audits[0]
 
-    source_meta = source.get("meta")
-    if not isinstance(source_meta, dict):
-        return False
     source_before = _finite_number(source.get("before"))
     source_amount = _finite_number(source.get("amount"))
     source_after = _finite_number(source.get("after"))
@@ -158,7 +153,6 @@ def _valid_audited_reversal(
         audit_required, reversal_chain, audit_chain, audit_source_index,
     )):
         return False
-
     if any(value is None for value in (
         source_before, source_amount, source_after, reversal_before,
         reversal_amount, reversal_after, nominal, audit_before,
@@ -166,20 +160,40 @@ def _valid_audited_reversal(
     )):
         return False
 
-    historical_treasury = str(meta.get("treasury") or "").strip()
     actor_uid = str(meta.get("actor_uid") or "").strip()
     try:
         from core.authority import is_owner
-
         authorized_actor = bool(actor_uid and is_owner(actor_uid))
     except Exception:
         authorized_actor = False
-    return bool(
+
+    correction_version = _exact_nonnegative_int(meta.get("correction_version")) or 1
+    if correction_version >= 2:
+        # New corrections record the actual Treasury configuration at correction
+        # time separately from the self-transfer address. These addresses need
+        # not match: the source transaction itself proves no transfer to Treasury.
+        treasury_at_correction = str(
+            meta.get("current_treasury_at_correction") or ""
+        ).strip()
+        treasury_record_valid = bool(
+            treasury_at_correction
+            and Web3.is_address(treasury_at_correction)
+            and _same_address(meta.get("treasury"), treasury_at_correction)
+        )
+    else:
+        # Backward-compatible validation for the previous Treasury-alias-only
+        # reversal contract. Never grandfather an incomplete legacy correction.
+        historical_treasury = str(meta.get("treasury") or "").strip()
+        treasury_record_valid = (
+            _same_address(historical_treasury, sender)
+            and _same_address(historical_treasury, destination)
+        )
+
+    common_checks = bool(
         authorized_actor
         and audit.get("actor_uid") == actor_uid
         and correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
         and str(correction.get("uid") or "") == source_uid
-        and source_uid
         and str(meta.get("tx_hash") or "").lower() == tx_hash.lower()
         and meta.get("source_idempotency_key") == source_key
         and meta.get("source_reason") == "bnb:deposit"
@@ -187,8 +201,7 @@ def _valid_audited_reversal(
         and meta.get("gate_remained_closed") is True
         and reversal_chain == 56
         and audit_chain == 56
-        and _same_address(historical_treasury, sender)
-        and _same_address(historical_treasury, destination)
+        and treasury_record_valid
         and _same_address(meta.get("from"), bound_wallet)
         and _same_address(meta.get("to"), bound_wallet)
         and _same_address(sender, bound_wallet)
@@ -202,13 +215,10 @@ def _valid_audited_reversal(
         and reversal_required == audit_required == confirmations_required
         and reversal_confirms == audit_confirms
         and correction_index > source_index
-        and source_before is not None and source_amount is not None and source_after is not None
-        and reversal_before is not None and reversal_amount is not None and reversal_after is not None
         and abs((source_before + source_amount) - source_after) <= EPSILON
-        and abs(reversal_before - source_after) <= EPSILON
-        and abs(reversal_after - source_before) <= EPSILON
-        and abs(reversal_amount - (reversal_after - reversal_before)) <= EPSILON
         and abs(nominal - source_amount) <= EPSILON
+        and abs(reversal_amount + source_amount) <= EPSILON
+        and abs((reversal_before + reversal_amount) - reversal_after) <= EPSILON
         and abs(audit_before - reversal_before) <= EPSILON
         and abs(audit_amount - reversal_amount) <= EPSILON
         and abs(audit_after - reversal_after) <= EPSILON
@@ -219,7 +229,46 @@ def _valid_audited_reversal(
         and audit.get("source_idempotency_key") == source_key
         and audit.get("gate_remained_closed") is True
     )
+    if not common_checks:
+        return False
 
+    # Account activity after the source credit is permitted only when every
+    # ledger row remains arithmetically continuous, including the compensating
+    # debit and any later transactions. The final wallet balance must reconcile.
+    running = source_after
+    saw_correction = False
+    for index in range(source_index + 1, len(ledger)):
+        row = ledger[index]
+        if not isinstance(row, dict) or str(row.get("uid") or "") != source_uid:
+            continue
+        row_before = _finite_number(row.get("before"))
+        row_amount = _finite_number(row.get("amount"))
+        row_after = _finite_number(row.get("after"))
+        if row_before is None or row_amount is None or row_after is None:
+            return False
+        if abs(row_before - running) > EPSILON:
+            return False
+        if abs((row_before + row_amount) - row_after) > EPSILON:
+            return False
+        if index == correction_index:
+            if (
+                abs(row_before - reversal_before) > EPSILON
+                or abs(row_amount - reversal_amount) > EPSILON
+                or abs(row_after - reversal_after) > EPSILON
+            ):
+                return False
+            saw_correction = True
+        running = row_after
+
+    users = db.get("users")
+    user = users.get(source_uid) if isinstance(users, dict) else None
+    wallet = user.get("wallet") if isinstance(user, dict) else None
+    current_balance = _finite_number(wallet.get("credits")) if isinstance(wallet, dict) else None
+    return bool(
+        saw_correction
+        and current_balance is not None
+        and abs(current_balance - running) <= EPSILON
+    )
 
 def audit_bnb_deposit_history(db: dict | None) -> dict:
     """Audit all ledger entries with reason=bnb:deposit against BSC RPC.
