@@ -312,6 +312,40 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   expect(sharePayload.url).toBe('https://t.me/Me_ad_main_bot');
 });
 
+test('completed task receipt can be shared without account identifiers', async ({ page }) => {
+  await page.route('**/api/v1/tasks', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        tasks: [{ id: 'private-task-id-42', title: 'Complete your profile', status: 'done' }],
+        completed: 1,
+        open: 0,
+      }),
+    });
+  });
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: async payload => { window.__slhTaskSharePayload = payload; },
+    });
+    return loadControlTasks();
+  });
+
+  const shareButton = page.locator('#controlTasks').getByRole('button', { name: /שתף פעילות/ });
+  await expect(shareButton).toBeVisible();
+  await shareButton.click();
+
+  const payload = await page.evaluate(() => window.__slhTaskSharePayload);
+  expect(payload.title).toContain('SLH OS');
+  expect(payload.text).toContain('Complete your profile');
+  expect(payload.text).not.toContain('private-task-id-42');
+  expect(payload.text).not.toContain('8789977826');
+  expect(payload.text).not.toContain('Credits');
+  expect(payload.url).toBe('https://t.me/Me_ad_main_bot');
+});
+
 test('Exchange overview shows canonical gate truth, not a hardcoded green status', async ({ page }) => {
   await page.route('**/api/v1/exchange/summary', async route => {
     await route.fulfill({
