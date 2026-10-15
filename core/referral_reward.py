@@ -251,6 +251,18 @@ def recover_persisted_referral(referred_uid):
             if pending_referrer and str(pending_referrer) != referrer_uid:
                 raise ValueError("REFERRAL_PENDING_ATTRIBUTION_MISMATCH")
 
+        # Re-validate both authoritative reward ledgers against the same
+        # locked DB snapshot that will receive the settlement marker. A prior
+        # read cannot by itself authorize finalization if state changed later.
+        current_evidence = _reward_ledger_matches(
+            db2, referrer_uid, referred_uid, require_complete=True
+        )
+        if (
+            current_evidence["points_key"] != evidence["points_key"]
+            or current_evidence["credits_key"] != evidence["credits_key"]
+        ):
+            raise ValueError("REFERRAL_REWARD_EVIDENCE_CHANGED_DURING_FINALIZE")
+
         settlements = db2.setdefault(SETTLEMENTS_KEY, {})
         if not isinstance(settlements, dict):
             raise ValueError("REFERRAL_SETTLEMENTS_UNREADABLE")
