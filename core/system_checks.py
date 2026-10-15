@@ -276,8 +276,20 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
                 trade_errors.append(f"trade:{tid}:buyer_order_owner_mismatch")
             if not isinstance(sell_order, dict) or sell_order.get("side") != "sell":
                 trade_errors.append(f"trade:{tid}:bad_sell_order")
-            elif str(sell_order.get("uid") or sell_order.get("user_id") or "") != seller_uid:
-                trade_errors.append(f"trade:{tid}:seller_order_owner_mismatch")
+            else:
+                if str(sell_order.get("uid") or sell_order.get("user_id") or "") != seller_uid:
+                    trade_errors.append(f"trade:{tid}:seller_order_owner_mismatch")
+                ask = _decimal(sell_order.get("limit_price"))
+                if not ask.is_finite() or ask <= 0:
+                    trade_errors.append(f"trade:{tid}:bad_sell_order_price")
+                elif price.is_finite() and price < ask:
+                    trade_errors.append(f"trade:{tid}:price_below_sell_limit")
+            if isinstance(buy_order, dict) and buy_order.get("side") == "buy":
+                bid = _decimal(buy_order.get("limit_price"))
+                if not bid.is_finite() or bid <= 0:
+                    trade_errors.append(f"trade:{tid}:bad_buy_order_price")
+                elif price.is_finite() and price > bid:
+                    trade_errors.append(f"trade:{tid}:price_above_buy_limit")
 
         try:
             _assert_invariants(db)
