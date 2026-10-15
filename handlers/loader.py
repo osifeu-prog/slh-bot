@@ -34,6 +34,7 @@ def load_handlers(bot, context):
         ("legacy_wallet", "handlers.legacy_wallet_handler"),
         ("arcade", "handlers.arcade_handler"),
         ("share", "handlers.share_handler"),
+        ("social_assets", "handlers.social_assets_handler"),
         ("store", "handlers.store_handler"),
         ("user_shop", "handlers.user_shop_handler"),
         ("bot_factory", "handlers.bot_factory"),
