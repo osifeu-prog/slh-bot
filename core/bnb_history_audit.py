@@ -89,21 +89,18 @@ def _binding_for_uid(db: dict, uid: str) -> tuple[str | None, str | None]:
     return address, None
 
 
+# Narrow, exact reasons whose current canonical implementations write to the
+# SLH token ledger. Unknown or merely SLH-prefixed reasons are not enough
+# evidence to skip an owner row in a Credits balance proof.
 _SLH_ONLY_LEDGER_REASONS = frozenset({
     "exchange:sell_reserve",
     "exchange:cancel_release_slh",
-    "p2p:slh_sent",
-    "p2p:slh_received",
 })
 
 
 def _is_slh_only_ledger_reason(reason: Any) -> bool:
     value = str(reason or "").strip().lower()
-    return (
-        value in _SLH_ONLY_LEDGER_REASONS
-        or value.startswith("p2p:slh:")
-        or value.startswith("slh:")
-    )
+    return value in _SLH_ONLY_LEDGER_REASONS
 
 
 def _source_predecessor_anchor_valid(
