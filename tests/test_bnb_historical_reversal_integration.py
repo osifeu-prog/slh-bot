@@ -108,3 +108,31 @@ def test_history_gate_does_not_use_reversal_fallback_without_matching_correction
     assert result["ok"] is False
     assert result["finding_count"] == 1
     history_audit.assert_not_called()
+
+def test_public_history_gate_blocks_valid_tx_with_shared_wallet_binding():
+    db = _db(with_reversal=False)
+    db["ledger"][0]["meta"]["to"] = TREASURY
+    db["wallet_bindings"] = {
+        "owner": {"uid": "8789977826", "chain": "bsc", "address": SELF},
+        "other-user": {"uid": "5010371391", "chain": "bsc", "address": SELF},
+    }
+    verified = {
+        "ok": True,
+        "tx_hash": TX,
+        "from": SELF,
+        "to": TREASURY,
+        "amount_wei": 10**16,
+        "confirmations": 20,
+    }
+
+    with patch("core.deposit_monitor.verify_bnb_deposit", return_value=verified), patch(
+        "core.wallet_binding.get_binding", return_value={"address": SELF}
+    ):
+        result = _audit_historical_bnb_deposits(
+            db, {"treasury_wallet": TREASURY, "confirmations": 15}
+        )
+
+    assert result["ok"] is False
+    assert result["finding_count"] == 1
+    assert "CHAIN_SENDER_BINDING_AMBIGUOUS" in result["findings"][0]["issues"]
+
