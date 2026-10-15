@@ -491,7 +491,7 @@ def register(bot, context=None):
             bot.reply_to(message, "⛔ OWNER ONLY — BNB accounting correction.", parse_mode=None)
             return
         chat = getattr(message, "chat", None)
-        if getattr(chat, "type", "private") != "private":
+        if chat is None or getattr(chat, "type", None) != "private":
             bot.reply_to(message, "⛔ יש להריץ את הפקודה בשיחה פרטית עם הבוט.", parse_mode=None)
             return
         parts = (getattr(message, "text", "") or "").strip().split()
@@ -570,7 +570,7 @@ def register(bot, context=None):
             bot.reply_to(message, "⛔ OWNER ONLY — BNB accounting correction.", parse_mode=None)
             return
         chat = getattr(message, "chat", None)
-        if getattr(chat, "type", "private") != "private":
+        if chat is None or getattr(chat, "type", None) != "private":
             bot.reply_to(message, "⛔ יש להריץ את הפקודה בשיחה פרטית עם הבוט.", parse_mode=None)
             return
         parts = (getattr(message, "text", "") or "").strip().split()
