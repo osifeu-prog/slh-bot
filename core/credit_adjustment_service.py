@@ -234,7 +234,9 @@ def _replay_account_ledger(ledger, uid, source_index):
     balances = {}
     for index in range(source_index + 1, len(ledger)):
         row = ledger[index]
-        if not isinstance(row, dict) or str(row.get("uid") or "").strip() != uid:
+        if not isinstance(row, dict):
+            raise ValueError("ACCOUNT_LEDGER_ROW_INVALID")
+        if str(row.get("uid") or "").strip() != uid:
             continue
         before = _decimal(row.get("before"), "ACCOUNT_LEDGER_BEFORE_INVALID")
         amount = _decimal(row.get("amount"), "ACCOUNT_LEDGER_AMOUNT_INVALID")
@@ -291,6 +293,7 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
         or int(meta.get("confirmations") or 0) > int(proof.get("confirmations") or 0)
         or meta.get("required_confirmations") != proof.get("required_confirmations")
         or not _same(meta.get("current_treasury_at_correction"), meta.get("treasury"))
+        or not Web3.is_address(str(meta.get("current_treasury_at_correction") or ""))
     ):
         raise ValueError("REVERSAL_IDEMPOTENCY_CONFLICT")
 
