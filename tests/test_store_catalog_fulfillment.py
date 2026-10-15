@@ -34,7 +34,7 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
         self.assertEqual(
             self.items["esp32_pro"]["grant"],
             {
-                "bundle": [{"hardware": "esp32_pro"}, {"plugin": "agent_os"}],
+                "bundle": [{"plugin": "agent_os"}, {"hardware": "esp32_pro"}],
                 "vip_months_bonus": 3,
             },
         )
