@@ -305,6 +305,18 @@ def register(bot, context=None):
         # Existing accounts should resume their personal system directly.
         # Do this before the new-user Alpha onboarding card is rendered.
         if not is_new and not is_owner:
+            # /start is a recovery trigger if an earlier join saved the
+            # relationship but failed before completing referral rewards.
+            try:
+                from core.referral_reward import settle_persisted_referral
+                settlement = settle_persisted_referral(user_id)
+                if settlement.get("status") == "SETTLED":
+                    print(
+                        f"REFERRAL RECOVERY: referred={user_id} "
+                        f"referrer={settlement.get('referrer_uid')} status=SETTLED"
+                    )
+            except Exception as exc:
+                print("REFERRAL RECOVERY PENDING:", type(exc).__name__)
             send_dashboard(m.chat.id, user_id)
             return
 
