@@ -403,6 +403,13 @@ def is_reconciled_invalid_historical_deposit(db, ledger_index, entry, config=Non
     original credited row is still present and whose compensating ledger + audit
     rows fully reconcile. Every uncertainty fails closed.
     """
+    # A valid compensating entry is not, by itself, permission to treat the
+    # historical audit blocker as cleared. Require a separate explicit operator
+    # approval flag, distinct from BNB_DEPOSITS_OPEN. This prevents an old "1"
+    # operator flag from making deposits effective-open as a side effect of a
+    # ledger correction. This flag is read-only here and is never changed by code.
+    if os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() != "1":
+        return False
     try:
         if not isinstance(db, dict) or not isinstance(entry, dict):
             return False
