@@ -140,3 +140,18 @@ def test_daily_status_is_read_only(monkeypatch):
     assert result["daily_points"] == 10
     assert result["next_streak"] == 1
     assert repr(db) == before
+
+def test_malformed_daily_state_fails_closed_without_overwriting_it(monkeypatch):
+    db = _db()
+    db["users"]["123"]["daily_rewards"] = ["unexpected", "state"]
+    _use_db(monkeypatch, db)
+    before = repr(db)
+
+    try:
+        daily_reward_service.claim_daily_reward("123", now=_local("2026-10-15"))
+    except ValueError as exc:
+        assert str(exc) == "DAILY_REWARD_STATE_INVALID"
+    else:
+        raise AssertionError("malformed daily state must fail closed")
+
+    assert repr(db) == before
