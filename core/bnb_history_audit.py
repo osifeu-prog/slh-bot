@@ -522,7 +522,11 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             # A valid compensation resolves the accounting error, but it must
             # not itself authorize historical BNB settlement for go-live. Keep
             # the independent operator approval flag as a separate release gate.
-            if os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() == "1":
+            history_approved = (
+                os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() == "1"
+            )
+            operator_flag_open = os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1"
+            if history_approved and not operator_flag_open:
                 status = "RESOLVED_BY_AUDITED_REVERSAL"
                 reported_issues = [
                     "SELF_TRANSFER_NOT_A_DEPOSIT",
@@ -530,10 +534,12 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
                 ]
             else:
                 status = "BLOCKED"
-                reported_issues = [
-                    "SELF_TRANSFER_NOT_A_DEPOSIT",
-                    "RECONCILED_HISTORY_APPROVAL_REQUIRED",
-                ]
+                blocker = (
+                    "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"
+                    if operator_flag_open
+                    else "RECONCILED_HISTORY_APPROVAL_REQUIRED"
+                )
+                reported_issues = ["SELF_TRANSFER_NOT_A_DEPOSIT", blocker]
                 blockers.update(reported_issues)
         elif unique_issues:
             status = "BLOCKED"
