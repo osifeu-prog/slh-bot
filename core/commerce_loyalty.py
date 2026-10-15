@@ -208,8 +208,31 @@ def grant_whatsapp_cashback(uid, purchase_id, paid_amount, paid_currency, *, sku
         user = users.get(uid) if isinstance(users, dict) else None
         if not isinstance(user, dict):
             return {"status": "USER_NOT_FOUND"}
-        if not _is_whatsapp_attributed(user):
+        # A user-level WhatsApp touch is not sufficient for a cashback award.
+        # Require a trusted per-purchase record created only after a verified
+        # WhatsApp intent has been correlated to the completed canonical order.
+        attributions = db.get("whatsapp_purchase_attributions")
+        attribution = attributions.get(purchase_id) if isinstance(attributions, dict) else None
+        if not isinstance(attribution, dict):
             return {"status": "NOT_ELIGIBLE"}
+        if (
+            str(attribution.get("status") or "") != "VERIFIED_COMPLETED"
+            or str(attribution.get("purchase_id") or "") != purchase_id
+            or str(attribution.get("uid") or "") != uid
+            or str(attribution.get("sku") or "") != str(sku or "")
+            or not str(attribution.get("intent_id") or "").strip()
+            or not str(attribution.get("provider_message_id_hash") or "").strip()
+            or not str(attribution.get("completed_at") or "").strip()
+        ):
+            return {"status": "NOT_ELIGIBLE"}
+        if str(attribution.get("paid_currency") or "").strip().upper() != currency:
+            return {"status": "ATTRIBUTION_CONFLICT"}
+        try:
+            attributed_amount = Decimal(str(attribution.get("paid_amount")))
+        except (InvalidOperation, TypeError, ValueError):
+            return {"status": "ATTRIBUTION_CONFLICT"}
+        if attributed_amount != amount:
+            return {"status": "ATTRIBUTION_CONFLICT"}
         return _apply_award(
             db, uid, credits, "whatsapp:cashback", idempotency_key, details
         )
