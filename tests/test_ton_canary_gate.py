@@ -59,15 +59,15 @@ class TonCanaryGateTests(unittest.TestCase):
                 CANARY_UID: {
                     "tx_hash": tx_hash,
                     "replay_count": 61,
-                    "first_replay_at_epoch": 100.0,
-                    "last_replay_at_epoch": 200.0,
+                    "first_replay_at_epoch": 1791396310.0,
+                    "last_replay_at_epoch": 1791396400.0,
                     "amount_ton": 0.01,
                     "by_tx_hash": {
                         tx_hash: {
                             "tx_hash": tx_hash,
                             "replay_count": 61,
-                            "first_replay_at_epoch": 100.0,
-                            "last_replay_at_epoch": 200.0,
+                            "first_replay_at_epoch": 1791396310.0,
+                            "last_replay_at_epoch": 1791396400.0,
                             "amount_ton": 0.01,
                         }
                     },
@@ -80,6 +80,7 @@ class TonCanaryGateTests(unittest.TestCase):
                 "tx_hash": tx_hash,
                 "ton_amount": 0.01,
                 "credits": 1.0,
+                "timestamp": "2026-10-07T18:05:07.296058+00:00",
             }],
             "ledger": [{
                 "uid": CANARY_UID,
