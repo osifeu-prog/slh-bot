@@ -220,8 +220,11 @@ def backup_inventory(roots: tuple[Path, ...]) -> dict:
 
 def main() -> int:
     import state_manager
+    from core.account_ledger_audit import audit_account_ledger
     from core.slh_exchange_reconciliation import audit_db
+    from core.system_checks import check_bnb, check_exchange, check_money, check_ton
 
+    uid = "8789977826"
     db = state_manager.load_db()
     audit = audit_db(db)
     audit_summary = {
@@ -232,17 +235,64 @@ def main() -> int:
             "release_blocking_finding_count",
         ) if key in audit
     }
-    gates = {}
-    for key in (
+    gate_names = (
         "SLH_EXCHANGE_PUBLIC_OPEN", "BNB_DEPOSITS_OPEN",
         "TON_DEPOSITS_OPEN", "SLH_BSC_EXECUTION_ENABLED",
         "SLH_BSC_BROADCAST_ENABLED",
-    ):
+    )
+    gates = {}
+    for key in gate_names:
         value = os.getenv(key)
         gates[key] = value if value in {"0", "1"} else ("UNSET" if value is None else "SET_NON_BOOLEAN")
 
-    print("EXCHANGE_RELEASE_AUDIT", json.dumps(audit_summary, ensure_ascii=False))
+    exchange = check_exchange(db)
+    exchange_summary = {
+        key: exchange.get(key) for key in (
+            "ok", "public_gate", "public_ready", "verdict", "open_orders",
+            "test_seed_open", "recent_trades", "test_seed_trades",
+            "order_book_integrity", "trade_integrity", "money_invariants", "detail",
+        )
+    }
+    ledger = audit_account_ledger(db, uid)
+    ledger_summary = {
+        key: ledger.get(key) for key in (
+            "status", "rows_checked", "credits_sequence_rows_checked",
+            "non_credits_rows_skipped", "continuity_break_count",
+            "arithmetic_error_count", "malformed_global_rows",
+            "current_wallet_credits", "ledger_tail_after",
+            "current_balance_matches_tail", "blockers", "findings",
+        )
+    }
+    bnb = check_bnb()
+    bnb_summary = {
+        key: bnb.get(key) for key in (
+            "ok", "public_open", "flag_open", "ready", "launch_ready",
+            "empirical_status", "evidence_status", "historical_deposits_status",
+            "historical_deposits_found", "historical_deposits_failed",
+            "live_rpc_status", "confirmations_required", "gate_reasons",
+            "blockers", "warnings", "next_action",
+        )
+    }
+    ton = check_ton(uid)
+    ton_summary = {
+        key: ton.get(key) for key in (
+            "ok", "public_open", "flag_open", "ready", "rate",
+            "replay_evidence", "blockers", "warnings", "next_action",
+        ) if key in ton
+    }
+    money = check_money(uid)
+    money_summary = {
+        "ok": money.get("ok"), "detail": money.get("detail"),
+        "checks": money.get("checks"),
+    }
+
+    print("EXCHANGE_RELEASE_AUDIT", json.dumps(audit_summary, ensure_ascii=False, default=str))
     print("EFFECTIVE_ENV_FLAGS", json.dumps(gates, ensure_ascii=False))
+    print("CURRENT_EXCHANGE_CHECK", json.dumps(exchange_summary, ensure_ascii=False, default=str))
+    print("OWNER_CREDITS_AUDIT", json.dumps(ledger_summary, ensure_ascii=False, default=str))
+    print("BNB_READINESS_LIVE_RPC_READ_ONLY", json.dumps(bnb_summary, ensure_ascii=False, default=str))
+    print("TON_READINESS", json.dumps(ton_summary, ensure_ascii=False, default=str))
+    print("MONEY_INVARIANTS", json.dumps(money_summary, ensure_ascii=False, default=str))
     print("LIVE_SOURCE_ROWS", json.dumps(summarize_db(db, "LIVE"), ensure_ascii=False, default=str))
     roots = (
         Path("/app/state"), Path("/app/_slh_audit"),
