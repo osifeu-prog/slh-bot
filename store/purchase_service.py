@@ -44,7 +44,7 @@ def _validate_item(item):
     grant = item.get("grant")
     if not isinstance(grant, dict) or not grant:
         return "UNSUPPORTED_GRANT"
-    if not any(key in grant for key in ("permission", "course", "digital", "plugin", "hardware", "physical")):
+    if not any(key in grant for key in ("permission", "course", "digital", "plugin", "hardware", "physical", "bundle")):
         return "UNSUPPORTED_GRANT"
     return None
 
