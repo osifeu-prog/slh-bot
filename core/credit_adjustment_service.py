@@ -520,8 +520,7 @@ def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
     def mutate(db):
         if not isinstance(db, dict) or not isinstance(db.get("ledger"), list):
             raise ValueError("LEDGER_UNREADABLE")
-        if bnb_deposits_open():
-            raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+        _require_bnb_gate_closed_for_correction()
 
         source_index, source, source_meta, source_key = _find_source(db, uid, tx_hash)
         proof = _verify_self_transfer_for_reversal(uid, tx_hash, db)
