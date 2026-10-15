@@ -66,6 +66,7 @@ def test_render_help_prioritizes_known_commands_before_unknown_tail():
 def test_help_metadata_covers_existing_runtime_commands():
     commands = [
         "/check_ux",
+        "/check_exchange_reserves",
         "/biz",
         "/biz_users",
         "/biz_revenue",

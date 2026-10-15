@@ -39,6 +39,88 @@ def _icon(ok: bool) -> str:
 def _fmt_check(name: str, result: dict) -> str:
     return f"{_icon(bool(result.get('ok')))} {name}: {result.get('detail', 'no detail')}"
 
+def _safe_report_fragment(value, limit=100):
+    """Keep audit display fields single-line and bounded."""
+    return " ".join(str(value if value is not None else "").split())[:limit] or "—"
+
+
+def _exchange_reserves_output(report):
+    """Render a bounded read-only reserve report, failing closed on malformed results."""
+    valid_report = isinstance(report, dict) and report.get("read_only") is True
+    report = report if isinstance(report, dict) else {}
+    status = str(report.get("release_readiness_status") or "BLOCKED").upper()
+    findings = report.get("release_blocking_findings")
+    findings = findings if isinstance(findings, list) else []
+    try:
+        raw_count = report.get("release_blocking_finding_count")
+        count = len(findings) if raw_count is None else max(0, int(raw_count))
+    except (TypeError, ValueError, OverflowError):
+        count = len(findings) if isinstance(findings, list) else 1
+    checked = report.get("checked_cancelled_sell_orders", 0)
+    try:
+        checked = max(0, int(checked))
+    except (TypeError, ValueError, OverflowError):
+        checked = 0
+
+    release_pass = valid_report and status == "PASS" and count == 0
+    lines = [
+        "🧾 SLH EXCHANGE RESERVE AUDIT — READ ONLY",
+        "",
+        f"Release readiness: {'PASS' if release_pass else 'BLOCKED'}",
+        f"Audit integrity: {'PASS' if valid_report else 'BLOCKED'}",
+        f"Operational status: {_safe_report_fragment(report.get('operational_status'), 30)}",
+        f"Cancelled sell reserve orders checked: {checked}",
+        f"All findings: {_safe_report_fragment(report.get('finding_count', 'UNKNOWN'), 30)}",
+        f"Findings requiring release review: {count}",
+    ]
+
+    if not valid_report:
+        lines.append("Blocker: RESERVE_AUDIT_RESULT_INVALID")
+    elif status not in {"PASS", "BLOCKED"}:
+        lines.append("Blocker: RESERVE_AUDIT_STATUS_INVALID")
+
+    shown = 0
+    for item in findings[:12]:
+        if not isinstance(item, dict):
+            lines.append("• MALFORMED_FINDING")
+            shown += 1
+            continue
+        parts = [
+            _safe_report_fragment(item.get("code"), 90),
+            f"order={_safe_report_fragment(item.get('order_id'), 60)}",
+            f"ledger={_safe_report_fragment(item.get('ledger'), 30)}",
+        ]
+        classification = item.get("operational_classification")
+        if classification:
+            parts.append(f"class={_safe_report_fragment(classification, 45)}")
+        for key, label in (
+            ("reserve_delta", "reserve"),
+            ("normal_release_delta", "normal_release"),
+            ("correction_delta", "correction"),
+        ):
+            if key in item:
+                parts.append(f"{label}={_safe_report_fragment(item.get(key), 45)}")
+        event_ids = item.get("event_ids")
+        if isinstance(event_ids, list) and event_ids:
+            parts.append("events=" + ",".join(_safe_report_fragment(v, 45) for v in event_ids[:2]))
+        elif item.get("event_id"):
+            parts.append(f"event={_safe_report_fragment(item.get('event_id'), 60)}")
+        lines.append("• " + " | ".join(parts))
+        note = _safe_report_fragment(item.get("note"), 150)
+        if note != "—":
+            lines.append("  " + note)
+        shown += 1
+
+    if count > shown:
+        lines.append(f"… {count - shown} additional release findings omitted; inspect the full audit.")
+    elif len(findings) > 12:
+        lines.append(f"… {len(findings) - 12} more findings omitted.")
+    lines += [
+        "",
+        "🔒 No balances, orders, ledgers, wallets, or gates were changed.",
+    ]
+    return "\n".join(lines)[:3900]
+
 
 def _check_output(uid: str) -> str:
     db = check_db()
@@ -313,6 +395,29 @@ def register(bot, context=None):
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(message, f"❌ Exchange check failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["check_exchange_reserves"])
+    def check_exchange_reserves_cmd(message):
+        if not _allowed(message):
+            _send_denied(bot, message)
+            return
+        try:
+            from core.slh_exchange_reconciliation import run_once
+
+            report = run_once()
+            bot.reply_to(
+                message,
+                _exchange_reserves_output(report),
+                parse_mode=None,
+            )
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                "⛔ Exchange reserve audit BLOCKED — "
+                f"read-only snapshot failed ({type(exc).__name__}). "
+                "No accounting or gate changes were made.",
+                parse_mode=None,
+            )
 
     @bot.message_handler(commands=["check_bnb", "bnb_check"])
     def check_bnb_cmd(message):
