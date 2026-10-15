@@ -32,6 +32,16 @@ class FakeEth:
 def _fake_web3(eth):
     class FakeWeb3:
         @staticmethod
+        def is_address(value):
+            if not isinstance(value, str) or len(value) != 42 or not value.startswith("0x"):
+                return False
+            try:
+                int(value[2:], 16)
+            except ValueError:
+                return False
+            return True
+
+        @staticmethod
         def HTTPProvider(rpc, request_kwargs=None):
             return {"rpc": rpc, "request_kwargs": request_kwargs}
 
