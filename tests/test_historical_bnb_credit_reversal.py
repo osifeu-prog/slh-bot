@@ -216,6 +216,15 @@ def test_refuses_wallet_that_aliases_treasury_instead_of_this_case(monkeypatch):
     assert db == before
 
 
+def test_historical_deposit_is_not_reconciled_without_separate_operator_approval(monkeypatch):
+    db = _db()
+    monkeypatch.delenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", raising=False)
+
+    assert target.is_reconciled_invalid_historical_deposit(
+        db, 1, db["ledger"][1], _db()["bsc_settings"]
+    ) is False
+
+
 def test_refuses_when_operator_flag_is_on_even_if_historical_audit_blocks_gate(monkeypatch):
     db = _db()
     before = deepcopy(db)
