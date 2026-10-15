@@ -34,6 +34,9 @@ class TonDepositSettlementTests(unittest.TestCase):
         )
         self.tx_patch = patch.object(ton_deposit_service, "_find_ton_transaction")
         self.open_patch = patch.object(ton_deposit_service, "_deposits_open", return_value=True)
+        self.evidence_patch = patch.object(
+            ton_deposit_service, "_verified_public_replay_evidence", return_value=True
+        )
         self.settings_patch = patch.object(
             ton_deposit_service,
             "_settings",
@@ -44,12 +47,14 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.binding_patch.start()
         self.tx_mock = self.tx_patch.start()
         self.open_patch.start()
+        self.evidence_patch.start()
         self.settings_patch.start()
         self.addCleanup(self.atomic_patch.stop)
         self.addCleanup(self.load_patch.stop)
         self.addCleanup(self.binding_patch.stop)
         self.addCleanup(self.tx_patch.stop)
         self.addCleanup(self.open_patch.stop)
+        self.addCleanup(self.evidence_patch.stop)
         self.addCleanup(self.settings_patch.stop)
 
     def _tx(self, sender=BOUND, recipient=TREASURY, value_nano=1_000_000_000, memo="SLH12345"):
