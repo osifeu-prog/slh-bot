@@ -124,7 +124,6 @@ def record_vip_subscription_payment(
             "meta": {
                 "kind": period_kind,
                 "subscription_period": subscription_period,
-                "period_months": 12 if annual else 1,
             },
         }
 
