@@ -571,3 +571,23 @@ def test_audited_reversal_without_predecessor_anchor_remains_blocked():
     assert result["status"] == "BLOCKED"
     assert result["failed_rows"] == 1
     assert result["findings"][0]["status"] == "BLOCKED"
+
+
+def test_unknown_slh_prefix_cannot_anchor_audited_reversal():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    db["ledger"][0].update({
+        "before": 0.0,
+        "amount": 1.0,
+        "after": 1.0,
+        "reason": "slh:unknown_legacy_reason",
+    })
+
+    result = _run(
+        db, FakeEth(sender=SENDER, destination=SENDER), approved=True
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
