@@ -226,6 +226,8 @@ def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000,
             return False, "HUMAN_APPROVAL_INVALID: request not found."
         if str(request.get("requested_by", "")) != user_key:
             return False, "HUMAN_APPROVAL_INVALID: owner/request mismatch."
+        if request.get("status") != "approved_for_execution":
+            return False, "HUMAN_APPROVAL_NOT_VALID: request is not approved for execution."
         if request.get("command") != command:
             return False, "HUMAN_APPROVAL_INVALID: command mismatch."
     elif not rate_limit_ok(user_id):
