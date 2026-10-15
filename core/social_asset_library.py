@@ -134,8 +134,9 @@ def _centered(draw, text: str, y: int, font, fill, *, max_width: int = 1000):
     box = draw.textbbox((0, 0), value, font=font)
     width = box[2] - box[0]
     if width > max_width:
-        scale = max(12, int(font.size * max_width / max(width, 1)))
-        font = _font(scale, bold=font.size >= 40)
+        base_size = int(getattr(font, "size", 18) or 18)
+        scale = max(12, int(base_size * max_width / max(width, 1)))
+        font = _font(scale, bold=base_size >= 40)
         box = draw.textbbox((0, 0), value, font=font)
         width = box[2] - box[0]
     draw.text(((WIDTH - width) / 2, y), value, font=font, fill=fill)
