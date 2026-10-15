@@ -350,13 +350,9 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
     if not expected_audit:
         raise ValueError("REVERSAL_AUDIT_RECONCILIATION_FAILED")
 
-    try:
-        from core.authority import is_owner as owner_check
-        actor_uid = str(meta.get("actor_uid") or "")
-        if not actor_uid or not owner_check(actor_uid):
-            raise ValueError("REVERSAL_ACTOR_NOT_OWNER")
-    except Exception:
-        raise ValueError("REVERSAL_ACTOR_NOT_OWNER") from None
+    actor_uid = str(meta.get("actor_uid") or "")
+    if not actor_uid or not is_owner(actor_uid):
+        raise ValueError("REVERSAL_ACTOR_NOT_OWNER")
     return {
         "status": "ALREADY_REVERSED",
         "uid": uid,
