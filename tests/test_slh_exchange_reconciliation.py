@@ -922,5 +922,50 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertIn("LEDGER_EVENT_ID_MISSING", {item["code"] for item in report["findings"]})
         self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", {item["code"] for item in report["findings"]})
 
+    def test_archive_reason_alone_does_not_prove_test_seed_provenance(self):
+        # The archiver writes this reason after selection. It must not become
+        # circular evidence that the pre-archive order itself was a test seed.
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O_ARCHIVE_ONLY": {
+                    "id": "O_ARCHIVE_ONLY", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                    "archived_at": "2026-10-13T00:00:00+00:00",
+                    "archived_by": "operator",
+                    "archive_reason": "test_seed_retirement",
+                }
+            },
+            "ledger": [{
+                "uid": "seller", "amount": -5,
+                "reason": "exchange:sell_reserve",
+                "event_id": "reserve:O_ARCHIVE_ONLY",
+                "meta": {"order_id": "O_ARCHIVE_ONLY"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item.get("code") == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+        )
+
+        self.assertTrue(finding["order_is_archived"])
+        self.assertFalse(finding["order_is_test_seed"])
+        self.assertFalse(finding["order_is_archived_test_seed"])
+        self.assertEqual(finding["operational_classification"], "BLOCKING")
+        self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+
 if __name__ == "__main__":
     unittest.main()
