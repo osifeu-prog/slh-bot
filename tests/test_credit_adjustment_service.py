@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from core import credit_adjustment_service as target
+from core import bnb_history_audit
 
 UID = "test-owner-1"
 TX = "0x" + "ab" * 32
@@ -111,6 +112,32 @@ def _patch_runtime(monkeypatch, db, proof=None):
     )
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
+    monkeypatch.setattr(
+        bnb_history_audit,
+        "audit_bnb_deposit_history",
+        lambda _db: {
+            "scope": "read_only",
+            "status": "BLOCKED",
+            "rows_found": 2,
+            "rows_checked": 2,
+            "failed_rows": 1,
+            "blockers": [
+                "SELF_TRANSFER_NOT_A_DEPOSIT",
+                "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+            ],
+            "findings": [
+                {
+                    "tx_suffix": TX[-8:],
+                    "status": "BLOCKED",
+                    "issues": [
+                        "SELF_TRANSFER_NOT_A_DEPOSIT",
+                        "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+                    ],
+                },
+                {"tx_suffix": TX2[-8:], "status": "PASS", "issues": []},
+            ],
+        },
+    )
     return proof_state
 
 
