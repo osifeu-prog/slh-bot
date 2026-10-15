@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from core.authority import get_role, is_owner
 from core.release_readiness import build_release_report
 from core.system_checks import (
@@ -17,6 +20,8 @@ from core.system_checks import (
 
 
 _ALLOWED_ROLES = {"OWNER", "ADMIN", "DEVELOPER"}
+_PENDING_BNB_REVERSALS: dict[str, dict] = {}
+_BNB_REVERSAL_CONFIRM_TTL = timedelta(minutes=5)
 
 
 def _allowed(message) -> bool:
@@ -478,5 +483,174 @@ def register(bot, context=None):
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
             bot.reply_to(message, f"❌ TON check failed safely: {type(exc).__name__}")
+
+    @bot.message_handler(commands=["bnb_reverse_prepare"])
+    def bnb_reverse_prepare_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — BNB accounting correction.", parse_mode=None)
+            return
+        chat = getattr(message, "chat", None)
+        if getattr(chat, "type", "private") != "private":
+            bot.reply_to(message, "⛔ יש להריץ את הפקודה בשיחה פרטית עם הבוט.", parse_mode=None)
+            return
+        parts = (getattr(message, "text", "") or "").strip().split()
+        if len(parts) != 2:
+            bot.reply_to(
+                message,
+                "שימוש: /bnb_reverse_prepare <TX_HASH>\n"
+                "בדיקה חיה לקריאה בלבד; לא מתבצע reversal.",
+                parse_mode=None,
+            )
+            return
+        tx_hash = parts[1].strip()
+        try:
+            from core.credit_adjustment_service import preview_invalid_bnb_deposit_reversal
+
+            preview = preview_invalid_bnb_deposit_reversal(
+                actor_uid=uid, uid=uid, tx_hash=tx_hash
+            )
+            if preview.get("status") == "ALREADY_REVERSED":
+                bot.reply_to(
+                    message,
+                    "ℹ️ התיקון כבר קיים ומאומת; לא נוצר זיכוי/חיוב נוסף.\n"
+                    f"Balance after correction: {preview.get('balance_after', 'UNKNOWN')} Credits",
+                    parse_mode=None,
+                )
+                return
+            if preview.get("status") != "PREPARED" or preview.get("gate_remained_closed") is not True:
+                bot.reply_to(message, "⛔ PREVIEW BLOCKED — no mutation performed.", parse_mode=None)
+                return
+
+            now = datetime.now(timezone.utc)
+            for key, item in list(_PENDING_BNB_REVERSALS.items()):
+                expires = item.get("expires_at")
+                if not isinstance(expires, datetime) or expires <= now:
+                    _PENDING_BNB_REVERSALS.pop(key, None)
+            if len(_PENDING_BNB_REVERSALS) >= 20:
+                bot.reply_to(message, "⛔ יש יותר מדי בקשות אישור פעילות; בטל/המתן עד לפקיעת בקשה קיימת.", parse_mode=None)
+                return
+
+            confirmation = secrets.token_urlsafe(9)
+            while confirmation in _PENDING_BNB_REVERSALS:
+                confirmation = secrets.token_urlsafe(9)
+            _PENDING_BNB_REVERSALS[confirmation] = {
+                "actor_uid": uid,
+                "uid": uid,
+                "tx_hash": tx_hash.lower(),
+                "expected_current_balance": preview["expected_current_balance"],
+                "expires_at": now + _BNB_REVERSAL_CONFIRM_TTL,
+            }
+            lines = [
+                "🧾 BNB REVERSAL PREVIEW — LIVE READ ONLY",
+                f"Source ledger row: {preview.get('source_ledger_index')}",
+                f"TX suffix: …{preview.get('tx_suffix')}",
+                f"Credits to reverse: {preview.get('amount_reversed')}",
+                f"Current balance: {preview.get('balance_before')} Credits",
+                f"Projected balance: {preview.get('balance_after')} Credits",
+                "Historical BNB audit: all other rows passed; only this source self-transfer remains blocked.",
+                "Public BNB gate: CLOSED",
+                "DB changed: NO · Settlement executed: NO",
+                "",
+                f"To apply this one correction, within 5 minutes send: /bnb_reverse_confirm {confirmation}",
+                "Confirmation revalidates live chain, full deposit history, current balance and ledger sequence.",
+            ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"⛔ BNB reversal preview blocked safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
+
+    @bot.message_handler(commands=["bnb_reverse_confirm"])
+    def bnb_reverse_confirm_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — BNB accounting correction.", parse_mode=None)
+            return
+        chat = getattr(message, "chat", None)
+        if getattr(chat, "type", "private") != "private":
+            bot.reply_to(message, "⛔ יש להריץ את הפקודה בשיחה פרטית עם הבוט.", parse_mode=None)
+            return
+        parts = (getattr(message, "text", "") or "").strip().split()
+        if len(parts) != 2:
+            bot.reply_to(
+                message,
+                "שימוש: /bnb_reverse_confirm <CONFIRMATION_CODE>",
+                parse_mode=None,
+            )
+            return
+        code = parts[1].strip()
+        pending = _PENDING_BNB_REVERSALS.get(code)
+        now = datetime.now(timezone.utc)
+        if not isinstance(pending, dict) or pending.get("actor_uid") != uid:
+            bot.reply_to(message, "⛔ Confirmation code invalid or not issued to this owner.", parse_mode=None)
+            return
+        expires = pending.get("expires_at")
+        if not isinstance(expires, datetime) or expires <= now:
+            _PENDING_BNB_REVERSALS.pop(code, None)
+            bot.reply_to(message, "⌛ Confirmation expired; run /bnb_reverse_prepare again.", parse_mode=None)
+            return
+
+        # Consume before entering the atomic mutation, so a token can never be replayed.
+        _PENDING_BNB_REVERSALS.pop(code, None)
+        try:
+            from core.credit_adjustment_service import reverse_invalid_bnb_deposit
+
+            result = reverse_invalid_bnb_deposit(
+                actor_uid=uid,
+                uid=uid,
+                tx_hash=str(pending.get("tx_hash") or ""),
+                expected_current_balance=str(pending.get("expected_current_balance") or ""),
+                now=now,
+            )
+            if result.get("status") == "APPLIED" and result.get("gate_remained_closed") is True:
+                lines = [
+                    "✅ BNB ACCOUNTING CORRECTION APPLIED",
+                    f"TX suffix: …{str(result.get('tx_hash') or '')[-8:]}",
+                    f"Credits reversed: {result.get('amount_reversed')}",
+                    f"Balance before: {result.get('balance_before')}",
+                    f"Balance after: {result.get('balance_after')}",
+                    "Original ledger row preserved; one compensating debit and audit event appended.",
+                    "Public BNB gate remained CLOSED.",
+                ]
+            elif result.get("status") == "ALREADY_REVERSED" and result.get("gate_remained_closed") is True:
+                lines = [
+                    "ℹ️ BNB correction already exists and reconciles; no duplicate debit was applied.",
+                    f"Balance after: {result.get('balance_after')}",
+                    "Public BNB gate remained CLOSED.",
+                ]
+            else:
+                lines = [
+                    "⛔ Correction did not return an accepted status.",
+                    "Review live audit before retrying; a fresh preview is required.",
+                ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"⛔ BNB accounting correction refused safely: {type(exc).__name__}. "
+                "No retry token remains; re-run a fresh preview after reviewing the blocker.",
+                parse_mode=None,
+            )
+
+    @bot.message_handler(commands=["bnb_reverse_cancel"])
+    def bnb_reverse_cancel_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — BNB accounting correction.", parse_mode=None)
+            return
+        parts = (getattr(message, "text", "") or "").strip().split()
+        if len(parts) != 2:
+            bot.reply_to(message, "שימוש: /bnb_reverse_cancel <CONFIRMATION_CODE>", parse_mode=None)
+            return
+        code = parts[1].strip()
+        pending = _PENDING_BNB_REVERSALS.get(code)
+        if isinstance(pending, dict) and pending.get("actor_uid") == uid:
+            _PENDING_BNB_REVERSALS.pop(code, None)
+            bot.reply_to(message, "בקשת האישור בוטלה; לא בוצע שינוי בנתונים.", parse_mode=None)
+        else:
+            bot.reply_to(message, "Confirmation code invalid or not issued to this owner.", parse_mode=None)
 
     print("✅ system_checks loaded")
