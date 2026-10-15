@@ -261,7 +261,11 @@ def _valid_audited_reversal(
     saw_source = False
     saw_correction = False
     for index, row in enumerate(ledger):
-        if not isinstance(row, dict) or str(row.get("uid") or "") != source_uid:
+        # Malformed records anywhere in the canonical ledger make reconciliation
+        # incomplete; never skip a non-dict entry while accepting a reversal.
+        if not isinstance(row, dict):
+            return False
+        if str(row.get("uid") or "") != source_uid:
             continue
         row_before = _finite_number(row.get("before"))
         row_amount = _finite_number(row.get("amount"))

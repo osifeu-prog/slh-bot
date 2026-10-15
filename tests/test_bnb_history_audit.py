@@ -476,3 +476,19 @@ def test_approved_reversal_stays_resolved_when_public_operator_gate_is_open():
     assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
     assert "RECONCILED_HISTORY_APPROVAL_REQUIRED" not in result["blockers"]
 
+def test_audited_reversal_blocks_malformed_unrelated_ledger_row():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    db["ledger"].insert(0, None)
+    # Insertion shifts the source row by one; pin its index so the malformed
+    # row remains the sole purpose of this adversarial fixture.
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 1
+
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+
+
