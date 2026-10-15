@@ -96,6 +96,7 @@ KNOWN = {
     "ask": ("AI", "שאלת מערכת"),
     "faq": ("AI", "שאלות נפוצות"),
     "os": ("CONTROL", "SLH OS Control Center"),
+    "opshelp": ("CONTROL", "פקודות תפעול — OWNER בלבד"),
     "e": ("CONTROL", "Control Plane / execution gateway"),
     "exec": ("CONTROL", "ביצוע פקודה"),
     "redeploy": ("CONTROL", "Redeploy"),
@@ -112,6 +113,25 @@ KNOWN = {
     "mcp_test": ("AUTOMATION", "בדיקת MCP"),
     "autonomy_test": ("AUTOMATION", "בדיקת autonomy"),
 }
+
+
+# Intentionally small public allow-list. Runtime registration still decides
+# which of these commands actually exist; operational commands never leak into
+# the public /help response.
+PUBLIC_COMMANDS = (
+    ("start", "כניסה והתחלה"),
+    ("help", "מדריך שימושי"),
+    ("academy", "אקדמיה ולמידה"),
+    ("courses", "רשימת קורסים"),
+    ("ask", "שאלו את עוזר ה-AI"),
+    ("wallet", "ארנק ויתרת Credits"),
+    ("shop", "חנות ומוצרים"),
+    ("agents", "סוכני ה-AI שלכם"),
+    ("share", "הזמנה והפניות"),
+    ("faq", "שאלות נפוצות"),
+    ("miniapp", "פתיחת Mini App"),
+    ("trade_model", "הסבר על מודל ההכנסות"),
+)
 
 
 CATEGORY_ORDER = [
@@ -182,6 +202,33 @@ def get_catalog(bot_name="Me_ad_main"):
 
     return result
 
+
+
+def render_public_help(bot_name="Me_ad_main"):
+    """Render a conservative end-user menu, filtered by live runtime evidence."""
+    runtime = set(_runtime_commands(bot_name))
+    lines = [
+        "✨ SLH Spark — Smart Learning Hub",
+        "כאן לומדים, יוצרים ומתקדמים עם כלי AI וקהילה.",
+        "",
+        "פקודות שימושיות:",
+    ]
+    shown = 0
+    for command, description in PUBLIC_COMMANDS:
+        if command not in runtime:
+            continue
+        lines.append(f"/{command} — {description}")
+        shown += 1
+
+    if shown == 0:
+        lines.append("רשימת הפקודות לא אומתה כרגע. נסו שוב מאוחר יותר.")
+
+    lines.extend([
+        "",
+        "📈 מצב המסחר מופיע בנפרד. שער סגור או בדיקת מוכנות אינם אישור לביצוע עסקה.",
+        "פקודות ניהול, אבחון וסליקה אינן מוצגות במדריך הציבורי.",
+    ])
+    return "\\n".join(lines)
 
 def render_help(bot_name="Me_ad_main", limit=60):
     """Render a Telegram-safe compact catalog."""
