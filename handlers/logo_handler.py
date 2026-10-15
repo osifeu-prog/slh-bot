@@ -2,7 +2,10 @@ from handlers.onboarding_v2 import load_branding
 
 
 def register_logo_handler(bot):
-    @bot.message_handler(commands=['logo', 'brand'])
+    @bot.message_handler(commands=["logo", "brand"])
     def logo_cmd(msg):
-        branding = load_branding()
+        # The shared branding builder needs the live bot and requesting UID.
+        # Without them, /logo incorrectly renders the ID as "unknown".
+        user_id = str(getattr(getattr(msg, "from_user", None), "id", "") or "")
+        branding = load_branding(bot, user_id or None)
         bot.reply_to(msg, f"<pre>{branding}</pre>", parse_mode="HTML")
