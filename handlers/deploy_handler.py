@@ -137,6 +137,8 @@ def _safe_graphql_error_messages(payload):
         if message:
             messages.append(message[:240])
     return "; ".join(messages)
+
+
 def _graphql(token, query, variables):
     response = requests.post(
         RAILWAY_API_URL,
