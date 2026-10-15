@@ -7,13 +7,15 @@ from urllib.parse import quote
 from core.social_asset_library import get_asset, list_assets, render_social_asset
 
 
+PUBLIC_BASE_URL = "https://slh-cloud-bot-production.up.railway.app"
 PUBLIC_SITE = "https://slh-nft.com"
-MINI_APP_URL = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+MINI_APP_URL = PUBLIC_BASE_URL + "/mini-app-v4"
 
 
 def _share_url(asset: dict) -> str:
     text = str(asset.get("caption") or "").strip()
-    return "https://t.me/share/url?url=" + quote(PUBLIC_SITE, safe="") + "&text=" + quote(text, safe="")
+    share_page = PUBLIC_BASE_URL + "/share/" + quote(str(asset["id"]), safe="")
+    return "https://t.me/share/url?url=" + quote(share_page, safe="") + "&text=" + quote(text, safe="")
 
 
 def _catalog_markup():
@@ -112,7 +114,7 @@ def register(bot):
         bot.send_photo(
             chat_id,
             photo,
-            caption=str(asset["caption"])[:900],
+            caption=(str(asset["caption"]) + "\n\n" + PUBLIC_BASE_URL + "/share/" + asset_id)[:1024],
             reply_markup=buttons,
             parse_mode=None,
         )
