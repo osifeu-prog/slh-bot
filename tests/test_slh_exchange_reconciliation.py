@@ -718,5 +718,64 @@ class ExchangeReconciliationTests(unittest.TestCase):
             for item in report["release_blocking_findings"]
         ))
 
+    def test_balanced_legacy_cancel_remains_proven_with_unrelated_open_sell_reserve(self):
+        # The terminal order owns no reserve, while a different open order
+        # legitimately reserves 1 SLH. The wallet reserve must match active
+        # open orders; it need not be zero for this terminal order to reconcile.
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 10.0,
+                    "live_token_balance": 10.0,
+                    "exchange_reserved_slh": 1.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                },
+                "O_OPEN": {
+                    "id": "O_OPEN", "uid": "seller", "side": "sell",
+                    "status": "open", "original_amount": "1",
+                    "remaining_amount": "1", "reserved_slh": "1",
+                    "reserved_credits": "0",
+                },
+            },
+            "ledger": [
+                {
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+                {
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")  # Legacy IDs remain visible.
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertEqual(report["release_blocking_finding_count"], 0)
+        self.assertGreater(report["historical_finding_count"], 0)
+        self.assertTrue(all(
+            item["operational_classification"] == "LEGACY_BALANCED_CANCELLED_ORDER"
+            for item in report["findings"]
+        ))
+        self.assertTrue(all(
+            item.get("wallet_reserved_slh_is_zero") is False
+            and item.get("wallet_reserve_matches_open_orders") is True
+            for item in report["findings"]
+        ))
+
+
 if __name__ == "__main__":
     unittest.main()
