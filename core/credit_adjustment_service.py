@@ -244,17 +244,67 @@ def _validate_source(row, meta, proof, uid, tx_hash):
     return amount, amount_wei, before, after
 
 
+_SLH_ONLY_LEDGER_REASONS = frozenset({
+    "exchange:sell_reserve",
+    "exchange:cancel_release_slh",
+    "p2p:slh_sent",
+    "p2p:slh_received",
+})
+
+
+def _is_slh_only_ledger_reason(reason):
+    value = str(reason or "").strip().lower()
+    return (
+        value in _SLH_ONLY_LEDGER_REASONS
+        or value.startswith("p2p:slh:")
+        or value.startswith("slh:")
+    )
+
+
+def _validate_source_predecessor(ledger, uid, source_index, source_before):
+    """Anchor the BNB source to the latest preceding non-SLH row for this UID."""
+    for index in range(source_index - 1, -1, -1):
+        row = ledger[index]
+        if not isinstance(row, dict):
+            raise ValueError("ACCOUNT_LEDGER_ROW_INVALID")
+        if str(row.get("uid") or "").strip() != uid:
+            continue
+        if _is_slh_only_ledger_reason(row.get("reason")):
+            continue
+        before = _decimal(row.get("before"), "ACCOUNT_LEDGER_BEFORE_INVALID")
+        amount = _decimal(row.get("amount"), "ACCOUNT_LEDGER_AMOUNT_INVALID")
+        after = _decimal(row.get("after"), "ACCOUNT_LEDGER_AFTER_INVALID")
+        if abs((before + amount) - after) > _EPSILON:
+            raise ValueError("ACCOUNT_LEDGER_SEQUENCE_INVALID")
+        if abs(after - source_before) > _EPSILON:
+            raise ValueError("ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH")
+        return
+
+
 def _replay_account_ledger(ledger, uid, source_index):
-    """Validate full account-ledger continuity from its first row through latest."""
+    """Validate the exact BNB source through the current ledger tail.
+
+    Earlier account history is checked for a matching immediate predecessor
+    anchor, while unrelated older continuity gaps remain the responsibility of
+    the owner-wide account ledger audit.
+    """
     if not isinstance(ledger, list) or source_index < 0 or source_index >= len(ledger):
         raise ValueError("ACCOUNT_LEDGER_SOURCE_INDEX_INVALID")
+    # Keep malformed global rows fail-closed even when they predate this source.
+    if any(not isinstance(row, dict) for row in ledger):
+        raise ValueError("ACCOUNT_LEDGER_ROW_INVALID")
+    uid = str(uid or "").strip()
+    source = ledger[source_index]
+    if str(source.get("uid") or "").strip() != uid:
+        raise ValueError("ACCOUNT_LEDGER_SOURCE_NOT_FOUND")
+    source_before = _decimal(source.get("before"), "ACCOUNT_LEDGER_BEFORE_INVALID")
+    _validate_source_predecessor(ledger, uid, source_index, source_before)
+
     running = None
     balances = {}
     saw_source = False
-    uid = str(uid or "").strip()
-    for index, row in enumerate(ledger):
-        if not isinstance(row, dict):
-            raise ValueError("ACCOUNT_LEDGER_ROW_INVALID")
+    for index in range(source_index, len(ledger)):
+        row = ledger[index]
         if str(row.get("uid") or "").strip() != uid:
             continue
         before = _decimal(row.get("before"), "ACCOUNT_LEDGER_BEFORE_INVALID")
@@ -271,7 +321,6 @@ def _replay_account_ledger(ledger, uid, source_index):
     if not saw_source or running is None:
         raise ValueError("ACCOUNT_LEDGER_SOURCE_NOT_FOUND")
     return running, balances
-
 
 def _wallet_balance(db, uid):
     users = db.get("users")
