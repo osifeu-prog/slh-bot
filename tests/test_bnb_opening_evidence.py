@@ -592,6 +592,7 @@ def test_full_historical_audit_accepts_only_real_compensating_entry_with_approva
     monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "1")
     monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
+    monkeypatch.setattr("core.historical_bnb_credit_reversal.is_owner", lambda actor: str(actor) == uid)
     monkeypatch.setattr("core.bnb_gate._effective_config", lambda _db: _cfg())
     monkeypatch.setattr("core.historical_bnb_credit_reversal._effective_config", lambda _db: _cfg())
     monkeypatch.setattr("core.historical_bnb_credit_reversal.is_quarantined_bsc_address", lambda _address: False)
@@ -618,3 +619,13 @@ def test_full_historical_audit_accepts_only_real_compensating_entry_with_approva
     assert blocked["reconciled_count"] == 0
     assert blocked["finding_count"] == 1
     assert "CHAIN_TX_NOT_VERIFIED" in blocked["findings"][0]["issues"]
+
+    # Audit must not trust a self-consistent but non-owner-signed compensation.
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
+    db["ledger"][-1]["meta"]["actor_uid"] = "not-owner"
+    db["credit_adjustment_audit"][-1]["actor_uid"] = "not-owner"
+    forged_actor = _audit_historical_bnb_deposits(db, _cfg())
+    assert forged_actor["ok"] is False
+    assert forged_actor["reconciled_count"] == 0
+    assert forged_actor["finding_count"] == 1
+    assert "CHAIN_TX_NOT_VERIFIED" in forged_actor["findings"][0]["issues"]
