@@ -607,3 +607,22 @@ def test_reversal_fails_closed_when_no_predecessor_balance_anchor_exists(monkeyp
         _apply(db)
 
     assert db == before
+
+
+def test_unknown_slh_prefix_is_not_skipped_as_credit_anchor(monkeypatch):
+    db = _db()
+    db["ledger"][0].update({
+        "before": 0.0,
+        "amount": 1.0,
+        "after": 1.0,
+        "reason": "slh:unknown_legacy_reason",
+    })
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(
+        ValueError, match="ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH"
+    ):
+        _apply(db)
+
+    assert db == before
