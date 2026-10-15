@@ -395,6 +395,8 @@ def test_historical_self_transfer_with_valid_compensation_is_reconciled_only_for
     ), patch(
         "core.deposit_monitor.verify_bnb_deposit", side_effect=verify_one
     ), patch(
+        "core.wallet_binding.get_binding", return_value={"address": wallet}
+    ), patch(
         "core.historical_bnb_credit_reversal.is_reconciled_invalid_historical_deposit",
         return_value=True,
     ) as valid_compensation:
@@ -594,7 +596,7 @@ def test_full_historical_audit_accepts_only_real_compensating_entry_with_approva
         "core.historical_bnb_credit_reversal._verify_non_treasury_self_transfer",
         lambda _uid, _tx, _db: dict(bad_proof),
     )
-    monkeypatch.setattr("core.deposit_monitor.verify_bnb_deposit", side_effect=verify_tx)
+    monkeypatch.setattr("core.deposit_monitor.verify_bnb_deposit", verify_tx)
     monkeypatch.setattr("core.wallet_binding.get_binding", return_value={"address": wallet})
 
     result = _audit_historical_bnb_deposits(db, _cfg())
