@@ -51,6 +51,19 @@ def _reason_domain_hint(reason: Any) -> str:
     return "UNKNOWN_HINT"
 
 
+def _row_domain_hint(row: dict) -> str:
+    """Prefer explicit asset/domain metadata; fall back to a reason-only hint."""
+    meta = row.get("meta")
+    meta = meta if isinstance(meta, dict) else {}
+    explicit = str(meta.get("ledger_domain") or meta.get("asset") or "").strip().lower()
+    if explicit:
+        if "slh" in explicit or "token" in explicit:
+            return "SLH_HINT"
+        if "credit" in explicit:
+            return "CREDITS_HINT"
+    return _reason_domain_hint(row.get("reason"))
+
+
 def _row_summary(index: int, row: dict) -> dict:
     meta = row.get("meta")
     meta = meta if isinstance(meta, dict) else {}
@@ -59,7 +72,7 @@ def _row_summary(index: int, row: dict) -> dict:
         "index": index,
         "time": str(row.get("time") or "")[:32],
         "reason": str(row.get("reason") or "UNKNOWN")[:80],
-        "domain_hint": _reason_domain_hint(row.get("reason")),
+        "domain_hint": _row_domain_hint(row),
         "before": _number(row.get("before")),
         "amount": _number(row.get("amount")),
         "after": _number(row.get("after")),
@@ -101,6 +114,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
     current_balance = _number(wallet.get("credits")) if isinstance(wallet, dict) else None
 
     rows_checked = 0
+    sequence_rows_checked = 0
+    non_credits_rows_skipped = 0
     gap_count = 0
     arithmetic_count = 0
     malformed_global_rows = 0
@@ -124,6 +139,15 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
 
         rows_checked += 1
         summary = _row_summary(index, row)
+        # This report validates the user's Credits sequence. SLH-token rows are
+        # audited by the exchange/token-ledger reconciliation and must not be
+        # compared numerically with the Credits wallet. Keep the previous
+        # Credits candidate across such rows so a real Credits discontinuity
+        # cannot be hidden by an interleaved SLH event.
+        if summary["domain_hint"] == "SLH_HINT":
+            non_credits_rows_skipped += 1
+            continue
+        sequence_rows_checked += 1
         before, amount, after = summary["before"], summary["amount"], summary["after"]
         if before is None or amount is None or after is None or abs((before + amount) - after) > EPSILON:
             arithmetic_count += 1
@@ -179,6 +203,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
     blockers = []
     if rows_checked == 0:
         blockers.append("NO_ACCOUNT_LEDGER_ROWS")
+    if sequence_rows_checked == 0:
+        blockers.append("NO_CREDITS_SEQUENCE_ROWS")
     if arithmetic_count:
         blockers.append("ROW_ARITHMETIC_INVALID")
     if gap_count:
@@ -197,6 +223,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         "status": "PASS" if not blockers else "BLOCKED",
         "uid": uid,
         "rows_checked": rows_checked,
+        "credits_sequence_rows_checked": sequence_rows_checked,
+        "non_credits_rows_skipped": non_credits_rows_skipped,
         "continuity_break_count": gap_count,
         "arithmetic_error_count": arithmetic_count,
         "malformed_global_rows": malformed_global_rows,
