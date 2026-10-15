@@ -351,10 +351,39 @@ def test_non_owner_cannot_reverse(monkeypatch):
     assert db == before
 
 
+def test_preview_requires_explicit_closed_flag_when_flag_is_unset(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.delenv("BNB_DEPOSITS_OPEN", raising=False)
+
+    with pytest.raises(ValueError, match="BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid=UID, uid=UID, tx_hash=TX
+        )
+
+    assert db == before
+
+
+def test_preview_rejects_invalid_raw_bnb_gate_flag(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "false")
+
+    with pytest.raises(ValueError, match="BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid=UID, uid=UID, tx_hash=TX
+        )
+
+    assert db == before
+
+
 def test_open_bnb_gate_blocks_correction(monkeypatch):
     db = _db()
     before = deepcopy(db)
     _patch_runtime(monkeypatch, db)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: True)
 
     with pytest.raises(ValueError, match="BNB_GATE_MUST_REMAIN_CLOSED"):
