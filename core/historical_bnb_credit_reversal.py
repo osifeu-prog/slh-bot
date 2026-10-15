@@ -62,6 +62,13 @@ def _normalise_hash(value):
     return value
 
 
+def _require_operator_gate_flag_closed():
+    # A historically blocked audit can mask an operator flag that is still "1".
+    # Do not repair the last blocker and thereby accidentally make BNB effective-open.
+    if os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1":
+        raise ValueError("BNB_OPERATOR_FLAG_MUST_BE_CLOSED")
+
+
 def _treasury_context(db):
     if not isinstance(db, dict):
         raise ValueError("DB_UNREADABLE")
@@ -344,9 +351,14 @@ def _existing_reversal(db, record, proof, correction_key):
         and correction.get("reason") == _CORRECTION_REASON
         and meta.get("adjustment_kind") == _ADJUSTMENT_KIND
         and meta.get("source_idempotency_key") == record["source_key"]
+        and meta.get("source_reason") == "bnb:deposit"
         and meta.get("source_ledger_index") == record["source_index"]
         and _normalise_hash(meta.get("tx_hash")) == proof["tx_hash"]
         and meta.get("gate_remained_closed") is True
+        and meta.get("source_ledger_rows_preserved") is True
+        and meta.get("later_account_activity_preserved") is True
+        and str(meta.get("actor_uid") or "") == str(audit.get("actor_uid") or "")
+        and bool(str(meta.get("actor_uid") or "").strip())
         and meta.get("nominal_credits_reversed") == float(record["source_amount"])
         and amount == Decimal(str(-float(record["source_amount"])))
         and math.isclose(float(after), expected_after, rel_tol=0, abs_tol=_TOLERANCE)
@@ -384,6 +396,45 @@ def _existing_reversal(db, record, proof, correction_key):
     }
 
 
+def is_reconciled_invalid_historical_deposit(db, ledger_index, entry, config=None):
+    """Read-only validation that a failed historical deposit has a valid compensation.
+
+    Returns True only for an exact, unique non-Treasury self-transfer whose
+    original credited row is still present and whose compensating ledger + audit
+    rows fully reconcile. Every uncertainty fails closed.
+    """
+    try:
+        if not isinstance(db, dict) or not isinstance(entry, dict):
+            return False
+        index = _exact_int(ledger_index, "SOURCE_LEDGER_INDEX_INVALID")
+        uid = str(entry.get("uid") or "").strip()
+        meta = entry.get("meta")
+        if (
+            index < 0
+            or entry.get("reason") != "bnb:deposit"
+            or not uid
+            or not isinstance(meta, dict)
+        ):
+            return False
+        tx_hash = str(meta.get("tx_hash") or "").strip().lower()
+        if not _TX_HASH_RE.fullmatch(tx_hash):
+            return False
+        ledger = db.get("ledger")
+        if not isinstance(ledger, list) or index >= len(ledger) or ledger[index] != entry:
+            return False
+
+        record = _source_and_history(db, uid, tx_hash)
+        if record["source_index"] != index or record["source"] != entry:
+            return False
+        proof = _verify_non_treasury_self_transfer(uid, tx_hash, db)
+        _validate_proof_matches_source(record, proof)
+        correction_key = f"accounting:reversal:{tx_hash}"
+        existing = _existing_reversal(db, record, proof, correction_key)
+        return bool(existing and existing.get("status") == "ALREADY_REVERSED")
+    except Exception:
+        return False
+
+
 def reverse_invalid_nontreasury_bnb_self_transfer(
     *, actor_uid, uid, tx_hash, expected_current_balance, now=None
 ):
@@ -401,6 +452,7 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
         raise ValueError("INVALID_UID")
     if not _TX_HASH_RE.fullmatch(tx_hash):
         raise ValueError("INVALID_TX_HASH")
+    _require_operator_gate_flag_closed()
     if bnb_deposits_open():
         raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
 
@@ -435,6 +487,7 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
     def mutate(db):
         if not isinstance(db, dict):
             raise ValueError("DB_UNREADABLE")
+        _require_operator_gate_flag_closed()
         if bnb_deposits_open():
             raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
         context = _treasury_context(db)
