@@ -1,6 +1,5 @@
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
-import threading
 from datetime import datetime, timezone
 from unittest.mock import patch
 
