@@ -104,6 +104,7 @@ def snapshot():
 
 REWARDS = {
     "join_points": 1000,
+    "daily_points": 10,
     "referral_points": 10,
     "referral_credits": 0.9,
     "lesson_complete_points": 25,
