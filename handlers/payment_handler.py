@@ -91,6 +91,39 @@ def register_payment_handlers(bot):
             print(f"[VIP] invoice error: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
 
+
+    @bot.message_handler(commands=['vipcredits'])
+    def vipcredits_command(m):
+        from core.vip_credits_service import purchase_vip_month_with_credits
+        uid = str(m.from_user.id)
+        result = purchase_vip_month_with_credits(uid)
+        status = str(result.get("status") or "")
+        if status == "APPLIED":
+            expiry = int(result.get("vip_access_until") or 0)
+            import time
+            until = time.strftime("%Y-%m-%d", time.gmtime(expiry))
+            bot.send_message(
+                m.chat.id,
+                "✅ VIP הופעל ל־30 ימים תמורת 150 Credits.\n"
+                f"פעיל עד: {until}\n"
+                "זהו תשלום ידני ללא חידוש אוטומטי. לחידוש לאחר הפקיעה: /vipcredits",
+            )
+        elif status == "ACTIVE":
+            import time
+            expiry = int(result.get("vip_access_until") or 0)
+            until = time.strftime("%Y-%m-%d", time.gmtime(expiry))
+            bot.send_message(m.chat.id, f"ℹ️ VIP כבר פעיל עד {until}. לא חויבת שוב.")
+        elif status == "INSUFFICIENT_CREDITS":
+            balance = result.get("credits_balance", 0)
+            bot.send_message(
+                m.chat.id,
+                f"❌ נדרשים 150 Credits ל־VIP לחודש. היתרה הנוכחית: {balance} Credits.",
+            )
+        elif status == "USER_NOT_FOUND":
+            bot.send_message(m.chat.id, "❌ יש לבצע /join לפני רכישת VIP.")
+        else:
+            bot.send_message(m.chat.id, "⚠️ לא ניתן להשלים את רכישת ה־VIP בבטחה כרגע.")
+
     @bot.message_handler(commands=['pay'])
     def pay_command(m):
         _send_pay_menu(bot, m.chat.id, str(m.from_user.id))
