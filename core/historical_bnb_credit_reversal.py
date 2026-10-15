@@ -421,11 +421,14 @@ def is_reconciled_invalid_historical_deposit(db, ledger_index, entry, config=Non
         index = _exact_int(ledger_index, "SOURCE_LEDGER_INDEX_INVALID")
         uid = str(entry.get("uid") or "").strip()
         meta = entry.get("meta")
+        actor_uid = str(meta.get("actor_uid") or "").strip() if isinstance(meta, dict) else ""
         if (
             index < 0
             or entry.get("reason") != "bnb:deposit"
             or not uid
             or not isinstance(meta, dict)
+            or actor_uid != uid
+            or not is_owner(actor_uid)
         ):
             return False
         tx_hash = str(meta.get("tx_hash") or "").strip().lower()
@@ -462,6 +465,8 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
         raise PermissionError("OWNER_ONLY")
     if not uid:
         raise ValueError("INVALID_UID")
+    if uid != actor_uid:
+        raise PermissionError("OWNER_ACCOUNT_ONLY")
     if not _TX_HASH_RE.fullmatch(tx_hash):
         raise ValueError("INVALID_TX_HASH")
     _require_operator_gate_flag_closed()
