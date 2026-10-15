@@ -38,6 +38,8 @@ class StoreCatalogFulfillmentTests(unittest.TestCase):
                 "vip_months_bonus": 3,
             },
         )
+        from store.purchase_service import _validate_item
+        self.assertIsNone(_validate_item(self.items["esp32_pro"]))
         investor_bundle = self.items["slh_investor_bundle"]
         self.assertEqual(investor_bundle["price_stars"], 899)
         self.assertEqual(len(investor_bundle["grant"]["bundle"]), 8)
