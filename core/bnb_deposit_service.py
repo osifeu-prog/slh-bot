@@ -21,7 +21,22 @@ CREDITS_PER_BNB = 1000
 def settle_bnb_deposit(uid, tx_hash):
     uid = str(uid)
     canary_uid = os.getenv("BNB_DEPOSITS_CANARY_UID", "").strip()
-    canary_allowed = bool(canary_uid) and uid == canary_uid and bool(bnb_readiness().get("ready"))
+    canary_allowed = False
+    # Canary is a closed-gate exception, not a way to bypass a raw OPEN intent
+    # whose full public-gate evidence currently fails. Require an explicit closed
+    # operator flag before evaluating the canary's readiness and history proof.
+    operator_flag_closed = os.getenv("BNB_DEPOSITS_OPEN", "").strip() == "0"
+    if canary_uid and uid == canary_uid and operator_flag_closed:
+        try:
+            current_db = state_manager.load_db()
+            canary_allowed = bool(bnb_readiness(current_db).get("ready"))
+            if canary_allowed:
+                from core.bnb_history_audit import audit_bnb_deposit_history
+                canary_allowed = (
+                    audit_bnb_deposit_history(current_db).get("status") == "PASS"
+                )
+        except Exception:
+            canary_allowed = False
     if not (bnb_deposits_open() or canary_allowed):
         raise ValueError("BNB_DEPOSITS_CLOSED")
     if not isinstance(tx_hash, str) or not tx_hash.strip():
