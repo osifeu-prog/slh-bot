@@ -192,5 +192,82 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertEqual(result["verdict"], "OPEN")
 
 
+    def test_wrong_side_for_linked_buy_order_blocks_readiness(self):
+        from core.system_checks import check_exchange
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        db["exchange_orders"][str(trade["buy_order_id"])]["side"] = "sell"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:bad_buy_order", result["detail"])
+
+    def test_missing_linked_buy_order_blocks_readiness(self):
+        from core.system_checks import check_exchange
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["buy_order_id"] = "O_MISSING"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:bad_buy_order", result["detail"])
+
+    def test_wrong_credits_value_blocks_readiness(self):
+        from core.system_checks import check_exchange
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["credits_value"] = "999.00000000"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:bad_value", result["detail"])
+
+    def test_duplicate_trade_id_blocks_readiness(self):
+        from core.system_checks import check_exchange
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        db["exchange_trades"].append(dict(trade))
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:duplicate_or_missing_id", result["detail"])
+
+    def test_execution_check_blocks_trade_price_above_buy_limit(self):
+        from core.system_checks import check_exchange_for_execution
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["price"] = "3.00000000"
+        trade["credits_value"] = "15.00000000"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            result = check_exchange_for_execution(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["execution_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:price_above_buy_limit", result["detail"])
+
+
 if __name__ == "__main__":
     unittest.main()
