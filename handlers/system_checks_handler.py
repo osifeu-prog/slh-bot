@@ -316,6 +316,76 @@ def register(bot, context=None):
         except Exception as exc:
             bot.reply_to(message, f"❌ Exchange check failed safely: {type(exc).__name__}")
 
+    @bot.message_handler(commands=["check_owner_ledger"])
+    def check_owner_ledger_cmd(message):
+        uid = str(message.from_user.id)
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔ OWNER ONLY — owner ledger diagnostics.", parse_mode=None)
+            return
+        chat = getattr(message, "chat", None)
+        if chat is None or getattr(chat, "type", None) != "private":
+            bot.reply_to(message, "⛔ להריץ את בדיקת ספר החשבונות רק בשיחה פרטית עם הבוט.", parse_mode=None)
+            return
+        try:
+            import state_manager
+            from core.account_ledger_audit import audit_account_ledger
+
+            result = audit_account_ledger(state_manager.load_db(), uid)
+            lines = [
+                "🧾 OWNER ACCOUNT LEDGER — READ ONLY",
+                "",
+                f"Status: {result.get('status', 'BLOCKED')}",
+                f"Rows checked: {result.get('rows_checked', 0)}",
+                f"Continuity breaks: {result.get('continuity_break_count', 0)}",
+                f"Row arithmetic errors: {result.get('arithmetic_error_count', 0)}",
+                f"Malformed global rows: {result.get('malformed_global_rows', 0)}",
+                f"Wallet Credits: {result.get('current_wallet_credits', 'UNKNOWN')}",
+                f"Last ledger after: {result.get('ledger_tail_after', 'UNKNOWN')}",
+                f"Wallet matches ledger tail: {result.get('current_balance_matches_tail', False)}",
+                "",
+            ]
+            for item in result.get("findings", [])[:12]:
+                if not isinstance(item, dict):
+                    continue
+                kind = str(item.get("type") or "UNKNOWN")
+                if isinstance(item.get("previous"), dict) and isinstance(item.get("next"), dict):
+                    previous, next_row = item["previous"], item["next"]
+                    lines.append(
+                        f"{kind}: #{previous.get('index')} {previous.get('reason')} "
+                        f"after={previous.get('after')} → #{next_row.get('index')} "
+                        f"{next_row.get('reason')} before={next_row.get('before')} "
+                        f"delta={item.get('delta_to_explain')}"
+                    )
+                    lines.append(
+                        f"  hints: {previous.get('domain_hint')} → {next_row.get('domain_hint')}; "
+                        "source evidence required"
+                    )
+                elif isinstance(item.get("row"), dict):
+                    row = item["row"]
+                    lines.append(
+                        f"{kind}: #{row.get('index')} {row.get('reason')} "
+                        f"before={row.get('before')} amount={row.get('amount')} after={row.get('after')}"
+                    )
+                else:
+                    lines.append(f"{kind}: row #{item.get('index', 'UNKNOWN')}")
+            for blocker in result.get("blockers", [])[:8]:
+                lines.append(f"Blocker: {blocker}")
+            if result.get("findings_truncated"):
+                lines.append("Additional findings omitted; inspect source-backed export.")
+            lines += [
+                "",
+                "⚠️ Reason/domain hints are heuristic, not accounting proof.",
+                "🔒 No DB, ledger, Credits, wallets, or gates changed.",
+                "Do not execute an accounting correction until every discontinuity has source-backed reconciliation.",
+            ]
+            bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                f"⛔ Owner ledger audit failed safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
+
     @bot.message_handler(commands=["check_bnb", "bnb_check"])
     def check_bnb_cmd(message):
         if not _allowed(message):
