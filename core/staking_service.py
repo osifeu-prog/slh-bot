@@ -30,6 +30,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         user = users.get(uid)
         if user is None:
             raise ValueError("user not found")
+        if isinstance(user, dict) and user.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
 
         wallet = user.setdefault("wallet", {})
         credits = float(wallet.get("credits", 0) or 0)
