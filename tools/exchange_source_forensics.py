@@ -206,9 +206,13 @@ def backup_inventory(roots: tuple[Path, ...]) -> dict:
             if candidate[2] != selected[0][2]:
                 selected.append(candidate)
                 break
+        focus_ids = {"O0000000006", "O0000000009", "O0000000010", "O0000000011", "O0000000012"}
         for modified, size, path, _summary, data in selected:
             details = summarize_db(data, str(path), include_rows=True)
             details["mtime_utc"] = datetime.fromtimestamp(modified, timezone.utc).isoformat()
+            details["orders"] = [{k: v for k, v in row.items() if v is not None} for row in details["orders"]]
+            details["events"] = [{k: v for k, v in row.items() if v is not None} for row in details["events"] if row.get("order_id") in focus_ids][:24]
+            details["trades"] = [{k: v for k, v in row.items() if v is not None} for row in details["trades"]]
             detailed.append(details)
     return {
         "files_scanned": len(files),
