@@ -318,6 +318,22 @@ def test_later_ledger_sequence_mismatch_fails_without_mutation(monkeypatch):
     assert db == before
 
 
+def test_owner_cannot_reverse_another_users_account(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(PermissionError, match="OWNER_SELF_ACCOUNT_ONLY"):
+        target.reverse_invalid_bnb_deposit(
+            actor_uid=UID,
+            uid="other-user",
+            tx_hash=TX,
+            expected_current_balance="30.072775",
+        )
+
+    assert db == before
+
+
 def test_non_owner_cannot_reverse(monkeypatch):
     db = _db()
     before = deepcopy(db)
