@@ -1,4 +1,6 @@
 from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
+import threading
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -458,3 +460,40 @@ def test_existing_reversal_with_corrupt_audit_fails_closed(monkeypatch):
         _apply(db)
 
     assert db == before
+
+
+
+def test_concurrent_reversal_attempts_apply_compensation_once(monkeypatch):
+    """Two simultaneous confirms must produce one debit and one audit event."""
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    lock = threading.Lock()
+
+    def atomic_update(mutate):
+        # Model the process/thread serialization provided by state_manager.
+        with lock:
+            return mutate(db)
+
+    monkeypatch.setattr(target.state_manager, "atomic_update", atomic_update)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(_apply, db), pool.submit(_apply, db)]
+        results = [future.result() for future in futures]
+
+    statuses = [result["status"] for result in results]
+    assert statuses.count("APPLIED") == 1
+    assert statuses.count("ALREADY_REVERSED") == 1
+    assert db["users"][UID]["wallet"]["credits"] == 20.072775
+    corrections = [
+        row for row in db["ledger"]
+        if isinstance(row, dict)
+        and isinstance(row.get("meta"), dict)
+        and row["meta"].get("idempotency_key") == CORRECTION_KEY
+    ]
+    audit_rows = [
+        row for row in db["credit_adjustment_audit"]
+        if isinstance(row, dict)
+        and row.get("correction_idempotency_key") == CORRECTION_KEY
+    ]
+    assert len(corrections) == 1
+    assert len(audit_rows) == 1
