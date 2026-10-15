@@ -21,6 +21,7 @@ def _blocked_reserve_report():
         "operational_classification": "HISTORICAL_ARCHIVED_TEST_SEED",
     }
     return {
+        "read_only": True,
         "status": "FAIL",
         "operational_status": "PASS",
         "release_readiness_status": "BLOCKED",
@@ -91,3 +92,35 @@ def test_exchange_readiness_fails_closed_if_reserve_audit_raises():
     assert result["reserve_reconciliation_status"] == "BLOCKED"
     assert result["reserve_reconciliation_ok"] is False
     assert result["verdict"] == "BLOCKED"
+
+def test_exchange_readiness_fails_closed_on_inconsistent_reserve_summary():
+    db = _clean_exchange_db()
+    finding = {
+        "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
+        "order_id": "O0000000009",
+    }
+    malformed_report = {
+        "read_only": True,
+        "release_readiness_status": "PASS",
+        "release_blocking_finding_count": 0,
+        "release_blocking_findings": [finding],
+    }
+
+    with patch(
+        "core.slh_exchange_reconciliation.audit_db",
+        return_value=malformed_report,
+    ), patch(
+        "handlers.exchange_handler._assert_invariants",
+        return_value=None,
+    ), patch(
+        "core.exchange_gate.public_open",
+        return_value=True,
+    ):
+        result = check_exchange(db)
+
+    assert result["reserve_reconciliation_status"] == "BLOCKED"
+    assert result["reserve_reconciliation_ok"] is False
+    assert result["reserve_blocking_count"] == 1
+    assert result["public_ready"] is False
+    assert result["verdict"] == "BLOCKED"
+\n
