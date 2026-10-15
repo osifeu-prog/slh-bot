@@ -28,6 +28,12 @@ RELEASE_GATE_BLOCKER_CODES = frozenset({
     "DUPLICATE_LEDGER_EVENT_ID",
     "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW",
     "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
+    "ARCHIVED_TRADE_ID_INVALID",
+    "ARCHIVED_TRADE_ORDER_LINK_INVALID",
+    "ARCHIVED_TRADE_PARTY_MISMATCH",
+    "ARCHIVED_TRADE_VALUE_INVALID",
+    "ARCHIVED_TRADE_PRICE_OUTSIDE_LIMITS",
+    "ARCHIVED_TRADE_PRICE_EVIDENCE_INVALID",
 })
 
 # Event IDs became mandatory on 2026-09-28. Earlier ordinary reserve/release
@@ -110,6 +116,80 @@ def audit_db(db):
 
     def _uid(order):
         return str(order.get("uid") or order.get("user_id") or "")
+
+    # Archived trades remain part of financial history. Archival metadata must
+    # not make an invalid trade/order relationship disappear from release checks.
+    seen_archived_trade_ids = set()
+    for key, trade in _records(db.get("exchange_trade_archive", [])):
+        raw_tid = trade.get("trade_id") or trade.get("id")
+        tid = str(raw_tid or "").strip()
+        buy_id = str(trade.get("buy_order_id") or "").strip()
+        sell_id = str(trade.get("sell_order_id") or "").strip()
+        linked_order_ids = sorted({oid for oid in (buy_id, sell_id) if oid})
+
+        if not tid or tid in seen_archived_trade_ids:
+            findings.append({
+                "code": "ARCHIVED_TRADE_ID_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+        if tid:
+            seen_archived_trade_ids.add(tid)
+
+        buy_order = orders.get(buy_id) if buy_id else None
+        sell_order = orders.get(sell_id) if sell_id else None
+        buy_ok = isinstance(buy_order, dict) and str(buy_order.get("side") or "").lower() == "buy"
+        sell_ok = isinstance(sell_order, dict) and str(sell_order.get("side") or "").lower() == "sell"
+        if not buy_id or not sell_id or buy_id == sell_id or not buy_ok or not sell_ok:
+            findings.append({
+                "code": "ARCHIVED_TRADE_ORDER_LINK_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+            continue
+
+        buyer_uid = str(trade.get("buyer_uid") or "")
+        seller_uid = str(trade.get("seller_uid") or "")
+        if (
+            not buyer_uid or not seller_uid or buyer_uid == seller_uid
+            or _uid(buy_order) != buyer_uid
+            or _uid(sell_order) != seller_uid
+        ):
+            findings.append({
+                "code": "ARCHIVED_TRADE_PARTY_MISMATCH",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+
+        amount = _amount(trade.get("slh_amount"))
+        price = _amount(trade.get("price"))
+        value = _amount(trade.get("credits_value"))
+        if (
+            amount is None or amount <= 0
+            or price is None or price <= 0
+            or value is None or value <= 0
+            or value != amount * price
+        ):
+            findings.append({
+                "code": "ARCHIVED_TRADE_VALUE_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+
+        bid = _amount(buy_order.get("limit_price"))
+        ask = _amount(sell_order.get("limit_price"))
+        if bid is None or ask is None or price is None:
+            findings.append({
+                "code": "ARCHIVED_TRADE_PRICE_EVIDENCE_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+        elif price > bid or price < ask:
+            findings.append({
+                "code": "ARCHIVED_TRADE_PRICE_OUTSIDE_LIMITS",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
 
     # Cache expected current reserves per account. Values are never emitted in
     # findings; only consistency booleans are added for safe operator triage.
