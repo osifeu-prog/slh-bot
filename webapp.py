@@ -1340,7 +1340,7 @@ def send_social_asset_to_telegram_api():
     caption = str(payload.get("caption") or asset["caption"]).strip()
     if len(caption) > 850:
         return jsonify({"error": "CAPTION_TOO_LONG"}), 400
-    caption = (caption + "\\n\\n" + share_url)[:1024]
+    caption = (caption + "\n\n" + share_url)[:1024]
     try:
         response = requests.post(
             f"https://api.telegram.org/bot{token}/sendPhoto",
