@@ -109,7 +109,9 @@ def list_assets(base_url: str) -> list[dict[str, Any]]:
     output = []
     for key in _ASSETS:
         item = get_asset(key)
-        item["image_url"] = f"{base}/api/v1/social/assets/{quote(key, safe='')}.png"
+        safe_id = quote(key, safe="")
+        item["image_url"] = f"{base}/api/v1/social/assets/{safe_id}.png"
+        item["share_url"] = f"{base}/share/{safe_id}"
         output.append(item)
     return output
 
