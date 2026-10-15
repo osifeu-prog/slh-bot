@@ -190,8 +190,10 @@ def create_registered_action_request(actor_uid, action_key, parameters=None, sou
 
     def mutate(db):
         state = _ensure_state(db)
-        required = _effective_settings(state)["action_execution"]
-        status = "pending_execution" if required else "approved_for_execution"
+        # Typed system actions (deployment/Alpha transitions) always keep a
+        # dedicated approval, even if the generic shell-action setting is off.
+        required = True
+        status = "pending_execution"
         record = {
             "id": request_id, "kind": "registered_action",
             "action_key": action_key, "parameters": parameters,
