@@ -108,7 +108,7 @@ def test_public_help_handler_uses_public_catalog_and_opshelp_is_owner_only():
 
 def test_ai_grounding_policy_addresses_unverified_investor_numbers_and_legal_claims():
     assert "Never invent active-user counts" in AI_FACTUALITY_POLICY
-    assert "not already approved or implemented" in AI_FACTUALITY_POLICY
+    assert "as already approved or implemented" in AI_FACTUALITY_POLICY
     assert "non-custodial architecture eliminates legal/regulatory liability" in AI_FACTUALITY_POLICY
     assert "Only mention commands present in the runtime command registry" in AI_FACTUALITY_POLICY
     assert "Never invent user counts" in SLH_SYSTEM_RULES
