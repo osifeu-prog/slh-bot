@@ -72,6 +72,29 @@ class BNBCanaryTests(unittest.TestCase):
         verify.assert_not_called()
         record.assert_not_called()
 
+    def test_owner_canary_stays_blocked_when_raw_operator_flag_is_unset(self):
+        with (
+            patch.dict(
+                os.environ,
+                {"BNB_DEPOSITS_CANARY_UID": "8789977826"},
+                clear=True,
+            ),
+            patch.object(service, "bnb_deposits_open", return_value=False),
+            patch.object(service, "bnb_readiness", return_value={"ready": True}),
+            patch.object(
+                service.state_manager,
+                "load_db",
+                return_value={"ledger": [], "users": {"8789977826": {"wallet": {"credits": 7.19}}}},
+            ),
+            patch("core.bnb_history_audit.audit_bnb_deposit_history", return_value={"status": "PASS"}),
+            patch.object(service, "verify_bnb_deposit") as verify,
+            patch.object(service, "record_transaction") as record,
+        ):
+            with self.assertRaisesRegex(ValueError, "BNB_DEPOSITS_CLOSED"):
+                service.settle_bnb_deposit("8789977826", "0xTX")
+        verify.assert_not_called()
+        record.assert_not_called()
+
     def test_non_canary_user_stays_closed(self):
         with patch.dict(os.environ, {"BNB_DEPOSITS_OPEN": "0", "BNB_DEPOSITS_CANARY_UID": "8789977826"}, clear=False),              patch.object(service, "bnb_deposits_open", return_value=False),              patch.object(service, "bnb_readiness", return_value={"ready": True}):
             with self.assertRaisesRegex(ValueError, "BNB_DEPOSITS_CLOSED"):
@@ -102,28 +125,3 @@ class BNBCanaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-    def test_owner_canary_stays_blocked_when_raw_operator_flag_is_unset(self):
-        with (
-            patch.dict(
-                os.environ,
-                {"BNB_DEPOSITS_CANARY_UID": "8789977826"},
-                clear=False,
-            ),
-            patch.object(service, "bnb_deposits_open", return_value=False),
-            patch.object(service, "bnb_readiness", return_value={"ready": True}),
-            patch.object(
-                service.state_manager,
-                "load_db",
-                return_value={"ledger": [], "users": {"8789977826": {"wallet": {"credits": 7.19}}}},
-            ),
-            patch("core.bnb_history_audit.audit_bnb_deposit_history", return_value={"status": "PASS"}),
-            patch.object(service, "verify_bnb_deposit") as verify,
-            patch.object(service, "record_transaction") as record,
-        ):
-            os.environ.pop("BNB_DEPOSITS_OPEN", None)
-            with self.assertRaisesRegex(ValueError, "BNB_DEPOSITS_CLOSED"):
-                service.settle_bnb_deposit("8789977826", "0xTX")
-        verify.assert_not_called()
-        record.assert_not_called()
