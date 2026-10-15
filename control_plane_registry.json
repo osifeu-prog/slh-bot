@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "verified_date_utc": "2026-09-21",
+  "verified_date_utc": "2026-10-15",
   "purpose": "Canonical Control Plane inventory snapshot for SLH and connected external projects.",
   "canonical": {
     "repo": "osifeu-prog/slh-bot",
@@ -16,7 +16,7 @@
       "name": "slh-os-control-plane",
       "id": "fd30fefb-3d35-48a5-a7cb-e05337e812c4",
       "environment_id": "661caa13-83cb-4197-8825-943bebf96c5a",
-      "role": "canonical_control_plane",
+      "role": "canonical_control_plane_web_and_mcp",
       "services": [
         {
           "name": "web",
@@ -24,13 +24,15 @@
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
           "status": "SUCCESS",
-          "class": "primary",
+          "class": "control_plane_web_non_polling",
           "runtime_policy": {
             "start_command": "bash start_railway.sh",
             "restart_policy": "ALWAYS",
             "replicas": 1,
             "healthcheck": "/health",
-            "volume": "/app/state"
+            "volume": "/app/state",
+            "RUN_BOT": "0 (runtime log observed 2026-10-15)",
+            "role_note": "Web/control-plane service does not own Telegram polling in the observed deployment."
           }
         },
         {
@@ -38,7 +40,7 @@
           "id": "97aaaea9-6ab3-4aad-960d-23d12e3c8b11",
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
-          "status": "DEPLOYING",
+          "status": "SUCCESS",
           "class": "mcp_control_plane",
           "domain": "slh-mcp-production.up.railway.app",
           "runtime_policy": {
@@ -48,7 +50,8 @@
             "replicas": 1,
             "transport": "Streamable HTTP",
             "endpoint": "/mcp"
-          }
+          },
+          "runtime_note": "Railway Online; /health returned HTTP 200 and Railway healthcheck succeeded in logs on 2026-10-15."
         }
       ]
     },
@@ -56,7 +59,7 @@
       "name": "slh-cloud-bot",
       "id": "b33cb8d5-e82c-4a74-b94b-b52eb8c3d3db",
       "environment_id": "e82af387-87bb-40c9-b250-2e8a0b7fb41a",
-      "role": "secondary_non_polling_runtime",
+      "role": "active_telegram_polling_runtime",
       "services": [
         {
           "name": "slh-cloud-bot",
@@ -64,12 +67,13 @@
           "repo": "osifeu-prog/slh-bot",
           "branch": "main",
           "status": "SUCCESS",
-          "class": "secondary_non_polling",
+          "class": "active_telegram_polling_runtime",
           "runtime_policy": {
-            "RUN_BOT": "0",
-            "restart_policy": "NEVER",
-            "replicas": 1
-          }
+            "observed_polling": true,
+            "replicas": 1,
+            "evidence": "Runtime logs show [OK] Bot Me_ad_main started and Starting polling... on 2026-10-15."
+          },
+          "runtime_note": "This service owns the active Telegram polling observed on 2026-10-15; do not move polling to another service without a deployment/ownership review."
         }
       ]
     },
@@ -118,7 +122,7 @@
         {
           "name": "Postgres",
           "id": "c3437a2c-7dd5-406c-8372-35b40b71de86",
-          "status": "FAILED",
+          "status": "SUCCESS",
           "class": "infrastructure"
         }
       ]
@@ -162,8 +166,9 @@
           "id": "7f8ea87c-8b8b-4b22-9e2e-10525709eced",
           "repo": "osifeu-prog/telegram-bot",
           "branch": "main",
-          "status": "FAILED",
-          "class": "external_bot"
+          "status": "SUCCESS",
+          "class": "external_bot",
+          "runtime_note": "Railway reports Online with a successful current deployment on 2026-10-15; 2 warnings remain and API-level liveness was not independently probed."
         },
         {
           "name": "grafana",
@@ -174,8 +179,9 @@
         {
           "name": "prometheus",
           "id": "cacfb4ac-368b-483e-8491-2a9f142cb9b0",
-          "status": "FAILED",
-          "class": "infrastructure"
+          "status": "REMOVED",
+          "class": "infrastructure",
+          "runtime_note": "Not present in the live Railway service inventory checked on 2026-10-15; no deletion was performed by this audit."
         },
         {
           "name": "Redis",
@@ -242,9 +248,9 @@
           "id": "06b914f7-3e5f-4d35-82b2-5efd80fdca6a",
           "repo": "osifeu-prog/slh-claude-bot",
           "branch": "main",
-          "status": "CRASHED",
+          "status": "FAILED",
           "class": "legacy_crashed_bot",
-          "runtime_note": "TelegramUnauthorizedError observed; do not revive blindly. Website AI is routed to canonical SLH OS."
+          "runtime_note": "Railway reports Online, but runtime logs on 2026-10-15 show repeated TelegramUnauthorizedError / Unauthorized. Do not restart or rotate credentials automatically; website AI routes to canonical SLH OS."
         },
         {
           "name": "monitor.slh",
@@ -266,8 +272,9 @@
         {
           "name": "slh-fastapi",
           "id": "36269107-908a-449f-97ba-787871ba322f",
-          "status": "FAILED",
-          "class": "api_service"
+          "status": "DEGRADED",
+          "class": "api_service",
+          "runtime_note": "Latest deployment FAILED (2026-06-21); older successful deployment remains associated with the online service. Endpoint health not independently verified; do not label fully healthy."
         },
         {
           "name": "Postgres",
@@ -395,14 +402,15 @@
     }
   ],
   "notes": [
-    "slh-mcp is a dedicated MCP control-plane service in slh-os-control-plane; deployment status is point-in-time and must be re-verified before treating MCP as live.",
-    "Railway statuses above were reconciled live on 2026-09-21 via project environment/service status APIs; they are point-in-time deployment states, not continuous process heartbeats.",
-    "Canonical production is slh-os-control-plane/web on osifeu-prog/slh-bot main. It is the only configured production polling gateway; start_railway.sh owns polling and the service is configured with one replica.",
-    "slh-cloud-bot also sources osifeu-prog/slh-bot main, but its live service configuration has RUN_BOT=0 and restart policy NEVER; it is retained as a non-polling secondary runtime and must not be enabled automatically.",
-    "Legacy/external stacks are tracked for ownership and migration visibility. No automatic shutdown or deletion was performed during reconciliation.",
-    "slh-AI-bot is CRASHED and has a TelegramUnauthorizedError in its known deployment; do not revive blindly. The public SLH.co.il site currently routes its AI assistant to the canonical SLH OS API.",
-    "slh-api remains live and is retained because legacy site/API paths still depend on it.",
+    "Status is a dated inventory snapshot and not a continuous process heartbeat. See each service runtime_note before assigning an operational health label.",
+    "Live logs on 2026-10-15 show slh-os-control-plane/web with RUN_BOT=0; it is not the observed polling owner.",
+    "Live logs on 2026-10-15 show slh-cloud-bot started Bot Me_ad_main and began Telegram polling. Keep only one configured polling owner; verify before any future runtime topology change.",
+    "slh-mcp is Online and its /health endpoint returned HTTP 200 in the 2026-10-15 logs.",
+    "slh-AI-bot repeatedly returned TelegramUnauthorizedError in live logs despite Railway showing Online. Do not blindly revive; public website AI routes to the canonical SLH OS path. Human decision is required to retire the legacy service or restore its correct credentials.",
+    "slh-fastapi's latest deployment is FAILED while an older successful deployment remains attached to an Online service. Its endpoint health must be tested before treating it as fully green.",
+    "Legacy/external stacks are tracked for ownership and migration visibility. No service shutdown, token rotation, or deletion was performed during this audit.",
+    "slh-api remains live because some legacy site/API paths still depend on it.",
     "Unmapped GitHub repositories have no matching Railway service in this workspace snapshot; that does not prove they are not deployed elsewhere."
   ],
-  "verification_scope": "Live Railway project/service deployment status and service configuration reconciled on 2026-09-21; deployment status is current at verification time, not continuous runtime heartbeat."
+  "verification_scope": "Railway production service inventories/status and selected runtime logs were reconciled on 2026-10-15. This is a dated snapshot, not continuous process liveness. slh-cloud-bot polling is confirmed from runtime logs; slh-os-control-plane/web RUN_BOT=0 is confirmed from runtime logs. slh-AI-bot emits repeated TelegramUnauthorizedError. slh-fastapi latest deployment is FAILED while Railway still reports its service Online; endpoint health was not independently confirmed."
 }
