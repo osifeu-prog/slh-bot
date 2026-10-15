@@ -39,6 +39,24 @@ class ExchangePublicGateTests(unittest.TestCase):
             "exchange_sequence": 1,
         }
 
+    def _matched_trade_db(self):
+        db = self._db()
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            exchange_handler._place(
+                db, "seller", "sell",
+                exchange_handler._dec("5", "amount"),
+                exchange_handler._dec("2", "price"),
+                "req-party-sell",
+            )
+            exchange_handler._place(
+                db, "buyer", "buy",
+                exchange_handler._dec("5", "amount"),
+                exchange_handler._dec("2", "price"),
+                "req-party-buy",
+            )
+        self.assertEqual(len(db["exchange_trades"]), 1)
+        return db
+
     def test_order_entry_is_fail_closed(self):
         db = self._db()
         with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
@@ -87,6 +105,48 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertTrue(result["public_ready"])
         self.assertEqual(result["public_gate"], "CLOSED")
         self.assertEqual(result["verdict"], "READY_TO_OPEN")
+
+
+    def test_valid_trade_parties_pass_exchange_readiness(self):
+        from core import system_checks
+
+        db = self._matched_trade_db()
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = system_checks.check_exchange(db)
+
+        self.assertTrue(result["trade_integrity"])
+        self.assertTrue(result["public_ready"])
+        self.assertEqual(result["verdict"], "READY_TO_OPEN")
+
+    def test_mismatched_buyer_order_owner_blocks_exchange_readiness(self):
+        from core import system_checks
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["buyer_uid"] = "buyer-identity-mismatch"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = system_checks.check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:buyer_order_owner_mismatch", result["detail"])
+
+    def test_mismatched_seller_order_owner_blocks_exchange_readiness(self):
+        from core import system_checks
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["seller_uid"] = "seller-identity-mismatch"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = system_checks.check_exchange(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:seller_order_owner_mismatch", result["detail"])
 
 
 if __name__ == "__main__":
