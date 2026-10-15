@@ -30,7 +30,6 @@ These facts come from the supplied read-only outputs dated 2026-10-15, not from 
 
 **Interpretation:** The supplied DB snapshot contains no recorded referral attribution. It does not prove that nobody ever opened or clicked a Telegram link; it means no qualifying referral start is evidenced in that snapshot. The code/loader path is present, and the aggregate runtime command evidence reports zero collisions, but a specific live `/start` callback has not yet been identified from the registry output. Do not patch referral code, backfill users, rewrite `code`, or fabricate referral records without new failing runtime evidence.
 
-**Interpretation:** The supplied DB snapshot contains no recorded referral attribution. It does not prove that nobody ever opened or clicked a Telegram link; it means no qualifying referral start is evidenced in that snapshot. The code/loader path is present, so do not patch referral code, backfill users, rewrite `code`, or fabricate referral records without new failing runtime evidence.
 
 ### Exchange and external settlement
 - The operator's 11:30 narrative reported trades `T24` and `T26`, four trades total, zero open orders, order-book/money invariants passing, and a public gate open.
