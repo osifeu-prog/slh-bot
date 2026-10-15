@@ -6,6 +6,7 @@ This document describes a proposed code change on this branch. It does not mean 
 
 - VIP via Telegram Stars: the existing `/vip` recurring subscription remains 499 Stars/month. The existing launch benefits remain governed by their current qualification and deadline.
 - VIP via Credits: `/vipcredits` is a manual one-month purchase for 150 Credits. It does not auto-renew. A second call while VIP is active reports the expiry and does not debit again.
+- Annual VIP: `/vip annual` (also accepts `/vip yearly` and `/vip שנתי`) creates a one-time Telegram Stars invoice for 4,990 Stars and grants 365 days of VIP. It is not recurring; no auto-renewal is started. The price is equal to 10 monthly payments of 499 Stars, so it saves 2 monthly payments (998 Stars).
 - Investor digital bundle: `/buystars slh_investor_bundle` is one 899-Star purchase and grants the eight existing digital entitlements: Agent OS, Trade Pro permission, the three existing courses, and three emoji packs. The included item prices sum to **1,321 Stars** (199 + 199 + 299 + 299 + 150 + 50 + 100 + 25), so the discount is **422 Stars (~31.95%)**, not 622 Stars/41%.
 - The bundle includes a fixed 50-Credit bonus and one complimentary VIP month. A separate WhatsApp cashback policy is specified at 10% of Stars paid, rounded half-up to whole Credits (899 Stars would return 90 Credits), but **cashback is not currently issued** because the per-purchase WhatsApp-intent-to-payment attribution writer is not implemented. Do not advertise the extra 90 Credits or the 140-Credit total yet.
 - ESP32 Pro retains its canonical price of 888 Credits and existing hardware grant, and adds Agent OS plus three complimentary VIP months. The proposed 10% WhatsApp cashback on a completed 888-Credit purchase would be 88.8 Credits, but it is **not active** until a verified per-purchase attribution record is written. Inventory comes from canonical runtime state; never advertise a fixed quantity without a live inventory check.
@@ -30,7 +31,6 @@ This document describes a proposed code change on this branch. It does not mean 
 ## Not included / must not be promised yet
 
 - Daily Trade Pro signal delivery: granting the `trade_pro` permission does not prove that a daily signal delivery service or fixed cadence is running.
-- Annual VIP: `/vip annual` (also accepts `/vip yearly` and `/vip שנתי`) creates a one-time Telegram Stars invoice for 4,990 Stars and grants 365 days of VIP. It is not recurring; no auto-renewal is started. The price is equal to 10 monthly payments of 499 Stars, so it saves 2 monthly payments (998 Stars).
 - Private WhatsApp group membership, automated invite after payment, early-access-course announcements, and direct Q&A scheduling are not automated by this PR.
 - Agent OS entitlement is granted with ESP32 Pro, but physical device staging / pre-installation is not automated.
 
