@@ -68,10 +68,19 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
             return False
 
         tx_hash = str(evidence.get("tx_hash") or "").strip().lower()
-        replay_count = int(evidence.get("replay_count") or 0)
-        first_replay = float(evidence.get("first_replay_at_epoch") or 0)
-        last_replay = float(evidence.get("last_replay_at_epoch") or 0)
-        evidence_amount = Decimal(str(evidence.get("amount_ton") or 0))
+        by_tx_hash = evidence.get("by_tx_hash")
+        if not isinstance(by_tx_hash, dict):
+            return False
+        tx_evidence = by_tx_hash.get(tx_hash)
+        if not isinstance(tx_evidence, dict):
+            return False
+        if str(tx_evidence.get("tx_hash") or "").strip().lower() != tx_hash:
+            return False
+
+        replay_count = int(tx_evidence.get("replay_count") or 0)
+        first_replay = float(tx_evidence.get("first_replay_at_epoch") or 0)
+        last_replay = float(tx_evidence.get("last_replay_at_epoch") or 0)
+        evidence_amount = Decimal(str(tx_evidence.get("amount_ton") or 0))
         if (
             not tx_hash
             or replay_count < 1
@@ -318,26 +327,42 @@ def _match_deposit_intent(uid, transaction, intent_id=None):
 
 
 def _record_ton_replay_evidence(uid, tx_hash, transaction):
-    """Record an idempotent replay as audit evidence without touching Credits."""
+    """Record idempotent replay evidence independently for each transaction hash."""
     try:
         now = time.time()
+        tx_key = str(tx_hash).strip().lower()
+        amount_ton = float(Decimal(str(transaction.get("amount_ton") or 0)))
 
         def mutate(db):
-            evidence = db.setdefault("ton_replay_evidence", {})
-            current = evidence.get(str(uid))
+            evidence_by_uid = db.setdefault("ton_replay_evidence", {})
+            current = evidence_by_uid.get(str(uid))
             if not isinstance(current, dict):
                 current = {}
-            evidence[str(uid)] = {
-                "tx_hash": str(tx_hash),
-                "replay_count": int(current.get("replay_count") or 0) + 1,
-                "first_replay_at_epoch": float(current.get("first_replay_at_epoch") or now),
+
+            by_tx_hash = current.get("by_tx_hash")
+            if not isinstance(by_tx_hash, dict):
+                by_tx_hash = {}
+
+            per_tx = by_tx_hash.get(tx_key)
+            if not isinstance(per_tx, dict):
+                per_tx = {}
+
+            record = {
+                "tx_hash": tx_key,
+                "replay_count": int(per_tx.get("replay_count") or 0) + 1,
+                "first_replay_at_epoch": float(per_tx.get("first_replay_at_epoch") or now),
                 "last_replay_at_epoch": now,
-                "amount_ton": float(Decimal(str(transaction.get("amount_ton") or 0))),
+                "amount_ton": amount_ton,
             }
+            by_tx_hash[tx_key] = record
+            # Preserve the existing top-level summary for older status surfaces,
+            # but keep its counters scoped to the most recently replayed TX.
+            evidence_by_uid[str(uid)] = {**record, "by_tx_hash": by_tx_hash}
 
         state_manager.atomic_update(mutate)
     except Exception as exc:
         print("[TON_REPLAY] audit mark failed:", type(exc).__name__)
+
 
 
 def _mark_deposit_intent_matched(intent_id, tx_hash, idempotent):
