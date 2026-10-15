@@ -422,6 +422,31 @@ def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
         if existing is not None:
             return existing
 
+        # Re-audit every historical BNB credit before applying a correction.
+        # Only the exact source self-transfer and its known Treasury mismatch may
+        # remain unresolved; every other deposit (including row 210 in the
+        # supplied evidence) must independently pass live chain verification.
+        try:
+            from core.bnb_history_audit import audit_bnb_deposit_history
+            history = audit_bnb_deposit_history(db)
+        except Exception:
+            history = {"status": "BLOCKED", "findings": []}
+        blocked_findings = [
+            item for item in (history.get("findings") or [])
+            if isinstance(item, dict) and item.get("status") == "BLOCKED"
+        ]
+        allowed_source_issues = {
+            "SELF_TRANSFER_NOT_A_DEPOSIT",
+            "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+        }
+        if not (
+            history.get("status") == "BLOCKED"
+            and len(blocked_findings) == 1
+            and str(blocked_findings[0].get("tx_suffix") or "").lower() == tx_hash[-8:].lower()
+            and set(blocked_findings[0].get("issues") or []) == allowed_source_issues
+        ):
+            raise ValueError("HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS")
+
         correction_collisions = [
             row for row in db["ledger"]
             if isinstance(row, dict) and isinstance(row.get("meta"), dict)
