@@ -259,8 +259,28 @@ def register_payment_handlers(bot):
                     "⚠️ תשלום VIP נקלט, אך השלמת חבילת ההשקה ממתינה לריצוי אוטומטי.\n"
                     "החיוב יתחדש אוטומטית לפי מנוי Telegram Stars."
                 )
+            loyalty_rewards = result.get("loyalty_rewards") or {}
+            referral_rewards = loyalty_rewards.get("referral") or {}
+            newbie_bonus = referral_rewards.get("new_buyer_bonus") or {}
+            referral_commission = referral_rewards.get("referrer_commission") or {}
+            if newbie_bonus.get("status") == "APPLIED":
+                message += "\n🎁 בונוס לקוח VIP שהגיע מהפניה: 25 Credits."
+            if referral_commission.get("status") == "APPLIED":
+                referrer_uid = str(referral_rewards.get("referrer_uid") or "").strip()
+                try:
+                    if referrer_uid.isdigit() and referrer_uid != uid:
+                        bot.send_message(
+                            int(referrer_uid),
+                            "👥 הופעלה רכישת VIP דרך ההפניה שלך. "
+                            f"זוכית ב־{referral_commission.get('credits')} Credits "
+                            "עמלת הפניה (10% ממחיר ה־Stars, מומרת ל־Credits).",
+                        )
+                except Exception as exc:
+                    print(f"[VIP] referral notification failed: {type(exc).__name__}")
+            cashback = loyalty_rewards.get("whatsapp_cashback") or {}
+            if cashback.get("status") == "APPLIED":
+                message += f"\n💚 החזר WhatsApp: {cashback.get('credits')} Credits."
             bot.send_message(m.chat.id, message)
-            return
             return
 
         if payload.startswith("item_") and payload.endswith("_" + uid):
@@ -299,9 +319,14 @@ def register_payment_handlers(bot):
             if result["status"] == "RECOVERABLE":
                 bot.send_message(m.chat.id, "⚠️ Payment received. Fulfillment needs recovery; retry is safe and will not charge again.")
                 return
+            cashback = result.get("cashback") or {}
+            cashback_line = (
+                f"\n🎁 WhatsApp cashback: {cashback.get('credits')} Credits."
+                if cashback.get("status") == "APPLIED" else ""
+            )
             bot.send_message(m.chat.id, "✅ Payment received and item fulfilled.\n"
                               f"Item: {item_id}\nStars: {payment.total_amount}\n"
-                              f"Ref: {payment.telegram_payment_charge_id[:12]}")
+                              f"Ref: {payment.telegram_payment_charge_id[:12]}{cashback_line}")
             return
 
         parts = payload.split("_")
