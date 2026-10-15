@@ -26,6 +26,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
         report = audit_db(db)
         codes = {item["code"] for item in report["findings"]}
         self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
         self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
         self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", codes)
         missing_release = next(item for item in report["findings"] if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE")
@@ -84,6 +86,10 @@ class ExchangeReconciliationTests(unittest.TestCase):
     def test_no_matched_reserves_is_unknown_not_pass(self):
         report = audit_db({"exchange_orders": {}, "ledger": [], "slh_token_ledger": []})
         self.assertEqual(report["status"], "UNKNOWN")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn("RESERVE_HISTORY_NOT_PROVEN", {
+            item["code"] for item in report["release_blocking_findings"]
+        })
         self.assertIn("NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND", {item["code"] for item in report["findings"]})
 
     def test_invalid_reserve_amount_fails_closed(self):
@@ -480,7 +486,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
 
 
-    def test_archived_test_seed_findings_are_nonblocking_only_when_current_reserves_match(self):
+    def test_archived_test_seed_can_be_operationally_historical_but_block_release(self):
         db = {
             "users": {
                 "seller": {"wallet": {
@@ -512,6 +518,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
         self.assertEqual(report["blocking_finding_count"], 0)
         self.assertEqual(report["historical_finding_count"], report["finding_count"])
         self.assertEqual(len(report["blocking_findings"]), 0)
@@ -557,6 +565,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertEqual(report["release_blocking_finding_count"], 0)
         self.assertGreater(report["historical_finding_count"], 0)
         self.assertEqual(report["blocking_finding_count"], 0)
         self.assertTrue(all(
@@ -597,6 +607,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
         self.assertGreater(report["blocking_finding_count"], 0)
         self.assertGreater(len(report["blocking_findings"]), 0)
         self.assertTrue(any(
@@ -636,11 +648,134 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
         self.assertGreater(report["blocking_finding_count"], 0)
         self.assertTrue(any(
             item.get("wallet_reserve_matches_open_orders") is False
             for item in report["blocking_findings"]
         ))
+
+
+    def test_archived_test_seed_manual_correction_still_blocks_public_release(self):
+        order_id = "O0000000009"
+        event_id = f"correction:missed_release:{order_id}"
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 50000.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                order_id: {
+                    "id": order_id,
+                    "uid": "seller",
+                    "side": "sell",
+                    "status": "cancelled",
+                    "original_amount": "10000",
+                    "remaining_amount": "0",
+                    "reserved_slh": "0",
+                    "reserved_credits": "0",
+                    "test": True,
+                    "archive_reason": "test_seed_retirement",
+                    "archived_at": "2026-09-28T00:00:00+00:00",
+                }
+            },
+            "exchange_trades": [],
+            "ledger": [
+                {
+                    "uid": "seller", "amount": -10000.0,
+                    "reason": "exchange:sell_reserve",
+                    "event_id": f"reserve:{order_id}",
+                    "meta": {"order_id": order_id},
+                },
+                {
+                    "uid": "seller", "amount": 10000.0,
+                    "reason": "exchange:missed_release_correction",
+                    "event_id": event_id,
+                    "meta": {"order_id": order_id, "event_id": event_id},
+                },
+            ],
+            "slh_token_ledger": [{
+                "amount": 10000.0,
+                "reason": "exchange:missed_release_correction",
+                "kind": "reserve_release_correction",
+                "event_id": event_id,
+                "order_id": order_id,
+            }],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
+        self.assertTrue(any(
+            item.get("code") == "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW"
+            and item.get("order_id") == order_id
+            for item in report["release_blocking_findings"]
+        ))
+
+    def test_balanced_legacy_cancel_remains_proven_with_unrelated_open_sell_reserve(self):
+        # The terminal order owns no reserve, while a different open order
+        # legitimately reserves 1 SLH. The wallet reserve must match active
+        # open orders; it need not be zero for this terminal order to reconcile.
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 10.0,
+                    "live_token_balance": 10.0,
+                    "exchange_reserved_slh": 1.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                },
+                "O_OPEN": {
+                    "id": "O_OPEN", "uid": "seller", "side": "sell",
+                    "status": "open", "original_amount": "1",
+                    "remaining_amount": "1", "reserved_slh": "1",
+                    "reserved_credits": "0",
+                },
+            },
+            "ledger": [
+                {
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+                {
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")  # Legacy IDs remain visible.
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertEqual(report["release_blocking_finding_count"], 0)
+        self.assertGreater(report["historical_finding_count"], 0)
+        self.assertTrue(all(
+            item["operational_classification"] == "LEGACY_BALANCED_CANCELLED_ORDER"
+            for item in report["findings"]
+        ))
+        self.assertTrue(all(
+            item.get("wallet_reserved_slh_is_zero") is False
+            and item.get("wallet_reserve_matches_open_orders") is True
+            for item in report["findings"]
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()
