@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -22,6 +23,15 @@ from core.system_checks import (
 _ALLOWED_ROLES = {"OWNER", "ADMIN", "DEVELOPER"}
 _PENDING_BNB_REVERSALS: dict[str, dict] = {}
 _BNB_REVERSAL_CONFIRM_TTL = timedelta(minutes=5)
+
+
+def _safe_bnb_preview_error_label(exc: Exception) -> str:
+    """Expose only a stable symbolic ValueError code, never arbitrary exception text."""
+    if type(exc) is ValueError:
+        code = str(exc).strip()
+        if re.fullmatch(r"[A-Z][A-Z0-9_]{1,79}", code):
+            return code
+    return type(exc).__name__
 
 
 def _allowed(message) -> bool:
@@ -692,9 +702,12 @@ def register(bot, context=None):
             ]
             bot.reply_to(message, "\n".join(lines)[:3900], parse_mode=None)
         except Exception as exc:
+            # Internal service errors are symbolic identifiers (e.g. BNB_GATE_MUST_REMAIN_CLOSED).
+            # Never echo arbitrary provider/exception messages; they can contain URLs or sensitive data.
+            reason = _safe_bnb_preview_error_label(exc)
             bot.reply_to(
                 message,
-                f"⛔ BNB reversal preview blocked safely: {type(exc).__name__}",
+                f"⛔ BNB reversal preview blocked safely: {reason}. No changes performed.",
                 parse_mode=None,
             )
 
