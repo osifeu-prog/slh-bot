@@ -116,28 +116,40 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             from core.slh_exchange_reconciliation import audit_db
 
             reserve_audit = audit_db(db)
-            if not isinstance(reserve_audit, dict):
+            if not isinstance(reserve_audit, dict) or reserve_audit.get("read_only") is not True:
                 raise TypeError("RESERVE_AUDIT_RESULT_INVALID")
+
             reserve_reconciliation_status = str(
-                reserve_audit.get("release_readiness_status") or "BLOCKED"
+                reserve_audit.get("release_readiness_status") or ""
             ).upper()
             reserve_blocking_findings = reserve_audit.get("release_blocking_findings")
-            reserve_blocking_findings = (
-                reserve_blocking_findings
-                if isinstance(reserve_blocking_findings, list)
-                else []
-            )
-            reserve_blocking_count = int(
-                reserve_audit.get("release_blocking_finding_count") or len(reserve_blocking_findings)
-            )
+            if (
+                reserve_reconciliation_status not in {"PASS", "BLOCKED"}
+                or not isinstance(reserve_blocking_findings, list)
+                or not all(isinstance(item, dict) for item in reserve_blocking_findings)
+            ):
+                raise TypeError("RESERVE_AUDIT_RESULT_INVALID")
+
+            raw_reserve_blocking_count = reserve_audit.get("release_blocking_finding_count")
+            if (
+                isinstance(raw_reserve_blocking_count, bool)
+                or not isinstance(raw_reserve_blocking_count, int)
+                or raw_reserve_blocking_count < 0
+                or raw_reserve_blocking_count != len(reserve_blocking_findings)
+            ):
+                raise TypeError("RESERVE_AUDIT_COUNT_MISMATCH")
+            if (reserve_reconciliation_status == "PASS") != (raw_reserve_blocking_count == 0):
+                raise TypeError("RESERVE_AUDIT_STATUS_COUNT_MISMATCH")
+
+            reserve_blocking_count = raw_reserve_blocking_count
             reserve_blocking_codes = sorted({
                 str(item.get("code") or "UNKNOWN")
                 for item in reserve_blocking_findings
-                if isinstance(item, dict)
             })[:6]
             reserve_reconciliation_ok = (
                 reserve_reconciliation_status == "PASS"
                 and reserve_blocking_count == 0
+                and not reserve_blocking_findings
             )
         except Exception as exc:
             reserve_reconciliation_status = "BLOCKED"
