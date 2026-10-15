@@ -14,6 +14,10 @@ def _exchange_status_line():
             and str(verdict).strip().upper() == "OPEN"
             and result.get("public_ready") is True
             and result.get("ok") is True
+            # The current main build has no financial-release field, so it
+            # must never display OPEN until the reserve audit is integrated.
+            and result.get("reserve_reconciliation_ok") is True
+            and result.get("reserve_blocking_count") == 0
         ):
             return "📈 Internal Exchange — OPEN · canonical readiness checks PASS."
         return "📈 Internal Exchange — status unverified; treat trading as blocked."
