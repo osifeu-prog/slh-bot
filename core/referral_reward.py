@@ -333,3 +333,5 @@ def maybe_award(uid, now=None):
         }
         awards[uid] = record
         return dict(record)
+
+    return state_manager.atomic_update(mutate)
