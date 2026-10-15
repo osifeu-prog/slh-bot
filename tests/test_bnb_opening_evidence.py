@@ -374,6 +374,68 @@ def _verify_fixture_tx(tx_hash, valid_hash, verified):
     }
 
 
+
+def test_historical_self_transfer_with_valid_compensation_is_reconciled_only_for_specific_error():
+    from core.bnb_gate import _audit_historical_bnb_deposits
+
+    db, empirical, tx_hash, bad_hash, wallet, verified = _historical_deposit_fixture()
+
+    def verify_one(tx):
+        if str(tx).lower() == tx_hash.lower():
+            return dict(verified)
+        return {
+            "ok": False,
+            "error": "BNB_TX_RECIPIENT_NOT_TREASURY",
+            "to": wallet,
+            "treasury": TREASURY,
+        }
+
+    with patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.deposit_monitor.verify_bnb_deposit", side_effect=verify_one
+    ), patch(
+        "core.historical_bnb_credit_reversal.is_reconciled_invalid_historical_deposit",
+        return_value=True,
+    ) as valid_compensation:
+        result = _audit_historical_bnb_deposits(db, _cfg())
+
+    assert result["ok"] is True
+    assert result["rows_checked"] == 2
+    assert result["reconciled_count"] == 1
+    assert result["finding_count"] == 0
+    assert result["findings"] == []
+    valid_compensation.assert_called_once_with(db, 0, db["ledger"][0], _cfg())
+
+
+def test_historical_self_transfer_compensation_cannot_mask_other_ledger_findings():
+    from core.bnb_gate import _audit_historical_bnb_deposits
+
+    db, empirical, tx_hash, bad_hash, wallet, verified = _historical_deposit_fixture()
+    db["ledger"][0]["meta"]["idempotency_key"] = "bnb:deposit:wrong"
+
+    def verify_one(tx):
+        if str(tx).lower() == tx_hash.lower():
+            return dict(verified)
+        return {
+            "ok": False,
+            "error": "BNB_TX_RECIPIENT_NOT_TREASURY",
+            "to": wallet,
+            "treasury": TREASURY,
+        }
+
+    with patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.deposit_monitor.verify_bnb_deposit", side_effect=verify_one
+    ), patch(
+        "core.historical_bnb_credit_reversal.is_reconciled_invalid_historical_deposit",
+        return_value=True,
+    ) as valid_compensation:
+        result = _audit_historical_bnb_deposits(db, _cfg())
+
+    assert result["ok"] is False
+    assert result["reconciled_count"] == 0
+    assert result["finding_count"] == 1
+    assert "IDEMPOTENCY_KEY_MISMATCH" in result["findings"][0]["issues"]
+    valid_compensation.assert_not_called()
+
 def test_historical_invalid_deposit_blocks_opening_evidence_even_with_valid_proof():
     db, empirical, tx_hash, bad_hash, wallet, verified = _historical_deposit_fixture()
     with patch.dict(
