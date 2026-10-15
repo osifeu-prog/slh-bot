@@ -41,13 +41,12 @@ def _reason_domain_hint(reason: Any) -> str:
         "bnb:deposit",
         "ton:deposit",
         "store:purchase",
-        "admin:test_grant",
     }
     if text in slh_exact or text.startswith("p2p:slh:") or text.startswith("slh:"):
         return "SLH_HINT"
-    if text in credits_exact or text.startswith(("staking:", "arcade:", "bridge:")):
+    if text in credits_exact or text.startswith("staking:"):
         return "CREDITS_HINT"
-    if "credits" in text or text == "airdrop" or text == "p0_authority_verify":
+    if "credits" in text:
         return "CREDITS_HINT"
     return "UNKNOWN_HINT"
 
