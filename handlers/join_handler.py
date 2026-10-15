@@ -105,7 +105,19 @@ def register(bot):
             return
 
         if existing_user:
-            bot.reply_to(msg, "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך.")
+            recovery_note = ""
+            try:
+                from core.referral_reward import recover_persisted_referral
+                recovered = recover_persisted_referral(uid)
+                if recovered.get("status") == "SETTLED":
+                    recovery_note = "\n✅ תגמול ההפניה שהמתין הושלם."
+            except Exception as e:
+                print("REFERRAL REWARD RECOVERY FAILED:", type(e).__name__)
+                recovery_note = "\n⏳ התאוששות תגמול ההפניה עדיין נדרשת. נסה /join שוב מאוחר יותר."
+            bot.reply_to(
+                msg,
+                "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך." + recovery_note
+            )
             return
 
         user_states[uid] = {"step": "name"}
@@ -207,21 +219,19 @@ def register(bot):
                 print("WELCOME BONUS FAILED:", e)
 
             try:
-                ref_uid = _get_pending_referral(uid)
-                if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
-                    persisted = _persist_referral(uid, ref_uid)
-                    if persisted:
-                        from core.referral_reward import settle_successful_referral
-                        rewards = settle_successful_referral(str(ref_uid), uid)
-                        print(
-                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
-                            f"credits={rewards.get('credits')} "
-                            f"points={rewards.get('points')} "
-                            f"vip={rewards.get('vip')}"
-                        )
-                    _clear_pending_referral(uid)
+                # Attribution is persisted first. Recovery always uses that
+                # immutable relationship, including when a previous reward leg
+                # failed after the referral was saved.
+                from core.referral_reward import recover_persisted_referral
+                rewards = recover_persisted_referral(uid)
+                print(
+                    f"REFERRAL REWARD SETTLEMENT: uid={uid} "
+                    f"status={rewards.get('status')}"
+                )
             except Exception as e:
-                print("REFERRAL REWARD FAILED:", e)
+                # Do not clear pending attribution on partial settlement. A later
+                # /join retry can safely replay the same reward idempotency keys.
+                print("REFERRAL REWARD FAILED:", type(e).__name__)
 
             # Persist the completion timestamp only after profile + Academy have
             # passed. This marks referral attribution as converted, but never
