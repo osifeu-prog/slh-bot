@@ -525,8 +525,13 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
             history_approved = (
                 os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() == "1"
             )
-            operator_flag_open = os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1"
-            if history_approved and not operator_flag_open:
+            if history_approved:
+                # Historical reconciliation status is distinct from the current
+                # public gate state. The correction command itself refuses to
+                # mutate while BNB_DEPOSITS_OPEN=1. Once a valid correction is
+                # audited and the separate approval is set, this history audit
+                # must stay PASS when the operator later opens the public gate;
+                # otherwise bnb_deposits_open() and this audit deadlock each other.
                 status = "RESOLVED_BY_AUDITED_REVERSAL"
                 reported_issues = [
                     "SELF_TRANSFER_NOT_A_DEPOSIT",
@@ -534,12 +539,10 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
                 ]
             else:
                 status = "BLOCKED"
-                blocker = (
-                    "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"
-                    if operator_flag_open
-                    else "RECONCILED_HISTORY_APPROVAL_REQUIRED"
-                )
-                reported_issues = ["SELF_TRANSFER_NOT_A_DEPOSIT", blocker]
+                reported_issues = [
+                    "SELF_TRANSFER_NOT_A_DEPOSIT",
+                    "RECONCILED_HISTORY_APPROVAL_REQUIRED",
+                ]
                 blockers.update(reported_issues)
         elif unique_issues:
             status = "BLOCKED"
