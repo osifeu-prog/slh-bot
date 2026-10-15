@@ -281,6 +281,7 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
         if isinstance(entry, dict) and str(entry.get("reason") or "") == "bnb:deposit"
     ]
     findings = []
+    reconciled_count = 0
     binding_cache = {}
     config = config if isinstance(config, dict) else {}
     treasury = str(config.get("treasury_wallet") or "").strip().lower()
@@ -291,6 +292,7 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
 
     for index, entry in deposits:
         issues = []
+        verification_error = ""
         meta = entry.get("meta")
         if not isinstance(meta, dict):
             meta = {}
@@ -322,6 +324,10 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
 
             if not isinstance(verified, dict) or verified.get("ok") is not True:
                 issues.append("CHAIN_TX_NOT_VERIFIED")
+                verification_error = (
+                    str(verified.get("error") or "")
+                    if isinstance(verified, dict) else ""
+                )
             else:
                 verified_hash = str(verified.get("tx_hash") or "").strip()
                 sender = str(verified.get("from") or "").strip()
@@ -388,6 +394,28 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
             pass
 
         if issues:
+            # A specifically verified compensating entry may reconcile the one
+            # historical case where a self-transfer was wrongly credited as a
+            # deposit. Only waive the chain-verification finding itself, and
+            # only when the normal verifier reported a wrong Treasury recipient.
+            # Bad idempotency, ledger arithmetic, or any other issue still blocks.
+            if (
+                set(issues) == {"CHAIN_TX_NOT_VERIFIED"}
+                and verification_error == "BNB_TX_RECIPIENT_NOT_TREASURY"
+            ):
+                try:
+                    from core.historical_bnb_credit_reversal import (
+                        is_reconciled_invalid_historical_deposit,
+                    )
+                    if is_reconciled_invalid_historical_deposit(
+                        db, index, entry, config
+                    ):
+                        reconciled_count += 1
+                        continue
+                except Exception:
+                    # This is an optional recovery classification only. Any
+                    # uncertainty preserves the original blocking finding.
+                    pass
             findings.append({
                 "index": index,
                 "tx_suffix": tx_hash[-8:] if tx_hash else None,
@@ -397,6 +425,7 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
     return {
         "ok": not findings,
         "rows_checked": len(deposits),
+        "reconciled_count": reconciled_count,
         "finding_count": len(findings),
         "findings": findings,
     }
@@ -583,6 +612,7 @@ def bnb_opening_evidence() -> dict:
     evidence["historical_deposits"] = {
         "status": "PASS" if historical_audit.get("ok") else "FAIL",
         "rows_checked": int(historical_audit.get("rows_checked") or 0),
+        "reconciled_count": int(historical_audit.get("reconciled_count") or 0),
         "finding_count": int(historical_audit.get("finding_count") or len(historical_audit.get("findings") or [])),
         "findings": list(historical_audit.get("findings") or []),
     }
