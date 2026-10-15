@@ -272,8 +272,10 @@ def audit_db(db):
                 "note": "Shared event IDs are not de-duplicated across accounting domains.",
             })
 
-    # Corrections remain unresolved evidence. Missing IDs are also findings for
-    # exchange reserve/release/correction rows; they are never silently ignored.
+    # Corrections remain unresolved evidence. Missing event IDs are findings
+    # for post-policy rows, unknown-order rows, corrections and undated/malformed
+    # timestamps. Known ordinary reserve/release rows predating the policy are
+    # exempt from the metadata-only finding, but accounting findings still apply.
     for ledger_name, source in sources:
         for _, event in source:
             reserve, release, correction = _event_groups(event)
