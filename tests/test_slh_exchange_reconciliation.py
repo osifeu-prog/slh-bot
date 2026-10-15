@@ -777,7 +777,7 @@ class ExchangeReconciliationTests(unittest.TestCase):
         ))
 
 
-def test_pre_event_id_rows_exempt_only_the_missing_metadata_finding(self):
+    def test_pre_event_id_rows_exempt_only_the_missing_metadata_finding(self):
         db = {
             "users": {
                 "seller": {"wallet": {
