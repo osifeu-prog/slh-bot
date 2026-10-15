@@ -30,7 +30,7 @@ INTENTS = {
     "staking": ["סטייקינג","stake","staked","נעל","נעלתי","כמה סטייק"],
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
     "greeting": ["היי","שלום","בוקר טוב","ערב טוב","אהלן"],
-    "courses": ["/courses","הקורס שלי","רשימת קורסים","אקדמיה"],
+    "courses": ["/courses", "/academy", "הקורס שלי", "רשימת קורסים", "אילו קורסים", "איזה קורסים", "קורסים קיימים", "מה יש באקדמיה", "פתח אקדמיה", "פתח את האקדמיה"],
     "dashboard": ["dashboard","לוח המחוונים","דשבורד"],
     "analysis": ["נתח","ניתוח","תנתח","שיפור","איך לשפר","המלצה","ארכיטקטורה","אסטרטגיה"],
     "agents": ["סוכן","סוכנים","agent","צור סוכן","/agents","כמה סוכנים"],
@@ -40,12 +40,22 @@ INTENTS = {
     "general": []
 }
 
-FORBIDDEN_ASK_TOPICS = ["p0", "משימות p0", "חסימה"] # "p0", "משימות p0", "חסימה"] # "launch_state","launch","alpha_open","alpha","blocked","ready","p0","משימות p0","כמה משימות","האם סגרנו","מה המצב","סטטוס מערכת","מצב המערכת","האם המערכת","כמה משתמשים","יתרות","staked","credits","ארנק של","כמה כסף","אבטחה","הרשאות","gate","חסימה"]
+_SYSTEM_STATE_PATTERNS = (
+    re.compile(r"(?:מה המצב|מצב המערכת|סטטוס המערכת|סטטוס הפרויקט|מה הסטטוס|האם סגרנו)", re.IGNORECASE),
+    re.compile(r"(?:סטטוס|מצב|status|readiness).{0,25}(?:מערכת|פרויקט|exchange|בורסה|bnb|ton|הפקדות|מסחר|gate)", re.IGNORECASE),
+    re.compile(
+        r"(?:האם|אפשר כבר|האם כבר).{0,35}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת).{0,25}(?:פתוח|סגור|מוכן|פעיל|מאומת|ready|blocked)"
+        r"|(?:פתוח|סגור|מוכן|פעיל|מאומת|ready|blocked).{0,25}(?:מסחר|בורסה|exchange|bnb|ton|הפקדות|משיכות|settlement|gate|מערכת)",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(?:alpha_open|launch_state|readiness|gate_status|system status|runtime status)\b", re.IGNORECASE),
+    re.compile(r"(?:כמה משתמשים|כמה כסף יש במערכת|יתרות מערכת|סיכום הכנסות|האם ההכנסות|האם הבורסה פתוחה)", re.IGNORECASE),
+)
 
 
 def is_system_state_question(text):
-    text_lower = text.strip().lower()
-    return any(_kw_match(t, text_lower) for t in FORBIDDEN_ASK_TOPICS)
+    value = str(text or "").strip()
+    return any(pattern.search(value) for pattern in _SYSTEM_STATE_PATTERNS)
 
 
 PRIORITY = ["time","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
@@ -60,10 +70,17 @@ def detect_intent(text):
         if kw and _kw_match(kw, text_lower):
             return "time"
 
-    # Route direct course/Academy questions to the canonical local data path.
-    # These questions must not fall through to the LLM merely because they
-    # contain a generic question word such as "מה".
-    if any(x in text_lower for x in ("קורס", "שיעור", "academy", "אקדמיה")):
+    # Use the canonical catalog only for explicit catalog/navigation requests.
+    # Mentions of building, writing, or launching a course remain conversational
+    # questions and should reach the AI route instead of returning a course list.
+    catalog_phrases = (
+        "אילו קורסים", "איזה קורסים", "רשימת קורסים", "הקורסים שלי",
+        "קורסים קיימים", "מה יש באקדמיה", "פתח אקדמיה",
+        "פתח את האקדמיה", "academy catalog", "/courses", "/academy",
+    )
+    if text_lower.strip() in {"קורסים", "אקדמיה"} or any(
+        phrase in text_lower for phrase in catalog_phrases
+    ):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
@@ -179,6 +196,26 @@ def route(text, uid=None):
         return "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
 
     intent = detect_intent(raw_text)
+
+    # Live operational state must come from deterministic checks, not a language
+    # model with partial context. Offer the exact check paths instead of guessing.
+    if is_system_state_question(raw_text):
+        try:
+            from core.authority import has_permission
+            can_run_operational_checks = bool(uid) and has_permission(str(uid), "exec.audit")
+        except Exception:
+            can_run_operational_checks = False
+        if can_run_operational_checks:
+            return (
+                "כדי לשמור על דיוק, לא אסיק מצב חי מהקשר חלקי. "
+                "בדוק דרך /e alpha_status, /check_exchange או /check_bnb; "
+                "לנתיב נוסף פתח /help. אם תשלח את הפלט, אסכם PASS/FAIL/UNKNOWN."
+            )
+        return (
+            "אין לי אימות חי מלא של מצב המערכת מתוך השיחה הזאת, ולכן לא אנחש. "
+            "בדיקות תפעוליות מלאות דורשות הרשאה מתאימה; אני יכול להסביר את המנגנון "
+            "או לעזור לפרש פלט בדיקה שאושר לשיתוף."
+        )
 
     # Build canonical project context for every AI session without exposing secrets.
     try:

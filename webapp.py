@@ -3097,6 +3097,92 @@ def exchange_ticker():
     })
 
 
+@app.route("/api/v1/exchange/candles")
+def exchange_candles():
+    """Build bounded OHLC candles from completed internal exchange trades only."""
+    from datetime import datetime, timezone
+    import math
+
+    interval = str(request.args.get("interval", "1h")).strip()
+    interval_seconds = {
+        "1m": 60,
+        "5m": 300,
+        "15m": 900,
+        "30m": 1800,
+        "1h": 3600,
+        "4h": 14400,
+        "1d": 86400,
+    }
+    step = interval_seconds.get(interval)
+    if step is None:
+        return jsonify({"error": "INVALID_INTERVAL", "allowed": list(interval_seconds)}), 400
+
+    try:
+        requested_limit = int(request.args.get("limit", "200"))
+    except (TypeError, ValueError, OverflowError):
+        return jsonify({"error": "INVALID_LIMIT"}), 400
+    if requested_limit < 1:
+        return jsonify({"error": "INVALID_LIMIT"}), 400
+    limit = min(requested_limit, 500)
+
+    db = load_db()
+    raw = db.get("exchange_trades", [])
+    trades = raw if isinstance(raw, list) else []
+    parsed = []
+    for index, trade in enumerate(trades):
+        if not isinstance(trade, dict):
+            continue
+        timestamp = trade.get("timestamp")
+        try:
+            if timestamp is None or str(timestamp).strip() == "":
+                continue
+            stamp = datetime.fromisoformat(str(timestamp).strip().replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            epoch_seconds = stamp.timestamp()
+            price = float(trade.get("price"))
+            volume = float(trade.get("slh_amount", 0) or 0)
+            if not math.isfinite(epoch_seconds) or epoch_seconds < 0:
+                continue
+            if not math.isfinite(price) or price <= 0:
+                continue
+            if not math.isfinite(volume) or volume < 0:
+                continue
+            parsed.append((epoch_seconds, index, price, volume))
+        except (ValueError, TypeError, OverflowError, OSError):
+            continue
+
+    parsed.sort(key=lambda row: (row[0], row[1]))
+    candles = {}
+    for epoch_seconds, _index, price, volume in parsed:
+        bucket = int(epoch_seconds // step) * step
+        candle = candles.get(bucket)
+        if candle is None:
+            candles[bucket] = {
+                "time": bucket,
+                "open": price,
+                "high": price,
+                "low": price,
+                "close": price,
+                "volume": volume,
+            }
+            continue
+        candle["high"] = max(candle["high"], price)
+        candle["low"] = min(candle["low"], price)
+        candle["close"] = price
+        candle["volume"] += volume
+
+    result = sorted(candles.values(), key=lambda candle: candle["time"])[-limit:]
+    return _no_store(jsonify({
+        "symbol": "SLH/CREDITS",
+        "interval": interval,
+        "candles": result,
+        "count": len(result),
+        "source": "completed_internal_exchange_trades",
+        "read_only": True,
+    })), 200
+
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",

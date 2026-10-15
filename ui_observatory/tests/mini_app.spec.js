@@ -4,10 +4,9 @@ const AxeBuilder = require('@axe-core/playwright').default;
 
 const screens = [
   ['home', 'בית', 'bh'],
-  ['balance', 'Balance', 'bb'],
-  ['move', 'Move', 'bm'],
-  ['growth', 'Grow', 'bg'],
-  ['investor', 'Investor', 'binv'],
+  ['wallet', 'ארנק', 'bw'],
+  ['exchange', 'בורסה', 'bx'],
+  ['market', 'שוק', 'bmarket'],
 ];
 
 async function mockTelegramWebApp(page) {
@@ -113,8 +112,26 @@ async function assertOrCreateScreenshot(page, testInfo, name) {
 
 async function clickPrimaryNav(page, label) {
   const entry = screens.find(([, text]) => text === label);
-  if (!entry) throw new Error('Unknown primary navigation label: ' + label);
-  await page.locator('#' + entry[2]).click();
+  if (entry) {
+    await page.locator('#' + entry[2]).click();
+    return;
+  }
+
+  const secondary = {
+    'Balance': ['balance', 'כל היתרות'],
+    'Move': ['move', 'שליחה וקבלה'],
+    'Grow': ['growth', 'מרכז הצמיחה'],
+    'Investor': ['investor', 'תמונת חשבון'],
+  }[label];
+  if (!secondary) throw new Error('Unknown navigation label: ' + label);
+
+  await page.locator('#bmore').click();
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'false');
+  await page.locator('#moreSearch').fill(secondary[1]);
+  const target = page.locator('#mSheet .more-grid > button:visible').filter({ hasText: secondary[1] });
+  await expect(target).toHaveCount(1);
+  await target.click();
+  await expect(page.locator('#' + secondary[0])).toHaveClass(/active/);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -134,7 +151,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('#home')).toHaveClass(/active/);
 });
 
-test('all primary screens are reachable', async ({ page }) => {
+test('all primary destinations are reachable', async ({ page }) => {
   const seen = [];
   for (const [id, label] of screens) {
     await clickPrimaryNav(page, label);
@@ -142,6 +159,36 @@ test('all primary screens are reachable', async ({ page }) => {
     seen.push(id);
   }
   expect(seen).toEqual(screens.map(([id]) => id));
+});
+
+test('More menu searches secondary screens and opens the chosen destination', async ({ page }) => {
+  await page.locator('#bmore').click();
+  await expect(page.locator('#mSheet')).toHaveClass(/on/);
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'false');
+  await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'true');
+
+  await page.locator('#moreSearch').fill('TON Swap');
+  await expect(page.locator('#mSheet .more-grid > button:visible')).toHaveCount(1);
+  await expect(page.locator('#moreSearchEmpty')).toBeHidden();
+  await page.locator('#mSheet .more-grid > button:visible').filter({ hasText: 'TON Swap' }).click();
+
+  await expect(page.locator('#tonswap')).toHaveClass(/active/);
+  await expect(page.locator('#mSheet')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('#bmore')).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('chart deep link opens and focuses the market chart on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/mini-app?screen=exchange&chart=1');
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#exchange')).toHaveClass(/active/);
+  await expect(page.locator('#exMarketPulse')).toBeVisible();
+  await expect(page.locator('#exPriceChart')).toBeVisible();
+  await expect(page.locator('#exChartMeta')).toContainText('אין יצירת נתוני מחיר מדומים');
+  await expect.poll(
+    () => page.locator('#exMarketPulse').evaluate(el => el.getBoundingClientRect().top),
+    { timeout: 4000 }
+  ).toBeLessThan(60);
 });
 
 test('referral panel separates unique starts from completed referrals', async ({ page }) => {
@@ -279,7 +326,7 @@ test('Exchange overview shows canonical gate truth, not a hardcoded green status
     await loadExchange();
   });
   await expect(page.locator('#exEngineStatus')).toContainText('חסום למסחר');
-  await expect(page.locator('#exCanonicalGate')).toContainText('CLOSED');
+  await expect(page.locator('#exCanonicalGate')).toContainText('סגור · חסום');
   await expect(page.locator('#exGateCheckedAt')).toContainText('2026-10-11T10:00:00+00:00');
   await expect(page.locator('#exLiquidityNotice')).toContainText('המסחר חסום כרגע');
   await expect(page.locator('#exEngineStatus')).not.toContainText('🟢 פעיל');
@@ -294,11 +341,11 @@ test('exchange receipt shows every fresh canonical gate item', async ({ page }) 
     await sendExchangeOrder('buy', '2', '1');
   });
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
-  await expect(receipt).toContainText('Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('בדיקת המסחר העדכנית: עברה');
   await expect(receipt).toContainText('שער ציבורי');
   await expect(receipt).toContainText('ספר פקודות');
   await expect(receipt).toContainText('תקינות עסקאות');
-  await expect(receipt).toContainText('אינווריאנטים כספיים');
+  await expect(receipt).toContainText('איזון יתרות כספיות');
 });
 
 test('visible Buy button submits directly through the fresh Exchange endpoint', async ({ page }) => {
@@ -322,7 +369,7 @@ test('visible Buy button submits directly through the fresh Exchange endpoint', 
   expect(payload.price).toBe('1');
   expect(payload.client_request_id).toBeTruthy();
   await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
-    .toContainText('Fresh Exchange check: PASS');
+    .toContainText('בדיקת המסחר העדכנית: עברה');
   expect(page.url()).toContain('/mini-app');
 });
 
@@ -347,7 +394,7 @@ test('visible Sell button submits directly through the fresh Exchange endpoint',
   expect(payload.price).toBe('1');
   expect(payload.client_request_id).toBeTruthy();
   await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
-    .toContainText('Fresh Exchange check: PASS');
+    .toContainText('בדיקת המסחר העדכנית: עברה');
   expect(page.url()).toContain('/mini-app');
 });
 
@@ -380,8 +427,8 @@ test('partial Exchange receipt never shows a green fresh-check status', async ({
     await sendExchangeOrder('buy', '2', '1');
   });
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
-  await expect(receipt).toContainText('Fresh Exchange receipt incomplete');
-  await expect(receipt).not.toContainText('✅ Fresh Exchange check: PASS');
+  await expect(receipt).toContainText('קבלת אימות המסחר אינה שלמה');
+  await expect(receipt).not.toContainText('✅ בדיקת המסחר העדכנית: עברה');
 });
 
 test('mobile layout has no horizontal overflow', async ({ page }) => {
@@ -398,7 +445,7 @@ test('interactive controls have usable names and form fields are labelled', asyn
   const unnamed = await page.locator('button').evaluateAll(buttons => buttons.filter(b => !(b.innerText || b.getAttribute('aria-label') || '').trim()).length);
   expect(unnamed).toBe(0);
 
-  await clickPrimaryNav(page, 'Move');
+  await page.evaluate(() => show('move'));
   await page.locator('#move').getByRole('button', { name: /Send Credits/i }).click();
   await expect(page.locator('#recipient')).toHaveAttribute('id', 'recipient');
   await expect(page.locator('label[for="recipient"]')).toBeVisible();
@@ -417,8 +464,7 @@ test('visual baseline: home', async ({ page }, testInfo) => {
 });
 
 test('visual baseline: wallet', async ({ page }, testInfo) => {
-  await clickPrimaryNav(page, 'Balance');
-  await page.locator('#balance').getByRole('button', { name: /Advanced Wallet/i }).click();
+  await clickPrimaryNav(page, 'ארנק');
   await assertOrCreateScreenshot(page, testInfo, 'wallet.png');
 });
 
@@ -516,7 +562,7 @@ test('exchange receipt shows fresh PASS only when Railway and live beacon proof 
   await page.evaluate(() => sendExchangeOrder('buy', '2', '1'));
   const receipt = page.locator('#exchange [data-exchange-receipt="true"]');
   await expect(receipt).toBeVisible();
-  await expect(receipt).toContainText('Fresh Exchange check: PASS');
-  await expect(receipt).toContainText('Live runtime confirmation');
-  await expect(receipt).toContainText('PASS');
+  await expect(receipt).toContainText('בדיקת המסחר העדכנית: עברה');
+  await expect(receipt).toContainText('אימות סביבת ההרצה בזמן אמת');
+  await expect(receipt).toContainText('פתוח');
 });
