@@ -1005,7 +1005,13 @@ class ExchangeReconciliationTests(unittest.TestCase):
                 "sell_order_id": "O0000000006",
                 "archive_reason": "test_seed_retirement",
             }],
-            "ledger": [],
+            "ledger": [{
+                "time": "2026-09-22T14:50:12.259399+00:00",
+                "uid": "seller",
+                "amount": -5.0,
+                "reason": "exchange:sell_reserve",
+                "meta": {"order_id": "O0000000006", "trade_id": "T0000000008"},
+            }],
             "slh_token_ledger": [],
         }
 
