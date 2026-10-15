@@ -75,6 +75,55 @@ def settle_successful_referral(referrer_uid, referred_uid):
     }
  
  
+
+def settle_persisted_referral(referred_uid):
+    """Recover referral rewards after a persisted join, safely across retries."""
+    referred_uid = str(referred_uid).strip()
+    if not referred_uid:
+        return {"status": "NO_PERSISTED_REFERRAL"}
+
+    db = state_manager.load_db()
+    user = (db.get("users") or {}).get(referred_uid) or {}
+    referral = user.get("referral") or {}
+    referrer_uid = str(referral.get("referred_by") or "").strip()
+    if not referrer_uid or referrer_uid == referred_uid:
+        return {"status": "NO_PERSISTED_REFERRAL"}
+
+    settlements = db.get("referral_reward_settlements") or {}
+    existing = settlements.get(referred_uid) if isinstance(settlements, dict) else None
+    if (isinstance(existing, dict) and existing.get("status") == "settled"
+            and str(existing.get("referrer_uid")) == referrer_uid):
+        return {"status": "ALREADY_SETTLED", "referrer_uid": referrer_uid}
+
+    rewards = settle_successful_referral(referrer_uid, referred_uid)
+    settled_at = int(time.time())
+
+    def mark_settled(current_db):
+        current_user = (current_db.get("users") or {}).get(referred_uid) or {}
+        current_referral = current_user.get("referral") or {}
+        if str(current_referral.get("referred_by") or "") != referrer_uid:
+            raise ValueError("REFERRAL_RELATION_CHANGED_DURING_SETTLEMENT")
+        records = current_db.setdefault("referral_reward_settlements", {})
+        if not isinstance(records, dict):
+            raise ValueError("REFERRAL_SETTLEMENT_STATE_INVALID")
+        records[referred_uid] = {
+            "referred_uid": referred_uid,
+            "referrer_uid": referrer_uid,
+            "status": "settled",
+            "settled_at": settled_at,
+            "policy": "10_points_0.9_credits_idempotent",
+        }
+        return dict(records[referred_uid])
+
+    marker = state_manager.atomic_update(mark_settled)
+    return {
+        "status": "SETTLED",
+        "referrer_uid": referrer_uid,
+        "rewards": rewards,
+        "settlement": marker,
+    }
+
+
 def maybe_award(uid, now=None):
     uid = str(uid)
     now = int(time.time() if now is None else now)
