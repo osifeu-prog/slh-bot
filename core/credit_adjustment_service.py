@@ -395,9 +395,9 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
 
 def _require_bnb_gate_closed_for_correction():
     # Do not let removing the last historical blocker implicitly open deposits.
-    # The public gate must already be operator-configured closed before preview
-    # or mutation, not merely evaluate closed because this ledger has a finding.
-    if os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1":
+    # Require an explicit canonical CLOSED value, not an unset/invalid flag that
+    # happens to evaluate false under fail-closed runtime semantics.
+    if os.getenv("BNB_DEPOSITS_OPEN", "").strip() != "0":
         raise ValueError("BNB_DEPOSITS_FLAG_MUST_BE_CLOSED")
     if bnb_deposits_open():
         raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
