@@ -350,6 +350,38 @@ def test_v2_reversal_with_inconsistent_intervening_ledger_row_stays_blocked():
     assert result["findings"][0]["status"] == "BLOCKED"
 
 
+
+
+def test_v2_reversal_blocks_inconsistent_ledger_row_before_source():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    source = db["ledger"][0]
+    source["before"] = 18.091775
+    source["after"] = 28.091775
+    prior = {
+        "time": "2026-10-12T13:10:00+00:00",
+        "uid": "owner",
+        "before": 17.091775,
+        "amount": 1.0,
+        "after": 18.091775,
+        "reason": "credits:prior_activity",
+        "meta": {},
+    }
+    db["ledger"].insert(0, prior)
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 1
+    # Keep the earlier row arithmetically valid but break its continuity with
+    # the source row; validating only the suffix from source_after misses this.
+    db["ledger"][0]["amount"] = 2.0
+    db["ledger"][0]["after"] = 19.091775
+
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+
+
 def test_corrupt_reversal_audit_does_not_resolve_self_transfer():
     db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
     db["credit_adjustment_audit"][0]["balance_after"] = 999.0
