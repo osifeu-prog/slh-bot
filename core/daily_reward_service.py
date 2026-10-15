@@ -35,9 +35,11 @@ def _points_total(user):
 
 def _daily_state(user):
     value = user.get("daily_rewards")
-    if not isinstance(value, dict):
+    if value is None:
         value = {}
         user["daily_rewards"] = value
+    elif not isinstance(value, dict):
+        raise ValueError("DAILY_REWARD_STATE_INVALID")
     return value
 
 
