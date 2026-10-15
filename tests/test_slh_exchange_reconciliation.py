@@ -1080,5 +1080,25 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(archive_codes, set())
 
 
+    def test_malformed_archived_trade_history_fails_closed(self):
+        db = {
+            "exchange_orders": {},
+            "exchange_order_archive": {},
+            "exchange_trade_archive": ["not-a-trade-record"],
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertIn(
+            "ARCHIVED_TRADE_ARCHIVE_UNREADABLE",
+            {item["code"] for item in report["findings"]},
+        )
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
+        self.assertEqual(report["operational_status"], "BLOCKED")
+
+
 if __name__ == "__main__":
     unittest.main()
