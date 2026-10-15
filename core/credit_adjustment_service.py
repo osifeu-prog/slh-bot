@@ -244,21 +244,18 @@ def _validate_source(row, meta, proof, uid, tx_hash):
     return amount, amount_wei, before, after
 
 
+# Narrow, exact reasons whose current canonical implementations write to the
+# SLH token ledger. Unknown or merely SLH-prefixed reasons are not enough
+# evidence to skip an owner row in a Credits balance proof.
 _SLH_ONLY_LEDGER_REASONS = frozenset({
     "exchange:sell_reserve",
     "exchange:cancel_release_slh",
-    "p2p:slh_sent",
-    "p2p:slh_received",
 })
 
 
 def _is_slh_only_ledger_reason(reason):
     value = str(reason or "").strip().lower()
-    return (
-        value in _SLH_ONLY_LEDGER_REASONS
-        or value.startswith("p2p:slh:")
-        or value.startswith("slh:")
-    )
+    return value in _SLH_ONLY_LEDGER_REASONS
 
 
 def _validate_source_predecessor(ledger, uid, source_index, source_before):
