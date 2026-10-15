@@ -1,3 +1,5 @@
+from core.authority import is_owner
+
 def _exchange_status_line():
     try:
         from core.system_checks import check_exchange
@@ -37,3 +39,17 @@ def register(bot):
             text = "📘 מדריך SLH Spark לא זמין כרגע."
         text = _exchange_status_line() + "\n\n" + text
         bot.reply_to(msg, text)
+
+ 
+    @bot.message_handler(commands=["opshelp"])
+    def opshelp_cmd(msg):
+        uid = getattr(getattr(msg, "from_user", None), "id", None)
+        if not is_owner(uid):
+            bot.reply_to(msg, "⛔ הפקודה זמינה לבעלים בלבד.")
+            return
+        try:
+            from core.command_catalog import render_help
+            text = render_help("Me_ad_main", limit=60)
+        except Exception:
+            text = "📘 קטלוג פקודות התפעול לא זמין כרגע."
+        bot.reply_to(msg, _exchange_status_line() + "\n\n" + text)
