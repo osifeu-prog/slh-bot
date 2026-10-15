@@ -5,7 +5,16 @@ def _exchange_status_line():
         gate = result.get("public_gate", "CLOSED")
         readiness = "READY" if result.get("public_ready") else "BLOCKED"
         verdict = result.get("verdict", "BLOCKED")
-        return f"📈 Internal Exchange — gate {gate} · readiness {readiness} · {verdict}"
+        if str(gate).strip().upper() == "CLOSED":
+            return f"📈 Internal Exchange — CLOSED · readiness {readiness} is diagnostic only; trading remains closed."
+        if (
+            str(gate).strip().upper() == "OPEN"
+            and str(verdict).strip().upper() == "OPEN"
+            and result.get("public_ready") is True
+            and result.get("ok") is True
+        ):
+            return "📈 Internal Exchange — OPEN · canonical readiness checks PASS."
+        return "📈 Internal Exchange — status unverified; treat trading as blocked."
     except Exception:
         return "📈 Internal Exchange — gate CLOSED · readiness UNKNOWN"
 
@@ -22,9 +31,9 @@ def register(bot):
     @bot.message_handler(commands=["help", "allcommands", "commands", "comands"])
     def help_cmd(msg):
         try:
-            from core.command_catalog import render_help
-            text = render_help("Me_ad_main", limit=60)
+            from core.command_catalog import render_public_help
+            text = render_public_help("Me_ad_main")
         except Exception:
-            text = "📘 Runtime Command Catalog לא זמין כרגע."
+            text = "📘 מדריך SLH Spark לא זמין כרגע."
         text = _exchange_status_line() + "\n\n" + text
         bot.reply_to(msg, text)
