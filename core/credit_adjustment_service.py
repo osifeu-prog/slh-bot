@@ -520,6 +520,8 @@ def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
         raise PermissionError("OWNER_ONLY")
     if not uid:
         raise ValueError("INVALID_UID")
+    if uid != actor_uid:
+        raise PermissionError("OWNER_SELF_ACCOUNT_ONLY")
     if not _TX_HASH_RE.fullmatch(tx_hash):
         raise ValueError("INVALID_TX_HASH")
     _require_bnb_gate_closed_for_correction()
