@@ -34,6 +34,7 @@ RELEASE_GATE_BLOCKER_CODES = frozenset({
     "ARCHIVED_TRADE_VALUE_INVALID",
     "ARCHIVED_TRADE_PRICE_OUTSIDE_LIMITS",
     "ARCHIVED_TRADE_PRICE_EVIDENCE_INVALID",
+    "ARCHIVED_TRADE_ARCHIVE_UNREADABLE",
 })
 
 # Event IDs became mandatory on 2026-09-28. Earlier ordinary reserve/release
@@ -120,7 +121,22 @@ def audit_db(db):
     # Archived trades remain part of financial history. Archival metadata must
     # not make an invalid trade/order relationship disappear from release checks.
     seen_archived_trade_ids = set()
-    for key, trade in _records(db.get("exchange_trade_archive", [])):
+    archived_trade_source = db.get("exchange_trade_archive", [])
+    if "exchange_trade_archive" in db:
+        malformed_archive = (
+            not isinstance(archived_trade_source, (dict, list))
+            or (
+                isinstance(archived_trade_source, list)
+                and any(not isinstance(item, dict) for item in archived_trade_source)
+            )
+            or (
+                isinstance(archived_trade_source, dict)
+                and any(not isinstance(item, dict) for item in archived_trade_source.values())
+            )
+        )
+        if malformed_archive:
+            findings.append({"code": "ARCHIVED_TRADE_ARCHIVE_UNREADABLE"})
+    for key, trade in _records(archived_trade_source):
         raw_tid = trade.get("trade_id") or trade.get("id")
         tid = str(raw_tid or "").strip()
         buy_id = str(trade.get("buy_order_id") or "").strip()
