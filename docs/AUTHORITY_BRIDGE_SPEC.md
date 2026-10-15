@@ -106,14 +106,16 @@ Do not expose personal balance, private profile, internal exchange controls, adm
 ### D. Canonical catalog
 **Proposed:** `GET /internal/commerce/v1/whatsapp/catalog`
 
-Return only currently published, owner-approved products with canonical name/description, exact price/currency and supported next step. Do not invent prices, availability, terms, returns or ROI. If a product is only purchasable using Telegram Stars, explicitly say payment takes place through Telegram and not inside WhatsApp.
+Return saleable products from the canonical store sources: `store/items.json` and the current `state/db.json.products` projection used by `/shop`. Preserve the canonical SKU, name, price and purchase rail: `XTR` with `/buystars <sku>` for Stars products, or `Credits` with `/buy <sku>` for products the canonical store sells through Credits. Do not hardcode prices in `slh-api`, invent availability, or expose grant/seller internals. For physical/hardware items, include only while canonical stock is positive and display the latest inventory snapshot.
+
+Hide test/smoke SKUs from the public WhatsApp customer catalog, including `test_bill`, SKUs containing `test`, and SKUs containing `smoke`. The VIP monthly subscription via `/vip` is a separate product flow, not silently included in the 17-item store catalog. The response must state `payment_in_whatsapp=false`; customer payment remains in Telegram. An inquiry never reserves inventory or completes a purchase.
 
 ### E. Non-financial purchase inquiry
 **Proposed:** `POST /internal/commerce/v1/whatsapp/intents`
 
 Request: verified provider/message SID, active canonical link for account-specific requests, approved SKU, `intent="purchase_inquiry"`, explicit customer confirmation, and idempotency/correlation key.
 
-The Control Plane validates product, identity and policy; returns opaque `intent_id` and `status="inquiry_pending"`. Identical replay returns the original record. Reusing the key with a different SKU, identity or intent returns conflict.
+The Control Plane validates the SKU against the current customer-safe canonical catalog and returns an opaque `intent_id`, `status="inquiry_pending"`, canonical price/currency, and the appropriate Telegram command. A generic non-financial inquiry does not expose private account details and does not require account linking. Any account-specific action, checkout or fulfillment is outside this MVP and needs verified pairing plus a separate authorization contract. Identical replay returns the original record. Reusing the key with a different SKU/provider/intent returns conflict.
 
 An inquiry must not debit/credit Credits, write revenue, reserve exchange funds, place/cancel an order, mint/transfer SLH, create a payment claim, pay out, or fulfil an item. It never returns a paid or fulfilled receipt.
 
@@ -128,7 +130,7 @@ Default-deny all other permissions. Explicitly deny `exec.audit`, `agents.manage
 
 ## 6. Allowlisted WhatsApp actions
 
-Phase A may support `help`, `catalog`, `price <sku>`, `link`, and `buy <sku>` only as an account-eligible non-financial inquiry after verified pairing and canonical authorization. Unlinked senders may receive help and a public catalog only. They cannot retrieve personal details or submit an account-specific inquiry.
+Phase A may support `help`, `catalog`, `price <sku>`, `link`, and `buy <sku>` as a public, non-financial inquiry after explicit customer confirmation and canonical SKU validation. No pairing is required for a generic catalog/inquiry because it reveals no account information and causes no financial mutation. Unlinked senders cannot retrieve personal balance/profile details or initiate account-specific actions, checkout or fulfillment.
 
 Treat all message text as untrusted input. Never interpret it as shell, SQL, arbitrary commands, URLs to fetch, or an instruction to grant admin rights. Clearly state that a `buy` response is an inquiry for follow-up, not a payment or completed order.
 
@@ -180,9 +182,10 @@ This documentation PR must not add production secrets/variables or change deploy
 
 ## 11. Delivery order
 
-1. **PR 1 — this file only:** review/approve `AUTHORITY_BRIDGE_SPEC.md`; no code or production changes.
-2. **PR 2 — `slh-api` adapter:** only after PR 1 approval and confirmation of the canonical contracts. Implement provider verification, pairing interaction, safe catalog and inquiry. Keep it disabled by default.
-3. **PR 3 — `Tax_Free_world_bot` / `aiosqlite`:** separate task and review; not a dependency of this bridge unless scope is explicitly changed.
-4. **Rollout:** no deployment/flag change until code review, CI/security and signed-webhook end-to-end tests pass and deployment is explicitly approved.
+1. **PR 1 — this file:** review/approve `AUTHORITY_BRIDGE_SPEC.md`; no production changes.
+2. **PR 2 — Control Plane API:** draft [PR #658](https://github.com/osifeu-prog/slh-bot/pull/658) adds the default-off mixed Stars/Credits catalog and non-financial inquiry record. It must pass review/CI before the adapter can depend on it.
+3. **PR 3 — `slh-api` adapter:** signed Twilio webhook, replay protections, canonical catalog/intents client, and safe Hebrew responses. This PR is blocked until GitHub integration can write to `osifeu-prog/slh-api`; keep the feature flag off.
+4. **PR 4 — `Tax_Free_world_bot` / `aiosqlite`:** separate task and review, not a dependency unless scope is explicitly changed.
+5. **Rollout:** no deployment or flag change until all implementation PRs, CI/security and signed-webhook end-to-end tests pass and deployment is explicitly approved.
 
 An earlier exploratory code branch is not approval to skip the documented order. This spec is the contract baseline.
