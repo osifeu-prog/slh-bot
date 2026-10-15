@@ -52,7 +52,7 @@ def _reason_domain_hint(reason: Any) -> str:
 
 
 def _row_domain_hint(row: dict) -> str:
-    """Prefer explicit asset/domain metadata; only skip non-Credits rows with source markers."""
+    """Prefer explicit asset/domain metadata; fall back to a reason-only hint."""
     meta = row.get("meta")
     meta = meta if isinstance(meta, dict) else {}
     explicit = str(meta.get("ledger_domain") or meta.get("asset") or "").strip().lower()
@@ -61,20 +61,6 @@ def _row_domain_hint(row: dict) -> str:
             return "SLH_HINT"
         if "credit" in explicit:
             return "CREDITS_HINT"
-
-    # This exact reconciliation event documents a staked-counter resync, not a
-    # Credits-wallet transaction. Require both counter fields and the explicit
-    # "no credits minted" source note; the reason string alone is not proof.
-    reason = str(row.get("reason") or "").strip().lower()
-    note = str(meta.get("note") or "").strip().lower()
-    if (
-        reason == "reconciliation:staked_counter_fix"
-        and "staked_before" in meta
-        and "staked_after" in meta
-        and "no credits minted" in note
-    ):
-        return "NON_CREDITS_HINT"
-
     return _reason_domain_hint(row.get("reason"))
 
 
@@ -153,11 +139,12 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
 
         rows_checked += 1
         summary = _row_summary(index, row)
-        # This report validates the user's Credits sequence. SLH-token rows and
-        # explicitly source-marked non-Credits rows must not be compared with
-        # the Credits wallet. Keep the previous Credits candidate across these
-        # rows so genuine Credits discontinuities cannot be hidden.
-        if summary["domain_hint"] in {"SLH_HINT", "NON_CREDITS_HINT"}:
+        # This report validates the user's Credits sequence. SLH-token rows are
+        # audited by the exchange/token-ledger reconciliation and must not be
+        # compared numerically with the Credits wallet. Keep the previous
+        # Credits candidate across such rows so a real Credits discontinuity
+        # cannot be hidden by an interleaved SLH event.
+        if summary["domain_hint"] == "SLH_HINT":
             non_credits_rows_skipped += 1
             continue
         sequence_rows_checked += 1
