@@ -463,35 +463,42 @@ def test_existing_reversal_with_corrupt_audit_fails_closed(monkeypatch):
 
 
 
-def test_concurrent_reversal_attempts_apply_compensation_once(monkeypatch):
-    """Two simultaneous confirms must produce one debit and one audit event."""
+def test_concurrent_reversal_attempts_apply_compensation_once(monkeypatch, tmp_path):
+    """Two simultaneous confirms use real atomic DB persistence and append one debit."""
     db = _db()
     _patch_runtime(monkeypatch, db)
-    lock = threading.Lock()
 
-    def atomic_update(mutate):
-        # Model the process/thread serialization provided by state_manager.
-        with lock:
-            return mutate(db)
+    # Use the real state_manager atomic_update and file lock against an isolated
+    # temporary DB. RPC and chain evidence remain mocked by _patch_runtime.
+    import state_manager
 
-    monkeypatch.setattr(target.state_manager, "atomic_update", atomic_update)
+    db_path = tmp_path / "db.json"
+    monkeypatch.setattr(state_manager, "DB_FILE", str(db_path))
+    monkeypatch.setattr(state_manager, "_LOCK_PATH", str(db_path) + ".lock")
+    monkeypatch.setattr(state_manager, "_ensure_backup_scheduler", lambda: None)
+    state_manager.save_db(db)
+    real_load_db = state_manager.load_db
+    real_atomic_update = state_manager.atomic_update
+    monkeypatch.setattr(state_manager, "load_db", real_load_db)
+    monkeypatch.setattr(state_manager, "atomic_update", real_atomic_update)
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         futures = [pool.submit(_apply, db), pool.submit(_apply, db)]
         results = [future.result() for future in futures]
 
+    persisted = state_manager.load_db()
     statuses = [result["status"] for result in results]
     assert statuses.count("APPLIED") == 1
     assert statuses.count("ALREADY_REVERSED") == 1
-    assert db["users"][UID]["wallet"]["credits"] == 20.072775
+    assert persisted["users"][UID]["wallet"]["credits"] == 20.072775
     corrections = [
-        row for row in db["ledger"]
+        row for row in persisted["ledger"]
         if isinstance(row, dict)
         and isinstance(row.get("meta"), dict)
         and row["meta"].get("idempotency_key") == CORRECTION_KEY
     ]
     audit_rows = [
-        row for row in db["credit_adjustment_audit"]
+        row for row in persisted["credit_adjustment_audit"]
         if isinstance(row, dict)
         and row.get("correction_idempotency_key") == CORRECTION_KEY
     ]
