@@ -110,6 +110,7 @@ def _patch_runtime(monkeypatch, db, proof=None):
         target, "_verify_self_transfer_for_reversal",
         lambda _uid, _tx, _snapshot: dict(proof_state),
     )
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
     monkeypatch.setattr(target.state_manager, "atomic_update", lambda mutate: mutate(db))
     monkeypatch.setattr(target, "is_quarantined_bsc_address", lambda _address: False)
     monkeypatch.setattr(
