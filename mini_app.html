@@ -856,7 +856,7 @@ async function __slhSharePayload(title,text){
   }catch(e){
     if(e&&e.name==='AbortError')return false;
   }
-  const copyText=message+'\\n\\nSLH OS: '+url;
+  const copyText=message+'\n\nSLH OS: '+url;
   try{
     if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){
       await navigator.clipboard.writeText(copyText);
@@ -894,17 +894,17 @@ async function shareGovernanceActivity(proposalId,actionType){
   if(!receipt||!receipt.title){
     toast('⚠️ קבלת הפעולה אינה זמינה — רענן את Governance');return false;
   }
-  const title=String(receipt.title).replace(/\\s+/g,' ').trim().slice(0,160);
+  const title=String(receipt.title).replace(/\s+/g,' ').trim().slice(0,160);
   const text=kind==='vote'
-    ? '🗳️ השתתפתי בהצבעה ב־SLH OS Governance.\\nהצעה #'+pid+': '+title+'\\nההשתתפות נרשמה במערכת. הבחירה האישית ופרטי החשבון אינם נכללים בשיתוף.'
-    : '📣 פרסמתי הצעה ב־SLH OS Governance.\\nהצעה #'+pid+': '+title+'\\nאפשר להיכנס למערכת לקרוא את ההצעה ולהשתתף בדיון.';
+    ? '🗳️ השתתפתי בהצבעה ב־SLH OS Governance.\nהצעה #'+pid+': '+title+'\nההשתתפות נרשמה במערכת. הבחירה האישית ופרטי החשבון אינם נכללים בשיתוף.'
+    : '📣 פרסמתי הצעה ב־SLH OS Governance.\nהצעה #'+pid+': '+title+'\nאפשר להיכנס למערכת לקרוא את ההצעה ולהשתתף בדיון.';
   return __slhSharePayload('SLH OS — פעילות קהילתית',text);
 }
 
 async function shareRecentActivity(index){
   const receipt=__slhShareReceipts['recent:'+String(Number(index))];
   if(!receipt||!receipt.label){toast('⚠️ הפעילות אינה זמינה לשיתוף');return false;}
-  return __slhSharePayload('SLH OS — הפעילות שלי',receipt.label+'\\nהעדכון משותף ביוזמתך. פרטי החשבון והיתרות אינם נכללים.');
+  return __slhSharePayload('SLH OS — הפעילות שלי',receipt.label+'\nהעדכון משותף ביוזמתך. פרטי החשבון והיתרות אינם נכללים.');
 }
 
 async function loadRewardsPanel(){
