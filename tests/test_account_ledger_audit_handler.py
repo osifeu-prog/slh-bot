@@ -70,7 +70,7 @@ def test_owner_ledger_command_reports_only_the_private_owner_scope(monkeypatch):
     audit.assert_called_once()
     output = bot.replies[-1]
     assert "OWNER ACCOUNT LEDGER — READ ONLY" in output
-    assert "Continuity breaks: 12" in output
+    assert "Credits continuity breaks: 12" in output
     assert "Row arithmetic errors: 0" in output
     assert "POSSIBLE_MIXED_DOMAIN_BOUNDARY" in output
     assert "source evidence required" in output
