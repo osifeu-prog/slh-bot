@@ -381,6 +381,15 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
     }
 
 
+def _require_bnb_gate_closed_for_correction():
+    # Do not let removing the last historical blocker implicitly open deposits.
+    # The public gate must already be operator-configured closed before preview
+    # or mutation, not merely evaluate closed because this ledger has a finding.
+    if os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1":
+        raise ValueError("BNB_DEPOSITS_FLAG_MUST_BE_CLOSED")
+    _require_bnb_gate_closed_for_correction()
+
+
 def preview_invalid_bnb_deposit_reversal(*, actor_uid, uid, tx_hash):
     """Read-only preview for an owner-confirmed correction; never mutates state."""
     actor_uid = str(actor_uid or "").strip()
@@ -392,8 +401,7 @@ def preview_invalid_bnb_deposit_reversal(*, actor_uid, uid, tx_hash):
         raise PermissionError("OWNER_SELF_ACCOUNT_ONLY")
     if not _TX_HASH_RE.fullmatch(tx_hash):
         raise ValueError("INVALID_TX_HASH")
-    if bnb_deposits_open():
-        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+    _require_bnb_gate_closed_for_correction()
 
     try:
         db = state_manager.load_db()
@@ -401,8 +409,7 @@ def preview_invalid_bnb_deposit_reversal(*, actor_uid, uid, tx_hash):
         raise ValueError("LEDGER_UNREADABLE") from None
     if not isinstance(db, dict) or not isinstance(db.get("ledger"), list):
         raise ValueError("LEDGER_UNREADABLE")
-    if bnb_deposits_open():
-        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+    _require_bnb_gate_closed_for_correction()
 
     source_index, source, source_meta, source_key = _find_source(db, uid, tx_hash)
     proof = _verify_self_transfer_for_reversal(uid, tx_hash, db)
@@ -506,8 +513,7 @@ def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
         raise ValueError("INVALID_UID")
     if not _TX_HASH_RE.fullmatch(tx_hash):
         raise ValueError("INVALID_TX_HASH")
-    if bnb_deposits_open():
-        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+    _require_bnb_gate_closed_for_correction()
     expected_balance = _decimal(expected_current_balance, "INVALID_EXPECTED_BALANCE")
 
     def mutate(db):
