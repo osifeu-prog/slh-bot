@@ -287,7 +287,8 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
         or not _same(meta.get("to"), proof.get("bound_wallet"))
         or meta.get("amount_wei") != proof.get("amount_wei")
         or meta.get("block") != proof.get("block")
-        or meta.get("confirmations") != proof.get("confirmations")
+        or int(meta.get("confirmations") or 0) < int(meta.get("required_confirmations") or 0)
+        or int(meta.get("confirmations") or 0) > int(proof.get("confirmations") or 0)
         or meta.get("required_confirmations") != proof.get("required_confirmations")
         or not _same(meta.get("current_treasury_at_correction"), meta.get("treasury"))
     ):
