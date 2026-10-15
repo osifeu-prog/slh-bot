@@ -279,6 +279,22 @@ def test_reversal_is_idempotent_after_more_chain_confirmations(monkeypatch):
     assert len(db["credit_adjustment_audit"]) == 1
 
 
+def test_correction_rechecks_raw_gate_flag_inside_atomic_mutation(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    def flip_flag_then_mutate(mutate):
+        monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+        return mutate(db)
+
+    monkeypatch.setattr(target.state_manager, "atomic_update", flip_flag_then_mutate)
+    with pytest.raises(ValueError, match="BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"):
+        _apply(db)
+
+    assert db == before
+
+
 def test_stale_balance_fails_without_mutation(monkeypatch):
     db = _db()
     before = deepcopy(db)
