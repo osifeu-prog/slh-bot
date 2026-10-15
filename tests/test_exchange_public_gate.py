@@ -15,10 +15,12 @@ class ExchangePublicGateTests(unittest.TestCase):
             },
             "ledger": [
                 {
+                    "time": "2026-09-18T11:57:23+00:00",
                     "uid": "buyer", "before": 1.0, "amount": -1.0, "after": 0.0,
                     "reason": "exchange:sell_reserve", "meta": {"order_id": "O_LEGACY"},
                 },
                 {
+                    "time": "2026-09-18T11:58:23+00:00",
                     "uid": "buyer", "before": 0.0, "amount": 1.0, "after": 1.0,
                     "reason": "exchange:cancel_release", "meta": {"order_id": "O_LEGACY"},
                 },
