@@ -288,7 +288,12 @@ def register(bot, context=None):
         if is_referral_payload:
             prefix_len = 3 if is_whatsapp_campaign else 4
             ref_uid = payload[prefix_len:].strip()
-            if ref_uid.isdigit() and ref_uid != user_id and user_exists(ref_uid):
+            if (
+                ref_uid.isdigit()
+                and ref_uid != user_id
+                and user_exists(ref_uid)
+                and (not is_whatsapp_campaign or ref_uid == str(OWNER_TELEGRAM_ID))
+            ):
                 if is_new:
                     _set_pending_referral(user_id, ref_uid)
                 # Keep ordinary referral attribution first-touch and separate
