@@ -46,23 +46,41 @@ def _safe_report_fragment(value, limit=100):
 
 def _exchange_reserves_output(report):
     """Render a bounded read-only reserve report, failing closed on malformed results."""
-    valid_report = isinstance(report, dict) and report.get("read_only") is True
-    report = report if isinstance(report, dict) else {}
-    status = str(report.get("release_readiness_status") or "BLOCKED").upper()
-    findings = report.get("release_blocking_findings")
-    findings = findings if isinstance(findings, list) else []
-    try:
-        raw_count = report.get("release_blocking_finding_count")
-        count = len(findings) if raw_count is None else max(0, int(raw_count))
-    except (TypeError, ValueError, OverflowError):
-        count = len(findings) if isinstance(findings, list) else 1
+    is_dict = isinstance(report, dict)
+    report = report if is_dict else {}
+    status = str(report.get("release_readiness_status") or "").upper()
+
+    raw_findings = report.get("release_blocking_findings")
+    findings_is_list = isinstance(raw_findings, list)
+    findings = raw_findings if findings_is_list else []
+    findings_are_dicts = all(isinstance(item, dict) for item in findings)
+
+    raw_count = report.get("release_blocking_finding_count")
+    count_is_int = isinstance(raw_count, int) and not isinstance(raw_count, bool) and raw_count >= 0
+    count_matches = count_is_int and raw_count == len(findings)
+    count = max(raw_count if count_is_int else 0, len(findings))
+    status_matches_count = (
+        (status == "PASS" and count_is_int and raw_count == 0 and not findings)
+        or (status == "BLOCKED" and count_is_int and raw_count > 0)
+    )
+
+    valid_report = (
+        is_dict
+        and report.get("read_only") is True
+        and status in {"PASS", "BLOCKED"}
+        and findings_is_list
+        and findings_are_dicts
+        and count_matches
+        and status_matches_count
+    )
+    release_pass = valid_report and status == "PASS" and count == 0 and not findings
+
     checked = report.get("checked_cancelled_sell_orders", 0)
     try:
         checked = max(0, int(checked))
     except (TypeError, ValueError, OverflowError):
         checked = 0
 
-    release_pass = valid_report and status == "PASS" and count == 0
     lines = [
         "🧾 SLH EXCHANGE RESERVE AUDIT — READ ONLY",
         "",
@@ -76,8 +94,10 @@ def _exchange_reserves_output(report):
 
     if not valid_report:
         lines.append("Blocker: RESERVE_AUDIT_RESULT_INVALID")
-    elif status not in {"PASS", "BLOCKED"}:
-        lines.append("Blocker: RESERVE_AUDIT_STATUS_INVALID")
+        if count_is_int and raw_count != len(findings):
+            lines.append("Blocker: RESERVE_AUDIT_COUNT_MISMATCH")
+        elif status not in {"PASS", "BLOCKED"} or not status_matches_count:
+            lines.append("Blocker: RESERVE_AUDIT_STATUS_COUNT_MISMATCH")
 
     shown = 0
     for item in findings[:12]:
@@ -120,7 +140,6 @@ def _exchange_reserves_output(report):
         "🔒 No balances, orders, ledgers, wallets, or gates were changed.",
     ]
     return "\n".join(lines)[:3900]
-
 
 def _check_output(uid: str) -> str:
     db = check_db()
