@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections import Counter
 import json
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, date
 import os
 import time
 
@@ -28,6 +29,29 @@ RELEASE_GATE_BLOCKER_CODES = frozenset({
     "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
 })
 
+# Event IDs became mandatory on 2026-09-28. Earlier ordinary reserve/release
+# rows cannot be retroactively stamped; their accounting still must reconcile.
+EVENT_ID_ERA_START = date.fromisoformat("2026-09-28")
+
+
+def _predates_event_id_requirement(event):
+    """Return True only for a valid timestamp strictly before event-ID policy.
+
+    Missing or malformed timestamps fail closed. This suppresses only a
+    metadata-only finding for a known order's ordinary reserve/release row;
+    it does not suppress reserve deltas, orphan corrections, or other findings.
+    """
+    if not isinstance(event, dict):
+        return False
+    raw = str(event.get("time") or "").strip()
+    if not raw:
+        return False
+    try:
+        normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+        stamped = datetime.fromisoformat(normalized)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return stamped.date() < EVENT_ID_ERA_START
 
 def _records(value):
     if isinstance(value, dict):
@@ -261,20 +285,34 @@ def audit_db(db):
                 "note": "Shared event IDs are not de-duplicated across accounting domains.",
             })
 
-    # Corrections remain unresolved evidence. Missing IDs are also findings for
-    # exchange reserve/release/correction rows; they are never silently ignored.
+    # Corrections remain unresolved evidence. Missing event IDs are findings
+    # for post-policy rows, unknown-order rows, corrections and undated/malformed
+    # timestamps. Known ordinary reserve/release rows predating the policy are
+    # exempt from the metadata-only finding, but accounting findings still apply.
     for ledger_name, source in sources:
         for _, event in source:
             reserve, release, correction = _event_groups(event)
             oid = _order_id(event)
             related = _is_exchange_audit_event(event)
             if related and not _event_id(event):
-                findings.append({
-                    "code": "LEDGER_EVENT_ID_MISSING",
-                    "ledger": ledger_name,
-                    "order_id": oid or None,
-                    "group": "correction" if correction else "reserve" if reserve else "normal_release",
-                })
+                group = "correction" if correction else "reserve" if reserve else "normal_release"
+                # The policy did not require event_id before 2026-09-28.
+                # Exempt only ordinary reserve/release metadata for a known order
+                # with a valid pre-cutoff timestamp. Corrections, unknown orders,
+                # missing timestamps and malformed timestamps still fail closed.
+                legacy_metadata_only = (
+                    group in {"reserve", "normal_release"}
+                    and bool(oid)
+                    and oid in known_order_ids
+                    and _predates_event_id_requirement(event)
+                )
+                if not legacy_metadata_only:
+                    findings.append({
+                        "code": "LEDGER_EVENT_ID_MISSING",
+                        "ledger": ledger_name,
+                        "order_id": oid or None,
+                        "group": group,
+                    })
             if correction and related and oid and oid not in known_order_ids:
                 findings.append({
                     "code": "ORPHAN_RESERVE_CORRECTION",
