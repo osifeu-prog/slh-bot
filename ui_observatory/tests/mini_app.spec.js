@@ -325,15 +325,21 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   expect(sharePayload.url).toBe('https://t.me/Me_ad_main_bot');
 });
 
-test('completed task receipt can be shared without account identifiers', async ({ page }) => {
-  await page.route('**/api/v1/tasks', async route => {
+test('completed personal task receipt can be shared without account identifiers', async ({ page }) => {
+  await page.route('**/api/v1/me', async route => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        tasks: [{ id: 'private-task-id-42', title: 'Complete your profile', status: 'done' }],
-        completed: 1,
-        open: 0,
+        identity: { uid: '999999999', display_name: 'UI Test User', role: 'student' },
+        wallet: { credits: 10, token_balance: 0, live_token_balance: 0, staked: 0 },
+        academy: { courses: [], enrolled: [], progress: {} },
+        tasks: {
+          personal: [{ id: 'private-task-id-42', title: 'Complete your profile', status: 'done' }],
+          completed: 1,
+          open: 0,
+        },
+        rewards: { points: 0 },
       }),
     });
   });
@@ -343,10 +349,11 @@ test('completed task receipt can be shared without account identifiers', async (
       configurable: true,
       value: async payload => { window.__slhTaskSharePayload = payload; },
     });
-    return loadControlTasks();
+    return loadMe();
   });
+  await page.evaluate(() => show('academy'));
 
-  const shareButton = page.locator('#controlTasks').getByRole('button', { name: /שתף פעילות/ });
+  const shareButton = page.locator('#tasks').getByRole('button', { name: /שתף פעילות/ });
   await expect(shareButton).toBeVisible();
   await shareButton.click();
 
@@ -354,6 +361,7 @@ test('completed task receipt can be shared without account identifiers', async (
   expect(payload.title).toContain('SLH OS');
   expect(payload.text).toContain('Complete your profile');
   expect(payload.text).not.toContain('private-task-id-42');
+  expect(payload.text).not.toContain('999999999');
   expect(payload.text).not.toContain('8789977826');
   expect(payload.text).not.toContain('Credits');
   expect(payload.url).toBe('https://t.me/Me_ad_main_bot');
