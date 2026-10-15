@@ -80,6 +80,8 @@ class TonCanaryGateTests(unittest.TestCase):
                 "after": 8.091775,
                 "meta": {
                     "tx_hash": tx_hash,
+                    "source": "ton_verified_binding_v1",
+                    "binding_address_raw": "0:" + "22" * 32,
                     "ton_amount": 0.01,
                     "rate": "100",
                     "treasury": TREASURY,
