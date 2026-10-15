@@ -40,7 +40,7 @@ def check_commands() -> dict[str, Any]:
 
         snapshot = snapshot_runtime("Me_ad_main")
         collisions = int(snapshot.get("collision_count") or 0)
-        required = {"help", "check", "check_ux", "check_money", "check_bnb", "check_ton", "check_exchange"}
+        required = {"help", "check", "check_ux", "check_money", "check_bnb", "check_bnb_deposits", "bnb_reverse_prepare", "bnb_reverse_confirm", "bnb_reverse_cancel", "check_ton", "check_exchange"}
         registered = set(snapshot.get("commands", {}))
         missing = sorted("/" + cmd for cmd in required if "/" + cmd not in registered)
         ok = collisions == 0 and not missing
@@ -453,6 +453,7 @@ def check_bnb() -> dict[str, Any]:
 
         gate = bnb_readiness()
         evidence = bnb_opening_evidence()
+        historical = evidence.get("historical_deposits") or {}
         empirical = evidence.get("empirical_settlement") or {}
         empirical_status = str(empirical.get("status") or "PENDING_EMPIRICAL")
         configuration_ready = bool(gate.get("ready")) and not bool(evidence.get("blockers"))
@@ -489,6 +490,9 @@ def check_bnb() -> dict[str, Any]:
             "launch_ready": launch_ready,
             "empirical_status": empirical_status,
             "evidence_status": str(evidence.get("status") or "UNKNOWN"),
+            "historical_deposits_status": str(historical.get("status") or "UNKNOWN"),
+            "historical_deposits_found": int(historical.get("rows_checked") or 0),
+            "historical_deposits_failed": int(historical.get("finding_count") or len(historical.get("findings") or [])),
             "live_rpc_status": str((evidence.get("live_rpc") or {}).get("status") or "UNKNOWN"),
             "confirmations_required": gate.get("confirmations_required"),
             "gate_reasons": list(gate.get("reasons") or []),
@@ -506,6 +510,9 @@ def check_bnb() -> dict[str, Any]:
             "launch_ready": False,
             "empirical_status": "UNKNOWN",
             "evidence_status": "UNKNOWN",
+            "historical_deposits_status": "UNKNOWN",
+            "historical_deposits_found": 0,
+            "historical_deposits_failed": 0,
             "live_rpc_status": "UNKNOWN",
             "confirmations_required": 0,
             "gate_reasons": [],
