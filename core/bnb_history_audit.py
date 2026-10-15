@@ -8,6 +8,7 @@ metadata. It never writes DB state or changes balances/gates.
 from __future__ import annotations
 
 import math
+import os
 import re
 from typing import Any
 
@@ -507,11 +508,22 @@ def audit_bnb_deposit_history(db: dict | None) -> dict:
                 amount_wei, block_number, confirmations_required, confirmations, bound,
             )
         ):
-            status = "RESOLVED_BY_AUDITED_REVERSAL"
-            reported_issues = [
-                "SELF_TRANSFER_NOT_A_DEPOSIT",
-                "RESOLVED_BY_AUDITED_REVERSAL",
-            ]
+            # A valid compensation resolves the accounting error, but it must
+            # not itself authorize historical BNB settlement for go-live. Keep
+            # the independent operator approval flag as a separate release gate.
+            if os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() == "1":
+                status = "RESOLVED_BY_AUDITED_REVERSAL"
+                reported_issues = [
+                    "SELF_TRANSFER_NOT_A_DEPOSIT",
+                    "RESOLVED_BY_AUDITED_REVERSAL",
+                ]
+            else:
+                status = "BLOCKED"
+                reported_issues = [
+                    "SELF_TRANSFER_NOT_A_DEPOSIT",
+                    "RECONCILED_HISTORY_APPROVAL_REQUIRED",
+                ]
+                blockers.update(reported_issues)
         elif unique_issues:
             status = "BLOCKED"
             blockers.update(unique_issues)
