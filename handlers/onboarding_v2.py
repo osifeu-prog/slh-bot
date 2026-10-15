@@ -282,13 +282,17 @@ def register(bot, context=None):
             print("HOLIDAY CAMPAIGN ENTRY FAILED:", e)
 
         parts = (m.text or "").split(maxsplit=1)
-        if len(parts) > 1 and parts[1].startswith("ref_"):
-            ref_uid = parts[1][4:].strip()
+        payload = parts[1].strip() if len(parts) > 1 else ""
+        is_whatsapp_campaign = payload.startswith("wa_")
+        is_referral_payload = payload.startswith("ref_") or is_whatsapp_campaign
+        if is_referral_payload:
+            prefix_len = 3 if is_whatsapp_campaign else 4
+            ref_uid = payload[prefix_len:].strip()
             if ref_uid.isdigit() and ref_uid != user_id and user_exists(ref_uid):
                 if is_new:
                     _set_pending_referral(user_id, ref_uid)
-                # Track a unique referral start without awarding anything. Preserve
-                # the first pending referrer and never reattribute an existing account.
+                # Keep ordinary referral attribution first-touch and separate
+                # WhatsApp campaign origin from the referrer identity.
                 attribution_referrer = (
                     _get_pending_referral(user_id) if is_new else ref_uid
                 ) or ref_uid
@@ -298,9 +302,17 @@ def register(bot, context=None):
                         user_id,
                         str(attribution_referrer),
                         is_new_user=is_new,
+                        source="whatsapp" if is_whatsapp_campaign else "telegram_start_payload",
                     )
                 except Exception as exc:
                     print("REFERRAL ATTRIBUTION FAILED:", type(exc).__name__)
+
+                if is_whatsapp_campaign and not is_new:
+                    try:
+                        from core.commerce_loyalty import mark_whatsapp_store_touch
+                        mark_whatsapp_store_touch(user_id, ref_uid)
+                    except Exception as exc:
+                        print("WHATSAPP STORE TOUCH FAILED:", type(exc).__name__)
 
         # Existing accounts should resume their personal system directly.
         # Do this before the new-user Alpha onboarding card is rendered.
