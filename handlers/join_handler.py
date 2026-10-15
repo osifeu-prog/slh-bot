@@ -209,16 +209,16 @@ def register(bot):
             try:
                 ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
-                    persisted = _persist_referral(uid, ref_uid)
-                    if persisted:
-                        from core.referral_reward import settle_successful_referral
-                        rewards = settle_successful_referral(str(ref_uid), uid)
-                        print(
-                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
-                            f"credits={rewards.get('credits')} "
-                            f"points={rewards.get('points')} "
-                            f"vip={rewards.get('vip')}"
-                        )
+                    _persist_referral(uid, ref_uid)
+                    # Recover when the relationship was persisted by an earlier
+                    # attempt but reward settlement did not finish.
+                    from core.referral_reward import settle_persisted_referral
+                    settlement = settle_persisted_referral(uid)
+                    print(
+                        f"REFERRAL SETTLEMENT: referred={uid} "
+                        f"referrer={settlement.get('referrer_uid')} "
+                        f"status={settlement.get('status')}"
+                    )
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
