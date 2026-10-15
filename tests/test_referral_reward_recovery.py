@@ -142,3 +142,52 @@ def test_recovery_never_invents_or_reassigns_referral(monkeypatch, tmp_path):
     assert unchanged["users"]["100"]["wallet"]["credits"] == 0.0
     assert unchanged["users"]["100"]["gamification"]["points"] == 0
     assert unchanged["pending_referrals"]["200"] == "100"
+
+
+
+def test_missing_credit_leg_recovers_after_precommit_failure(monkeypatch, tmp_path):
+    """A failed Credits leg must retry without issuing the already-awarded Points again."""
+    db_path, rewards_path = _configure_state(monkeypatch, tmp_path)
+    real_add_credits = economy_bridge.add_credits
+    calls = {"count": 0}
+
+    def fail_before_commit_once(uid, amount, reason="bridge:add_credits", meta=None):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise RuntimeError("simulated Credits failure before commit")
+        return real_add_credits(uid, amount, reason=reason, meta=meta)
+
+    monkeypatch.setattr(economy_bridge, "add_credits", fail_before_commit_once)
+
+    try:
+        referral_reward.recover_persisted_referral("200")
+    except RuntimeError as exc:
+        assert "before commit" in str(exc)
+    else:
+        raise AssertionError("the simulated first Credits failure should propagate")
+
+    partial = json.loads(db_path.read_text(encoding="utf-8"))
+    assert partial["users"]["100"]["wallet"]["credits"] == 0.0
+    assert partial["users"]["100"]["gamification"]["points"] == 10
+    assert sum(
+        row.get("meta", {}).get("idempotency_key") == "ref:200"
+        for row in partial["users"]["100"]["points_ledger"]
+    ) == 1
+    assert not any(
+        row.get("meta", {}).get("idempotency_key") == "referral-credit:200"
+        for row in partial["ledger"]
+    )
+    assert "200" not in partial.get("referral_reward_settlements", {})
+    assert partial["pending_referrals"]["200"] == "100"
+
+    result = referral_reward.recover_persisted_referral("200")
+    assert result["status"] == "SETTLED"
+    _assert_exactly_once(db_path)
+
+    again = referral_reward.recover_persisted_referral("200")
+    assert again["status"] == "ALREADY_SETTLED"
+    _assert_exactly_once(db_path)
+
+    reward_ledger = json.loads(rewards_path.read_text(encoding="utf-8"))
+    assert sum(row.get("idempotency_key") == "ref:200" for row in reward_ledger) == 1
+    assert sum(row.get("idempotency_key") == "referral-credit:200" for row in reward_ledger) == 1
