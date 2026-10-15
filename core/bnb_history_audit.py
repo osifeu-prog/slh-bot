@@ -250,13 +250,13 @@ def _valid_audited_reversal(
     if not common_checks:
         return False
 
-    # Account activity after the source credit is permitted only when every
-    # ledger row remains arithmetically continuous, including the compensating
-    # debit and any later transactions. The final wallet balance must reconcile.
-    running = source_after
+    # Replay the entire account ledger, not only entries after the bad source
+    # credit. This prevents an earlier row from being altered while the suffix
+    # beginning at source_after still appears internally consistent.
+    running = None
+    saw_source = False
     saw_correction = False
-    for index in range(source_index + 1, len(ledger)):
-        row = ledger[index]
+    for index, row in enumerate(ledger):
         if not isinstance(row, dict) or str(row.get("uid") or "") != source_uid:
             continue
         row_before = _finite_number(row.get("before"))
@@ -264,10 +264,19 @@ def _valid_audited_reversal(
         row_after = _finite_number(row.get("after"))
         if row_before is None or row_amount is None or row_after is None:
             return False
-        if abs(row_before - running) > EPSILON:
+        if running is not None and abs(row_before - running) > EPSILON:
             return False
         if abs((row_before + row_amount) - row_after) > EPSILON:
             return False
+        if index == source_index:
+            if (
+                row is not source
+                or abs(row_before - source_before) > EPSILON
+                or abs(row_amount - source_amount) > EPSILON
+                or abs(row_after - source_after) > EPSILON
+            ):
+                return False
+            saw_source = True
         if index == correction_index:
             if (
                 abs(row_before - reversal_before) > EPSILON
