@@ -48,6 +48,28 @@ def _require(permission: str):
     return subject, None
 
 
+def _whatsapp_store_principal():
+    """Authenticate the separately scoped WhatsApp storefront service."""
+    if os.getenv("WHATSAPP_STORE_ENABLED", "0").strip() != "1":
+        return None, (jsonify({"error": "WHATSAPP_STORE_DISABLED"}), 404)
+
+    expected = os.getenv("SLH_WHATSAPP_STORE_BRIDGE_TOKEN", "").strip()
+    if not expected:
+        return None, (jsonify({"error": "WHATSAPP_STORE_NOT_CONFIGURED"}), 503)
+
+    authorization = request.headers.get("Authorization", "").strip()
+    scheme, _, supplied = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, expected):
+        return None, (jsonify({"error": "WHATSAPP_STORE_AUTH_REQUIRED"}), 401)
+
+    subject = os.getenv("SLH_WHATSAPP_STORE_PRINCIPAL_ID", "").strip()
+    if not subject:
+        return None, (jsonify({"error": "WHATSAPP_STORE_PRINCIPAL_NOT_CONFIGURED"}), 503)
+    if not has_permission(subject, "whatsapp.store"):
+        return None, (jsonify({"error": "WHATSAPP_STORE_FORBIDDEN"}), 403)
+    return subject, None
+
+
 def _public_agent(agent: dict) -> dict:
     return {key: value for key, value in agent.items() if key not in _SENSITIVE_AGENT_FIELDS}
 
@@ -175,5 +197,176 @@ def register_mcp_bridge_routes(app):
             }), 200
         result = lifecycle.complete_mission(str(mission_id))
         return jsonify(result), 200
+
+    @app.route("/internal/commerce/v1/whatsapp/catalog", methods=["GET"])
+    def whatsapp_store_catalog():
+        _subject, error = _whatsapp_store_principal()
+        if error:
+            return error
+        try:
+            from store.engine import load_items
+            from store.stars_purchase_service import get_stars_items
+
+            source_items = load_items()
+            stars_items = get_stars_items()
+            if not isinstance(source_items, dict) or not isinstance(stars_items, dict):
+                raise RuntimeError("WHATSAPP_CATALOG_INVALID")
+            public_items = []
+            for raw_sku, raw_price in sorted(stars_items.items()):
+                sku = str(raw_sku).strip()
+                item = source_items.get(sku)
+                if not sku or not isinstance(item, dict) or isinstance(raw_price, bool):
+                    continue
+                try:
+                    price_stars = int(raw_price)
+                except (TypeError, ValueError, OverflowError):
+                    continue
+                if price_stars <= 0:
+                    continue
+                raw_name = item.get("name")
+                name = str(raw_name).strip()[:120] if isinstance(raw_name, str) and raw_name.strip() else sku
+                raw_description = item.get("description")
+                description = raw_description.strip()[:500] if isinstance(raw_description, str) else ""
+                raw_type = item.get("type")
+                item_type = str(raw_type).strip()[:40] if isinstance(raw_type, str) else "digital"
+                public_items.append({
+                    "sku": sku,
+                    "name": name,
+                    "description": description,
+                    "type": item_type,
+                    "price": price_stars,
+                    "currency": "XTR",
+                    "checkout_channel": "telegram_stars",
+                })
+            return jsonify({
+                "items": public_items,
+                "currency": "XTR",
+                "checkout_channel": "telegram_stars",
+                "payment_in_whatsapp": False,
+            }), 200
+        except Exception as exc:
+            print("[WHATSAPP_STORE] catalog failed:", type(exc).__name__)
+            return jsonify({"error": "WHATSAPP_CATALOG_UNAVAILABLE"}), 503
+
+    @app.route("/internal/commerce/v1/whatsapp/intents", methods=["POST"])
+    def whatsapp_store_purchase_intent():
+        _subject, error = _whatsapp_store_principal()
+        if error:
+            return error
+
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
+        allowed_fields = {
+            "provider", "provider_message_id", "sku", "intent", "customer_confirmed"
+        }
+        if set(payload) - allowed_fields:
+            return jsonify({"error": "UNSUPPORTED_FIELDS"}), 400
+
+        provider = str(payload.get("provider") or "").strip().lower()
+        provider_message_id = str(payload.get("provider_message_id") or "").strip()
+        sku = str(payload.get("sku") or "").strip()
+        if provider != "twilio":
+            return jsonify({"error": "PROVIDER_NOT_SUPPORTED"}), 400
+        if (
+            not provider_message_id
+            or len(provider_message_id) > 255
+            or not provider_message_id.isascii()
+            or any(ord(char) < 33 or ord(char) > 126 for char in provider_message_id)
+        ):
+            return jsonify({"error": "INVALID_PROVIDER_MESSAGE_ID"}), 400
+        if (
+            not sku
+            or len(sku) > 120
+            or not sku.isascii()
+            or any(not (char.isalnum() or char in "_-") for char in sku)
+        ):
+            return jsonify({"error": "INVALID_SKU"}), 400
+        if payload.get("intent") != "purchase_inquiry" or payload.get("customer_confirmed") is not True:
+            return jsonify({"error": "EXPLICIT_PURCHASE_INQUIRY_REQUIRED"}), 400
+
+        try:
+            from store.engine import load_items
+            from store.stars_purchase_service import get_stars_items
+            source_items = load_items()
+            stars_items = get_stars_items()
+            if not isinstance(source_items, dict) or not isinstance(stars_items, dict):
+                raise RuntimeError("WHATSAPP_CATALOG_INVALID")
+            item = source_items.get(sku)
+            price_stars = stars_items.get(sku)
+            if not isinstance(item, dict) or isinstance(price_stars, bool) or price_stars is None:
+                return jsonify({"error": "SKU_NOT_AVAILABLE"}), 404
+            price_stars = int(price_stars)
+            if price_stars <= 0:
+                return jsonify({"error": "SKU_NOT_AVAILABLE"}), 404
+
+            import hashlib
+            from datetime import datetime, timezone
+            import state_manager
+
+            idempotency_digest = hashlib.sha256(
+                (provider + ":" + provider_message_id).encode("ascii")
+            ).hexdigest()
+            raw_name = item.get("name")
+            item_name = str(raw_name).strip()[:120] if isinstance(raw_name, str) and raw_name.strip() else sku
+            created_at = datetime.now(timezone.utc).isoformat()
+
+            def mutate(db):
+                intents = db.setdefault("whatsapp_purchase_intents", {})
+                if not isinstance(intents, dict):
+                    return {"status": "STATE_INVALID"}
+                existing = intents.get(idempotency_digest)
+                if existing is not None:
+                    if (
+                        not isinstance(existing, dict)
+                        or str(existing.get("sku")) != sku
+                        or str(existing.get("provider")) != provider
+                    ):
+                        return {"status": "CONFLICT"}
+                    return {"status": "DUPLICATE", "intent": existing}
+                if len(intents) >= 20000:
+                    return {"status": "CAPACITY"}
+                intent = {
+                    "id": "WPI_" + idempotency_digest[:24],
+                    "channel": "whatsapp",
+                    "provider": provider,
+                    "provider_message_id_hash": idempotency_digest,
+                    "sku": sku,
+                    "item_name": item_name,
+                    "price_stars": price_stars,
+                    "currency": "XTR",
+                    "status": "inquiry_pending",
+                    "financial_mutation": False,
+                    "created_at": created_at,
+                }
+                intents[idempotency_digest] = intent
+                return {"status": "CREATED", "intent": intent}
+
+            result = state_manager.atomic_update(mutate)
+            status = str(result.get("status") or "UNKNOWN") if isinstance(result, dict) else "UNKNOWN"
+            if status == "CONFLICT":
+                return jsonify({"error": "IDEMPOTENCY_CONFLICT"}), 409
+            if status == "CAPACITY":
+                return jsonify({"error": "WHATSAPP_INTENT_CAPACITY_REACHED"}), 503
+            if status == "STATE_INVALID":
+                return jsonify({"error": "WHATSAPP_INTENT_STATE_INVALID"}), 503
+            if status not in {"CREATED", "DUPLICATE"}:
+                return jsonify({"error": "WHATSAPP_INTENT_FAILED"}), 503
+            intent = result["intent"]
+            return jsonify({
+                "ok": True,
+                "intent_id": intent["id"],
+                "status": intent["status"],
+                "sku": intent["sku"],
+                "price": intent["price_stars"],
+                "currency": intent["currency"],
+                "checkout_channel": "telegram_stars",
+                "payment_in_whatsapp": False,
+                "financial_mutation": False,
+                "duplicate": status == "DUPLICATE",
+            }), 200
+        except Exception as exc:
+            print("[WHATSAPP_STORE] inquiry failed:", type(exc).__name__)
+            return jsonify({"error": "WHATSAPP_INTENT_FAILED"}), 503
 
     return app
