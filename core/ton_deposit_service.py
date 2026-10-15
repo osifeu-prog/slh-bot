@@ -44,6 +44,100 @@ def _settings():
     return wallet, Decimal(str(rate or 0))
 
 
+
+def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
+    """Fail closed unless the configured canary has a coherent credited-TX/replay proof.
+
+    Replay evidence is keyed by UID, so this validates its current TX hash against
+    exactly one transaction row, one matching TON ledger row, and one used-hash
+    entry. It also binds the historical row to the currently configured treasury
+    and rate. This is an operational readiness check, not cryptographic proof.
+    """
+    try:
+        uid = str(os.getenv("TON_DEPOSITS_CANARY_UID", "")).strip()
+        if not uid:
+            return False
+
+        db = state_manager.load_db()
+        if not isinstance(db, dict):
+            return False
+
+        evidence_by_uid = db.get("ton_replay_evidence") or {}
+        evidence = evidence_by_uid.get(uid) if isinstance(evidence_by_uid, dict) else None
+        if not isinstance(evidence, dict):
+            return False
+
+        tx_hash = str(evidence.get("tx_hash") or "").strip().lower()
+        replay_count = int(evidence.get("replay_count") or 0)
+        first_replay = float(evidence.get("first_replay_at_epoch") or 0)
+        last_replay = float(evidence.get("last_replay_at_epoch") or 0)
+        evidence_amount = Decimal(str(evidence.get("amount_ton") or 0))
+        if (
+            not tx_hash
+            or replay_count < 1
+            or first_replay <= 0
+            or last_replay < first_replay
+            or evidence_amount <= 0
+        ):
+            return False
+
+        used_txs = db.get("used_ton_txs") or []
+        used_hash_count = sum(
+            1 for item in used_txs
+            if isinstance(item, str) and item.strip().lower() == tx_hash
+        )
+
+        transaction_rows = [
+            row for row in (db.get("transactions") or [])
+            if isinstance(row, dict)
+            and str(row.get("uid")) == uid
+            and str(row.get("type") or "").lower() == "ton"
+            and str(row.get("tx_hash") or "").strip().lower() == tx_hash
+        ]
+        ledger_rows = []
+        for row in db.get("ledger") or []:
+            if not isinstance(row, dict) or str(row.get("uid")) != uid:
+                continue
+            meta = row.get("meta") or {}
+            if (
+                row.get("reason") == "ton:deposit"
+                and isinstance(meta, dict)
+                and str(meta.get("tx_hash") or "").strip().lower() == tx_hash
+            ):
+                ledger_rows.append(row)
+
+        if used_hash_count != 1 or len(transaction_rows) != 1 or len(ledger_rows) != 1:
+            return False
+
+        transaction = transaction_rows[0]
+        ledger = ledger_rows[0]
+        meta = ledger.get("meta") or {}
+        if not isinstance(meta, dict):
+            return False
+
+        ton_amount = Decimal(str(transaction.get("ton_amount") or 0))
+        credits = Decimal(str(transaction.get("credits") or 0))
+        ledger_amount = Decimal(str(ledger.get("amount") or 0))
+        before = Decimal(str(ledger.get("before") or 0))
+        after = Decimal(str(ledger.get("after") or 0))
+        ledger_ton_amount = Decimal(str(meta.get("ton_amount") or 0))
+        ledger_rate = Decimal(str(meta.get("rate") or 0))
+        configured_treasury = normalize_ton_address(str(treasury))
+        recorded_treasury = normalize_ton_address(str(meta.get("treasury") or ""))
+
+        return bool(
+            ton_amount == evidence_amount
+            and ledger_ton_amount == ton_amount
+            and credits > 0
+            and ledger_amount == credits
+            and abs((before + ledger_amount) - after) <= Decimal("0.00000001")
+            and str(meta.get("memo") or "").strip().lower() == memo_for(uid).lower()
+            and recorded_treasury == configured_treasury
+            and ledger_rate == rate
+        )
+    except Exception:
+        return False
+
 def ton_readiness() -> dict:
     """Read-only TON settlement readiness contract.
 
@@ -64,15 +158,26 @@ def ton_readiness() -> dict:
     if not (TON_RATE_MIN <= rate <= TON_RATE_MAX):
         reasons.append("TON_RATE_NOT_SAFE")
 
+    config_ready = not reasons
+    evidence_ready = (
+        _verified_public_replay_evidence(str(treasury), rate)
+        if config_ready else False
+    )
+    all_reasons = list(reasons)
+    if not evidence_ready:
+        all_reasons.append("TON_EMPIRICAL_REPLAY_EVIDENCE_MISSING")
+
     flag_open = _deposits_open()
     return {
         "flag_open": flag_open,
-        "ready": not reasons,
-        "effective_open": flag_open and not reasons,
+        "config_ready": config_ready,
+        "evidence_ready": evidence_ready,
+        "ready": config_ready and evidence_ready,
+        "effective_open": flag_open and config_ready and evidence_ready,
         "treasury": treasury,
         "treasury_raw": normalized,
         "rate": str(rate),
-        "reasons": reasons,
+        "reasons": all_reasons,
     }
 
 
@@ -91,7 +196,7 @@ def ton_settlement_allowed(uid) -> bool:
         _canary_settlement_open()
         and canary_uid
         and uid == canary_uid
-        and readiness["ready"]
+        and readiness.get("config_ready", readiness["ready"])
     )
 
 
