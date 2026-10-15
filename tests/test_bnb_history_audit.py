@@ -405,7 +405,10 @@ def test_shared_bsc_wallet_binding_blocks_history_audit():
     assert result["failed_rows"] == 1
     assert "CURRENT_WALLET_BINDING_ADDRESS_NOT_UNIQUE" in result["findings"][0]["issues"]
 
-def test_approved_reversal_does_not_clear_history_blocker_if_operator_flag_is_open():
+def test_approved_reversal_stays_resolved_when_public_operator_gate_is_open():
+    # Opening the public gate must not invalidate the history proof itself.
+    # The actual gate still depends on this PASS plus fresh live evidence; the
+    # reversal mutation is separately prohibited whenever BNB_DEPOSITS_OPEN=1.
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
     )
@@ -417,9 +420,8 @@ def test_approved_reversal_does_not_clear_history_blocker_if_operator_flag_is_op
         operator_open=True,
     )
 
-    assert result["status"] == "BLOCKED"
-    assert result["failed_rows"] == 1
-    assert result["findings"][0]["status"] == "BLOCKED"
-    assert "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED" in result["findings"][0]["issues"]
-    assert "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED" in result["blockers"]
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+    assert "RECONCILED_HISTORY_APPROVAL_REQUIRED" not in result["blockers"]
 
