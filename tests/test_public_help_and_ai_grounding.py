@@ -79,6 +79,36 @@ def test_exchange_status_is_not_shown_as_open_without_all_check_results():
     assert "blocked" in rendered
 
 
+def test_gate_open_is_not_displayed_without_integrated_reserve_release_evidence():
+    result = {
+        "public_gate": "OPEN",
+        "public_ready": True,
+        "verdict": "OPEN",
+        "ok": True,
+    }
+    with patch("core.system_checks.check_exchange", return_value=result):
+        rendered = help_handler._exchange_status_line()
+
+    assert "status unverified" in rendered
+    assert "blocked" in rendered
+
+
+def test_gate_open_requires_explicit_zero_blocker_reserve_release_pass():
+    result = {
+        "public_gate": "OPEN",
+        "public_ready": True,
+        "verdict": "OPEN",
+        "ok": True,
+        "reserve_reconciliation_ok": True,
+        "reserve_blocking_count": 0,
+    }
+    with patch("core.system_checks.check_exchange", return_value=result):
+        rendered = help_handler._exchange_status_line()
+
+    assert "OPEN" in rendered
+    assert "canonical readiness checks PASS" in rendered
+
+
 def test_public_help_handler_uses_public_catalog_and_opshelp_is_owner_only():
     bot = FakeBot()
     help_handler.register(bot)
