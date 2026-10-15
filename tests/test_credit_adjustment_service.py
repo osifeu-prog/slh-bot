@@ -299,6 +299,62 @@ def test_correction_rechecks_raw_gate_flag_inside_atomic_mutation(monkeypatch):
     assert db == before
 
 
+def test_reversal_can_reconcile_source_after_an_older_continuity_gap(monkeypatch):
+    db = _db()
+    db["ledger"][0:0] = [
+        {
+            "time": "2026-10-01T10:00:00+00:00",
+            "uid": UID,
+            "before": 0.0,
+            "amount": 1.0,
+            "after": 1.0,
+            "reason": "admin:test_grant",
+            "meta": {},
+        },
+        {
+            "time": "2026-10-07T18:05:07+00:00",
+            "uid": UID,
+            "before": 7.091775,
+            "amount": 1.0,
+            "after": 8.091775,
+            "reason": "ton:deposit",
+            "meta": {},
+        },
+    ]
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    result = _apply(db)
+
+    assert result["status"] == "APPLIED"
+    assert result["amount_reversed"] == 10.0
+    assert db["ledger"][:-1] == before["ledger"]
+    assert db["users"][UID]["wallet"]["credits"] == 20.072775
+    assert len(db["credit_adjustment_audit"]) == 1
+
+
+def test_reversal_still_blocks_when_immediate_pre_source_anchor_mismatches(monkeypatch):
+    db = _db()
+    db["ledger"].insert(0, {
+        "time": "2026-10-01T10:00:00+00:00",
+        "uid": UID,
+        "before": 0.0,
+        "amount": 1.0,
+        "after": 1.0,
+        "reason": "credits:prior_activity",
+        "meta": {},
+    })
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(
+        ValueError, match="ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH"
+    ):
+        _apply(db)
+
+    assert db == before
+
+
 def test_stale_balance_fails_without_mutation(monkeypatch):
     db = _db()
     before = deepcopy(db)
