@@ -14,6 +14,21 @@ import time
 import state_manager
 
 
+# These findings represent unresolved financial dispositions. They remain
+# launch blockers even if the underlying order has been archived or classified
+# as a historical test seed; archive metadata is not accounting authorization.
+RELEASE_GATE_BLOCKER_CODES = frozenset({
+    "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
+    "RESERVE_DELTA_NOT_ZERO",
+    "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
+    "ORPHAN_RESERVE_CORRECTION",
+    "INVALID_RESERVE_LEDGER_AMOUNT",
+    "DUPLICATE_LEDGER_EVENT_ID",
+    "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW",
+    "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
+})
+
+
 def _records(value):
     if isinstance(value, dict):
         return [(str(key), item) for key, item in value.items() if isinstance(item, dict)]
@@ -426,7 +441,11 @@ def audit_db(db):
             and str(order.get("status") or "").lower() in terminal_statuses
             and context.get("order_remaining_is_zero") is True
             and context.get("order_reserved_slh_is_zero") is True
-            and context.get("wallet_reserved_slh_is_zero") is True
+            # Other open sell orders may legitimately reserve SLH in this wallet.
+            # Prove that this terminal order released its own reserve and that
+            # the wallet total exactly matches the independent open-order book.
+            # Requiring the whole wallet reserve to be zero confuses unrelated
+            # live reservations with a terminal-order reconciliation failure.
             and context.get("wallet_reserve_matches_open_orders") is True
         )
 
@@ -527,10 +546,25 @@ def audit_db(db):
             item["operational_classification"] = "BLOCKING"
             blocking_findings.append(item)
 
+    release_blocking_findings = [
+        item for item in findings
+        if str(item.get("code") or "") in RELEASE_GATE_BLOCKER_CODES
+    ]
+    if checked == 0:
+        # No matched reserve history is not evidence of a clean release.
+        release_blocking_findings.append({
+            "code": "RESERVE_HISTORY_NOT_PROVEN",
+            "note": "The audit could not match any cancelled sell reserve history.",
+        })
+    release_readiness_status = "BLOCKED" if release_blocking_findings else "PASS"
+
     status = "FAIL" if any(
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
     ) else ("UNKNOWN" if checked == 0 else "PASS")
+    # Operational reserve consistency and financial-release permission are
+    # separate decisions. Archived seed state can be operationally retired yet
+    # still require accounting review before public trading is enabled.
     operational_status = (
         "UNKNOWN" if checked == 0
         else "BLOCKED" if blocking_findings
@@ -540,6 +574,9 @@ def audit_db(db):
     return {
         "status": status,
         "operational_status": operational_status,
+        "release_readiness_status": release_readiness_status,
+        "release_blocking_finding_count": len(release_blocking_findings),
+        "release_blocking_findings": release_blocking_findings,
         "read_only": True,
         "checked_cancelled_sell_orders": checked,
         "finding_count": len(findings),
@@ -638,6 +675,8 @@ def run_periodic(log, interval_seconds=None):
                 "[SLH_EXCHANGE_RECONCILIATION] "
                 f"status={report['status']} "
                 f"operational_status={report.get('operational_status', 'UNKNOWN')} "
+                f"release_readiness_status={report.get('release_readiness_status', 'UNKNOWN')} "
+                f"release_blocking_finding_count={report.get('release_blocking_finding_count', 0)} "
                 f"blocking_finding_count={report.get('blocking_finding_count', len(findings))} "
                 f"historical_finding_count={report.get('historical_finding_count', 0)} "
                 f"checked_cancelled_sell_orders={report['checked_cancelled_sell_orders']} "
