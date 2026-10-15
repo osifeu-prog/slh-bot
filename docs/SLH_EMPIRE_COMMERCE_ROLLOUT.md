@@ -30,7 +30,7 @@ This document describes a proposed code change on this branch. It does not mean 
 ## Not included / must not be promised yet
 
 - Daily Trade Pro signal delivery: granting the `trade_pro` permission does not prove that a daily signal delivery service or fixed cadence is running.
-- Annual VIP for 4,990 Stars: no annual SKU or 12-month payment authority is created here.
+- Annual VIP: `/vip annual` (also accepts `/vip yearly` and `/vip שנתי`) creates a one-time Telegram Stars invoice for 4,990 Stars and grants 365 days of VIP. It is not recurring; no auto-renewal is started. The price is equal to 10 monthly payments of 499 Stars, so it saves 2 monthly payments (998 Stars).
 - Private WhatsApp group membership, automated invite after payment, early-access-course announcements, and direct Q&A scheduling are not automated by this PR.
 - Agent OS entitlement is granted with ESP32 Pro, but physical device staging / pre-installation is not automated.
 
