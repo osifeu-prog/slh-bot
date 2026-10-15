@@ -8,7 +8,7 @@ import os
 from flask import jsonify, request
 
 from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents, has_permission
+from core.authority import get_role, get_visible_agents, has_permission
 from core.runtime_service import execute_agent, status as runtime_status
 from core.mission_lifecycle import MissionLifecycleService
 
@@ -65,6 +65,8 @@ def _whatsapp_store_principal():
     subject = os.getenv("SLH_WHATSAPP_STORE_PRINCIPAL_ID", "").strip()
     if not subject:
         return None, (jsonify({"error": "WHATSAPP_STORE_PRINCIPAL_NOT_CONFIGURED"}), 503)
+    if get_role(subject) != "WHATSAPP_STORE_SERVICE":
+        return None, (jsonify({"error": "WHATSAPP_STORE_PRINCIPAL_ROLE_REQUIRED"}), 403)
     if not has_permission(subject, "whatsapp.store"):
         return None, (jsonify({"error": "WHATSAPP_STORE_FORBIDDEN"}), 403)
     return subject, None
