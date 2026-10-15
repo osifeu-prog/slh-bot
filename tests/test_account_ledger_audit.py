@@ -124,7 +124,9 @@ def test_ambiguous_legacy_reasons_are_not_assigned_a_financial_domain():
 
 
 
-def test_staked_counter_reconciliation_is_not_a_credits_balance_row():
+def test_staked_counter_row_without_authoritative_domain_marker_stays_blocked():
+    from core.account_ledger_audit import _row_domain_hint
+
     db = {
         "users": {UID: {"wallet": {"credits": 5.0}}},
         "ledger": [
@@ -143,7 +145,7 @@ def test_staked_counter_reconciliation_is_not_a_credits_balance_row():
                 "after": 552.0,
                 "reason": "reconciliation:staked_counter_fix",
                 "meta": {
-                    "ref": "RECON-TEST",
+                    "ref": "RECON-240-20260919",
                     "staked_before": 552.0,
                     "staked_after": 792.0,
                     "note": "counter resync to ledger-proven locked total; no credits minted",
@@ -160,25 +162,8 @@ def test_staked_counter_reconciliation_is_not_a_credits_balance_row():
         ],
     }
 
+    assert _row_domain_hint(db["ledger"][1]) == "UNKNOWN_HINT"
     result = audit_account_ledger(db, UID)
-
-    assert result["status"] == "PASS"
-    assert result["continuity_break_count"] == 0
-    assert result["arithmetic_error_count"] == 0
-    assert result["credits_sequence_rows_checked"] == 2
-    assert result["non_credits_rows_skipped"] == 1
-
-
-def test_staked_counter_reason_without_source_markers_is_not_skipped():
-    from core.account_ledger_audit import _row_domain_hint
-
-    row = {
-        "uid": UID,
-        "before": 552.0,
-        "amount": 0.0,
-        "after": 552.0,
-        "reason": "reconciliation:staked_counter_fix",
-        "meta": {"note": "missing evidence"},
-    }
-
-    assert _row_domain_hint(row) == "UNKNOWN_HINT"
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 2
+    assert [item["delta_to_explain"] for item in result["findings"]] == [552.0, -552.0]
