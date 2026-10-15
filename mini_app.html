@@ -832,6 +832,81 @@ async function shareReferralLink(){
   }catch(e){}
   toast("🔗 "+link);
 }
+let __slhShareReceipts=Object.create(null);
+
+function __slhShareActivityLabel(reason){
+  const key=String(reason||'').trim().toLowerCase();
+  if(key.includes('governance_vote')||key.includes('vote'))return 'השתתפתי בפעילות Governance של SLH OS';
+  if(key.includes('referral'))return 'השתתפתי בקהילת SLH OS';
+  if(key.includes('task'))return 'השלמתי פעילות ב־SLH OS';
+  if(key.includes('course')||key.includes('academy'))return 'התקדמתי בלמידה ב־SLH OS';
+  return 'ביצעתי פעילות ב־SLH OS';
+}
+
+async function __slhSharePayload(title,text){
+  const url='https://t.me/Me_ad_main_bot';
+  const message=String(text||'').trim();
+  const shareData={title:String(title||'SLH OS'),text:message,url};
+  try{
+    if(typeof navigator.share==='function'){
+      await navigator.share(shareData);
+      toast('✅ הפעילות שותפה');
+      return true;
+    }
+  }catch(e){
+    if(e&&e.name==='AbortError')return false;
+  }
+  const copyText=message+'\\n\\nSLH OS: '+url;
+  try{
+    if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){
+      await navigator.clipboard.writeText(copyText);
+      toast('✅ סיכום הפעילות הועתק — אפשר להדביק ולשתף');
+      return true;
+    }
+  }catch(e){}
+  try{
+    const area=document.createElement('textarea');
+    area.value=copyText;
+    area.setAttribute('readonly','');
+    area.style.position='fixed';
+    area.style.opacity='0';
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    const copied=document.execCommand('copy');
+    area.remove();
+    if(copied){
+      toast('✅ סיכום הפעילות הועתק — אפשר להדביק ולשתף');
+      return true;
+    }
+  }catch(e){}
+  toast('⚠️ השיתוף האוטומטי אינו זמין במכשיר זה');
+  return false;
+}
+
+async function shareGovernanceActivity(proposalId,actionType){
+  const pid=Number(proposalId);
+  const kind=String(actionType||'');
+  if(!Number.isInteger(pid)||pid<1||!['vote','proposal'].includes(kind)){
+    toast('⚠️ קבלת השיתוף אינה תקינה');return false;
+  }
+  const receipt=__slhShareReceipts[kind+':'+pid];
+  if(!receipt||!receipt.title){
+    toast('⚠️ קבלת הפעולה אינה זמינה — רענן את Governance');return false;
+  }
+  const title=String(receipt.title).replace(/\\s+/g,' ').trim().slice(0,160);
+  const text=kind==='vote'
+    ? '🗳️ השתתפתי בהצבעה ב־SLH OS Governance.\\nהצעה #'+pid+': '+title+'\\nההשתתפות נרשמה במערכת. הבחירה האישית ופרטי החשבון אינם נכללים בשיתוף.'
+    : '📣 פרסמתי הצעה ב־SLH OS Governance.\\nהצעה #'+pid+': '+title+'\\nאפשר להיכנס למערכת לקרוא את ההצעה ולהשתתף בדיון.';
+  return __slhSharePayload('SLH OS — פעילות קהילתית',text);
+}
+
+async function shareRecentActivity(index){
+  const receipt=__slhShareReceipts['recent:'+String(Number(index))];
+  if(!receipt||!receipt.label){toast('⚠️ הפעילות אינה זמינה לשיתוף');return false;}
+  return __slhSharePayload('SLH OS — הפעילות שלי',receipt.label+'\\nהעדכון משותף ביוזמתך. פרטי החשבון והיתרות אינם נכללים.');
+}
+
 async function loadRewardsPanel(){
   if(!initData){showAuthGate();return}
   const el=$("slh-rewards-body");
@@ -1710,10 +1785,11 @@ function renderPublicShell(d){
     const activity=$('homeRecentActivity');
     if(activity){
       activity.innerHTML=recent.length
-        ? recent.slice(-4).reverse().map(x=>{
+        ? recent.slice(-4).reverse().map((x,index)=>{
             const credits=Number(x.credits||0),points=Number(x.points||0);
             const value=((credits?('+'+fmt(credits)+' C'):'')+(credits&&points?' · ':'')+(points?('+'+fmt(points)+' P'):''));
-            return '<div class="wallet-row"><span>'+esc(String(x.reason||'Reward'))+'</span><strong>'+esc(value||'—')+'</strong></div>';
+            __slhShareReceipts['recent:'+index]={label:__slhShareActivityLabel(x.reason)};
+            return '<div class="wallet-row"><span>'+esc(String(x.reason||'Reward'))+'</span><strong>'+esc(value||'—')+'</strong><button class="action" type="button" style="padding:5px 8px;font-size:12px;flex-shrink:0" onclick="shareRecentActivity('+index+')">🔗 שתף</button></div>';
           }).join('')
         : '<div class="muted">אין כרגע אירועי Rewards להצגה.</div>';
     }
@@ -3262,9 +3338,14 @@ async function loadGovernanceInto(targetId){
         const validId=Number.isInteger(pid)&&pid>0;
         const mine=p.my_vote&&typeof p.my_vote==='object'?p.my_vote:null;
         const status=String(p.status||'unknown');
+        if(validId){
+          const shareTitle=String(p.title||'').replace(/\\s+/g,' ').trim().slice(0,160);
+          if(mine)__slhShareReceipts['vote:'+pid]={title:shareTitle};
+          if(p.created_by_me===true)__slhShareReceipts['proposal:'+pid]={title:shareTitle};
+        }
         let voteHtml='';
         if(mine){
-          voteHtml='<div class="guide" style="margin-top:8px"><b>✅ ההצבעה שלך נרשמה</b><div>'+esc(String(mine.choice||''))+' · משקל '+fmt(mine.weight||1)+'</div><div class="muted">'+esc(mine.timestamp||'')+'</div></div>';
+          voteHtml='<div class="guide" style="margin-top:8px"><b>✅ ההצבעה שלך נרשמה</b><div>'+esc(String(mine.choice||''))+' · משקל '+fmt(mine.weight||1)+'</div><div class="muted">'+esc(mine.timestamp||'')+'</div><button class="action" type="button" style="margin-top:8px;width:100%" onclick="shareGovernanceActivity('+pid+',&quot;vote&quot;)"><b>🔗 שתף את ההשתתפות</b><span>הבחירה ופרטי החשבון לא נכללים בשיתוף</span></button></div>';
         }else if(status==='open'&&validId){
           voteHtml='<div class="actions" style="margin-top:8px">'+
             '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;yes&quot;)"><b>👍 בעד</b></button>'+
@@ -3272,10 +3353,13 @@ async function loadGovernanceInto(targetId){
             '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;abstain&quot;)"><b>➖ נמנע</b></button>'+
           '</div>';
         }
+        const proposalShareHtml=validId&&p.created_by_me===true
+          ? '<button class="action" type="button" style="margin-top:8px;width:100%" onclick="shareGovernanceActivity('+pid+',&quot;proposal&quot;)"><b>🔗 שתף את ההצעה</b><span>כותרת ההצעה וקישור למערכת בלבד</span></button>'
+          : '';
         return '<div class="task" style="margin-top:10px"><b>#'+esc(p.id)+' '+esc(p.title||'')+'</b>'+
           '<div class="muted">'+esc(status)+' · כן '+fmt(v.yes||0)+' · לא '+fmt(v.no||0)+' · נמנע '+fmt(v.abstain||0)+'</div>'+
           (p.description?'<div style="margin-top:6px;white-space:pre-wrap">'+esc(p.description)+'</div>':'')+
-          voteHtml+'</div>';
+          voteHtml+proposalShareHtml+'</div>';
       }).join('');
     }else{
       h+='<div class="muted" style="margin-top:12px">אין הצעות להצגה. אפשר לפרסם הצעה ראשונה בטופס שמעל.</div>';

@@ -100,6 +100,27 @@ class GovernanceCanonicalFlowTests(unittest.TestCase):
         self.assertEqual(data["proposal"]["title"], "User proposal")
         self.assertEqual(db["governance"]["proposals"][-1]["created_by"], "42")
 
+    def test_governance_read_marks_own_proposal_without_exposing_creator_uid(self):
+        db = governance_db()
+        own = db["governance"]["proposals"][0]
+        own["created_by"] = "42"
+        other = dict(own)
+        other.update({"id": 8, "title": "Other proposal", "created_by": "99"})
+        db["governance"]["proposals"].append(other)
+
+        with patch.object(webapp, "authenticated_uid", return_value="42"), \
+             patch.object(governance_store, "load_governance", return_value=db["governance"]):
+            response = webapp.app.test_client().get("/api/v1/governance")
+
+        self.assertEqual(response.status_code, 200)
+        proposals = {item["id"]: item for item in response.get_json()["proposals"]}
+        self.assertIs(proposals[7]["created_by_me"], True)
+        self.assertIs(proposals[8]["created_by_me"], False)
+        self.assertNotIn("created_by", proposals[7])
+        self.assertNotIn("created_by", proposals[8])
+        self.assertNotIn("42", str(proposals[7]))
+        self.assertNotIn("99", str(proposals[8]))
+
     def test_minapp_has_public_governance_screen_and_vote_controls(self):
         source = Path("mini_app.html").read_text(encoding="utf-8")
         self.assertIn('<section id="governance" class="screen">', source)
@@ -107,6 +128,9 @@ class GovernanceCanonicalFlowTests(unittest.TestCase):
         self.assertIn("function submitGovernanceVote", source)
         self.assertIn("/api/v1/governance/vote", source)
         self.assertIn("/api/v1/governance/proposal", source)
+        self.assertIn("shareGovernanceActivity", source)
+        self.assertIn("shareRecentActivity", source)
+        self.assertIn("created_by_me", source)
         self.assertNotIn("openAction('/vote ", source)
 
     def test_minapp_vote_endpoint_requires_telegram_auth(self):

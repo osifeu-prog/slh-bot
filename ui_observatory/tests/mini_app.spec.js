@@ -228,6 +228,7 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
     status: 'open',
     votes: { yes: voteRecorded ? 1 : 0, no: 0, abstain: 0, weighted_yes: voteRecorded ? 1 : 0, weighted_no: 0 },
     my_vote: null,
+    created_by_me: true,
   };
 
   await page.route('**/api/v1/governance', async route => {
@@ -279,6 +280,7 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   await governanceEntry.click();
   await expect(page.locator('#governance')).toHaveClass(/active/);
   await expect(page.locator('#governanceBody')).toContainText('Canonical UI test proposal');
+  await expect(page.locator('#governanceBody').getByRole('button', { name: /שתף את ההצעה/ })).toBeVisible();
 
   const voteRequestPromise = page.waitForRequest(request =>
     request.url().endsWith('/api/v1/governance/vote') && request.method() === 'POST'
@@ -291,6 +293,23 @@ test('visible Governance entry records a vote and shows the canonical receipt', 
   await expect(page.locator('#governance')).toHaveClass(/active/);
   await expect(page.locator('#governanceBody')).toContainText('ההצבעה שלך נרשמה');
   await expect(page.locator('#governanceBody')).toContainText('yes · משקל 1');
+  const shareButton = page.locator('#governanceBody').getByRole('button', { name: /שתף את ההשתתפות/ });
+  await expect(shareButton).toBeVisible();
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: async payload => { window.__slhTestSharePayload = payload; },
+    });
+  });
+  await shareButton.click();
+  const sharePayload = await page.evaluate(() => window.__slhTestSharePayload);
+  expect(sharePayload.title).toContain('SLH OS');
+  expect(sharePayload.text).toContain('Canonical UI test proposal');
+  expect(sharePayload.text).toContain('ההשתתפות נרשמה');
+  expect(sharePayload.text).not.toContain('yes');
+  expect(sharePayload.text).not.toContain('8789977826');
+  expect(sharePayload.url).toBe('https://t.me/Me_ad_main_bot');
 });
 
 test('Exchange overview shows canonical gate truth, not a hardcoded green status', async ({ page }) => {
