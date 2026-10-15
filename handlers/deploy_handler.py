@@ -123,22 +123,20 @@ def _safe_graphql_error_messages(payload):
         if not isinstance(message, str) or not message.strip():
             continue
         message = re.sub(
-            r"(?i)\\b(Bearer|Project-Access-Token)\\s+\\S+",
-            r"\\1 [REDACTED]",
+            r"(?i)\b(Bearer|Project-Access-Token)\s+\S+",
+            r"\1 [REDACTED]",
             message,
         )
         message = re.sub(
-            r"(?i)\\b(token|secret|password)\\s*[:=]\\s*[^\\s,;]+",
-            r"\\1=[REDACTED]",
+            r"(?i)\b(token|secret|password)\s*[:=]\s*[^\s,;]+",
+            r"\1=[REDACTED]",
             message,
         )
-        message = re.sub(r"[\\x00-\\x1f\\x7f]", " ", message)
-        message = re.sub(r"\\s+", " ", message).strip()
+        message = re.sub(r"[\x00-\x1f\x7f]", " ", message)
+        message = re.sub(r"\s+", " ", message).strip()
         if message:
             messages.append(message[:240])
     return "; ".join(messages)
-
-
 def _graphql(token, query, variables):
     response = requests.post(
         RAILWAY_API_URL,
