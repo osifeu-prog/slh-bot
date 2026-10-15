@@ -1088,10 +1088,38 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
     def test_malformed_archived_trade_history_fails_closed(self):
         db = {
-            "exchange_orders": {},
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 1.0,
+                    "live_token_balance": 1.0,
+                    "exchange_reserved_slh": 0.0,
+                    "exchange_reserved_credits": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_BALANCED": {
+                    "id": "O_BALANCED", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "1",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0", "limit_price": "1",
+                }
+            },
             "exchange_order_archive": {},
             "exchange_trade_archive": ["not-a-trade-record"],
-            "ledger": [],
+            "ledger": [
+                {
+                    "time": "2026-09-22T14:50:12+00:00",
+                    "uid": "seller", "amount": -1,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_BALANCED"},
+                },
+                {
+                    "time": "2026-09-22T14:51:12+00:00",
+                    "uid": "seller", "amount": 1,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_BALANCED"},
+                },
+            ],
             "slh_token_ledger": [],
         }
 
