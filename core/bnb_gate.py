@@ -380,6 +380,26 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
                     bound_address = str(binding.get("address") or "").strip() if isinstance(binding, dict) else ""
                     if not bound_address or sender.lower() != bound_address.lower():
                         issues.append("CHAIN_SENDER_BINDING_MISMATCH")
+                    # The public gate must reject ambiguous ownership even when
+                    # the transaction otherwise verifies. The legacy audit is
+                    # also called on the live OPEN path, so do this cheap DB-only
+                    # uniqueness check here rather than relying on the detailed
+                    # audit's error-recovery fallback.
+                    wallet_bindings = db.get("wallet_bindings")
+                    if not isinstance(wallet_bindings, dict) or not bound_address:
+                        issues.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    else:
+                        same_address_bindings = [
+                            item for item in wallet_bindings.values()
+                            if isinstance(item, dict)
+                            and str(item.get("chain") or "").strip().lower() == "bsc"
+                            and str(item.get("address") or "").strip().lower() == bound_address.lower()
+                        ]
+                        if (
+                            len(same_address_bindings) != 1
+                            or str(same_address_bindings[0].get("uid") or "") != uid
+                        ):
+                            issues.append("CHAIN_SENDER_BINDING_AMBIGUOUS")
                 if not treasury or receiver.lower() != treasury:
                     issues.append("CHAIN_TREASURY_MISMATCH")
                 if str(meta.get("from") or "").strip().lower() != sender.lower():
