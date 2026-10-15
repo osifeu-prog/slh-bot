@@ -104,18 +104,33 @@ class TonCanaryGateTests(unittest.TestCase):
 
     def test_empirical_readiness_requires_one_matching_credit_and_ledger_row(self):
         db = self._valid_replay_db()
-        with patch.object(service.state_manager, "load_db", return_value=db):
-            self.assertTrue(service._verified_public_replay_evidence(TREASURY, service.Decimal("100")))
+        with patch.dict(os.environ, {"TON_DEPOSITS_CANARY_UID": CANARY_UID}, clear=False):
+            with patch.object(service.state_manager, "load_db", return_value=db):
+                self.assertTrue(
+                    service._verified_public_replay_evidence(
+                        TREASURY, service.Decimal("100")
+                    )
+                )
 
         db["ledger"].append(dict(db["ledger"][0]))
-        with patch.object(service.state_manager, "load_db", return_value=db):
-            self.assertFalse(service._verified_public_replay_evidence(TREASURY, service.Decimal("100")))
+        with patch.dict(os.environ, {"TON_DEPOSITS_CANARY_UID": CANARY_UID}, clear=False):
+            with patch.object(service.state_manager, "load_db", return_value=db):
+                self.assertFalse(
+                    service._verified_public_replay_evidence(
+                        TREASURY, service.Decimal("100")
+                    )
+                )
 
     def test_empirical_readiness_rejects_bad_balance_arithmetic(self):
         db = self._valid_replay_db()
         db["ledger"][0]["after"] = 9.0
-        with patch.object(service.state_manager, "load_db", return_value=db):
-            self.assertFalse(service._verified_public_replay_evidence(TREASURY, service.Decimal("100")))
+        with patch.dict(os.environ, {"TON_DEPOSITS_CANARY_UID": CANARY_UID}, clear=False):
+            with patch.object(service.state_manager, "load_db", return_value=db):
+                self.assertFalse(
+                    service._verified_public_replay_evidence(
+                        TREASURY, service.Decimal("100")
+                    )
+                )
 
 
 if __name__ == "__main__":
