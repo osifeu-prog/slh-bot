@@ -80,7 +80,11 @@ def audit_trades(db, trade_ids):
                 "checks": {"snapshot_sources": None},
             })
             continue
-        trade = trade_map.get(tid)
+        matching_trades = [
+            row for row in trades
+            if isinstance(row, dict) and str(row.get("id")) == tid
+        ]
+        trade = matching_trades[0] if matching_trades else None
         if trade is None:
             reports.append({
                 "trade_id": tid, "status": "FAIL",
@@ -88,7 +92,7 @@ def audit_trades(db, trade_ids):
             })
             continue
 
-        checks = {}
+        checks = {"trade_record_unique": len(matching_trades) == 1}
         buyer_uid = str(trade.get("buyer_uid") or "")
         seller_uid = str(trade.get("seller_uid") or "")
         amount = _decimal(trade.get("slh_amount"))
@@ -117,12 +121,17 @@ def audit_trades(db, trade_ids):
                 and str(sell_order.get("uid") or sell_order.get("user_id") or "") == seller_uid
             )
             bid = _decimal(buy_order.get("limit_price"))
+            ask = _decimal(sell_order.get("limit_price"))
             checks["trade_price_within_bid"] = (
                 price is not None and bid is not None and price <= bid
+            )
+            checks["trade_price_within_ask"] = (
+                price is not None and ask is not None and price >= ask
             )
         else:
             checks["order_sides_and_parties"] = False
             checks["trade_price_within_bid"] = False
+            checks["trade_price_within_ask"] = False
 
         event_id = f"exchange:settlement_slh:{tid}"
         settlement_rows = [
