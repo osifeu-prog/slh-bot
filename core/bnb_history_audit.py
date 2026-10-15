@@ -89,6 +89,55 @@ def _binding_for_uid(db: dict, uid: str) -> tuple[str | None, str | None]:
     return address, None
 
 
+_SLH_ONLY_LEDGER_REASONS = frozenset({
+    "exchange:sell_reserve",
+    "exchange:cancel_release_slh",
+    "p2p:slh_sent",
+    "p2p:slh_received",
+})
+
+
+def _is_slh_only_ledger_reason(reason: Any) -> bool:
+    value = str(reason or "").strip().lower()
+    return (
+        value in _SLH_ONLY_LEDGER_REASONS
+        or value.startswith("p2p:slh:")
+        or value.startswith("slh:")
+    )
+
+
+def _source_predecessor_anchor_valid(
+    ledger: list, source_index: int, source_uid: str, source_before: float
+) -> bool:
+    """Require the latest preceding non-SLH owner row to meet the BNB source.
+
+    Earlier unrelated continuity gaps remain visible in the owner-wide audit;
+    the BNB reversal proof is scoped to this independently verified source and
+    its ledger suffix, with an explicit balance anchor immediately before it.
+    """
+    if not isinstance(ledger, list) or source_index < 0 or source_index >= len(ledger):
+        return False
+    for index in range(source_index - 1, -1, -1):
+        row = ledger[index]
+        if not isinstance(row, dict):
+            return False
+        if str(row.get("uid") or "").strip() != str(source_uid).strip():
+            continue
+        if _is_slh_only_ledger_reason(row.get("reason")):
+            continue
+        before = _finite_number(row.get("before"))
+        amount = _finite_number(row.get("amount"))
+        after = _finite_number(row.get("after"))
+        if before is None or amount is None or after is None:
+            return False
+        return (
+            abs((before + amount) - after) <= EPSILON
+            and abs(after - source_before) <= EPSILON
+        )
+    # A source that is the first canonical row has no prior balance to anchor.
+    return True
+
+
 def _valid_audited_reversal(
     db: dict,
     ledger: list,
@@ -254,17 +303,22 @@ def _valid_audited_reversal(
     if not common_checks:
         return False
 
-    # Replay the entire account ledger, not only entries after the bad source
-    # credit. This prevents an earlier row from being altered while the suffix
-    # beginning at source_after still appears internally consistent.
+    # Reconcile the exact verified source through the correction and current
+    # tail. Older continuity issues are retained by the owner-wide audit; they
+    # must not invalidate this source-specific correction if the immediate
+    # pre-source account anchor and the complete source suffix both reconcile.
+    # Malformed rows anywhere in the global ledger still fail closed.
+    if any(not isinstance(row, dict) for row in ledger):
+        return False
+    if not _source_predecessor_anchor_valid(
+        ledger, source_index, source_uid, source_before
+    ):
+        return False
     running = None
     saw_source = False
     saw_correction = False
-    for index, row in enumerate(ledger):
-        # Malformed records anywhere in the canonical ledger make reconciliation
-        # incomplete; never skip a non-dict entry while accepting a reversal.
-        if not isinstance(row, dict):
-            return False
+    for index in range(source_index, len(ledger)):
+        row = ledger[index]
         if str(row.get("uid") or "") != source_uid:
             continue
         row_before = _finite_number(row.get("before"))
@@ -294,6 +348,9 @@ def _valid_audited_reversal(
                 return False
             saw_correction = True
         running = row_after
+
+    if not saw_source or not saw_correction:
+        return False
 
     users = db.get("users")
     user = users.get(source_uid) if isinstance(users, dict) else None
