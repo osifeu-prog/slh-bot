@@ -64,6 +64,8 @@ def _exchange_check():
         order_ok = bool(data.get("order_book_integrity"))
         trade_ok = bool(data.get("trade_integrity"))
         money_ok = bool(data.get("money_invariants"))
+        account_ledger_status = str(data.get("account_ledger_status") or "UNKNOWN")
+        account_ledger_ok = bool(data.get("account_ledger_integrity"))
 
         if (
             verdict in {"OPEN", "READY_TO_OPEN"}
@@ -71,12 +73,14 @@ def _exchange_check():
             and order_ok
             and trade_ok
             and money_ok
+            and account_ledger_ok
             and public_ready
         ):
             detail = (
                 "canonical exchange checks pass; "
                 f"public gate={public_gate}; "
                 f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                f"account_ledger={account_ledger_status}; "
                 f"open_orders={open_orders}; "
                 f"recent_trades={recent_trades}; "
                 f"test_seed_trades={test_seed_trades}"
@@ -90,6 +94,7 @@ def _exchange_check():
                 f"canonical exchange verdict={verdict}; "
                 f"public gate={public_gate}; "
                 f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                f"account_ledger={account_ledger_status}; "
                 f"open_orders={open_orders}; "
                 f"recent_trades={recent_trades}; "
                 f"test_seed_trades={test_seed_trades}"
