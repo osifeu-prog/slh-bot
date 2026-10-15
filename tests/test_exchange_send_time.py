@@ -30,9 +30,25 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
                         "credits": 100.0,
                     }
                 },
+                "8789977826": {
+                    "wallet": {
+                        "token_balance": 0.0,
+                        "live_token_balance": 0.0,
+                        "exchange_reserved_slh": 0.0,
+                        "exchange_reserved_credits": 0.0,
+                        "credits": 0.0,
+                    }
+                },
             },
             "transactions": [],
-            "ledger": [],
+            "ledger": [{
+                "uid": "8789977826",
+                "before": 0.0,
+                "amount": 0.0,
+                "after": 0.0,
+                "reason": "test:credits_anchor",
+                "meta": {"ledger_domain": "credits"},
+            }],
             "slh_token_ledger": [],
             "exchange_orders": {},
             "exchange_trades": [],
