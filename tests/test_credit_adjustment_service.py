@@ -245,6 +245,47 @@ def test_open_bnb_gate_blocks_correction(monkeypatch):
     assert db == before
 
 
+def test_reversal_blocks_if_another_historical_deposit_fails_audit(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setattr(
+        bnb_history_audit,
+        "audit_bnb_deposit_history",
+        lambda _db: {
+            "status": "BLOCKED",
+            "rows_found": 2,
+            "rows_checked": 2,
+            "failed_rows": 2,
+            "blockers": [
+                "SELF_TRANSFER_NOT_A_DEPOSIT",
+                "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+                "LEDGER_CREDITS_MISMATCH",
+            ],
+            "findings": [
+                {
+                    "tx_suffix": TX[-8:],
+                    "status": "BLOCKED",
+                    "issues": [
+                        "SELF_TRANSFER_NOT_A_DEPOSIT",
+                        "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+                    ],
+                },
+                {
+                    "tx_suffix": TX2[-8:],
+                    "status": "BLOCKED",
+                    "issues": ["LEDGER_CREDITS_MISMATCH"],
+                },
+            ],
+        },
+    )
+
+    with pytest.raises(ValueError, match="HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS"):
+        _apply(db)
+
+    assert db == before
+
+
 def test_source_that_is_not_a_self_transfer_is_rejected(monkeypatch):
     db = _db()
     before = deepcopy(db)
