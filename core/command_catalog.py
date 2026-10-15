@@ -72,6 +72,7 @@ KNOWN = {
     "exchange_status": ("SYSTEM", "סטטוס Exchange (alias)"),
     "check_bnb": ("SYSTEM", "בדיקת BNB"),
     "check_bnb_deposits": ("SYSTEM", "בדיקת היסטוריית הפקדות BNB"),
+    "check_owner_ledger": ("SYSTEM", "בדיקת רציפות ספר חשבונות הבעלים — קריאה בלבד"),
     "check_ton": ("SYSTEM", "בדיקת TON"),
     "check_ux": ("SYSTEM", "בדיקת Mini App"),
     "biz": ("CONTROL", "תמונת עסק"),
