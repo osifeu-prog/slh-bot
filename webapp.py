@@ -4,6 +4,7 @@ import hmac
 import json
 import os
 import secrets
+import requests
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -1232,6 +1233,133 @@ def growth_events_api():
     except Exception as exc:
         print("[GROWTH_EVENTS] write error:", type(exc).__name__)
         return jsonify({"error": "GROWTH_EVENT_FAILED"}), 503
+
+@app.route("/api/v1/social/assets", methods=["GET"])
+def social_assets_catalog_api():
+    """Authenticated catalog of built-in, self-generated SLH Spark creatives."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    try:
+        from core.social_asset_library import list_assets
+        return _no_store(jsonify({
+            "ok": True,
+            "assets": list_assets(request.url_root.rstrip("/")),
+        })), 200
+    except Exception as exc:
+        print("[SOCIAL_ASSETS] catalog error:", type(exc).__name__)
+        return jsonify({"error": "SOCIAL_ASSET_CATALOG_UNAVAILABLE"}), 503
+
+
+@app.route("/api/v1/social/assets/<asset_id>.png", methods=["GET"])
+def social_asset_image_api(asset_id):
+    """Public, cacheable PNG endpoint used by previews and social crawlers."""
+    try:
+        from core.social_asset_library import get_asset, render_social_asset
+        asset = get_asset(asset_id)
+        payload = render_social_asset(asset_id)
+    except KeyError:
+        return jsonify({"error": "SOCIAL_ASSET_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[SOCIAL_ASSETS] render error:", type(exc).__name__)
+        return jsonify({"error": "SOCIAL_ASSET_RENDER_FAILED"}), 503
+    response = make_response(payload)
+    response.headers["Content-Type"] = "image/png"
+    response.headers["Content-Length"] = str(len(payload))
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Content-Disposition"] = f"inline; filename=slh-spark-{asset['id']}.png"
+    return response
+
+
+@app.route("/share/<asset_id>", methods=["GET"])
+def social_share_landing(asset_id):
+    """Stable Open Graph/Twitter landing page with a per-creative preview image."""
+    from html import escape as html_escape
+    from urllib.parse import quote as url_quote
+    try:
+        from core.social_asset_library import get_asset
+        asset = get_asset(asset_id)
+    except KeyError:
+        return "SLH Spark creative not found", 404
+    base = request.url_root.rstrip("/")
+    asset_key = url_quote(asset["id"], safe="")
+    image_url = f"{base}/api/v1/social/assets/{asset_key}.png"
+    share_url = f"{base}/share/{asset_key}"
+    mini_app_url = f"{base}/mini-app-v4"
+    title = html_escape("SLH Spark — " + str(asset["title"]))
+    description = html_escape(" ".join(str(asset["caption"]).split()))
+    image = html_escape(image_url, quote=True)
+    canonical = html_escape(share_url, quote=True)
+    app_link = html_escape(mini_app_url, quote=True)
+    page = f"""<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title><meta name="description" content="{description}">
+<link rel="canonical" href="{canonical}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="SLH Spark">
+<meta property="og:title" content="{title}"><meta property="og:description" content="{description}">
+<meta property="og:url" content="{canonical}"><meta property="og:image" content="{image}">
+<meta property="og:image:secure_url" content="{image}"><meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{image}">
+<style>body{{margin:0;background:#081121;color:#f7faff;font:18px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box}}main{{width:min(920px,100%)}}img{{width:100%;height:auto;border-radius:20px;box-shadow:0 18px 70px #0008}}p{{line-height:1.7;color:#c5d2e7}}a{{display:inline-block;background:#58d9ce;color:#071323;text-decoration:none;font-weight:700;padding:13px 20px;border-radius:12px}}</style>
+</head><body><main><img src="{image}" width="1200" height="630" alt="{title}">
+<h1>{title}</h1><p>{description}</p><a href="{app_link}">פתח את SLH Spark</a></main></body></html>"""
+    response = make_response(page)
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@app.route("/api/v1/social/send-to-telegram", methods=["POST"])
+def send_social_asset_to_telegram_api():
+    """Deliver one generated creative to the authenticated user's own Telegram chat."""
+    uid = authenticated_uid()
+    if uid is None:
+        return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    payload = request.get_json(silent=True) or {}
+    asset_id = str(payload.get("asset_id") or "").strip().lower()
+    try:
+        from core.social_asset_library import get_asset, render_social_asset
+        asset = get_asset(asset_id)
+        image_bytes = render_social_asset(asset_id)
+    except KeyError:
+        return jsonify({"error": "SOCIAL_ASSET_NOT_FOUND"}), 404
+    except Exception as exc:
+        print("[SOCIAL_ASSETS] delivery render error:", type(exc).__name__)
+        return jsonify({"error": "SOCIAL_ASSET_RENDER_FAILED"}), 503
+
+    token = str(os.getenv("BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+    if not token or ":" not in token:
+        return jsonify({"error": "TELEGRAM_DELIVERY_NOT_CONFIGURED"}), 503
+    base = request.url_root.rstrip("/")
+    share_url = f"{base}/share/{asset_id}"
+    caption = str(payload.get("caption") or asset["caption"]).strip()
+    if len(caption) > 850:
+        return jsonify({"error": "CAPTION_TOO_LONG"}), 400
+    caption = (caption + "\\n\\n" + share_url)[:1024]
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{token}/sendPhoto",
+            data={"chat_id": str(uid), "caption": caption},
+            files={"photo": (f"slh-spark-{asset_id}.png", image_bytes, "image/png")},
+            timeout=(3, 15),
+        )
+        try:
+            result = response.json()
+        except Exception:
+            result = {}
+        if response.status_code != 200 or result.get("ok") is not True:
+            # Do not echo the Bot API response, which could contain sensitive context.
+            return jsonify({"error": "TELEGRAM_DELIVERY_FAILED"}), 502
+    except Exception as exc:
+        print("[SOCIAL_ASSETS] Telegram delivery error:", type(exc).__name__)
+        return jsonify({"error": "TELEGRAM_DELIVERY_FAILED"}), 502
+    return jsonify({"ok": True, "sent": True, "asset_id": asset_id}), 200
+
 
 @app.route("/api/v1/store", methods=["GET"])
 def stars_store_api():
