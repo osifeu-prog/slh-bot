@@ -67,6 +67,9 @@ def test_help_metadata_covers_existing_runtime_commands():
     commands = [
         "/check_ux",
         "/check_bnb_deposits",
+        "/bnb_reverse_prepare",
+        "/bnb_reverse_confirm",
+        "/bnb_reverse_cancel",
         "/biz",
         "/biz_users",
         "/biz_revenue",
