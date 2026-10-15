@@ -228,8 +228,33 @@ def record_vip_subscription_payment(
             "fulfillment_status": "blocked",
         }
 
-    # A completed replay is a no-op: do not re-run fulfillment or record
-    # subscription revenue a second time. Pending replays remain recoverable.
+    # Reconcile referral rewards and WhatsApp cashback on every legitimate
+    # replay. Each reward has its own idempotency key, so this is safe even
+    # after a previous payment record succeeded but a reward write was pending.
+    loyalty_rewards = {}
+    try:
+        from core.commerce_loyalty import grant_whatsapp_cashback
+        loyalty_rewards["whatsapp_cashback"] = grant_whatsapp_cashback(
+            uid, f"vip:{charge_id}", stars_paid, TELEGRAM_STARS_CURRENCY,
+            sku="vip_monthly",
+        )
+    except Exception as exc:
+        loyalty_rewards["whatsapp_cashback"] = {
+            "status": "PENDING", "error": type(exc).__name__
+        }
+    try:
+        from core.commerce_loyalty import settle_referred_vip_purchase
+        loyalty_rewards["referral"] = settle_referred_vip_purchase(
+            uid, charge_id, stars_paid
+        )
+    except Exception as exc:
+        loyalty_rewards["referral"] = {
+            "status": "PENDING", "error": type(exc).__name__
+        }
+
+    # A completed replay is a no-op: do not re-run VIP fulfillment or record
+    # subscription revenue a second time. Loyalty rewards above are independently
+    # idempotent and can be reconciled on replay.
     if not created and str(record.get("fulfillment_status", "pending")) == "completed":
         return {
             "status": "duplicate",
@@ -238,6 +263,7 @@ def record_vip_subscription_payment(
             "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
             "fulfillment_status": "completed",
             "bundle": record.get("bundle"),
+            "loyalty_rewards": loyalty_rewards,
         }
 
     bundle = apply_vip_benefits(
@@ -261,4 +287,5 @@ def record_vip_subscription_payment(
         "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
         "fulfillment_status": fulfillment_status,
         "bundle": bundle,
+        "loyalty_rewards": loyalty_rewards,
     }
