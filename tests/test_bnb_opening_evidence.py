@@ -390,7 +390,9 @@ def test_historical_self_transfer_with_valid_compensation_is_reconciled_only_for
             "treasury": TREASURY,
         }
 
-    with patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+    with patch.dict(os.environ, {"SLH_BNB_RECONCILED_HISTORY_APPROVED": "1"}, clear=False), patch(
+        "core.bnb_gate._effective_config", return_value=_cfg()
+    ), patch(
         "core.deposit_monitor.verify_bnb_deposit", side_effect=verify_one
     ), patch(
         "core.historical_bnb_credit_reversal.is_reconciled_invalid_historical_deposit",
@@ -422,7 +424,9 @@ def test_historical_self_transfer_compensation_cannot_mask_other_ledger_findings
             "treasury": TREASURY,
         }
 
-    with patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+    with patch.dict(os.environ, {"SLH_BNB_RECONCILED_HISTORY_APPROVED": "1"}, clear=False), patch(
+        "core.bnb_gate._effective_config", return_value=_cfg()
+    ), patch(
         "core.deposit_monitor.verify_bnb_deposit", side_effect=verify_one
     ), patch(
         "core.historical_bnb_credit_reversal.is_reconciled_invalid_historical_deposit",
