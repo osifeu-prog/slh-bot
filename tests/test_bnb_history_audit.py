@@ -84,7 +84,30 @@ def _db(*, sender=SENDER, destination=TREASURY, amount_wei=AMOUNT_WEI, duplicate
                 "address": SENDER,
             }
         },
-        "ledger": [row, dict(row) if duplicate else None] if duplicate else [row],
+        "ledger": [
+            {
+                "time": "2026-10-12T13:13:31+00:00",
+                "uid": "owner",
+                "reason": "ton:deposit",
+                "before": 17.091775,
+                "amount": 1.0,
+                "after": 18.091775,
+                "meta": {"asset": "Credits", "ledger_domain": "credits", "event_id": "test-opening-anchor"},
+            },
+            row,
+            dict(row) if duplicate else None,
+        ] if duplicate else [
+            {
+                "time": "2026-10-12T13:13:31+00:00",
+                "uid": "owner",
+                "reason": "ton:deposit",
+                "before": 17.091775,
+                "amount": 1.0,
+                "after": 18.091775,
+                "meta": {"asset": "Credits", "ledger_domain": "credits", "event_id": "test-opening-anchor"},
+            },
+            row,
+        ],
     }
 
 
@@ -152,7 +175,7 @@ def test_self_transfer_is_not_accepted_as_a_historical_deposit():
 def _add_audited_reversal(db):
     correction_key = f"accounting:reversal:{TX_HASH.lower()}"
     source_key = f"bnb:deposit:{TX_HASH.lower()}"
-    source = db["ledger"][0]
+    source = db["ledger"][1]
     source_meta = source["meta"]
     source_meta["from"] = SENDER
     source_meta["to"] = SENDER
@@ -168,7 +191,7 @@ def _add_audited_reversal(db):
             "idempotency_key": correction_key,
             "source_idempotency_key": source_key,
             "source_reason": "bnb:deposit",
-            "source_ledger_index": 0,
+            "source_ledger_index": 1,
             "tx_hash": TX_HASH.lower(),
             "actor_uid": OWNER_UID,
             "nominal_credits_reversed": 10.0,
@@ -208,7 +231,7 @@ def _add_audited_reversal(db):
 def _add_audited_reversal_v2_with_later_activity(db):
     correction_key = f"accounting:reversal:{TX_HASH.lower()}"
     source_key = f"bnb:deposit:{TX_HASH.lower()}"
-    source = db["ledger"][0]
+    source = db["ledger"][1]
     source["meta"]["from"] = SENDER
     source["meta"]["to"] = SENDER
 
@@ -246,7 +269,7 @@ def _add_audited_reversal_v2_with_later_activity(db):
             "correction_version": 2,
             "source_idempotency_key": source_key,
             "source_reason": "bnb:deposit",
-            "source_ledger_index": 0,
+            "source_ledger_index": 1,
             "tx_hash": TX_HASH.lower(),
             "actor_uid": "owner",
             "nominal_credits_reversed": 10.0,
@@ -346,6 +369,46 @@ def test_v2_audited_reversal_resolves_self_transfer_after_later_activity():
 
 
 
+def test_v2_reversal_allows_older_gap_when_immediate_source_anchor_matches():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    # Preserve an older account discontinuity, but provide a correct row
+    # immediately before the invalid BNB source. The source-specific BNB
+    # audit must validate that anchor and the complete source-to-tail chain,
+    # while the owner-wide ledger audit continues to report the older gap.
+    db["ledger"][0:0] = [
+        {
+            "time": "2026-10-01T10:00:00+00:00",
+            "uid": "owner",
+            "before": 0.0,
+            "amount": 1.0,
+            "after": 1.0,
+            "reason": "admin:test_grant",
+            "meta": {},
+        },
+        {
+            "time": "2026-10-07T18:05:07+00:00",
+            "uid": "owner",
+            "before": 17.091775,
+            "amount": 1.0,
+            "after": 18.091775,
+            "reason": "ton:deposit",
+            "meta": {},
+        },
+    ]
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 3
+
+    result = _run(
+        db, FakeEth(sender=SENDER, destination=SENDER), approved=True
+    )
+
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+    assert db["users"]["owner"]["wallet"]["credits"] == 20.072775
+
+
 def test_audited_reversal_does_not_clear_gate_without_explicit_history_approval():
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
@@ -361,7 +424,7 @@ def test_v2_reversal_with_inconsistent_intervening_ledger_row_stays_blocked():
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
     )
-    db["ledger"][1]["before"] = 999.0
+    db["ledger"][2]["before"] = 999.0
     result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
 
     assert result["status"] == "BLOCKED"
@@ -375,7 +438,7 @@ def test_v2_reversal_blocks_inconsistent_ledger_row_before_source():
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
     )
-    source = db["ledger"][0]
+    source = db["ledger"][1]
     source["before"] = 18.091775
     source["after"] = 28.091775
     prior = {
@@ -388,11 +451,11 @@ def test_v2_reversal_blocks_inconsistent_ledger_row_before_source():
         "meta": {},
     }
     db["ledger"].insert(0, prior)
-    db["ledger"][-1]["meta"]["source_ledger_index"] = 1
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 2
     # Keep the earlier row arithmetically valid but break its continuity with
     # the source row; validating only the suffix from source_after misses this.
-    db["ledger"][0]["amount"] = 2.0
-    db["ledger"][0]["after"] = 19.091775
+    db["ledger"][1]["amount"] = 2.0
+    db["ledger"][1]["after"] = 19.091775
 
     result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
 
@@ -483,7 +546,7 @@ def test_audited_reversal_blocks_malformed_unrelated_ledger_row():
     db["ledger"].insert(0, None)
     # Insertion shifts the source row by one; pin its index so the malformed
     # row remains the sole purpose of this adversarial fixture.
-    db["ledger"][-1]["meta"]["source_ledger_index"] = 1
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 2
 
     result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
 
@@ -492,3 +555,39 @@ def test_audited_reversal_blocks_malformed_unrelated_ledger_row():
     assert result["findings"][0]["status"] == "BLOCKED"
 
 
+
+
+def test_audited_reversal_without_predecessor_anchor_remains_blocked():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    db["ledger"].pop(0)  # Remove the only pre-source Credits anchor.
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 0
+
+    result = _run(
+        db, FakeEth(sender=SENDER, destination=SENDER), approved=True
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+
+
+def test_unknown_slh_prefix_cannot_anchor_audited_reversal():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    db["ledger"][0].update({
+        "before": 0.0,
+        "amount": 1.0,
+        "after": 1.0,
+        "reason": "slh:unknown_legacy_reason",
+    })
+
+    result = _run(
+        db, FakeEth(sender=SENDER, destination=SENDER), approved=True
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
