@@ -304,6 +304,9 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
     if (
         correction.get("reason") != _CORRECTION_REASON
         or meta.get("correction_version") != 2
+        # The v2 correction contract is owner-self-account only. Do not report
+        # an old entry authored for another owner account as this UID's success.
+        or str(meta.get("actor_uid") or "").strip() != uid
         or meta.get("source_idempotency_key") != source_key
         or meta.get("source_reason") != "bnb:deposit"
         or meta.get("source_ledger_index") != source_index
@@ -358,6 +361,7 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
     expected_audit = (
         audit.get("event") == _CORRECTION_EVENT
         and str(audit.get("uid") or "") == uid
+        and str(audit.get("actor_uid") or "").strip() == uid
         and str(audit.get("actor_uid") or "") == str(meta.get("actor_uid") or "")
         and _same(audit.get("tx_hash"), tx_hash)
         and audit.get("source_idempotency_key") == source_key
