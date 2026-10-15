@@ -86,6 +86,7 @@ def _stub_web3(fake):
 
 def _patch_runtime(monkeypatch, db, *, fake=None):
     fake = fake or _fake_web3()
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
     monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
@@ -210,6 +211,18 @@ def test_refuses_wallet_that_aliases_treasury_instead_of_this_case(monkeypatch):
     _patch_runtime(monkeypatch, db, fake=_fake_web3(sender=TREASURY, recipient=TREASURY))
 
     with pytest.raises(ValueError, match="BNB_WALLET_ALIASES_TREASURY_NOT_THIS_CASE"):
+        _apply()
+
+    assert db == before
+
+
+def test_refuses_when_operator_flag_is_on_even_if_historical_audit_blocks_gate(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+
+    with pytest.raises(ValueError, match="BNB_OPERATOR_FLAG_MUST_BE_CLOSED"):
         _apply()
 
     assert db == before
