@@ -31,10 +31,14 @@ DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
 # Partners (alpha.distribute) are granted only via env, e.g. after an
 # accounting reconciliation is closed. Empty by default.
 PARTNER_IDS = _csv_ids("SLH_PARTNER_IDS")
+# A dedicated service principal used only by the default-off WhatsApp storefront.
+# It must never inherit OWNER/ADMIN/DEVELOPER permissions.
+WHATSAPP_STORE_SERVICE_IDS = _csv_ids("SLH_WHATSAPP_STORE_PRINCIPAL_ID")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
     "OWNER": ["*"],
+    "WHATSAPP_STORE_SERVICE": ["whatsapp.store"],
     "PARTNER_READ_ONLY": [
         "public.view",
         "investor.view",
@@ -89,6 +93,11 @@ def get_role(uid) -> str:
 
     if uid == OWNER_ID:
         return "OWNER"
+
+    # This reserved service identity receives only the explicitly listed
+    # WhatsApp-store permission; it must not use an owner/admin Telegram UID.
+    if uid in WHATSAPP_STORE_SERVICE_IDS:
+        return "WHATSAPP_STORE_SERVICE"
 
     # Persistent profile status can revoke/lock developer access even when
     # the UID is still present in the bootstrap environment variable.
