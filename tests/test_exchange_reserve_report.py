@@ -98,3 +98,14 @@ def test_exchange_reserve_command_does_not_audit_for_unauthorized_user():
 
     denied.assert_called_once()
     audit.assert_not_called()
+
+def test_exchange_reserve_report_fails_closed_when_blocker_count_conflicts_with_findings():
+    report = _report()
+    report["release_readiness_status"] = "PASS"
+    report["release_blocking_finding_count"] = 0
+
+    rendered = target._exchange_reserves_output(report)
+
+    assert "Release readiness: BLOCKED" in rendered
+    assert "Audit integrity: BLOCKED" in rendered
+    assert "RESERVE_AUDIT_COUNT_MISMATCH" in rendered
