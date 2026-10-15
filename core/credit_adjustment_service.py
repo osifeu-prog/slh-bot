@@ -436,7 +436,7 @@ def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
 
         before = float(current_balance)
         reversal_amount = -float(source_amount)
-        after = float(current_balance + reversal_amount)
+        after = float(current_balance) + reversal_amount
         if abs((before + reversal_amount) - after) > 1e-9:
             raise ValueError("REVERSAL_FLOAT_ARITHMETIC_INVALID")
 
