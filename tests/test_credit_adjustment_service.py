@@ -25,6 +25,15 @@ def _db():
         },
         "ledger": [
             {
+                "time": "2026-10-10T08:58:46.536038+00:00",
+                "uid": UID,
+                "before": 7.091775,
+                "amount": 1.0,
+                "after": 8.091775,
+                "reason": "ton:deposit",
+                "meta": {"asset": "Credits", "ledger_domain": "credits", "event_id": "test-opening-anchor"},
+            },
+            {
                 "time": "2026-10-10T08:58:47.536038+00:00",
                 "uid": UID,
                 "before": 8.091775,
@@ -167,7 +176,7 @@ def test_read_only_preview_shows_current_and_projected_balance_without_mutation(
 
     assert result["status"] == "PREPARED"
     assert result["scope"] == "read_only"
-    assert result["source_ledger_index"] == 0
+    assert result["source_ledger_index"] == 1
     assert result["tx_suffix"] == TX[-8:]
     assert result["amount_reversed"] == 10.0
     assert result["balance_before"] == 30.072775
@@ -279,7 +288,7 @@ def test_reversal_is_idempotent_after_more_chain_confirmations(monkeypatch):
     assert first["status"] == "APPLIED"
     assert second["status"] == "ALREADY_REVERSED"
     assert db["users"][UID]["wallet"]["credits"] == 20.072775
-    assert len(db["ledger"]) == 5
+    assert len(db["ledger"]) == 6
     assert len(db["credit_adjustment_audit"]) == 1
 
 
@@ -299,6 +308,55 @@ def test_correction_rechecks_raw_gate_flag_inside_atomic_mutation(monkeypatch):
     assert db == before
 
 
+def test_reversal_can_reconcile_source_after_an_older_continuity_gap(monkeypatch):
+    db = _db()
+    db["ledger"][0:0] = [
+        {
+            "time": "2026-10-01T10:00:00+00:00",
+            "uid": UID,
+            "before": 0.0,
+            "amount": 1.0,
+            "after": 1.0,
+            "reason": "admin:test_grant",
+            "meta": {},
+        },
+        {
+            "time": "2026-10-07T18:05:07+00:00",
+            "uid": UID,
+            "before": 7.091775,
+            "amount": 1.0,
+            "after": 8.091775,
+            "reason": "ton:deposit",
+            "meta": {},
+        },
+    ]
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    result = _apply(db)
+
+    assert result["status"] == "APPLIED"
+    assert result["amount_reversed"] == 10.0
+    assert db["ledger"][:-1] == before["ledger"]
+    assert db["users"][UID]["wallet"]["credits"] == 20.072775
+    assert len(db["credit_adjustment_audit"]) == 1
+
+
+def test_reversal_still_blocks_when_immediate_pre_source_anchor_mismatches(monkeypatch):
+    db = _db()
+    # Keep the predecessor arithmetic valid but make it disagree with source.before.
+    db["ledger"][0].update({"before": 0.0, "amount": 1.0, "after": 1.0})
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(
+        ValueError, match="ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH"
+    ):
+        _apply(db)
+
+    assert db == before
+
+
 def test_stale_balance_fails_without_mutation(monkeypatch):
     db = _db()
     before = deepcopy(db)
@@ -312,7 +370,7 @@ def test_stale_balance_fails_without_mutation(monkeypatch):
 
 def test_later_ledger_sequence_mismatch_fails_without_mutation(monkeypatch):
     db = _db()
-    db["ledger"][2]["before"] = 99.0
+    db["ledger"][3]["before"] = 99.0
     before = deepcopy(db)
     _patch_runtime(monkeypatch, db)
 
@@ -450,7 +508,7 @@ def test_source_that_is_not_a_self_transfer_is_rejected(monkeypatch):
 
 def test_duplicate_source_idempotency_key_fails_closed(monkeypatch):
     db = _db()
-    db["ledger"].append(deepcopy(db["ledger"][0]))
+    db["ledger"].append(deepcopy(db["ledger"][1]))
     before = deepcopy(db)
     _patch_runtime(monkeypatch, db)
 
@@ -535,3 +593,36 @@ def test_concurrent_reversal_attempts_apply_compensation_once(monkeypatch, tmp_p
     ]
     assert len(corrections) == 1
     assert len(audit_rows) == 1
+
+
+def test_reversal_fails_closed_when_no_predecessor_balance_anchor_exists(monkeypatch):
+    db = _db()
+    db["ledger"].pop(0)  # Leave the BNB source as the first owner ledger row.
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(
+        ValueError, match="ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISSING"
+    ):
+        _apply(db)
+
+    assert db == before
+
+
+def test_unknown_slh_prefix_is_not_skipped_as_credit_anchor(monkeypatch):
+    db = _db()
+    db["ledger"][0].update({
+        "before": 0.0,
+        "amount": 1.0,
+        "after": 1.0,
+        "reason": "slh:unknown_legacy_reason",
+    })
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(
+        ValueError, match="ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH"
+    ):
+        _apply(db)
+
+    assert db == before
