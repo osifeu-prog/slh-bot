@@ -20,7 +20,6 @@ ACTION_SETTINGS = {
 }
 REQUEST_TTL_SECONDS = 30 * 60
 CONFIG_CONFIRM_TTL_SECONDS = 5 * 60
-AUDIT_LIMIT = 2000
 
 
 def _now() -> float:
@@ -95,8 +94,7 @@ def _audit(db: dict[str, Any], event: str, *, actor_id=None, request_id=None,
         "resource_id": str(resource_id) if resource_id is not None else None,
         "detail": str(detail)[:500] if detail is not None else None,
     })
-    if len(rows) > AUDIT_LIMIT:
-        del rows[:-AUDIT_LIMIT]
+    # Keep the audit trail append-only: never silently discard older decisions.
 
 
 def record_action_event(event: str, *, actor_id=None, action=None,

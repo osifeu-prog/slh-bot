@@ -74,10 +74,10 @@ def task_done(message, bot):
         is_private = str(getattr(message.chat, "type", "")) == "private"
         text = "⏳ השלמת המשימה ממתינה לאישור OWNER."
         if is_private:
-            text += "\\nמזהה בקשה: " + str(request_id)
+            text += "\nמזהה בקשה: " + str(request_id)
         text += (
-            "\\nנשלחה בקשת אישור לבעלים." if notified else
-            "\\nלא ניתן היה לאשר שהודעת OWNER נמסרה; אל תנסה שוב עד לבדיקת הסטטוס."
+            "\nנשלחה בקשת אישור לבעלים." if notified else
+            "\nלא ניתן היה לאשר שהודעת OWNER נמסרה; אל תנסה שוב עד לבדיקת הסטטוס."
         )
         bot.send_message(message.chat.id, text)
         return

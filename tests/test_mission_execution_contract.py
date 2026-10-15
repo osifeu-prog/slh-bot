@@ -72,7 +72,7 @@ def _runtime_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(
         human_intervention,
         "record_action_event",
-        lambda **kwargs: {"status": "recorded"},
+        lambda *args, **kwargs: {"status": "recorded"},
     )
     calls = []
     monkeypatch.setattr(academy_manager, "complete_stage", lambda uid, course_id, stage: calls.append((uid, course_id, stage)) or {"ok": True, "uid": uid, "course_id": course_id, "stage": stage})

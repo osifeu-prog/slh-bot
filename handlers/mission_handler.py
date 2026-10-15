@@ -96,9 +96,9 @@ def register(bot, context=None):
             if result.get("status") == "approval_required":
                 bot.reply_to(
                     m,
-                    "⏳ ההשלמה ממתינה לאישור OWNER.\\n"
+                    "⏳ ההשלמה ממתינה לאישור OWNER.\n"
                     + "מזהה בקשה: " + str(result.get("request_id"))
-                    + "\\nהבעלים יקבל בקשת אישור בפרטי.",
+                    + "\nהבעלים יקבל בקשת אישור בפרטי.",
                 )
                 return
             if result.get("status") != "completed":
@@ -108,7 +108,7 @@ def register(bot, context=None):
             reward = result.get("reward", {})
             bot.reply_to(
                 m,
-                f"✅ משימה #{mission_id} הושלמה.\\n"
+                f"✅ משימה #{mission_id} הושלמה.\n"
                 f"סטטוס תגמול: {reward.get('status', 'unknown')}",
             )
             return
@@ -128,12 +128,12 @@ def register(bot, context=None):
             if result.get("status") == "approval_required":
                 bot.reply_to(
                     m,
-                    "⏳ ביצוע המשימה ממתין לאישור OWNER.\\n"
+                    "⏳ ביצוע המשימה ממתין לאישור OWNER.\n"
                     + "מזהה בקשה: " + str(result.get("request_id"))
-                    + "\\nהבעלים יקבל בקשת אישור בפרטי.",
+                    + "\nהבעלים יקבל בקשת אישור בפרטי.",
                 )
             else:
-                bot.reply_to(m, "🔵 תוצאת הרצת משימה #" + mission_id + "\\n" +
+                bot.reply_to(m, "🔵 תוצאת הרצת משימה #" + mission_id + "\n" +
                              str(result)[:3000])
             return
 
