@@ -1662,7 +1662,7 @@ async function loadSocialAssets(){
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
     __slhSocialAssetCatalog=Array.isArray(d.assets)?d.assets:[];
     if(!__slhSocialAssetCatalog.length){box.innerHTML='<div class="muted">אין כרגע עיצובים זמינים.</div>';return}
-    box.innerHTML=__slhSocialAssetCatalog.map(x=>'<article class="slh-social-card"><img loading="lazy" src="'+esc(x.image_url)+'" alt="'+esc(x.title)+'"><span class="slh-social-pill">PNG · 1200×630</span><h4>'+esc(x.title)+'</h4><div class="slh-social-caption">'+esc(x.caption||'')+'</div><div class="slh-social-actions"><button class="action primary" onclick="sendSocialAssetToTelegram(\''+esc(x.id)+'\')">📩 שלח לבוט</button><button class="action" onclick="shareSocialAsset(\''+esc(x.id)+'\')">📣 שתף תמונה</button></div><p class="muted" style="font-size:11px;margin:8px 0 0">Preview: <a href="'+esc(x.image_url)+'" target="_blank" rel="noopener">פתח תמונה</a> · <a href="'+esc(window.location.origin+'/share/'+encodeURIComponent(x.id))+'" target="_blank" rel="noopener">קישור חברתי</a></p></article>').join('');
+    box.innerHTML=__slhSocialAssetCatalog.map(x=>'<article class="slh-social-card"><img loading="lazy" src="'+esc(x.image_url)+'" alt="'+esc(x.title)+'"><span class="slh-social-pill">PNG · 1200×630</span><h4>'+esc(x.title)+'</h4><div class="slh-social-caption">'+esc(x.caption||'')+'</div><div class="slh-social-actions"><button class="action primary" onclick="sendSocialAssetToTelegram(\''+esc(x.id)+'\')">📩 שלח לבוט</button><button class="action" onclick="shareSocialAsset(\''+esc(x.id)+'\')">📣 שתף תמונה</button></div><p class="muted" style="font-size:11px;margin:8px 0 0">Preview: <a href="'+esc(x.image_url)+'" target="_blank" rel="noopener">פתח תמונה</a> · <a href="'+esc(x.share_url)+'" target="_blank" rel="noopener">קישור חברתי</a></p></article>').join('');
   }catch(e){box.innerHTML='<div class="muted">לא ניתן לטעון את המאגר: '+esc(e.message||'שגיאה')+'</div>'}
 }
 async function sendSocialAssetToTelegram(id){
@@ -1678,7 +1678,7 @@ async function sendSocialAssetToTelegram(id){
 async function shareSocialAsset(id){
   const asset=socialAssetById(id);
   if(!asset){toast('בחר עיצוב מהמאגר');return}
-  const shareUrl=String(window.location.origin+'/share/'+encodeURIComponent(asset.id));
+  const shareUrl=String(asset.share_url||'');
   try{
     const r=await fetch(asset.image_url,{cache:'force-cache'});
     if(!r.ok)throw Error('IMAGE_UNAVAILABLE');
