@@ -441,7 +441,11 @@ def audit_db(db):
             and str(order.get("status") or "").lower() in terminal_statuses
             and context.get("order_remaining_is_zero") is True
             and context.get("order_reserved_slh_is_zero") is True
-            and context.get("wallet_reserved_slh_is_zero") is True
+            # Other open sell orders may legitimately reserve SLH in this wallet.
+            # Prove that this terminal order released its own reserve and that
+            # the wallet total exactly matches the independent open-order book.
+            # Requiring the whole wallet reserve to be zero confuses unrelated
+            # live reservations with a terminal-order reconciliation failure.
             and context.get("wallet_reserve_matches_open_orders") is True
         )
 
