@@ -1,4 +1,5 @@
 import json
+import math
 import time
 
 import state_manager
@@ -15,8 +16,168 @@ def _canonical_uid(uid):
     return value
 
 
+
+def _grant_vip_months(uid, purchase_id, months):
+    """Grant complimentary VIP time once per immutable purchase ID; no revenue is recorded."""
+    from core.stars_price_authority import VIP_SUBSCRIPTION_PERIOD
+
+    uid = str(uid).strip()
+    purchase_id = str(purchase_id or "").strip()
+    if not uid or not purchase_id:
+        raise ValueError("VIP_BONUS_PURCHASE_ID_REQUIRED")
+    if isinstance(months, bool) or not isinstance(months, int) or months < 1 or months > 12:
+        raise ValueError("VIP_BONUS_MONTHS_INVALID")
+
+    award_id = f"store-bonus:{purchase_id}:vip-months"
+
+    def mutate(db):
+        users = db.get("users")
+        if not isinstance(users, dict) or not isinstance(users.get(uid), dict):
+            raise ValueError("VIP_BONUS_USER_NOT_FOUND")
+        awards = db.setdefault("vip_bonus_awards", {})
+        if not isinstance(awards, dict):
+            raise ValueError("VIP_BONUS_AWARDS_INVALID")
+
+        existing = awards.get(award_id)
+        if existing is not None:
+            if (
+                not isinstance(existing, dict)
+                or str(existing.get("uid")) != uid
+                or int(existing.get("months", 0) or 0) != months
+                or str(existing.get("purchase_id")) != purchase_id
+            ):
+                return {"status": "CONFLICT", "award_id": award_id}
+            return {**existing, "status": "DUPLICATE"}
+
+        user = users[uid]
+        permissions = user.get("permissions", [])
+        if permissions is None:
+            permissions = []
+        if not isinstance(permissions, list):
+            raise ValueError("VIP_BONUS_PERMISSIONS_INVALID")
+        try:
+            previous_until = int(user.get("vip_access_until", 0) or 0)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("VIP_BONUS_EXPIRY_INVALID") from exc
+
+        now = int(time.time())
+        starts_at = max(now, previous_until)
+        expires_at = starts_at + int(VIP_SUBSCRIPTION_PERIOD) * months
+        if "vip_access" not in permissions:
+            permissions = list(permissions) + ["vip_access"]
+        user["permissions"] = permissions
+        user["vip_access_until"] = expires_at
+
+        record = {
+            "award_id": award_id,
+            "uid": uid,
+            "purchase_id": purchase_id,
+            "months": months,
+            "period_seconds": int(VIP_SUBSCRIPTION_PERIOD),
+            "granted_at": now,
+            "starts_at": starts_at,
+            "expires_at": expires_at,
+            "source": "store_bundle_bonus",
+        }
+        awards[award_id] = record
+        return {**record, "status": "APPLIED"}
+
+    result = state_manager.atomic_update(mutate)
+    if not isinstance(result, dict) or result.get("status") == "CONFLICT":
+        raise ValueError("VIP_BONUS_IDEMPOTENCY_CONFLICT")
+    return result
+
+
+def _apply_bundle_grant(uid, grant, purchase_id=None):
+    """Apply a small allowlisted bundle with replay-safe Credits/VIP bonuses."""
+    allowed_fields = {"bundle", "credits_bonus", "vip_months_bonus"}
+    if set(grant) - allowed_fields:
+        raise ValueError("BUNDLE_GRANT_FIELDS_INVALID")
+
+    grants = grant.get("bundle")
+    if not isinstance(grants, list) or not grants or len(grants) > 16:
+        raise ValueError("BUNDLE_GRANTS_INVALID")
+
+    allowed_grant_types = {"permission", "course", "digital", "plugin", "hardware"}
+    validated = []
+    for item in grants:
+        if not isinstance(item, dict) or len(item) != 1:
+            raise ValueError("BUNDLE_CHILD_GRANT_INVALID")
+        kind = next(iter(item))
+        if kind not in allowed_grant_types or not str(item.get(kind) or "").strip():
+            raise ValueError("BUNDLE_CHILD_GRANT_INVALID")
+        validated.append({kind: item[kind]})
+
+    raw_credits = grant.get("credits_bonus", 0)
+    if isinstance(raw_credits, bool):
+        raise ValueError("BUNDLE_CREDITS_BONUS_INVALID")
+    try:
+        credits_bonus = float(raw_credits)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("BUNDLE_CREDITS_BONUS_INVALID") from exc
+    if not math.isfinite(credits_bonus) or credits_bonus < 0 or credits_bonus > 10000:
+        raise ValueError("BUNDLE_CREDITS_BONUS_INVALID")
+
+    raw_months = grant.get("vip_months_bonus", 0)
+    if isinstance(raw_months, bool):
+        raise ValueError("BUNDLE_VIP_MONTHS_INVALID")
+    try:
+        vip_months_bonus = int(raw_months)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("BUNDLE_VIP_MONTHS_INVALID") from exc
+    if vip_months_bonus != raw_months or vip_months_bonus < 0 or vip_months_bonus > 12:
+        raise ValueError("BUNDLE_VIP_MONTHS_INVALID")
+
+    purchase_id = str(purchase_id or "").strip()
+    if (credits_bonus > 0 or vip_months_bonus > 0) and not purchase_id:
+        raise ValueError("BUNDLE_BONUS_PURCHASE_ID_REQUIRED")
+
+    applied = []
+    for index, child_grant in enumerate(validated):
+        child_purchase_id = f"{purchase_id}:bundle:{index}" if purchase_id else None
+        result = apply_grant(uid, child_grant, purchase_id=child_purchase_id)
+        if not isinstance(result, dict) or result.get("ok") is not True:
+            raise RuntimeError("BUNDLE_CHILD_FULFILLMENT_FAILED")
+        applied.append(result)
+
+    credits_result = None
+    if credits_bonus > 0:
+        from core import economy_service
+
+        credits_result = economy_service.record_transaction(
+            uid=uid,
+            amount=credits_bonus,
+            reason="store:bundle_bonus",
+            meta={
+                "idempotency_key": f"store-bonus:{purchase_id}:credits",
+                "purchase_id": purchase_id,
+                "source": "store_bundle",
+            },
+            return_details=True,
+        )
+        if not isinstance(credits_result, dict) or credits_result.get("status") not in {"APPLIED", "DUPLICATE"}:
+            raise RuntimeError("BUNDLE_CREDITS_BONUS_FAILED")
+
+    vip_result = None
+    if vip_months_bonus > 0:
+        vip_result = _grant_vip_months(uid, purchase_id, vip_months_bonus)
+
+    return {
+        "ok": True,
+        "type": "bundle",
+        "purchase_id": purchase_id or None,
+        "grants": applied,
+        "credits_bonus": credits_result,
+        "vip_bonus": vip_result,
+    }
+
+
 def apply_grant(uid, grant, purchase_id=None):
     uid = _canonical_uid(uid)
+    if not isinstance(grant, dict):
+        raise ValueError("GRANT_INVALID")
+    if "bundle" in grant:
+        return _apply_bundle_grant(uid, grant, purchase_id=purchase_id)
     user = profile_manager.get_user(uid)
 
     if "permission" in grant:
