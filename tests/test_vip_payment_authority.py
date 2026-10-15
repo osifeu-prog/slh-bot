@@ -126,8 +126,6 @@ class VIPPaymentAuthorityTests(unittest.TestCase):
         self.assertEqual(result["fulfillment_status"], "completed")
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class VIPAnnualPaymentAuthorityTests(unittest.TestCase):
@@ -217,3 +215,7 @@ class VIPAnnualPaymentAuthorityTests(unittest.TestCase):
                     uid="100", stars_paid=499, charge_id="wrong-annual-price", annual=True
                 )
         update.assert_not_called()
+
+
+if __name__ == "__main__":
+    unittest.main()
