@@ -565,8 +565,8 @@ class ExchangeReconciliationTests(unittest.TestCase):
 
         self.assertEqual(report["status"], "FAIL")
         self.assertEqual(report["operational_status"], "PASS")
-        self.assertEqual(report["release_readiness_status"], "PASS")
-        self.assertEqual(report["release_blocking_finding_count"], 0)
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertEqual(report["release_blocking_finding_count"], 2)
         self.assertGreater(report["historical_finding_count"], 0)
         self.assertEqual(report["blocking_finding_count"], 0)
         self.assertTrue(all(
