@@ -8,7 +8,6 @@ from core.social_asset_library import get_asset, list_assets, render_social_asse
 
 
 PUBLIC_BASE_URL = "https://slh-cloud-bot-production.up.railway.app"
-PUBLIC_SITE = "https://slh-nft.com"
 MINI_APP_URL = PUBLIC_BASE_URL + "/mini-app-v4"
 
 
@@ -21,7 +20,7 @@ def _share_url(asset: dict) -> str:
 def _catalog_markup():
     from telebot import types
 
-    catalog = list_assets(PUBLIC_SITE)
+    catalog = list_assets(PUBLIC_BASE_URL)
     markup = types.InlineKeyboardMarkup(row_width=2)
     buttons = [
         types.InlineKeyboardButton(
