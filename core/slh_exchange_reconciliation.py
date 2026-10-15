@@ -153,7 +153,15 @@ def audit_db(db):
         )
         try:
             from core.exchange_housekeeping import is_test_seed
-            test_seed = bool(is_test_seed(order))
+            # Archive metadata is assigned by the archiver itself. In particular,
+            # archive_reason="test_seed_retirement" must not prove that the
+            # pre-archive record was a seed; exclude bookkeeping fields and
+            # require independent seed evidence in the preserved order payload.
+            seed_evidence_order = {
+                key: value for key, value in order.items()
+                if key not in {"archive_reason", "archived_at", "archived_by"}
+            }
+            test_seed = bool(is_test_seed(seed_evidence_order))
         except Exception:
             # Classification is diagnostic only; never allow it to affect audit status.
             test_seed = None
