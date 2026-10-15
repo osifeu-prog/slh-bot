@@ -67,25 +67,33 @@ def _exchange_check():
         account_ledger_status = str(data.get("account_ledger_status") or "UNKNOWN")
         account_ledger_ok = bool(data.get("account_ledger_integrity"))
 
-        if (
-            verdict in {"OPEN", "READY_TO_OPEN"}
-            and bool(data.get("ok"))
+        all_checks_pass = (
+            bool(data.get("ok"))
             and order_ok
             and trade_ok
             and money_ok
             and account_ledger_ok
             and public_ready
-        ):
+        )
+
+        if verdict == "OPEN" and public_gate == "OPEN" and all_checks_pass:
             detail = (
-                "canonical exchange checks pass; "
-                f"public gate={public_gate}; "
-                f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                "canonical Exchange and account-ledger checks pass; public gate=OPEN; "
                 f"account_ledger={account_ledger_status}; "
-                f"open_orders={open_orders}; "
-                f"recent_trades={recent_trades}; "
+                f"open_orders={open_orders}; recent_trades={recent_trades}; "
                 f"test_seed_trades={test_seed_trades}"
             )
             return _check("Internal exchange", "GREEN", detail)
+
+        if verdict == "READY_TO_OPEN" and public_gate == "CLOSED" and all_checks_pass:
+            detail = (
+                "internal Exchange and account-ledger checks pass; "
+                "public gate=CLOSED; not public-open; operator review is still required; "
+                f"account_ledger={account_ledger_status}; "
+                f"open_orders={open_orders}; recent_trades={recent_trades}; "
+                f"test_seed_trades={test_seed_trades}"
+            )
+            return _check("Internal exchange", "DEGRADED", detail)
 
         return _check(
             "Internal exchange",
