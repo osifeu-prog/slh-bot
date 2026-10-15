@@ -70,6 +70,7 @@ KNOWN = {
     "check_money": ("SYSTEM", "בדיקת כלכלת המערכת"),
     "check_exchange": ("SYSTEM", "בדיקת Exchange"),
     "check_bnb": ("SYSTEM", "בדיקת BNB"),
+    "check_bnb_deposits": ("SYSTEM", "בדיקת היסטוריית הפקדות BNB"),
     "check_ton": ("SYSTEM", "בדיקת TON"),
     "check_ux": ("SYSTEM", "בדיקת Mini App"),
     "biz": ("CONTROL", "תמונת עסק"),
