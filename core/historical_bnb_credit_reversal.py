@@ -408,6 +408,11 @@ def is_reconciled_invalid_historical_deposit(db, ledger_index, entry, config=Non
     # approval flag, distinct from BNB_DEPOSITS_OPEN. This prevents an old "1"
     # operator flag from making deposits effective-open as a side effect of a
     # ledger correction. This flag is read-only here and is never changed by code.
+    # Never clear a historical blocker while the ordinary operator flag is
+    # already open: otherwise this classification alone could make the public
+    # gate effective-open without a fresh, deliberate gate-opening decision.
+    if os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1":
+        return False
     if os.getenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "0").strip() != "1":
         return False
     try:
