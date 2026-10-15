@@ -35,7 +35,12 @@ class ReferralRewardTests(unittest.TestCase):
 
     def test_grants_vip_at_five(self):
         db = make_db(5)
-        self.assertIsNotNone(self.award(db))
+        self.assertTrue(referral_reward.offer_open(1000))
+        self.assertEqual(referral_reward.REFERRALS_REQUIRED, 5)
+        self.assertEqual(referral_reward.MAX_AWARDS, 10)
+        self.assertEqual(db["users"]["1"]["referral"]["count"], 5)
+        result = self.award(db)
+        self.assertIsNotNone(result)
         user = db["users"]["1"]
         self.assertIn("vip_access", user["permissions"])
         self.assertGreater(user["vip_access_until"], 1000)
@@ -47,12 +52,18 @@ class ReferralRewardTests(unittest.TestCase):
 
     def test_not_granted_twice(self):
         db = make_db(5)
+        self.assertTrue(referral_reward.offer_open(1000))
+        self.assertEqual(referral_reward.REFERRALS_REQUIRED, 5)
+        self.assertEqual(referral_reward.MAX_AWARDS, 10)
         self.assertIsNotNone(self.award(db))
         self.assertIsNone(self.award(db))
 
     def test_extends_existing_vip(self):
         db = make_db(5)
         db["users"]["1"]["vip_access_until"] = 5000
+        self.assertTrue(referral_reward.offer_open(1000))
+        self.assertEqual(referral_reward.REFERRALS_REQUIRED, 5)
+        self.assertEqual(referral_reward.MAX_AWARDS, 10)
         self.assertIsNotNone(self.award(db))
         self.assertGreater(db["users"]["1"]["vip_access_until"], 5000)
 
