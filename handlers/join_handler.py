@@ -219,9 +219,24 @@ def register(bot):
                 print("WELCOME BONUS FAILED:", e)
 
             try:
-                # Attribution is persisted first. Recovery always uses that
-                # immutable relationship, including when a previous reward leg
-                # failed after the referral was saved.
+                # Persist the first referral relationship before settlement.
+                # _persist_referral is idempotent, so a retry never increments
+                # the referrer's count a second time or reassigns attribution.
+                pending_referrer = _get_pending_referral(uid)
+                if (
+                    pending_referrer
+                    and str(pending_referrer) != uid
+                    and user_exists(str(pending_referrer))
+                ):
+                    persisted = _persist_referral(uid, pending_referrer)
+                    print(
+                        f"REFERRAL ATTRIBUTION: uid={uid} "
+                        f"referrer={pending_referrer} persisted={persisted}"
+                    )
+
+                # Recovery uses only the immutable stored referred_by value.
+                # It retries partial reward settlement and clears the pending
+                # marker only after both authoritative ledgers are verified.
                 from core.referral_reward import recover_persisted_referral
                 rewards = recover_persisted_referral(uid)
                 print(
