@@ -109,7 +109,7 @@ class MCPBridgeRouteTests(unittest.TestCase):
         return {
             "WHATSAPP_STORE_ENABLED": "1",
             "SLH_WHATSAPP_STORE_BRIDGE_TOKEN": "store-test",
-            "SLH_WHATSAPP_STORE_PRINCIPAL_ID": "owner",
+            "SLH_WHATSAPP_STORE_PRINCIPAL_ID": "999999999999999999",
         }
 
     def test_whatsapp_store_is_disabled_by_default(self):
@@ -119,6 +119,8 @@ class MCPBridgeRouteTests(unittest.TestCase):
 
     def test_whatsapp_catalog_requires_dedicated_bearer(self):
         with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="WHATSAPP_STORE_SERVICE"
+        ), patch(
             "core.mcp_bridge_routes.has_permission", return_value=True
         ):
             response = self.client.get("/internal/commerce/v1/whatsapp/catalog")
@@ -126,6 +128,8 @@ class MCPBridgeRouteTests(unittest.TestCase):
 
     def test_whatsapp_catalog_returns_only_canonical_stars_items(self):
         with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="WHATSAPP_STORE_SERVICE"
+        ), patch(
             "core.mcp_bridge_routes.has_permission", return_value=True
         ), patch(
             "store.engine.load_items",
@@ -167,6 +171,8 @@ class MCPBridgeRouteTests(unittest.TestCase):
             "customer_confirmed": True,
         }
         with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="WHATSAPP_STORE_SERVICE"
+        ), patch(
             "core.mcp_bridge_routes.has_permission", return_value=True
         ), patch(
             "store.engine.load_items",
@@ -213,6 +219,8 @@ class MCPBridgeRouteTests(unittest.TestCase):
             "customer_confirmed": True,
         }
         with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="WHATSAPP_STORE_SERVICE"
+        ), patch(
             "core.mcp_bridge_routes.has_permission", return_value=True
         ), patch(
             "store.engine.load_items",
@@ -243,6 +251,8 @@ class MCPBridgeRouteTests(unittest.TestCase):
 
     def test_whatsapp_purchase_inquiry_requires_explicit_customer_confirmation(self):
         with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="WHATSAPP_STORE_SERVICE"
+        ), patch(
             "core.mcp_bridge_routes.has_permission", return_value=True
         ):
             response = self.client.post(
@@ -258,6 +268,30 @@ class MCPBridgeRouteTests(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "EXPLICIT_PURCHASE_INQUIRY_REQUIRED")
+
+
+    def test_whatsapp_store_rejects_owner_role_even_if_permission_wildcard_would_pass(self):
+        with patch.dict(os.environ, self._store_env()), patch(
+            "core.mcp_bridge_routes.get_role", return_value="OWNER"
+        ), patch(
+            "core.mcp_bridge_routes.has_permission", return_value=True
+        ):
+            response = self.client.get(
+                "/internal/commerce/v1/whatsapp/catalog",
+                headers={"Authorization": "Bearer store-test"},
+            )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json()["error"], "WHATSAPP_STORE_PRINCIPAL_ROLE_REQUIRED")
+
+    def test_canonical_whatsapp_service_role_has_only_store_permission(self):
+        from core.authority import get_role, has_permission
+
+        service_id = "999999999999999999"
+        with patch("core.authority.WHATSAPP_STORE_SERVICE_IDS", {service_id}):
+            self.assertEqual(get_role(service_id), "WHATSAPP_STORE_SERVICE")
+            self.assertTrue(has_permission(service_id, "whatsapp.store"))
+            self.assertFalse(has_permission(service_id, "exec.audit"))
+            self.assertFalse(has_permission(service_id, "agents.manage"))
 
 
 if __name__ == "__main__":
