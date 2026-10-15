@@ -563,15 +563,81 @@ def register(bot, context=None):
             bot.reply_to(message, "⛔ יש להריץ את הפקודה בשיחה פרטית עם הבוט.", parse_mode=None)
             return
         parts = (getattr(message, "text", "") or "").strip().split()
-        if len(parts) != 2:
+        auto_discovered = False
+        if len(parts) == 1:
+            # Owner convenience path: discover a unique self-transfer row from
+            # the canonical ledger. The subsequent source/chain/audit preview is
+            # still performed by the same strict correction service.
+            try:
+                import state_manager
+
+                db = state_manager.load_db()
+                ledger = db.get("ledger", []) if isinstance(db, dict) else None
+                if not isinstance(ledger, list):
+                    raise ValueError("LEDGER_UNREADABLE")
+                candidates = []
+                for index, row in enumerate(ledger):
+                    if not isinstance(row, dict) or str(row.get("uid") or "") != uid:
+                        continue
+                    if str(row.get("reason") or "") != "bnb:deposit":
+                        continue
+                    meta = row.get("meta") if isinstance(row.get("meta"), dict) else {}
+                    tx_hash_candidate = str(meta.get("tx_hash") or "").strip()
+                    sender = str(meta.get("from") or "").strip()
+                    recipient = str(meta.get("to") or "").strip()
+                    if (
+                        len(tx_hash_candidate) == 66
+                        and tx_hash_candidate.lower().startswith("0x")
+                        and all(ch in "0123456789abcdefABCDEF" for ch in tx_hash_candidate[2:])
+                        and sender and recipient and sender.lower() == recipient.lower()
+                    ):
+                        candidates.append({
+                            "index": index,
+                            "tx_hash": tx_hash_candidate.lower(),
+                            "amount": row.get("amount"),
+                        })
+            except Exception as exc:
+                bot.reply_to(
+                    message,
+                    f"⛔ גילוי מקור BNB נכשל בבטחה ({type(exc).__name__}); לא בוצע שינוי.",
+                    parse_mode=None,
+                )
+                return
+            if len(candidates) != 1:
+                if not candidates:
+                    detail = (
+                        "לא נמצאה רשומת bnb:deposit של החשבון העצמי שבה from=to. "
+                        "לא בוצע שינוי. אם יש TX מסוים לבדיקה, אפשר להעבירו כארגומנט."
+                    )
+                else:
+                    summaries = ", ".join(
+                        f"row {item['index']} · …{item['tx_hash'][-8:]}"
+                        for item in candidates[:5]
+                    )
+                    detail = (
+                        f"נמצאו {len(candidates)} מועמדים; אין בחירה אוטומטית. "
+                        f"מועמדים: {summaries}. יש לציין TX מדויק."
+                    )
+                bot.reply_to(
+                    message,
+                    "🔎 BNB AUTO-DISCOVERY — READ ONLY\n"
+                    + detail
+                    + "\nפורמט ידני: /bnb_reverse_prepare <TX_HASH>",
+                    parse_mode=None,
+                )
+                return
+            tx_hash = candidates[0]["tx_hash"]
+            auto_discovered = True
+        elif len(parts) == 2:
+            tx_hash = parts[1].strip()
+        else:
             bot.reply_to(
                 message,
-                "שימוש: /bnb_reverse_prepare <TX_HASH>\n"
-                "בדיקה חיה לקריאה בלבד; לא מתבצע reversal.",
+                "שימוש: /bnb_reverse_prepare [TX_HASH]\n"
+                "ללא TX_HASH הבוט יאתר מועמד יחיד בלבד; הבדיקה לקריאה בלבד.",
                 parse_mode=None,
             )
             return
-        tx_hash = parts[1].strip()
         try:
             from core.credit_adjustment_service import preview_invalid_bnb_deposit_reversal
 
@@ -611,6 +677,7 @@ def register(bot, context=None):
             }
             lines = [
                 "🧾 BNB REVERSAL PREVIEW — LIVE READ ONLY",
+                "Discovery: AUTO (unique source row)" if auto_discovered else "Discovery: explicit TX supplied",
                 f"Source ledger row: {preview.get('source_ledger_index')}",
                 f"TX suffix: …{preview.get('tx_suffix')}",
                 f"Credits to reverse: {preview.get('amount_reversed')}",
