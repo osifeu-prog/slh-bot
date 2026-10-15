@@ -33,6 +33,8 @@ def _db():
                     "tx_hash": TX,
                     "idempotency_key": SOURCE_KEY,
                     "bnb_amount_wei": 10**16,
+                    "block": 123,
+                    "confirmations": 20,
                     "from": OWNER_WALLET,
                     "to": OWNER_WALLET,
                 },
