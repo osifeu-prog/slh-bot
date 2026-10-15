@@ -155,7 +155,7 @@ class HumanInterventionTests(unittest.TestCase):
             "cat ~/.ssh/id_rsa",
             "cat /root/.ssh/id_ed25519",
             "cat /root/.aws/credentials",
-            "grep token /app/config.txt",
+            "grep token /app/.config/config.txt",
         )
         for command in unsafe_reads:
             with self.subTest(command=command):
