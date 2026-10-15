@@ -288,7 +288,7 @@ def register(bot, context=None):
         except Exception as exc:
             bot.reply_to(message, f"❌ Money check failed safely: {type(exc).__name__}")
 
-    @bot.message_handler(commands=["check_exchange", "exchange_check"])
+    @bot.message_handler(commands=["check_exchange", "exchange_check", "exchange_status"])
     def check_exchange_cmd(message):
         if not _allowed(message):
             _send_denied(bot, message)
