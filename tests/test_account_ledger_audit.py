@@ -121,3 +121,64 @@ def test_ambiguous_legacy_reasons_are_not_assigned_a_financial_domain():
     assert _reason_domain_hint("bridge:spend") == "UNKNOWN_HINT"
     assert _reason_domain_hint("arcade:entry") == "UNKNOWN_HINT"
     assert _reason_domain_hint("admin:test_grant") == "UNKNOWN_HINT"
+
+
+
+def test_staked_counter_reconciliation_is_not_a_credits_balance_row():
+    db = {
+        "users": {UID: {"wallet": {"credits": 5.0}}},
+        "ledger": [
+            {
+                "uid": UID,
+                "before": 100.0,
+                "amount": -100.0,
+                "after": 0.0,
+                "reason": "admin_correction_unbacked_test_credits_release",
+                "meta": {"ledger_domain": "credits"},
+            },
+            {
+                "uid": UID,
+                "before": 552.0,
+                "amount": 0.0,
+                "after": 552.0,
+                "reason": "reconciliation:staked_counter_fix",
+                "meta": {
+                    "ref": "RECON-TEST",
+                    "staked_before": 552.0,
+                    "staked_after": 792.0,
+                    "note": "counter resync to ledger-proven locked total; no credits minted",
+                },
+            },
+            {
+                "uid": UID,
+                "before": 0.0,
+                "amount": 5.0,
+                "after": 5.0,
+                "reason": "store:purchase",
+                "meta": {"ledger_domain": "credits"},
+            },
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "PASS"
+    assert result["continuity_break_count"] == 0
+    assert result["arithmetic_error_count"] == 0
+    assert result["credits_sequence_rows_checked"] == 2
+    assert result["non_credits_rows_skipped"] == 1
+
+
+def test_staked_counter_reason_without_source_markers_is_not_skipped():
+    from core.account_ledger_audit import _row_domain_hint
+
+    row = {
+        "uid": UID,
+        "before": 552.0,
+        "amount": 0.0,
+        "after": 552.0,
+        "reason": "reconciliation:staked_counter_fix",
+        "meta": {"note": "missing evidence"},
+    }
+
+    assert _row_domain_hint(row) == "UNKNOWN_HINT"
