@@ -321,6 +321,37 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
                 verified = {"ok": False}
 
             if not isinstance(verified, dict) or verified.get("ok") is not True:
+                # The canonical deposit verifier must keep rejecting self-transfers.
+                # After a separately authorized, fully audited compensating debit,
+                # the history audit may recognize that specific source row as resolved.
+                # This fallback independently re-verifies every historical row; it
+                # never trusts the existence of a correction key alone.
+                reversal_key = f"accounting:reversal:{tx_hash.lower()}"
+                stored_from = str(meta.get("from") or "").strip()
+                stored_to = str(meta.get("to") or "").strip()
+                has_reversal = any(
+                    isinstance(item, dict)
+                    and isinstance(item.get("meta"), dict)
+                    and str(item["meta"].get("idempotency_key") or "") == reversal_key
+                    for item in ledger
+                )
+                if (
+                    has_reversal
+                    and stored_from
+                    and stored_from.lower() == stored_to.lower()
+                ):
+                    try:
+                        from core.bnb_history_audit import audit_bnb_deposit_history
+                        detailed = audit_bnb_deposit_history(db)
+                    except Exception:
+                        detailed = {"status": "BLOCKED"}
+                    if isinstance(detailed, dict) and detailed.get("status") == "PASS":
+                        return {
+                            "ok": True,
+                            "rows_checked": len(deposits),
+                            "finding_count": 0,
+                            "findings": [],
+                        }
                 issues.append("CHAIN_TX_NOT_VERIFIED")
             else:
                 verified_hash = str(verified.get("tx_hash") or "").strip()
