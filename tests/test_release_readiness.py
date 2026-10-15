@@ -182,3 +182,33 @@ def test_release_readiness_blocks_clean_orderbook_when_accounting_audit_is_block
 
     assert check["status"] == "BLOCKED"
     assert "account_ledger=BLOCKED" in check["detail"]
+
+
+def test_exchange_ready_but_closed_gate_is_not_reported_green(monkeypatch):
+    import core.system_checks as checks
+    from core.release_readiness import _exchange_check
+
+    monkeypatch.setattr(
+        checks,
+        "check_exchange",
+        lambda: {
+            "ok": True,
+            "verdict": "READY_TO_OPEN",
+            "public_gate": "CLOSED",
+            "public_ready": True,
+            "open_orders": 0,
+            "recent_trades": 0,
+            "test_seed_trades": 0,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "account_ledger_integrity": True,
+            "account_ledger_status": "PASS",
+        },
+    )
+
+    result = _exchange_check()
+
+    assert result["status"] == "DEGRADED"
+    assert "public gate=CLOSED" in result["detail"]
+    assert "not public-open" in result["detail"]
