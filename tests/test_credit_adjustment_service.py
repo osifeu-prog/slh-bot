@@ -103,6 +103,9 @@ def _proof():
 
 def _patch_runtime(monkeypatch, db, proof=None):
     monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
+    # Every correction fixture starts from an explicitly operator-closed gate.
+    # Individual tests override/delete this value to exercise fail-closed cases.
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "0")
     monkeypatch.setattr(target, "is_owner", lambda actor: str(actor) == UID)
     monkeypatch.setattr(target, "bnb_deposits_open", lambda: False)
     monkeypatch.setattr(target, "_effective_config", lambda _db: db["bsc_settings"])
