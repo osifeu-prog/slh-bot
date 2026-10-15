@@ -62,6 +62,15 @@ class TonCanaryGateTests(unittest.TestCase):
                     "first_replay_at_epoch": 100.0,
                     "last_replay_at_epoch": 200.0,
                     "amount_ton": 0.01,
+                    "by_tx_hash": {
+                        tx_hash: {
+                            "tx_hash": tx_hash,
+                            "replay_count": 61,
+                            "first_replay_at_epoch": 100.0,
+                            "last_replay_at_epoch": 200.0,
+                            "amount_ton": 0.01,
+                        }
+                    },
                 }
             },
             "used_ton_txs": [tx_hash],
@@ -103,6 +112,17 @@ class TonCanaryGateTests(unittest.TestCase):
         self.assertFalse(result["ready"])
         self.assertFalse(result["effective_open"])
         self.assertIn("TON_EMPIRICAL_REPLAY_EVIDENCE_MISSING", result["reasons"])
+
+    def test_empirical_readiness_rejects_legacy_uid_only_replay_counter(self):
+        db = self._valid_replay_db()
+        db["ton_replay_evidence"][CANARY_UID].pop("by_tx_hash")
+        with patch.dict(os.environ, {"TON_DEPOSITS_CANARY_UID": CANARY_UID}, clear=False):
+            with patch.object(service.state_manager, "load_db", return_value=db):
+                self.assertFalse(
+                    service._verified_public_replay_evidence(
+                        TREASURY, service.Decimal("100")
+                    )
+                )
 
     def test_empirical_readiness_requires_one_matching_credit_and_ledger_row(self):
         db = self._valid_replay_db()
