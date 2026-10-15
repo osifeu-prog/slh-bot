@@ -129,18 +129,6 @@ def _apply_award(db, uid, amount, reason, idempotency_key, details):
     }
 
 
-def _is_whatsapp_attributed(user):
-    if not isinstance(user, dict):
-        return False
-    referral = user.get("referral")
-    referral = referral if isinstance(referral, dict) else {}
-    return bool(
-        str(user.get("acquisition_channel") or "").lower() == "whatsapp"
-        or user.get("whatsapp_store_touch")
-        or str(referral.get("source") or "").lower() == "whatsapp"
-    )
-
-
 def mark_whatsapp_store_touch(uid, referrer_uid=None, *, now=None):
     """Record a WhatsApp store touch without changing an existing referral owner."""
     uid = _uid(uid)
@@ -176,7 +164,7 @@ def mark_whatsapp_store_touch(uid, referrer_uid=None, *, now=None):
 
 
 def grant_whatsapp_cashback(uid, purchase_id, paid_amount, paid_currency, *, sku=None):
-    """Grant 10% Credits cashback once for a completed purchase by WhatsApp cohort."""
+    """Grant cashback only for a completed order with verified per-purchase WhatsApp attribution."""
     uid = _uid(uid)
     purchase_id = str(purchase_id or "").strip()
     currency = str(paid_currency or "").strip().upper()
