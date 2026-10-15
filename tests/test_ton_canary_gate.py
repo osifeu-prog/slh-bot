@@ -63,7 +63,7 @@ class TonCanaryGateTests(unittest.TestCase):
                     "last_replay_at_epoch": 1791396400.0,
                     "amount_ton": 0.01,
                     "by_tx_hash": {
-                        tx_hash: {
+                        tx_hash.lower(): {
                             "tx_hash": tx_hash,
                             "replay_count": 61,
                             "first_replay_at_epoch": 1791396310.0,
