@@ -371,7 +371,7 @@ def register(bot, context=None):
             for blocker in result.get("blockers", [])[:8]:
                 lines.append(f"Blocker: {blocker}")
             if result.get("findings_truncated"):
-                lines.append("Additional findings omitted; inspect source-backed export.")
+                lines.append("Additional findings omitted; Telegram output is capped at 12 findings.")
             lines += [
                 "",
                 "⚠️ Reason/domain hints are heuristic, not accounting proof.",
