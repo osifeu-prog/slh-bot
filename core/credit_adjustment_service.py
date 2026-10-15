@@ -245,12 +245,14 @@ def _validate_source(row, meta, proof, uid, tx_hash):
 
 
 def _replay_account_ledger(ledger, uid, source_index):
-    """Check balance arithmetic from the source credit through the latest row."""
-    source = ledger[source_index]
-    running = _decimal(source.get("after"), "SOURCE_AFTER_INVALID")
+    """Validate full account-ledger continuity from its first row through latest."""
+    if not isinstance(ledger, list) or source_index < 0 or source_index >= len(ledger):
+        raise ValueError("ACCOUNT_LEDGER_SOURCE_INDEX_INVALID")
+    running = None
     balances = {}
-    for index in range(source_index + 1, len(ledger)):
-        row = ledger[index]
+    saw_source = False
+    uid = str(uid or "").strip()
+    for index, row in enumerate(ledger):
         if not isinstance(row, dict):
             raise ValueError("ACCOUNT_LEDGER_ROW_INVALID")
         if str(row.get("uid") or "").strip() != uid:
@@ -258,10 +260,16 @@ def _replay_account_ledger(ledger, uid, source_index):
         before = _decimal(row.get("before"), "ACCOUNT_LEDGER_BEFORE_INVALID")
         amount = _decimal(row.get("amount"), "ACCOUNT_LEDGER_AMOUNT_INVALID")
         after = _decimal(row.get("after"), "ACCOUNT_LEDGER_AFTER_INVALID")
-        if abs(before - running) > _EPSILON or abs((before + amount) - after) > _EPSILON:
+        if running is not None and abs(before - running) > _EPSILON:
+            raise ValueError("ACCOUNT_LEDGER_SEQUENCE_INVALID")
+        if abs((before + amount) - after) > _EPSILON:
             raise ValueError("ACCOUNT_LEDGER_SEQUENCE_INVALID")
         balances[index] = (before, amount, after)
         running = after
+        if index == source_index:
+            saw_source = True
+    if not saw_source or running is None:
+        raise ValueError("ACCOUNT_LEDGER_SOURCE_NOT_FOUND")
     return running, balances
 
 
