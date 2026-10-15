@@ -97,6 +97,9 @@ def _run(db, fake_eth, *, approved=False, operator_open=False):
             "BNB_DEPOSITS_OPEN": "1" if operator_open else "0",
         },
     ), patch(
+        "core.authority.is_owner",
+        side_effect=lambda candidate: str(candidate) in {OWNER_UID, "owner"},
+    ), patch(
         "core.bnb_history_audit.get_bsc_config",
         return_value={
             "chain_id": 56,
@@ -245,7 +248,7 @@ def _add_audited_reversal_v2_with_later_activity(db):
             "source_reason": "bnb:deposit",
             "source_ledger_index": 0,
             "tx_hash": TX_HASH.lower(),
-            "actor_uid": OWNER_UID,
+            "actor_uid": "owner",
             "nominal_credits_reversed": 10.0,
             "chain_id": 56,
             "block": 80,
@@ -264,7 +267,7 @@ def _add_audited_reversal_v2_with_later_activity(db):
         "event": "INVALID_BNB_SELF_TRANSFER_REVERSED",
         "time": "2026-10-15T12:00:00+00:00",
         "uid": "owner",
-        "actor_uid": OWNER_UID,
+        "actor_uid": "owner",
         "tx_hash": TX_HASH.lower(),
         "source_idempotency_key": source_key,
         "correction_idempotency_key": correction_key,
@@ -312,6 +315,22 @@ def test_valid_reversal_remains_resolved_after_treasury_rotation():
     assert result["status"] == "PASS"
     assert result["failed_rows"] == 0
     assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+
+
+def test_v2_reversal_with_owner_actor_not_matching_source_account_is_blocked():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    # The actor is a real owner, but not the UID whose balance this row changes.
+    db["ledger"][-1]["meta"]["actor_uid"] = OWNER_UID
+    db["credit_adjustment_audit"][0]["actor_uid"] = OWNER_UID
+
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+    assert "SELF_TRANSFER_NOT_A_DEPOSIT" in result["findings"][0]["issues"]
 
 
 def test_v2_audited_reversal_resolves_self_transfer_after_later_activity():
