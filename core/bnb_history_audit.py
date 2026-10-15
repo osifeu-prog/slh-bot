@@ -209,6 +209,10 @@ def _valid_audited_reversal(
 
     common_checks = bool(
         authorized_actor
+        # Version 2 is the owner-self-account correction flow. Legacy v1 records
+        # retain their earlier compatibility contract, but a new-format reversal
+        # must be authored by the same owner UID whose balance it adjusts.
+        and (correction_version == 1 or actor_uid == source_uid)
         and audit.get("actor_uid") == actor_uid
         and correction.get("reason") == "accounting:invalid_bnb_deposit_reversal"
         and str(correction.get("uid") or "") == source_uid
