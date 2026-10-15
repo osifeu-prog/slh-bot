@@ -496,20 +496,20 @@ def test_existing_reversal_with_corrupt_audit_fails_closed(monkeypatch):
 
 def test_concurrent_reversal_attempts_apply_compensation_once(monkeypatch, tmp_path):
     """Two simultaneous confirms use real atomic DB persistence and append one debit."""
+    # Capture canonical operations before the fixture monkeypatches the shared module.
+    import state_manager
+    real_load_db = state_manager.load_db
+    real_atomic_update = state_manager.atomic_update
     db = _db()
     _patch_runtime(monkeypatch, db)
 
     # Use the real state_manager atomic_update and file lock against an isolated
     # temporary DB. RPC and chain evidence remain mocked by _patch_runtime.
-    import state_manager
-
     db_path = tmp_path / "db.json"
     monkeypatch.setattr(state_manager, "DB_FILE", str(db_path))
     monkeypatch.setattr(state_manager, "_LOCK_PATH", str(db_path) + ".lock")
     monkeypatch.setattr(state_manager, "_ensure_backup_scheduler", lambda: None)
     state_manager.save_db(db)
-    real_load_db = state_manager.load_db
-    real_atomic_update = state_manager.atomic_update
     monkeypatch.setattr(state_manager, "load_db", real_load_db)
     monkeypatch.setattr(state_manager, "atomic_update", real_atomic_update)
 
