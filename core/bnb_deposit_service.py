@@ -25,7 +25,7 @@ def settle_bnb_deposit(uid, tx_hash):
     # Canary is a closed-gate exception, not a way to bypass a raw OPEN intent
     # whose full public-gate evidence currently fails. Require an explicit closed
     # operator flag before evaluating the canary's readiness and history proof.
-    operator_flag_closed = os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "0"
+    operator_flag_closed = os.getenv("BNB_DEPOSITS_OPEN", "").strip() == "0"
     if canary_uid and uid == canary_uid and operator_flag_closed:
         try:
             current_db = state_manager.load_db()
