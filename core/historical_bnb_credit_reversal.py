@@ -402,16 +402,17 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
     expected_balance = _decimal(expected_current_balance, "INVALID_EXPECTED_BALANCE")
     initial_db = state_manager.load_db()
     record = _source_and_history(initial_db, uid, tx_hash)
-    if record["current_balance"] != expected_balance:
-        raise ValueError("CURRENT_BALANCE_MISMATCH")
-
     proof = _verify_non_treasury_self_transfer(uid, tx_hash, initial_db)
     _validate_proof_matches_source(record, proof)
     correction_key = f"accounting:reversal:{tx_hash}"
 
+    # Check an already-persisted correction before comparing the caller's
+    # original expected balance: retries after a committed write must be safe.
     existing = _existing_reversal(initial_db, record, proof, correction_key)
     if existing is not None:
         return existing
+    if record["current_balance"] != expected_balance:
+        raise ValueError("CURRENT_BALANCE_MISMATCH")
 
     initial_source = deepcopy(record["source"])
     initial_account_rows = deepcopy(record["account_rows"])
