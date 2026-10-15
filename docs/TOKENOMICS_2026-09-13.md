@@ -112,6 +112,24 @@ Current implemented referral reward:
 
 The expired September 11, 2026 Holiday campaign is historical only; it does not constitute a current automatic SLH issuance path.
 
+
+## 8A. Referral settlement integrity and rollout
+
+The referral reward policy remains unchanged: one successful, persisted referral
+can grant 10 Points and 0.9 internal Credits; five successful referrals may
+unlock one VIP month while the launch offer is open. Referral rewards are not
+SLH token issuance and must not be marketed as cash income.
+
+Operational acceptance requires the persisted `referred_by` relationship,
+stable per-user idempotency keys, recoverable partial failures, and a settlement
+marker written only after all grants return successfully. Self-referrals,
+invalid referrers, and repeated start payloads must grant nothing. Production
+rollout remains pending until CI and live read-only verification confirm the
+deployed revision and referral event/ledger reconciliation.
+
+This integrity work does not change referral amounts, create new SLH issuance,
+or introduce a new economic entitlement.
+
 ## 9. Staking
 
 Current SLH OS staking operates on **Credits**, not on the external BSC SLH token.
