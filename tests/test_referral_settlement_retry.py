@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 
 import state_manager
-from core import referral_settlement
+from core import referral_reward, referral_settlement
 
 
 class ReferralSettlementRetryTests(unittest.TestCase):
@@ -54,6 +54,36 @@ class ReferralSettlementRetryTests(unittest.TestCase):
         self.assertEqual(result["status"], "SETTLED")
         settle.assert_called_once_with("10", "20")
         self.assertEqual(self.db["pending_referrals"]["20"], "999")
+
+    def test_partial_component_retry_uses_stable_keys_without_duplicate_awards(self):
+        applied = {}
+        fail_credit_once = {"value": True}
+
+        def idempotent_grant(uid, reason, credits=0, points=0, idempotency_key=None):
+            if reason == "referral_success_bonus" and fail_credit_once["value"]:
+                fail_credit_once["value"] = False
+                raise RuntimeError("simulated credit write failure")
+            if idempotency_key in applied:
+                return {"duplicate": True, "idempotency_key": idempotency_key}
+            applied[idempotency_key] = {
+                "uid": uid, "reason": reason, "credits": credits, "points": points
+            }
+            return {"credits": credits, "points": points}
+
+        with mock.patch.object(referral_reward, "grant", side_effect=idempotent_grant), mock.patch.object(
+            referral_reward, "maybe_award", return_value=None
+        ):
+            with self.assertRaisesRegex(RuntimeError, "simulated credit write failure"):
+                referral_reward.settle_successful_referral("10", "20")
+
+            # Points were applied before the Credits component failed. Retry and replay
+            # must use the same stable keys, so only the missing component is applied.
+            referral_reward.settle_successful_referral("10", "20")
+            referral_reward.settle_successful_referral("10", "20")
+
+        self.assertEqual(set(applied), {"ref:20", "referral-credit:20"})
+        self.assertEqual(applied["ref:20"]["points"], 10)
+        self.assertEqual(applied["referral-credit:20"]["credits"], 0.9)
 
     def test_missing_relationship_does_not_award(self):
         self.db["users"]["20"]["referral"] = {}
