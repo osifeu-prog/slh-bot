@@ -1234,6 +1234,16 @@ def growth_events_api():
         print("[GROWTH_EVENTS] write error:", type(exc).__name__)
         return jsonify({"error": "GROWTH_EVENT_FAILED"}), 503
 
+def _social_public_base_url():
+    """Return a configured canonical HTTPS base, never trusting an arbitrary Host header."""
+    fallback = "https://slh-cloud-bot-production.up.railway.app"
+    value = str(os.getenv("SLH_SOCIAL_PUBLIC_BASE_URL") or fallback).strip().rstrip("/")
+    parts = urlsplit(value)
+    if parts.scheme != "https" or not parts.netloc or parts.username or parts.password:
+        return fallback
+    return value
+
+
 @app.route("/api/v1/social/assets", methods=["GET"])
 def social_assets_catalog_api():
     """Authenticated catalog of built-in, self-generated SLH Spark creatives."""
@@ -1244,7 +1254,7 @@ def social_assets_catalog_api():
         from core.social_asset_library import list_assets
         return _no_store(jsonify({
             "ok": True,
-            "assets": list_assets(request.url_root.rstrip("/")),
+            "assets": list_assets(_social_public_base_url()),
         })), 200
     except Exception as exc:
         print("[SOCIAL_ASSETS] catalog error:", type(exc).__name__)
@@ -1282,7 +1292,7 @@ def social_share_landing(asset_id):
         asset = get_asset(asset_id)
     except KeyError:
         return "SLH Spark creative not found", 404
-    base = request.url_root.rstrip("/")
+    base = _social_public_base_url()
     asset_key = url_quote(asset["id"], safe="")
     image_url = f"{base}/api/v1/social/assets/{asset_key}.png"
     share_url = f"{base}/share/{asset_key}"
