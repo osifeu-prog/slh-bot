@@ -388,3 +388,18 @@ def test_audit_fails_closed_when_ledger_shape_is_invalid():
     result = audit_bnb_deposit_history({"ledger": None})
     assert result["status"] == "BLOCKED"
     assert "LEDGER_UNREADABLE" in result["blockers"]
+
+def test_shared_bsc_wallet_binding_blocks_history_audit():
+    db = _db()
+    db["wallet_bindings"]["other-user"] = {
+        "uid": "other-user",
+        "chain": "bsc",
+        "address": SENDER,
+    }
+
+    result = _run(db, FakeEth())
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert "CURRENT_WALLET_BINDING_ADDRESS_NOT_UNIQUE" in result["findings"][0]["issues"]
+
