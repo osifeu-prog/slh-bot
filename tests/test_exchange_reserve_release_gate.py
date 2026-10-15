@@ -123,4 +123,3 @@ def test_exchange_readiness_fails_closed_on_inconsistent_reserve_summary():
     assert result["reserve_blocking_count"] == 1
     assert result["public_ready"] is False
     assert result["verdict"] == "BLOCKED"
-\n
