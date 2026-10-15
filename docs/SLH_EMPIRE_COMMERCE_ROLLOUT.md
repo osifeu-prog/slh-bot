@@ -2,29 +2,38 @@
 
 This document describes a proposed code change on this branch. It does not mean the offer is live in production.
 
-## Canonical offers in this change
+## Offers proposed by this branch
 
-- VIP via Telegram Stars: the existing /vip recurring subscription remains 499 Stars/month. The pre-existing launch-benefit path remains governed by its existing qualification and deadline.
-- VIP via Credits: /vipcredits is a manual one-month purchase for 150 Credits. It does not auto-renew. A second call while VIP is active reports the expiry and does not debit again.
-- Investor digital bundle: /buystars slh_investor_bundle is one 899-Star purchase and grants the eight existing digital SKUs: Agent OS, Trade Pro permission, the three existing courses, and three emoji packs. The included item prices sum to 1,321 Stars (199 + 199 + 299 + 299 + 150 + 50 + 100 + 25), so the proposed bundle discount is 422 Stars (~31.95%), not 622 Stars/41%. The bundle also grants 50 Credits and one complimentary VIP month.
-- ESP32 Pro: the existing 888-Credit SKU retains its canonical price and hardware grant, and adds Agent OS plus three complimentary VIP months through the same idempotent grant pathway. Inventory is canonical runtime state and must be checked before claiming a particular stock number.
+- VIP via Telegram Stars: the existing `/vip` recurring subscription remains 499 Stars/month. The existing launch benefits remain governed by their current qualification and deadline.
+- VIP via Credits: `/vipcredits` is a manual one-month purchase for 150 Credits. It does not auto-renew. A second call while VIP is active reports the expiry and does not debit again.
+- Investor digital bundle: `/buystars slh_investor_bundle` is one 899-Star purchase and grants the eight existing digital entitlements: Agent OS, Trade Pro permission, the three existing courses, and three emoji packs. The included item prices sum to **1,321 Stars** (199 + 199 + 299 + 299 + 150 + 50 + 100 + 25), so the discount is **422 Stars (~31.95%)**, not 622 Stars/41%.
+- The bundle includes a fixed 50-Credit bonus and one complimentary VIP month. WhatsApp-attributed buyers receive an additional 10% Stars cashback, rounded half-up to whole Credits; 899 Stars therefore returns 90 Credits, for a total of **140 Credits** from the fixed bonus plus cashback.
+- ESP32 Pro retains its canonical price of 888 Credits and existing hardware grant, and adds Agent OS plus three complimentary VIP months. WhatsApp-attributed buyers are also eligible for 10% cashback on completed Credits purchases (888 Credits returns 88.8 Credits). Inventory comes from canonical runtime state; never advertise a fixed quantity without a live inventory check.
+- Referral VIP rewards: after a referred user successfully pays for a VIP Stars subscription, the buyer receives 25 Credits once per buyer and the referrer receives 10% of each valid VIP Stars charge as Credits, rounded half-up to whole Credits (499 Stars returns 50 Credits to the referrer). Each award is keyed to the immutable identity of the buyer or payment charge to prevent replay duplication.
+
+## WhatsApp attribution boundary
+
+- Use the WhatsApp campaign deep link `https://t.me/Me_ad_main_bot?start=wa_8789977826`. It preserves the referrer ID and records the WhatsApp acquisition source without overwriting an existing referral relationship.
+- Cashback is issued only after the canonical Telegram Stars/ Credits purchase authority records a completed purchase and the user's account is marked as WhatsApp-attributed. The order/payment charge ID is the idempotency boundary.
+- This is **not yet a full WhatsApp checkout integration**. The `slh-api` inbound Twilio adapter is not implemented/verified end-to-end; the current bot change cannot prove that every purchase happened inside a WhatsApp chat or associate a WhatsApp MessageSid with the final Telegram payment. The Control Plane WhatsApp catalog/intents PR is separately default-off and must be reviewed/deployed with the adapter before promoting automatic WhatsApp replies.
+- New-customer referral rewards require successful persisted referral attribution followed by a confirmed paid VIP charge; merely clicking a link or sending a WhatsApp message does not trigger payment rewards.
 
 ## Replay and accounting safety
 
-- Bundle item grants use a stable child purchase ID based on the immutable Telegram Stars charge/purchase ID.
-- The 50-Credit bonus is written through the canonical economy ledger with an idempotency key.
-- Complimentary VIP months are written to vip_bonus_awards in the same atomic DB update as the VIP entitlement extension; they do not create Stars revenue.
+- Bundle item grants use stable child purchase IDs derived from the immutable Telegram Stars charge/purchase ID.
+- The fixed 50-Credit bundle bonus and 10% cashback are separate ledger events with distinct idempotency keys.
+- Complimentary VIP months are recorded in `vip_bonus_awards` in the same atomic DB update as the VIP entitlement extension; they do not create Stars revenue.
 - The Credits-funded VIP debit, entitlement extension, and negative ledger event are one canonical atomic DB update.
-- This change does not open BNB or TON, alter on-chain balances, or change external settlement configuration.
+- Referral buyer bonus and referrer commission are written to the canonical Credits ledger, with a preflight of both awards and stable keys.
+- Nothing in this branch opens BNB or TON, alters on-chain balances, or changes external settlement configuration.
 
-## Not enabled by this change
+## Not included / must not be promised yet
 
-- Daily Trade Pro signals: the bundle grants the current trade_pro permission; this is not proof that a daily signal-delivery service is running. Do not promise daily signals until delivery and cadence are verified.
-- 10% WhatsApp cashback: no reward is issued merely because a customer sends a WhatsApp message. Cashback must be tied to a verified WhatsApp-origin purchase intent and the corresponding canonical completed Telegram order.
-- Referral-to-purchase commission and newcomer 25-Credit bonus: existing referral-start telemetry is not proof of paid conversion. Do not promise these rewards until first-touch attribution, paid VIP conversion, and idempotent reward settlement are connected and tested end-to-end.
+- Daily Trade Pro signal delivery: granting the `trade_pro` permission does not prove that a daily signal delivery service or fixed cadence is running.
 - Annual VIP for 4,990 Stars: no annual SKU or 12-month payment authority is created here.
-- Agent OS “preinstalled” on a physical ESP32: the app entitlement is granted, but physical staging/installation is not automated by this change.
+- Private WhatsApp group membership, automated invite after payment, early-access-course announcements, and direct Q&A scheduling are not automated by this PR.
+- Agent OS entitlement is granted with ESP32 Pro, but physical device staging / pre-installation is not automated.
 
 ## Release conditions
 
-Do not advertise the proposed offer as purchasable until this PR is reviewed, merged, deployed and tested with a non-customer test account. Keep the WhatsApp bridge disabled by default. This is a code proposal only; no production state, user balance, inventory, or payment was modified by authoring it.
+Keep this PR in draft until CI passes and reviewers validate the fulfillment, referral and cashback paths. Do not advertise the proposal as live or as full WhatsApp checkout until the PR is reviewed, merged, deployed and tested using non-customer test accounts. Keep the WhatsApp bridge default-off. No production state, user balance, inventory, payment, or deployment was modified by authoring this branch.
