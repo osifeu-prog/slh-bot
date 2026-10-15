@@ -731,6 +731,7 @@ def _safe_log_finding(item, index):
         "ledgers",
         "order_id",
         "order_ids",
+        "trade_id",
         "order_status",
         "order_remaining_is_zero",
         "order_reserved_slh_is_zero",
