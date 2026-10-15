@@ -188,6 +188,20 @@ def test_preview_is_owner_only_and_cannot_target_another_uid(monkeypatch):
         )
 
 
+def test_preview_refuses_when_operator_flag_could_auto_open_gate(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setenv("BNB_DEPOSITS_OPEN", "1")
+
+    with pytest.raises(ValueError, match="BNB_DEPOSITS_FLAG_MUST_BE_CLOSED"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid=UID, uid=UID, tx_hash=TX
+        )
+
+    assert db == before
+
+
 def test_preview_blocks_when_row_210_or_another_historical_bnb_row_needs_review(monkeypatch):
     db = _db()
     before = deepcopy(db)
