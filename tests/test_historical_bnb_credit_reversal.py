@@ -190,6 +190,22 @@ def test_refuses_duplicate_user_wallet_binding(monkeypatch):
     assert db == before
 
 
+def test_refuses_to_adjust_an_account_other_than_the_owner(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(PermissionError, match="OWNER_ACCOUNT_ONLY"):
+        target.reverse_invalid_nontreasury_bnb_self_transfer(
+            actor_uid=UID,
+            uid="other-user",
+            tx_hash=TX,
+            expected_current_balance="30.072775",
+        )
+
+    assert db == before
+
+
 def test_refuses_tx_that_is_not_bound_wallet_self_transfer(monkeypatch):
     db = _db()
     other = "0x3333333333333333333333333333333333333333"
