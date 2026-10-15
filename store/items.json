@@ -24,7 +24,15 @@
     "price": 888,
     "type": "hardware",
     "grant": {
-      "hardware": "esp32_pro"
+      "bundle": [
+        {
+          "hardware": "esp32_pro"
+        },
+        {
+          "plugin": "agent_os"
+        }
+      ],
+      "vip_months_bonus": 3
     }
   },
   "esp32_standard": {
@@ -130,5 +138,43 @@
       "course": "algo_trading_999"
     },
     "price_stars": 150
+  },
+  "slh_investor_bundle": {
+    "name": "SLH EMPIRE Investor Bundle",
+    "price": 0,
+    "stars_only": true,
+    "type": "bundle",
+    "price_stars": 899,
+    "description": "Eight existing digital items in one Stars purchase; includes 50 Credits and one VIP month.",
+    "grant": {
+      "bundle": [
+        {
+          "plugin": "agent_os"
+        },
+        {
+          "permission": "trade_pro"
+        },
+        {
+          "course": "ethereum"
+        },
+        {
+          "course": "slh_vs_eth_sol"
+        },
+        {
+          "course": "algo_trading_999"
+        },
+        {
+          "digital": "emoji_slh"
+        },
+        {
+          "digital": "emoji_vip"
+        },
+        {
+          "digital": "emoji_bitcoin"
+        }
+      ],
+      "credits_bonus": 50,
+      "vip_months_bonus": 1
+    }
   }
 }
