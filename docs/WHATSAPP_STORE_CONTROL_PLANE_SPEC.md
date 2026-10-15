@@ -17,7 +17,7 @@ The existing `/internal/telegram/mcp-proof` route is a read-only connectivity pr
 - Receive inbound messages only after provider signature verification (Twilio is a candidate because outbound Twilio support already exists).
 - Allowlist simple intents: `help`, `catalog`, `price <sku>`, `buy <sku>`.
 - Return only published product data from the canonical Control Plane; never invent price, currency, availability, delivery terms, token allocation or ROI claims.
-- `buy <sku>` creates only a non-financial inquiry/intent. Tell the customer it is an inquiry, not a completed purchase.
+- `buy <sku>` creates only a non-financial inquiry/intent after the provider signature is verified and the canonical catalog/policy check passes. A linked SLH account is not required for a generic inquiry because it grants no private account access or purchase rights; any account-specific action, eligibility check, checkout or fulfillment requires separate verified account pairing. Tell the customer it is an inquiry, not a completed purchase.
 - Keep outbound marketing broadcasts out of this MVP; require documented opt-in and an opt-out path.
 - No payment, wallet mutation, Credits debit/credit, revenue posting, token mint/transfer, payment claim, payout or fulfilment in this phase.
 
@@ -33,7 +33,7 @@ The existing `/internal/telegram/mcp-proof` route is a read-only connectivity pr
 
 ## 4. Identity pairing
 
-A contact row or imported phone number is not proof of ownership of an SLH account.
+A contact row or imported phone number is not proof of ownership of an SLH account. Generic inquiry-only handling may use the provider-verified phone without linking an SLH account, but must not expose balances, private account data or account-specific eligibility. Pairing is required before any account-specific operation, checkout or fulfillment.
 
 1. An authenticated user starts pairing from the canonical Telegram bot or authenticated Mini App.
 2. Generate a cryptographically random, short-lived, single-use code; store only a hash, rate-limit attempts, and invalidate after use or expiry.
@@ -42,15 +42,16 @@ A contact row or imported phone number is not proof of ownership of an SLH accou
 5. The canonical Control Plane validates the code and binds the phone to its canonical principal. All later requests re-resolve principal and permissions.
 6. Unlinked, expired, reused, revoked or conflicting identities cannot access private balances or perform purchase actions.
 
-## 5. Proposed contracts — not yet confirmed as deployed
+## 5. Control Plane contracts
 
-First inspect/confirm whether equivalent canonical routes already exist. If they do, document and reuse them rather than creating parallel routes. Otherwise propose:
+The first implementation draft is in [slh-bot PR #656](https://github.com/osifeu-prog/slh-bot/pull/656). It is **not merged or deployed**.
 
-- `POST /internal/commerce/whatsapp/resolve-principal`: provider, verified E.164 sender, provider message ID, single-use pairing code and correlation/idempotency key. Do not accept caller-authoritative UID. Return only a minimal canonical principal reference, link status and customer-safe capabilities.
-- `GET /internal/commerce/catalog?channel=whatsapp`: published, available SKUs with customer-safe name/description, approved exact price/currency, sales status and safe next step.
-- `POST /internal/commerce/intents`: canonical principal reference, approved SKU, channel, provider message ID, explicit intent/consent and idempotency key. Return an opaque intent ID and non-payment status. Duplicate message IDs return the original intent.
+- `GET /internal/commerce/v1/whatsapp/catalog`: returns only products in the canonical Telegram Stars catalog, with customer-safe name/description, exact XTR price and `checkout_channel=telegram_stars`. It explicitly reports `payment_in_whatsapp=false`.
+- `POST /internal/commerce/v1/whatsapp/intents`: accepts `provider=twilio`, a provider message ID, approved SKU, `intent=purchase_inquiry`, and `customer_confirmed=true`; returns an opaque inquiry ID and `inquiry_pending`. The Control Plane hashes the provider message ID for idempotency, returns the original record on identical replay, and rejects reuse of the same message ID for a different SKU.
 
-These contracts must be authenticated, documented, scoped and tested before the adapter is wired. Intent creation must never cause a wallet, ledger, revenue, token or payment mutation.
+Both routes require the dedicated `SLH_WHATSAPP_STORE_BRIDGE_TOKEN`, `SLH_WHATSAPP_STORE_PRINCIPAL_ID`, canonical `whatsapp.store` permission, and `WHATSAPP_STORE_ENABLED=1`. They are disabled by default; do not configure or enable them in production until the code PR is reviewed and the adapter is ready.
+
+The initial inquiry API intentionally does not identify a Telegram user or accept a caller-supplied UID. A separate short-lived, single-use Telegram-started pairing flow must be designed before any account-level access, checkout or fulfillment. Inquiry creation must never cause a wallet, ledger, revenue, token or payment mutation.
 
 ## 6. Inbound security and reliability
 
