@@ -88,8 +88,13 @@ def _db(*, sender=SENDER, destination=TREASURY, amount_wei=AMOUNT_WEI, duplicate
     }
 
 
-def _run(db, fake_eth):
-    with patch(
+def _run(db, fake_eth, *, approved=False):
+    # Reversal resolution must remain blocked unless the separate go-live
+    # approval flag is explicitly set. Pin it per test, independent of CI env.
+    with patch.dict(
+        "os.environ",
+        {"SLH_BNB_RECONCILED_HISTORY_APPROVED": "1" if approved else "0"},
+    ), patch(
         "core.bnb_history_audit.get_bsc_config",
         return_value={
             "chain_id": 56,
@@ -286,7 +291,7 @@ def test_self_transfer_stays_blocked_without_audited_reversal_even_if_destinatio
 
 def test_complete_persisted_reversal_resolves_only_the_source_self_transfer():
     db = _add_audited_reversal(_db(sender=SENDER, destination=SENDER))
-    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
 
     assert result["status"] == "PASS"
     assert result["failed_rows"] == 0
@@ -300,7 +305,7 @@ def test_valid_reversal_remains_resolved_after_treasury_rotation():
     # self-transfer address. The persisted reversal must still reconcile from
     # its own historical metadata, not require the current treasury to match.
     db["bsc_settings"]["treasury_wallet"] = TREASURY
-    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
 
     assert result["status"] == "PASS"
     assert result["failed_rows"] == 0
@@ -311,13 +316,25 @@ def test_v2_audited_reversal_resolves_self_transfer_after_later_activity():
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
     )
-    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER), approved=True)
 
     assert result["status"] == "PASS"
     assert result["failed_rows"] == 0
     assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
     assert db["users"]["owner"]["wallet"]["credits"] == 20.072775
 
+
+
+def test_audited_reversal_does_not_clear_gate_without_explicit_history_approval():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert "RECONCILED_HISTORY_APPROVAL_REQUIRED" in result["blockers"]
+    assert "RECONCILED_HISTORY_APPROVAL_REQUIRED" in result["findings"][0]["issues"]
 
 def test_v2_reversal_with_inconsistent_intervening_ledger_row_stays_blocked():
     db = _add_audited_reversal_v2_with_later_activity(
