@@ -336,7 +336,7 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
         and audit.get("correction_idempotency_key") == correction_key
         and audit.get("chain_id") == 56
         and audit.get("block") == proof.get("block")
-        and audit.get("confirmations") == proof.get("confirmations")
+        and audit.get("confirmations") == meta.get("confirmations")
         and audit.get("required_confirmations") == proof.get("required_confirmations")
         and audit.get("gate_remained_closed") is True
         and abs(_decimal(audit.get("balance_before"), "REVERSAL_AUDIT_INVALID") - correction_before) <= _EPSILON
