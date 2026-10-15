@@ -134,8 +134,8 @@ def _source_predecessor_anchor_valid(
             abs((before + amount) - after) <= EPSILON
             and abs(after - source_before) <= EPSILON
         )
-    # A source that is the first canonical row has no prior balance to anchor.
-    return True
+    # Without a prior owner Credits anchor, a non-zero source balance is unexplained.
+    return False
 
 
 def _valid_audited_reversal(
