@@ -167,8 +167,14 @@ def _valid_audited_reversal(
     except Exception:
         authorized_actor = False
 
-    correction_version = _exact_nonnegative_int(meta.get("correction_version")) or 1
-    if correction_version >= 2:
+    raw_correction_version = meta.get("correction_version")
+    if raw_correction_version is None:
+        correction_version = 1  # legacy Treasury-alias-only reversal
+    else:
+        correction_version = _exact_nonnegative_int(raw_correction_version)
+        if correction_version not in (1, 2):
+            return False
+    if correction_version == 2:
         # New corrections record the actual Treasury configuration at correction
         # time separately from the self-transfer address. These addresses need
         # not match: the source transaction itself proves no transfer to Treasury.
