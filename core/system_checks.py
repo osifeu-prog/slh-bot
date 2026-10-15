@@ -40,7 +40,7 @@ def check_commands() -> dict[str, Any]:
 
         snapshot = snapshot_runtime("Me_ad_main")
         collisions = int(snapshot.get("collision_count") or 0)
-        required = {"help", "check", "check_ux", "check_money", "check_bnb", "check_bnb_deposits", "check_ton", "check_exchange"}
+        required = {"help", "check", "check_ux", "check_money", "check_bnb", "check_bnb_deposits", "bnb_reverse_prepare", "bnb_reverse_confirm", "bnb_reverse_cancel", "check_ton", "check_exchange"}
         registered = set(snapshot.get("commands", {}))
         missing = sorted("/" + cmd for cmd in required if "/" + cmd not in registered)
         ok = collisions == 0 and not missing
