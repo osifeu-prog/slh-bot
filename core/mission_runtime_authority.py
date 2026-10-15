@@ -29,7 +29,7 @@ def _resolve_agent(lifecycle, mission):
     return lifecycle.find_agent(manifest, assigned_id)
 
 
-def execute_mission_authority(mission_id, root=".", runtime=None):
+def execute_mission_authority(mission_id, root=".", runtime=None, *, requester_uid=None, requester_chat_id=None, human_approval_id=None):
     lifecycle = MissionLifecycleService(root)
     board, _manifest = lifecycle.load_state()
     mission = lifecycle.find_mission(board, mission_id)
@@ -60,6 +60,39 @@ def execute_mission_authority(mission_id, root=".", runtime=None):
     if owner_id is None:
         return {"status": "blocked", "mission_id": str(mission_id), "reason": "trusted_owner_not_found"}
 
+    from core import human_intervention as hi
+    gate = hi.request_or_authorize(
+        action="mission_execute",
+        resource_id=str(mission_id),
+        requester_uid=str(requester_uid or ""),
+        requester_chat_id=requester_chat_id,
+        approval_id=human_approval_id,
+    )
+    if gate.get("status") != "authorized":
+        return {
+            **gate,
+            "mission_id": str(mission_id),
+            "reason": gate.get("reason", gate.get("status")),
+        }
+    approval_request_id = gate.get("request_id")
+
+    def record_result(success, detail):
+        summary = str(detail)[:500]
+        if approval_request_id:
+            hi.finish_request(
+                approval_request_id,
+                success=success,
+                detail=summary,
+            )
+        else:
+            hi.record_action_event(
+                "action_completed" if success else "action_failed",
+                actor_id=requester_uid,
+                action="mission_execute",
+                resource_id=str(mission_id),
+                detail=summary,
+            )
+
     event = {
         "cmd": f"{agent.get('name') or str(mission.get('assigned_to'))}:execute_mission",
         "mission_id": str(mission_id),
@@ -80,6 +113,7 @@ def execute_mission_authority(mission_id, root=".", runtime=None):
                 mission.get("assigned_to"), event
             )
     except Exception as exc:
+        record_result(False, "runtime_unavailable:" + type(exc).__name__)
         return {
             "status": "blocked",
             "mission_id": str(mission_id),
@@ -101,6 +135,7 @@ def execute_mission_authority(mission_id, root=".", runtime=None):
     )
 
     if not verified:
+        record_result(False, "runtime_result_not_verified")
         return {
             "status": "blocked",
             "mission_id": str(mission_id),
@@ -113,6 +148,7 @@ def execute_mission_authority(mission_id, root=".", runtime=None):
         execution_result=data,
     )
     if lifecycle_result.get("status") != "executed":
+        record_result(False, "lifecycle_execution_commit_failed")
         return {
             "status": "blocked",
             "mission_id": str(mission_id),
@@ -120,6 +156,7 @@ def execute_mission_authority(mission_id, root=".", runtime=None):
             "lifecycle_result": lifecycle_result,
         }
 
+    record_result(True, "mission execution verified and committed")
     return {
         "status": "executed",
         "mission_id": str(mission_id),

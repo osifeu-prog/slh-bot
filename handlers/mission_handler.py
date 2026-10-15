@@ -1,7 +1,7 @@
 import state_manager
 
 from core.mission_state import MissionStateNormalizer
-from core.mission_runtime_bridge import execute_mission_via_runtime
+from handlers.human_intervention_handler import request_action
 from core.mission_lifecycle import MissionLifecycleService
 from core.mission_reward_service import issue_mission_reward
 
@@ -33,6 +33,9 @@ def register(bot, context=None):
         if action in {"add", "assign", "done", "run"}:
             if not callable(is_admin) or not is_admin(m):
                 bot.reply_to(m, "❌ פעולה זו זמינה ל-Owner בלבד.")
+                return
+            if str(getattr(getattr(m, "chat", None), "type", "")) != "private":
+                bot.reply_to(m, "🔒 פעולות ניהול ומשימות הדורשות אישור חייבות להתבצע בצ'אט פרטי עם הבוט.")
                 return
 
         board, _manifest = lifecycle.load_state()
@@ -83,15 +86,31 @@ def register(bot, context=None):
                 bot.reply_to(m, "שימוש: /mission done <id>")
                 return
             mission_id = parts[2].strip()
-            result = lifecycle.complete_mission(mission_id=mission_id)
-            if result.get("status") != "completed" and result.get("reason") != "mission_already_completed":
-                bot.reply_to(m, "❌ השלמת המשימה נחסמה.\n" + str(result.get("checks") or result.get("reason", "unknown")))
+            result = request_action(
+                bot,
+                action="mission_complete",
+                resource_id=mission_id,
+                requester_uid=str(m.from_user.id),
+                requester_chat_id=getattr(m.chat, "id", None),
+            )
+            if result.get("status") == "approval_required":
+                bot.reply_to(
+                    m,
+                    "⏳ ההשלמה ממתינה לאישור OWNER.\\n"
+                    + "מזהה בקשה: " + str(result.get("request_id"))
+                    + "\\nהבעלים יקבל בקשת אישור בפרטי.",
+                )
                 return
-            reward = reward_after_completion(mission_id)
-            if reward.get("status") in {"blocked", "pending"}:
-                bot.reply_to(m, f"⚠️ המשימה הושלמה, אך התגמול ממתין: {reward.get('reason')}")
+            if result.get("status") != "completed":
+                bot.reply_to(m, "❌ השלמת המשימה לא הושלמה: " +
+                             str(result.get("reason", result.get("status", "blocked"))))
                 return
-            bot.reply_to(m, f"✅ משימה #{mission_id} הושלמה!\n💰 תגמול: {reward.get('reward', 0)} SLH")
+            reward = result.get("reward", {})
+            bot.reply_to(
+                m,
+                f"✅ משימה #{mission_id} הושלמה.\\n"
+                f"סטטוס תגמול: {reward.get('status', 'unknown')}",
+            )
             return
 
         if action == "run":
@@ -99,14 +118,23 @@ def register(bot, context=None):
                 bot.reply_to(m, "שימוש: /mission run <id>")
                 return
             mission_id = parts[2].strip()
-            try:
-                result = execute_mission_via_runtime(mission_id=mission_id)
-                lifecycle_result = result.get("lifecycle_result", {})
-                if lifecycle_result.get("status") == "completed":
-                    result["reward"] = reward_after_completion(mission_id)
-                bot.reply_to(m, "🔵 תוצאת הרצת משימה #" + mission_id + "\n" + str(result))
-            except Exception as e:
-                bot.reply_to(m, "❌ שגיאה בהרצת משימה #" + mission_id + "\n" + str(e))
+            result = request_action(
+                bot,
+                action="mission_execute",
+                resource_id=mission_id,
+                requester_uid=str(m.from_user.id),
+                requester_chat_id=getattr(m.chat, "id", None),
+            )
+            if result.get("status") == "approval_required":
+                bot.reply_to(
+                    m,
+                    "⏳ ביצוע המשימה ממתין לאישור OWNER.\\n"
+                    + "מזהה בקשה: " + str(result.get("request_id"))
+                    + "\\nהבעלים יקבל בקשת אישור בפרטי.",
+                )
+            else:
+                bot.reply_to(m, "🔵 תוצאת הרצת משימה #" + mission_id + "\\n" +
+                             str(result)[:3000])
             return
 
         if action == "rewards":

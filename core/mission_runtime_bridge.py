@@ -6,7 +6,7 @@ from core.mission_state import MissionStateNormalizer
 from core.mission_reward_service import issue_mission_reward
 
 
-def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None):
+def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None, *, requester_uid=None, requester_chat_id=None, human_approval_id=None):
     """Keep legacy callers on the canonical Mission Runtime authority.
 
     The bridge must not create a second Kernel/Runtime plane. Optional runtime
@@ -25,6 +25,9 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
             mission_id=str(mission_id),
             root=root,
             runtime=runtime,
+            requester_uid=requester_uid,
+            requester_chat_id=requester_chat_id,
+            human_approval_id=human_approval_id,
         )
         if execution.get("status") != "executed":
             return execution
@@ -36,7 +39,11 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
             "current_status": status,
         }
 
-    completion = lifecycle.complete_mission(mission_id=str(mission_id))
+    completion = lifecycle.complete_mission(
+        mission_id=str(mission_id),
+        requester_uid=requester_uid,
+        requester_chat_id=requester_chat_id,
+    )
     final_board, _manifest = lifecycle.load_state()
     final_mission = lifecycle.find_mission(final_board, mission_id)
     reward = {"status": "not_attempted"}
@@ -44,10 +51,16 @@ def execute_mission_via_runtime(mission_id, root=".", runtime=None, kernel=None)
         if final_mission is not None:
             reward = issue_mission_reward(final_mission, mission_id=str(mission_id))
 
+    status_out = (
+        "completed" if completion.get("status") == "completed"
+        else "approval_required" if completion.get("status") == "approval_required"
+        else "blocked"
+    )
     return {
-        "status": "completed" if completion.get("status") == "completed" else "blocked",
+        "status": status_out,
         "mission_id": str(mission_id),
         "execution_result": execution,
         "lifecycle_result": {"status": completion.get("status"), "completion": completion},
+        "completion_request_id": completion.get("request_id"),
         "reward": reward,
     }

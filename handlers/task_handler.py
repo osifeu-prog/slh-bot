@@ -44,6 +44,7 @@ def task_done(message, bot):
             uid=uid,
             task_id=task_id,
             meta={"source": "task_handler", "telegram_user_id": str(uid)},
+            requester_chat_id=getattr(message.chat, "id", None),
         )
     except ValueError as e:
         reason = str(e)
@@ -63,6 +64,28 @@ def task_done(message, bot):
         bot.send_message(message.chat.id, "❌ השלמת המשימה נכשלה בבטחה.")
         print(f"[TASK] task_done error: {e}")
         return
+    if result.get("status") == "approval_required":
+        request_id = result.get("request_id")
+        try:
+            from handlers.human_intervention_handler import notify_approval_request
+            notified = notify_approval_request(bot, str(request_id))
+        except Exception:
+            notified = False
+        is_private = str(getattr(message.chat, "type", "")) == "private"
+        text = "⏳ השלמת המשימה ממתינה לאישור OWNER."
+        if is_private:
+            text += "\\nמזהה בקשה: " + str(request_id)
+        text += (
+            "\\nנשלחה בקשת אישור לבעלים." if notified else
+            "\\nלא ניתן היה לאשר שהודעת OWNER נמסרה; אל תנסה שוב עד לבדיקת הסטטוס."
+        )
+        bot.send_message(message.chat.id, text)
+        return
+    if result.get("status") != "completed":
+        bot.send_message(message.chat.id, "❌ השלמת המשימה נחסמה: " +
+                         str(result.get("reason", result.get("status", "unknown"))))
+        return
+
     reward = result.get("reward", 0)
     if result.get("reward_status") == "pending":
         bot.send_message(message.chat.id, f"🎉 משימה הושלמה!\n+{reward} קרדיטים\n⚠️ התגמול ממתין לעיבוד חוזר.")

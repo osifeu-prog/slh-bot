@@ -52,6 +52,7 @@ def load_handlers(bot, context):
         ("terms", "handlers.terms_handler"),
         ("task", "handlers.task_handler"),
         ("mission", "handlers.mission_handler"),
+        ("human_intervention", "handlers.human_intervention_handler"),
         ("academy", "handlers.academy_handler"),
         ("academy_menu", "handlers.academy_menu_handler"),
         ("device", "handlers.device_handler"),

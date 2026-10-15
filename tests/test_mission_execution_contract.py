@@ -60,8 +60,20 @@ def _runtime_fixture(tmp_path, monkeypatch):
     agent = {"id": "agent-1", "name": "Mission Executor", "state": "idle", "runtime_class": "MissionExecutorAgent", "owner_id": "owner-1"}
     _write_state(tmp_path, mission, agent)
     import state_manager
-    from core import academy_manager
+    from core import academy_manager, human_intervention
     monkeypatch.setattr(state_manager, "get_agents", lambda: {"agent-1": agent})
+    # This test isolates runtime/contract behavior. Approval semantics are
+    # covered independently in tests/test_human_intervention.py.
+    monkeypatch.setattr(
+        human_intervention,
+        "request_or_authorize",
+        lambda **kwargs: {"status": "authorized", "gate": "test_fixture"},
+    )
+    monkeypatch.setattr(
+        human_intervention,
+        "record_action_event",
+        lambda **kwargs: {"status": "recorded"},
+    )
     calls = []
     monkeypatch.setattr(academy_manager, "complete_stage", lambda uid, course_id, stage: calls.append((uid, course_id, stage)) or {"ok": True, "uid": uid, "course_id": course_id, "stage": stage})
     kernel = SLHKernel()

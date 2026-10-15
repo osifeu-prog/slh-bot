@@ -1538,7 +1538,11 @@ class MissionLifecycleService:
 
     def complete_mission(
         self,
-        mission_id
+        mission_id,
+        *,
+        requester_uid=None,
+        requester_chat_id=None,
+        human_approval_id=None,
     ):
 
         from datetime import datetime, timezone
@@ -1755,6 +1759,24 @@ class MissionLifecycleService:
 
                 }
 
+            from core import human_intervention as hi
+            gate = hi.request_or_authorize(
+                action="mission_complete",
+                resource_id=str(mission_id),
+                requester_uid=str(requester_uid or ""),
+                requester_chat_id=requester_chat_id,
+                approval_id=human_approval_id,
+            )
+            if gate.get("status") != "authorized":
+                return {
+                    **gate,
+                    "mission_id": str(mission_id),
+                    "checks": checks,
+                    "write_performed": False,
+                }
+
+            approval_request_id = gate.get("request_id")
+
             now = datetime.now(
                 timezone.utc
             )
@@ -1878,6 +1900,9 @@ class MissionLifecycleService:
 
                 "read_only":
                     False,
+
+                "human_intervention_request_id":
+                    approval_request_id,
 
             }
 
