@@ -765,12 +765,20 @@ class ExchangeReconciliationTests(unittest.TestCase):
                     "reserved_credits": "0",
                 }
             },
-            "ledger": [{
-                "time": "2026-09-18T11:57:23.447796+00:00",
-                "uid": "seller", "amount": 5,
-                "reason": "exchange:missed_release_correction",
-                "meta": {"order_id": "O_PRE_CORRECTION"},
-            }],
+            "ledger": [
+                {
+                    "time": "2026-09-18T11:56:23.447796+00:00",
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_PRE_CORRECTION"},
+                },
+                {
+                    "time": "2026-09-18T11:57:23.447796+00:00",
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:missed_release_correction",
+                    "meta": {"order_id": "O_PRE_CORRECTION"},
+                },
+            ],
             "slh_token_ledger": [],
         }
 
