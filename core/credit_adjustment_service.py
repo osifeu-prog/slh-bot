@@ -387,7 +387,8 @@ def _require_bnb_gate_closed_for_correction():
     # or mutation, not merely evaluate closed because this ledger has a finding.
     if os.getenv("BNB_DEPOSITS_OPEN", "0").strip() == "1":
         raise ValueError("BNB_DEPOSITS_FLAG_MUST_BE_CLOSED")
-    _require_bnb_gate_closed_for_correction()
+    if bnb_deposits_open():
+        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
 
 
 def preview_invalid_bnb_deposit_reversal(*, actor_uid, uid, tx_hash):
