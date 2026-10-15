@@ -24,6 +24,19 @@ def _atomic(db):
 
 def test_whatsapp_bundle_cashback_is_90_credits_and_idempotent():
     db = _db()
+    db["whatsapp_purchase_attributions"] = {
+        "stars:charge-bundle": {
+            "purchase_id": "stars:charge-bundle",
+            "intent_id": "WPI_test-bundle",
+            "provider_message_id_hash": "test-hash-bundle",
+            "uid": "100",
+            "sku": "slh_investor_bundle",
+            "paid_amount": 899,
+            "paid_currency": "XTR",
+            "status": "VERIFIED_COMPLETED",
+            "completed_at": "2026-10-15T09:00:00+00:00",
+        }
+    }
     with _atomic(db):
         first = commerce_loyalty.grant_whatsapp_cashback(
             "100", "stars:charge-bundle", 899, "XTR", sku="slh_investor_bundle"
@@ -92,6 +105,19 @@ def test_vip_referral_awards_new_buyer_25_and_referrer_10_percent_once_per_charg
 
 def test_cashback_for_credits_purchase_uses_ten_percent():
     db = _db()
+    db["whatsapp_purchase_attributions"] = {
+        "purchase:esp32-pro": {
+            "purchase_id": "purchase:esp32-pro",
+            "intent_id": "WPI_test-esp32",
+            "provider_message_id_hash": "test-hash-esp32",
+            "uid": "100",
+            "sku": "esp32_pro",
+            "paid_amount": 888,
+            "paid_currency": "CREDITS",
+            "status": "VERIFIED_COMPLETED",
+            "completed_at": "2026-10-15T09:00:00+00:00",
+        }
+    }
     with _atomic(db):
         result = commerce_loyalty.grant_whatsapp_cashback(
             "100", "purchase:esp32-pro", 888, "CREDITS", sku="esp32_pro"
@@ -99,3 +125,14 @@ def test_cashback_for_credits_purchase_uses_ten_percent():
     assert result["status"] == "APPLIED"
     assert result["credits"] == "88.80000000"
     assert db["users"]["100"]["wallet"]["credits"] == 88.8
+
+
+def test_whatsapp_touch_without_correlated_purchase_does_not_receive_cashback():
+    db = _db()
+    with _atomic(db):
+        result = commerce_loyalty.grant_whatsapp_cashback(
+            "100", "stars:unmatched", 899, "XTR", sku="slh_investor_bundle"
+        )
+    assert result["status"] == "NOT_ELIGIBLE"
+    assert db["users"]["100"]["wallet"]["credits"] == 0
+    assert db["ledger"] == []
