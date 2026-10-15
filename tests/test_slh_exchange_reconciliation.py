@@ -967,5 +967,118 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["operational_status"], "BLOCKED")
         self.assertEqual(report["release_readiness_status"], "BLOCKED")
 
+    def test_archived_trade_party_mismatch_is_a_release_blocker(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                    "exchange_reserved_credits": 0.0,
+                    "credits": 0.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O0000000006": {
+                    "id": "O0000000006", "uid": "seller", "side": "sell",
+                    "original_amount": "5", "remaining_amount": "0",
+                    "limit_price": "1", "reserved_slh": "0",
+                    "reserved_credits": "0", "status": "cancelled",
+                    "client_request_id": "TEST-SELL-001",
+                    "archive_reason": "test_seed_retirement",
+                },
+                "O0000000007": {
+                    "id": "O0000000007", "uid": "TEST_BUYER", "side": "buy",
+                    "original_amount": "5", "remaining_amount": "0",
+                    "limit_price": "1", "reserved_slh": "0",
+                    "reserved_credits": "0", "status": "filled",
+                    "client_request_id": "TEST-BUY-001",
+                    "archive_reason": "test_seed_retirement",
+                },
+            },
+            "exchange_trade_archive": [{
+                "id": "T0000000008", "buyer_uid": "DELETED_TEST",
+                "seller_uid": "seller", "slh_amount": "5",
+                "price": "1", "credits_value": "5",
+                "buy_order_id": "O0000000007",
+                "sell_order_id": "O0000000006",
+                "archive_reason": "test_seed_retirement",
+            }],
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item.get("code") == "ARCHIVED_TRADE_PARTY_MISMATCH"
+        )
+
+        self.assertEqual(finding["trade_id"], "T0000000008")
+        self.assertEqual(
+            finding["order_ids"],
+            ["O0000000006", "O0000000007"],
+        )
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn(
+            "ARCHIVED_TRADE_PARTY_MISMATCH",
+            {item["code"] for item in report["release_blocking_findings"]},
+        )
+        self.assertEqual(report["operational_status"], "BLOCKED")
+
+    def test_valid_archived_trade_has_no_archive_integrity_finding(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                    "exchange_reserved_credits": 0.0,
+                    "credits": 0.0,
+                }},
+                "buyer": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                    "exchange_reserved_credits": 0.0,
+                    "credits": 0.0,
+                }},
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "B1": {
+                    "id": "B1", "uid": "buyer", "side": "buy",
+                    "original_amount": "5", "remaining_amount": "0",
+                    "limit_price": "1", "reserved_slh": "0",
+                    "reserved_credits": "0", "status": "filled",
+                    "archive_reason": "order_retired",
+                },
+                "S1": {
+                    "id": "S1", "uid": "seller", "side": "sell",
+                    "original_amount": "5", "remaining_amount": "0",
+                    "limit_price": "1", "reserved_slh": "0",
+                    "reserved_credits": "0", "status": "filled",
+                    "archive_reason": "order_retired",
+                },
+            },
+            "exchange_trade_archive": [{
+                "id": "T1", "buyer_uid": "buyer", "seller_uid": "seller",
+                "slh_amount": "5", "price": "1", "credits_value": "5",
+                "buy_order_id": "B1", "sell_order_id": "S1",
+                "archive_reason": "trade_retired",
+            }],
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        archive_codes = {
+            item["code"] for item in report["findings"]
+            if str(item.get("code") or "").startswith("ARCHIVED_TRADE_")
+        }
+        self.assertEqual(archive_codes, set())
+
+
 if __name__ == "__main__":
     unittest.main()
