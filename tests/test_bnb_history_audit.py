@@ -185,6 +185,86 @@ def _add_audited_reversal(db):
     return db
 
 
+def _add_audited_reversal_v2_with_later_activity(db):
+    correction_key = f"accounting:reversal:{TX_HASH.lower()}"
+    source_key = f"bnb:deposit:{TX_HASH.lower()}"
+    source = db["ledger"][0]
+    source["meta"]["from"] = SENDER
+    source["meta"]["to"] = SENDER
+
+    # Simulate later legitimate account credits. The reversal must debit only
+    # the bad source credit from the current balance, not reset the old balance.
+    db["ledger"].extend([
+        {
+            "time": "2026-10-12T13:20:00+00:00",
+            "uid": "owner",
+            "before": 28.091775,
+            "amount": 0.99,
+            "after": 29.081775,
+            "reason": "exchange:settlement_credits",
+            "meta": {"trade_id": "T-1"},
+        },
+        {
+            "time": "2026-10-12T13:25:00+00:00",
+            "uid": "owner",
+            "before": 29.081775,
+            "amount": 0.991,
+            "after": 30.072775,
+            "reason": "exchange:settlement_credits",
+            "meta": {"trade_id": "T-2"},
+        },
+    ])
+    correction = {
+        "time": "2026-10-15T12:00:00+00:00",
+        "uid": "owner",
+        "before": 30.072775,
+        "amount": -10.0,
+        "after": 20.072775,
+        "reason": "accounting:invalid_bnb_deposit_reversal",
+        "meta": {
+            "idempotency_key": correction_key,
+            "correction_version": 2,
+            "source_idempotency_key": source_key,
+            "source_reason": "bnb:deposit",
+            "source_ledger_index": 0,
+            "tx_hash": TX_HASH.lower(),
+            "actor_uid": OWNER_UID,
+            "nominal_credits_reversed": 10.0,
+            "chain_id": 56,
+            "block": 80,
+            "confirmations": 20,
+            "required_confirmations": 15,
+            "amount_wei": AMOUNT_WEI,
+            "treasury": TREASURY,
+            "current_treasury_at_correction": TREASURY,
+            "from": SENDER,
+            "to": SENDER,
+            "gate_remained_closed": True,
+        },
+    }
+    db["ledger"].append(correction)
+    db["credit_adjustment_audit"] = [{
+        "event": "INVALID_BNB_SELF_TRANSFER_REVERSED",
+        "time": "2026-10-15T12:00:00+00:00",
+        "uid": "owner",
+        "actor_uid": OWNER_UID,
+        "tx_hash": TX_HASH.lower(),
+        "source_idempotency_key": source_key,
+        "correction_idempotency_key": correction_key,
+        "amount": -10.0,
+        "nominal_credits_reversed": 10.0,
+        "balance_before": 30.072775,
+        "balance_after": 20.072775,
+        "chain_id": 56,
+        "block": 80,
+        "confirmations": 20,
+        "required_confirmations": 15,
+        "gate_remained_closed": True,
+    }]
+    db["users"]["owner"]["wallet"]["credits"] = 20.072775
+    return db
+
+
 def test_self_transfer_stays_blocked_without_audited_reversal_even_if_destination_is_treasury():
     db = _db(sender=SENDER, destination=SENDER)
     db["bsc_settings"]["treasury_wallet"] = SENDER
@@ -215,6 +295,30 @@ def test_valid_reversal_remains_resolved_after_treasury_rotation():
     assert result["status"] == "PASS"
     assert result["failed_rows"] == 0
     assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+
+
+def test_v2_audited_reversal_resolves_self_transfer_after_later_activity():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+    assert db["users"]["owner"]["wallet"]["credits"] == 20.072775
+
+
+def test_v2_reversal_with_inconsistent_intervening_ledger_row_stays_blocked():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    db["ledger"][1]["before"] = 999.0
+    result = _run(db, FakeEth(sender=SENDER, destination=SENDER))
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
 
 
 def test_corrupt_reversal_audit_does_not_resolve_self_transfer():
