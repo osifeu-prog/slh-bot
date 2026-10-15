@@ -642,5 +642,141 @@ class ExchangeReconciliationTests(unittest.TestCase):
             for item in report["blocking_findings"]
         ))
 
+
+    def test_pre_event_id_rows_exempt_only_the_missing_metadata_finding(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_PRE_ERA": {
+                    "id": "O_PRE_ERA", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "time": "2026-09-18T11:57:23.447796+00:00",
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_PRE_ERA"},
+                },
+                {
+                    "time": "2026-09-18T11:58:23.447796+00:00",
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_PRE_ERA"},
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        self.assertNotIn("LEDGER_EVENT_ID_MISSING", {item["code"] for item in report["findings"]})
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["operational_status"], "PASS")
+
+    def test_pre_event_id_unbalanced_reserve_remains_blocking(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_PRE_UNBALANCED": {
+                    "id": "O_PRE_UNBALANCED", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [{
+                "time": "2026-09-18T11:57:23.447796+00:00",
+                "uid": "seller", "amount": -5,
+                "reason": "exchange:sell_reserve",
+                "meta": {"order_id": "O_PRE_UNBALANCED"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+        self.assertNotIn("LEDGER_EVENT_ID_MISSING", codes)
+        self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertIn("RESERVE_DELTA_NOT_ZERO", codes)
+        self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertGreater(report["blocking_finding_count"], 0)
+
+    def test_missing_event_id_at_policy_start_remains_a_finding(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_POST_ERA": {
+                    "id": "O_POST_ERA", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "time": "2026-09-28T00:00:00+00:00",
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_POST_ERA"},
+                },
+                {
+                    "time": "2026-09-28T00:01:00+00:00",
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_POST_ERA"},
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        missing = [item for item in report["findings"] if item["code"] == "LEDGER_EVENT_ID_MISSING"]
+        self.assertEqual(len(missing), 2)
+        self.assertEqual(report["status"], "FAIL")
+
+    def test_pre_event_id_correction_without_event_id_is_not_exempted(self):
+        db = {
+            "exchange_orders": {
+                "O_PRE_CORRECTION": {
+                    "id": "O_PRE_CORRECTION", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [{
+                "time": "2026-09-18T11:57:23.447796+00:00",
+                "uid": "seller", "amount": 5,
+                "reason": "exchange:missed_release_correction",
+                "meta": {"order_id": "O_PRE_CORRECTION"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        self.assertIn("LEDGER_EVENT_ID_MISSING", {item["code"] for item in report["findings"]})
+        self.assertIn("MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW", {item["code"] for item in report["findings"]})
+
 if __name__ == "__main__":
     unittest.main()
