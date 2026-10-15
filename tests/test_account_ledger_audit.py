@@ -40,6 +40,28 @@ def test_audit_does_not_compare_slh_rows_as_credits_without_mutation():
     assert db == before
 
 
+def test_credits_sequence_continues_across_interleaved_slh_rows():
+    db = {
+        "users": {UID: {"wallet": {"credits": 90.0}}},
+        "ledger": [
+            {"uid": UID, "before": 100.0, "amount": -5.0, "after": 95.0,
+             "reason": "store:purchase"},
+            {"uid": UID, "before": 2000.0, "amount": -1000.0, "after": 1000.0,
+             "reason": "exchange:sell_reserve"},
+            {"uid": UID, "before": 95.0, "amount": -5.0, "after": 90.0,
+             "reason": "store:purchase"},
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "PASS"
+    assert result["credits_sequence_rows_checked"] == 2
+    assert result["non_credits_rows_skipped"] == 1
+    assert result["continuity_break_count"] == 0
+    assert result["current_balance_matches_tail"] is True
+
+
 def test_same_unknown_domain_gap_still_blocks_account_audit():
     db = _db()
     db["ledger"][2]["reason"] = "store:p2p_sale"
