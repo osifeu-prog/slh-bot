@@ -88,7 +88,6 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
             or first_replay <= 0
             or last_replay < first_replay
             or evidence_amount <= 0
-            or first_replay < settled_at_epoch
         ):
             return False
 
@@ -132,6 +131,8 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
         if transaction_time.tzinfo is None:
             return False
         settled_at_epoch = transaction_time.timestamp()
+        if first_replay < settled_at_epoch:
+            return False
 
         ton_amount = Decimal(str(transaction.get("ton_amount") or 0))
         credits = Decimal(str(transaction.get("credits") or 0))
