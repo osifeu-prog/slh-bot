@@ -38,6 +38,20 @@ def test_whatsapp_bundle_cashback_is_90_credits_and_idempotent():
     assert len([x for x in db["ledger"] if x.get("reason") == "whatsapp:cashback"]) == 1
 
 
+def test_whatsapp_touch_is_idempotent_and_does_not_reassign_referral():
+    db = _db()
+    db["users"]["200"]["referral"] = {"referred_by": "300", "source": "telegram_start_payload"}
+    with _atomic(db):
+        first = commerce_loyalty.mark_whatsapp_store_touch("200", "100", now="2026-10-15T09:00:00Z")
+        second = commerce_loyalty.mark_whatsapp_store_touch("200", "100", now="2026-10-15T09:05:00Z")
+
+    assert first["status"] == "APPLIED"
+    assert second["status"] == "DUPLICATE"
+    assert db["users"]["200"]["referral"]["referred_by"] == "300"
+    assert db["users"]["200"]["acquisition_channel"] == "whatsapp"
+    assert db["whatsapp_store_touches"]["200"]["referrer_uid"] == "100"
+
+
 def test_non_whatsapp_user_does_not_receive_cashback():
     db = _db()
     with _atomic(db):
