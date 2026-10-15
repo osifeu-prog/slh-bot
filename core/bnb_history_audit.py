@@ -73,8 +73,19 @@ def _binding_for_uid(db: dict, uid: str) -> tuple[str | None, str | None]:
     if len(matches) != 1:
         return None, "CURRENT_WALLET_BINDING_MISSING_OR_AMBIGUOUS"
     address = str(matches[0].get("address") or "").strip()
-    if not address or is_quarantined_bsc_address(address):
+    if not address or not Web3.is_address(address) or is_quarantined_bsc_address(address):
         return None, "CURRENT_WALLET_BINDING_UNUSABLE"
+
+    # A sender address must identify exactly one account. Otherwise an on-chain
+    # transfer from that address cannot independently prove which UID owns it.
+    address_matches = [
+        value for value in registry.values()
+        if isinstance(value, dict)
+        and str(value.get("chain") or "").strip().lower() == "bsc"
+        and str(value.get("address") or "").strip().lower() == address.lower()
+    ]
+    if len(address_matches) != 1:
+        return None, "CURRENT_WALLET_BINDING_ADDRESS_NOT_UNIQUE"
     return address, None
 
 
