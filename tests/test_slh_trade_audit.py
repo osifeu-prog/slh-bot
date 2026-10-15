@@ -49,6 +49,20 @@ class SlhTradeAuditTests(unittest.TestCase):
         db["exchange_orders"]["S1"]["uid"] = "someone-else"
         self.assertEqual(audit_trades(db, ["T1"])["status"], "FAIL")
 
+    def test_trade_below_seller_limit_fails(self):
+        db = _db()
+        db["exchange_orders"]["S1"]["limit_price"] = "1.01000000"
+        report = audit_trades(db, ["T1"])
+        self.assertEqual(report["status"], "FAIL")
+        self.assertFalse(report["trades"][0]["checks"]["trade_price_within_ask"])
+
+    def test_duplicate_trade_record_fails(self):
+        db = _db()
+        db["exchange_trades"].append(dict(db["exchange_trades"][0]))
+        report = audit_trades(db, ["T1"])
+        self.assertEqual(report["status"], "FAIL")
+        self.assertFalse(report["trades"][0]["checks"]["trade_record_unique"])
+
     def test_missing_snapshot_sources_are_unknown(self):
         report = audit_trades({}, ["T1"])
         self.assertEqual(report["status"], "UNKNOWN")
