@@ -88,12 +88,14 @@ def _db(*, sender=SENDER, destination=TREASURY, amount_wei=AMOUNT_WEI, duplicate
     }
 
 
-def _run(db, fake_eth, *, approved=False):
-    # Reversal resolution must remain blocked unless the separate go-live
-    # approval flag is explicitly set. Pin it per test, independent of CI env.
+def _run(db, fake_eth, *, approved=False, operator_open=False):
+    # Pin both independent operator flags per test, regardless of CI environment.
     with patch.dict(
         "os.environ",
-        {"SLH_BNB_RECONCILED_HISTORY_APPROVED": "1" if approved else "0"},
+        {
+            "SLH_BNB_RECONCILED_HISTORY_APPROVED": "1" if approved else "0",
+            "BNB_DEPOSITS_OPEN": "1" if operator_open else "0",
+        },
     ), patch(
         "core.bnb_history_audit.get_bsc_config",
         return_value={
@@ -402,4 +404,22 @@ def test_shared_bsc_wallet_binding_blocks_history_audit():
     assert result["status"] == "BLOCKED"
     assert result["failed_rows"] == 1
     assert "CURRENT_WALLET_BINDING_ADDRESS_NOT_UNIQUE" in result["findings"][0]["issues"]
+
+def test_approved_reversal_does_not_clear_history_blocker_if_operator_flag_is_open():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+
+    result = _run(
+        db,
+        FakeEth(sender=SENDER, destination=SENDER),
+        approved=True,
+        operator_open=True,
+    )
+
+    assert result["status"] == "BLOCKED"
+    assert result["failed_rows"] == 1
+    assert result["findings"][0]["status"] == "BLOCKED"
+    assert "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED" in result["findings"][0]["issues"]
+    assert "BNB_DEPOSITS_FLAG_MUST_BE_CLOSED" in result["blockers"]
 
