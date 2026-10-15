@@ -104,9 +104,15 @@ def is_read_only_command(command):
         return False
     # Reads of canonical state, dotenv files, repository internals or system
     # procfs are not in the unattended-read allowlist.
+    # Fail closed on likely credentials and private-key locations. This is
+    # intentionally conservative: sensitive terms in arguments require review.
     sensitive_fragments = (
         ".env", "state/", "db.json", ".git/", "/proc/", "/sys/",
-        "credentials", "secrets", "private_key",
+        "credentials", "credential", "secrets", "secret", "private_key",
+        ".ssh/", "id_rsa", "id_ed25519", "id_ecdsa", ".pem", ".key",
+        ".aws/", ".gnupg/", ".config/", "wallet", "mnemonic", "seed",
+        "password", "passwd", "api_key", "apikey", "access_key",
+        "authorization", "cookie", "bot_token", "environment",
     )
     if any(
         fragment in token.replace("\\\\", "/").lower()
@@ -117,7 +123,7 @@ def is_read_only_command(command):
     name = tokens[0]
     if name in {
         "pwd", "whoami", "ls", "stat", "file", "head", "tail", "cat",
-        "grep", "rg", "nl", "wc", "du", "df", "printenv", "echo", "printf",
+        "grep", "rg", "nl", "wc", "du", "df", "echo", "printf",
     }:
         return True
     if name == "find":

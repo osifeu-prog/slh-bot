@@ -149,6 +149,25 @@ class HumanInterventionTests(unittest.TestCase):
         run.assert_called_once()
         self.assertNotIn("human_intervention", self.db)
 
+    def test_environment_dump_and_private_key_reads_are_not_unattended(self):
+        unsafe_reads = (
+            "printenv",
+            "cat ~/.ssh/id_rsa",
+            "cat /root/.ssh/id_ed25519",
+            "cat /root/.aws/credentials",
+            "grep token /app/config.txt",
+        )
+        for command in unsafe_reads:
+            with self.subTest(command=command):
+                self.assertFalse(policy.is_read_only_command(command), command)
+
+        # Each unsafe read must be held for owner approval, never executed now.
+        with patch("core.exec_policy._run") as run:
+            ok, output = exec_policy.run_gated(OWNER, "printenv", source="test-secret-read")
+        self.assertFalse(ok)
+        self.assertIn("HUMAN_APPROVAL_REQUIRED", output)
+        run.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
