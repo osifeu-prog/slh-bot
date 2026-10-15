@@ -48,7 +48,10 @@ def test_leading_whitespace_command_is_not_routed_to_llm():
 def test_plain_natural_text_is_not_mislabeled_as_a_command():
     bot = FakeBot()
     natural_chat.register(bot)
-    with patch.object(natural_chat, "route", return_value="תשובה") as route:
+    with patch.object(natural_chat, "route", return_value="תשובה") as route, patch.object(
+        natural_chat, "record_turn"
+    ) as record_turn:
         bot.handler(_message("מה מצב המערכת?"))
     route.assert_called_once_with("מה מצב המערכת?", "8789977826")
     assert bot.sent[-1][1] == "תשובה"
+    record_turn.assert_called_once()
