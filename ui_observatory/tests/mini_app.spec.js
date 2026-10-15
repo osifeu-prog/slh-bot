@@ -135,6 +135,11 @@ async function clickPrimaryNav(page, label) {
 }
 
 test.beforeEach(async ({ page }) => {
+  const __slhPageErrors = [];
+  page.on('pageerror', error => {
+    __slhPageErrors.push(String(error?.stack || error?.message || error));
+    console.log('[SLH PAGEERROR]', String(error?.stack || error?.message || error));
+  });
   // The production Mini App must require real Telegram initData.
   // The browser test supplies a deterministic Telegram WebApp stub and mocks API calls.
   await mockTelegramWebApp(page);
@@ -142,6 +147,14 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/mini-app');
   await page.waitForLoadState('domcontentloaded');
   await page.waitForFunction(() => window.Telegram?.WebApp?.initData === 'ui-test-init-data');
+  const __slhAuthDiag = await page.evaluate(() => ({
+    telegramInitData: window.Telegram?.WebApp?.initData || '',
+    appInitData: typeof initData === 'undefined' ? '__undefined__' : String(initData || ''),
+    tgAvailable: typeof tg !== 'undefined' && !!tg,
+    authGateDisplay: getComputedStyle(document.querySelector('#authGate')).display,
+    appDisplay: getComputedStyle(document.querySelector('.app')).display
+  }));
+  console.log('[SLH AUTH DIAG]', JSON.stringify({ ...__slhAuthDiag, pageErrors: __slhPageErrors }));
   await expect(page.locator('#authGate')).toBeHidden();
   await expect(page.locator('.app')).toBeVisible();
   await expect(page.locator('#slh-splash')).toBeHidden({ timeout: 5000 });
