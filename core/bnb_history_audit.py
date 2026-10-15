@@ -292,7 +292,9 @@ def _valid_audited_reversal(
     wallet = user.get("wallet") if isinstance(user, dict) else None
     current_balance = _finite_number(wallet.get("credits")) if isinstance(wallet, dict) else None
     return bool(
-        saw_correction
+        saw_source
+        and saw_correction
+        and running is not None
         and current_balance is not None
         and abs(current_balance - running) <= EPSILON
     )
