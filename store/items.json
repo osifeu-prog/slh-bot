@@ -26,10 +26,10 @@
     "grant": {
       "bundle": [
         {
-          "hardware": "esp32_pro"
+          "plugin": "agent_os"
         },
         {
-          "plugin": "agent_os"
+          "hardware": "esp32_pro"
         }
       ],
       "vip_months_bonus": 3
