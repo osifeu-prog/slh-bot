@@ -427,6 +427,26 @@ def test_duplicate_source_idempotency_key_fails_closed(monkeypatch):
     assert db == before
 
 
+
+def test_existing_reversal_by_different_owner_uid_is_not_reported_as_already_reversed(monkeypatch):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+    other_owner = "another-authorized-owner"
+    monkeypatch.setattr(
+        target, "is_owner", lambda actor: str(actor) in {UID, other_owner}
+    )
+    assert _apply(db)["status"] == "APPLIED"
+
+    db["ledger"][-1]["meta"]["actor_uid"] = other_owner
+    db["credit_adjustment_audit"][0]["actor_uid"] = other_owner
+    before = deepcopy(db)
+
+    with pytest.raises(ValueError, match="REVERSAL_IDEMPOTENCY_CONFLICT"):
+        _apply(db)
+
+    assert db == before
+
+
 def test_existing_reversal_with_corrupt_audit_fails_closed(monkeypatch):
     db = _db()
     _patch_runtime(monkeypatch, db)
