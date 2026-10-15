@@ -17,6 +17,17 @@ def load_ledger():
         return []
 
 
+def _whatsapp_cashback(uid, purchase_id, amount, item_id):
+    try:
+        from core.commerce_loyalty import grant_whatsapp_cashback
+        return grant_whatsapp_cashback(
+            uid, purchase_id, amount, "CREDITS", sku=item_id
+        )
+    except Exception as exc:
+        # Preserve the completed purchase; the next idempotent replay can retry.
+        return {"status": "PENDING", "error": type(exc).__name__}
+
+
 def save_ledger(data):
     with open(LEDGER_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -186,7 +197,14 @@ def purchase(uid, item_id, request_id=None):
 
     status = purchase_state.get("status")
     if status == "FULFILLED":
-        return True, {"status": "ALREADY_COMPLETED", "item": purchase_state["item_name"], "paid": purchase_state["price"], "grant": purchase_state.get("fulfillment")}
+        cashback = _whatsapp_cashback(uid, purchase_state["purchase_id"], purchase_state["price"], item_id)
+        return True, {
+            "status": "ALREADY_COMPLETED",
+            "item": purchase_state["item_name"],
+            "paid": purchase_state["price"],
+            "grant": purchase_state.get("fulfillment"),
+            "cashback": cashback,
+        }
     if status == "REJECTED":
         return False, purchase_state.get("error", "PURCHASE_REJECTED")
 
@@ -224,7 +242,15 @@ def purchase(uid, item_id, request_id=None):
 
     purchase_state = _update_purchase(claim["purchase_id"], status="FULFILLED", fulfillment=fulfillment, fulfilled_at=datetime.now(timezone.utc).isoformat(), fulfillment_started_at=None, error=None)
     _record_compat_ledger(purchase_state, fulfillment)
-    return True, {"status": "SUCCESS", "item": purchase_state["item_name"], "paid": purchase_state["price"], "grant": fulfillment, "commission": 0}
+    cashback = _whatsapp_cashback(uid, purchase_state["purchase_id"], purchase_state["price"], item_id)
+    return True, {
+        "status": "SUCCESS",
+        "item": purchase_state["item_name"],
+        "paid": purchase_state["price"],
+        "grant": fulfillment,
+        "commission": 0,
+        "cashback": cashback,
+    }
 
 
 
@@ -339,4 +365,8 @@ def purchase_physical(uid, item_id, request_id=None):
             "purchase_status": "PAID", "new_balance": buyer_balance - price,
         }, None
 
-    return state_manager.atomic_update(mutate)
+    result, error = state_manager.atomic_update(mutate)
+    if error is None and isinstance(result, dict) and result.get("status") in {"SUCCESS", "ALREADY_COMPLETED"}:
+        cashback = _whatsapp_cashback(uid, purchase_id, result.get("paid", 0), item_id)
+        result = {**result, "cashback": cashback}
+    return result, error
