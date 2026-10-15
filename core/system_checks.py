@@ -14,7 +14,7 @@ from typing import Any
 
 
 REQUIRED_DB_KEYS = ("users", "transactions", "ledger")
-REQUIRED_UX_IDS = ("balance", "move", "growth", "investor", "profile", "bh", "bb", "bm", "bg", "binv")
+REQUIRED_UX_IDS = ("balance", "move", "growth", "investor", "profile", "bh", "bw", "bx", "bmarket", "bmore")
 
 
 def check_db() -> dict[str, Any]:
