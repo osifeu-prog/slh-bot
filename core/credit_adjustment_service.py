@@ -279,6 +279,7 @@ def _validate_source_predecessor(ledger, uid, source_index, source_before):
         if abs(after - source_before) > _EPSILON:
             raise ValueError("ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISMATCH")
         return
+    raise ValueError("ACCOUNT_LEDGER_SOURCE_PREDECESSOR_MISSING")
 
 
 def _replay_account_ledger(ledger, uid, source_index):
