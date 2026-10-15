@@ -844,7 +844,7 @@ function __slhShareActivityLabel(reason){
 }
 
 async function __slhSharePayload(title,text){
-  const url='https://t.me/Me_ad_main_bot';
+  const url='https://t.me/Me_ad_main_bot?startapp=home';
   const message=String(text||'').trim();
   const shareData={title:String(title||'SLH OS'),text:message,url};
   try{
