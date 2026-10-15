@@ -351,14 +351,10 @@ def register(bot, context=None):
                 if isinstance(item.get("previous"), dict) and isinstance(item.get("next"), dict):
                     previous, next_row = item["previous"], item["next"]
                     lines.append(
-                        f"{kind}: #{previous.get('index')} {previous.get('reason')} "
+                        f"{kind}: #{previous.get('index')} {previous.get('reason')}[{previous.get('domain_hint')}] "
                         f"after={previous.get('after')} → #{next_row.get('index')} "
-                        f"{next_row.get('reason')} before={next_row.get('before')} "
-                        f"delta={item.get('delta_to_explain')}"
-                    )
-                    lines.append(
-                        f"  hints: {previous.get('domain_hint')} → {next_row.get('domain_hint')}; "
-                        "source evidence required"
+                        f"{next_row.get('reason')}[{next_row.get('domain_hint')}] "
+                        f"before={next_row.get('before')} delta={item.get('delta_to_explain')}; evidence required"
                     )
                 elif isinstance(item.get("row"), dict):
                     row = item["row"]
