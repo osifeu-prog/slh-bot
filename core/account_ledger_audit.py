@@ -142,7 +142,7 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
             gap_count += 1
             prev_domain = previous["domain_hint"]
             next_domain = summary["domain_hint"]
-            if prev_domain.endswith("_HINT") and next_domain.endswith("_HINT") and prev_domain != next_domain:
+            if prev_domain in {"SLH_HINT", "CREDITS_HINT"} and next_domain in {"SLH_HINT", "CREDITS_HINT"} and prev_domain != next_domain:
                 classification = "POSSIBLE_MIXED_DOMAIN_BOUNDARY"
             elif any(word in (previous["reason"] + " " + summary["reason"]).lower()
                      for word in ("correction", "reset", "test_grant", "zero")):
