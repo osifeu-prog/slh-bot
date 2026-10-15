@@ -505,3 +505,103 @@ def test_public_bnb_gate_fails_closed_on_invalid_historical_deposit():
         assert bnb_deposits_open() is False
 
 
+
+
+def test_full_historical_audit_accepts_only_real_compensating_entry_with_approval(monkeypatch):
+    from core.bnb_gate import _audit_historical_bnb_deposits
+
+    db, empirical, valid_hash, bad_hash, wallet, verified_valid = _historical_deposit_fixture()
+    uid = "224223270"
+    db["users"] = {uid: {"wallet": {"credits": 18.091775}}}
+    correction_key = f"accounting:reversal:{bad_hash.lower()}"
+    source_key = f"bnb:deposit:{bad_hash.lower()}"
+    correction = {
+        "uid": uid,
+        "before": 28.091775,
+        "amount": -10.0,
+        "after": 18.091775,
+        "reason": "accounting:invalid_bnb_deposit_reversal",
+        "meta": {
+            "idempotency_key": correction_key,
+            "source_idempotency_key": source_key,
+            "source_reason": "bnb:deposit",
+            "source_ledger_index": 0,
+            "tx_hash": bad_hash.lower(),
+            "actor_uid": uid,
+            "adjustment_kind": "verified_invalid_nontreasury_bnb_self_transfer",
+            "nominal_credits_reversed": 10.0,
+            "chain_id": 56,
+            "block": 80,
+            "confirmations": 21,
+            "required_confirmations": 15,
+            "amount_wei": 10**16,
+            "treasury": TREASURY,
+            "from": wallet,
+            "to": wallet,
+            "source_ledger_rows_preserved": True,
+            "later_account_activity_preserved": True,
+            "gate_remained_closed": True,
+        },
+    }
+    db["ledger"].append(correction)
+    db["credit_adjustment_audit"] = [{
+        "event": "INVALID_BNB_NON_TREASURY_SELF_TRANSFER_REVERSED",
+        "uid": uid,
+        "actor_uid": uid,
+        "tx_hash": bad_hash.lower(),
+        "source_idempotency_key": source_key,
+        "correction_idempotency_key": correction_key,
+        "amount": -10.0,
+        "nominal_credits_reversed": 10.0,
+        "balance_before": 28.091775,
+        "balance_after": 18.091775,
+        "chain_id": 56,
+        "block": 80,
+        "confirmations": 21,
+        "required_confirmations": 15,
+        "gate_remained_closed": True,
+    }]
+    bad_proof = {
+        "tx_hash": bad_hash.lower(),
+        "chain_id": 56,
+        "receipt_status": 1,
+        "from": wallet,
+        "to": wallet,
+        "treasury": TREASURY,
+        "bound_wallet": wallet,
+        "amount_wei": 10**16,
+        "block": 80,
+        "confirmations": 21,
+        "required_confirmations": 15,
+    }
+
+    def verify_tx(tx):
+        if str(tx).lower() == valid_hash.lower():
+            return dict(verified_valid)
+        return {
+            "ok": False,
+            "error": "BNB_TX_RECIPIENT_NOT_TREASURY",
+            "to": wallet,
+            "treasury": TREASURY,
+        }
+
+    monkeypatch.setenv("SLH_BSC_CANONICAL_TREASURY", TREASURY)
+    monkeypatch.setenv("SLH_BNB_RECONCILED_HISTORY_APPROVED", "1")
+    monkeypatch.setattr("core.bnb_gate._effective_config", lambda _db: _cfg())
+    monkeypatch.setattr("core.historical_bnb_credit_reversal._effective_config", lambda _db: _cfg())
+    monkeypatch.setattr("core.historical_bnb_credit_reversal.is_quarantined_bsc_address", lambda _address: False)
+    monkeypatch.setattr(
+        "core.historical_bnb_credit_reversal._verify_non_treasury_self_transfer",
+        lambda _uid, _tx, _db: dict(bad_proof),
+    )
+    monkeypatch.setattr("core.deposit_monitor.verify_bnb_deposit", side_effect=verify_tx)
+    monkeypatch.setattr("core.wallet_binding.get_binding", return_value={"address": wallet})
+
+    result = _audit_historical_bnb_deposits(db, _cfg())
+
+    assert result["ok"] is True
+    assert result["rows_checked"] == 2
+    assert result["reconciled_count"] == 1
+    assert result["finding_count"] == 0
+    assert result["findings"] == []
+
