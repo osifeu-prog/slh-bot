@@ -59,9 +59,22 @@ def _row_domain_hint(row: dict) -> str:
     if explicit:
         if "slh" in explicit or "token" in explicit:
             return "SLH_HINT"
+        if "stake" in explicit:
+            return "STAKED_HINT"
         if "credit" in explicit:
             return "CREDITS_HINT"
-    return _reason_domain_hint(row.get("reason"))
+
+    # This exact reconciliation event records the staked counter, not liquid
+    # Credits. Require both explicit staked fields; do not infer from the name
+    # alone, and do not skip ordinary staking:stake/unstake Credits movements.
+    reason = str(row.get("reason") or "").strip().lower()
+    if (
+        reason == "reconciliation:staked_counter_fix"
+        and "staked_before" in meta
+        and "staked_after" in meta
+    ):
+        return "STAKED_HINT"
+    return _reason_domain_hint(reason)
 
 
 def _row_summary(index: int, row: dict) -> dict:
@@ -139,12 +152,11 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
 
         rows_checked += 1
         summary = _row_summary(index, row)
-        # This report validates the user's Credits sequence. SLH-token rows are
-        # audited by the exchange/token-ledger reconciliation and must not be
-        # compared numerically with the Credits wallet. Keep the previous
-        # Credits candidate across such rows so a real Credits discontinuity
-        # cannot be hidden by an interleaved SLH event.
-        if summary["domain_hint"] == "SLH_HINT":
+        # This report validates the user's liquid Credits sequence. SLH-token
+        # rows and the explicitly identified staked-counter reconciliation row
+        # are separate asset domains. Keep the previous Credits candidate
+        # across them so they neither create false gaps nor hide real ones.
+        if summary["domain_hint"] in {"SLH_HINT", "STAKED_HINT"}:
             non_credits_rows_skipped += 1
             continue
         sequence_rows_checked += 1

@@ -191,3 +191,35 @@ def test_infrastructure_snapshot_marks_old_registry_stale(monkeypatch):
     assert snapshot["registry_stale"] is True
     assert snapshot["registry_age_days"] is not None
     assert snapshot["registry_age_days"] > snapshot["registry_stale_after_days"]
+
+def test_check_exchange_blocks_public_readiness_when_account_ledger_is_blocked(monkeypatch):
+    import core.exchange_gate as exchange_gate
+    import core.system_checks as checks
+    import handlers.exchange_handler as exchange_handler
+
+    monkeypatch.setattr(exchange_gate, "public_open", lambda: False)
+    monkeypatch.setattr(exchange_handler, "_assert_invariants", lambda db: None)
+
+    db = {
+        "users": {"owner-1": {"wallet": {"credits": 8.0}}},
+        "ledger": [
+            {"uid": "owner-1", "before": 10.0, "amount": -2.0, "after": 8.0,
+             "reason": "store:purchase"},
+            {"uid": "owner-1", "before": 13.0, "amount": -5.0, "after": 8.0,
+             "reason": "store:purchase"},
+        ],
+        "exchange_orders": {},
+        "exchange_trades": [],
+        "exchange_requests": {},
+    }
+
+    result = checks.check_exchange(db)
+
+    assert result["order_book_integrity"] is True
+    assert result["trade_integrity"] is True
+    assert result["money_invariants"] is True
+    assert result["account_ledger_integrity"] is False
+    assert "ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY" in result["account_ledger_blockers"]
+    assert result["public_ready"] is False
+    assert result["verdict"] == "BLOCKED"
+    assert result["ok"] is False

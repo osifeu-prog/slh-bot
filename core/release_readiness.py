@@ -64,24 +64,32 @@ def _exchange_check():
         order_ok = bool(data.get("order_book_integrity"))
         trade_ok = bool(data.get("trade_integrity"))
         money_ok = bool(data.get("money_invariants"))
-
-        if (
-            verdict in {"OPEN", "READY_TO_OPEN"}
-            and bool(data.get("ok"))
+        account_ledger_ok = bool(data.get("account_ledger_integrity"))
+        all_checks_pass = (
+            bool(data.get("ok"))
             and order_ok
             and trade_ok
             and money_ok
+            and account_ledger_ok
             and public_ready
-        ):
+        )
+
+        if verdict == "OPEN" and public_gate == "OPEN" and all_checks_pass:
             detail = (
-                "canonical exchange checks pass; "
-                f"public gate={public_gate}; "
-                f"public readiness={'PASS' if public_ready else 'FAIL'}; "
-                f"open_orders={open_orders}; "
-                f"recent_trades={recent_trades}; "
+                "Exchange and account-ledger checks pass; public gate=OPEN; "
+                f"open_orders={open_orders}; recent_trades={recent_trades}; "
                 f"test_seed_trades={test_seed_trades}"
             )
             return _check("Internal exchange", "GREEN", detail)
+
+        if verdict == "READY_TO_OPEN" and public_gate == "CLOSED" and all_checks_pass:
+            detail = (
+                "internal Exchange and account-ledger checks pass; "
+                "public gate=CLOSED; not public-open; operator review is still required; "
+                f"open_orders={open_orders}; recent_trades={recent_trades}; "
+                f"test_seed_trades={test_seed_trades}"
+            )
+            return _check("Internal exchange", "DEGRADED", detail)
 
         return _check(
             "Internal exchange",
@@ -90,6 +98,8 @@ def _exchange_check():
                 f"canonical exchange verdict={verdict}; "
                 f"public gate={public_gate}; "
                 f"public readiness={'PASS' if public_ready else 'FAIL'}; "
+                f"account ledger={'PASS' if account_ledger_ok else 'FAIL'}; "
+                f"account ledger blockers={','.join(data.get('account_ledger_blockers') or [])}; "
                 f"open_orders={open_orders}; "
                 f"recent_trades={recent_trades}; "
                 f"test_seed_trades={test_seed_trades}"

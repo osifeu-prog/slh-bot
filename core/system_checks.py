@@ -123,6 +123,10 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
                 "order_book_integrity": False,
                 "trade_integrity": False,
                 "money_invariants": False,
+                "account_ledger_integrity": False,
+                "account_ledger_accounts_checked": 0,
+                "account_ledger_failure_count": 1,
+                "account_ledger_blockers": ["ACCOUNT_LEDGER_NOT_CHECKED"],
                 "public_gate": "CLOSED",
                 "public_ready": False,
                 "verdict": "BLOCKED",
@@ -142,6 +146,55 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
                 "public_ready": False,
                 "verdict": "BLOCKED",
             }
+
+        from core.account_ledger_audit import _row_domain_hint, audit_account_ledger
+
+        # Exchange book/reserve invariants are necessary but not sufficient for
+        # public readiness. Audit every UID with a Credits-domain ledger row,
+        # plus any account with a nonzero/unreadable Credits wallet. Fail closed
+        # if the ledger/users scope is unreadable or no account can be audited.
+        account_ledger_uids = set()
+        account_ledger_findings = []
+        audit_ledger = db.get("ledger")
+        audit_users = db.get("users")
+        if not isinstance(audit_ledger, list):
+            account_ledger_findings.append({"blockers": ["LEDGER_UNREADABLE"]})
+        elif not isinstance(audit_users, dict):
+            account_ledger_findings.append({"blockers": ["USERS_UNREADABLE"]})
+        else:
+            for row in audit_ledger:
+                if not isinstance(row, dict):
+                    continue
+                row_uid = str(row.get("uid") or "").strip()
+                if row_uid and _row_domain_hint(row) not in {"SLH_HINT", "STAKED_HINT"}:
+                    account_ledger_uids.add(row_uid)
+
+            for uid, user in audit_users.items():
+                if not isinstance(user, dict) or not isinstance(user.get("wallet"), dict):
+                    account_ledger_uids.add(str(uid))
+                    continue
+                wallet_credits = _decimal(user["wallet"].get("credits", 0))
+                if not wallet_credits.is_finite() or wallet_credits != 0:
+                    account_ledger_uids.add(str(uid))
+
+            if not account_ledger_uids:
+                account_ledger_findings.append({"blockers": ["NO_CREDITS_AUDIT_SCOPE"]})
+            else:
+                for uid in sorted(account_ledger_uids):
+                    audit = audit_account_ledger(db, uid)
+                    if str(audit.get("status") or "BLOCKED") != "PASS":
+                        account_ledger_findings.append({
+                            "blockers": list(audit.get("blockers") or ["ACCOUNT_LEDGER_AUDIT_BLOCKED"])
+                        })
+
+        account_ledger_blockers = sorted({
+            str(blocker)
+            for finding in account_ledger_findings
+            for blocker in finding.get("blockers", [])
+            if blocker
+        })
+        account_ledger_ok = bool(account_ledger_uids) and not account_ledger_findings
+        account_ledger_failure_count = len(account_ledger_findings)
 
         open_orders = [o for o in orders.values() if isinstance(o, dict) and o.get("status") == "open"]
         test_seed_open = [o for o in open_orders if is_test_seed(o)]
@@ -238,6 +291,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             and trade_ok
             and money_ok
             and requests_ok
+            and account_ledger_ok
             and (for_execution or len(open_orders) == 0)
             and len(test_seed_open) == 0
             and len(test_seed_trades) == 0
@@ -254,6 +308,12 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             details.append("trades=" + ",".join(trade_errors[:5]))
         if not money_ok:
             details.append("money=" + money_detail)
+        if not account_ledger_ok:
+            details.append(
+                "account_ledger=BLOCKED("
+                + ",".join(account_ledger_blockers[:4])
+                + ")"
+            )
         if len(open_orders) and not for_execution:
             details.append(f"open_orders={len(open_orders)}")
         elif len(open_orders):
@@ -263,7 +323,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         detail = "public state clean" if not details else " · ".join(details)
 
         public_ready = bool(clean_for_public)
-        ok = order_ok and trade_ok and money_ok and requests_ok
+        ok = order_ok and trade_ok and money_ok and requests_ok and account_ledger_ok
         return {
             "ok": ok,
             "detail": detail,
@@ -274,6 +334,10 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             "order_book_integrity": order_ok,
             "trade_integrity": trade_ok,
             "money_invariants": money_ok,
+            "account_ledger_integrity": account_ledger_ok,
+            "account_ledger_accounts_checked": len(account_ledger_uids),
+            "account_ledger_failure_count": account_ledger_failure_count,
+            "account_ledger_blockers": account_ledger_blockers,
             "public_gate": gate,
             "public_ready": public_ready,
             "verdict": verdict,

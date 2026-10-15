@@ -121,3 +121,48 @@ def test_ambiguous_legacy_reasons_are_not_assigned_a_financial_domain():
     assert _reason_domain_hint("bridge:spend") == "UNKNOWN_HINT"
     assert _reason_domain_hint("arcade:entry") == "UNKNOWN_HINT"
     assert _reason_domain_hint("admin:test_grant") == "UNKNOWN_HINT"
+
+def test_audit_skips_explicit_staked_counter_row_and_preserves_credits_sequence():
+    db = {
+        "users": {UID: {"wallet": {"credits": 5.0}}},
+        "ledger": [
+            {
+                "uid": UID,
+                "before": 100.0,
+                "amount": -100.0,
+                "after": 0.0,
+                "reason": "admin_correction_unbacked_test_credits_release",
+            },
+            {
+                "uid": UID,
+                "before": 552.0,
+                "amount": 0.0,
+                "after": 552.0,
+                "reason": "reconciliation:staked_counter_fix",
+                "meta": {
+                    "staked_before": 552,
+                    "staked_after": 792,
+                    "note": "counter resync; no credits minted",
+                },
+            },
+            {
+                "uid": UID,
+                "before": 0.0,
+                "amount": 5.0,
+                "after": 5.0,
+                "reason": "exchange:settlement_credits",
+            },
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "PASS"
+    assert result["rows_checked"] == 3
+    assert result["credits_sequence_rows_checked"] == 2
+    assert result["non_credits_rows_skipped"] == 1
+    assert result["continuity_break_count"] == 0
+    assert result["arithmetic_error_count"] == 0
+    assert result["current_balance_matches_tail"] is True
+    assert result["financial_mutation_performed"] is False
+    assert result["gate_changed"] is False
