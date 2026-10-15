@@ -23,7 +23,14 @@ def _seed_db(path):
     )
 
 
+def _restore_state_manager(db_file, lock_path):
+    state_manager.DB_FILE = db_file
+    state_manager._LOCK_PATH = lock_path
+
+
 def test_referral_relationship_persists_once_and_does_not_repeat_reward():
+    original_db_file = state_manager.DB_FILE
+    original_lock_path = state_manager._LOCK_PATH
     tmp = tempfile.TemporaryDirectory()
     try:
         db_path = Path(tmp.name) / "db.json"
@@ -43,11 +50,15 @@ def test_referral_relationship_persists_once_and_does_not_repeat_reward():
         db = state_manager.load_db()
         assert db["users"]["100"]["referral"]["count"] == 1
     finally:
+        _restore_state_manager(original_db_file, original_lock_path)
         tmp.cleanup()
 
 
 def test_referral_full_reward_path_is_idempotent():
-    """Persist a referral, grant its reward, then prove retry cannot double-pay."""
+    original_db_file = state_manager.DB_FILE
+    original_lock_path = state_manager._LOCK_PATH
+    import core.reward_engine as reward_engine
+    original_ledger = reward_engine.LEDGER
     tmp = tempfile.TemporaryDirectory()
     try:
         db_path = Path(tmp.name) / "db.json"
@@ -57,7 +68,6 @@ def test_referral_full_reward_path_is_idempotent():
         state_manager._LOCK_PATH = str(db_path) + ".lock"
 
         import handlers.join_handler as join_handler
-        import core.reward_engine as reward_engine
         join_handler = importlib.reload(join_handler)
         reward_engine = importlib.reload(reward_engine)
         reward_engine.LEDGER = ledger_path
@@ -104,11 +114,18 @@ def test_referral_full_reward_path_is_idempotent():
         ref_entries = [x for x in ledger if x.get("idempotency_key") == "ref:200"]
         assert len(ref_entries) == 1
     finally:
+        reward_engine.LEDGER = original_ledger
+        _restore_state_manager(original_db_file, original_lock_path)
         tmp.cleanup()
 
 
-
 def test_persisted_referral_rewards_recover_after_partial_failure_without_double_pay():
+    original_db_file = state_manager.DB_FILE
+    original_lock_path = state_manager._LOCK_PATH
+    import core.reward_engine as reward_engine
+    original_ledger = reward_engine.LEDGER
+    from core import referral_reward
+    original_grant = referral_reward.grant
     tmp = tempfile.TemporaryDirectory()
     try:
         db_path = Path(tmp.name) / "db.json"
@@ -118,14 +135,11 @@ def test_persisted_referral_rewards_recover_after_partial_failure_without_double
         state_manager._LOCK_PATH = str(db_path) + ".lock"
 
         import handlers.join_handler as join_handler
-        import core.reward_engine as reward_engine
-        from core import referral_reward
         join_handler = importlib.reload(join_handler)
         reward_engine = importlib.reload(reward_engine)
         reward_engine.LEDGER = ledger_path
 
         assert join_handler._persist_referral("200", "100") is True
-        original_grant = referral_reward.grant
         failed = {"credits": False}
 
         def flaky_grant(*args, **kwargs):
@@ -161,4 +175,7 @@ def test_persisted_referral_rewards_recover_after_partial_failure_without_double
         assert len(points_events) == 1
         assert len(credit_events) == 1
     finally:
+        referral_reward.grant = original_grant
+        reward_engine.LEDGER = original_ledger
+        _restore_state_manager(original_db_file, original_lock_path)
         tmp.cleanup()
