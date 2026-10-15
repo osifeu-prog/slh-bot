@@ -183,7 +183,7 @@ def _valid_audited_reversal(
         ).strip()
         treasury_record_valid = bool(
             treasury_at_correction
-            and Web3.is_address(treasury_at_correction)
+            and bool(re.fullmatch(r"0x[0-9a-fA-F]{40}", treasury_at_correction))
             and _same_address(meta.get("treasury"), treasury_at_correction)
         )
     else:
