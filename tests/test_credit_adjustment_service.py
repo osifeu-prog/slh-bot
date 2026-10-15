@@ -151,6 +151,76 @@ def _apply(db, expected="30.072775"):
     )
 
 
+def test_read_only_preview_shows_current_and_projected_balance_without_mutation(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+
+    result = target.preview_invalid_bnb_deposit_reversal(
+        actor_uid=UID, uid=UID, tx_hash=TX
+    )
+
+    assert result["status"] == "PREPARED"
+    assert result["scope"] == "read_only"
+    assert result["source_ledger_index"] == 0
+    assert result["tx_suffix"] == TX[-8:]
+    assert result["amount_reversed"] == 10.0
+    assert result["balance_before"] == 30.072775
+    assert result["balance_after"] == 20.072775
+    assert result["gate_remained_closed"] is True
+    assert result["database_changed"] is False
+    assert result["settlement_executed"] is False
+    assert db == before
+
+
+def test_preview_is_owner_only_and_cannot_target_another_uid(monkeypatch):
+    db = _db()
+    _patch_runtime(monkeypatch, db)
+
+    with pytest.raises(PermissionError, match="OWNER_ONLY"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid="not-owner", uid="not-owner", tx_hash=TX
+        )
+    with pytest.raises(PermissionError, match="OWNER_SELF_ACCOUNT_ONLY"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid=UID, uid="other-user", tx_hash=TX
+        )
+
+
+def test_preview_blocks_when_row_210_or_another_historical_bnb_row_needs_review(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_runtime(monkeypatch, db)
+    monkeypatch.setattr(
+        bnb_history_audit,
+        "audit_bnb_deposit_history",
+        lambda _db: {
+            "status": "BLOCKED",
+            "findings": [
+                {
+                    "tx_suffix": TX[-8:],
+                    "status": "BLOCKED",
+                    "issues": [
+                        "SELF_TRANSFER_NOT_A_DEPOSIT",
+                        "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+                    ],
+                },
+                {
+                    "tx_suffix": TX2[-8:],
+                    "status": "BLOCKED",
+                    "issues": ["STORED_AMOUNT_WEI_MISMATCH"],
+                },
+            ],
+        },
+    )
+
+    with pytest.raises(ValueError, match="HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS"):
+        target.preview_invalid_bnb_deposit_reversal(
+            actor_uid=UID, uid=UID, tx_hash=TX
+        )
+    assert db == before
+
+
 def test_reversal_claws_back_source_amount_without_rewriting_later_activity(monkeypatch):
     db = _db()
     original = deepcopy(db["ledger"])
