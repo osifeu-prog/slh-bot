@@ -357,6 +357,11 @@ def _existing_reversal(db, record, proof, correction_key):
         and audit.get("source_idempotency_key") == record["source_key"]
         and audit_before == before and audit_amount == amount and audit_after == after
         and audit.get("gate_remained_closed") is True
+        and audit.get("nominal_credits_reversed") == float(record["source_amount"])
+        and audit.get("chain_id") == proof["chain_id"]
+        and audit.get("block") == proof["block"]
+        and audit.get("confirmations") == proof["confirmations"]
+        and audit.get("required_confirmations") == proof["required_confirmations"]
         and meta.get("chain_id") == proof["chain_id"]
         and meta.get("amount_wei") == proof["amount_wei"]
         and meta.get("block") == proof["block"]
@@ -401,6 +406,7 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
 
     expected_balance = _decimal(expected_current_balance, "INVALID_EXPECTED_BALANCE")
     initial_db = state_manager.load_db()
+    initial_context = _treasury_context(initial_db)
     record = _source_and_history(initial_db, uid, tx_hash)
     proof = _verify_non_treasury_self_transfer(uid, tx_hash, initial_db)
     _validate_proof_matches_source(record, proof)
@@ -435,6 +441,7 @@ def reverse_invalid_nontreasury_bnb_self_transfer(
         current_wallet = _resolve_unique_user_bsc_wallet(uid, db, context["treasury"])
         if (
             context["chain_id"] != proof["chain_id"]
+            or context["rpc"] != initial_context["rpc"]
             or context["treasury"].lower() != proof["treasury"].lower()
             or context["required_confirmations"] != proof["required_confirmations"]
             or current_wallet.lower() != proof["bound_wallet"].lower()
