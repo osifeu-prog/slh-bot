@@ -13,12 +13,28 @@ class ExchangePublicGateTests(unittest.TestCase):
                 "seller": {"wallet": {"token_balance": 10.0, "live_token_balance": 10.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 0.0}},
                 "buyer": {"wallet": {"token_balance": 0.0, "live_token_balance": 0.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 100.0}},
             },
-            "ledger": [],
+            "ledger": [
+                {
+                    "uid": "buyer", "before": 1.0, "amount": -1.0, "after": 0.0,
+                    "reason": "exchange:sell_reserve", "meta": {"order_id": "O_LEGACY"},
+                },
+                {
+                    "uid": "buyer", "before": 0.0, "amount": 1.0, "after": 1.0,
+                    "reason": "exchange:cancel_release", "meta": {"order_id": "O_LEGACY"},
+                },
+            ],
             "slh_token_ledger": [],
-            "exchange_orders": {},
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "buyer", "side": "sell",
+                    "original_amount": "1.00000000", "remaining_amount": "0.00000000",
+                    "limit_price": "1.00000000", "reserved_slh": "0.00000000",
+                    "reserved_credits": "0.00000000", "sequence": 1, "status": "cancelled",
+                }
+            },
             "exchange_trades": [],
             "exchange_requests": {},
-            "exchange_sequence": 0,
+            "exchange_sequence": 1,
         }
 
     def test_order_entry_is_fail_closed(self):
@@ -36,7 +52,7 @@ class ExchangePublicGateTests(unittest.TestCase):
             self.assertEqual(blocked.exception.check["public_gate"], "CLOSED")
             self.assertFalse(blocked.exception.check["execution_ready"])
             self.assertTrue(blocked.exception.check["checked_at"])
-        self.assertEqual(db["exchange_orders"], {})
+        self.assertEqual(set(db["exchange_orders"]), {"O_LEGACY"})
         self.assertEqual(db["slh_token_ledger"], [])
 
     def test_open_gate_allows_internal_match(self):
@@ -60,7 +76,7 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertEqual(db["users"]["buyer"]["wallet"]["token_balance"], 5.0)
         self.assertEqual(db["users"]["seller"]["wallet"]["credits"], 10.0)
 
-    def test_clean_state_is_ready_to_open(self):
+    def test_balanced_legacy_reserve_history_is_ready_to_open(self):
         from core import system_checks
 
         db = self._db()
