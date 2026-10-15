@@ -381,6 +381,114 @@ def _existing_reversal_result(db, *, uid, tx_hash, source_index, source, source_
     }
 
 
+def preview_invalid_bnb_deposit_reversal(*, actor_uid, uid, tx_hash):
+    """Read-only preview for an owner-confirmed correction; never mutates state."""
+    actor_uid = str(actor_uid or "").strip()
+    uid = str(uid or "").strip()
+    tx_hash = str(tx_hash or "").strip()
+    if not is_owner(actor_uid):
+        raise PermissionError("OWNER_ONLY")
+    if uid != actor_uid:
+        raise PermissionError("OWNER_SELF_ACCOUNT_ONLY")
+    if not _TX_HASH_RE.fullmatch(tx_hash):
+        raise ValueError("INVALID_TX_HASH")
+    if bnb_deposits_open():
+        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+
+    try:
+        db = state_manager.load_db()
+    except Exception:
+        raise ValueError("LEDGER_UNREADABLE") from None
+    if not isinstance(db, dict) or not isinstance(db.get("ledger"), list):
+        raise ValueError("LEDGER_UNREADABLE")
+    if bnb_deposits_open():
+        raise ValueError("BNB_GATE_MUST_REMAIN_CLOSED")
+
+    source_index, source, source_meta, source_key = _find_source(db, uid, tx_hash)
+    proof = _verify_self_transfer_for_reversal(uid, tx_hash, db)
+    source_amount, amount_wei, _source_before, _source_after = _validate_source(
+        source, source_meta, proof, uid, tx_hash
+    )
+    correction_key = f"accounting:reversal:{tx_hash.lower()}"
+    existing = _existing_reversal_result(
+        db, uid=uid, tx_hash=tx_hash.lower(), source_index=source_index,
+        source=source, source_meta=source_meta, source_key=source_key,
+        source_amount=source_amount, proof=proof, correction_key=correction_key,
+    )
+    if existing is not None:
+        return existing
+
+    try:
+        from core.bnb_history_audit import audit_bnb_deposit_history
+        history = audit_bnb_deposit_history(db)
+    except Exception:
+        history = {"status": "BLOCKED", "findings": []}
+    blocked_findings = [
+        item for item in (history.get("findings") or [])
+        if isinstance(item, dict) and item.get("status") == "BLOCKED"
+    ]
+    allowed_source_issues = {
+        "SELF_TRANSFER_NOT_A_DEPOSIT",
+        "HISTORICAL_DESTINATION_NOT_CURRENT_TREASURY",
+    }
+    if not (
+        history.get("status") == "BLOCKED"
+        and len(blocked_findings) == 1
+        and str(blocked_findings[0].get("tx_suffix") or "").lower() == tx_hash[-8:].lower()
+        and set(blocked_findings[0].get("issues") or []) == allowed_source_issues
+    ):
+        raise ValueError("HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS")
+
+    correction_collisions = [
+        row for row in db["ledger"]
+        if isinstance(row, dict) and isinstance(row.get("meta"), dict)
+        and row["meta"].get("idempotency_key") == correction_key
+    ]
+    audit_rows = db.get("credit_adjustment_audit", [])
+    if not isinstance(audit_rows, list):
+        raise ValueError("CREDIT_ADJUSTMENT_AUDIT_UNREADABLE")
+    audit_collisions = [
+        row for row in audit_rows
+        if isinstance(row, dict)
+        and row.get("correction_idempotency_key") == correction_key
+    ]
+    if correction_collisions or audit_collisions:
+        raise ValueError("REVERSAL_IDEMPOTENCY_CONFLICT")
+
+    current_balance = _wallet_balance(db, uid)
+    running, _balances = _replay_account_ledger(db["ledger"], uid, source_index)
+    if abs(running - current_balance) > _EPSILON:
+        raise ValueError("CURRENT_BALANCE_LEDGER_MISMATCH")
+    if current_balance < source_amount:
+        raise ValueError("INSUFFICIENT_CREDITS_FOR_REVERSAL")
+
+    cfg = _effective_config(db)
+    treasury = str(cfg.get("treasury_wallet") or "").strip()
+    canonical = str(os.getenv("SLH_BSC_CANONICAL_TREASURY", "")).strip()
+    if not treasury or not canonical or treasury.lower() != canonical.lower():
+        raise ValueError("BNB_CANONICAL_TREASURY_MISMATCH")
+    if not Web3.is_address(treasury) or is_quarantined_bsc_address(treasury):
+        raise ValueError("BNB_TREASURY_UNUSABLE")
+
+    return {
+        "status": "PREPARED",
+        "scope": "read_only",
+        "uid": uid,
+        "tx_hash": tx_hash.lower(),
+        "tx_suffix": tx_hash[-8:],
+        "source_ledger_index": source_index,
+        "source_idempotency_key": source_key,
+        "correction_idempotency_key": correction_key,
+        "amount_reversed": float(source_amount),
+        "balance_before": float(current_balance),
+        "balance_after": float(current_balance - source_amount),
+        "expected_current_balance": str(current_balance),
+        "gate_remained_closed": True,
+        "database_changed": False,
+        "settlement_executed": False,
+    }
+
+
 def reverse_invalid_bnb_deposit(*, actor_uid, uid, tx_hash,
                                 expected_current_balance, now=None):
     """Append one audited compensating entry after live proof and full reconciliation.
