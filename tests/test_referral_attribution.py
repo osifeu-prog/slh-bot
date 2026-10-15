@@ -131,3 +131,32 @@ def test_invalid_or_self_referral_is_ignored_without_mutation(monkeypatch):
 
     assert result["recorded"] is False
     assert db == before
+
+
+def test_whatsapp_source_is_preserved_in_first_touch_event(monkeypatch):
+    db = _db()
+    _patch_db(monkeypatch, db)
+
+    result = referral_attribution.record_referral_start(
+        "200", "100", is_new_user=True,
+        now="2026-10-15T09:00:00+00:00",
+        source="whatsapp",
+    )
+
+    assert result["status"] == "PENDING_JOIN"
+    assert result["source"] == "whatsapp"
+    assert db["referral_start_events"]["200"]["source"] == "whatsapp"
+
+
+def test_unknown_referral_source_is_rejected_without_mutation(monkeypatch):
+    db = _db()
+    before = deepcopy(db)
+    _patch_db(monkeypatch, db)
+
+    result = referral_attribution.record_referral_start(
+        "200", "100", is_new_user=True, source="untrusted_source"
+    )
+
+    assert result["status"] == "IGNORED"
+    assert result["reason"] == "INVALID_SOURCE"
+    assert db == before
