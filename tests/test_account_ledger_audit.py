@@ -76,3 +76,11 @@ def test_audit_fails_closed_for_malformed_global_rows():
 def test_audit_fails_closed_for_missing_uid_or_ledger():
     assert audit_account_ledger({}, "")["blockers"] == ["UID_MISSING"]
     assert audit_account_ledger({"users": {}}, UID)["blockers"] == ["LEDGER_UNREADABLE"]
+
+def test_ambiguous_legacy_reasons_are_not_assigned_a_financial_domain():
+    from core.account_ledger_audit import _reason_domain_hint
+
+    assert _reason_domain_hint("airdrop") == "UNKNOWN_HINT"
+    assert _reason_domain_hint("bridge:spend") == "UNKNOWN_HINT"
+    assert _reason_domain_hint("arcade:entry") == "UNKNOWN_HINT"
+    assert _reason_domain_hint("admin:test_grant") == "UNKNOWN_HINT"
