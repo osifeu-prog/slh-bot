@@ -149,5 +149,48 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertIn(f"trade:{trade['id']}:seller_order_owner_mismatch", result["detail"])
 
 
+    def test_execution_check_blocks_mismatched_buyer_order_owner(self):
+        from core.system_checks import check_exchange_for_execution
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["buyer_uid"] = "buyer-identity-mismatch"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            result = check_exchange_for_execution(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["execution_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:buyer_order_owner_mismatch", result["detail"])
+
+    def test_execution_check_blocks_mismatched_seller_order_owner(self):
+        from core.system_checks import check_exchange_for_execution
+
+        db = self._matched_trade_db()
+        trade = db["exchange_trades"][0]
+        trade["seller_uid"] = "seller-identity-mismatch"
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            result = check_exchange_for_execution(db)
+
+        self.assertFalse(result["trade_integrity"])
+        self.assertFalse(result["execution_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn(f"trade:{trade['id']}:seller_order_owner_mismatch", result["detail"])
+
+    def test_execution_check_allows_party_consistent_trade_when_gate_is_open(self):
+        from core.system_checks import check_exchange_for_execution
+
+        db = self._matched_trade_db()
+
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            result = check_exchange_for_execution(db)
+
+        self.assertTrue(result["trade_integrity"])
+        self.assertTrue(result["execution_ready"])
+        self.assertEqual(result["verdict"], "OPEN")
+
+
 if __name__ == "__main__":
     unittest.main()
