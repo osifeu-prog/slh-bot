@@ -124,9 +124,12 @@ def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
         ledger_rate = Decimal(str(meta.get("rate") or 0))
         configured_treasury = normalize_ton_address(str(treasury))
         recorded_treasury = normalize_ton_address(str(meta.get("treasury") or ""))
+        recorded_binding = normalize_ton_address(str(meta.get("binding_address_raw") or ""))
 
         return bool(
-            ton_amount == evidence_amount
+            str(meta.get("source") or "") == "ton_verified_binding_v1"
+            and bool(recorded_binding)
+            and ton_amount == evidence_amount
             and ledger_ton_amount == ton_amount
             and credits > 0
             and ledger_amount == credits
