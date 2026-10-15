@@ -346,6 +346,46 @@ def test_v2_audited_reversal_resolves_self_transfer_after_later_activity():
 
 
 
+def test_v2_reversal_allows_older_gap_when_immediate_source_anchor_matches():
+    db = _add_audited_reversal_v2_with_later_activity(
+        _db(sender=SENDER, destination=SENDER)
+    )
+    # Preserve an older account discontinuity, but provide a correct row
+    # immediately before the invalid BNB source. The source-specific BNB
+    # audit must validate that anchor and the complete source-to-tail chain,
+    # while the owner-wide ledger audit continues to report the older gap.
+    db["ledger"][0:0] = [
+        {
+            "time": "2026-10-01T10:00:00+00:00",
+            "uid": "owner",
+            "before": 0.0,
+            "amount": 1.0,
+            "after": 1.0,
+            "reason": "admin:test_grant",
+            "meta": {},
+        },
+        {
+            "time": "2026-10-07T18:05:07+00:00",
+            "uid": "owner",
+            "before": 17.091775,
+            "amount": 1.0,
+            "after": 18.091775,
+            "reason": "ton:deposit",
+            "meta": {},
+        },
+    ]
+    db["ledger"][-1]["meta"]["source_ledger_index"] = 2
+
+    result = _run(
+        db, FakeEth(sender=SENDER, destination=SENDER), approved=True
+    )
+
+    assert result["status"] == "PASS"
+    assert result["failed_rows"] == 0
+    assert result["findings"][0]["status"] == "RESOLVED_BY_AUDITED_REVERSAL"
+    assert db["users"]["owner"]["wallet"]["credits"] == 20.072775
+
+
 def test_audited_reversal_does_not_clear_gate_without_explicit_history_approval():
     db = _add_audited_reversal_v2_with_later_activity(
         _db(sender=SENDER, destination=SENDER)
