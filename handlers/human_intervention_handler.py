@@ -158,6 +158,59 @@ def register(bot, context=None):
             if not decision.get("ok"):
                 bot.reply_to(message, f"❌ האישור נדחה: {decision.get('error', 'UNKNOWN')}")
                 return
+            if record.get("kind") == "registered_action":
+                claim = policy.claim_execution(
+                    request_id, message.from_user.id, str(record.get("command") or "")
+                )
+                if not claim.get("ok"):
+                    bot.reply_to(message, f"❌ הפעולה לא התחילה: {claim.get('error', 'UNKNOWN')}")
+                    return
+                try:
+                    action_key = record.get("action_key")
+                    params = record.get("parameters") if isinstance(record.get("parameters"), dict) else {}
+                    if action_key == "alpha_open":
+                        from core.alpha_control_plane import open_alpha
+                        result = open_alpha(message.from_user.id)
+                        output = "Alpha state: " + str(result.get("status", "OPEN"))
+                    elif action_key == "railway_up":
+                        from core.railway_control import canonical_up
+                        commit_sha = params.get("commit_sha")
+                        result = canonical_up(commit_sha=commit_sha) if commit_sha else canonical_up()
+                        output = (
+                            "Railway deploy triggered.\n"
+                            f"Project: {result.get('project')}\n"
+                            f"Service: {result.get('service')}\n"
+                            f"Commit: {str(result.get('commit') or 'unknown')[:12]}\n"
+                            f"Deployment: {str(result.get('deployment_id') or 'unknown')}"
+                        )
+                    else:
+                        raise ValueError("UNREGISTERED_ACTION")
+                    lifecycle = policy.record_execution_result(
+                        request_id, message.from_user.id, success=True,
+                        result_code="registered_action_success",
+                    )
+                    if not lifecycle.get("ok"):
+                        bot.reply_to(message, f"⚠️ הפעולה הושלמה אך הרישום נכשל. ID: {request_id}")
+                        return
+                    if lifecycle.get("status") == "executed_pending_completion":
+                        output += f"\n\n⏸ נדרש אישור סיום: /intervention complete {request_id}"
+                    bot.reply_to(message, f"✅ פעולה מאושרת\nID: {request_id}\n{output}"[:3900])
+                except Exception as exc:
+                    try:
+                        policy.record_execution_result(
+                            request_id, message.from_user.id, success=False,
+                            result_code="registered_action_failed:" + type(exc).__name__,
+                        )
+                    except Exception:
+                        pass
+                    bot.reply_to(
+                        message,
+                        "❌ הפעולה נכשלה או נחסמה בידי ה-gate הפנימי. "
+                        "היתכנות side effects לא הונחה; יש לבדוק את מצב הפעולה לפני retry. "
+                        f"ID: {request_id} · {type(exc).__name__}",
+                    )
+                return
+
             command = str(record.get("command") or "")
             ok, output = run_gated(
                 message.from_user.id,
