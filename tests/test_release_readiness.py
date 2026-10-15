@@ -152,3 +152,33 @@ def test_release_report_green_bnb_only_after_revalidated_evidence_and_open_gate(
     assert check["status"] == "GREEN"
     assert "BNB settlement PUBLIC OPEN" in check["detail"]
     assert "empirical evidence revalidated against chain and ledger" in check["detail"]
+
+
+
+def test_release_readiness_blocks_clean_orderbook_when_accounting_audit_is_blocked(monkeypatch):
+    monkeypatch.setenv("RUN_BOT", "1")
+    monkeypatch.setenv("BOT_TOKEN", "test-token")
+
+    import core.system_checks as checks
+    from core.release_readiness import _exchange_check
+
+    monkeypatch.setattr(checks, "check_exchange", lambda: {
+        "ok": False,
+        "verdict": "BLOCKED",
+        "public_gate": "CLOSED",
+        "public_ready": False,
+        "open_orders": 0,
+        "recent_trades": 0,
+        "test_seed_trades": 0,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_integrity": False,
+        "account_ledger_status": "BLOCKED",
+        "account_ledger_blockers": ["ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY"],
+    })
+
+    check = _exchange_check()
+
+    assert check["status"] == "BLOCKED"
+    assert "account_ledger=BLOCKED" in check["detail"]
