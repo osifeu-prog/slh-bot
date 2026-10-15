@@ -38,7 +38,7 @@ def register(bot):
             )
             return
 
-        points_total = int(result.get("points_total", _points(uid)) or 0)
+        points_total = int(result["points_total"] if result.get("points_total") is not None else _points(uid))
         streak = int(result.get("streak", 0) or 0)
         if status == "claimed":
             bot.reply_to(
