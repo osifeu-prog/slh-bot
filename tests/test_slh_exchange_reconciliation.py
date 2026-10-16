@@ -1134,5 +1134,24 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["operational_status"], "BLOCKED")
 
 
+    def test_unlisted_finding_still_blocks_release_fail_closed(self):
+        db = {
+            "exchange_trade_archive": "malformed",
+            "exchange_orders": {},
+            "exchange_order_archive": {},
+            "ledger": [],
+            "slh_token_ledger": [],
+        }
+        with patch.object(reconciliation, "RELEASE_GATE_BLOCKER_CODES", frozenset()):
+            report = audit_db(db)
+
+        self.assertIn(
+            "ARCHIVED_TRADE_ARCHIVE_UNREADABLE",
+            {item["code"] for item in report["findings"]},
+        )
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(report["release_blocking_finding_count"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()
