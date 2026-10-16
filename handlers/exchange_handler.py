@@ -1419,9 +1419,6 @@ def register(bot):
             state_manager.atomic_update(mutate)
             bot.reply_to(msg, f"✅ הוראה #{oid} בוטלה")
         except ValueError as e:
-            if str(e) == "TRADER_CERTIFICATION_REQUIRED":
-                bot.reply_to(msg, "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test")
-            else:
-                bot.reply_to(msg, "❌ " + str(e))
+            bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
