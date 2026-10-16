@@ -125,3 +125,25 @@ def test_test_definition_has_ten_questions_and_safety_critical_items():
     assert len(QUESTIONS) == 10
     assert all(question["critical"] for question in QUESTIONS[:4])
     assert all("options" in question and len(question["options"]) == 3 for question in QUESTIONS)
+
+def test_webapp_api_returns_403_for_uncertified_account_without_mutation(monkeypatch):
+    import webapp
+    import handlers.exchange_handler as exchange_handler
+    db = {
+        "users": {"1": _user()},
+        "exchange_orders": {}, "exchange_trades": [], "exchange_requests": {},
+        "exchange_sequence": 0, "ledger": [], "slh_token_ledger": [],
+    }
+    monkeypatch.setattr(webapp, "authenticated_uid", lambda: "1")
+    monkeypatch.setattr(state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(state_manager, "atomic_update", lambda mutate: mutate(db))
+    before = deepcopy(db)
+    with patch.object(exchange_handler, "require_fresh_live_exchange_proof") as live_check:
+        response = webapp.app.test_client().post(
+            "/api/v1/exchange/order",
+            json={"side": "buy", "amount": "1", "price": "1", "client_request_id": "uncertified"},
+        )
+    assert response.status_code == 403
+    assert response.get_json()["code"] == "TRADER_CERTIFICATION_REQUIRED"
+    live_check.assert_not_called()
+    assert db == before
