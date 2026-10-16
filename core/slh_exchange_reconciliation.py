@@ -689,9 +689,14 @@ def audit_db(db):
             item["operational_classification"] = "BLOCKING"
             blocking_findings.append(item)
 
+    # Fail closed: an allowlist of blocker codes can silently downgrade a
+    # newly introduced or misspelled finding. Every finding blocks release
+    # unless a narrowly-scoped, explicitly verified historical exception above
+    # has already classified it as non-blocking.
     release_blocking_findings = [
         item for item in findings
-        if str(item.get("code") or "") in RELEASE_GATE_BLOCKER_CODES
+        if item.get("operational_classification") == "BLOCKING"
+        or str(item.get("code") or "") in RELEASE_GATE_BLOCKER_CODES
     ]
     if checked == 0:
         # No matched reserve history is not evidence of a clean release.
