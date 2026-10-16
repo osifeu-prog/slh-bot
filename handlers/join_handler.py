@@ -219,6 +219,26 @@ def register(bot):
                             f"points={rewards.get('points')} "
                             f"vip={rewards.get('vip')}"
                         )
+                        # First-15 course offer is awarded only after onboarding succeeds
+                        # and the referral relationship has been persisted.
+                        try:
+                            from core.trader_certification import award_referral_course
+                            promo = award_referral_course(str(ref_uid), uid)
+                            if promo.get("status") == "GRANTED":
+                                slot = promo.get("award", {}).get("slot")
+                                try:
+                                    bot.send_message(
+                                        str(ref_uid),
+                                        "🎓 זכית בקורס המסחר האלגוריתמי של SLH במתנה! "
+                                        f"מקום {slot}/15 אומת בעקבות הרשמה מוצלחת דרך הקישור שלך. "
+                                        "פתח /courses כדי להתחיל."
+                                    )
+                                except Exception as notify_exc:
+                                    print("TRADER COURSE PROMO NOTIFICATION FAILED:", type(notify_exc).__name__)
+                            else:
+                                print("TRADER COURSE PROMO:", promo.get("status"), promo.get("reason", ""))
+                        except Exception as promo_exc:
+                            print("TRADER COURSE PROMO FAILED:", type(promo_exc).__name__)
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
