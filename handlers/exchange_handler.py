@@ -527,6 +527,12 @@ def _place(db, uid, side, amount, price, request_id, live_proof=None):
     if is_frozen_account(db, uid):
         raise ValueError("ACCOUNT_FROZEN")
 
+    # Final authorization check against the exact atomic DB snapshot.
+    # This covers legacy callers that do not go through execute_exchange_order().
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid, db):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
@@ -695,6 +701,12 @@ def execute_exchange_order(
     )
     if existing is not None:
         return response(existing, True)
+
+    # The central execution service is shared by Telegram and authenticated Mini App/API.
+    # Do not let alternate clients bypass the server-recorded course certification.
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
 
     try:
         live_proof = require_fresh_live_exchange_proof()
@@ -1301,7 +1313,10 @@ def register(bot):
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("SELL", e.check))
         except ValueError as e:
-            bot.reply_to(msg, "❌ " + str(e))
+            if str(e) == "TRADER_CERTIFICATION_REQUIRED":
+                bot.reply_to(msg, "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test")
+            else:
+                bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
 
@@ -1322,7 +1337,10 @@ def register(bot):
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("BUY", e.check))
         except ValueError as e:
-            bot.reply_to(msg, "❌ " + str(e))
+            if str(e) == "TRADER_CERTIFICATION_REQUIRED":
+                bot.reply_to(msg, "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test")
+            else:
+                bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
 

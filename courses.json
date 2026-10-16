@@ -324,6 +324,11 @@
         "id": 6,
         "name": "מעבדת מסכם: בניית סוכן Paper Trading",
         "lesson": "lessons/algorithmic_trading/6.txt"
+      },
+      {
+        "id": 7,
+        "name": "הסמכת סוחר SLH — מבחן כשירות ומסחר אחראי",
+        "lesson": "lessons/algorithmic_trading/7.txt"
       }
     ]
   }
