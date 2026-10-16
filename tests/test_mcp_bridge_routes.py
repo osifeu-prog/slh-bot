@@ -99,5 +99,59 @@ class MCPBridgeRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+    def test_notification_preferences_route_is_authenticated_and_reads_canonical_state(self):
+        denied = self.client.get("/internal/mcp/v1/operator/preferences")
+        self.assertEqual(denied.status_code, 401)
+
+        with patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+            "core.ui_preferences.get_preferences",
+            return_value={"theme": "calm", "language": "he", "compact": False, "notification_level": "off"},
+        ) as read:
+            response = self.client.get(
+                "/internal/mcp/v1/operator/preferences",
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["notification_level"], "off")
+        self.assertEqual(payload["allowed_levels"], ["off", "milestones", "all"])
+        read.assert_called_once_with("owner")
+
+    def test_notification_preferences_route_validates_patch_and_uses_canonical_writer(self):
+        headers = {"Authorization": "Bearer bridge-test"}
+        with patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+            "core.ui_preferences.validate_notification_level", return_value="off"
+        ), patch(
+            "core.ui_preferences.set_preferences",
+            return_value={"notification_level": "off"},
+        ) as save:
+            invalid = self.client.patch(
+                "/internal/mcp/v1/operator/preferences",
+                json={"notification_level": "off", "extra": True},
+                headers=headers,
+            )
+            response = self.client.patch(
+                "/internal/mcp/v1/operator/preferences",
+                json={"notification_level": "off"},
+                headers=headers,
+            )
+
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["direct_command_replies_muted"])
+        self.assertFalse(response.get_json()["critical_security_messages_muted"])
+        save.assert_called_once_with("owner", notification_level="off")
+
+    def test_notification_preferences_patch_requires_owner_permission(self):
+        with patch("core.mcp_bridge_routes.has_permission", return_value=False):
+            response = self.client.patch(
+                "/internal/mcp/v1/operator/preferences",
+                json={"notification_level": "off"},
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+        self.assertEqual(response.status_code, 403)
+
+
 if __name__ == "__main__":
     unittest.main()
