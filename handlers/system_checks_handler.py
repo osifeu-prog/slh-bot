@@ -358,6 +358,29 @@ def register(bot, context=None):
                         f"{next_row.get('reason')}[{next_row.get('domain_hint')}] "
                         f"before={next_row.get('before')} delta={item.get('delta_to_explain')}; source evidence required"
                     )
+                    evidence = item.get("source_evidence")
+                    if isinstance(evidence, dict):
+                        source_parts = []
+                        transfer = evidence.get("transfer")
+                        if isinstance(transfer, dict):
+                            source_parts.append(
+                                f"transfer rows={len(transfer.get('ledger_rows') or [])}/"
+                                f"processed_keys={len(transfer.get('processed_keys') or [])}"
+                            )
+                        purchase = evidence.get("purchase")
+                        if isinstance(purchase, dict):
+                            if purchase.get("record_found") is True:
+                                source_parts.append(
+                                    f"purchase={purchase.get('status')} item={purchase.get('item_id')} "
+                                    f"payout={purchase.get('seller_payout')}"
+                                )
+                            else:
+                                source_parts.append("purchase record not found")
+                        if source_parts:
+                            lines.append(
+                                "  SOURCE CONTEXT ONLY: " + "; ".join(source_parts)
+                                + "; gap remains unresolved"
+                            )
                 elif isinstance(item.get("row"), dict):
                     row = item["row"]
                     lines.append(
