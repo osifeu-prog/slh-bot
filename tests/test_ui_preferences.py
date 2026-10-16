@@ -31,7 +31,7 @@ def test_preferences_are_stored_in_canonical_db():
 def test_get_preferences_defaults_are_stable():
     with patch.object(ui_preferences.state_manager, "load_db", return_value={"users": {}}):
         prefs = ui_preferences.get_preferences("123")
-    assert prefs == {"theme": "calm", "language": "he", "compact": False}
+    assert prefs == {"theme": "calm", "language": "he", "compact": False, "notification_level": "milestones"}
 
 
 def test_notification_preference_validation_and_progress_policy():
