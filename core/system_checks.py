@@ -104,6 +104,8 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         import state_manager
         from core.exchange_gate import public_open
         from core.exchange_housekeeping import is_test_seed
+        from core.authority import OWNER_ID
+        from core.account_ledger_audit import audit_account_ledger
         from handlers.exchange_handler import _assert_invariants
 
         if db is None:
@@ -230,6 +232,24 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             money_ok = False
             money_detail = type(exc).__name__
 
+        # Keep order-book diagnostics separate from financial-accounting
+        # readiness. Public readiness and execution require a passing owner
+        # Credits audit; errors in the audit fail closed.
+        try:
+            account_ledger = audit_account_ledger(db, OWNER_ID)
+            account_ledger_status = str(account_ledger.get("status") or "BLOCKED")
+            account_ledger_ok = account_ledger_status == "PASS"
+            account_ledger_blockers = list(account_ledger.get("blockers") or [])
+            account_ledger_findings = int(
+                account_ledger.get("finding_count")
+                or len(account_ledger.get("findings") or [])
+            )
+        except Exception as exc:
+            account_ledger_status = "ERROR"
+            account_ledger_ok = False
+            account_ledger_blockers = [f"ACCOUNT_LEDGER_AUDIT_ERROR:{type(exc).__name__}"]
+            account_ledger_findings = 0
+
         order_ok = not order_errors
         trade_ok = not trade_errors
         requests_ok = isinstance(requests, dict)
@@ -238,6 +258,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             and trade_ok
             and money_ok
             and requests_ok
+            and account_ledger_ok
             and (for_execution or len(open_orders) == 0)
             and len(test_seed_open) == 0
             and len(test_seed_trades) == 0
@@ -254,6 +275,11 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             details.append("trades=" + ",".join(trade_errors[:5]))
         if not money_ok:
             details.append("money=" + money_detail)
+        if not account_ledger_ok:
+            ledger_reason = ",".join(str(x) for x in account_ledger_blockers[:4])
+            if not ledger_reason:
+                ledger_reason = f"findings={account_ledger_findings}"
+            details.append(f"account_ledger={account_ledger_status}({ledger_reason})")
         if len(open_orders) and not for_execution:
             details.append(f"open_orders={len(open_orders)}")
         elif len(open_orders):
@@ -263,10 +289,14 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         detail = "public state clean" if not details else " · ".join(details)
 
         public_ready = bool(clean_for_public)
-        ok = order_ok and trade_ok and money_ok and requests_ok
+        ok = order_ok and trade_ok and money_ok and requests_ok and account_ledger_ok
         return {
             "ok": ok,
             "detail": detail,
+            "account_ledger_integrity": account_ledger_ok,
+            "account_ledger_status": account_ledger_status,
+            "account_ledger_findings": account_ledger_findings,
+            "account_ledger_blockers": account_ledger_blockers,
             "open_orders": len(open_orders),
             "test_seed_open": len(test_seed_open),
             "recent_trades": len(recent_trades),

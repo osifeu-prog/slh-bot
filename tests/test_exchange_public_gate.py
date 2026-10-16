@@ -18,8 +18,18 @@ class ExchangePublicGateTests(unittest.TestCase):
                     "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
                     "wallet": {"token_balance": 0.0, "live_token_balance": 0.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 100.0},
                 },
+                "8789977826": {
+                    "wallet": {"credits": 0.0},
+                },
             },
-            "ledger": [],
+            "ledger": [{
+                "uid": "8789977826",
+                "before": 0.0,
+                "amount": 0.0,
+                "after": 0.0,
+                "reason": "test:credits_anchor",
+                "meta": {"ledger_domain": "credits"},
+            }],
             "slh_token_ledger": [],
             "exchange_orders": {},
             "exchange_trades": [],
@@ -80,6 +90,32 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertEqual(result["public_gate"], "CLOSED")
         self.assertEqual(result["verdict"], "READY_TO_OPEN")
 
+
+
+    def test_public_readiness_blocks_when_owner_credits_audit_is_blocked(self):
+        from core import system_checks
+
+        db = self._db()
+        blocked_audit = {
+            "status": "BLOCKED",
+            "blockers": ["ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY"],
+            "finding_count": 1,
+            "findings": [{"type": "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"}],
+        }
+        with patch("state_manager.load_db", return_value=db), patch(
+            "core.account_ledger_audit.audit_account_ledger",
+            return_value=blocked_audit,
+        ), patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
+            result = system_checks.check_exchange()
+
+        self.assertTrue(result["order_book_integrity"])
+        self.assertTrue(result["trade_integrity"])
+        self.assertTrue(result["money_invariants"])
+        self.assertFalse(result["account_ledger_integrity"])
+        self.assertEqual(result["account_ledger_status"], "BLOCKED")
+        self.assertFalse(result["public_ready"])
+        self.assertEqual(result["verdict"], "BLOCKED")
+        self.assertIn("account_ledger=BLOCKED", result["detail"])
 
 if __name__ == "__main__":
     unittest.main()
