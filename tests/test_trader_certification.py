@@ -102,3 +102,25 @@ def test_uncertified_user_is_blocked_before_live_exchange_check(monkeypatch):
             )
     live_check.assert_not_called()
     assert db == before
+
+def test_atomic_place_boundary_blocks_uncertified_legacy_caller_without_mutation():
+    import handlers.exchange_handler as exchange_handler
+    db = {
+        "users": {"1": _user()},
+        "exchange_orders": {},
+        "exchange_trades": [],
+        "exchange_requests": {},
+        "exchange_sequence": 0,
+        "ledger": [],
+        "slh_token_ledger": [],
+    }
+    before = deepcopy(db)
+    with pytest.raises(ValueError, match="TRADER_CERTIFICATION_REQUIRED"):
+        exchange_handler._place(db, "1", "buy", Decimal("1"), Decimal("1"), "direct-call")
+    assert db == before
+
+def test_test_definition_has_ten_questions_and_safety_critical_items():
+    from handlers.trader_certification_handler import QUESTIONS
+    assert len(QUESTIONS) == 10
+    assert all(question["critical"] for question in QUESTIONS[:4])
+    assert all("options" in question and len(question["options"]) == 3 for question in QUESTIONS)
