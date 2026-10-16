@@ -24,8 +24,6 @@ class Capability:
 _READ_CAPABILITIES = (
     Capability("system.health", "Return safe MCP service health metadata.", "public.view", False),
     Capability("system.snapshot", "Return a safe SLH control-plane snapshot.", "public.view", False),
-    Capability("operator.notifications.status", "Read the authenticated operator progress-notification preference.", "exec.audit", False),
-    Capability("operator.notifications.set_progress", "Enable or suppress non-critical progress updates for the authenticated operator; critical alerts stay enabled.", "agents.manage", True),
     Capability("agents.list", "List agents visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.get", "Get one agent visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.consistency", "Compare canonical agent DB state with its snapshot without mutating either.", "agents.view_self", False),
