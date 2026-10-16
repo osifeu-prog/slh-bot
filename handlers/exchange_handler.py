@@ -527,6 +527,12 @@ def _place(db, uid, side, amount, price, request_id, live_proof=None):
     if is_frozen_account(db, uid):
         raise ValueError("ACCOUNT_FROZEN")
 
+    # Final authorization check against the exact atomic DB snapshot.
+    # This covers legacy callers that do not go through execute_exchange_order().
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid, db):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
