@@ -154,6 +154,38 @@ def audit_trades(db, trade_ids):
                 and _close(row.get("amount"), amount)
             )
 
+        # Buyer Credits are debited once when the buy order is created, not
+        # once per fill. Verify that canonical order-level reserve event against
+        # the original order quantity and limit price. A reason hint alone is
+        # insufficient: require the buyer, exact order ID, exact amount, and
+        # internally consistent before/amount/after arithmetic.
+        buy_reserve_rows = [
+            row for row in credits
+            if isinstance(row, dict)
+            and str(row.get("reason") or "") == "exchange:buy_reserve"
+            and str(_meta(row).get("order_id") or "") == buy_id
+        ]
+        checks["buyer_credits_debit_event_unique"] = len(buy_reserve_rows) == 1
+        if len(buy_reserve_rows) == 1 and checks["orders_exist"]:
+            debit = buy_reserve_rows[0]
+            debit_before = _decimal(debit.get("before"))
+            debit_amount = _decimal(debit.get("amount"))
+            debit_after = _decimal(debit.get("after"))
+            original_amount = _decimal(buy_order.get("original_amount"))
+            bid_price = _decimal(buy_order.get("limit_price"))
+            checks["buyer_credits_debit_matches_order"] = bool(
+                str(debit.get("uid") or "") == buyer_uid
+                and debit_before is not None and debit_amount is not None
+                and debit_after is not None
+                and debit_amount < 0
+                and original_amount is not None and original_amount > 0
+                and bid_price is not None and bid_price > 0
+                and _close(debit_amount, -(original_amount * bid_price))
+                and _close(debit_before + debit_amount, debit_after)
+            )
+        else:
+            checks["buyer_credits_debit_matches_order"] = False
+
         seller_credit_rows = [
             row for row in credits
             if isinstance(row, dict)
