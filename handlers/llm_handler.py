@@ -293,7 +293,7 @@ def query_llm_with_context(question, uid=None, skip_checks=False):
         context = f"""
 SLH SYSTEM STATE:
 Role: {role}
-Progress notification preference: {notification_level} (applies to proactive progress updates only; direct command replies and critical security messages remain enabled).
+Progress notification preference: {notification_level}. Policy: off = no proactive progress updates; milestones = only verified milestones, blockers, completion, or action-required notices; all = all progress updates. Direct command replies and critical security messages remain enabled.
 {financial_context}Agents: {len(state_manager.get_agents())}
 Tasks: {len(db.get('tasks', {}))}
 Votes: {len(db.get('votes', {}))}
