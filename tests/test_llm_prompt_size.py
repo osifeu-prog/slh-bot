@@ -13,3 +13,8 @@ def test_compact_prompt_preserves_edges():
 def test_short_prompt_is_unchanged():
     prompt = "hello"
     assert llm_handler._compact_prompt(prompt, max_chars=5000) == prompt
+
+
+def test_slh_system_rules_prevent_repetitive_progress_updates():
+    assert "AUTONOMOUS UPDATE POLICY" in llm_handler.SLH_SYSTEM_RULES
+    assert "Never suggest an unimplemented command as if it exists" in llm_handler.SLH_SYSTEM_RULES
