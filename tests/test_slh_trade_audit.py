@@ -12,7 +12,7 @@ def _db():
             "sell_order_id": "S1",
         }],
         "exchange_orders": {
-            "B1": {"id": "B1", "uid": "buyer", "side": "buy", "limit_price": "1.00000000"},
+            "B1": {"id": "B1", "uid": "buyer", "side": "buy", "limit_price": "1.00000000", "original_amount": "1.00000000"},
             "S1": {"id": "S1", "uid": "seller", "side": "sell", "limit_price": "0.99000000"},
         },
         "exchange_order_archive": {},
@@ -23,6 +23,8 @@ def _db():
             "from_uid": "__EXCHANGE_RESERVE__", "amount": 1.0,
         }],
         "ledger": [
+            {"uid": "buyer", "before": 10.0, "amount": -1.0, "after": 9.0,
+             "reason": "exchange:buy_reserve", "meta": {"order_id": "B1"}},
             {"uid": "seller", "amount": 0.99, "reason": "exchange:settlement_credits",
              "meta": {"trade_id": "T1", "order_id": "S1"}},
             {"uid": "buyer", "amount": 0.01, "reason": "exchange:price_improvement_release",
@@ -36,6 +38,33 @@ class SlhTradeAuditTests(unittest.TestCase):
         report = audit_trades(_db(), ["T1"])
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["trades"][0]["status"], "PASS")
+
+    def test_missing_buyer_credits_debit_fails(self):
+        db = _db()
+        db["ledger"] = [
+            row for row in db["ledger"]
+            if row.get("reason") != "exchange:buy_reserve"
+        ]
+        report = audit_trades(db, ["T1"])
+        self.assertEqual(report["status"], "FAIL")
+        self.assertFalse(report["trades"][0]["checks"]["buyer_credits_debit_event_unique"])
+
+    def test_duplicate_buyer_credits_debit_fails(self):
+        db = _db()
+        debit = next(row for row in db["ledger"] if row.get("reason") == "exchange:buy_reserve")
+        db["ledger"].append(dict(debit))
+        report = audit_trades(db, ["T1"])
+        self.assertEqual(report["status"], "FAIL")
+        self.assertFalse(report["trades"][0]["checks"]["buyer_credits_debit_event_unique"])
+
+    def test_wrong_user_or_amount_buyer_debit_fails(self):
+        for field, value in (("uid", "attacker"), ("amount", -0.5)):
+            db = _db()
+            debit = next(row for row in db["ledger"] if row.get("reason") == "exchange:buy_reserve")
+            debit[field] = value
+            report = audit_trades(db, ["T1"])
+            self.assertEqual(report["status"], "FAIL")
+            self.assertFalse(report["trades"][0]["checks"]["buyer_credits_debit_matches_order"])
 
     def test_missing_slh_settlement_fails(self):
         db = _db()
