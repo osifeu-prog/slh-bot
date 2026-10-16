@@ -22,6 +22,18 @@ class VIPFulfillmentTests(unittest.TestCase):
                 "grant": {"course": "ai_tokens"},
                 "price_stars": 299,
             },
+            "free_course": {
+                "name": "קורס חינמי",
+                "type": "course",
+                "grant": {"course": "free_course"},
+                "price_stars": 0,
+            },
+            "misclassified_course": {
+                "name": "פריט שאינו קורס",
+                "type": "digital",
+                "grant": {"course": "not_a_paid_course"},
+                "price_stars": 100,
+            },
             "agent_os": {
                 "name": "Agent OS",
                 "type": "plugin",
