@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -114,7 +115,12 @@ def apply_vip_benefits(
             if item.get("type") != "course":
                 continue
             price_stars = item.get("price_stars")
-            if not isinstance(price_stars, (int, float)) or price_stars <= 0:
+            if (
+                isinstance(price_stars, bool)
+                or not isinstance(price_stars, (int, float))
+                or not math.isfinite(price_stars)
+                or price_stars <= 0
+            ):
                 continue
             course_id = (item.get("grant") or {}).get("course")
             if not isinstance(course_id, str) or not course_id.strip():
