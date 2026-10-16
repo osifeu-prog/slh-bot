@@ -167,3 +167,91 @@ def test_staked_counter_row_without_authoritative_domain_marker_stays_blocked():
     assert result["status"] == "BLOCKED"
     assert result["continuity_break_count"] == 2
     assert [item["delta_to_explain"] for item in result["findings"]] == [552.0, -552.0]
+
+def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
+    db = {
+        "users": {UID: {"wallet": {"credits": 7.091775}}},
+        "processed_transfers": {
+            "TG-TRANSFER-owner-191058": "TRANSFER-20261005145750197186",
+        },
+        "purchases": {
+            "purchase:telegram_buy:buyer:191618": {
+                "purchase_id": "purchase:telegram_buy:buyer:191618",
+                "request_id": "telegram_buy:buyer:191618",
+                "uid": "buyer",
+                "seller_uid": UID,
+                "item_id": "market_smoke",
+                "price": 1.0,
+                "seller_payout": 0.9,
+                "commission": 0.1,
+                "status": "FULFILLED",
+                "created_at": "2026-10-05T16:19:45.915817+00:00",
+            },
+        },
+        "ledger": [
+            {
+                "time": "2026-10-05T14:57:50+00:00",
+                "uid": UID,
+                "before": 2.191775,
+                "amount": -1.0,
+                "after": 1.191775,
+                "reason": "p2p:transfer_sent",
+                "meta": {
+                    "transfer_id": "TRANSFER-20261005145750197186",
+                    "recipient_uid": "buyer",
+                },
+            },
+            {
+                "time": "2026-10-05T14:57:50+00:00",
+                "uid": "buyer",
+                "before": 0.0,
+                "amount": 1.0,
+                "after": 1.0,
+                "reason": "p2p:transfer_received",
+                "meta": {
+                    "transfer_id": "TRANSFER-20261005145750197186",
+                    "sender_uid": UID,
+                },
+            },
+            {
+                "time": "2026-10-05T16:19:45+00:00",
+                "uid": "buyer",
+                "before": 1.0,
+                "amount": -1.0,
+                "after": 0.0,
+                "reason": "store:p2p_purchase",
+                "meta": {
+                    "purchase_id": "purchase:telegram_buy:buyer:191618",
+                    "seller_uid": UID,
+                },
+            },
+            {
+                "time": "2026-10-05T16:19:45+00:00",
+                "uid": UID,
+                "before": 6.191775,
+                "amount": 0.9,
+                "after": 7.091775,
+                "reason": "store:p2p_sale",
+                "meta": {
+                    "purchase_id": "purchase:telegram_buy:buyer:191618",
+                    "buyer_uid": "buyer",
+                },
+            },
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    finding = result["findings"][0]
+    assert finding["delta_to_explain"] == 5.0
+    evidence = finding["source_evidence"]
+    assert evidence["resolves_gap"] is False
+    assert evidence["source_match_status"] == "CONTEXT_ONLY_REQUIRES_RECONCILIATION"
+    assert evidence["transfer"]["record_found"] is True
+    assert len(evidence["transfer"]["ledger_rows"]) == 2
+    assert evidence["transfer"]["processed_keys"] == ["TG-TRANSFER-owner-191058"]
+    assert evidence["purchase"]["record_found"] is True
+    assert evidence["purchase"]["status"] == "FULFILLED"
+    assert evidence["purchase"]["seller_payout"] == 0.9
