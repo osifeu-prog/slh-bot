@@ -76,14 +76,22 @@ def _exchange_check():
             and public_ready
         )
 
-        if verdict == "OPEN" and public_gate == "OPEN" and all_checks_pass:
-            detail = (
-                "canonical Exchange and account-ledger checks pass; public gate=OPEN; "
-                f"account_ledger={account_ledger_status}; "
-                f"open_orders={open_orders}; recent_trades={recent_trades}; "
-                f"test_seed_trades={test_seed_trades}"
+        # Owner policy: only internal-only trading may be considered, and the
+        # public trading gate must remain CLOSED until a separate approval.
+        # Readiness must not report GREEN merely because an explicitly public
+        # gate is enabled and the accounting invariants happen to pass.
+        if public_gate != "CLOSED":
+            return _check(
+                "Internal exchange",
+                "BLOCKED",
+                (
+                    "policy requires public gate=CLOSED; public trading is not authorized; "
+                    f"canonical exchange verdict={verdict}; "
+                    f"account_ledger={account_ledger_status}; "
+                    f"open_orders={open_orders}; recent_trades={recent_trades}; "
+                    f"test_seed_trades={test_seed_trades}"
+                ),
             )
-            return _check("Internal exchange", "GREEN", detail)
 
         if verdict == "READY_TO_OPEN" and public_gate == "CLOSED" and all_checks_pass:
             detail = (
