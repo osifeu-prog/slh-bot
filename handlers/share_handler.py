@@ -38,4 +38,23 @@ def register(bot):
             f"💰 עמלת רכישות שהצטברה: {commission}\n\n"
             "התגמול ניתן על הצטרפות מוצלחת, לא על עצם הלחיצה/השיתוף."
         )
+        try:
+            from core.trader_certification import referral_course_promo_status
+            promo = referral_course_promo_status(uid, db)
+            if promo.get("awarded"):
+                text += (
+                    "\n\n✅ הטבת קורס המסחר שלך אושרה — מקום "
+                    f"{promo.get('slot')}/15. פתח /courses כדי להתחיל."
+                )
+            elif promo.get("remaining", 0) > 0:
+                text += (
+                    "\n\n🎓 הטבת השקה: קורס המסחר בחינם ל־15 מפנים ראשונים. "
+                    "כדי להבטיח זכאות, משתתף חדש צריך להיכנס דרך הקישור האישי "
+                    "ולהשלים הרשמה מוצלחת. שיתוף או לחיצה בלבד אינם ניתנים לאימות. "
+                    f"מקומות שנותרו: {promo.get('remaining')}/15."
+                )
+            else:
+                text += "\n\nℹ️ הטבת 15 קורסי המסחר החינמיים הסתיימה."
+        except Exception:
+            text += "\n\nℹ️ מצב הטבת קורס המסחר אינו זמין כרגע; אין להניח שהמקום נשמר."
         bot.reply_to(msg, text)

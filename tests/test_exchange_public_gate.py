@@ -10,9 +10,17 @@ class ExchangePublicGateTests(unittest.TestCase):
     def _db(self):
         return {
             "users": {
-                "seller": {"wallet": {"token_balance": 10.0, "live_token_balance": 10.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 0.0}},
-                "buyer": {"wallet": {"token_balance": 0.0, "live_token_balance": 0.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 100.0}},
-                "8789977826": {"wallet": {"credits": 0.0}},
+                "seller": {
+                    "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
+                    "wallet": {"token_balance": 10.0, "live_token_balance": 10.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 0.0},
+                },
+                "buyer": {
+                    "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
+                    "wallet": {"token_balance": 0.0, "live_token_balance": 0.0, "exchange_reserved_slh": 0.0, "exchange_reserved_credits": 0.0, "credits": 100.0},
+                },
+                "8789977826": {
+                    "wallet": {"credits": 0.0},
+                },
             },
             "ledger": [{
                 "uid": "8789977826",
@@ -27,6 +35,10 @@ class ExchangePublicGateTests(unittest.TestCase):
             "exchange_trades": [],
             "exchange_requests": {},
             "exchange_sequence": 0,
+            "trader_certifications": {
+                "seller": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"},
+                "buyer": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"},
+            },
         }
 
     def test_order_entry_is_fail_closed(self):
@@ -77,6 +89,7 @@ class ExchangePublicGateTests(unittest.TestCase):
         self.assertTrue(result["public_ready"])
         self.assertEqual(result["public_gate"], "CLOSED")
         self.assertEqual(result["verdict"], "READY_TO_OPEN")
+
 
 
     def test_public_readiness_blocks_when_owner_credits_audit_is_blocked(self):

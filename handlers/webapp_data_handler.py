@@ -90,6 +90,14 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
             format_blocked_execution_receipt(side, exc.check),
         )
         return
+    except ValueError as exc:
+        if str(exc) == "TRADER_CERTIFICATION_REQUIRED":
+            bot.send_message(
+                chat_id,
+                "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test",
+            )
+            return
+        raise
 
     # Use the same evidence-bearing receipt as the direct Telegram order path.
     # Missing/legacy execution proof is explicitly marked NOT VERIFIED there.
