@@ -49,6 +49,7 @@ def test_first_fifteen_unique_verified_referrers_receive_one_free_course(monkeyp
 def test_promo_requires_real_persisted_referral_and_is_idempotent(monkeypatch):
     users = {"1": _user(), "2": _user(), "3": _user()}
     users["2"]["referral"]["referred_by"] = "1"
+    users["3"]["referral"]["referred_by"] = "1"
     db = {"users": users}
     _install_db(monkeypatch, db)
 
