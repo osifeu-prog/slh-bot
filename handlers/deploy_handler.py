@@ -3,10 +3,10 @@ import re
 import requests
 
 from core.authority import is_owner
+from core.railway_control import ENDPOINT as RAILWAY_API_URL
 
 
 REGISTRY_FILE = "control_plane_registry.json"
-RAILWAY_API_URL = "https://backboard.railway.app/graphql/v2"
 
 
 def _load_registry():
@@ -107,6 +107,38 @@ def _resolve_target(name, include_infrastructure=False):
     return None, name
 
 
+def _safe_graphql_error_messages(payload):
+    """Extract concise GraphQL error messages without echoing credentials."""
+    if not isinstance(payload, dict):
+        return ""
+    errors = payload.get("errors")
+    if not isinstance(errors, list):
+        return ""
+
+    messages = []
+    for error in errors[:3]:
+        if not isinstance(error, dict):
+            continue
+        message = error.get("message")
+        if not isinstance(message, str) or not message.strip():
+            continue
+        message = re.sub(
+            r"(?i)\b(Bearer|Project-Access-Token)\s+\S+",
+            r"\1 [REDACTED]",
+            message,
+        )
+        message = re.sub(
+            r"(?i)\b(token|secret|password)\s*[:=]\s*[^\s,;]+",
+            r"\1=[REDACTED]",
+            message,
+        )
+        message = re.sub(r"[\x00-\x1f\x7f]", " ", message)
+        message = re.sub(r"\s+", " ", message).strip()
+        if message:
+            messages.append(message[:240])
+    return "; ".join(messages)
+
+
 def _graphql(token, query, variables):
     response = requests.post(
         RAILWAY_API_URL,
@@ -117,12 +149,24 @@ def _graphql(token, query, variables):
         },
         timeout=20,
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.HTTPError:
+        # Railway may return GraphQL validation details with an HTTP 4xx.
+        # Surface only sanitized error.message fields, never the response body
+        # or request headers (which could contain credentials).
+        try:
+            payload = response.json()
+        except (ValueError, TypeError):
+            payload = {}
+        details = _safe_graphql_error_messages(payload)
+        status = getattr(response, "status_code", None)
+        code = f"RAILWAY_HTTP_{status}" if isinstance(status, int) else "RAILWAY_HTTP_ERROR"
+        raise RuntimeError(f"{code}: {details}" if details else code) from None
+
     data = response.json()
-    if data.get("errors"):
-        messages = "; ".join(
-            str(error.get("message", "GraphQL error")) for error in data["errors"]
-        )
+    messages = _safe_graphql_error_messages(data)
+    if messages:
         raise RuntimeError(messages)
     return data.get("data") or {}
 
