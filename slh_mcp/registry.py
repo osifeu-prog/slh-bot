@@ -30,7 +30,6 @@ from slh_mcp.tools.integrations import (
 )
 from slh_mcp.tools.economic_ledger import _tool_economy_ledger
 from slh_mcp.tools.mqtt import _tool_mqtt_status, _tool_mqtt_probe
-from slh_mcp.tools.notifications import _tool_notification_preferences, _tool_set_progress_notifications
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
     _tool_economy_agent_ledger,
@@ -43,8 +42,6 @@ def register_capabilities(server):
     handlers = {
         "system.health": _tool_system_health,
         "system.snapshot": _tool_system_snapshot,
-        "operator.notifications.status": _tool_notification_preferences,
-        "operator.notifications.set_progress": _tool_set_progress_notifications,
         "agents.list": _tool_agents_list,
         "agents.get": _tool_agents_get,
         "agents.runtime_status": _tool_agents_runtime_status,
