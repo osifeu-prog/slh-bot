@@ -72,6 +72,21 @@ def runtime_status() -> dict:
     return _request("/internal/mcp/v1/runtime/status")
 
 
+def notification_preferences() -> dict:
+    """Read the configured MCP principal’s non-critical progress notification preference."""
+    return _request("/internal/mcp/v1/operator/notifications")
+
+
+def set_progress_notifications(enabled: bool) -> dict:
+    """Persist the configured MCP principal’s progress notification preference via Control Plane."""
+    if not isinstance(enabled, bool):
+        raise ValueError("BOOLEAN_REQUIRED")
+    return _request(
+        "/internal/mcp/v1/operator/notifications",
+        method="PATCH",
+        payload={"progress_updates_enabled": enabled},
+    )
+
 def self_test() -> bool:
     """Verify the authenticated MCP -> Control Plane bridge without mutating state."""
     if not enabled():
