@@ -3478,6 +3478,13 @@ def api_exchange_order():
                 "code": code,
                 "exchange_check": getattr(exc, "check", {}),
             }), 409
+        if code == "TRADER_CERTIFICATION_REQUIRED":
+            return jsonify({
+                "error": code,
+                "code": code,
+                "message": "Complete the SLH algorithmic trading course and pass /trader_test before trading.",
+                "required_action": "/trader_test",
+            }), 403
         if code in {"EXCHANGE_IDEMPOTENCY_KEY_REUSED", "EXCHANGE_REQUEST_RECORD_INVALID"}:
             return jsonify({"error": code, "code": code}), 409
         return jsonify({"error": code}), 400
