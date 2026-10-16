@@ -105,7 +105,19 @@ def register(bot):
             return
 
         if existing_user:
-            bot.reply_to(msg, "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך.")
+            recovery_note = ""
+            try:
+                from core.referral_reward import recover_persisted_referral
+                recovered = recover_persisted_referral(uid)
+                if recovered.get("status") == "SETTLED":
+                    recovery_note = "\n✅ תגמול ההפניה שהמתין הושלם."
+            except Exception as e:
+                print("REFERRAL REWARD RECOVERY FAILED:", type(e).__name__)
+                recovery_note = "\n⏳ התאוששות תגמול ההפניה עדיין נדרשת. נסה /join שוב מאוחר יותר."
+            bot.reply_to(
+                msg,
+                "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך." + recovery_note
+            )
             return
 
         user_states[uid] = {"step": "name"}
@@ -207,21 +219,34 @@ def register(bot):
                 print("WELCOME BONUS FAILED:", e)
 
             try:
-                ref_uid = _get_pending_referral(uid)
-                if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
-                    persisted = _persist_referral(uid, ref_uid)
-                    if persisted:
-                        from core.referral_reward import settle_successful_referral
-                        rewards = settle_successful_referral(str(ref_uid), uid)
-                        print(
-                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
-                            f"credits={rewards.get('credits')} "
-                            f"points={rewards.get('points')} "
-                            f"vip={rewards.get('vip')}"
-                        )
-                    _clear_pending_referral(uid)
+                # Persist the first referral relationship before settlement.
+                # _persist_referral is idempotent, so a retry never increments
+                # the referrer's count a second time or reassigns attribution.
+                pending_referrer = _get_pending_referral(uid)
+                if (
+                    pending_referrer
+                    and str(pending_referrer) != uid
+                    and user_exists(str(pending_referrer))
+                ):
+                    persisted = _persist_referral(uid, pending_referrer)
+                    print(
+                        f"REFERRAL ATTRIBUTION: uid={uid} "
+                        f"referrer={pending_referrer} persisted={persisted}"
+                    )
+
+                # Recovery uses only the immutable stored referred_by value.
+                # It retries partial reward settlement and clears the pending
+                # marker only after both authoritative ledgers are verified.
+                from core.referral_reward import recover_persisted_referral
+                rewards = recover_persisted_referral(uid)
+                print(
+                    f"REFERRAL REWARD SETTLEMENT: uid={uid} "
+                    f"status={rewards.get('status')}"
+                )
             except Exception as e:
-                print("REFERRAL REWARD FAILED:", e)
+                # Do not clear pending attribution on partial settlement. A later
+                # /join retry can safely replay the same reward idempotency keys.
+                print("REFERRAL REWARD FAILED:", type(e).__name__)
 
             # Persist the completion timestamp only after profile + Academy have
             # passed. This marks referral attribution as converted, but never
