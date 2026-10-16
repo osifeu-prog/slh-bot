@@ -135,6 +135,10 @@ PUBLIC_COMMANDS = (
     ("faq", "שאלות נפוצות"),
     ("miniapp", "פתיחת Mini App"),
     ("trade_model", "הסבר על מודל ההכנסות"),
+    ("progress", "התקדמות אישית"),
+    ("dashboard", "לוח הבקרה"),
+    ("history", "היסטוריית עסקאות"),
+    ("balance", "יתרת Credits"),
 )
 
 
@@ -232,7 +236,7 @@ def render_public_help(bot_name="Me_ad_main"):
         "📈 מצב המסחר מופיע בנפרד. שער סגור או בדיקת מוכנות אינם אישור לביצוע עסקה.",
         "פקודות ניהול, אבחון וסליקה אינן מוצגות במדריך הציבורי.",
     ])
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 def render_help(bot_name="Me_ad_main", limit=60):
     """Render a Telegram-safe compact catalog."""
