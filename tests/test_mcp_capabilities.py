@@ -22,6 +22,8 @@ class MCPCapabilityTests(unittest.TestCase):
         self.assertIn("agents.list", names)
         self.assertIn("economy.agent_balance", names)
         self.assertIn("bots.registry", names)
+        self.assertIn("operator.notifications.status", names)
+        self.assertIn("operator.notifications.set_progress", names)
 
     def test_shell_is_not_exposed(self):
         from slh_mcp.capabilities import get_capability
@@ -41,6 +43,7 @@ class MCPCapabilityTests(unittest.TestCase):
             "economy.agent_balance",
             "economy.agent_ledger",
             "bots.registry",
+            "operator.notifications.status",
         }
         for item in list_capabilities():
             if item.name in read_names:
