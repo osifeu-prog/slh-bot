@@ -105,6 +105,16 @@ def register(bot):
             return
 
         if existing_user:
+            # Existing users can retry a referral reward whose attribution was saved
+            # before an earlier settlement attempt failed. Reward keys are idempotent.
+            try:
+                from core.referral_settlement import settle_persisted_referral
+                settlement = settle_persisted_referral(uid)
+                if settlement.get("status") == "SETTLED":
+                    print(f"REFERRAL REWARD RETRY: {uid} -> {settlement.get('referrer_uid')}")
+            except Exception as e:
+                print("REFERRAL REWARD RETRY FAILED:", e)
+
             bot.reply_to(msg, "ℹ️ החשבון כבר רשום. פתח /dashboard להמשך.")
             return
 
@@ -209,17 +219,15 @@ def register(bot):
             try:
                 ref_uid = _get_pending_referral(uid)
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
-                    persisted = _persist_referral(uid, ref_uid)
-                    if persisted:
-                        from core.referral_reward import settle_successful_referral
-                        rewards = settle_successful_referral(str(ref_uid), uid)
-                        print(
-                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
-                            f"credits={rewards.get('credits')} "
-                            f"points={rewards.get('points')} "
-                            f"vip={rewards.get('vip')}"
-                        )
-                    _clear_pending_referral(uid)
+                    # Persist attribution once, then settle from the canonical
+                    # relationship. On failure, pending attribution remains for retry.
+                    _persist_referral(uid, ref_uid)
+                    from core.referral_settlement import settle_persisted_referral
+                    settlement = settle_persisted_referral(uid)
+                    print(
+                        f"REFERRAL REWARDS: {ref_uid} <- {uid} "
+                        f"status={settlement.get('status')}"
+                    )
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
 
