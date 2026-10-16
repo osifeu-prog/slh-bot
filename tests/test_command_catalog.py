@@ -106,3 +106,28 @@ def test_exchange_status_alias_has_catalog_metadata():
     item = by_command["exchange_status"]
     assert item["known"] is True
     assert "Exchange" in item["description"]
+
+def test_public_help_uses_real_line_breaks_and_includes_core_shortcuts():
+    runtime = {
+        "commands": [
+            "/start",
+            "/help",
+            "/balance",
+            "/history",
+            "/dashboard",
+            "/progress",
+        ],
+    }
+
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value=runtime,
+    ):
+        rendered = command_catalog.render_public_help("Me_ad_main")
+
+    assert "\\\\n" not in rendered
+    assert "\n/start — כניסה והתחלה" in rendered
+    assert "/balance — יתרת Credits" in rendered
+    assert "/history — היסטוריית עסקאות" in rendered
+    assert "/dashboard — לוח הבקרה" in rendered
+    assert "/progress — התקדמות אישית" in rendered
