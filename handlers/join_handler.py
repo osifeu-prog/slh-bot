@@ -211,16 +211,9 @@ def register(bot):
                 if ref_uid and str(ref_uid) != uid and user_exists(str(ref_uid)):
                     persisted = _persist_referral(uid, ref_uid)
                     if persisted:
-                        from core.referral_reward import settle_successful_referral
-                        rewards = settle_successful_referral(str(ref_uid), uid)
-                        print(
-                            f"REFERRAL REWARDS: {ref_uid} <- {uid} "
-                            f"credits={rewards.get('credits')} "
-                            f"points={rewards.get('points')} "
-                            f"vip={rewards.get('vip')}"
-                        )
-                        # First-15 course offer is awarded only after onboarding succeeds
-                        # and the referral relationship has been persisted.
+                        # Course promotion is independent of referral Credits/Points settlement:
+                        # a reward-service failure must not consume the successful signup without
+                        # giving the verified course entitlement.
                         try:
                             from core.trader_certification import award_referral_course
                             promo = award_referral_course(str(ref_uid), uid)
@@ -239,6 +232,20 @@ def register(bot):
                                 print("TRADER COURSE PROMO:", promo.get("status"), promo.get("reason", ""))
                         except Exception as promo_exc:
                             print("TRADER COURSE PROMO FAILED:", type(promo_exc).__name__)
+
+                        try:
+                            from core.referral_reward import settle_successful_referral
+                            rewards = settle_successful_referral(str(ref_uid), uid)
+                            print(
+                                f"REFERRAL REWARDS: {ref_uid} <- {uid} "
+                                f"credits={rewards.get('credits')} "
+                                f"points={rewards.get('points')} "
+                                f"vip={rewards.get('vip')}"
+                            )
+                        except Exception as reward_exc:
+                            # The referral attribution and course offer have already
+                            # been handled. Log the separate reward failure for recovery.
+                            print("REFERRAL REWARD SETTLEMENT FAILED:", type(reward_exc).__name__)
                     _clear_pending_referral(uid)
             except Exception as e:
                 print("REFERRAL REWARD FAILED:", e)
