@@ -176,24 +176,4 @@ def register_mcp_bridge_routes(app):
         result = lifecycle.complete_mission(str(mission_id))
         return jsonify(result), 200
 
-    @app.route("/internal/mcp/v1/operator/notifications", methods=["GET", "PATCH"])
-    def mcp_bridge_notification_preferences():
-        permission = "exec.audit" if request.method == "GET" else "agents.manage"
-        subject, error = _require(permission)
-        if error:
-            return error
-        from core.notification_preferences import get_notification_preferences, set_progress_updates
-        if request.method == "GET":
-            result = get_notification_preferences(subject)
-            code = 200 if result.get("ok") else (404 if result.get("error") == "USER_NOT_FOUND" else 503)
-            return jsonify(result), code
-        payload = request.get_json(silent=True)
-        if not isinstance(payload, dict) or set(payload.keys()) != {"progress_updates_enabled"}:
-            return jsonify({"error": "NOTIFICATION_PREFERENCE_PAYLOAD_INVALID"}), 400
-        enabled = payload.get("progress_updates_enabled")
-        if not isinstance(enabled, bool):
-            return jsonify({"error": "BOOLEAN_REQUIRED"}), 400
-        result = set_progress_updates(subject, enabled)
-        code = 200 if result.get("ok") else (404 if result.get("error") == "USER_NOT_FOUND" else 503)
-        return jsonify(result), code
     return app
