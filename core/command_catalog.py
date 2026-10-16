@@ -95,6 +95,8 @@ KNOWN = {
     "postmaker": ("UI", "יצירת תמונת פרסום"),
     "dashboard": ("UI", "Dashboard"),
     "settings": ("UI", "הגדרות"),
+    "notifications": ("UI", "הגדרות עדכוני התקדמות"),
+    "stop_notifications": ("UI", "כיבוי עדכוני התקדמות"),
     "theme": ("UI", "ערכת תצוגה"),
     "ask": ("AI", "שאלת מערכת"),
     "faq": ("AI", "שאלות נפוצות"),
@@ -134,6 +136,7 @@ PUBLIC_COMMANDS = (
     ("media", "מאגר תמונות לשיתוף"),
     ("faq", "שאלות נפוצות"),
     ("miniapp", "פתיחת Mini App"),
+    ("notifications", "הגדרת עדכוני התקדמות"),
     ("trade_model", "הסבר על מודל ההכנסות"),
 )
 
