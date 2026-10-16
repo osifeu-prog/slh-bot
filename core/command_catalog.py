@@ -59,11 +59,6 @@ KNOWN = {
     "propose": ("GOVERNANCE", "הצעה"),
     "tally": ("GOVERNANCE", "תוצאות"),
     "gov_status": ("GOVERNANCE", "סטטוס Governance"),
-    "stop_notifications": ("SYSTEM", "השתקת עדכוני התקדמות שגרתיים"),
-    "resume_notifications": ("SYSTEM", "הפעלת עדכוני התקדמות שגרתיים"),
-    "start_notifications": ("SYSTEM", "הפעלת עדכוני התקדמות שגרתיים"),
-    "notification_status": ("SYSTEM", "מצב העדפות התראות"),
-    "notifications": ("SYSTEM", "מצב העדפות התראות"),
     "share": ("REFERRAL", "קישור הזמנה וסטטוס"),
     "refer": ("REFERRAL", "קיצור ל-Share"),
     "invite": ("REFERRAL", "קיצור ל-Share"),
@@ -100,6 +95,8 @@ KNOWN = {
     "postmaker": ("UI", "יצירת תמונת פרסום"),
     "dashboard": ("UI", "Dashboard"),
     "settings": ("UI", "הגדרות"),
+    "notifications": ("UI", "הגדרות עדכוני התקדמות"),
+    "stop_notifications": ("UI", "כיבוי עדכוני התקדמות"),
     "theme": ("UI", "ערכת תצוגה"),
     "ask": ("AI", "שאלת מערכת"),
     "faq": ("AI", "שאלות נפוצות"),
@@ -139,6 +136,7 @@ PUBLIC_COMMANDS = (
     ("media", "מאגר תמונות לשיתוף"),
     ("faq", "שאלות נפוצות"),
     ("miniapp", "פתיחת Mini App"),
+    ("notifications", "הגדרת עדכוני התקדמות"),
     ("trade_model", "הסבר על מודל ההכנסות"),
 )
 
