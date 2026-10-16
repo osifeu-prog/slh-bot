@@ -12,7 +12,7 @@ def test_algorithmic_trading_course_is_registered_and_paid_in_stars():
     assert course["title"] == "מסחר אלגוריתמי, כוחות השוק ופסיכולוגיה"
     assert course["access"] == "paid"
     assert course["store_item"] == "course_algo_trading"
-    assert [stage["id"] for stage in course["stages"]] == [1, 2, 3, 4, 5, 6]
+    assert [stage["id"] for stage in course["stages"]] == [1, 2, 3, 4, 5, 6, 7]
     items = json.loads((ROOT / "store" / "items.json").read_text(encoding="utf-8"))
     item = items["course_algo_trading"]
     assert item["type"] == "course"

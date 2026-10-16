@@ -198,6 +198,8 @@ def register(bot):
                 message = "❌ קורס לא נמצא"
             elif error == "stage_not_found":
                 message = "❌ שיעור לא נמצא"
+            elif error == "trader_certification_required":
+                message = "🔒 יש לעבור תחילה את מבחן הסמכת הסוחר: /trader_test"
             else:
                 message = "❌ לא ניתן להשלים את השיעור הזה"
             bot.reply_to(m, message)

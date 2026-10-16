@@ -11,6 +11,7 @@ def _db():
     return {
         "users": {
             "seller": {
+                "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
                 "wallet": {
                     "token_balance": 10.0,
                     "live_token_balance": 10.0,
@@ -24,6 +25,7 @@ def _db():
         "exchange_trades": [],
         "exchange_requests": {},
         "slh_token_ledger": [],
+        "trader_certifications": {"seller": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"}},
     }
 
 
