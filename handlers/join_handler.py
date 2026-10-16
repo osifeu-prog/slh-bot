@@ -220,15 +220,19 @@ def register(bot):
                             if promo.get("status") == "GRANTED":
                                 slot = promo.get("award", {}).get("slot")
                                 try:
-                                    from core.notification_preferences import send_progress_update
-                                    send_progress_update(
-                                        bot,
-                                        str(ref_uid),
-                                        "🎓 זכית בקורס המסחר האלגוריתמי של SLH במתנה! "
-                                        f"מקום {slot}/15 אומת בעקבות הרשמה מוצלחת דרך הקישור שלך. "
-                                        "פתח /courses כדי להתחיל.",
-                                        kind="milestone",
-                                    )
+                                    try:
+                                        from core.ui_preferences import should_send_progress_notification
+                                        notify = should_send_progress_notification(str(ref_uid), event_class="milestone")
+                                    except Exception:
+                                        # If preference support is unavailable, fail open for the earned-course notice.
+                                        notify = True
+                                    if notify:
+                                        bot.send_message(
+                                            str(ref_uid),
+                                            "🎓 זכית בקורס המסחר האלגוריתמי של SLH במתנה! "
+                                            f"מקום {slot}/15 אומת בעקבות הרשמה מוצלחת דרך הקישור שלך. "
+                                            "פתח /courses כדי להתחיל."
+                                        )
                                 except Exception as notify_exc:
                                     print("TRADER COURSE PROMO NOTIFICATION FAILED:", type(notify_exc).__name__)
                             else:
