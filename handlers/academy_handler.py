@@ -144,6 +144,8 @@ def register(bot):
                 message = "❌ הקורס עדיין לא התחיל. התחל דרך /courses"
             elif error == "course_not_found":
                 message = "❌ קורס לא נמצא"
+            elif error == "trader_certification_required":
+                message = "🔒 יש לעבור תחילה את מבחן הסמכת הסוחר: /trader_test"
             else:
                 message = "❌ לא ניתן להשלים את השלב הזה"
             bot.reply_to(m, message)
