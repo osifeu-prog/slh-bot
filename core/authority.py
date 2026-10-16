@@ -31,10 +31,13 @@ DEVELOPER_IDS = _csv_ids("SLH_DEVELOPER_IDS")
 # Partners (alpha.distribute) are granted only via env, e.g. after an
 # accounting reconciliation is closed. Empty by default.
 PARTNER_IDS = _csv_ids("SLH_PARTNER_IDS")
+# Dedicated synthetic principal for the default-off WhatsApp storefront only.
+WHATSAPP_STORE_SERVICE_IDS = _csv_ids("SLH_WHATSAPP_STORE_PRINCIPAL_ID")
 ALPHA_DISTRIBUTOR_IDS = {OWNER_ID, *PARTNER_IDS}
 
 ROLES = {
     "OWNER": ["*"],
+    "WHATSAPP_STORE_SERVICE": ["whatsapp.store"],
     "PARTNER_READ_ONLY": [
         "public.view",
         "investor.view",
@@ -112,6 +115,9 @@ def get_role(uid) -> str:
 
     if uid in ADMIN_IDS:
         return "ADMIN"
+
+    if not profile and uid in WHATSAPP_STORE_SERVICE_IDS:
+        return "WHATSAPP_STORE_SERVICE"
 
     if not profile:
         return "UNKNOWN"

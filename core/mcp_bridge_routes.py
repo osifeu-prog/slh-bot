@@ -8,7 +8,7 @@ import os
 from flask import jsonify, request
 
 from core.agent_registry import get_agent, list_agents
-from core.authority import get_visible_agents, has_permission
+from core.authority import get_role, get_visible_agents, has_permission
 from core.runtime_service import execute_agent, status as runtime_status
 from core.mission_lifecycle import MissionLifecycleService
 
@@ -46,6 +46,186 @@ def _require(permission: str):
     if not has_permission(subject, permission):
         return None, (jsonify({"error": "MCP_BRIDGE_FORBIDDEN"}), 403)
     return subject, None
+
+
+_WHATSAPP_TEST_SKU_MARKERS = ("test", "smoke")
+
+
+def _whatsapp_is_test_sku(sku: str) -> bool:
+    value = str(sku or "").strip().lower()
+    return any(marker in value for marker in _WHATSAPP_TEST_SKU_MARKERS)
+
+
+def _whatsapp_store_principal():
+    """Authorize the separately scoped storefront service; disabled by default."""
+    if os.getenv("WHATSAPP_STORE_ENABLED", "0").strip() != "1":
+        return None, (jsonify({"error": "WHATSAPP_STORE_DISABLED"}), 404)
+    expected = os.getenv("SLH_WHATSAPP_STORE_BRIDGE_TOKEN", "").strip()
+    if not expected:
+        return None, (jsonify({"error": "WHATSAPP_STORE_NOT_CONFIGURED"}), 503)
+    authorization = request.headers.get("Authorization", "").strip()
+    scheme, _, supplied = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, expected):
+        return None, (jsonify({"error": "WHATSAPP_STORE_AUTH_REQUIRED"}), 401)
+    subject = os.getenv("SLH_WHATSAPP_STORE_PRINCIPAL_ID", "").strip()
+    if not subject or not subject.isdigit():
+        return None, (jsonify({"error": "WHATSAPP_STORE_PRINCIPAL_NOT_CONFIGURED"}), 503)
+    if get_role(subject) != "WHATSAPP_STORE_SERVICE":
+        return None, (jsonify({"error": "WHATSAPP_STORE_PRINCIPAL_ROLE_REQUIRED"}), 403)
+    if not has_permission(subject, "whatsapp.store"):
+        return None, (jsonify({"error": "WHATSAPP_STORE_FORBIDDEN"}), 403)
+    return subject, None
+
+
+def _whatsapp_store_catalog_snapshot():
+    """Return safe public products from the canonical store and current inventory."""
+    import math
+    import state_manager
+    from store.engine import load_items
+    from store.stars_purchase_service import get_stars_items
+
+    source_items = load_items()
+    stars_items = get_stars_items()
+    db = state_manager.load_db()
+    products = db.get("products", {}) if isinstance(db, dict) else {}
+    if not isinstance(source_items, dict) or not isinstance(stars_items, dict) or not isinstance(products, dict):
+        raise RuntimeError("WHATSAPP_CATALOG_INVALID")
+
+    public_items = {}
+    for raw_sku, raw_item in source_items.items():
+        sku = str(raw_sku or "").strip()
+        if not sku or not isinstance(raw_item, dict) or _whatsapp_is_test_sku(sku):
+            continue
+
+        stars_price = stars_items.get(sku)
+        price = None
+        currency = None
+        checkout_channel = None
+        checkout_command = None
+        if stars_price is not None and not isinstance(stars_price, bool):
+            try:
+                price = int(stars_price)
+            except (TypeError, ValueError, OverflowError):
+                price = None
+            if price is not None and price > 0:
+                currency = "XTR"
+                checkout_channel = "telegram_stars"
+                checkout_command = f"/buystars {sku}"
+
+        if price is None:
+            if raw_item.get("stars_only") is True:
+                continue
+            raw_price = raw_item.get("price")
+            if isinstance(raw_price, bool) or not isinstance(raw_price, (int, float)):
+                continue
+            numeric_price = float(raw_price)
+            if not math.isfinite(numeric_price) or numeric_price <= 0:
+                continue
+            price = int(numeric_price) if numeric_price.is_integer() else numeric_price
+            currency = "Credits"
+            checkout_channel = "telegram_credits"
+            checkout_command = f"/buy {sku}"
+
+        item_type = str(raw_item.get("type") or "digital").strip().lower()[:40]
+        inventory = None
+        if item_type in {"hardware", "physical"}:
+            product = products.get(sku)
+            if not isinstance(product, dict):
+                continue
+            raw_inventory = product.get("inventory", 0)
+            if isinstance(raw_inventory, bool):
+                continue
+            try:
+                inventory = int(raw_inventory)
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if inventory <= 0:
+                continue
+
+        raw_name = raw_item.get("name")
+        name = str(raw_name).strip()[:120] if isinstance(raw_name, str) and raw_name.strip() else sku
+        raw_description = raw_item.get("description")
+        description = raw_description.strip()[:500] if isinstance(raw_description, str) else ""
+        record = {
+            "sku": sku,
+            "name": name,
+            "description": description,
+            "type": item_type,
+            "price": price,
+            "currency": currency,
+            "checkout_channel": checkout_channel,
+            "checkout_command": checkout_command,
+            "payment_in_whatsapp": False,
+        }
+        if inventory is not None:
+            record["stock_remaining"] = inventory
+        public_items[sku] = record
+
+    # Public marketplace rows are canonical state projections; never expose
+    # test/smoke listings or any seller/private metadata.
+    for raw_sku, product in products.items():
+        sku = str(raw_sku or "").strip()
+        if not sku or sku in source_items or _whatsapp_is_test_sku(sku) or not isinstance(product, dict):
+            continue
+        if str(product.get("type") or "").strip().lower() != "physical":
+            continue
+        try:
+            price = float(product.get("price"))
+            inventory = int(product.get("inventory", 0))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if not math.isfinite(price) or price <= 0 or inventory <= 0:
+            continue
+        raw_name = product.get("name")
+        name = str(raw_name).strip()[:120] if isinstance(raw_name, str) and raw_name.strip() else sku
+        public_items[sku] = {
+            "sku": sku,
+            "name": name,
+            "description": "",
+            "type": "physical",
+            "price": int(price) if price.is_integer() else price,
+            "currency": "Credits",
+            "checkout_channel": "telegram_credits",
+            "checkout_command": f"/buy {sku}",
+            "stock_remaining": inventory,
+            "payment_in_whatsapp": False,
+        }
+
+    return [public_items[sku] for sku in sorted(public_items)]
+
+
+def _whatsapp_intent_mutation(db, *, idempotency_digest, provider, sku, item, created_at):
+    intents = db.setdefault("whatsapp_purchase_intents", {})
+    if not isinstance(intents, dict):
+        return {"status": "STATE_INVALID"}
+    existing = intents.get(idempotency_digest)
+    if existing is not None:
+        if (
+            not isinstance(existing, dict)
+            or str(existing.get("sku")) != sku
+            or str(existing.get("provider")) != provider
+        ):
+            return {"status": "CONFLICT"}
+        return {"status": "DUPLICATE", "intent": existing}
+    if len(intents) >= 20000:
+        return {"status": "CAPACITY"}
+    intent = {
+        "id": "WPI_" + idempotency_digest[:24],
+        "channel": "whatsapp",
+        "provider": provider,
+        "provider_message_id_hash": idempotency_digest,
+        "sku": item["sku"],
+        "item_name": item["name"],
+        "price": item["price"],
+        "currency": item["currency"],
+        "checkout_channel": item["checkout_channel"],
+        "checkout_command": item["checkout_command"],
+        "status": "inquiry_pending",
+        "financial_mutation": False,
+        "created_at": created_at,
+    }
+    intents[idempotency_digest] = intent
+    return {"status": "CREATED", "intent": intent}
 
 
 def _public_agent(agent: dict) -> dict:
@@ -175,5 +355,99 @@ def register_mcp_bridge_routes(app):
             }), 200
         result = lifecycle.complete_mission(str(mission_id))
         return jsonify(result), 200
+
+
+    @app.route("/internal/commerce/v1/whatsapp/catalog", methods=["GET"])
+    def whatsapp_store_catalog():
+        _subject, error = _whatsapp_store_principal()
+        if error:
+            return error
+        try:
+            items = _whatsapp_store_catalog_snapshot()
+            return jsonify({
+                "items": items,
+                "payment_in_whatsapp": False,
+                "checkout_channels": ["telegram_stars", "telegram_credits"],
+                "excluded_test_items": True,
+            }), 200
+        except Exception as exc:
+            print("[WHATSAPP_STORE] catalog failed:", type(exc).__name__)
+            return jsonify({"error": "WHATSAPP_CATALOG_UNAVAILABLE"}), 503
+
+    @app.route("/internal/commerce/v1/whatsapp/intents", methods=["POST"])
+    def whatsapp_store_purchase_intent():
+        _subject, error = _whatsapp_store_principal()
+        if error:
+            return error
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
+        allowed_fields = {"provider", "provider_message_id", "sku", "intent", "customer_confirmed"}
+        if set(payload) - allowed_fields:
+            return jsonify({"error": "UNSUPPORTED_FIELDS"}), 400
+
+        provider = str(payload.get("provider") or "").strip().lower()
+        provider_message_id = str(payload.get("provider_message_id") or "").strip()
+        sku = str(payload.get("sku") or "").strip()
+        if provider != "twilio":
+            return jsonify({"error": "PROVIDER_NOT_SUPPORTED"}), 400
+        if (
+            not provider_message_id or len(provider_message_id) > 255
+            or not provider_message_id.isascii()
+            or any(ord(char) < 33 or ord(char) > 126 for char in provider_message_id)
+        ):
+            return jsonify({"error": "INVALID_PROVIDER_MESSAGE_ID"}), 400
+        if (
+            not sku or len(sku) > 120 or not sku.isascii()
+            or any(not (char.isalnum() or char in "_-") for char in sku)
+        ):
+            return jsonify({"error": "INVALID_SKU"}), 400
+        if payload.get("intent") != "purchase_inquiry" or payload.get("customer_confirmed") is not True:
+            return jsonify({"error": "EXPLICIT_PURCHASE_INQUIRY_REQUIRED"}), 400
+
+        try:
+            import hashlib
+            from datetime import datetime, timezone
+            import state_manager
+
+            items = {item["sku"]: item for item in _whatsapp_store_catalog_snapshot()}
+            item = items.get(sku)
+            if item is None:
+                return jsonify({"error": "SKU_NOT_AVAILABLE"}), 404
+
+            digest = hashlib.sha256((provider + ":" + provider_message_id).encode("ascii")).hexdigest()
+            created_at = datetime.now(timezone.utc).isoformat()
+            result = state_manager.atomic_update(
+                lambda db: _whatsapp_intent_mutation(
+                    db, idempotency_digest=digest, provider=provider, sku=sku, item=item, created_at=created_at
+                )
+            )
+            status = str(result.get("status") or "UNKNOWN") if isinstance(result, dict) else "UNKNOWN"
+            if status == "CONFLICT":
+                return jsonify({"error": "IDEMPOTENCY_CONFLICT"}), 409
+            if status == "CAPACITY":
+                return jsonify({"error": "WHATSAPP_INTENT_CAPACITY_REACHED"}), 503
+            if status == "STATE_INVALID":
+                return jsonify({"error": "WHATSAPP_INTENT_STATE_INVALID"}), 503
+            if status not in {"CREATED", "DUPLICATE"}:
+                return jsonify({"error": "WHATSAPP_INTENT_FAILED"}), 503
+
+            intent = result["intent"]
+            return jsonify({
+                "ok": True,
+                "intent_id": intent["id"],
+                "status": intent["status"],
+                "sku": intent["sku"],
+                "price": intent["price"],
+                "currency": intent["currency"],
+                "checkout_channel": intent["checkout_channel"],
+                "checkout_command": intent["checkout_command"],
+                "payment_in_whatsapp": False,
+                "financial_mutation": False,
+                "duplicate": status == "DUPLICATE",
+            }), 200
+        except Exception as exc:
+            print("[WHATSAPP_STORE] inquiry failed:", type(exc).__name__)
+            return jsonify({"error": "WHATSAPP_INTENT_FAILED"}), 503
 
     return app
