@@ -275,6 +275,10 @@ def query_llm_with_context(question, uid=None, skip_checks=False):
             db = json.load(f)
         user = db.get("users", {}).get(str(uid), {})
         role = user.get("role", "unknown")
+        raw_preferences = (db.get("ui_preferences") or {}).get(str(uid), {}) if uid is not None else {}
+        notification_level = str(raw_preferences.get("notification_level") or "milestones").strip().lower()
+        if notification_level not in {"off", "milestones", "all"}:
+            notification_level = "milestones"
 
         if is_owner(uid):
             wallet = user.get("wallet", {})
@@ -289,6 +293,7 @@ def query_llm_with_context(question, uid=None, skip_checks=False):
         context = f"""
 SLH SYSTEM STATE:
 Role: {role}
+Progress notification preference: {notification_level} (applies to proactive progress updates only; direct command replies and critical security messages remain enabled).
 {financial_context}Agents: {len(state_manager.get_agents())}
 Tasks: {len(db.get('tasks', {}))}
 Votes: {len(db.get('votes', {}))}
