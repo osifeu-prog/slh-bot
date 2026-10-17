@@ -88,6 +88,23 @@ Content-Type: application/json
 - אין לצרוב עדיין קוד שמאתחל ממסר למצב `ON`, ואין לאפשר `restart`/`power_off` דרך HTTP. ברירת המחדל היא ניטור בלבד עד לאחר סקירת בטיחות נפרדת.
 - חישוב רווחיות לא ממומש. לשם כך נדרשים תעריף חשמל מאושר ומדידה מצטברת מאומתת, לצד נתוני תשלום אמיתיים מה־pool; אין להשתמש בהנחת מחיר חשמל או בהכנסת BTC לדוגמה כנתון אמת.
 
+## איתור מקור הקושחה לפי התיעוד הקיים
+
+בדקתי את הדוחות שנשמרו בספרייה ואת קובצי ה־ZIP הזמינים, וגם את ענף GitHub הנוכחי. נמצאו **נתיבי מועמדים**, אבל לא גוף המקור הפעיל שניתן לאמת או לקמפל כאן.
+
+סדר הבדיקה שנגזר מהרישומים המקומיים:
+
+1. `D:\\SLH_CYD_FIX` — סביבת העבודה שסומנה ביומן הבנייה; דווח על Arduino CLI 1.4.1, ESP32 core 3.3.8 ו־COM5, אך תוצאת בנייה שנעצרה ב־23% אינה הצלחת firmware. ברשימת התיקיות הישנה הנתיב הופיע כ־directory link; היעד שלו לא תועד, ולכן אין להניח שהוא מקור יחיד או עדכני.
+2. `D:\\SLH_ECOSYSTEM\\esp\\CYD_Tamagotchi\\`
+3. `D:\\SLH_ECOSYSTEM\\esp\\esp32_lumina\\`
+4. `D:\\SLH_ECOSYSTEM\\esp\\firmware_clean\\`
+5. `D:\\SLH_ECOSYSTEM\\esp\\lumina_test\\`
+6. `D:\\SLH_ECOSYSTEM\\platformio.ini`
+
+נמצאו גם שמות של קבצים המסומנים כגיבוי/שבורים: `esp\\platformio.ini.bak2`, `esp\\platformio.ini.broken`, `esp\\src\\main.cpp.broken`. הם אינם ראיה למקור פעיל ואין להשתמש בהם לצריבה בלי השוואה מול קובץ הבנייה האחרון.
+
+הדוח השמור מכיל את **פקודת הסריקה** ל־PC2, אבל לא את הפלט הסופי של `PC2_REPORT2.txt`. הקבצים `0.1.zip` ו־`0.1(1).zip` שנמצאו בספרייה מכילים `src/main.py` שמייבא `src.webhook_server`, ולא קושחת ESP32; ZIP הבוט מכיל handlers בצד השרת ולא firmware. לכן אין מספיק ראיות לקבוע איזה `main.cpp` הוא הפעיל, או לאשר מפת פינים/חיישנים. אין להמציא קוד משלים או לצרוב קובץ `.broken`.
+
 ## חיבור MCP (Read-Only)\n\nה־Control Plane חושף קריאה מוגנת דרך `/internal/mcp/v1/miners` ו־`/internal/mcp/v1/miners/<device_id>`. שירות MCP משתמש ב־`SLH_CONTROL_PLANE_URL` וב־`SLH_MCP_BRIDGE_TOKEN` שכבר קיימים; אין צורך להמציא `MCP_CHAT_TOKEN` חדש. כלים נוספים ב־MCP: `miners.list` ו־`miners.status`, שניהם לקריאה בלבד ומוגבלים ל־`exec.audit`. המידע מוחזר ללא מזהה בעלים, סודות או פרטי ledger.\n\n## פקודות Telegram
 
 - `/esp_miner_status <device_id>` — סטטוס של מכשיר יחיד.
