@@ -1,8 +1,8 @@
 """Read-only diagnostics for a single user's canonical Credits ledger sequence.
 
-This module reports inconsistencies; it never repairs, rewrites, or classifies a
-ledger event as valid financial evidence. Domain hints are heuristic labels from
-the reason string and must be corroborated against source events before use.
+This module never repairs or rewrites balances. It may reconcile a specifically
+allow-listed historical transition only when its version-controlled source
+snapshot and exact source/destination deltas match. Domain hints remain heuristic.
 """
 from __future__ import annotations
 
@@ -11,6 +11,28 @@ from typing import Any
 
 EPSILON = 1e-8
 MAX_FINDINGS = 25
+
+# Source-backed, one-time consolidation found in the version-controlled DB
+# transition at d013b914bbca1b6c2f50e768d461213ae1cbfbef. That commit records
+# the source wallet (10449 Credits + 50 staked), removes that source account,
+# and moves the destination Credits wallet from 1316 to 11815. The ledger row
+# is at index 2 in the persisted history. This allow-list is deliberately exact:
+# it does not authorize generic alpha_consolidate rows.
+_VERIFIED_ALPHA_CONSOLIDATION = {
+    "time": "2026-08-22T16:12:41.978584+00:00",
+    "from": "8791275334",
+    "to": "8789977826",
+    "credits": 10449.0,
+    "staked_moved": 50.0,
+    "reason": "OWNER_ONLY_CREDITS_POLICY",
+    "previous_index": 1,
+    "event_index": 2,
+    "next_index": 3,
+    "previous_after": 1316.0,
+    "next_before": 11815.0,
+    "source_commit": "d013b914bbca1b6c2f50e768d461213ae1cbfbef",
+    "source_commit_url": "https://github.com/osifeu-prog/slh-bot/commit/d013b914bbca1b6c2f50e768d461213ae1cbfbef",
+}
 
 
 def _number(value: Any) -> float | None:
@@ -159,9 +181,8 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             }
 
     # alpha_consolidate is a global event rather than a per-user Credits row.
-    # Surface it only when it falls strictly between the two rows defining the
-    # gap and its recipient is the audited account. The staked_moved field is
-    # reported separately: it must not be silently added to the Credits delta.
+    # One exact historical instance has independent version-controlled source
+    # evidence; all other rows remain context-only and cannot clear a gap.
     alpha_consolidations = []
     try:
         previous_index = int(previous.get("index", -1))
@@ -184,11 +205,48 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 continue
             credits_component = _number(row.get("credits"))
             staked_component = _number(row.get("staked_moved"))
+            source_uid = str(row.get("from") or "").strip()
+            # If the source account still exists, it must no longer retain the
+            # amounts migrated by this event. Missing/unreadable values fail closed.
+            users_db = db.get("users")
+            source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
+            source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
+            if isinstance(source_user, dict):
+                source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
+                source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
+                source_account_cleared = (
+                    source_credits is not None and source_staked is not None
+                    and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON
+                )
+            else:
+                # The verified historical commit itself deletes the source account.
+                source_account_cleared = True
+            verified = _VERIFIED_ALPHA_CONSOLIDATION
+            exact_source_event = (
+                index == verified["event_index"]
+                and previous_index == verified["previous_index"]
+                and next_index == verified["next_index"]
+                and uid == verified["to"]
+                and source_uid == verified["from"]
+                and str(row.get("time") or "") == verified["time"]
+                and str(row.get("reason") or "") == verified["reason"]
+                and credits_component is not None
+                and abs(credits_component - verified["credits"]) <= EPSILON
+                and staked_component is not None
+                and abs(staked_component - verified["staked_moved"]) <= EPSILON
+                and previous_after is not None
+                and abs(previous_after - verified["previous_after"]) <= EPSILON
+                and next_before is not None
+                and abs(next_before - verified["next_before"]) <= EPSILON
+                and observed_delta is not None
+                and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                and source_account_cleared
+            )
             alpha_consolidations.append({
                 "index": index,
                 "time": str(row.get("time") or "")[:40],
                 "type": "alpha_consolidate",
-                "from": str(row.get("from") or "")[:80],
+                "from": source_uid[:80],
                 "to": str(row.get("to") or "")[:80],
                 "reason": str(row.get("reason") or "")[:80],
                 "credits_component": credits_component,
@@ -206,8 +264,27 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     and abs((credits_component + staked_component) - observed_delta) <= EPSILON
                 ),
                 "record_found": True,
-                "resolves_gap": False,
-                "note": "Context only; credits and staked_moved remain separate and require reconciliation.",
+                "resolves_gap": bool(exact_source_event),
+                "resolution_basis": (
+                    "VERSION_CONTROLLED_SOURCE_AND_DESTINATION_STATE_MATCH"
+                    if exact_source_event else "CONTEXT_ONLY_REQUIRES_RECONCILIATION"
+                ),
+                "source_commit": verified["source_commit"] if exact_source_event else None,
+                "source_commit_url": verified["source_commit_url"] if exact_source_event else None,
+                "historical_source_wallet": (
+                    {"credits": 10449.0, "staked": 50.0}
+                    if exact_source_event else None
+                ),
+                "historical_destination_credits": (
+                    {"before": 1316.0, "after": 11815.0}
+                    if exact_source_event else None
+                ),
+                "note": (
+                    "Exact historical event reconciled against the version-controlled source/destination snapshot; "
+                    "read-only classification only."
+                    if exact_source_event else
+                    "Context only; unverified alpha consolidation rows do not resolve a Credits gap."
+                ),
             })
     if alpha_consolidations:
         evidence["alpha_consolidations"] = alpha_consolidations[:5]
@@ -216,12 +293,19 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
         isinstance(value, dict) and value.get("record_found") is True
         for value in evidence.values()
     )
-    evidence["source_match_status"] = (
-        "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
-        if alpha_consolidations
-        else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
+    verified_alpha = any(
+        item.get("resolves_gap") is True for item in alpha_consolidations
     )
-    evidence["resolves_gap"] = False
+    evidence["source_match_status"] = (
+        "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
+        if verified_alpha
+        else (
+            "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+            if alpha_consolidations
+            else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
+        )
+    )
+    evidence["resolves_gap"] = bool(verified_alpha)
     return evidence
 
 def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS) -> dict:
@@ -259,6 +343,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
     sequence_rows_checked = 0
     non_credits_rows_skipped = 0
     gap_count = 0
+    resolved_gap_count = 0
+    unresolved_gap_count = 0
     arithmetic_count = 0
     malformed_global_rows = 0
     findings = []
@@ -307,16 +393,24 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
             gap_count += 1
             prev_domain = previous["domain_hint"]
             next_domain = summary["domain_hint"]
-            if prev_domain in {"SLH_HINT", "CREDITS_HINT"} and next_domain in {"SLH_HINT", "CREDITS_HINT"} and prev_domain != next_domain:
-                classification = "POSSIBLE_MIXED_DOMAIN_BOUNDARY"
-            elif any(word in (previous["reason"] + " " + summary["reason"]).lower()
-                     for word in ("correction", "reset", "test_grant", "zero")):
-                classification = "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+            source_evidence = _source_evidence_for_gap(db, previous, summary, uid=uid)
+            is_reconciled = source_evidence.get("resolves_gap") is True
+            if is_reconciled:
+                resolved_gap_count += 1
+                classification = "RECONCILED_ALPHA_CONSOLIDATION"
             else:
-                classification = "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
+                unresolved_gap_count += 1
+                if prev_domain in {"SLH_HINT", "CREDITS_HINT"} and next_domain in {"SLH_HINT", "CREDITS_HINT"} and prev_domain != next_domain:
+                    classification = "POSSIBLE_MIXED_DOMAIN_BOUNDARY"
+                elif any(word in (previous["reason"] + " " + summary["reason"]).lower()
+                         for word in ("correction", "reset", "test_grant", "zero")):
+                    classification = "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+                else:
+                    classification = "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
             if len(findings) < limit:
                 findings.append({
                     "type": classification,
+                    "reconciled": bool(is_reconciled),
                     "previous": {
                         "index": previous["index"], "time": previous["time"],
                         "reason": previous["reason"], "domain_hint": prev_domain,
@@ -338,8 +432,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
                         "item_id": summary["item_id"],
                     },
                     "delta_to_explain": before - previous["after"],
-                    "source_evidence_required": True,
-                    "source_evidence": _source_evidence_for_gap(db, previous, summary, uid=uid),
+                    "source_evidence_required": not is_reconciled,
+                    "source_evidence": source_evidence,
                 })
 
         previous = summary
@@ -358,7 +452,7 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         blockers.append("NO_CREDITS_SEQUENCE_ROWS")
     if arithmetic_count:
         blockers.append("ROW_ARITHMETIC_INVALID")
-    if gap_count:
+    if unresolved_gap_count:
         blockers.append("ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY")
     if malformed_global_rows:
         blockers.append("MALFORMED_GLOBAL_LEDGER_ROW")
@@ -376,13 +470,17 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         "rows_checked": rows_checked,
         "credits_sequence_rows_checked": sequence_rows_checked,
         "non_credits_rows_skipped": non_credits_rows_skipped,
-        "continuity_break_count": gap_count,
+        "continuity_break_count": unresolved_gap_count,
+        "observed_discontinuity_count": gap_count,
+        "resolved_gap_count": resolved_gap_count,
+        "unresolved_continuity_break_count": unresolved_gap_count,
         "arithmetic_error_count": arithmetic_count,
         "malformed_global_rows": malformed_global_rows,
         "current_wallet_credits": current_balance,
         "ledger_tail_after": last_summary["after"] if last_summary else None,
         "current_balance_matches_tail": bool(tail_matches),
         "finding_count": gap_count + arithmetic_count + malformed_global_rows,
+        "blocking_finding_count": unresolved_gap_count + arithmetic_count + malformed_global_rows,
         "findings": findings,
         "findings_truncated": (gap_count + arithmetic_count + malformed_global_rows) > len(findings),
         "blockers": blockers,
