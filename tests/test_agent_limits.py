@@ -33,16 +33,23 @@ class AgentLimitTests(unittest.TestCase):
 
     def test_agent_creation_blocks_the_third_regular_agent(self):
         from core.agent_registry import create_agent
+        from core import agent_registry
 
         existing = {
             "1": {"id": "1", "name": "a", "owner_id": "1"},
             "2": {"id": "2", "name": "b", "owner_id": "1"},
         }
-        with patch("core.agent_registry.STORE.get_all", return_value=existing), patch(
+        db = {"users": {"1": {}}, "agents": dict(existing)}
+        with patch(
+            "core.agent_registry.state_manager.atomic_update",
+            side_effect=lambda mutate: mutate(db),
+        ), patch(
             "core.agent_registry.can_create_agent", return_value=False
-        ):
+        ), patch.object(agent_registry.STORE, "rebuild_snapshot"):
             with self.assertRaises(ValueError):
                 create_agent("c", owner_id="1")
+
+        self.assertEqual(db["agents"], existing)
 
 
 if __name__ == "__main__":
