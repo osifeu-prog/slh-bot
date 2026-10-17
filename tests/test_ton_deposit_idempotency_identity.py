@@ -94,6 +94,17 @@ class TonDepositIdempotencyIdentityTests(unittest.TestCase):
 
         self.assertEqual(self.db, before)
 
+    def test_same_hash_with_different_deposit_intent_is_a_conflict(self):
+        self._settle_once()
+        before = copy.deepcopy(self.db)
+        changed = self._meta()
+        changed["deposit_intent_id"] = "intent-new"
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDENTITY_CONFLICT"):
+            self._record(meta=changed)
+
+        self.assertEqual(self.db, before)
+
     def test_same_hash_with_changed_treasury_is_a_conflict(self):
         self._settle_once()
         before = copy.deepcopy(self.db)
