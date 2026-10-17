@@ -16,12 +16,12 @@ TOKEN_LEDGER_KEY = "slh_token_ledger"
 DISTRIBUTOR_PERMISSION = "alpha.distribute"
 EXCHANGE_RESERVE_KEY = "exchange_reserved_slh"
 EXCHANGE_RESERVE_UID = "__EXCHANGE_RESERVE__"
-P2P_TRANSFERS_OPEN_ENV = "SLH_P2P_TRANSFERS_OPEN"
+INTERNAL_TRANSFERS_OPEN_ENV = "SLH_INTERNAL_TRANSFERS_OPEN"
 
 
-def p2p_transfers_open() -> bool:
+def internal_transfers_open() -> bool:
     """Public internal-SLH P2P transfer gate; default closed until explicitly enabled."""
-    return os.getenv(P2P_TRANSFERS_OPEN_ENV, "0").strip() == "1"
+    return os.getenv(INTERNAL_TRANSFERS_OPEN_ENV, "0").strip() == "1"
 
 
 def _amount(value):
@@ -93,8 +93,8 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
     # global transfer gate is closed. Both checks happen before any mutation.
     if is_frozen_account(db, from_uid):
         raise ValueError("ACCOUNT_FROZEN")
-    if not p2p_transfers_open():
-        raise ValueError("SLH_P2P_TRANSFERS_CLOSED")
+    if not internal_transfers_open():
+        raise ValueError("SLH_INTERNAL_TRANSFERS_CLOSED")
 
     ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     sender_wallet = sender.setdefault("wallet", {})

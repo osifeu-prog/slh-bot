@@ -21,7 +21,7 @@ def _p2p_db():
 
 
 def test_p2p_slh_transfer_defaults_closed_without_state_change(monkeypatch):
-    monkeypatch.delenv("SLH_P2P_TRANSFERS_OPEN", raising=False)
+    monkeypatch.delenv("SLH_INTERNAL_TRANSFERS_OPEN", raising=False)
     db = _p2p_db()
     before = copy.deepcopy(db)
     with patch.object(
@@ -29,7 +29,7 @@ def test_p2p_slh_transfer_defaults_closed_without_state_change(monkeypatch):
         "atomic_update",
         side_effect=lambda mutate: mutate(db),
     ):
-        with pytest.raises(ValueError, match="SLH_P2P_TRANSFERS_CLOSED"):
+        with pytest.raises(ValueError, match="SLH_INTERNAL_TRANSFERS_CLOSED"):
             slh_distribution.transfer(
                 sender_uid=SENDER,
                 recipient_uid=RECIPIENT_UID,
@@ -40,14 +40,14 @@ def test_p2p_slh_transfer_defaults_closed_without_state_change(monkeypatch):
 
 
 def test_p2p_slh_transfer_requires_exact_open_value(monkeypatch):
-    monkeypatch.setenv("SLH_P2P_TRANSFERS_OPEN", "true")
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "true")
     db = _p2p_db()
     with patch.object(
         slh_distribution.state_manager,
         "atomic_update",
         side_effect=lambda mutate: mutate(db),
     ):
-        with pytest.raises(ValueError, match="SLH_P2P_TRANSFERS_CLOSED"):
+        with pytest.raises(ValueError, match="SLH_INTERNAL_TRANSFERS_CLOSED"):
             slh_distribution.transfer(
                 sender_uid=SENDER,
                 recipient_uid=RECIPIENT_UID,
@@ -58,7 +58,7 @@ def test_p2p_slh_transfer_requires_exact_open_value(monkeypatch):
 
 
 def test_p2p_slh_transfer_can_be_enabled_explicitly(monkeypatch):
-    monkeypatch.setenv("SLH_P2P_TRANSFERS_OPEN", "1")
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "1")
     db = _p2p_db()
     with patch.object(
         slh_distribution.state_manager,
@@ -78,7 +78,7 @@ def test_p2p_slh_transfer_can_be_enabled_explicitly(monkeypatch):
 
 
 def test_exact_p2p_replay_remains_noop_after_gate_closes_and_sender_freezes(monkeypatch):
-    monkeypatch.setenv("SLH_P2P_TRANSFERS_OPEN", "1")
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "1")
     db = _p2p_db()
     with patch.object(
         slh_distribution.state_manager,
@@ -93,7 +93,7 @@ def test_exact_p2p_replay_remains_noop_after_gate_closes_and_sender_freezes(monk
         )
     assert first["status"] == "completed"
     db["users"][SENDER]["frozen"] = True
-    monkeypatch.setenv("SLH_P2P_TRANSFERS_OPEN", "0")
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "0")
     before = copy.deepcopy(db)
     with patch.object(
         slh_distribution.state_manager,
@@ -181,3 +181,24 @@ def test_all_slh_user_signed_transfer_configs_are_default_closed(monkeypatch):
                 response = client.post(path, json=payload)
             assert response.status_code == 403, (path, response.status_code, response.get_json())
             assert response.get_json() == {"error": "BSC_USER_SIGNED_TRANSFERS_CLOSED"}
+
+
+def test_authorized_slh_air_distribution_is_also_default_closed(monkeypatch):
+    monkeypatch.delenv("SLH_INTERNAL_TRANSFERS_OPEN", raising=False)
+    db = _p2p_db()
+    before = copy.deepcopy(db)
+    monkeypatch.setattr(slh_distribution, "has_permission", lambda uid, permission: True)
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        with pytest.raises(ValueError, match="SLH_INTERNAL_TRANSFERS_CLOSED"):
+            slh_distribution.distribute(
+                distributor_uid=SENDER,
+                recipient_uid=RECIPIENT_UID,
+                amount="1",
+                reason="alpha_air",
+                event_id="air-test-closed",
+            )
+    assert db == before
