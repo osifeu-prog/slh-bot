@@ -61,9 +61,9 @@ def run_command(cmd, msg):
             # Use the same configured Gemini -> optional Ollama -> Groq fallback
             # chain as the canonical assistant; do not bypass it with a local
             # phi3 subprocess.
-            from handlers.llm_handler import query_llm_with_context
+            from core.ask_router import route
             uid = str(msg.get("uid") or "").strip() or None
-            return query_llm_with_context(prompt, uid=uid)
+            return str(route(prompt, uid=uid))
         elif cmd == "complete":
             task_id = msg.get("task_id", "")
             if not task_id:
@@ -200,10 +200,10 @@ def tutor_worker():
                 command = str(msg.get("command", ""))
                 try:
                     if command == "ask":
-                        from handlers.llm_handler import query_llm_with_context
+                        from core.ask_router import route
                         prompt = str(msg.get("prompt") or "").strip()
                         uid = str(msg.get("uid") or "").strip() or None
-                        ans = query_llm_with_context(prompt, uid=uid)[:1000] if prompt else "Question is empty."
+                        ans = str(route(prompt, uid=uid))[:1000] if prompt else "Question is empty."
                     else:
                         import subprocess as sp
                         ans = sp.check_output(
