@@ -19,7 +19,8 @@ CLAIM_LEASE_SECONDS = 600
 MAX_OUTBOX = 20
 MAX_OUTPUT = 2000
 _TUTOR_THREAD_STARTED = False
-_TUTOR_THREAD_LOCK = threading.Lock()
+_AGENT_THREAD_STARTED = False
+_WORKER_START_LOCK = threading.Lock()
 
 
 def run_command(cmd, msg):
@@ -77,16 +78,19 @@ def run_command(cmd, msg):
         return f"Error: {exc}"
 
 
-def _claim_inbox(agent_filter=None, *, exclude_agents=()):
-    """Move inbox messages to a leased processing list in one atomic DB update."""
+def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
+    """Claim at most max_messages under one atomic update to keep leases bounded."""
     now = time.time()
     claimed = []
+    limit = max(1, int(max_messages))
 
     def mutate(db):
         agents = db.setdefault("agents", {})
         if not isinstance(agents, dict):
             raise ValueError("agents must be an object")
         for name, data in agents.items():
+            if len(claimed) >= limit:
+                break
             if not isinstance(data, dict):
                 continue
             if agent_filter is not None and name not in agent_filter:
@@ -98,8 +102,7 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=()):
             if not isinstance(inbox, list) or not isinstance(processing, list):
                 raise ValueError(f"invalid inbox/processing for agent {name}")
 
-            # Requeue expired claims. Keep the original claim ID on the message
-            # so diagnostics can correlate a retry; the next claim gets a new ID.
+            # Requeue expired claims. Keep the original message data intact.
             still_processing = []
             for entry in processing:
                 if not isinstance(entry, dict) or not isinstance(entry.get("message"), dict):
@@ -114,17 +117,16 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=()):
                     still_processing.append(entry)
             data["processing"] = still_processing
 
-            while inbox:
+            while inbox and len(claimed) < limit:
                 msg = inbox.pop(0)
                 if not isinstance(msg, dict):
                     msg = {"command": str(msg)}
                 claim_id = uuid.uuid4().hex
-                entry = {
+                data["processing"].append({
                     "claim_id": claim_id,
                     "message": msg,
                     "claimed_at": now,
-                }
-                data["processing"].append(entry)
+                })
                 claimed.append((str(name), claim_id, dict(msg)))
     state_manager.atomic_update(mutate)
     return claimed
@@ -168,8 +170,6 @@ def _log_worker_error(label):
 def agent_worker():
     while True:
         try:
-            # The tutor has its own response path. Do not let two workers race
-            # to consume the same tutor inbox.
             claimed = _claim_inbox(exclude_agents={"tutor"})
             for name, claim_id, msg in claimed:
                 cmd = str(msg.get("command", "")).strip().lower()
@@ -207,12 +207,13 @@ def tutor_worker():
 
 
 def start_agent_thread():
-    """Start both background workers once; importing this module has no side effects."""
-    global _TUTOR_THREAD_STARTED
+    """Start background workers once; importing this module has no side effects."""
+    global _TUTOR_THREAD_STARTED, _AGENT_THREAD_STARTED
     try:
-        agent_thread = threading.Thread(target=agent_worker, daemon=True, name="agent_worker")
-        agent_thread.start()
-        with _TUTOR_THREAD_LOCK:
+        with _WORKER_START_LOCK:
+            if not _AGENT_THREAD_STARTED:
+                threading.Thread(target=agent_worker, daemon=True, name="agent_worker").start()
+                _AGENT_THREAD_STARTED = True
             if not _TUTOR_THREAD_STARTED:
                 threading.Thread(target=tutor_worker, daemon=True, name="tutor_worker").start()
                 _TUTOR_THREAD_STARTED = True
@@ -275,7 +276,11 @@ def complete_task(uid, task_id):
         if isinstance(points, bool) or not isinstance(points, (int, float)):
             result["message"] = "❌ Invalid task reward"
             return
-        current_student["points"] = current_student.get("points", 0) + points
+        old_points = current_student.get("points", 0)
+        if isinstance(old_points, bool) or not isinstance(old_points, (int, float)):
+            result["message"] = "❌ Invalid student points"
+            return
+        current_student["points"] = old_points + points
         completed.append(task_key)
         result["message"] = f"✅ Task {task_key} completed! +{points} points"
 
