@@ -210,3 +210,18 @@ def test_ingest_rejects_generic_esp32_without_explicit_miner_opt_in(monkeypatch)
     assert exc.value.code == "MINER_ROLE_NOT_ENABLED"
     assert exc.value.status_code == 403
     atomic_update.assert_not_called()
+
+
+
+def test_device_specific_token_is_accepted_for_the_matching_registered_node(monkeypatch):
+    monkeypatch.setenv("SLH_MINER_DEVICE_TOKENS_JSON", json.dumps({DEVICE_ID: "device-specific-token"}))
+    monkeypatch.delenv("SLH_MINER_INGEST_TOKEN", raising=False)
+    db = {"users": {}}
+
+    with patch.object(miner_service.state_manager, "load_json", return_value=_registry()), patch.object(
+        miner_service.state_manager, "atomic_update", side_effect=lambda mutate: mutate(db)
+    ):
+        saved = miner_service.ingest_telemetry(_payload(), "Bearer device-specific-token")
+
+    assert saved["device_id"] == DEVICE_ID
+    assert db["miners"][DEVICE_ID]["temperature_c"] == 68.5
