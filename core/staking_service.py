@@ -14,6 +14,8 @@ import state_manager
 
 def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
     uid = str(uid)
+    if isinstance(amount, bool) or isinstance(lock_days, bool):
+        raise ValueError("INVALID_STAKING_REQUEST")
     try:
         amount = float(amount)
         lock_days = int(lock_days)
@@ -49,6 +51,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         if request_key:
             existing = requests.get(request_key)
             if existing:
+                if not isinstance(existing, dict):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
                 positions = db.get('stake_positions', {})
                 existing_position = (
                     positions.get(existing.get('position_id'))
