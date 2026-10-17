@@ -105,6 +105,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
 
     def test_missing_file_validation_does_not_change_student_state(self):
         db = _db()
+        db["students"]["u1"].pop("completed_tasks")
         before = copy.deepcopy(db)
 
         with self._atomic_patch(db):
