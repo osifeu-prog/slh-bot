@@ -21,16 +21,14 @@ def _agent_task(uid, text):
         raw = raw.split(None, 1)[1].strip()
         lowered = raw.casefold()
 
-    if lowered in _READ_ONLY_AGENT_COMMANDS:
-        return {"command": lowered, "uid": uid}
-
     if is_owner(uid):
-        if lowered in _OWNER_AGENT_COMMANDS:
+        if lowered in (_READ_ONLY_AGENT_COMMANDS | _OWNER_AGENT_COMMANDS):
             return {"command": lowered, "uid": uid}
         parts = raw.split(maxsplit=1)
         if len(parts) == 2 and parts[0].casefold() == "complete":
             return {"command": "complete", "task_id": parts[1].strip(), "uid": uid}
 
+    # Ordinary users' text such as "whoami" is a question, never a host action.
     return {"command": "ask", "prompt": raw, "uid": uid}
 
 
