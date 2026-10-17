@@ -155,6 +155,26 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
     if action == "approve":
         if not withdrawals_open():
             raise ValueError("WITHDRAWALS_CLOSED")
+
+        # Revalidate the immutable payout target and the owner's current freeze
+        # state immediately before changing a pending request to paid.
+        uid = str(req.get("uid") or "").strip()
+        users = db.get("users")
+        user = users.get(uid) if isinstance(users, dict) else None
+        if not isinstance(user, dict):
+            raise ValueError("USER_NOT_FOUND")
+        if user.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
+
+        try:
+            amount = float(req.get("amount"))
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("WITHDRAWAL_RECORD_INVALID") from None
+        if not math.isfinite(amount) or amount < MIN_WITHDRAW:
+            raise ValueError("WITHDRAWAL_RECORD_INVALID")
+        if not valid_ton_address(req.get("address")):
+            raise ValueError("INVALID_ADDRESS")
+
         payout_ref = str(ref or "").strip()
         if not payout_ref or len(payout_ref) > 256:
             raise ValueError("REF_REQUIRED")
