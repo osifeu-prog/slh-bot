@@ -101,7 +101,8 @@ def test_credit_invoice_callback_does_not_create_invoice_when_closed(monkeypatch
 
     assert bot.sent_invoices == []
     assert bot.callback_calls
-    assert bot.callback_calls[0][0] == ("callback-1",)
+    assert bot.callback_calls[0][0][0] == "callback-1"
+    assert "סגורים" in bot.callback_calls[0][0][1]
     assert bot.callback_calls[0][1]["show_alert"] is True
 
 
