@@ -2763,6 +2763,12 @@ def slh_quick_send_config(preset):
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
+        from core.authority import is_owner
+        if not is_owner(uid):
+            return jsonify({"error": "OWNER_ONLY"}), 403
+        from core.bsc_user_signed_gate import user_signed_transfers_open
+        if not user_signed_transfers_open():
+            return jsonify({"error": "BSC_USER_SIGNED_TRANSFERS_CLOSED"}), 403
         from core.slh_quick_send import get_quick_send_config
         result = get_quick_send_config(uid, preset)
         return _no_store(jsonify(result)), 200
@@ -2791,6 +2797,9 @@ def slh_browser_send_config():
 
         if not is_owner(uid):
             return jsonify({"error": "OWNER_ONLY"}), 403
+        from core.bsc_user_signed_gate import user_signed_transfers_open
+        if not user_signed_transfers_open():
+            return jsonify({"error": "BSC_USER_SIGNED_TRANSFERS_CLOSED"}), 403
 
         handoff = get_handoff_metadata(request.cookies.get("slh_wallet_handoff"))
         if not handoff or str(handoff.get("uid")) != str(uid):
@@ -2959,6 +2968,12 @@ def slh_browser_quick_send_config():
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
     try:
+        from core.authority import is_owner
+        if not is_owner(uid):
+            return jsonify({"error": "OWNER_ONLY"}), 403
+        from core.bsc_user_signed_gate import user_signed_transfers_open
+        if not user_signed_transfers_open():
+            return jsonify({"error": "BSC_USER_SIGNED_TRANSFERS_CLOSED"}), 403
         from core.slh_quick_send import get_quick_send_config
         result = get_quick_send_config(uid, "owner_to_tzvika_1")
         return _no_store(jsonify(result)), 200
@@ -3099,6 +3114,9 @@ def secondary_distribution_smoke_config():
     uid = authenticated_uid()
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
+    from core.bsc_user_signed_gate import user_signed_transfers_open
+    if not user_signed_transfers_open():
+        return jsonify({"error": "BSC_USER_SIGNED_TRANSFERS_CLOSED"}), 403
     try:
         from core.secondary_distribution_service import secondary_distribution_snapshot
         from core.wallet_binding import get_binding
@@ -3143,7 +3161,10 @@ def secondary_distribution_prepare():
         )
         return _no_store(jsonify(result)), 200
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        code = str(exc)
+        if code == "BSC_USER_SIGNED_TRANSFERS_CLOSED":
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
     except Exception as exc:
         print("[DISTRIBUTION] prepare error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "SECONDARY_DISTRIBUTION_PREPARE_FAILED"}), 502
