@@ -104,16 +104,22 @@ class AgentHandlerTaskTests(unittest.TestCase):
         self.assertNotIn("- 16", self.bot.replies[-1])
 
     def test_agentoutbox_displays_only_the_authorized_agents_recent_results(self):
-        self.agent["outbox"] = ["first", "second"]
         msg = self._message("/agentoutbox Alpha")
         with (
             patch("handlers.agents_handler.normalize_uid", return_value="123"),
             patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch(
+                "handlers.agents_handler.get_outbox",
+                return_value=("16", ["older result", "newer result"]),
+            ),
         ):
             self.bot.handlers["agentoutbox"](msg)
 
-        self.assertIn("first", self.bot.replies[-1])
-        self.assertIn("second", self.bot.replies[-1])
+        self.assertIn("newest first", self.bot.replies[-1])
+        self.assertLess(
+            self.bot.replies[-1].index("newer result"),
+            self.bot.replies[-1].index("older result"),
+        )
 
 
 if __name__ == "__main__":
