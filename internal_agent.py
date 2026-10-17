@@ -14,7 +14,7 @@ from pathlib import Path
 
 import state_manager
 
-ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "restart", "ask"}
+ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "ask"}
 CLAIM_LEASE_SECONDS = 600
 MAX_OUTBOX = 20
 MAX_OUTPUT = 2000
@@ -54,9 +54,6 @@ def run_command(cmd, msg):
             return os.popen("tail -n 20 logs/bot.log").read() if os.path.exists("logs/bot.log") else "No logs"
         elif cmd == "errors":
             return os.popen("tail -n 20 logs/error.log").read() if os.path.exists("logs/error.log") else "No errors"
-        elif cmd == "restart":
-            os.system("bash start.sh &")
-            return "Restart triggered"
         elif cmd == "ask":
             prompt = str(msg.get("prompt") or "").strip()
             if not prompt:
