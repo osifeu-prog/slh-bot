@@ -246,11 +246,10 @@ def record_ton_deposit(
             except ValueError:
                 raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
 
-            # First distinguish an evidenced identity conflict from missing
-            # or contradictory historical data.
+            # First distinguish internally inconsistent historical data from
+            # a coherent prior settlement that conflicts with this request.
             if (
-                str(previous_tx.get("uid") or "") != uid
-                or str(previous_ledger.get("uid") or "") != str(previous_tx.get("uid") or "")
+                str(previous_ledger.get("uid") or "") != str(previous_tx.get("uid") or "")
                 or old_credits != number(previous_ledger.get("amount"))
                 or old_ton_amount != stored_ledger_ton
                 or old_credits != ledger_amount
@@ -258,7 +257,8 @@ def record_ton_deposit(
             ):
                 raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
             if (
-                old_credits != number(credits)
+                str(previous_tx.get("uid") or "") != uid
+                or old_credits != number(credits)
                 or old_ton_amount != number(ton_amount)
             ):
                 raise ValueError("TON_DEPOSIT_IDENTITY_CONFLICT")
