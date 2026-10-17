@@ -47,6 +47,8 @@ def get_device_status(
         "records": 0,
         "matched_ids": [],
         "source": "state/devices.json",
+        "diagnostics": None,
+        "diagnostics_age_seconds": None,
     }
 
     try:
@@ -58,6 +60,7 @@ def get_device_status(
         devices = data.get("devices", {})
 
         freshest = None
+        freshest_record = None
 
         for device_id, device in devices.items():
             if not isinstance(device, dict):
@@ -78,6 +81,7 @@ def get_device_status(
             for ts in candidates:
                 if ts is not None and (freshest is None or ts > freshest):
                     freshest = ts
+                    freshest_record = device
 
         if freshest is None:
             result["status"] = "unknown"
@@ -93,6 +97,15 @@ def get_device_status(
         else:
             result["status"] = "offline"
             result["status_icon"] = "🔴"
+
+        if isinstance(freshest_record, dict):
+            received_at = _timestamp(freshest_record.get("diagnostics_received_at"))
+            if received_at is not None:
+                diagnostics_age = max(0.0, now - received_at)
+                result["diagnostics_age_seconds"] = diagnostics_age
+                diagnostics = freshest_record.get("diagnostics")
+                if diagnostics_age <= ttl_seconds and isinstance(diagnostics, dict) and diagnostics.get("version") == 1:
+                    result["diagnostics"] = diagnostics
 
         return result
 
