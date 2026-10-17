@@ -239,8 +239,8 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
 
     def test_non_owner_agent_cannot_run_host_commands_but_can_ask_slh_ai(self):
         with (
-            patch.object(internal_agent, "run_command", return_value="answer from fallback") as run,
             patch("core.ask_router.route", return_value="answer from fallback") as route,
+            patch.object(internal_agent.os, "system") as system_call,
         ):
             blocked = internal_agent._dispatch_worker_command(
                 "whoami", {"uid": "customer"}, owner_authorized=False
@@ -257,8 +257,8 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual(blocked, "OWNER_ONLY_AGENT")
         self.assertEqual(answer, "answer from fallback")
         self.assertIn("not allowed", owner_restart)
-        run.assert_not_called()
-        route.assert_not_called()
+        route.assert_called_once_with("Please explain status", uid="customer")
+        system_call.assert_not_called()
 
     def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
