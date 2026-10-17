@@ -166,14 +166,71 @@ def record_ton_deposit(
 
     def mutate(db):
         users = db.setdefault("users", {})
+        if not isinstance(users, dict):
+            raise ValueError("TON_DEPOSIT_USERS_INVALID")
+
+        used_txs = db.setdefault("used_ton_txs", [])
+        if not isinstance(used_txs, list):
+            raise ValueError("TON_DEPOSIT_STORE_INVALID")
+
+        if tx_hash in used_txs:
+            # A hash is only an idempotent replay when its original immutable
+            # identity can be reconstructed and matches this request.
+            if used_txs.count(tx_hash) != 1:
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            transactions = db.get("transactions", [])
+            ledger = db.get("ledger", [])
+            if not isinstance(transactions, list) or not isinstance(ledger, list):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            tx_rows = [
+                row for row in transactions
+                if isinstance(row, dict) and str(row.get("tx_hash") or "") == tx_hash
+            ]
+            ledger_rows = [
+                row for row in ledger
+                if isinstance(row, dict)
+                and row.get("reason") == "ton:deposit"
+                and isinstance(row.get("meta"), dict)
+                and str(row["meta"].get("tx_hash") or "") == tx_hash
+            ]
+            if len(tx_rows) != 1 or len(ledger_rows) != 1:
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            original_tx = tx_rows[0]
+            original_ledger = ledger_rows[0]
+            original_meta = original_ledger["meta"]
+
+            def same_numeric(left, right):
+                try:
+                    left_value = float(left)
+                    right_value = float(right)
+                except (TypeError, ValueError, OverflowError):
+                    return False
+                return (
+                    math.isfinite(left_value)
+                    and math.isfinite(right_value)
+                    and left_value == right_value
+                )
+
+            identity_matches = (
+                original_tx.get("type") == "ton"
+                and str(original_tx.get("uid") or "") == uid
+                and same_numeric(original_tx.get("credits"), credits)
+                and same_numeric(original_tx.get("ton_amount"), ton_amount)
+                and str(original_ledger.get("uid") or "") == uid
+                and same_numeric(original_ledger.get("amount"), credits)
+                and same_numeric(original_meta.get("ton_amount"), ton_amount)
+                and same_numeric(original_ledger.get("before", 0), original_ledger.get("before", 0))
+                and same_numeric(original_ledger.get("after"), float(original_ledger.get("before", 0)) + credits)
+            )
+            if not identity_matches:
+                raise ValueError("TON_DEPOSIT_IDEMPOTENCY_CONFLICT")
+            return None
 
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
-
-        used_txs = db.setdefault("used_ton_txs", [])
-
-        if tx_hash in used_txs:
-            return None
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
