@@ -225,3 +225,20 @@ def test_device_specific_token_is_accepted_for_the_matching_registered_node(monk
 
     assert saved["device_id"] == DEVICE_ID
     assert db["miners"][DEVICE_ID]["temperature_c"] == 68.5
+
+
+
+def test_miner_api_route_rejects_oversized_payload():
+    from flask import Flask
+    from core.mcp_bridge_routes import register_mcp_bridge_routes
+
+    app = Flask("miner-route-large-body-test")
+    register_mcp_bridge_routes(app)
+    response = app.test_client().post(
+        "/api/miner",
+        data="x" * 8193,
+        content_type="application/json",
+    )
+
+    assert response.status_code == 413
+    assert response.get_json() == {"error": "PAYLOAD_TOO_LARGE"}
