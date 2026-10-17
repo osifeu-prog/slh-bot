@@ -38,6 +38,48 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
     def _atomic_update(self, mutate):
         return mutate(self.db)
 
+    def test_legacy_text_message_is_treated_as_a_question_not_a_command(self):
+        self.db["agents"]["alpha"]["inbox"] = ["restart"]
+
+        with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
+            claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
+
+        self.assertEqual(len(claimed), 1)
+        self.assertEqual(
+            claimed[0][2],
+            {"command": "ask", "prompt": "restart", "uid": ""},
+        )
+
+    def test_ask_uses_the_configured_provider_fallback_chain(self):
+        with patch(
+            "core.ask_router.route",
+            return_value="answer from canonical AI fallback",
+        ) as query:
+            result = internal_agent.run_command(
+                "ask", {"prompt": "Explain this safely", "uid": "owner"}
+            )
+
+        self.assertEqual(result, "answer from canonical AI fallback")
+        query.assert_called_once_with("Explain this safely", uid="owner")
+
+    def test_legacy_restart_command_is_disabled_even_for_owner(self):
+        with patch("core.authority.is_owner", return_value=True), patch.object(
+            internal_agent.os, "system"
+        ) as system_call:
+            result = internal_agent.run_command("restart", {"uid": "owner"})
+
+        self.assertEqual(result, "Unknown: restart")
+        system_call.assert_not_called()
+
+    def test_sensitive_agent_commands_require_owner_identity(self):
+        with patch("core.authority.is_owner", return_value=False), patch.object(
+            internal_agent.os, "system"
+        ) as system_call:
+            result = internal_agent.run_command("restart", {"uid": "123"})
+
+        self.assertEqual(result, "OWNER_ONLY")
+        system_call.assert_not_called()
+
     def test_agent_claim_moves_one_message_to_processing_without_losing_other_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
@@ -52,7 +94,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.db["agents"]["alpha"]["outbox"] = [f"old-{index}" for index in range(25)]
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
-            name, claim_id, _message = claimed[0]
+            name, claim_id, _message, _owner_authorized = claimed[0]
             finalized = internal_agent._finalize_message(name, claim_id, "new-output")
 
         self.assertTrue(finalized)
@@ -102,6 +144,121 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
                 arg = node.args[0]
                 if isinstance(arg, ast.Constant) and arg.value == "db.json":
                     self.fail("internal_agent.py must not access root db.json directly")
+
+    def test_actual_agent_worker_claims_ask_and_finalizes_outbox_result(self):
+        payload = {
+            "command": "ask",
+            "prompt": "Summarize readiness without executing actions",
+            "uid": "owner",
+            "request_id": "telegram:owner:555:900",
+        }
+        self.db["agents"]["alpha"]["inbox"] = [payload]
+        self.db["agents"]["alpha"]["processing"] = []
+
+        class StopWorker(BaseException):
+            """Stop the background loop after its first complete iteration."""
+
+        with (
+            patch.object(
+                internal_agent.state_manager,
+                "atomic_update",
+                side_effect=self._atomic_update,
+            ),
+            patch(
+                "core.ask_router.route",
+                return_value="answer from configured SLH fallback",
+            ) as query,
+            patch.object(internal_agent.time, "sleep", side_effect=StopWorker),
+        ):
+            with self.assertRaises(StopWorker):
+                internal_agent.agent_worker()
+
+        query.assert_called_once_with(
+            "Summarize readiness without executing actions",
+            uid="owner",
+        )
+        agent = self.db["agents"]["alpha"]
+        self.assertEqual(agent["inbox"], [])
+        self.assertEqual(agent["processing"], [])
+        self.assertEqual(len(agent["outbox"]), 1)
+        self.assertIn("answer from configured SLH fallback", agent["outbox"][0])
+        self.assertIn("ask", agent["outbox"][0])
+
+    def test_numeric_agent_ids_route_workers_by_display_name(self):
+        self.db["agents"] = {
+            "29": {
+                "name": "tutor",
+                "inbox": [{"command": "ask", "prompt": "tutor prompt", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+            "30": {
+                "name": "internal-console",
+                "inbox": [{"command": "ask", "prompt": "general prompt", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+        }
+
+        with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
+            general = internal_agent._claim_inbox(exclude_agents={"tutor"}, max_messages=10)
+            tutor = internal_agent._claim_inbox(agent_filter={"tutor"}, max_messages=10)
+
+        self.assertEqual([item[0] for item in general], ["30"])
+        self.assertEqual([item[0] for item in tutor], ["29"])
+        self.assertEqual(self.db["agents"]["29"]["inbox"], [])
+        self.assertEqual(self.db["agents"]["30"]["inbox"], [])
+
+    def test_claimed_host_command_includes_owner_owned_agent_authority(self):
+        self.db["agents"] = {
+            "16": {
+                "name": "customer-agent",
+                "owner_id": "customer",
+                "inbox": [{"command": "whoami", "uid": "customer"}],
+                "processing": [],
+                "outbox": [],
+            },
+            "17": {
+                "name": "owner-agent",
+                "owner_id": "owner",
+                "inbox": [{"command": "whoami", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+        }
+        with (
+            patch("core.authority.is_owner", side_effect=lambda uid: str(uid) == "owner"),
+            patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update),
+        ):
+            claimed = internal_agent._claim_inbox(max_messages=10)
+
+        self.assertEqual({item[0]: item[3] for item in claimed}, {
+            "16": False,
+            "17": True,
+        })
+
+    def test_non_owner_agent_cannot_run_host_commands_but_can_ask_slh_ai(self):
+        with (
+            patch("core.ask_router.route", return_value="answer from fallback") as route,
+            patch.object(internal_agent.os, "system") as system_call,
+        ):
+            blocked = internal_agent._dispatch_worker_command(
+                "whoami", {"uid": "customer"}, owner_authorized=False
+            )
+            answer = internal_agent._dispatch_worker_command(
+                "ask",
+                {"uid": "customer", "prompt": "Please explain status"},
+                owner_authorized=False,
+            )
+            owner_restart = internal_agent._dispatch_worker_command(
+                "restart", {"uid": "owner"}, owner_authorized=True
+            )
+
+        self.assertEqual(blocked, "OWNER_ONLY_AGENT")
+        self.assertEqual(answer, "answer from fallback")
+        self.assertIn("not allowed", owner_restart)
+        route.assert_called_once_with("Please explain status", uid="customer")
+        system_call.assert_not_called()
 
     def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):

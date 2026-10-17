@@ -1,0 +1,156 @@
+import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from handlers import agents_handler
+
+
+class FakeBot:
+    def __init__(self):
+        self.handlers = {}
+        self.replies = []
+
+    def message_handler(self, commands=None, **_kwargs):
+        def decorate(fn):
+            for command in commands or []:
+                self.handlers[str(command)] = fn
+            return fn
+        return decorate
+
+    def reply_to(self, _message, text, **_kwargs):
+        self.replies.append(str(text))
+
+
+class AgentHandlerTaskTests(unittest.TestCase):
+    def setUp(self):
+        self.bot = FakeBot()
+        agents_handler.register(self.bot, None)
+        self.agent = {
+            "id": "16",
+            "name": "Alpha",
+            "owner_id": "123",
+            "outbox": [],
+        }
+
+    def _message(self, text):
+        return SimpleNamespace(
+            text=text,
+            from_user=SimpleNamespace(id=123),
+            chat=SimpleNamespace(id=555),
+            message_id=777,
+        )
+
+    def test_sendagent_queues_free_text_as_an_ask_task(self):
+        msg = self._message("/sendagent Alpha check progress and report ledger")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=False),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        send.assert_called_once_with(
+            "16",
+            {
+                "command": "ask",
+                "prompt": "check progress and report ledger",
+                "uid": "123",
+                "request_id": "telegram:123:555:777",
+                "source": "telegram:123",
+            },
+        )
+        self.assertIn("/agent_outbox 16", self.bot.replies[-1])
+        self.assertIn("/agentoutbox Alpha", self.bot.replies[-1])
+
+    def test_explicit_ask_whoami_stays_a_question_for_the_owner(self):
+        msg = self._message("/sendagent Alpha ask whoami")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="8789977826"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=True),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "whoami")
+        self.assertEqual(task["uid"], "8789977826")
+
+    def test_non_owner_whoami_text_is_a_question_not_a_host_command(self):
+        msg = self._message("/sendagent Alpha whoami")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=False),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "whoami")
+        self.assertEqual(task["uid"], "123")
+
+    def test_non_owner_cannot_turn_plain_text_restart_into_a_restart_command(self):
+        msg = self._message("/sendagent Alpha restart")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=False),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "restart")
+
+    def test_restart_text_is_not_routed_to_the_legacy_restart_command_even_for_owner(self):
+        msg = self._message("/sendagent Alpha restart")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=True),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "restart")
+
+    def test_inbox_unpacks_canonical_agent_id_and_messages_tuple(self):
+        msg = self._message("/inbox Alpha")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.get_inbox", return_value=("16", [{"command": "ask", "prompt": "check ledger"}])),
+        ):
+            self.bot.handlers["inbox"](msg)
+
+        self.assertIn("- ask: check ledger", self.bot.replies[-1])
+        self.assertNotIn("- 16", self.bot.replies[-1])
+
+    def test_agentoutbox_displays_only_the_authorized_agents_recent_results(self):
+        msg = self._message("/agentoutbox Alpha")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch(
+                "handlers.agents_handler.get_outbox",
+                return_value=("16", ["older result", "newer result"]),
+            ),
+        ):
+            self.bot.handlers["agentoutbox"](msg)
+
+        self.assertIn("newest first", self.bot.replies[-1])
+        self.assertLess(
+            self.bot.replies[-1].index("newer result"),
+            self.bot.replies[-1].index("older result"),
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -299,6 +299,8 @@ class WebAppApiAuthTests(unittest.TestCase):
             "custody": False,
         }
         with patch("webapp.authenticated_uid", return_value="8789977826"), patch(
+            "core.authority.is_owner", return_value=True
+        ), patch.dict("os.environ", {"SLH_BSC_USER_SIGNED_TRANSFERS_OPEN": "1"}), patch(
             "core.slh_quick_send.get_quick_send_config", return_value=cfg
         ):
             response = self.client.get("/api/v1/wallet/slh/browser-quick-send")
@@ -401,6 +403,8 @@ class WebAppApiAuthTests(unittest.TestCase):
             "custody": False,
         }
         with patch("webapp.authenticated_uid", return_value="8789977826"), patch(
+            "core.authority.is_owner", return_value=True
+        ), patch.dict("os.environ", {"SLH_BSC_USER_SIGNED_TRANSFERS_OPEN": "1"}), patch(
             "core.slh_quick_send.get_quick_send_config", return_value=payload
         ):
             response = self.client.get("/api/v1/slh/quick-send/owner_to_tzvika_1")
@@ -410,6 +414,8 @@ class WebAppApiAuthTests(unittest.TestCase):
 
     def test_quick_send_config_rejects_non_owner(self):
         with patch("webapp.authenticated_uid", return_value="5010371391"), patch(
+            "core.authority.is_owner", return_value=False
+        ), patch(
             "core.slh_quick_send.get_quick_send_config",
             side_effect=PermissionError("OWNER_ONLY"),
         ):
