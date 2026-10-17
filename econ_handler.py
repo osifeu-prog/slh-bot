@@ -59,22 +59,36 @@ def register_econ_handlers(bot):
                 referrer_uid=referrer_uid,
                 meta={
                     "source": "telegram_buy",
+                    "idempotency_key": f"telegram-buy:{uid}:{call.id}",
+                    "item_id": item,
                 },
             )
 
-            bot.answer_callback_query(
-                call.id,
-                f"✅ Purchased {item}! "
-                f"Remaining: {result['credits']} credits"
-            )
-
-            bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text=(
+            if result.get("duplicate"):
+                callback_text = (
+                    "ℹ️ This purchase was already processed. "
+                    f"Remaining: {result['credits']} credits."
+                )
+                message_text = (
+                    f"ℹ️ This purchase of {item} was already processed; "
+                    "no second charge was applied.\n"
+                    f"Remaining: {result['credits']} credits."
+                )
+            else:
+                callback_text = (
+                    f"✅ Purchased {item}! "
+                    f"Remaining: {result['credits']} credits"
+                )
+                message_text = (
                     f"✅ Purchased {item} for {price} credits.\n"
                     f"Remaining: {result['credits']} credits."
                 )
+
+            bot.answer_callback_query(call.id, callback_text)
+            bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=message_text,
             )
 
         except ValueError as e:
