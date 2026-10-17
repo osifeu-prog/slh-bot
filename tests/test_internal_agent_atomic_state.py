@@ -36,25 +36,28 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
     def _atomic_update(self, mutate):
         return mutate(self.db)
 
-    def test_agent_claim_moves_messages_to_processing_without_losing_tutor_inbox(self):
+    def test_agent_claim_moves_one_message_to_processing_without_losing_other_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
 
-        self.assertEqual(len(claimed), 2)
-        self.assertEqual(self.db["agents"]["alpha"]["inbox"], [])
-        self.assertEqual(len(self.db["agents"]["alpha"]["processing"]), 2)
+        self.assertEqual(len(claimed), 1)
+        self.assertEqual(self.db["agents"]["alpha"]["inbox"], [{"command": "status"}])
+        self.assertEqual(len(self.db["agents"]["alpha"]["processing"]), 1)
         self.assertEqual(self.db["agents"]["tutor"]["inbox"], [{"command": "hello"}])
         self.assertEqual(self.db["agents"]["tutor"].get("processing", []), [])
 
-    def test_finalize_is_atomic_and_caps_outbox(self):
+    def test_finalize_caps_outbox_and_removes_only_its_claim(self):
+        self.db["agents"]["alpha"]["outbox"] = [f"old-{index}" for index in range(25)]
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
             name, claim_id, _message = claimed[0]
-            for index in range(25):
-                internal_agent._finalize_message(name, claim_id if index == 0 else "missing", f"output-{index}")
+            finalized = internal_agent._finalize_message(name, claim_id, "new-output")
 
-        self.assertEqual(len(self.db["agents"]["alpha"]["processing"]), 1)
-        self.assertEqual(self.db["agents"]["alpha"]["outbox"], ["output-0"])
+        self.assertTrue(finalized)
+        self.assertEqual(len(self.db["agents"]["alpha"]["outbox"]), 20)
+        self.assertEqual(self.db["agents"]["alpha"]["outbox"][-1], "new-output")
+        self.assertEqual(self.db["agents"]["alpha"]["processing"], [])
+        self.assertEqual(self.db["agents"]["alpha"]["inbox"], [{"command": "status"}])
 
     def test_finalize_does_not_append_output_for_missing_or_expired_claim(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
@@ -87,7 +90,8 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual(self.db["students"]["student-1"]["points"], 7)
 
     def test_module_has_no_direct_root_db_json_reads_or_writes(self):
-        source = open(internal_agent.__file__, encoding="utf-8").read()
+        with open(internal_agent.__file__, encoding="utf-8") as source_file:
+            source = source_file.read()
         tree = ast.parse(source)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
@@ -97,15 +101,30 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
                 if isinstance(arg, ast.Constant) and arg.value == "db.json":
                     self.fail("internal_agent.py must not access root db.json directly")
 
-    def test_tutor_and_general_workers_have_separate_inboxes(self):
+    def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             general = internal_agent._claim_inbox(exclude_agents={"tutor"})
             tutor = internal_agent._claim_inbox(agent_filter={"tutor"})
 
-        self.assertEqual([item[0] for item in general], ["alpha", "alpha"])
+        self.assertEqual([item[0] for item in general], ["alpha"])
         self.assertEqual([item[0] for item in tutor], ["tutor"])
-        self.assertEqual(self.db["agents"]["alpha"]["inbox"], [])
+        self.assertEqual(self.db["agents"]["alpha"]["inbox"], [{"command": "status"}])
         self.assertEqual(self.db["agents"]["tutor"]["inbox"], [])
+
+    def test_expired_claim_is_requeued(self):
+        self.db["agents"]["alpha"]["processing"] = [{
+            "claim_id": "expired",
+            "message": {"command": "whoami"},
+            "claimed_at": 0,
+        }]
+        self.db["agents"]["alpha"]["inbox"] = []
+        with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
+            claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
+
+        self.assertEqual(len(claimed), 1)
+        self.assertEqual(claimed[0][2], {"command": "whoami"})
+        self.assertNotEqual(claimed[0][1], "expired")
+        self.assertEqual(self.db["agents"]["alpha"]["processing"][0]["claim_id"], claimed[0][1])
 
 
 if __name__ == "__main__":
