@@ -11,6 +11,8 @@ import re
 
 import requests
 
+from core.financial_gates import stars_payments_open
+
 from core.stars_price_authority import (
     CREDIT_PACKS,
     TELEGRAM_STARS_CURRENCY,
@@ -73,6 +75,11 @@ def build_invoice_request(uid, kind, item_id):
 
 
 def create_invoice_link(req):
+    # This is the final side-effect boundary for Mini App invoice links too.
+    # Never contact Telegram to create a new invoice while the gate is closed;
+    # confirmed successful_payment callbacks remain handled elsewhere.
+    if not stars_payments_open():
+        raise ValueError("STARS_PAYMENTS_CLOSED")
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN_MISSING")
