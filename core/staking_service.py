@@ -66,12 +66,51 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                     stored_lock_days = int(existing_position.get("lock_days"))
                 except (TypeError, ValueError, OverflowError):
                     raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN") from None
+                position_id = str(existing.get("position_id") or "").strip()
                 if (
-                    not math.isfinite(stored_amount)
+                    not position_id
+                    or str(existing_position.get("id") or "") != position_id
+                    or not math.isfinite(stored_amount)
                     or str(existing_position.get("uid") or "") != uid
                     or str(existing.get("uid") or "") != uid
+                    or stored_lock_days <= 0
                 ):
                     raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
+
+                matching_ledger = [
+                    row for row in ledger
+                    if isinstance(row, dict)
+                    and str(row.get("uid") or "") == uid
+                    and str(row.get("reason") or "") == "staking:stake_locked"
+                    and isinstance(row.get("meta"), dict)
+                    and str(row["meta"].get("position_id") or "") == position_id
+                ]
+                if len(matching_ledger) != 1:
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
+                ledger_row = matching_ledger[0]
+                ledger_meta = ledger_row["meta"]
+                try:
+                    ledger_amount = float(ledger_row.get("amount"))
+                    ledger_before = float(ledger_row.get("before"))
+                    ledger_after = float(ledger_row.get("after"))
+                    ledger_lock_days = int(ledger_meta.get("lock_days"))
+                    staked_before = float(ledger_meta.get("staked_before"))
+                    staked_after = float(ledger_meta.get("staked_after"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN") from None
+                evidence_values = (
+                    ledger_amount, ledger_before, ledger_after,
+                    staked_before, staked_after,
+                )
+                if (
+                    not all(math.isfinite(value) for value in evidence_values)
+                    or not math.isclose(ledger_amount, -stored_amount, rel_tol=0.0, abs_tol=1e-9)
+                    or ledger_lock_days != stored_lock_days
+                    or not math.isclose(ledger_before + ledger_amount, ledger_after, rel_tol=0.0, abs_tol=1e-9)
+                    or not math.isclose(staked_before + stored_amount, staked_after, rel_tol=0.0, abs_tol=1e-9)
+                ):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
+
                 if (
                     not math.isclose(stored_amount, amount, rel_tol=0.0, abs_tol=1e-9)
                     or stored_lock_days != lock_days
