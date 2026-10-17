@@ -1,7 +1,9 @@
 import ast
 import copy
+import importlib
+import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import internal_agent
 
@@ -125,6 +127,42 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual(claimed[0][2], {"command": "whoami"})
         self.assertNotEqual(claimed[0][1], "expired")
         self.assertEqual(self.db["agents"]["alpha"]["processing"][0]["claim_id"], claimed[0][1])
+
+
+    def test_worker_autostart_is_gated_by_run_bot(self):
+        with (
+            patch.dict(os.environ, {"RUN_BOT": "0"}),
+            patch.object(internal_agent, "start_agent_thread") as start,
+        ):
+            internal_agent._maybe_start_workers()
+            start.assert_not_called()
+
+        with (
+            patch.dict(os.environ, {"RUN_BOT": "1"}),
+            patch.object(internal_agent, "start_agent_thread") as start,
+        ):
+            internal_agent._maybe_start_workers()
+            start.assert_called_once_with()
+
+
+    def test_module_import_starts_both_workers_only_when_run_bot_enabled(self):
+        # Reload the module with Thread mocked to test the actual import-time path
+        # without spawning worker loops inside the test runner.
+        try:
+            threads = [MagicMock(), MagicMock()]
+            with (
+                patch.dict(os.environ, {"RUN_BOT": "1"}),
+                patch("threading.Thread", side_effect=threads) as thread_class,
+            ):
+                importlib.reload(internal_agent)
+                self.assertEqual(thread_class.call_count, 2)
+                names = [call.kwargs.get("name") for call in thread_class.call_args_list]
+                self.assertCountEqual(names, ["agent_worker", "tutor_worker"])
+                self.assertEqual([thread.start.call_count for thread in threads], [1, 1])
+        finally:
+            # Restore the module to a test-safe state; no workers are started here.
+            with patch.dict(os.environ, {"RUN_BOT": "0"}):
+                importlib.reload(internal_agent)
 
 
 if __name__ == "__main__":

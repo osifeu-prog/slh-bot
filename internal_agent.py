@@ -207,7 +207,7 @@ def tutor_worker():
 
 
 def start_agent_thread():
-    """Start background workers once; importing this module has no side effects."""
+    """Start background workers once when requested by the live runtime."""
     global _TUTOR_THREAD_STARTED, _AGENT_THREAD_STARTED
     try:
         with _WORKER_START_LOCK:
@@ -289,3 +289,13 @@ def complete_task(uid, task_id):
     except Exception:
         return "❌ DB error"
     return result["message"]
+
+def _maybe_start_workers():
+    """Start the internal workers only when the bot runtime is explicitly enabled."""
+    if os.getenv("RUN_BOT", "").strip() == "1":
+        start_agent_thread()
+
+
+# Production entrypoint loads this module via complete_handler. Keep ordinary imports
+# side-effect-free in tests/tools, but restore worker startup in the active bot runtime.
+_maybe_start_workers()
