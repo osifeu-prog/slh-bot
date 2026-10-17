@@ -62,7 +62,21 @@ def _local_state_fingerprint():
         raw = path.read_bytes()
         after = path.stat()
 
-    if before.st_size != after.st_size or before.st_mtime_ns != after.st_mtime_ns:
+    before_identity = (
+        before.st_dev,
+        before.st_ino,
+        before.st_size,
+        before.st_mtime_ns,
+        before.st_ctime_ns,
+    )
+    after_identity = (
+        after.st_dev,
+        after.st_ino,
+        after.st_size,
+        after.st_mtime_ns,
+        after.st_ctime_ns,
+    )
+    if before_identity != after_identity:
         raise ValueError("STATE_FILE_CHANGED_DURING_READ")
 
     database = json.loads(raw.decode("utf-8"))
@@ -89,8 +103,12 @@ def _local_state_fingerprint():
     return {
         "fingerprint_version": 1,
         "source": "local_state_manager_json",
-        "db_file_configured": str(state_manager.DB_FILE),
-        "db_file_resolved": str(path),
+        "db_file_configured": (
+            configured_path.as_posix()
+            if not configured_path.is_absolute()
+            else "<absolute-path-configured>"
+        ),
+        "db_file_path_kind": "absolute" if configured_path.is_absolute() else "relative",
         "file_exists": True,
         "size_bytes": len(raw),
         "mtime_ns": after.st_mtime_ns,
@@ -104,18 +122,6 @@ def _local_state_fingerprint():
             "run_bot": os.getenv("RUN_BOT", "unset"),
         },
     }
-
-
-def _state_fingerprint_auth_error():
-    """Authenticate the read-only fingerprint route with the existing bridge secret."""
-    expected = os.getenv("SLH_MCP_BRIDGE_TOKEN", "").strip()
-    if not expected:
-        return jsonify({"error": "MCP_BRIDGE_NOT_CONFIGURED"}), 503
-    authorization = request.headers.get("Authorization", "").strip()
-    scheme, _, supplied = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not supplied or not hmac.compare_digest(supplied, expected):
-        return jsonify({"error": "MCP_BRIDGE_AUTH_REQUIRED"}), 401
-    return None
 
 
 
@@ -200,8 +206,8 @@ def register_mcp_bridge_routes(app):
 
     @app.route("/internal/mcp/v1/state/fingerprint", methods=["GET"])
     def mcp_bridge_state_fingerprint():
-        """Read-only, token-authenticated fingerprint; never disclose database rows."""
-        auth_error = _state_fingerprint_auth_error()
+        """Read-only, permission-gated fingerprint; never disclose database rows."""
+        _subject, auth_error = _require("agents.view_self")
         if auth_error is not None:
             return auth_error
 
