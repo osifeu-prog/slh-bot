@@ -73,6 +73,11 @@ def build_invoice_request(uid, kind, item_id):
 
 
 def create_invoice_link(req):
+    # Final boundary: all Mini App callers must pass the shared Stars gate
+    # immediately before creating a new Telegram invoice link.
+    from core.stars_gate import require_stars_payments_open
+    require_stars_payments_open()
+
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN_MISSING")
