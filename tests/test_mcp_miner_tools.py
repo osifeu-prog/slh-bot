@@ -8,7 +8,7 @@ from slh_mcp.tools import miners as miner_tools
 
 
 OWNER = Principal(
-    subject="8789977826",
+    subject="12345",
     role="OWNER",
     permissions=frozenset({"exec.audit"}),
 )
