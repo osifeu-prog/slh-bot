@@ -434,7 +434,7 @@ def _format_miner_status(device_id, payload):
         f"Voltage: `{_miner_display(payload.get('volts'), 'V')}`\n"
         f"Current: `{_miner_display(payload.get('amps'), 'A')}`\n"
         f"Energy: `{_miner_display(payload.get('energy_kwh'), 'kWh')}`\n"
-        f"Status: `{payload.get('status', 'UNKNOWN')}`\n"
+        f"Status: `{shown_status}`\n"
         f"Reported by node: `{payload.get('reported_status', '-')}`\n"
         f"Alerts: `{alert_text}`\n"
         f"Last seen: `{payload.get('last_seen', '-')}`\n\n"
