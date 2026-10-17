@@ -31,17 +31,19 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         if user is None:
             raise ValueError("user not found")
 
-        wallet = user.setdefault("wallet", {})
-        credits = float(wallet.get("credits", 0) or 0)
-        staked = float(wallet.get("staked", 0) or 0)
-
-        positions = db.setdefault('stake_positions', {})
         request_key = f'{uid}:{request_id}' if request_id else ''
         if request_key:
-            requests = db.setdefault('staking_requests', {})
-            existing = requests.get(request_key)
+            requests = db.get('staking_requests', {})
+            existing = requests.get(request_key) if isinstance(requests, dict) else None
             if existing:
-                existing_position = positions.get(existing.get('position_id'))
+                positions = db.get('stake_positions', {})
+                wallet = user.get("wallet", {})
+                wallet = wallet if isinstance(wallet, dict) else {}
+                existing_position = (
+                    positions.get(existing.get('position_id'))
+                    if isinstance(positions, dict)
+                    else None
+                )
                 return {
                     'status': 'duplicate',
                     'request_id': request_id,
@@ -49,6 +51,16 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                     'credits': float(wallet.get('credits', 0) or 0),
                     'staked': float(wallet.get('staked', 0) or 0),
                 }
+
+        # Freeze applies to new staking debits, but not to an exact retry of
+        # an already-created request above.
+        if isinstance(user, dict) and user.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
+
+        wallet = user.setdefault("wallet", {})
+        credits = float(wallet.get("credits", 0) or 0)
+        staked = float(wallet.get("staked", 0) or 0)
+        positions = db.setdefault('stake_positions', {})
         if credits < amount:
             raise ValueError("insufficient credits")
         now = time.time()
