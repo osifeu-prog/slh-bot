@@ -80,6 +80,7 @@ def test_help_metadata_covers_existing_runtime_commands():
         "/bnb_smoke",
         "/academy_progress",
         "/agentoutbox",
+        "/agent_outbox",
     ]
 
     with patch(
