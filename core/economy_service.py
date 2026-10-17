@@ -49,15 +49,15 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                 if existing_meta.get("idempotency_key") != idempotency_key:
                     continue
 
-                if not return_details:
-                    return entry["after"]
-
+                # An idempotency key is an immutable transaction identity.
+                # Validate it for every caller, including legacy callers that
+                # expect a numeric balance rather than a details dictionary.
                 conflict = (
                     str(entry.get("uid")) != uid
                     or str(entry.get("reason")) != str(reason)
                     or float(entry.get("amount", 0) or 0) != float(amount)
                 )
-                for field in ("tx_hash", "bnb_amount_wei", "from", "to"):
+                for field in ("purchase_id", "item_id", "tx_hash", "bnb_amount_wei", "from", "to"):
                     if field not in meta:
                         continue
                     if field not in existing_meta:
@@ -66,14 +66,25 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                     old_value, new_value = existing_meta.get(field), meta.get(field)
                     if field in {"tx_hash", "from", "to"}:
                         matches = str(old_value or "").lower() == str(new_value or "").lower()
-                    else:
+                    elif field == "bnb_amount_wei":
                         try:
                             matches = int(old_value) == int(new_value)
                         except (TypeError, ValueError):
                             matches = False
+                    else:
+                        matches = str(old_value) == str(new_value)
                     if not matches:
                         conflict = True
                         break
+
+                if conflict and not return_details:
+                    # Do not return the old transaction's balance for a
+                    # different request; callers could mistake that for a
+                    # successful debit and continue fulfillment.
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+                if not return_details:
+                    return entry["after"]
 
                 wallet = users.get(uid, {}).get("wallet", {})
                 return {
