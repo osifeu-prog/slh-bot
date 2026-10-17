@@ -6,6 +6,13 @@ ITEMS_FILE = Path(__file__).resolve().parent / "items.json"
 DB_PATH = Path("state/db.json")
 STARS_ITEMS = set()
 
+# Internal smoke/test records remain in the DB for audit history, but are not public catalog items.
+HIDDEN_ITEM_IDS = {
+    "test_bill",
+    "u_8789977826_test_product",
+    "u_8789977826_market_smoke",
+}
+
 
 def load_items():
     try:
@@ -49,6 +56,8 @@ def format_shop_message(user_balance=0):
     msg += "💎 /buy נשאר מסלול רכישה פנימי ב-Credits עבור פריטים שתומכים בו.\n\n"
 
     for item_id, data in items.items():
+        if item_id in HIDDEN_ITEM_IDS:
+            continue
         price = data.get("price", 0)
         stars_price = int(data.get("price_stars", 0) or 0)
         price_text = f"{stars_price} Stars" if item_id in stars_items else ("חינם" if price == 0 else f"{price} Credits")
@@ -62,6 +71,7 @@ def format_shop_message(user_balance=0):
         (str(item_id), product)
         for item_id, product in products.items()
         if isinstance(product, dict)
+        and item_id not in HIDDEN_ITEM_IDS
         and product.get("type") == "physical"
         and item_id not in items
         and int(product.get("inventory", 0) or 0) > 0
