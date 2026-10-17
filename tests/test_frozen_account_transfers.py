@@ -70,6 +70,54 @@ class FrozenAccountCanonicalLedgerTests(unittest.TestCase):
             )
         self.assertEqual(self.db, before)
 
+    def test_frozen_sender_can_replay_completed_transfer_without_mutation(self):
+        with patch.object(
+            distribution.state_manager,
+            "atomic_update",
+            side_effect=lambda mutate: mutate(self.db),
+        ):
+            first = distribution.transfer(
+                sender_uid="sender",
+                recipient_uid="buyer",
+                amount=1,
+                event_id="test-transfer-before-freeze",
+                reason="p2p:slh",
+            )
+        self.assertEqual(first["status"], "completed")
+        self.db["users"]["sender"]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        with patch.object(
+            distribution.state_manager,
+            "atomic_update",
+            side_effect=lambda mutate: mutate(self.db),
+        ):
+            replay = distribution.transfer(
+                sender_uid="sender",
+                recipient_uid="buyer",
+                amount=1,
+                event_id="test-transfer-before-freeze",
+                reason="p2p:slh",
+            )
+
+        self.assertEqual(replay["status"], "already_completed")
+        self.assertEqual(self.db, before)
+
+        with patch.object(
+            distribution.state_manager,
+            "atomic_update",
+            side_effect=lambda mutate: mutate(self.db),
+        ):
+            with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+                distribution.transfer(
+                    sender_uid="sender",
+                    recipient_uid="buyer",
+                    amount=1,
+                    event_id="test-new-transfer-after-freeze",
+                    reason="p2p:slh",
+                )
+        self.assertEqual(self.db, before)
+
     def test_settlement_is_blocked_if_either_participant_is_frozen(self):
         for frozen_uid in ("frozen", "buyer"):
             with self.subTest(frozen_uid=frozen_uid):

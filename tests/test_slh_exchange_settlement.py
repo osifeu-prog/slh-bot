@@ -1,10 +1,13 @@
+import copy
 import unittest
+from unittest.mock import patch
 
 from core.slh_distribution import (
     EXCHANGE_RESERVE_KEY,
     reserve_in_db,
     release_reserve_in_db,
     settle_reserve_in_db,
+    transfer,
 )
 
 
@@ -93,6 +96,139 @@ class SlhExchangeSettlementTests(unittest.TestCase):
         self.assertEqual(db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 0.0)
         self.assertEqual(_supply(db), before)
         self.assertEqual(len(db["slh_token_ledger"]), 2)
+
+    def test_frozen_account_can_replay_completed_reserve_but_cannot_create_new_one(self):
+        db = _db()
+        reserve_in_db(
+            db, uid="seller", amount=40,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        db["users"]["seller"]["frozen"] = True
+        before = copy.deepcopy(db)
+
+        replay = reserve_in_db(
+            db, uid="seller", amount=40,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+
+        self.assertEqual(replay["status"], "already_completed")
+        self.assertEqual(db, before)
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            reserve_in_db(
+                db, uid="seller", amount=1,
+                event_id="exchange:reserve_slh:O2", order_id="O2",
+            )
+        self.assertEqual(db, before)
+
+    def test_frozen_participant_can_replay_completed_settlement_without_mutation(self):
+        db = _db()
+        reserve_in_db(
+            db, uid="seller", amount=40,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        settle_reserve_in_db(
+            db, seller_uid="seller", buyer_uid="buyer", amount=25,
+            event_id="exchange:settlement_slh:T1",
+            order_id="O1", trade_id="T1",
+        )
+        db["users"]["buyer"]["frozen"] = True
+        before = copy.deepcopy(db)
+
+        replay = settle_reserve_in_db(
+            db, seller_uid="seller", buyer_uid="buyer", amount=25,
+            event_id="exchange:settlement_slh:T1",
+            order_id="O1", trade_id="T1",
+        )
+
+        self.assertEqual(replay["status"], "already_completed")
+        self.assertEqual(db, before)
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            settle_reserve_in_db(
+                db, seller_uid="seller", buyer_uid="buyer", amount=1,
+                event_id="exchange:settlement_slh:T2",
+                order_id="O1", trade_id="T2",
+            )
+        self.assertEqual(db, before)
+
+    def test_frozen_owner_can_release_existing_exchange_reserve_on_cancel(self):
+        db = _db()
+        before_supply = _supply(db)
+        reserve_in_db(
+            db, uid="seller", amount=40,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        db["users"]["seller"]["frozen"] = True
+        before_release = copy.deepcopy(db)
+
+        result = release_reserve_in_db(
+            db, uid="seller", amount=40,
+            event_id="exchange:release_slh:O1", order_id="O1",
+        )
+
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(db["users"]["seller"]["wallet"]["token_balance"], 100.0)
+        self.assertEqual(
+            db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 0.0
+        )
+        self.assertEqual(_supply(db), before_supply)
+        self.assertEqual(len(db["slh_token_ledger"]), 2)
+        self.assertEqual(db["users"]["seller"]["frozen"], True)
+        self.assertNotEqual(db, before_release)
+
+    def test_reserve_cannot_lock_slH_already_reserved_by_another_order(self):
+        db = _db()
+        reserve_in_db(
+            db, uid="seller", amount=70,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        before = copy.deepcopy(db)
+
+        with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
+            reserve_in_db(
+                db, uid="seller", amount=31,
+                event_id="exchange:reserve_slh:O2", order_id="O2",
+            )
+
+        self.assertEqual(db, before)
+
+    def test_wallet_transfer_cannot_spend_slH_locked_in_exchange_reserve(self):
+        db = _db()
+        supply_before = _supply(db)
+        reserve_in_db(
+            db, uid="seller", amount=70,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        before = copy.deepcopy(db)
+
+        with patch(
+            "core.slh_distribution.state_manager.atomic_update",
+            side_effect=lambda mutate: mutate(db),
+        ):
+            with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
+                transfer(
+                    sender_uid="seller", recipient_uid="buyer", amount=31,
+                    event_id="p2p:should-not-spend-reserve", reason="p2p:slh",
+                )
+
+            self.assertEqual(db, before)
+
+            result = transfer(
+                sender_uid="seller", recipient_uid="buyer", amount=30,
+                event_id="p2p:unreserved-amount-only", reason="p2p:slh",
+            )
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(
+            db["users"]["seller"]["wallet"]["token_balance"], 70.0
+        )
+        self.assertEqual(
+            db["users"]["seller"]["wallet"]["live_token_balance"], 70.0
+        )
+        self.assertEqual(
+            db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 70.0
+        )
+        self.assertEqual(_supply(db), supply_before)
 
     def test_reserve_and_settlement_reject_insufficient_amount(self):
         db = _db()
