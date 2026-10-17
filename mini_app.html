@@ -1443,10 +1443,13 @@ async function sendExchangeOrder(side,amount,price,options){
       if(resp.status<500)delete __exchangePendingRequests[intent];
       return;
     }
-    delete __exchangePendingRequests[intent];
     renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
     const executionCheck=d.execution_check||{};
     const receiptVerified=hasFreshExchangeExecutionProof(executionCheck);
+    // Retain the idempotency key when a 2xx response has incomplete execution
+    // proof. A retry of this unresolved intent must replay the same request,
+    // not silently create a second order. Clear it only after a verified receipt. 
+    if(receiptVerified)delete __exchangePendingRequests[intent];
     const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
     const tradeNote=tradeIds.length?' · מזהי עסקאות: '+tradeIds.join(', '):' · ממתין להתאמה';
     if(d.idempotent_replay===true){
