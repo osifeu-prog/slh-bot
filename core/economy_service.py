@@ -51,6 +51,24 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
 
         idempotency_key = str(meta.get("idempotency_key") or "").strip()
         if idempotency_key:
+            keyed_entries = [
+                row for row in ledger
+                if isinstance(row, dict)
+                and isinstance(row.get("meta"), dict)
+                and str(row["meta"].get("idempotency_key") or "").strip() == idempotency_key
+            ]
+            if len(keyed_entries) > 1:
+                if not return_details:
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+                wallet_value = user.get("wallet")
+                balance_after = wallet_value.get("credits") if isinstance(wallet_value, dict) else None
+                return {
+                    "status": "CONFLICT",
+                    "balance_after": balance_after,
+                    "credits_applied": 0.0,
+                    "existing_uid": str(keyed_entries[0].get("uid")),
+                }
+
             for entry in ledger:
                 if not isinstance(entry, dict):
                     continue
@@ -117,7 +135,13 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                         "credits_applied": 0.0,
                         "existing_uid": str(entry.get("uid")),
                     }
-                return entry.get("after")
+                try:
+                    existing_after = float(entry.get("after"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT") from None
+                if not math.isfinite(existing_after):
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+                return entry["after"]
 
         # Replays are resolved above, so frozen accounts can retry an exact
         # previously-applied debit without a second mutation. Every new debit,
