@@ -91,6 +91,8 @@ def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
 def test_same_unknown_domain_gap_still_blocks_account_audit():
     db = _db()
     db["ledger"][2]["reason"] = "store:p2p_sale"
+    # This test is specifically for an unknown domain, not explicit SLH metadata.
+    db["ledger"][2].pop("meta", None)
     db["ledger"][2]["before"] = 7.0
     db["ledger"][2]["amount"] = 1.0
     db["ledger"][2]["after"] = 8.0
