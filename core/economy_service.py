@@ -309,6 +309,7 @@ def record_ton_deposit(
 
         # This is a new transaction only when neither the canonical used-hash
         # index nor a transaction/ledger source row has this hash.
+        used_txs = db.setdefault("used_ton_txs", [])
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
