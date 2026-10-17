@@ -110,6 +110,44 @@ class CanonicalFrozenCreditsDebitTests(unittest.TestCase):
 
         self.assertEqual(self.db, before)
 
+    def test_duplicate_ledger_entries_for_the_same_key_fail_closed(self):
+        self._debit(reason="arcade:entry", key="duplicate-key-21")
+        self.db["ledger"].append(copy.deepcopy(self.db["ledger"][0]))
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(reason="arcade:entry", key="duplicate-key-21")
+
+        self.assertEqual(self.db, before)
+
+    def test_replay_with_missing_historical_after_balance_fails_closed(self):
+        self._debit(reason="arcade:entry", key="missing-after-key-22")
+        self.db["ledger"][0].pop("after")
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(reason="arcade:entry", key="missing-after-key-22")
+
+        self.assertEqual(self.db, before)
+
+    def test_details_contract_reports_ambiguous_history_as_conflict(self):
+        self._debit(reason="arcade:entry", key="details-duplicate-key-23")
+        self.db["ledger"].append(copy.deepcopy(self.db["ledger"][0]))
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        result = economy_service.record_transaction(
+            uid=UID,
+            amount=-5.0,
+            reason="arcade:entry",
+            meta={"idempotency_key": "details-duplicate-key-23", "source": "unit_test"},
+            return_details=True,
+        )
+
+        self.assertEqual(result["status"], "CONFLICT")
+        self.assertEqual(result["credits_applied"], 0.0)
+        self.assertEqual(self.db, before)
+
     def test_identity_metadata_conflict_fails_without_mutation(self):
         self._debit(
             reason="store:purchase",
