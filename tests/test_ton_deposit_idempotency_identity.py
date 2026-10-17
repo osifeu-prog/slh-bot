@@ -186,3 +186,87 @@ class TonDepositIdempotencyIdentityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TonDepositServiceCallerTests(unittest.TestCase):
+    """Exercise the service boundary around the canonical identity guard."""
+
+    def _transaction(self):
+        return {
+            "tx_hash": TX,
+            "from": BOUND,
+            "to": TREASURY,
+            "amount_ton": 1.0,
+            "memo": f"SLH{UID}",
+            "utime": 1_760_000_000,
+            "lt": "987654",
+        }
+
+    def _binding(self):
+        return {"address": BOUND, "address_raw": BOUND}
+
+    def test_identity_conflict_does_not_record_replay_or_match_new_intent(self):
+        from core import ton_deposit_service
+
+        with (
+            patch.object(ton_deposit_service, "_match_deposit_intent", return_value="intent-new"),
+            patch.object(
+                ton_deposit_service,
+                "record_ton_deposit",
+                side_effect=ValueError("TON_DEPOSIT_IDENTITY_CONFLICT"),
+            ) as record,
+            patch.object(ton_deposit_service, "_record_ton_replay_evidence") as replay_evidence,
+            patch.object(ton_deposit_service, "_mark_deposit_intent_matched") as mark_intent,
+        ):
+            with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDENTITY_CONFLICT"):
+                ton_deposit_service._settle_observed_transaction(
+                    UID, self._transaction(), TREASURY, Decimal("100"), self._binding()
+                )
+
+        record.assert_called_once()
+        replay_evidence.assert_not_called()
+        mark_intent.assert_not_called()
+
+    def test_exact_replay_after_original_intent_matched_does_not_match_new_intent(self):
+        from decimal import Decimal
+        from core import ton_deposit_service
+
+        with (
+            patch.object(ton_deposit_service, "_match_deposit_intent", return_value=None),
+            patch.object(ton_deposit_service, "record_ton_deposit", return_value=None),
+            patch.object(ton_deposit_service, "_record_ton_replay_evidence") as replay_evidence,
+            patch.object(ton_deposit_service, "_mark_deposit_intent_matched") as mark_intent,
+        ):
+            result = ton_deposit_service._settle_observed_transaction(
+                UID, self._transaction(), TREASURY, Decimal("100"), self._binding()
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertTrue(result["idempotent"])
+        self.assertEqual(result["credits"], 0.0)
+        replay_evidence.assert_called_once()
+        mark_intent.assert_called_once_with(None, TX, True)
+
+    def test_matched_intent_is_not_selected_as_a_new_pending_intent(self):
+        from core import ton_deposit_service
+
+        db = {
+            "ton_deposit_intents": {
+                "intent-original": {
+                    "uid": UID,
+                    "status": "matched",
+                    "amount_nano": 1_000_000_000,
+                    "memo": f"SLH{UID}",
+                    "treasury": TREASURY,
+                    "binding_address_raw": BOUND,
+                    "created_at_epoch": 1_759_999_000,
+                    "expires_at_epoch": 1_760_001_000,
+                }
+            }
+        }
+        with patch.object(ton_deposit_service.state_manager, "load_db", return_value=db):
+            matched = ton_deposit_service._match_deposit_intent(
+                UID, self._transaction(), "intent-original"
+            )
+
+        self.assertIsNone(matched)
