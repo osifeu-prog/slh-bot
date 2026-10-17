@@ -52,7 +52,7 @@ def _reason_domain_hint(reason: Any) -> str:
 
 
 def _row_domain_hint(row: dict) -> str:
-    """Prefer explicit asset/domain metadata; fall back to a reason-only hint."""
+    """Use explicit domain metadata; keep reason-only SLH labels ambiguous."""
     meta = row.get("meta")
     meta = meta if isinstance(meta, dict) else {}
     explicit = str(meta.get("ledger_domain") or meta.get("asset") or "").strip().lower()
@@ -61,7 +61,13 @@ def _row_domain_hint(row: dict) -> str:
             return "SLH_HINT"
         if "credit" in explicit:
             return "CREDITS_HINT"
-    return _reason_domain_hint(row.get("reason"))
+    inferred = _reason_domain_hint(row.get("reason"))
+    # A heuristic SLH label must not remove a row from the Credits continuity
+    # check. Without explicit domain metadata, retain it as ambiguous so any
+    # continuity gap remains visible and blocks release readiness.
+    if inferred == "SLH_HINT":
+        return "AMBIGUOUS_DOMAIN_HINT"
+    return inferred
 
 
 def _row_summary(index: int, row: dict) -> dict:
@@ -225,11 +231,10 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
 
         rows_checked += 1
         summary = _row_summary(index, row)
-        # This report validates the user's Credits sequence. SLH-token rows are
-        # audited by the exchange/token-ledger reconciliation and must not be
-        # compared numerically with the Credits wallet. Keep the previous
-        # Credits candidate across such rows so a real Credits discontinuity
-        # cannot be hidden by an interleaved SLH event.
+        # Only explicit asset/domain metadata is authoritative enough to skip
+        # an SLH-token row here. Reason-only SLH guesses are labeled ambiguous
+        # by _row_domain_hint() and remain in the sequence, failing closed if
+        # they create a continuity gap.
         if summary["domain_hint"] == "SLH_HINT":
             non_credits_rows_skipped += 1
             continue
