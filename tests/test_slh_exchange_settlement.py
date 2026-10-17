@@ -1,5 +1,6 @@
 import copy
 import unittest
+from unittest.mock import patch
 
 from core.slh_distribution import (
     EXCHANGE_RESERVE_KEY,
@@ -201,18 +202,22 @@ class SlhExchangeSettlementTests(unittest.TestCase):
         )
         before = copy.deepcopy(db)
 
-        with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
-            transfer(
-                sender_uid="seller", recipient_uid="buyer", amount=31,
-                event_id="p2p:should-not-spend-reserve", reason="p2p:slh",
+        with patch(
+            "core.slh_distribution.state_manager.atomic_update",
+            side_effect=lambda mutate: mutate(db),
+        ):
+            with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
+                transfer(
+                    sender_uid="seller", recipient_uid="buyer", amount=31,
+                    event_id="p2p:should-not-spend-reserve", reason="p2p:slh",
+                )
+
+            self.assertEqual(db, before)
+
+            result = transfer(
+                sender_uid="seller", recipient_uid="buyer", amount=30,
+                event_id="p2p:unreserved-amount-only", reason="p2p:slh",
             )
-
-        self.assertEqual(db, before)
-
-        result = transfer(
-            sender_uid="seller", recipient_uid="buyer", amount=30,
-            event_id="p2p:unreserved-amount-only", reason="p2p:slh",
-        )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(
             db["users"]["seller"]["wallet"]["token_balance"], 70.0
