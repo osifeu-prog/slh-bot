@@ -52,7 +52,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
 
     def test_ask_uses_the_configured_provider_fallback_chain(self):
         with patch(
-            "handlers.llm_handler.query_llm_with_context",
+            "core.ask_router.route",
             return_value="answer from canonical AI fallback",
         ) as query:
             result = internal_agent.run_command(
@@ -165,7 +165,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
                 side_effect=self._atomic_update,
             ),
             patch(
-                "handlers.llm_handler.query_llm_with_context",
+                "core.ask_router.route",
                 return_value="answer from configured SLH fallback",
             ) as query,
             patch.object(internal_agent.time, "sleep", side_effect=StopWorker),
