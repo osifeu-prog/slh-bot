@@ -1,4 +1,6 @@
 from datetime import datetime
+
+import state_manager
 from core.audit import log_event
 from core.agent_state_store import AgentStateStore
 from core.agent_policy import can_create_agent
@@ -129,15 +131,58 @@ def delete_agent(identifier):
 
 
 def send_message(identifier, message):
+    """Append a string or structured command to an agent inbox atomically."""
     agent_id, agent = get_agent(identifier)
     if agent is None:
         raise KeyError(f"Agent '{identifier}' not found")
-    db = STORE._load_db()
-    agents = db.setdefault("agents", {})
-    agents[agent_id].setdefault("inbox", []).append(str(message))
-    STORE._atomic_write(STORE.DB_PATH, db)
-    STORE.rebuild_snapshot(db=db)
-    log_event("agent.message_sent", target=agent_id, details={"message_length": len(str(message))})
+
+    payload = dict(message) if isinstance(message, dict) else str(message)
+    request_id = (
+        str(payload.get("request_id") or "").strip()
+        if isinstance(payload, dict)
+        else ""
+    )
+    queued = {"value": False}
+
+    def mutate(db):
+        agents = db.get("agents", {})
+        target = agents.get(agent_id) if isinstance(agents, dict) else None
+        if not isinstance(target, dict):
+            raise KeyError(f"Agent '{identifier}' not found")
+        inbox = target.setdefault("inbox", [])
+        if not isinstance(inbox, list):
+            raise ValueError("AGENT_INBOX_INVALID")
+
+        if request_id:
+            processing = target.get("processing", [])
+            already_pending = any(
+                isinstance(item, dict) and str(item.get("request_id") or "") == request_id
+                for item in inbox
+            )
+            already_processing = any(
+                isinstance(item, dict)
+                and isinstance(item.get("message"), dict)
+                and str(item["message"].get("request_id") or "") == request_id
+                for item in (processing if isinstance(processing, list) else [])
+            )
+            if already_pending or already_processing:
+                return False
+
+        inbox.append(payload)
+        queued["value"] = True
+        return True
+
+    state_manager.atomic_update(mutate)
+    if queued["value"]:
+        STORE.rebuild_snapshot()
+        log_event(
+            "agent.message_sent",
+            target=agent_id,
+            details={
+                "message_length": len(str(payload)),
+                "structured": isinstance(payload, dict),
+            },
+        )
     return agent_id
 
 
@@ -146,3 +191,18 @@ def get_inbox(identifier):
     if agent is None:
         raise KeyError(f"Agent '{identifier}' not found")
     return agent_id, list(agent.get("inbox", []))
+
+
+def get_outbox(identifier, limit=5):
+    """Return the newest bounded agent results for an authorized caller."""
+    agent_id, agent = get_agent(identifier)
+    if agent is None:
+        raise KeyError(f"Agent '{identifier}' not found")
+    try:
+        count = max(1, min(int(limit), 20))
+    except (TypeError, ValueError, OverflowError):
+        count = 5
+    outbox = agent.get("outbox", [])
+    if not isinstance(outbox, list):
+        return agent_id, []
+    return agent_id, list(outbox[-count:])
