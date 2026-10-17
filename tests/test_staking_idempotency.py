@@ -1,3 +1,4 @@
+import copy
 import json
 import tempfile
 import unittest
@@ -84,6 +85,48 @@ class StakingIdempotencyTests(unittest.TestCase):
         wallet = db["users"]["u1"]["wallet"]
         self.assertEqual(wallet["credits"], 100.0)
         self.assertEqual(wallet["staked"], 0.0)
+
+
+    def test_frozen_user_cannot_create_new_staking_position(self):
+        db = self.read_db()
+        db["users"]["u1"]["frozen"] = True
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            staking_service.stake_locked(
+                "u1", 10, lock_days=30, request_id="frozen-new-stake",
+            )
+
+        self.assertEqual(self.read_db(), before)
+        self.assertNotIn("stake_positions", before)
+        self.assertNotIn("ledger", before)
+
+    def test_frozen_user_can_retry_exact_existing_stake_without_second_debit(self):
+        first = staking_service.stake_locked(
+            "u1", 10, lock_days=30, request_id="retry-before-freeze",
+        )
+        db = self.read_db()
+        db["users"]["u1"]["frozen"] = True
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+        before_retry = self.read_db()
+
+        replay = staking_service.stake_locked(
+            "u1", 10, lock_days=30, request_id="retry-before-freeze",
+        )
+
+        self.assertEqual(replay["status"], "duplicate")
+        self.assertEqual(replay["position"]["id"], first["position"]["id"])
+        self.assertEqual(self.read_db(), before_retry)
+        final = self.read_db()
+        self.assertEqual(final["users"]["u1"]["wallet"]["credits"], 90.0)
+        self.assertEqual(final["users"]["u1"]["wallet"]["staked"], 10.0)
+        self.assertEqual(len(final["stake_positions"]), 1)
+        self.assertEqual(len([
+            row for row in final["ledger"]
+            if row.get("reason") == "staking:stake_locked"
+        ]), 1)
+
 
 
 if __name__ == "__main__":
