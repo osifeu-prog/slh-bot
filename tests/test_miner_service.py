@@ -27,11 +27,11 @@ def _payload(**overrides):
 
 def _db():
     return {
-        "users": {"8789977826": {"wallet": {"credits": 7}}},
+        "users": {"12345": {"wallet": {"credits": 7}}},
         "devices": {
             DEVICE_ID: {
                 "device_id": DEVICE_ID,
-                "owner_id": "8789977826",
+                "owner_id": "12345",
                 "type": "esp32",
                 "status": "online",
                 "mqtt_topics": {"telemetry": f"slh/esp/{DEVICE_ID}/telemetry"},
@@ -53,7 +53,7 @@ def test_ingest_saves_to_existing_canonical_device_record_without_touching_ledge
     _configure_global_token(monkeypatch)
     db = _db()
     original_ledger = list(db["ledger"])
-    original_user = dict(db["users"]["8789977826"])
+    original_user = dict(db["users"]["12345"])
     original_topics = dict(db["devices"][DEVICE_ID]["mqtt_topics"])
 
     with patch.object(miner_service.state_manager, "load_db", return_value=db), patch.object(
@@ -78,7 +78,7 @@ def test_ingest_saves_to_existing_canonical_device_record_without_touching_ledge
     assert device["unrelated_field"] == "must survive"
     assert "miners" not in db
     assert db["ledger"] == original_ledger
-    assert db["users"]["8789977826"] == original_user
+    assert db["users"]["12345"] == original_user
     atomic_update.assert_called_once()
 
 
@@ -266,10 +266,10 @@ def test_mcp_bridge_lists_only_safe_miner_fields_and_is_read_only(monkeypatch):
     app = Flask("mcp-miner-list-test")
     register_mcp_bridge_routes(app)
     monkeypatch.setenv("SLH_MCP_BRIDGE_TOKEN", TOKEN)
-    monkeypatch.setenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "8789977826")
+    monkeypatch.setenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "12345")
     device = {
         "device_id": DEVICE_ID,
-        "owner_id": "8789977826",
+        "owner_id": "12345",
         "type": "esp32",
         "status": "online",
         "mqtt_topics": {"telemetry": "slh/esp/test/telemetry"},
@@ -304,7 +304,7 @@ def test_mcp_miner_bridge_requires_auth(monkeypatch):
     app = Flask("mcp-miner-auth-test")
     register_mcp_bridge_routes(app)
     monkeypatch.setenv("SLH_MCP_BRIDGE_TOKEN", TOKEN)
-    monkeypatch.setenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "8789977826")
+    monkeypatch.setenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "12345")
     response = app.test_client().get("/internal/mcp/v1/miners")
     assert response.status_code == 401
     assert response.get_json() == {"error": "MCP_BRIDGE_AUTH_REQUIRED"}
