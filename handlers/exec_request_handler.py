@@ -39,7 +39,29 @@ def register(bot):
                 from core.exec_policy import is_owner, run_audit
                 _requester = pending['uid']
                 if is_owner(_requester):
-                    ok, output = run_gated(_requester, pending['command'], source="execr_approved", timeout=15)
+                    from core.human_intervention import (
+                        create_preapproved_execution,
+                        is_read_only_command,
+                    )
+                    command = pending['command']
+                    if is_read_only_command(command):
+                        ok, output = run_gated(
+                            _requester, command, source="execr_approved", timeout=15
+                        )
+                    else:
+                        action_request_id = create_preapproved_execution(
+                            _requester,
+                            command,
+                            source="execr_approved",
+                            approved_by=call_or_msg.from_user.id,
+                        )
+                        ok, output = run_gated(
+                            _requester,
+                            command,
+                            source="execr_approved",
+                            timeout=15,
+                            intervention_request_id=action_request_id,
+                        )
                 else:
                     ok, output = run_audit(_requester, pending['command'], source="execr_approved_audit", timeout=15)
                 if not ok:

@@ -44,7 +44,8 @@ def register(bot, context=None):
                 )
 
                 if not ok:
-                    output.append(f"❌ BATCH BLOCKED/FAILED\n{result}")
+                    label = "⏸ BATCH AWAITS OWNER APPROVAL" if "HUMAN_APPROVAL_REQUIRED" in result else "❌ BATCH BLOCKED/FAILED"
+                    output.append(f"{label}\n{result}")
                     break
 
                 output.append(f"✅ BATCH\n{result}")
@@ -60,7 +61,8 @@ def register(bot, context=None):
                 )
 
                 if not ok:
-                    output.append(f"❌ {cmd}\n{result}")
+                    label = "⏸ ACTION AWAITS OWNER APPROVAL" if "HUMAN_APPROVAL_REQUIRED" in result else "❌ ACTION BLOCKED/FAILED"
+                    output.append(f"{label}\n{cmd}\n{result}")
                     break
 
                 output.append(f"✅ {cmd}\n{result}")
