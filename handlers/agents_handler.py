@@ -15,11 +15,11 @@ def _agent_task(uid, text):
     raw = str(text or "").strip()
     lowered = raw.casefold()
 
-    # Preserve the documented explicit form: /sendagent <agent> ask <question>.
-    # The prefix is syntax, not part of the natural-language prompt.
+    # Explicit "ask" always means natural-language routing, even if the
+    # question happens to match a host-command name such as "whoami".
     if lowered.startswith("ask "):
-        raw = raw.split(None, 1)[1].strip()
-        lowered = raw.casefold()
+        prompt = raw.split(None, 1)[1].strip()
+        return {"command": "ask", "prompt": prompt, "uid": uid}
 
     if is_owner(uid):
         if lowered in (_READ_ONLY_AGENT_COMMANDS | _OWNER_AGENT_COMMANDS):
