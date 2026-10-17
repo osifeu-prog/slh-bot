@@ -146,16 +146,19 @@ def record_ton_deposit(
     uid = str(uid)
     meta = meta or {}
 
-    # P0 input validation: TON deposits may only create positive credits.
-    if not isinstance(credits, (int, float)):
+    # Fail closed on booleans and non-finite numeric values before any DB
+    # mutation; NaN bypasses ordinary <= 0 checks and can poison wallet balances.
+    if isinstance(credits, bool) or not isinstance(credits, (int, float)):
         raise TypeError("credits must be numeric")
-
+    if not math.isfinite(credits):
+        raise ValueError("INVALID_TON_CREDITS")
     if credits <= 0:
         raise ValueError("INVALID_TON_CREDITS")
 
-    if not isinstance(ton_amount, (int, float)):
+    if isinstance(ton_amount, bool) or not isinstance(ton_amount, (int, float)):
         raise TypeError("ton_amount must be numeric")
-
+    if not math.isfinite(ton_amount):
+        raise ValueError("INVALID_TON_AMOUNT")
     if ton_amount <= 0:
         raise ValueError("INVALID_TON_AMOUNT")
 
