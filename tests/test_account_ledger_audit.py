@@ -15,7 +15,7 @@ def _db():
             {"uid": "someone-else", "before": 100.0, "amount": -1.0, "after": 99.0,
              "reason": "other"},
             {"uid": UID, "before": 7.0, "amount": 1.0, "after": 8.0,
-             "reason": "exchange:sell_reserve", "meta": {"order_id": "O-1"}},
+             "reason": "exchange:sell_reserve", "meta": {"order_id": "O-1", "ledger_domain": "slh"}},
         ],
     }
 
@@ -47,7 +47,7 @@ def test_credits_sequence_continues_across_interleaved_slh_rows():
             {"uid": UID, "before": 100.0, "amount": -5.0, "after": 95.0,
              "reason": "store:purchase"},
             {"uid": UID, "before": 2000.0, "amount": -1000.0, "after": 1000.0,
-             "reason": "exchange:sell_reserve"},
+             "reason": "exchange:sell_reserve", "meta": {"ledger_domain": "slh"}},
             {"uid": UID, "before": 95.0, "amount": -5.0, "after": 90.0,
              "reason": "store:purchase"},
         ],
@@ -62,9 +62,37 @@ def test_credits_sequence_continues_across_interleaved_slh_rows():
     assert result["current_balance_matches_tail"] is True
 
 
+
+
+def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
+    db = {
+        "users": {UID: {"wallet": {"credits": 90.0}}},
+        "ledger": [
+            {"uid": UID, "before": 100.0, "amount": -5.0, "after": 95.0,
+             "reason": "store:purchase", "meta": {"ledger_domain": "credits"}},
+            {"uid": UID, "before": 2000.0, "amount": -1000.0, "after": 1000.0,
+             "reason": "exchange:sell_reserve"},
+            {"uid": UID, "before": 95.0, "amount": -5.0, "after": 90.0,
+             "reason": "store:purchase", "meta": {"ledger_domain": "credits"}},
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    assert result["credits_sequence_rows_checked"] == 3
+    assert result["non_credits_rows_skipped"] == 0
+    assert result["continuity_break_count"] == 2
+    assert [item["delta_to_explain"] for item in result["findings"]] == [
+        1905.0, -905.0
+    ]
+
+
 def test_same_unknown_domain_gap_still_blocks_account_audit():
     db = _db()
     db["ledger"][2]["reason"] = "store:p2p_sale"
+    # This test is specifically for an unknown domain, not explicit SLH metadata.
+    db["ledger"][2].pop("meta", None)
     db["ledger"][2]["before"] = 7.0
     db["ledger"][2]["amount"] = 1.0
     db["ledger"][2]["after"] = 8.0
@@ -255,3 +283,75 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["record_found"] is True
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
+
+def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits_gap():
+    target_uid = "8789977826"
+    source_uid = "8791275334"
+    db = {
+        "users": {
+            target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+            source_uid: {"wallet": {"credits": 0.0, "staked": 0.0}},
+        },
+        "ledger": [
+            {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
+             "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-20T14:18:59.208393+00:00", "uid": target_uid,
+             "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": source_uid, "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"time": "2026-08-25T14:20:44.705458+00:00", "uid": target_uid,
+             "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake",
+             "meta": {"staked_before": 136, "staked_after": 236}},
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "PASS"
+    assert result["continuity_break_count"] == 0
+    assert result["observed_discontinuity_count"] == 1
+    assert result["resolved_gap_count"] == 1
+    assert result["blocking_finding_count"] == 0
+    assert result["current_balance_matches_tail"] is True
+    finding = result["findings"][0]
+    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
+    assert finding["reconciled"] is True
+    evidence = finding["source_evidence"]
+    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
+    assert evidence["resolves_gap"] is True
+    consolidation = evidence["alpha_consolidations"][0]
+    assert consolidation["credits_component"] == 10449
+    assert consolidation["staked_moved_component"] == 50
+    assert consolidation["observed_balance_delta"] == 10499
+    assert consolidation["credits_plus_staked_matches_delta"] is True
+    assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
+    assert db == before
+
+
+def test_unverified_alpha_consolidation_near_miss_stays_blocked():
+    target_uid = "8789977826"
+    db = {
+        "users": {target_uid: {"wallet": {"credits": 11715.0}}},
+        "ledger": [
+            {"uid": target_uid, "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": "different-source", "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"uid": target_uid, "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake"},
+        ],
+    }
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    assert result["resolved_gap_count"] == 0
+    assert result["findings"][0]["reconciled"] is False
+    assert result["findings"][0]["source_evidence"]["resolves_gap"] is False
