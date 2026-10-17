@@ -272,6 +272,38 @@ def test_miner_api_route_rejects_oversized_payload():
     assert response.get_json() == {"error": "PAYLOAD_TOO_LARGE"}
 
 
+def test_miner_api_route_rejects_oversized_stream_without_content_length():
+    from flask import Flask
+    from core.mcp_bridge_routes import register_mcp_bridge_routes
+
+    app = Flask("miner-route-large-stream-test")
+    register_mcp_bridge_routes(app)
+    response = app.test_client().post(
+        "/api/miner",
+        data=b"x" * 8193,
+        content_type="application/json",
+        environ_overrides={"CONTENT_LENGTH": None, "wsgi.input_terminated": True},
+    )
+    assert response.status_code == 413
+    assert response.get_json() == {"error": "PAYLOAD_TOO_LARGE"}
+
+
+def test_miner_api_route_requires_length_for_unterminated_stream():
+    from flask import Flask
+    from core.mcp_bridge_routes import register_mcp_bridge_routes
+
+    app = Flask("miner-route-no-length-test")
+    register_mcp_bridge_routes(app)
+    response = app.test_client().post(
+        "/api/miner",
+        data=b"{}",
+        content_type="application/json",
+        environ_overrides={"CONTENT_LENGTH": None},
+    )
+    assert response.status_code == 411
+    assert response.get_json() == {"error": "CONTENT_LENGTH_REQUIRED"}
+
+
 def test_mcp_bridge_lists_only_safe_miner_fields_and_is_read_only(monkeypatch):
     from flask import Flask
     from core.mcp_bridge_routes import register_mcp_bridge_routes
