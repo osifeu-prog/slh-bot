@@ -64,7 +64,7 @@ def test_credits_sequence_continues_across_interleaved_slh_rows():
 
 
 
-def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
+def test_canonical_slh_reason_without_metadata_is_excluded_from_credits_sequence():
     db = {
         "users": {UID: {"wallet": {"credits": 90.0}}},
         "ledger": [
@@ -79,13 +79,21 @@ def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
 
     result = audit_account_ledger(db, UID)
 
-    assert result["status"] == "BLOCKED"
-    assert result["credits_sequence_rows_checked"] == 3
-    assert result["non_credits_rows_skipped"] == 0
-    assert result["continuity_break_count"] == 2
-    assert [item["delta_to_explain"] for item in result["findings"]] == [
-        1905.0, -905.0
-    ]
+    assert result["status"] == "PASS"
+    assert result["credits_sequence_rows_checked"] == 2
+    assert result["non_credits_rows_skipped"] == 1
+    assert result["continuity_break_count"] == 0
+    assert result["current_balance_matches_tail"] is True
+
+
+def test_unknown_slh_like_reason_remains_ambiguous_and_blocks():
+    from core.account_ledger_audit import _row_domain_hint
+
+    row = {
+        "reason": "exchange:sell_reserve_legacy_unknown",
+        "before": 2000.0, "amount": -1000.0, "after": 1000.0,
+    }
+    assert _row_domain_hint(row) == "AMBIGUOUS_DOMAIN_HINT"
 
 
 def test_same_unknown_domain_gap_still_blocks_account_audit():
