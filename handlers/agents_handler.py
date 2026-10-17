@@ -140,9 +140,8 @@ def register(bot, context):
             bot.reply_to(
                 m,
                 "📨 המשימה נשלחה לתור הסוכן. "
-                "לצפייה בתוצאה: /agent_outbox " + str(agent_id) + "
-"
-                "(alias: /agentoutbox " + str(agent.get("name", agent_id)) + ")",
+                "לצפייה בתוצאה: /agent_outbox " + str(agent_id)
+                + " (alias: /agentoutbox " + str(agent.get("name", agent_id)) + ")",
             )
         except Exception as e:
             bot.reply_to(m, "Agent task submission failed: " + type(e).__name__)
