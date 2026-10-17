@@ -88,14 +88,20 @@ def register(bot):
         event_id = f"p2p_credits:{sender}:{msg.chat.id}:{msg.message_id}"
 
         def transfer_credits(db):
-            if sender not in db.get("users", {}) or recipient not in db.get("users", {}):
+            users = db.get("users", {})
+            if sender not in users or recipient not in users:
                 raise ValueError("USER_NOT_FOUND")
             existing = [
                 x for x in db.get("ledger", [])
                 if x.get("meta", {}).get("event_id") == event_id
             ]
             if existing:
+                # Preserve an exact replay as a no-op even if the sender was
+                # frozen after this Telegram message already completed.
                 return "already_completed"
+            sender_user = users.get(sender)
+            if isinstance(sender_user, dict) and sender_user.get("frozen") is True:
+                raise ValueError("ACCOUNT_FROZEN")
             s_bal = _bal(db, sender, "credits")
             if s_bal < amount:
                 raise ValueError("INSUFFICIENT_CREDITS")
