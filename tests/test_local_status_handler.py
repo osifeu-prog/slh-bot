@@ -57,7 +57,7 @@ class LocalStatusHandlerTests(unittest.TestCase):
         self.assertIn("PC_Osif2: ONLINE", output)
         self.assertIn("PC_MAIN_001: OFFLINE", output)
         self.assertIn("Docker / Git diagnostics: NOT REPORTED", output)
-        self.assertIn("No commands were executed", output)
+        self.assertIn("Read-only: no commands, files, containers, balances, or gates were changed.", output)
         self.assertEqual(read.call_count, 2)
 
     def test_fresh_signed_diagnostics_are_rendered_without_logs(self):
