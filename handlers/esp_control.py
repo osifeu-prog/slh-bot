@@ -388,7 +388,8 @@ def register_sync(bot):
             return
 
         payload = build_miner_payload(did)
-        response = _send_cmd(did, "miner " + json.dumps(payload, ensure_ascii=False))
+        # Read-only for now: the tracked repository does not contain firmware
+        # proving that an ESP accepts a "miner <json>" command.
         status_emoji = "✅" if payload.get("status") == "online" else "⚠️"
         msg = (
             f"⛏️ *Miner Status* — `{did}`\n\n"
@@ -402,7 +403,8 @@ def register_sync(bot):
             f"Daily est.: `{payload['daily_revenue_btc']}` BTC\n"
             f"Last share: `{payload['last_share']}`\n"
             f"Updated: `{payload['updated_at']}`\n\n"
-            f"ESP response: `{response or 'no response'}`"
+            "Source: stored device record (not live miner telemetry).\n"
+            "No MQTT command sent; firmware protocol is not yet verified."
         )
         try:
             bot.reply_to(m, msg, parse_mode="Markdown")
