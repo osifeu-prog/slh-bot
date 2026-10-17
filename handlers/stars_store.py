@@ -1,5 +1,6 @@
 """Stars checkout for the SLH store."""
 from telebot.types import LabeledPrice
+from core.financial_gates import stars_payments_open
 from store.engine import load_items, resolve_item_id
 from store.stars_purchase_service import get_stars_items, get_stars_price
 from core.stars_price_authority import TELEGRAM_STARS_CURRENCY
@@ -8,6 +9,9 @@ from core.stars_price_authority import TELEGRAM_STARS_CURRENCY
 def register(bot):
     @bot.message_handler(commands=['buystars'])
     def buystars(m):
+        if not stars_payments_open():
+            bot.reply_to(m, "⛔ תשלומי Telegram Stars סגורים כעת. לא נוצרה חשבונית חדשה.")
+            return
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
             bot.reply_to(m, "שימוש: /buystars <item_id>\nזמין ב-Stars: " + ", ".join(get_stars_items()))
