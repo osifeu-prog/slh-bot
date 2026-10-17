@@ -168,7 +168,7 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         user = users.get(uid) if isinstance(users, dict) else None
         if not uid or not isinstance(user, dict):
             raise ValueError("WITHDRAWAL_RECORD_INVALID")
-        if is_frozen_account(db, uid):
+        if user.get("frozen") is True:
             raise ValueError("ACCOUNT_FROZEN")
 
         try:
