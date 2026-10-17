@@ -120,14 +120,16 @@ class StakingIdempotencyTests(unittest.TestCase):
 
         self.assertEqual(self.read_db(), before)
 
-    def test_missing_users_store_is_not_created_by_rejected_stake(self):
+    def test_missing_users_store_is_rejected_without_rewriting_invalid_db(self):
         self.db_path.write_text(json.dumps({"ledger": []}), encoding="utf-8")
-        before = self.read_db()
+        before_raw = self.db_path.read_text(encoding="utf-8")
 
-        with self.assertRaisesRegex(ValueError, "INVALID_USERS_STATE"):
+        # Canonical state_manager validation rejects this malformed DB before
+        # the staking mutator is invoked; its safe error is DB_READ_FAILED.
+        with self.assertRaisesRegex(RuntimeError, "DB_READ_FAILED"):
             staking_service.stake_locked("u1", 10, lock_days=30, request_id="missing-users")
 
-        self.assertEqual(self.read_db(), before)
+        self.assertEqual(self.db_path.read_text(encoding="utf-8"), before_raw)
 
     def test_nan_stake_amount_is_rejected_before_db_mutation(self):
         before = self.read_db()
