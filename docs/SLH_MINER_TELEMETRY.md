@@ -2,6 +2,12 @@
 
 **מצב:** מימוש צד השרת והפקודות בבדיקה ב־GitHub. לא מוזג ולא נפרס. אין עדיין מקור טלמטריה פיזי מאומת.
 
+## מה אומת מה־Runtime (17 באוקטובר 2026)
+
+ב־`state/db.json → devices` דווחה רשומת ESP32 בשם `ESP_1787680517`, בעלים `8789977826`, מצב `online`, ו־Topic מוגדר `slh/esp/ESP_1787680517/telemetry`. זה מאמת את קיום הרשומה וה־Topic, **אבל לא מאמת שקיימות מדידות טמפרטורה/הספק או שהשרת מקבל אותן**.
+
+בקוד הנבדק, `core/mqtt_device_listener.py` מאזין ל־heartbeat ב־`slh/device/+/heartbeat`, ו־listener הפעולות של ESP מאזין ל־`slh/esp/+/action`; לא נמצא subscriber פעיל ל־`slh/esp/+/telemetry`. לכן נתיב הפיילוט הנוכחי הוא HTTPS עם Bearer אל `/api/miner`. לא נקבל דיווחי MQTT לא מאומתים כאמת, ולא נשתמש בסטטוס `online` כתחליף למדידות חיישן.
+
 ## החלטות ארכיטקטורה
 
 1. ה־ESP32 שולח מדידות ב־HTTPS אל ה־Control Plane ששומר את `state/db.json`:
