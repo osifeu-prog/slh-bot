@@ -19,6 +19,8 @@ class MCPCapabilityTests(unittest.TestCase):
 
         names = {item.name for item in list_capabilities()}
         self.assertIn("system.health", names)
+        self.assertIn("preferences.notifications.get", names)
+        self.assertIn("preferences.notifications.set", names)
         self.assertIn("agents.list", names)
         self.assertIn("economy.agent_balance", names)
         self.assertIn("bots.registry", names)

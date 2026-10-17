@@ -36,6 +36,18 @@ class WebAppExchangeOrderIntentTests(unittest.TestCase):
             "ledger": [],
             "slh_token_ledger": [],
         }
+        for uid, user in self.db["users"].items():
+            user["academy"] = {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}}
+        self.db["trader_certifications"] = {
+            uid: {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"}
+            for uid in self.db["users"]
+        }
+        for uid, user in self.db["users"].items():
+            user["academy"] = {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}}
+        self.db["trader_certifications"] = {
+            uid: {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"}
+            for uid in self.db["users"]
+        }
         from handlers import exchange_handler
 
         self.original_uid = webapp.authenticated_uid

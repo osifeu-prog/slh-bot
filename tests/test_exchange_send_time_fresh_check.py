@@ -8,6 +8,7 @@ def _exchange_db():
     return {
         "users": {
             "buyer": {
+                "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
                 "wallet": {
                     "credits": 100.0,
                     "token_balance": 0.0,
@@ -22,6 +23,7 @@ def _exchange_db():
         "exchange_requests": {},
         "exchange_sequence": 0,
         "ledger": [],
+        "trader_certifications": {"buyer": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"}},
     }
 
 

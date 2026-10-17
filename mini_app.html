@@ -7,7 +7,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 </script>
 <style>
 :root{--bg:#070a12;--panel:#111827;--panel2:#0d1422;--line:#243047;--text:#f8fafc;--muted:#94a3b8;--accent:#7c5cff;--accent2:#20d3a7;--warn:#fbbf24;--danger:#fb7185;--r:20px}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% -10%,#2a1d62 0,#070a12 38%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;padding:16px 14px 88px}.app{max-width:720px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{display:flex;gap:10px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#14b8a6);display:grid;place-items:center;font-size:22px}.title{font-size:21px;font-weight:900}.subtitle,.muted{color:var(--muted);font-size:12px}.refresh,.ghost,.copy{background:#ffffff0c;color:#fff;border:1px solid #ffffff14;border-radius:11px;padding:9px 11px}.hero,.card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}.hero{background:linear-gradient(145deg,#17152d,#111827 60%);border-radius:24px}.hero-label{color:#b9a9ff;font-size:12px}.hero-balance{font-size:37px;font-weight:900;margin:4px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric-label{color:var(--muted);font-size:12px}.metric{font-size:21px;font-weight:800;margin-top:5px}.token{color:#d8ccff}.stake{color:#70e4c6}.section-title{font-size:15px;font-weight:900;margin:18px 2px 8px}.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.nav button{background:#ffffff09;color:#cbd5e1;border:1px solid #ffffff12;border-radius:13px;padding:10px 6px;font-size:12px}.nav button.active{background:#7c5cff22;color:#fff;border-color:#7c5cff66}.screen{display:none}.screen.active{display:block}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.action{background:#ffffff08;border:1px solid #ffffff12;color:#fff;border-radius:15px;padding:14px;text-align:right;min-height:76px}.action b{display:block;font-size:14px;margin-bottom:4px}.action span{font-size:11px;color:var(--muted)}.primary{background:linear-gradient(135deg,#7c5cff,#5b4bd8);border-color:transparent}.status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #ffffff0b}.status:last-child{border:0}.pill{border-radius:999px;padding:5px 9px;font-size:11px;background:#ffffff0b;color:#cbd5e1}.ok{color:#6ee7b7;background:#10b98118}.pending{color:#fcd34d;background:#f59e0b18}.progress{height:7px;background:#ffffff0b;border-radius:99px;overflow:hidden;margin:9px 0}.bar{height:100%;background:linear-gradient(90deg,#7c5cff,#20d3a7);border-radius:99px}.wallet-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff0b}.wallet-row:last-child{border:0}.address{direction:ltr;text-align:left;font-family:monospace;font-size:11px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.guide{margin-top:10px;padding:12px;border:1px solid #ffffff10;border-radius:14px;background:#ffffff05}.guide summary{cursor:pointer;font-weight:800;font-size:13px}.guide p{color:#cbd5e1;font-size:12px;line-height:1.55}.next{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#20d3a710;border:1px solid #20d3a733;border-radius:15px;padding:13px}.ai{background:linear-gradient(145deg,#17152d,#0f1a27);border:1px solid #7c5cff44}.ai b{font-size:15px}.ai p{font-size:12px;line-height:1.55;color:#cbd5e1}.task{padding:9px 0;border-bottom:1px solid #ffffff0b;font-size:13px}.task:last-child{border:0}.done{opacity:.55}.form-label{display:block;font-size:12px;color:var(--muted);margin:8px 0 5px}.form-input{width:100%;background:#ffffff08;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:12px;font-size:14px;outline:none}.form-input:focus{border-color:#7c5cff88}.bottom{position:fixed;bottom:0;left:0;right:0;background:#090d16ee;backdrop-filter:blur(14px);border-top:1px solid #ffffff12;padding:8px max(10px,calc((100vw - 720px)/2 + 10px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;z-index:5}.bottom button{background:none;color:#94a3b8;font-size:11px;padding:7px}.bottom button.active{color:#fff}.toast{position:fixed;left:50%;bottom:72px;transform:translateX(-50%) translateY(20px);background:#182235;color:#fff;border:1px solid #ffffff18;border-radius:12px;padding:10px 14px;font-size:12px;opacity:0;transition:.2s;pointer-events:none;z-index:10}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:420px){.hero-balance{font-size:31px}}
-.auth-gate{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;background:rgba(7,10,18,.96);backdrop-filter:blur(16px)}.auth-gate[hidden]{display:none}.auth-gate-card{width:min(520px,100%);background:linear-gradient(145deg,#17152d,#111827);border:1px solid #7c5cff66;border-radius:24px;padding:28px;text-align:center;box-shadow:0 20px 80px #0008}.auth-gate-icon{font-size:42px;margin-bottom:8px}.auth-gate-card h2{margin:0 0 10px;font-size:21px}.auth-gate-card p{margin:0 0 18px;color:#cbd5e1;font-size:13px;line-height:1.6}.auth-gate-card a{display:inline-block;text-decoration:none;background:linear-gradient(135deg,#7c5cff,#5b4bd8);color:#fff;border-radius:14px;padding:12px 18px;font-weight:800}.growth-hero{background:linear-gradient(145deg,#1b1634,#0d1d2b);border:1px solid #7c5cff55}.growth-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}.growth-step{padding:9px 5px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12;text-align:center;font-size:11px}.growth-step b{display:block;font-size:15px;margin-bottom:3px}.rail{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #ffffff0b}.rail:last-child{border:0}.rail-main{min-width:0}.rail-name{font-weight:800}.rail-detail{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}.rail-state{border-radius:999px;padding:5px 8px;font-size:10px;white-space:nowrap}.growth-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.growth-kpi{padding:10px;border-radius:13px;background:#ffffff08;text-align:center}.growth-kpi b{display:block;font-size:19px}.growth-kpi span{display:block;color:var(--muted);font-size:10px;margin-top:3px}</style>
+.auth-gate{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:22px;background:rgba(7,10,18,.96);backdrop-filter:blur(16px)}.auth-gate[hidden]{display:none}.auth-gate-card{width:min(520px,100%);background:linear-gradient(145deg,#17152d,#111827);border:1px solid #7c5cff66;border-radius:24px;padding:28px;text-align:center;box-shadow:0 20px 80px #0008}.auth-gate-icon{font-size:42px;margin-bottom:8px}.auth-gate-card h2{margin:0 0 10px;font-size:21px}.auth-gate-card p{margin:0 0 18px;color:#cbd5e1;font-size:13px;line-height:1.6}.auth-gate-card a{display:inline-block;text-decoration:none;background:linear-gradient(135deg,#7c5cff,#5b4bd8);color:#fff;border-radius:14px;padding:12px 18px;font-weight:800}.growth-hero{background:linear-gradient(145deg,#1b1634,#0d1d2b);border:1px solid #7c5cff55}.growth-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}.growth-step{padding:9px 5px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff12;text-align:center;font-size:11px}.growth-step b{display:block;font-size:15px;margin-bottom:3px}.rail{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #ffffff0b}.rail:last-child{border:0}.rail-main{min-width:0}.rail-name{font-weight:800}.rail-detail{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}.rail-state{border-radius:999px;padding:5px 8px;font-size:10px;white-space:nowrap}.growth-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.growth-kpi{padding:10px;border-radius:13px;background:#ffffff08;text-align:center}.growth-kpi b{display:block;font-size:19px}.growth-kpi span{display:block;color:var(--muted);font-size:10px;margin-top:3px}.slh-social-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}.slh-social-card{border:1px solid rgba(140,170,215,.25);border-radius:14px;padding:10px;min-width:0}.slh-social-card img{display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:10px;background:#081121}.slh-social-card h4{margin:10px 0 4px;font-size:15px}.slh-social-caption{font-size:13px;line-height:1.6;white-space:normal;opacity:.82;margin:5px 0 10px}.slh-social-actions{display:flex;flex-wrap:wrap;gap:7px}.slh-social-actions button{flex:1;min-width:110px;font-size:13px}.slh-social-pill{display:inline-block;font-size:11px;padding:3px 7px;border-radius:99px;border:1px solid rgba(100,210,205,.45);margin-bottom:6px}</style>
 <style id="slh-ux-v3">
 html,body{width:100%;max-width:100%;overflow-x:hidden}.app{width:100%;min-width:0;max-width:720px}.card,.hero,.grid,.actions,.growth-flow{min-width:0;max-width:100%}
 :root{
@@ -172,7 +172,62 @@ body{background:var(--v4-bg)!important;color:var(--v4-text)!important;font-famil
 .slh-swap-result{margin-top:10px;padding:11px;border-radius:13px;background:var(--v4-soft);font-size:11px;line-height:1.6;word-break:break-word}.slh-swap-result b{font-weight:900}
 .slh-swap-code{direction:ltr;text-align:left;font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
 @media(max-width:520px){.slh-swap-grid{grid-template-columns:1fr}.slh-swap-actions{grid-template-columns:1fr}}
-</style></head>
+</style>
+<style id="slh-exchange-market-ux-v1">
+.slh-ex-pulse-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.slh-ex-pulse-head b{display:block;font-size:15px}
+.slh-ex-pulse-head .muted{font-size:11px;margin-top:3px;line-height:1.5}
+.slh-ex-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:13px}
+.slh-ex-metric{background:var(--v4-soft);border:1px solid color-mix(in srgb,var(--v4-text) 7%,transparent);border-radius:12px;padding:10px;min-width:0}
+.slh-ex-metric span{display:block;color:var(--v4-hint);font-size:10px;line-height:1.4}
+.slh-ex-metric strong{display:block;font-size:13px;line-height:1.5;margin-top:3px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.slh-ex-chart{width:100%;min-height:105px;margin-top:10px;overflow:hidden;border-radius:12px;background:var(--v4-soft)}
+.slh-ex-chart svg{display:block;width:100%;height:auto;min-height:105px}
+.slh-ex-chart-empty{display:flex;align-items:center;justify-content:center;text-align:center;min-height:105px;padding:16px;font-size:12px;line-height:1.6;color:var(--v4-hint)}
+.slh-ex-chart-foot{font-size:10px;line-height:1.6;color:var(--v4-hint);margin-top:7px}
+.slh-ex-book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
+.slh-ex-book-side{min-width:0}
+.slh-ex-book-side-title{font-size:11px;font-weight:800;padding:5px 2px 8px;border-bottom:1px solid color-mix(in srgb,var(--v4-text) 10%,transparent);margin-bottom:3px}
+.slh-ex-book-level{position:relative;display:flex;justify-content:space-between;align-items:center;gap:5px;min-width:0;overflow:hidden;padding:9px 6px;border-bottom:1px solid color-mix(in srgb,var(--v4-text) 6%,transparent);font-size:11px;font-variant-numeric:tabular-nums}
+.slh-ex-depth-bar{position:absolute;inset-block:0;inset-inline-end:0;pointer-events:none;opacity:.13}
+.slh-ex-book-level.buy .slh-ex-depth-bar{background:#16a34a}
+.slh-ex-book-level.sell .slh-ex-depth-bar{background:#ef4444}
+.slh-ex-book-level span:not(.slh-ex-depth-bar){position:relative;z-index:1;min-width:0}
+.slh-ex-book-price{font-weight:800;white-space:nowrap}
+.slh-ex-book-amount{text-align:end;overflow-wrap:anywhere}
+.slh-ex-book-amount small{display:block;color:var(--v4-hint);font-size:9px;font-weight:400}
+.slh-ex-chart-control-group{display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:0}
+.slh-ex-chart-controls{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.slh-ex-chart-controls button{min-width:32px;padding:6px 8px;font-size:10px;line-height:1.2;border-radius:9px}
+.slh-ex-chart-controls button[aria-pressed="true"]{background:var(--v4-btn);color:var(--v4-btntext);border-color:var(--v4-btn);opacity:1!important}
+.slh-ex-candle-svg{display:block;width:100%;height:auto;min-height:140px;touch-action:pan-y}
+.slh-ex-candle-svg text{font-family:inherit}
+
+@media(max-width:520px){.slh-ex-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.slh-ex-book-grid{gap:7px}.slh-ex-book-level{font-size:10px;padding:8px 4px}}
+@media(max-width:360px){.slh-ex-book-grid{grid-template-columns:1fr}.slh-ex-book-level{font-size:11px;padding:9px 6px}}
+</style>
+
+
+<style id="slh-ux-v6-navigation">
+/* Core navigation: make the product's highest-value destinations obvious and touch-friendly. */
+.bottom.ux-bottom{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;min-height:68px;padding-top:7px;padding-bottom:calc(7px + env(safe-area-inset-bottom,0px))}
+.bottom.ux-bottom button{appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:48px;padding:7px 3px;border:1px solid transparent;border-radius:12px;background:transparent!important;color:var(--v4-hint)!important;font-size:20px;line-height:1.05;touch-action:manipulation;transition:background-color .16s,border-color .16s,color .16s}
+.bottom.ux-bottom button span{display:block;font-size:10px;font-weight:800;line-height:1.15;white-space:nowrap}
+.bottom.ux-bottom button.active{background:var(--v4-btn)!important;color:var(--v4-btntext)!important;border-color:color-mix(in srgb,var(--v4-btn) 80%,transparent)!important;box-shadow:0 3px 12px color-mix(in srgb,var(--v4-btn) 20%,transparent)}
+.bottom.ux-bottom button[aria-expanded="true"]{background:var(--v4-soft)!important;border-color:color-mix(in srgb,var(--v4-text) 18%,transparent)!important}
+.bottom.ux-bottom button:focus-visible,.slh-more-search:focus-visible,.v-sheet button:focus-visible{outline:3px solid var(--v4-btn);outline-offset:2px}
+.bottom.ux-bottom button:active{transform:scale(.97)}
+.slh-more-search-label{display:block;margin:10px 0 5px;font-size:11px;font-weight:800;color:var(--v4-text)}
+.slh-more-search{width:100%;min-height:46px;margin-bottom:9px;background:var(--v4-soft)!important;color:var(--v4-text)!important;border:1px solid color-mix(in srgb,var(--v4-text) 15%,transparent)!important;border-radius:13px!important}
+.slh-more-search::placeholder{color:var(--v4-hint);opacity:.85}
+.slh-more-search-empty{padding:14px;border:1px dashed color-mix(in srgb,var(--v4-text) 18%,transparent);border-radius:12px;margin-bottom:8px;color:var(--v4-hint);font-size:12px;line-height:1.6;text-align:center}
+.v-sheet .v-panel{max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.v-sheet[aria-hidden="true"]{visibility:hidden;pointer-events:none}
+.v-sheet.on[aria-hidden="false"]{visibility:visible;pointer-events:auto}
+@media(max-width:360px){.bottom.ux-bottom{gap:2px}.bottom.ux-bottom button{font-size:18px;padding-inline:1px}.bottom.ux-bottom button span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.bottom.ux-bottom button{transition:none!important}}
+</style>
+</head>
 <body>
 <!-- SLH SPARK NEURAL ELECTRIC SPLASH -->
 <div id="slh-splash" style="position:fixed;inset:0;z-index:9999;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;direction:ltr;transition:opacity .6s ease,visibility .6s;">
@@ -241,7 +296,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   <div class="ux-tile actionable" onclick="show('wallet');loadCombined()"><b><span id="uxBnbDot" class="ux-dot"></span> BNB</b><span id="uxBnbMini">ארנק לא אומת</span></div>
   <div class="ux-tile actionable" onclick="show('market')"><b>🛍 Buy</b><span>Stars · Card · Wallet</span></div>
 </div>
-<div class="nav legacy-nav" aria-hidden="true"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange');loadBook()" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
+<div class="nav legacy-nav" aria-hidden="true"><button onclick="show('home')" id="nh">🏠 בית</button><button onclick="show('investor')" id="ni">📊 Investor</button><button onclick="show('wallet');loadCombined()" id="nw">👛 ארנק</button><button onclick="show('market')" id="nm">🛍 שוק</button><button onclick="show('transfer')" id="nt">💸 העברה</button><button onclick="show('buy')" id="nb">💳 קנייה</button><button onclick="show('stake')" id="ns">🔒 סטייקינג</button><button onclick="show('alpha')" id="na">🚀 Alpha</button><button onclick="show('academy')" id="nc">🎓 Academy</button><button onclick="show('exchange')" id="nx">🪙 בורסה</button><button onclick="show('bscswap');loadBscSwapPolicy()" id="nbs">🔄 BSC Swap</button><button onclick="show('tonswap');loadTonSwapAssets()" id="nts">💎 TON Swap</button><button onclick="show('system');loadSystem()" id="nsys">🖥 מערכת</button><button onclick="show('control');loadControl()" id="ncontrol">🧭 Control</button><button onclick="show('ai')" id="nai">✨ AI</button><button onclick="show('settings');loadUiSettings()" id="nsettings">⚙️ הגדרות</button></div>
 <main>
 <section id="home" class="screen">
 <div class="ux-page-head"><div><div class="hero-label">⚡ SLH OS</div><h2>המרכז האישי שלך</h2><p class="muted">כסף, נכסים והתקדמות — במקום אחד פשוט.</p></div></div>
@@ -264,7 +319,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="show('move')"><b>📤 שלח</b><span>העבר נכס או Credits</span></button>
 <button class="action" onclick="show('balance')"><b>💰 Balance</b><span>ראה את כל היתרות</span></button>
 <button class="action" onclick="show('growth')"><b>🚀 Grow</b><span>למד · הרווח · התקדם</span></button>
-<button class="action" type="button" onclick="show('exchange');loadExchange()"><b>🪙 מסחר פנימי</b><span>Exchange · SLH ↔ Credits</span></button>
+<button class="action" type="button" onclick="show('exchange')"><b>🪙 מסחר פנימי</b><span>Exchange · SLH ↔ Credits</span></button>
 <button class="action" type="button" onclick="show('governance');loadGovernanceScreen()"><b>🗳️ הצעות והצבעות</b><span>ראה הצעות פעילות והצבע לפי זכאות</span></button>
 </div>
 <div class="card ux-activity-card">
@@ -365,7 +420,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="show('transfer')"><b>📤 Send Credits</b><span>העברה פנימית למשתמש אחר</span></button>
 <button class="action" onclick="show('wallet')"><b>📤 Send SLH on-chain</b><span>הארנק שלך חותם ומשדר</span></button>
 <button class="action" onclick="show('wallet')"><b>📥 Receive</b><span>קבל נכס וראה כתובת/סטטוס</span></button>
-<button class="action" onclick="show('exchange');loadExchange()"><b>🔁 Exchange</b><span>SLH ↔ Credits</span></button>
+<button class="action" onclick="show('exchange')"><b>🔁 Exchange</b><span>SLH ↔ Credits</span></button>
 </div>
 <div class="card ux-explain"><b>🧭 איך לבחור?</b><p class="muted"><b>Credits</b> = יתרה פנימית. <b>SLH</b> = נכס on-chain. <b>TON / BNB</b> = רשתות/נכסים למסלולים on-chain. לפני כל אישור, בדוק איזה נכס משתנה.</p></div>
 </section>
@@ -388,7 +443,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 </div>
 </section>
 
-<section id="growth" class="screen"><div id="growthHub"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></div></section>
+<section id="growth" class="screen"><div id="growthHub"><div class="section-title">⚡ SLH Growth Hub</div><div class="card growth-hero"><div class="hero-label">Discover → Buy / Connect → Use → Earn → Upgrade</div><h3 style="margin:6px 0 4px">כל מנועי הצמיחה במקום אחד</h3><p class="muted" id="growthNext">טוען את הצעד הבא…</p><div class="growth-flow"><div class="growth-step">🛍<b>BUY</b>רכישה</div><div class="growth-step">⚙️<b>USE</b>שימוש</div><div class="growth-step">🎁<b>EARN</b>תגמול</div><div class="growth-step">🚀<b>UP</b>שדרוג</div></div><div class="actions"><button class="action primary" onclick="show('market');trackGrowth('purchase_intent','growth',{rail:'stars'})"><b>💳 Buy</b><span>Stars / Card לפי המוצר</span></button><button class="action" onclick="show('wallet');trackGrowth('wallet_bind_intent','growth',{rail:'wallets'})"><b>👛 Connect</b><span>BNB · TON · WalletConnect</span></button><button class="action" onclick="show('academy');trackGrowth('reward_view','growth',{screen:'academy'})"><b>🎓 Earn</b><span>Academy · Tasks · Referral</span></button><button class="action" onclick="openAction('/trade','Trade');trackGrowth('trade_view','growth',{screen:'trade'})"><b>📈 Trade</b><span>Scanner · Safe Mode · Pro</span></button></div></div><div class="card"><div class="section-title" style="margin-top:0">🏆 מדדי המשתמש</div><div id="growthKpis" class="growth-kpis"><div class="growth-kpi">—</div><div class="growth-kpi">—</div><div class="growth-kpi">—</div></div></div><div class="card"><div class="section-title" style="margin-top:0">💰 מסלולי הכנסה ושימוש</div><div id="growthRails"><div class="muted">טוען…</div></div></div><div class="card" id="growthOwnerCard" hidden><div class="section-title" style="margin-top:0">👑 Owner Revenue</div><div id="growthOwnerRevenue" class="muted"></div></div></div><div class="card" id="slhSocialStudio"><div class="section-title" style="margin-top:0">🖼️ מאגר תמונות לשיתוף</div><p class="muted">בחר עיצוב מוכן של SLH Spark. המערכת מייצרת תמונת 1200×630, שולחת אותה לבוט שלך ומספקת קישור עם Preview לרשתות חברתיות.</p><div id="slhSocialAssets" class="slh-social-grid"><div class="muted">טוען את מאגר העיצובים…</div></div></div></section>
 <section id="market" class="screen"><div class="section-title">🛍 SLH Market</div>
 <div class="card" id="marketAssetGuide">
   <b>🧭 מדריך קצר: מה מקבלים בכל מסלול?</b>
@@ -404,7 +459,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     <p><b>הצבעה:</b> רכישה בחנות אינה מקנה זכות הצבעה אוטומטית. לפי המימוש הנוכחי, משקל ההצבעה נגזר מתפקיד החשבון ולא מיתרת SLH.</p>
   </div>
   <div class="actions" style="margin-top:8px">
-    <button class="action" type="button" onclick="show('exchange');loadExchange()"><b>🪙 קנייה / מכירה של SLH פנימי</b><span>Exchange · SLH/Credits · הוראות ועסקאות</span></button>
+    <button class="action" type="button" onclick="show('exchange')"><b>🪙 קנייה / מכירה של SLH פנימי</b><span>Exchange · SLH/Credits · הוראות ועסקאות</span></button>
     <button class="action" type="button" onclick="show('governance');loadGovernanceScreen()"><b>🗳️ הצעות והצבעות</b><span>צפה בהצעות פתוחות וקבל אישור הצבעה</span></button>
   </div>
 </div>
@@ -420,7 +475,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 <button class="action" onclick="openAction('/buystars emoji_bitcoin','Emoji Bitcoin')"><b>₿ Emoji Bitcoin</b><span>25 Stars</span></button>
 <button class="action" onclick="openAction('/buystars emoji_slh','Emoji SLH')"><b>⚡ Emoji SLH</b><span>50 Stars</span></button>
 <button class="action" onclick="openAction('/buystars emoji_vip','Emoji VIP')"><b>⭐ Emoji VIP</b><span>100 Stars</span></button>
-<button class="action" onclick="show('exchange');loadExchange()"><b>🪙 SLH Exchange</b><span>קנייה ומכירה מול Credits</span></button>
+<button class="action" onclick="show('exchange')"><b>🪙 SLH Exchange</b><span>קנייה ומכירה מול Credits</span></button>
 
 </div></div>
 <div class="card"><b>🎁 Referral</b><p class="muted">כל ההפניות, התגמולים והעמלה שלך — בתוך ה־Mini App.</p><button class="action primary" onclick="loadRewardsPanel()"><b>🔗 שתף והזמן</b><span>קישור אישי + תגמולים</span></button></div>
@@ -466,11 +521,43 @@ window.addEventListener('DOMContentLoaded',()=>{
 <section id="buy" class="screen"><div class="section-title">💳 קניית Credits</div><div class="card"><b>רכישה דרך Telegram Stars</b><p class="muted">ה־Mini App מסביר את התהליך; התשלום עצמו נשאר תחת סמכות הבוט.</p><div class="actions"><button class="action primary" onclick="openAction('/pay','קניית Credits')"><b>בחר חבילה</b><span>פתיחת תהליך הרכישה</span></button><button class="action" onclick="showGuide('buyguide')"><b>איך זה עובד?</b><span>מדריך קצר</span></button></div><details id="buyguide" class="guide"><summary>📘 מדריך קנייה</summary><p>בחר חבילה → בדוק מחיר וכמות → אשר תשלום ב־Telegram → המתן לאישור. אל תסתמך על צילום מסך כתחליף לאישור המערכת.</p></details></div></section>
 <section id="stake" class="screen"><div class="section-title">🔒 Staking Live</div><div class="card"><b>היתרה הסטייקד שלך: <span id="sg">—</span></b><p class="muted">Staking מבצע פעולה אמיתית על יתרת Credits באמצעות אותו מנגנון אטומי של המערכת.</p><label class="form-label" for="stakeAmount">כמות Credits</label><input id="stakeAmount" class="form-input" inputmode="decimal" placeholder="לדוגמה: 10"><label class="form-label" for="stakeDays">תקופת נעילה (ימים)</label><input id="stakeDays" class="form-input" inputmode="numeric" value="30"><button class="action primary" style="width:100%;margin-top:10px" onclick="submitStake()"><b>🔒 בצע Staking</b><span>העברה אטומית + Position ID + ledger</span></button></div><div class="card"><b>📊 הפוזיציות שלי</b><div id="stakePositions" class="muted" style="margin-top:8px">טוען…</div></div><div class="card"><b>ℹ️ איך זה עובד</b><p class="muted">ה־UID נלקח מהאימות של Telegram בצד השרת. בקשת Mini App מקבלת מזהה חד־פעמי, כך ש־Retry לא ייצור staking כפול.</p></div></section>
 <section id="alpha" class="screen"><div class="section-title">🚀 Alpha Readiness</div><div class="card" id="alphaBox">טוען…</div><details class="guide"><summary>📘 מה זה Alpha?</summary><p>המסך מציג ראיות מצב בלבד. זכאות והקצאה סופית תלויות במדיניות רשמית. כאשר המדיניות חסרה, לא מוצג סכום הקצאה.</p></details></section>
-<section id="exchange" class="screen"><div class="section-title">🪙 SLH Exchange</div>
-<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">נבדק לאחרונה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH/CREDITS</strong></div><div class="wallet-row"><span class="muted">SLH Live שלך</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
-<div class="card"><b>📈 קנייה</b><p class="muted">Limit order — כמות SLH ומחיר מקסימלי ב־Credits.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מקסימלי ב-Credits ל-SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
-<div class="card"><b>📉 מכירה</b><p class="muted">Limit order — כמות SLH ומחיר מבוקש.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב-Credits ל-SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת Limit + התאמה אוטומטית</span></button></div>
-<div class="card"><b>📖 ספר פקודות חי</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
+<section id="exchange" class="screen"><div class="section-title">🪙 מסחר פנימי ב־SLH</div>
+<div class="card" id="exchangeStatusCard"><div class="wallet-row"><span class="muted">מנוע בורסה</span><strong id="exEngineStatus">בודק סטטוס קנוני…</strong></div><div class="wallet-row"><span class="muted">שער קנוני</span><strong id="exCanonicalGate">לא אומת</strong></div><div class="wallet-row"><span class="muted">זמן הבדיקה (UTC)</span><strong id="exGateCheckedAt">—</strong></div><div class="wallet-row"><span class="muted">שוק</span><strong id="exMarketStatus">SLH / Credits</strong></div><div class="wallet-row"><span class="muted">יתרת SLH Live זמינה</span><strong id="exSLH">—</strong></div><div class="wallet-row"><span class="muted">Credits שלך</span><strong id="exCredits">—</strong></div><div class="wallet-row"><span class="muted">מחיר אחרון</span><strong id="exLast">—</strong></div><div id="exLiquidityNotice" class="guide" style="margin-top:9px">בודק נזילות…</div></div>
+
+<div class="card slh-ex-pulse" id="exMarketPulse">
+  <div class="slh-ex-pulse-head">
+    <div><b>📊 תמונת שוק</b><div class="muted">SLH מול Credits · נרות מעסקאות פנימיות שהושלמו</div></div>
+    <div class="slh-ex-chart-control-group">
+      <span class="pill pending" id="exChartStatus">טוען נתונים</span>
+      <div id="chartTimeframes" class="slh-ex-chart-controls" role="group" aria-label="טווח זמן לגרף">
+        <button type="button" class="ghost" data-tf="1m" aria-pressed="false" onclick="setChartTF('1m')">1ד</button>
+        <button type="button" class="ghost" data-tf="15m" aria-pressed="false" onclick="setChartTF('15m')">15ד</button>
+        <button type="button" class="ghost" data-tf="1h" aria-pressed="true" onclick="setChartTF('1h')">1ש</button>
+        <button type="button" class="ghost" data-tf="1d" aria-pressed="false" onclick="setChartTF('1d')">1י</button>
+      </div>
+    </div>
+  </div>
+  <div class="slh-ex-metrics">
+    <div class="slh-ex-metric"><span>מחיר קנייה מיטבי</span><strong id="exBestBid">—</strong></div>
+    <div class="slh-ex-metric"><span>מחיר מכירה מיטבי</span><strong id="exBestAsk">—</strong></div>
+    <div class="slh-ex-metric"><span>מרווח מחיר</span><strong id="exSpread">—</strong></div>
+    <div class="slh-ex-metric"><span>עסקאות בהיסטוריה</span><strong id="exTradeCount">—</strong></div>
+  </div>
+  <div class="slh-ex-chart" id="exPriceChart" aria-live="polite"><div class="slh-ex-chart-empty">טוען נתוני עסקאות...</div></div>
+  <div class="slh-ex-chart-foot" id="exChartMeta">כל נר מסכם עסקאות פנימיות שהושלמו בטווח שנבחר. אין כאן מחיר DEX או מחיר חיצוני.</div>
+</div>
+
+<details class="guide" id="exchangeChartGuide" style="margin-top:10px">
+  <summary>📘 איך נוצרים הנרות בגרף?</summary>
+  <p>כל נר מסכם עסקאות פנימיות שהושלמו בתקופת הזמן שנבחרה. עצם הצבת הוראת קנייה או מכירה אינה יוצרת נר; נדרשת התאמה שבוצעה ונרשמה כעסקה.</p>
+  <p><b>Open</b> — מחיר העסקה הראשונה בתקופה. <b>High</b> — המחיר הגבוה ביותר. <b>Low</b> — המחיר הנמוך ביותר. <b>Close</b> — מחיר העסקה האחרונה. <b>Volume</b> — נפח SLH שדווח עבור העסקאות בתקופה.</p>
+  <p>ספר הפקודות מציג הוראות שטרם הותאמו. Bid הוא מחיר הקנייה הגבוה ביותר, Ask הוא מחיר המכירה הנמוך ביותר, וה־Spread הוא ההפרש ביניהם. הוראת Limit עשויה להמתין ולא להתבצע אם אין הצעה נגדית מתאימה.</p>
+  <p><b>חשוב:</b> זהו גרף של עסקאות פנימיות בלבד — לא מחיר DEX, לא הוכחה לנזילות חיצונית ולא הבטחה שניתן לקנות או למכור בכמות או במחיר מסוימים. כשאין עסקאות, אין נתון עסקאות חדש. לצורך לימוד ותרגול יש להשתמש בסימולציה, ולא לבצע הפקדה או עסקה אמיתית רק כדי לייצר נר.</p>
+  <p>פקודות: <code>/chart</code> לפתיחת הגרף, <code>/orders</code> להצגת ההוראות, <code>/trades</code> להצגת עסקאות שהושלמו.</p>
+</details>
+<div class="card"><b>📈 קנייה</b><p class="muted">הוראת קנייה במחיר מוגבל — כמות SLH ומחיר מרבי ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="buyAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר מרבי ב־Credits לכל SLH</label><input id="buyPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action primary" style="margin-top:10px;width:100%" onclick="submitOrder('buy_slh','buyAmount','buyPrice')"><b>🟢 קנה SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
+<div class="card"><b>📉 מכירה</b><p class="muted">הוראת מכירה במחיר מוגדר — כמות SLH ומחיר מבוקש ב־Credits לכל SLH.</p><label class="form-label">כמות SLH</label><input id="sellAmount" class="form-input" inputmode="decimal" placeholder="100"><label class="form-label">מחיר ב־Credits לכל SLH</label><input id="sellPrice" class="form-input" inputmode="decimal" placeholder="1"><button class="action" style="margin-top:10px;width:100%" onclick="submitOrder('sell_slh','sellAmount','sellPrice')"><b>🔴 מכור SLH</b><span>הצבת הוראה והתאמה אוטומטית</span></button></div>
+<div class="card"><b>📖 ספר ההוראות בזמן אמת</b><div id="orderbook" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>📊 עסקאות אחרונות</b><div id="recentTrades" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>📋 ההוראות שלי</b><div id="myOrders" class="muted" style="margin-top:8px">טוען…</div></div>
 <div class="card"><b>⚙️ פעולות בורסה</b><div class="actions" style="margin-top:8px"><button class="action" onclick="loadExchange()"><b>↻ רענן שוק</b><span>Book · Trades · Orders · balances</span></button><button class="action" onclick="sendCommand('/orders','ההוראות שלי')"><b>🤖 Telegram Orders</b><span>מציג את ההוראות שלך בבוט</span></button><button class="action" onclick="sendCommand('/trades','עסקאות')"><b>📜 Telegram Trades</b><span>מציג היסטוריית עסקאות בבוט</span></button></div></div>
@@ -614,30 +701,42 @@ window.addEventListener('DOMContentLoaded',()=>{
   <details class="guide"><summary>📘 איך זה עובד?</summary><p>שינוי ערכה כאן נשמר בצד השרת. בפעם הבאה ש־Mini App נפתח הוא טוען את אותה בחירה, ופקודת /theme בבוט משנה את אותה הגדרה בדיוק.</p></details>
 </section>
 </main></div>
-<nav class="bottom ux-bottom">
-<button id="bh" onclick="show('home')">🏠<br><span>בית</span></button>
-<button id="bb" onclick="show('balance')">💰<br><span>Balance</span></button>
-<button id="bm" onclick="show('move')">🔄<br><span>Move</span></button>
-<button id="bg" onclick="show('growth')">🚀<br><span>Grow</span></button>
-<button id="binv" onclick="show('investor')">📊<br><span>Investor</span></button>
+<nav class="bottom ux-bottom" aria-label="ניווט ראשי">
+<button id="bh" type="button" aria-label="בית" aria-current="page" onclick="show('home')">🏠<span>בית</span></button>
+<button id="bw" type="button" aria-label="ארנק ופורטפוליו" onclick="show('wallet');loadCombined()">👛<span>ארנק</span></button>
+<button id="bx" type="button" aria-label="בורסה ומסחר פנימי" onclick="show('exchange')">🪙<span>בורסה</span></button>
+<button id="bmarket" type="button" aria-label="שוק ורכישה" onclick="show('market')">🛍️<span>שוק</span></button>
+<button id="bmore" type="button" aria-label="כלים נוספים" aria-haspopup="dialog" aria-controls="mSheet" aria-expanded="false" onclick="window.openMoreMenu?.()">☰<span>עוד</span></button>
 </nav>
-<div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+<div class="v-sheet" id="mSheet" role="dialog" aria-modal="true" aria-labelledby="mTitle" aria-hidden="true">
   <div class="v-panel">
-    <h3 id="mTitle">עוד ב־SLH OS</h3>
-    <p class="v-sub">כל המסכים הנוספים במקום אחד — בלי גלילה אופקית.</p>
+    <h3 id="mTitle">כל הכלים ב־SLH OS</h3>
+    <p class="v-sub">חפש מסך או פעולה. פעולות רגישות יישארו מוגנות לפי הרשאות.</p>
+    <label class="slh-more-search-label" for="moreSearch">חיפוש מהיר</label>
+    <input id="moreSearch" class="form-input slh-more-search" type="search" inputmode="search" autocomplete="off" placeholder="חפש ארנק, מסחר, קורסים…" aria-label="חיפוש במסכי SLH OS" oninput="filterMoreTools(this.value)">
+    <div id="moreSearchEmpty" class="slh-more-search-empty" role="status" aria-live="polite" hidden>לא נמצאו מסכים תואמים. נסה מונח אחר.</div>
     <div class="more-grid">
       <button class="action" onclick="show('market');closeMoreMenu()"><b>🛍 שוק</b><span>מוצרים ותשלומים</span></button>
       <button class="action" onclick="show('buy');closeMoreMenu()"><b>💳 קנייה</b><span>Credits</span></button>
       <button class="action" onclick="show('stake');closeMoreMenu()"><b>🔒 סטייקינג</b><span>פוזיציות ותנאים</span></button>
       <button class="action" onclick="show('alpha');closeMoreMenu()"><b>🚀 Alpha</b><span>זכאות והתקדמות</span></button>
       <button class="action" onclick="show('academy');closeMoreMenu()"><b>🎓 Academy</b><span>קורסים ושיעורים</span></button><button class="action" onclick="show('governance');loadGovernanceScreen();closeMoreMenu()"><b>🗳️ Governance</b><span>הצעות, הצבעה וקבלה</span></button><button class="action" onclick="show('settings');loadUiSettings();closeMoreMenu()"><b>⚙️ הגדרות</b><span>ערכת תצוגה וסנכרון</span></button>
-      <button class="action" onclick="show('exchange');loadExchange();closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
-      <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מערכת</b><span>Health וסטטוס</span></button>
+      <button class="action" onclick="show('exchange');closeMoreMenu()"><b>🪙 בורסה</b><span>Order Book</span></button><button class="action" onclick="show('bscswap');loadBscSwapPolicy();closeMoreMenu()"><b>🔄 Swap</b><span>SLH · BNB · USDT · BSC</span></button>
+      <button class="action" onclick="show('wallet');loadCombined();closeMoreMenu()"><b>👛 ארנק ופורטפוליו</b><span>יתרות, חיבורים ונכסים</span></button>
+      <button class="action" onclick="show('balance');closeMoreMenu()"><b>💰 כל היתרות</b><span>Credits ונכסים</span></button>
+      <button class="action" onclick="show('move');closeMoreMenu()"><b>🔄 שליחה וקבלה</b><span>בחר מסלול לפי הנכס</span></button>
+      <button class="action" onclick="show('transfer');closeMoreMenu()"><b>📤 העברת Credits</b><span>העברה פנימית</span></button>
+      <button class="action" onclick="show('growth');closeMoreMenu()"><b>🚀 מרכז הצמיחה</b><span>משימות, הפניות והתקדמות</span></button>
+      <button class="action" onclick="show('profile');closeMoreMenu()"><b>👤 הפרופיל שלי</b><span>התקדמות והעדפות</span></button>
+      <button class="action" onclick="show('investor');closeMoreMenu()"><b>📊 תמונת חשבון</b><span>נתוני חשבון לקריאה בלבד</span></button>
+      <button class="action" onclick="show('ai');closeMoreMenu()"><b>✨ עוזר SLH AI</b><span>שאלות והכוונה</span></button>
+      <button class="action" onclick="show('tonswap');loadTonSwapAssets();closeMoreMenu()"><b>💎 TON Swap</b><span>מסלול TON</span></button>
+      <button class="action" onclick="show('system');loadSystem();closeMoreMenu()"><b>🖥 מצב מערכת</b><span>תקינות וסטטוס</span></button>
       <div id="ownerToolsMenu" class="owner-tools-menu"><button class="action" onclick="show('control');loadControl();closeMoreMenu()"><b>🧭 Control</b><span>Owner / Go‑Live</span></button><button class="action" id="vaultMenuBtn" onclick="show('vault');loadVault();closeMoreMenu()"><b>🔐 Bot Vault</b><span>Owner only</span></button></div>
     </div>
     <div class="v-row"><button type="button" id="mClose">סגור</button></div>
   </div>
-</div><div id="toast" class="toast"></div>
+</div><div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 (function(){
   window.addEventListener("error",function(e){
@@ -666,15 +765,17 @@ function __slhRender(id){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   const scr=$(id);if(scr)scr.classList.add('active');
   document.querySelectorAll('.nav button,.bottom button').forEach(x=>x.classList.remove('active'));
-  const map={home:['nh','bh'],balance:['bb'],move:['bm'],growth:['bg'],investor:['ni','binv'],profile:[],wallet:['nw'],market:['nm'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
+  const map={home:['nh','bh'],balance:[],move:[],growth:[],investor:['ni'],profile:[],wallet:['nw','bw'],market:['nm','bmarket'],transfer:['nt'],buy:['nb'],stake:['ns'],alpha:['na'],academy:['nc'],governance:[],exchange:['nx','bx'],bscswap:['nbs'],tonswap:['nts'],system:['nsys'],control:['ncontrol'],ai:['nai'],settings:['nsettings'],vault:[]};
   (map[id]||[]).forEach(x=>$(x)?.classList.add('active'));
+  if(!['home','wallet','exchange','market'].includes(id)) $('bmore')?.classList.add('active');
+  document.querySelectorAll('.bottom button').forEach(function(button){if(button.classList.contains('active'))button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   window.scrollTo(0,0);
   __slhShowing=id;
   __slhSetBack();
   if(id==='exchange')loadExchange();
   if(id==='ai')loadAiReadiness();
   if(id==='market'){loadStarsStore();loadCardStore()}
-  if(id==='growth'){loadGrowthHub();trackGrowth('home_view','growth',{screen:'growth'})}
+  if(id==='growth'){loadGrowthHub();loadSocialAssets();trackGrowth('home_view','growth',{screen:'growth'})}
 }
 function show(id,opts){
   if(!$(id))return;
@@ -693,7 +794,7 @@ function __slhGoBack(){
   __slhNavStack.pop();
   __slhRender(__slhNavStack[__slhNavStack.length-1]);
 }
-function sendCommand(cmd,label){try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}const c=String(cmd||'').trim();if(c.startsWith('/buystars ')){return buyStars('store_item',c.slice(10).trim())}if(c==='/pay'){return chooseCreditPack()}const screens={"/wallet":"wallet","/transfer":"transfer","/stake":"stake","/alpha":"alpha","/academy":"academy","/exchange":"exchange"};if(screens[c]){show(screens[c]);if(c==='/wallet'&&typeof loadCombined==='function')loadCombined();if(c==='/exchange'&&typeof loadExchange==='function')loadExchange();return}if(c==='/system'){show('system');if(typeof loadSystem==='function')loadSystem();return}if(c==='/control'){show('control');if(typeof loadControl==='function')loadControl();return}if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink('https://t.me/Me_ad_main_bot');toast('פתחתי את הבוט להמשך');return}toast(label||'פתח את הבוט להמשך')}catch(e){toast('שליחה נכשלה')}}
+function sendCommand(cmd,label){try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}const c=String(cmd||'').trim();if(c.startsWith('/buystars ')){return buyStars('store_item',c.slice(10).trim())}if(c==='/pay'){return chooseCreditPack()}const screens={"/wallet":"wallet","/transfer":"transfer","/stake":"stake","/alpha":"alpha","/academy":"academy","/exchange":"exchange"};if(screens[c]){show(screens[c]);if(c==='/wallet'&&typeof loadCombined==='function')loadCombined();return}if(c==='/system'){show('system');if(typeof loadSystem==='function')loadSystem();return}if(c==='/control'){show('control');if(typeof loadControl==='function')loadControl();return}if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink('https://t.me/Me_ad_main_bot');toast('פתחתי את הבוט להמשך');return}toast(label||'פתח את הבוט להמשך')}catch(e){toast('שליחה נכשלה')}}
 async function starsPost(body){const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),10000);try{const r=await fetch('/api/v1/stars/invoice',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify(body),signal:ctl.signal});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d}finally{clearTimeout(timer)}}
 async function buyStars(kind,id){trackGrowth('purchase_intent','market',{rail:'stars',item_id:id});try{if(!initData){showAuthGate();toast('פתח מתוך Telegram');return}toast('⏳ פותח תשלום…');const d=await starsPost({kind:String(kind||''),id:String(id||'')});if(!d.link)throw Error('NO_LINK');if(tg&&typeof tg.openInvoice==='function'){tg.openInvoice(d.link,function(status){if(status==='paid'){try{tg.HapticFeedback?.notificationOccurred('success')}catch(_e){}toast('✅ התשלום התקבל');setTimeout(()=>loadMe(),1200)}else if(status==='failed'){toast('❌ התשלום נכשל. לא חויבת.')}else if(status==='cancelled'){toast('התשלום בוטל')}});return}if(tg&&typeof tg.openTelegramLink==='function'){tg.openTelegramLink(d.link);return}window.location.href=d.link}catch(e){console.log('buyStars',e);toast('❌ לא ניתן לפתוח תשלום: '+(e.message||e))}}
 async function shareReferralLink(){
@@ -940,6 +1041,19 @@ async function loadBscAssets(){
     if(grid)grid.innerHTML='';
   }
 }
+function exchangeStatusDetail(detail){
+  const raw=String(detail||"").trim();
+  if(!raw||raw==="public state clean")return "בדיקות תקינות ההוראות, העסקאות והיתרות עברו.";
+  const live=raw.match(/^live_open_orders=([0-9]+)$/);
+  if(live)return "קיימות "+live[1]+" הוראות פתוחות.";
+  if(raw.includes("public exchange gate is CLOSED"))return "שער המסחר מוגדר כסגור.";
+  if(raw.includes("public runtime probe failed"))return "לא ניתן לאמת כרגע את סביבת ההרצה החיה. רענן ונסה שוב.";
+  if(raw.includes("Railway Exchange gate is not configured OPEN"))return "שער המסחר ב־Railway אינו מוגדר כפתוח.";
+  if(raw.includes("order_book="))return "נמצאו אי־התאמות בספר ההוראות.";
+  if(raw.includes("trades="))return "נמצאו אי־התאמות ברישומי העסקאות.";
+  if(raw.includes("money="))return "נמצאה אי־התאמה ביתרות או ברזרבות.";
+  return "בדיקת הבטיחות לא עברה. רענן את המסך ובדוק את סטטוס המסחר בבוט.";
+}
 function updateMarketNotice(ex){
   const line=$("marketNoticeLine"); const li=$("exLiquidityNotice"); const engine=$("exEngineStatus");
   const gateEl=$("exCanonicalGate"); const checkedEl=$("exGateCheckedAt");
@@ -953,8 +1067,8 @@ function updateMarketNotice(ex){
     && status.execution_ready===true && status.public_ready===true
     && status.order_book_integrity===true && status.trade_integrity===true
     && status.money_invariants===true;
-  const gateLabel=gateOpen?"OPEN · PASS":gateKnown
-    ? String(status.public_gate||"CLOSED")+" · "+String(status.verdict||"BLOCKED")
+  const gateLabel=gateOpen?"פתוח · תקין":gateKnown
+    ? (status.public_gate==="CLOSED"?"סגור · חסום":"נדרשת בדיקה")
     : "לא אומת";
   if(engine)engine.textContent=gateOpen?"🟢 פתוח למסחר":gateKnown?"🔒 חסום למסחר":"⚪ לא אומת";
   if(gateEl)gateEl.textContent=gateLabel;
@@ -963,20 +1077,20 @@ function updateMarketNotice(ex){
     if(gateOpen){
       li.innerHTML=orders||trades
         ? '🟢 <b>שער המסחר מאומת ופתוח</b> · '+orders+' הוראות פתוחות · '+trades+' עסקאות'
-        : '🟠 <b>שער המסחר פתוח, אך אין כרגע Orders/Trades.</b><br>אין כאן נתוני נזילות מדומים; התאמות יתחילו רק מול פקודות אמיתיות.';
+        : '🟠 <b>שער המסחר פתוח, אך אין כרגע הוראות או עסקאות.</b><br>אין כאן נתוני נזילות מדומים; התאמות יתחילו רק מול פקודות אמיתיות.';
     }else if(gateKnown){
-      li.innerHTML='🔒 <b>המסחר חסום כרגע</b> · '+esc(gateLabel)+'<br>'+esc(status.detail||'הפקודות ייחסמו עד שהבדיקה הקנונית תהיה תקינה.');
+      li.innerHTML='🔒 <b>המסחר חסום כרגע</b> · '+esc(gateLabel)+'<br>'+esc(exchangeStatusDetail(status.detail));
     }else{
       li.innerHTML='⚪ <b>לא ניתן לאמת כרגע את מצב המסחר.</b><br>אין להסתמך על סטטוס קודם; רענן ונסה שוב.';
     }
   }
   if(line)line.innerHTML=gateOpen
     ? (orders||trades
-        ? '🪙 <b>SLH Exchange פתוח</b> · '+orders+' Orders · '+trades+' Trades'
-        : '🪙 <b>שער SLH Exchange פתוח</b> · ספר הפקודות ריק כרגע.')
+        ? '🪙 <b>המסחר הפנימי ב־SLH פתוח</b> · '+orders+' הוראות · '+trades+' עסקאות'
+        : '🪙 <b>שער המסחר הפנימי פתוח</b> · ספר הפקודות ריק כרגע.')
     : gateKnown
-      ? '🔒 <b>SLH Exchange חסום</b> · '+esc(gateLabel)
-      : '⚪ <b>SLH Exchange לא אומת</b> · אין להסתמך על סטטוס קודם.';
+      ? '🔒 <b>המסחר הפנימי ב־SLH חסום</b> · '+esc(gateLabel)
+      : '⚪ <b>המסחר הפנימי ב־SLH לא אומת</b> · אין להסתמך על סטטוס קודם.';
 }
 async function loadExchangeMyOrders(){
   const el=$("myOrders");if(!el)return;
@@ -984,8 +1098,8 @@ async function loadExchangeMyOrders(){
     const r=await fetch('/api/v1/exchange/my-orders',{headers,cache:'no-store'});const d=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
     const rows=d.orders||[];
-    el.innerHTML=rows.length?rows.map(o=>'<div class="wallet-row"><span><b>'+esc(o.side==='buy'?'BUY':'SELL')+'</b> · '+esc(o.amount)+' SLH @ '+esc(o.price)+' C</span><button class="ghost" type="button" onclick="cancelExchangeOrder(\''+esc(o.id)+'\')">✖ ביטול</button></div>').join(''):'<div class="muted">אין לך הוראות פתוחות כרגע</div>';
-  }catch(e){el.innerHTML='<div class="muted">לא ניתן לטעון הוראות</div>'}
+    el.innerHTML=rows.length?rows.map(o=>'<div class="wallet-row"><span><b>'+esc(o.side==='buy'?'קנייה':'מכירה')+'</b> · '+esc(o.amount)+' SLH במחיר '+esc(o.price)+' Credits לכל SLH</span><button class="ghost" type="button" onclick="cancelExchangeOrder(\''+esc(o.id)+'\')">✖ ביטול</button></div>').join(''):'<div class="muted">אין לך הוראות פתוחות כרגע</div>';
+  }catch(e){el.innerHTML='<div class="muted">לא ניתן לטעון את ההוראות כרגע</div>'}
 }
 async function cancelExchangeOrder(id){
   if(!id)return;
@@ -993,8 +1107,170 @@ async function cancelExchangeOrder(id){
     const r=await fetch('/api/v1/exchange/order/'+encodeURIComponent(id),{method:'DELETE',headers});const d=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
     toast('✅ הוראה בוטלה והרזרבה שוחררה'); await loadExchange();
-  }catch(e){toast('❌ ביטול נכשל: '+(e.message||e))}
+  }catch(e){toast('❌ לא ניתן לבטל את ההוראה כרגע. רענן ובדוק את מצבה.')}
 }
+
+function exchangePriceLabel(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n.toLocaleString('he-IL',{maximumFractionDigits:8}):'—';
+}
+function renderExchangeOrderbook(orders){
+  const el=$("orderbook");if(!el)return;
+  const valid=(Array.isArray(orders)?orders:[]).filter(o=>
+    o&&["buy","sell"].includes(String(o.side))&&Number.isFinite(Number(o.price))&&Number(o.price)>0&&Number.isFinite(Number(o.amount))&&Number(o.amount)>0
+  );
+  if(!valid.length){
+    el.innerHTML='<div class="muted">אין הזמנות פתוחות — אין כאן נתוני דמה.</div>';
+    return;
+  }
+  const grouped={buy:new Map(),sell:new Map()};
+  valid.forEach(o=>{
+    const price=Number(o.price),amount=Number(o.amount),key=price.toFixed(8);
+    const row=grouped[o.side].get(key)||{price,amount:0,count:0};
+    row.amount+=amount;row.count+=1;grouped[o.side].set(key,row);
+  });
+  const bids=Array.from(grouped.buy.values()).sort((a,b)=>b.price-a.price);
+  const asks=Array.from(grouped.sell.values()).sort((a,b)=>a.price-b.price);
+  const all=bids.concat(asks);
+  const maxDepth=all.reduce((max,x)=>Math.max(max,x.amount),1);
+  const renderSide=(side,rows)=>{
+    const title=side==='buy'?'קנייה · מחיר גבוה קודם':'מכירה · מחיר נמוך קודם';
+    const body=rows.slice(0,8).map(row=>{
+      const width=Math.max(4,Math.min(100,row.amount/maxDepth*100));
+      return '<div class="slh-ex-book-level '+side+'"><span class="slh-ex-depth-bar" style="width:'+width.toFixed(2)+'%"></span>'+
+        '<span class="slh-ex-book-price">'+exchangePriceLabel(row.price)+' Credits</span>'+
+        '<span class="slh-ex-book-amount">'+fmt(row.amount)+' SLH<small>'+row.count+' הוראות</small></span></div>';
+    }).join('');
+    return '<div class="slh-ex-book-side"><div class="slh-ex-book-side-title">'+title+'</div>'+
+      (body||'<div class="muted" style="font-size:11px;padding:8px 2px">אין הצעות בצד זה</div>')+'</div>';
+  };
+  el.innerHTML='<div class="slh-ex-book-grid">'+renderSide('buy',bids)+renderSide('sell',asks)+'</div>'+
+    (valid.length>16?'<div class="muted" style="font-size:10px;margin-top:8px">מוצגות עד 8 רמות מחיר לכל צד; המחירים המיטביים מחושבים מכל ההוראות הפתוחות שהתקבלו.</div>':'');
+}
+let __chartTF = '1h';
+function renderExchangeMarketPulse(orders,trades){
+  const validOrders=(Array.isArray(orders)?orders:[]).filter(o=>
+    o&&["buy","sell"].includes(String(o.side))&&Number.isFinite(Number(o.price))&&Number(o.price)>0&&Number.isFinite(Number(o.amount))&&Number(o.amount)>0
+  );
+  const bids=validOrders.filter(o=>o.side==='buy').sort((a,b)=>Number(b.price)-Number(a.price));
+  const asks=validOrders.filter(o=>o.side==='sell').sort((a,b)=>Number(a.price)-Number(b.price));
+  const bid=bids.length?Number(bids[0].price):null;
+  const ask=asks.length?Number(asks[0].price):null;
+  setText('exBestBid',bid===null?'אין הצעת קנייה':exchangePriceLabel(bid)+' Credits');
+  setText('exBestAsk',ask===null?'אין הצעת מכירה':exchangePriceLabel(ask)+' Credits');
+  if(bid!==null&&ask!==null){
+    const spread=ask-bid;
+    if(spread<0){
+      setText('exSpread','הוראות חופפות');
+    }else{
+      const mid=(ask+bid)/2;
+      const pct=mid>0?(spread/mid*100):0;
+      setText('exSpread',exchangePriceLabel(spread)+' Credits לכל SLH · '+pct.toLocaleString('he-IL',{maximumFractionDigits:2})+'%');
+    }
+  }else{
+    setText('exSpread','אין שני צדדים');
+  }
+  const validTrades=(Array.isArray(trades)?trades:[]).filter(t=>
+    t&&Number.isFinite(Number(t.price))&&Number(t.price)>0&&Number.isFinite(Number(t.slh_amount))&&Number(t.slh_amount)>0
+  );
+  setText('exTradeCount',String(validTrades.length)+' מתוך 100');
+}
+function setChartTF(tf){
+  const allowed=['1m','15m','1h','1d'];
+  __chartTF=allowed.includes(String(tf))?String(tf):'1h';
+  const controls=$('chartTimeframes');
+  if(controls)controls.querySelectorAll('button[data-tf]').forEach(button=>{
+    const active=button.dataset.tf===__chartTF;
+    button.setAttribute('aria-pressed',active?'true':'false');
+    button.style.opacity=active?'1':'0.55';
+  });
+  return loadExchangeCandles(__chartTF);
+}
+function exchangeTimeframeLabel(tf){
+  return ({"1m":"דקה","15m":"15 דקות","1h":"שעה","1d":"יום"})[String(tf)]||"שעה";
+}
+function formatCandleTime(epoch,tf){
+  const date=new Date(Number(epoch)*1000);
+  if(!Number.isFinite(date.getTime()))return '—';
+  const options=tf==='1d'
+    ?{day:'2-digit',month:'2-digit',year:'2-digit'}
+    :{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false};
+  return date.toLocaleString('he-IL',options);
+}
+function renderExchangeCandles(candles,tf){
+  const host=$('exPriceChart');
+  const status=$('exChartStatus');
+  const meta=$('exChartMeta');
+  if(!host)return;
+  const valid=(Array.isArray(candles)?candles:[]).filter(c=>{
+    if(!c||!Number.isFinite(Number(c.time))||Number(c.time)<0)return false;
+    const o=Number(c.open),h=Number(c.high),l=Number(c.low),cl=Number(c.close),v=Number(c.volume);
+    return [o,h,l,cl,v].every(Number.isFinite)&&o>0&&h>0&&l>0&&cl>0&&v>=0&&l<=Math.min(o,cl)&&h>=Math.max(o,cl);
+  }).sort((a,b)=>Number(a.time)-Number(b.time));
+  if(!valid.length){
+    if(status){status.textContent='אין נתונים לטווח';status.classList.remove('ok');status.classList.add('pending')}
+    host.innerHTML='<div class="slh-ex-chart-empty">אין עסקאות פנימיות שהושלמו בטווח הזה.<br>הגרף יתמלא כשיצטברו עסקאות אמיתיות.</div>';
+    if(meta)meta.textContent='הנתונים מסוכמים מיומן העסקאות הפנימיות. אין יצירת נתוני מחיר מדומים.';
+    return;
+  }
+  const W=640,H=260,left=74,right=626,top=16,priceBottom=174,volumeTop=195,volumeBottom=232;
+  const lows=valid.map(c=>Number(c.low)),highs=valid.map(c=>Number(c.high));
+  const rawLow=Math.min(...lows),rawHigh=Math.max(...highs);
+  const pad=rawHigh>rawLow?(rawHigh-rawLow)*0.09:Math.max(Math.abs(rawHigh)*0.025,1e-8);
+  const minPrice=Math.max(0,rawLow-pad),maxPrice=rawHigh+pad;
+  const range=Math.max(maxPrice-minPrice,1e-8);
+  const yPrice=p=>priceBottom-((p-minPrice)/range)*(priceBottom-top);
+  const maxVolume=valid.reduce((m,c)=>Math.max(m,Number(c.volume)),0);
+  const step=(right-left)/valid.length;
+  const candleWidth=Math.max(2.2,Math.min(16,step*0.58));
+  const volumeWidth=Math.max(2,candleWidth);
+  const ticks=[maxPrice,(maxPrice+minPrice)/2,minPrice];
+  const grid=ticks.map((p,i)=>{
+    const y=top+i*(priceBottom-top)/2;
+    return '<line x1="'+left+'" x2="'+right+'" y1="'+y.toFixed(2)+'" y2="'+y.toFixed(2)+'" stroke="currentColor" stroke-opacity=".13" stroke-dasharray="3 4"/>'+
+      '<text x="5" y="'+(y+4).toFixed(2)+'" fill="currentColor" fill-opacity=".75" font-size="11">'+esc(exchangePriceLabel(p))+'</text>';
+  }).join('');
+  const shapes=valid.map((c,i)=>{
+    const o=Number(c.open),h=Number(c.high),l=Number(c.low),cl=Number(c.close),v=Number(c.volume);
+    const x=left+step*(i+0.5),yo=yPrice(o),yh=yPrice(h),yl=yPrice(l),yc=yPrice(cl);
+    const isUp=cl>=o,color=isUp?'#16a34a':'#ef4444';
+    const bodyY=Math.min(yo,yc),bodyH=Math.max(1.5,Math.abs(yc-yo));
+    const volumeH=maxVolume>0?(v/maxVolume)*(volumeBottom-volumeTop):0;
+    const title=esc(formatCandleTime(c.time,tf)+' · פתיחה '+exchangePriceLabel(o)+' · גבוה '+exchangePriceLabel(h)+' · נמוך '+exchangePriceLabel(l)+' · סגירה '+exchangePriceLabel(cl)+' · נפח '+fmt(v)+' SLH');
+    return '<g><title>'+title+'</title>'+
+      '<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+yh.toFixed(2)+'" y2="'+yl.toFixed(2)+'" stroke="'+color+'" stroke-width="1.5"/>'+
+      '<rect x="'+(x-candleWidth/2).toFixed(2)+'" y="'+bodyY.toFixed(2)+'" width="'+candleWidth.toFixed(2)+'" height="'+bodyH.toFixed(2)+'" fill="'+color+'" rx=".5"/>'+
+      (volumeH>0?'<rect x="'+(x-volumeWidth/2).toFixed(2)+'" y="'+(volumeBottom-volumeH).toFixed(2)+'" width="'+volumeWidth.toFixed(2)+'" height="'+volumeH.toFixed(2)+'" fill="'+color+'" fill-opacity=".55"/>':'')+
+      '</g>';
+  }).join('');
+  const timeLabels=valid.length===1
+    ?'<text x="'+((left+right)/2)+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="middle" font-size="10">'+esc(formatCandleTime(valid[0].time,tf))+'</text>'
+    :'<text x="'+left+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="start" font-size="10">'+esc(formatCandleTime(valid[0].time,tf))+'</text>'+
+     '<text x="'+right+'" y="253" fill="currentColor" fill-opacity=".72" text-anchor="end" font-size="10">'+esc(formatCandleTime(valid[valid.length-1].time,tf))+'</text>';
+  host.innerHTML='<svg class="slh-ex-candle-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="גרף נרות SLH מול Credits בטווח '+esc(exchangeTimeframeLabel(tf))+'">'+
+    '<title>נרות SLH מול Credits</title><desc>גרף נרות המבוסס על עסקאות פנימיות שהושלמו בלבד; הנפח הוא סכום כמות SLH בעסקאות בכל נר.</desc>'+
+    grid+'<line x1="'+left+'" x2="'+right+'" y1="'+volumeTop+'" y2="'+volumeTop+'" stroke="currentColor" stroke-opacity=".18"/>'+
+    '<text x="5" y="'+(volumeTop+11)+'" fill="currentColor" fill-opacity=".72" font-size="10">נפח</text>'+shapes+timeLabels+'</svg>';
+  if(status){status.textContent=valid.length+' נרות · '+exchangeTimeframeLabel(tf);status.classList.toggle('ok',valid.length>0);status.classList.toggle('pending',valid.length===0)}
+  if(meta)meta.textContent='מוצגים '+valid.length+' נרות בטווח '+exchangeTimeframeLabel(tf)+' · פתיחה/גבוה/נמוך/סגירה · נפח = סכום SLH בעסקאות שהושלמו. זו היסטוריה פנימית, לא מחיר חיצוני.';
+}
+async function loadExchangeCandles(tf){
+  const chosen=['1m','15m','1h','1d'].includes(String(tf||''))?String(tf):__chartTF;
+  const host=$('exPriceChart');
+  const status=$('exChartStatus');
+  if(status){status.textContent='טוען נתוני '+exchangeTimeframeLabel(chosen);status.classList.remove('ok');status.classList.add('pending')}
+  try{
+    const response=await fetch('/api/v1/exchange/candles?interval='+encodeURIComponent(chosen)+'&limit=200',{headers,cache:'no-store'});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok)throw Error(payload.error||('HTTP '+response.status));
+    renderExchangeCandles(payload.candles,chosen);
+  }catch(e){
+    if(host)host.innerHTML='<div class="slh-ex-chart-empty">לא ניתן לטעון את נתוני הנרות כרגע. רענן כדי לנסות שוב.</div>';
+    if(status){status.textContent='לא אומת';status.classList.remove('ok');status.classList.add('pending')}
+    setText('exChartMeta','היסטוריית הנרות אינה זמינה. לא מוצגים נתונים קודמים כאילו הם עדכניים.');
+  }
+}
+
 async function loadExchange(){
   try{
     if(typeof loadMe==='function')await loadMe();
@@ -1012,19 +1288,24 @@ async function loadExchange(){
     
     updateMarketNotice(ex);
     const orders=b.orders||[];
-    const el=$("orderbook");
-    if(el)el.innerHTML=orders.length?orders.slice(0,40).map(o=>'<div class="wallet-row"><span class="pill '+(o.side==='buy'?'ok':'')+'">'+(o.side==='buy'?'קנייה':'מכירה')+'</span><span>'+fmt(o.amount)+' SLH</span><strong>'+fmt(o.price)+' C</strong></div>').join(''):'<div class="muted">אין הזמנות פתוחות — אין כאן נתוני דמה.</div>';
+    renderExchangeOrderbook(orders);
     const trades=m.trades||[];
+    renderExchangeMarketPulse(orders,trades);
     const te=$("recentTrades");
-    if(te)te.innerHTML=trades.length?trades.slice(-20).reverse().map(x=>'<div class="wallet-row"><span>'+fmt(x.slh_amount)+' SLH</span><strong>'+fmt(x.price)+' C</strong><span class="muted">'+esc((x.timestamp||'').slice(0,19))+'</span></div>').join(''):'<div class="muted">אין עסקאות שבוצעו עדיין.</div>';
+    if(te)te.innerHTML=trades.length?trades.slice(-20).reverse().map(x=>'<div class="wallet-row"><span>'+fmt(x.slh_amount)+' SLH</span><strong>'+fmt(x.price)+' Credits</strong><span "muted">'+esc((x.timestamp||'').slice(0,19))+'</span></div>').join(''):'<div class="muted">אין עסקאות שבוצעו עדיין.</div>';
     await loadExchangeMyOrders();
+    await loadExchangeCandles(__chartTF);
   }catch(e){
     const el=$("orderbook");if(el)el.innerHTML='<div class="muted">לא ניתן לטעון את ספר הפקודות</div>';
+    const chart=$("exPriceChart");if(chart)chart.innerHTML='<div class="slh-ex-chart-empty">נתוני השוק לא זמינים כרגע. רענן כדי לבצע בדיקה חדשה.</div>';
+    const chartStatus=$("exChartStatus");if(chartStatus){chartStatus.textContent='לא אומת';chartStatus.classList.remove('ok');chartStatus.classList.add('pending')}
+    const timeframeControls=$('chartTimeframes');if(timeframeControls)timeframeControls.querySelectorAll('button[data-tf]').forEach(button=>{button.setAttribute('aria-pressed',button.dataset.tf===__chartTF?'true':'false')});
+    setText("exBestBid","—");setText("exBestAsk","—");setText("exSpread","—");setText("exTradeCount","—");
     const li=$("exLiquidityNotice");if(li)li.textContent='⚪ לא ניתן לאמת כרגע את מצב המסחר; אין להסתמך על סטטוס קודם.';
     setText("exEngineStatus","⚪ לא אומת");
     setText("exCanonicalGate","לא אומת");
     setText("exGateCheckedAt","—");
-    const line=$("marketNoticeLine");if(line)line.textContent="⚪ SLH Exchange לא אומת";
+    const line=$("marketNoticeLine");if(line)line.textContent="⚪ המסחר הפנימי ב־SLH לא אומת";
   }
 }
 function submitOrder(side,aId,pId){
@@ -1062,6 +1343,17 @@ function hasFreshExchangeExecutionProof(check){
     && hasLiveBeaconTimestamp
     && timestampsAreClose;
 }
+function exchangeOrderStatusLabel(value){
+  const status=String(value||"").trim().toLowerCase();
+  return ({open:"פתוחה",filled:"הושלמה",partially_filled:"בוצעה חלקית",partial:"בוצעה חלקית",cancelled:"בוטלה",canceled:"בוטלה",accepted:"התקבלה",created:"נוצרה",pending:"ממתינה",rejected:"נדחתה"})[status]||"לא ידוע";
+}
+function exchangeGateValueLabel(value){
+  const gate=String(value??"").trim().toUpperCase();
+  if(gate==="OPEN"||gate==="1")return "פתוח";
+  if(gate==="CLOSED"||gate==="0")return "סגור";
+  if(gate==="BLOCKED")return "חסום";
+  return "לא ידוע";
+}
 function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
   const check=data.execution_check||{};
   const idempotentReplay=data.idempotent_replay===true;
@@ -1076,34 +1368,34 @@ function renderExchangeExecutionReceipt(data,side,amount,price,sourceInputId){
     box.setAttribute('data-exchange-receipt','true');
     host.appendChild(box);
   }
-  const sideLabel=side==='buy'?'BUY':'SELL';
+  const sideLabel=side==='buy'?'קנייה':'מכירה';
   const tradeLabel=tradeIds.length
-    ? 'Trade ID: '+tradeIds.map(x=>esc(x)).join(', ')
-    : 'הפקודה נרשמה בספר; עדיין אין התאמה מול פקודה נגדית.';
-  const flagLabel=value=>value===true?'PASS':value===false?'FAIL':'לא דווח';
+    ? (tradeIds.length===1?'מזהה עסקה: ':'מזהי עסקאות: ')+tradeIds.map(x=>esc(x)).join(', ')
+    : 'ההוראה נרשמה בספר; עדיין לא נמצאה הוראה נגדית להתאמה.';
+  const flagLabel=value=>value===true?'תקין':value===false?'לא תקין':'לא דווח';
   const liveProofPassed=hasFreshExchangeExecutionProof(check);
   const receiptHeading=idempotentReplay
     ? '↩️ קבלה חוזרת — אותה פקודה, ללא ביצוע נוסף'
-    : (liveProofPassed?'✅ Fresh Exchange check: PASS':'⚠️ Fresh Exchange receipt incomplete — לא ניתן להציג ירוק');
+    : (liveProofPassed?'✅ בדיקת המסחר העדכנית: עברה':'⚠️ קבלת אימות המסחר אינה שלמה — אין להציג אישור ירוק');
   const livePublicUpdatedAt=check.live_public_updated_at===undefined||check.live_public_updated_at===null
     ? 'לא דווח'
-    : String(check.live_public_updated_at);
+    : formatCandleTime(Number(check.live_public_updated_at),'1h');
   box.innerHTML='<b>'+receiptHeading+'</b>'+
-    '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH @ '+esc(price)+' Credits</div>'+
-    '<div>Order ID: '+esc(data.order_id||'—')+' · '+esc(String(data.status||'accepted').toUpperCase())+'</div>'+
-    '<div>Filled: '+esc(data.filled||'0')+' SLH · Remaining: '+esc(data.remaining||'0')+' SLH</div>'+
+    '<div style="margin-top:6px">'+esc(sideLabel)+' · '+esc(amount)+' SLH במחיר '+esc(price)+' Credits לכל SLH</div>'+
+    '<div>מזהה הוראה: '+esc(data.order_id||'—')+' · מצב: '+esc(exchangeOrderStatusLabel(data.status))+'</div>'+
+    '<div>בוצע: '+esc(data.filled||'0')+' SLH · נותר לביצוע: '+esc(data.remaining||'0')+' SLH</div>'+
     '<div>'+tradeLabel+'</div>'+
-    '<div class="wallet-row" style="margin-top:8px"><span>שער ציבורי</span><strong>'+esc(check.public_gate||'לא דווח')+'</strong></div>'+
+    '<div class="wallet-row" style="margin-top:8px"><span>שער ציבורי</span><strong>'+esc(exchangeGateValueLabel(check.public_gate))+'</strong></div>'+
     '<div class="wallet-row"><span>מוכנות ציבורית</span><strong>'+esc(flagLabel(check.public_ready))+'</strong></div>'+
     '<div class="wallet-row"><span>ספר פקודות</span><strong>'+esc(flagLabel(check.order_book_integrity))+'</strong></div>'+
     '<div class="wallet-row"><span>תקינות עסקאות</span><strong>'+esc(flagLabel(check.trade_integrity))+'</strong></div>'+
-    '<div class="wallet-row"><span>אינווריאנטים כספיים</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
-    '<div class="wallet-row"><span>Live runtime confirmation</span><strong>'+ (liveProofPassed?'PASS':'NOT VERIFIED') +'</strong></div>'+
-    '<div class="wallet-row"><span>Railway gate / live gate</span><strong>'+esc(String(check.live_railway_gate||'UNKNOWN')+' / '+String(check.live_public_gate||'UNKNOWN'))+'</strong></div>'+
-    '<div class="wallet-row"><span>Live verdict / readiness</span><strong>'+esc(String(check.live_public_verdict||'UNKNOWN')+' / '+flagLabel(check.live_public_readiness))+'</strong></div>'+
-    '<div class="muted" style="margin-top:4px">'+(idempotentReplay?'קבלה חוזרת של הפקודה המקורית · זמן האימות המקורי: ':'בדיקה שבוצעה בצד השרת בתוך פעולת המסחר האטומית · ')+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
-    '<div class="muted">Live checked_at: '+esc(check.live_checked_at||'לא דווח')+' · Beacon updated_at (epoch): '+esc(livePublicUpdatedAt)+'</div>'+
-    (liveProofPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה, אך קבלת האימות החי חסרה או אינה עקבית בזמן. בדוק Order ID והיסטוריית העסקאות לפני ניסיון נוסף; אל תיצור פקודה חדשה על סמך קבלה חלקית.</div>');
+    '<div class="wallet-row"><span>איזון יתרות כספיות</span><strong>'+esc(flagLabel(check.money_invariants))+'</strong></div>'+
+    '<div class="wallet-row"><span>אימות סביבת ההרצה בזמן אמת</span><strong>'+(liveProofPassed?'עבר':'לא אומת')+'</strong></div>'+
+    '<div class="wallet-row"><span>שער הפריסה / שער המסחר הציבורי</span><strong>'+esc(exchangeGateValueLabel(check.live_railway_gate)+' / '+exchangeGateValueLabel(check.live_public_gate))+'</strong></div>'+
+    '<div class="wallet-row"><span>מצב השער החי / מוכנות</span><strong>'+esc(exchangeGateValueLabel(check.live_public_verdict)+' / '+flagLabel(check.live_public_readiness))+'</strong></div>'+
+    '<div class="muted" style="margin-top:4px">'+(idempotentReplay?'קבלה חוזרת של ההוראה המקורית · זמן האימות המקורי: ':'בדיקה שבוצעה בצד השרת בתוך פעולת המסחר האטומית · ')+esc(check.checked_at||'זמן הבדיקה לא דווח')+'</div>'+
+    '<div class="muted">זמן אימות הסביבה הפעילה: '+esc(check.live_checked_at||'לא דווח')+' · עדכון אות המצב: '+esc(livePublicUpdatedAt)+'</div>'+
+    (liveProofPassed?'':'<div class="muted" style="margin-top:5px">השרת החזיר תשובה, אך קבלת האימות החי חסרה או אינה עקבית בזמן. בדוק את מזהה ההוראה ואת היסטוריית העסקאות לפני ניסיון נוסף; אל תיצור הוראה חדשה על סמך קבלה חלקית.</div>');
 }
 function renderExchangeExecutionBlocked(data,sourceInputId){
   const check=data.exchange_check||{};
@@ -1117,9 +1409,9 @@ function renderExchangeExecutionBlocked(data,sourceInputId){
     box.setAttribute('data-exchange-receipt','true');
     host.appendChild(box);
   }
-  box.innerHTML='<b>⛔ Fresh Exchange check: BLOCKED</b>'+
-    '<div>הפקודה לא בוצעה. אין להמשיך על סמך נתון קודם.</div>'+
-    '<div class="muted">'+esc(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.')+'</div>'+
+  box.innerHTML='<b>⛔ בדיקת המסחר העדכנית חסומה</b>'+
+    '<div>ההוראה לא בוצעה. אין להמשיך על סמך נתון קודם.</div>'+
+    '<div class="muted">'+esc(exchangeStatusDetail(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.'))+'</div>'+
     '<div class="muted">זמן האימות הקנוני: '+esc(check.checked_at||'לא דווח')+'</div>';
 }
 async function sendExchangeOrder(side,amount,price,options){
@@ -1132,7 +1424,7 @@ async function sendExchangeOrder(side,amount,price,options){
   const reqId=__exchangePendingRequests[intent]||((crypto&&crypto.randomUUID)?crypto.randomUUID():('x-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)));
   __exchangePendingRequests[intent]=reqId;
   try{
-    toast('⏳ מאמת את מצב Exchange הקנוני ומבצע באותה פעולה בשרת…');
+    toast('⏳ מאמת את שער המסחר ומבצע את הבדיקה באותה פעולה בשרת…');
     const resp=await fetch('/api/v1/exchange/order',{
       method:'POST',
       headers:Object.assign({'Content-Type':'application/json'},headers),
@@ -1151,28 +1443,30 @@ async function sendExchangeOrder(side,amount,price,options){
       if(resp.status<500)delete __exchangePendingRequests[intent];
       return;
     }
-    delete __exchangePendingRequests[intent];
     renderExchangeExecutionReceipt(d,side,amount,price,options.sourceInputId);
     const executionCheck=d.execution_check||{};
     const receiptVerified=hasFreshExchangeExecutionProof(executionCheck);
+    // Retain the idempotency key when a 2xx response has incomplete execution
+    // proof. A retry of this unresolved intent must replay the same request,
+    // not silently create a second order. Clear it only after a verified receipt. 
+    if(receiptVerified)delete __exchangePendingRequests[intent];
     const tradeIds=Array.isArray(d.trade_ids)?d.trade_ids:[];
-    const tradeNote=tradeIds.length?' · Trade '+tradeIds.join(', '):' · ממתין להתאמה';
+    const tradeNote=tradeIds.length?' · מזהי עסקאות: '+tradeIds.join(', '):' · ממתין להתאמה';
     if(d.idempotent_replay===true){
-      toast('↩️ קבלה חוזרת · '+String(d.order_id||'Order')+' · לא נוצרה פקודה חדשה ולא בוצע חיוב נוסף.');
+      toast('↩️ קבלה חוזרת · הוראה '+String(d.order_id||'לא ידועה')+' · לא נוצרה הוראה חדשה ולא בוצע חיוב נוסף.');
     }else{
       toast(receiptVerified
-        ? '✅ Fresh canonical check PASS · '+String(d.order_id||'Order')+' · '+String(d.status||'accepted').toUpperCase()+tradeNote
-        : '⚠️ הפקודה התקבלה, אך קבלת האימות חלקית. בדוק Order ID והיסטוריית העסקאות לפני ניסיון נוסף.');
+        ? '✅ בדיקת המסחר העדכנית תקינה · הוראה '+String(d.order_id||'לא ידועה')+' · '+exchangeOrderStatusLabel(d.status)+tradeNote
+        : '⚠️ ההוראה התקבלה, אך פרטי האימות אינם שלמים. בדוק את ההוראה ואת היסטוריית העסקאות לפני ניסיון נוסף.');
     }
     if(typeof loadExchange==='function'){
       await loadExchange();
     }else{
-      if(typeof loadBook==='function')await loadBook();
       if(typeof loadMe==='function')await loadMe();
     }
   }catch(e){
     // Keep the request ID after a network/5xx-style failure so a retry is idempotent.
-    toast('❌ לא התקבל אישור מהשרת: '+(e.message||e)+'. ניסיון חוזר לאותה פקודה ישתמש באותו מזהה.');
+    toast('❌ לא התקבל אישור מהשרת. ניסיון חוזר ישתמש באותו מזהה הוראה; בדוק את ההיסטוריה לפני פעולה חדשה.');
   }
 }
 function prepareTransfer(){const r=($("recipient")?.value||'').trim();const a=($("amount")?.value||'').trim();if(!/^\d+$/.test(r)){toast('מזהה Telegram לא תקין');return}const n=Number(a);if(!Number.isFinite(n)||n<=0){toast('סכום Credits לא תקין');return}sendCommand(`/transfer ${r} ${a}`,'העברת Credits')}
@@ -1358,6 +1652,50 @@ async function loadFinancialTruth(){
   }
 }
 async function trackGrowth(event,surface,meta){try{if(!initData)return;const id=(crypto&&crypto.randomUUID)?crypto.randomUUID():('g-'+Date.now()+'-'+Math.random().toString(36).slice(2,8));await fetch('/api/v1/growth-events',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({event:event,event_id:id,surface:surface,meta:meta||{}})}).catch(()=>{});}catch(_e){}}
+let __slhSocialAssetCatalog=[];
+function socialAssetById(id){return __slhSocialAssetCatalog.find(x=>x.id===String(id||''))||null}
+async function loadSocialAssets(){
+  const box=$('slhSocialAssets');
+  if(!box)return;
+  if(!initData){box.innerHTML='<div class="muted">פתח את האפליקציה מתוך Telegram כדי לטעון את המאגר.</div>';return}
+  box.innerHTML='<div class="muted">מייצר את מאגר התמונות…</div>';
+  try{
+    const r=await fetch('/api/v1/social/assets?_='+Date.now(),{headers,cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    __slhSocialAssetCatalog=Array.isArray(d.assets)?d.assets:[];
+    if(!__slhSocialAssetCatalog.length){box.innerHTML='<div class="muted">אין כרגע עיצובים זמינים.</div>';return}
+    box.innerHTML=__slhSocialAssetCatalog.map(x=>'<article class="slh-social-card"><img loading="lazy" src="'+esc(x.image_url)+'" alt="'+esc(x.title)+'"><span class="slh-social-pill">PNG · 1200×630</span><h4>'+esc(x.title)+'</h4><div class="slh-social-caption">'+esc(x.caption||'')+'</div><div class="slh-social-actions"><button class="action primary" onclick="sendSocialAssetToTelegram(\''+esc(x.id)+'\')">📩 שלח לבוט</button><button class="action" onclick="shareSocialAsset(\''+esc(x.id)+'\')">📣 שתף תמונה</button></div><p class="muted" style="font-size:11px;margin:8px 0 0">Preview: <a href="'+esc(x.image_url)+'" target="_blank" rel="noopener">פתח תמונה</a> · <a href="'+esc(x.share_url)+'" target="_blank" rel="noopener">קישור חברתי</a></p></article>').join('');
+  }catch(e){box.innerHTML='<div class="muted">לא ניתן לטעון את המאגר: '+esc(e.message||'שגיאה')+'</div>'}
+}
+async function sendSocialAssetToTelegram(id){
+  const asset=socialAssetById(id);
+  if(!asset){toast('בחר עיצוב מהמאגר');return}
+  try{
+    const r=await fetch('/api/v1/social/send-to-telegram',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({asset_id:asset.id})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||d.ok!==true)throw Error(d.error||('HTTP '+r.status));
+    toast('✅ התמונה נשלחה אליך ב־Telegram. אפשר להעביר אותה לערוץ או לרשת חברתית.');
+  }catch(e){toast('❌ שליחת התמונה נכשלה: '+(e.message||'שגיאה'))}
+}
+async function shareSocialAsset(id){
+  const asset=socialAssetById(id);
+  if(!asset){toast('בחר עיצוב מהמאגר');return}
+  const shareUrl=String(asset.share_url||'');
+  try{
+    const r=await fetch(asset.image_url,{cache:'force-cache'});
+    if(!r.ok)throw Error('IMAGE_UNAVAILABLE');
+    const blob=await r.blob();
+    const file=new File([blob],'slh-spark-'+asset.id+'.png',{type:'image/png'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:asset.title,text:String(asset.caption||'')+'\n'+shareUrl});
+      toast('✅ התמונה וקישור ה־Preview נפתחו לשיתוף');
+      return;
+    }
+  }catch(e){if(e&&e.name==='AbortError')return}
+  await sendSocialAssetToTelegram(asset.id);
+  toast('📩 שלחתי את התמונה לבוט. אפשר להעביר אותה לערוץ או לשמור אותה לשיתוף.');
+}
 async function loadGrowthHub(){
   if(!initData){return}
   try{
@@ -3252,8 +3590,32 @@ html[data-text="xl"] .app{zoom:1.22}
 <script>
 (function(){
   var m=document.getElementById('mSheet'),c=document.getElementById('mClose');
-  window.openMoreMenu=function(){if(m)m.classList.add('on');};
-  window.closeMoreMenu=function(){if(m)m.classList.remove('on');};
+  window.filterMoreTools=function(query){
+    var q=String(query||'').trim().toLocaleLowerCase('he');
+    var buttons=Array.prototype.slice.call(document.querySelectorAll('#mSheet .more-grid > button, #mSheet .owner-tools-menu button'));
+    var visible=0;
+    buttons.forEach(function(button){
+      var matches=!q||button.textContent.toLocaleLowerCase('he').indexOf(q)!==-1;
+      button.hidden=!matches;
+      if(matches)visible+=1;
+    });
+    var empty=document.getElementById('moreSearchEmpty');
+    if(empty)empty.hidden=visible>0;
+  };
+  window.openMoreMenu=function(){
+    if(m){m.classList.add('on');m.setAttribute('aria-hidden','false');}
+    var button=document.getElementById('bmore');
+    if(button)button.setAttribute('aria-expanded','true');
+    var input=document.getElementById('moreSearch');
+    if(input&&window.matchMedia&&window.matchMedia('(pointer: fine)').matches)input.focus();
+  };
+  window.closeMoreMenu=function(){
+    if(m){m.classList.remove('on');m.setAttribute('aria-hidden','true');}
+    var button=document.getElementById('bmore');
+    if(button)button.setAttribute('aria-expanded','false');
+    var input=document.getElementById('moreSearch');
+    if(input){input.value='';window.filterMoreTools('');}
+  };
   if(c)c.onclick=window.closeMoreMenu;
   if(m)m.addEventListener('click',function(e){if(e.target===m)window.closeMoreMenu();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')window.closeMoreMenu();});
@@ -3285,13 +3647,24 @@ html[data-text="xl"] .app{zoom:1.22}
   try{
     var W=window.Telegram&&window.Telegram.WebApp;
     var fromTelegram=W&&W.initDataUnsafe&&W.initDataUnsafe.start_param;
-    var fromUrl=new URLSearchParams(window.location.search).get('screen');
+    var urlParams=new URLSearchParams(window.location.search);
+    var fromUrl=urlParams.get('screen');
+    var openChart=urlParams.get('chart')==='1';
     var raw=String(fromTelegram||fromUrl||'').trim().toLowerCase();
     var allowed=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];
     if(allowed.indexOf(raw)<0||raw==='home')return;
     function open(){
       try{
-        if(typeof window.show==='function'){window.show(raw);return}
+        if(typeof window.show==='function'){
+          window.show(raw);
+          if(raw==='exchange'&&openChart){
+            setTimeout(function(){
+              var chart=document.getElementById('exMarketPulse');
+              if(chart)chart.scrollIntoView({behavior:'auto',block:'start'});
+            },120);
+          }
+          return;
+        }
         setTimeout(open,150);
       }catch(_e){}
     }

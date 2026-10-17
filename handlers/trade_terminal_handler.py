@@ -21,6 +21,7 @@ def _send_portfolio(bot, chat_id, uid):
         from core.wallet_binding import get_binding
         from core.ton_wallet_binding import get_ton_binding
         from core import slh_api_client
+        from core.bsc_wallet_read_model import read_bsc_wallet
 
         user = get_user(uid) or {}
         wallet = user.get("wallet", {}) or {}
@@ -29,14 +30,37 @@ def _send_portfolio(bot, chat_id, uid):
         api = slh_api_client.get_balances(uid) or {}
         balances = api.get("balances", {}) if isinstance(api, dict) else {}
 
+        # The API/Postgres ledger is separate from the real BSC token contract.
+        # Never label that ledger's value as an on-chain wallet balance.
+        try:
+            live_bsc = read_bsc_wallet(uid)
+        except Exception as exc:
+            print("[TRADE] live BSC portfolio read:", type(exc).__name__)
+            live_bsc = {}
+        assets = live_bsc.get("assets", {}) if isinstance(live_bsc, dict) else {}
+        slh_asset = assets.get("SLH", {}) if isinstance(assets, dict) else {}
+        live_slh = slh_asset.get("amount") if isinstance(slh_asset, dict) else None
+        live_block = live_bsc.get("block_number") if isinstance(live_bsc, dict) else None
+
         lines = [
             f"👛 {trade.t('portfolio', uid)}",
             f"💰 Credits: {wallet.get('credits', 0)}",
             f"🔒 Staked: {wallet.get('staked', 0)}",
-            f"🌐 SLH on-chain: {balances.get('SLH', 0)}",
+        ]
+        if isinstance(live_bsc, dict) and live_bsc.get("ok") is True and live_slh is not None:
+            block_note = f" · BSC block {live_block}" if live_block is not None else ""
+            lines.append(f"🌐 SLH on-chain (BSC): {live_slh}{block_note}")
+        else:
+            # Unknown/unavailable data must not be silently rendered as zero.
+            lines.append("🌐 SLH on-chain (BSC): לא זמין — אימות RPC/contract נכשל")
+
+        lines.extend([
             f"BNB: {'✅ ' + trade.t('verified', uid) if bnb else '⚪️ ' + trade.t('not_verified', uid)}",
             f"TON: {'✅ ' + trade.t('verified', uid) if ton else '⚪️ ' + trade.t('not_verified', uid)}",
-        ]
+        ])
+        if isinstance(api, dict) and isinstance(balances, dict) and "SLH" in balances:
+            lines.append(f"🗂 SLH API ledger (separate, not on-chain): {balances.get('SLH')}")
+
         bot.send_message(chat_id, "\n".join(lines))
     except Exception as exc:
         print("[TRADE] portfolio:", type(exc).__name__)

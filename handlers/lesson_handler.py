@@ -3,6 +3,32 @@ from core import lesson_engine
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
+
+TELEGRAM_SAFE_MESSAGE_CHARS = 3500
+
+
+def _split_message(text, limit=TELEGRAM_SAFE_MESSAGE_CHARS):
+    """Split a long lesson into Telegram-safe chunks, preferring paragraph boundaries."""
+    remaining = str(text or "")
+    chunks = []
+    limit = max(256, int(limit))
+    while len(remaining) > limit:
+        split_at = remaining.rfind("\n\n", 0, limit + 1)
+        if split_at < limit // 2:
+            split_at = remaining.rfind("\n", 0, limit + 1)
+        if split_at < limit // 2:
+            split_at = remaining.rfind(" ", 0, limit + 1)
+        if split_at <= 0:
+            split_at = limit
+        chunk = remaining[:split_at].rstrip()
+        if chunk:
+            chunks.append(chunk)
+        remaining = remaining[split_at:].lstrip()
+    if remaining or not chunks:
+        chunks.append(remaining)
+    return chunks
+
+
 def _lesson_keyboard(course_id, stage, total, completed=False):
     markup = InlineKeyboardMarkup(row_width=1)
     if completed:
@@ -60,12 +86,19 @@ def register(bot):
             bot.reply_to(m, "❌ קורס לא נמצא")
             return
 
+        if not lesson_engine.has_course_access(uid, course_id):
+            from handlers.academy_handler import _paid_course_lock
+            locked = _paid_course_lock(uid, course_id)
+            bot.reply_to(
+                m,
+                locked or "🔒 אין לך הרשאה לקורס הזה."
+            )
+            return
+
         if not lesson_engine.can_access_lesson(uid, course_id, stage):
             progress = academy_manager.get_course(uid, course_id) or {}
             completed = set(progress.get("completed", []) or [])
-            if stage in completed:
-                pass
-            else:
+            if stage not in completed:
                 bot.reply_to(
                     m,
                     "🔒 השיעור נעול. יש להשלים קודם את השיעור הקודם."
@@ -85,19 +118,30 @@ def register(bot):
             if str(value).isdigit()
         }
 
-        bot.send_message(
-            m.chat.id,
+        message_text = (
             f"📘 {lesson_data['name']}\n\n"
             f"{lesson_data['content']}\n\n"
-            + ("✅ השיעור כבר הושלם — אפשר לקרוא אותו שוב בכל עת.\n"
-               if completed else "סיימת? לחץ על הכפתור למטה. 👇\n"),
-            reply_markup=_lesson_keyboard(
-                course_id,
-                stage,
-                total,
-                completed=completed,
+            + (
+                "✅ השיעור כבר הושלם — אפשר לקרוא אותו שוב בכל עת.\n"
+                if completed else "סיימת? לחץ על הכפתור למטה. 👇\n"
             )
         )
+        chunks = _split_message(message_text)
+        keyboard = _lesson_keyboard(
+            course_id,
+            stage,
+            total,
+            completed=completed,
+        )
+        for index, chunk in enumerate(chunks):
+            if index == len(chunks) - 1:
+                bot.send_message(
+                    m.chat.id,
+                    chunk,
+                    reply_markup=keyboard,
+                )
+            else:
+                bot.send_message(m.chat.id, chunk)
 
     @bot.message_handler(commands=["finish"])
     def finish(m):
@@ -143,7 +187,10 @@ def register(bot):
 
         if not result.get("ok"):
             error = result.get("error")
-            if error == "course_not_started":
+            if error == "course_locked":
+                from handlers.academy_handler import _paid_course_lock
+                message = _paid_course_lock(uid, course_id) or "🔒 אין לך הרשאה לקורס הזה."
+            elif error == "course_not_started":
                 message = "❌ הקורס עדיין לא התחיל. התחל דרך /academy"
             elif error == "sequential_access":
                 message = "🔒 אי אפשר להשלים את השלב הזה עדיין. יש להשלים קודם את השלב הקודם."
@@ -151,6 +198,8 @@ def register(bot):
                 message = "❌ קורס לא נמצא"
             elif error == "stage_not_found":
                 message = "❌ שיעור לא נמצא"
+            elif error == "trader_certification_required":
+                message = "🔒 יש לעבור תחילה את מבחן הסמכת הסוחר: /trader_test"
             else:
                 message = "❌ לא ניתן להשלים את השיעור הזה"
             bot.reply_to(m, message)

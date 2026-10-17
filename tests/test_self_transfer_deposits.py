@@ -58,6 +58,35 @@ def test_bnb_verification_rejects_self_transfer_as_not_a_deposit():
     assert result["error"] == "BNB_SELF_TRANSFER_NOT_DEPOSIT"
 
 
+
+def test_bnb_verification_reports_explicit_non_treasury_recipient_error():
+    fake_w3 = Mock()
+    fake_w3.eth.chain_id = 56
+    fake_w3.eth.block_number = 200
+    fake_w3.to_checksum_address = lambda value: value
+    fake_w3.eth.get_transaction.return_value = {
+        "from": SELF,
+        "to": SELF,
+        "value": 10**16,
+    }
+    fake_w3.eth.get_transaction_receipt.return_value = {
+        "status": 1,
+        "blockNumber": 100,
+    }
+
+    config = {
+        "rpc": "https://rpc.invalid",
+        "treasury_wallet": TOKEN,
+        "confirmations": 15,
+    }
+    with patch("core.deposit_monitor.get_bsc_config", return_value=config), patch(
+        "core.deposit_monitor.state_manager.load_db", return_value={}
+    ), patch("core.deposit_monitor.Web3", _web3_stub(fake_w3)):
+        result = deposit_monitor.verify_bnb_deposit(TX_HASH)
+
+    assert result["ok"] is False
+    assert result["error"] == "BNB_TX_RECIPIENT_NOT_TREASURY"
+
 def test_slh_verification_rejects_self_transfer_as_not_a_deposit():
     topic = "0x" + ("0" * 24) + SELF[2:]
     fake_w3 = Mock()

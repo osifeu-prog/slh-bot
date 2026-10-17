@@ -1,6 +1,4 @@
 from datetime import datetime
-import json
-import os
 
 import state_manager
 
@@ -9,33 +7,17 @@ DB_PATH = "state/db.json"
 
 
 def load_db():
-    if not os.path.exists(DB_PATH):
-        return {
-            "users": {},
-            "students": {},
-            "tasks": {},
-            "votes": {}
-        }
-
-    with open(DB_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """Compatibility reader using the canonical DB lock and fail-closed checks."""
+    return state_manager.load_db()
 
 
 def save_db(db):
-    """
-    Compatibility writer.
+    """Compatibility writer using the canonical locked, atomic DB persistence.
 
-    New mutation code should prefer state_manager.atomic_update().
+    Callers that read-modify-write should move the full mutation into
+    state_manager.atomic_update() to avoid saving a stale snapshot.
     """
-    os.makedirs("state", exist_ok=True)
-
-    with open(DB_PATH, "w", encoding="utf-8") as f:
-        json.dump(
-            db,
-            f,
-            indent=2,
-            ensure_ascii=False
-        )
+    state_manager.save_db(db)
 
 
 def deep_merge(target, source):
