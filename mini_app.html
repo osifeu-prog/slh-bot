@@ -832,6 +832,87 @@ async function shareReferralLink(){
   }catch(e){}
   toast("🔗 "+link);
 }
+let __slhShareReceipts=Object.create(null);
+
+function __slhShareActivityLabel(reason){
+  const key=String(reason||'').trim().toLowerCase();
+  if(key.includes('governance_vote')||key.includes('vote'))return 'השתתפתי בפעילות Governance של SLH OS';
+  if(key.includes('referral'))return 'השתתפתי בקהילת SLH OS';
+  if(key.includes('task'))return 'השלמתי פעילות ב־SLH OS';
+  if(key.includes('course')||key.includes('academy'))return 'התקדמתי בלמידה ב־SLH OS';
+  return 'ביצעתי פעילות ב־SLH OS';
+}
+
+async function __slhSharePayload(title,text){
+  const url='https://t.me/Me_ad_main_bot?startapp=home';
+  const message=String(text||'').trim();
+  const shareData={title:String(title||'SLH OS'),text:message,url};
+  try{
+    if(typeof navigator.share==='function'){
+      await navigator.share(shareData);
+      toast('✅ הפעילות שותפה');
+      return true;
+    }
+  }catch(e){
+    if(e&&e.name==='AbortError')return false;
+  }
+  const copyText=message+'\n\nSLH OS: '+url;
+  try{
+    if(navigator.clipboard&&typeof navigator.clipboard.writeText==='function'){
+      await navigator.clipboard.writeText(copyText);
+      toast('✅ סיכום הפעילות הועתק — אפשר להדביק ולשתף');
+      return true;
+    }
+  }catch(e){}
+  try{
+    const area=document.createElement('textarea');
+    area.value=copyText;
+    area.setAttribute('readonly','');
+    area.style.position='fixed';
+    area.style.opacity='0';
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    const copied=document.execCommand('copy');
+    area.remove();
+    if(copied){
+      toast('✅ סיכום הפעילות הועתק — אפשר להדביק ולשתף');
+      return true;
+    }
+  }catch(e){}
+  toast('⚠️ השיתוף האוטומטי אינו זמין במכשיר זה');
+  return false;
+}
+
+async function shareGovernanceActivity(proposalId,actionType){
+  const pid=Number(proposalId);
+  const kind=String(actionType||'');
+  if(!Number.isInteger(pid)||pid<1||!['vote','proposal'].includes(kind)){
+    toast('⚠️ קבלת השיתוף אינה תקינה');return false;
+  }
+  const receipt=__slhShareReceipts[kind+':'+pid];
+  if(!receipt||!receipt.title){
+    toast('⚠️ קבלת הפעולה אינה זמינה — רענן את Governance');return false;
+  }
+  const title=String(receipt.title).replace(/\s+/g,' ').trim().slice(0,160);
+  const text=kind==='vote'
+    ? '🗳️ השתתפתי בהצבעה ב־SLH OS Governance.\nהצעה #'+pid+': '+title+'\nההשתתפות נרשמה במערכת. הבחירה האישית ופרטי החשבון אינם נכללים בשיתוף.'
+    : '📣 פרסמתי הצעה ב־SLH OS Governance.\nהצעה #'+pid+': '+title+'\nאפשר להיכנס למערכת לקרוא את ההצעה ולהשתתף בדיון.';
+  return __slhSharePayload('SLH OS — פעילות קהילתית',text);
+}
+
+async function shareRecentActivity(index){
+  const receipt=__slhShareReceipts['recent:'+String(Number(index))];
+  if(!receipt||!receipt.label){toast('⚠️ הפעילות אינה זמינה לשיתוף');return false;}
+  return __slhSharePayload('SLH OS — הפעילות שלי',receipt.label+'\nהעדכון משותף ביוזמתך. פרטי החשבון והיתרות אינם נכללים.');
+}
+
+async function shareActivitySummary(label){
+  const safeLabel=String(label||'').replace(/\s+/g,' ').trim().slice(0,180);
+  if(!safeLabel){toast('⚠️ סיכום הפעילות אינו זמין לשיתוף');return false;}
+  return __slhSharePayload('SLH OS — הפעילות שלי',safeLabel+'\nהעדכון משותף ביוזמתך. פרטי החשבון והיתרות אינם נכללים.');
+}
+
 async function loadRewardsPanel(){
   if(!initData){showAuthGate();return}
   const el=$("slh-rewards-body");
@@ -1757,10 +1838,11 @@ function renderPublicShell(d){
     const activity=$('homeRecentActivity');
     if(activity){
       activity.innerHTML=recent.length
-        ? recent.slice(-4).reverse().map(x=>{
+        ? recent.slice(-4).reverse().map((x,index)=>{
             const credits=Number(x.credits||0),points=Number(x.points||0);
             const value=((credits?('+'+fmt(credits)+' C'):'')+(credits&&points?' · ':'')+(points?('+'+fmt(points)+' P'):''));
-            return '<div class="wallet-row"><span>'+esc(String(x.reason||'Reward'))+'</span><strong>'+esc(value||'—')+'</strong></div>';
+            __slhShareReceipts['recent:'+index]={label:__slhShareActivityLabel(x.reason)};
+            return '<div class="wallet-row"><span>'+esc(String(x.reason||'Reward'))+'</span><strong>'+esc(value||'—')+'</strong><button class="action" type="button" style="padding:5px 8px;font-size:12px;flex-shrink:0" onclick="shareRecentActivity('+index+')">🔗 שתף</button></div>';
           }).join('')
         : '<div class="muted">אין כרגע אירועי Rewards להצגה.</div>';
     }
@@ -1778,7 +1860,7 @@ const initialTonBinding=w.ton_binding||null;
 
 setText('tonBindingStatus',initialTonBinding?'✅ מאומת':(w.ton_settlement?.open?'⚪️ לא מאומת':'⛔ Settlement סגור'));
 setText('tonBindingAddress',initialTonBinding?esc(initialTonBinding.address):'אין ארנק TON מאומת');
-setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet||'לא מקושר'));renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span></div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>`<div class="task ${t.status==='done'?'done':''}">${t.status==='done'?'✅':'⬜'} ${esc(t.title)}</div>`).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];if(__applyInitialScreen&&__navRevisionAtLoad===__slhNavRevision)show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
+setText('ton',initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet?esc(w.ton_wallet):'לא מקושר'));const truth=w.asset_truth||{};setText("wcredits",fmt(w.credits));setText("wslhTotal",fmt(truth.current_total??w.token_balance));setText("wtoken",fmt(truth.current_live??w.live_token_balance??0));setText("wslhReserved",fmt(truth.current_reserved??0));setText("wslhSpendable",fmt(truth.spendable_live??0));setText("wslhProvenance",truth.provenance_status||"unknown");$("wslhProvenance")?.classList.toggle("ok",truth.provenance_status==="live_backed");$("wslhProvenance")?.classList.toggle("pending",truth.provenance_status!=="live_backed");setText("exCr",fmt(w.credits));setText("exTk",fmt(truth.spendable_live??0));setText("wstaked",fmt(w.staked));setText("wpoints",fmt(d.gamification?.points||d.rewards?.points||0));setText("wreferrals",fmt(d.referral?.count||0));setText("wcommission",fmt(d.referral?.commission_credits||0));setText("sg",fmt(w.staked));setText("ton",initialTonBinding?esc(initialTonBinding.address):(w.ton_wallet||'לא מקושר'));renderAlpha(d.alpha);loadWalletBindings().catch(()=>{});loadGrowthHub().catch(()=>{});loadFinancialTruth().catch(()=>{});const enrolled=Array.isArray(ac.enrolled)?ac.enrolled:[];const courses=Array.isArray(ac.courses)?ac.courses:[];const progress=ac.progress&&typeof ac.progress==='object'?ac.progress:{};const courseTitles={bitcoin_mastery:'ביטקוין מאסטרי',ethereum:'אתריום מאסטרי',slh_vs_eth_sol:'SLH vs Ethereum vs Solana',ai_tokens:'איך מחושבים טוקנים ב-AI'};const academyList=courses.map(cid=>{const p=progress[cid]&&typeof progress[cid]==='object'?progress[cid]:{};const completed=Array.isArray(p.completed)?p.completed.length:0;const stage=Number(p.stage||0);const title=courseTitles[cid]||cid;const state=enrolled.includes(cid)?'רשום':'זמין';const shareLabel='התקדמתי ב־SLH OS Academy: '+title+' · '+completed+' שיעורים הושלמו';const shareButton=completed>0?'<button class="action" style="margin-top:8px;width:100%" onclick="shareActivitySummary('+esc(JSON.stringify(shareLabel))+')">🔗 שתף את ההתקדמות</button>':'';return '<div class="task '+(completed>0?'done':'')+'">'+(completed>0?'✅':'📘')+' <b>'+esc(title)+'</b><span class="muted"> · '+esc(state)+' · Stage '+stage+' · '+completed+' הושלמו</span>'+shareButton+'</div>';}).join('');setHTML("academyText",courses.length?('<div class="muted">📚 '+courses.length+' קורסים זמינים</div>'+academyList):'<div class="muted">📚 אין קורסים זמינים</div>');const items=Array.isArray(ts.personal)?ts.personal:[];setHTML("tasks",items.length?items.map(t=>{const done=t.status==='done';const taskTitle=String(t.title||'משימה').replace(/\\s+/g,' ').trim().slice(0,120);const shareLabel='השלמתי משימה ב־SLH OS: '+taskTitle;const share=done?'<button class="action" style="margin-top:8px;width:100%" onclick="shareActivitySummary('+esc(JSON.stringify(shareLabel))+')">🔗 שתף פעילות</button>':'';return `<div class="task ${done?'done':''}">${done?'✅':'⬜'} ${esc(t.title)}${share}</div>`;}).join(''):'<div class="muted">אין משימות אישיות</div>');setNext(d);const __slhInitialScreens=['home','balance','move','growth','investor','profile','wallet','market','transfer','buy','stake','alpha','academy','exchange','bscswap','tonswap','system','control','ai','settings'];if(__applyInitialScreen&&__navRevisionAtLoad===__slhNavRevision)show(__slhInitialScreens.includes(__slhStartScreen)?__slhStartScreen:'home');
 if(__slhSmokeMode&&__slhShowing==='wallet'&&__slhSlhRoute!=='smoke'){
   const notice=$('slhSmokeNotice');if(notice)notice.hidden=false;
   const amount=$('slhSendAmount');if(amount&&!amount.value)amount.value='1';
@@ -3266,8 +3348,11 @@ async function loadControlTasks(){
     const rows=Array.isArray(d.tasks)?d.tasks:[];
     setHTML('controlTasks',rows.length?rows.map(t=>{
       const done=t.status==='done';
+      const title=String(t.title||'משימה').replace(/\s+/g,' ').trim().slice(0,120);
+      const shareLabel='השלמתי משימה ב־SLH OS: '+title;
+      const shareButton=done?'<button class="action" style="margin-top:8px;width:100%" onclick="shareActivitySummary('+esc(JSON.stringify(shareLabel))+')">🔗 שתף פעילות</button>':'';
       const button=done?'':'<button class="ghost" style="margin-inline-start:8px" onclick="completeControlTask(\''+esc(t.id)+'\')">השלם</button>';
-      return '<div class="task '+(done?'done':'')+'">'+(done?'✅':'⬜')+' <b>'+esc(t.title||t.id)+'</b><span class="muted"> · '+esc(t.status||'open')+'</span>'+button+'</div>';
+      return '<div class="task '+(done?'done':'')+'">'+(done?'✅':'⬜')+' <b>'+esc(t.title||t.id)+'</b><span class="muted"> · '+esc(t.status||'open')+'</span>'+button+shareButton+'</div>';
     }).join(''):'<div class="muted">אין משימות אישיות</div>');
   }catch(e){setHTML('controlTasks','<div class="muted">לא ניתן לטעון משימות</div>')}
 }
@@ -3309,9 +3394,14 @@ async function loadGovernanceInto(targetId){
         const validId=Number.isInteger(pid)&&pid>0;
         const mine=p.my_vote&&typeof p.my_vote==='object'?p.my_vote:null;
         const status=String(p.status||'unknown');
+        if(validId){
+          const shareTitle=String(p.title||'').replace(/\\s+/g,' ').trim().slice(0,160);
+          if(mine)__slhShareReceipts['vote:'+pid]={title:shareTitle};
+          if(p.created_by_me===true)__slhShareReceipts['proposal:'+pid]={title:shareTitle};
+        }
         let voteHtml='';
         if(mine){
-          voteHtml='<div class="guide" style="margin-top:8px"><b>✅ ההצבעה שלך נרשמה</b><div>'+esc(String(mine.choice||''))+' · משקל '+fmt(mine.weight||1)+'</div><div class="muted">'+esc(mine.timestamp||'')+'</div></div>';
+          voteHtml='<div class="guide" style="margin-top:8px"><b>✅ ההצבעה שלך נרשמה</b><div>'+esc(String(mine.choice||''))+' · משקל '+fmt(mine.weight||1)+'</div><div class="muted">'+esc(mine.timestamp||'')+'</div><button class="action" type="button" style="margin-top:8px;width:100%" onclick="shareGovernanceActivity('+pid+',&quot;vote&quot;)"><b>🔗 שתף את ההשתתפות</b><span>הבחירה ופרטי החשבון לא נכללים בשיתוף</span></button></div>';
         }else if(status==='open'&&validId){
           voteHtml='<div class="actions" style="margin-top:8px">'+
             '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;yes&quot;)"><b>👍 בעד</b></button>'+
@@ -3319,10 +3409,13 @@ async function loadGovernanceInto(targetId){
             '<button class="action" type="button" onclick="submitGovernanceVote('+pid+',&quot;abstain&quot;)"><b>➖ נמנע</b></button>'+
           '</div>';
         }
+        const proposalShareHtml=validId&&p.created_by_me===true
+          ? '<button class="action" type="button" style="margin-top:8px;width:100%" onclick="shareGovernanceActivity('+pid+',&quot;proposal&quot;)"><b>🔗 שתף את ההצעה</b><span>כותרת ההצעה וקישור למערכת בלבד</span></button>'
+          : '';
         return '<div class="task" style="margin-top:10px"><b>#'+esc(p.id)+' '+esc(p.title||'')+'</b>'+
           '<div class="muted">'+esc(status)+' · כן '+fmt(v.yes||0)+' · לא '+fmt(v.no||0)+' · נמנע '+fmt(v.abstain||0)+'</div>'+
           (p.description?'<div style="margin-top:6px;white-space:pre-wrap">'+esc(p.description)+'</div>':'')+
-          voteHtml+'</div>';
+          voteHtml+proposalShareHtml+'</div>';
       }).join('');
     }else{
       h+='<div class="muted" style="margin-top:12px">אין הצעות להצגה. אפשר לפרסם הצעה ראשונה בטופס שמעל.</div>';
