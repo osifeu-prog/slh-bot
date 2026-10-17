@@ -7,8 +7,8 @@
 1. ה־ESP32 שולח מדידות ב־HTTPS אל ה־Control Plane ששומר את `state/db.json`:
    `POST https://web-production-22f28.up.railway.app/api/miner`
 2. **אין לשלוח ל־`https://slh-mcp-production.up.railway.app/api/miner`.** השירות הזה הוא שכבת MCP (`/mcp`) ואינו מחזיק את מאגר `state/db.json` הקנוני של הבוט.
-3. הנתונים נשמרים בצורה אטומית תחת `db["miners"][device_id]`. לא משנים יתרות משתמשים, Credits, SLH, Staking או ledger פיננסי.
-4. השרת מקבל דיווחים רק ממכשיר ESP32 רשום, עם בעלים מוגדר, opt-in מפורש (`miner_enabled: true` או capability בשם `miner`) ואימות Bearer. מכשיר ESP32 כללי אינו נחשב אוטומטית לכורה. בהיעדר סוד תואם, ה־API נכשל סגור ואינו כותב.
+3. הנתונים נשמרים בצורה אטומית בתוך הרשומה הקיימת `db["devices"][device_id]["telemetry"]`. לא יוצרים מרשם `miners` מקביל ולא משנים יתרות משתמשים, Credits, SLH, Staking או ledger פיננסי.
+4. השרת מקבל דיווחים רק ממכשיר ESP32 רשום ב־`state/db.json → devices`, עם בעלים מוגדר, opt-in מפורש (`miner_enabled: true`, capability בשם `miner`, מזהה ב־`SLH_MINER_DEVICE_IDS` או טוקן פר־מכשיר ב־`SLH_MINER_DEVICE_TOKENS_JSON`) ואימות Bearer. מכשיר ESP32 כללי אינו נחשב אוטומטית לכורה. בהיעדר סוד תואם, ה־API נכשל סגור ואינו כותב.
 5. פקודות `/esp_miner_status <device_id>`, `/miner_status [device_id]` ו־`/miner_list` הן לקריאה בלבד. לפני הדיווח הראשון הן מציגות `NO_DATA` במקום להציג אפסים מומצאים.
 6. אין endpoint לקבלת פקודות מרחוק, אין אתחול כורה, אין כיבוי חשמל אוטומטי ואין כתיבת אירועי טמפרטורה ל־ledger פיננסי.
 
@@ -16,7 +16,7 @@
 
 יש להגדיר את הסוד בשירות **`web` בפרויקט `slh-os-control-plane`**, ולא בשירות MCP, ורק אחרי שה־PR נבדק ומוזג.
 
-לפני חיבור פיזי יש לבחור מכשיר רשום אחד ולאפשר לו במרשם המכשירים `miner_enabled: true` בתהליך בעלים מבוקר. בשלב זה לא השתנה מרשם הייצור.
+לפני חיבור פיזי יש לבחור מכשיר ESP32 רשום אחד ולבצע opt-in מפורש. אפשר לעשות זאת דרך `SLH_MINER_DEVICE_TOKENS_JSON` (מזהה + טוקן ייחודי) או דרך allowlist `SLH_MINER_DEVICE_IDS`; אין צורך ליצור מפתח `miners` נפרד. בשלב זה לא השתנו משתני Railway או נתוני הייצור.
 
 ### פיילוט של מכשיר אחד
 הגדר משתנה Railway בשם `SLH_MINER_INGEST_TOKEN` לערך סודי אקראי חזק; העתק את אותו הערך להגדרת ה־firmware כ־`TOKEN`. אין לשמור את הערך ב־Git, ב־JSON של המכשיר, בלוגים או במסמכי מדריך.
@@ -82,7 +82,7 @@ Content-Type: application/json
 - אין לצרוב עדיין קוד שמאתחל ממסר למצב `ON`, ואין לאפשר `restart`/`power_off` דרך HTTP. ברירת המחדל היא ניטור בלבד עד לאחר סקירת בטיחות נפרדת.
 - חישוב רווחיות לא ממומש. לשם כך נדרשים תעריף חשמל מאושר ומדידה מצטברת מאומתת, לצד נתוני תשלום אמיתיים מה־pool; אין להשתמש בהנחת מחיר חשמל או בהכנסת BTC לדוגמה כנתון אמת.
 
-## פקודות Telegram
+## חיבור MCP (Read-Only)\n\nה־Control Plane חושף קריאה מוגנת דרך `/internal/mcp/v1/miners` ו־`/internal/mcp/v1/miners/<device_id>`. שירות MCP משתמש ב־`SLH_CONTROL_PLANE_URL` וב־`SLH_MCP_BRIDGE_TOKEN` שכבר קיימים; אין צורך להמציא `MCP_CHAT_TOKEN` חדש. כלים נוספים ב־MCP: `miners.list` ו־`miners.status`, שניהם לקריאה בלבד ומוגבלים ל־`exec.audit`. המידע מוחזר ללא מזהה בעלים, סודות או פרטי ledger.\n\n## פקודות Telegram
 
 - `/esp_miner_status <device_id>` — סטטוס של מכשיר יחיד.
 - `/miner_status <device_id>` — אותו סטטוס; ללא מזהה מציג את רשימת המכשירים של המשתמש.
