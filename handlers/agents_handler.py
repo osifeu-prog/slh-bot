@@ -171,7 +171,7 @@ def register(bot, context):
                 lines.append("- " + str(message)[:250])
         bot.reply_to(m, "\n".join(lines))
 
-    @bot.message_handler(commands=["agentoutbox"])
+    @bot.message_handler(commands=["agentoutbox", "agent_outbox"])
     def agentoutbox_cmd(m):
         parts = m.text.split(maxsplit=1)
         if len(parts) < 2:
