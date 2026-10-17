@@ -391,17 +391,17 @@ def register_sync(bot):
         response = _send_cmd(did, "miner " + json.dumps(payload, ensure_ascii=False))
         status_emoji = "✅" if payload.get("status") == "online" else "⚠️"
         msg = (
-            f"⛏️ *Miner Status* — `{did}`\\n\\n"
-            f"Hashrate: `{payload['hashrate_ths']}` TH/s\\n"
-            f"24h avg: `{payload['hashrate_24h']}` TH/s\\n"
-            f"Temp: `{payload['temperature']}`°C\\n"
-            f"Rejected: `{payload['rejected_pct']}%`\\n"
-            f"Status: {status_emoji} `{payload['status']}`\\n"
-            f"Pool: `{payload['pool']}`\\n"
-            f"Worker: `{payload['worker']}`\\n"
-            f"Daily est.: `{payload['daily_revenue_btc']}` BTC\\n"
-            f"Last share: `{payload['last_share']}`\\n"
-            f"Updated: `{payload['updated_at']}`\\n\\n"
+            f"⛏️ *Miner Status* — `{did}`\n\n"
+            f"Hashrate: `{payload['hashrate_ths']}` TH/s\n"
+            f"24h avg: `{payload['hashrate_24h']}` TH/s\n"
+            f"Temp: `{payload['temperature']}`°C\n"
+            f"Rejected: `{payload['rejected_pct']}%`\n"
+            f"Status: {status_emoji} `{payload['status']}`\n"
+            f"Pool: `{payload['pool']}`\n"
+            f"Worker: `{payload['worker']}`\n"
+            f"Daily est.: `{payload['daily_revenue_btc']}` BTC\n"
+            f"Last share: `{payload['last_share']}`\n"
+            f"Updated: `{payload['updated_at']}`\n\n"
             f"ESP response: `{response or 'no response'}`"
         )
         try:
