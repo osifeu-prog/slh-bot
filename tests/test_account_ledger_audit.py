@@ -86,7 +86,9 @@ def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
     assert [item["delta_to_explain"] for item in result["findings"]] == [
         1905.0, -905.0
     ]
-\n\ndef test_same_unknown_domain_gap_still_blocks_account_audit():
+
+
+def test_same_unknown_domain_gap_still_blocks_account_audit():
     db = _db()
     db["ledger"][2]["reason"] = "store:p2p_sale"
     db["ledger"][2]["before"] = 7.0
