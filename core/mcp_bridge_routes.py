@@ -176,4 +176,34 @@ def register_mcp_bridge_routes(app):
         result = lifecycle.complete_mission(str(mission_id))
         return jsonify(result), 200
 
+    @app.route("/internal/mcp/v1/operator/preferences", methods=["GET", "PATCH"])
+    def mcp_bridge_operator_preferences():
+        permission = "agents.view_self" if request.method == "GET" else "agents.modify_self"
+        subject, error = _require(permission)
+        if error:
+            return error
+        from core.ui_preferences import get_preferences, set_preferences, validate_notification_level
+        if request.method == "GET":
+            prefs = get_preferences(subject)
+            return jsonify({
+                "ok": True,
+                "notification_level": prefs["notification_level"],
+                "allowed_levels": ["off", "milestones", "all"],
+                "scope": "proactive_progress_updates_only",
+            }), 200
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or set(payload.keys()) != {"notification_level"}:
+            return jsonify({"error": "NOTIFICATION_PREFERENCE_PAYLOAD_INVALID"}), 400
+        try:
+            level = validate_notification_level(payload.get("notification_level"))
+            prefs = set_preferences(subject, notification_level=level)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({
+            "ok": True,
+            "notification_level": prefs["notification_level"],
+            "scope": "proactive_progress_updates_only",
+            "direct_command_replies_muted": False,
+            "critical_security_messages_muted": False,
+        }), 200
     return app

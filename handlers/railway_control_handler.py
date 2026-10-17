@@ -19,11 +19,17 @@ ADDR = re.compile(r"^0x[0-9a-fA-F]{40}$")
 
 
 def _ids():
-    # Do not reuse Railway-injected RAILWAY_* metadata for the integration's
-    # credentials or target scope. These explicit SLH_* values must be managed
-    # by the operator and independently match a scoped Project Token.
+    # Keep target IDs explicit and operator-managed. A project-token candidate
+    # may come from SLH_RAILWAY_TOKEN or a standard Railway project-token variable;
+    # _snapshot() verifies its project/environment scope before any control action.
     values = {
-        "token": str(os.getenv("SLH_RAILWAY_TOKEN") or "").strip(),
+        "token": str(
+            os.getenv("SLH_RAILWAY_TOKEN")
+            or os.getenv("RAILWAY_PROJECT_TOKEN")
+            or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
+            or os.getenv("RAILWAY_TOKEN")
+            or ""
+        ).strip(),
         "project_id": str(os.getenv("SLH_RAILWAY_PROJECT_ID") or "").strip(),
         "environment_id": str(os.getenv("SLH_RAILWAY_ENVIRONMENT_ID") or "").strip(),
         "service_id": str(os.getenv("SLH_RAILWAY_SERVICE_ID") or "").strip(),
@@ -350,6 +356,15 @@ def connections_status_reply():
         or os.getenv("GIT_TOKEN")
     )
     git_writer_token = os.getenv("GIT_TOKEN") or os.getenv("GITHUB_TOKEN")
+    railway_account_token = (
+        os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
+    )
+    railway_project_token = (
+        os.getenv("SLH_RAILWAY_TOKEN")
+        or os.getenv("RAILWAY_PROJECT_TOKEN")
+        or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
+        or os.getenv("RAILWAY_TOKEN")
+    )
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "SLH-Connections-Status",
@@ -380,19 +395,16 @@ def connections_status_reply():
         + ("CONFIGURED (write permission not tested)" if git_writer_token else "MISSING")
     )
     lines.append(
-        "Railway account token (/deploy, /logs): "
-        + ("CONFIGURED (not probed here)" if (
-            os.getenv("RAILWAY_API_TOKEN") or os.getenv("RAILWAY_API_TOKEN_SLH")
-        ) else "MISSING — RAILWAY_API_TOKEN")
+        "Railway account/workspace token (cross-project targets): "
+        + ("CONFIGURED (not probed here)" if railway_account_token else "MISSING — RAILWAY_API_TOKEN")
     )
     lines.append(
-        "Railway core control token: "
-        + ("CONFIGURED (not probed here)" if (
-            os.getenv("RAILWAY_API_TOKEN")
-            or os.getenv("RAILWAY_API_TOKEN_SLH")
-            or os.getenv("RAILWAY_PROJECT_TOKEN")
-            or os.getenv("RAILWAY_PROJECT_TOKEN_SLH")
-        ) else "MISSING")
+        "Railway project token candidate (single project/environment): "
+        + ("CONFIGURED (scope checked below)" if railway_project_token else "MISSING")
+    )
+    lines.append(
+        "Railway core control credential: "
+        + ("CONFIGURED (scope checked below)" if (railway_account_token or railway_project_token) else "MISSING")
     )
 
     try:

@@ -33,8 +33,6 @@ REQUEST_TTL_SECONDS = 600
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
 ERC20_TRANSFER_SELECTOR = "a9059cbb"
-
-
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -163,6 +161,11 @@ def prepare_secondary_slh_transfer(
     request_id = str(request_id or "").strip()
     if not request_id or len(request_id) > 128:
         raise ValueError("INVALID_REQUEST_ID")
+
+    # This is a distinct self-custody BSC transfer surface, not the exchange
+    # or server-broadcast gate. Do not prepare new transactions unless explicitly enabled.
+    from core.bsc_user_signed_gate import require_user_signed_transfers_open
+    require_user_signed_transfers_open()
 
     recipient = _checksum(recipient, "recipient")
     amount = _parse_amount(amount)

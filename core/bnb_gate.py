@@ -321,6 +321,37 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
                 verified = {"ok": False}
 
             if not isinstance(verified, dict) or verified.get("ok") is not True:
+                # The canonical deposit verifier must keep rejecting self-transfers.
+                # After a separately authorized, fully audited compensating debit,
+                # the history audit may recognize that specific source row as resolved.
+                # This fallback independently re-verifies every historical row; it
+                # never trusts the existence of a correction key alone.
+                reversal_key = f"accounting:reversal:{tx_hash.lower()}"
+                stored_from = str(meta.get("from") or "").strip()
+                stored_to = str(meta.get("to") or "").strip()
+                has_reversal = any(
+                    isinstance(item, dict)
+                    and isinstance(item.get("meta"), dict)
+                    and str(item["meta"].get("idempotency_key") or "") == reversal_key
+                    for item in ledger
+                )
+                if (
+                    has_reversal
+                    and stored_from
+                    and stored_from.lower() == stored_to.lower()
+                ):
+                    try:
+                        from core.bnb_history_audit import audit_bnb_deposit_history
+                        detailed = audit_bnb_deposit_history(db)
+                    except Exception:
+                        detailed = {"status": "BLOCKED"}
+                    if isinstance(detailed, dict) and detailed.get("status") == "PASS":
+                        return {
+                            "ok": True,
+                            "rows_checked": len(deposits),
+                            "finding_count": 0,
+                            "findings": [],
+                        }
                 issues.append("CHAIN_TX_NOT_VERIFIED")
             else:
                 verified_hash = str(verified.get("tx_hash") or "").strip()
@@ -349,6 +380,26 @@ def _audit_historical_bnb_deposits(db, config) -> dict:
                     bound_address = str(binding.get("address") or "").strip() if isinstance(binding, dict) else ""
                     if not bound_address or sender.lower() != bound_address.lower():
                         issues.append("CHAIN_SENDER_BINDING_MISMATCH")
+                    # The public gate must reject ambiguous ownership even when
+                    # the transaction otherwise verifies. The legacy audit is
+                    # also called on the live OPEN path, so do this cheap DB-only
+                    # uniqueness check here rather than relying on the detailed
+                    # audit's error-recovery fallback.
+                    wallet_bindings = db.get("wallet_bindings")
+                    if not isinstance(wallet_bindings, dict) or not bound_address:
+                        issues.append("BNB_WALLET_BINDINGS_UNVERIFIED")
+                    else:
+                        same_address_bindings = [
+                            item for item in wallet_bindings.values()
+                            if isinstance(item, dict)
+                            and str(item.get("chain") or "").strip().lower() == "bsc"
+                            and str(item.get("address") or "").strip().lower() == bound_address.lower()
+                        ]
+                        if (
+                            len(same_address_bindings) != 1
+                            or str(same_address_bindings[0].get("uid") or "") != uid
+                        ):
+                            issues.append("CHAIN_SENDER_BINDING_AMBIGUOUS")
                 if not treasury or receiver.lower() != treasury:
                     issues.append("CHAIN_TREASURY_MISMATCH")
                 if str(meta.get("from") or "").strip().lower() != sender.lower():
