@@ -170,10 +170,145 @@ def record_ton_deposit(
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
 
-        used_txs = db.setdefault("used_ton_txs", [])
+        # A used transaction hash is an immutable settlement identity, not
+        # enough evidence by itself to call every replay an exact duplicate.
+        # Inspect all available canonical source rows before taking the no-op
+        # path. Missing, duplicated or internally inconsistent evidence fails
+        # closed and never reaches the Credits mutation.
+        from decimal import Decimal, InvalidOperation
 
-        if tx_hash in used_txs:
+        def number(value):
+            if isinstance(value, bool):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            try:
+                parsed = Decimal(str(value))
+            except (InvalidOperation, TypeError, ValueError):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+            if not parsed.is_finite():
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            return parsed
+
+        def normalized_hash(value):
+            return str(value or "").strip().lower()
+
+        used_txs = db.get("used_ton_txs", [])
+        if not isinstance(used_txs, list):
+            raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+        transactions = db.get("transactions", [])
+        ledger = db.get("ledger", [])
+        if not isinstance(transactions, list) or not isinstance(ledger, list):
+            raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+        requested_hash = normalized_hash(tx_hash)
+        matching_transactions = [
+            row for row in transactions
+            if isinstance(row, dict)
+            and str(row.get("type") or "").lower() == "ton"
+            and normalized_hash(row.get("tx_hash")) == requested_hash
+        ]
+        matching_ledger = [
+            row for row in ledger
+            if isinstance(row, dict)
+            and str(row.get("reason") or "") == "ton:deposit"
+            and normalized_hash(
+                (row.get("meta") or {}).get("tx_hash")
+                if isinstance(row.get("meta"), dict)
+                else row.get("tx_hash")
+            ) == requested_hash
+        ]
+        used_hash = any(normalized_hash(item) == requested_hash for item in used_txs)
+
+        # Rows with this hash but no used-hash index, or a used hash without
+        # its unique transaction + ledger pair, indicate incomplete evidence.
+        evidence_exists = bool(used_hash or matching_transactions or matching_ledger)
+        if evidence_exists:
+            if (
+                not used_hash
+                or len(matching_transactions) != 1
+                or len(matching_ledger) != 1
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            previous_tx = matching_transactions[0]
+            previous_ledger = matching_ledger[0]
+            previous_meta = previous_ledger.get("meta")
+            if not isinstance(previous_meta, dict):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            try:
+                old_credits = number(previous_tx.get("credits"))
+                old_ton_amount = number(previous_tx.get("ton_amount"))
+                ledger_amount = number(previous_ledger.get("amount"))
+                ledger_before = number(previous_ledger.get("before"))
+                ledger_after = number(previous_ledger.get("after"))
+                stored_ledger_ton = number(previous_meta.get("ton_amount"))
+            except ValueError:
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+
+            # First distinguish an evidenced identity conflict from missing
+            # or contradictory historical data.
+            if (
+                str(previous_tx.get("uid") or "") != uid
+                or str(previous_ledger.get("uid") or "") != str(previous_tx.get("uid") or "")
+                or old_credits != number(previous_ledger.get("amount"))
+                or old_ton_amount != stored_ledger_ton
+                or old_credits != ledger_amount
+                or ledger_before + ledger_amount != ledger_after
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            if (
+                old_credits != number(credits)
+                or old_ton_amount != number(ton_amount)
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_CONFLICT")
+
+            # The ledger row is the canonical place where binding, treasury,
+            # memo and transaction-specific chain evidence are retained.
+            # If a requested immutable field is absent from one side, do not
+            # guess that an old row represents the same settlement.
+            identity_fields = (
+                "idempotency_key",
+                "source",
+                "binding_address_raw",
+                "treasury",
+                "memo",
+                "rate",
+                "utime",
+                "lt",
+                "deposit_intent_id",
+            )
+            for field in identity_fields:
+                requested_present = field in meta
+                stored_present = field in previous_meta
+                requested_value = meta.get(field)
+                stored_value = previous_meta.get(field)
+
+                # A completed payment may be replayed after its original
+                # intent is already matched. In that case no new intent is
+                # proposed, so None must not invalidate an otherwise exact
+                # replay. A newly proposed intent, however, must match the
+                # original intent identity exactly.
+                if field == "deposit_intent_id" and requested_value in (None, ""):
+                    continue
+                if not requested_present or not stored_present:
+                    raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+                if field == "rate":
+                    try:
+                        matches = number(requested_value) == number(stored_value)
+                    except ValueError:
+                        raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+                elif field in {"binding_address_raw", "treasury", "memo"}:
+                    matches = str(requested_value or "").strip().lower() == str(stored_value or "").strip().lower()
+                else:
+                    matches = str(requested_value if requested_value is not None else "") == str(stored_value if stored_value is not None else "")
+                if not matches:
+                    raise ValueError("TON_DEPOSIT_IDENTITY_CONFLICT")
+
             return None
+
+        # This is a new transaction only when neither the canonical used-hash
+        # index nor a transaction/ledger source row has this hash.
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
