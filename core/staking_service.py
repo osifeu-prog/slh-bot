@@ -5,6 +5,7 @@ This module is the staking-specific mutation boundary; callers must not mutate
 wallet or stake_positions directly.
 """
 
+import math
 import time
 from datetime import datetime, timezone
 
