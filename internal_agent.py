@@ -247,7 +247,6 @@ def complete_task(uid, task_id):
         completed = student.get("completed_tasks", [])
         if not isinstance(completed, list):
             completed = []
-            student["completed_tasks"] = completed
         if any(str(existing_id) == task_id_text for existing_id in completed):
             return f"✅ Task {task_id_text} already completed", None
 
@@ -260,6 +259,7 @@ def complete_task(uid, task_id):
         points = task.get("reward", 0)
         student["points"] = student.get("points", 0) + points
         completed.append(task_id_text)
+        student["completed_tasks"] = completed
         students[uid] = student
         return f"✅ Task {task_id_text} completed! +{points} points", None
 
