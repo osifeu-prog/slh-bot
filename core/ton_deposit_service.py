@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import time
+from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
 
@@ -44,6 +45,123 @@ def _settings():
     return wallet, Decimal(str(rate or 0))
 
 
+
+def _verified_public_replay_evidence(treasury: str, rate: Decimal) -> bool:
+    """Fail closed unless the configured canary has a coherent credited-TX/replay proof.
+
+    Replay evidence is keyed by UID, so this validates its current TX hash against
+    exactly one transaction row, one matching TON ledger row, and one used-hash
+    entry. It also binds the historical row to the currently configured treasury
+    and rate. This is an operational readiness check, not cryptographic proof.
+    """
+    try:
+        uid = str(os.getenv("TON_DEPOSITS_CANARY_UID", "")).strip()
+        if not uid:
+            return False
+
+        db = state_manager.load_db()
+        if not isinstance(db, dict):
+            return False
+
+        evidence_by_uid = db.get("ton_replay_evidence") or {}
+        evidence = evidence_by_uid.get(uid) if isinstance(evidence_by_uid, dict) else None
+        if not isinstance(evidence, dict):
+            return False
+
+        tx_hash = str(evidence.get("tx_hash") or "").strip().lower()
+        by_tx_hash = evidence.get("by_tx_hash")
+        if not isinstance(by_tx_hash, dict):
+            return False
+        tx_evidence = by_tx_hash.get(tx_hash)
+        if not isinstance(tx_evidence, dict):
+            return False
+        if str(tx_evidence.get("tx_hash") or "").strip().lower() != tx_hash:
+            return False
+
+        replay_count = int(tx_evidence.get("replay_count") or 0)
+        first_replay = float(tx_evidence.get("first_replay_at_epoch") or 0)
+        last_replay = float(tx_evidence.get("last_replay_at_epoch") or 0)
+        evidence_amount = Decimal(str(tx_evidence.get("amount_ton") or 0))
+        if (
+            not tx_hash
+            or replay_count < 1
+            or first_replay <= 0
+            or last_replay < first_replay
+            or evidence_amount <= 0
+        ):
+            return False
+
+        used_txs = db.get("used_ton_txs") or []
+        used_hash_count = sum(
+            1 for item in used_txs
+            if isinstance(item, str) and item.strip().lower() == tx_hash
+        )
+
+        transaction_rows = [
+            row for row in (db.get("transactions") or [])
+            if isinstance(row, dict)
+            and str(row.get("uid")) == uid
+            and str(row.get("type") or "").lower() == "ton"
+            and str(row.get("tx_hash") or "").strip().lower() == tx_hash
+        ]
+        ledger_rows = []
+        for row in db.get("ledger") or []:
+            if not isinstance(row, dict) or str(row.get("uid")) != uid:
+                continue
+            meta = row.get("meta") or {}
+            if (
+                row.get("reason") == "ton:deposit"
+                and isinstance(meta, dict)
+                and str(meta.get("tx_hash") or "").strip().lower() == tx_hash
+            ):
+                ledger_rows.append(row)
+
+        if used_hash_count != 1 or len(transaction_rows) != 1 or len(ledger_rows) != 1:
+            return False
+
+        transaction = transaction_rows[0]
+        ledger = ledger_rows[0]
+        meta = ledger.get("meta") or {}
+        if not isinstance(meta, dict):
+            return False
+
+        transaction_time = datetime.fromisoformat(
+            str(transaction.get("timestamp") or "").replace("Z", "+00:00")
+        )
+        if transaction_time.tzinfo is None:
+            return False
+        settled_at_epoch = transaction_time.timestamp()
+        if first_replay < settled_at_epoch:
+            return False
+
+        ton_amount = Decimal(str(transaction.get("ton_amount") or 0))
+        credits = Decimal(str(transaction.get("credits") or 0))
+        expected_credits = (ton_amount * rate).quantize(Decimal("0.01"))
+        ledger_amount = Decimal(str(ledger.get("amount") or 0))
+        before = Decimal(str(ledger.get("before") or 0))
+        after = Decimal(str(ledger.get("after") or 0))
+        ledger_ton_amount = Decimal(str(meta.get("ton_amount") or 0))
+        ledger_rate = Decimal(str(meta.get("rate") or 0))
+        configured_treasury = normalize_ton_address(str(treasury))
+        recorded_treasury = normalize_ton_address(str(meta.get("treasury") or ""))
+        recorded_binding = normalize_ton_address(str(meta.get("binding_address_raw") or ""))
+
+        return bool(
+            str(meta.get("source") or "") == "ton_verified_binding_v1"
+            and bool(recorded_binding)
+            and ton_amount == evidence_amount
+            and ledger_ton_amount == ton_amount
+            and credits > 0
+            and credits == expected_credits
+            and ledger_amount == credits
+            and abs((before + ledger_amount) - after) <= Decimal("0.00000001")
+            and str(meta.get("memo") or "").strip().lower() == memo_for(uid).lower()
+            and recorded_treasury == configured_treasury
+            and ledger_rate == rate
+        )
+    except Exception:
+        return False
+
 def ton_readiness() -> dict:
     """Read-only TON settlement readiness contract.
 
@@ -64,15 +182,26 @@ def ton_readiness() -> dict:
     if not (TON_RATE_MIN <= rate <= TON_RATE_MAX):
         reasons.append("TON_RATE_NOT_SAFE")
 
+    config_ready = not reasons
+    evidence_ready = (
+        _verified_public_replay_evidence(str(treasury), rate)
+        if config_ready else False
+    )
+    all_reasons = list(reasons)
+    if not evidence_ready:
+        all_reasons.append("TON_EMPIRICAL_REPLAY_EVIDENCE_MISSING")
+
     flag_open = _deposits_open()
     return {
         "flag_open": flag_open,
-        "ready": not reasons,
-        "effective_open": flag_open and not reasons,
+        "config_ready": config_ready,
+        "evidence_ready": evidence_ready,
+        "ready": config_ready and evidence_ready,
+        "effective_open": flag_open and config_ready and evidence_ready,
         "treasury": treasury,
         "treasury_raw": normalized,
         "rate": str(rate),
-        "reasons": reasons,
+        "reasons": all_reasons,
     }
 
 
@@ -91,7 +220,7 @@ def ton_settlement_allowed(uid) -> bool:
         _canary_settlement_open()
         and canary_uid
         and uid == canary_uid
-        and readiness["ready"]
+        and readiness.get("config_ready", readiness["ready"])
     )
 
 
@@ -210,26 +339,42 @@ def _match_deposit_intent(uid, transaction, intent_id=None):
 
 
 def _record_ton_replay_evidence(uid, tx_hash, transaction):
-    """Record an idempotent replay as audit evidence without touching Credits."""
+    """Record idempotent replay evidence independently for each transaction hash."""
     try:
         now = time.time()
+        tx_key = str(tx_hash).strip().lower()
+        amount_ton = float(Decimal(str(transaction.get("amount_ton") or 0)))
 
         def mutate(db):
-            evidence = db.setdefault("ton_replay_evidence", {})
-            current = evidence.get(str(uid))
+            evidence_by_uid = db.setdefault("ton_replay_evidence", {})
+            current = evidence_by_uid.get(str(uid))
             if not isinstance(current, dict):
                 current = {}
-            evidence[str(uid)] = {
-                "tx_hash": str(tx_hash),
-                "replay_count": int(current.get("replay_count") or 0) + 1,
-                "first_replay_at_epoch": float(current.get("first_replay_at_epoch") or now),
+
+            by_tx_hash = current.get("by_tx_hash")
+            if not isinstance(by_tx_hash, dict):
+                by_tx_hash = {}
+
+            per_tx = by_tx_hash.get(tx_key)
+            if not isinstance(per_tx, dict):
+                per_tx = {}
+
+            record = {
+                "tx_hash": tx_key,
+                "replay_count": int(per_tx.get("replay_count") or 0) + 1,
+                "first_replay_at_epoch": float(per_tx.get("first_replay_at_epoch") or now),
                 "last_replay_at_epoch": now,
-                "amount_ton": float(Decimal(str(transaction.get("amount_ton") or 0))),
+                "amount_ton": amount_ton,
             }
+            by_tx_hash[tx_key] = record
+            # Preserve the existing top-level summary for older status surfaces,
+            # but keep its counters scoped to the most recently replayed TX.
+            evidence_by_uid[str(uid)] = {**record, "by_tx_hash": by_tx_hash}
 
         state_manager.atomic_update(mutate)
     except Exception as exc:
         print("[TON_REPLAY] audit mark failed:", type(exc).__name__)
+
 
 
 def _mark_deposit_intent_matched(intent_id, tx_hash, idempotent):
