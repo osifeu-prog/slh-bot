@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import os
+from datetime import datetime, timezone
 
 from flask import jsonify, request
 
@@ -47,6 +48,23 @@ def _read_limited_json_body(max_bytes: int):
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None, "JSON_OBJECT_REQUIRED"
     return payload, None
+
+
+def _telemetry_is_stale(telemetry: dict) -> bool:
+    """Fail closed when sensor data is absent, malformed, future-dated, or older than 120s."""
+    if not isinstance(telemetry, dict):
+        return True
+    last_seen = str(telemetry.get("last_seen") or "").strip()
+    if not last_seen:
+        return True
+    try:
+        observed = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
+        if observed.tzinfo is None:
+            observed = observed.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - observed).total_seconds()
+        return age_seconds < -60 or age_seconds > 120
+    except (TypeError, ValueError, OverflowError):
+        return True
 
 
 def _principal():
@@ -259,6 +277,7 @@ def register_mcp_bridge_routes(app):
                         )
                         if key in telemetry
                     }
+                    safe_telemetry["stale"] = _telemetry_is_stale(telemetry)
                 result.append({
                     "device_id": device_id,
                     "name": str(device.get("name") or device_id)[:80],
@@ -301,6 +320,7 @@ def register_mcp_bridge_routes(app):
                     )
                     if key in telemetry
                 }
+                safe_telemetry["stale"] = _telemetry_is_stale(telemetry)
             return jsonify({
                 "device_id": device_id,
                 "name": str(device.get("name") or device_id)[:80],
