@@ -217,14 +217,19 @@ def record_ton_deposit(
                 else row.get("tx_hash")
             ) == requested_hash
         ]
-        used_hash = any(normalized_hash(item) == requested_hash for item in used_txs)
+        used_matches = [
+            item for item in used_txs
+            if normalized_hash(item) == requested_hash
+        ]
+        used_hash = bool(used_matches)
 
-        # Rows with this hash but no used-hash index, or a used hash without
-        # its unique transaction + ledger pair, indicate incomplete evidence.
+        # Rows with this hash but no unique used-hash marker, or a used hash
+        # without its unique transaction + ledger pair, indicate incomplete
+        # or contradictory evidence.
         evidence_exists = bool(used_hash or matching_transactions or matching_ledger)
         if evidence_exists:
             if (
-                not used_hash
+                len(used_matches) != 1
                 or len(matching_transactions) != 1
                 or len(matching_ledger) != 1
             ):
