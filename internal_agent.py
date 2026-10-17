@@ -1,17 +1,38 @@
-import state_manager
-import json, time, datetime, os, threading, traceback
+"""Internal agent workers using canonical, atomic SLH state updates.
 
-ALLOWED = {"complete","whoami","dbsize","status","uptime","sysinfo","logs","errors","restart","ask"}
+Inbox messages are claimed under the DB lock, processed without holding it, and
+finalized atomically. Claims have a lease so a worker crash does not permanently
+strand a message. Commands with financial/task side effects must be idempotent.
+"""
+import datetime
+import os
+import threading
+import time
+import traceback
+import uuid
+from pathlib import Path
+
+import state_manager
+
+ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "restart", "ask"}
+CLAIM_LEASE_SECONDS = 600
+MAX_OUTBOX = 20
+MAX_OUTPUT = 2000
+_TUTOR_THREAD_STARTED = False
+_TUTOR_THREAD_LOCK = threading.Lock()
+
 
 def run_command(cmd, msg):
     try:
         if cmd == "whoami":
             return os.popen("whoami").read().strip()
         elif cmd == "dbsize":
-            return f"db.json: {os.path.getsize('db.json')} bytes" if os.path.exists("db.json") else "db.json not found"
+            path = Path(getattr(state_manager, "DB_FILE", "state/db.json"))
+            return f"db.json: {path.stat().st_size} bytes" if path.exists() else "db.json not found"
         elif cmd == "status":
             if os.path.exists("runtime/bot.pid"):
-                with open("runtime/bot.pid") as f: pid = f.read().strip()
+                with open("runtime/bot.pid", encoding="utf-8") as f:
+                    pid = f.read().strip()
                 return f"Bot running (PID {pid})" if os.path.exists(f"/proc/{pid}") else f"Stale PID {pid}"
             return "No PID file"
         elif cmd == "uptime":
@@ -33,12 +54,16 @@ def run_command(cmd, msg):
                 return "Usage: /sendagent mytermux ask <question>"
             import subprocess as sp
             try:
-                res = sp.check_output(["ollama", "run", "phi3:mini", "ענה בעברית, בפסקה קצרה: " + prompt], text=True, timeout=120)
+                res = sp.check_output(
+                    ["ollama", "run", "phi3:mini", "ענה בעברית, בפסקה קצרה: " + prompt],
+                    text=True,
+                    timeout=120,
+                )
                 return res.strip()
             except sp.TimeoutExpired:
                 return "❌ Timeout"
-            except Exception as e:
-                return f"Ollama error: {e}"
+            except Exception as exc:
+                return f"Ollama error: {exc}"
         elif cmd == "complete":
             task_id = msg.get("task_id", "")
             if not task_id:
@@ -47,104 +72,215 @@ def run_command(cmd, msg):
             if not uid:
                 return "Missing uid"
             return complete_task(uid, task_id)
-        else:
-            return f"Unknown: {cmd}"
-    except Exception as e:
-        return f"Error: {e}"
+        return f"Unknown: {cmd}"
+    except Exception as exc:
+        return f"Error: {exc}"
+
+
+def _claim_inbox(agent_filter=None, *, exclude_agents=()):
+    """Move inbox messages to a leased processing list in one atomic DB update."""
+    now = time.time()
+    claimed = []
+
+    def mutate(db):
+        agents = db.setdefault("agents", {})
+        if not isinstance(agents, dict):
+            raise ValueError("agents must be an object")
+        for name, data in agents.items():
+            if not isinstance(data, dict):
+                continue
+            if agent_filter is not None and name not in agent_filter:
+                continue
+            if name in exclude_agents:
+                continue
+            inbox = data.setdefault("inbox", [])
+            processing = data.setdefault("processing", [])
+            if not isinstance(inbox, list) or not isinstance(processing, list):
+                raise ValueError(f"invalid inbox/processing for agent {name}")
+
+            # Requeue expired claims. Keep the original claim ID on the message
+            # so diagnostics can correlate a retry; the next claim gets a new ID.
+            still_processing = []
+            for entry in processing:
+                if not isinstance(entry, dict) or not isinstance(entry.get("message"), dict):
+                    continue
+                try:
+                    expired = now - float(entry.get("claimed_at", now)) >= CLAIM_LEASE_SECONDS
+                except (TypeError, ValueError):
+                    expired = True
+                if expired:
+                    inbox.append(entry["message"])
+                else:
+                    still_processing.append(entry)
+            data["processing"] = still_processing
+
+            while inbox:
+                msg = inbox.pop(0)
+                if not isinstance(msg, dict):
+                    msg = {"command": str(msg)}
+                claim_id = uuid.uuid4().hex
+                entry = {
+                    "claim_id": claim_id,
+                    "message": msg,
+                    "claimed_at": now,
+                }
+                data["processing"].append(entry)
+                claimed.append((str(name), claim_id, dict(msg)))
+    state_manager.atomic_update(mutate)
+    return claimed
+
+
+def _finalize_message(agent_name, claim_id, output):
+    """Commit output and remove a claim atomically; never save a stale DB snapshot."""
+    result = {"finalized": False}
+
+    def mutate(db):
+        agents = db.get("agents", {})
+        agent = agents.get(agent_name) if isinstance(agents, dict) else None
+        if not isinstance(agent, dict):
+            return
+        processing = agent.setdefault("processing", [])
+        match = next(
+            (entry for entry in processing
+             if isinstance(entry, dict) and entry.get("claim_id") == claim_id),
+            None,
+        )
+        if match is None:
+            return
+        processing.remove(match)
+        outbox = agent.setdefault("outbox", [])
+        if not isinstance(outbox, list):
+            raise ValueError(f"invalid outbox for agent {agent_name}")
+        outbox.append(output[:MAX_OUTPUT])
+        del outbox[:-MAX_OUTBOX]
+        result["finalized"] = True
+
+    state_manager.atomic_update(mutate)
+    return result["finalized"]
+
+
+def _log_worker_error(label):
+    os.makedirs("logs", exist_ok=True)
+    with open("logs/agent.log", "a", encoding="utf-8") as f:
+        f.write(f"{datetime.datetime.now()} {label}: {traceback.format_exc()}\n")
+
 
 def agent_worker():
     while True:
         try:
-            with open("db.json") as f:
-                db = json.load(f)
-            changed = False
-            for name, data in state_manager.get_agents().items():
-                inbox = data.get("inbox", [])
-                if not inbox:
-                    continue
-                outbox = data.setdefault("outbox", [])
-                for msg in inbox[:]:
-                    cmd = msg.get("command", "").strip().lower()
-                    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    _start = time.time()
-                    if cmd in ALLOWED:
-                        res = run_command(cmd, msg)
-                    else:
-                        res = f"❌ '{cmd}' not allowed"
-                    elapsed = time.time() - _start
-                    outbox.append(f"[{now}] {cmd}\n>> {res[:2000]}\n⏱️ {elapsed:.1f}s")
-                    inbox.remove(msg)
-                    changed = True
-                if len(outbox) > 20:
-                    data["outbox"] = outbox[-20:]
-            if changed:
-                with open("db.json", "w") as f:
-                    json.dump(db, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            # תיעוד שגיאה
-            os.makedirs("logs", exist_ok=True)
-            with open("logs/agent.log", "a") as f:
-                f.write(f"{datetime.datetime.now()} Agent worker error: {traceback.format_exc()}\n")
-            time.sleep(5)  # המתן לפני ניסיון חוזר
+            # The tutor has its own response path. Do not let two workers race
+            # to consume the same tutor inbox.
+            claimed = _claim_inbox(exclude_agents={"tutor"})
+            for name, claim_id, msg in claimed:
+                cmd = str(msg.get("command", "")).strip().lower()
+                now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                started = time.time()
+                res = run_command(cmd, msg) if cmd in ALLOWED else f"❌ '{cmd}' not allowed"
+                elapsed = time.time() - started
+                output = f"[{now}] {cmd}\n>> {str(res)[:MAX_OUTPUT]}\n⏱️ {elapsed:.1f}s"
+                _finalize_message(name, claim_id, output)
+        except Exception:
+            _log_worker_error("Agent worker error")
+            time.sleep(5)
         time.sleep(2)
 
-def start_agent_thread():
-    try:
-        t = threading.Thread(target=agent_worker, daemon=True, name="agent_worker")
-        t.start()
-        print("Internal agent thread started")
-    except Exception as e:
-        os.makedirs("logs", exist_ok=True)
-        with open("logs/agent.log", "a") as f:
-            f.write(f"{datetime.datetime.now()} Failed to start agent: {traceback.format_exc()}\n")
-        print(f"Agent start error: {e}")
-def complete_task(uid, task_id):
-    try:
-        with open("db.json") as f: db = json.load(f)
-    except: return "❌ DB error"
-    student = db.get("students", {}).get(uid)
-    if not student: return "❌ Not registered"
-    tasks = db.get("courses", {}).get("bitcoin_mastery", {}).get("tasks", {})
-    task = tasks.get(str(task_id))
-    if not task: return "❌ Task not found"
-    # בדיקה: file_exists
-    if task.get("validation", "").startswith("file_exists:"):
-        path = os.path.expanduser(task["validation"].split(":",1)[1])
-        if not os.path.exists(path):
-            return f"❌ File {path} not found"
-    # תגמול
-    points = task.get("reward", 0)
-    student.setdefault("points", 0)
-    student["points"] += points
-    # שמירת השלמה
-    completed = student.setdefault("completed_tasks", [])
-    if task_id not in completed:
-        completed.append(task_id)
-    db["students"][uid] = student
-    with open("db.json","w") as f: json.dump(db, f, indent=2, ensure_ascii=False)
-    return f"✅ Task {task_id} completed! +{points} points"
 
-# Tutor auto-reply
 def tutor_worker():
-    import time, json
     while True:
         try:
-            agents = state_manager.get_agents()
-            tutor = agents.get("tutor", {})
-            inbox = tutor.get("inbox", [])
-            if inbox:
-                msg = inbox.pop(0)["command"]
-                # try Ollama
+            claimed = _claim_inbox(agent_filter={"tutor"})
+            for name, claim_id, msg in claimed:
+                command = str(msg.get("command", ""))
                 try:
                     import subprocess as sp
-                    ans = sp.check_output(["ollama", "run", "phi3:mini", msg], text=True, timeout=30)[:1000]
-                except:
-                    ans = f"Tutor: received '{msg}'. LLM offline, but I'm learning!"
-                tutor.setdefault("outbox", []).append(ans)
-                agents["tutor"] = tutor
-                state_manager.set_agents(agents)
-        except:
-            pass
+                    ans = sp.check_output(
+                        ["ollama", "run", "phi3:mini", command],
+                        text=True,
+                        timeout=30,
+                    )[:1000]
+                except Exception:
+                    ans = f"Tutor: received '{command}'. LLM offline, but I'm learning!"
+                _finalize_message(name, claim_id, ans)
+        except Exception:
+            _log_worker_error("Tutor worker error")
         time.sleep(5)
 
-threading.Thread(target=tutor_worker, daemon=True).start()
+
+def start_agent_thread():
+    """Start both background workers once; importing this module has no side effects."""
+    global _TUTOR_THREAD_STARTED
+    try:
+        agent_thread = threading.Thread(target=agent_worker, daemon=True, name="agent_worker")
+        agent_thread.start()
+        with _TUTOR_THREAD_LOCK:
+            if not _TUTOR_THREAD_STARTED:
+                threading.Thread(target=tutor_worker, daemon=True, name="tutor_worker").start()
+                _TUTOR_THREAD_STARTED = True
+        print("Internal agent threads started")
+    except Exception as exc:
+        _log_worker_error("Failed to start agent")
+        print(f"Agent start error: {exc}")
+
+
+def complete_task(uid, task_id):
+    """Complete a course task once, awarding its points in the canonical DB."""
+    uid = str(uid)
+    task_key = str(task_id)
+
+    try:
+        snapshot = state_manager.load_db()
+    except Exception:
+        return "❌ DB error"
+
+    student = snapshot.get("students", {}).get(uid)
+    if not isinstance(student, dict):
+        return "❌ Not registered"
+    tasks = snapshot.get("courses", {}).get("bitcoin_mastery", {}).get("tasks", {})
+    task = tasks.get(task_key) if isinstance(tasks, dict) else None
+    if not isinstance(task, dict):
+        return "❌ Task not found"
+
+    validation = str(task.get("validation", ""))
+    if validation.startswith("file_exists:"):
+        path = os.path.expanduser(validation.split(":", 1)[1])
+        if not os.path.exists(path):
+            return f"❌ File {path} not found"
+
+    result = {"message": "❌ Task could not be completed"}
+
+    def mutate(db):
+        students = db.get("students", {})
+        current_student = students.get(uid) if isinstance(students, dict) else None
+        current_tasks = db.get("courses", {}).get("bitcoin_mastery", {}).get("tasks", {})
+        current_task = current_tasks.get(task_key) if isinstance(current_tasks, dict) else None
+        if not isinstance(current_student, dict):
+            result["message"] = "❌ Not registered"
+            return
+        if not isinstance(current_task, dict):
+            result["message"] = "❌ Task not found"
+            return
+        if str(current_task.get("validation", "")) != validation:
+            result["message"] = "❌ Task changed; retry completion"
+            return
+
+        completed = current_student.setdefault("completed_tasks", [])
+        if not isinstance(completed, list):
+            result["message"] = "❌ Invalid completion record"
+            return
+        if any(str(done) == task_key for done in completed):
+            result["message"] = f"ℹ️ Task {task_key} already completed; no extra points awarded."
+            return
+
+        points = current_task.get("reward", 0)
+        if isinstance(points, bool) or not isinstance(points, (int, float)):
+            result["message"] = "❌ Invalid task reward"
+            return
+        current_student["points"] = current_student.get("points", 0) + points
+        completed.append(task_key)
+        result["message"] = f"✅ Task {task_key} completed! +{points} points"
+
+    try:
+        state_manager.atomic_update(mutate)
+    except Exception:
+        return "❌ DB error"
+    return result["message"]
