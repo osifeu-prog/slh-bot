@@ -44,6 +44,8 @@ _READ_CAPABILITIES = (
     Capability("bots.federation", "Cross-check registered bots against Railway service/deployment metadata.", "exec.audit", False),
     Capability("mqtt.status", "Read non-secret MQTT broker configuration and listener metadata.", "exec.audit", False),
     Capability("mqtt.probe", "Perform a read-only MQTT broker CONNECT/Disconnect probe.", "exec.audit", False),
+    Capability("miners.list", "List registered ESP32 devices and latest stored miner telemetry from the canonical Control Plane.", "exec.audit", False),
+    Capability("miners.status", "Read one registered ESP32 device's latest stored telemetry from the canonical Control Plane.", "exec.audit", False),
 )
 
 _MUTATING_CAPABILITIES = (
