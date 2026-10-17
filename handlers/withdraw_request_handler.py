@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 import state_manager
 from core.authority import is_owner, has_permission
+from core.slh_distribution import is_frozen_account
 
 MIN_WITHDRAW = 1.0
 
@@ -168,7 +169,7 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         user = users.get(uid) if isinstance(users, dict) else None
         if not uid or not isinstance(user, dict):
             raise ValueError("WITHDRAWAL_RECORD_INVALID")
-        if user.get("frozen") is True:
+        if is_frozen_account(db, uid):
             raise ValueError("ACCOUNT_FROZEN")
 
         try:
@@ -196,9 +197,10 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         user = users.get(uid) if isinstance(users, dict) else None
         if not isinstance(user, dict):
             raise ValueError("USER_NOT_FOUND")
-        wallet = user.setdefault("wallet", {})
-        if not isinstance(wallet, dict):
+        wallet_value = user.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
             raise ValueError("WALLET_INVALID")
+        wallet = wallet_value if isinstance(wallet_value, dict) else {}
         try:
             amount = float(req.get("amount"))
             before = float(wallet.get("credits", 0))
@@ -226,6 +228,8 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
                 },
             )
         )
+        if wallet_value is None:
+            user["wallet"] = wallet
         wallet["credits"] = after
         req.update(
             {
