@@ -62,6 +62,15 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual(result, "answer from canonical AI fallback")
         query.assert_called_once_with("Explain this safely", uid="owner")
 
+    def test_legacy_restart_command_is_disabled_even_for_owner(self):
+        with patch("core.authority.is_owner", return_value=True), patch.object(
+            internal_agent.os, "system"
+        ) as system_call:
+            result = internal_agent.run_command("restart", {"uid": "owner"})
+
+        self.assertEqual(result, "Unknown: restart")
+        system_call.assert_not_called()
+
     def test_sensitive_agent_commands_require_owner_identity(self):
         with patch("core.authority.is_owner", return_value=False), patch.object(
             internal_agent.os, "system"
