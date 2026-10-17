@@ -206,4 +206,31 @@ def register_mcp_bridge_routes(app):
             "direct_command_replies_muted": False,
             "critical_security_messages_muted": False,
         }), 200
+    @app.route("/api/miner", methods=["POST"])
+    def miner_telemetry_ingest():
+        """Authenticated ESP32 telemetry receiver on the state-owning web service."""
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
+
+        try:
+            from core.miner_service import MinerTelemetryError, ingest_telemetry
+
+            record = ingest_telemetry(
+                payload,
+                authorization=request.headers.get("Authorization", ""),
+            )
+            return jsonify({
+                "ok": True,
+                "device_id": record["device_id"],
+                "health_status": record["health_status"],
+                "alerts": record["alerts"],
+                "last_seen": record["last_seen"],
+            }), 200
+        except MinerTelemetryError as exc:
+            return jsonify({"error": exc.code}), exc.status_code
+        except Exception as exc:
+            print("[MINER] telemetry ingest error:", type(exc).__name__)
+            return jsonify({"error": "MINER_TELEMETRY_FAILED"}), 500
+
     return app
