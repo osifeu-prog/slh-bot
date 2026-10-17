@@ -60,6 +60,7 @@ class AgentHandlerTaskTests(unittest.TestCase):
                 "source": "telegram:123",
             },
         )
+        self.assertIn("/agent_outbox 16", self.bot.replies[-1])
         self.assertIn("/agentoutbox Alpha", self.bot.replies[-1])
 
     def test_non_owner_cannot_turn_plain_text_restart_into_a_restart_command(self):
