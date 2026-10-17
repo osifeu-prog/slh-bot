@@ -355,6 +355,12 @@ def stars_invoice():
     if uid is None:
         return jsonify({"error": "TELEGRAM_AUTH_REQUIRED"}), 401
 
+    # The Mini App is a separate public Stars checkout surface. Enforce the
+    # same default-closed gate as bot invoice creation before minting a link.
+    from core.stars_gate import stars_payments_open
+    if not stars_payments_open():
+        return jsonify({"error": "STARS_PAYMENTS_CLOSED"}), 503
+
     payload = request.get_json(silent=True) or {}
     try:
         from core.stars_invoice import build_invoice_request, create_invoice_link
@@ -362,6 +368,11 @@ def stars_invoice():
         return _no_store(jsonify({"link": create_invoice_link(invoice)})), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        if str(exc) == "STARS_PAYMENTS_CLOSED":
+            return jsonify({"error": "STARS_PAYMENTS_CLOSED"}), 503
+        print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "INVOICE_FAILED"}), 502
     except Exception as exc:
         print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
         return jsonify({"error": "INVOICE_FAILED"}), 502

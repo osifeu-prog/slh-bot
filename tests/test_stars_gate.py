@@ -133,3 +133,20 @@ def test_gate_closure_does_not_add_a_guard_to_confirmed_payment_callback():
     assert "def successful_payment(m):" in source
     segment = source.split("def successful_payment(m):", 1)[1].split("def cardpay_command", 1)[0]
     assert "STARS_PAYMENTS_CLOSED" not in segment
+
+
+def test_miniapp_invoice_api_rejects_checkout_when_stars_gate_closed(monkeypatch):
+    import webapp
+    from core import stars_invoice as invoice_authority
+
+    monkeypatch.setenv("STARS_PAYMENTS_OPEN", "0")
+    with patch("webapp.authenticated_uid", return_value="100"), \
+         patch.object(invoice_authority, "build_invoice_request", side_effect=AssertionError("invoice must not be built")), \
+         patch.object(invoice_authority, "create_invoice_link", side_effect=AssertionError("invoice link must not be created")):
+        response = webapp.app.test_client().post(
+            "/api/v1/stars/invoice",
+            json={"kind": "credit_pack", "id": "100"},
+        )
+
+    assert response.status_code == 503
+    assert response.get_json() == {"error": "STARS_PAYMENTS_CLOSED"}
