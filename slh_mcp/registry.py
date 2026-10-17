@@ -30,6 +30,7 @@ from slh_mcp.tools.integrations import (
 )
 from slh_mcp.tools.economic_ledger import _tool_economy_ledger
 from slh_mcp.tools.mqtt import _tool_mqtt_status, _tool_mqtt_probe
+from slh_mcp.tools.miners import _tool_miners_list, _tool_miner_status
 from slh_mcp.tools.preferences import _tool_notifications_get, _tool_notifications_set
 from slh_mcp.tools.economy import (
     _tool_economy_agent_balance,
@@ -61,6 +62,8 @@ def register_capabilities(server):
         "bots.federation": _tool_bots_federation,
         "mqtt.status": _tool_mqtt_status,
         "mqtt.probe": _tool_mqtt_probe,
+        "miners.list": _tool_miners_list,
+        "miners.status": _tool_miner_status,
         "railway.projects": _tool_railway_projects,
         "railway.services": _tool_railway_services,
         "railway.deployments": _tool_railway_deployments,
