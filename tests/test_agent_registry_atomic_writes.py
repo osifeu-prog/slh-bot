@@ -106,6 +106,44 @@ class AgentRegistryAtomicWriteTests(unittest.TestCase):
         self.assertEqual(self.db["agents"]["16"]["inbox"], [expected])
         direct_write_mock.assert_not_called()
 
+    def test_send_message_deduplicates_same_request_while_pending(self):
+        task = {
+            "command": "ask",
+            "prompt": "Check status",
+            "uid": "owner",
+            "request_id": "telegram:owner:555:777",
+        }
+        atomic, snapshot, direct_write, event = self._patches()
+        with atomic, snapshot as snapshot_mock, direct_write as direct_write_mock, event as event_mock:
+            first = registry.send_message("Existing", task)
+            second = registry.send_message("Existing", task)
+
+        self.assertEqual(first, "16")
+        self.assertEqual(second, "16")
+        self.assertEqual(self.db["agents"]["16"]["inbox"], [task])
+        snapshot_mock.assert_called_once()
+        event_mock.assert_called_once()
+        direct_write_mock.assert_not_called()
+
+    def test_send_message_deduplicates_same_request_while_processing(self):
+        task = {
+            "command": "ask",
+            "prompt": "Check status",
+            "uid": "owner",
+            "request_id": "telegram:owner:555:778",
+        }
+        self.db["agents"]["16"]["processing"] = [
+            {"claim_id": "claim-1", "message": copy.deepcopy(task), "claimed_at": 123.0}
+        ]
+        atomic, snapshot, direct_write, event = self._patches()
+        with atomic, snapshot as snapshot_mock, direct_write as direct_write_mock, event as event_mock:
+            registry.send_message("Existing", task)
+
+        self.assertEqual(self.db["agents"]["16"]["inbox"], [])
+        snapshot_mock.assert_not_called()
+        event_mock.assert_not_called()
+        direct_write_mock.assert_not_called()
+
     def test_send_message_keeps_legacy_text_messages_compatible(self):
         atomic, snapshot, direct_write, event = self._patches()
         with atomic, snapshot, direct_write as direct_write_mock, event:
