@@ -31,6 +31,7 @@ def _registry():
             DEVICE_ID: {
                 "type": "esp32",
                 "owner": "8789977826",
+                "miner_enabled": True,
                 "mqtt_topic": f"slh/esp/{DEVICE_ID}",
             }
         }
@@ -195,3 +196,17 @@ def test_miner_api_route_rejects_non_object_json():
 
     assert response.status_code == 400
     assert response.get_json() == {"error": "JSON_OBJECT_REQUIRED"}
+
+
+def test_ingest_rejects_generic_esp32_without_explicit_miner_opt_in(monkeypatch):
+    _configure_global_token(monkeypatch)
+    registry = {"devices": {DEVICE_ID: {"type": "esp32", "owner": "8789977826"}}}
+    with patch.object(miner_service.state_manager, "load_json", return_value=registry), patch.object(
+        miner_service.state_manager, "atomic_update"
+    ) as atomic_update:
+        with pytest.raises(miner_service.MinerTelemetryError) as exc:
+            miner_service.ingest_telemetry(_payload(), f"Bearer {TOKEN}")
+
+    assert exc.value.code == "MINER_ROLE_NOT_ENABLED"
+    assert exc.value.status_code == 403
+    atomic_update.assert_not_called()
