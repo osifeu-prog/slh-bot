@@ -106,3 +106,36 @@ def test_miner_list_only_includes_nodes_owned_by_the_requester():
     assert "ESP_OWNED" in rendered
     assert "ESP_OTHER" not in rendered
     assert "PC_OWNED" not in rendered
+
+
+
+def test_miner_status_marks_old_measurements_stale():
+    bot = Mock()
+    handlers = _capture_handlers(bot)
+    message = SimpleNamespace(
+        text="/miner_status ESP_TEST",
+        from_user=SimpleNamespace(id=12345),
+    )
+    stale_payload = {
+        "status": "OK",
+        "temperature_c": 68.5,
+        "watts": 3250,
+        "volts": 230,
+        "amps": 14,
+        "energy_kwh": 12,
+        "reported_status": "OK",
+        "alerts": [],
+        "last_seen": "2020-01-01T00:00:00Z",
+        "source": "esp32_authenticated_http",
+        "stale": True,
+    }
+
+    with patch("handlers.esp_control._load_devices", return_value=_device()), patch(
+        "handlers.esp_control.build_miner_payload", return_value=stale_payload
+    ):
+        esp_control.register_sync(bot)
+        handlers["miner_status"](message)
+
+    rendered = bot.reply_to.call_args.args[1]
+    assert "Status: `STALE`" in rendered
+    assert "TELEMETRY_STALE" in rendered
