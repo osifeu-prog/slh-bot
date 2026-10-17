@@ -63,6 +63,21 @@ class AgentHandlerTaskTests(unittest.TestCase):
         self.assertIn("/agent_outbox 16", self.bot.replies[-1])
         self.assertIn("/agentoutbox Alpha", self.bot.replies[-1])
 
+    def test_explicit_ask_whoami_stays_a_question_for_the_owner(self):
+        msg = self._message("/sendagent Alpha ask whoami")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="8789977826"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.is_owner", return_value=True),
+            patch("handlers.agents_handler.send_message") as send,
+        ):
+            self.bot.handlers["sendagent"](msg)
+
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "whoami")
+        self.assertEqual(task["uid"], "8789977826")
+
     def test_non_owner_whoami_text_is_a_question_not_a_host_command(self):
         msg = self._message("/sendagent Alpha whoami")
         with (
