@@ -56,9 +56,51 @@ class LocalStatusHandlerTests(unittest.TestCase):
         output = self.bot.sent[-1]
         self.assertIn("PC_Osif2: ONLINE", output)
         self.assertIn("PC_MAIN_001: OFFLINE", output)
-        self.assertIn("Docker / Git / container logs: NOT REPORTED", output)
-        self.assertIn("No commands were executed", output)
+        self.assertIn("Docker / Git diagnostics: NOT REPORTED", output)
+        self.assertIn("Read-only: no commands, files, containers, balances, or gates were changed.", output)
         self.assertEqual(read.call_count, 2)
+
+    def test_fresh_signed_diagnostics_are_rendered_without_logs(self):
+        snapshot = {
+            "version": 1,
+            "docker": {
+                "daemon": "UP",
+                "container_count": 22,
+                "running_count": 20,
+                "restarting_names": ["slh-ton-mnh", "slh-nifti"],
+            },
+            "postgres": "UP",
+            "redis": "UP",
+            "git": {"branch": "main", "commit": "abcdef1", "dirty": True, "dirty_files": 3},
+            "compose": {
+                "utf8": "PASS",
+                "bad_byte_97_count": 0,
+                "root_env_present": True,
+                "claude_env_present": False,
+            },
+            "bots": {
+                "slh-ton-mnh": "RESTARTING",
+                "slh-nifti": "RESTARTING",
+                "slh-crazy-panel": "UP",
+            },
+        }
+        reports = [
+            {
+                "status": "online", "age_seconds": 12, "records": 1,
+                "diagnostics": snapshot, "diagnostics_age_seconds": 8,
+            },
+            {"status": "unknown", "age_seconds": None, "records": 0},
+        ]
+        with patch.object(local_status_handler, "is_owner", return_value=True), patch.object(local_status_handler, "get_device_status", side_effect=reports):
+            self.bot.handlers["local_status"](message())
+
+        output = self.bot.sent[-1]
+        self.assertIn("Docker: UP · 22 containers · 20 running", output)
+        self.assertIn("Git: main @ abcdef1 · dirty (3 paths)", output)
+        self.assertIn("Bots: ton-mnh RESTARTING · nifti RESTARTING · crazy-panel UP", output)
+        self.assertIn("Restarting containers: slh-ton-mnh, slh-nifti", output)
+        self.assertIn("Logs and secret values are never returned.", output)
+        self.assertNotIn("token=", output.lower())
 
     def test_read_failure_is_fail_closed_without_traceback(self):
         with patch.object(local_status_handler, "is_owner", return_value=True), \
