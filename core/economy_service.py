@@ -1059,21 +1059,31 @@ def transfer_credits(
                 old_sender_uid = str(sent.get("uid") or "")
                 old_recipient_uid = str(sent_meta.get("recipient_uid") or "")
                 try:
-                    old_amount = abs(float(sent.get("amount")))
+                    sent_amount = float(sent.get("amount"))
                     received_amount = float(received.get("amount"))
-                    old_sender_balance_after = float(sent.get("after"))
+                    sent_before = float(sent.get("before"))
+                    sent_after = float(sent.get("after"))
+                    received_before = float(received.get("before"))
+                    received_after = float(received.get("after"))
+                    old_amount = abs(sent_amount)
                     old_recipient_uid_row = str(received.get("uid") or "")
                     old_sender_uid_receipt = str(received_meta.get("sender_uid") or "")
                 except (TypeError, ValueError, OverflowError):
                     raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN") from None
                 if (
-                    old_sender_uid != str(sent_meta.get("sender_uid") or old_sender_uid)
+                    not old_sender_uid
                     or not old_recipient_uid
                     or old_recipient_uid_row != old_recipient_uid
                     or old_sender_uid_receipt != old_sender_uid
-                    or float(sent.get("amount", 0) or 0) >= 0
+                    or sent_amount >= 0
+                    or received_amount <= 0
+                    or not all(math.isfinite(x) for x in (
+                        sent_amount, received_amount, sent_before, sent_after,
+                        received_before, received_after,
+                    ))
                     or abs(received_amount - old_amount) > 1e-9
-                    or abs(float(sent.get("before")) + float(sent.get("amount")) - old_sender_balance_after) > 1e-9
+                    or abs((sent_before + sent_amount) - sent_after) > 1e-9
+                    or abs((received_before + received_amount) - received_after) > 1e-9
                 ):
                     raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN")
             else:
