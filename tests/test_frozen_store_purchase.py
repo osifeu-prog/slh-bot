@@ -144,6 +144,25 @@ class FrozenStorePurchaseTests(unittest.TestCase):
         self.assertEqual(db["purchases"][purchase_id]["error"], "ACCOUNT_FROZEN")
         apply_grant.assert_not_called()
 
+    def test_unfrozen_physical_purchase_still_settles_atomically(self):
+        db = _db()
+        before = copy.deepcopy(db)
+
+        result, error = self._purchase_physical(db)
+
+        self.assertIsNone(error)
+        self.assertEqual(result["status"], "SUCCESS")
+        self.assertEqual(result["paid"], 25.0)
+        self.assertEqual(result["seller_payout"], 22.5)
+        self.assertEqual(result["commission"], 2.5)
+        self.assertEqual(db["users"]["buyer"]["wallet"]["credits"], 75.0)
+        self.assertEqual(db["users"]["seller"]["wallet"]["credits"], 42.5)
+        self.assertEqual(db["users"]["SLH_TREASURY"]["wallet"]["credits"], 2.5)
+        self.assertEqual(db["products"]["physical-item"]["inventory"], 1)
+        self.assertEqual(db["purchases"]["purchase:physical-request"]["status"], "PAID")
+        self.assertEqual(len(db["ledger"]), 3)
+        self.assertNotEqual(db, before)
+
     def test_completed_physical_purchase_retry_remains_idempotent_when_frozen(self):
         db = _db(frozen_buyer=True, frozen_seller=True)
         db["purchases"]["purchase:physical-request"] = {
