@@ -90,6 +90,18 @@ class AgentHandlerTaskTests(unittest.TestCase):
         self.assertEqual(task["command"], "ask")
         self.assertEqual(task["prompt"], "restart")
 
+    def test_inbox_unpacks_canonical_agent_id_and_messages_tuple(self):
+        msg = self._message("/inbox Alpha")
+        with (
+            patch("handlers.agents_handler.normalize_uid", return_value="123"),
+            patch("handlers.agents_handler._check_access", return_value=("16", self.agent)),
+            patch("handlers.agents_handler.get_inbox", return_value=("16", [{"command": "ask", "prompt": "check ledger"}])),
+        ):
+            self.bot.handlers["inbox"](msg)
+
+        self.assertIn("- ask: check ledger", self.bot.replies[-1])
+        self.assertNotIn("- 16", self.bot.replies[-1])
+
     def test_agentoutbox_displays_only_the_authorized_agents_recent_results(self):
         self.agent["outbox"] = ["first", "second"]
         msg = self._message("/agentoutbox Alpha")
