@@ -57,8 +57,11 @@ def device_role_enabled(device_id: str, device: dict[str, Any]) -> bool:
     Generic ESP32 records are not implicitly treated as miners.
     """
     token_map = _device_token_map()
-    if token_map is not None and str(device_id) in token_map:
-        return bool(token_map[str(device_id)])
+    if token_map is not None:
+        # The token map is also the authoritative allowlist while configured.
+        # A DB flag or separate allowlist must not make a device appear enabled
+        # when ingestion will reject it for lacking a mapped per-device token.
+        return bool(str(token_map.get(str(device_id), "") or "").strip())
     if str(device_id) in _device_allowlist():
         return True
     if device.get("miner_enabled") is True:
