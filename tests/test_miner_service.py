@@ -323,7 +323,7 @@ def test_mcp_bridge_lists_only_safe_miner_fields_and_is_read_only(monkeypatch):
         "telemetry": {
             "temperature_c": 68.5,
             "watts": 3250.0,
-            "last_seen": "2026-10-17T11:00:00Z",
+            "last_seen": "2020-01-01T00:00:00Z",
             "secret": "must not escape",
         },
     }
@@ -338,8 +338,39 @@ def test_mcp_bridge_lists_only_safe_miner_fields_and_is_read_only(monkeypatch):
     result = response.get_json()
     assert result["count"] == 1
     assert result["devices"][0]["telemetry"]["temperature_c"] == 68.5
+    assert result["devices"][0]["telemetry"]["stale"] is True
     assert "secret_field" not in result["devices"][0]
     assert "secret" not in result["devices"][0]["telemetry"]
+
+
+def test_mcp_bridge_single_miner_marks_recent_telemetry_fresh(monkeypatch):
+    from datetime import datetime, timezone
+    from flask import Flask
+    from core.mcp_bridge_routes import register_mcp_bridge_routes
+
+    app = Flask("mcp-miner-detail-fresh-test")
+    register_mcp_bridge_routes(app)
+    monkeypatch.setenv("SLH_MCP_BRIDGE_TOKEN", TOKEN)
+    monkeypatch.setenv("SLH_MCP_BRIDGE_PRINCIPAL_ID", "12345")
+    device = {
+        "device_id": DEVICE_ID,
+        "owner_id": "12345",
+        "type": "esp32",
+        "status": "online",
+        "telemetry": {
+            "temperature_c": 68.5,
+            "last_seen": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        },
+    }
+    with patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+        "core.miner_service.get_registered_device", return_value=device
+    ), patch("core.miner_service.device_role_enabled", return_value=True):
+        response = app.test_client().get(
+            f"/internal/mcp/v1/miners/{DEVICE_ID}",
+            headers={"Authorization": f"Bearer {TOKEN}"},
+        )
+    assert response.status_code == 200
+    assert response.get_json()["telemetry"]["stale"] is False
 
 
 def test_mcp_miner_bridge_requires_auth(monkeypatch):
