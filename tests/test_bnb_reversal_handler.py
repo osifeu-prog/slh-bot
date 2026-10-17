@@ -216,3 +216,36 @@ def test_prepare_auto_discovery_fails_closed_for_zero_or_multiple_candidates(mon
     assert "נמצאו 2 מועמדים" in bot.replies[-1]
     assert "אין בחירה אוטומטית" in bot.replies[-1]
     assert not target._PENDING_BNB_REVERSALS
+
+
+
+def test_prepare_exposes_safe_symbolic_value_error_code_without_mutation(monkeypatch):
+    bot = _register(monkeypatch)
+    with patch(
+        "core.credit_adjustment_service.preview_invalid_bnb_deposit_reversal",
+        side_effect=ValueError("HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS"),
+    ):
+        bot.handlers["bnb_reverse_prepare"](
+            _message(f"/bnb_reverse_prepare {TX}")
+        )
+
+    assert "HISTORICAL_BNB_AUDIT_HAS_OTHER_BLOCKERS" in bot.replies[-1]
+    assert "No changes performed" in bot.replies[-1]
+    assert not target._PENDING_BNB_REVERSALS
+
+
+def test_prepare_does_not_echo_untrusted_exception_message(monkeypatch):
+    bot = _register(monkeypatch)
+    secret_like = "rpc=https://user:secret@example.invalid token=do-not-print"
+    with patch(
+        "core.credit_adjustment_service.preview_invalid_bnb_deposit_reversal",
+        side_effect=ValueError(secret_like),
+    ):
+        bot.handlers["bnb_reverse_prepare"](
+            _message(f"/bnb_reverse_prepare {TX}")
+        )
+
+    assert "ValueError" in bot.replies[-1]
+    assert secret_like not in bot.replies[-1]
+    assert "secret" not in bot.replies[-1]
+    assert not target._PENDING_BNB_REVERSALS
