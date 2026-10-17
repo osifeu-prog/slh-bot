@@ -85,6 +85,8 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
             str(existing.get("from_uid")) != from_uid
             or str(existing.get("to_uid")) != to_uid
             or Decimal(str(existing.get("amount", 0))) != amount
+            or str(existing.get("reason", "")) != str(reason)
+            or str(existing.get("kind", "")) != "wallet_transfer"
         ):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
