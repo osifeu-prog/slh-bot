@@ -214,6 +214,19 @@ def record_ton_deposit(
                     and left_value == right_value
                 )
 
+            try:
+                ledger_before = float(original_ledger["before"])
+                ledger_after = float(original_ledger["after"])
+                ledger_amount = float(original_ledger["amount"])
+                ledger_arithmetic_matches = (
+                    math.isfinite(ledger_before)
+                    and math.isfinite(ledger_after)
+                    and math.isfinite(ledger_amount)
+                    and abs((ledger_before + ledger_amount) - ledger_after) <= 1e-9
+                )
+            except (KeyError, TypeError, ValueError, OverflowError):
+                ledger_arithmetic_matches = False
+
             identity_matches = (
                 original_tx.get("type") == "ton"
                 and str(original_tx.get("uid") or "") == uid
@@ -222,8 +235,7 @@ def record_ton_deposit(
                 and str(original_ledger.get("uid") or "") == uid
                 and same_numeric(original_ledger.get("amount"), credits)
                 and same_numeric(original_meta.get("ton_amount"), ton_amount)
-                and same_numeric(original_ledger.get("before", 0), original_ledger.get("before", 0))
-                and same_numeric(original_ledger.get("after"), float(original_ledger.get("before", 0)) + credits)
+                and ledger_arithmetic_matches
             )
             if not identity_matches:
                 raise ValueError("TON_DEPOSIT_IDEMPOTENCY_CONFLICT")
