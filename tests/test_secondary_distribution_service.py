@@ -36,7 +36,7 @@ def _binding():
 
 
 def test_requires_registered_wallet(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     with patch.object(svc.state_manager, "load_db", return_value={}):
         with pytest.raises(ValueError, match="SECONDARY_DISTRIBUTION_WALLET_NOT_ACTIVE"):
@@ -44,7 +44,7 @@ def test_requires_registered_wallet(monkeypatch):
 
 
 def test_enforces_per_transaction_limit(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     db = _db()
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     with patch.object(svc.state_manager, "load_db", return_value=db):
@@ -53,7 +53,7 @@ def test_enforces_per_transaction_limit(monkeypatch):
 
 
 def test_counts_pending_amount_against_daily_limit(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     db = _db()
     now = datetime(2026, 10, 3, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(svc, "_now", lambda: now)
@@ -71,7 +71,7 @@ def test_counts_pending_amount_against_daily_limit(monkeypatch):
             svc.prepare_secondary_slh_transfer(UID, RECIPIENT, "51", "r1")
 
 def test_prepare_is_user_signed_only_and_returns_payload(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     db = _db()
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())
     class Fn:
@@ -105,7 +105,7 @@ def test_prepare_is_user_signed_only_and_returns_payload(monkeypatch):
 
 
 def test_request_id_is_idempotent(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     db = _db()
     db["secondary_distribution_pending"]["r1"] = {
         "request_id": "r1",
@@ -156,7 +156,7 @@ def test_cancel_releases_pending_request(monkeypatch):
 
 
 def test_unbounded_mode_does_not_block_large_amount(monkeypatch):
-    monkeypatch.setenv("SLH_BSC_SECONDARY_DISTRIBUTION_OPEN", "1")
+    monkeypatch.setenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", "1")
     db = _db()
     db["secondary_distribution_wallets"][UID]["limit_mode"] = "unbounded"
     monkeypatch.setattr(svc, "get_binding", lambda uid: _binding())

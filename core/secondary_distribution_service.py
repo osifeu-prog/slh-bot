@@ -11,7 +11,6 @@ Completed daily usage is counted from verified on-chain receipts.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -34,14 +33,6 @@ REQUEST_TTL_SECONDS = 600
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
 ERC20_TRANSFER_SELECTOR = "a9059cbb"
-SECONDARY_DISTRIBUTION_OPEN_ENV = "SLH_BSC_SECONDARY_DISTRIBUTION_OPEN"
-
-
-def secondary_distribution_open() -> bool:
-    """Gate new app-prepared secondary-wallet transfers; default closed."""
-    return os.getenv(SECONDARY_DISTRIBUTION_OPEN_ENV, "0").strip() == "1"
-
-
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -173,8 +164,8 @@ def prepare_secondary_slh_transfer(
 
     # This is a distinct self-custody BSC transfer surface, not the exchange
     # or server-broadcast gate. Do not prepare new transactions unless explicitly enabled.
-    if not secondary_distribution_open():
-        raise ValueError("SECONDARY_DISTRIBUTION_CLOSED")
+    from core.bsc_user_signed_gate import require_user_signed_transfers_open
+    require_user_signed_transfers_open()
 
     recipient = _checksum(recipient, "recipient")
     amount = _parse_amount(amount)
