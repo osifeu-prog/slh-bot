@@ -7,7 +7,7 @@ from core.authority import get_visible_agents, normalize_uid, is_owner
 # Only exact commands are interpreted as worker operations. Free-form text is
 # always sent through the assistant fallback chain, never as a command string.
 _READ_ONLY_AGENT_COMMANDS = {"whoami", "status", "uptime"}
-_OWNER_AGENT_COMMANDS = {"dbsize", "sysinfo", "logs", "errors", "restart"}
+_OWNER_AGENT_COMMANDS = {"dbsize", "sysinfo", "logs", "errors"}
 
 
 def _agent_task(uid, text):
