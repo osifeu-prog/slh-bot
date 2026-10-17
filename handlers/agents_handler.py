@@ -156,7 +156,7 @@ def register(bot, context):
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
-        inbox = get_inbox(agent_id)
+        _, inbox = get_inbox(agent_id)
         display_name = agent.get("name", agent_id)
         if not inbox:
             bot.reply_to(m, "Inbox (" + str(display_name) + "): empty")
