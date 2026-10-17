@@ -392,10 +392,20 @@ def _miner_device_owned_by(dev, uid):
     return str(dev.get("owner") or dev.get("owner_id") or "") == str(uid)
 
 
-def _is_esp_node(dev):
-    return str(dev.get("type", "") or "").strip().lower() in {
-        "esp32", "miner", "esp32_miner", "esp32-miner",
-    }
+def _is_miner_node(dev):
+    device_type = str(dev.get("type", "") or "").strip().lower()
+    if device_type not in {"esp32", "miner", "esp32_miner", "esp32-miner"}:
+        return False
+    raw_capabilities = dev.get("capabilities", [])
+    capabilities = {
+        str(value).strip().lower()
+        for value in raw_capabilities
+    } if isinstance(raw_capabilities, (list, tuple, set)) else set()
+    return (
+        dev.get("miner_enabled") is True
+        or "miner" in capabilities
+        or device_type in {"miner", "esp32_miner", "esp32-miner"}
+    )
 
 
 def _format_miner_status(device_id, payload):
@@ -440,7 +450,7 @@ def register_sync(bot):
             if not _miner_device_owned_by(dev, m.from_user.id):
                 bot.reply_to(m, "Not your device")
                 return
-            if not _is_esp_node(dev):
+            if not _is_miner_node(dev):
                 bot.reply_to(m, "Device is not a registered ESP32 miner node")
                 return
             try:
@@ -465,7 +475,7 @@ def register_sync(bot):
             (did, dev)
             for did, dev in devices.items()
             if isinstance(dev, dict)
-            and _is_esp_node(dev)
+            and _is_miner_node(dev)
             and _miner_device_owned_by(dev, m.from_user.id)
         ]
         if not owned_devices:
