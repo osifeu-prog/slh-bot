@@ -127,6 +127,58 @@ class AgentMessageContractTests(unittest.TestCase):
         self.assertEqual(result, "answer from configured fallback chain")
         route.assert_called_once_with("Explain the current architecture", uid="8789977826")
 
+    def test_actual_agent_worker_claims_ask_and_finalizes_outbox_result(self):
+        import internal_agent
+
+        payload = {
+            "command": "ask",
+            "prompt": "Summarize current readiness without executing actions",
+            "uid": "8789977826",
+            "request_id": "telegram:8789977826:12345:679",
+        }
+        db = {
+            "agents": {
+                "16": {
+                    "name": "helper",
+                    "inbox": [payload.copy()],
+                    "processing": [],
+                    "outbox": [],
+                }
+            }
+        }
+
+        class StopWorker(BaseException):
+            """Exit the production loop after one successful iteration."""
+
+        def apply_atomic_update(mutate):
+            return mutate(db)
+
+        with (
+            patch.object(
+                internal_agent.state_manager,
+                "atomic_update",
+                side_effect=apply_atomic_update,
+            ),
+            patch(
+                "core.ask_router.route",
+                return_value="answer from canonical router",
+            ) as route,
+            patch.object(internal_agent.time, "sleep", side_effect=StopWorker),
+        ):
+            with self.assertRaises(StopWorker):
+                internal_agent.agent_worker()
+
+        route.assert_called_once_with(
+            "Summarize current readiness without executing actions",
+            uid="8789977826",
+        )
+        agent = db["agents"]["16"]
+        self.assertEqual(agent["inbox"], [])
+        self.assertEqual(agent["processing"], [])
+        self.assertEqual(len(agent["outbox"]), 1)
+        self.assertIn("answer from canonical router", agent["outbox"][0])
+        self.assertIn("ask", agent["outbox"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
