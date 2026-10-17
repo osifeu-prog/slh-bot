@@ -92,9 +92,14 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
                 break
             if not isinstance(data, dict):
                 continue
-            if agent_filter is not None and name not in agent_filter:
+            # Canonical dictionary keys are usually numeric IDs; the human-
+            # readable agent name is stored separately in the record.
+            agent_id = str(name)
+            display_name = str(data.get("name") or "").strip()
+            identities = {agent_id, display_name}
+            if agent_filter is not None and not identities.intersection(set(map(str, agent_filter))):
                 continue
-            if name in exclude_agents:
+            if identities.intersection(set(map(str, exclude_agents))):
                 continue
             inbox = data.setdefault("inbox", [])
             processing = data.setdefault("processing", [])
