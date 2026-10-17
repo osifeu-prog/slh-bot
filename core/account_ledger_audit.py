@@ -103,9 +103,22 @@ def _row_domain_hint(row: dict) -> str:
         return "STAKED_COUNTER_HINT"
 
     inferred = _reason_domain_hint(row.get("reason"))
-    # A heuristic SLH label must not remove a row from the Credits continuity
-    # check. Without explicit domain metadata, retain it as ambiguous so any
-    # continuity gap remains visible and blocks release readiness.
+    # A narrow allow-list of canonical, asset-specific event names is safe to
+    # classify without metadata: these exact reason contracts are used by the
+    # corresponding services and do not represent Credits mutations. Keep
+    # generic/unknown reasons ambiguous so this cannot hide arbitrary gaps.
+    reason = str(row.get("reason") or "").strip().lower()
+    if inferred == "SLH_HINT" and (
+        reason in {
+            "exchange:sell_reserve",
+            "exchange:cancel_release_slh",
+            "p2p:slh_sent",
+            "p2p:slh_received",
+            "slh:provenance_correction",
+        }
+        or reason.startswith("p2p:slh:")
+    ):
+        return "SLH_HINT"
     if inferred == "SLH_HINT":
         return "AMBIGUOUS_DOMAIN_HINT"
     return inferred
