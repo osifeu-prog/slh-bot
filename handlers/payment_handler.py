@@ -92,6 +92,15 @@ def register_payment_handlers(bot):
             return
         try:
             _send_vip_invoice(bot, m.chat.id, uid)
+        except RuntimeError as e:
+            if str(e) == "STARS_PAYMENTS_CLOSED":
+                bot.send_message(
+                    m.chat.id,
+                    "⛔ תשלומי Stars סגורים כרגע. לא נוצרה חשבונית חדשה.",
+                )
+            else:
+                print(f"[VIP] invoice error: {type(e).__name__}")
+                bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
         except Exception as e:
             print(f"[VIP] invoice error: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
