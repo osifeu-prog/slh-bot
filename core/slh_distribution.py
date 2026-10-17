@@ -89,10 +89,12 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
 
-    if not p2p_transfers_open():
-        raise ValueError("SLH_P2P_TRANSFERS_CLOSED")
+    # Preserve the explicit frozen-account policy result even while the
+    # global transfer gate is closed. Both checks happen before any mutation.
     if is_frozen_account(db, from_uid):
         raise ValueError("ACCOUNT_FROZEN")
+    if not p2p_transfers_open():
+        raise ValueError("SLH_P2P_TRANSFERS_CLOSED")
 
     ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     sender_wallet = sender.setdefault("wallet", {})
