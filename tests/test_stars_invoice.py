@@ -46,7 +46,7 @@ class StarsInvoiceTest(unittest.TestCase):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$abc"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             link = stars_invoice.create_invoice_link(
@@ -69,7 +69,7 @@ class StarsInvoiceTest(unittest.TestCase):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$vip"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             stars_invoice.create_invoice_link(req)
@@ -78,6 +78,22 @@ class StarsInvoiceTest(unittest.TestCase):
         self.assertEqual(body["prices"][0]["amount"], VIP_MONTHLY_STARS)
         self.assertEqual(body["subscription_period"], VIP_SUBSCRIPTION_PERIOD)
 
+
+    def test_create_link_is_blocked_when_gate_closed(self):
+        with (
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "0"}),
+            mock.patch("core.stars_invoice.requests.post") as post,
+        ):
+            with self.assertRaisesRegex(ValueError, "STARS_PAYMENTS_CLOSED"):
+                stars_invoice.create_invoice_link(
+                    {
+                        "title": "100 Credits",
+                        "description": "d",
+                        "payload": "credits_100_1",
+                        "stars": 100,
+                    }
+                )
+        post.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()
