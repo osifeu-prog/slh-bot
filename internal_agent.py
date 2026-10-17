@@ -14,7 +14,7 @@ from pathlib import Path
 
 import state_manager
 
-ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "restart", "ask"}
+ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "ask"}
 CLAIM_LEASE_SECONDS = 600
 MAX_OUTBOX = 20
 MAX_OUTPUT = 2000
@@ -47,8 +47,8 @@ def run_command(cmd, msg):
         elif cmd == "errors":
             return os.popen("tail -n 20 logs/error.log").read() if os.path.exists("logs/error.log") else "No errors"
         elif cmd == "restart":
-            os.system("bash start.sh &")
-            return "Restart triggered"
+            # Never launch the legacy start.sh stack from a background inbox worker.
+            return "❌ Restart disabled in agent workers; use the authenticated admin restart path."
         elif cmd == "ask":
             prompt = msg.get("prompt", "")
             if not prompt:
@@ -78,6 +78,30 @@ def run_command(cmd, msg):
         return f"Error: {exc}"
 
 
+def _is_owner_agent_record(agent):
+    """Return True only for an agent owned by the canonical SLH owner."""
+    if not isinstance(agent, dict):
+        return False
+    owner_uid = str(agent.get("owner_id") or "").strip()
+    if not owner_uid:
+        return False
+    try:
+        from core.authority import is_owner
+        return bool(is_owner(owner_uid))
+    except Exception:
+        # Authorization errors fail closed; never grant host-command access.
+        return False
+
+
+def _dispatch_worker_command(cmd, msg, *, owner_authorized):
+    """Enforce the host-command trust boundary before dispatch."""
+    if not owner_authorized:
+        return "❌ Host worker commands are restricted to owner-owned agents."
+    if cmd not in ALLOWED:
+        return f"❌ command not allowed: {cmd}"
+    return run_command(cmd, msg)
+
+
 def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
     """Claim at most max_messages under one atomic update to keep leases bounded."""
     now = time.time()
@@ -93,9 +117,13 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
                 break
             if not isinstance(data, dict):
                 continue
-            if agent_filter is not None and name not in agent_filter:
+            # Agent dictionary keys are canonical IDs; names live in the record.
+            agent_id = str(name)
+            display_name = str(data.get("name") or "").strip()
+            identities = {agent_id, display_name}
+            if agent_filter is not None and not identities.intersection(set(map(str, agent_filter))):
                 continue
-            if name in exclude_agents:
+            if identities.intersection(set(map(str, exclude_agents))):
                 continue
             inbox = data.setdefault("inbox", [])
             processing = data.setdefault("processing", [])
@@ -127,7 +155,7 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
                     "message": msg,
                     "claimed_at": now,
                 })
-                claimed.append((str(name), claim_id, dict(msg)))
+                claimed.append((agent_id, claim_id, dict(msg), _is_owner_agent_record(data)))
     state_manager.atomic_update(mutate)
     return claimed
 
@@ -171,11 +199,11 @@ def agent_worker():
     while True:
         try:
             claimed = _claim_inbox(exclude_agents={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, owner_authorized in claimed:
                 cmd = str(msg.get("command", "")).strip().lower()
                 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 started = time.time()
-                res = run_command(cmd, msg) if cmd in ALLOWED else f"❌ '{cmd}' not allowed"
+                res = _dispatch_worker_command(cmd, msg, owner_authorized=owner_authorized)
                 elapsed = time.time() - started
                 output = f"[{now}] {cmd}\n>> {str(res)[:MAX_OUTPUT]}\n⏱️ {elapsed:.1f}s"
                 _finalize_message(name, claim_id, output)
@@ -189,7 +217,7 @@ def tutor_worker():
     while True:
         try:
             claimed = _claim_inbox(agent_filter={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, _owner_authorized in claimed:
                 command = str(msg.get("command", ""))
                 try:
                     import subprocess as sp
