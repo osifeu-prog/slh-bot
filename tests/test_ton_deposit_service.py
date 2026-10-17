@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -142,7 +143,7 @@ class TonDepositSettlementTests(unittest.TestCase):
                 "expires_at_epoch": 1_760_001_830,
             }
         }
-        before_replay = __import__("copy").deepcopy(self.db)
+        before_replay = copy.deepcopy(self.db)
 
         with patch.object(
             ton_deposit_service,
