@@ -80,7 +80,9 @@ def sanitize_local_diagnostics(value: Any) -> dict[str, Any] | None:
     total = _bounded_int(docker.get("container_count"), 0, 1000)
     running = _bounded_int(docker.get("running_count"), 0, 1000)
     restarting = docker.get("restarting_names")
-    if daemon not in _DIAG_STATUSES or total is None or running is None or running > total:
+    if not isinstance(daemon, str) or daemon not in _DIAG_STATUSES:
+        return None
+    if total is None or running is None or running > total:
         return None
     if not isinstance(restarting, list) or len(restarting) > 30:
         return None
@@ -92,7 +94,9 @@ def sanitize_local_diagnostics(value: Any) -> dict[str, Any] | None:
 
     postgres = value.get("postgres")
     redis = value.get("redis")
-    if postgres not in _DIAG_STATUSES or redis not in _DIAG_STATUSES:
+    if not isinstance(postgres, str) or postgres not in _DIAG_STATUSES:
+        return None
+    if not isinstance(redis, str) or redis not in _DIAG_STATUSES:
         return None
 
     git = value.get("git")
@@ -122,7 +126,7 @@ def sanitize_local_diagnostics(value: Any) -> dict[str, Any] | None:
     bad_byte_count = _bounded_int(compose.get("bad_byte_97_count"), 0, 1000000)
     root_env = compose.get("root_env_present")
     claude_env = compose.get("claude_env_present")
-    if utf8 not in {"PASS", "FAIL", "UNKNOWN"} or bad_byte_count is None:
+    if not isinstance(utf8, str) or utf8 not in {"PASS", "FAIL", "UNKNOWN"} or bad_byte_count is None:
         return None
     if not isinstance(root_env, bool) or not isinstance(claude_env, bool):
         return None
@@ -269,8 +273,13 @@ def on_message(client, userdata, msg):
         dev["status"] = "online"
         dev["last_heartbeat"] = timestamp
         if diagnostics is not None:
+            # Timestamp diagnostic freshness from the signed source clock, not
+            # receipt time, so replaying an old signed message cannot freshen it.
+            source_timestamp = float(payload["ts"])
             dev["diagnostics"] = diagnostics
-            dev["diagnostics_received_at"] = timestamp
+            dev["diagnostics_received_at"] = datetime.fromtimestamp(
+                source_timestamp, timezone.utc
+            ).isoformat()
         return True
 
     try:
