@@ -1,6 +1,6 @@
 from core.agent_registry import (
     list_agents, get_agent, create_agent, update_agent,
-    delete_agent, send_message, get_inbox,
+    delete_agent, send_message, get_inbox, get_outbox,
 )
 from core.authority import get_visible_agents, normalize_uid, is_owner
 
@@ -140,7 +140,9 @@ def register(bot, context):
             bot.reply_to(
                 m,
                 "📨 המשימה נשלחה לתור הסוכן. "
-                "לצפייה בתוצאה: /agentoutbox " + str(agent.get("name", agent_id)),
+                "לצפייה בתוצאה: /agent_outbox " + str(agent_id) + "
+"
+                "(alias: /agentoutbox " + str(agent.get("name", agent_id)) + ")",
             )
         except Exception as e:
             bot.reply_to(m, "Agent task submission failed: " + type(e).__name__)
@@ -182,12 +184,16 @@ def register(bot, context):
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
-        outbox = agent.get("outbox", [])
-        if not isinstance(outbox, list) or not outbox:
+        try:
+            _, outbox = get_outbox(agent_id, limit=8)
+        except Exception as e:
+            bot.reply_to(m, "Agent outbox unavailable: " + type(e).__name__)
+            return
+        if not outbox:
             bot.reply_to(m, "Outbox (" + str(agent.get("name", agent_id)) + "): empty")
             return
-        lines = ["Outbox (" + str(agent.get("name", agent_id)) + ") — latest results:"]
-        for entry in outbox[-8:]:
+        lines = ["Outbox (" + str(agent.get("name", agent_id)) + ") — newest first:"]
+        for entry in reversed(outbox):
             lines.append(str(entry)[:900])
         bot.reply_to(m, "\n\n".join(lines)[-3800:])
 
