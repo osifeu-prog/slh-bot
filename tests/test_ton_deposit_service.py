@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -139,7 +140,7 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.tx_mock.return_value = self._tx()
         first = ton_deposit_service.settle_ton_deposit(UID, TX)
         self.assertFalse(first["idempotent"])
-        before = __import__("copy").deepcopy(self.db)
+        before = copy.deepcopy(self.db)
 
         with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
             economy_service.record_ton_deposit(
@@ -152,7 +153,7 @@ class TonDepositSettlementTests(unittest.TestCase):
     def test_same_hash_with_different_credits_is_a_conflict_without_mutation(self):
         self.tx_mock.return_value = self._tx()
         ton_deposit_service.settle_ton_deposit(UID, TX)
-        before = __import__("copy").deepcopy(self.db)
+        before = copy.deepcopy(self.db)
 
         with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
             economy_service.record_ton_deposit(
@@ -165,7 +166,7 @@ class TonDepositSettlementTests(unittest.TestCase):
     def test_same_hash_with_different_ton_amount_is_a_conflict_without_mutation(self):
         self.tx_mock.return_value = self._tx()
         ton_deposit_service.settle_ton_deposit(UID, TX)
-        before = __import__("copy").deepcopy(self.db)
+        before = copy.deepcopy(self.db)
 
         with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
             economy_service.record_ton_deposit(
@@ -179,7 +180,7 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.tx_mock.return_value = self._tx()
         ton_deposit_service.settle_ton_deposit(UID, TX)
         self.db["transactions"] = []
-        before = __import__("copy").deepcopy(self.db)
+        before = copy.deepcopy(self.db)
 
         with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDENTITY_UNKNOWN"):
             economy_service.record_ton_deposit(
