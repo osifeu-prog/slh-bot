@@ -23,6 +23,7 @@ def _device(owner="12345"):
         "ESP_TEST": {
             "type": "esp32",
             "owner": owner,
+            "miner_enabled": True,
             "mqtt_topic": "slh/esp/ESP_TEST",
         }
     }
@@ -84,8 +85,8 @@ def test_miner_list_only_includes_nodes_owned_by_the_requester():
     bot = Mock()
     handlers = _capture_handlers(bot)
     devices = {
-        "ESP_OWNED": {"type": "esp32", "owner": "12345"},
-        "ESP_OTHER": {"type": "esp32", "owner": "99999"},
+        "ESP_OWNED": {"type": "esp32", "owner": "12345", "miner_enabled": True},
+        "ESP_OTHER": {"type": "esp32", "owner": "99999", "miner_enabled": True},
         "PC_OWNED": {"type": "pc", "owner": "12345"},
     }
     message = SimpleNamespace(
