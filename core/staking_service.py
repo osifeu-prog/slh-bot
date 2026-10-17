@@ -255,6 +255,45 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
                     raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN")
                 if stored_position_id != position_id:
                     raise ValueError("STAKING_UNSTAKE_IDENTITY_CONFLICT")
+
+                try:
+                    position_amount = float(position.get("amount"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN") from None
+                if not math.isfinite(position_amount) or position_amount <= 0:
+                    raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN")
+                matching_ledger = [
+                    row for row in ledger
+                    if isinstance(row, dict)
+                    and str(row.get("uid") or "") == uid
+                    and str(row.get("reason") or "") == "staking:unstake_locked"
+                    and isinstance(row.get("meta"), dict)
+                    and str(row["meta"].get("position_id") or "") == position_id
+                ]
+                if len(matching_ledger) != 1:
+                    raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN")
+                ledger_row = matching_ledger[0]
+                ledger_meta = ledger_row["meta"]
+                try:
+                    ledger_amount = float(ledger_row.get("amount"))
+                    ledger_before = float(ledger_row.get("before"))
+                    ledger_after = float(ledger_row.get("after"))
+                    staked_before = float(ledger_meta.get("staked_before"))
+                    staked_after = float(ledger_meta.get("staked_after"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN") from None
+                evidence_values = (
+                    ledger_amount, ledger_before, ledger_after,
+                    staked_before, staked_after,
+                )
+                if (
+                    not all(math.isfinite(value) for value in evidence_values)
+                    or not math.isclose(ledger_amount, position_amount, rel_tol=0.0, abs_tol=1e-9)
+                    or not math.isclose(ledger_before + ledger_amount, ledger_after, rel_tol=0.0, abs_tol=1e-9)
+                    or not math.isclose(staked_before - position_amount, staked_after, rel_tol=0.0, abs_tol=1e-9)
+                ):
+                    raise ValueError("STAKING_UNSTAKE_IDENTITY_UNKNOWN")
+
                 wallet_value = user.get("wallet")
                 if wallet_value is not None and not isinstance(wallet_value, dict):
                     raise ValueError("INVALID_WALLET_STATE")
