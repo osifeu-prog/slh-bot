@@ -1,0 +1,162 @@
+import copy
+import unittest
+from unittest.mock import patch
+
+from core import economy_service
+
+
+UID = "12345"
+OTHER_UID = "67890"
+
+
+class CanonicalFrozenCreditsDebitTests(unittest.TestCase):
+    def setUp(self):
+        self.db = {
+            "users": {
+                UID: {"wallet": {"credits": 100.0}, "frozen": False},
+                OTHER_UID: {"wallet": {"credits": 50.0}, "frozen": False},
+            },
+            "ledger": [],
+        }
+        self.atomic_patch = patch.object(
+            economy_service.state_manager,
+            "atomic_update",
+            side_effect=lambda mutate: mutate(self.db),
+        )
+        self.atomic_patch.start()
+        self.addCleanup(self.atomic_patch.stop)
+
+    def _debit(self, uid=UID, amount=-5.0, reason="arcade:entry", key="req-1", **extra):
+        meta = {"source": "unit_test"}
+        if key is not None:
+            meta["idempotency_key"] = key
+        meta.update(extra)
+        return economy_service.record_transaction(
+            uid=uid,
+            amount=amount,
+            reason=reason,
+            meta=meta,
+        )
+
+    def test_frozen_arcade_debit_is_blocked_atomically(self):
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            self._debit(reason="arcade:entry")
+
+        self.assertEqual(self.db, before)
+
+    def test_frozen_generic_bridge_debit_is_blocked_atomically(self):
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            self._debit(reason="bridge:spend")
+
+        self.assertEqual(self.db, before)
+
+    def test_frozen_store_debit_is_blocked_by_the_same_canonical_boundary(self):
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+            self._debit(reason="store:purchase")
+
+        self.assertEqual(self.db, before)
+
+    def test_normal_account_can_still_make_a_valid_debit(self):
+        result = self._debit()
+        self.assertEqual(result, 95.0)
+        self.assertEqual(self.db["users"][UID]["wallet"]["credits"], 95.0)
+        self.assertEqual(len(self.db["ledger"]), 1)
+
+    def test_exact_debit_replay_after_freeze_is_read_only_noop(self):
+        first = self._debit(reason="arcade:entry", key="stable-entry-7")
+        self.assertEqual(first, 95.0)
+        self.db["users"][UID]["frozen"] = True
+        before_retry = copy.deepcopy(self.db)
+
+        replay = self._debit(reason="arcade:entry", key="stable-entry-7")
+
+        self.assertEqual(replay, 95.0)
+        self.assertEqual(self.db, before_retry)
+
+    def test_reused_key_with_different_amount_fails_before_freeze_gate(self):
+        self._debit(reason="arcade:entry", key="stable-entry-8")
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(amount=-6.0, reason="arcade:entry", key="stable-entry-8")
+
+        self.assertEqual(self.db, before)
+
+    def test_reused_key_with_different_uid_fails_without_mutation(self):
+        self._debit(reason="arcade:entry", key="stable-entry-9")
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(uid=OTHER_UID, amount=-5.0, reason="arcade:entry", key="stable-entry-9")
+
+        self.assertEqual(self.db, before)
+
+    def test_reused_key_with_different_reason_fails_without_mutation(self):
+        self._debit(reason="arcade:entry", key="stable-entry-10")
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(reason="store:purchase", key="stable-entry-10")
+
+        self.assertEqual(self.db, before)
+
+    def test_identity_metadata_conflict_fails_without_mutation(self):
+        self._debit(
+            reason="store:purchase",
+            key="store-request-11",
+            purchase_id="purchase:req-11",
+            item_id="item-old",
+        )
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_KEY_CONFLICT"):
+            self._debit(
+                reason="store:purchase",
+                key="store-request-11",
+                purchase_id="purchase:req-11",
+                item_id="item-new",
+            )
+
+        self.assertEqual(self.db, before)
+
+    def test_details_contract_reports_conflict_without_mutation(self):
+        self._debit(reason="arcade:entry", key="details-key-12")
+        self.db["users"][UID]["frozen"] = True
+        before = copy.deepcopy(self.db)
+
+        result = economy_service.record_transaction(
+            uid=UID,
+            amount=-8.0,
+            reason="arcade:entry",
+            meta={"idempotency_key": "details-key-12", "source": "unit_test"},
+            return_details=True,
+        )
+
+        self.assertEqual(result["status"], "CONFLICT")
+        self.assertEqual(result["credits_applied"], 0.0)
+        self.assertEqual(self.db, before)
+
+    def test_frozen_account_can_receive_positive_credit(self):
+        self.db["users"][UID]["frozen"] = True
+        result = economy_service.record_transaction(
+            uid=UID,
+            amount=2.0,
+            reason="refund:adjustment",
+            meta={"idempotency_key": "refund-key-13"},
+        )
+        self.assertEqual(result, 102.0)
+        self.assertEqual(self.db["users"][UID]["wallet"]["credits"], 102.0)
+
+
+if __name__ == "__main__":
+    unittest.main()
