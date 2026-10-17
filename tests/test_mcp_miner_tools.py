@@ -71,3 +71,24 @@ def test_mcp_miner_status_requires_device_id():
         with pytest.raises(ValueError, match="device_id required"):
             miner_tools.miner_status("", OWNER)
     bridge.assert_not_called()
+
+
+
+def test_mcp_registry_registers_both_miner_read_tools():
+    from unittest.mock import Mock
+    from slh_mcp import registry
+
+    server = Mock()
+    with patch("slh_mcp.registry.register_resources"), patch(
+        "slh_mcp.registry.register_extended_resources"
+    ), patch("slh_mcp.registry.register_economic_resources"), patch(
+        "slh_mcp.registry.register_infrastructure_resources"
+    ), patch("slh_mcp.resources.register_mqtt_resources"):
+        registry.register_capabilities(server)
+
+    registered_names = {
+        call.kwargs.get("name")
+        for call in server.add_tool.call_args_list
+    }
+    assert "miners.list" in registered_names
+    assert "miners.status" in registered_names
