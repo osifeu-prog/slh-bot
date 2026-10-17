@@ -184,6 +184,31 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertIn("answer from configured SLH fallback", agent["outbox"][0])
         self.assertIn("ask", agent["outbox"][0])
 
+    def test_numeric_agent_ids_route_workers_by_display_name(self):
+        self.db["agents"] = {
+            "29": {
+                "name": "tutor",
+                "inbox": [{"command": "ask", "prompt": "tutor prompt", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+            "30": {
+                "name": "internal-console",
+                "inbox": [{"command": "ask", "prompt": "general prompt", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+        }
+
+        with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
+            general = internal_agent._claim_inbox(exclude_agents={"tutor"}, max_messages=10)
+            tutor = internal_agent._claim_inbox(agent_filter={"tutor"}, max_messages=10)
+
+        self.assertEqual([item[0] for item in general], ["30"])
+        self.assertEqual([item[0] for item in tutor], ["29"])
+        self.assertEqual(self.db["agents"]["29"]["inbox"], [])
+        self.assertEqual(self.db["agents"]["30"]["inbox"], [])
+
     def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             general = internal_agent._claim_inbox(exclude_agents={"tutor"})
