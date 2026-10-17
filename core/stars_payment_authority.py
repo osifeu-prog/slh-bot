@@ -12,7 +12,9 @@ from core.vip_fulfillment import apply_vip_benefits, is_launch_offer_open
 from core.stars_price_authority import (
     TELEGRAM_STARS_CURRENCY,
     VIP_MONTHLY_STARS,
+    VIP_ANNUAL_STARS,
     VIP_SUBSCRIPTION_PERIOD,
+    VIP_ANNUAL_PERIOD,
 )
 
 
@@ -83,8 +85,9 @@ def record_vip_subscription_payment(
     recurring=False,
     first_recurring=False,
     now=None,
+    annual=False,
 ):
-    """Activate one VIP month and safely fulfill the launch bundle when eligible."""
+    """Activate monthly or annual VIP and safely fulfill qualifying launch benefits."""
     uid = str(uid).strip()
     charge_id = str(charge_id or "").strip()
     try:
@@ -96,7 +99,11 @@ def record_vip_subscription_payment(
         raise ValueError("INVALID_USER_ID")
     if not charge_id:
         raise ValueError("INVALID_CHARGE_ID")
-    if stars_paid != VIP_MONTHLY_STARS:
+    annual = bool(annual)
+    expected_stars = VIP_ANNUAL_STARS if annual else VIP_MONTHLY_STARS
+    subscription_period = VIP_ANNUAL_PERIOD if annual else VIP_SUBSCRIPTION_PERIOD
+    period_kind = "vip_annual" if annual else "vip_monthly"
+    if stars_paid != expected_stars:
         raise ValueError("INVALID_VIP_STARS_AMOUNT")
 
     now = int(time.time() if now is None else now)
@@ -115,8 +122,8 @@ def record_vip_subscription_payment(
             "reference": charge_id,
             "uid": uid,
             "meta": {
-                "kind": "vip_monthly",
-                "subscription_period": VIP_SUBSCRIPTION_PERIOD,
+                "kind": period_kind,
+                "subscription_period": subscription_period,
             },
         }
 
@@ -133,6 +140,8 @@ def record_vip_subscription_payment(
                 stored_stars = None
             if stored_stars != stars_paid:
                 conflicts.append("stars_paid")
+            if bool(existing.get("annual", False)) != annual:
+                conflicts.append("annual")
             conflicts.extend(
                 "revenue." + field
                 for field in revenue_ledger.conflicting_fields_in_db(db, **revenue_args)
@@ -164,7 +173,7 @@ def record_vip_subscription_payment(
 
         previous = int(existing_user.get("vip_access_until", 0) or 0)
         start = max(now, previous)
-        until = start + VIP_SUBSCRIPTION_PERIOD
+        until = start + subscription_period
         vip_bundle = existing_user.get("vip_bundle")
         vip_bundle = vip_bundle if isinstance(vip_bundle, dict) else {}
         already_qualified = bool(
@@ -202,6 +211,8 @@ def record_vip_subscription_payment(
             "status": "ACTIVE",
             "recurring": bool(recurring),
             "first_recurring": bool(first_recurring),
+            "annual": annual,
+            "period_months": 12 if annual else 1,
             "launch_offer_qualified": bool(launch_offer_qualified),
             "fulfillment_status": "pending",
         }
@@ -228,8 +239,33 @@ def record_vip_subscription_payment(
             "fulfillment_status": "blocked",
         }
 
-    # A completed replay is a no-op: do not re-run fulfillment or record
-    # subscription revenue a second time. Pending replays remain recoverable.
+    # Reconcile referral rewards and WhatsApp cashback on every legitimate
+    # replay. Each reward has its own idempotency key, so this is safe even
+    # after a previous payment record succeeded but a reward write was pending.
+    loyalty_rewards = {}
+    try:
+        from core.commerce_loyalty import grant_whatsapp_cashback
+        loyalty_rewards["whatsapp_cashback"] = grant_whatsapp_cashback(
+            uid, f"vip:{charge_id}", stars_paid, TELEGRAM_STARS_CURRENCY,
+            sku="vip_annual" if annual else "vip_monthly",
+        )
+    except Exception as exc:
+        loyalty_rewards["whatsapp_cashback"] = {
+            "status": "PENDING", "error": type(exc).__name__
+        }
+    try:
+        from core.commerce_loyalty import settle_referred_vip_purchase
+        loyalty_rewards["referral"] = settle_referred_vip_purchase(
+            uid, charge_id, stars_paid
+        )
+    except Exception as exc:
+        loyalty_rewards["referral"] = {
+            "status": "PENDING", "error": type(exc).__name__
+        }
+
+    # A completed replay is a no-op: do not re-run VIP fulfillment or record
+    # subscription revenue a second time. Loyalty rewards above are independently
+    # idempotent and can be reconciled on replay.
     if not created and str(record.get("fulfillment_status", "pending")) == "completed":
         return {
             "status": "duplicate",
@@ -238,6 +274,7 @@ def record_vip_subscription_payment(
             "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
             "fulfillment_status": "completed",
             "bundle": record.get("bundle"),
+            "loyalty_rewards": loyalty_rewards,
         }
 
     bundle = apply_vip_benefits(
@@ -261,4 +298,5 @@ def record_vip_subscription_payment(
         "launch_offer_qualified": bool(record.get("launch_offer_qualified")),
         "fulfillment_status": fulfillment_status,
         "bundle": bundle,
+        "loyalty_rewards": loyalty_rewards,
     }

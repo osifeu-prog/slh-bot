@@ -26,6 +26,7 @@ def record_referral_start(
     *,
     is_new_user: bool,
     now: str | None = None,
+    source: str = "telegram_start_payload",
 ) -> dict[str, Any]:
     """Record at most one referral start per referred UID, preserving first touch.
 
@@ -34,6 +35,14 @@ def record_referral_start(
     """
     uid = _uid(referred_uid)
     requested_referrer = _uid(referrer_uid)
+    source = str(source or "telegram_start_payload").strip().lower()
+    if source not in {"telegram_start_payload", "whatsapp"}:
+        return {
+            "recorded": False,
+            "already_recorded": False,
+            "status": "IGNORED",
+            "reason": "INVALID_SOURCE",
+        }
     if not uid or not requested_referrer or uid == requested_referrer:
         return {
             "recorded": False,
@@ -106,7 +115,7 @@ def record_referral_start(
             "referrer_uid": actual_referrer,
             "first_seen_at": timestamp,
             "status": status,
-            "source": "telegram_start_payload",
+            "source": source,
             "is_new_user_at_start": bool(is_new_user),
         }
         events[uid] = event

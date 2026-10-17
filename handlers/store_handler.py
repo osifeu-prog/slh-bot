@@ -25,9 +25,14 @@ def register(bot):
         if ok:
             status = result.get("status")
             if status == "ALREADY_COMPLETED":
-                text = f"ℹ️ הרכישה כבר הושלמה: {result['item']}\n💰 שולם: {result['paid']} SLH"
+                text = f"ℹ️ הרכישה כבר הושלמה: {result['item']}\n💰 שולם: {result['paid']} Credits"
             else:
-                text = f"✅ נרכש: {result['item']}\n💰 שולם: {result['paid']} SLH"
+                text = f"✅ נרכש: {result['item']}\n💰 שולם: {result['paid']} Credits"
+            cashback = result.get("cashback") or {}
+            if cashback.get("status") == "APPLIED":
+                text += f"\n🎁 החזר WhatsApp: {cashback.get('credits')} Credits"
+            elif cashback.get("status") == "PENDING":
+                text += "\n⏳ הרכישה הושלמה; החזר הנאמנות ממתין להתאמה אוטומטית."
         elif result == "RECOVERABLE":
             text = "⚠️ התשלום נשמר והרכישה דורשת השלמת אספקה. ניסיון חוזר לא יחייב שוב."
         elif result == "IN_PROGRESS":
