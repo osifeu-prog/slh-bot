@@ -36,6 +36,8 @@ class AgentHandlerTaskTests(unittest.TestCase):
         return SimpleNamespace(
             text=text,
             from_user=SimpleNamespace(id=123),
+            chat=SimpleNamespace(id=555),
+            message_id=777,
         )
 
     def test_sendagent_queues_free_text_as_an_ask_task(self):
@@ -54,6 +56,8 @@ class AgentHandlerTaskTests(unittest.TestCase):
                 "command": "ask",
                 "prompt": "check progress and report ledger",
                 "uid": "123",
+                "request_id": "telegram:123:555:777",
+                "source": "telegram:123",
             },
         )
         self.assertIn("/agentoutbox Alpha", self.bot.replies[-1])
