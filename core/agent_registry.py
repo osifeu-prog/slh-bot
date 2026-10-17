@@ -177,7 +177,12 @@ def delete_agent(identifier):
 
 
 def send_message(identifier, message):
-    """Append a legacy text message or structured worker task atomically."""
+    """Append a legacy text message or structured worker task atomically.
+
+    Structured task request IDs are idempotency keys while that request is
+    still queued or leased for processing. This prevents Telegram retries from
+    enqueueing the same task twice without suppressing a later intentional ask.
+    """
     if isinstance(message, dict):
         payload = dict(message)
         if not isinstance(payload.get("command"), str) or not payload["command"].strip():
@@ -185,6 +190,13 @@ def send_message(identifier, message):
         payload["command"] = payload["command"].strip()
     else:
         payload = str(message)
+
+    request_id = (
+        str(payload.get("request_id") or "").strip()
+        if isinstance(payload, dict)
+        else ""
+    )
+    queued = {"value": False}
 
     def mutate(db):
         agents = db.setdefault("agents", {})
@@ -195,21 +207,43 @@ def send_message(identifier, message):
             raise KeyError(f"Agent '{identifier}' not found")
         agent = agents[agent_id]
         inbox = agent.setdefault("inbox", [])
+        processing = agent.setdefault("processing", [])
         if not isinstance(inbox, list):
             raise ValueError(f"invalid inbox for agent {agent_id}")
+        if not isinstance(processing, list):
+            raise ValueError(f"invalid processing queue for agent {agent_id}")
+
+        if request_id:
+            already_pending = any(
+                isinstance(item, dict)
+                and str(item.get("request_id") or "").strip() == request_id
+                for item in inbox
+            )
+            already_processing = any(
+                isinstance(item, dict)
+                and isinstance(item.get("message"), dict)
+                and str(item["message"].get("request_id") or "").strip() == request_id
+                for item in processing
+            )
+            if already_pending or already_processing:
+                return str(agent.get("id", agent_id))
+
         inbox.append(payload)
+        queued["value"] = True
         return str(agent.get("id", agent_id))
 
     agent_id = state_manager.atomic_update(mutate)
-    STORE.rebuild_snapshot()
-    log_event(
-        "agent.message_sent",
-        target=agent_id,
-        details={
-            "message_length": len(str(message)),
-            "message_type": "structured" if isinstance(message, dict) else "text",
-        },
-    )
+    if queued["value"]:
+        STORE.rebuild_snapshot()
+        log_event(
+            "agent.message_sent",
+            target=agent_id,
+            details={
+                "message_length": len(str(message)),
+                "message_type": "structured" if isinstance(message, dict) else "text",
+                "request_id_deduplicated": bool(request_id),
+            },
+        )
     return agent_id
 
 
