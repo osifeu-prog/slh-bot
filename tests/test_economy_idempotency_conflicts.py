@@ -163,3 +163,21 @@ def test_store_does_not_fulfill_purchase_after_idempotency_conflict():
     assert len(db["ledger"]) == 1
     assert db["purchases"]["purchase:req-001"]["status"] == "REJECTED"
     apply_grant.assert_not_called()
+
+
+def test_replay_missing_existing_store_identity_metadata_fails_closed():
+    db = _db()
+    before = deepcopy(db)
+
+    with _atomic_update_for(db):
+        with pytest.raises(ValueError, match="IDEMPOTENCY_KEY_CONFLICT"):
+            economy_service.record_transaction(
+                "buyer",
+                -10.0,
+                reason="store:purchase",
+                # Same key and amount is not sufficient: the original row
+                # bound this debit to a specific purchase and item.
+                meta={"idempotency_key": IDEMPOTENCY_KEY},
+            )
+
+    assert db == before
