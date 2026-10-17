@@ -156,5 +156,33 @@ class TonDepositIdempotencyIdentityTests(unittest.TestCase):
         self.assertEqual(self.db, before)
 
 
+    def test_boolean_credits_are_rejected_before_mutation(self):
+        before = copy.deepcopy(self.db)
+        with self.assertRaisesRegex(TypeError, "credits must be numeric"):
+            self._record(credits=True)
+        self.assertEqual(self.db, before)
+
+    def test_non_finite_credits_are_rejected_before_mutation(self):
+        for amount in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(amount=amount):
+                before = copy.deepcopy(self.db)
+                with self.assertRaisesRegex(ValueError, "INVALID_TON_CREDITS"):
+                    self._record(credits=amount)
+                self.assertEqual(self.db, before)
+
+    def test_boolean_ton_amount_is_rejected_before_mutation(self):
+        before = copy.deepcopy(self.db)
+        with self.assertRaisesRegex(TypeError, "ton_amount must be numeric"):
+            self._record(ton_amount=True)
+        self.assertEqual(self.db, before)
+
+    def test_non_finite_ton_amount_is_rejected_before_mutation(self):
+        for amount in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(amount=amount):
+                before = copy.deepcopy(self.db)
+                with self.assertRaisesRegex(ValueError, "INVALID_TON_AMOUNT"):
+                    self._record(ton_amount=amount)
+                self.assertEqual(self.db, before)
+
 if __name__ == "__main__":
     unittest.main()
