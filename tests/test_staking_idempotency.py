@@ -86,5 +86,51 @@ class StakingIdempotencyTests(unittest.TestCase):
         self.assertEqual(wallet["staked"], 0.0)
 
 
+    def test_same_stake_request_id_with_different_amount_fails_without_mutation(self):
+        staking_service.stake_locked("u1", 10, lock_days=30, request_id="stable-stake")
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "STAKING_REQUEST_IDENTITY_CONFLICT"):
+            staking_service.stake_locked("u1", 11, lock_days=30, request_id="stable-stake")
+
+        self.assertEqual(self.read_db(), before)
+
+    def test_same_stake_request_id_with_different_lock_days_fails_without_mutation(self):
+        staking_service.stake_locked("u1", 10, lock_days=30, request_id="stable-stake-lock")
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "STAKING_REQUEST_IDENTITY_CONFLICT"):
+            staking_service.stake_locked("u1", 10, lock_days=60, request_id="stable-stake-lock")
+
+        self.assertEqual(self.read_db(), before)
+
+    def test_nan_stake_amount_is_rejected_before_db_mutation(self):
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "finite positive"):
+            staking_service.stake_locked("u1", float("nan"), lock_days=30, request_id="nan-stake")
+
+        self.assertEqual(self.read_db(), before)
+
+    def test_unstake_request_id_cannot_be_reused_for_a_different_position(self):
+        first_position = staking_service.stake_locked("u1", 10, lock_days=1, request_id="stake-a")
+        second_position = staking_service.stake_locked("u1", 10, lock_days=1, request_id="stake-b")
+        db = self.read_db()
+        db["stake_positions"][first_position["position"]["id"]]["unlocks_at"] = 0
+        db["stake_positions"][second_position["position"]["id"]]["unlocks_at"] = 0
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+
+        staking_service.unstake_locked(
+            "u1", first_position["position"]["id"], request_id="shared-unstake",
+        )
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "STAKING_UNSTAKE_IDENTITY_CONFLICT"):
+            staking_service.unstake_locked(
+                "u1", second_position["position"]["id"], request_id="shared-unstake",
+            )
+
+        self.assertEqual(self.read_db(), before)
+
 if __name__ == "__main__":
     unittest.main()
