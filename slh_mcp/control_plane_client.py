@@ -6,6 +6,7 @@ import json
 import os
 import urllib.error
 import urllib.request
+from urllib.parse import quote
 
 _TIMEOUT = 15
 
@@ -84,6 +85,17 @@ def set_notification_preference(level: str) -> dict:
         method="PATCH",
         payload={"notification_level": str(level)},
     )
+
+def miners() -> dict:
+    """Read registered ESP32 devices and their stored telemetry through the canonical Control Plane."""
+    return _request("/internal/mcp/v1/miners")
+
+
+def miner(device_id: str) -> dict:
+    """Read one registered ESP32 device and its stored telemetry."""
+    safe_id = quote(str(device_id), safe="")
+    return _request(f"/internal/mcp/v1/miners/{safe_id}")
+
 
 def self_test() -> bool:
     """Verify the authenticated MCP -> Control Plane bridge without mutating state."""
