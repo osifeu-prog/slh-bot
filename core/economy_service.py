@@ -58,9 +58,9 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                     or float(entry.get("amount", 0) or 0) != float(amount)
                 )
                 for field in ("purchase_id", "item_id", "tx_hash", "bnb_amount_wei", "from", "to"):
-                    if field not in meta:
+                    if field not in meta and field not in existing_meta:
                         continue
-                    if field not in existing_meta:
+                    if field not in meta or field not in existing_meta:
                         conflict = True
                         break
                     old_value, new_value = existing_meta.get(field), meta.get(field)
