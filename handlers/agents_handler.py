@@ -131,6 +131,11 @@ def register(bot, context):
             return
         try:
             task = _agent_task(uid, parts[2])
+            chat_id = str(getattr(getattr(m, "chat", None), "id", "") or "").strip()
+            message_id = str(getattr(m, "message_id", "") or "").strip()
+            if chat_id and message_id:
+                task["request_id"] = f"telegram:{uid}:{chat_id}:{message_id}"
+                task["source"] = f"telegram:{uid}"
             send_message(agent_id, task)
             bot.reply_to(
                 m,
