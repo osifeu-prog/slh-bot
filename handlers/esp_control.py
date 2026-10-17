@@ -344,7 +344,189 @@ def build_sync_payload(uid):
     }
 
 
+def build_miner_payload(device_id):
+    """Return the latest authenticated telemetry snapshot, or explicit no-data state."""
+    from core.miner_service import get_miner_telemetry
+
+    record = get_miner_telemetry(device_id)
+    if not record:
+        return {
+            "device_id": device_id,
+            "temperature_c": None,
+            "watts": None,
+            "volts": None,
+            "amps": None,
+            "energy_kwh": None,
+            "status": "NO_DATA",
+            "reported_status": "-",
+            "alerts": [],
+            "last_seen": "-",
+            "source": "none",
+            "stale": True,
+        }
+
+    last_seen = str(record.get("last_seen") or "-")
+    stale = True
+    try:
+        seen_at = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
+        if seen_at.tzinfo is None:
+            seen_at = seen_at.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - seen_at).total_seconds()
+        stale = age_seconds < -60 or age_seconds > 120
+    except (TypeError, ValueError, OverflowError):
+        stale = True
+
+    return {
+        "device_id": device_id,
+        "temperature_c": record.get("temperature_c"),
+        "watts": record.get("watts"),
+        "volts": record.get("volts"),
+        "amps": record.get("amps"),
+        "energy_kwh": record.get("energy_kwh"),
+        "status": str(record.get("health_status") or "UNKNOWN"),
+        "reported_status": str(record.get("reported_status") or "-"),
+        "alerts": list(record.get("alerts") or []),
+        "last_seen": last_seen,
+        "source": str(record.get("source") or "unknown"),
+        "stale": stale,
+    }
+
+
+def _miner_display(value, unit):
+    if value is None:
+        return "not received"
+    try:
+        return f"{float(value):g} {unit}"
+    except (TypeError, ValueError, OverflowError):
+        return "invalid stored value"
+
+
+def _miner_device_owned_by(dev, uid):
+    return str(dev.get("owner") or dev.get("owner_id") or "") == str(uid)
+
+
+def _is_esp_node(dev):
+    return str(dev.get("type", "") or "").strip().lower() in {
+        "esp32", "miner", "esp32_miner", "esp32-miner",
+    }
+
+
+def _miner_opted_in(device_id, dev):
+    try:
+        from core.miner_service import device_role_enabled
+        return device_role_enabled(device_id, dev)
+    except Exception:
+        return False
+
+
+def _format_miner_status(device_id, payload):
+    alerts = list(payload.get("alerts") or [])
+    if payload.get("stale"):
+        alerts.append("TELEMETRY_STALE")
+    alert_text = ", ".join(str(value) for value in alerts) if alerts else "none"
+    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
+    return (
+        f"⛏️ *Miner Status* — `{device_id}`\n\n"
+        f"Temperature: `{_miner_display(payload.get('temperature_c'), '°C')}`\n"
+        f"Power: `{_miner_display(payload.get('watts'), 'W')}`\n"
+        f"Voltage: `{_miner_display(payload.get('volts'), 'V')}`\n"
+        f"Current: `{_miner_display(payload.get('amps'), 'A')}`\n"
+        f"Energy: `{_miner_display(payload.get('energy_kwh'), 'kWh')}`\n"
+        f"Status: `{shown_status}`\n"
+        f"Reported by node: `{payload.get('reported_status', '-')}`\n"
+        f"Alerts: `{alert_text}`\n"
+        f"Last seen: `{payload.get('last_seen', '-')}`\n\n"
+        "Source: authenticated ESP32 telemetry stored by the Control Plane.\n"
+        "Alerts are advisory only; no relay or miner power command is sent."
+    )
+
+
 def register_sync(bot):
+    @bot.message_handler(commands=["esp_miner_status", "miner_status", "miner_list"])
+    def miner_status_command(m):
+        parts = (m.text or "").split()
+        command = parts[0].split("@", 1)[0].lstrip("/").lower() if parts else ""
+        device_id = parts[1] if len(parts) > 1 else None
+
+        if command == "esp_miner_status" and not device_id:
+            bot.reply_to(m, "Usage: /esp_miner_status <device_id>")
+            return
+        if command == "miner_list" and device_id:
+            bot.reply_to(m, "Usage: /miner_list")
+            return
+
+        try:
+            from core.miner_service import get_registered_device, list_registered_esp_devices
+            devices = list_registered_esp_devices()
+        except Exception:
+            bot.reply_to(m, "Canonical device registry unavailable; no status returned.")
+            return
+
+        if device_id:
+            dev = get_registered_device(device_id)
+            if not dev or not _is_esp_node(dev):
+                bot.reply_to(m, f"Registered ESP32 device {device_id} not found")
+                return
+            if not _miner_device_owned_by(dev, m.from_user.id):
+                bot.reply_to(m, "Not your device")
+                return
+            if not _miner_opted_in(device_id, dev):
+                bot.reply_to(
+                    m,
+                    f"ESP32 {device_id} exists in the canonical DB, but it is not enabled for miner telemetry.\n"
+                    "No measurements have been fabricated and ingestion remains blocked until the device is explicitly enrolled.",
+                )
+                return
+            try:
+                payload = build_miner_payload(device_id)
+            except Exception:
+                bot.reply_to(m, "Miner telemetry database unavailable; no status returned.")
+                return
+            if payload.get("status") == "NO_DATA":
+                bot.reply_to(
+                    m,
+                    f"⛏️ ESP32 {device_id}: NO_DATA. The canonical device record exists, but no telemetry snapshot has been stored yet.",
+                )
+                return
+            try:
+                bot.reply_to(m, _format_miner_status(device_id, payload), parse_mode="Markdown")
+            except Exception:
+                bot.reply_to(m, _format_miner_status(device_id, payload))
+            return
+
+        owned_devices = [
+            (did, dev)
+            for did, dev in devices.items()
+            if _miner_device_owned_by(dev, m.from_user.id)
+        ]
+        if not owned_devices:
+            bot.reply_to(m, "No registered ESP32 devices are assigned to this account in the canonical DB.")
+            return
+
+        lines = ["⛏️ *ESP32 telemetry — read only*"]
+        try:
+            for did, dev in sorted(owned_devices)[:25]:
+                if not _miner_opted_in(did, dev):
+                    lines.append(f"• `{did}` — NOT_ENABLED")
+                    continue
+                payload = build_miner_payload(did)
+                if payload.get("status") == "NO_DATA":
+                    lines.append(f"• `{did}` — NO_DATA")
+                else:
+                    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
+                    temp = _miner_display(payload.get("temperature_c"), "°C")
+                    watts = _miner_display(payload.get("watts"), "W")
+                    lines.append(f"• `{did}` — `{shown_status}` | {temp} | {watts}")
+        except Exception:
+            bot.reply_to(m, "Miner telemetry database unavailable; no list returned.")
+            return
+        if len(owned_devices) > 25:
+            lines.append(f"... and {len(owned_devices) - 25} more devices")
+        try:
+            bot.reply_to(m, "\n".join(lines), parse_mode="Markdown")
+        except Exception:
+            bot.reply_to(m, "\n".join(lines))
+
     @bot.message_handler(commands=["esp_sync"])
     def esp_sync(m):
         parts = m.text.split()
