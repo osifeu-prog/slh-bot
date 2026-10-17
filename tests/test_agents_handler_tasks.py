@@ -72,7 +72,7 @@ class AgentHandlerTaskTests(unittest.TestCase):
         self.assertEqual(task["command"], "ask")
         self.assertEqual(task["prompt"], "restart")
 
-    def test_owner_can_submit_an_explicit_allowlisted_restart_command(self):
+    def test_restart_text_is_not_routed_to_the_legacy_restart_command_even_for_owner(self):
         msg = self._message("/sendagent Alpha restart")
         with (
             patch("handlers.agents_handler.normalize_uid", return_value="123"),
@@ -82,7 +82,9 @@ class AgentHandlerTaskTests(unittest.TestCase):
         ):
             self.bot.handlers["sendagent"](msg)
 
-        send.assert_called_once_with("16", {"command": "restart", "uid": "123"})
+        task = send.call_args.args[1]
+        self.assertEqual(task["command"], "ask")
+        self.assertEqual(task["prompt"], "restart")
 
     def test_agentoutbox_displays_only_the_authorized_agents_recent_results(self):
         self.agent["outbox"] = ["first", "second"]
