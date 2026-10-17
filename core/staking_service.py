@@ -35,10 +35,19 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         if not isinstance(user, dict):
             raise ValueError("user not found")
 
+        requests = db.get("staking_requests", {})
+        positions = db.get("stake_positions", {})
+        ledger = db.get("ledger", [])
+        if not isinstance(requests, dict):
+            raise ValueError("STAKING_REQUEST_STORE_INVALID")
+        if not isinstance(positions, dict):
+            raise ValueError("INVALID_STAKE_POSITIONS")
+        if not isinstance(ledger, list):
+            raise ValueError("INVALID_LEDGER_STATE")
+
         request_key = f'{uid}:{request_id}' if request_id else ''
         if request_key:
-            requests = db.get('staking_requests', {})
-            existing = requests.get(request_key) if isinstance(requests, dict) else None
+            existing = requests.get(request_key)
             if existing:
                 positions = db.get('stake_positions', {})
                 existing_position = (
@@ -65,6 +74,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                 ):
                     raise ValueError("STAKING_REQUEST_IDENTITY_CONFLICT")
                 wallet_value = user.get("wallet")
+                if wallet_value is not None and not isinstance(wallet_value, dict):
+                    raise ValueError("INVALID_WALLET_STATE")
                 wallet = wallet_value if isinstance(wallet_value, dict) else {}
                 try:
                     credits_now = float(wallet.get('credits', 0) or 0)
@@ -98,9 +109,6 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         if not math.isfinite(credits) or not math.isfinite(staked) or credits < 0 or staked < 0:
             raise ValueError("INVALID_WALLET_BALANCE")
 
-        positions = db.get('stake_positions', {})
-        if not isinstance(positions, dict):
-            raise ValueError("INVALID_STAKE_POSITIONS")
         if credits < amount:
             raise ValueError("insufficient credits")
         now = time.time()
@@ -109,6 +117,12 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
             now += 0.001
             position_id = f"sp_{int(now * 1000)}"
 
+        # All store shapes and financial checks passed; attach default stores
+        # only on the successful mutation path.
+        positions = db.setdefault("stake_positions", positions)
+        if request_key:
+            requests = db.setdefault("staking_requests", requests)
+        ledger = db.setdefault("ledger", ledger)
         if wallet_value is None:
             user["wallet"] = wallet
         wallet["credits"] = credits - amount
@@ -133,7 +147,7 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                 'created_at': now,
             }
 
-        db.setdefault('ledger', []).append({
+        ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
             "before": credits,
