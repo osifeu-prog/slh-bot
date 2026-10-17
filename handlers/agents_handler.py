@@ -15,6 +15,12 @@ def _agent_task(uid, text):
     raw = str(text or "").strip()
     lowered = raw.casefold()
 
+    # Preserve the documented explicit form: /sendagent <agent> ask <question>.
+    # The prefix is syntax, not part of the natural-language prompt.
+    if lowered.startswith("ask "):
+        raw = raw.split(None, 1)[1].strip()
+        lowered = raw.casefold()
+
     if lowered in _READ_ONLY_AGENT_COMMANDS:
         return {"command": lowered, "uid": uid}
 
@@ -167,7 +173,8 @@ def register(bot, context):
             if isinstance(message, dict):
                 command = str(message.get("command") or "task")
                 detail = str(message.get("prompt") or message.get("task_id") or "").strip()
-                lines.append("- " + command + ((": " + detail[:220]) if detail else ""))
+                line = "- " + command + ((": " + detail[:220]) if detail else "")
+                lines.append(line + " [command: " + command + "]")
             else:
                 lines.append("- " + str(message)[:250])
         bot.reply_to(m, "\n".join(lines))
