@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 import os
 
 from flask import jsonify, request
@@ -19,6 +20,33 @@ _PUBLIC_MISSION_FIELDS = {
     "assigned_at", "execution_started_at", "execution_completed_at", "completed_at",
 }
 _MAX_COMMAND_LENGTH = 2000
+_MAX_MINER_BODY_BYTES = 8192
+
+
+def _read_limited_json_body(max_bytes: int):
+    """Read a bounded JSON body even when Content-Length is omitted."""
+    content_length = request.content_length
+    if content_length is not None and content_length > max_bytes:
+        return None, "PAYLOAD_TOO_LARGE"
+    if content_length is None and not request.environ.get("wsgi.input_terminated"):
+        # Without either a length or a server-marked terminated stream, the
+        # application cannot safely determine where a streaming body ends.
+        return None, "CONTENT_LENGTH_REQUIRED"
+
+    raw = bytearray()
+    while len(raw) <= max_bytes:
+        chunk = request.stream.read(min(4096, max_bytes + 1 - len(raw)))
+        if not chunk:
+            break
+        raw.extend(chunk)
+        if len(raw) > max_bytes:
+            return None, "PAYLOAD_TOO_LARGE"
+
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None, "JSON_OBJECT_REQUIRED"
+    return payload, None
 
 
 def _principal():
@@ -291,10 +319,12 @@ def register_mcp_bridge_routes(app):
     @app.route("/api/miner", methods=["POST"])
     def miner_telemetry_ingest():
         """Authenticated ESP32 telemetry receiver on the state-owning web service."""
-        if request.content_length is not None and request.content_length > 8192:
-            return jsonify({"error": "PAYLOAD_TOO_LARGE"}), 413
-        payload = request.get_json(silent=True)
-        if not isinstance(payload, dict):
+        payload, body_error = _read_limited_json_body(_MAX_MINER_BODY_BYTES)
+        if body_error == "PAYLOAD_TOO_LARGE":
+            return jsonify({"error": body_error}), 413
+        if body_error == "CONTENT_LENGTH_REQUIRED":
+            return jsonify({"error": body_error}), 411
+        if body_error or not isinstance(payload, dict):
             return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
 
         try:
