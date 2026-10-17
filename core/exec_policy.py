@@ -40,6 +40,11 @@ DANGEROUS_PATTERNS = [
     r"""(?:\[\s*["']token_balance["']\s*\]|\.token_balance\s*)\+?\s*=""",
     r"""\.update\(\s*\{[^}]*["']token_balance["']""",
     r"""\.setdefault\(\s*["']token_balance["']""",
+    # Internal Credits also require canonical transaction/ledger authorities.
+    # Block direct assignment and in-place arithmetic in owner /exec commands.
+    r"""(?:\[\s*["']credits["']\s*\]|\.credits)\s*(?:\+=|-=|\*=|//=|/=|=)""",
+    r"""\.update\(\s*\{[^}]*["']credits["']""",
+    r"""\.setdefault\(\s*["']credits["']""",
 ]
 
 
