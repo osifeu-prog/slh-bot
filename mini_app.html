@@ -1017,11 +1017,11 @@ async function cancelSecondaryDistribution(){
 }
 
 async function loadBscAssets(){
+  const status=$("bscLiveTruthStatus"), grid=$("bscLiveTruthGrid");
+  if(!initData){if(status)status.textContent='פתח את ה-Mini App מתוך Telegram';return}
   // Coalesce overlapping startup/render refreshes so only one RPC snapshot can update the UI.
   if(window.__slhBscAssetsLoading)return;
   window.__slhBscAssetsLoading=true;
-  const status=$("bscLiveTruthStatus"), grid=$("bscLiveTruthGrid");
-  if(!initData){if(status)status.textContent='פתח את ה-Mini App מתוך Telegram';return}
   try{
     const r=await fetch('/api/v1/wallet/bsc-assets',{headers,cache:'no-store'});
     const d=await r.json().catch(()=>({}));
