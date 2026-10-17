@@ -72,6 +72,19 @@ def runtime_status() -> dict:
     return _request("/internal/mcp/v1/runtime/status")
 
 
+def notification_preferences() -> dict:
+    """Read the configured operator principal’s preferences from the canonical Control Plane."""
+    return _request("/internal/mcp/v1/operator/preferences")
+
+
+def set_notification_preference(level: str) -> dict:
+    """Set the configured operator principal’s preference in the canonical bot database."""
+    return _request(
+        "/internal/mcp/v1/operator/preferences",
+        method="PATCH",
+        payload={"notification_level": str(level)},
+    )
+
 def self_test() -> bool:
     """Verify the authenticated MCP -> Control Plane bridge without mutating state."""
     if not enabled():

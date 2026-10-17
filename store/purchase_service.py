@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import state_manager
 from store.engine import load_items, resolve_item_id
 from core.economy_bridge import get_balance, spend
+from core.slh_distribution import is_frozen_account
 from store.grant_engine import apply_grant
 
 LEDGER_FILE = "state/rewards_ledger.json"
@@ -52,6 +53,11 @@ def _get_or_create_purchase(uid, item_id, request_id, item):
             if str(existing.get("request_id")) != str(request_id) or str(existing.get("uid")) != str(uid) or existing.get("item_id") != item_id:
                 return None, "REQUEST_ID_CONFLICT"
             return existing, None
+
+        # A frozen account may retry an existing request, but may not create a
+        # new store purchase or reserve inventory.
+        if is_frozen_account(db, uid):
+            return None, "ACCOUNT_FROZEN"
 
         reservation = None
         if item.get("type") == "hardware":
@@ -197,10 +203,11 @@ def purchase(uid, item_id, request_id=None):
             return False, "NOT_ENOUGH_SLH"
         try:
             result = spend(uid, purchase_state["price"], reason="store:purchase", meta={"idempotency_key": purchase_state["purchase_id"] + ":debit", "purchase_id": purchase_state["purchase_id"], "item_id": item_id})
-        except Exception:
+        except Exception as exc:
             _release_reservation(purchase_state["purchase_id"])
-            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
-            return False, "PAYMENT_FAILED"
+            error = "ACCOUNT_FROZEN" if str(exc) == "ACCOUNT_FROZEN" else "PAYMENT_FAILED"
+            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error=error)
+            return False, error
         if result is False:
             _release_reservation(purchase_state["purchase_id"])
             _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
@@ -274,6 +281,11 @@ def purchase_physical(uid, item_id, request_id=None):
                     "paid": existing.get("price", 0),
                     "purchase_status": existing.get("status"),
                 }, None
+
+        # The physical-store path debits and credits both wallets directly in
+        # this atomic mutation, so enforce the freeze policy here as well.
+        if is_frozen_account(db, uid) or is_frozen_account(db, seller_uid):
+            return None, "ACCOUNT_FROZEN"
 
         raw_price = product.get("price", catalog.get("price"))
         try:

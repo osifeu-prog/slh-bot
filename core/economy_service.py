@@ -84,6 +84,17 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
                 }
 
         user = users[uid]
+        # Enforce the freeze at the atomic debit boundary as well as purchase
+        # creation. An already-recorded idempotent debit returns above, so a
+        # paid purchase can still recover safely after a crash.
+        if (
+            amount < 0
+            and str(reason) == "store:purchase"
+            and isinstance(user, dict)
+            and user.get("frozen") is True
+        ):
+            raise ValueError("ACCOUNT_FROZEN")
+
         wallet = user.setdefault("wallet", {})
 
         before = wallet.get("credits", 0)

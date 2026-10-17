@@ -71,6 +71,8 @@ KNOWN = {
     "check_exchange": ("SYSTEM", "בדיקת Exchange"),
     "exchange_status": ("SYSTEM", "סטטוס Exchange (alias)"),
     "check_bnb": ("SYSTEM", "בדיקת BNB"),
+    "check_bnb_deposits": ("SYSTEM", "בדיקת היסטוריית הפקדות BNB"),
+    "check_owner_ledger": ("SYSTEM", "בדיקת רציפות ספר חשבונות הבעלים — קריאה בלבד"),
     "check_ton": ("SYSTEM", "בדיקת TON"),
     "check_ux": ("SYSTEM", "בדיקת Mini App"),
     "biz": ("CONTROL", "תמונת עסק"),
@@ -81,16 +83,25 @@ KNOWN = {
     "bots": ("CONTROL", "מפת bots"),
     "execr": ("CONTROL", "בקשת ביצוע לאישור"),
     "bnb_smoke": ("CHAIN", "בדיקת BNB מבוקרת"),
+    "bnb_reverse_prepare": ("CHAIN", "הכנת תיקון BNB — OWNER, קריאה בלבד"),
+    "bnb_reverse_confirm": ("CHAIN", "אישור תיקון BNB חד־פעמי — OWNER"),
+    "bnb_reverse_cancel": ("CHAIN", "ביטול אישור תיקון BNB"),
     "bnb_reconcile": ("CHAIN", "בדיקת TX BNB קיים"),
     "bnb_reconcile_confirm": ("CHAIN", "אישור settlement TX BNB קיים"),
     "academy_progress": ("ACADEMY", "התקדמות בקורס"),
     "miniapp": ("UI", "Mini App"),
+    "media": ("UI", "מאגר תמונות ופרסומים"),
+    "share_assets": ("UI", "מאגר תמונות לשיתוף"),
+    "postmaker": ("UI", "יצירת תמונת פרסום"),
     "dashboard": ("UI", "Dashboard"),
     "settings": ("UI", "הגדרות"),
+    "notifications": ("UI", "הגדרות עדכוני התקדמות"),
+    "stop_notifications": ("UI", "כיבוי עדכוני התקדמות"),
     "theme": ("UI", "ערכת תצוגה"),
     "ask": ("AI", "שאלת מערכת"),
     "faq": ("AI", "שאלות נפוצות"),
     "os": ("CONTROL", "SLH OS Control Center"),
+    "opshelp": ("CONTROL", "פקודות תפעול — OWNER בלבד"),
     "e": ("CONTROL", "Control Plane / execution gateway"),
     "exec": ("CONTROL", "ביצוע פקודה"),
     "redeploy": ("CONTROL", "Redeploy"),
@@ -107,6 +118,27 @@ KNOWN = {
     "mcp_test": ("AUTOMATION", "בדיקת MCP"),
     "autonomy_test": ("AUTOMATION", "בדיקת autonomy"),
 }
+
+
+# Intentionally small public allow-list. Runtime registration still decides
+# which of these commands actually exist; operational commands never leak into
+# the public /help response.
+PUBLIC_COMMANDS = (
+    ("start", "כניסה והתחלה"),
+    ("help", "מדריך שימושי"),
+    ("academy", "אקדמיה ולמידה"),
+    ("courses", "רשימת קורסים"),
+    ("ask", "שאלו את עוזר ה-AI"),
+    ("wallet", "ארנק ויתרת Credits"),
+    ("shop", "חנות ומוצרים"),
+    ("agents", "סוכני ה-AI שלכם"),
+    ("share", "הזמנה והפניות"),
+    ("media", "מאגר תמונות לשיתוף"),
+    ("faq", "שאלות נפוצות"),
+    ("miniapp", "פתיחת Mini App"),
+    ("notifications", "הגדרת עדכוני התקדמות"),
+    ("trade_model", "הסבר על מודל ההכנסות"),
+)
 
 
 CATEGORY_ORDER = [
@@ -177,6 +209,33 @@ def get_catalog(bot_name="Me_ad_main"):
 
     return result
 
+
+
+def render_public_help(bot_name="Me_ad_main"):
+    """Render a conservative end-user menu, filtered by live runtime evidence."""
+    runtime = set(_runtime_commands(bot_name))
+    lines = [
+        "✨ SLH Spark — Smart Learning Hub",
+        "כאן לומדים, יוצרים ומתקדמים עם כלי AI וקהילה.",
+        "",
+        "פקודות שימושיות:",
+    ]
+    shown = 0
+    for command, description in PUBLIC_COMMANDS:
+        if command not in runtime:
+            continue
+        lines.append(f"/{command} — {description}")
+        shown += 1
+
+    if shown == 0:
+        lines.append("רשימת הפקודות לא אומתה כרגע. נסו שוב מאוחר יותר.")
+
+    lines.extend([
+        "",
+        "📈 מצב המסחר מופיע בנפרד. שער סגור או בדיקת מוכנות אינם אישור לביצוע עסקה.",
+        "פקודות ניהול, אבחון וסליקה אינן מוצגות במדריך הציבורי.",
+    ])
+    return "\\n".join(lines)
 
 def render_help(bot_name="Me_ad_main", limit=60):
     """Render a Telegram-safe compact catalog."""

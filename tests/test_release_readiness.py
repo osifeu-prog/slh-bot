@@ -152,3 +152,93 @@ def test_release_report_green_bnb_only_after_revalidated_evidence_and_open_gate(
     assert check["status"] == "GREEN"
     assert "BNB settlement PUBLIC OPEN" in check["detail"]
     assert "empirical evidence revalidated against chain and ledger" in check["detail"]
+
+
+
+def test_release_readiness_blocks_clean_orderbook_when_accounting_audit_is_blocked(monkeypatch):
+    monkeypatch.setenv("RUN_BOT", "1")
+    monkeypatch.setenv("BOT_TOKEN", "test-token")
+
+    import core.system_checks as checks
+    from core.release_readiness import _exchange_check
+
+    monkeypatch.setattr(checks, "check_exchange", lambda: {
+        "ok": False,
+        "verdict": "BLOCKED",
+        "public_gate": "CLOSED",
+        "public_ready": False,
+        "open_orders": 0,
+        "recent_trades": 0,
+        "test_seed_trades": 0,
+        "order_book_integrity": True,
+        "trade_integrity": True,
+        "money_invariants": True,
+        "account_ledger_integrity": False,
+        "account_ledger_status": "BLOCKED",
+        "account_ledger_blockers": ["ACCOUNT_LEDGER_SEQUENCE_DISCONTINUITY"],
+    })
+
+    check = _exchange_check()
+
+    assert check["status"] == "BLOCKED"
+    assert "account_ledger=BLOCKED" in check["detail"]
+
+
+def test_exchange_ready_but_closed_gate_is_not_reported_green(monkeypatch):
+    import core.system_checks as checks
+    from core.release_readiness import _exchange_check
+
+    monkeypatch.setattr(
+        checks,
+        "check_exchange",
+        lambda: {
+            "ok": True,
+            "verdict": "READY_TO_OPEN",
+            "public_gate": "CLOSED",
+            "public_ready": True,
+            "open_orders": 0,
+            "recent_trades": 0,
+            "test_seed_trades": 0,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "account_ledger_integrity": True,
+            "account_ledger_status": "PASS",
+        },
+    )
+
+    result = _exchange_check()
+
+    assert result["status"] == "DEGRADED"
+    assert "public gate=CLOSED" in result["detail"]
+    assert "not public-open" in result["detail"]
+
+
+def test_public_exchange_gate_open_is_blocked_even_when_checks_pass(monkeypatch):
+    import core.system_checks as checks
+    from core.release_readiness import _exchange_check
+
+    monkeypatch.setattr(
+        checks,
+        "check_exchange",
+        lambda: {
+            "ok": True,
+            "verdict": "OPEN",
+            "public_gate": "OPEN",
+            "public_ready": True,
+            "open_orders": 0,
+            "recent_trades": 4,
+            "test_seed_trades": 0,
+            "order_book_integrity": True,
+            "trade_integrity": True,
+            "money_invariants": True,
+            "account_ledger_integrity": True,
+            "account_ledger_status": "PASS",
+        },
+    )
+
+    result = _exchange_check()
+
+    assert result["status"] == "BLOCKED"
+    assert "policy requires public gate=CLOSED" in result["detail"]
+    assert "public trading is not authorized" in result["detail"]

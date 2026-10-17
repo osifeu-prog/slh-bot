@@ -254,6 +254,43 @@ def configure_default_mini_app_menu(bot):
             )
         )
         log("[TELEGRAM] Default Mini App menu button configured")
+        try:
+            english = [
+                ("start", "Get started"),
+                ("help", "Help & commands"),
+                ("academy", "Academy & learning"),
+                ("courses", "Browse courses"),
+                ("ask", "Ask the AI assistant"),
+                ("wallet", "Wallet & balance"),
+                ("shop", "Store & perks"),
+                ("agents", "Your AI agents"),
+                ("share", "Invite & referrals"),
+                ("media", "Brand images & sharing"),
+            ]
+            hebrew = [
+                ("start", "כניסה והתחלה"),
+                ("help", "מדריך ופקודות"),
+                ("academy", "אקדמיה ולמידה"),
+                ("courses", "רשימת קורסים"),
+                ("ask", "שאלו את עוזר ה-AI"),
+                ("wallet", "ארנק ויתרה"),
+                ("shop", "חנות והטבות"),
+                ("agents", "סוכני AI"),
+                ("share", "קישור הזמנה"),
+                ("media", "מאגר תמונות לשיתוף"),
+            ]
+            bot.set_my_commands(
+                [types.BotCommand(command=command, description=description) for command, description in english],
+                language_code="",
+            )
+            bot.set_my_commands(
+                [types.BotCommand(command=command, description=description) for command, description in hebrew],
+                language_code="he",
+            )
+            log("[TELEGRAM] Default command menus configured (en/he)")
+        except Exception as exc:
+            # Menu presentation is non-critical; never block bot startup.
+            log(f"[TELEGRAM] Command menu configuration skipped: {type(exc).__name__}")
     except Exception as exc:
         log(f"[TELEGRAM] Mini App menu button configuration skipped: {type(exc).__name__}")
 
