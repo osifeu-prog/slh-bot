@@ -13,22 +13,25 @@ import state_manager
 
 def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
     uid = str(uid)
-    amount = float(amount)
-    lock_days = int(lock_days)
+    try:
+        amount = float(amount)
+        lock_days = int(lock_days)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("INVALID_STAKING_REQUEST") from None
     meta = dict(meta or {})
     request_id = str(request_id or '').strip()
     if len(request_id) > 200:
         raise ValueError('request_id too long')
 
-    if amount <= 0:
-        raise ValueError("amount must be positive")
+    if not math.isfinite(amount) or amount <= 0:
+        raise ValueError("amount must be a finite positive number")
     if lock_days <= 0:
         raise ValueError("lock_days must be positive")
 
     def mutate(db):
         users = db.setdefault("users", {})
         user = users.get(uid)
-        if user is None:
+        if not isinstance(user, dict):
             raise ValueError("user not found")
 
         request_key = f'{uid}:{request_id}' if request_id else ''
@@ -37,30 +40,66 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
             existing = requests.get(request_key) if isinstance(requests, dict) else None
             if existing:
                 positions = db.get('stake_positions', {})
-                wallet = user.get("wallet", {})
-                wallet = wallet if isinstance(wallet, dict) else {}
                 existing_position = (
                     positions.get(existing.get('position_id'))
                     if isinstance(positions, dict)
                     else None
                 )
+                if not isinstance(existing_position, dict):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
+                try:
+                    stored_amount = float(existing_position.get("amount"))
+                    stored_lock_days = int(existing_position.get("lock_days"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN") from None
+                if (
+                    not math.isfinite(stored_amount)
+                    or str(existing_position.get("uid") or "") != uid
+                    or str(existing.get("uid") or "") != uid
+                ):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_UNKNOWN")
+                if (
+                    not math.isclose(stored_amount, amount, rel_tol=0.0, abs_tol=1e-9)
+                    or stored_lock_days != lock_days
+                ):
+                    raise ValueError("STAKING_REQUEST_IDENTITY_CONFLICT")
+                wallet_value = user.get("wallet")
+                wallet = wallet_value if isinstance(wallet_value, dict) else {}
+                try:
+                    credits_now = float(wallet.get('credits', 0) or 0)
+                    staked_now = float(wallet.get('staked', 0) or 0)
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("INVALID_WALLET_BALANCE") from None
+                if not math.isfinite(credits_now) or not math.isfinite(staked_now):
+                    raise ValueError("INVALID_WALLET_BALANCE")
                 return {
                     'status': 'duplicate',
                     'request_id': request_id,
                     'position': existing_position,
-                    'credits': float(wallet.get('credits', 0) or 0),
-                    'staked': float(wallet.get('staked', 0) or 0),
+                    'credits': credits_now,
+                    'staked': staked_now,
                 }
 
         # Freeze applies to new staking debits, but not to an exact retry of
         # an already-created request above.
-        if isinstance(user, dict) and user.get("frozen") is True:
+        if user.get("frozen") is True:
             raise ValueError("ACCOUNT_FROZEN")
 
-        wallet = user.setdefault("wallet", {})
-        credits = float(wallet.get("credits", 0) or 0)
-        staked = float(wallet.get("staked", 0) or 0)
-        positions = db.setdefault('stake_positions', {})
+        wallet_value = user.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
+            raise ValueError("INVALID_WALLET_STATE")
+        wallet = wallet_value if isinstance(wallet_value, dict) else {}
+        try:
+            credits = float(wallet.get("credits", 0) or 0)
+            staked = float(wallet.get("staked", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("INVALID_WALLET_BALANCE") from None
+        if not math.isfinite(credits) or not math.isfinite(staked) or credits < 0 or staked < 0:
+            raise ValueError("INVALID_WALLET_BALANCE")
+
+        positions = db.get('stake_positions', {})
+        if not isinstance(positions, dict):
+            raise ValueError("INVALID_STAKE_POSITIONS")
         if credits < amount:
             raise ValueError("insufficient credits")
         now = time.time()
@@ -69,6 +108,8 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
             now += 0.001
             position_id = f"sp_{int(now * 1000)}"
 
+        if wallet_value is None:
+            user["wallet"] = wallet
         wallet["credits"] = credits - amount
         wallet["staked"] = staked + amount
         positions[position_id] = {
@@ -82,9 +123,12 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         }
 
         if request_key:
-            db.setdefault('staking_requests', {})[request_key] = {
+            requests = db.setdefault('staking_requests', {})
+            requests[request_key] = {
                 'position_id': position_id,
                 'uid': uid,
+                'amount': amount,
+                'lock_days': lock_days,
                 'created_at': now,
             }
 
@@ -113,7 +157,6 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         }
 
     return state_manager.atomic_update(mutate)
-
 
 def unstake_locked(uid, position_id, meta=None, request_id=None):
     uid = str(uid)
