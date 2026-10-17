@@ -25,6 +25,14 @@ _WORKER_START_LOCK = threading.Lock()
 
 def run_command(cmd, msg):
     try:
+        # Commands that can expose host data, alter the runtime, or award points
+        # are restricted to the canonical owner identity even if an inbox task
+        # is inserted through another internal path.
+        if cmd in {"dbsize", "sysinfo", "logs", "errors", "restart", "complete"}:
+            from core.authority import is_owner
+            if not is_owner(str(msg.get("uid") or "").strip()):
+                return "OWNER_ONLY"
+
         if cmd == "whoami":
             return os.popen("whoami").read().strip()
         elif cmd == "dbsize":
@@ -50,21 +58,15 @@ def run_command(cmd, msg):
             os.system("bash start.sh &")
             return "Restart triggered"
         elif cmd == "ask":
-            prompt = msg.get("prompt", "")
+            prompt = str(msg.get("prompt") or "").strip()
             if not prompt:
-                return "Usage: /sendagent mytermux ask <question>"
-            import subprocess as sp
-            try:
-                res = sp.check_output(
-                    ["ollama", "run", "phi3:mini", "ענה בעברית, בפסקה קצרה: " + prompt],
-                    text=True,
-                    timeout=120,
-                )
-                return res.strip()
-            except sp.TimeoutExpired:
-                return "❌ Timeout"
-            except Exception as exc:
-                return f"Ollama error: {exc}"
+                return "Usage: /sendagent <agent> <question>"
+            # Use the same configured Gemini -> optional Ollama -> Groq fallback
+            # chain as the canonical assistant; do not bypass it with a local
+            # phi3 subprocess.
+            from handlers.llm_handler import query_llm_with_context
+            uid = str(msg.get("uid") or "").strip() or None
+            return query_llm_with_context(prompt, uid=uid)
         elif cmd == "complete":
             task_id = msg.get("task_id", "")
             if not task_id:
@@ -120,7 +122,10 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
             while inbox and len(claimed) < limit:
                 msg = inbox.pop(0)
                 if not isinstance(msg, dict):
-                    msg = {"command": str(msg)}
+                    # Legacy text is a question, never an executable command.
+                    # This prevents a free-form inbox string such as "restart"
+                    # from being reinterpreted as a privileged operation.
+                    msg = {"command": "ask", "prompt": str(msg), "uid": ""}
                 claim_id = uuid.uuid4().hex
                 data["processing"].append({
                     "claim_id": claim_id,
@@ -192,14 +197,20 @@ def tutor_worker():
             for name, claim_id, msg in claimed:
                 command = str(msg.get("command", ""))
                 try:
-                    import subprocess as sp
-                    ans = sp.check_output(
-                        ["ollama", "run", "phi3:mini", command],
-                        text=True,
-                        timeout=30,
-                    )[:1000]
+                    if command == "ask":
+                        from handlers.llm_handler import query_llm_with_context
+                        prompt = str(msg.get("prompt") or "").strip()
+                        uid = str(msg.get("uid") or "").strip() or None
+                        ans = query_llm_with_context(prompt, uid=uid)[:1000] if prompt else "Question is empty."
+                    else:
+                        import subprocess as sp
+                        ans = sp.check_output(
+                            ["ollama", "run", "phi3:mini", command],
+                            text=True,
+                            timeout=30,
+                        )[:1000]
                 except Exception:
-                    ans = f"Tutor: received '{command}'. LLM offline, but I'm learning!"
+                    ans = "Tutor processing unavailable; no action was executed."
                 _finalize_message(name, claim_id, ans)
         except Exception:
             _log_worker_error("Tutor worker error")
