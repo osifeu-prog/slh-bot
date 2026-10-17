@@ -8,7 +8,8 @@ def run_command(cmd, msg):
         if cmd == "whoami":
             return os.popen("whoami").read().strip()
         elif cmd == "dbsize":
-            return f"db.json: {os.path.getsize('db.json')} bytes" if os.path.exists("db.json") else "db.json not found"
+            db_path = state_manager.DB_FILE
+            return f"db.json: {os.path.getsize(db_path)} bytes" if os.path.exists(db_path) else "db.json not found"
         elif cmd == "status":
             if os.path.exists("runtime/bot.pid"):
                 with open("runtime/bot.pid") as f: pid = f.read().strip()
