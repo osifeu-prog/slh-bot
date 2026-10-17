@@ -18,15 +18,17 @@ def _capture_handlers(bot):
     return handlers
 
 
-def _device(owner="12345"):
-    return {
-        "ESP_TEST": {
-            "type": "esp32",
-            "owner": owner,
-            "miner_enabled": True,
-            "mqtt_topic": "slh/esp/ESP_TEST",
-        }
+def _device(owner="12345", **overrides):
+    device = {
+        "device_id": "ESP_TEST",
+        "type": "esp32",
+        "owner_id": owner,
+        "miner_enabled": True,
+        "status": "online",
+        "mqtt_topics": {"telemetry": "slh/esp/ESP_TEST/telemetry"},
     }
+    device.update(overrides)
+    return device
 
 
 def test_build_miner_payload_does_not_invent_zero_values():
@@ -39,7 +41,7 @@ def test_build_miner_payload_does_not_invent_zero_values():
     assert payload["source"] == "none"
 
 
-def test_esp_miner_status_is_owner_checked_and_never_sends_mqtt():
+def test_esp_miner_status_reads_canonical_device_and_is_read_only():
     bot = Mock()
     handlers = _capture_handlers(bot)
     message = SimpleNamespace(
@@ -47,19 +49,17 @@ def test_esp_miner_status_is_owner_checked_and_never_sends_mqtt():
         from_user=SimpleNamespace(id=12345),
     )
 
-    with patch("handlers.esp_control._load_devices", return_value=_device()), patch(
+    with patch("core.miner_service.get_registered_device", return_value=_device()), patch(
+        "core.miner_service.list_registered_esp_devices", return_value={"ESP_TEST": _device()}
+    ), patch(
         "handlers.esp_control.build_miner_payload",
-        return_value={
-            "status": "NO_DATA",
-            "temperature_c": None,
-            "watts": None,
-        },
+        return_value={"status": "NO_DATA", "temperature_c": None, "watts": None},
     ), patch("handlers.esp_control._send_cmd") as send_cmd:
         esp_control.register_sync(bot)
         handlers["esp_miner_status"](message)
 
     bot.reply_to.assert_called_once()
-    assert "no authenticated telemetry" in bot.reply_to.call_args.args[1]
+    assert "NO_DATA" in bot.reply_to.call_args.args[1]
     send_cmd.assert_not_called()
 
 
@@ -71,9 +71,9 @@ def test_miner_status_rejects_non_owner_without_reading_telemetry():
         from_user=SimpleNamespace(id=99999),
     )
 
-    with patch("handlers.esp_control._load_devices", return_value=_device()), patch(
-        "handlers.esp_control.build_miner_payload"
-    ) as build_payload:
+    with patch("core.miner_service.get_registered_device", return_value=_device()), patch(
+        "core.miner_service.list_registered_esp_devices", return_value={"ESP_TEST": _device()}
+    ), patch("handlers.esp_control.build_miner_payload") as build_payload:
         esp_control.register_sync(bot)
         handlers["miner_status"](message)
 
@@ -81,20 +81,39 @@ def test_miner_status_rejects_non_owner_without_reading_telemetry():
     build_payload.assert_not_called()
 
 
-def test_miner_list_only_includes_nodes_owned_by_the_requester():
+def test_miner_status_requires_explicit_enrollment_for_ingestion():
+    bot = Mock()
+    handlers = _capture_handlers(bot)
+    device = _device()
+    device.pop("miner_enabled")
+    message = SimpleNamespace(
+        text="/miner_status ESP_TEST",
+        from_user=SimpleNamespace(id=12345),
+    )
+
+    with patch("core.miner_service.get_registered_device", return_value=device), patch(
+        "core.miner_service.list_registered_esp_devices", return_value={"ESP_TEST": device}
+    ), patch("handlers.esp_control.build_miner_payload") as build_payload:
+        esp_control.register_sync(bot)
+        handlers["miner_status"](message)
+
+    assert "not enabled for miner telemetry" in bot.reply_to.call_args.args[1]
+    build_payload.assert_not_called()
+
+
+def test_miner_list_includes_only_devices_owned_by_the_requester():
     bot = Mock()
     handlers = _capture_handlers(bot)
     devices = {
-        "ESP_OWNED": {"type": "esp32", "owner": "12345", "miner_enabled": True},
-        "ESP_OTHER": {"type": "esp32", "owner": "99999", "miner_enabled": True},
-        "PC_OWNED": {"type": "pc", "owner": "12345"},
+        "ESP_OWNED": _device("12345", device_id="ESP_OWNED", miner_enabled=True),
+        "ESP_OTHER": _device("99999", device_id="ESP_OTHER", miner_enabled=True),
     }
     message = SimpleNamespace(
         text="/miner_list",
         from_user=SimpleNamespace(id=12345),
     )
 
-    with patch("handlers.esp_control._load_devices", return_value=devices), patch(
+    with patch("core.miner_service.list_registered_esp_devices", return_value=devices), patch(
         "handlers.esp_control.build_miner_payload",
         return_value={"status": "NO_DATA"},
     ) as build_payload:
@@ -105,8 +124,6 @@ def test_miner_list_only_includes_nodes_owned_by_the_requester():
     rendered = bot.reply_to.call_args.args[1]
     assert "ESP_OWNED" in rendered
     assert "ESP_OTHER" not in rendered
-    assert "PC_OWNED" not in rendered
-
 
 
 def test_miner_status_marks_old_measurements_stale():
@@ -130,9 +147,9 @@ def test_miner_status_marks_old_measurements_stale():
         "stale": True,
     }
 
-    with patch("handlers.esp_control._load_devices", return_value=_device()), patch(
-        "handlers.esp_control.build_miner_payload", return_value=stale_payload
-    ):
+    with patch("core.miner_service.get_registered_device", return_value=_device()), patch(
+        "core.miner_service.list_registered_esp_devices", return_value={"ESP_TEST": _device()}
+    ), patch("handlers.esp_control.build_miner_payload", return_value=stale_payload):
         esp_control.register_sync(bot)
         handlers["miner_status"](message)
 
