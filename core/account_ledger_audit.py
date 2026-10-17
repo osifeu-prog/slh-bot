@@ -74,7 +74,7 @@ def _reason_domain_hint(reason: Any) -> str:
 
 
 def _row_domain_hint(row: dict) -> str:
-    """Use explicit domain metadata; keep reason-only SLH labels ambiguous."""
+    """Use explicit domain metadata and narrowly validated legacy counter rows."""
     meta = row.get("meta")
     meta = meta if isinstance(meta, dict) else {}
     explicit = str(meta.get("ledger_domain") or meta.get("asset") or "").strip().lower()
@@ -83,6 +83,25 @@ def _row_domain_hint(row: dict) -> str:
             return "SLH_HINT"
         if "credit" in explicit:
             return "CREDITS_HINT"
+
+    # This historical record is a staking-counter reconciliation, not a Credits
+    # mutation, only when all of its structural evidence agrees. Do not classify
+    # by reason alone: require zero amount, both counter snapshots, and the
+    # explicit no-Credits statement in the metadata note.
+    reason = str(row.get("reason") or "").strip().lower()
+    note = str(meta.get("note") or "").strip().lower()
+    staked_before = _number(meta.get("staked_before"))
+    staked_after = _number(meta.get("staked_after"))
+    amount = _number(row.get("amount"))
+    if (
+        reason == "reconciliation:staked_counter_fix"
+        and amount == 0
+        and staked_before is not None
+        and staked_after is not None
+        and "no credits minted" in note
+    ):
+        return "STAKED_COUNTER_HINT"
+
     inferred = _reason_domain_hint(row.get("reason"))
     # A heuristic SLH label must not remove a row from the Credits continuity
     # check. Without explicit domain metadata, retain it as ambiguous so any
@@ -377,7 +396,7 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         # an SLH-token row here. Reason-only SLH guesses are labeled ambiguous
         # by _row_domain_hint() and remain in the sequence, failing closed if
         # they create a continuity gap.
-        if summary["domain_hint"] == "SLH_HINT":
+        if summary["domain_hint"] in {"SLH_HINT", "STAKED_COUNTER_HINT"}:
             non_credits_rows_skipped += 1
             continue
         sequence_rows_checked += 1
