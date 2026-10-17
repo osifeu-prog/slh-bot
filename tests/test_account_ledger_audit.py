@@ -90,7 +90,7 @@ def test_unknown_slh_like_reason_remains_ambiguous_and_blocks():
     from core.account_ledger_audit import _row_domain_hint
 
     row = {
-        "reason": "exchange:sell_reserve_legacy_unknown",
+        "reason": "slh:legacy_unverified",
         "before": 2000.0, "amount": -1000.0, "after": 1000.0,
     }
     assert _row_domain_hint(row) == "AMBIGUOUS_DOMAIN_HINT"
