@@ -52,6 +52,7 @@ KNOWN = {
     "agentstate": ("AGENTS", "מצב סוכן"),
     "sendagent": ("AGENTS", "שליחה לסוכן"),
     "inbox": ("AGENTS", "תיבת סוכן"),
+    "agent_outbox": ("AGENTS", "תוצאות סוכן"),
     "task": ("GOVERNANCE", "משימות"),
     "mission": ("GOVERNANCE", "משימות/מיסיות"),
     "complete": ("GOVERNANCE", "השלמת משימה"),

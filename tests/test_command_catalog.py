@@ -66,6 +66,7 @@ def test_render_help_prioritizes_known_commands_before_unknown_tail():
 def test_help_metadata_covers_existing_runtime_commands():
     commands = [
         "/check_ux",
+        "/agent_outbox",
         "/check_bnb_deposits",
         "/bnb_reverse_prepare",
         "/bnb_reverse_confirm",

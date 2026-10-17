@@ -50,21 +50,17 @@ def run_command(cmd, msg):
             os.system("bash start.sh &")
             return "Restart triggered"
         elif cmd == "ask":
-            prompt = msg.get("prompt", "")
+            prompt = str(msg.get("prompt", "") or "").strip()
             if not prompt:
-                return "Usage: /sendagent mytermux ask <question>"
-            import subprocess as sp
+                return "Usage: /sendagent <name> ask <question>"
+            uid = str(msg.get("uid") or "").strip() or None
             try:
-                res = sp.check_output(
-                    ["ollama", "run", "phi3:mini", "ענה בעברית, בפסקה קצרה: " + prompt],
-                    text=True,
-                    timeout=120,
-                )
-                return res.strip()
-            except sp.TimeoutExpired:
-                return "❌ Timeout"
+                # Reuse SLH's deterministic router and configured LLM fallbacks.
+                # This path answers questions; it does not execute host actions.
+                from core.ask_router import route
+                return str(route(prompt, uid=uid))
             except Exception as exc:
-                return f"Ollama error: {exc}"
+                return f"SLH AI router unavailable: {type(exc).__name__}"
         elif cmd == "complete":
             task_id = msg.get("task_id", "")
             if not task_id:
