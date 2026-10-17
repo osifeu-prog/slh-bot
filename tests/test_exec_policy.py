@@ -11,18 +11,18 @@ class ExecAuditBoundaryTests(unittest.TestCase):
 
     def test_direct_credits_mutations_are_blocked(self):
         commands = (
-            "python3 -c 'u[\\"credits\\"] = u.get(\\"credits\\", 0) + 5'",
-            "python3 -c 'wallet[\\"credits\\"] += 1'",
-            "python3 -c 'user.credits = 50'",
-            "python3 -c 'wallet.update({\\"credits\\": 99})'",
-            "python3 -c 'wallet.setdefault(\\"credits\\", 0)'",
+            """python3 -c 'u["credits"] = u.get("credits", 0) + 5'""",
+            """python3 -c 'wallet["credits"] += 1'""",
+            """python3 -c 'user.credits = 50'""",
+            """python3 -c 'wallet.update({"credits": 99})'""",
+            """python3 -c 'wallet.setdefault("credits", 0)'""",
         )
         for command in commands:
             self.assertTrue(is_dangerous(command), command)
 
     def test_reading_credits_is_not_treated_as_a_mutation(self):
         commands = (
-            "python3 -c 'print(user[\\"credits\\"])'",
+            """python3 -c 'print(user["credits"])'""",
             "grep -n credits core/economy_service.py",
             "sed -n '20,60p' core/economy_service.py",
         )
