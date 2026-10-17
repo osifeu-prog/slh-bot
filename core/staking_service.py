@@ -18,9 +18,12 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         raise ValueError("INVALID_STAKING_REQUEST")
     try:
         amount = float(amount)
-        lock_days = int(lock_days)
+        lock_days_numeric = float(lock_days)
     except (TypeError, ValueError, OverflowError):
         raise ValueError("INVALID_STAKING_REQUEST") from None
+    if not math.isfinite(lock_days_numeric) or not lock_days_numeric.is_integer():
+        raise ValueError("INVALID_STAKING_REQUEST")
+    lock_days = int(lock_days_numeric)
     meta = dict(meta or {})
     request_id = str(request_id or '').strip()
     if len(request_id) > 200:
@@ -32,7 +35,9 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
         raise ValueError("lock_days must be positive")
 
     def mutate(db):
-        users = db.setdefault("users", {})
+        users = db.get("users")
+        if not isinstance(users, dict):
+            raise ValueError("INVALID_USERS_STATE")
         user = users.get(uid)
         if not isinstance(user, dict):
             raise ValueError("user not found")
