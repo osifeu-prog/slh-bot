@@ -145,6 +145,45 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
                 if isinstance(arg, ast.Constant) and arg.value == "db.json":
                     self.fail("internal_agent.py must not access root db.json directly")
 
+    def test_actual_agent_worker_claims_ask_and_finalizes_outbox_result(self):
+        payload = {
+            "command": "ask",
+            "prompt": "Summarize readiness without executing actions",
+            "uid": "owner",
+            "request_id": "telegram:owner:555:900",
+        }
+        self.db["agents"]["alpha"]["inbox"] = [payload]
+        self.db["agents"]["alpha"]["processing"] = []
+
+        class StopWorker(BaseException):
+            """Stop the background loop after its first complete iteration."""
+
+        with (
+            patch.object(
+                internal_agent.state_manager,
+                "atomic_update",
+                side_effect=self._atomic_update,
+            ),
+            patch(
+                "handlers.llm_handler.query_llm_with_context",
+                return_value="answer from configured SLH fallback",
+            ) as query,
+            patch.object(internal_agent.time, "sleep", side_effect=StopWorker),
+        ):
+            with self.assertRaises(StopWorker):
+                internal_agent.agent_worker()
+
+        query.assert_called_once_with(
+            "Summarize readiness without executing actions",
+            uid="owner",
+        )
+        agent = self.db["agents"]["alpha"]
+        self.assertEqual(agent["inbox"], [])
+        self.assertEqual(agent["processing"], [])
+        self.assertEqual(len(agent["outbox"]), 1)
+        self.assertIn("answer from configured SLH fallback", agent["outbox"][0])
+        self.assertIn("ask", agent["outbox"][0])
+
     def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             general = internal_agent._claim_inbox(exclude_agents={"tutor"})
