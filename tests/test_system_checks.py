@@ -16,6 +16,22 @@ def test_miniapp_contract_contains_new_public_shell():
         assert marker in source
 
 
+def test_check_ux_matches_current_mini_app_bottom_navigation():
+    from core.system_checks import REQUIRED_UX_IDS, check_ux
+
+    html = Path("mini_app.html").read_text(encoding="utf-8")
+    current_bottom_nav_ids = {"bh", "bw", "bx", "bmarket", "bmore"}
+    obsolete_bottom_nav_ids = {"bb", "bm", "bg", "binv"}
+
+    assert current_bottom_nav_ids <= set(REQUIRED_UX_IDS)
+    assert not (obsolete_bottom_nav_ids & set(REQUIRED_UX_IDS))
+    for item in current_bottom_nav_ids:
+        assert f'id="{item}"' in html
+
+    result = check_ux()
+    assert result["ok"], result["checks"]
+
+
 def test_system_check_module_exposes_read_only_contract():
     source = Path("core/system_checks.py").read_text(encoding="utf-8")
     for marker in ("def check_db", "def check_commands", "def check_ux", "def check_money", "def check_bnb", "def check_ton", "def check_exchange"):
