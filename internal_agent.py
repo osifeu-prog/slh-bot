@@ -77,6 +77,39 @@ def run_command(cmd, msg):
         return f"Error: {exc}"
 
 
+# These operations expose runtime/host data or mutate course rewards. They are
+# allowed only when the inbox belongs to a canonical owner-owned agent.
+OWNER_AGENT_COMMANDS = frozenset({
+    "whoami", "status", "uptime", "dbsize", "sysinfo", "logs", "errors", "complete",
+})
+
+
+def _is_owner_agent_record(agent):
+    """Return True only when the agent record is owned by the canonical SLH owner."""
+    if not isinstance(agent, dict):
+        return False
+    owner_uid = str(agent.get("owner_id") or "").strip()
+    if not owner_uid:
+        return False
+    try:
+        from core.authority import is_owner
+        return bool(is_owner(owner_uid))
+    except Exception:
+        return False
+
+
+def _dispatch_worker_command(cmd, msg, *, owner_authorized):
+    """Keep free-form questions available while fail-closing host-side actions."""
+    cmd = str(cmd or "").strip().lower()
+    if cmd == "ask":
+        return run_command(cmd, msg)
+    if cmd not in ALLOWED:
+        return f"❌ command not allowed: {cmd}"
+    if cmd in OWNER_AGENT_COMMANDS and not owner_authorized:
+        return "OWNER_ONLY_AGENT"
+    return run_command(cmd, msg)
+
+
 def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
     """Claim at most max_messages under one atomic update to keep leases bounded."""
     now = time.time()
@@ -134,7 +167,7 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
                     "message": msg,
                     "claimed_at": now,
                 })
-                claimed.append((str(name), claim_id, dict(msg)))
+                claimed.append((str(name), claim_id, dict(msg), _is_owner_agent_record(data)))
     state_manager.atomic_update(mutate)
     return claimed
 
@@ -178,11 +211,13 @@ def agent_worker():
     while True:
         try:
             claimed = _claim_inbox(exclude_agents={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, owner_authorized in claimed:
                 cmd = str(msg.get("command", "")).strip().lower()
                 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 started = time.time()
-                res = run_command(cmd, msg) if cmd in ALLOWED else f"❌ '{cmd}' not allowed"
+                res = _dispatch_worker_command(
+                    cmd, msg, owner_authorized=owner_authorized
+                )
                 elapsed = time.time() - started
                 output = f"[{now}] {cmd}\n>> {str(res)[:MAX_OUTPUT]}\n⏱️ {elapsed:.1f}s"
                 _finalize_message(name, claim_id, output)
@@ -196,23 +231,22 @@ def tutor_worker():
     while True:
         try:
             claimed = _claim_inbox(agent_filter={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, _owner_authorized in claimed:
                 command = str(msg.get("command", ""))
+                prompt = str(msg.get("prompt") or "").strip()
+                if not prompt:
+                    # Tutor inbox is conversational only; legacy/non-ask task
+                    # labels are questions, never host commands.
+                    prompt = command.strip()
                 try:
-                    if command == "ask":
-                        from core.ask_router import route
-                        prompt = str(msg.get("prompt") or "").strip()
-                        uid = str(msg.get("uid") or "").strip() or None
-                        ans = str(route(prompt, uid=uid))[:1000] if prompt else "Question is empty."
+                    if not prompt:
+                        ans = "Question is empty."
                     else:
-                        import subprocess as sp
-                        ans = sp.check_output(
-                            ["ollama", "run", "phi3:mini", command],
-                            text=True,
-                            timeout=30,
-                        )[:1000]
+                        from core.ask_router import route
+                        uid = str(msg.get("uid") or "").strip() or None
+                        ans = str(route(prompt, uid=uid))[:1000]
                 except Exception:
-                    ans = "Tutor processing unavailable; no action was executed."
+                    ans = "Tutor AI route unavailable; the request remains non-operational."
                 _finalize_message(name, claim_id, ans)
         except Exception:
             _log_worker_error("Tutor worker error")
