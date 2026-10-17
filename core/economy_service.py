@@ -314,52 +314,147 @@ def purchase_item(
     commission_rate=0.10,
     meta=None,
 ):
-    """
-    Atomic purchase authority.
+    """Atomically debit Credits and grant a legacy purchase exactly once.
 
-    One DB transaction performs:
-    - buyer debit
-    - entitlement mutation
-    - optional referral commission
-    - immutable ledger entries
+    Legacy Telegram purchases must supply an immutable idempotency key in
+    meta. Replays are resolved before the account-freeze check so a retry
+    of an already-completed request remains a read-only no-op.
     """
 
     uid = str(uid)
-    price = float(price)
-    meta = meta or {}
+    item = str(item or "").strip()
+    try:
+        price = float(price)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("INVALID_PRICE") from None
+    meta = dict(meta or {})
+    idempotency_key = str(meta.get("idempotency_key") or "").strip()
 
-    if price <= 0:
+    if not idempotency_key:
+        raise ValueError("IDEMPOTENCY_KEY_REQUIRED")
+    if not math.isfinite(price) or price <= 0:
         raise ValueError("INVALID_PRICE")
+    if item not in {"ask_credit", "premium_agent"}:
+        raise ValueError("UNKNOWN_ITEM")
+    if meta.get("item_id") not in (None, "", item):
+        raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+    meta["idempotency_key"] = idempotency_key
+    meta["item_id"] = item
 
     def mutate(db):
-        users = db.setdefault("users", {})
-
+        users = db.get("users")
+        if not isinstance(users, dict):
+            raise ValueError("USERS_STATE_INVALID")
         buyer = users.get(uid)
-        if buyer is None:
-            raise Exception("USER_NOT_FOUND")
-        if isinstance(buyer, dict) and buyer.get("frozen") is True:
+        if not isinstance(buyer, dict):
+            raise ValueError("USER_NOT_FOUND")
+
+        ledger = db.get("ledger", [])
+        if not isinstance(ledger, list):
+            raise ValueError("LEDGER_STATE_INVALID")
+
+        key_rows = [
+            row for row in ledger
+            if isinstance(row, dict)
+            and isinstance(row.get("meta"), dict)
+            and str(row["meta"].get("idempotency_key") or "") == idempotency_key
+        ]
+        purchase_rows = [
+            row for row in key_rows
+            if str(row.get("reason") or "").startswith("purchase:")
+        ]
+
+        if purchase_rows:
+            if len(purchase_rows) != 1:
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+            existing = purchase_rows[0]
+            existing_meta = existing.get("meta")
+            try:
+                old_amount = float(existing.get("amount"))
+            except (TypeError, ValueError, OverflowError):
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT") from None
+
+            if (
+                str(existing.get("uid") or "") != uid
+                or str(existing.get("reason") or "") != f"purchase:{item}"
+                or not math.isfinite(old_amount)
+                or not math.isclose(old_amount, -price, rel_tol=0.0, abs_tol=1e-9)
+                or not isinstance(existing_meta, dict)
+                or existing_meta.get("item_id") not in (None, "", item)
+                or (
+                    "source" in meta
+                    and str(existing_meta.get("source") or "") != str(meta.get("source") or "")
+                )
+            ):
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+            # A referral reward ledger row can carry the same source purchase
+            # key. Accept only the expected, correctly attributed commission
+            # row; every other use of this key is a conflict.
+            for row in key_rows:
+                if row is existing:
+                    continue
+                row_meta = row.get("meta") if isinstance(row, dict) else None
+                if (
+                    str(row.get("reason") or "") == "referral:commission"
+                    and isinstance(row_meta, dict)
+                    and str(row_meta.get("source_uid") or "") == uid
+                    and str(row_meta.get("purchase_item") or "") == item
+                ):
+                    continue
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+            wallet = buyer.get("wallet")
+            if not isinstance(wallet, dict):
+                raise ValueError("WALLET_STATE_INVALID")
+            try:
+                balance_now = float(wallet.get("credits", 0) or 0)
+            except (TypeError, ValueError, OverflowError):
+                raise ValueError("INVALID_CREDITS_BALANCE") from None
+            if not math.isfinite(balance_now):
+                raise ValueError("INVALID_CREDITS_BALANCE")
+            return {
+                "item": item,
+                "uid": uid,
+                "credits": balance_now,
+                "commission": 0,
+                "duplicate": True,
+            }
+
+        if key_rows:
+            # The key exists, but there is no matching purchase authority row.
+            raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+        from core.slh_distribution import is_frozen_account
+
+        if is_frozen_account(db, uid):
             raise ValueError("ACCOUNT_FROZEN")
 
-        buyer_wallet = buyer.setdefault("wallet", {})
-        buyer_before = buyer_wallet.get("credits", 0)
-
+        wallet_value = buyer.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
+            raise ValueError("WALLET_STATE_INVALID")
+        buyer_wallet = wallet_value if isinstance(wallet_value, dict) else {}
+        try:
+            buyer_before = float(buyer_wallet.get("credits", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("INVALID_CREDITS_BALANCE") from None
+        if not math.isfinite(buyer_before):
+            raise ValueError("INVALID_CREDITS_BALANCE")
         if buyer_before < price:
             raise ValueError("INSUFFICIENT_CREDITS")
 
+        # All rejection checks are complete; mutation begins only below.
         buyer_after = buyer_before - price
+        if wallet_value is None:
+            buyer["wallet"] = buyer_wallet
         buyer_wallet["credits"] = buyer_after
 
         if item == "ask_credit":
             buyer["ask_credits"] = buyer.get("ask_credits", 0) + 1
-
-        elif item == "premium_agent":
+        else:
             buyer["premium"] = True
 
-        else:
-            raise ValueError("UNKNOWN_ITEM")
-
-        ledger = db.setdefault("ledger", [])
-
+        ledger = db.setdefault("ledger", ledger)
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
@@ -394,7 +489,6 @@ def purchase_item(
                         ref_wallet_value is None or isinstance(ref_wallet_value, dict)
                     )
                     ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
-
                     ref_before = ref_wallet.get("credits", 0)
                     treasury = users.get(TREASURY_UID)
                     treasury_wallet = (
@@ -461,7 +555,6 @@ def purchase_item(
         }
 
     return state_manager.atomic_update(mutate)
-
 
 def record_stars_payment(
     uid,
