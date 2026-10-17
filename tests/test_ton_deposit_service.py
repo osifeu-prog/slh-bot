@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from core import ton_deposit_service
+from core import economy_service, ton_deposit_service
 
 
 UID = "12345"
@@ -131,6 +131,63 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertFalse(ton_deposit_service.deposits_are_open())
         with self.assertRaisesRegex(ValueError, "TON_DEPOSITS_CLOSED"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
+
+
+
+
+    def test_same_hash_with_different_uid_is_a_conflict_without_mutation(self):
+        self.tx_mock.return_value = self._tx()
+        first = ton_deposit_service.settle_ton_deposit(UID, TX)
+        self.assertFalse(first["idempotent"])
+        before = __import__("copy").deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
+            economy_service.record_ton_deposit(
+                "other-user", 100, 1.0, TX,
+                meta={"idempotency_key": "test-conflicting-ton-replay"},
+            )
+
+        self.assertEqual(self.db, before)
+
+    def test_same_hash_with_different_credits_is_a_conflict_without_mutation(self):
+        self.tx_mock.return_value = self._tx()
+        ton_deposit_service.settle_ton_deposit(UID, TX)
+        before = __import__("copy").deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
+            economy_service.record_ton_deposit(
+                UID, 101, 1.0, TX,
+                meta={"idempotency_key": "test-conflicting-ton-replay"},
+            )
+
+        self.assertEqual(self.db, before)
+
+    def test_same_hash_with_different_ton_amount_is_a_conflict_without_mutation(self):
+        self.tx_mock.return_value = self._tx()
+        ton_deposit_service.settle_ton_deposit(UID, TX)
+        before = __import__("copy").deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDEMPOTENCY_CONFLICT"):
+            economy_service.record_ton_deposit(
+                UID, 100, 2.0, TX,
+                meta={"idempotency_key": "test-conflicting-ton-replay"},
+            )
+
+        self.assertEqual(self.db, before)
+
+    def test_used_hash_without_unique_source_identity_fails_closed(self):
+        self.tx_mock.return_value = self._tx()
+        ton_deposit_service.settle_ton_deposit(UID, TX)
+        self.db["transactions"] = []
+        before = __import__("copy").deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDENTITY_UNKNOWN"):
+            economy_service.record_ton_deposit(
+                UID, 100, 1.0, TX,
+                meta={"idempotency_key": "test-ton-replay"},
+            )
+
+        self.assertEqual(self.db, before)
 
 
 if __name__ == "__main__":
