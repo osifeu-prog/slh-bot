@@ -471,7 +471,8 @@ test('incomplete Exchange receipt retry reuses the same idempotency key', async 
     .toContainText('קבלת אימות המסחר אינה שלמה');
 });
 
-test('mobile layout has no horizontal overflow', async ({ page }) => {
+test('mobile layout has no horizontal overflow at 320px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
   const metrics = await page.evaluate(() => ({
     viewport: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
