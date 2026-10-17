@@ -209,6 +209,8 @@ def register_mcp_bridge_routes(app):
     @app.route("/api/miner", methods=["POST"])
     def miner_telemetry_ingest():
         """Authenticated ESP32 telemetry receiver on the state-owning web service."""
+        if request.content_length is not None and request.content_length > 8192:
+            return jsonify({"error": "PAYLOAD_TOO_LARGE"}), 413
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
