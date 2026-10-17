@@ -6,6 +6,7 @@ from core.slh_distribution import (
     reserve_in_db,
     release_reserve_in_db,
     settle_reserve_in_db,
+    transfer,
 )
 
 
@@ -174,6 +175,55 @@ class SlhExchangeSettlementTests(unittest.TestCase):
         self.assertEqual(len(db["slh_token_ledger"]), 2)
         self.assertEqual(db["users"]["seller"]["frozen"], True)
         self.assertNotEqual(db, before_release)
+
+    def test_reserve_cannot_lock_slH_already_reserved_by_another_order(self):
+        db = _db()
+        reserve_in_db(
+            db, uid="seller", amount=70,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        before = copy.deepcopy(db)
+
+        with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
+            reserve_in_db(
+                db, uid="seller", amount=31,
+                event_id="exchange:reserve_slh:O2", order_id="O2",
+            )
+
+        self.assertEqual(db, before)
+
+    def test_wallet_transfer_cannot_spend_slH_locked_in_exchange_reserve(self):
+        db = _db()
+        supply_before = _supply(db)
+        reserve_in_db(
+            db, uid="seller", amount=70,
+            event_id="exchange:reserve_slh:O1", order_id="O1",
+        )
+        before = copy.deepcopy(db)
+
+        with self.assertRaisesRegex(ValueError, "INSUFFICIENT_LIVE_SLH"):
+            transfer(
+                sender_uid="seller", recipient_uid="buyer", amount=31,
+                event_id="p2p:should-not-spend-reserve", reason="p2p:slh",
+            )
+
+        self.assertEqual(db, before)
+
+        result = transfer(
+            sender_uid="seller", recipient_uid="buyer", amount=30,
+            event_id="p2p:unreserved-amount-only", reason="p2p:slh",
+        )
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(
+            db["users"]["seller"]["wallet"]["token_balance"], 70.0
+        )
+        self.assertEqual(
+            db["users"]["seller"]["wallet"]["live_token_balance"], 70.0
+        )
+        self.assertEqual(
+            db["users"]["seller"]["wallet"][EXCHANGE_RESERVE_KEY], 70.0
+        )
+        self.assertEqual(_supply(db), supply_before)
 
     def test_reserve_and_settlement_reject_insufficient_amount(self):
         db = _db()
