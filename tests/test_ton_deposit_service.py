@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -117,6 +118,47 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertEqual(self.db["used_ton_txs"], [TX])
         self.assertEqual(self.db["ton_replay_evidence"][UID]["tx_hash"], TX)
         self.assertEqual(self.db["ton_replay_evidence"][UID]["replay_count"], 1)
+
+    def test_conflicting_hash_replay_does_not_mark_a_new_intent_matched(self):
+        transaction = self._tx()
+        transaction["utime"] = 1_760_000_000
+        transaction["lt"] = "987654"
+        self.tx_mock.return_value = transaction
+
+        first = ton_deposit_service.settle_ton_deposit(UID, TX)
+        self.assertFalse(first["idempotent"])
+
+        # This intent was created shortly after the observed chain time. The
+        # intent matcher permits a small timestamp tolerance, so replay must
+        # still compare the original settlement identity before matching it.
+        self.db["ton_deposit_intents"] = {
+            "intent-new": {
+                "uid": UID,
+                "status": "pending",
+                "amount_nano": 1_000_000_000,
+                "memo": f"SLH{UID}",
+                "treasury": TREASURY,
+                "binding_address_raw": BOUND,
+                "created_at_epoch": 1_760_000_030,
+                "expires_at_epoch": 1_760_001_830,
+            }
+        }
+        before_replay = copy.deepcopy(self.db)
+
+        with patch.object(
+            ton_deposit_service,
+            "_settings",
+            return_value=(TREASURY, 101),
+        ):
+            with self.assertRaisesRegex(
+                ValueError, "TON_DEPOSIT_IDENTITY_CONFLICT"
+            ):
+                ton_deposit_service.settle_ton_deposit(UID, TX)
+
+        # The failed replay must neither credit again nor change the intent
+        # from pending to matched or write replay-success evidence.
+        self.assertEqual(self.db, before_replay)
+        self.assertEqual(self.db["ton_deposit_intents"]["intent-new"]["status"], "pending")
 
     def test_unsafe_rate_is_rejected_when_deposits_open(self):
         self.tx_mock.return_value = self._tx()
