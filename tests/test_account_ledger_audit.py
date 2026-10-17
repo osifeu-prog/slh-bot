@@ -190,11 +190,13 @@ def test_staked_counter_row_without_authoritative_domain_marker_stays_blocked():
         ],
     }
 
-    assert _row_domain_hint(db["ledger"][1]) == "UNKNOWN_HINT"
+    assert _row_domain_hint(db["ledger"][1]) == "STAKED_COUNTER_HINT"
     result = audit_account_ledger(db, UID)
+    # The counter-only row is excluded, but the underlying Credits correction
+    # and following Credits row still disagree, so the real gap remains blocked.
     assert result["status"] == "BLOCKED"
-    assert result["continuity_break_count"] == 2
-    assert [item["delta_to_explain"] for item in result["findings"]] == [552.0, -552.0]
+    assert result["continuity_break_count"] == 1
+    assert [item["delta_to_explain"] for item in result["findings"]] == [-552.0]
 
 def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     db = {
