@@ -1028,18 +1028,81 @@ def transfer_credits(
         recipient_wallet = recipient.setdefault("wallet", {})
 
         sender_balance = float(sender_wallet.get("credits", 0))
-        if sender_balance < amount:
-            raise ValueError("INSUFFICIENT_CREDITS")
-
         processed = db.setdefault("processed_transfers", {})
         if idempotency_key in processed:
+            stored = processed[idempotency_key]
+            if isinstance(stored, dict):
+                old_transfer_id = str(stored.get("transfer_id") or "").strip()
+                old_sender_uid = str(stored.get("sender_uid") or "").strip()
+                old_recipient_uid = str(stored.get("recipient_uid") or "").strip()
+                try:
+                    old_amount = float(stored.get("amount"))
+                except (TypeError, ValueError, OverflowError):
+                    old_amount = float("nan")
+            elif isinstance(stored, str) and stored.strip():
+                # Backward compatibility for historical key -> transfer_id
+                # records: reconstruct identity only from a consistent pair
+                # of persisted ledger rows. Never guess from the new request.
+                old_transfer_id = stored.strip()
+                rows = [
+                    row for row in db.get("ledger", [])
+                    if isinstance(row, dict)
+                    and isinstance(row.get("meta"), dict)
+                    and str(row["meta"].get("transfer_id") or "") == old_transfer_id
+                ]
+                sent_rows = [row for row in rows if row.get("reason") == "p2p:transfer_sent"]
+                received_rows = [row for row in rows if row.get("reason") == "p2p:transfer_received"]
+                if len(sent_rows) != 1 or len(received_rows) != 1:
+                    raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN")
+                sent, received = sent_rows[0], received_rows[0]
+                sent_meta, received_meta = sent["meta"], received["meta"]
+                old_sender_uid = str(sent.get("uid") or "")
+                old_recipient_uid = str(sent_meta.get("recipient_uid") or "")
+                try:
+                    old_amount = abs(float(sent.get("amount")))
+                    received_amount = float(received.get("amount"))
+                    old_sender_balance_after = float(sent.get("after"))
+                    old_recipient_uid_row = str(received.get("uid") or "")
+                    old_sender_uid_receipt = str(received_meta.get("sender_uid") or "")
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN") from None
+                if (
+                    old_sender_uid != str(sent_meta.get("sender_uid") or old_sender_uid)
+                    or not old_recipient_uid
+                    or old_recipient_uid_row != old_recipient_uid
+                    or old_sender_uid_receipt != old_sender_uid
+                    or float(sent.get("amount", 0) or 0) >= 0
+                    or abs(received_amount - old_amount) > 1e-9
+                    or abs(float(sent.get("before")) + float(sent.get("amount")) - old_sender_balance_after) > 1e-9
+                ):
+                    raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN")
+            else:
+                raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN")
+
+            if (
+                not old_transfer_id
+                or not old_sender_uid
+                or not old_recipient_uid
+                or not math.isfinite(old_amount)
+                or old_amount <= 0
+            ):
+                raise ValueError("LEGACY_TRANSFER_IDENTITY_UNKNOWN")
+            if (
+                old_sender_uid != sender_uid
+                or old_recipient_uid != recipient_uid
+                or old_amount != amount
+            ):
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
             return {
                 "status": "duplicate",
-                "transfer_id": processed[idempotency_key],
-                "amount": amount,
-                "recipient_uid": recipient_uid,
+                "transfer_id": old_transfer_id,
+                "amount": old_amount,
+                "recipient_uid": old_recipient_uid,
                 "sender_balance": sender_balance,
             }
+
+        if sender_balance < amount:
+            raise ValueError("INSUFFICIENT_CREDITS")
 
         transfer_id = f"TRANSFER-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
 
@@ -1081,7 +1144,12 @@ def transfer_credits(
             "meta": recipient_meta,
         })
 
-        processed[idempotency_key] = transfer_id
+        processed[idempotency_key] = {
+            "transfer_id": transfer_id,
+            "sender_uid": sender_uid,
+            "recipient_uid": recipient_uid,
+            "amount": amount,
+        }
 
         return {
             "status": "completed",
