@@ -91,8 +91,7 @@ class LocalStatusHandlerTests(unittest.TestCase):
             },
             {"status": "unknown", "age_seconds": None, "records": 0},
         ]
-        with patch.object(local_status_handler, "is_owner", return_value=True), \\
-             patch.object(local_status_handler, "get_device_status", side_effect=reports):
+        with patch.object(local_status_handler, "is_owner", return_value=True), patch.object(local_status_handler, "get_device_status", side_effect=reports):
             self.bot.handlers["local_status"](message())
 
         output = self.bot.sent[-1]
