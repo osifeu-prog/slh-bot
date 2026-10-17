@@ -39,7 +39,7 @@ class FrozenCreditsDebitBoundaryTests(unittest.TestCase):
                     "u1",
                     -5.0,
                     reason="arcade:entry",
-                    meta={"source": "unit_test", "idempotency_key": "frozen-legacy-purchase"},
+                    meta={"source": "unit_test"},
                 )
 
         self.assertEqual(db, before)
@@ -69,7 +69,7 @@ class FrozenCreditsDebitBoundaryTests(unittest.TestCase):
                     uid="u1",
                     item="ask_credit",
                     price=10,
-                    meta={"source": "unit_test"},
+                    meta={"source": "unit_test", "idempotency_key": "frozen-legacy-purchase"},
                 )
 
         self.assertEqual(db, before)
