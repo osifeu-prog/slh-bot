@@ -252,3 +252,18 @@ def get_inbox(identifier):
     if agent is None:
         raise KeyError(f"Agent '{identifier}' not found")
     return agent_id, list(agent.get("inbox", []))
+
+
+def get_outbox(identifier, limit=5):
+    """Return the newest bounded agent results for an authorized caller."""
+    agent_id, agent = get_agent(identifier)
+    if agent is None:
+        raise KeyError(f"Agent '{identifier}' not found")
+    try:
+        count = max(1, min(int(limit), 20))
+    except (TypeError, ValueError, OverflowError):
+        count = 5
+    outbox = agent.get("outbox", [])
+    if not isinstance(outbox, list):
+        return agent_id, []
+    return agent_id, list(outbox[-count:])
