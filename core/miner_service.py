@@ -77,6 +77,11 @@ def _registered_esp(device_id: str) -> dict[str, Any]:
     device_type = str(device.get("type", "") or "").strip().lower()
     if device_type not in _ALLOWED_DEVICE_TYPES:
         raise MinerTelemetryError("MINER_DEVICE_TYPE_NOT_ALLOWED", 403)
+    raw_capabilities = device.get("capabilities", [])
+    capabilities = {str(value).strip().lower() for value in raw_capabilities} if isinstance(raw_capabilities, (list, tuple, set)) else set()
+    explicitly_enabled = device.get("miner_enabled") is True or "miner" in capabilities or device_type in {"miner", "esp32_miner", "esp32-miner"}
+    if not explicitly_enabled:
+        raise MinerTelemetryError("MINER_ROLE_NOT_ENABLED", 403)
     if not str(device.get("owner") or device.get("owner_id") or "").strip():
         raise MinerTelemetryError("MINER_DEVICE_OWNER_REQUIRED", 403)
     return device
