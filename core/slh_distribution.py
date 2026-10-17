@@ -68,10 +68,11 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
         raise ValueError("SENDER_NOT_FOUND")
     if not recipient:
         raise ValueError("RECIPIENT_NOT_FOUND")
-    if is_frozen_account(db, from_uid):
-        raise ValueError("ACCOUNT_FROZEN")
 
-    ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
+    # Read-only replay must remain idempotent if the sender was frozen after
+    # the original transfer. Do not create the ledger key until a new transfer
+    # has passed the frozen-account guard.
+    ledger = db.get(TOKEN_LEDGER_KEY, [])
     existing = _find_event(ledger, event_id)
     if existing:
         if (
@@ -82,13 +83,25 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
 
+    if is_frozen_account(db, from_uid):
+        raise ValueError("ACCOUNT_FROZEN")
+
+    ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     sender_wallet = sender.setdefault("wallet", {})
     recipient_wallet = recipient.setdefault("wallet", {})
     sender_balance = Decimal(str(sender_wallet.get("token_balance", 0) or 0))
     recipient_balance = Decimal(str(recipient_wallet.get("token_balance", 0) or 0))
     sender_live = Decimal(str(sender_wallet.get("live_token_balance", 0) or 0))
     recipient_live = Decimal(str(recipient_wallet.get("live_token_balance", 0) or 0))
-    if sender_live < amount:
+    sender_reserved = Decimal(str(sender_wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
+    # SLH already escrowed against open sell orders is not transferable. The
+    # live balance includes that escrow, so only live minus reserved is spendable.
+    if (
+        sender_reserved < 0
+        or sender_live < amount
+        or sender_live - sender_reserved < amount
+        or sender_balance < amount
+    ):
         raise ValueError("INSUFFICIENT_LIVE_SLH")
 
     sender_after = sender_balance - amount
@@ -139,7 +152,13 @@ def reserve_in_db(db, *, uid, amount, event_id, order_id=None, reason="exchange:
     total_before = Decimal(str(wallet.get("token_balance", 0) or 0))
     available = Decimal(str(wallet.get("live_token_balance", 0) or 0))
     reserve_before = Decimal(str(wallet.get(EXCHANGE_RESERVE_KEY, 0) or 0))
-    if available < amount or total_before < amount:
+    # Existing exchange escrow is part of the live/total balance but is not
+    # available for a second sell order. Subtract it before approving a new lock.
+    if (
+        reserve_before < 0
+        or available < reserve_before + amount
+        or total_before < reserve_before + amount
+    ):
         raise ValueError("INSUFFICIENT_LIVE_SLH")
 
     # Reserve moves live/spendable SLH into escrow; it does not change the
