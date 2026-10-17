@@ -1,5 +1,6 @@
 import ast
 import copy
+import os
 import unittest
 from unittest.mock import patch
 
@@ -125,6 +126,22 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual(claimed[0][2], {"command": "whoami"})
         self.assertNotEqual(claimed[0][1], "expired")
         self.assertEqual(self.db["agents"]["alpha"]["processing"][0]["claim_id"], claimed[0][1])
+
+
+    def test_worker_autostart_is_gated_by_run_bot(self):
+        with (
+            patch.dict(os.environ, {"RUN_BOT": "0"}),
+            patch.object(internal_agent, "start_agent_thread") as start,
+        ):
+            internal_agent._maybe_start_workers()
+            start.assert_not_called()
+
+        with (
+            patch.dict(os.environ, {"RUN_BOT": "1"}),
+            patch.object(internal_agent, "start_agent_thread") as start,
+        ):
+            internal_agent._maybe_start_workers()
+            start.assert_called_once_with()
 
 
 if __name__ == "__main__":
