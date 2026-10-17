@@ -206,4 +206,115 @@ def register_mcp_bridge_routes(app):
             "direct_command_replies_muted": False,
             "critical_security_messages_muted": False,
         }), 200
+    @app.route("/internal/mcp/v1/miners", methods=["GET"])
+    def mcp_bridge_miners():
+        """Read safe telemetry from canonical registered ESP32 device records."""
+        subject, error = _require("exec.audit")
+        if error:
+            return error
+        try:
+            from core.miner_service import list_registered_esp_devices, device_role_enabled
+            devices = list_registered_esp_devices()
+            result = []
+            for device_id, device in sorted(devices.items()):
+                owner_id = str(device.get("owner_id") or device.get("owner") or "")
+                if owner_id != str(subject) and not has_permission(subject, "agents.manage"):
+                    continue
+                telemetry = device.get("telemetry")
+                safe_telemetry = None
+                if isinstance(telemetry, dict):
+                    safe_telemetry = {
+                        key: telemetry.get(key)
+                        for key in (
+                            "temperature_c", "watts", "volts", "amps", "energy_kwh",
+                            "reported_status", "health_status", "alerts", "last_seen", "source",
+                        )
+                        if key in telemetry
+                    }
+                result.append({
+                    "device_id": device_id,
+                    "name": str(device.get("name") or device_id)[:80],
+                    "type": str(device.get("type") or ""),
+                    "status": str(device.get("status") or "unknown"),
+                    "last_seen": device.get("last_seen"),
+                    "last_telemetry_at": device.get("last_telemetry_at"),
+                    "miner_enabled": bool(device_role_enabled(device_id, device)),
+                    "telemetry": safe_telemetry,
+                })
+            return jsonify({"devices": result, "count": len(result), "read_only": True}), 200
+        except Exception as exc:
+            print("[MCP_BRIDGE] miner list error:", type(exc).__name__)
+            return jsonify({"error": "MINER_STATUS_UNAVAILABLE"}), 503
+
+    @app.route("/internal/mcp/v1/miners/<device_id>", methods=["GET"])
+    def mcp_bridge_miner(device_id):
+        """Read one registered ESP32 telemetry snapshot with owner scoping."""
+        subject, error = _require("exec.audit")
+        if error:
+            return error
+        try:
+            from core.miner_service import get_registered_device, device_role_enabled
+            device = get_registered_device(device_id)
+            if not device or str(device.get("type", "") or "").strip().lower() not in {
+                "esp32", "miner", "esp32_miner", "esp32-miner",
+            }:
+                return jsonify({"error": "DEVICE_NOT_FOUND"}), 404
+            owner_id = str(device.get("owner_id") or device.get("owner") or "")
+            if owner_id != str(subject) and not has_permission(subject, "agents.manage"):
+                return jsonify({"error": "DEVICE_NOT_FOUND"}), 404
+            telemetry = device.get("telemetry")
+            safe_telemetry = None
+            if isinstance(telemetry, dict):
+                safe_telemetry = {
+                    key: telemetry.get(key)
+                    for key in (
+                        "temperature_c", "watts", "volts", "amps", "energy_kwh",
+                        "reported_status", "health_status", "alerts", "last_seen", "source",
+                    )
+                    if key in telemetry
+                }
+            return jsonify({
+                "device_id": device_id,
+                "name": str(device.get("name") or device_id)[:80],
+                "type": str(device.get("type") or ""),
+                "status": str(device.get("status") or "unknown"),
+                "last_seen": device.get("last_seen"),
+                "last_telemetry_at": device.get("last_telemetry_at"),
+                "miner_enabled": bool(device_role_enabled(device_id, device)),
+                "telemetry": safe_telemetry,
+                "read_only": True,
+            }), 200
+        except Exception as exc:
+            print("[MCP_BRIDGE] miner read error:", type(exc).__name__)
+            return jsonify({"error": "MINER_STATUS_UNAVAILABLE"}), 503
+
+    @app.route("/api/miner", methods=["POST"])
+    def miner_telemetry_ingest():
+        """Authenticated ESP32 telemetry receiver on the state-owning web service."""
+        if request.content_length is not None and request.content_length > 8192:
+            return jsonify({"error": "PAYLOAD_TOO_LARGE"}), 413
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "JSON_OBJECT_REQUIRED"}), 400
+
+        try:
+            from core.miner_service import MinerTelemetryError, ingest_telemetry
+
+            record = ingest_telemetry(
+                payload,
+                authorization=request.headers.get("Authorization", ""),
+            )
+            return jsonify({
+                "ok": True,
+                "device_id": record["device_id"],
+                "health_status": record["health_status"],
+                "alerts": record["alerts"],
+                "last_seen": record["last_seen"],
+            }), 200
+        except MinerTelemetryError as exc:
+            return jsonify({"error": exc.code}), exc.status_code
+        except Exception as exc:
+            print("[MINER] telemetry ingest error:", type(exc).__name__)
+            return jsonify({"error": "MINER_TELEMETRY_FAILED"}), 500
+
     return app
