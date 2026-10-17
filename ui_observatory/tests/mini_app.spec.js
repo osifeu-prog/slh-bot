@@ -431,6 +431,46 @@ test('partial Exchange receipt never shows a green fresh-check status', async ({
   await expect(receipt).not.toContainText('✅ בדיקת המסחר העדכנית: עברה');
 });
 
+test('incomplete Exchange receipt retry reuses the same idempotency key', async ({ page }) => {
+  const requestIds = [];
+  await page.route('**/api/v1/exchange/order', async route => {
+    requestIds.push(route.request().postDataJSON().client_request_id);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        order_id: 'O000000099',
+        filled: '0.00000000',
+        remaining: '2.00000000',
+        status: 'open',
+        trade_ids: [],
+        execution_check: {
+          status: 'PASS',
+          public_gate: 'OPEN',
+          verdict: 'OPEN',
+          public_ready: true,
+          order_book_integrity: true,
+          trade_integrity: true,
+          money_invariants: true
+        }
+      })
+    });
+  });
+
+  await page.evaluate(async () => {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    document.querySelector('#exchange').classList.add('active');
+    await sendExchangeOrder('buy', '2', '1');
+    await sendExchangeOrder('buy', '2', '1');
+  });
+
+  expect(requestIds).toHaveLength(2);
+  expect(requestIds[0]).toBeTruthy();
+  expect(requestIds[1]).toBe(requestIds[0]);
+  await expect(page.locator('#exchange [data-exchange-receipt="true"]'))
+    .toContainText('קבלת אימות המסחר אינה שלמה');
+});
+
 test('mobile layout has no horizontal overflow', async ({ page }) => {
   const metrics = await page.evaluate(() => ({
     viewport: window.innerWidth,
