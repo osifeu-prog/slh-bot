@@ -92,3 +92,11 @@ The same bridge secret must be configured on the canonical web service and on `s
 ## MQTT diagnostics
 
 `mqtt.status` reports the configured broker without connecting. `mqtt.probe` performs a read-only MQTT CONNECT/Disconnect check and never publishes, subscribes, or writes device state.
+
+
+## Read-only miner telemetry tools
+
+- `miners.list` — list the authenticated principal's registered ESP32 devices, explicit miner enrollment state, and last stored telemetry.
+- `miners.status(device_id)` — read one registered device's telemetry snapshot.
+
+These tools read through the existing authenticated Control Plane bridge and are guarded by `exec.audit`. They do not read the web service's database directly, publish MQTT messages, control relays, or mutate financial state. No separate `MCP_CHAT_TOKEN` is part of this service's current authentication contract; MCP clients authenticate with `SLH_MCP_BEARER_TOKEN`, while the service-to-Control-Plane bridge uses `SLH_MCP_BRIDGE_TOKEN`.
