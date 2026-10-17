@@ -14,7 +14,7 @@ from pathlib import Path
 
 import state_manager
 
-ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "restart", "ask"}
+ALLOWED = {"complete", "whoami", "dbsize", "status", "uptime", "sysinfo", "logs", "errors", "ask"}
 CLAIM_LEASE_SECONDS = 600
 MAX_OUTBOX = 20
 MAX_OUTPUT = 2000
@@ -25,6 +25,14 @@ _WORKER_START_LOCK = threading.Lock()
 
 def run_command(cmd, msg):
     try:
+        # Commands that can expose host data, alter the runtime, or award points
+        # are restricted to the canonical owner identity even if an inbox task
+        # is inserted through another internal path.
+        if cmd in {"dbsize", "sysinfo", "logs", "errors", "restart", "complete"}:
+            from core.authority import is_owner
+            if not is_owner(str(msg.get("uid") or "").strip()):
+                return "OWNER_ONLY"
+
         if cmd == "whoami":
             return os.popen("whoami").read().strip()
         elif cmd == "dbsize":
@@ -46,21 +54,16 @@ def run_command(cmd, msg):
             return os.popen("tail -n 20 logs/bot.log").read() if os.path.exists("logs/bot.log") else "No logs"
         elif cmd == "errors":
             return os.popen("tail -n 20 logs/error.log").read() if os.path.exists("logs/error.log") else "No errors"
-        elif cmd == "restart":
-            os.system("bash start.sh &")
-            return "Restart triggered"
         elif cmd == "ask":
-            prompt = str(msg.get("prompt", "") or "").strip()
+            prompt = str(msg.get("prompt") or "").strip()
             if not prompt:
-                return "Usage: /sendagent <name> ask <question>"
+                return "Usage: /sendagent <agent> <question>"
+            # Use the same configured Gemini -> optional Ollama -> Groq fallback
+            # chain as the canonical assistant; do not bypass it with a local
+            # phi3 subprocess.
+            from core.ask_router import route
             uid = str(msg.get("uid") or "").strip() or None
-            try:
-                # Reuse SLH's deterministic router and configured LLM fallbacks.
-                # This path answers questions; it does not execute host actions.
-                from core.ask_router import route
-                return str(route(prompt, uid=uid))
-            except Exception as exc:
-                return f"SLH AI router unavailable: {type(exc).__name__}"
+            return str(route(prompt, uid=uid))
         elif cmd == "complete":
             task_id = msg.get("task_id", "")
             if not task_id:
@@ -72,6 +75,39 @@ def run_command(cmd, msg):
         return f"Unknown: {cmd}"
     except Exception as exc:
         return f"Error: {exc}"
+
+
+# These operations expose runtime/host data or mutate course rewards. They are
+# allowed only when the inbox belongs to a canonical owner-owned agent.
+OWNER_AGENT_COMMANDS = frozenset({
+    "whoami", "status", "uptime", "dbsize", "sysinfo", "logs", "errors", "complete",
+})
+
+
+def _is_owner_agent_record(agent):
+    """Return True only when the agent record is owned by the canonical SLH owner."""
+    if not isinstance(agent, dict):
+        return False
+    owner_uid = str(agent.get("owner_id") or "").strip()
+    if not owner_uid:
+        return False
+    try:
+        from core.authority import is_owner
+        return bool(is_owner(owner_uid))
+    except Exception:
+        return False
+
+
+def _dispatch_worker_command(cmd, msg, *, owner_authorized):
+    """Keep free-form questions available while fail-closing host-side actions."""
+    cmd = str(cmd or "").strip().lower()
+    if cmd == "ask":
+        return run_command(cmd, msg)
+    if cmd not in ALLOWED:
+        return f"❌ command not allowed: {cmd}"
+    if cmd in OWNER_AGENT_COMMANDS and not owner_authorized:
+        return "OWNER_ONLY_AGENT"
+    return run_command(cmd, msg)
 
 
 def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
@@ -89,9 +125,14 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
                 break
             if not isinstance(data, dict):
                 continue
-            if agent_filter is not None and name not in agent_filter:
+            # Canonical dictionary keys are usually numeric IDs; the human-
+            # readable agent name is stored separately in the record.
+            agent_id = str(name)
+            display_name = str(data.get("name") or "").strip()
+            identities = {agent_id, display_name}
+            if agent_filter is not None and not identities.intersection(set(map(str, agent_filter))):
                 continue
-            if name in exclude_agents:
+            if identities.intersection(set(map(str, exclude_agents))):
                 continue
             inbox = data.setdefault("inbox", [])
             processing = data.setdefault("processing", [])
@@ -116,14 +157,17 @@ def _claim_inbox(agent_filter=None, *, exclude_agents=(), max_messages=1):
             while inbox and len(claimed) < limit:
                 msg = inbox.pop(0)
                 if not isinstance(msg, dict):
-                    msg = {"command": str(msg)}
+                    # Legacy text is a question, never an executable command.
+                    # This prevents a free-form inbox string such as "restart"
+                    # from being reinterpreted as a privileged operation.
+                    msg = {"command": "ask", "prompt": str(msg), "uid": ""}
                 claim_id = uuid.uuid4().hex
                 data["processing"].append({
                     "claim_id": claim_id,
                     "message": msg,
                     "claimed_at": now,
                 })
-                claimed.append((str(name), claim_id, dict(msg)))
+                claimed.append((str(name), claim_id, dict(msg), _is_owner_agent_record(data)))
     state_manager.atomic_update(mutate)
     return claimed
 
@@ -167,11 +211,13 @@ def agent_worker():
     while True:
         try:
             claimed = _claim_inbox(exclude_agents={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, owner_authorized in claimed:
                 cmd = str(msg.get("command", "")).strip().lower()
                 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 started = time.time()
-                res = run_command(cmd, msg) if cmd in ALLOWED else f"❌ '{cmd}' not allowed"
+                res = _dispatch_worker_command(
+                    cmd, msg, owner_authorized=owner_authorized
+                )
                 elapsed = time.time() - started
                 output = f"[{now}] {cmd}\n>> {str(res)[:MAX_OUTPUT]}\n⏱️ {elapsed:.1f}s"
                 _finalize_message(name, claim_id, output)
@@ -185,17 +231,22 @@ def tutor_worker():
     while True:
         try:
             claimed = _claim_inbox(agent_filter={"tutor"})
-            for name, claim_id, msg in claimed:
+            for name, claim_id, msg, _owner_authorized in claimed:
                 command = str(msg.get("command", ""))
+                prompt = str(msg.get("prompt") or "").strip()
+                if not prompt:
+                    # Tutor inbox is conversational only; legacy/non-ask task
+                    # labels are questions, never host commands.
+                    prompt = command.strip()
                 try:
-                    import subprocess as sp
-                    ans = sp.check_output(
-                        ["ollama", "run", "phi3:mini", command],
-                        text=True,
-                        timeout=30,
-                    )[:1000]
+                    if not prompt:
+                        ans = "Question is empty."
+                    else:
+                        from core.ask_router import route
+                        uid = str(msg.get("uid") or "").strip() or None
+                        ans = str(route(prompt, uid=uid))[:1000]
                 except Exception:
-                    ans = f"Tutor: received '{command}'. LLM offline, but I'm learning!"
+                    ans = "Tutor AI route unavailable; the request remains non-operational."
                 _finalize_message(name, claim_id, ans)
         except Exception:
             _log_worker_error("Tutor worker error")
