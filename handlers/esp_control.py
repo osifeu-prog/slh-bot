@@ -405,20 +405,18 @@ def _miner_device_owned_by(dev, uid):
     return str(dev.get("owner") or dev.get("owner_id") or "") == str(uid)
 
 
-def _is_miner_node(dev):
-    device_type = str(dev.get("type", "") or "").strip().lower()
-    if device_type not in {"esp32", "miner", "esp32_miner", "esp32-miner"}:
+def _is_esp_node(dev):
+    return str(dev.get("type", "") or "").strip().lower() in {
+        "esp32", "miner", "esp32_miner", "esp32-miner",
+    }
+
+
+def _miner_opted_in(device_id, dev):
+    try:
+        from core.miner_service import device_role_enabled
+        return device_role_enabled(device_id, dev)
+    except Exception:
         return False
-    raw_capabilities = dev.get("capabilities", [])
-    capabilities = {
-        str(value).strip().lower()
-        for value in raw_capabilities
-    } if isinstance(raw_capabilities, (list, tuple, set)) else set()
-    return (
-        dev.get("miner_enabled") is True
-        or "miner" in capabilities
-        or device_type in {"miner", "esp32_miner", "esp32-miner"}
-    )
 
 
 def _format_miner_status(device_id, payload):
@@ -457,17 +455,27 @@ def register_sync(bot):
             bot.reply_to(m, "Usage: /miner_list")
             return
 
-        devices = _load_devices()
+        try:
+            from core.miner_service import get_registered_device, list_registered_esp_devices
+            devices = list_registered_esp_devices()
+        except Exception:
+            bot.reply_to(m, "Canonical device registry unavailable; no status returned.")
+            return
+
         if device_id:
-            dev = devices.get(device_id)
-            if not dev:
-                bot.reply_to(m, f"Device {device_id} not found")
+            dev = get_registered_device(device_id)
+            if not dev or not _is_esp_node(dev):
+                bot.reply_to(m, f"Registered ESP32 device {device_id} not found")
                 return
             if not _miner_device_owned_by(dev, m.from_user.id):
                 bot.reply_to(m, "Not your device")
                 return
-            if not _is_miner_node(dev):
-                bot.reply_to(m, "Device is not a registered ESP32 miner node")
+            if not _miner_opted_in(device_id, dev):
+                bot.reply_to(
+                    m,
+                    f"ESP32 {device_id} exists in the canonical DB, but it is not enabled for miner telemetry.\n"
+                    "No measurements have been fabricated and ingestion remains blocked until the device is explicitly enrolled.",
+                )
                 return
             try:
                 payload = build_miner_payload(device_id)
@@ -477,8 +485,7 @@ def register_sync(bot):
             if payload.get("status") == "NO_DATA":
                 bot.reply_to(
                     m,
-                    f"⛏️ Miner node `{device_id}` is registered, but no authenticated telemetry has been received yet.\n"
-                    "No values are inferred or filled with zeros.",
+                    f"⛏️ ESP32 {device_id}: NO_DATA. The canonical device record exists, but no telemetry snapshot has been stored yet.",
                 )
                 return
             try:
@@ -490,30 +497,31 @@ def register_sync(bot):
         owned_devices = [
             (did, dev)
             for did, dev in devices.items()
-            if isinstance(dev, dict)
-            and _is_miner_node(dev)
-            and _miner_device_owned_by(dev, m.from_user.id)
+            if _miner_device_owned_by(dev, m.from_user.id)
         ]
         if not owned_devices:
-            bot.reply_to(m, "No registered ESP32 nodes are assigned to this account.")
+            bot.reply_to(m, "No registered ESP32 devices are assigned to this account in the canonical DB.")
             return
 
-        lines = ["⛏️ *Registered miner nodes — read only*"]
+        lines = ["⛏️ *ESP32 telemetry — read only*"]
         try:
-            for did, _dev in owned_devices[:25]:
+            for did, dev in sorted(owned_devices)[:25]:
+                if not _miner_opted_in(did, dev):
+                    lines.append(f"• `{did}` — NOT_ENABLED")
+                    continue
                 payload = build_miner_payload(did)
                 if payload.get("status") == "NO_DATA":
                     lines.append(f"• `{did}` — NO_DATA")
                 else:
+                    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
                     temp = _miner_display(payload.get("temperature_c"), "°C")
                     watts = _miner_display(payload.get("watts"), "W")
-                    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
                     lines.append(f"• `{did}` — `{shown_status}` | {temp} | {watts}")
         except Exception:
             bot.reply_to(m, "Miner telemetry database unavailable; no list returned.")
             return
         if len(owned_devices) > 25:
-            lines.append(f"... and {len(owned_devices) - 25} more nodes")
+            lines.append(f"... and {len(owned_devices) - 25} more devices")
         try:
             bot.reply_to(m, "\n".join(lines), parse_mode="Markdown")
         except Exception:
