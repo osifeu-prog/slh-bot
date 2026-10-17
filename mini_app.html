@@ -772,6 +772,7 @@ function __slhRender(id){
   window.scrollTo(0,0);
   __slhShowing=id;
   __slhSetBack();
+  if(id==='wallet'&&typeof loadBscAssets==='function')loadBscAssets();
   if(id==='exchange')loadExchange();
   if(id==='ai')loadAiReadiness();
   if(id==='market'){loadStarsStore();loadCardStore()}
