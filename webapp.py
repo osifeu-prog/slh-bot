@@ -3132,7 +3132,10 @@ def secondary_distribution_prepare():
         )
         return _no_store(jsonify(result)), 200
     except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        code = str(exc)
+        if code == "SECONDARY_DISTRIBUTION_CLOSED":
+            return jsonify({"error": code}), 403
+        return jsonify({"error": code}), 400
     except Exception as exc:
         print("[DISTRIBUTION] prepare error:", type(exc).__name__, str(exc)[:160])
         return jsonify({"error": "SECONDARY_DISTRIBUTION_PREPARE_FAILED"}), 502
