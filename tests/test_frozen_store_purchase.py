@@ -91,6 +91,59 @@ class FrozenStorePurchaseTests(unittest.TestCase):
         self.assertEqual(error, "ACCOUNT_FROZEN")
         self.assertEqual(db, before)
 
+    def test_frozen_buyer_cannot_debit_unpaid_created_digital_purchase(self):
+        db = _db(frozen_buyer=True)
+        request_id = "retry-created-frozen"
+        purchase_id = "purchase:" + request_id
+        db["purchases"][purchase_id] = {
+            "purchase_id": purchase_id,
+            "request_id": request_id,
+            "uid": "buyer",
+            "item_id": "digital-item",
+            "item_name": "Test digital item",
+            "price": 10.0,
+            "status": "CREATED",
+            "inventory_reservation": None,
+            "fulfillment": None,
+        }
+        items = {
+            "digital-item": {
+                "type": "digital",
+                "name": "Test digital item",
+                "price": 10.0,
+                "grant": {"digital": "test-item"},
+            }
+        }
+
+        with (
+            patch.object(
+                purchase_service.state_manager,
+                "load_db",
+                return_value=db,
+            ),
+            patch.object(
+                purchase_service.state_manager,
+                "atomic_update",
+                side_effect=lambda mutate: mutate(db),
+            ),
+            patch.object(purchase_service, "load_items", return_value=items),
+            patch.object(
+                purchase_service, "resolve_item_id", return_value="digital-item"
+            ),
+            patch.object(purchase_service, "apply_grant") as apply_grant,
+        ):
+            success, result = purchase_service.purchase(
+                "buyer", "digital-item", request_id=request_id
+            )
+
+        self.assertFalse(success)
+        self.assertEqual(result, "ACCOUNT_FROZEN")
+        self.assertEqual(db["users"]["buyer"]["wallet"]["credits"], 100.0)
+        self.assertEqual(db["ledger"], [])
+        self.assertEqual(db["purchases"][purchase_id]["status"], "REJECTED")
+        self.assertEqual(db["purchases"][purchase_id]["error"], "ACCOUNT_FROZEN")
+        apply_grant.assert_not_called()
+
     def test_completed_physical_purchase_retry_remains_idempotent_when_frozen(self):
         db = _db(frozen_buyer=True, frozen_seller=True)
         db["purchases"]["purchase:physical-request"] = {
