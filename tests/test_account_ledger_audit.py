@@ -15,7 +15,7 @@ def _db():
             {"uid": "someone-else", "before": 100.0, "amount": -1.0, "after": 99.0,
              "reason": "other"},
             {"uid": UID, "before": 7.0, "amount": 1.0, "after": 8.0,
-             "reason": "exchange:sell_reserve", "meta": {"order_id": "O-1"}},
+             "reason": "exchange:sell_reserve", "meta": {"order_id": "O-1", "ledger_domain": "slh"}},
         ],
     }
 
