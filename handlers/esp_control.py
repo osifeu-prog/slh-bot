@@ -362,7 +362,19 @@ def build_miner_payload(device_id):
             "alerts": [],
             "last_seen": "-",
             "source": "none",
+            "stale": True,
         }
+
+    last_seen = str(record.get("last_seen") or "-")
+    stale = True
+    try:
+        seen_at = datetime.fromisoformat(last_seen.replace("Z", "+00:00"))
+        if seen_at.tzinfo is None:
+            seen_at = seen_at.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - seen_at).total_seconds()
+        stale = age_seconds < -60 or age_seconds > 120
+    except (TypeError, ValueError, OverflowError):
+        stale = True
 
     return {
         "device_id": device_id,
@@ -374,8 +386,9 @@ def build_miner_payload(device_id):
         "status": str(record.get("health_status") or "UNKNOWN"),
         "reported_status": str(record.get("reported_status") or "-"),
         "alerts": list(record.get("alerts") or []),
-        "last_seen": str(record.get("last_seen") or "-"),
+        "last_seen": last_seen,
         "source": str(record.get("source") or "unknown"),
+        "stale": stale,
     }
 
 
@@ -409,8 +422,11 @@ def _is_miner_node(dev):
 
 
 def _format_miner_status(device_id, payload):
-    alerts = payload.get("alerts") or []
+    alerts = list(payload.get("alerts") or [])
+    if payload.get("stale"):
+        alerts.append("TELEMETRY_STALE")
     alert_text = ", ".join(str(value) for value in alerts) if alerts else "none"
+    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
     return (
         f"⛏️ *Miner Status* — `{device_id}`\n\n"
         f"Temperature: `{_miner_display(payload.get('temperature_c'), '°C')}`\n"
@@ -491,7 +507,8 @@ def register_sync(bot):
                 else:
                     temp = _miner_display(payload.get("temperature_c"), "°C")
                     watts = _miner_display(payload.get("watts"), "W")
-                    lines.append(f"• `{did}` — `{payload.get('status', 'UNKNOWN')}` | {temp} | {watts}")
+                    shown_status = "STALE" if payload.get("stale") else payload.get("status", "UNKNOWN")
+                    lines.append(f"• `{did}` — `{shown_status}` | {temp} | {watts}")
         except Exception:
             bot.reply_to(m, "Miner telemetry database unavailable; no list returned.")
             return
