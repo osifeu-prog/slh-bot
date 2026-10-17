@@ -344,7 +344,71 @@ def build_sync_payload(uid):
     }
 
 
+
+def build_miner_payload(device_id):
+    """Return miner metrics for a device (or defaults if none)."""
+    devices = _load_devices()
+    dev = devices.get(device_id) or {}
+    miner = dev.get("miner") or {}
+
+    def _number(key):
+        try:
+            return float(miner.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    return {
+        "hashrate_ths": _number("hashrate_ths"),
+        "hashrate_24h": _number("hashrate_24h"),
+        "temperature": _number("temperature"),
+        "rejected_pct": _number("rejected_pct"),
+        "status": str(miner.get("status", "unknown") or "unknown"),
+        "last_share": str(miner.get("last_share", "-") or "-"),
+        "daily_revenue_btc": _number("daily_revenue_btc"),
+        "pool": str(miner.get("pool", "-") or "-"),
+        "worker": str(miner.get("worker", device_id) or device_id),
+        "updated_at": str(miner.get("updated_at", "-") or "-"),
+    }
+
+
 def register_sync(bot):
+    @bot.message_handler(commands=["esp_miner_status"])
+    def esp_miner_status(m):
+        parts = (m.text or "").split()
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /esp_miner_status <device_id>")
+            return
+        did = parts[1]
+        dev = _load_devices().get(did)
+        if not dev:
+            bot.reply_to(m, f"Device {did} not found")
+            return
+        if not _owner_ok(dev, m.from_user.id):
+            bot.reply_to(m, "Not your device")
+            return
+
+        payload = build_miner_payload(did)
+        response = _send_cmd(did, "miner " + json.dumps(payload, ensure_ascii=False))
+        status_emoji = "✅" if payload.get("status") == "online" else "⚠️"
+        msg = (
+            f"⛏️ *Miner Status* — `{did}`\\n\\n"
+            f"Hashrate: `{payload['hashrate_ths']}` TH/s\\n"
+            f"24h avg: `{payload['hashrate_24h']}` TH/s\\n"
+            f"Temp: `{payload['temperature']}`°C\\n"
+            f"Rejected: `{payload['rejected_pct']}%`\\n"
+            f"Status: {status_emoji} `{payload['status']}`\\n"
+            f"Pool: `{payload['pool']}`\\n"
+            f"Worker: `{payload['worker']}`\\n"
+            f"Daily est.: `{payload['daily_revenue_btc']}` BTC\\n"
+            f"Last share: `{payload['last_share']}`\\n"
+            f"Updated: `{payload['updated_at']}`\\n\\n"
+            f"ESP response: `{response or 'no response'}`"
+        )
+        try:
+            bot.reply_to(m, msg, parse_mode="Markdown")
+        except Exception:
+            bot.reply_to(m, msg)
+
     @bot.message_handler(commands=["esp_sync"])
     def esp_sync(m):
         parts = m.text.split()
