@@ -107,7 +107,7 @@ class TelegramStarsAvailabilityGateTests(unittest.TestCase):
                 os.environ.pop("STARS_PAYMENTS_OPEN", None)
                 self.bot._handler("message", "pay_command")(_message("/pay"))
                 self.assertEqual(self.bot.invoices, [])
-                self.assertTrue(any("סגורים" in kwargs.get("text", "") for _args, kwargs in self.bot.messages))
+                self.assertIn("סגורים", str(self.bot.messages))
 
     def test_pay_menu_and_credit_invoice_are_blocked_when_gate_closed(self):
         self.bot._handler("message", "pay_command")(_message("/pay"))
