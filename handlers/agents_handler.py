@@ -180,7 +180,7 @@ def register(bot, context):
         lines = [f"Outbox ({agent.get('name', agent_id)}) — newest first:"]
         for item in reversed(outbox):
             lines.append(str(item)[:700])
-        bot.reply_to(m, "\\n\\n".join(lines)[:3900])
+        bot.reply_to(m, "\n\n".join(lines)[:3900])
 
     @bot.message_handler(commands=["agent_delete"])
     def agent_delete_cmd(m):
