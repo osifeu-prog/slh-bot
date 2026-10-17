@@ -1,4 +1,5 @@
 import copy
+from decimal import Decimal
 import unittest
 from unittest.mock import patch
 
