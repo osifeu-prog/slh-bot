@@ -14,6 +14,8 @@ class FakeBot:
         self.pre_checkout_calls = []
         self.callback_calls = []
         self.sent_invoices = []
+        self.sent_messages = []
+        self.replies = []
 
     def _decorator(self, *args, **kwargs):
         def register(fn):
@@ -35,10 +37,10 @@ class FakeBot:
         self.sent_invoices.append((args, kwargs))
 
     def send_message(self, *args, **kwargs):
-        pass
+        self.sent_messages.append((args, kwargs))
 
     def reply_to(self, *args, **kwargs):
-        pass
+        self.replies.append((args, kwargs))
 
     def edit_message_text(self, *args, **kwargs):
         pass
@@ -63,9 +65,9 @@ def test_pay_menu_does_not_load_account_or_offer_checkout_when_closed(monkeypatc
     bot = FakeBot()
     with patch.object(payment_handler.state_manager, "load_db", side_effect=AssertionError("must not load")):
         payment_handler._send_pay_menu(bot, 42, "100")
-    # FakeBot tracks messages indirectly; the important boundary is that no
-    # account lookup and no invoice creation is reached when closed.
     assert bot.sent_invoices == []
+    assert bot.sent_messages
+    assert "סגורים" in bot.sent_messages[0][0][1]
 
 
 def test_vip_invoice_link_is_not_created_when_closed(monkeypatch):
@@ -118,6 +120,8 @@ def test_store_stars_command_does_not_build_invoice_when_closed(monkeypatch):
     with patch.object(stars_store, "load_items", side_effect=AssertionError("must not load catalog")):
         bot.handlers["buystars"](message)
     assert bot.sent_invoices == []
+    assert bot.replies
+    assert "סגורים" in bot.replies[0][0][1]
 
 
 def test_gate_closure_does_not_add_a_guard_to_confirmed_payment_callback():
