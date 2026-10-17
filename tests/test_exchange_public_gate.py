@@ -56,6 +56,24 @@ class ExchangePublicGateTests(unittest.TestCase):
             },
         }
 
+    def _matched_trade_db(self):
+        db = self._db()
+        with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "1"}, clear=False):
+            exchange_handler._place(
+                db, "seller", "sell",
+                exchange_handler._dec("5", "amount"),
+                exchange_handler._dec("2", "price"),
+                "req-party-sell",
+            )
+            exchange_handler._place(
+                db, "buyer", "buy",
+                exchange_handler._dec("5", "amount"),
+                exchange_handler._dec("2", "price"),
+                "req-party-buy",
+            )
+        self.assertEqual(len(db["exchange_trades"]), 1)
+        return db
+
     def test_order_entry_is_fail_closed(self):
         db = self._db()
         with patch.dict(os.environ, {"SLH_EXCHANGE_PUBLIC_OPEN": "0"}, clear=False):
