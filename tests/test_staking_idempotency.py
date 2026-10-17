@@ -112,6 +112,37 @@ class StakingIdempotencyTests(unittest.TestCase):
 
         self.assertEqual(self.read_db(), before)
 
+    def test_nan_unstake_unlock_time_fails_closed_without_mutation(self):
+        created = staking_service.stake_locked(
+            "u1", 10, lock_days=1, request_id="stake-nan-unlock",
+        )
+        db = self.read_db()
+        position_id = created["position"]["id"]
+        db["stake_positions"][position_id]["unlocks_at"] = float("nan")
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "INVALID_STAKE_POSITION"):
+            staking_service.unstake_locked("u1", position_id, request_id="nan-unlock")
+
+        self.assertEqual(self.read_db(), before)
+
+    def test_non_list_ledger_blocks_unstake_before_wallet_mutation(self):
+        created = staking_service.stake_locked(
+            "u1", 10, lock_days=1, request_id="stake-bad-ledger",
+        )
+        db = self.read_db()
+        position_id = created["position"]["id"]
+        db["stake_positions"][position_id]["unlocks_at"] = 0
+        db["ledger"] = {"corrupt": True}
+        self.db_path.write_text(json.dumps(db), encoding="utf-8")
+        before = self.read_db()
+
+        with self.assertRaisesRegex(ValueError, "INVALID_LEDGER_STATE"):
+            staking_service.unstake_locked("u1", position_id, request_id="bad-ledger-unstake")
+
+        self.assertEqual(self.read_db(), before)
+
     def test_unstake_request_id_cannot_be_reused_for_a_different_position(self):
         first_position = staking_service.stake_locked("u1", 10, lock_days=1, request_id="stake-a")
         second_position = staking_service.stake_locked("u1", 10, lock_days=1, request_id="stake-b")
