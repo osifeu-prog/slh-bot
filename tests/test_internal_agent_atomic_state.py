@@ -94,7 +94,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.db["agents"]["alpha"]["outbox"] = [f"old-{index}" for index in range(25)]
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
-            name, claim_id, _message = claimed[0]
+            name, claim_id, _message, _owner_authorized = claimed[0]
             finalized = internal_agent._finalize_message(name, claim_id, "new-output")
 
         self.assertTrue(finalized)
@@ -208,6 +208,57 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertEqual([item[0] for item in tutor], ["29"])
         self.assertEqual(self.db["agents"]["29"]["inbox"], [])
         self.assertEqual(self.db["agents"]["30"]["inbox"], [])
+
+    def test_claimed_host_command_includes_owner_owned_agent_authority(self):
+        self.db["agents"] = {
+            "16": {
+                "name": "customer-agent",
+                "owner_id": "customer",
+                "inbox": [{"command": "whoami", "uid": "customer"}],
+                "processing": [],
+                "outbox": [],
+            },
+            "17": {
+                "name": "owner-agent",
+                "owner_id": "owner",
+                "inbox": [{"command": "whoami", "uid": "owner"}],
+                "processing": [],
+                "outbox": [],
+            },
+        }
+        with (
+            patch("core.authority.is_owner", side_effect=lambda uid: str(uid) == "owner"),
+            patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update),
+        ):
+            claimed = internal_agent._claim_inbox(max_messages=10)
+
+        self.assertEqual({item[0]: item[3] for item in claimed}, {
+            "16": False,
+            "17": True,
+        })
+
+    def test_non_owner_agent_cannot_run_host_commands_but_can_ask_slh_ai(self):
+        with (
+            patch.object(internal_agent, "run_command", return_value="answer from fallback") as run,
+            patch("core.ask_router.route", return_value="answer from fallback") as route,
+        ):
+            blocked = internal_agent._dispatch_worker_command(
+                "whoami", {"uid": "customer"}, owner_authorized=False
+            )
+            answer = internal_agent._dispatch_worker_command(
+                "ask",
+                {"uid": "customer", "prompt": "Please explain status"},
+                owner_authorized=False,
+            )
+            owner_restart = internal_agent._dispatch_worker_command(
+                "restart", {"uid": "owner"}, owner_authorized=True
+            )
+
+        self.assertEqual(blocked, "OWNER_ONLY_AGENT")
+        self.assertEqual(answer, "answer from fallback")
+        self.assertIn("not allowed", owner_restart)
+        run.assert_not_called()
+        route.assert_not_called()
 
     def test_tutor_and_general_workers_claim_separate_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
