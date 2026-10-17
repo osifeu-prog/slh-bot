@@ -5,6 +5,7 @@ import urllib.request
 
 import state_manager
 from core import stars_payment_authority
+from core.financial_gates import stars_payments_open
 from core.stars_price_authority import (
     CREDIT_PACKS_BY_ID,
     TELEGRAM_STARS_CURRENCY,
@@ -60,6 +61,9 @@ def _send_vip_invoice(bot, chat_id, uid):
 
 
 def _send_pay_menu(bot, chat_id, uid):
+    if not stars_payments_open():
+        bot.send_message(chat_id, "⛔ תשלומי Telegram Stars סגורים כעת. לא נוצרה חשבונית חדשה.")
+        return
     db = state_manager.load_db()
     if uid not in db.get("users", {}):
         bot.send_message(chat_id, "❌ Please /join first.")
@@ -85,6 +89,9 @@ def register_payment_handlers(bot):
         if until > int(time.time()):
             bot.send_message(m.chat.id, f"⭐ VIP פעיל עד {time.strftime('%Y-%m-%d', time.gmtime(until))}.")
             return
+        if not stars_payments_open():
+            bot.send_message(m.chat.id, "⛔ תשלומי Telegram Stars סגורים כעת. לא נוצרה חשבונית VIP חדשה.")
+            return
         try:
             _send_vip_invoice(bot, m.chat.id, uid)
         except Exception as e:
@@ -102,6 +109,9 @@ def register_payment_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
+        if not stars_payments_open():
+            bot.answer_callback_query(call.id, "Telegram Stars payments are currently closed.")
+            return
         pack_id = call.data.split("_", 1)[1]
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
@@ -131,6 +141,13 @@ def register_payment_handlers(bot):
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
+        if not stars_payments_open():
+            bot.answer_pre_checkout_query(
+                query.id,
+                ok=False,
+                error_message="Telegram Stars payments are currently closed.",
+            )
+            return
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
             item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
