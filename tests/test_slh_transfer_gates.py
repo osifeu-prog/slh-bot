@@ -110,6 +110,66 @@ def test_exact_p2p_replay_remains_noop_after_gate_closes_and_sender_freezes(monk
     assert db == before
 
 
+def test_conflicting_p2p_replay_reason_is_rejected_without_mutation(monkeypatch):
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "1")
+    db = _p2p_db()
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        slh_distribution.transfer(
+            sender_uid=SENDER,
+            recipient_uid=RECIPIENT_UID,
+            amount="2",
+            event_id="p2p-reason-conflict",
+            reason="p2p",
+        )
+    before = copy.deepcopy(db)
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        with pytest.raises(ValueError, match="EVENT_ID_CONFLICT"):
+            slh_distribution.transfer(
+                sender_uid=SENDER,
+                recipient_uid=RECIPIENT_UID,
+                amount="2",
+                event_id="p2p-reason-conflict",
+                reason="alpha_air",
+            )
+    assert db == before
+
+
+def test_conflicting_p2p_replay_kind_is_rejected_without_mutation(monkeypatch):
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "1")
+    db = _p2p_db()
+    db["slh_token_ledger"].append({
+        "event_id": "p2p-kind-conflict",
+        "from_uid": SENDER,
+        "to_uid": RECIPIENT_UID,
+        "amount": 2.0,
+        "reason": "p2p",
+        "kind": "exchange_reserve",
+    })
+    before = copy.deepcopy(db)
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        with pytest.raises(ValueError, match="EVENT_ID_CONFLICT"):
+            slh_distribution.transfer(
+                sender_uid=SENDER,
+                recipient_uid=RECIPIENT_UID,
+                amount="2",
+                event_id="p2p-kind-conflict",
+                reason="p2p",
+            )
+    assert db == before
+
+
 def test_secondary_distribution_prepare_defaults_closed_before_wallet_or_rpc_work(monkeypatch):
     monkeypatch.delenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", raising=False)
     monkeypatch.setattr(

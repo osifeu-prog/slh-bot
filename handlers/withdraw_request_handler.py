@@ -158,6 +158,28 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         payout_ref = str(ref or "").strip()
         if not payout_ref or len(payout_ref) > 256:
             raise ValueError("REF_REQUIRED")
+
+        # Validate the persisted request and current owner policy at the same
+        # atomic boundary that changes it to paid. A request may have been
+        # created while the account was active and remain pending after it is
+        # frozen. Never auto-refund or alter balances on this path.
+        uid = str(req.get("uid") or "").strip()
+        users = db.get("users")
+        user = users.get(uid) if isinstance(users, dict) else None
+        if not uid or not isinstance(user, dict):
+            raise ValueError("WITHDRAWAL_RECORD_INVALID")
+        if user.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
+
+        try:
+            amount = float(req.get("amount"))
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("WITHDRAWAL_RECORD_INVALID") from None
+        if not math.isfinite(amount) or amount < MIN_WITHDRAW:
+            raise ValueError("WITHDRAWAL_RECORD_INVALID")
+        if not valid_ton_address(req.get("address")):
+            raise ValueError("WITHDRAWAL_RECORD_INVALID")
+
         req.update(
             {
                 "status": "paid",
@@ -174,9 +196,10 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         user = users.get(uid) if isinstance(users, dict) else None
         if not isinstance(user, dict):
             raise ValueError("USER_NOT_FOUND")
-        wallet = user.setdefault("wallet", {})
-        if not isinstance(wallet, dict):
+        wallet_value = user.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
             raise ValueError("WALLET_INVALID")
+        wallet = wallet_value if isinstance(wallet_value, dict) else {}
         try:
             amount = float(req.get("amount"))
             before = float(wallet.get("credits", 0))
@@ -204,6 +227,8 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
                 },
             )
         )
+        if wallet_value is None:
+            user["wallet"] = wallet
         wallet["credits"] = after
         req.update(
             {
@@ -215,7 +240,6 @@ def resolve_withdrawal(db, req_id, action, admin_uid, ref=None):
         return req
 
     raise ValueError("BAD_ACTION")
-
 
 def _is_admin(uid):
     return is_owner(uid) or has_permission(uid, "agents.manage")

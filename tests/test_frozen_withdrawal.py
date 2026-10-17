@@ -42,5 +42,41 @@ class FrozenWithdrawalTests(unittest.TestCase):
         self.assertEqual(db, before)
 
 
+
+
+    def test_request_frozen_after_creation_cannot_be_approved(self):
+        db = _db(False)
+        with (
+            patch.object(wh, "withdrawals_open", return_value=True),
+            patch.object(wh, "valid_ton_address", return_value=True),
+        ):
+            req_id = wh.create_withdrawal(db, "u1", 1.0, "EQ-test-address")
+            db["users"]["u1"]["frozen"] = True
+            before = copy.deepcopy(db)
+
+            with self.assertRaisesRegex(ValueError, "ACCOUNT_FROZEN"):
+                wh.resolve_withdrawal(
+                    db, req_id, "approve", "admin", "manual-payout-ref"
+                )
+
+        self.assertEqual(db, before)
+        self.assertEqual(db["withdrawal_requests"][req_id]["status"], "pending")
+
+    def test_frozen_pending_request_can_still_be_rejected_for_refund(self):
+        db = _db(False)
+        with (
+            patch.object(wh, "withdrawals_open", return_value=True),
+            patch.object(wh, "valid_ton_address", return_value=True),
+        ):
+            req_id = wh.create_withdrawal(db, "u1", 1.0, "EQ-test-address")
+        db["users"]["u1"]["frozen"] = True
+
+        result = wh.resolve_withdrawal(db, req_id, "reject", "admin")
+
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(db["users"]["u1"]["wallet"]["credits"], 5.0)
+        self.assertEqual(db["ledger"][-1]["reason"], "withdraw:refund")
+
+
 if __name__ == "__main__":
     unittest.main()
