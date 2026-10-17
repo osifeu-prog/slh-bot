@@ -11,16 +11,7 @@ from core.revenue_ledger import summary as revenue_summary
 
 
 def _canonical_xtr_rows(db):
-    rows = db.get("revenue_ledger", [])
-    if not isinstance(rows, list):
-        return []
-    return [
-        row for row in rows
-        if isinstance(row, dict)
-        and str(row.get("currency", "")) == "XTR"
-        and float(row.get("amount", 0) or 0) > 0
-        and str(row.get("reference", "")).strip()
-    ]
+    return revenue_ledger.reportable_rows(db, currency="XTR")
 
 
 def _label(row):
@@ -177,10 +168,10 @@ def register(bot):
             bucket["stars"] += float(row.get("amount", 0) or 0)
 
         lines = [
-            "📊 SLH Revenue — canonical external payments",
-            f"💰 Real Telegram Stars: {total_stars:g}",
+            "📊 SLH gross receipts — canonical external payments (not profit)",
+            f"💰 Verified gross Telegram Stars receipts: {total_stars:g}",
             f"👥 Paying customers: {paying_customers}",
-            f"🧾 Confirmed revenue events: {len(rows)}",
+            f"🧾 Confirmed gross-receipt events: {len(rows)}",
         ]
 
         for label, bucket in sorted(by_product.items()):
@@ -189,8 +180,9 @@ def register(bot):
             )
 
         lines.append("")
+        lines.append("ℹ️ These are gross receipts, not profit; fees, costs, refunds and liabilities are not netted.")
         lines.append("ℹ️ Internal Credit spending is not cash revenue.")
-        lines.append("ℹ️ Fake/test payment records are excluded because this view uses revenue_ledger.")
+        lines.append("ℹ️ Totals require matching local payment/order evidence; test/fake and unmatched rows are excluded.")
 
         bot.reply_to(msg, "\n".join(lines))
 
@@ -217,9 +209,19 @@ def register(bot):
             bot.reply_to(msg, "⛔️ Admin only")
             return
         data = revenue_summary()
-        lines = [f"📈 Revenue ledger events: {data['events']}"]
+        lines = [
+            f"📈 Revenue ledger verified events: {data['events']}",
+            f"Raw ledger rows: {data.get('raw_events', data['events'])}",
+            f"Excluded test/legacy events: {data.get('excluded_test_events', 0)}",
+            f"Excluded unmatched/invalid events: {data.get('excluded_unverified_events', 0)}",
+        ]
         for currency, total in sorted(data["totals"].items()):
-            lines.append(f"• {currency}: {total:g}")
+            lines.append(f"• Verified {currency}: {total:g}")
+        for currency, total in sorted(data.get("excluded_test_totals", {}).items()):
+            lines.append(f"• Excluded test/legacy {currency}: {total:g}")
+        for currency, total in sorted(data.get("excluded_unverified_totals", {}).items()):
+            lines.append(f"• Excluded unmatched/invalid {currency}: {total:g}")
+        lines.append("XTR totals require matching local payment/order evidence; live Telegram reconciliation is separate.")
         lines.append("Internal Credit spending is not counted as cash revenue.")
         bot.reply_to(msg, "\n".join(lines))
 
