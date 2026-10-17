@@ -110,6 +110,40 @@ def test_exact_p2p_replay_remains_noop_after_gate_closes_and_sender_freezes(monk
     assert db == before
 
 
+def test_reused_event_id_with_different_reason_fails_closed(monkeypatch):
+    monkeypatch.setenv("SLH_INTERNAL_TRANSFERS_OPEN", "1")
+    db = _p2p_db()
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        first = slh_distribution.transfer(
+            sender_uid=SENDER,
+            recipient_uid=RECIPIENT_UID,
+            amount="2",
+            event_id="p2p-reason-conflict",
+            reason="p2p:credits",
+        )
+    assert first["status"] == "completed"
+    before = copy.deepcopy(db)
+
+    with patch.object(
+        slh_distribution.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        with pytest.raises(ValueError, match="EVENT_ID_CONFLICT"):
+            slh_distribution.transfer(
+                sender_uid=SENDER,
+                recipient_uid=RECIPIENT_UID,
+                amount="2",
+                event_id="p2p-reason-conflict",
+                reason="alpha_air",
+            )
+    assert db == before
+
+
 def test_secondary_distribution_prepare_defaults_closed_before_wallet_or_rpc_work(monkeypatch):
     monkeypatch.delenv("SLH_BSC_USER_SIGNED_TRANSFERS_OPEN", raising=False)
     monkeypatch.setattr(
