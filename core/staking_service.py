@@ -49,6 +49,13 @@ def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
                     'credits': float(wallet.get('credits', 0) or 0),
                     'staked': float(wallet.get('staked', 0) or 0),
                 }
+
+        # Block every new stake debit for a frozen account at the atomic
+        # mutation boundary. Exact replays above remain safe and do not debit
+        # again, which preserves crash/retry recovery for existing positions.
+        if isinstance(user, dict) and user.get("frozen") is True:
+            raise ValueError("ACCOUNT_FROZEN")
+
         if credits < amount:
             raise ValueError("insufficient credits")
         now = time.time()
