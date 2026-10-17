@@ -29,6 +29,7 @@ _ERRORS = {
     "INVALID_AMOUNT": "❌ כמות לא תקינה (מינימום 1 credit)",
     "INVALID_ADDRESS": "❌ כתובת TON לא תקינה",
     "USER_NOT_FOUND": "❌ משתמש לא נמצא",
+    "ACCOUNT_FROZEN": "⛔ החשבון מוקפא; לא ניתן ליצור בקשת משיכה.",
     "INSUFFICIENT_CREDITS": "❌ אין מספיק Credits זמינים",
     "REQUEST_NOT_PENDING": "❌ הבקשה לא נמצאה או שכבר טופלה",
     "REF_REQUIRED": "❌ נדרשת אסמכתא לתשלום שכבר בוצע",
@@ -87,6 +88,8 @@ def create_withdrawal(db, uid, amount, address):
     user = users.get(uid) if isinstance(users, dict) else None
     if not isinstance(user, dict):
         raise ValueError("USER_NOT_FOUND")
+    if user.get("frozen") is True:
+        raise ValueError("ACCOUNT_FROZEN")
 
     wallet = user.setdefault("wallet", {})
     if not isinstance(wallet, dict):

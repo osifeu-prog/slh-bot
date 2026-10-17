@@ -79,8 +79,94 @@ def _row_summary(index: int, row: dict) -> dict:
         "tx_suffix": tx_hash[-8:] if tx_hash else None,
         "order_id": str(meta.get("order_id") or "")[:40] or None,
         "event_id": str(row.get("event_id") or meta.get("event_id") or "")[:64] or None,
+        "transfer_id": str(meta.get("transfer_id") or "")[:80] or None,
+        "purchase_id": str(meta.get("purchase_id") or "")[:120] or None,
+        "idempotency_key": str(meta.get("idempotency_key") or "")[:120] or None,
+        "item_id": str(meta.get("item_id") or "")[:80] or None,
     }
 
+
+def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict) -> dict:
+    """Return linked source-record context for a gap without resolving it.
+
+    Source records may explain a transaction's purpose, but they are never
+    treated as proof that a balance discontinuity is reconciled.
+    """
+    evidence: dict[str, Any] = {}
+    ledger = db.get("ledger") if isinstance(db.get("ledger"), list) else []
+
+    transfer_id = str(previous.get("transfer_id") or next_row.get("transfer_id") or "").strip()
+    if transfer_id:
+        transfer_rows = []
+        for index, row in enumerate(ledger):
+            if not isinstance(row, dict):
+                continue
+            meta = row.get("meta")
+            meta = meta if isinstance(meta, dict) else {}
+            linked_id = str(meta.get("transfer_id") or row.get("transfer_id") or "").strip()
+            if linked_id != transfer_id:
+                continue
+            transfer_rows.append({
+                "index": index,
+                "uid": str(row.get("uid") or ""),
+                "reason": str(row.get("reason") or "UNKNOWN")[:80],
+                "before": _number(row.get("before")),
+                "amount": _number(row.get("amount")),
+                "after": _number(row.get("after")),
+            })
+        processed = db.get("processed_transfers")
+        processed_keys = [
+            str(key) for key, value in processed.items()
+            if str(value) == transfer_id
+        ][:5] if isinstance(processed, dict) else []
+        evidence["transfer"] = {
+            "transfer_id": transfer_id,
+            "ledger_rows": transfer_rows[:8],
+            "processed_keys": processed_keys,
+            "record_found": bool(transfer_rows or processed_keys),
+        }
+
+    purchase_id = str(next_row.get("purchase_id") or previous.get("purchase_id") or "").strip()
+    if purchase_id:
+        purchases = db.get("purchases")
+        record = purchases.get(purchase_id) if isinstance(purchases, dict) else None
+        if not isinstance(record, dict) and isinstance(purchases, dict):
+            record = next(
+                (item for item in purchases.values()
+                 if isinstance(item, dict) and str(item.get("purchase_id") or "") == purchase_id),
+                None,
+            )
+        if isinstance(record, dict):
+            fulfillment = record.get("fulfillment")
+            fulfillment = fulfillment if isinstance(fulfillment, dict) else {}
+            evidence["purchase"] = {
+                "purchase_id": purchase_id,
+                "record_found": True,
+                "status": str(record.get("status") or "UNKNOWN")[:40],
+                "uid": str(record.get("uid") or ""),
+                "seller_uid": str(record.get("seller_uid") or ""),
+                "item_id": str(record.get("item_id") or "")[:80],
+                "price": _number(record.get("price")),
+                "seller_payout": _number(record.get("seller_payout")),
+                "commission": _number(record.get("commission")),
+                "created_at": str(record.get("created_at") or "")[:40],
+                "fulfillment_method": str(fulfillment.get("method") or "")[:40],
+            }
+        else:
+            evidence["purchase"] = {
+                "purchase_id": purchase_id,
+                "record_found": False,
+            }
+
+    linked = any(
+        isinstance(value, dict) and value.get("record_found") is True
+        for value in evidence.values()
+    )
+    evidence["source_match_status"] = (
+        "CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH"
+    )
+    evidence["resolves_gap"] = False
+    return evidence
 
 def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS) -> dict:
     """Check per-user row arithmetic, sequence continuity, and wallet/tail equality."""
@@ -180,15 +266,24 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
                         "reason": previous["reason"], "domain_hint": prev_domain,
                         "after": previous["after"], "order_id": previous["order_id"],
                         "event_id": previous["event_id"],
+                        "transfer_id": previous["transfer_id"],
+                        "purchase_id": previous["purchase_id"],
+                        "idempotency_key": previous["idempotency_key"],
+                        "item_id": previous["item_id"],
                     },
                     "next": {
                         "index": summary["index"], "time": summary["time"],
                         "reason": summary["reason"], "domain_hint": next_domain,
                         "before": before, "order_id": summary["order_id"],
                         "event_id": summary["event_id"],
+                        "transfer_id": summary["transfer_id"],
+                        "purchase_id": summary["purchase_id"],
+                        "idempotency_key": summary["idempotency_key"],
+                        "item_id": summary["item_id"],
                     },
                     "delta_to_explain": before - previous["after"],
                     "source_evidence_required": True,
+                    "source_evidence": _source_evidence_for_gap(db, previous, summary),
                 })
 
         previous = summary

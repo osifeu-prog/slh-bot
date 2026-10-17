@@ -24,6 +24,7 @@ class Capability:
 _READ_CAPABILITIES = (
     Capability("system.health", "Return safe MCP service health metadata.", "public.view", False),
     Capability("system.snapshot", "Return a safe SLH control-plane snapshot.", "public.view", False),
+    Capability("preferences.notifications.get", "Read the authenticated principal's own progress-notification preference.", "agents.view_self", False),
     Capability("agents.list", "List agents visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.get", "Get one agent visible to the authenticated SLH principal.", "agents.view_self", False),
     Capability("agents.consistency", "Compare canonical agent DB state with its snapshot without mutating either.", "agents.view_self", False),
@@ -46,6 +47,7 @@ _READ_CAPABILITIES = (
 )
 
 _MUTATING_CAPABILITIES = (
+    Capability("preferences.notifications.set", "Set the authenticated principal's own progress-notification preference.", "agents.modify_self", True),
     Capability("agents.create", "Create an SLH agent.", "agents.manage", True),
     Capability("agents.update", "Update an SLH agent.", "agents.manage", True),
     Capability("missions.create", "Create an SLH mission.", "agents.manage", True),
