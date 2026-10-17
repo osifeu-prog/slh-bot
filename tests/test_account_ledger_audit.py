@@ -47,7 +47,7 @@ def test_credits_sequence_continues_across_interleaved_slh_rows():
             {"uid": UID, "before": 100.0, "amount": -5.0, "after": 95.0,
              "reason": "store:purchase"},
             {"uid": UID, "before": 2000.0, "amount": -1000.0, "after": 1000.0,
-             "reason": "exchange:sell_reserve"},
+             "reason": "exchange:sell_reserve", "meta": {"ledger_domain": "slh"}},
             {"uid": UID, "before": 95.0, "amount": -5.0, "after": 90.0,
              "reason": "store:purchase"},
         ],
@@ -62,7 +62,31 @@ def test_credits_sequence_continues_across_interleaved_slh_rows():
     assert result["current_balance_matches_tail"] is True
 
 
-def test_same_unknown_domain_gap_still_blocks_account_audit():
+
+
+def test_reason_only_slh_hint_is_ambiguous_and_cannot_hide_a_credits_gap():
+    db = {
+        "users": {UID: {"wallet": {"credits": 90.0}}},
+        "ledger": [
+            {"uid": UID, "before": 100.0, "amount": -5.0, "after": 95.0,
+             "reason": "store:purchase", "meta": {"ledger_domain": "credits"}},
+            {"uid": UID, "before": 2000.0, "amount": -1000.0, "after": 1000.0,
+             "reason": "exchange:sell_reserve"},
+            {"uid": UID, "before": 95.0, "amount": -5.0, "after": 90.0,
+             "reason": "store:purchase", "meta": {"ledger_domain": "credits"}},
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    assert result["credits_sequence_rows_checked"] == 3
+    assert result["non_credits_rows_skipped"] == 0
+    assert result["continuity_break_count"] == 2
+    assert [item["delta_to_explain"] for item in result["findings"]] == [
+        1905.0, -905.0
+    ]
+\n\ndef test_same_unknown_domain_gap_still_blocks_account_audit():
     db = _db()
     db["ledger"][2]["reason"] = "store:p2p_sale"
     db["ledger"][2]["before"] = 7.0
