@@ -27,84 +27,154 @@ def get_balance_safe(uid):
 def record_transaction(uid, amount, reason="unknown", meta=None, *, return_details=False):
     uid = str(uid)
 
-    if not isinstance(amount, (int, float)):
+    if not isinstance(amount, (int, float)) or isinstance(amount, bool):
         raise TypeError("amount must be numeric")
     if not math.isfinite(amount):
         raise ValueError("INVALID_AMOUNT")
 
-    meta = meta or {}
+    if meta is None:
+        meta = {}
+    if not isinstance(meta, dict):
+        raise TypeError("meta must be a dictionary")
 
     def mutate(db):
-        users = db.setdefault("users", {})
+        users = db.get("users")
+        if not isinstance(users, dict):
+            raise ValueError("USERS_STATE_INVALID")
+        user = users.get(uid)
+        if not isinstance(user, dict):
+            raise ValueError("USER_NOT_FOUND")
 
-        if uid not in users:
-            raise Exception("USER_NOT_FOUND")
+        ledger = db.get("ledger", [])
+        if not isinstance(ledger, list):
+            raise ValueError("LEDGER_STATE_INVALID")
 
-        ledger = db.setdefault("ledger", [])
-
-        idempotency_key = meta.get("idempotency_key")
+        idempotency_key = str(meta.get("idempotency_key") or "").strip()
         if idempotency_key:
+            keyed_entries = [
+                row for row in ledger
+                if isinstance(row, dict)
+                and isinstance(row.get("meta"), dict)
+                and str(row["meta"].get("idempotency_key") or "").strip() == idempotency_key
+            ]
+            if len(keyed_entries) > 1:
+                if not return_details:
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+                wallet_value = user.get("wallet")
+                balance_after = wallet_value.get("credits") if isinstance(wallet_value, dict) else None
+                return {
+                    "status": "CONFLICT",
+                    "balance_after": balance_after,
+                    "credits_applied": 0.0,
+                    "existing_uid": str(keyed_entries[0].get("uid")),
+                }
+
             for entry in ledger:
-                existing_meta = entry.get("meta") or {}
-                if existing_meta.get("idempotency_key") != idempotency_key:
+                if not isinstance(entry, dict):
+                    continue
+                existing_meta = entry.get("meta")
+                if not isinstance(existing_meta, dict):
+                    continue
+                if str(existing_meta.get("idempotency_key") or "").strip() != idempotency_key:
                     continue
 
-                if not return_details:
-                    return entry["after"]
-
+                try:
+                    old_amount = float(entry.get("amount", 0) or 0)
+                except (TypeError, ValueError, OverflowError):
+                    old_amount = float("nan")
                 conflict = (
                     str(entry.get("uid")) != uid
                     or str(entry.get("reason")) != str(reason)
-                    or float(entry.get("amount", 0) or 0) != float(amount)
+                    or not math.isfinite(old_amount)
+                    or old_amount != float(amount)
                 )
-                for field in ("tx_hash", "bnb_amount_wei", "from", "to"):
-                    if field not in meta:
+
+                # Treat transaction identity as immutable regardless of the
+                # legacy numeric-return or details-return API contract.
+                for field in (
+                    "purchase_id",
+                    "item_id",
+                    "tx_hash",
+                    "bnb_amount_wei",
+                    "from",
+                    "to",
+                ):
+                    old_present = field in existing_meta
+                    new_present = field in meta
+                    if not old_present and not new_present:
                         continue
-                    if field not in existing_meta:
+                    if not old_present or not new_present:
                         conflict = True
                         break
-                    old_value, new_value = existing_meta.get(field), meta.get(field)
+                    old_value = existing_meta.get(field)
+                    new_value = meta.get(field)
                     if field in {"tx_hash", "from", "to"}:
                         matches = str(old_value or "").lower() == str(new_value or "").lower()
-                    else:
+                    elif field == "bnb_amount_wei":
                         try:
                             matches = int(old_value) == int(new_value)
-                        except (TypeError, ValueError):
+                        except (TypeError, ValueError, OverflowError):
                             matches = False
+                    else:
+                        matches = str(old_value) == str(new_value)
                     if not matches:
                         conflict = True
                         break
 
-                wallet = users.get(uid, {}).get("wallet", {})
-                return {
-                    "status": "CONFLICT" if conflict else "DUPLICATE",
-                    "balance_after": wallet.get("credits"),
-                    "credits_applied": 0.0,
-                    "existing_uid": str(entry.get("uid")),
-                }
+                if conflict and not return_details:
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
 
-        user = users[uid]
-        # Enforce the freeze at the atomic debit boundary as well as purchase
-        # creation. An already-recorded idempotent debit returns above, so a
-        # paid purchase can still recover safely after a crash.
-        if (
-            amount < 0
-            and str(reason) == "store:purchase"
-            and isinstance(user, dict)
-            and user.get("frozen") is True
-        ):
-            raise ValueError("ACCOUNT_FROZEN")
+                wallet_value = user.get("wallet")
+                if not isinstance(wallet_value, dict):
+                    raise ValueError("WALLET_STATE_INVALID")
+                balance_after = wallet_value.get("credits")
+                if return_details:
+                    return {
+                        "status": "CONFLICT" if conflict else "DUPLICATE",
+                        "balance_after": balance_after,
+                        "credits_applied": 0.0,
+                        "existing_uid": str(entry.get("uid")),
+                    }
+                try:
+                    existing_after = float(entry.get("after"))
+                except (TypeError, ValueError, OverflowError):
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT") from None
+                if not math.isfinite(existing_after):
+                    raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+                return entry["after"]
 
-        wallet = user.setdefault("wallet", {})
+        # Replays are resolved above, so frozen accounts can retry an exact
+        # previously-applied debit without a second mutation. Every new debit,
+        # regardless of reason (store, arcade, P2P, generic bridge, etc.), is
+        # blocked at this atomic canonical boundary while the account is frozen.
+        if amount < 0:
+            from core.slh_distribution import is_frozen_account
 
-        before = wallet.get("credits", 0)
+            if is_frozen_account(db, uid):
+                raise ValueError("ACCOUNT_FROZEN")
+
+        wallet_value = user.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
+            raise ValueError("WALLET_STATE_INVALID")
+        wallet = wallet_value if isinstance(wallet_value, dict) else {}
+
+        try:
+            before = float(wallet.get("credits", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("INVALID_CREDITS_BALANCE") from None
+        if not math.isfinite(before):
+            raise ValueError("INVALID_CREDITS_BALANCE")
+
         after = before + amount
-
         if after < 0:
             raise ValueError("INSUFFICIENT_CREDITS")
 
+        # Mutation starts only after identity, freeze and balance validations.
+        if wallet_value is None:
+            user["wallet"] = wallet
         wallet["credits"] = after
 
+        ledger = db.setdefault("ledger", ledger)
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
@@ -112,7 +182,7 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
             "amount": amount,
             "after": after,
             "reason": reason,
-            "meta": meta,
+            "meta": dict(meta),
         })
 
         if return_details:
@@ -125,7 +195,6 @@ def record_transaction(uid, amount, reason="unknown", meta=None, *, return_detai
         return after
 
     return state_manager.atomic_update(mutate)
-
 
 def record_ton_deposit(
     uid,
@@ -146,16 +215,19 @@ def record_ton_deposit(
     uid = str(uid)
     meta = meta or {}
 
-    # P0 input validation: TON deposits may only create positive credits.
-    if not isinstance(credits, (int, float)):
+    # Fail closed on booleans and non-finite numeric values before any DB
+    # mutation; NaN bypasses ordinary <= 0 checks and can poison wallet balances.
+    if isinstance(credits, bool) or not isinstance(credits, (int, float)):
         raise TypeError("credits must be numeric")
-
+    if not math.isfinite(credits):
+        raise ValueError("INVALID_TON_CREDITS")
     if credits <= 0:
         raise ValueError("INVALID_TON_CREDITS")
 
-    if not isinstance(ton_amount, (int, float)):
+    if isinstance(ton_amount, bool) or not isinstance(ton_amount, (int, float)):
         raise TypeError("ton_amount must be numeric")
-
+    if not math.isfinite(ton_amount):
+        raise ValueError("INVALID_TON_AMOUNT")
     if ton_amount <= 0:
         raise ValueError("INVALID_TON_AMOUNT")
 
@@ -170,10 +242,151 @@ def record_ton_deposit(
         if uid not in users:
             raise Exception("USER_NOT_FOUND")
 
-        used_txs = db.setdefault("used_ton_txs", [])
+        # A used transaction hash is an immutable settlement identity, not
+        # enough evidence by itself to call every replay an exact duplicate.
+        # Inspect all available canonical source rows before taking the no-op
+        # path. Missing, duplicated or internally inconsistent evidence fails
+        # closed and never reaches the Credits mutation.
+        from decimal import Decimal, InvalidOperation
 
-        if tx_hash in used_txs:
+        def number(value):
+            if isinstance(value, bool):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            try:
+                parsed = Decimal(str(value))
+            except (InvalidOperation, TypeError, ValueError):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+            if not parsed.is_finite():
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            return parsed
+
+        def normalized_hash(value):
+            return str(value or "").strip().lower()
+
+        used_txs = db.get("used_ton_txs", [])
+        if not isinstance(used_txs, list):
+            raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+        transactions = db.get("transactions", [])
+        ledger = db.get("ledger", [])
+        if not isinstance(transactions, list) or not isinstance(ledger, list):
+            raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+        requested_hash = normalized_hash(tx_hash)
+        matching_transactions = [
+            row for row in transactions
+            if isinstance(row, dict)
+            and str(row.get("type") or "").lower() == "ton"
+            and normalized_hash(row.get("tx_hash")) == requested_hash
+        ]
+        matching_ledger = [
+            row for row in ledger
+            if isinstance(row, dict)
+            and str(row.get("reason") or "") == "ton:deposit"
+            and normalized_hash(
+                (row.get("meta") or {}).get("tx_hash")
+                if isinstance(row.get("meta"), dict)
+                else row.get("tx_hash")
+            ) == requested_hash
+        ]
+        used_matches = [
+            item for item in used_txs
+            if normalized_hash(item) == requested_hash
+        ]
+        used_hash = bool(used_matches)
+
+        # Rows with this hash but no unique used-hash marker, or a used hash
+        # without its unique transaction + ledger pair, indicate incomplete
+        # or contradictory evidence.
+        evidence_exists = bool(used_hash or matching_transactions or matching_ledger)
+        if evidence_exists:
+            if (
+                len(used_matches) != 1
+                or len(matching_transactions) != 1
+                or len(matching_ledger) != 1
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            previous_tx = matching_transactions[0]
+            previous_ledger = matching_ledger[0]
+            previous_meta = previous_ledger.get("meta")
+            if not isinstance(previous_meta, dict):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+
+            try:
+                old_credits = number(previous_tx.get("credits"))
+                old_ton_amount = number(previous_tx.get("ton_amount"))
+                ledger_amount = number(previous_ledger.get("amount"))
+                ledger_before = number(previous_ledger.get("before"))
+                ledger_after = number(previous_ledger.get("after"))
+                stored_ledger_ton = number(previous_meta.get("ton_amount"))
+            except ValueError:
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+
+            # First distinguish internally inconsistent historical data from
+            # a coherent prior settlement that conflicts with this request.
+            if (
+                str(previous_ledger.get("uid") or "") != str(previous_tx.get("uid") or "")
+                or old_credits != number(previous_ledger.get("amount"))
+                or old_ton_amount != stored_ledger_ton
+                or old_credits != ledger_amount
+                or ledger_before + ledger_amount != ledger_after
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+            if (
+                str(previous_tx.get("uid") or "") != uid
+                or old_credits != number(credits)
+                or old_ton_amount != number(ton_amount)
+            ):
+                raise ValueError("TON_DEPOSIT_IDENTITY_CONFLICT")
+
+            # The ledger row is the canonical place where binding, treasury,
+            # memo and transaction-specific chain evidence are retained.
+            # If a requested immutable field is absent from one side, do not
+            # guess that an old row represents the same settlement.
+            identity_fields = (
+                "idempotency_key",
+                "source",
+                "binding_address_raw",
+                "treasury",
+                "memo",
+                "rate",
+                "utime",
+                "lt",
+                "deposit_intent_id",
+            )
+            for field in identity_fields:
+                requested_present = field in meta
+                stored_present = field in previous_meta
+                requested_value = meta.get(field)
+                stored_value = previous_meta.get(field)
+
+                # A completed payment may be replayed after its original
+                # intent is already matched. In that case no new intent is
+                # proposed, so None must not invalidate an otherwise exact
+                # replay. A newly proposed intent, however, must match the
+                # original intent identity exactly.
+                if field == "deposit_intent_id" and requested_value in (None, ""):
+                    continue
+                if not requested_present or not stored_present:
+                    raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN")
+                if field == "rate":
+                    try:
+                        matches = number(requested_value) == number(stored_value)
+                    except ValueError:
+                        raise ValueError("TON_DEPOSIT_IDENTITY_UNKNOWN") from None
+                elif field in {"binding_address_raw", "treasury", "memo"}:
+                    matches = str(requested_value or "").strip().lower() == str(stored_value or "").strip().lower()
+                else:
+                    matches = str(requested_value if requested_value is not None else "") == str(stored_value if stored_value is not None else "")
+                if not matches:
+                    raise ValueError("TON_DEPOSIT_IDENTITY_CONFLICT")
+
             return None
+
+        # This is a new transaction only when neither the canonical used-hash
+        # index nor a transaction/ledger source row has this hash.
+        used_txs = db.setdefault("used_ton_txs", [])
 
         user = users[uid]
         wallet = user.setdefault("wallet", {})
@@ -245,50 +458,147 @@ def purchase_item(
     commission_rate=0.10,
     meta=None,
 ):
-    """
-    Atomic purchase authority.
+    """Atomically debit Credits and grant a legacy purchase exactly once.
 
-    One DB transaction performs:
-    - buyer debit
-    - entitlement mutation
-    - optional referral commission
-    - immutable ledger entries
+    Legacy Telegram purchases must supply an immutable idempotency key in
+    meta. Replays are resolved before the account-freeze check so a retry
+    of an already-completed request remains a read-only no-op.
     """
 
     uid = str(uid)
-    price = float(price)
-    meta = meta or {}
+    item = str(item or "").strip()
+    try:
+        price = float(price)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("INVALID_PRICE") from None
+    meta = dict(meta or {})
+    idempotency_key = str(meta.get("idempotency_key") or "").strip()
 
-    if price <= 0:
+    if not idempotency_key:
+        raise ValueError("IDEMPOTENCY_KEY_REQUIRED")
+    if not math.isfinite(price) or price <= 0:
         raise ValueError("INVALID_PRICE")
+    if item not in {"ask_credit", "premium_agent"}:
+        raise ValueError("UNKNOWN_ITEM")
+    if meta.get("item_id") not in (None, "", item):
+        raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+    meta["idempotency_key"] = idempotency_key
+    meta["item_id"] = item
 
     def mutate(db):
-        users = db.setdefault("users", {})
-
+        users = db.get("users")
+        if not isinstance(users, dict):
+            raise ValueError("USERS_STATE_INVALID")
         buyer = users.get(uid)
-        if buyer is None:
-            raise Exception("USER_NOT_FOUND")
+        if not isinstance(buyer, dict):
+            raise ValueError("USER_NOT_FOUND")
 
-        buyer_wallet = buyer.setdefault("wallet", {})
-        buyer_before = buyer_wallet.get("credits", 0)
+        ledger = db.get("ledger", [])
+        if not isinstance(ledger, list):
+            raise ValueError("LEDGER_STATE_INVALID")
 
+        key_rows = [
+            row for row in ledger
+            if isinstance(row, dict)
+            and isinstance(row.get("meta"), dict)
+            and str(row["meta"].get("idempotency_key") or "") == idempotency_key
+        ]
+        purchase_rows = [
+            row for row in key_rows
+            if str(row.get("reason") or "").startswith("purchase:")
+        ]
+
+        if purchase_rows:
+            if len(purchase_rows) != 1:
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+            existing = purchase_rows[0]
+            existing_meta = existing.get("meta")
+            try:
+                old_amount = float(existing.get("amount"))
+            except (TypeError, ValueError, OverflowError):
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT") from None
+
+            if (
+                str(existing.get("uid") or "") != uid
+                or str(existing.get("reason") or "") != f"purchase:{item}"
+                or not math.isfinite(old_amount)
+                or not math.isclose(old_amount, -price, rel_tol=0.0, abs_tol=1e-9)
+                or not isinstance(existing_meta, dict)
+                or existing_meta.get("item_id") not in (None, "", item)
+                or (
+                    "source" in meta
+                    and str(existing_meta.get("source") or "") != str(meta.get("source") or "")
+                )
+            ):
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+            # A referral reward ledger row can carry the same source purchase
+            # key. Accept only the expected, correctly attributed commission
+            # row; every other use of this key is a conflict.
+            for row in key_rows:
+                if row is existing:
+                    continue
+                row_meta = row.get("meta") if isinstance(row, dict) else None
+                if (
+                    str(row.get("reason") or "") == "referral:commission"
+                    and isinstance(row_meta, dict)
+                    and str(row_meta.get("source_uid") or "") == uid
+                    and str(row_meta.get("purchase_item") or "") == item
+                ):
+                    continue
+                raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+            wallet = buyer.get("wallet")
+            if not isinstance(wallet, dict):
+                raise ValueError("WALLET_STATE_INVALID")
+            try:
+                balance_now = float(wallet.get("credits", 0) or 0)
+            except (TypeError, ValueError, OverflowError):
+                raise ValueError("INVALID_CREDITS_BALANCE") from None
+            if not math.isfinite(balance_now):
+                raise ValueError("INVALID_CREDITS_BALANCE")
+            return {
+                "item": item,
+                "uid": uid,
+                "credits": balance_now,
+                "commission": 0,
+                "duplicate": True,
+            }
+
+        if key_rows:
+            # The key exists, but there is no matching purchase authority row.
+            raise ValueError("IDEMPOTENCY_KEY_CONFLICT")
+
+        from core.slh_distribution import is_frozen_account
+
+        if is_frozen_account(db, uid):
+            raise ValueError("ACCOUNT_FROZEN")
+
+        wallet_value = buyer.get("wallet")
+        if wallet_value is not None and not isinstance(wallet_value, dict):
+            raise ValueError("WALLET_STATE_INVALID")
+        buyer_wallet = wallet_value if isinstance(wallet_value, dict) else {}
+        try:
+            buyer_before = float(buyer_wallet.get("credits", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("INVALID_CREDITS_BALANCE") from None
+        if not math.isfinite(buyer_before):
+            raise ValueError("INVALID_CREDITS_BALANCE")
         if buyer_before < price:
             raise ValueError("INSUFFICIENT_CREDITS")
 
+        # All rejection checks are complete; mutation begins only below.
         buyer_after = buyer_before - price
+        if wallet_value is None:
+            buyer["wallet"] = buyer_wallet
         buyer_wallet["credits"] = buyer_after
 
         if item == "ask_credit":
             buyer["ask_credits"] = buyer.get("ask_credits", 0) + 1
-
-        elif item == "premium_agent":
+        else:
             buyer["premium"] = True
 
-        else:
-            raise ValueError("UNKNOWN_ITEM")
-
-        ledger = db.setdefault("ledger", [])
-
+        ledger = db.setdefault("ledger", ledger)
         ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
@@ -323,7 +633,6 @@ def purchase_item(
                         ref_wallet_value is None or isinstance(ref_wallet_value, dict)
                     )
                     ref_wallet = ref_wallet_value if isinstance(ref_wallet_value, dict) else {}
-
                     ref_before = ref_wallet.get("credits", 0)
                     treasury = users.get(TREASURY_UID)
                     treasury_wallet = (
@@ -390,7 +699,6 @@ def purchase_item(
         }
 
     return state_manager.atomic_update(mutate)
-
 
 def record_stars_payment(
     uid,
