@@ -255,3 +255,38 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["record_found"] is True
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
+
+def test_alpha_consolidation_is_exposed_as_context_but_does_not_resolve_credits_gap():
+    db = {
+        "users": {UID: {"wallet": {"credits": 11715.0}}},
+        "ledger": [
+            {"uid": UID, "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"uid": UID, "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"type": "alpha_consolidate", "from": "student-1", "to": UID,
+             "credits": 10449, "staked_moved": 50,
+             "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"uid": UID, "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake"},
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    evidence = result["findings"][0]["source_evidence"]
+    assert evidence["source_match_status"] == "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+    assert evidence["resolves_gap"] is False
+    assert len(evidence["alpha_consolidations"]) == 1
+    consolidation = evidence["alpha_consolidations"][0]
+    assert consolidation["credits_component"] == 10449
+    assert consolidation["staked_moved_component"] == 50
+    assert consolidation["observed_balance_delta"] == 10499
+    assert consolidation["credits_component_matches_delta"] is False
+    assert consolidation["credits_plus_staked_matches_delta"] is True
+    assert consolidation["resolves_gap"] is False
+    assert db == before
+
