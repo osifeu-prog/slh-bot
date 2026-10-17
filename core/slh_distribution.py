@@ -5,6 +5,7 @@ balances, exchange reserves, and the canonical token ledger stay auditable and
 replay-safe inside the same atomic state transition.
 """
 
+import os
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 
@@ -15,6 +16,12 @@ TOKEN_LEDGER_KEY = "slh_token_ledger"
 DISTRIBUTOR_PERMISSION = "alpha.distribute"
 EXCHANGE_RESERVE_KEY = "exchange_reserved_slh"
 EXCHANGE_RESERVE_UID = "__EXCHANGE_RESERVE__"
+INTERNAL_TRANSFERS_OPEN_ENV = "SLH_INTERNAL_TRANSFERS_OPEN"
+
+
+def internal_transfers_open() -> bool:
+    """Public internal-SLH P2P transfer gate; default closed until explicitly enabled."""
+    return os.getenv(INTERNAL_TRANSFERS_OPEN_ENV, "0").strip() == "1"
 
 
 def _amount(value):
@@ -68,10 +75,10 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
         raise ValueError("SENDER_NOT_FOUND")
     if not recipient:
         raise ValueError("RECIPIENT_NOT_FOUND")
-    if is_frozen_account(db, from_uid):
-        raise ValueError("ACCOUNT_FROZEN")
 
-    ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
+    # Preserve exact prior receipts/replays even when the public gate is closed
+    # or the sender was frozen after the original transfer. Never mutate on replay.
+    ledger = db.get(TOKEN_LEDGER_KEY, [])
     existing = _find_event(ledger, event_id)
     if existing:
         if (
@@ -82,6 +89,14 @@ def _transfer_in_db(db, *, from_uid, to_uid, amount, reason, event_id):
             raise ValueError("EVENT_ID_CONFLICT")
         return {"status": "already_completed", **existing}
 
+    # Preserve the explicit frozen-account policy result even while the
+    # global transfer gate is closed. Both checks happen before any mutation.
+    if is_frozen_account(db, from_uid):
+        raise ValueError("ACCOUNT_FROZEN")
+    if not internal_transfers_open():
+        raise ValueError("SLH_INTERNAL_TRANSFERS_CLOSED")
+
+    ledger = db.setdefault(TOKEN_LEDGER_KEY, [])
     sender_wallet = sender.setdefault("wallet", {})
     recipient_wallet = recipient.setdefault("wallet", {})
     sender_balance = Decimal(str(sender_wallet.get("token_balance", 0) or 0))
