@@ -109,6 +109,15 @@ class MCPBridgeRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.get_json(), {"error": "MCP_BRIDGE_AUTH_REQUIRED"})
 
+    def test_state_fingerprint_requires_view_permission(self):
+        with patch("core.mcp_bridge_routes.has_permission", return_value=False):
+            response = self.client.get(
+                "/internal/mcp/v1/state/fingerprint",
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json(), {"error": "MCP_BRIDGE_FORBIDDEN"})
+
     def test_state_fingerprint_reports_hash_and_aggregate_counts_only(self):
         raw = json.dumps({
             "users": {"sensitive-user-id": {"wallet": {"credits": 987654.25}}},
@@ -121,13 +130,17 @@ class MCPBridgeRouteTests(unittest.TestCase):
             db_path.write_bytes(raw)
             with patch("state_manager.DB_FILE", str(db_path)), patch(
                 "state_manager._db_lock", return_value=nullcontext()
-            ), patch("core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
-                "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
-                "RAILWAY_PROJECT_ID": "project-test",
-                "RAILWAY_ENVIRONMENT_ID": "environment-test",
-                "RAILWAY_SERVICE_ID": "service-test",
-                "RUN_BOT": "0",
-            }.get(key, default)):
+            ), patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+                "core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
+                    "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
+                    "SLH_MCP_BRIDGE_PRINCIPAL_ID": "owner",
+                    "SLH_MCP_PRINCIPAL_ID": "",
+                    "RAILWAY_PROJECT_ID": "project-test",
+                    "RAILWAY_ENVIRONMENT_ID": "environment-test",
+                    "RAILWAY_SERVICE_ID": "service-test",
+                    "RUN_BOT": "0",
+                }.get(key, default)
+            ):
                 response = self.client.get(
                     "/internal/mcp/v1/state/fingerprint",
                     headers={"Authorization": "Bearer bridge-test"},
@@ -154,9 +167,13 @@ class MCPBridgeRouteTests(unittest.TestCase):
             before = db_path.read_bytes()
             with patch("state_manager.DB_FILE", str(db_path)), patch(
                 "state_manager._db_lock", return_value=nullcontext()
-            ), patch("core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
-                "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
-            }.get(key, default)):
+            ), patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+                "core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
+                    "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
+                    "SLH_MCP_BRIDGE_PRINCIPAL_ID": "owner",
+                    "SLH_MCP_PRINCIPAL_ID": "",
+                }.get(key, default)
+            ):
                 response = self.client.get(
                     "/internal/mcp/v1/state/fingerprint",
                     headers={"Authorization": "Bearer bridge-test"},
