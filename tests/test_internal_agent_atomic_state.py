@@ -38,6 +38,39 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
     def _atomic_update(self, mutate):
         return mutate(self.db)
 
+    def test_legacy_text_message_is_treated_as_a_question_not_a_command(self):
+        self.db["agents"]["alpha"]["inbox"] = ["restart"]
+
+        with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
+            claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
+
+        self.assertEqual(len(claimed), 1)
+        self.assertEqual(
+            claimed[0][2],
+            {"command": "ask", "prompt": "restart", "uid": ""},
+        )
+
+    def test_ask_uses_the_configured_provider_fallback_chain(self):
+        with patch(
+            "handlers.llm_handler.query_llm_with_context",
+            return_value="answer from canonical AI fallback",
+        ) as query:
+            result = internal_agent.run_command(
+                "ask", {"prompt": "Explain this safely", "uid": "owner"}
+            )
+
+        self.assertEqual(result, "answer from canonical AI fallback")
+        query.assert_called_once_with("Explain this safely", uid="owner")
+
+    def test_sensitive_agent_commands_require_owner_identity(self):
+        with patch("core.authority.is_owner", return_value=False), patch.object(
+            internal_agent.os, "system"
+        ) as system_call:
+            result = internal_agent.run_command("restart", {"uid": "123"})
+
+        self.assertEqual(result, "OWNER_ONLY")
+        system_call.assert_not_called()
+
     def test_agent_claim_moves_one_message_to_processing_without_losing_other_inboxes(self):
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
