@@ -134,6 +134,19 @@ def test_device_specific_token_is_accepted_as_explicit_device_opt_in(monkeypatch
     assert db["devices"][DEVICE_ID]["telemetry"]["temperature_c"] == 68.5
 
 
+def test_device_token_map_is_the_authoritative_enrollment_allowlist(monkeypatch):
+    monkeypatch.setenv(
+        "SLH_MINER_DEVICE_TOKENS_JSON",
+        json.dumps({"ANOTHER_DEVICE": "another-device-token"}),
+    )
+    # Even an old DB opt-in and a separate allowlist cannot advertise this
+    # device as enabled: ingestion requires a token-map entry in this mode.
+    monkeypatch.setenv("SLH_MINER_DEVICE_IDS", DEVICE_ID)
+    db = _db()
+    assert db["devices"][DEVICE_ID]["miner_enabled"] is True
+    assert miner_service.device_role_enabled(DEVICE_ID, db["devices"][DEVICE_ID]) is False
+
+
 def test_device_allowlist_is_an_explicit_opt_in(monkeypatch):
     monkeypatch.setenv("SLH_MINER_DEVICE_IDS", DEVICE_ID)
     monkeypatch.setenv("SLH_MINER_INGEST_TOKEN", TOKEN)
