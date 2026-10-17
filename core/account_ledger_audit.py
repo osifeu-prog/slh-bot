@@ -86,7 +86,7 @@ def _row_summary(index: int, row: dict) -> dict:
     }
 
 
-def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict) -> dict:
+def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str = "") -> dict:
     """Return linked source-record context for a gap without resolving it.
 
     Source records may explain a transaction's purpose, but they are never
@@ -158,12 +158,68 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict) -> dict:
                 "record_found": False,
             }
 
+    # alpha_consolidate is a global event rather than a per-user Credits row.
+    # Surface it only when it falls strictly between the two rows defining the
+    # gap and its recipient is the audited account. The staked_moved field is
+    # reported separately: it must not be silently added to the Credits delta.
+    alpha_consolidations = []
+    try:
+        previous_index = int(previous.get("index", -1))
+        next_index = int(next_row.get("index", -1))
+    except (TypeError, ValueError, OverflowError):
+        previous_index, next_index = -1, -1
+    if uid and 0 <= previous_index < next_index < len(ledger):
+        previous_after = _number(previous.get("after"))
+        next_before = _number(next_row.get("before"))
+        observed_delta = (
+            next_before - previous_after
+            if previous_after is not None and next_before is not None
+            else None
+        )
+        for index in range(previous_index + 1, next_index):
+            row = ledger[index]
+            if not isinstance(row, dict) or row.get("type") != "alpha_consolidate":
+                continue
+            if str(row.get("to") or "").strip() != uid:
+                continue
+            credits_component = _number(row.get("credits"))
+            staked_component = _number(row.get("staked_moved"))
+            alpha_consolidations.append({
+                "index": index,
+                "time": str(row.get("time") or "")[:40],
+                "type": "alpha_consolidate",
+                "from": str(row.get("from") or "")[:80],
+                "to": str(row.get("to") or "")[:80],
+                "reason": str(row.get("reason") or "")[:80],
+                "credits_component": credits_component,
+                "staked_moved_component": staked_component,
+                "observed_balance_delta": observed_delta,
+                "credits_component_matches_delta": (
+                    credits_component is not None
+                    and observed_delta is not None
+                    and abs(credits_component - observed_delta) <= EPSILON
+                ),
+                "credits_plus_staked_matches_delta": (
+                    credits_component is not None
+                    and staked_component is not None
+                    and observed_delta is not None
+                    and abs((credits_component + staked_component) - observed_delta) <= EPSILON
+                ),
+                "record_found": True,
+                "resolves_gap": False,
+                "note": "Context only; credits and staked_moved remain separate and require reconciliation.",
+            })
+    if alpha_consolidations:
+        evidence["alpha_consolidations"] = alpha_consolidations[:5]
+
     linked = any(
         isinstance(value, dict) and value.get("record_found") is True
         for value in evidence.values()
     )
     evidence["source_match_status"] = (
-        "CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH"
+        "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+        if alpha_consolidations
+        else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
     )
     evidence["resolves_gap"] = False
     return evidence
@@ -283,7 +339,7 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
                     },
                     "delta_to_explain": before - previous["after"],
                     "source_evidence_required": True,
-                    "source_evidence": _source_evidence_for_gap(db, previous, summary),
+                    "source_evidence": _source_evidence_for_gap(db, previous, summary, uid=uid),
                 })
 
         previous = summary
