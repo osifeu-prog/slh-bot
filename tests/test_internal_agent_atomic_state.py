@@ -52,7 +52,7 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.db["agents"]["alpha"]["outbox"] = [f"old-{index}" for index in range(25)]
         with patch.object(internal_agent.state_manager, "atomic_update", side_effect=self._atomic_update):
             claimed = internal_agent._claim_inbox(exclude_agents={"tutor"})
-            name, claim_id, _message = claimed[0]
+            name, claim_id, _message, _owner_authorized = claimed[0]
             finalized = internal_agent._finalize_message(name, claim_id, "new-output")
 
         self.assertTrue(finalized)
@@ -128,6 +128,68 @@ class InternalAgentAtomicStateTests(unittest.TestCase):
         self.assertNotEqual(claimed[0][1], "expired")
         self.assertEqual(self.db["agents"]["alpha"]["processing"][0]["claim_id"], claimed[0][1])
 
+
+    def test_numeric_agent_ids_route_by_display_name_and_capture_owner_authority(self):
+        self.db["agents"] = {
+            "16": {
+                "name": "customer-agent",
+                "owner_id": "other-user",
+                "inbox": [{"command": "restart"}],
+                "outbox": [],
+            },
+            "29": {
+                "name": "tutor",
+                "owner_id": "owner",
+                "inbox": [{"command": "hello"}],
+                "outbox": [],
+            },
+            "30": {
+                "name": "internal-console",
+                "owner_id": "owner",
+                "inbox": [{"command": "whoami"}],
+                "outbox": [],
+            },
+        }
+
+        with (
+            patch("core.authority.is_owner", side_effect=lambda uid: uid == "owner"),
+            patch.object(
+                internal_agent.state_manager,
+                "atomic_update",
+                side_effect=self._atomic_update,
+            ),
+        ):
+            general = internal_agent._claim_inbox(
+                exclude_agents={"tutor"}, max_messages=10
+            )
+            tutor = internal_agent._claim_inbox(
+                agent_filter={"tutor"}, max_messages=10
+            )
+
+        self.assertEqual({item[0] for item in general}, {"16", "30"})
+        self.assertEqual({item[0]: item[3] for item in general}, {
+            "16": False,
+            "30": True,
+        })
+        self.assertEqual([item[0] for item in tutor], ["29"])
+        self.assertTrue(tutor[0][3])
+        self.assertEqual(self.db["agents"]["29"]["inbox"], [])
+
+    def test_worker_dispatch_blocks_non_owner_and_never_runs_legacy_restart(self):
+        with patch.object(internal_agent.os, "system") as system:
+            self.assertNotIn("restart", internal_agent.ALLOWED)
+            blocked = internal_agent._dispatch_worker_command(
+                "restart", {}, owner_authorized=False
+            )
+            owner_attempt = internal_agent._dispatch_worker_command(
+                "restart", {}, owner_authorized=True
+            )
+            direct_attempt = internal_agent.run_command("restart", {})
+
+        self.assertIn("owner-owned", blocked)
+        self.assertIn("not allowed", owner_attempt)
+        self.assertIn("Restart disabled", direct_attempt)
+        system.assert_not_called()
 
     def test_worker_autostart_is_gated_by_run_bot(self):
         with (
