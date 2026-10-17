@@ -179,3 +179,59 @@ def test_env_closed_cannot_be_overridden_when_readiness_helpers_are_live(monkeyp
     assert target.bnb_readiness(db)["ready"] is True
     assert target.bnb_readiness(db)["effective_open"] is False
     assert target.bnb_deposits_open() is False
+
+
+
+def test_status_report_uses_fresh_historical_audit_not_stored_smoke_status(monkeypatch):
+    import handlers.bnb_gate_control_handler as control
+
+    db = _db()
+    monkeypatch.setattr(control.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(control, "bnb_readiness", lambda *_a, **_kw: {
+        "flag_open": False, "ready": True, "effective_open": False, "reasons": []
+    })
+    monkeypatch.setattr(control, "_effective_config", lambda *_a, **_kw: {
+        "treasury_wallet": db["bsc_settings"]["treasury_wallet"],
+        "confirmations": 15,
+    })
+    monkeypatch.setattr(control, "bnb_deposits_open", lambda: False)
+    monkeypatch.setattr(control, "bnb_opening_evidence", lambda: {
+        "status": "BLOCKED",
+        "ready_to_open": False,
+        "blockers": ["HISTORICAL_BNB_DEPOSIT_LEDGER_REVALIDATION_FAILED"],
+        "empirical_settlement": {"status": "PASS"},
+        "historical_deposits": {
+            "status": "FAIL",
+            "rows_checked": 2,
+            "finding_count": 1,
+            "findings": [{"issues": ["SELF_TRANSFER_NOT_A_DEPOSIT"]}],
+        },
+    })
+
+    report = control._status_report()
+
+    assert "Configuration readiness: PASS" in report
+    assert "Empirical transaction proof: PASS" in report
+    assert "Historical BNB deposits: FAIL · checked=2 · findings=1" in report
+    assert "Overall opening evidence: BLOCKED" in report
+    assert "HISTORICAL_BNB_DEPOSIT_LEDGER_REVALIDATION_FAILED" in report
+    assert "Public gate: CLOSED" in report
+
+
+def test_status_report_fails_closed_when_fresh_opening_evidence_raises(monkeypatch):
+    import handlers.bnb_gate_control_handler as control
+
+    db = _db()
+    monkeypatch.setattr(control.state_manager, "load_db", lambda: db)
+    monkeypatch.setattr(control, "bnb_readiness", lambda *_a, **_kw: {
+        "flag_open": False, "ready": True, "effective_open": False, "reasons": []
+    })
+    monkeypatch.setattr(
+        control, "bnb_opening_evidence",
+        lambda: (_ for _ in ()).throw(RuntimeError("evidence unavailable")),
+    )
+
+    report = control._status_report()
+
+    assert "Public gate: CLOSED (fail-safe; RuntimeError)" in report
+    assert "could not be fully verified" in report
