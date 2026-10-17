@@ -208,6 +208,8 @@ def test_student_profile_blocks_legacy_env_developer_grant(monkeypatch):
 def test_vip_invoice_link_request_contains_stars_subscription(monkeypatch):
     from handlers import payment_handler
 
+    # This test verifies invoice construction when checkout is explicitly enabled.
+    monkeypatch.setenv("STARS_PAYMENTS_OPEN", "1")
     captured = {}
 
     class FakeBot:

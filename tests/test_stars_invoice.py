@@ -42,11 +42,27 @@ class StarsInvoiceTest(unittest.TestCase):
         self.assertEqual(req["stars"], VIP_MONTHLY_STARS)
         self.assertEqual(req["payload"], "vip_monthly_123")
 
+
+    def test_create_link_rejects_when_gate_is_closed(self):
+        request = {
+            "title": "100 Credits",
+            "description": "d",
+            "payload": "credits_100_1",
+            "stars": 100,
+        }
+        with (
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "0"}),
+            mock.patch("core.stars_invoice.requests.post") as post,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "STARS_PAYMENTS_CLOSED"):
+                stars_invoice.create_invoice_link(request)
+        post.assert_not_called()
+
     def test_create_link_uses_xtr(self):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$abc"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             link = stars_invoice.create_invoice_link(
@@ -69,7 +85,7 @@ class StarsInvoiceTest(unittest.TestCase):
         fake = mock.Mock()
         fake.json.return_value = {"ok": True, "result": "https://t.me/$vip"}
         with (
-            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x"}),
+            mock.patch.dict("os.environ", {"BOT_TOKEN": "1:x", "STARS_PAYMENTS_OPEN": "1"}),
             mock.patch("core.stars_invoice.requests.post", return_value=fake) as post,
         ):
             stars_invoice.create_invoice_link(req)

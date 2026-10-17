@@ -1,4 +1,6 @@
+import os
 import unittest
+from unittest.mock import patch
 
 
 class FakeBot:
@@ -41,6 +43,13 @@ class Query:
 
 
 class VIPPreCheckoutTests(unittest.TestCase):
+    def setUp(self):
+        # The pre-checkout tests exercise price/recipient validation after the
+        # explicit checkout gate has allowed a new invoice.
+        self._stars_gate = patch.dict(os.environ, {"STARS_PAYMENTS_OPEN": "1"})
+        self._stars_gate.start()
+        self.addCleanup(self._stars_gate.stop)
+
     def _handler(self):
         from handlers.payment_handler import register_payment_handlers
 
