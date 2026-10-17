@@ -114,9 +114,9 @@ def _row_domain_hint(row: dict) -> str:
             "exchange:cancel_release_slh",
             "p2p:slh_sent",
             "p2p:slh_received",
+            "slh:provenance_correction",
         }
         or reason.startswith("p2p:slh:")
-        or reason.startswith("slh:")
     ):
         return "SLH_HINT"
     if inferred == "SLH_HINT":
