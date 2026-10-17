@@ -134,6 +134,16 @@ class TonDepositIdempotencyIdentityTests(unittest.TestCase):
 
         self.assertEqual(self.db, before)
 
+    def test_duplicate_used_hash_markers_fail_closed(self):
+        self._settle_once()
+        self.db["used_ton_txs"].append(TX.upper())
+        before = copy.deepcopy(self.db)
+
+        with self.assertRaisesRegex(ValueError, "TON_DEPOSIT_IDENTITY_UNKNOWN"):
+            self._record()
+
+        self.assertEqual(self.db, before)
+
 
 if __name__ == "__main__":
     unittest.main()
