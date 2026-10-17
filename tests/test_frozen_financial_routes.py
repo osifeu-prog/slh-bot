@@ -97,6 +97,81 @@ def test_frozen_sender_can_replay_exact_completed_p2p_message_without_mutation()
     assert "already completed" in bot.replies[-1].lower()
 
 
+def _completed_p2p_db(frozen=True):
+    event_id = "p2p_credits:frozen-sender:7:123"
+    return {
+        "users": {
+            "frozen-sender": {"frozen": frozen, "wallet": {"credits": 90.0}},
+            "recipient": {"wallet": {"credits": 15.0}},
+            "recipient-2": {"wallet": {"credits": 0.0}},
+        },
+        "ledger": [
+            {
+                "uid": "frozen-sender", "before": 100.0, "amount": -10.0,
+                "after": 90.0, "reason": "p2p:credits_sent",
+                "meta": {"recipient": "recipient", "event_id": event_id},
+            },
+            {
+                "uid": "recipient", "before": 5.0, "amount": 10.0,
+                "after": 15.0, "reason": "p2p:credits_received",
+                "meta": {"sender": "frozen-sender", "event_id": event_id},
+            },
+        ],
+    }
+
+
+def test_p2p_reused_message_id_with_different_amount_is_rejected_without_mutation():
+    db = _completed_p2p_db()
+    before = copy.deepcopy(db)
+    bot = FakeBot()
+    ui_exchange_handler.register(bot)
+
+    with patch.object(
+        ui_exchange_handler.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        bot.handlers["p2p_credits"](_message(amount=11))
+
+    assert db == before
+    assert "P2P_CREDITS_IDENTITY_CONFLICT" in bot.replies[-1]
+
+
+def test_p2p_reused_message_id_with_different_recipient_is_rejected_without_mutation():
+    db = _completed_p2p_db()
+    before = copy.deepcopy(db)
+    bot = FakeBot()
+    ui_exchange_handler.register(bot)
+
+    with patch.object(
+        ui_exchange_handler.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        bot.handlers["p2p_credits"](_message(recipient="recipient-2"))
+
+    assert db == before
+    assert "P2P_CREDITS_IDENTITY_CONFLICT" in bot.replies[-1]
+
+
+def test_p2p_replay_with_only_one_ledger_side_fails_closed():
+    db = _completed_p2p_db()
+    db["ledger"].pop()
+    before = copy.deepcopy(db)
+    bot = FakeBot()
+    ui_exchange_handler.register(bot)
+
+    with patch.object(
+        ui_exchange_handler.state_manager,
+        "atomic_update",
+        side_effect=lambda mutate: mutate(db),
+    ):
+        bot.handlers["p2p_credits"](_message())
+
+    assert db == before
+    assert "P2P_CREDITS_IDENTITY_UNKNOWN" in bot.replies[-1]
+
+
 def test_frozen_account_cannot_move_credits_into_staking():
     db = {
         "users": {
