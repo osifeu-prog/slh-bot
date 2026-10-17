@@ -191,6 +191,9 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         position = positions.get(position_id) if isinstance(positions, dict) else None
         if not isinstance(position, dict) or str(position.get("uid") or "") != uid:
             raise ValueError("position not found")
+        ledger = db.get("ledger", [])
+        if not isinstance(ledger, list):
+            raise ValueError("INVALID_LEDGER_STATE")
 
         request_key = f'{uid}:{request_id}' if request_id else ''
         if request_key:
@@ -210,6 +213,8 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
                 if stored_position_id != position_id:
                     raise ValueError("STAKING_UNSTAKE_IDENTITY_CONFLICT")
                 wallet_value = user.get("wallet")
+                if wallet_value is not None and not isinstance(wallet_value, dict):
+                    raise ValueError("INVALID_WALLET_STATE")
                 wallet = wallet_value if isinstance(wallet_value, dict) else {}
                 try:
                     credits_now = float(wallet.get('credits', 0) or 0)
@@ -259,6 +264,11 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         if staked < amount:
             raise ValueError("insufficient staked balance")
 
+        # Attach missing stores only after all request, balance and
+        # position checks have passed, so rejected calls leave state unchanged.
+        ledger = db.setdefault("ledger", ledger)
+        if request_key:
+            requests = db.setdefault("staking_unstake_requests", {})
         if wallet_value is None:
             user["wallet"] = wallet
         wallet["staked"] = staked - amount
@@ -267,13 +277,13 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         position["unlocked_at"] = time.time()
 
         if request_key:
-            db.setdefault('staking_unstake_requests', {})[request_key] = {
+            requests[request_key] = {
                 'position_id': position_id,
                 'uid': uid,
                 'created_at': time.time(),
             }
 
-        db.setdefault('ledger', []).append({
+        ledger.append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
             "before": credits,
