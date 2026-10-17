@@ -154,7 +154,7 @@ class StarsPaymentAvailabilityGateTests(unittest.TestCase):
             bot.callback("pay_100credits")(_callback())
 
         self.assertEqual(bot.invoices, [])
-        self.assertIn("closed", (bot.callback_answers[0][1] or "").lower())
+        self.assertIn("סגורים", (bot.callback_answers[0][1] or ""))
 
     def test_precheckout_is_rejected_after_gate_closes(self):
         bot = FakeBot()
@@ -166,7 +166,7 @@ class StarsPaymentAvailabilityGateTests(unittest.TestCase):
             "checkout-1",
             {
                 "ok": False,
-                "error_message": "Telegram Stars payments are currently closed.",
+                "error_message": "SLH Stars payments are temporarily closed.",
             },
         )])
 
