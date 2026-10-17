@@ -676,3 +676,68 @@ def test_voice_broadcast_readiness_blocks_when_reserve_audit_fails(monkeypatch):
     assert "11 findings" in reply
     assert "הכן ברודקאסט למסחר פנימי" not in reply
     assert "לא לשדר" in reply
+
+
+
+def test_fresh_reserve_audit_accepts_consistent_operational_pass_but_preserves_history(monkeypatch):
+    historical = {
+        "code": "LEDGER_EVENT_ID_MISSING",
+        "order_id": "O_LEGACY",
+        "group": "reserve",
+        "operational_classification": "LEGACY_BALANCED_CANCELLED_ORDER",
+    }
+    monkeypatch.setattr(
+        reserve_reconciliation,
+        "audit_db",
+        lambda _db: {
+            "status": "FAIL",
+            "operational_status": "PASS",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 3,
+            "finding_count": 1,
+            "findings": [historical],
+            "blocking_finding_count": 0,
+            "blocking_findings": [],
+            "historical_finding_count": 1,
+            "historical_findings": [historical],
+        },
+    )
+
+    result = target._fresh_reserve_audit({})
+
+    assert result["status"] == "PASS"
+    assert result["audit_status"] == "FAIL"
+    assert result["blocking_finding_count"] == 0
+    assert result["historical_finding_count"] == 1
+    assert "historical" in result["detail"].lower()
+
+
+def test_fresh_reserve_audit_blocks_inconsistent_operational_classification(monkeypatch):
+    historical = {
+        "code": "LEDGER_EVENT_ID_MISSING",
+        "order_id": "O_LEGACY",
+        "group": "reserve",
+        "operational_classification": "LEGACY_BALANCED_CANCELLED_ORDER",
+    }
+    monkeypatch.setattr(
+        reserve_reconciliation,
+        "audit_db",
+        lambda _db: {
+            "status": "FAIL",
+            "operational_status": "PASS",
+            "read_only": True,
+            "checked_cancelled_sell_orders": 3,
+            "finding_count": 1,
+            "findings": [historical],
+            "blocking_finding_count": 1,
+            "blocking_findings": [historical],
+            "historical_finding_count": 1,
+            "historical_findings": [historical],
+        },
+    )
+
+    result = target._fresh_reserve_audit({})
+
+    assert result["status"] == "BLOCKED"
+    assert "inconsistent" in result["detail"].lower() or "blocking" in result["detail"].lower()
+

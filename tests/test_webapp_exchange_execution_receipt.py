@@ -16,7 +16,17 @@ class _Bot:
 class MiniAppExchangeExecutionReceiptTests(unittest.TestCase):
     def setUp(self):
         self.bot = _Bot()
-        self.db = {"exchange_requests": {}}
+        self.db = {
+            "exchange_requests": {},
+            "users": {
+                "456": {
+                    "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
+                }
+            },
+            "trader_certifications": {
+                "456": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"}
+            },
+        }
         self.load_patch = patch.object(
             webapp_data_handler.state_manager,
             "load_db",

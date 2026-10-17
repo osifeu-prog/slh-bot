@@ -527,6 +527,12 @@ def _place(db, uid, side, amount, price, request_id, live_proof=None):
     if is_frozen_account(db, uid):
         raise ValueError("ACCOUNT_FROZEN")
 
+    # Final authorization check against the exact atomic DB snapshot.
+    # This covers legacy callers that do not go through execute_exchange_order().
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid, db):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
+
     from core.system_checks import check_exchange_for_execution
 
     checked_at = _now()
@@ -695,6 +701,12 @@ def execute_exchange_order(
     )
     if existing is not None:
         return response(existing, True)
+
+    # The central execution service is shared by Telegram and authenticated Mini App/API.
+    # Do not let alternate clients bypass the server-recorded course certification.
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
 
     try:
         live_proof = require_fresh_live_exchange_proof()
@@ -1042,7 +1054,63 @@ def route_exchange_gate_voice(bot, message, transcript):
     return _request_guarded_exchange_gate_open()
 
 
+def build_exchange_chart_url(base_url=None):
+    """Build a validated HTTPS Mini App deep link for the internal Exchange screen."""
+    import os
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+    configured = base_url if base_url is not None else os.getenv("SLH_MINI_APP_URL", "")
+    base = str(configured or "").strip()
+    if not base:
+        base = "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+
+    parsed = urlsplit(base)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        parsed = urlsplit("https://slh-cloud-bot-production.up.railway.app/mini-app-v4")
+
+    path = parsed.path or "/mini-app-v4"
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+        if key not in {"screen", "chart"}
+    ]
+    query.extend((("screen", "exchange"), ("chart", "1")))
+    return urlunsplit((parsed.scheme, parsed.netloc, path, urlencode(query), ""))
+
+
 def register(bot):
+    @bot.message_handler(commands=["chart"])
+    def exchange_chart_cmd(msg):
+        chat_type = str(getattr(getattr(msg, "chat", None), "type", "")).lower()
+        if chat_type != "private":
+            bot.reply_to(msg, "פתח את /chart בשיחה הפרטית עם הבוט כדי לפתוח את Mini App.")
+            return
+        try:
+            from telebot import types
+
+            url = build_exchange_chart_url()
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "📈 פתח את בורסת SLH",
+                    web_app=types.WebAppInfo(url=url),
+                )
+            )
+            bot.reply_to(
+                msg,
+                "📈 SLH Exchange — גרף מחיר\n\n"
+                "פתיחת מסך הבורסה ישירות בתוך Telegram. "
+                "הנרות מבוססים על עסקאות פנימיות שהושלמו בלבד; "
+                "כאשר יש מעט עסקאות, ההיסטוריה תהיה דלילה. "
+                "זה אינו מחיר DEX או הצהרה על נזילות חיצונית.",
+                reply_markup=markup,
+            )
+        except Exception:
+            bot.reply_to(
+                msg,
+                "❌ לא הצלחתי לפתוח את קישור הבורסה. פתח את /miniapp ונווט אל 🪙 בורסה.",
+            )
+
     @bot.message_handler(func=_is_exchange_gate_text_message, content_types=["text"])
     def exchange_gate_text_cmd(msg):
         answer = route_exchange_gate_text(bot, msg, getattr(msg, "text", "") or "")
@@ -1245,7 +1313,10 @@ def register(bot):
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("SELL", e.check))
         except ValueError as e:
-            bot.reply_to(msg, "❌ " + str(e))
+            if str(e) == "TRADER_CERTIFICATION_REQUIRED":
+                bot.reply_to(msg, "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test")
+            else:
+                bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
 
@@ -1266,7 +1337,10 @@ def register(bot):
         except ExchangeFreshCheckBlocked as e:
             bot.reply_to(msg, format_blocked_execution_receipt("BUY", e.check))
         except ValueError as e:
-            bot.reply_to(msg, "❌ " + str(e))
+            if str(e) == "TRADER_CERTIFICATION_REQUIRED":
+                bot.reply_to(msg, "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test")
+            else:
+                bot.reply_to(msg, "❌ " + str(e))
         except Exception as e:
             bot.reply_to(msg, "❌ שגיאה: " + str(e))
 

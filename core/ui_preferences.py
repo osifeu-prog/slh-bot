@@ -29,6 +29,9 @@ THEMES = {
 }
 DEFAULT_THEME = "calm"
 
+NOTIFICATION_LEVELS = {"off", "milestones", "all"}
+DEFAULT_NOTIFICATION_LEVEL = "milestones"
+
 THEME_ALIASES = {
     "dark": "calm",
     "כהה": "calm",
@@ -58,6 +61,30 @@ def validate_theme(value: str | None) -> str:
     return key
 
 
+def normalize_notification_level(value) -> str:
+    level = str(value or DEFAULT_NOTIFICATION_LEVEL).strip().lower()
+    return level if level in NOTIFICATION_LEVELS else DEFAULT_NOTIFICATION_LEVEL
+
+
+def validate_notification_level(value) -> str:
+    level = str(value or "").strip().lower()
+    aliases = {"none": "off", "quiet": "milestones", "important": "milestones", "all_updates": "all"}
+    level = aliases.get(level, level)
+    if level not in NOTIFICATION_LEVELS:
+        raise ValueError("NOTIFICATION_LEVEL_INVALID")
+    return level
+
+
+def should_send_progress_notification(uid, *, event_class="progress") -> bool:
+    """Policy for proactive progress updates; direct command replies are unaffected."""
+    level = get_preferences(uid)["notification_level"]
+    if level == "off":
+        return False
+    if level == "all":
+        return True
+    return str(event_class or "").strip().lower() in {"milestone", "blocker", "action_required", "completed"}
+
+
 def get_preferences(uid) -> dict:
     uid = str(uid)
     db = state_manager.load_db()
@@ -66,10 +93,11 @@ def get_preferences(uid) -> dict:
         "theme": normalize_theme(raw.get("theme")),
         "language": str(raw.get("language") or "he").strip().lower()[:8] or "he",
         "compact": bool(raw.get("compact", False)),
+        "notification_level": normalize_notification_level(raw.get("notification_level")),
     }
 
 
-def set_preferences(uid, *, theme=None, language=None, compact=None) -> dict:
+def set_preferences(uid, *, theme=None, language=None, compact=None, notification_level=None) -> dict:
     uid = str(uid)
     current = get_preferences(uid)
     updated = dict(current)
@@ -79,6 +107,8 @@ def set_preferences(uid, *, theme=None, language=None, compact=None) -> dict:
         updated["language"] = str(language).strip().lower()[:8] or current["language"]
     if compact is not None:
         updated["compact"] = bool(compact)
+    if notification_level is not None:
+        updated["notification_level"] = validate_notification_level(notification_level)
 
     def mutate(db):
         prefs = db.setdefault("ui_preferences", {})

@@ -1,4 +1,7 @@
 import unittest
+from unittest.mock import patch
+
+import core.slh_exchange_reconciliation as reconciliation
 
 from core.slh_exchange_reconciliation import audit_db
 
@@ -299,6 +302,345 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(missing["order_id"], "O8")
         self.assertEqual(missing["group"], "correction")
 
+
+    def test_periodic_audit_logs_all_findings_in_safe_bounded_chunks(self):
+        class StopPeriodicLoop(Exception):
+            pass
+
+        findings = [
+            {
+                "code": f"FINDING_{index:02d}",
+                "order_id": f"O{index:010d}",
+                "ledger": "ledger",
+                "event_id": f"event:{index:02d}",
+                "uid": "private-full-user-id",
+                "note": "private note must not be logged",
+            }
+            for index in range(23)
+        ]
+        report = {
+            "status": "FAIL",
+            "checked_cancelled_sell_orders": 7,
+            "finding_count": len(findings),
+            "findings": findings,
+        }
+        messages = []
+
+        with patch.object(reconciliation, "run_once", return_value=report):
+            with patch.object(reconciliation.time, "sleep", side_effect=StopPeriodicLoop):
+                with self.assertRaises(StopPeriodicLoop):
+                    reconciliation.run_periodic(messages.append, interval_seconds=60)
+
+        details = [
+            line for line in messages
+            if line.startswith("[SLH_EXCHANGE_RECONCILIATION_DETAILS]")
+        ]
+        self.assertEqual(len(details), 5)
+        joined = "\n".join(messages)
+        for index in range(23):
+            self.assertIn(f"FINDING_{index:02d}", joined)
+            self.assertIn(f"event:{index:02d}", joined)
+        self.assertIn("finding_count=23", joined)
+        self.assertNotIn("private-full-user-id", joined)
+        self.assertNotIn("private note must not be logged", joined)
+        self.assertTrue(all(len(line) < 4000 for line in details))
+
+
+    def test_cancelled_buy_credit_release_does_not_poison_sell_reserve_audit(self):
+        # This audit proves SLH SELL reserve releases only. A legacy BUY order
+        # releases Credits, and must not be mistaken for an SLH reserve event.
+        db = {
+            "exchange_orders": {
+                "O_BUY": {
+                    "id": "O_BUY", "uid": "42", "side": "buy",
+                    "status": "cancelled", "original_amount": "100",
+                    "remaining_amount": "0", "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "42", "amount": 100,
+                    "reason": "exchange:cancel_release_credits",
+                    "meta": {"order_id": "O_BUY"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "UNKNOWN")
+        self.assertNotIn("LEDGER_EVENT_ID_MISSING", codes)
+        self.assertNotIn("DUPLICATE_LEDGER_EVENT_ID", codes)
+
+
+
+    def test_findings_include_sanitized_order_and_wallet_state_for_triage(self):
+        db = {
+            "users": {
+                "seller": {
+                    "wallet": {
+                        "token_balance": 5.0,
+                        "live_token_balance": 5.0,
+                        "exchange_reserved_slh": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {
+                "O0000000006": {
+                    "id": "O0000000006",
+                    "uid": "seller",
+                    "side": "sell",
+                    "status": "cancelled",
+                    "original_amount": "5",
+                    "remaining_amount": "0",
+                    "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "seller",
+                    "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O0000000006"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+        )
+
+        self.assertEqual(finding["order_status"], "CANCELLED")
+        self.assertTrue(finding["order_remaining_is_zero"])
+        self.assertTrue(finding["order_reserved_slh_is_zero"])
+        self.assertTrue(finding["wallet_reserved_slh_is_zero"])
+        self.assertTrue(finding["wallet_reserve_matches_open_orders"])
+        self.assertNotIn("uid", finding)
+        self.assertNotIn("wallet_exchange_reserved_slh", finding)
+
+
+
+    def test_audit_context_classifies_archived_seed_orders_safely(self):
+        db = {
+            "users": {
+                "seller": {
+                    "wallet": {
+                        "token_balance": 5.0,
+                        "live_token_balance": 5.0,
+                        "exchange_reserved_slh": 0.0,
+                    }
+                }
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O_TEST_1": {
+                    "id": "O_TEST_1",
+                    "uid": "seller",
+                    "side": "sell",
+                    "status": "cancelled",
+                    "original_amount": "5",
+                    "remaining_amount": "0",
+                    "reserved_slh": "0",
+                    "reserved_credits": "0",
+                    "test": True,
+                    "archived_at": "2026-10-13T00:00:00+00:00",
+                    "archive_reason": "test_seed_retirement",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "seller",
+                    "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "event_id": "reserve:O_TEST_1",
+                    "meta": {"order_id": "O_TEST_1"},
+                }
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+        finding = next(
+            item for item in report["findings"]
+            if item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+        )
+
+        self.assertTrue(finding["order_is_archived"])
+        self.assertTrue(finding["order_is_test_seed"])
+        self.assertTrue(finding["order_is_archived_test_seed"])
+        self.assertNotIn("uid", finding)
+        self.assertNotIn("token_balance", finding)
+        self.assertNotIn("wallet_reserved_slh", finding)
+
+
+
+    def test_archived_test_seed_findings_are_nonblocking_only_when_current_reserves_match(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O_TEST_1": {
+                    "id": "O_TEST_1", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0", "test": True,
+                    "archived_at": "2026-10-13T00:00:00+00:00",
+                    "archive_reason": "test_seed_retirement",
+                }
+            },
+            "ledger": [{
+                "uid": "seller", "amount": -5,
+                "reason": "exchange:sell_reserve", "event_id": "reserve:O_TEST_1",
+                "meta": {"order_id": "O_TEST_1"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["blocking_finding_count"], 0)
+        self.assertEqual(report["historical_finding_count"], report["finding_count"])
+        self.assertEqual(len(report["blocking_findings"]), 0)
+        self.assertEqual(len(report["historical_findings"]), report["finding_count"])
+        self.assertTrue(all(
+            item["operational_classification"] == "HISTORICAL_ARCHIVED_TEST_SEED"
+            for item in report["findings"]
+        ))
+
+    def test_balanced_legacy_cancel_with_missing_ids_is_nonblocking_only_with_current_state_proof(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [
+                {
+                    "uid": "seller", "amount": -5,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+                {
+                    "uid": "seller", "amount": 5,
+                    "reason": "exchange:cancel_release",
+                    "meta": {"order_id": "O_LEGACY"},
+                },
+            ],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertGreater(report["historical_finding_count"], 0)
+        self.assertEqual(report["blocking_finding_count"], 0)
+        self.assertTrue(all(
+            item["operational_classification"] == "LEGACY_BALANCED_CANCELLED_ORDER"
+            for item in report["findings"]
+        ))
+        self.assertTrue(all(
+            item["code"] == "LEDGER_EVENT_ID_MISSING"
+            for item in report["findings"]
+        ))
+
+    def test_unbalanced_nonseed_cancelled_sell_reserve_remains_blocking(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {
+                "O_UNBALANCED": {
+                    "id": "O_UNBALANCED", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0",
+                }
+            },
+            "ledger": [{
+                "uid": "seller", "amount": -5,
+                "reason": "exchange:sell_reserve", "event_id": "reserve:O_UNBALANCED",
+                "meta": {"order_id": "O_UNBALANCED"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertGreater(report["blocking_finding_count"], 0)
+        self.assertGreater(len(report["blocking_findings"]), 0)
+        self.assertTrue(any(
+            item["code"] == "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE"
+            for item in report["blocking_findings"]
+        ))
+
+    def test_archived_test_seed_is_blocking_if_current_wallet_reserve_is_inconsistent(self):
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 5.0,
+                    "live_token_balance": 5.0,
+                    "exchange_reserved_slh": 2.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                "O_TEST_2": {
+                    "id": "O_TEST_2", "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "5",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0", "test": True,
+                    "archived_at": "2026-10-13T00:00:00+00:00",
+                    "archive_reason": "test_seed_retirement",
+                }
+            },
+            "ledger": [{
+                "uid": "seller", "amount": -5,
+                "reason": "exchange:sell_reserve", "event_id": "reserve:O_TEST_2",
+                "meta": {"order_id": "O_TEST_2"},
+            }],
+            "slh_token_ledger": [],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["status"], "FAIL")
+        self.assertEqual(report["operational_status"], "BLOCKED")
+        self.assertGreater(report["blocking_finding_count"], 0)
+        self.assertTrue(any(
+            item.get("wallet_reserve_matches_open_orders") is False
+            for item in report["blocking_findings"]
+        ))
 
 if __name__ == "__main__":
     unittest.main()

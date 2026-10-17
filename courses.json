@@ -289,5 +289,47 @@
         "lesson": "lessons/governance_game_theory/8.txt"
       }
     ]
+  },
+  "algo_trading_999": {
+    "title": "מסחר אלגוריתמי, כוחות השוק ופסיכולוגיה",
+    "access": "paid",
+    "store_item": "course_algo_trading",
+    "stages": [
+      {
+        "id": 1,
+        "name": "יסודות המסחר האלגוריתמי וארכיטקטורת SLH",
+        "lesson": "lessons/algorithmic_trading/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "כוחות השוק: ספר הפקודות והנזילות",
+        "lesson": "lessons/algorithmic_trading/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "פסיכולוגיה: תכנון מול תגובה רגשית",
+        "lesson": "lessons/algorithmic_trading/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "אסטרטגיות אלגוריתמיות בסימולציה",
+        "lesson": "lessons/algorithmic_trading/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "ניהול סיכונים ובקרות בטיחות",
+        "lesson": "lessons/algorithmic_trading/5.txt"
+      },
+      {
+        "id": 6,
+        "name": "מעבדת מסכם: בניית סוכן Paper Trading",
+        "lesson": "lessons/algorithmic_trading/6.txt"
+      },
+      {
+        "id": 7,
+        "name": "הסמכת סוחר SLH — מבחן כשירות ומסחר אחראי",
+        "lesson": "lessons/algorithmic_trading/7.txt"
+      }
+    ]
   }
 }

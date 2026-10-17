@@ -149,7 +149,13 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
             "amount": 10.0,
             "before": 100.0,
             "after": 110.0,
-            "meta": {"idempotency_key": f"bnb:deposit:{tx_hash.lower()}"},
+            "meta": {
+                "idempotency_key": f"bnb:deposit:{tx_hash.lower()}",
+                "tx_hash": tx_hash,
+                "bnb_amount_wei": amount_wei,
+                "from": wallet,
+                "to": TREASURY,
+            },
         }]
     }
     verified = {
@@ -188,8 +194,10 @@ def test_complete_live_evidence_is_revalidated_but_gate_stays_closed():
     ) as ledger_load:
         status = bnb_opening_evidence()
 
-    live_tx_check.assert_called_once_with(tx_hash)
-    binding_lookup.assert_called_once_with("224223270")
+    assert live_tx_check.call_count == 2
+    live_tx_check.assert_called_with(tx_hash)
+    assert binding_lookup.call_count == 2
+    binding_lookup.assert_called_with("224223270")
     assert ledger_load.call_count == 1
     assert status["status"] == "READY_TO_OPEN"
     assert status["ready_to_open"] is True
@@ -273,3 +281,161 @@ def test_probe_bsc_rpc_reads_chain_and_block_without_touching_treasury(monkeypat
     assert result["block"] == 123456
     assert result["network"] == "bsc"
     provider.assert_called_once_with(config["rpc"], request_kwargs={"timeout": 5})
+
+
+def _historical_deposit_fixture():
+    tx_hash = "0x" + "a" * 64
+    bad_hash = "0x" + "b" * 64
+    wallet = "0x2222222222222222222222222222222222222222"
+    amount_wei = 10**16
+    empirical = {
+        "status": "PASS",
+        "tx_hash": tx_hash,
+        "observed_at": "2026-10-09T07:00:00+00:00",
+        "amount_wei": amount_wei,
+        "confirmations": 15,
+        "ledger_entries_for_idempotency_key": 1,
+        "credits": 10.0,
+        "balance_before": 18.091775,
+        "balance_after": 28.091775,
+        "replay_balance_after": 28.091775,
+        "checks": {
+            "wallet_binding": True,
+            "tx_verification": True,
+            "idempotency": True,
+            "atomic_ledger": True,
+            "reconciliation": True,
+        },
+        "from_bound_wallet": True,
+        "gate_remained_closed": True,
+        "uid": "224223270",
+        "to_treasury": TREASURY,
+    }
+    good_entry = {
+        "uid": "224223270",
+        "reason": "bnb:deposit",
+        "amount": 10.0,
+        "before": 18.091775,
+        "after": 28.091775,
+        "meta": {
+            "idempotency_key": f"bnb:deposit:{tx_hash.lower()}",
+            "tx_hash": tx_hash,
+            "bnb_amount_wei": amount_wei,
+            "from": wallet,
+            "to": TREASURY,
+        },
+    }
+    bad_entry = {
+        "uid": "224223270",
+        "reason": "bnb:deposit",
+        "amount": 10.0,
+        "before": 8.091775,
+        "after": 18.091775,
+        "meta": {
+            "idempotency_key": f"bnb:deposit:{bad_hash.lower()}",
+            "tx_hash": bad_hash,
+            "bnb_amount_wei": amount_wei,
+            "from": wallet,
+            "to": wallet,
+        },
+    }
+    db = {
+        "bsc_settings": _cfg(),
+        "wallet_bindings": {
+            wallet.lower(): {
+                "uid": "224223270",
+                "chain": "bsc",
+                "address": wallet,
+            }
+        },
+        "settlement_evidence": {"bnb": empirical},
+        "ledger": [bad_entry, good_entry],
+    }
+    verified = {
+        "ok": True,
+        "tx_hash": tx_hash,
+        "from": wallet,
+        "to": TREASURY,
+        "amount_wei": amount_wei,
+        "confirmations": 15,
+    }
+    return db, empirical, tx_hash, bad_hash, wallet, verified
+
+
+def _verify_fixture_tx(tx_hash, valid_hash, verified):
+    if str(tx_hash).lower() == str(valid_hash).lower():
+        return dict(verified)
+    return {
+        "ok": False,
+        "error": "BNB_SELF_TRANSFER_NOT_DEPOSIT",
+        "from": verified["from"],
+        "to": verified["from"],
+        "tx_hash": str(tx_hash),
+    }
+
+
+def test_historical_invalid_deposit_blocks_opening_evidence_even_with_valid_proof():
+    db, empirical, tx_hash, bad_hash, wallet, verified = _historical_deposit_fixture()
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "0",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.bnb_gate._empirical_settlement_evidence", return_value=empirical
+    ), patch(
+        "core.deposit_monitor.get_onchain_status",
+        return_value={
+            "ok": True,
+            "chain_id": 56,
+            "block": 123,
+            "treasury_wallet": TREASURY,
+            "network": "bsc",
+        },
+    ), patch(
+        "core.deposit_monitor.verify_bnb_deposit",
+        side_effect=lambda value: _verify_fixture_tx(value, tx_hash, verified),
+    ), patch(
+        "core.wallet_binding.get_binding", return_value={"address": wallet}
+    ), patch(
+        "state_manager.load_db", return_value=db
+    ):
+        status = bnb_opening_evidence()
+
+    assert status["scope"] == "read_only"
+    assert status["historical_deposits"]["status"] == "FAIL"
+    assert status["historical_deposits"]["rows_checked"] == 2
+    assert status["historical_deposits"]["finding_count"] == 1
+    assert status["historical_deposits"]["findings"][0]["tx_suffix"] == bad_hash[-8:]
+    assert "CHAIN_TX_NOT_VERIFIED" in status["historical_deposits"]["findings"][0]["issues"]
+    assert "HISTORICAL_BNB_DEPOSIT_LEDGER_REVALIDATION_FAILED" in status["blockers"]
+    assert status["gate_open"] is False
+    assert status["ready_to_open"] is False
+
+
+def test_public_bnb_gate_fails_closed_on_invalid_historical_deposit():
+    from core.bnb_gate import bnb_deposits_open
+
+    db, empirical, tx_hash, bad_hash, wallet, verified = _historical_deposit_fixture()
+    with patch.dict(
+        os.environ,
+        {
+            "BNB_DEPOSITS_OPEN": "1",
+            "SLH_BSC_CANONICAL_TREASURY": TREASURY,
+        },
+        clear=False,
+    ), patch("core.bnb_gate._effective_config", return_value=_cfg()), patch(
+        "core.bnb_gate._empirical_evidence_revalidated", return_value=True
+    ), patch(
+        "core.deposit_monitor.verify_bnb_deposit",
+        side_effect=lambda value: _verify_fixture_tx(value, tx_hash, verified),
+    ), patch(
+        "core.wallet_binding.get_binding", return_value={"address": wallet}
+    ), patch(
+        "state_manager.load_db", return_value=db
+    ):
+        assert bnb_deposits_open() is False
+
+

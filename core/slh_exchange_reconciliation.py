@@ -6,6 +6,7 @@ ledgers, freezes, or exchange gates.
 from __future__ import annotations
 
 from collections import Counter
+import json
 from decimal import Decimal, InvalidOperation
 import os
 import time
@@ -51,15 +52,83 @@ def audit_db(db):
     """Return a read-only reserve report with ledger domains kept separate."""
     findings = []
     orders = {}
-    for key, order in _records(db.get("exchange_orders", {})) + _records(db.get("exchange_order_archive", {})):
+    order_source_by_id = {}
+    for key, order in _records(db.get("exchange_orders", {})):
         oid = str(order.get("order_id") or order.get("id") or key)
         orders[oid] = order
+        order_source_by_id[oid] = "active"
+    for key, order in _records(db.get("exchange_order_archive", {})):
+        oid = str(order.get("order_id") or order.get("id") or key)
+        orders[oid] = order
+        order_source_by_id[oid] = "archive"
 
     sources = (
         ("ledger", _records(db.get("ledger", []))),
         ("slh_token_ledger", _records(db.get("slh_token_ledger", []))),
     )
     known_order_ids = set(orders)
+
+    def _uid(order):
+        return str(order.get("uid") or order.get("user_id") or "")
+
+    # Cache expected current reserves per account. Values are never emitted in
+    # findings; only consistency booleans are added for safe operator triage.
+    open_sell_reserve_by_uid = {}
+    open_sell_reserve_unknown_uids = set()
+    for oid, order in orders.items():
+        if order_source_by_id.get(oid) != "active":
+            continue
+        if str(order.get("side") or "").lower() != "sell" or str(order.get("status") or "").lower() != "open":
+            continue
+        uid = _uid(order)
+        if not uid:
+            continue
+        amount = _amount(order.get("reserved_slh"))
+        if amount is None:
+            open_sell_reserve_unknown_uids.add(uid)
+            continue
+        open_sell_reserve_by_uid[uid] = open_sell_reserve_by_uid.get(uid, Decimal(0)) + amount
+
+    def _current_order_context(order_id):
+        oid = str(order_id or "")
+        order = orders.get(oid)
+        if not isinstance(order, dict):
+            return {}
+        uid = _uid(order)
+        users = db.get("users", {})
+        user = users.get(uid) if uid and isinstance(users, dict) else None
+        wallet = user.get("wallet") if isinstance(user, dict) else None
+        wallet = wallet if isinstance(wallet, dict) else {}
+        remaining = _amount(order.get("remaining_amount"))
+        order_reserve = _amount(order.get("reserved_slh"))
+        wallet_reserve = (
+            _amount(wallet.get("exchange_reserved_slh", 0))
+            if isinstance(user, dict) else None
+        )
+        expected_open_reserve = open_sell_reserve_by_uid.get(uid, Decimal(0))
+        reserve_match = (
+            wallet_reserve == expected_open_reserve
+            if uid and wallet_reserve is not None and uid not in open_sell_reserve_unknown_uids
+            else None
+        )
+        try:
+            from core.exchange_housekeeping import is_test_seed
+            test_seed = bool(is_test_seed(order))
+        except Exception:
+            # Classification is diagnostic only; never allow it to affect audit status.
+            test_seed = None
+        archived = order_source_by_id.get(oid) == "archive"
+        return {
+            "order_status": str(order.get("status") or "UNKNOWN").upper(),
+            "order_remaining_is_zero": remaining == 0 if remaining is not None else None,
+            "order_reserved_slh_is_zero": order_reserve == 0 if order_reserve is not None else None,
+            "wallet_reserved_slh_is_zero": wallet_reserve == 0 if wallet_reserve is not None else None,
+            "wallet_reserve_matches_open_orders": reserve_match,
+            "order_is_archived": archived,
+            "order_is_test_seed": test_seed,
+            "order_is_archived_test_seed": archived and test_seed is True and str(order.get("archive_reason") or "") == "test_seed_retirement",
+        }
+
 
     def _meta(event):
         value = event.get("meta")
@@ -96,10 +165,19 @@ def audit_db(db):
         if reserve:
             return True
 
+        # BUY-order cancellation releases Credits, not SLH. This audit is
+        # intentionally limited to SLH SELL reserves; counting a Credits release
+        # here creates a false missing-event-ID finding for unrelated BUY orders.
+        if "credits" in reason or "credits" in kind:
+            return False
+        order = orders.get(order_id)
+        if isinstance(order, dict) and str(order.get("side") or "").lower() == "buy":
+            return False
+
         if correction:
-            # The general Credits ledger also contains non-exchange corrections.
+            # The general ledger also contains non-exchange corrections.
             # Only include corrections evidenced as exchange/reserve-specific,
-            # or explicitly attached to a known exchange order.
+            # or explicitly attached to a known SELL order.
             event_id = _event_id(event).lower()
             evidence = " ".join((reason, kind, event_id))
             reserve_correction = any(
@@ -112,8 +190,8 @@ def audit_db(db):
             return False
         return (
             order_id in known_order_ids
-            or reason.startswith("exchange:")
-            or kind.startswith("exchange_")
+            or reason in {"exchange:cancel_release", "exchange:cancel_release_slh"}
+            or kind in {"exchange_release"}
         )
 
     # Detect duplicates within each source independently. Do not silently
@@ -330,23 +408,221 @@ def audit_db(db):
             "note": "No eligible reserve records were matched; the audit cannot claim PASS.",
         })
 
+    # Add sanitized current-state context, without suppressing findings or changing
+    # the complete historical audit result.
+    for item in findings:
+        if item.get("order_id"):
+            item.update(_current_order_context(item["order_id"]))
+
+    terminal_statuses = {"cancelled", "canceled", "closed", "expired"}
+
+    def _current_reserve_state_is_proven(order_id):
+        order = orders.get(str(order_id))
+        if not isinstance(order, dict):
+            return False
+        context = _current_order_context(order_id)
+        return (
+            str(order.get("side") or "").lower() == "sell"
+            and str(order.get("status") or "").lower() in terminal_statuses
+            and context.get("order_remaining_is_zero") is True
+            and context.get("order_reserved_slh_is_zero") is True
+            and context.get("wallet_reserved_slh_is_zero") is True
+            and context.get("wallet_reserve_matches_open_orders") is True
+        )
+
+    def _archived_test_seed_finding_is_nonblocking(item):
+        raw_ids = []
+        if item.get("order_id"):
+            raw_ids = [str(item.get("order_id"))]
+        elif isinstance(item.get("order_ids"), list):
+            raw_ids = [str(oid) for oid in item["order_ids"] if oid]
+        if not raw_ids:
+            return False
+        for oid in raw_ids:
+            order = orders.get(oid)
+            context = _current_order_context(oid)
+            if (
+                not isinstance(order, dict)
+                or order_source_by_id.get(oid) != "archive"
+                or context.get("order_is_archived_test_seed") is not True
+                or not _current_reserve_state_is_proven(oid)
+            ):
+                return False
+        return True
+
+    def _legacy_balanced_cancelled_order_is_nonblocking(item):
+        if item.get("code") != "LEDGER_EVENT_ID_MISSING":
+            return False
+        if item.get("group") not in {"reserve", "normal_release"}:
+            return False
+        oid = str(item.get("order_id") or "")
+        ledger_name = str(item.get("ledger") or "")
+        order = orders.get(oid)
+        if (
+            not oid
+            or ledger_name not in {"ledger", "slh_token_ledger"}
+            or not isinstance(order, dict)
+            or order_source_by_id.get(oid) != "active"
+            or str(order.get("side") or "").lower() != "sell"
+            or str(order.get("status") or "").lower() not in terminal_statuses
+            or not _current_reserve_state_is_proven(oid)
+        ):
+            return False
+        context = _current_order_context(oid)
+        # Do not infer "legacy" from missing IDs alone. It must be an ordinary,
+        # non-seed order with a proved empty current reserve and matching order book.
+        if context.get("order_is_test_seed") is not False:
+            return False
+        ledger_source = dict(sources).get(ledger_name)
+        if not isinstance(ledger_source, list):
+            return False
+        order_events = [
+            event for _, event in ledger_source
+            if _order_id(event) == oid and _is_exchange_audit_event(event)
+        ]
+        reserve_events = []
+        release_events = []
+        correction_events = []
+        for event in order_events:
+            reserve, release, correction = _event_groups(event)
+            if reserve:
+                reserve_events.append(event)
+            if release:
+                release_events.append(event)
+            if correction:
+                correction_events.append(event)
+        # Missing-ID classification is only acceptable when the paired rows
+        # are unique, tied to this terminal order, and contain no correction.
+        if (
+            len(reserve_events) != 1
+            or len(release_events) != 1
+            or correction_events
+            or not any(not _event_id(event) for event in reserve_events + release_events)
+        ):
+            return False
+        parsed_reserve = [(_amount(event.get("amount")), event) for event in reserve_events]
+        parsed_release = [(_amount(event.get("amount")), event) for event in release_events]
+        if any(amount is None for amount, _ in parsed_reserve + parsed_release):
+            return False
+        reserve_total = sum(
+            (_ledger_delta(event, amount, "reserve", ledger_name) for amount, event in parsed_reserve),
+            Decimal(0),
+        )
+        release_total = sum(
+            (_ledger_delta(event, amount, "normal_release", ledger_name) for amount, event in parsed_release),
+            Decimal(0),
+        )
+        return reserve_total + release_total == 0
+
+    blocking_findings = []
+    historical_findings = []
+    for item in findings:
+        if _archived_test_seed_finding_is_nonblocking(item):
+            item["operational_classification"] = "HISTORICAL_ARCHIVED_TEST_SEED"
+            historical_findings.append(item)
+        elif _legacy_balanced_cancelled_order_is_nonblocking(item):
+            item["operational_classification"] = "LEGACY_BALANCED_CANCELLED_ORDER"
+            historical_findings.append(item)
+        else:
+            item["operational_classification"] = "BLOCKING"
+            blocking_findings.append(item)
+
     status = "FAIL" if any(
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
     ) else ("UNKNOWN" if checked == 0 else "PASS")
+    operational_status = (
+        "UNKNOWN" if checked == 0
+        else "BLOCKED" if blocking_findings
+        else "PASS"
+    )
 
     return {
         "status": status,
+        "operational_status": operational_status,
         "read_only": True,
         "checked_cancelled_sell_orders": checked,
         "finding_count": len(findings),
         "findings": findings,
+        "blocking_finding_count": len(blocking_findings),
+        "blocking_findings": blocking_findings,
+        "historical_finding_count": len(historical_findings),
+        "historical_findings": historical_findings,
     }
 
 
 def run_once():
     db = state_manager.load_db()
     return audit_db(db)
+
+
+def _safe_log_finding(item, index):
+    """Keep operational logs useful without emitting arbitrary DB fields."""
+    if not isinstance(item, dict):
+        return {"index": index, "code": "MALFORMED_FINDING"}
+
+    allowed = (
+        "code",
+        "ledger",
+        "ledgers",
+        "order_id",
+        "order_ids",
+        "order_status",
+        "order_remaining_is_zero",
+        "order_reserved_slh_is_zero",
+        "wallet_reserved_slh_is_zero",
+        "wallet_reserve_matches_open_orders",
+        "order_is_archived",
+        "order_is_test_seed",
+        "order_is_archived_test_seed",
+        "operational_classification",
+        "group",
+        "uid_suffix",
+        "reserve_delta",
+        "normal_release_delta",
+        "release_delta",
+        "net_delta",
+        "correction_delta",
+        "event_id",
+        "event_ids",
+    )
+    safe = {"index": index}
+    for key in allowed:
+        if key not in item or item[key] is None:
+            continue
+        value = item[key]
+        if key == "uid_suffix":
+            suffix = "".join(char for char in str(value) if char.isdigit())[-4:]
+            if suffix:
+                safe[key] = suffix
+            continue
+        if isinstance(value, list):
+            limit = 4 if key in {"ledgers", "order_ids"} else 3
+            safe[key] = [
+                str(entry).replace("\n", " ").replace("\\r", " ")[:80]
+                for entry in value[:limit]
+                if entry is not None
+            ]
+        elif isinstance(value, (str, int, float, bool)):
+            rendered = str(value).replace("\n", " ").replace("\\r", " ")
+            safe[key] = rendered[:100] if isinstance(value, str) else value
+        else:
+            safe[key] = str(value).replace("\n", " ").replace("\\r", " ")[:100]
+    return safe
+
+
+def _reserve_audit_log_chunks(findings, chunk_size=5):
+    """Format every finding as bounded, sanitized one-line JSON chunks."""
+    if not isinstance(findings, list):
+        return []
+    safe_findings = [
+        _safe_log_finding(item, index)
+        for index, item in enumerate(findings, start=1)
+    ]
+    return [
+        json.dumps(safe_findings[offset:offset + chunk_size], ensure_ascii=False, separators=(",", ":"))
+        for offset in range(0, len(safe_findings), chunk_size)
+    ]
 
 
 def run_periodic(log, interval_seconds=None):
@@ -356,13 +632,24 @@ def run_periodic(log, interval_seconds=None):
     while True:
         try:
             report = run_once()
+            findings = report.get("findings")
+            findings = findings if isinstance(findings, list) else []
             log(
                 "[SLH_EXCHANGE_RECONCILIATION] "
                 f"status={report['status']} "
+                f"operational_status={report.get('operational_status', 'UNKNOWN')} "
+                f"blocking_finding_count={report.get('blocking_finding_count', len(findings))} "
+                f"historical_finding_count={report.get('historical_finding_count', 0)} "
                 f"checked_cancelled_sell_orders={report['checked_cancelled_sell_orders']} "
                 f"finding_count={report['finding_count']} "
-                f"findings={report['findings'][:20]}"
+                f"logged_finding_count={len(findings)}"
             )
+            chunks = _reserve_audit_log_chunks(findings)
+            for part_number, chunk in enumerate(chunks, start=1):
+                log(
+                    "[SLH_EXCHANGE_RECONCILIATION_DETAILS] "
+                    f"part={part_number}/{len(chunks)} findings={chunk}"
+                )
         except Exception as exc:
             log(f"[SLH_EXCHANGE_RECONCILIATION] status=UNKNOWN error={type(exc).__name__}: {str(exc)[:200]}")
         time.sleep(interval)

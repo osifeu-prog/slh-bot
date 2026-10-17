@@ -222,3 +222,25 @@ def register(bot):
             lines.append(f"• {currency}: {total:g}")
         lines.append("Internal Credit spending is not counted as cash revenue.")
         bot.reply_to(msg, "\n".join(lines))
+
+
+    @bot.message_handler(commands=["revenue_recovery_audit"])
+    def revenue_recovery_audit_cmd(msg):
+        # Financial recovery evidence is owner-only, not merely admin-visible.
+        from core.authority import is_owner
+        if not is_owner(msg.from_user.id):
+            bot.reply_to(msg, "⛔️ פקודת ביקורת שחזור פיננסי זמינה לבעלים בלבד.")
+            return
+
+        try:
+            from core.revenue_recovery_audit import format_revenue_recovery_report
+            report = format_revenue_recovery_report(".")
+            bot.reply_to(msg, report)
+        except Exception as exc:
+            # Keep the response bounded and never expose file contents or secrets.
+            bot.reply_to(
+                msg,
+                "🔴 Revenue recovery audit failed safely: "
+                + type(exc).__name__
+                + ". No changes were made."
+            )
