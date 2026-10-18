@@ -1,5 +1,6 @@
 import unittest
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
+from unittest.mock import patch
 
 from handlers.pitch_handler import (
     PITCH_SLIDES,
@@ -166,6 +167,115 @@ class PitchHandlerTests(unittest.TestCase):
         self.assertEqual(len(main_bot.message_handlers), 1)
         self.assertEqual(len(main_bot.callback_handlers), 1)
         self.assertEqual(main_bot.message_handlers[0][0]["commands"], ["pitch"])
+
+
+    def test_pitch_command_sends_first_slide_and_navigation(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        command_handler = bot.message_handlers[0][1]
+        message = SimpleNamespace(chat=SimpleNamespace(id=100, type="private"))
+
+        command_handler(message)
+
+        self.assertEqual(len(bot.sent_messages), 1)
+        args, kwargs = bot.sent_messages[0]
+        self.assertEqual(args[0], 100)
+        self.assertIn("מסך 1/6", args[1])
+        callbacks = {
+            button.callback_data
+            for row in kwargs["reply_markup"].keyboard
+            for button in row
+            if button.callback_data
+        }
+        self.assertIn("slh_pitch:slide:1", callbacks)
+
+    def test_slide_navigation_edits_the_current_message(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        callback_handler = bot.callback_handlers[0][1]
+        call = SimpleNamespace(
+            id="callback-slide",
+            data="slh_pitch:slide:1",
+            from_user=SimpleNamespace(id=123),
+            message=SimpleNamespace(
+                chat=SimpleNamespace(id=100, type="private"),
+                message_id=456,
+            ),
+        )
+
+        callback_handler(call)
+
+        self.assertEqual(len(bot.callback_answers), 1)
+        self.assertEqual(len(bot.edited_messages), 1)
+        args, kwargs = bot.edited_messages[0]
+        self.assertIn("מסך 2/6", args[0])
+        self.assertEqual(kwargs["chat_id"], 100)
+        self.assertEqual(kwargs["message_id"], 456)
+
+    def test_simulation_callback_displays_only_the_synthetic_demo(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        callback_handler = bot.callback_handlers[0][1]
+        call = SimpleNamespace(
+            id="callback-sim",
+            data="slh_pitch:sim",
+            from_user=SimpleNamespace(id=123),
+            message=SimpleNamespace(
+                chat=SimpleNamespace(id=100, type="private"),
+                message_id=456,
+            ),
+        )
+
+        callback_handler(call)
+
+        self.assertEqual(len(bot.edited_messages), 1)
+        args, kwargs = bot.edited_messages[0]
+        self.assertIn("SIM-DEMO-001", args[0])
+        self.assertIn("נתונים סינתטיים בלבד", args[0])
+        self.assertIn("לא נכתבה רשומה", args[0])
+        self.assertNotIn("ledger_entry", kwargs)
+
+    def test_academy_callback_dispatches_only_in_private_chat(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        callback_handler = bot.callback_handlers[0][1]
+        calls = []
+        academy_module = ModuleType("handlers.academy_menu_handler")
+        academy_module._send_academy = lambda *args: calls.append(args)
+        call = SimpleNamespace(
+            id="callback-academy",
+            data="slh_pitch:academy",
+            from_user=SimpleNamespace(id=12345),
+            message=SimpleNamespace(
+                chat=SimpleNamespace(id=100, type="private"),
+                message_id=456,
+            ),
+        )
+
+        with patch.dict("sys.modules", {"handlers.academy_menu_handler": academy_module}):
+            callback_handler(call)
+
+        self.assertEqual(calls, [(bot, 100, "12345")])
+        self.assertEqual(bot.sent_messages, [])
+
+    def test_invalid_slide_callback_is_rejected_without_editing(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        callback_handler = bot.callback_handlers[0][1]
+        call = SimpleNamespace(
+            id="callback-invalid",
+            data="slh_pitch:slide:999",
+            from_user=SimpleNamespace(id=123),
+            message=SimpleNamespace(
+                chat=SimpleNamespace(id=100, type="private"),
+                message_id=456,
+            ),
+        )
+
+        callback_handler(call)
+
+        self.assertIn("מסך לא תקין", bot.callback_answers[0][0][1])
+        self.assertEqual(bot.edited_messages, [])
 
 
 if __name__ == "__main__":
