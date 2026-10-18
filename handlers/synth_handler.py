@@ -1,3 +1,4 @@
+import io
 import os
 import re
 import tempfile
@@ -42,9 +43,10 @@ def register(bot):
             fd, output_path = tempfile.mkstemp(prefix="slh-synth-", suffix=".ogg")
             os.close(fd)
             se.main(score, waveform, duration, output_path)
-            with open(output_path, "rb") as audio:
-                audio.name = "slh-synth.ogg"
-                bot.send_voice(message.chat.id, audio, reply_to_message_id=getattr(message, "message_id", None))
+            with open(output_path, "rb") as source:
+                audio = io.BytesIO(source.read())
+            audio.name = "slh-synth.ogg"
+            bot.send_voice(message.chat.id, audio, reply_to_message_id=getattr(message, "message_id", None))
         except Exception as exc:
             bot.reply_to(message, "לא הצלחתי ליצור את קובץ השמע כרגע.")
             print("[SYNTH] generation/delivery failed:", type(exc).__name__)
