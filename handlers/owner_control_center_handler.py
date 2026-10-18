@@ -213,7 +213,7 @@ def parse_callback(data, now=None):
     if len(parts) != 3 or parts[0] != "slhcc":
         return None
     action = parts[1]
-    if action not in {"menu", "audit", "last", "next"}:
+    if action not in {"menu", "audit", "last", "next", "state_calibration"}:
         return None
     try:
         issued = int(parts[2])
@@ -468,11 +468,132 @@ def format_report(report):
     return "\n".join(lines)[:3900]
 
 
+
+def _run_state_calibration():
+    """Run the owner-triggered, read-only three-store fingerprint check."""
+    import urllib.error
+    import urllib.request
+
+    coordinator_url = (
+        "https://web-production-22f28.up.railway.app/internal/ops/state-calibration"
+    )
+    token = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
+    if not token:
+        return (
+            "🧪 כיול מקורות אחסון — BLOCKED\n\n"
+            "חסר SLH_MCP_BRIDGE_TOKEN בתהליך הבוט. לא בוצע שינוי כלשהו."
+        )
+
+    request = urllib.request.Request(
+        coordinator_url,
+        headers={
+            "Authorization": "Bearer " + token,
+            "Accept": "application/json",
+            "Cache-Control": "no-cache",
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=28) as response:
+            status = getattr(response, "status", 200)
+            if status != 200:
+                return (
+                    "🧪 כיול מקורות אחסון — BLOCKED\n\n"
+                    f"הרכז החזיר HTTP {status}. לא בוצע שינוי."
+                )
+            payload = json.loads(response.read(64 * 1024).decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        return (
+            "🧪 כיול מקורות אחסון — BLOCKED\n\n"
+            f"הרכז החזיר HTTP {exc.code}. בדוק הרשאה/פריסה; לא שונו נתונים."
+        )
+    except Exception as exc:
+        return (
+            "🧪 כיול מקורות אחסון — BLOCKED\n\n"
+            f"הבדיקה לא הושלמה ({type(exc).__name__}). "
+            "לא הונחו הנחות לגבי מצב האחסון."
+        )
+
+    if not isinstance(payload, dict) or payload.get("ok") is not True:
+        return (
+            "🧪 כיול מקורות אחסון — BLOCKED\n\n"
+            "התקבלה תשובה לא מאומתת מהרכז. לא בוצע שינוי."
+        )
+
+    def sha(value):
+        value = str(value or "").lower()
+        if len(value) == 64 and all(ch in "0123456789abcdef" for ch in value):
+            return value
+        return "UNKNOWN"
+
+    sources = payload.get("sources") if isinstance(payload.get("sources"), dict) else {}
+    lines = [
+        "🧪 כיול מקורות אחסון — READ ONLY",
+        "תוצאה: " + str(payload.get("status") or "UNKNOWN"),
+        "UTC: " + str(payload.get("timestamp_utc") or "UNKNOWN")[:32],
+        "",
+    ]
+    for key, title in (
+        ("bot_json", "1/3 Bot JSON"),
+        ("web_json", "2/3 Web JSON"),
+    ):
+        item = sources.get(key) if isinstance(sources.get(key), dict) else {}
+        lines.append(f"{title}: {str(item.get('status') or 'UNKNOWN')}")
+        snapshot = item.get("snapshot") if isinstance(item.get("snapshot"), dict) else {}
+        if item.get("ok") is True:
+            lines.append("SHA-256: " + sha(snapshot.get("sha256")))
+            lines.append("Schema SHA-256: " + sha(snapshot.get("schema_sha256")))
+            lines.append("File bytes: " + str(snapshot.get("size_bytes") or "UNKNOWN"))
+            collections = snapshot.get("collections") if isinstance(snapshot.get("collections"), dict) else {}
+            counts = []
+            for collection in ("users", "ledger", "slh_token_ledger", "exchange_orders", "exchange_trades", "withdrawals"):
+                row = collections.get(collection) if isinstance(collections.get(collection), dict) else {}
+                count = row.get("count")
+                counts.append(collection + "=" + (str(count) if isinstance(count, int) else "n/a"))
+            lines.append("Counts: " + " · ".join(counts))
+        else:
+            lines.append("סיבה: " + str(item.get("reason") or "לא התקבלה הוכחה")[:48])
+        lines.append("")
+
+    pg = sources.get("api_postgres") if isinstance(sources.get("api_postgres"), dict) else {}
+    lines.append("3/3 SLH API · PostgreSQL: " + str(pg.get("status") or "UNKNOWN"))
+    if pg.get("ok") is True:
+        lines.append("Schema SHA-256: " + sha(pg.get("schema_sha256")))
+        lines.append("Aggregate SHA-256: " + sha(pg.get("aggregate_sha256")))
+        lines.append("Public tables: " + str(pg.get("table_count") if isinstance(pg.get("table_count"), int) else "UNKNOWN"))
+        lines.append("Estimated total rows: " + str(pg.get("total_estimated_rows") if isinstance(pg.get("total_estimated_rows"), int) else "UNKNOWN"))
+        tables = pg.get("financial_tables") if isinstance(pg.get("financial_tables"), list) else []
+        if tables:
+            lines.append("Financial table estimates:")
+            for row in tables[:12]:
+                if not isinstance(row, dict):
+                    continue
+                name = str(row.get("table") or "unknown")[:48]
+                count = row.get("estimated_rows")
+                lines.append(f"• {name}: ~{count if isinstance(count, int) else 'n/a'}")
+        lines.append("הערה: ספירות PostgreSQL מקורבות לפי סטטיסטיקות מסד, לא COUNT מדויק.")
+    else:
+        lines.append("סיבה: " + str(pg.get("reason") or "endpoint לא זמין")[:48])
+
+    comparison = payload.get("json_snapshot_comparison")
+    comparison = comparison if isinstance(comparison, dict) else {}
+    lines.extend([
+        "",
+        "השוואת Bot/Web: " + str(comparison.get("status") or "UNKNOWN"),
+        str(comparison.get("note") or "")[:240],
+        "",
+        "🛡️ הבדיקה לקריאה בלבד: לא נכתבו ל־DB, לא שונו יתרות, לא הופעלו שערים ולא בוצעה פריסה.",
+        "הדוח אינו אישור לפתיחת מסחר/הפקדות/משיכות.",
+    ])
+    return "\n".join(lines)[:3900]
+
+
 def _keyboard():
     from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
+        InlineKeyboardButton("🧪 כיול — טביעת אצבע ל־3 מקורות", callback_data=callback_data("state_calibration")),
         InlineKeyboardButton("🔎 הרץ בדיקה לקריאה בלבד", callback_data=callback_data("audit")),
         InlineKeyboardButton("📄 הצג דוח אחרון", callback_data=callback_data("last")),
         InlineKeyboardButton("➡️ המשך בטוח — הצג את השלב הבא", callback_data=callback_data("next")),
@@ -520,6 +641,13 @@ def register(bot):
                 bot.send_message(call.message.chat.id, "אין עדיין דוח שמור. לחץ על בדיקה לקריאה בלבד.", reply_markup=_keyboard())
             else:
                 bot.send_message(call.message.chat.id, format_report(report), reply_markup=_keyboard())
+        elif action == "state_calibration":
+            bot.send_message(
+                call.message.chat.id,
+                _run_state_calibration(),
+                reply_markup=_keyboard(),
+                parse_mode=None,
+            )
         elif action == "next":
             step = next_safe_step(_load_release_state())
             bot.send_message(
