@@ -127,7 +127,7 @@ def market_snapshot(*, force: bool = False, now: float | None = None) -> dict:
             "missing_symbols": [item["symbol"] for item in UNIVERSE],
             "fetched_at_utc": None,
             "cache": "MISS",
-            "reason": "Set TWELVEDATA_API_KEY in the server environment; never put it in browser code.",
+            "reason": "Configure the market-data provider on the server; never put credentials in browser code.",
             "paper_only": True,
         }
 
