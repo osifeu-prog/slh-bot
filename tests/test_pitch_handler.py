@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 from handlers.pitch_handler import (
     PITCH_SLIDES,
@@ -14,6 +15,18 @@ class FakeBot:
     def __init__(self):
         self.message_handlers = []
         self.callback_handlers = []
+        self.sent_messages = []
+        self.callback_answers = []
+        self.edited_messages = []
+
+    def send_message(self, *args, **kwargs):
+        self.sent_messages.append((args, kwargs))
+
+    def answer_callback_query(self, *args, **kwargs):
+        self.callback_answers.append((args, kwargs))
+
+    def edit_message_text(self, *args, **kwargs):
+        self.edited_messages.append((args, kwargs))
 
     def message_handler(self, **kwargs):
         def decorate(fn):
@@ -61,6 +74,27 @@ class PitchHandlerTests(unittest.TestCase):
                             self.assertTrue(button.callback_data.startswith("slh_pitch:"))
                         if button.url is not None:
                             self.assertTrue(button.url.startswith("https://"))
+
+    def test_academy_callback_does_not_expose_course_progress_in_groups(self):
+        bot = FakeBot()
+        register(bot, {"bot_name": "Me_ad_main"})
+        callback_handler = bot.callback_handlers[0][1]
+        call = SimpleNamespace(
+            id="callback-1",
+            data="slh_pitch:academy",
+            from_user=SimpleNamespace(id=12345),
+            message=SimpleNamespace(
+                chat=SimpleNamespace(id=-100123, type="supergroup"),
+                message_id=456,
+            ),
+        )
+
+        callback_handler(call)
+
+        self.assertEqual(len(bot.callback_answers), 1)
+        self.assertIn("שיחה פרטית", bot.callback_answers[0][0][1])
+        self.assertEqual(bot.sent_messages, [])
+        self.assertEqual(bot.edited_messages, [])
 
     def test_tokenomics_slide_links_to_source_and_current_status(self):
         keyboard = build_slide_keyboard(2)
