@@ -96,10 +96,13 @@ def env(i, count, attack=0.02, decay=0.1, sustain=0.7, release=0.15):
             return 1.0 - (1.0 - sustain) * (position - attack) / decay
         return sustain
 
-    release_start = max(0.0, total - min(release, total))
+    # A short note cannot contain an entire long release stage. Reserve at
+    # least 65% of the note for its attack/decay/sustain before fading out.
+    release_duration = min(release, total * 0.35)
+    release_start = max(0.0, total - release_duration)
     if t >= release_start:
         release_level = level_at(release_start)
-        remaining = max(0.0, (total - t) / max(min(release, total), 1 / SR))
+        remaining = max(0.0, (total - t) / max(release_duration, 1 / SR))
         return release_level * remaining
     return level_at(t)
 
