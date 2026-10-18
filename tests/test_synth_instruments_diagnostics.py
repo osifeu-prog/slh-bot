@@ -141,6 +141,28 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
 
+
+    def test_inline_javascript_parses_when_node_is_available(self):
+        import shutil
+        import subprocess
+
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js unavailable; JavaScript syntax check is optional locally")
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        start_marker = "<script>\\n(function(){"
+        start = html.index(start_marker) + len("<script>")
+        end = html.index("</script>", start)
+        script = html[start:end]
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".js", encoding="utf-8", delete=False) as handle:
+            handle.write(script)
+            script_path = handle.name
+        try:
+            result = subprocess.run([node, "--check", script_path], capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        finally:
+            Path(script_path).unlink(missing_ok=True)
+
     def test_ui_posts_only_bounded_instrument_command_shape(self):
         handler = (ROOT / "handlers" / "synth_handler.py").read_text(encoding="utf-8")
         bridge = (ROOT / "handlers" / "webapp_data_handler.py").read_text(encoding="utf-8")
