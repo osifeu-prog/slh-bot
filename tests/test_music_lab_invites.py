@@ -74,8 +74,16 @@ class MusicLabInviteTests(unittest.TestCase):
         return {
             "users": {owner: {}, "111": {}, "222": {}, "333": {"lang": "he"}, "not-an-id": {}},
             "music_lab_invite_opt_outs": {"333": "2026-10-01T00:00:00+00:00"},
+            "music_lab_invite_opt_ins": {
+                "111": "2026-10-01T00:00:00+00:00",
+                "222": "2026-10-01T00:00:00+00:00",
+                "333": "2026-10-01T00:00:00+00:00",
+            },
             "community_groups": {
-                "-100111": {"chat_id": "-100111", "role": "free", "bot_status": "administrator"},
+                "-100111": {
+                    "chat_id": "-100111", "role": "free", "bot_status": "administrator",
+                    "music_lab_invite_opt_in": True,
+                },
                 "-100222": {"chat_id": "-100222", "role": "unbound", "bot_status": "administrator"},
                 "-100333": {"chat_id": "-100333", "role": "academy", "bot_status": "left"},
                 "444": {"chat_id": "444", "role": "vip", "bot_status": "administrator"},
