@@ -10,22 +10,33 @@ from core.identity import OWNER_TELEGRAM_ID
 def register(bot):
 
     def _finish_exec_request(call_or_msg, request_id, action, is_callback=False):
-        db = state_manager.load_db()
-        pending = db.get('pending_exec', {}).get(request_id)
+        def finalize(db):
+            pending_exec = db.get("pending_exec", {})
+            if not isinstance(pending_exec, dict):
+                return {"ok": False}
 
-        if not pending or pending['status'] != 'pending':
+            pending = pending_exec.get(request_id)
+            if not isinstance(pending, dict) or pending.get("status") != "pending":
+                return {"ok": False}
+
+            pending["status"] = "approved" if action == "approve" else "rejected"
+            pending["decided_by"] = str(call_or_msg.from_user.id)
+            pending["decided_at"] = time.time()
+            pending_exec[request_id] = pending
+            db.setdefault("exec_audit", []).append(pending.copy())
+
+            # Return a detached snapshot for post-commit execution and messages.
+            return {"ok": True, "pending": dict(pending)}
+
+        result = state_manager.atomic_update(finalize)
+        if not result.get("ok"):
             if is_callback:
                 bot.answer_callback_query(call_or_msg.id, "❌ הבקשה לא פעילה")
             else:
                 bot.reply_to(call_or_msg, "❌ הבקשה לא פעילה")
             return
 
-        pending['status'] = 'approved' if action == 'approve' else 'rejected'
-        pending['decided_by'] = str(call_or_msg.from_user.id)
-        pending['decided_at'] = time.time()
-        db['pending_exec'][request_id] = pending
-        db.setdefault('exec_audit', []).append(pending.copy())
-        state_manager.save_db(db)
+        pending = result["pending"]
 
         if action == 'approve':
             msg_text = "✅ אושר, מריץ פקודה"
