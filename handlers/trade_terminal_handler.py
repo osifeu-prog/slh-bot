@@ -1,8 +1,18 @@
 """Telegram UI for the SLH Trade Terminal MVP."""
 
+import os
 from telebot import types
 
 from core import trade_terminal as trade
+
+
+def _market_lab_url():
+    base = (
+        os.getenv("SLH_PUBLIC_BASE_URL")
+        or os.getenv("PUBLIC_BASE_URL")
+        or "https://slh-cloud-bot-production.up.railway.app"
+    ).strip().rstrip("/")
+    return base + "/market-lab"
 
 
 def _prepare_locale(message):
@@ -111,6 +121,7 @@ def _trade_menu(uid):
     )
     markup.add(types.InlineKeyboardButton(trade.t("pro", uid), callback_data="trade:pro"))
     markup.add(types.InlineKeyboardButton(trade.t("ai_explain", uid), callback_data="trade:ai"))
+    markup.add(types.InlineKeyboardButton("🟩 מפת חום שוק · תיק מדומה", url=_market_lab_url()))
     return markup
 
 
@@ -124,6 +135,18 @@ def register(bot):
             f"{trade.t('commands', uid)}"
         )
         bot.send_message(chat_id, text, reply_markup=_trade_menu(uid))
+
+    @bot.message_handler(commands=["heatmap", "market_lab"])
+    def market_lab_command(message):
+        uid = _prepare_locale(message)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("פתח מפת חום · Paper Only", url=_market_lab_url()))
+        bot.reply_to(
+            message,
+            "🟩 Market Lab — מפת חום של מדדי שוק ו־ETF סקטוריאליים.\\n"
+            "הכלי תיאורי בלבד וכולל תיק מדומה בדפדפן; אין בו הוראות מסחר אמיתיות.",
+            reply_markup=markup,
+        )
 
     @bot.message_handler(commands=["trade", "trading", "terminal"])
     def trade_command(message):
