@@ -60,7 +60,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .white-key{height:162px;width:32px;background:linear-gradient(#fff,#e7ebf4);color:#182136;border:1px solid #9ca8ba;z-index:1}
 .black-key{height:103px;width:21px;background:linear-gradient(110deg,#354156,#050910 60%);color:#fff;border:1px solid #02050a;z-index:2;padding-bottom:7px;box-shadow:0 3px 5px #0008}
 .piano-key.selected-key{background:linear-gradient(#b7aaff,#6e5be8);color:#fff;box-shadow:inset 0 0 0 2px #d9d0ff}
-.piano-key:active{filter:brightness(1.25)}
+.piano-key:active,.piano-key.is-held{filter:brightness(1.25);transform:translateY(2px)}
+.piano-key{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .measure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .measure-value{font-size:21px;font-weight:900;color:var(--mint);font-variant-numeric:tabular-nums;margin-top:5px}
 .graph-wrap{margin-top:14px;padding:10px;border:1px solid #25364c;border-radius:13px;background:#07101b}
@@ -249,6 +250,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   let steps=presets.major.map(function(x){return Object.assign({},x);});
   let activeStep=0, audioContext=null, analyser=null, visualUntil=0, visualFrame=0;
   let measureExpected=null, tunerStream=null, tunerSource=null, tunerAnalyser=null, tunerBuffer=null, tunerRunning=false, tunerFrame=0, lastTunerUpdate=0;
+  const heldPresses=new Map();
   const $=function(id){return document.getElementById(id);};
   const esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const qualityInfo=function(id){return QUALITY.find(function(q){return q.id===id;})||QUALITY[0];};
@@ -329,7 +331,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function setupAnalyser(){
     if(analyser)return;
-    analyser=audioContext.createAnalyser();analyser.fftSize=16384;analyser.smoothingTimeConstant=0.07;analyser.connect(audioContext.destination);
+    analyser=audioContext.createAnalyser();analyser.fftSize=32768;analyser.minDecibels=-120;analyser.maxDecibels=0;analyser.smoothingTimeConstant=0;analyser.connect(audioContext.destination);
   }
   function scheduleVoice(midi,start,duration,instrument,peak,expected){
     var cfg=settingsFromUi(),ctx=audioContext;
@@ -368,6 +370,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     visualFrame=0;
     var scope=$('scopeCanvas'),spectrum=$('spectrumCanvas');
     if(analyser&&audioContext){
+      if(heldPresses.size)visualUntil=Math.max(visualUntil,audioContext.currentTime+.18);
       drawScope(scope,analyser);drawSpectrum(spectrum,analyser);
       if(audioContext.currentTime<visualUntil){
         var peak=dominantFrequency(analyser);
@@ -633,6 +636,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var key=event.target.closest('[data-note]');if(!key)return;
     toggleKeyInChord(key.dataset.note);playKey(Number(key.dataset.midi));
   });
+  window.addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  window.addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
   window.addEventListener('blur',releaseAllHeldPresses);
   $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
   $('wave').addEventListener('change',applyInstrumentDefaults);
