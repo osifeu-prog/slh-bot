@@ -6,7 +6,26 @@ from handlers.pitch_handler import (
     build_slide_keyboard,
     render_slide,
     render_simulation_demo,
+    register,
 )
+
+
+class FakeBot:
+    def __init__(self):
+        self.message_handlers = []
+        self.callback_handlers = []
+
+    def message_handler(self, **kwargs):
+        def decorate(fn):
+            self.message_handlers.append((kwargs, fn))
+            return fn
+        return decorate
+
+    def callback_query_handler(self, **kwargs):
+        def decorate(fn):
+            self.callback_handlers.append((kwargs, fn))
+            return fn
+        return decorate
 
 
 class PitchHandlerTests(unittest.TestCase):
@@ -55,6 +74,19 @@ class PitchHandlerTests(unittest.TestCase):
             for button in row
         }
         self.assertNotIn("slh_pitch:sim", first_callbacks)
+
+
+    def test_pitch_handler_registers_only_for_primary_bot_context(self):
+        secondary_bot = FakeBot()
+        register(secondary_bot, {"bot_name": "secondary_bot"})
+        self.assertEqual(secondary_bot.message_handlers, [])
+        self.assertEqual(secondary_bot.callback_handlers, [])
+
+        main_bot = FakeBot()
+        register(main_bot, {"bot_name": "Me_ad_main"})
+        self.assertEqual(len(main_bot.message_handlers), 1)
+        self.assertEqual(len(main_bot.callback_handlers), 1)
+        self.assertEqual(main_bot.message_handlers[0][0]["commands"], ["pitch"])
 
 
 if __name__ == "__main__":
