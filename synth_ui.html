@@ -335,14 +335,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function scheduleVoice(midi,start,duration,instrument,peak,expected){
     var cfg=settingsFromUi(),ctx=audioContext;
-    var envNode=ctx.createGain(),filter=ctx.createBiquadFilter();
-    filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);filter.Q.setValueAtTime(cfg.resonance,start);
-    envNode.connect(filter);filter.connect(analyser);
+    var envNode=ctx.createGain();
+    var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25;
+    var filter=null;
+    if(needsFilter){filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);filter.Q.setValueAtTime(cfg.resonance,start);envNode.connect(filter);filter.connect(analyser);}
+    else envNode.connect(analyser);
     var parts=[];
-    if(instrument==='piano')parts=[{m:1,t:'triangle',g:.64},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.09},{m:6.02,t:'sine',g:.04}];
-    else if(instrument==='moog')parts=[{m:1,t:'sawtooth',g:.8},{m:1.005,t:'sawtooth',g:.2}];
-    else if(instrument==='bass')parts=[{m:1,t:'sawtooth',g:.67},{m:.5,t:'sine',g:.33}];
-    else if(instrument==='organ')parts=[{m:1,t:'sine',g:.65},{m:2,t:'sine',g:.23},{m:3,t:'sine',g:.12}];
+    if(instrument==='piano')parts=[{m:1,t:'sine',g:.66},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.085},{m:6.02,t:'sine',g:.035}];
+    else if(instrument==='moog')parts=[{m:1,t:'sawtooth',g:1}];
+    else if(instrument==='bass')parts=[{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}];
+    else if(instrument==='organ')parts=[{m:1,t:'sine',g:.67},{m:2,t:'sine',g:.22},{m:3,t:'sine',g:.11}];
     else if(instrument==='pluck')parts=[{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
     else parts=[{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
     var attackEnd=start+Math.min(cfg.attack,duration*.25);
@@ -442,10 +444,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     catch(e){$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
   }
   function heldInstrumentParts(instrument){
-    if(instrument==='piano')return [{m:1,t:'triangle',g:.64},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.09},{m:6.02,t:'sine',g:.04}];
-    if(instrument==='moog')return [{m:1,t:'sawtooth',g:.8},{m:1.005,t:'sawtooth',g:.2}];
-    if(instrument==='bass')return [{m:1,t:'sawtooth',g:.67},{m:.5,t:'sine',g:.33}];
-    if(instrument==='organ')return [{m:1,t:'sine',g:.65},{m:2,t:'sine',g:.23},{m:3,t:'sine',g:.12}];
+    // Keep sustained-key timbre and pitch ratios aligned with handlers/synth_engine.py.
+    if(instrument==='piano')return [{m:1,t:'sine',g:.66},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.085},{m:6.02,t:'sine',g:.035}];
+    if(instrument==='moog')return [{m:1,t:'sawtooth',g:1}];
+    if(instrument==='bass')return [{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}];
+    if(instrument==='organ')return [{m:1,t:'sine',g:.67},{m:2,t:'sine',g:.22},{m:3,t:'sine',g:.11}];
     if(instrument==='pluck')return [{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
     return [{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
   }
@@ -456,9 +459,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
       await ensureAudio();token.starting=false;
       if(token.released)return;
       var ctx=audioContext,cfg=settingsFromUi(),instrument=$('wave').value,start=ctx.currentTime+.005,peak=.22;
-      var filter=ctx.createBiquadFilter(),envNode=ctx.createGain();
-      filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);filter.Q.setValueAtTime(cfg.resonance,start);
-      envNode.connect(filter);filter.connect(analyser);
+      var envNode=ctx.createGain();
+      var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25;
+      var filter=null;
+      if(needsFilter){
+        filter=ctx.createBiquadFilter();filter.type='lowpass';
+        filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);
+        filter.Q.setValueAtTime(cfg.resonance,start);
+        envNode.connect(filter);filter.connect(analyser);
+      }else{
+        envNode.connect(analyser);
+      }
       var attack=Math.max(.005,cfg.attack),decay=Math.max(.005,cfg.decay),sustain=Math.max(.0001,peak*cfg.sustain),parts=heldInstrumentParts(instrument),oscs=[];
       envNode.gain.setValueAtTime(.0001,start);
       envNode.gain.linearRampToValueAtTime(peak,start+attack);
@@ -466,7 +477,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
       parts.forEach(function(part){
         var osc=ctx.createOscillator(),amp=ctx.createGain();
         osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(token.midi)*part.m,start);
-        if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
         amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);osc.start(start);oscs.push({osc:osc,amp:amp});
       });
       token.voice={ctx:ctx,cfg:cfg,envNode:envNode,filter:filter,oscs:oscs,startedAt:start,peak:peak,attack:attack,decay:decay,sustain:sustain,releasing:false};
@@ -523,9 +533,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function sendToBot(){
     var cmd=command();
-    if(source){copyCommand();status('הפקודה הועתקה. פתח את צ׳אט הבוט והדבק אותה לקבלת קובץ שמע.');return;}
-    if(tg&&typeof tg.sendData==='function'){try{tg.sendData(JSON.stringify({cmd:cmd}));status('הפקודה נשלחה לבוט.');return;}catch(_){}}
-    copyCommand();status('לא ניתן לשלוח ישירות; הפקודה הועתקה להדבקה בבוט.');
+    if(source==='inline'){copyCommand();status('בחלון Inline אין שליחה ישירה; הפקודה הועתקה להדבקה בצ׳אט.');return;}
+    if(tg&&tg.initData&&typeof tg.sendData==='function'){try{tg.sendData(JSON.stringify({cmd:cmd}));status('הפקודה נשלחה לבוט. קובץ השמע יוחזר לצ׳אט.');return;}catch(_){}}
+    copyCommand();status('שליחה ישירה אינה זמינה כאן; הפקודה הועתקה להדבקה בצ׳אט הבוט.');
   }
   function applyInstrumentDefaults(){
     var def=INST_DEFAULTS[$('wave').value]||INST_DEFAULTS.sine;
