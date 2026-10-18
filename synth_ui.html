@@ -409,13 +409,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
     }
   }
   function dominantFrequency(node){
-    var data=new Uint8Array(node.frequencyBinCount);node.getByteFrequencyData(data);
+    // Float FFT bins are already expressed in dB. Interpolating them directly
+    // avoids taking a second logarithm of byte-scaled magnitudes, which biased
+    // the displayed frequency/cents estimate by several cents.
+    var data=new Float32Array(node.frequencyBinCount);node.getFloatFrequencyData(data);
     var low=Math.max(1,Math.floor(45*node.fftSize/audioContext.sampleRate));
     var high=Math.min(data.length-2,Math.floor(2200*node.fftSize/audioContext.sampleRate));
-    var best=-1,bestValue=0;
-    for(var i=low;i<=high;i++){if(data[i]>bestValue){bestValue=data[i];best=i;}}
-    if(best<1||bestValue<12)return 0;
-    var a=Math.log(data[best-1]+1),b=Math.log(data[best]+1),c=Math.log(data[best+1]+1);
+    var best=-1,bestValue=-Infinity;
+    for(var i=low;i<=high;i++){if(Number.isFinite(data[i])&&data[i]>bestValue){bestValue=data[i];best=i;}}
+    if(best<1||bestValue < -110)return 0;
+    var a=Number.isFinite(data[best-1])?data[best-1]:-160;
+    var b=Number.isFinite(data[best])?data[best]:-160;
+    var c=Number.isFinite(data[best+1])?data[best+1]:-160;
     var denom=a-2*b+c,delta=Math.abs(denom)<1e-8?0:.5*(a-c)/denom;delta=Math.max(-1,Math.min(1,delta));
     return (best+delta)*audioContext.sampleRate/node.fftSize;
   }
