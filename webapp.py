@@ -472,6 +472,250 @@ def health():
     return "OK", 200
 
 
+# Internal read-only state calibration. These identifiers pin the coordinator
+# to the existing Web service; they are not authorization credentials.
+_STATE_CALIBRATION_WEB_SERVICE_ID = "13d97581-0199-4f6a-80d1-885c9304ffc5"
+_STATE_CALIBRATION_BOT_FINGERPRINT_URL = (
+    "https://slh-cloud-bot-production.up.railway.app/internal/ops/state-fingerprint"
+)
+_STATE_CALIBRATION_POSTGRES_FINGERPRINT_URL = (
+    "https://slh-api-production.up.railway.app/internal/ops/state-fingerprint"
+)
+_STATE_FINGERPRINT_COLLECTIONS = (
+    "users", "ledger", "slh_token_ledger", "transactions", "exchange_orders",
+    "exchange_trades", "purchases", "processed_transfers", "used_ton_txs",
+    "used_bnb_txs", "ton_deposit_intents", "bnb_deposits", "slh_deposit_intents",
+    "withdrawals", "withdrawal_requests", "staking_requests", "stake_positions",
+    "stars_payments", "stars_invoices", "credit_ledger", "revenue_ledger",
+)
+
+
+def _state_calibration_auth_error():
+    expected = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
+    authorization = str(request.headers.get("Authorization", "") or "").strip()
+    scheme, _, supplied = authorization.partition(" ")
+    if not expected:
+        return jsonify({"error": "STATE_CALIBRATION_NOT_CONFIGURED"}), 503
+    if (
+        scheme.lower() != "bearer"
+        or not supplied
+        or not hmac.compare_digest(supplied, expected)
+    ):
+        return jsonify({"error": "STATE_CALIBRATION_AUTH_REQUIRED"}), 401
+    return None
+
+
+def _state_calibration_blocked(reason):
+    return {"ok": False, "status": "BLOCKED", "reason": str(reason)[:48]}
+
+
+def _state_fingerprint_remote(url, headers):
+    """Fetch only an authenticated diagnostic; never relay upstream error bodies."""
+    try:
+        response = requests.get(
+            url,
+            headers={**headers, "Accept": "application/json", "Cache-Control": "no-cache"},
+            timeout=(3, 8),
+            allow_redirects=False,
+        )
+    except requests.RequestException as exc:
+        return _state_calibration_blocked("UPSTREAM_" + type(exc).__name__.upper())
+    if response.status_code != 200:
+        return _state_calibration_blocked("HTTP_" + str(response.status_code))
+    try:
+        payload = response.json()
+    except ValueError:
+        return _state_calibration_blocked("INVALID_JSON")
+    return payload if isinstance(payload, dict) and payload.get("ok") is True else _state_calibration_blocked("INVALID_PROOF")
+
+
+def _safe_json_fingerprint(payload):
+    if not isinstance(payload, dict) or payload.get("source") != "state_manager_json":
+        return _state_calibration_blocked("SOURCE_INVALID")
+    runtime = payload.get("runtime") if isinstance(payload.get("runtime"), dict) else {}
+    snapshot = payload.get("snapshot") if isinstance(payload.get("snapshot"), dict) else {}
+    digest = str(snapshot.get("sha256") or "")
+    schema_digest = str(snapshot.get("schema_sha256") or "")
+    if len(digest) != 64 or any(ch not in "0123456789abcdef" for ch in digest.lower()):
+        return _state_calibration_blocked("HASH_INVALID")
+    collections = snapshot.get("collections")
+    safe_collections = {}
+    if isinstance(collections, dict):
+        for key in _STATE_FINGERPRINT_COLLECTIONS:
+            value = collections.get(key)
+            if not isinstance(value, dict):
+                continue
+            count = value.get("count")
+            safe_count = count if isinstance(count, int) and count >= 0 else None
+            safe_collections[key] = {
+                "type": str(value.get("type") or "unknown")[:16],
+                "count": safe_count,
+            }
+    return {
+        "ok": True,
+        "status": "PASS",
+        "source": "state_manager_json",
+        "read_only": True,
+        "runtime": {
+            "railway_project_id": str(runtime.get("railway_project_id") or "")[:64] or None,
+            "railway_environment_id": str(runtime.get("railway_environment_id") or "")[:64] or None,
+            "railway_service_id": str(runtime.get("railway_service_id") or "")[:64] or None,
+            "run_bot": str(runtime.get("run_bot") or "unset")[:8],
+        },
+        "snapshot": {
+            "sha256": digest.lower(),
+            "schema_sha256": schema_digest[:64],
+            "size_bytes": snapshot.get("size_bytes") if isinstance(snapshot.get("size_bytes"), int) else None,
+            "mtime_ns": snapshot.get("mtime_ns") if isinstance(snapshot.get("mtime_ns"), int) else None,
+            "root_key_count": snapshot.get("root_key_count") if isinstance(snapshot.get("root_key_count"), int) else None,
+            "collections": safe_collections,
+        },
+    }
+
+
+@app.route("/internal/ops/state-fingerprint", methods=["GET"])
+def internal_state_fingerprint():
+    """Authenticated, local-only JSON fingerprint. No rows or balances are returned."""
+    auth_error = _state_calibration_auth_error()
+    if auth_error is not None:
+        return auth_error
+    try:
+        from core.state_fingerprint import build_local_state_fingerprint
+        payload = build_local_state_fingerprint()
+    except Exception as exc:
+        # No raw paths, data, or exception messages leave the process.
+        return jsonify(_state_calibration_blocked(type(exc).__name__.upper())), 503
+    response = jsonify(payload)
+    response.headers["Cache-Control"] = "no-store"
+    return response, 200
+
+
+@app.route("/internal/ops/state-calibration", methods=["GET"])
+def internal_state_calibration():
+    """Read-only coordinator for the bot JSON, Web JSON and Postgres stores."""
+    auth_error = _state_calibration_auth_error()
+    if auth_error is not None:
+        return auth_error
+    if str(os.getenv("RAILWAY_SERVICE_ID", "")).strip() != _STATE_CALIBRATION_WEB_SERVICE_ID:
+        # The aggregator is intentionally available only on the designated Web service.
+        return jsonify({"error": "STATE_CALIBRATION_COORDINATOR_ONLY"}), 404
+
+    from datetime import datetime, timezone
+    try:
+        from core.state_fingerprint import build_local_state_fingerprint
+        web_raw = build_local_state_fingerprint()
+        web_json = _safe_json_fingerprint(web_raw)
+    except Exception as exc:
+        web_json = _state_calibration_blocked("LOCAL_" + type(exc).__name__.upper())
+
+    bridge_token = str(os.getenv("SLH_MCP_BRIDGE_TOKEN", "") or "").strip()
+    api_token = str(os.getenv("SLH_SERVICE_TOKEN", "") or "").strip()
+
+    bot_json = (
+        _safe_json_fingerprint(_state_fingerprint_remote(
+            _STATE_CALIBRATION_BOT_FINGERPRINT_URL,
+            {"Authorization": "Bearer " + bridge_token},
+        ))
+        if bridge_token
+        else _state_calibration_blocked("BRIDGE_TOKEN_MISSING")
+    )
+    postgres_raw = (
+        _state_fingerprint_remote(
+            _STATE_CALIBRATION_POSTGRES_FINGERPRINT_URL,
+            {"X-SLH-Service-Token": api_token},
+        )
+        if api_token
+        else _state_calibration_blocked("SERVICE_TOKEN_MISSING")
+    )
+    postgres = _state_calibration_blocked("POSTGRES_FINGERPRINT_UNAVAILABLE")
+    if postgres_raw.get("ok") is True and postgres_raw.get("source") == "slh_api_postgres":
+        schema_digest = str(postgres_raw.get("schema_sha256") or "")
+        aggregate_digest = str(postgres_raw.get("aggregate_sha256") or "")
+        if (
+            len(schema_digest) == 64
+            and len(aggregate_digest) == 64
+            and all(ch in "0123456789abcdef" for ch in schema_digest.lower())
+            and all(ch in "0123456789abcdef" for ch in aggregate_digest.lower())
+        ):
+            raw_tables = postgres_raw.get("financial_tables")
+            safe_tables = []
+            if isinstance(raw_tables, list):
+                for item in raw_tables[:20]:
+                    if not isinstance(item, dict):
+                        continue
+                    name = str(item.get("table") or "")
+                    if not name or not name.replace("_", "").isalnum():
+                        continue
+                    rows = item.get("estimated_rows")
+                    safe_tables.append({
+                        "table": name[:64],
+                        "estimated_rows": rows if isinstance(rows, int) and rows >= 0 else None,
+                    })
+            postgres = {
+                "ok": True,
+                "status": "PASS",
+                "source": "slh_api_postgres",
+                "read_only": True,
+                "schema_sha256": schema_digest.lower(),
+                "aggregate_sha256": aggregate_digest.lower(),
+                "table_count": postgres_raw.get("table_count") if isinstance(postgres_raw.get("table_count"), int) else None,
+                "total_estimated_rows": postgres_raw.get("total_estimated_rows") if isinstance(postgres_raw.get("total_estimated_rows"), int) else None,
+                "financial_tables": safe_tables,
+                "row_counts_are_estimates": True,
+            }
+        else:
+            postgres = _state_calibration_blocked("POSTGRES_HASH_INVALID")
+    elif postgres_raw.get("status") == "BLOCKED":
+        postgres = postgres_raw
+
+    same_bytes = None
+    if bot_json.get("ok") is True and web_json.get("ok") is True:
+        same_bytes = (
+            bot_json.get("snapshot", {}).get("sha256")
+            == web_json.get("snapshot", {}).get("sha256")
+        )
+    sources = {
+        "bot_json": bot_json,
+        "web_json": web_json,
+        "api_postgres": postgres,
+    }
+    all_collected = all(
+        isinstance(item, dict) and item.get("ok") is True
+        for item in sources.values()
+    )
+    response_body = {
+        "ok": True,
+        "status": "COLLECTED_REVIEW_REQUIRED" if all_collected else "BLOCKED_INCOMPLETE",
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "read_only": True,
+        "release_gate": False,
+        "sources": sources,
+        "json_snapshot_comparison": {
+            "same_bytes_at_observation": same_bytes,
+            "status": (
+                "UNKNOWN"
+                if same_bytes is None
+                else "MATCH_BYTES_NOT_PROOF_OF_SHARED_AUTHORITY"
+                if same_bytes
+                else "DIFFERENT_SNAPSHOTS_REQUIRE_RECONCILIATION"
+            ),
+            "note": "The JSON stores are on separate Railway volumes. Matching hashes do not prove a shared write authority; differing hashes alone do not reconstruct transaction history.",
+        },
+        "safety": {
+            "raw_rows_returned": False,
+            "user_ids_returned": False,
+            "individual_balances_returned": False,
+            "ledger_contents_returned": False,
+            "database_written": False,
+            "balances_changed": False,
+            "gates_changed": False,
+        },
+    }
+    response = jsonify(response_body)
+    response.headers["Cache-Control"] = "no-store"
+    return response, 200
+
+
 @app.route("/api/public/site-status", methods=["GET", "OPTIONS"])
 def public_site_status():
     """Public, read-only system beacon for the canonical SLH website.
