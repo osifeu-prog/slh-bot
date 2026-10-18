@@ -157,7 +157,7 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
             'id="attack"', 'id="decay"', 'id="sustain"', 'id="release"',
             'id="cutoff"', 'id="resonance"', 'id="scopeCanvas"',
             'id="spectrumCanvas"', 'id="testReference"', 'id="tunerProfile"',
-            'id="startTuner"', 'id="stopTuner"', 'id="measuredHz"',
+            'id="startTuner"', 'id="stopTuner"', 'id="stopPlayback"', 'function stopPlayback()', 'activeVoices.add(voiceRecord)', 'quick-nav', 'href="#sound"', 'href="#chords"', 'href="#keyboard"', 'href="#tuner"', 'href="#listen"', 'id="measuredHz"',
             ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz', 'pointerdown', 'pointerup', 'lostpointercapture', 'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime'
         ):
             with self.subTest(marker=marker):
