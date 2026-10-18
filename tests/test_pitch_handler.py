@@ -77,7 +77,12 @@ class PitchHandlerTests(unittest.TestCase):
         self.assertNotIn("slh_pitch:sim", first_callbacks)
 
 
-    def test_pitch_handler_registers_only_for_primary_bot_context(self):
+    def test_pitch_handler_requires_explicit_primary_bot_context(self):
+        missing_context_bot = FakeBot()
+        register(missing_context_bot)
+        self.assertEqual(missing_context_bot.message_handlers, [])
+        self.assertEqual(missing_context_bot.callback_handlers, [])
+
         secondary_bot = FakeBot()
         register(secondary_bot, {"bot_name": "secondary_bot"})
         self.assertEqual(secondary_bot.message_handlers, [])
