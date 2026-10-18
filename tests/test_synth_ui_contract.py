@@ -15,7 +15,7 @@ class SynthUiContractTests(unittest.TestCase):
         self.assertIn('id="duration"', html)
         self.assertIn('id="addStep"', html)
         self.assertIn("steps.length>=16", html)
-        self.assertIn("tg.sendData(JSON.stringify({cmd}))", html)
+        self.assertIn("tg.sendData(JSON.stringify({cmd:cmd}))", html)
         self.assertIn("copyCommand()", html)
         self.assertIn("/synth ", html)
 
