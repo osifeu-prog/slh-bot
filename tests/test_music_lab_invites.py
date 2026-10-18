@@ -50,7 +50,7 @@ class FakeBot:
 
     def handler(self, commands=None, callback_data=None):
         for opts, fn in self.message_handlers:
-            if commands and opts.get("commands") == commands:
+            if commands and all(command in opts.get("commands", []) for command in commands):
                 return fn
         if callback_data:
             for opts, fn in self.callback_handlers:
