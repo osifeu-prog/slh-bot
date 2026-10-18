@@ -150,7 +150,7 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
         if not node:
             self.skipTest("Node.js unavailable; JavaScript syntax check is optional locally")
         html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
-        start_marker = "<script>\\n(function(){"
+        start_marker = "<script>" + "\n(function(){"
         start = html.index(start_marker) + len("<script>")
         end = html.index("</script>", start)
         script = html[start:end]
