@@ -493,7 +493,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var y0=cmnd[Math.max(1,chosen-1)],y1=cmnd[chosen],y2=cmnd[Math.min(maxLag,chosen+1)];
     var denom=y0-2*y1+y2,shift=Math.abs(denom)<1e-9?0:.5*(y0-y2)/denom;
     var lagEstimate=chosen+Math.max(-.5,Math.min(.5,shift));
-    return {frequency:(sampleRate/2)/lagEstimate,confidence:1-cmnd[chosen]};
+    return {frequency:sampleRate/lagEstimate,confidence:1-cmnd[chosen]};
   }
   async function startTuner(){
     if(tunerRunning)return;
@@ -517,7 +517,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var decimated=new Float32Array(Math.floor(tunerBuffer.length/2));
     for(var i=0;i<decimated.length;i++)decimated[i]=tunerBuffer[i*2];
     var profile=TUNER_PROFILES[$('tunerProfile').value]||TUNER_PROFILES.chromatic;
-    var result=detectPitch(decimated,audioContext.sampleRate,profile.min,profile.max);
+    var result=detectPitch(decimated,audioContext.sampleRate/2,profile.min,profile.max);
     if(!result){$('tunerNote').textContent='—';$('tunerHz').textContent='— Hz';$('tunerCents').textContent='הקשב לתו';$('tunerNeedle').style.left='50%';return;}
     var ref=Number($('a4ref').value),midiFloat=69+12*Math.log2(result.frequency/ref),midi=Math.round(midiFloat),cents=(midiFloat-midi)*100;
     $('tunerNote').textContent=midiToNote(midi);$('tunerHz').textContent=result.frequency.toFixed(2)+' Hz';$('tunerCents').textContent=centsLabel(cents);
@@ -541,7 +541,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('steps').addEventListener('click',function(event){
     var remove=event.target.closest('[data-remove]');
     if(remove){if(steps.length<=1)return;steps.splice(Number(remove.dataset.remove),1);if(activeStep>=steps.length)activeStep=steps.length-1;renderSteps();return;}
-    var card=event.target.closest('.step');if(card){activeStep=Number(card.dataset.step);renderSteps();}
+    var card=event.target.closest('.step');if(card){var nextStep=Number(card.dataset.step);if(nextStep!==activeStep){activeStep=nextStep;renderSteps();}}
   });
   $('pianoKeyboard').addEventListener('click',function(event){var key=event.target.closest('[data-note]');if(key)toggleKeyInChord(key.dataset.note);});
   $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
@@ -559,7 +559,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('stopTuner').addEventListener('click',stopTuner);
   $('back').addEventListener('click',function(){if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
   window.addEventListener('pagehide',stopTuner);
-  renderReferenceOptions();renderKeyboard();renderSteps();
+  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();
   if(source){$('send').textContent='העתק לבוט 📋';status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');}
 })();
 </script>
