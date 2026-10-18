@@ -25,7 +25,7 @@ class SynthUiContractTests(unittest.TestCase):
         self.assertIn('BASE_DIR / "synth_ui.html"', source)
         self.assertIn("slh-synth-miniapp-entry", source)
         self.assertIn("/synth-ui?source=miniapp", source)
-        self.assertIn('Cache-Control", "no-store', source)
+        self.assertIn('"Cache-Control"] = "no-store', source)
 
     def test_bot_offers_private_web_app_button(self):
         source = (ROOT / "handlers" / "synth_handler.py").read_text(encoding="utf-8")
