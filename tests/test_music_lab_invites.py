@@ -136,6 +136,18 @@ class MusicLabInviteTests(unittest.TestCase):
         send.assert_called_once()
         self.assertIn("אינה פעילה", self.bot.answers[-1][1])
 
+    def test_group_invitation_does_not_offer_a_misleading_personal_optout_button(self):
+        markup = invites._markup(private=False)
+        callback_data = [
+            button.callback_data
+            for row in markup.keyboard
+            for button in row
+            if getattr(button, "callback_data", None)
+        ]
+        self.assertNotIn("mliv:optout", callback_data)
+        self.assertIn("/music_invite_stop", invites.GROUP_INVITE_TEXT)
+        self.assertIn("הודעות אישיות", invites.GROUP_INVITE_TEXT)
+
     def test_opt_out_callback_persists_preference_without_financial_paths(self):
         call = SimpleNamespace(
             id="callback-optout", data="mliv:optout",
