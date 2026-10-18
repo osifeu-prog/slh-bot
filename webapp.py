@@ -835,7 +835,8 @@ def public_market_heatmap():
     """Read-only sanitized quote snapshot; never exposes provider credentials or trade controls."""
     try:
         from core.paper_market import market_lab_summary, market_snapshot
-        snapshot = market_snapshot(force=request.args.get("refresh") == "1")
+        # Public clients cannot bypass the short provider cache on every click.
+        snapshot = market_snapshot()
         summary = market_lab_summary(snapshot)
         payload = {
             "ok": snapshot.get("status") in {"AVAILABLE", "PARTIAL"},
