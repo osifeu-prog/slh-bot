@@ -557,7 +557,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var diff=new Float64Array(maxLag+1),cmnd=new Float64Array(maxLag+1),running=0;
     for(var lag=1;lag<=maxLag;lag++){
       var value=0;
-      for(var j=0;j<size-lag;j+=2){var d=samples[j]-samples[j+lag];value+=d*d;}
+      for(var j=0;j<size-lag;j++){var d=samples[j]-samples[j+lag];value+=d*d;}
       diff[lag]=value;running+=value;cmnd[lag]=running?value*lag/running:1;
     }
     var chosen=-1;
