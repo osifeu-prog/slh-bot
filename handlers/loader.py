@@ -103,7 +103,6 @@ def load_handlers(bot, context):
         ("voting", "handlers.ai_voting_handler"),
         ("governance", "handlers.governance_canonical_handler"),
         ("community_groups", "handlers.community_group_handler"),
-        ("music_academy_invites", "handlers.music_academy_invite_handler"),
         ("broadcast", "handlers.broadcast_handler"),
         ("user_feedback", "handlers.user_feedback_handler"),
         ("broadcast_ack", "handlers.broadcast_ack_handler"),
