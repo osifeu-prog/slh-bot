@@ -165,6 +165,55 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
         finally:
             Path(script_path).unlink(missing_ok=True)
 
+    def test_piano_upper_register_pitch_estimator_against_synthetic_reference(self):
+        import shutil
+        import subprocess
+
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node.js unavailable; numerical JavaScript pitch test requires Node.js")
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        start = html.index("function detectPitch(samples,sampleRate,minFreq,maxFreq){")
+        end = html.index("  async function startTuner(){", start)
+        detector = html[start:end]
+        harness = detector + r'''
+function makeTone(frequency, harmonics) {
+  const sr = 24000, n = 4096, samples = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / sr;
+    let value = Math.sin(2 * Math.PI * frequency * t);
+    for (const item of harmonics) {
+      value += item[1] * Math.sin(2 * Math.PI * frequency * item[0] * t + 0.27 * item[0]);
+    }
+    samples[i] = value;
+  }
+  return samples;
+}
+for (const fixture of [
+  {hz: 440, harmonics: [], tolerance: 0.5},
+  {hz: 1760, harmonics: [], tolerance: 2.2},
+  {hz: 2200, harmonics: [], tolerance: 0.7},
+  {hz: 3000, harmonics: [[2, 0.35], [3, 0.18]], tolerance: 0.7},
+  {hz: 4000, harmonics: [[2, 0.22]], tolerance: 0.7}
+]) {
+  const result = detectPitch(makeTone(fixture.hz, fixture.harmonics), 24000, 25, 4200);
+  if (!result || !Number.isFinite(result.frequency)) throw new Error("NO_PITCH:" + fixture.hz);
+  const cents = 1200 * Math.log2(result.frequency / fixture.hz);
+  if (Math.abs(cents) > fixture.tolerance) {
+    throw new Error("CENTS_OUT_OF_RANGE:" + fixture.hz + ":" + cents.toFixed(3));
+  }
+  process.stdout.write(fixture.hz + "Hz=" + cents.toFixed(3) + "c\n");
+}
+'''
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".js", encoding="utf-8", delete=False) as handle:
+            handle.write(harness)
+            script_path = handle.name
+        try:
+            result = subprocess.run([node, script_path], capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        finally:
+            Path(script_path).unlink(missing_ok=True)
+
     def test_ui_posts_only_bounded_instrument_command_shape(self):
         handler = (ROOT / "handlers" / "synth_handler.py").read_text(encoding="utf-8")
         bridge = (ROOT / "handlers" / "webapp_data_handler.py").read_text(encoding="utf-8")
