@@ -186,7 +186,7 @@ def _closed_keyboard():
 
 def register(bot, context=None):
     # Pitch mode belongs to the primary SLH Spark bot, not to child bots.
-    if context and context.get("bot_name") != "Me_ad_main":
+    if not isinstance(context, dict) or context.get("bot_name") != "Me_ad_main":
         return
 
     @bot.message_handler(commands=["pitch"])
