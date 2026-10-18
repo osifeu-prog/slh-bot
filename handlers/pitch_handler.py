@@ -78,7 +78,7 @@ SIMULATION_DEMO = (
     "3. Execution: בוצעה סימולציה בלבד\n"
     "4. Event ID: SIM-TX-0001\n"
     "5. Confirmation: MOCK_CONFIRMED\n"
-    "6. Ledger: נרשמה תנועת דוגמה בסביבה המדומה\n"
+    "6. Ledger: המחשה טקסטואלית בלבד — לא נכתבה רשומה\n"
     "7. Expected balance: 900 יחידות וירטואליות\n"
     "8. Observed balance: 900 יחידות וירטואליות\n"
     "9. Variance: 0.00\n\n"
