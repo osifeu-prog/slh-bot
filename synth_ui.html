@@ -557,14 +557,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var diff=new Float64Array(maxLag+1),cmnd=new Float64Array(maxLag+1),running=0;
     for(var lag=1;lag<=maxLag;lag++){
       var value=0;
-      for(var j=0;j<size-lag;j+=2){var d=samples[j]-samples[j+lag];value+=d*d;}
+      for(var j=0;j<size-lag;j++){var d=samples[j]-samples[j+lag];value+=d*d;}
       diff[lag]=value;running+=value;cmnd[lag]=running?value*lag/running:1;
     }
     var chosen=-1;
     for(var l=minLag;l<=maxLag;l++){if(cmnd[l]<.16){while(l+1<=maxLag&&cmnd[l+1]<cmnd[l])l++;chosen=l;break;}}
     if(chosen<0){var best=1;for(var k=minLag;k<=maxLag;k++){if(cmnd[k]<best){best=cmnd[k];chosen=k;}}}
     if(chosen<0||cmnd[chosen]>.38)return null;
-    var y0=cmnd[Math.max(1,chosen-1)],y1=cmnd[chosen],y2=cmnd[Math.min(maxLag,chosen+1)];
+    // CMND is robust for ordinary notes, but its curve is asymmetrical
+    // when only a handful of samples form one period. In piano's upper register
+    // use the raw YIN difference curve for sub-sample interpolation; this avoids
+    // a systematic positive cents bias at short lags while keeping CMND for note selection.
+    var interpolationCurve=(maxFreq>2000&&chosen<=12)?diff:cmnd;
+    var y0=interpolationCurve[Math.max(1,chosen-1)],y1=interpolationCurve[chosen],y2=interpolationCurve[Math.min(maxLag,chosen+1)];
     var denom=y0-2*y1+y2,shift=Math.abs(denom)<1e-9?0:.5*(y0-y2)/denom;
     var lagEstimate=chosen+Math.max(-.5,Math.min(.5,shift));
     return {frequency:sampleRate/lagEstimate,confidence:1-cmnd[chosen]};
