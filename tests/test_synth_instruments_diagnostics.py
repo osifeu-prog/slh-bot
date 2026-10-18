@@ -150,6 +150,15 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
         self.assertIn("tg.sendData(JSON.stringify({cmd:cmd}))", html)
         self.assertIn("שליחה ישירה אינה זמינה כאן", html)
 
+    def test_stop_button_cancels_scheduled_and_reference_audio(self):
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        self.assertIn('$("stopPlayback")', html) if '$("stopPlayback")' in html else self.assertIn("$('stopPlayback')", html)
+        self.assertIn("addEventListener('click',stopPlayback)", html)
+        self.assertIn("activeVoices.add(voiceRecord)", html)
+        self.assertIn("activeVoices.add(referenceRecord)", html)
+        self.assertIn("releaseAllHeldPresses()", html)
+        self.assertIn('aria-label="ניווט במעבדת המוזיקה"', html)
+
     def test_ui_exposes_keyboard_presets_adsr_analysis_and_tuner(self):
         html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
         for marker in (
