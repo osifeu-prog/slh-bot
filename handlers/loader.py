@@ -16,6 +16,7 @@ def load_handlers(bot, context):
         ("local_status", "handlers.local_status_handler"),
         ("owner_control_center", "handlers.owner_control_center_handler"),
         ("trade_terminal", "handlers.trade_terminal_handler"),
+        ("music_lab_invite", "handlers.music_lab_invite_handler"),
         ("onboarding", "handlers.onboarding_v2"),
         ("agents", "handlers.agents_handler"),
         ("audit", "handlers.audit_handler"),
