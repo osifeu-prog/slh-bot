@@ -44,6 +44,107 @@ def _icon(ok: bool) -> str:
 def _fmt_check(name: str, result: dict) -> str:
     return f"{_icon(bool(result.get('ok')))} {name}: {result.get('detail', 'no detail')}"
 
+def _safe_report_fragment(value, limit=100):
+    """Keep audit display fields single-line and bounded."""
+    return " ".join(str(value if value is not None else "").split())[:limit] or "—"
+
+
+def _exchange_reserves_output(report):
+    """Render a bounded read-only reserve report, failing closed on malformed results."""
+    is_dict = isinstance(report, dict)
+    report = report if is_dict else {}
+    status = str(report.get("release_readiness_status") or "").upper()
+
+    raw_findings = report.get("release_blocking_findings")
+    findings_is_list = isinstance(raw_findings, list)
+    findings = raw_findings if findings_is_list else []
+    findings_are_dicts = all(isinstance(item, dict) for item in findings)
+
+    raw_count = report.get("release_blocking_finding_count")
+    count_is_int = isinstance(raw_count, int) and not isinstance(raw_count, bool) and raw_count >= 0
+    count_matches = count_is_int and raw_count == len(findings)
+    count = max(raw_count if count_is_int else 0, len(findings))
+    status_matches_count = (
+        (status == "PASS" and count_is_int and raw_count == 0 and not findings)
+        or (status == "BLOCKED" and count_is_int and raw_count > 0)
+    )
+
+    valid_report = (
+        is_dict
+        and report.get("read_only") is True
+        and status in {"PASS", "BLOCKED"}
+        and findings_is_list
+        and findings_are_dicts
+        and count_matches
+        and status_matches_count
+    )
+    release_pass = valid_report and status == "PASS" and count == 0 and not findings
+
+    checked = report.get("checked_cancelled_sell_orders", 0)
+    try:
+        checked = max(0, int(checked))
+    except (TypeError, ValueError, OverflowError):
+        checked = 0
+
+    lines = [
+        "🧾 SLH EXCHANGE RESERVE AUDIT — READ ONLY",
+        "",
+        f"Release readiness: {'PASS' if release_pass else 'BLOCKED'}",
+        f"Audit integrity: {'PASS' if valid_report else 'BLOCKED'}",
+        f"Operational status: {_safe_report_fragment(report.get('operational_status'), 30)}",
+        f"Cancelled sell reserve orders checked: {checked}",
+        f"All findings: {_safe_report_fragment(report.get('finding_count', 'UNKNOWN'), 30)}",
+        f"Findings requiring release review: {count}",
+    ]
+
+    if not valid_report:
+        lines.append("Blocker: RESERVE_AUDIT_RESULT_INVALID")
+        if count_is_int and raw_count != len(findings):
+            lines.append("Blocker: RESERVE_AUDIT_COUNT_MISMATCH")
+        elif status not in {"PASS", "BLOCKED"} or not status_matches_count:
+            lines.append("Blocker: RESERVE_AUDIT_STATUS_COUNT_MISMATCH")
+
+    shown = 0
+    for item in findings[:12]:
+        if not isinstance(item, dict):
+            lines.append("• MALFORMED_FINDING")
+            shown += 1
+            continue
+        parts = [
+            _safe_report_fragment(item.get("code"), 90),
+            f"order={_safe_report_fragment(item.get('order_id'), 60)}",
+            f"ledger={_safe_report_fragment(item.get('ledger'), 30)}",
+        ]
+        classification = item.get("operational_classification")
+        if classification:
+            parts.append(f"class={_safe_report_fragment(classification, 45)}")
+        for key, label in (
+            ("reserve_delta", "reserve"),
+            ("normal_release_delta", "normal_release"),
+            ("correction_delta", "correction"),
+        ):
+            if key in item:
+                parts.append(f"{label}={_safe_report_fragment(item.get(key), 45)}")
+        event_ids = item.get("event_ids")
+        if isinstance(event_ids, list) and event_ids:
+            parts.append("events=" + ",".join(_safe_report_fragment(v, 45) for v in event_ids[:2]))
+        elif item.get("event_id"):
+            parts.append(f"event={_safe_report_fragment(item.get('event_id'), 60)}")
+        lines.append("• " + " | ".join(parts))
+        note = _safe_report_fragment(item.get("note"), 150)
+        if note != "—":
+            lines.append("  " + note)
+        shown += 1
+
+    if count > shown:
+        lines.append(f"… {count - shown} additional release findings omitted; inspect the full audit.")
+    elif len(findings) > 12:
+        lines.append(f"… {len(findings) - 12} more findings omitted.")
+    lines += [
+        "",
+        "🔒 No balances, orders, ledgers, wallets, or gates were changed.",
+    ]
+    return "\n".join(lines)[:3900]
 
 def _check_output(uid: str) -> str:
     db = check_db()
@@ -305,6 +406,9 @@ def register(bot, context=None):
                 f"Order book integrity: {'PASS' if result['order_book_integrity'] else 'FAIL'}",
                 f"Trade integrity: {'PASS' if result['trade_integrity'] else 'FAIL'}",
                 f"Money invariants: {'PASS' if result['money_invariants'] else 'FAIL'}",
+                f"Reserve reconciliation: {result.get('reserve_reconciliation_status', 'UNKNOWN')}",
+                f"Reserve findings needing review: {result.get('reserve_blocking_count', 0)}",
+                f"Reserve blocker codes: {', '.join(result.get('reserve_blocking_codes', [])[:4]) or 'NONE'}",
                 f"Public trading gate: {result['public_gate']}",
                 f"Public trading readiness: {'PASS' if result['public_ready'] else 'FAIL'}",
                 f"Verdict: {result['verdict']}",
@@ -404,6 +508,29 @@ def register(bot, context=None):
             bot.reply_to(
                 message,
                 f"⛔ Owner ledger audit failed safely: {type(exc).__name__}",
+                parse_mode=None,
+            )
+
+    @bot.message_handler(commands=["check_exchange_reserves"])
+    def check_exchange_reserves_cmd(message):
+        if not _allowed(message):
+            _send_denied(bot, message)
+            return
+        try:
+            from core.slh_exchange_reconciliation import run_once
+
+            report = run_once()
+            bot.reply_to(
+                message,
+                _exchange_reserves_output(report),
+                parse_mode=None,
+            )
+        except Exception as exc:
+            bot.reply_to(
+                message,
+                "⛔ Exchange reserve audit BLOCKED — "
+                f"read-only snapshot failed ({type(exc).__name__}). "
+                "No accounting or gate changes were made.",
                 parse_mode=None,
             )
 

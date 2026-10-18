@@ -114,6 +114,48 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         trades = db.get("exchange_trades", [])
         requests = db.get("exchange_requests", {})
 
+        try:
+            from core.slh_exchange_reconciliation import audit_db
+
+            reserve_audit = audit_db(db)
+            if not isinstance(reserve_audit, dict) or reserve_audit.get("read_only") is not True:
+                raise TypeError("RESERVE_AUDIT_RESULT_INVALID")
+
+            reserve_reconciliation_status = str(reserve_audit.get("release_readiness_status") or "").upper()
+            reserve_blocking_findings = reserve_audit.get("release_blocking_findings")
+            if (
+                reserve_reconciliation_status not in {"PASS", "BLOCKED"}
+                or not isinstance(reserve_blocking_findings, list)
+                or not all(isinstance(item, dict) for item in reserve_blocking_findings)
+            ):
+                raise TypeError("RESERVE_AUDIT_RESULT_INVALID")
+
+            raw_reserve_blocking_count = reserve_audit.get("release_blocking_finding_count")
+            if (
+                isinstance(raw_reserve_blocking_count, bool)
+                or not isinstance(raw_reserve_blocking_count, int)
+                or raw_reserve_blocking_count < 0
+                or raw_reserve_blocking_count != len(reserve_blocking_findings)
+            ):
+                raise TypeError("RESERVE_AUDIT_COUNT_MISMATCH")
+            if (reserve_reconciliation_status == "PASS") != (raw_reserve_blocking_count == 0):
+                raise TypeError("RESERVE_AUDIT_STATUS_COUNT_MISMATCH")
+
+            reserve_blocking_count = raw_reserve_blocking_count
+            reserve_blocking_codes = sorted({
+                str(item.get("code") or "UNKNOWN") for item in reserve_blocking_findings
+            })[:6]
+            reserve_reconciliation_ok = (
+                reserve_reconciliation_status == "PASS"
+                and reserve_blocking_count == 0
+                and not reserve_blocking_findings
+            )
+        except Exception:
+            reserve_reconciliation_status = "BLOCKED"
+            reserve_blocking_count = 1
+            reserve_blocking_codes = ["RESERVE_AUDIT_UNAVAILABLE"]
+            reserve_reconciliation_ok = False
+
         if not isinstance(orders, dict):
             return {
                 "ok": False,
@@ -125,6 +167,10 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
                 "order_book_integrity": False,
                 "trade_integrity": False,
                 "money_invariants": False,
+                "reserve_reconciliation_status": "BLOCKED",
+                "reserve_reconciliation_ok": False,
+                "reserve_blocking_count": 1,
+                "reserve_blocking_codes": ["EXCHANGE_STATE_UNREADABLE"],
                 "public_gate": "CLOSED",
                 "public_ready": False,
                 "verdict": "BLOCKED",
@@ -221,8 +267,24 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             sell_order = orders.get(str(trade.get("sell_order_id")))
             if not isinstance(buy_order, dict) or buy_order.get("side") != "buy":
                 trade_errors.append(f"trade:{tid}:bad_buy_order")
+            elif str(buy_order.get("uid") or buy_order.get("user_id") or "") != buyer_uid:
+                trade_errors.append(f"trade:{tid}:buyer_order_owner_mismatch")
             if not isinstance(sell_order, dict) or sell_order.get("side") != "sell":
                 trade_errors.append(f"trade:{tid}:bad_sell_order")
+            else:
+                if str(sell_order.get("uid") or sell_order.get("user_id") or "") != seller_uid:
+                    trade_errors.append(f"trade:{tid}:seller_order_owner_mismatch")
+                ask = _decimal(sell_order.get("limit_price"))
+                if not ask.is_finite() or ask <= 0:
+                    trade_errors.append(f"trade:{tid}:bad_sell_order_price")
+                elif price.is_finite() and price < ask:
+                    trade_errors.append(f"trade:{tid}:price_below_sell_limit")
+            if isinstance(buy_order, dict) and buy_order.get("side") == "buy":
+                bid = _decimal(buy_order.get("limit_price"))
+                if not bid.is_finite() or bid <= 0:
+                    trade_errors.append(f"trade:{tid}:bad_buy_order_price")
+                elif price.is_finite() and price > bid:
+                    trade_errors.append(f"trade:{tid}:price_above_buy_limit")
 
         try:
             _assert_invariants(db)
@@ -259,6 +321,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             and money_ok
             and requests_ok
             and account_ledger_ok
+            and reserve_reconciliation_ok
             and (for_execution or len(open_orders) == 0)
             and len(test_seed_open) == 0
             and len(test_seed_trades) == 0
@@ -275,6 +338,9 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             details.append("trades=" + ",".join(trade_errors[:5]))
         if not money_ok:
             details.append("money=" + money_detail)
+        if not reserve_reconciliation_ok:
+            codes = ",".join(reserve_blocking_codes[:4]) or "UNRESOLVED"
+            details.append(f"reserve_reconciliation=BLOCKED findings={reserve_blocking_count} codes={codes}")
         if not account_ledger_ok:
             ledger_reason = ",".join(str(x) for x in account_ledger_blockers[:4])
             if not ledger_reason:
@@ -289,7 +355,7 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
         detail = "public state clean" if not details else " · ".join(details)
 
         public_ready = bool(clean_for_public)
-        ok = order_ok and trade_ok and money_ok and requests_ok and account_ledger_ok
+        ok = order_ok and trade_ok and money_ok and requests_ok and account_ledger_ok and reserve_reconciliation_ok
         return {
             "ok": ok,
             "detail": detail,
@@ -304,6 +370,10 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             "order_book_integrity": order_ok,
             "trade_integrity": trade_ok,
             "money_invariants": money_ok,
+            "reserve_reconciliation_status": reserve_reconciliation_status,
+            "reserve_reconciliation_ok": reserve_reconciliation_ok,
+            "reserve_blocking_count": reserve_blocking_count,
+            "reserve_blocking_codes": reserve_blocking_codes,
             "public_gate": gate,
             "public_ready": public_ready,
             "verdict": verdict,
@@ -319,6 +389,10 @@ def check_exchange(db: dict[str, Any] | None = None, *, for_execution: bool = Fa
             "order_book_integrity": False,
             "trade_integrity": False,
             "money_invariants": False,
+            "reserve_reconciliation_status": "BLOCKED",
+            "reserve_reconciliation_ok": False,
+            "reserve_blocking_count": 1,
+            "reserve_blocking_codes": ["RESERVE_AUDIT_FAILED"],
             "public_gate": "CLOSED",
             "public_ready": False,
             "verdict": "BLOCKED",
@@ -340,6 +414,7 @@ def check_exchange_for_execution(db: dict[str, Any]) -> dict[str, Any]:
         and bool(result.get("order_book_integrity"))
         and bool(result.get("trade_integrity"))
         and bool(result.get("money_invariants"))
+        and bool(result.get("reserve_reconciliation_ok"))
         and str(result.get("public_gate")) == "OPEN"
         and str(result.get("verdict")) == "OPEN"
     )
