@@ -530,6 +530,8 @@ def _state_fingerprint_remote(url, headers):
 
 
 def _safe_json_fingerprint(payload):
+    if isinstance(payload, dict) and payload.get("status") == "BLOCKED":
+        return _state_calibration_blocked(str(payload.get("reason") or "UPSTREAM_BLOCKED")[:48])
     if not isinstance(payload, dict) or payload.get("source") != "state_manager_json":
         return _state_calibration_blocked("SOURCE_INVALID")
     runtime = payload.get("runtime") if isinstance(payload.get("runtime"), dict) else {}
