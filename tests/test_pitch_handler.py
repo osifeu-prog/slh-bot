@@ -56,8 +56,39 @@ class PitchHandlerTests(unittest.TestCase):
                 self.assertTrue(keyboard.keyboard)
                 for row in keyboard.keyboard:
                     for button in row:
-                        self.assertLessEqual(len(button.callback_data.encode("utf-8")), 64)
-                        self.assertTrue(button.callback_data.startswith("slh_pitch:"))
+                        if button.callback_data is not None:
+                            self.assertLessEqual(len(button.callback_data.encode("utf-8")), 64)
+                            self.assertTrue(button.callback_data.startswith("slh_pitch:"))
+                        if button.url is not None:
+                            self.assertTrue(button.url.startswith("https://"))
+
+    def test_tokenomics_slide_links_to_source_and_current_status(self):
+        keyboard = build_slide_keyboard(2)
+        urls = {
+            button.text: button.url
+            for row in keyboard.keyboard
+            for button in row
+            if button.url
+        }
+        self.assertEqual(
+            urls.get("📄 Whitepaper — טוקונומיקה"),
+            "https://slh-nft.com/whitepaper.html",
+        )
+        self.assertEqual(
+            urls.get("🌐 סטטוס ציבורי נוכחי"),
+            "https://slh-nft.com/",
+        )
+
+    def test_academy_button_is_available_on_academy_and_partnership_slides(self):
+        for index in (1, len(PITCH_SLIDES) - 1):
+            with self.subTest(index=index):
+                callbacks = {
+                    button.callback_data
+                    for row in build_slide_keyboard(index).keyboard
+                    for button in row
+                    if button.callback_data
+                }
+                self.assertIn("slh_pitch:academy", callbacks)
 
     def test_simulation_button_only_on_controls_slide(self):
         controls = build_slide_keyboard(4)
