@@ -39,7 +39,7 @@ class SynthUiContractTests(unittest.TestCase):
         self.assertIn('action == "synth"', source)
         self.assertIn('cmd.startswith("/synth ")', source)
         self.assertIn("len(cmd) <= 1200", source)
-        self.assertIn("len(parts) <= 131", source)
+        self.assertIn("len(parts) <= 132", source)
         self.assertIn('message.chat, "type"', source)
         self.assertIn("bot.process_new_messages([message])", source)
 
