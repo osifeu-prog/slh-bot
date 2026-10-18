@@ -49,6 +49,19 @@ def register(bot, context=None):
                 _transfer(bot, chat_id, uid, parts[1], parts[2], message.message_id)
             elif action == "shop" and len(parts) == 1:
                 _shop(bot, chat_id)
+            elif (
+                action == "synth"
+                and cmd.startswith("/synth ")
+                and len(cmd) <= 1200
+                and len(parts) <= 131
+                and str(getattr(message.chat, "type", "")).lower() == "private"
+            ):
+                # This is the only long command accepted from Mini App data.
+                # The existing synth handler applies its own waveform, duration,
+                # chord-count, chord-size, and note validation before rendering.
+                message.text = cmd
+                message.content_type = "text"
+                bot.process_new_messages([message])
             elif action in {x.lstrip("/") for x in ALLOWED_COMMANDS} and len(parts) <= 3:
                 message.text = cmd
                 message.content_type = "text"
