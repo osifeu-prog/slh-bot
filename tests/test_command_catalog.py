@@ -123,3 +123,20 @@ def test_exchange_status_alias_has_catalog_metadata():
     item = by_command["exchange_status"]
     assert item["known"] is True
     assert "Exchange" in item["description"]
+
+
+
+def test_miner_commands_have_read_only_control_metadata():
+    commands = ["/esp_miner_status", "/miner_status", "/miner_list"]
+
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value={"commands": commands},
+    ):
+        catalog = command_catalog.get_catalog("Me_ad_main")
+
+    by_command = {item["command"]: item for item in catalog}
+    assert set(by_command) == {command.lstrip("/") for command in commands}
+    assert all(item["known"] for item in by_command.values())
+    assert all(item["category"] == "CONTROL" for item in by_command.values())
+    assert all("קריאה בלבד" in item["description"] for item in by_command.values())
