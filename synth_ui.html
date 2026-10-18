@@ -233,9 +233,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function sendToBot() {
     const cmd=command();
-    if(source==='miniapp') {
+    if(source) {
       copyCommand();
-      status('הפקודה הועתקה מה־Mini App. פתח את צ׳אט הבוט והדבק אותה כדי לקבל קובץ שמע.');
+      status('הפקודה הועתקה. פתח את צ׳אט הבוט והדבק אותה כדי לקבל קובץ שמע.');
       return;
     }
     if(tg && typeof tg.sendData==='function') {
@@ -272,11 +272,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('copy').addEventListener('click',copyCommand);
   $('back').addEventListener('click',()=>{
     if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}
+    if(source==='inline'){try{tg?.close?.();return;}catch(_){}}
     if(tg&&typeof tg.close==='function'){try{tg.close();return;}catch(_){}}
     window.location.assign('/mini-app-v4');
   });
   renderSteps();
-  if(source==='miniapp') {
+  if(source) {
     $('send').textContent='העתק לבוט 📋';
     status('בחר אקורדים. אפשר לנגן כאן או להעתיק פקודה ולהדביק בצ׳אט הבוט.');
   }
