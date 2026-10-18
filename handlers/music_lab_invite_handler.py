@@ -25,7 +25,13 @@ INVITE_TEXT = (
     "תאוריה מוזיקלית, הרמוניה, אימון שמיעה ופיתוח קול בקצב אישי.\n\n"
     "פתחו את SLH OS ובחרו Synth או Academy. "
     "הכלים בשלב לימוד ותרגול בלבד — לא מסחר ולא מוצר פיננסי פתוח.\n\n"
-    "להסרה מהזמנות מוזיקליות: לחצו על ״לא לקבל הזמנות״."
+    "להסרה מהזמנות פרטיות נוספות: לחצו על ״לא לקבל הזמנות״ או כתבו /music_invite_stop בפרטי."
+)
+GROUP_INVITE_TEXT = (
+    INVITE_TEXT.replace(
+        "להסרה מהזמנות פרטיות נוספות: לחצו על ״לא לקבל הזמנות״ או כתבו /music_invite_stop בפרטי.",
+        "להפסיק הודעות אישיות נוספות: פתחו שיחה פרטית עם הבוט ושלחו /music_invite_stop.",
+    )
 )
 
 
@@ -88,10 +94,11 @@ def _markup(*, private):
         "📚 מסלולי הלימוד ב־SLH Academy",
         url="https://t.me/Me_ad_main_bot",
     ))
-    markup.add(types.InlineKeyboardButton(
-        "🔕 לא לקבל הזמנות מוזיקליות",
-        callback_data="mliv:optout",
-    ))
+    if private:
+        markup.add(types.InlineKeyboardButton(
+            "🔕 לא לקבל הזמנות פרטיות נוספות",
+            callback_data="mliv:optout",
+        ))
     return markup
 
 
@@ -179,7 +186,7 @@ def _send_campaign(bot, pending):
     if not stopped_on_state_error:
         for chat_id in group_ids:
             ok, next_allowed_at = _send_one(
-                bot, chat_id, INVITE_TEXT, next_allowed_at, reply_markup=_markup(private=False)
+                bot, chat_id, GROUP_INVITE_TEXT, next_allowed_at, reply_markup=_markup(private=False)
             )
             if ok:
                 sent += 1
