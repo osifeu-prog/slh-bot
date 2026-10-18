@@ -6,12 +6,14 @@ import tempfile
 from telebot import types
 from handlers import synth_engine as se
 
-WAVES = ("sine", "saw", "square", "tri")
+WAVES = se.WAVES
+INSTRUMENTS = se.INSTRUMENTS
 NOTE = re.compile(r"[A-G][#b]?[0-8]$")
 USAGE = (
-    "שימוש: /synth <sine|saw|square|tri> <משך 0.1-1.5> <תווים>\n"
+    "שימוש: /synth <sine|saw|square|tri|piano|moog|bass|organ|pluck> <משך 0.1-1.5> <תווים> [;slh=attack,decay,sustain,release,cutoff,resonance]\n"
     "רווח = אקורד, פסיק = צעד הבא\n"
-    "דוגמה: /synth saw 0.6 C4 E4 G4,F4 A4 C5"
+    "דוגמה: /synth piano 0.6 C4 E4 G4,F4 A4 C5\n"
+    "ADSR ופילטר אופציונליים נשלטים מהממשק; ערכיהם נבדקים בגבולות בטוחים."
 )
 
 
@@ -64,17 +66,26 @@ def register(bot):
                 raise ValueError
             waveform = parts[1].lower()
             duration = float(parts[2])
-            score = parts[3]
+            raw_score = parts[3]
+            settings = None
+            score, marker, raw_settings = raw_score.partition(" ;slh=")
+            score = score.strip()
+            if marker:
+                values = raw_settings.split(",")
+                if len(values) != len(se.SETTING_KEYS):
+                    raise ValueError("INVALID_SYNTH_SETTINGS")
+                settings = dict(zip(se.SETTING_KEYS, (float(v) for v in values)))
+                settings = se.normalize_settings(waveform, settings)
             steps = score.split(",")
             valid = (
-                waveform in WAVES
+                waveform in INSTRUMENTS
                 and 0.1 <= duration <= 1.5
                 and 1 <= len(steps) <= 16
                 and all(step.split() and len(step.split()) <= 8 for step in steps)
                 and all(NOTE.fullmatch(note) for step in steps for note in step.split())
             )
             if not valid:
-                raise ValueError
+                raise ValueError("INVALID_SYNTH_COMMAND")
         except (ValueError, IndexError):
             markup = _synth_inline_button() if str(getattr(getattr(message, "chat", None), "type", "")).lower() == "private" else None
             bot.reply_to(message, USAGE, reply_markup=markup)
@@ -84,7 +95,7 @@ def register(bot):
         try:
             fd, output_path = tempfile.mkstemp(prefix="slh-synth-", suffix=".ogg")
             os.close(fd)
-            se.main(score, waveform, duration, output_path)
+            se.main(score, waveform, duration, output_path, settings=settings)
             with open(output_path, "rb") as source:
                 audio = io.BytesIO(source.read())
             audio.name = "slh-synth.ogg"
