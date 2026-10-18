@@ -46,6 +46,7 @@ class PitchHandlerTests(unittest.TestCase):
         self.assertEqual(demo, SIMULATION_DEMO)
         self.assertIn("נתונים סינתטיים בלבד", demo)
         self.assertIn("SIM-DEMO-001", demo)
+        self.assertIn("לא נכתבה רשומה", demo)
         self.assertIn("אינה עסקה אמיתית", demo)
 
     def test_keyboard_callbacks_are_bounded(self):
