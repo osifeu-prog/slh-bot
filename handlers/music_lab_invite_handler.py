@@ -49,12 +49,14 @@ def _targets(db):
     users = users if isinstance(users, dict) else {}
     optouts = db.get("music_lab_invite_opt_outs", {})
     optouts = optouts if isinstance(optouts, dict) else {}
+    optins = db.get("music_lab_invite_opt_ins", {})
+    optins = optins if isinstance(optins, dict) else {}
     user_ids = []
     for key, record in users.items():
         uid = str(key).strip()
         if not uid.isdigit() or int(uid) <= 0 or uid == str(OWNER_TELEGRAM_ID):
             continue
-        if str(optouts.get(uid, "")).strip():
+        if str(optouts.get(uid, "")).strip() or not optins.get(uid):
             continue
         if isinstance(record, dict) and record.get("is_bot") is True:
             continue
@@ -69,12 +71,12 @@ def _targets(db):
         chat_id = str(record.get("chat_id") or raw_id).strip()
         role = str(record.get("role") or "").strip().lower()
         bot_status = str(record.get("bot_status") or "").strip().lower()
-        if not (chat_id.startswith("-") and chat_id[1:].isdigit()):
+        if record.get("music_lab_invite_opt_in") is not True:
             continue
         if role in _ALLOWED_GROUP_ROLES and bot_status in _ALLOWED_BOT_GROUP_STATUSES:
-            group_ids.append(chat_id)
+            if chat_id.startswith("-") and chat_id[1:].isdigit():
+                group_ids.append(chat_id)
     return sorted(set(user_ids)), sorted(set(group_ids))
-
 
 def _markup(*, private):
     from telebot import types
@@ -118,21 +120,24 @@ def _set_optout(uid, opted_out):
         return False
 
     def mutate(db):
-        values = db.get("music_lab_invite_opt_outs", {})
-        if not isinstance(values, dict):
+        optouts = db.get("music_lab_invite_opt_outs", {})
+        optins = db.get("music_lab_invite_opt_ins", {})
+        if not isinstance(optouts, dict) or not isinstance(optins, dict):
             raise ValueError("MUSIC_INVITE_PREFS_INVALID")
         if opted_out:
-            values[uid] = datetime.now(timezone.utc).isoformat()
+            optouts[uid] = datetime.now(timezone.utc).isoformat()
+            optins.pop(uid, None)
         else:
-            values.pop(uid, None)
-        db["music_lab_invite_opt_outs"] = values
+            optouts.pop(uid, None)
+            optins[uid] = datetime.now(timezone.utc).isoformat()
+        db["music_lab_invite_opt_outs"] = optouts
+        db["music_lab_invite_opt_ins"] = optins
         return True
 
     try:
         return bool(state_manager.atomic_update(mutate))
     except Exception:
         return False
-
 
 def _append_audit(entry):
     def mutate(db):
@@ -169,10 +174,12 @@ def _send_campaign(bot, pending):
             current = state_manager.load_db()
             optouts = current.get("music_lab_invite_opt_outs", {})
             optouts = optouts if isinstance(optouts, dict) else {}
+            optins = current.get("music_lab_invite_opt_ins", {})
+            optins = optins if isinstance(optins, dict) else {}
         except Exception:
             stopped_on_state_error = True
             break
-        if str(optouts.get(uid, "")).strip():
+        if str(optouts.get(uid, "")).strip() or not optins.get(uid):
             skipped_optout += 1
             continue
         ok, next_allowed_at = _send_one(
@@ -185,6 +192,23 @@ def _send_campaign(bot, pending):
 
     if not stopped_on_state_error:
         for chat_id in group_ids:
+            try:
+                current = state_manager.load_db()
+                groups = current.get("community_groups", {})
+                groups = groups if isinstance(groups, dict) else {}
+                group = groups.get(str(chat_id), {})
+                still_opted_in = (
+                    isinstance(group, dict)
+                    and group.get("music_lab_invite_opt_in") is True
+                    and str(group.get("role") or "").lower() in _ALLOWED_GROUP_ROLES
+                    and str(group.get("bot_status") or "").lower() in _ALLOWED_BOT_GROUP_STATUSES
+                )
+            except Exception:
+                stopped_on_state_error = True
+                break
+            if not still_opted_in:
+                skipped_optout += 1
+                continue
             ok, next_allowed_at = _send_one(
                 bot, chat_id, GROUP_INVITE_TEXT, next_allowed_at, reply_markup=_markup(private=False)
             )
@@ -285,11 +309,57 @@ def register(bot):
 
     @bot.message_handler(commands=["music_invite_start"])
     def music_invite_start(message):
+        if str(getattr(getattr(message, "chat", None), "type", "")).lower() != "private":
+            bot.reply_to(message, "להצטרפות להזמנות, כתוב/י לבוט בפרטי /music_invite_start.")
+            return
         ok = _set_optout(str(message.from_user.id), False)
         bot.reply_to(
             message,
-            "✅ הזמנות Music Lab הופעלו מחדש."
+            "✅ נרשמת במפורש לקבלת הזמנות Music Lab. אפשר לבטל בכל עת עם /music_invite_stop."
             if ok else "❌ לא הצלחתי לעדכן את ההעדפה.",
+        )
+
+    @bot.message_handler(commands=["music_invite_group_on", "music_invite_group_off"])
+    def music_invite_group_consent(message):
+        if str(getattr(getattr(message, "from_user", None), "id", "")) != str(OWNER_TELEGRAM_ID):
+            bot.reply_to(message, "⛔ הפעולה מיועדת לבעלים בלבד.")
+            return
+        if str(getattr(getattr(message, "chat", None), "type", "")).lower() not in {"group", "supergroup"}:
+            bot.reply_to(message, "יש להריץ את הפקודה בתוך הקבוצה הרלוונטית.")
+            return
+        try:
+            member = bot.get_chat_member(message.chat.id, message.from_user.id)
+            if str(getattr(member, "status", "")).lower() not in _ALLOWED_BOT_GROUP_STATUSES:
+                bot.reply_to(message, "⛔ נדרשת הרשאת מנהל בקבוצה; לא בוצע שינוי.")
+                return
+        except Exception:
+            bot.reply_to(message, "⛔ לא ניתן לאמת הרשאת מנהל בקבוצה; לא בוצע שינוי.")
+            return
+
+        enabled = (message.text or "").split()[0].split("@")[0].endswith("group_on")
+        chat_id = str(message.chat.id)
+
+        def mutate(db):
+            groups = db.get("community_groups", {})
+            if not isinstance(groups, dict):
+                raise ValueError("COMMUNITY_GROUPS_INVALID")
+            record = groups.get(chat_id)
+            if not isinstance(record, dict):
+                raise ValueError("COMMUNITY_GROUP_NOT_REGISTERED")
+            record["music_lab_invite_opt_in"] = bool(enabled)
+            record["music_lab_invite_opt_in_at"] = datetime.now(timezone.utc).isoformat()
+            record["music_lab_invite_opt_in_by"] = str(message.from_user.id)
+            db["community_groups"] = groups
+
+        try:
+            state_manager.atomic_update(mutate)
+        except Exception as exc:
+            bot.reply_to(message, "⛔ לא בוצע שינוי: " + type(exc).__name__)
+            return
+        bot.reply_to(
+            message,
+            "✅ הקבוצה אישרה קבלת הזמנות Music Lab."
+            if enabled else "בוצע: הקבוצה לא תקבל הזמנות Music Lab נוספות."
         )
 
     @bot.callback_query_handler(func=lambda call: str(call.data or "").startswith("mliv:"))
