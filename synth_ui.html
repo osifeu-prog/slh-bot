@@ -11,6 +11,10 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:radial-gradient(circle at 8% 0,#30245d 0,transparent 34%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Arial,sans-serif;padding:16px 14px calc(26px + env(safe-area-inset-bottom))}
 .app{max-width:760px;margin:auto}
+.quick-nav{position:sticky;top:0;z-index:20;display:flex;gap:7px;overflow-x:auto;padding:9px 0;background:#080d18ed;backdrop-filter:blur(12px);scrollbar-width:thin}
+.quick-nav a{flex:0 0 auto;text-decoration:none;color:#dbe5ff;border:1px solid #33445e;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;background:#111b2b}
+.quick-nav a:focus-visible{outline:3px solid #8b78ff;outline-offset:2px}
+#back{grid-column:1/-1}
 header{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
 .logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#8b78ff,#20cfa9);font-size:25px;box-shadow:0 10px 32px #6d5be533}
 h1{font-size:22px;margin:0;font-weight:900}
@@ -82,11 +86,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="app">
 <header>
   <div class="logo">🎹</div>
-  <div><h1>SLH Spark Synth</h1><div class="subtitle">בנה אקורדים, נגן תצוגה מקדימה וצור פקודה לבוט</div></div>
+  <div><h1>SLH Spark Synth</h1><div class="subtitle">מסלול קצר: בחר צליל → בנה אקורד → נגן → בדוק כיוון</div></div>
 </header>
+<nav class="quick-nav" aria-label="ניווט במעבדת המוזיקה">
+  <a href="#sound">1. צליל</a><a href="#chords">2. אקורדים</a><a href="#keyboard">3. מקלדת</a><a href="#tuner">4. טיונר</a><a href="#listen">5. נגן ושלח</a>
+</nav>
 
-<section class="card">
-  <h2>🎛️ צליל ומשך</h2>
+<section class="card" id="sound">
+  <h2>🎛️ שלב 1 · צליל ומשך</h2>
   <div class="controls">
     <div class="field">
       <label for="wave">כלי / אופי צליל</label>
@@ -126,17 +133,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </section>
 
-<section class="card">
+<section class="card" id="chords">
   <div class="steps-head">
-    <h2>🎼 רצף האקורדים</h2>
+    <h2>🎼 שלב 2 · רצף האקורדים</h2>
     <button type="button" class="small" id="addStep">＋ הוסף צעד</button>
   </div>
   <div class="steps" id="steps"></div>
   <p class="note">עד 16 צעדים, עד 8 תווים בכל אקורד. אפשר לשנות שורש, סוג אקורד ואוקטבה לכל צעד.</p>
 </section>
 
-<section class="card">
-  <div class="steps-head"><h2>🎹 מקלדת נגינה</h2><span class="chip" id="activeStepLabel">עריכת צעד 1</span></div>
+<section class="card" id="keyboard">
+  <div class="steps-head"><h2>🎹 שלב 3 · מקלדת נגינה</h2><span class="chip" id="activeStepLabel">עריכת צעד 1</span></div>
   <p class="note">לחיצה על קליד משמיעה תו ומוסיפה/מסירה אותו מהאקורד בצעד הנבחר. בחר צעד בכרטיס האקורד כדי לערוך צעד אחר.</p>
   <div class="keyboard-scroll"><div class="piano-keyboard" id="pianoKeyboard" aria-label="מקלדת פסנתר אינטראקטיבית"></div></div>
   <div class="status" id="keyboardStatus" role="status" aria-live="polite">תו נבדק לפי כיוון הצליל שבחרת.</div>
@@ -161,8 +168,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <p class="note">המדידה נעשית בדפדפן ובחומרת השמע המקומית. רזולוציית FFT, קצב הדגימה, עוצמת השמע והתקן הפלט משפיעים על הדיוק.</p>
 </section>
 
-<section class="card">
-  <h2>🎯 טיונר כרומטי</h2>
+<section class="card" id="tuner">
+  <h2>🎯 שלב 4 · טיונר כרומטי</h2>
   <div class="controls">
     <div class="field">
       <label for="tunerProfile">כלי נגינה / טווח</label>
@@ -192,10 +199,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <p class="note">הטיונר מודד תו אחד בכל פעם. מצב הפסנתר משווה לטמפרמנט שווה בלבד; הוא אינו מחשב עקומת Stretch Tuning או מחליף טכנאי כיוון פסנתרים.</p>
 </section>
 
-<section class="card">
-  <h2>▶️ האזנה ושליחה</h2>
+<section class="card" id="listen">
+  <h2>▶️ שלב 5 · האזנה ושליחה</h2>
   <div class="actions">
     <button type="button" class="primary" id="play">▶ נגן כאן</button>
+    <button type="button" class="ghost" id="stopPlayback">⏹ עצור נגינה</button>
     <button type="button" class="mint" id="send">שלח לבוט 🎧</button>
     <button type="button" id="copy">העתק פקודה</button>
     <button type="button" class="ghost" id="back">חזרה</button>
@@ -251,6 +259,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   let activeStep=0, audioContext=null, analyser=null, visualUntil=0, visualFrame=0;
   let measureExpected=null, tunerStream=null, tunerSource=null, tunerAnalyser=null, tunerBuffer=null, tunerRunning=false, tunerFrame=0, lastTunerUpdate=0;
   const heldPresses=new Map();
+  const activeVoices=new Set();
   const $=function(id){return document.getElementById(id);};
   const esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const qualityInfo=function(id){return QUALITY.find(function(q){return q.id===id;})||QUALITY[0];};
@@ -357,12 +366,23 @@ button:disabled{opacity:.45;cursor:not-allowed}
     envNode.gain.linearRampToValueAtTime(sustainLevel,Math.max(attackEnd+.002,decayEnd));
     envNode.gain.setValueAtTime(sustainLevel,releaseStart);
     envNode.gain.linearRampToValueAtTime(.0001,start+duration);
+    var voiceRecord={gain:envNode,filter:filter,oscillators:[],remaining:parts.length};
+    activeVoices.add(voiceRecord);
     parts.forEach(function(part){
       var osc=ctx.createOscillator(),amp=ctx.createGain();
       osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(midi)*part.m,start);
       if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
       amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);
       osc.start(start);osc.stop(start+duration+.03);
+      voiceRecord.oscillators.push(osc);
+      osc.onended=function(){
+        try{osc.disconnect();amp.disconnect();}catch(_){}
+        voiceRecord.remaining-=1;
+        if(voiceRecord.remaining<=0){
+          activeVoices.delete(voiceRecord);
+          try{envNode.disconnect();if(filter)filter.disconnect();}catch(_){}
+        }
+      };
     });
     if(expected!==undefined&&expected!==null)measureExpected=expected;
     visualUntil=Math.max(visualUntil,start+duration+.35);startVisuals();
@@ -428,6 +448,31 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var c=Number.isFinite(data[best+1])?data[best+1]:-160;
     var denom=a-2*b+c,delta=Math.abs(denom)<1e-8?0:.5*(a-c)/denom;delta=Math.max(-1,Math.min(1,delta));
     return (best+delta)*audioContext.sampleRate/node.fftSize;
+  }
+  function stopPlayback(){
+    var now=audioContext?audioContext.currentTime:0;
+    releaseAllHeldPresses();
+    if(!audioContext||!activeVoices.size){
+      visualUntil=now+.08;
+      startVisuals();
+      status("אין רצף צליל פעיל לעצירה.");
+      return;
+    }
+    var stopped=activeVoices.size;
+    activeVoices.forEach(function(record){
+      var gain=record.gain&&record.gain.gain;
+      if(gain){
+        try{
+          if(typeof gain.cancelAndHoldAtTime==="function")gain.cancelAndHoldAtTime(now);
+          else{gain.cancelScheduledValues(now);gain.setValueAtTime(Math.max(.0001,gain.value||.0001),now);}
+          gain.linearRampToValueAtTime(.0001,now+.025);
+        }catch(_){}
+      }
+      record.oscillators.forEach(function(osc){try{osc.stop(now+.04);}catch(_){}});
+    });
+    visualUntil=now+.12;
+    startVisuals();
+    status("⏹ הופסק רצף הנגינה. אפשר לנגן שוב.");
   }
   async function playLocally(){
     try{
@@ -657,6 +702,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('presetMajor').addEventListener('click',function(){steps=presets.major.map(function(x){return Object.assign({},x);});activeStep=0;renderSteps();status('נטען רצף I–IV–V–I.');});
   $('presetMinor').addEventListener('click',function(){steps=presets.minor.map(function(x){return Object.assign({},x);});activeStep=0;renderSteps();status('נטען רצף i–VI–III–VII.');});
   $('play').addEventListener('click',playLocally);
+  $('stopPlayback').addEventListener('click',stopPlayback);
   $('send').addEventListener('click',sendToBot);
   $('copy').addEventListener('click',copyCommand);
   $('testReference').addEventListener('click',testReference);
