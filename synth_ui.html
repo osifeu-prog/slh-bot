@@ -60,7 +60,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .white-key{height:162px;width:32px;background:linear-gradient(#fff,#e7ebf4);color:#182136;border:1px solid #9ca8ba;z-index:1}
 .black-key{height:103px;width:21px;background:linear-gradient(110deg,#354156,#050910 60%);color:#fff;border:1px solid #02050a;z-index:2;padding-bottom:7px;box-shadow:0 3px 5px #0008}
 .piano-key.selected-key{background:linear-gradient(#b7aaff,#6e5be8);color:#fff;box-shadow:inset 0 0 0 2px #d9d0ff}
-.piano-key:active{filter:brightness(1.25)}
+.piano-key:active,.piano-key.is-held{filter:brightness(1.25);transform:translateY(2px)}
+.piano-key{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .measure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .measure-value{font-size:21px;font-weight:900;color:var(--mint);font-variant-numeric:tabular-nums;margin-top:5px}
 .graph-wrap{margin-top:14px;padding:10px;border:1px solid #25364c;border-radius:13px;background:#07101b}
@@ -249,6 +250,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   let steps=presets.major.map(function(x){return Object.assign({},x);});
   let activeStep=0, audioContext=null, analyser=null, visualUntil=0, visualFrame=0;
   let measureExpected=null, tunerStream=null, tunerSource=null, tunerAnalyser=null, tunerBuffer=null, tunerRunning=false, tunerFrame=0, lastTunerUpdate=0;
+  const heldPresses=new Map();
   const $=function(id){return document.getElementById(id);};
   const esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   const qualityInfo=function(id){return QUALITY.find(function(q){return q.id===id;})||QUALITY[0];};
@@ -329,7 +331,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function setupAnalyser(){
     if(analyser)return;
-    analyser=audioContext.createAnalyser();analyser.fftSize=16384;analyser.smoothingTimeConstant=0.07;analyser.connect(audioContext.destination);
+    analyser=audioContext.createAnalyser();analyser.fftSize=32768;analyser.minDecibels=-120;analyser.maxDecibels=0;analyser.smoothingTimeConstant=0;analyser.connect(audioContext.destination);
   }
   function scheduleVoice(midi,start,duration,instrument,peak,expected){
     var cfg=settingsFromUi(),ctx=audioContext;
@@ -368,6 +370,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     visualFrame=0;
     var scope=$('scopeCanvas'),spectrum=$('spectrumCanvas');
     if(analyser&&audioContext){
+      if(heldPresses.size)visualUntil=Math.max(visualUntil,audioContext.currentTime+.18);
       drawScope(scope,analyser);drawSpectrum(spectrum,analyser);
       if(audioContext.currentTime<visualUntil){
         var peak=dominantFrequency(analyser);
@@ -409,13 +412,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
     }
   }
   function dominantFrequency(node){
-    var data=new Uint8Array(node.frequencyBinCount);node.getByteFrequencyData(data);
+    // Float FFT bins are already expressed in dB. Interpolating them directly
+    // avoids taking a second logarithm of byte-scaled magnitudes, which biased
+    // the displayed frequency/cents estimate by several cents.
+    var data=new Float32Array(node.frequencyBinCount);node.getFloatFrequencyData(data);
     var low=Math.max(1,Math.floor(45*node.fftSize/audioContext.sampleRate));
     var high=Math.min(data.length-2,Math.floor(2200*node.fftSize/audioContext.sampleRate));
-    var best=-1,bestValue=0;
-    for(var i=low;i<=high;i++){if(data[i]>bestValue){bestValue=data[i];best=i;}}
-    if(best<1||bestValue<12)return 0;
-    var a=Math.log(data[best-1]+1),b=Math.log(data[best]+1),c=Math.log(data[best+1]+1);
+    var best=-1,bestValue=-Infinity;
+    for(var i=low;i<=high;i++){if(Number.isFinite(data[i])&&data[i]>bestValue){bestValue=data[i];best=i;}}
+    if(best<1||bestValue < -110)return 0;
+    var a=Number.isFinite(data[best-1])?data[best-1]:-160;
+    var b=Number.isFinite(data[best])?data[best]:-160;
+    var c=Number.isFinite(data[best+1])?data[best+1]:-160;
     var denom=a-2*b+c,delta=Math.abs(denom)<1e-8?0:.5*(a-c)/denom;delta=Math.max(-1,Math.min(1,delta));
     return (best+delta)*audioContext.sampleRate/node.fftSize;
   }
@@ -433,6 +441,70 @@ button:disabled{opacity:.45;cursor:not-allowed}
     try{await ensureAudio();var dur=Math.max(.45,Number($('duration').value));var start=audioContext.currentTime+.015;measureExpected=hzForMidi(midi);scheduleVoice(midi,start,dur,$('wave').value,.22,measureExpected);$('keyboardStatus').textContent=midiToNote(midi)+' · '+hzForMidi(midi).toFixed(2)+' Hz';}
     catch(e){$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
   }
+  function heldInstrumentParts(instrument){
+    if(instrument==='piano')return [{m:1,t:'triangle',g:.64},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.09},{m:6.02,t:'sine',g:.04}];
+    if(instrument==='moog')return [{m:1,t:'sawtooth',g:.8},{m:1.005,t:'sawtooth',g:.2}];
+    if(instrument==='bass')return [{m:1,t:'sawtooth',g:.67},{m:.5,t:'sine',g:.33}];
+    if(instrument==='organ')return [{m:1,t:'sine',g:.65},{m:2,t:'sine',g:.23},{m:3,t:'sine',g:.12}];
+    if(instrument==='pluck')return [{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
+    return [{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
+  }
+  async function startHeldVoice(token){
+    if(token.starting||token.voice||token.released)return;
+    token.starting=true;
+    try{
+      await ensureAudio();token.starting=false;
+      if(token.released)return;
+      var ctx=audioContext,cfg=settingsFromUi(),instrument=$('wave').value,start=ctx.currentTime+.005,peak=.22;
+      var filter=ctx.createBiquadFilter(),envNode=ctx.createGain();
+      filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);filter.Q.setValueAtTime(cfg.resonance,start);
+      envNode.connect(filter);filter.connect(analyser);
+      var attack=Math.max(.005,cfg.attack),decay=Math.max(.005,cfg.decay),sustain=Math.max(.0001,peak*cfg.sustain),parts=heldInstrumentParts(instrument),oscs=[];
+      envNode.gain.setValueAtTime(.0001,start);
+      envNode.gain.linearRampToValueAtTime(peak,start+attack);
+      envNode.gain.linearRampToValueAtTime(sustain,start+attack+decay);
+      parts.forEach(function(part){
+        var osc=ctx.createOscillator(),amp=ctx.createGain();
+        osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(token.midi)*part.m,start);
+        if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
+        amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);osc.start(start);oscs.push({osc:osc,amp:amp});
+      });
+      token.voice={ctx:ctx,cfg:cfg,envNode:envNode,filter:filter,oscs:oscs,startedAt:start,peak:peak,attack:attack,decay:decay,sustain:sustain,releasing:false};
+      measureExpected=hzForMidi(token.midi);visualUntil=start+.3;startVisuals();
+      $('keyboardStatus').textContent=midiToNote(token.midi)+' · '+measureExpected.toFixed(2)+' Hz · החזק לנגינה רציפה';
+      if(token.released)releaseHeldVoice(token);
+    }catch(e){token.starting=false;$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
+  }
+  function releaseHeldVoice(token){
+    var voice=token.voice;if(!voice||voice.releasing)return;voice.releasing=true;
+    var now=voice.ctx.currentTime,end=now+Math.max(.025,voice.cfg.release),gain=voice.envNode.gain,held=false;
+    try{if(typeof gain.cancelAndHoldAtTime==='function'){gain.cancelAndHoldAtTime(now);held=true;}}catch(_){}
+    if(!held){
+      var elapsed=Math.max(0,now-voice.startedAt),value;
+      if(elapsed<voice.attack)value=.0001+(voice.peak-.0001)*(elapsed/voice.attack);
+      else if(elapsed<voice.attack+voice.decay){var ratio=(elapsed-voice.attack)/voice.decay;value=voice.peak+(voice.sustain-voice.peak)*ratio;}
+      else value=voice.sustain;
+      try{gain.cancelScheduledValues(now);gain.setValueAtTime(Math.max(.0001,value),now);}catch(_){}
+    }
+    try{gain.linearRampToValueAtTime(.0001,end);}catch(_){}
+    var left=voice.oscs.length;
+    voice.oscs.forEach(function(item){
+      item.osc.onended=function(){
+        try{item.osc.disconnect();item.amp.disconnect();}catch(_){}
+        left--;
+        if(left<=0){try{voice.envNode.disconnect();voice.filter.disconnect();}catch(_){}}
+      };
+      try{item.osc.stop(end+.04);}catch(_){}
+    });
+    visualUntil=Math.max(visualUntil,end+.25);startVisuals();
+  }
+  function endHeldPress(pointerId){
+    var token=heldPresses.get(pointerId);if(!token)return;
+    heldPresses.delete(pointerId);token.released=true;
+    if(token.key)token.key.classList.remove('is-held');
+    releaseHeldVoice(token);
+  }
+  function releaseAllHeldPresses(){Array.from(heldPresses.keys()).forEach(endHeldPress);}
   async function testReference(){
     try{
       var selected=$('referenceNote').value,midi=noteToMidi(selected);if(midi===null)throw new Error('תו לא תקין');
@@ -469,7 +541,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     }else if(current.length>=8){status('אפשר להכניס עד 8 תווים בכל צעד.');return;}
     else current.push(note);
     step.customNotes=current;
-    renderSteps();playKey(noteToMidi(note));
+    renderSteps();
   }
   function renderReferenceOptions(){
     var items=[];for(var midi=48;midi<=83;midi++)items.push(midiToNote(midi));
@@ -545,7 +617,28 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(remove){if(steps.length<=1)return;steps.splice(Number(remove.dataset.remove),1);if(activeStep>=steps.length)activeStep=steps.length-1;renderSteps();return;}
     var card=event.target.closest('.step');if(card){var nextStep=Number(card.dataset.step);if(nextStep!==activeStep){activeStep=nextStep;renderSteps();}}
   });
-  $('pianoKeyboard').addEventListener('click',function(event){var key=event.target.closest('[data-note]');if(key)toggleKeyInChord(key.dataset.note);});
+  $('pianoKeyboard').addEventListener('pointerdown',function(event){
+    var key=event.target.closest('[data-note]');if(!key)return;
+    if(event.pointerType==='mouse'&&event.button!==0)return;
+    if(heldPresses.has(event.pointerId))return;
+    event.preventDefault();
+    var token={pointerId:event.pointerId,note:key.dataset.note,midi:Number(key.dataset.midi),key:key,released:false,starting:false,voice:null};
+    heldPresses.set(event.pointerId,token);key.classList.add('is-held');
+    try{key.setPointerCapture(event.pointerId);}catch(_){}
+    toggleKeyInChord(token.note);startHeldVoice(token);
+  });
+  $('pianoKeyboard').addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('lostpointercapture',function(event){endHeldPress(event.pointerId);});
+  // Preserve keyboard/screen-reader access: a keyboard-activated click has detail=0.
+  $('pianoKeyboard').addEventListener('click',function(event){
+    if(event.detail!==0)return;
+    var key=event.target.closest('[data-note]');if(!key)return;
+    toggleKeyInChord(key.dataset.note);playKey(Number(key.dataset.midi));
+  });
+  window.addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  window.addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
+  window.addEventListener('blur',releaseAllHeldPresses);
   $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
   $('wave').addEventListener('change',applyInstrumentDefaults);
   ['duration','attack','decay','sustain','release','cutoff','resonance'].forEach(function(id){$(id).addEventListener('input',refreshCommand);});

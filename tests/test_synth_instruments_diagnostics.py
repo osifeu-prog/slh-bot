@@ -136,7 +136,9 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
             'id="cutoff"', 'id="resonance"', 'id="scopeCanvas"',
             'id="spectrumCanvas"', 'id="testReference"', 'id="tunerProfile"',
             'id="startTuner"', 'id="stopTuner"', 'id="measuredHz"',
-            ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz'
+            ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz',
+            'pointerdown', 'pointerup', 'lostpointercapture',
+            'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime'
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
