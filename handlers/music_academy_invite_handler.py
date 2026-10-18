@@ -280,6 +280,14 @@ def register(bot):
             if getattr(message.chat, "type", None) not in {"group", "supergroup"}:
                 bot.reply_to(message, "יש להריץ group_on בתוך הקבוצה שתרצה לקבל הזמנות.")
                 return
+            try:
+                member = bot.get_chat_member(message.chat.id, message.from_user.id)
+                if str(getattr(member, "status", "")).lower() not in {"administrator", "creator"}:
+                    bot.reply_to(message, "⛔ נדרש מנהל/ת קבוצה כדי לאשר הזמנות לקבוצה.")
+                    return
+            except Exception:
+                bot.reply_to(message, "⛔ לא ניתן לאמת הרשאת מנהל בקבוצה; לא בוצע שינוי.")
+                return
             chat_id = str(message.chat.id)
 
             def enable_group(db):
@@ -301,6 +309,14 @@ def register(bot):
         if action == "group_off":
             if getattr(message.chat, "type", None) not in {"group", "supergroup"}:
                 bot.reply_to(message, "יש להריץ group_off בתוך הקבוצה.")
+                return
+            try:
+                member = bot.get_chat_member(message.chat.id, message.from_user.id)
+                if str(getattr(member, "status", "")).lower() not in {"administrator", "creator"}:
+                    bot.reply_to(message, "⛔ נדרש מנהל/ת קבוצה כדי לבטל את ההרשאה.")
+                    return
+            except Exception:
+                bot.reply_to(message, "⛔ לא ניתן לאמת הרשאת מנהל בקבוצה; לא בוצע שינוי.")
                 return
             chat_id = str(message.chat.id)
 
