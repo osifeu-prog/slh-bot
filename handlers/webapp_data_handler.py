@@ -53,7 +53,7 @@ def register(bot, context=None):
                 action == "synth"
                 and cmd.startswith("/synth ")
                 and len(cmd) <= 1200
-                and len(parts) <= 131
+                and len(parts) <= 132
                 and str(getattr(message.chat, "type", "")).lower() == "private"
             ):
                 # This is the only long command accepted from Mini App data.
