@@ -71,13 +71,21 @@ class PitchHandlerTests(unittest.TestCase):
             if button.url
         }
         self.assertEqual(
-            urls.get("📄 Whitepaper — טוקונומיקה"),
+            urls.get("📄 Whitepaper — טיוטה היסטורית"),
             "https://slh-nft.com/whitepaper.html",
         )
         self.assertEqual(
-            urls.get("🌐 סטטוס ציבורי נוכחי"),
+            urls.get("🔎 סטטוס קנוני"),
+            "https://slh-nft.com/status.html",
+        )
+        self.assertEqual(
+            urls.get("🌐 אתר ציבורי"),
             "https://slh-nft.com/",
         )
+        body = PITCH_SLIDES[2]["body"]
+        self.assertIn("מסמך היסטורי/טיוטה בלבד", body)
+        self.assertIn("אין כרגע הצעת IDO/Presale ציבורית", body)
+        self.assertIn("אם מופיע UNKNOWN", body)
 
     def test_academy_button_is_available_on_academy_and_partnership_slides(self):
         for index in (1, len(PITCH_SLIDES) - 1):
