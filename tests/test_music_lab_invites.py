@@ -42,6 +42,9 @@ class FakeBot:
     def send_message(self, chat_id, text, **kwargs):
         self.messages.append((chat_id, text, kwargs))
 
+    def get_chat_member(self, chat_id, user_id):
+        return SimpleNamespace(status="administrator")
+
     def answer_callback_query(self, callback_id, text=None, **kwargs):
         self.answers.append((callback_id, text, kwargs))
 
@@ -86,6 +89,7 @@ class MusicLabInviteTests(unittest.TestCase):
                 },
                 "-100222": {"chat_id": "-100222", "role": "unbound", "bot_status": "administrator"},
                 "-100333": {"chat_id": "-100333", "role": "academy", "bot_status": "left"},
+                "-100123": {"chat_id": "-100123", "role": "free", "bot_status": "administrator"},
                 "444": {"chat_id": "444", "role": "vip", "bot_status": "administrator"},
             },
         }
@@ -155,6 +159,27 @@ class MusicLabInviteTests(unittest.TestCase):
         self.assertNotIn("mliv:optout", callback_data)
         self.assertIn("/music_invite_stop", invites.GROUP_INVITE_TEXT)
         self.assertIn("הודעות אישיות", invites.GROUP_INVITE_TEXT)
+
+    def test_explicit_opt_in_command_enables_private_user(self):
+        db = self.sample_db()
+        with patch.object(invites.state_manager, "atomic_update", side_effect=lambda fn: fn(db)):
+            owner = "111"
+            result = invites._set_optout(owner, False)
+        self.assertTrue(result)
+        self.assertIn("111", db["music_lab_invite_opt_ins"])
+        self.assertNotIn("111", db["music_lab_invite_opt_outs"])
+
+    def test_group_invites_require_explicit_group_opt_in(self):
+        db = self.sample_db()
+        with patch.object(invites.state_manager, "load_db", return_value=db):
+            users, groups = invites._targets(db)
+        self.assertNotIn("-100123", groups)
+        with patch.object(invites.state_manager, "atomic_update", side_effect=lambda fn: fn(db)):
+            bot = self.bot
+            handler = bot.handler(commands=["music_invite_group_on"])
+            handler(message(str(OWNER_TELEGRAM_ID), "supergroup", "/music_invite_group_on"))
+        self.assertTrue(db["community_groups"]["-100123"]["music_lab_invite_opt_in"])
+        self.assertIn("-100123", invites._targets(db)[1])
 
     def test_opt_out_callback_persists_preference_without_financial_paths(self):
         call = SimpleNamespace(
