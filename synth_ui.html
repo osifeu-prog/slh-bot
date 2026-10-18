@@ -12,6 +12,20 @@
 body{margin:0;min-height:100vh;background:radial-gradient(circle at 8% 0,#30245d 0,transparent 34%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Arial,sans-serif;padding:16px 14px calc(26px + env(safe-area-inset-bottom))}
 .app{max-width:760px;margin:auto}
 header{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
+.top-actions{margin-inline-start:auto;display:flex;align-items:center}
+.app:fullscreen,.app.is-fullscreen{max-width:none;width:100%;height:100%;margin:0;overflow:auto;padding:14px;background:var(--bg)}
+.app.is-fullscreen{position:fixed;inset:0;z-index:9999}
+.app:fullscreen .piano-keyboard,.app.is-fullscreen .piano-keyboard{height:clamp(190px,42vh,360px)}
+.app:fullscreen .white-key,.app.is-fullscreen .white-key{height:calc(clamp(190px,42vh,360px) - 2px)}
+.app:fullscreen .black-key,.app.is-fullscreen .black-key{height:clamp(112px,27vh,220px)}
+body.fullscreen-active{overflow:hidden}
+.scale-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.scale-notes{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.scale-note{font:12px ui-monospace,monospace;background:#0a1422;border:1px solid #3d4d6a;border-radius:9px;padding:8px;color:#d8e1ff}
+.scale-note.root-note{border-color:var(--mint);color:var(--mint);font-weight:900}
+.piano-key.scale-key{box-shadow:inset 0 0 0 2px #31d7b0}
+.piano-key.selected-key{outline:3px solid #bcb1ff;outline-offset:-4px}
+@media(max-width:560px){.scale-controls{grid-template-columns:1fr 1fr}.top-actions button{padding:8px;font-size:12px}header{align-items:flex-start}}
 .logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#8b78ff,#20cfa9);font-size:25px;box-shadow:0 10px 32px #6d5be533}
 h1{font-size:22px;margin:0;font-weight:900}
 .subtitle{font-size:13px;color:var(--muted);margin-top:3px}
@@ -82,7 +96,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="app">
 <header>
   <div class="logo">🎹</div>
-  <div><h1>SLH Spark Synth</h1><div class="subtitle">בנה אקורדים, נגן תצוגה מקדימה וצור פקודה לבוט</div></div>
+  <div><h1>SLH Spark Synth</h1><div class="subtitle">סולמות, אקורדים ונגינה חיה</div></div>
+  <div class="top-actions"><button type="button" class="ghost" id="fullscreenToggle" aria-pressed="false">⛶ מסך מלא</button></div>
 </header>
 
 <section class="card">
@@ -135,7 +150,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <p class="note">עד 16 צעדים, עד 8 תווים בכל אקורד. אפשר לשנות שורש, סוג אקורד ואוקטבה לכל צעד.</p>
 </section>
 
-<section class="card">
+<section class="card" id="scalePanel">
+  <h2>🎼 סולמות — תצוגה ונגינה</h2>
+  <div class="scale-controls">
+    <div class="field"><label for="scaleRoot">שורש הסולם</label><select id="scaleRoot"></select></div>
+    <div class="field"><label for="scaleType">סוג הסולם</label><select id="scaleType"></select></div>
+    <div class="field"><label for="scaleOctave">אוקטבה</label><select id="scaleOctave"><option value="3">3</option><option value="4" selected>4</option></select></div>
+  </div>
+  <div class="scale-notes" id="scaleNotes" aria-label="תווי הסולם"></div>
+  <div class="actions" style="margin-top:12px">
+    <button type="button" class="primary" id="playScale">▶ נגן סולם</button>
+    <button type="button" class="ghost" id="highlightScale">הדגש על המקלדת</button>
+  </div>
+  <p class="note" id="scaleStatus" role="status" aria-live="polite">בחר שורש וסוג סולם כדי לראות את התווים והתדרים.</p>
+</section>
+
+<section class="card" id="keyboardPanel">
   <div class="steps-head"><h2>🎹 מקלדת נגינה</h2><span class="chip" id="activeStepLabel">עריכת צעד 1</span></div>
   <p class="note">לחיצה על קליד משמיעה תו ומוסיפה/מסירה אותו מהאקורד בצעד הנבחר. בחר צעד בכרטיס האקורד כדי לערוך צעד אחר.</p>
   <div class="keyboard-scroll"><div class="piano-keyboard" id="pianoKeyboard" aria-label="מקלדת פסנתר אינטראקטיבית"></div></div>
@@ -224,6 +254,21 @@ button:disabled{opacity:.45;cursor:not-allowed}
     {id:'dom7',label:'דומיננטי 7',intervals:[0,4,7,10]},
     {id:'maj7',label:'מז׳ור 7',intervals:[0,4,7,11]}
   ];
+  const SCALE_TYPES=[
+    {id:'major',label:'מז׳ור / Ionian',intervals:[0,2,4,5,7,9,11]},
+    {id:'natural_minor',label:'מינור טבעי',intervals:[0,2,3,5,7,8,10]},
+    {id:'harmonic_minor',label:'מינור הרמוני',intervals:[0,2,3,5,7,8,11]},
+    {id:'melodic_minor',label:'מינור מלודי',intervals:[0,2,3,5,7,9,11]},
+    {id:'major_pentatonic',label:'פנטטוני מז׳ור',intervals:[0,2,4,7,9]},
+    {id:'minor_pentatonic',label:'פנטטוני מינור',intervals:[0,3,5,7,10]},
+    {id:'blues',label:'בלוז',intervals:[0,3,5,6,7,10]},
+    {id:'dorian',label:'דוריאן',intervals:[0,2,3,5,7,9,10]},
+    {id:'phrygian',label:'פריגי',intervals:[0,1,3,5,7,8,10]},
+    {id:'lydian',label:'לידי',intervals:[0,2,4,6,7,9,11]},
+    {id:'mixolydian',label:'מיקסולידי',intervals:[0,2,4,5,7,9,10]},
+    {id:'locrian',label:'לוקריאן',intervals:[0,1,3,5,6,8,10]},
+    {id:'chromatic',label:'כרומטי · 12 תווים',intervals:[0,1,2,3,4,5,6,7,8,9,10,11]}
+  ];
   const INST_DEFAULTS={
     sine:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
     saw:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
@@ -300,6 +345,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
     $('activeStepLabel').textContent='עריכת צעד '+(activeStep+1);
     refreshCommand();
   }
+  function scaleDefinition(){return SCALE_TYPES.find(function(item){return item.id===$('scaleType').value;})||SCALE_TYPES[0];}
+  function scaleMidiNotes(){
+    var root=NOTES.indexOf($('scaleRoot').value);
+    var base=(Number($('scaleOctave').value)+1)*12+root;
+    return scaleDefinition().intervals.map(function(interval){var midi=base+interval;return {midi:midi,note:midiToNote(midi),hz:hzForMidi(midi)};});
+  }
+  function renderScale(){
+    if(!$('scaleNotes'))return;
+    var notes=scaleMidiNotes();
+    $('scaleNotes').innerHTML=notes.map(function(n,i){return '<span class="scale-note '+(i===0?'root-note':'')+'">'+esc(n.note)+'<br>'+n.hz.toFixed(2)+' Hz</span>';}).join('');
+    $('scaleStatus').textContent=$('scaleRoot').value+' '+scaleDefinition().label+' · '+notes.length+' תווים · אוקטבה '+$('scaleOctave').value;
+    updateKeyboardSelection();
+  }
   function renderExpected(){
     if(!$('expectedNotes'))return;
     var notes=chordNotes(steps[activeStep]||steps[0]);
@@ -320,7 +378,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
   function updateKeyboardSelection(){
     if(!$('pianoKeyboard'))return;
     var selected=new Set(chordNotes(steps[activeStep]||steps[0]).map(function(n){return n.note;}));
-    $('pianoKeyboard').querySelectorAll('[data-note]').forEach(function(btn){btn.classList.toggle('selected-key',selected.has(btn.dataset.note));});
+    var pitchClasses=new Set(scaleDefinition().intervals.map(function(interval){return (NOTES.indexOf($('scaleRoot').value)+interval)%12;}));
+    $('pianoKeyboard').querySelectorAll('[data-note]').forEach(function(btn){
+      var midi=Number(btn.dataset.midi);
+      btn.classList.toggle('selected-key',selected.has(btn.dataset.note));
+      btn.classList.toggle('scale-key',pitchClasses.has(((midi%12)+12)%12));
+    });
   }
   function ensureAudio(){
     var Ctx=window.AudioContext||window.webkitAudioContext;
@@ -426,6 +489,38 @@ button:disabled{opacity:.45;cursor:not-allowed}
     var c=Number.isFinite(data[best+1])?data[best+1]:-160;
     var denom=a-2*b+c,delta=Math.abs(denom)<1e-8?0:.5*(a-c)/denom;delta=Math.max(-1,Math.min(1,delta));
     return (best+delta)*audioContext.sampleRate/node.fftSize;
+  }
+  async function playScale(){
+    try{
+      await ensureAudio();
+      var notes=scaleMidiNotes(),dur=Math.max(.16,Math.min(.55,Number($('duration').value)));
+      var instrument=$('wave').value,start=audioContext.currentTime+.04;
+      notes.forEach(function(n,i){scheduleVoice(n.midi,start+i*dur,dur,instrument,.2,null);});
+      visualUntil=start+notes.length*dur+.3;
+      $('scaleStatus').textContent='▶ מנגן '+$('scaleRoot').value+' '+scaleDefinition().label+' · '+notes.length+' תווים';
+    }catch(e){$('scaleStatus').textContent='לא הצלחתי לנגן את הסולם: '+(e.message||'שגיאת שמע');}
+  }
+  function syncFullscreenButton(){
+    var app=document.querySelector('.app');
+    var active=!!(document.fullscreenElement===app||app.classList.contains('is-fullscreen'));
+    $('fullscreenToggle').textContent=active?'⤢ יציאה ממסך מלא':'⛶ מסך מלא';
+    $('fullscreenToggle').setAttribute('aria-pressed',active?'true':'false');
+  }
+  async function toggleFullscreen(){
+    var app=document.querySelector('.app');
+    var active=!!(document.fullscreenElement===app||app.classList.contains('is-fullscreen'));
+    if(active){
+      if(document.fullscreenElement===app&&document.exitFullscreen){try{await document.exitFullscreen();}catch(_){}}
+      app.classList.remove('is-fullscreen');document.body.classList.remove('fullscreen-active');
+      syncFullscreenButton();return;
+    }
+    try{
+      if(!app.requestFullscreen)throw new Error('FULLSCREEN_UNAVAILABLE');
+      await app.requestFullscreen();
+    }catch(_){
+      app.classList.add('is-fullscreen');document.body.classList.add('fullscreen-active');
+    }
+    syncFullscreenButton();
   }
   async function playLocally(){
     try{
@@ -639,6 +734,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
   window.addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
   window.addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
   window.addEventListener('blur',releaseAllHeldPresses);
+  $('scaleRoot').innerHTML=options(ROOTS,'C');
+  $('scaleType').innerHTML=options(SCALE_TYPES,'major',function(item){return item.label;});
+  ['scaleRoot','scaleType','scaleOctave'].forEach(function(id){$(id).addEventListener('change',renderScale);});
+  $('playScale').addEventListener('click',playScale);
+  $('highlightScale').addEventListener('click',function(){
+    renderScale();
+    $('keyboardPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    $('scaleStatus').textContent='הסולם מודגש בירוק על המקלדת.';
+  });
+  $('fullscreenToggle').addEventListener('click',toggleFullscreen);
+  document.addEventListener('fullscreenchange',syncFullscreenButton);
   $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
   $('wave').addEventListener('change',applyInstrumentDefaults);
   ['duration','attack','decay','sustain','release','cutoff','resonance'].forEach(function(id){$(id).addEventListener('input',refreshCommand);});
@@ -654,7 +760,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('stopTuner').addEventListener('click',stopTuner);
   $('back').addEventListener('click',function(){if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
   window.addEventListener('pagehide',stopTuner);
-  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();
+  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();renderScale();syncFullscreenButton();
   if(source){$('send').textContent='העתק לבוט 📋';status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');}
 })();
 </script>
