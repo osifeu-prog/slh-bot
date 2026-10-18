@@ -138,7 +138,12 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
             'id="startTuner"', 'id="stopTuner"', 'id="measuredHz"',
             ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz',
             'pointerdown', 'pointerup', 'lostpointercapture',
-            'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime'
+            'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime',
+            'id="fullscreenToggle"', 'requestFullscreen', 'is-fullscreen',
+            'id="scaleRoot"', 'id="scaleType"', 'id="scaleOctave"',
+            'id="scaleNotes"', 'id="playScale"', 'id="highlightScale"',
+            'SCALE_TYPES', 'harmonic_minor', 'major_pentatonic', 'mixolydian',
+            'function renderScale()', 'function playScale()'
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
