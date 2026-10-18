@@ -128,6 +128,28 @@ class SynthCommandSettingsTests(unittest.TestCase):
 
 
 class SynthUiDiagnosticsContractTests(unittest.TestCase):
+    def test_browser_and_held_instrument_pitch_models_match_server_renderer(self):
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        # Quick preview and pointer-held notes must use matching fundamentals/partials.
+        self.assertIn("if(instrument==='piano')parts=[{m:1,t:'sine',g:.66}", html)
+        self.assertIn("if(instrument==='piano')return [{m:1,t:'sine',g:.66}", html)
+        self.assertIn("else if(instrument==='moog')parts=[{m:1,t:'sawtooth',g:1}]", html)
+        self.assertIn("if(instrument==='moog')return [{m:1,t:'sawtooth',g:1}]", html)
+        self.assertIn("else if(instrument==='bass')parts=[{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}]", html)
+        self.assertIn("if(instrument==='bass')return [{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}]", html)
+        self.assertNotIn("m:1.005", html)
+        self.assertNotIn("m:.5,t:'sine'", html)
+        self.assertIn("var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25", html)
+        self.assertIn("getFloatFrequencyData(data)", html)
+        self.assertIn("fftSize=32768", html)
+
+    def test_mini_app_send_uses_bridge_when_available_and_copies_when_not(self):
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        self.assertIn("if(source==='inline')", html)
+        self.assertIn("tg&&tg.initData&&typeof tg.sendData==='function'", html)
+        self.assertIn("tg.sendData(JSON.stringify({cmd:cmd}))", html)
+        self.assertIn("שליחה ישירה אינה זמינה כאן", html)
+
     def test_ui_exposes_keyboard_presets_adsr_analysis_and_tuner(self):
         html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
         for marker in (
@@ -136,9 +158,7 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
             'id="cutoff"', 'id="resonance"', 'id="scopeCanvas"',
             'id="spectrumCanvas"', 'id="testReference"', 'id="tunerProfile"',
             'id="startTuner"', 'id="stopTuner"', 'id="measuredHz"',
-            ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz',
-            'pointerdown', 'pointerup', 'lostpointercapture',
-            'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime'
+            ';slh=', 'getUserMedia', 'detectPitch', 'A4 = 440 Hz', 'pointerdown', 'pointerup', 'lostpointercapture', 'getFloatFrequencyData(data)', 'fftSize=32768', 'cancelAndHoldAtTime'
         ):
             with self.subTest(marker=marker):
                 self.assertIn(marker, html)
