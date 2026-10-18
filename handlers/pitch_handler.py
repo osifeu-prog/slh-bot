@@ -71,6 +71,7 @@ PITCH_SLIDES = (
 SIMULATION_DEMO = (
     "🧪 הדגמת סימולציה — נתונים סינתטיים בלבד\n\n"
     "תרחיש: SIM-DEMO-001\n"
+    "יתרת פתיחה: 1,000 יחידות וירטואליות\n"
     "פעולה: רכישה מדומה בשווי 100 יחידות וירטואליות\n\n"
     "1. Intent: נוצרה כוונת פעולה מדומה\n"
     "2. Quote: הצעת מחיר לדוגמה — 100 יחידות\n"
@@ -183,7 +184,11 @@ def _closed_keyboard():
     return markup
 
 
-def register(bot):
+def register(bot, context=None):
+    # Pitch mode belongs to the primary SLH Spark bot, not to child bots.
+    if context and context.get("bot_name") != "Me_ad_main":
+        return
+
     @bot.message_handler(commands=["pitch"])
     def pitch_command(message):
         bot.send_message(
