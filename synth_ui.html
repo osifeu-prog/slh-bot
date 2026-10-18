@@ -463,10 +463,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
   function toggleKeyInChord(note){
     var step=steps[activeStep],current=Array.isArray(step.customNotes)?step.customNotes.slice():chordNotes(step).map(function(n){return n.note;});
     var index=current.indexOf(note);
-    if(index>=0)current.splice(index,1);
-    else if(current.length>=8){status('אפשר להכניס עד 8 תווים בכל צעד.');return;}
+    if(index>=0){
+      if(current.length===1){status('לכל צעד חייב להישאר לפחות תו אחד.');return;}
+      current.splice(index,1);
+    }else if(current.length>=8){status('אפשר להכניס עד 8 תווים בכל צעד.');return;}
     else current.push(note);
-    if(current.length)step.customNotes=current;else delete step.customNotes;
+    step.customNotes=current;
     renderSteps();playKey(noteToMidi(note));
   }
   function renderReferenceOptions(){
