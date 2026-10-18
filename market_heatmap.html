@@ -95,6 +95,7 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
         '<div class="tile-name">'+esc(tile.name)+'</div>'+
         '<div class="price">'+esc(tile.currency||'USD')+' '+fmt(tile.price,2)+'</div>'+
         '<div class="move">'+(number(tile.change_percent)>0?'+':'')+fmt(tile.change_percent,2)+'%</div>'+
+        '<div class="sub">נתון ספק: '+esc(tile.provider_time||'זמן לא נמסר')+'</div>'+
         '<div class="sub">'+esc(tags(number(tile.change_percent)||0))+'</div>'+
         '<div class="tile-actions"><button type="button" class="watch '+(isWatched?'active':'')+'" data-watch="'+esc(tile.symbol)+'">'+(isWatched?'★ במעקב':'☆ למעקב')+'</button><button type="button" data-paper="'+esc(tile.symbol)+'">ניסוי</button></div>';
       $('tiles').appendChild(article);
