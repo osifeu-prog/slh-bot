@@ -3,6 +3,7 @@ import os
 import re
 import tempfile
 
+from telebot import types
 from handlers import synth_engine as se
 
 WAVES = ("sine", "saw", "square", "tri")
@@ -14,7 +15,47 @@ USAGE = (
 )
 
 
+def _synth_ui_url(source=None):
+    base = (
+        os.getenv("SLH_PUBLIC_BASE_URL")
+        or os.getenv("PUBLIC_BASE_URL")
+        or "https://slh-cloud-bot-production.up.railway.app"
+    ).strip().rstrip("/")
+    url = base + "/synth-ui"
+    return url + ("?source=" + source if source else "")
+
+
+def _synth_inline_button():
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton(
+        "🎹 פתח ממשק סינתיסייזר",
+        web_app=types.WebAppInfo(url=_synth_ui_url("inline")),
+    ))
+    return markup
+
+
 def register(bot):
+    @bot.message_handler(commands=["synth_ui", "synthui"])
+    def synth_ui(message):
+        chat_type = str(getattr(getattr(message, "chat", None), "type", "")).lower()
+        if chat_type != "private":
+            bot.reply_to(message, "פתח את הממשק בשיחה הפרטית עם הבוט.")
+            return
+        markup = types.ReplyKeyboardMarkup(
+            resize_keyboard=True,
+            one_time_keyboard=True,
+            row_width=1,
+        )
+        markup.add(types.KeyboardButton(
+            "🎹 פתח ממשק סינתיסייזר",
+            web_app=types.WebAppInfo(url=_synth_ui_url()),
+        ))
+        bot.send_message(
+            message.chat.id,
+            "🎹 בנה אקורדים, נגן תצוגה מקדימה ושלח את הרצף לבוט לקבלת קובץ שמע.",
+            reply_markup=markup,
+        )
+
     @bot.message_handler(commands=["synth"])
     def synth(message):
         parts = (message.text or "").split(None, 3)
@@ -35,7 +76,8 @@ def register(bot):
             if not valid:
                 raise ValueError
         except (ValueError, IndexError):
-            bot.reply_to(message, USAGE)
+            markup = _synth_inline_button() if str(getattr(getattr(message, "chat", None), "type", "")).lower() == "private" else None
+            bot.reply_to(message, USAGE, reply_markup=markup)
             return
 
         output_path = None
