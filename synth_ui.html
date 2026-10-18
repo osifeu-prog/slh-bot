@@ -451,11 +451,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
   }
   function stopPlayback(){
     var now=audioContext?audioContext.currentTime:0;
+    var heldCount=heldPresses.size;
     releaseAllHeldPresses();
     if(!audioContext||!activeVoices.size){
       visualUntil=now+.08;
       startVisuals();
-      status("אין רצף צליל פעיל לעצירה.");
+      status(heldCount?"שוחררו הקלידים המוחזקים.":"אין צליל פעיל לעצירה.");
       return;
     }
     var stopped=activeVoices.size;
@@ -565,6 +566,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
       var selected=$('referenceNote').value,midi=noteToMidi(selected);if(midi===null)throw new Error('תו לא תקין');
       await ensureAudio();var start=audioContext.currentTime+.025,dur=1.35,osc=audioContext.createOscillator(),gain=audioContext.createGain();
       osc.type='sine';osc.frequency.setValueAtTime(hzForMidi(midi),start);gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(.20,start+.02);gain.gain.setValueAtTime(.20,start+1.1);gain.gain.linearRampToValueAtTime(.0001,start+dur);osc.connect(gain);gain.connect(analyser);osc.start(start);osc.stop(start+dur+.02);
+      var referenceRecord={gain:gain,filter:null,oscillators:[osc],remaining:1};
+      activeVoices.add(referenceRecord);
+      osc.onended=function(){activeVoices.delete(referenceRecord);try{osc.disconnect();gain.disconnect();}catch(_){}};
       measureExpected=hzForMidi(midi);visualUntil=start+dur+.2;startVisuals();status('בדיקת ייחוס: '+selected+' · '+measureExpected.toFixed(2)+' Hz. סטיית השיא תוצג בזמן הנגינה.');
     }catch(e){status('בדיקת הייחוס נכשלה: '+(e.message||'שגיאה'));}
   }
@@ -709,7 +713,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('startTuner').addEventListener('click',startTuner);
   $('stopTuner').addEventListener('click',stopTuner);
   $('back').addEventListener('click',function(){if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
-  window.addEventListener('pagehide',stopTuner);
+  window.addEventListener('pagehide',function(){stopTuner();stopPlayback();});
   renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();
   if(source){$('send').textContent='העתק לבוט 📋';status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');}
 })();
