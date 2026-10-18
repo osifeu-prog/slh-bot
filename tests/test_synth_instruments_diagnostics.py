@@ -144,6 +144,19 @@ class SynthUiDiagnosticsContractTests(unittest.TestCase):
                 self.assertIn(marker, html)
 
 
+    def test_preview_and_held_instrument_pitch_models_are_aligned(self):
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        self.assertIn("if(instrument==='piano')parts=[{m:1,t:'sine',g:.66}", html)
+        self.assertIn("if(instrument==='piano')return [{m:1,t:'sine',g:.66}", html)
+        self.assertIn("else if(instrument==='moog')parts=[{m:1,t:'sawtooth',g:1}]", html)
+        self.assertIn("if(instrument==='moog')return [{m:1,t:'sawtooth',g:1}]", html)
+        self.assertIn("else if(instrument==='bass')parts=[{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}]", html)
+        self.assertIn("if(instrument==='bass')return [{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}]", html)
+        self.assertNotIn("m:1.005", html)
+        self.assertNotIn("m:.5,t:'sine'", html)
+        self.assertIn("var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25", html)
+        self.assertIn("fftSize=32768", html)
+
     def test_inline_javascript_parses_when_node_is_available(self):
         import shutil
         import subprocess
