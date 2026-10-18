@@ -264,6 +264,14 @@ def register(bot, context=None):
             return
 
         if data == "slh_pitch:academy":
+            # Academy can include user-specific course progress; never expose it in group chats.
+            if getattr(message.chat, "type", None) != "private":
+                bot.answer_callback_query(
+                    call.id,
+                    "מטעמי פרטיות, פתח את הבוט בשיחה פרטית כדי לפתוח את Academy.",
+                    show_alert=False,
+                )
+                return
             bot.answer_callback_query(call.id)
             try:
                 from handlers.academy_menu_handler import _send_academy
