@@ -438,6 +438,70 @@ button:disabled{opacity:.45;cursor:not-allowed}
     try{await ensureAudio();var dur=Math.max(.45,Number($('duration').value));var start=audioContext.currentTime+.015;measureExpected=hzForMidi(midi);scheduleVoice(midi,start,dur,$('wave').value,.22,measureExpected);$('keyboardStatus').textContent=midiToNote(midi)+' · '+hzForMidi(midi).toFixed(2)+' Hz';}
     catch(e){$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
   }
+  function heldInstrumentParts(instrument){
+    if(instrument==='piano')return [{m:1,t:'triangle',g:.64},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.09},{m:6.02,t:'sine',g:.04}];
+    if(instrument==='moog')return [{m:1,t:'sawtooth',g:.8},{m:1.005,t:'sawtooth',g:.2}];
+    if(instrument==='bass')return [{m:1,t:'sawtooth',g:.67},{m:.5,t:'sine',g:.33}];
+    if(instrument==='organ')return [{m:1,t:'sine',g:.65},{m:2,t:'sine',g:.23},{m:3,t:'sine',g:.12}];
+    if(instrument==='pluck')return [{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
+    return [{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
+  }
+  async function startHeldVoice(token){
+    if(token.starting||token.voice||token.released)return;
+    token.starting=true;
+    try{
+      await ensureAudio();token.starting=false;
+      if(token.released)return;
+      var ctx=audioContext,cfg=settingsFromUi(),instrument=$('wave').value,start=ctx.currentTime+.005,peak=.22;
+      var filter=ctx.createBiquadFilter(),envNode=ctx.createGain();
+      filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.45),start);filter.Q.setValueAtTime(cfg.resonance,start);
+      envNode.connect(filter);filter.connect(analyser);
+      var attack=Math.max(.005,cfg.attack),decay=Math.max(.005,cfg.decay),sustain=Math.max(.0001,peak*cfg.sustain),parts=heldInstrumentParts(instrument),oscs=[];
+      envNode.gain.setValueAtTime(.0001,start);
+      envNode.gain.linearRampToValueAtTime(peak,start+attack);
+      envNode.gain.linearRampToValueAtTime(sustain,start+attack+decay);
+      parts.forEach(function(part){
+        var osc=ctx.createOscillator(),amp=ctx.createGain();
+        osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(token.midi)*part.m,start);
+        if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
+        amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);osc.start(start);oscs.push({osc:osc,amp:amp});
+      });
+      token.voice={ctx:ctx,cfg:cfg,envNode:envNode,filter:filter,oscs:oscs,startedAt:start,peak:peak,attack:attack,decay:decay,sustain:sustain,releasing:false};
+      measureExpected=hzForMidi(token.midi);visualUntil=start+.3;startVisuals();
+      $('keyboardStatus').textContent=midiToNote(token.midi)+' · '+measureExpected.toFixed(2)+' Hz · החזק לנגינה רציפה';
+      if(token.released)releaseHeldVoice(token);
+    }catch(e){token.starting=false;$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
+  }
+  function releaseHeldVoice(token){
+    var voice=token.voice;if(!voice||voice.releasing)return;voice.releasing=true;
+    var now=voice.ctx.currentTime,end=now+Math.max(.025,voice.cfg.release),gain=voice.envNode.gain,held=false;
+    try{if(typeof gain.cancelAndHoldAtTime==='function'){gain.cancelAndHoldAtTime(now);held=true;}}catch(_){}
+    if(!held){
+      var elapsed=Math.max(0,now-voice.startedAt),value;
+      if(elapsed<voice.attack)value=.0001+(voice.peak-.0001)*(elapsed/voice.attack);
+      else if(elapsed<voice.attack+voice.decay){var ratio=(elapsed-voice.attack)/voice.decay;value=voice.peak+(voice.sustain-voice.peak)*ratio;}
+      else value=voice.sustain;
+      try{gain.cancelScheduledValues(now);gain.setValueAtTime(Math.max(.0001,value),now);}catch(_){}
+    }
+    try{gain.linearRampToValueAtTime(.0001,end);}catch(_){}
+    var left=voice.oscs.length;
+    voice.oscs.forEach(function(item){
+      item.osc.onended=function(){
+        try{item.osc.disconnect();item.amp.disconnect();}catch(_){}
+        left--;
+        if(left<=0){try{voice.envNode.disconnect();voice.filter.disconnect();}catch(_){}}
+      };
+      try{item.osc.stop(end+.04);}catch(_){}
+    });
+    visualUntil=Math.max(visualUntil,end+.25);startVisuals();
+  }
+  function endHeldPress(pointerId){
+    var token=heldPresses.get(pointerId);if(!token)return;
+    heldPresses.delete(pointerId);token.released=true;
+    if(token.key)token.key.classList.remove('is-held');
+    releaseHeldVoice(token);
+  }
+  function releaseAllHeldPresses(){Array.from(heldPresses.keys()).forEach(endHeldPress);}
   async function testReference(){
     try{
       var selected=$('referenceNote').value,midi=noteToMidi(selected);if(midi===null)throw new Error('תו לא תקין');
@@ -474,7 +538,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     }else if(current.length>=8){status('אפשר להכניס עד 8 תווים בכל צעד.');return;}
     else current.push(note);
     step.customNotes=current;
-    renderSteps();playKey(noteToMidi(note));
+    renderSteps();
   }
   function renderReferenceOptions(){
     var items=[];for(var midi=48;midi<=83;midi++)items.push(midiToNote(midi));
