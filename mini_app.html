@@ -772,6 +772,7 @@ function __slhRender(id){
   window.scrollTo(0,0);
   __slhShowing=id;
   __slhSetBack();
+  if(id==='wallet'&&typeof loadBscAssets==='function')loadBscAssets();
   if(id==='exchange')loadExchange();
   if(id==='ai')loadAiReadiness();
   if(id==='market'){loadStarsStore();loadCardStore()}
@@ -1018,6 +1019,9 @@ async function cancelSecondaryDistribution(){
 async function loadBscAssets(){
   const status=$("bscLiveTruthStatus"), grid=$("bscLiveTruthGrid");
   if(!initData){if(status)status.textContent='פתח את ה-Mini App מתוך Telegram';return}
+  // Coalesce overlapping startup/render refreshes so only one RPC snapshot can update the UI.
+  if(window.__slhBscAssetsLoading)return;
+  window.__slhBscAssetsLoading=true;
   try{
     const r=await fetch('/api/v1/wallet/bsc-assets',{headers,cache:'no-store'});
     const d=await r.json().catch(()=>({}));
@@ -1039,6 +1043,8 @@ async function loadBscAssets(){
   }catch(e){
     if(status)status.textContent='❌ לא ניתן לקרוא יתרות BSC כרגע: '+(e.message||e);
     if(grid)grid.innerHTML='';
+  }finally{
+    window.__slhBscAssetsLoading=false;
   }
 }
 function exchangeStatusDetail(detail){

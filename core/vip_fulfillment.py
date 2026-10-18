@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -109,8 +110,20 @@ def apply_vip_benefits(
         for item_id, item in sorted(load_items().items()):
             if not isinstance(item, dict):
                 continue
+            # VIP includes every paid catalog course, not free courses or
+            # unrelated item types that happen to carry a course grant field.
+            if item.get("type") != "course":
+                continue
+            price_stars = item.get("price_stars")
+            if (
+                isinstance(price_stars, bool)
+                or not isinstance(price_stars, (int, float))
+                or not math.isfinite(price_stars)
+                or price_stars <= 0
+            ):
+                continue
             course_id = (item.get("grant") or {}).get("course")
-            if not course_id:
+            if not isinstance(course_id, str) or not course_id.strip():
                 continue
             course_result = apply_grant(
                 uid,
