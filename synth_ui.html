@@ -614,7 +614,26 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(remove){if(steps.length<=1)return;steps.splice(Number(remove.dataset.remove),1);if(activeStep>=steps.length)activeStep=steps.length-1;renderSteps();return;}
     var card=event.target.closest('.step');if(card){var nextStep=Number(card.dataset.step);if(nextStep!==activeStep){activeStep=nextStep;renderSteps();}}
   });
-  $('pianoKeyboard').addEventListener('click',function(event){var key=event.target.closest('[data-note]');if(key)toggleKeyInChord(key.dataset.note);});
+  $('pianoKeyboard').addEventListener('pointerdown',function(event){
+    var key=event.target.closest('[data-note]');if(!key)return;
+    if(event.pointerType==='mouse'&&event.button!==0)return;
+    if(heldPresses.has(event.pointerId))return;
+    event.preventDefault();
+    var token={pointerId:event.pointerId,note:key.dataset.note,midi:Number(key.dataset.midi),key:key,released:false,starting:false,voice:null};
+    heldPresses.set(event.pointerId,token);key.classList.add('is-held');
+    try{key.setPointerCapture(event.pointerId);}catch(_){}
+    toggleKeyInChord(token.note);startHeldVoice(token);
+  });
+  $('pianoKeyboard').addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('lostpointercapture',function(event){endHeldPress(event.pointerId);});
+  // Preserve keyboard/screen-reader access: a keyboard-activated click has detail=0.
+  $('pianoKeyboard').addEventListener('click',function(event){
+    if(event.detail!==0)return;
+    var key=event.target.closest('[data-note]');if(!key)return;
+    toggleKeyInChord(key.dataset.note);playKey(Number(key.dataset.midi));
+  });
+  window.addEventListener('blur',releaseAllHeldPresses);
   $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
   $('wave').addEventListener('change',applyInstrumentDefaults);
   ['duration','attack','decay','sustain','release','cutoff','resonance'].forEach(function(id){$(id).addEventListener('input',refreshCommand);});
