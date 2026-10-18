@@ -163,13 +163,20 @@ def register_learning_path(bot):
         except:
             bot.reply_to(m, "Invalid ID.")
             return
-        db = state_manager.load_db()
-        submissions = db.get("agent_submissions", [])
-        if sub_id < 0 or sub_id >= len(submissions):
+        def mutate(db):
+            submissions = db.get("agent_submissions", [])
+            if not isinstance(submissions, list):
+                return None
+            if sub_id < 0 or sub_id >= len(submissions):
+                return None
+            return submissions.pop(sub_id)
+
+        # Atomically read and remove from the current DB snapshot so this
+        # metadata operation cannot overwrite a concurrent wallet mutation.
+        sub = state_manager.atomic_update(mutate)
+        if not isinstance(sub, dict):
             bot.reply_to(m, "Submission not found.")
             return
-        sub = submissions.pop(sub_id)
-        state_manager.save_db(db)
         bot.reply_to(m, f"❌ Agent '{sub['agent_name']}' rejected.")
         bot.send_message(sub["uid"], f"❌ הסוכן '{sub['agent_name']}' נדחה. נסה שוב עם שיפור.")
 
@@ -198,8 +205,10 @@ def register_learning_path(bot):
             return
         new_name = parts[1].strip()
         uid = str(m.from_user.id)
-        db = state_manager.load_db()
-        user = db.setdefault("users", {}).setdefault(uid, {"name": "אוסיף"})
-        user["name"] = new_name
-        state_manager.save_db(db)
+        def mutate(db):
+            user = db.setdefault("users", {}).setdefault(uid, {"name": "אוסיף"})
+            user["name"] = new_name
+
+        # Keep profile changes inside the canonical locked transaction.
+        state_manager.atomic_update(mutate)
         bot.reply_to(m, f"✅ Your name is now {new_name}.")
