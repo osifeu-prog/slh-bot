@@ -18,6 +18,7 @@ def test_wallet_sync_disabled_by_default(monkeypatch):
     "broker,user,password,use_tls,enabled,allowlist",
     [
         ("broker.hivemq.com", "u", "p", True, "1", "broker.hivemq.com"),
+        ("test.mosquitto.org", "u", "p", True, "1", "test.mosquitto.org"),
         ("public.example.com", "u", "p", True, "1", ""),
         ("public.example.com", "u", "p", True, "1", "other.example.com"),
         ("private.example.invalid", "", "p", True, "1", "private.example.invalid"),
