@@ -256,8 +256,10 @@ def configure_default_mini_app_menu(bot):
         log("[TELEGRAM] Default Mini App menu button configured")
         try:
             english = [
+                ("pitch", "SLH Spark pitch deck"),
                 ("start", "Get started"),
                 ("help", "Help & commands"),
+                ("select_all", "Copy-friendly command guide"),
                 ("academy", "Academy & learning"),
                 ("courses", "Browse courses"),
                 ("ask", "Ask the AI assistant"),
@@ -268,8 +270,10 @@ def configure_default_mini_app_menu(bot):
                 ("media", "Brand images & sharing"),
             ]
             hebrew = [
+                ("pitch", "מצגת SLH Spark"),
                 ("start", "כניסה והתחלה"),
                 ("help", "מדריך ופקודות"),
+                ("select_all", "ריכוז תוכן להעתקה"),
                 ("academy", "אקדמיה ולמידה"),
                 ("courses", "רשימת קורסים"),
                 ("ask", "שאלו את עוזר ה-AI"),

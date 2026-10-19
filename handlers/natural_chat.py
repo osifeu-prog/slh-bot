@@ -15,7 +15,19 @@ def register(bot, context=None):
         if getattr(msg.from_user, "is_bot", False):
             return
 
-        user_text = normalize_keyboard_text(msg.text.strip())
+        raw_text = str(getattr(msg, "text", "") or "")
+        # pyTelegramBotAPI recognizes commands only when "/" is the first
+        # character. If whitespace prefixes a slash command, do not route it
+        # to the LLM as natural language or return a misleading AI answer.
+        if raw_text[:1].isspace() and raw_text.lstrip().startswith("/"):
+            bot.send_message(
+                msg.chat.id,
+                "⚠️ נראה שהפקודה מתחילה ברווחים. Telegram מזהה פקודות רק כשה־/ "
+                "הוא התו הראשון בהודעה. שלח שוב את הפקודה בלי רווחים בתחילתה."
+            )
+            return
+
+        user_text = normalize_keyboard_text(raw_text.strip())
 
         if not user_text:
             return

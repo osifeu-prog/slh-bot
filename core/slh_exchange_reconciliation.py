@@ -8,11 +8,58 @@ from __future__ import annotations
 from collections import Counter
 import json
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, date
 import os
 import time
 
 import state_manager
 
+
+# These findings represent unresolved financial dispositions. They remain
+# launch blockers even if the underlying order has been archived or classified
+# as a historical test seed; archive metadata is not accounting authorization.
+RELEASE_GATE_BLOCKER_CODES = frozenset({
+    "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
+    "RESERVE_DELTA_NOT_ZERO",
+    "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
+    "ORPHAN_RESERVE_CORRECTION",
+    "INVALID_RESERVE_LEDGER_AMOUNT",
+    "LEDGER_EVENT_ID_MISSING",
+    "DUPLICATE_LEDGER_EVENT_ID",
+    "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW",
+    "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
+    "ARCHIVED_TRADE_ID_INVALID",
+    "ARCHIVED_TRADE_ORDER_LINK_INVALID",
+    "ARCHIVED_TRADE_PARTY_MISMATCH",
+    "ARCHIVED_TRADE_VALUE_INVALID",
+    "ARCHIVED_TRADE_PRICE_OUTSIDE_LIMITS",
+    "ARCHIVED_TRADE_PRICE_EVIDENCE_INVALID",
+    "ARCHIVED_TRADE_ARCHIVE_UNREADABLE",
+})
+
+# Event IDs became mandatory on 2026-09-28. Earlier ordinary reserve/release
+# rows cannot be retroactively stamped; their accounting still must reconcile.
+EVENT_ID_ERA_START = date.fromisoformat("2026-09-28")
+
+
+def _predates_event_id_requirement(event):
+    """Return True only for a valid timestamp strictly before event-ID policy.
+
+    Missing or malformed timestamps fail closed. This suppresses only a
+    metadata-only finding for a known order's ordinary reserve/release row;
+    it does not suppress reserve deltas, orphan corrections, or other findings.
+    """
+    if not isinstance(event, dict):
+        return False
+    raw = str(event.get("time") or "").strip()
+    if not raw:
+        return False
+    try:
+        normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+        stamped = datetime.fromisoformat(normalized)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return stamped.date() < EVENT_ID_ERA_START
 
 def _records(value):
     if isinstance(value, dict):
@@ -71,6 +118,95 @@ def audit_db(db):
     def _uid(order):
         return str(order.get("uid") or order.get("user_id") or "")
 
+    # Archived trades remain part of financial history. Archival metadata must
+    # not make an invalid trade/order relationship disappear from release checks.
+    seen_archived_trade_ids = set()
+    archived_trade_source = db.get("exchange_trade_archive", [])
+    if "exchange_trade_archive" in db:
+        malformed_archive = (
+            not isinstance(archived_trade_source, (dict, list))
+            or (
+                isinstance(archived_trade_source, list)
+                and any(not isinstance(item, dict) for item in archived_trade_source)
+            )
+            or (
+                isinstance(archived_trade_source, dict)
+                and any(not isinstance(item, dict) for item in archived_trade_source.values())
+            )
+        )
+        if malformed_archive:
+            findings.append({"code": "ARCHIVED_TRADE_ARCHIVE_UNREADABLE"})
+    for key, trade in _records(archived_trade_source):
+        raw_tid = trade.get("trade_id") or trade.get("id")
+        tid = str(raw_tid or "").strip()
+        buy_id = str(trade.get("buy_order_id") or "").strip()
+        sell_id = str(trade.get("sell_order_id") or "").strip()
+        linked_order_ids = sorted({oid for oid in (buy_id, sell_id) if oid})
+
+        if not tid or tid in seen_archived_trade_ids:
+            findings.append({
+                "code": "ARCHIVED_TRADE_ID_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+        if tid:
+            seen_archived_trade_ids.add(tid)
+
+        buy_order = orders.get(buy_id) if buy_id else None
+        sell_order = orders.get(sell_id) if sell_id else None
+        buy_ok = isinstance(buy_order, dict) and str(buy_order.get("side") or "").lower() == "buy"
+        sell_ok = isinstance(sell_order, dict) and str(sell_order.get("side") or "").lower() == "sell"
+        if not buy_id or not sell_id or buy_id == sell_id or not buy_ok or not sell_ok:
+            findings.append({
+                "code": "ARCHIVED_TRADE_ORDER_LINK_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+            continue
+
+        buyer_uid = str(trade.get("buyer_uid") or "")
+        seller_uid = str(trade.get("seller_uid") or "")
+        if (
+            not buyer_uid or not seller_uid or buyer_uid == seller_uid
+            or _uid(buy_order) != buyer_uid
+            or _uid(sell_order) != seller_uid
+        ):
+            findings.append({
+                "code": "ARCHIVED_TRADE_PARTY_MISMATCH",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+
+        amount = _amount(trade.get("slh_amount"))
+        price = _amount(trade.get("price"))
+        value = _amount(trade.get("credits_value"))
+        if (
+            amount is None or amount <= 0
+            or price is None or price <= 0
+            or value is None or value <= 0
+            or value != amount * price
+        ):
+            findings.append({
+                "code": "ARCHIVED_TRADE_VALUE_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+
+        bid = _amount(buy_order.get("limit_price"))
+        ask = _amount(sell_order.get("limit_price"))
+        if bid is None or ask is None or price is None:
+            findings.append({
+                "code": "ARCHIVED_TRADE_PRICE_EVIDENCE_INVALID",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+        elif price > bid or price < ask:
+            findings.append({
+                "code": "ARCHIVED_TRADE_PRICE_OUTSIDE_LIMITS",
+                "trade_id": tid or str(key),
+                "order_ids": linked_order_ids,
+            })
+
     # Cache expected current reserves per account. Values are never emitted in
     # findings; only consistency booleans are added for safe operator triage.
     open_sell_reserve_by_uid = {}
@@ -113,7 +249,15 @@ def audit_db(db):
         )
         try:
             from core.exchange_housekeeping import is_test_seed
-            test_seed = bool(is_test_seed(order))
+            # Archive metadata is assigned by the archiver itself. In particular,
+            # archive_reason="test_seed_retirement" must not prove that the
+            # pre-archive record was a seed; exclude bookkeeping fields and
+            # require independent seed evidence in the preserved order payload.
+            seed_evidence_order = {
+                key: value for key, value in order.items()
+                if key not in {"archive_reason", "archived_at", "archived_by"}
+            }
+            test_seed = bool(is_test_seed(seed_evidence_order))
         except Exception:
             # Classification is diagnostic only; never allow it to affect audit status.
             test_seed = None
@@ -246,20 +390,34 @@ def audit_db(db):
                 "note": "Shared event IDs are not de-duplicated across accounting domains.",
             })
 
-    # Corrections remain unresolved evidence. Missing IDs are also findings for
-    # exchange reserve/release/correction rows; they are never silently ignored.
+    # Corrections remain unresolved evidence. Missing event IDs are findings
+    # for post-policy rows, unknown-order rows, corrections and undated/malformed
+    # timestamps. Known ordinary reserve/release rows predating the policy are
+    # exempt from the metadata-only finding, but accounting findings still apply.
     for ledger_name, source in sources:
         for _, event in source:
             reserve, release, correction = _event_groups(event)
             oid = _order_id(event)
             related = _is_exchange_audit_event(event)
             if related and not _event_id(event):
-                findings.append({
-                    "code": "LEDGER_EVENT_ID_MISSING",
-                    "ledger": ledger_name,
-                    "order_id": oid or None,
-                    "group": "correction" if correction else "reserve" if reserve else "normal_release",
-                })
+                group = "correction" if correction else "reserve" if reserve else "normal_release"
+                # The policy did not require event_id before 2026-09-28.
+                # Exempt only ordinary reserve/release metadata for a known order
+                # with a valid pre-cutoff timestamp. Corrections, unknown orders,
+                # missing timestamps and malformed timestamps still fail closed.
+                legacy_metadata_only = (
+                    group in {"reserve", "normal_release"}
+                    and bool(oid)
+                    and oid in known_order_ids
+                    and _predates_event_id_requirement(event)
+                )
+                if not legacy_metadata_only:
+                    findings.append({
+                        "code": "LEDGER_EVENT_ID_MISSING",
+                        "ledger": ledger_name,
+                        "order_id": oid or None,
+                        "group": group,
+                    })
             if correction and related and oid and oid not in known_order_ids:
                 findings.append({
                     "code": "ORPHAN_RESERVE_CORRECTION",
@@ -426,7 +584,11 @@ def audit_db(db):
             and str(order.get("status") or "").lower() in terminal_statuses
             and context.get("order_remaining_is_zero") is True
             and context.get("order_reserved_slh_is_zero") is True
-            and context.get("wallet_reserved_slh_is_zero") is True
+            # Other open sell orders may legitimately reserve SLH in this wallet.
+            # Prove that this terminal order released its own reserve and that
+            # the wallet total exactly matches the independent open-order book.
+            # Requiring the whole wallet reserve to be zero confuses unrelated
+            # live reservations with a terminal-order reconciliation failure.
             and context.get("wallet_reserve_matches_open_orders") is True
         )
 
@@ -527,10 +689,30 @@ def audit_db(db):
             item["operational_classification"] = "BLOCKING"
             blocking_findings.append(item)
 
+    # Fail closed: an allowlist of blocker codes can silently downgrade a
+    # newly introduced or misspelled finding. Every finding blocks release
+    # unless a narrowly-scoped, explicitly verified historical exception above
+    # has already classified it as non-blocking.
+    release_blocking_findings = [
+        item for item in findings
+        if item.get("operational_classification") == "BLOCKING"
+        or str(item.get("code") or "") in RELEASE_GATE_BLOCKER_CODES
+    ]
+    if checked == 0:
+        # No matched reserve history is not evidence of a clean release.
+        release_blocking_findings.append({
+            "code": "RESERVE_HISTORY_NOT_PROVEN",
+            "note": "The audit could not match any cancelled sell reserve history.",
+        })
+    release_readiness_status = "BLOCKED" if release_blocking_findings else "PASS"
+
     status = "FAIL" if any(
         item.get("code") != "NO_CANCELLED_SELL_ORDERS_WITH_RESERVE_FOUND"
         for item in findings
     ) else ("UNKNOWN" if checked == 0 else "PASS")
+    # Operational reserve consistency and financial-release permission are
+    # separate decisions. Archived seed state can be operationally retired yet
+    # still require accounting review before public trading is enabled.
     operational_status = (
         "UNKNOWN" if checked == 0
         else "BLOCKED" if blocking_findings
@@ -540,6 +722,9 @@ def audit_db(db):
     return {
         "status": status,
         "operational_status": operational_status,
+        "release_readiness_status": release_readiness_status,
+        "release_blocking_finding_count": len(release_blocking_findings),
+        "release_blocking_findings": release_blocking_findings,
         "read_only": True,
         "checked_cancelled_sell_orders": checked,
         "finding_count": len(findings),
@@ -567,6 +752,7 @@ def _safe_log_finding(item, index):
         "ledgers",
         "order_id",
         "order_ids",
+        "trade_id",
         "order_status",
         "order_remaining_is_zero",
         "order_reserved_slh_is_zero",
@@ -638,6 +824,8 @@ def run_periodic(log, interval_seconds=None):
                 "[SLH_EXCHANGE_RECONCILIATION] "
                 f"status={report['status']} "
                 f"operational_status={report.get('operational_status', 'UNKNOWN')} "
+                f"release_readiness_status={report.get('release_readiness_status', 'UNKNOWN')} "
+                f"release_blocking_finding_count={report.get('release_blocking_finding_count', 0)} "
                 f"blocking_finding_count={report.get('blocking_finding_count', len(findings))} "
                 f"historical_finding_count={report.get('historical_finding_count', 0)} "
                 f"checked_cancelled_sell_orders={report['checked_cancelled_sell_orders']} "

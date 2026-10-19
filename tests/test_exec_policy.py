@@ -1,13 +1,17 @@
+import os
 import unittest
 
-from core.exec_policy import is_audit_command, is_dangerous, redact_secrets
+from core.exec_policy import _audit_path_allowed, is_audit_command, is_dangerous, redact_secrets
 
 
 class ExecAuditBoundaryTests(unittest.TestCase):
     def test_allowed_source_reads(self):
         self.assertTrue(is_audit_command("cat core/authority.py"))
-        self.assertTrue(is_audit_command("grep -R release readiness core/"))
+        self.assertTrue(is_audit_command("grep -r release core/"))
+        self.assertFalse(is_audit_command("grep -R release core/"))
         self.assertTrue(is_audit_command("find handlers/ -type f"))
+        self.assertTrue(is_audit_command("sed -n '20,60p' core/exec_policy.py"))
+        self.assertTrue(is_audit_command("head -n 30 README.md"))
 
     def test_direct_credits_mutations_are_blocked(self):
         commands = (
@@ -37,7 +41,17 @@ class ExecAuditBoundaryTests(unittest.TestCase):
             "find state/ -type f",
             "cat .env",
             "cat .env.example",
+            "cat core/.envrc",
+            "cat tests/.env-production",
+            "grep TOKEN core/.envrc",
             "grep -R secret .git/",
+            "grep TOKEN .env",
+            "grep TOKEN .env.example",
+            "cat core/../.env",
+            "awk 'BEGIN {system(\"id\")}'",
+            "find handlers/ -exec id \\;",
+            "find handlers/ -exec id +",
+            "sed -n '1e id' core/exec_policy.py",
         )
         for command in commands:
             self.assertFalse(is_audit_command(command), command)
@@ -46,9 +60,22 @@ class ExecAuditBoundaryTests(unittest.TestCase):
         self.assertFalse(is_audit_command("grep -R token ."))
         self.assertFalse(is_audit_command("find . -type f"))
 
+    def test_symlinked_audit_paths_are_blocked(self):
+        link = os.path.join("core", ".audit_symlink_regression")
+        try:
+            os.symlink("../state", link)
+            self.assertFalse(_audit_path_allowed(link))
+        finally:
+            if os.path.islink(link):
+                os.unlink(link)
+
     def test_chaining_remains_blocked(self):
         self.assertFalse(is_audit_command("cat core/authority.py && pwd"))
         self.assertFalse(is_audit_command("grep token core/ | head"))
+        self.assertFalse(is_audit_command("find handlers/ -exec id \\;"))
+        self.assertFalse(is_audit_command("find handlers/ -exec id +"))
+        self.assertFalse(is_audit_command("sed -n '1e id' core/exec_policy.py"))
+        self.assertFalse(is_audit_command("awk 'BEGIN {system(\"id\")}'"))
 
     def test_redacts_credentials_in_json_with_quoted_keys(self):
         password = "device-password-value-123"

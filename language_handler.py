@@ -65,21 +65,18 @@ def normalize_lang(value):
 
 def ensure_user_language(uid, language_code=None):
     uid = str(uid)
-    db = state_manager.load_db()
-    settings = db.setdefault("user_settings", {}).setdefault(uid, {})
-    existing = normalize_lang(settings.get("lang"))
-    if existing:
-        return existing
-
     detected = normalize_lang(language_code)
-    if detected:
-        settings["lang"] = detected
-        state_manager.save_db(db)
-        return detected
 
-    settings["lang"] = "he"
-    state_manager.save_db(db)
-    return "he"
+    def mutate(db):
+        settings = db.setdefault("user_settings", {}).setdefault(uid, {})
+        existing = normalize_lang(settings.get("lang"))
+        if existing:
+            return existing
+        selected = detected or "he"
+        settings["lang"] = selected
+        return selected
+
+    return state_manager.atomic_update(mutate)
 
 
 def register_language(bot):
@@ -99,9 +96,11 @@ def register_language(bot):
             return
 
         uid = str(m.from_user.id)
-        db = state_manager.load_db()
-        db.setdefault("user_settings", {}).setdefault(uid, {})["lang"] = lang
-        state_manager.save_db(db)
+
+        def mutate(db):
+            db.setdefault("user_settings", {}).setdefault(uid, {})["lang"] = lang
+
+        state_manager.atomic_update(mutate)
         bot.reply_to(m, f"Language set to {LANGUAGE_NAMES[lang]}.")
 
 

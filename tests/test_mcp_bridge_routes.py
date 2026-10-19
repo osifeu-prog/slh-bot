@@ -3,6 +3,11 @@ import unittest
 from unittest.mock import patch
 
 from flask import Flask
+from contextlib import nullcontext
+import hashlib
+import json
+import tempfile
+from pathlib import Path
 
 
 class MCPBridgeRouteTests(unittest.TestCase):
@@ -98,6 +103,84 @@ class MCPBridgeRouteTests(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 400)
 
+
+    def test_state_fingerprint_requires_bridge_token(self):
+        response = self.client.get("/internal/mcp/v1/state/fingerprint")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.get_json(), {"error": "MCP_BRIDGE_AUTH_REQUIRED"})
+
+    def test_state_fingerprint_requires_view_permission(self):
+        with patch("core.mcp_bridge_routes.has_permission", return_value=False):
+            response = self.client.get(
+                "/internal/mcp/v1/state/fingerprint",
+                headers={"Authorization": "Bearer bridge-test"},
+            )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json(), {"error": "MCP_BRIDGE_FORBIDDEN"})
+
+    def test_state_fingerprint_reports_hash_and_aggregate_counts_only(self):
+        raw = json.dumps({
+            "users": {"sensitive-user-id": {"wallet": {"credits": 987654.25}}},
+            "ledger": [{"uid": "sensitive-user-id", "amount": -987654.25, "reason": "private-test-marker"}],
+            "slh_token_ledger": [],
+            "exchange_orders": {"order-secret-id": {"status": "open"}},
+        }, separators=(",", ":")).encode("utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = Path(directory) / "db.json"
+            db_path.write_bytes(raw)
+            with patch("state_manager.DB_FILE", str(db_path)), patch(
+                "state_manager._db_lock", return_value=nullcontext()
+            ), patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+                "core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
+                    "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
+                    "SLH_MCP_BRIDGE_PRINCIPAL_ID": "owner",
+                    "SLH_MCP_PRINCIPAL_ID": "",
+                    "RAILWAY_PROJECT_ID": "project-test",
+                    "RAILWAY_ENVIRONMENT_ID": "environment-test",
+                    "RAILWAY_SERVICE_ID": "service-test",
+                    "RUN_BOT": "0",
+                }.get(key, default)
+            ):
+                response = self.client.get(
+                    "/internal/mcp/v1/state/fingerprint",
+                    headers={"Authorization": "Bearer bridge-test"},
+                )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(payload["size_bytes"], len(raw))
+        self.assertEqual(payload["collections"]["users"], {"type": "object", "count": 1})
+        self.assertEqual(payload["collections"]["ledger"], {"type": "array", "count": 1})
+        self.assertEqual(payload["collections"]["slh_token_ledger"], {"type": "array", "count": 0})
+        self.assertEqual(payload["collections"]["exchange_orders"], {"type": "object", "count": 1})
+        serialized = response.get_data(as_text=True)
+        for secret in ("sensitive-user-id", "987654.25", "private-test-marker", "order-secret-id"):
+            self.assertNotIn(secret, serialized)
+        self.assertEqual(response.headers.get("Cache-Control"), "no-store")
+
+    def test_state_fingerprint_failure_is_generic_and_read_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db_path = Path(directory) / "db.json"
+            db_path.write_text("{ malformed", encoding="utf-8")
+            before = db_path.read_bytes()
+            with patch("state_manager.DB_FILE", str(db_path)), patch(
+                "state_manager._db_lock", return_value=nullcontext()
+            ), patch("core.mcp_bridge_routes.has_permission", return_value=True), patch(
+                "core.mcp_bridge_routes.os.getenv", side_effect=lambda key, default=None: {
+                    "SLH_MCP_BRIDGE_TOKEN": "bridge-test",
+                    "SLH_MCP_BRIDGE_PRINCIPAL_ID": "owner",
+                    "SLH_MCP_PRINCIPAL_ID": "",
+                }.get(key, default)
+            ):
+                response = self.client.get(
+                    "/internal/mcp/v1/state/fingerprint",
+                    headers={"Authorization": "Bearer bridge-test"},
+                )
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.get_json(), {"error": "STATE_FINGERPRINT_FAILED"})
+            self.assertEqual(db_path.read_bytes(), before)
 
     def test_notification_preferences_route_is_authenticated_and_reads_canonical_state(self):
         denied = self.client.get("/internal/mcp/v1/operator/preferences")
