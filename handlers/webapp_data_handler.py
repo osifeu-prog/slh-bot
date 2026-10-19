@@ -49,6 +49,19 @@ def register(bot, context=None):
                 _transfer(bot, chat_id, uid, parts[1], parts[2], message.message_id)
             elif action == "shop" and len(parts) == 1:
                 _shop(bot, chat_id)
+            elif (
+                action == "synth"
+                and cmd.startswith("/synth ")
+                and len(cmd) <= 1200
+                and len(parts) <= 132
+                and str(getattr(message.chat, "type", "")).lower() == "private"
+            ):
+                # This is the only long command accepted from Mini App data.
+                # The existing synth handler applies its own waveform, duration,
+                # chord-count, chord-size, and note validation before rendering.
+                message.text = cmd
+                message.content_type = "text"
+                bot.process_new_messages([message])
             elif action in {x.lstrip("/") for x in ALLOWED_COMMANDS} and len(parts) <= 3:
                 message.text = cmd
                 message.content_type = "text"
@@ -90,6 +103,14 @@ def _exchange_order(bot, chat_id, uid, action, amount_text, price_text, nonce):
             format_blocked_execution_receipt(side, exc.check),
         )
         return
+    except ValueError as exc:
+        if str(exc) == "TRADER_CERTIFICATION_REQUIRED":
+            bot.send_message(
+                chat_id,
+                "🔒 כדי לסחור ב-SLH Exchange יש להשלים את הקורס ולעבור את המבחן: /courses ואז /trader_test",
+            )
+            return
+        raise
 
     # Use the same evidence-bearing receipt as the direct Telegram order path.
     # Missing/legacy execution proof is explicitly marked NOT VERIFIED there.

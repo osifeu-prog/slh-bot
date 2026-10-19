@@ -134,6 +134,15 @@ def complete_lesson(uid, course_id, stage):
             "error": "sequential_access"
         }
 
+    if course_id == "algo_trading_999" and stage == 7:
+        from core.trader_certification import has_trader_certification
+        if not has_trader_certification(uid):
+            return {
+                "already_completed": False,
+                "ok": False,
+                "error": "trader_certification_required",
+            }
+
     result = academy_manager.complete_stage(
         uid,
         course_id,

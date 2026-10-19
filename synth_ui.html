@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080d18">
+<title>SLH Spark · Synth</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#080d18;--panel:#111b2b;--line:#293951;--text:#f7f9ff;--muted:#9eacc2;--purple:#8b78ff;--mint:#31d7b0;--danger:#ff8294}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 8% 0,#30245d 0,transparent 34%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Arial,sans-serif;padding:16px 14px calc(26px + env(safe-area-inset-bottom))}
+.app{max-width:760px;margin:auto}
+header{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
+.top-actions{margin-inline-start:auto;display:flex;align-items:center}
+.app:fullscreen,.app.is-fullscreen{max-width:none;width:100%;height:100%;margin:0;overflow:auto;padding:14px;background:var(--bg)}
+.app.is-fullscreen{position:fixed;inset:0;z-index:9999}
+.app:fullscreen .piano-keyboard,.app.is-fullscreen .piano-keyboard{height:clamp(190px,42vh,360px)}
+.app:fullscreen .white-key,.app.is-fullscreen .white-key{height:calc(clamp(190px,42vh,360px) - 2px)}
+.app:fullscreen .black-key,.app.is-fullscreen .black-key{height:clamp(112px,27vh,220px)}
+body.fullscreen-active{overflow:hidden}
+.scale-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.scale-notes{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.scale-note{font:12px ui-monospace,monospace;background:#0a1422;border:1px solid #3d4d6a;border-radius:9px;padding:8px;color:#d8e1ff}
+.scale-note.root-note{border-color:var(--mint);color:var(--mint);font-weight:900}
+.piano-key.scale-key{box-shadow:inset 0 0 0 2px #31d7b0}
+.piano-key.selected-key{outline:3px solid #bcb1ff;outline-offset:-4px}
+@media(max-width:560px){.scale-controls{grid-template-columns:1fr 1fr}.top-actions button{padding:8px;font-size:12px}header{align-items:flex-start}}
+.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#8b78ff,#20cfa9);font-size:25px;box-shadow:0 10px 32px #6d5be533}
+h1{font-size:22px;margin:0;font-weight:900}
+.subtitle{font-size:13px;color:var(--muted);margin-top:3px}
+.card{border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#121c2d,#0d1421);padding:16px;margin:12px 0}
+.card h2{font-size:16px;margin:0 0 12px}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field label,.field-title{font-size:12px;color:var(--muted)}
+select,input[type=range]{width:100%}
+select{background:#0a1220;border:1px solid #33445e;border-radius:12px;color:var(--text);min-height:44px;padding:8px 10px;font-size:15px}
+.range-row{display:flex;align-items:center;gap:10px}
+.range-row output{min-width:54px;font-weight:800;color:var(--mint);text-align:center}
+input[type=range]{accent-color:var(--purple)}
+.steps-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.step{background:#0b1423;border:1px solid #2a3a53;border-radius:15px;padding:12px;min-width:0}
+.step-title{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;margin-bottom:9px}
+.step-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.step-fields label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}
+.step select{min-height:40px;padding:7px;font-size:13px}
+.step .octave-row{grid-column:1/-1}
+button{border:1px solid #33445e;border-radius:12px;min-height:44px;padding:10px 13px;color:var(--text);background:#17243a;font-weight:800;font-size:14px;cursor:pointer}
+button:active{transform:translateY(1px)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #8b78ff;outline-offset:2px}
+button.primary{background:linear-gradient(135deg,#7864f5,#6351db);border-color:transparent}
+button.mint{background:linear-gradient(135deg,#1dbf9c,#118c84);border-color:transparent;color:#041613}
+button.ghost{background:transparent}
+button.small{min-height:32px;padding:4px 9px;font-size:12px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.presets button{flex:1;min-width:135px}
+.command{direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:#070c15;border:1px solid #25344a;color:#cbd6ff;border-radius:12px;padding:12px;font:13px ui-monospace,SFMono-Regular,Consolas,monospace;margin:10px 0}
+.status{font-size:12px;color:var(--muted);min-height:20px;margin-top:10px}
+.note{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 0}
+@media(max-width:420px){.steps{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.card{padding:13px}}
+
+.subhead{font-size:13px;margin:16px 0 9px;color:#c8d5f2}
+.param-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+.chip{font-size:11px;color:#c9c0ff;border:1px solid #4b4277;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.step.active-step{border-color:var(--purple);box-shadow:0 0 0 1px #8b78ff55 inset}
+.step{cursor:pointer}
+.keyboard-scroll{overflow-x:auto;padding:8px 0 12px;direction:ltr}
+.piano-keyboard{position:relative;height:164px;min-width:672px;border-radius:7px;overflow:hidden;background:#07101b;border:1px solid #46536a}
+.piano-key{position:absolute;top:0;border-radius:0 0 6px 6px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding:0 0 9px;min-height:0;font-size:10px;font-weight:700;touch-action:manipulation}
+.white-key{height:162px;width:32px;background:linear-gradient(#fff,#e7ebf4);color:#182136;border:1px solid #9ca8ba;z-index:1}
+.black-key{height:103px;width:21px;background:linear-gradient(110deg,#354156,#050910 60%);color:#fff;border:1px solid #02050a;z-index:2;padding-bottom:7px;box-shadow:0 3px 5px #0008}
+.piano-key.selected-key{background:linear-gradient(#b7aaff,#6e5be8);color:#fff;box-shadow:inset 0 0 0 2px #d9d0ff}
+.piano-key:active,.piano-key.is-held{filter:brightness(1.25);transform:translateY(2px)}
+.piano-key{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.measure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.measure-value{font-size:21px;font-weight:900;color:var(--mint);font-variant-numeric:tabular-nums;margin-top:5px}
+.graph-wrap{margin-top:14px;padding:10px;border:1px solid #25364c;border-radius:13px;background:#07101b}
+.graph-wrap canvas{display:block;width:100%;height:120px}
+#spectrumCanvas{height:160px}
+.expected-notes{display:flex;flex-wrap:wrap;gap:7px}
+.expected-note{font:12px ui-monospace,monospace;background:#0a1422;border:1px solid #2b3b52;border-radius:9px;padding:7px;color:#d8e1ff}
+.tuner-readout{display:grid;grid-template-columns:0.8fr 1.2fr 0.8fr;gap:8px;margin:14px 0 18px}
+.tuner-note{font-size:28px;font-weight:900;color:#fff;margin-top:3px}
+.tuner-meter{height:10px;border-radius:999px;background:linear-gradient(90deg,#f06a7c 0%,#f1c75b 35%,#3fdbad 50%,#f1c75b 65%,#f06a7c 100%);position:relative;margin:12px 0 5px}
+.meter-center{position:absolute;left:50%;top:-5px;height:20px;width:2px;background:#fff}
+.tuner-needle{position:absolute;left:50%;top:-6px;width:4px;height:22px;border-radius:5px;background:#fff;box-shadow:0 0 8px #fff;transform:translateX(-50%);transition:left .1s}
+.meter-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:14px}
+@media(max-width:480px){.param-grid{grid-template-columns:1fr}.tuner-readout{grid-template-columns:1fr 1fr}.tuner-readout>div:last-child{grid-column:1/-1}.measure-value{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">🎹</div>
+  <div><h1>SLH Spark Synth</h1><div class="subtitle">סולמות, אקורדים ונגינה חיה</div></div>
+  <div class="top-actions"><button type="button" class="ghost" id="fullscreenToggle" aria-pressed="false">⛶ מסך מלא</button></div>
+</header>
+
+<section class="card">
+  <h2>🎛️ צליל ומשך</h2>
+  <div class="controls">
+    <div class="field">
+      <label for="wave">כלי / אופי צליל</label>
+      <select id="wave">
+        <option value="piano">🎹 Piano · פסנתר מדומה</option>
+        <option value="moog">🎛️ Moog-style · סינת׳ אנלוגי</option>
+        <option value="bass">🔊 Analog Bass · בס</option>
+        <option value="organ">🎹 Organ · אורגן</option>
+        <option value="pluck">🪕 Pluck · פריטה</option>
+        <option value="sine">Sine · גל נקי</option>
+        <option value="saw">Saw · מסור</option>
+        <option value="square">Square · מרובע</option>
+        <option value="tri">Triangle · משולש</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="duration">משך כל אקורד</label>
+      <div class="range-row"><input id="duration" type="range" min="0.1" max="1.5" step="0.1" value="0.6"><output id="durationOut">0.6 שנ׳</output></div>
+    </div>
+  </div>
+  <h3 class="subhead">ADSR · מעטפת הצליל</h3>
+  <div class="param-grid">
+    <div class="field"><label for="attack">Attack</label><div class="range-row"><input id="attack" type="range" min="0.005" max="0.5" step="0.005" value="0.02"><output id="attackOut">0.020 s</output></div></div>
+    <div class="field"><label for="decay">Decay</label><div class="range-row"><input id="decay" type="range" min="0.005" max="0.8" step="0.005" value="0.1"><output id="decayOut">0.100 s</output></div></div>
+    <div class="field"><label for="sustain">Sustain</label><div class="range-row"><input id="sustain" type="range" min="0" max="1" step="0.05" value="0.7"><output id="sustainOut">70%</output></div></div>
+    <div class="field"><label for="release">Release</label><div class="range-row"><input id="release" type="range" min="0.005" max="0.8" step="0.005" value="0.15"><output id="releaseOut">0.150 s</output></div></div>
+  </div>
+  <h3 class="subhead">Filter · סינון תהודה</h3>
+  <div class="param-grid">
+    <div class="field"><label for="cutoff">Cutoff</label><div class="range-row"><input id="cutoff" type="range" min="200" max="12000" step="100" value="1800"><output id="cutoffOut">1800 Hz</output></div></div>
+    <div class="field"><label for="resonance">Resonance / Q</label><div class="range-row"><input id="resonance" type="range" min="0.5" max="12" step="0.1" value="5"><output id="resonanceOut">5.0</output></div></div>
+  </div>
+  <p class="note">הכלי הוא סינתזה מקורבת בזמן אמת, לא הקלטה של פסנתר או Moog פיזי. ADSR והפילטר נשלחים גם לפקודת הבוט.</p>
+  <div class="presets">
+    <button type="button" class="ghost" id="presetMajor">I – IV – V – I</button>
+    <button type="button" class="ghost" id="presetMinor">i – VI – III – VII</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="steps-head">
+    <h2>🎼 רצף האקורדים</h2>
+    <button type="button" class="small" id="addStep">＋ הוסף צעד</button>
+  </div>
+  <div class="steps" id="steps"></div>
+  <p class="note">עד 16 צעדים, עד 8 תווים בכל אקורד. אפשר לשנות שורש, סוג אקורד ואוקטבה לכל צעד.</p>
+</section>
+
+<section class="card" id="scalePanel">
+  <h2>🎼 סולמות — תצוגה ונגינה</h2>
+  <div class="scale-controls">
+    <div class="field"><label for="scaleRoot">שורש הסולם</label><select id="scaleRoot"></select></div>
+    <div class="field"><label for="scaleType">סוג הסולם</label><select id="scaleType"></select></div>
+    <div class="field"><label for="scaleOctave">אוקטבה</label><select id="scaleOctave"><option value="3">3</option><option value="4" selected>4</option></select></div>
+  </div>
+  <div class="scale-notes" id="scaleNotes" aria-label="תווי הסולם"></div>
+  <div class="actions" style="margin-top:12px">
+    <button type="button" class="primary" id="playScale">▶ נגן סולם</button>
+    <button type="button" class="ghost" id="highlightScale">הדגש על המקלדת</button>
+  </div>
+  <p class="note" id="scaleStatus" role="status" aria-live="polite">בחר שורש וסוג סולם כדי לראות את התווים והתדרים.</p>
+</section>
+
+<section class="card" id="keyboardPanel">
+  <div class="steps-head"><h2>🎹 מקלדת נגינה</h2><span class="chip" id="activeStepLabel">עריכת צעד 1</span></div>
+  <p class="note">לחיצה על קליד משמיעה תו ומוסיפה/מסירה אותו מהאקורד בצעד הנבחר. בחר צעד בכרטיס האקורד כדי לערוך צעד אחר.</p>
+  <div class="keyboard-scroll"><div class="piano-keyboard" id="pianoKeyboard" aria-label="מקלדת פסנתר אינטראקטיבית"></div></div>
+  <div class="status" id="keyboardStatus" role="status" aria-live="polite">תו נבדק לפי כיוון הצליל שבחרת.</div>
+</section>
+
+<section class="card">
+  <h2>📊 מעבדת תדרים</h2>
+  <div class="measure-grid">
+    <div><div class="field-title">תדר נמדד / שיא דומיננטי</div><div class="measure-value" id="measuredHz">— Hz</div></div>
+    <div><div class="field-title">סטייה מול תו הבדיקה</div><div class="measure-value" id="measuredCents">— cents</div></div>
+  </div>
+  <div class="field" style="margin:12px 0">
+    <label for="referenceNote">תו ייחוס למדידת תדר</label>
+    <select id="referenceNote"></select>
+  </div>
+  <button type="button" class="primary" id="testReference">▶ בדיקת תדר טהורה</button>
+  <p class="note">בדיקת הייחוס מפיקה גל סינוס בודד בתדר המחושב של התו שנבחר. בזמן אקורד, השיא הדומיננטי עשוי להיות הרמוניה ולא התו הנמוך ביותר.</p>
+  <div class="graph-wrap"><div class="field-title">Oscilloscope · צורת גל בזמן</div><canvas id="scopeCanvas" width="720" height="120" aria-label="תצוגת צורת גל"></canvas></div>
+  <div class="graph-wrap"><div class="field-title">FFT · אנרגיה לפי תדר (עד 2 kHz)</div><canvas id="spectrumCanvas" width="720" height="160" aria-label="תצוגת ספקטרום"></canvas></div>
+  <h3 class="subhead">תדרים נומינליים של הצעד הפעיל (A4 = 440 Hz)</h3>
+  <div id="expectedNotes" class="expected-notes"></div>
+  <p class="note">המדידה נעשית בדפדפן ובחומרת השמע המקומית. רזולוציית FFT, קצב הדגימה, עוצמת השמע והתקן הפלט משפיעים על הדיוק.</p>
+</section>
+
+<section class="card">
+  <h2>🎯 טיונר כרומטי</h2>
+  <div class="controls">
+    <div class="field">
+      <label for="tunerProfile">כלי נגינה / טווח</label>
+      <select id="tunerProfile">
+        <option value="chromatic">Chromatic · כלים שונים</option>
+        <option value="guitar">גיטרה</option>
+        <option value="bass">גיטרה בס</option>
+        <option value="violin">כינור</option>
+        <option value="ukulele">יוקולילי</option>
+        <option value="piano">פסנתר · תו יחיד</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="a4ref">ייחוס A4</label>
+      <div class="range-row"><input id="a4ref" type="range" min="430" max="450" step="0.1" value="440"><output id="a4refOut">440.0 Hz</output></div>
+    </div>
+  </div>
+  <div class="tuner-readout">
+    <div><div class="field-title">תו מזוהה</div><div class="tuner-note" id="tunerNote">—</div></div>
+    <div><div class="field-title">תדר בסיס משוער</div><div class="measure-value" id="tunerHz">— Hz</div></div>
+    <div><div class="field-title">סטייה</div><div class="measure-value" id="tunerCents">— ¢</div></div>
+  </div>
+  <div class="tuner-meter"><div class="meter-center"></div><div id="tunerNeedle" class="tuner-needle"></div></div>
+  <div class="meter-labels"><span>♭ נמוך</span><span>0</span><span>♯ גבוה</span></div>
+  <div class="actions"><button type="button" class="primary" id="startTuner">הפעל מיקרופון</button><button type="button" class="ghost" id="stopTuner" disabled>עצור מדידה</button></div>
+  <div class="status" id="tunerStatus" role="status" aria-live="polite">המיקרופון כבוי. לחץ הפעלה כדי לאשר שימוש מקומי בשמע.</div>
+  <p class="note">הטיונר מודד תו אחד בכל פעם. מצב הפסנתר משווה לטמפרמנט שווה בלבד; הוא אינו מחשב עקומת Stretch Tuning או מחליף טכנאי כיוון פסנתרים.</p>
+</section>
+
+<section class="card">
+  <h2>▶️ האזנה ושליחה</h2>
+  <div class="actions">
+    <button type="button" class="primary" id="play">▶ נגן כאן</button>
+    <button type="button" class="mint" id="send">שלח לבוט 🎧</button>
+    <button type="button" id="copy">העתק פקודה</button>
+    <button type="button" class="ghost" id="back">חזרה</button>
+  </div>
+  <div class="field" style="margin-top:14px">
+    <label for="command">פקודת Telegram שנוצרה</label>
+    <div class="command" id="command">/synth sine 0.6 C4 E4 G4,F4 A4 C5,G4 B4 D5,C4 E4 G4</div>
+  </div>
+  <div class="status" id="status" role="status" aria-live="polite">התצוגה המקדימה מתנגנת בדפדפן. שליחה מהכפתור בבוט תחזיר קובץ שמע לצ׳אט.</div>
+</section>
+</div>
+<script>
+(function(){
+  'use strict';
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  const source = new URLSearchParams(window.location.search).get('source') || '';
+  if (tg) { try { tg.ready(); tg.expand(); } catch (_) {} }
+
+  const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const ROOTS=NOTES.slice();
+  const QUALITY=[
+    {id:'major',label:'מז׳ור',intervals:[0,4,7]},
+    {id:'minor',label:'מינור',intervals:[0,3,7]},
+    {id:'dim',label:'מוקטן',intervals:[0,3,6]},
+    {id:'sus4',label:'sus4',intervals:[0,5,7]},
+    {id:'dom7',label:'דומיננטי 7',intervals:[0,4,7,10]},
+    {id:'maj7',label:'מז׳ור 7',intervals:[0,4,7,11]}
+  ];
+  const SCALE_TYPES=[
+    {id:'major',label:'מז׳ור / Ionian',intervals:[0,2,4,5,7,9,11]},
+    {id:'natural_minor',label:'מינור טבעי',intervals:[0,2,3,5,7,8,10]},
+    {id:'harmonic_minor',label:'מינור הרמוני',intervals:[0,2,3,5,7,8,11]},
+    {id:'melodic_minor',label:'מינור מלודי',intervals:[0,2,3,5,7,9,11]},
+    {id:'major_pentatonic',label:'פנטטוני מז׳ור',intervals:[0,2,4,7,9]},
+    {id:'minor_pentatonic',label:'פנטטוני מינור',intervals:[0,3,5,7,10]},
+    {id:'blues',label:'בלוז',intervals:[0,3,5,6,7,10]},
+    {id:'dorian',label:'דוריאן',intervals:[0,2,3,5,7,9,10]},
+    {id:'phrygian',label:'פריגי',intervals:[0,1,3,5,7,8,10]},
+    {id:'lydian',label:'לידי',intervals:[0,2,4,6,7,9,11]},
+    {id:'mixolydian',label:'מיקסולידי',intervals:[0,2,4,5,7,9,10]},
+    {id:'locrian',label:'לוקריאן',intervals:[0,1,3,5,6,8,10]},
+    {id:'chromatic',label:'כרומטי · 12 תווים',intervals:[0,1,2,3,4,5,6,7,8,9,10,11]}
+  ];
+  const INST_DEFAULTS={
+    sine:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
+    saw:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
+    square:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
+    tri:{attack:.02,decay:.1,sustain:.7,release:.15,cutoff:12000,resonance:.7},
+    piano:{attack:.005,decay:.38,sustain:.22,release:.32,cutoff:10000,resonance:.8},
+    moog:{attack:.02,decay:.18,sustain:.72,release:.2,cutoff:1800,resonance:5},
+    bass:{attack:.008,decay:.18,sustain:.6,release:.14,cutoff:850,resonance:2},
+    organ:{attack:.01,decay:.04,sustain:.9,release:.08,cutoff:10000,resonance:.8},
+    pluck:{attack:.005,decay:.22,sustain:.08,release:.12,cutoff:5200,resonance:1}
+  };
+  const TUNER_PROFILES={
+    chromatic:{min:40,max:2000,label:'Chromatic'},
+    guitar:{min:65,max:500,label:'גיטרה'},
+    bass:{min:30,max:300,label:'בס'},
+    violin:{min:165,max:1100,label:'כינור'},
+    ukulele:{min:170,max:1000,label:'יוקולילי'},
+    piano:{min:25,max:4200,label:'פסנתר · תו יחיד'}
+  };
+  const presets={
+    major:[{root:'C',quality:'major',octave:4},{root:'F',quality:'major',octave:4},{root:'G',quality:'major',octave:4},{root:'C',quality:'major',octave:4}],
+    minor:[{root:'A',quality:'minor',octave:3},{root:'F',quality:'major',octave:3},{root:'C',quality:'major',octave:4},{root:'G',quality:'major',octave:3}]
+  };
+  let steps=presets.major.map(function(x){return Object.assign({},x);});
+  let activeStep=0, audioContext=null, analyser=null, visualUntil=0, visualFrame=0;
+  let measureExpected=null, tunerStream=null, tunerSource=null, tunerAnalyser=null, tunerBuffer=null, tunerRunning=false, tunerFrame=0, lastTunerUpdate=0;
+  const heldPresses=new Map();
+  const $=function(id){return document.getElementById(id);};
+  const esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  const qualityInfo=function(id){return QUALITY.find(function(q){return q.id===id;})||QUALITY[0];};
+  function options(items,current,labelFn){return items.map(function(item){var value=typeof item==='object'?item.id:item;var label=labelFn?labelFn(item):value;return '<option value="'+esc(value)+'"'+(String(value)===String(current)?' selected':'')+'>'+esc(label)+'</option>';}).join('');}
+  function noteToMidi(note){var m=/^([A-G])([#b]?)([0-8])$/.exec(note);if(!m)return null;var base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]];return (Number(m[3])+1)*12+base+(m[2]==='#'?1:m[2]==='b'?-1:0);}
+  function midiToNote(midi){return NOTES[((midi%12)+12)%12]+(Math.floor(midi/12)-1);}
+  function hzForMidi(midi){return 440*Math.pow(2,(midi-69)/12);}
+  function settingsFromUi(){return {attack:Number($('attack').value),decay:Number($('decay').value),sustain:Number($('sustain').value),release:Number($('release').value),cutoff:Number($('cutoff').value),resonance:Number($('resonance').value)};}
+  function chordNotes(step){
+    if(Array.isArray(step.customNotes))return step.customNotes.map(function(note){return {midi:noteToMidi(note),note:note};}).filter(function(n){return n.midi!==null;});
+    var base=(Number(step.octave)+1)*12+ROOTS.indexOf(step.root);
+    return qualityInfo(step.quality).intervals.map(function(interval){var midi=base+interval;return {midi:midi,note:midiToNote(midi)};});
+  }
+  function score(){return steps.map(function(step){return chordNotes(step).map(function(n){return n.note;}).join(' ');}).join(',');}
+  function command(){
+    var dur=Number($('duration').value).toFixed(1).replace(/\.0$/,'');
+    var s=settingsFromUi();
+    var suffix=[s.attack,s.decay,s.sustain,s.release,s.cutoff,s.resonance].map(function(v){return Number(v).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');}).join(',');
+    return '/synth '+$('wave').value+' '+dur+' '+score()+' ;slh='+suffix;
+  }
+  function status(text){$('status').textContent=text;}
+  function refreshCommand(){
+    $('command').textContent=command();
+    $('durationOut').textContent=Number($('duration').value).toFixed(1)+' שנ׳';
+    $('attackOut').textContent=Number($('attack').value).toFixed(3)+' s';
+    $('decayOut').textContent=Number($('decay').value).toFixed(3)+' s';
+    $('sustainOut').textContent=Math.round(Number($('sustain').value)*100)+'%';
+    $('releaseOut').textContent=Number($('release').value).toFixed(3)+' s';
+    $('cutoffOut').textContent=Math.round(Number($('cutoff').value))+' Hz';
+    $('resonanceOut').textContent=Number($('resonance').value).toFixed(1);
+    $('a4refOut').textContent=Number($('a4ref').value).toFixed(1)+' Hz';
+    renderExpected();
+    updateKeyboardSelection();
+  }
+  function renderSteps(){
+    $('steps').innerHTML=steps.map(function(s,i){
+      return '<article class="step '+(i===activeStep?'active-step':'')+'" data-step="'+i+'">'+
+        '<div class="step-title"><span>צעד '+(i+1)+(i===activeStep?' · נבחר':'')+'</span>'+
+        '<button type="button" class="small ghost remove" data-remove="'+i+'" aria-label="הסר צעד '+(i+1)+'" '+(steps.length===1?'disabled':'')+'>✕</button></div>'+
+        '<div class="step-fields"><div><label for="root-'+i+'">שורש</label><select id="root-'+i+'" data-field="root" data-index="'+i+'">'+options(ROOTS,s.root)+'</select></div>'+
+        '<div><label for="quality-'+i+'">סוג</label><select id="quality-'+i+'" data-field="quality" data-index="'+i+'">'+options(QUALITY,s.quality,function(q){return q.label;})+'</select></div>'+
+        '<div class="octave-row"><label for="octave-'+i+'">אוקטבה</label><select id="octave-'+i+'" data-field="octave" data-index="'+i+'">'+options([2,3,4,5,6],s.octave,function(n){return 'אוקטבה '+n;})+'</select></div></div>'+
+        (Array.isArray(s.customNotes)?'<p class="note">קלידים מותאמים: '+esc(s.customNotes.join(' '))+'</p>':'')+
+        '</article>';
+    }).join('');
+    $('addStep').disabled=steps.length>=16;
+    $('activeStepLabel').textContent='עריכת צעד '+(activeStep+1);
+    refreshCommand();
+  }
+  function scaleDefinition(){return SCALE_TYPES.find(function(item){return item.id===$('scaleType').value;})||SCALE_TYPES[0];}
+  function scaleMidiNotes(){
+    var root=NOTES.indexOf($('scaleRoot').value);
+    var base=(Number($('scaleOctave').value)+1)*12+root;
+    return scaleDefinition().intervals.map(function(interval){var midi=base+interval;return {midi:midi,note:midiToNote(midi),hz:hzForMidi(midi)};});
+  }
+  function renderScale(){
+    if(!$('scaleNotes'))return;
+    var notes=scaleMidiNotes();
+    $('scaleNotes').innerHTML=notes.map(function(n,i){return '<span class="scale-note '+(i===0?'root-note':'')+'">'+esc(n.note)+'<br>'+n.hz.toFixed(2)+' Hz</span>';}).join('');
+    $('scaleStatus').textContent=$('scaleRoot').value+' '+scaleDefinition().label+' · '+notes.length+' תווים · אוקטבה '+$('scaleOctave').value;
+    updateKeyboardSelection();
+  }
+  function renderExpected(){
+    if(!$('expectedNotes'))return;
+    var notes=chordNotes(steps[activeStep]||steps[0]);
+    $('expectedNotes').innerHTML=notes.length?notes.map(function(n){return '<span class="expected-note">'+esc(n.note)+' · '+hzForMidi(n.midi).toFixed(2)+' Hz</span>';}).join(''):'<span class="note">אין תווים בצעד הזה.</span>';
+  }
+  function renderKeyboard(){
+    var el=$('pianoKeyboard');if(!el)return;
+    var whiteWidth=32,whiteCount=0,items=[];
+    for(var midi=48;midi<=83;midi++){
+      var note=midiToNote(midi),black=note.indexOf('#')>=0;
+      var x=black?(whiteCount*whiteWidth-10):(whiteCount*whiteWidth);
+      items.push('<button type="button" class="piano-key '+(black?'black-key':'white-key')+'" data-note="'+note+'" data-midi="'+midi+'" style="left:'+x+'px" aria-label="'+note+' — '+hzForMidi(midi).toFixed(2)+' Hz" title="'+note+' · '+hzForMidi(midi).toFixed(2)+' Hz">'+(black?note.replace('#','♯'):note)+'</button>');
+      if(!black)whiteCount++;
+    }
+    el.style.width=(whiteCount*whiteWidth)+'px';el.innerHTML=items.join('');
+    updateKeyboardSelection();
+  }
+  function updateKeyboardSelection(){
+    if(!$('pianoKeyboard'))return;
+    var selected=new Set(chordNotes(steps[activeStep]||steps[0]).map(function(n){return n.note;}));
+    var pitchClasses=new Set(scaleDefinition().intervals.map(function(interval){return (NOTES.indexOf($('scaleRoot').value)+interval)%12;}));
+    $('pianoKeyboard').querySelectorAll('[data-note]').forEach(function(btn){
+      var midi=Number(btn.dataset.midi);
+      btn.classList.toggle('selected-key',selected.has(btn.dataset.note));
+      btn.classList.toggle('scale-key',pitchClasses.has(((midi%12)+12)%12));
+    });
+  }
+  function ensureAudio(){
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)throw new Error('דפדפן זה אינו תומך ב-Web Audio');
+    if(!audioContext)audioContext=new Ctx();
+    if(audioContext.state==='suspended')return audioContext.resume().then(setupAnalyser);
+    setupAnalyser();return Promise.resolve();
+  }
+  function setupAnalyser(){
+    if(analyser)return;
+    analyser=audioContext.createAnalyser();analyser.fftSize=32768;analyser.minDecibels=-120;analyser.maxDecibels=0;analyser.smoothingTimeConstant=0;analyser.connect(audioContext.destination);
+  }
+  function scheduleVoice(midi,start,duration,instrument,peak,expected){
+    var cfg=settingsFromUi(),ctx=audioContext;
+    var envNode=ctx.createGain(),filter=null;
+    var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25;
+    if(needsFilter){filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.4),start);filter.Q.setValueAtTime(cfg.resonance,start);envNode.connect(filter);filter.connect(analyser);}
+    else envNode.connect(analyser);
+    var parts=[];
+    if(instrument==='piano')parts=[{m:1,t:'sine',g:.66},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.085},{m:6.02,t:'sine',g:.035}];
+    else if(instrument==='moog')parts=[{m:1,t:'sawtooth',g:1}];
+    else if(instrument==='bass')parts=[{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}];
+    else if(instrument==='organ')parts=[{m:1,t:'sine',g:.67},{m:2,t:'sine',g:.22},{m:3,t:'sine',g:.11}];
+    else if(instrument==='pluck')parts=[{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
+    else parts=[{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
+    var attackEnd=start+Math.min(cfg.attack,duration*.25);
+    var decayEnd=Math.min(attackEnd+cfg.decay,start+duration*.68);
+    var releaseStart=Math.max(decayEnd,start+duration-Math.min(cfg.release,duration*.30));
+    releaseStart=Math.min(releaseStart,start+duration-.003);
+    var sustainLevel=Math.max(.0001,peak*cfg.sustain);
+    envNode.gain.setValueAtTime(.0001,start);
+    envNode.gain.linearRampToValueAtTime(Math.max(.0002,peak),attackEnd);
+    envNode.gain.linearRampToValueAtTime(sustainLevel,Math.max(attackEnd+.002,decayEnd));
+    envNode.gain.setValueAtTime(sustainLevel,releaseStart);
+    envNode.gain.linearRampToValueAtTime(.0001,start+duration);
+    parts.forEach(function(part){
+      var osc=ctx.createOscillator(),amp=ctx.createGain();
+      osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(midi)*part.m,start);
+      if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
+      amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);
+      osc.start(start);osc.stop(start+duration+.03);
+    });
+    if(expected!==undefined&&expected!==null)measureExpected=expected;
+    visualUntil=Math.max(visualUntil,start+duration+.35);startVisuals();
+  }
+  function startVisuals(){if(!visualFrame)visualFrame=requestAnimationFrame(drawDiagnostics);}
+  function drawDiagnostics(){
+    visualFrame=0;
+    var scope=$('scopeCanvas'),spectrum=$('spectrumCanvas');
+    if(analyser&&audioContext){
+      if(heldPresses.size)visualUntil=Math.max(visualUntil,audioContext.currentTime+.18);
+      drawScope(scope,analyser);drawSpectrum(spectrum,analyser);
+      if(audioContext.currentTime<visualUntil){
+        var peak=dominantFrequency(analyser);
+        if(peak>0){
+          $('measuredHz').textContent=peak.toFixed(2)+' Hz';
+          if(measureExpected){var cents=1200*Math.log2(peak/measureExpected);$('measuredCents').textContent=(cents>=0?'+':'')+cents.toFixed(1)+' ¢';}
+          else $('measuredCents').textContent='—';
+        }
+      }else{
+        $('measuredHz').textContent='— Hz';$('measuredCents').textContent='— ¢';
+      }
+    }
+    if(audioContext&&audioContext.currentTime<visualUntil)visualFrame=requestAnimationFrame(drawDiagnostics);
+  }
+  function prepareCanvas(canvas){
+    var rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+    var w=Math.max(280,Math.floor(rect.width*dpr)),h=Math.max(80,Math.floor(rect.height*dpr));
+    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+    var c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return {ctx:c,w:rect.width,h:rect.height};
+  }
+  function drawScope(canvas,node){
+    if(!canvas)return;var info=prepareCanvas(canvas),c=info.ctx,w=info.w,h=info.h;
+    c.fillStyle='#07101b';c.fillRect(0,0,w,h);c.strokeStyle='#23374f';c.lineWidth=1;
+    for(var y=1;y<4;y++){c.beginPath();c.moveTo(0,h*y/4);c.lineTo(w,h*y/4);c.stroke();}
+    var data=new Uint8Array(node.fftSize);node.getByteTimeDomainData(data);
+    c.strokeStyle='#38d9b3';c.lineWidth=1.5;c.beginPath();
+    for(var i=0;i<data.length;i++){var x=i/(data.length-1)*w,yy=(data[i]/255)*h;if(i===0)c.moveTo(x,yy);else c.lineTo(x,yy);}c.stroke();
+  }
+  function drawSpectrum(canvas,node){
+    if(!canvas)return;var info=prepareCanvas(canvas),c=info.ctx,w=info.w,h=info.h;
+    c.fillStyle='#07101b';c.fillRect(0,0,w,h);c.strokeStyle='#23374f';
+    var bins=new Uint8Array(node.frequencyBinCount);node.getByteFrequencyData(bins);
+    var maxHz=Math.min(2000,audioContext.sampleRate/2),maxBin=Math.max(1,Math.floor(maxHz*node.fftSize/audioContext.sampleRate));
+    var step=Math.max(1,Math.floor(maxBin/w));
+    for(var x=0;x<w;x++){
+      var bin=Math.min(maxBin,Math.floor(x/w*maxBin)),value=bins[bin]||0;
+      var bar=Math.max(1,(value/255)*(h-12));
+      c.fillStyle='#8b78ff';c.fillRect(x,h-bar,Math.max(1,w/maxBin*step*.75),bar);
+    }
+  }
+  function dominantFrequency(node){
+    // Float FFT bins are already expressed in dB. Interpolating them directly
+    // avoids taking a second logarithm of byte-scaled magnitudes, which biased
+    // the displayed frequency/cents estimate by several cents.
+    var data=new Float32Array(node.frequencyBinCount);node.getFloatFrequencyData(data);
+    var low=Math.max(1,Math.floor(45*node.fftSize/audioContext.sampleRate));
+    var high=Math.min(data.length-2,Math.floor(2200*node.fftSize/audioContext.sampleRate));
+    var best=-1,bestValue=-Infinity;
+    for(var i=low;i<=high;i++){if(Number.isFinite(data[i])&&data[i]>bestValue){bestValue=data[i];best=i;}}
+    if(best<1||bestValue < -110)return 0;
+    var a=Number.isFinite(data[best-1])?data[best-1]:-160;
+    var b=Number.isFinite(data[best])?data[best]:-160;
+    var c=Number.isFinite(data[best+1])?data[best+1]:-160;
+    var denom=a-2*b+c,delta=Math.abs(denom)<1e-8?0:.5*(a-c)/denom;delta=Math.max(-1,Math.min(1,delta));
+    return (best+delta)*audioContext.sampleRate/node.fftSize;
+  }
+  async function playScale(){
+    try{
+      await ensureAudio();
+      var notes=scaleMidiNotes(),dur=Math.max(.16,Math.min(.55,Number($('duration').value)));
+      var instrument=$('wave').value,start=audioContext.currentTime+.04;
+      notes.forEach(function(n,i){scheduleVoice(n.midi,start+i*dur,dur,instrument,.2,null);});
+      visualUntil=start+notes.length*dur+.3;
+      $('scaleStatus').textContent='▶ מנגן '+$('scaleRoot').value+' '+scaleDefinition().label+' · '+notes.length+' תווים';
+    }catch(e){$('scaleStatus').textContent='לא הצלחתי לנגן את הסולם: '+(e.message||'שגיאת שמע');}
+  }
+  function syncFullscreenButton(){
+    var app=document.querySelector('.app');
+    var active=!!(document.fullscreenElement===app||app.classList.contains('is-fullscreen'));
+    $('fullscreenToggle').textContent=active?'⤢ יציאה ממסך מלא':'⛶ מסך מלא';
+    $('fullscreenToggle').setAttribute('aria-pressed',active?'true':'false');
+  }
+  async function toggleFullscreen(){
+    var app=document.querySelector('.app');
+    var active=!!(document.fullscreenElement===app||app.classList.contains('is-fullscreen'));
+    if(active){
+      if(document.fullscreenElement===app&&document.exitFullscreen){try{await document.exitFullscreen();}catch(_){}}
+      app.classList.remove('is-fullscreen');document.body.classList.remove('fullscreen-active');
+      syncFullscreenButton();return;
+    }
+    try{
+      if(!app.requestFullscreen)throw new Error('FULLSCREEN_UNAVAILABLE');
+      await app.requestFullscreen();
+    }catch(_){
+      app.classList.add('is-fullscreen');document.body.classList.add('fullscreen-active');
+    }
+    syncFullscreenButton();
+  }
+  async function playLocally(){
+    try{
+      await ensureAudio();
+      var instrument=$('wave').value,dur=Number($('duration').value),start=audioContext.currentTime+.04;
+      measureExpected=null;
+      steps.forEach(function(step,index){var ns=chordNotes(step);ns.forEach(function(n){scheduleVoice(n.midi,start+index*dur,dur,instrument,.20/Math.max(1,ns.length),null);});});
+      visualUntil=start+steps.length*dur+.4;
+      status('▶ מנגן '+steps.length+' צעדים ב-'+instrument+'. משך כולל כ-'+(steps.length*dur).toFixed(1)+' שניות.');
+    }catch(e){status('לא הצלחתי לנגן: '+(e.message||'שגיאת שמע'));}
+  }
+  async function playKey(midi){
+    try{await ensureAudio();var dur=Math.max(.45,Number($('duration').value));var start=audioContext.currentTime+.015;measureExpected=hzForMidi(midi);scheduleVoice(midi,start,dur,$('wave').value,.22,measureExpected);$('keyboardStatus').textContent=midiToNote(midi)+' · '+hzForMidi(midi).toFixed(2)+' Hz';}
+    catch(e){$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
+  }
+  function heldInstrumentParts(instrument){
+    if(instrument==='piano')return [{m:1,t:'sine',g:.66},{m:2.01,t:'sine',g:.23},{m:3.99,t:'sine',g:.085},{m:6.02,t:'sine',g:.035}];
+    if(instrument==='moog')return [{m:1,t:'sawtooth',g:1}];
+    if(instrument==='bass')return [{m:1,t:'sawtooth',g:.68},{m:1,t:'sine',g:.32}];
+    if(instrument==='organ')return [{m:1,t:'sine',g:.67},{m:2,t:'sine',g:.22},{m:3,t:'sine',g:.11}];
+    if(instrument==='pluck')return [{m:1,t:'triangle',g:.72},{m:2,t:'sine',g:.28}];
+    return [{m:1,t:({sine:'sine',saw:'sawtooth',square:'square',tri:'triangle'})[instrument]||'sine',g:1}];
+  }
+  async function startHeldVoice(token){
+    if(token.starting||token.voice||token.released)return;
+    token.starting=true;
+    try{
+      await ensureAudio();token.starting=false;
+      if(token.released)return;
+      var ctx=audioContext,cfg=settingsFromUi(),instrument=$('wave').value,start=ctx.currentTime+.005,peak=.22;
+      var filter=null,envNode=ctx.createGain();
+      var needsFilter=instrument==='moog'||instrument==='bass'||cfg.cutoff<11999||cfg.resonance>1.25;
+      if(needsFilter){filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.setValueAtTime(Math.min(cfg.cutoff,ctx.sampleRate*.4),start);filter.Q.setValueAtTime(cfg.resonance,start);envNode.connect(filter);filter.connect(analyser);}
+      else envNode.connect(analyser);
+      var attack=Math.max(.005,cfg.attack),decay=Math.max(.005,cfg.decay),sustain=Math.max(.0001,peak*cfg.sustain),parts=heldInstrumentParts(instrument),oscs=[];
+      envNode.gain.setValueAtTime(.0001,start);
+      envNode.gain.linearRampToValueAtTime(peak,start+attack);
+      envNode.gain.linearRampToValueAtTime(sustain,start+attack+decay);
+      parts.forEach(function(part){
+        var osc=ctx.createOscillator(),amp=ctx.createGain();
+        osc.type=part.t;osc.frequency.setValueAtTime(hzForMidi(token.midi)*part.m,start);
+        if(instrument==='moog'&&part.m>1)osc.detune.setValueAtTime(5,start);
+        amp.gain.setValueAtTime(part.g,start);osc.connect(amp);amp.connect(envNode);osc.start(start);oscs.push({osc:osc,amp:amp});
+      });
+      token.voice={ctx:ctx,cfg:cfg,envNode:envNode,filter:filter,oscs:oscs,startedAt:start,peak:peak,attack:attack,decay:decay,sustain:sustain,releasing:false};
+      measureExpected=hzForMidi(token.midi);visualUntil=start+.3;startVisuals();
+      $('keyboardStatus').textContent=midiToNote(token.midi)+' · '+measureExpected.toFixed(2)+' Hz · החזק לנגינה רציפה';
+      if(token.released)releaseHeldVoice(token);
+    }catch(e){token.starting=false;$('keyboardStatus').textContent='לא ניתן לנגן את הקליד: '+(e.message||'שגיאת שמע');}
+  }
+  function releaseHeldVoice(token){
+    var voice=token.voice;if(!voice||voice.releasing)return;voice.releasing=true;
+    var now=voice.ctx.currentTime,end=now+Math.max(.025,voice.cfg.release),gain=voice.envNode.gain,held=false;
+    try{if(typeof gain.cancelAndHoldAtTime==='function'){gain.cancelAndHoldAtTime(now);held=true;}}catch(_){}
+    if(!held){
+      var elapsed=Math.max(0,now-voice.startedAt),value;
+      if(elapsed<voice.attack)value=.0001+(voice.peak-.0001)*(elapsed/voice.attack);
+      else if(elapsed<voice.attack+voice.decay){var ratio=(elapsed-voice.attack)/voice.decay;value=voice.peak+(voice.sustain-voice.peak)*ratio;}
+      else value=voice.sustain;
+      try{gain.cancelScheduledValues(now);gain.setValueAtTime(Math.max(.0001,value),now);}catch(_){}
+    }
+    try{gain.linearRampToValueAtTime(.0001,end);}catch(_){}
+    var left=voice.oscs.length;
+    voice.oscs.forEach(function(item){
+      item.osc.onended=function(){
+        try{item.osc.disconnect();item.amp.disconnect();}catch(_){}
+        left--;
+        if(left<=0){try{voice.envNode.disconnect();voice.filter.disconnect();}catch(_){}}
+      };
+      try{item.osc.stop(end+.04);}catch(_){}
+    });
+    visualUntil=Math.max(visualUntil,end+.25);startVisuals();
+  }
+  function endHeldPress(pointerId){
+    var token=heldPresses.get(pointerId);if(!token)return;
+    heldPresses.delete(pointerId);token.released=true;
+    if(token.key)token.key.classList.remove('is-held');
+    releaseHeldVoice(token);
+  }
+  function releaseAllHeldPresses(){Array.from(heldPresses.keys()).forEach(endHeldPress);}
+  async function testReference(){
+    try{
+      var selected=$('referenceNote').value,midi=noteToMidi(selected);if(midi===null)throw new Error('תו לא תקין');
+      await ensureAudio();var start=audioContext.currentTime+.025,dur=1.35,osc=audioContext.createOscillator(),gain=audioContext.createGain();
+      osc.type='sine';osc.frequency.setValueAtTime(hzForMidi(midi),start);gain.gain.setValueAtTime(.0001,start);gain.gain.linearRampToValueAtTime(.20,start+.02);gain.gain.setValueAtTime(.20,start+1.1);gain.gain.linearRampToValueAtTime(.0001,start+dur);osc.connect(gain);gain.connect(analyser);osc.start(start);osc.stop(start+dur+.02);
+      measureExpected=hzForMidi(midi);visualUntil=start+dur+.2;startVisuals();status('בדיקת ייחוס: '+selected+' · '+measureExpected.toFixed(2)+' Hz. סטיית השיא תוצג בזמן הנגינה.');
+    }catch(e){status('בדיקת הייחוס נכשלה: '+(e.message||'שגיאה'));}
+  }
+  async function copyCommand(){
+    var cmd=command();
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText)await navigator.clipboard.writeText(cmd);
+      else{var area=document.createElement('textarea');area.value=cmd;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();var ok=document.execCommand('copy');area.remove();if(!ok)throw Error('COPY_FAILED');}
+      status('✅ הפקודה והגדרות הצליל הועתקו. אפשר להדביק בצ׳אט עם @Me_ad_main_bot.');
+    }catch(_){status('לא הצלחנו להעתיק אוטומטית. סמן את הפקודה והעתק ידנית.');}
+  }
+  function sendToBot(){
+    var cmd=command();
+    if(source){copyCommand();status('הפקודה הועתקה. פתח את צ׳אט הבוט והדבק אותה לקבלת קובץ שמע.');return;}
+    if(tg&&typeof tg.sendData==='function'){try{tg.sendData(JSON.stringify({cmd:cmd}));status('הפקודה נשלחה לבוט.');return;}catch(_){}}
+    copyCommand();status('לא ניתן לשלוח ישירות; הפקודה הועתקה להדבקה בבוט.');
+  }
+  function applyInstrumentDefaults(){
+    var def=INST_DEFAULTS[$('wave').value]||INST_DEFAULTS.sine;
+    Object.keys(def).forEach(function(key){if($(key))$(key).value=def[key];});
+    refreshCommand();
+  }
+  function toggleKeyInChord(note){
+    var step=steps[activeStep],current=Array.isArray(step.customNotes)?step.customNotes.slice():chordNotes(step).map(function(n){return n.note;});
+    var index=current.indexOf(note);
+    if(index>=0){
+      if(current.length===1){status('לכל צעד חייב להישאר לפחות תו אחד.');return;}
+      current.splice(index,1);
+    }else if(current.length>=8){status('אפשר להכניס עד 8 תווים בכל צעד.');return;}
+    else current.push(note);
+    step.customNotes=current;
+    renderSteps();
+  }
+  function renderReferenceOptions(){
+    var items=[];for(var midi=48;midi<=83;midi++)items.push(midiToNote(midi));
+    $('referenceNote').innerHTML=items.map(function(note){return '<option value="'+note+'"'+(note==='A4'?' selected':'')+'>'+note+' · '+hzForMidi(noteToMidi(note)).toFixed(2)+' Hz</option>';}).join('');
+  }
+  function centsLabel(value){return (value>0?'+':'')+value.toFixed(1)+' ¢';}
+  function detectPitch(samples,sampleRate,minFreq,maxFreq){
+    var size=samples.length,sum=0,maxAmp=0;
+    for(var i=0;i<size;i++){sum+=samples[i]*samples[i];maxAmp=Math.max(maxAmp,Math.abs(samples[i]));}
+    var rms=Math.sqrt(sum/size);if(rms<.008||maxAmp<.025)return null;
+    var minLag=Math.max(2,Math.floor(sampleRate/maxFreq)),maxLag=Math.min(Math.floor(size/2)-1,Math.ceil(sampleRate/minFreq));
+    if(maxLag<=minLag)return null;
+    var diff=new Float64Array(maxLag+1),cmnd=new Float64Array(maxLag+1),running=0;
+    for(var lag=1;lag<=maxLag;lag++){
+      var value=0;
+      for(var j=0;j<size-lag;j++){var d=samples[j]-samples[j+lag];value+=d*d;}
+      diff[lag]=value;running+=value;cmnd[lag]=running?value*lag/running:1;
+    }
+    var chosen=-1;
+    for(var l=minLag;l<=maxLag;l++){if(cmnd[l]<.16){while(l+1<=maxLag&&cmnd[l+1]<cmnd[l])l++;chosen=l;break;}}
+    if(chosen<0){var best=1;for(var k=minLag;k<=maxLag;k++){if(cmnd[k]<best){best=cmnd[k];chosen=k;}}}
+    if(chosen<0||cmnd[chosen]>.38)return null;
+    // CMND is robust for ordinary notes, but its curve is asymmetrical
+    // when only a handful of samples form one period. In piano's upper register
+    // use the raw YIN difference curve for sub-sample interpolation; this avoids
+    // a systematic positive cents bias at short lags while keeping CMND for note selection.
+    var interpolationCurve=(maxFreq>2000&&chosen<=12)?diff:cmnd;
+    var y0=interpolationCurve[Math.max(1,chosen-1)],y1=interpolationCurve[chosen],y2=interpolationCurve[Math.min(maxLag,chosen+1)];
+    var denom=y0-2*y1+y2,shift=Math.abs(denom)<1e-9?0:.5*(y0-y2)/denom;
+    var lagEstimate=chosen+Math.max(-.5,Math.min(.5,shift));
+    return {frequency:sampleRate/lagEstimate,confidence:1-cmnd[chosen]};
+  }
+  async function startTuner(){
+    if(tunerRunning)return;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('tunerStatus').textContent='הדפדפן אינו מאפשר גישה למיקרופון. נסה HTTPS או דפדפן אחר.';return;}
+    try{
+      tunerStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
+      await ensureAudio();
+      tunerSource=audioContext.createMediaStreamSource(tunerStream);
+      tunerAnalyser=audioContext.createAnalyser();tunerAnalyser.fftSize=8192;tunerAnalyser.smoothingTimeConstant=0;
+      tunerSource.connect(tunerAnalyser);tunerBuffer=new Float32Array(tunerAnalyser.fftSize);
+      tunerRunning=true;$('startTuner').disabled=true;$('stopTuner').disabled=false;
+      $('tunerStatus').textContent='🎤 המיקרופון פעיל מקומית. נגן תו יחיד והחזק אותו יציב; האודיו אינו נשלח לשרת.';
+      lastTunerUpdate=0;tunerFrame=requestAnimationFrame(readTuner);
+    }catch(e){stopTuner();$('tunerStatus').textContent='לא ניתן להפעיל מיקרופון: '+(e.name==='NotAllowedError'?'נדרשת הרשאת מיקרופון.':(e.message||'שגיאה'));}
+  }
+  function readTuner(now){
+    if(!tunerRunning||!tunerAnalyser)return;
+    tunerFrame=requestAnimationFrame(readTuner);
+    if(now-lastTunerUpdate<150)return;lastTunerUpdate=now;
+    tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
+    var decimated=new Float32Array(Math.floor(tunerBuffer.length/2));
+    for(var i=0;i<decimated.length;i++)decimated[i]=tunerBuffer[i*2];
+    var profile=TUNER_PROFILES[$('tunerProfile').value]||TUNER_PROFILES.chromatic;
+    var result=detectPitch(decimated,audioContext.sampleRate/2,profile.min,profile.max);
+    if(!result){$('tunerNote').textContent='—';$('tunerHz').textContent='— Hz';$('tunerCents').textContent='הקשב לתו';$('tunerNeedle').style.left='50%';return;}
+    var ref=Number($('a4ref').value),midiFloat=69+12*Math.log2(result.frequency/ref),midi=Math.round(midiFloat),cents=(midiFloat-midi)*100;
+    $('tunerNote').textContent=midiToNote(midi);$('tunerHz').textContent=result.frequency.toFixed(2)+' Hz';$('tunerCents').textContent=centsLabel(cents);
+    $('tunerNeedle').style.left=(50+Math.max(-50,Math.min(50,cents)))+'%';
+    $('tunerStatus').textContent=profile.label+' · ביטחון זיהוי משוער '+Math.round(result.confidence*100)+'% · תו יחיד מומלץ.';
+  }
+  function stopTuner(){
+    tunerRunning=false;if(tunerFrame)cancelAnimationFrame(tunerFrame);tunerFrame=0;
+    try{if(tunerSource)tunerSource.disconnect();}catch(_){}
+    tunerSource=null;tunerAnalyser=null;tunerBuffer=null;
+    if(tunerStream){tunerStream.getTracks().forEach(function(track){track.stop();});tunerStream=null;}
+    if($('startTuner'))$('startTuner').disabled=false;
+    if($('stopTuner'))$('stopTuner').disabled=true;
+  }
+
+  $('steps').addEventListener('change',function(event){
+    var field=event.target.dataset.field,index=Number(event.target.dataset.index);
+    if(!field||!Number.isInteger(index)||!steps[index])return;
+    delete steps[index].customNotes;steps[index][field]=field==='octave'?Number(event.target.value):event.target.value;renderSteps();
+  });
+  $('steps').addEventListener('click',function(event){
+    var remove=event.target.closest('[data-remove]');
+    if(remove){if(steps.length<=1)return;steps.splice(Number(remove.dataset.remove),1);if(activeStep>=steps.length)activeStep=steps.length-1;renderSteps();return;}
+    var card=event.target.closest('.step');if(card){var nextStep=Number(card.dataset.step);if(nextStep!==activeStep){activeStep=nextStep;renderSteps();}}
+  });
+  $('pianoKeyboard').addEventListener('pointerdown',function(event){
+    var key=event.target.closest('[data-note]');if(!key)return;
+    if(event.pointerType==='mouse'&&event.button!==0)return;
+    if(heldPresses.has(event.pointerId))return;
+    event.preventDefault();
+    var token={pointerId:event.pointerId,note:key.dataset.note,midi:Number(key.dataset.midi),key:key,released:false,starting:false,voice:null};
+    heldPresses.set(event.pointerId,token);key.classList.add('is-held');
+    try{key.setPointerCapture(event.pointerId);}catch(_){}
+    toggleKeyInChord(token.note);startHeldVoice(token);
+  });
+  $('pianoKeyboard').addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
+  $('pianoKeyboard').addEventListener('lostpointercapture',function(event){endHeldPress(event.pointerId);});
+  // Preserve keyboard/screen-reader access: a keyboard-activated click has detail=0.
+  $('pianoKeyboard').addEventListener('click',function(event){
+    if(event.detail!==0)return;
+    var key=event.target.closest('[data-note]');if(!key)return;
+    toggleKeyInChord(key.dataset.note);playKey(Number(key.dataset.midi));
+  });
+  window.addEventListener('pointerup',function(event){endHeldPress(event.pointerId);});
+  window.addEventListener('pointercancel',function(event){endHeldPress(event.pointerId);});
+  window.addEventListener('blur',releaseAllHeldPresses);
+  $('scaleRoot').innerHTML=options(ROOTS,'C');
+  $('scaleType').innerHTML=options(SCALE_TYPES,'major',function(item){return item.label;});
+  ['scaleRoot','scaleType','scaleOctave'].forEach(function(id){$(id).addEventListener('change',renderScale);});
+  $('playScale').addEventListener('click',playScale);
+  $('highlightScale').addEventListener('click',function(){
+    renderScale();
+    $('keyboardPanel').scrollIntoView({behavior:'smooth',block:'start'});
+    $('scaleStatus').textContent='הסולם מודגש בירוק על המקלדת.';
+  });
+  $('fullscreenToggle').addEventListener('click',toggleFullscreen);
+  document.addEventListener('fullscreenchange',syncFullscreenButton);
+  $('addStep').addEventListener('click',function(){if(steps.length>=16)return;steps.push(Object.assign({},steps[steps.length-1],{customNotes:undefined}));activeStep=steps.length-1;renderSteps();});
+  $('wave').addEventListener('change',applyInstrumentDefaults);
+  ['duration','attack','decay','sustain','release','cutoff','resonance'].forEach(function(id){$(id).addEventListener('input',refreshCommand);});
+  $('a4ref').addEventListener('input',function(){refreshCommand();});
+  $('tunerProfile').addEventListener('change',function(){$('tunerStatus').textContent='טווח הזיהוי שונה ל-'+TUNER_PROFILES[$('tunerProfile').value].label+'.';});
+  $('presetMajor').addEventListener('click',function(){steps=presets.major.map(function(x){return Object.assign({},x);});activeStep=0;renderSteps();status('נטען רצף I–IV–V–I.');});
+  $('presetMinor').addEventListener('click',function(){steps=presets.minor.map(function(x){return Object.assign({},x);});activeStep=0;renderSteps();status('נטען רצף i–VI–III–VII.');});
+  $('play').addEventListener('click',playLocally);
+  $('send').addEventListener('click',sendToBot);
+  $('copy').addEventListener('click',copyCommand);
+  $('testReference').addEventListener('click',testReference);
+  $('startTuner').addEventListener('click',startTuner);
+  $('stopTuner').addEventListener('click',stopTuner);
+  $('back').addEventListener('click',function(){if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
+  window.addEventListener('pagehide',stopTuner);
+  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();renderScale();syncFullscreenButton();
+  if(source){$('send').textContent='העתק לבוט 📋';status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');}
+})();
+</script>
+</body>
+</html>

@@ -291,16 +291,63 @@ def register(bot):
         )
 
 
+def _button_course_title(course_id, title):
+    """Keep Telegram inline button labels short while preserving full titles in the menu."""
+    short = {
+        "music_reading_basics": "קריאת תווים וקצב",
+        "music_theory_foundations": "תאוריה מוזיקלית",
+        "harmony_voice_leading": "הרמוניה והובלת קולות",
+        "voice_and_ear_training": "קול ושמיעה",
+        "bitcoin_mastery": "ביטקוין מאסטרי",
+        "ethereum": "אתריום מאסטרי",
+        "slh_vs_eth_sol": "SLH מול ETH/SOL",
+        "ai_tokens": "טוקנים ו-AI",
+        "governance_game_theory": "ממשל ותורת המשחקים",
+        "algo_trading_999": "מסחר אלגוריתמי",
+    }
+    value = short.get(course_id, str(title or course_id))
+    return value if len(value) <= 32 else value[:31] + "…"
+
+
+def _course_category(course_id):
+    if course_id in {
+        "music_reading_basics", "music_theory_foundations",
+        "harmony_voice_leading", "voice_and_ear_training",
+    }:
+        return "🎼 מוזיקה, תאוריה וקול"
+    if course_id == "algo_trading_999":
+        return "📈 מסחר וניתוח שוק"
+    return "🧠 ידע דיגיטלי וכלכלה"
+
+
 def _send_academy(bot, chat_id, uid):
     courses = academy_manager.get_courses()
     if not courses:
         bot.send_message(chat_id, "📚 אין קורסים זמינים")
         return
 
-    text = "🎓 SLH ACADEMY\n\nמערכת הלימוד שלך:\n\n"
-    markup = InlineKeyboardMarkup(row_width=1)
+    music_first = [
+        "music_reading_basics", "music_theory_foundations",
+        "harmony_voice_leading", "voice_and_ear_training",
+    ]
+    trading_last = ["algo_trading_999"]
+    ordered_ids = (
+        [cid for cid in music_first if cid in courses]
+        + [cid for cid in courses if cid not in music_first + trading_last]
+        + [cid for cid in trading_last if cid in courses]
+    )
 
-    for cid, data in courses.items():
+    text = "🎓 SLH ACADEMY\n\nבחר מסלול לימוד. ההתקדמות נשמרת, ואפשר לחזור לשיעורים שהושלמו.\n"
+    markup = InlineKeyboardMarkup(row_width=1)
+    current_category = None
+
+    for cid in ordered_ids:
+        data = courses[cid]
+        category = _course_category(cid)
+        if category != current_category:
+            current_category = category
+            text += "\n" + category + "\n"
+        
         stages = data.get("stages", [])
         total = len(stages)
         progress = academy_manager.get_course(uid, cid) or {}
@@ -321,18 +368,18 @@ def _send_academy(bot, chat_id, uid):
             if stage_id not in completed:
                 remaining.append(stage_id)
 
+        short_title = _button_course_title(cid, data.get("title", cid))
         text += f"📘 {data['title']}\n"
 
         if total and not remaining:
             text += (
-                f"✅ הושלם: {total}/{total}\n"
-                "📖 זמין לקריאה חוזרת בכל עת.\n\n"
+                f"✅ הושלם: {total}/{total} · אפשר לחזור בכל עת.\n\n"
             )
-            button_text = f"📖 חזרה לקורס {data['title']}"
+            button_text = f"📖 חזרה · {short_title}"
         else:
             next_stage = remaining[0] if remaining else min(len(completed) + 1, total)
             text += f"▶️ ההמשך שלך: שיעור {next_stage}/{total}\n\n"
-            button_text = f"▶️ המשך {data['title']} · {next_stage}/{total}"
+            button_text = f"▶️ {short_title} · {next_stage}/{total}"
 
         markup.add(
             InlineKeyboardButton(

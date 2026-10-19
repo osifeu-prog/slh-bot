@@ -1,13 +1,41 @@
 import json
+import math
 from datetime import datetime, timezone, timedelta
 
 import state_manager
+from core.account_ledger_audit import audit_account_ledger
 from store.engine import load_items, resolve_item_id
 from core.economy_bridge import get_balance, spend
+from core.slh_distribution import is_frozen_account
 from store.grant_engine import apply_grant
 
 LEDGER_FILE = "state/rewards_ledger.json"
 FULFILLMENT_STALE_SECONDS = 15 * 60
+_CREDITS_LEDGER_EPSILON = 1e-8
+
+
+def _credits_wallet_matches_ledger_tail(db, uid):
+    """Fail closed when an account wallet diverges from its last Credits ledger row.
+
+    Older historical gaps do not by themselves prevent a new transaction when
+    the live wallet still matches its latest ledger tail. A zero-balance account
+    with no Credits rows is also a valid initial state.
+    """
+    report = audit_account_ledger(db, uid, max_findings=1)
+    if report.get("current_balance_matches_tail") is True:
+        return True
+
+    if report.get("malformed_global_rows", 0):
+        return False
+    if report.get("sequence_rows_checked", 0) != 0:
+        return False
+
+    balance = report.get("current_wallet_credits")
+    try:
+        balance = float(balance)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(balance) and abs(balance) <= _CREDITS_LEDGER_EPSILON
 
 
 def load_ledger():
@@ -52,6 +80,11 @@ def _get_or_create_purchase(uid, item_id, request_id, item):
             if str(existing.get("request_id")) != str(request_id) or str(existing.get("uid")) != str(uid) or existing.get("item_id") != item_id:
                 return None, "REQUEST_ID_CONFLICT"
             return existing, None
+
+        # A frozen account may retry an existing request, but may not create a
+        # new store purchase or reserve inventory.
+        if is_frozen_account(db, uid):
+            return None, "ACCOUNT_FROZEN"
 
         reservation = None
         if item.get("type") == "hardware":
@@ -197,10 +230,11 @@ def purchase(uid, item_id, request_id=None):
             return False, "NOT_ENOUGH_SLH"
         try:
             result = spend(uid, purchase_state["price"], reason="store:purchase", meta={"idempotency_key": purchase_state["purchase_id"] + ":debit", "purchase_id": purchase_state["purchase_id"], "item_id": item_id})
-        except Exception:
+        except Exception as exc:
             _release_reservation(purchase_state["purchase_id"])
-            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
-            return False, "PAYMENT_FAILED"
+            error = "ACCOUNT_FROZEN" if str(exc) == "ACCOUNT_FROZEN" else "PAYMENT_FAILED"
+            _update_purchase(purchase_state["purchase_id"], status="REJECTED", error=error)
+            return False, error
         if result is False:
             _release_reservation(purchase_state["purchase_id"])
             _update_purchase(purchase_state["purchase_id"], status="REJECTED", error="PAYMENT_FAILED")
@@ -275,6 +309,11 @@ def purchase_physical(uid, item_id, request_id=None):
                     "purchase_status": existing.get("status"),
                 }, None
 
+        # The physical-store path debits and credits both wallets directly in
+        # this atomic mutation, so enforce the freeze policy here as well.
+        if is_frozen_account(db, uid) or is_frozen_account(db, seller_uid):
+            return None, "ACCOUNT_FROZEN"
+
         raw_price = product.get("price", catalog.get("price"))
         try:
             price = float(raw_price)
@@ -287,18 +326,39 @@ def purchase_physical(uid, item_id, request_id=None):
         if inventory <= 0:
             return None, "OUT_OF_STOCK"
 
-        buyer_wallet = buyer.setdefault("wallet", {})
-        buyer_balance = float(buyer_wallet.get("credits", 0) or 0)
+        buyer_wallet = buyer.get("wallet")
+        seller_wallet = seller.get("wallet")
+        if not isinstance(buyer_wallet, dict):
+            return None, "BUYER_LEDGER_TAIL_MISMATCH"
+        if not isinstance(seller_wallet, dict):
+            return None, "SELLER_LEDGER_TAIL_MISMATCH"
+
+        try:
+            buyer_balance = float(buyer_wallet.get("credits", 0) or 0)
+            seller_balance = float(seller_wallet.get("credits", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            return None, "INVALID_BALANCE"
+        if not math.isfinite(buyer_balance) or not math.isfinite(seller_balance):
+            return None, "INVALID_BALANCE"
         if buyer_balance < price:
             return None, "NOT_ENOUGH_CREDITS"
 
-        seller_wallet = seller.setdefault("wallet", {})
         commission = round(price * 0.10, 8)
         seller_payout = round(price - commission, 8)
-        now = datetime.now(timezone.utc).isoformat()
+        treasury = users.get("SLH_TREASURY")
 
+        # Do not append new ledger rows onto a wallet balance that has drifted
+        # away from the last recorded Credits row. Check all affected accounts
+        # before changing any wallet, inventory, purchase, or ledger state.
+        if not _credits_wallet_matches_ledger_tail(db, uid):
+            return None, "BUYER_LEDGER_TAIL_MISMATCH"
+        if not _credits_wallet_matches_ledger_tail(db, seller_uid):
+            return None, "SELLER_LEDGER_TAIL_MISMATCH"
+        if treasury and commission > 0 and not _credits_wallet_matches_ledger_tail(db, "SLH_TREASURY"):
+            return None, "TREASURY_LEDGER_TAIL_MISMATCH"
+
+        now = datetime.now(timezone.utc).isoformat()
         buyer_wallet["credits"] = buyer_balance - price
-        seller_balance = float(seller_wallet.get("credits", 0) or 0)
         seller_wallet["credits"] = seller_balance + seller_payout
 
         ledger = db.setdefault("ledger", [])
@@ -313,7 +373,6 @@ def purchase_physical(uid, item_id, request_id=None):
             "meta": {"item_id": item_id, "buyer_uid": uid, "purchase_id": purchase_id},
         })
 
-        treasury = users.get("SLH_TREASURY")
         if treasury and commission > 0:
             wallet = treasury.setdefault("wallet", {})
             treasury_before = float(wallet.get("credits", 0) or 0)

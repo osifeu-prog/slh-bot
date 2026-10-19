@@ -15,6 +15,16 @@ def _runtime_open():
         "updated_at": 1791830000.0,
         "detail": "canonical public runtime proof passed",
     }
+def _certify(db, uid="buyer"):
+    user = db.setdefault("users", {}).setdefault(uid, {})
+    user.setdefault("academy", {}).setdefault("courses", {})["algo_trading_999"] = {
+        "stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]
+    }
+    db.setdefault("trader_certifications", {})[uid] = {
+        "passed": True, "score": 10, "critical_pass": True,
+        "quiz_version": "slh-trader-readiness-v1"
+    }
+    return db
 
 
 class FreshLiveExchangePreflightTests(unittest.TestCase):
@@ -90,6 +100,7 @@ class FreshLiveExchangePreflightTests(unittest.TestCase):
             "ledger": [],
             "slh_token_ledger": [],
         }
+        _certify(db, "buyer")
         before = copy.deepcopy(db)
         with patch.object(state_manager, "load_db", return_value=db), patch.object(
             state_manager, "atomic_update", side_effect=lambda mutate: mutate(db)
@@ -129,6 +140,7 @@ class FreshLiveExchangePreflightTests(unittest.TestCase):
             "ledger": [],
             "slh_token_ledger": [],
         }
+        _certify(db, "buyer")
         proof = {
             "status": "PASS",
             "checked_at": "2026-10-12T16:02:00+00:00",
@@ -216,6 +228,7 @@ class FreshLiveExchangePreflightTests(unittest.TestCase):
         import webapp as rest_webapp
 
         db = {"exchange_requests": {}, "exchange_orders": {}}
+        _certify(db, "buyer")
         before = copy.deepcopy(db)
         original_uid = rest_webapp.authenticated_uid
         original_load_db = rest_webapp.state_manager.load_db

@@ -7,13 +7,34 @@ from core.command_registry import _extract_commands
 def test_system_check_commands_are_registered_in_source():
     source = Path("handlers/system_checks_handler.py").read_text(encoding="utf-8")
     found = _extract_commands(source)
-    assert {"check", "checks", "check_ux", "check_money", "check_bnb", "check_ton", "check_exchange"} <= found
+    assert {"check", "checks", "check_ux", "check_money", "check_bnb", "check_bnb_deposits", "check_owner_ledger", "bnb_reverse_prepare", "bnb_reverse_confirm", "bnb_reverse_cancel", "check_ton", "check_exchange"} <= found
+
+
+def test_exchange_reserve_command_is_registered_in_source():
+    source = Path("handlers/system_checks_handler.py").read_text(encoding="utf-8")
+    assert "check_exchange_reserves" in _extract_commands(source)
 
 
 def test_miniapp_contract_contains_new_public_shell():
     source = Path("mini_app.html").read_text(encoding="utf-8")
     for marker in ('id="balance"', 'id="move"', 'id="growth"', 'id="investor"', 'id="profile"'):
         assert marker in source
+
+
+def test_check_ux_matches_current_mini_app_bottom_navigation():
+    from core.system_checks import REQUIRED_UX_IDS, check_ux
+
+    html = Path("mini_app.html").read_text(encoding="utf-8")
+    current_bottom_nav_ids = {"bh", "bw", "bx", "bmarket", "bmore"}
+    obsolete_bottom_nav_ids = {"bb", "bm", "bg", "binv"}
+
+    assert current_bottom_nav_ids <= set(REQUIRED_UX_IDS)
+    assert not (obsolete_bottom_nav_ids & set(REQUIRED_UX_IDS))
+    for item in current_bottom_nav_ids:
+        assert f'id="{item}"' in html
+
+    result = check_ux()
+    assert result["ok"], result["checks"]
 
 
 def test_system_check_module_exposes_read_only_contract():

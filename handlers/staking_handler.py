@@ -57,8 +57,16 @@ def register(bot):
             return
         try:
             res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake"})
-            if res.get("status") == "duplicate":
+            if res.get("status") in {"duplicate", "already_unlocked"}:
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
+                return
+            if res.get("status") in {"legacy_refund_review_required", "position_state_review_required"}:
+                code = res.get("code") or res.get("status")
+                bot.reply_to(
+                    msg,
+                    "⛔ השחרור נחסם לבדיקה חשבונאית (" + str(code) + "). "
+                    "לא בוצע שינוי ביתרה או בסטייק. אין לנסות שוב עד לבדיקת המקור.",
+                )
                 return
             bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:
@@ -144,8 +152,16 @@ def register(bot):
             return
         try:
             res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake_lock"})
-            if res.get("status") == "duplicate":
+            if res.get("status") in {"duplicate", "already_unlocked"}:
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
+                return
+            if res.get("status") in {"legacy_refund_review_required", "position_state_review_required"}:
+                code = res.get("code") or res.get("status")
+                bot.reply_to(
+                    msg,
+                    "⛔ השחרור נחסם לבדיקה חשבונאית (" + str(code) + "). "
+                    "לא בוצע שינוי ביתרה או בסטייק. אין לנסות שוב עד לבדיקת המקור.",
+                )
                 return
             bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:

@@ -1,9 +1,35 @@
 from core.agent_registry import (
     list_agents, get_agent, create_agent, update_agent,
-    delete_agent, send_message, get_inbox,
+    delete_agent, send_message, get_inbox, get_outbox,
 )
 from core.authority import get_visible_agents, normalize_uid, is_owner
-from core.runtime_service import execute_agent
+
+# Only exact commands are interpreted as worker operations. Free-form text is
+# always sent through the assistant fallback chain, never as a command string.
+_READ_ONLY_AGENT_COMMANDS = {"whoami", "status", "uptime"}
+_OWNER_AGENT_COMMANDS = {"dbsize", "sysinfo", "logs", "errors"}
+
+
+def _agent_task(uid, text):
+    uid = normalize_uid(uid)
+    raw = str(text or "").strip()
+    lowered = raw.casefold()
+
+    # Explicit "ask" always means natural-language routing, even if the
+    # question happens to match a host-command name such as "whoami".
+    if lowered.startswith("ask "):
+        prompt = raw.split(None, 1)[1].strip()
+        return {"command": "ask", "prompt": prompt, "uid": uid}
+
+    if is_owner(uid):
+        if lowered in (_READ_ONLY_AGENT_COMMANDS | _OWNER_AGENT_COMMANDS):
+            return {"command": lowered, "uid": uid}
+        parts = raw.split(maxsplit=1)
+        if len(parts) == 2 and parts[0].casefold() == "complete":
+            return {"command": "complete", "task_id": parts[1].strip(), "uid": uid}
+
+    # Ordinary users' text such as "whoami" is a question, never a host action.
+    return {"command": "ask", "prompt": raw, "uid": uid}
 
 
 def _agent_sort_key(item):
@@ -108,15 +134,21 @@ def register(bot, context):
             bot.reply_to(m, "Agent not found or access denied")
             return
         try:
-            send_message(agent_id, parts[2])
-            result = execute_agent(
-                agent_id,
-                parts[2],
-                source=f"telegram:{uid}",
+            task = _agent_task(uid, parts[2])
+            chat_id = str(getattr(getattr(m, "chat", None), "id", "") or "").strip()
+            message_id = str(getattr(m, "message_id", "") or "").strip()
+            if chat_id and message_id:
+                task["request_id"] = f"telegram:{uid}:{chat_id}:{message_id}"
+                task["source"] = f"telegram:{uid}"
+            send_message(agent_id, task)
+            bot.reply_to(
+                m,
+                "📨 המשימה נשלחה לתור הסוכן. "
+                "לצפייה בתוצאה: /agent_outbox " + str(agent_id)
+                + " (alias: /agentoutbox " + str(agent.get("name", agent_id)) + ")",
             )
-            bot.reply_to(m, "Runtime result: " + str(result.get("data", result)))
         except Exception as e:
-            bot.reply_to(m, "Agent execution failed: " + type(e).__name__)
+            bot.reply_to(m, "Agent task submission failed: " + type(e).__name__)
 
     @bot.message_handler(commands=["inbox"])
     def inbox_cmd(m):
@@ -129,15 +161,45 @@ def register(bot, context):
         if agent is None:
             bot.reply_to(m, "Agent not found or access denied")
             return
-        inbox = get_inbox(agent_id)
+        _, inbox = get_inbox(agent_id)
         display_name = agent.get("name", agent_id)
         if not inbox:
             bot.reply_to(m, "Inbox (" + str(display_name) + "): empty")
             return
         lines = ["Inbox (" + str(display_name) + "):"]
         for message in inbox:
-            lines.append("- " + str(message))
+            if isinstance(message, dict):
+                command = str(message.get("command") or "task")
+                detail = str(message.get("prompt") or message.get("task_id") or "").strip()
+                line = "- " + command + ((": " + detail[:220]) if detail else "")
+                lines.append(line + " [command: " + command + "]")
+            else:
+                lines.append("- " + str(message)[:250])
         bot.reply_to(m, "\n".join(lines))
+
+    @bot.message_handler(commands=["agentoutbox", "agent_outbox"])
+    def agentoutbox_cmd(m):
+        parts = m.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(m, "Usage: /agentoutbox <name>")
+            return
+        uid = normalize_uid(m.from_user.id)
+        agent_id, agent = _check_access(uid, parts[1])
+        if agent is None:
+            bot.reply_to(m, "Agent not found or access denied")
+            return
+        try:
+            _, outbox = get_outbox(agent_id, limit=8)
+        except Exception as e:
+            bot.reply_to(m, "Agent outbox unavailable: " + type(e).__name__)
+            return
+        if not outbox:
+            bot.reply_to(m, "Outbox (" + str(agent.get("name", agent_id)) + "): empty")
+            return
+        lines = ["Outbox (" + str(agent.get("name", agent_id)) + ") — newest first:"]
+        for entry in reversed(outbox):
+            lines.append(str(entry)[:900])
+        bot.reply_to(m, "\n\n".join(lines)[-3800:])
 
     @bot.message_handler(commands=["agent_delete"])
     def agent_delete_cmd(m):

@@ -1,4 +1,13 @@
 def load_handlers(bot, context):
+    # Register owner-only acknowledgements first; ContinueHandling lets
+    # normal command and natural-chat handlers process the same message.
+    try:
+        from handlers.owner_message_reactions_handler import register as register_owner_message_reactions
+        register_owner_message_reactions(bot, context)
+        print("✅ owner message reactions handler ready")
+    except Exception as e:
+        print("⚠️ owner message reactions skipped:", type(e).__name__)
+
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
@@ -13,6 +22,7 @@ def load_handlers(bot, context):
         ("ui_settings", "handlers.ui_settings_handler"),
         ("business_control", "handlers.business_control_handler"),
         ("bot_system_control", "handlers.bot_system_control_handler"),
+        ("local_status", "handlers.local_status_handler"),
         ("owner_control_center", "handlers.owner_control_center_handler"),
         ("trade_terminal", "handlers.trade_terminal_handler"),
         ("onboarding", "handlers.onboarding_v2"),
@@ -34,6 +44,7 @@ def load_handlers(bot, context):
         ("legacy_wallet", "handlers.legacy_wallet_handler"),
         ("arcade", "handlers.arcade_handler"),
         ("share", "handlers.share_handler"),
+        ("social_assets", "handlers.social_assets_handler"),
         ("store", "handlers.store_handler"),
         ("user_shop", "handlers.user_shop_handler"),
         ("bot_factory", "handlers.bot_factory"),
@@ -54,6 +65,7 @@ def load_handlers(bot, context):
         ("mission", "handlers.mission_handler"),
         ("academy", "handlers.academy_handler"),
         ("academy_menu", "handlers.academy_menu_handler"),
+        ("pitch", "handlers.pitch_handler"),
         ("device", "handlers.device_handler"),
         ("esp_control", "handlers.esp_control"),
         ("esp_agent_control", "handlers.esp_agent_control"),
@@ -61,7 +73,9 @@ def load_handlers(bot, context):
         ("gateway", "handlers.gateway_handler"),
         ("file", "handlers.file_handler"),
         ("voice", "handlers.voice_handler"),
+        ("synth", "handlers.synth_handler"),
         ("help", "handlers.help_handler"),
+        ("select_all", "handlers.select_all_handler"),
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
         ("leaderboard", "handlers.leaderboard_handler"),
@@ -71,6 +85,7 @@ def load_handlers(bot, context):
         ("agent_submission_guard", "handlers.agent_submission_guard"),
         ("learning_path", "learning_path"),
         ("lesson", "handlers.lesson_handler"),
+        ("trader_certification", "handlers.trader_certification_handler"),
         ("bot_identity", "handlers.bot_identity_handler"),
         ("map", "handlers.map_handler"),
         ("unified_system", "handlers.unified_system_handler"),

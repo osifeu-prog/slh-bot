@@ -13,6 +13,7 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
         return {
             "users": {
                 "seller": {
+                    "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
                     "wallet": {
                         "token_balance": 10.0,
                         "live_token_balance": 10.0,
@@ -22,6 +23,7 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
                     }
                 },
                 "buyer": {
+                    "academy": {"courses": {"algo_trading_999": {"stage": 7, "completed": [1, 2, 3, 4, 5, 6, 7]}}},
                     "wallet": {
                         "token_balance": 0.0,
                         "live_token_balance": 0.0,
@@ -30,14 +32,49 @@ class ExchangeSendTimeGateTests(unittest.TestCase):
                         "credits": 100.0,
                     }
                 },
+                "8789977826": {
+                    "wallet": {
+                        "token_balance": 0.0,
+                        "live_token_balance": 0.0,
+                        "exchange_reserved_slh": 0.0,
+                        "exchange_reserved_credits": 0.0,
+                        "credits": 0.0,
+                    }
+                },
             },
             "transactions": [],
-            "ledger": [],
+            "ledger": [{
+                "uid": "8789977826",
+                "before": 0.0,
+                "amount": 0.0,
+                "after": 0.0,
+                "reason": "test:credits_anchor",
+                "meta": {"ledger_domain": "credits"},
+            }, {
+                "time": "2026-09-18T11:57:23+00:00",
+                "uid": "buyer", "before": 1.0, "amount": -1.0, "after": 0.0,
+                "reason": "exchange:sell_reserve", "meta": {"order_id": "O_LEGACY"},
+            }, {
+                "time": "2026-09-18T11:58:23+00:00",
+                "uid": "buyer", "before": 0.0, "amount": 1.0, "after": 1.0,
+                "reason": "exchange:cancel_release", "meta": {"order_id": "O_LEGACY"},
+            }],
             "slh_token_ledger": [],
-            "exchange_orders": {},
+            "exchange_orders": {
+                "O_LEGACY": {
+                    "id": "O_LEGACY", "uid": "buyer", "side": "sell",
+                    "original_amount": "1.00000000", "remaining_amount": "0.00000000",
+                    "limit_price": "1.00000000", "reserved_slh": "0.00000000",
+                    "reserved_credits": "0.00000000", "sequence": 1, "status": "cancelled",
+                }
+            },
             "exchange_trades": [],
             "exchange_requests": {},
-            "exchange_sequence": 0,
+            "exchange_sequence": 1,
+            "trader_certifications": {
+                "seller": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"},
+                "buyer": {"passed": True, "score": 10, "critical_pass": True, "quiz_version": "slh-trader-readiness-v1"},
+            },
         }
 
     def test_execution_check_requires_explicit_open_gate(self):

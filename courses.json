@@ -324,7 +324,140 @@
         "id": 6,
         "name": "מעבדת מסכם: בניית סוכן Paper Trading",
         "lesson": "lessons/algorithmic_trading/6.txt"
+      },
+      {
+        "id": 7,
+        "name": "הסמכת סוחר SLH — מבחן כשירות ומסחר אחראי",
+        "lesson": "lessons/algorithmic_trading/7.txt"
       }
     ]
+  },
+  "music_reading_basics": {
+    "title": "קריאת תווים וקצב — מהיסוד",
+    "description": "קריאת חמשה, מפתחות, משכים, סימני שינוי, קצב ותרגול נגינה.",
+    "stages": [
+      {
+        "id": 1,
+        "name": "חמשה, מפתחות ושמות התווים",
+        "lesson": "lessons/music_reading_basics/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "משך התווים, הפסקות ומשקל",
+        "lesson": "lessons/music_reading_basics/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "גובה הצליל, אוקטבות וקווי עזר",
+        "lesson": "lessons/music_reading_basics/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "סימני שינוי, תיבות וסימני מפתח",
+        "lesson": "lessons/music_reading_basics/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "קריאה ראשונה ותרגול מסכם",
+        "lesson": "lessons/music_reading_basics/5.txt"
+      }
+    ],
+    "access": "free"
+  },
+  "music_theory_foundations": {
+    "title": "תאוריה מוזיקלית — צלילים, סולמות ומרווחים",
+    "description": "חצאי טון, טונים, מרווחים, סולמות, מרכז טונאלי ובניית אקורדים.",
+    "stages": [
+      {
+        "id": 1,
+        "name": "חצי טון, טון ומרווח",
+        "lesson": "lessons/music_theory_foundations/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "סולם מז׳ור ובניית מפתח",
+        "lesson": "lessons/music_theory_foundations/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "סולמות מינוריים ומרכז טונאלי",
+        "lesson": "lessons/music_theory_foundations/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "בניית מרווחים ואקורדים מתוך סולם",
+        "lesson": "lessons/music_theory_foundations/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "ניתוח שמיעתי ופרויקט קצר",
+        "lesson": "lessons/music_theory_foundations/5.txt"
+      }
+    ],
+    "access": "free"
+  },
+  "harmony_voice_leading": {
+    "title": "הרמוניה והובלת קולות — מאקורד למוזיקה",
+    "description": "אקורדים, היפוכים, תפקידים הרמוניים, קדנצות והובלת קולות.",
+    "stages": [
+      {
+        "id": 1,
+        "name": "אקורדים משולשים ואיכות",
+        "lesson": "lessons/harmony_voice_leading/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "היפוכים ובס",
+        "lesson": "lessons/harmony_voice_leading/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "תפקידים הרמוניים וקדנצות",
+        "lesson": "lessons/harmony_voice_leading/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "הובלת קולות ופתרון חלק",
+        "lesson": "lessons/harmony_voice_leading/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "מהלך אקורדים, מלודיה ובס",
+        "lesson": "lessons/harmony_voice_leading/5.txt"
+      }
+    ],
+    "access": "free"
+  },
+  "voice_and_ear_training": {
+    "title": "הקול האנושי, שמיעה ואימון מוזיקלי בטוח",
+    "description": "חימום עדין, דיוק בגובה, תהודה והגייה, אימון שמיעה והקלטה עצמית.",
+    "stages": [
+      {
+        "id": 1,
+        "name": "הכנה, יציבה ונשימה נוחה",
+        "lesson": "lessons/voice_and_ear_training/1.txt"
+      },
+      {
+        "id": 2,
+        "name": "דיוק בגובה הצליל ומשוב",
+        "lesson": "lessons/voice_and_ear_training/2.txt"
+      },
+      {
+        "id": 3,
+        "name": "תנועות, תהודה והגייה",
+        "lesson": "lessons/voice_and_ear_training/3.txt"
+      },
+      {
+        "id": 4,
+        "name": "אימון שמיעה: מרווחים ואקורדים",
+        "lesson": "lessons/voice_and_ear_training/4.txt"
+      },
+      {
+        "id": 5,
+        "name": "ביטוי, הקלטה ותוכנית תרגול",
+        "lesson": "lessons/voice_and_ear_training/5.txt"
+      }
+    ],
+    "access": "free"
   }
 }

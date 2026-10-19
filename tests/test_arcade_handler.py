@@ -9,6 +9,7 @@ class FakeBot:
         self.commands = {}
         self.filters = []
         self.sent = []
+        self.sent_kwargs = []
 
     def message_handler(self, commands=None, func=None):
         def decorator(fn):
@@ -21,6 +22,7 @@ class FakeBot:
 
     def reply_to(self, msg, text, **kwargs):
         self.sent.append(text)
+        self.sent_kwargs.append(kwargs)
 
 
 class Msg:
@@ -46,6 +48,19 @@ class ArcadeHandlerTests(unittest.TestCase):
 
         start.assert_called_once_with("100")
         self.assertIn("2 + 2 = ?", bot.sent[-1])
+
+    def test_arcade_start_escapes_stop_command_for_markdown(self):
+        bot = FakeBot()
+        arcade_handler.register(bot)
+        with patch.object(
+            arcade_handler.arcade_engine,
+            "start_game",
+            return_value={"status": "started", "question": "2 + 2 = ?", "deadline": 160},
+        ):
+            bot.commands["arcade"](Msg("/arcade"))
+
+        self.assertEqual(bot.sent_kwargs[-1].get("parse_mode"), "Markdown")
+        self.assertIn(r"/arcade\_stop", bot.sent[-1])
 
     def test_active_answer_uses_existing_engine(self):
         bot = FakeBot()
