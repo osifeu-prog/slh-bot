@@ -8,6 +8,33 @@ PASSWORD = os.getenv("MQTT_PASSWORD") or ""
 USE_TLS = os.getenv("MQTT_TLS", "0") == "1"
 
 
+def wallet_sync_security_ready():
+    """Fail closed unless wallet sync has an explicitly approved secure MQTT setup.
+
+    The enable flag acknowledges that broker-side per-device ACLs and identity
+    binding have been configured. The broker must also appear in an explicit
+    operator-maintained allowlist. This function never changes configuration
+    or connects to a broker.
+    """
+    explicitly_enabled = os.getenv("MQTT_WALLET_SYNC_ENABLED", "0") == "1"
+    configured_brokers = {
+        item.strip().lower().rstrip(".")
+        for item in os.getenv("MQTT_WALLET_SYNC_ALLOWED_BROKERS", "").split(",")
+        if item.strip()
+    }
+    broker_is_approved = bool(
+        BROKER
+        and BROKER.strip().lower().rstrip(".") in configured_brokers
+    )
+    return bool(
+        explicitly_enabled
+        and broker_is_approved
+        and USER
+        and PASSWORD
+        and USE_TLS
+    )
+
+
 def apply(client):
     """Attach credentials and TLS to a paho client before connect()."""
     if USER:
@@ -16,7 +43,8 @@ def apply(client):
         try:
             client.tls_set()
         except Exception as e:
-            print("MQTT TLS setup failed:", e)
+            # Never continue with a plaintext client after TLS setup failed.
+            raise RuntimeError("MQTT TLS setup failed; refusing connection") from e
     return client
 
 
