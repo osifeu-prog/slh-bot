@@ -67,13 +67,6 @@ AUDIT_COMMAND_PATTERNS = [
 ]
 
 
-AUDIT_FORBIDDEN_PATHS = (
-    re.compile(r"""(^|[\s'"=:/])(?:\./)?state(?:/|$)""", re.IGNORECASE),
-    re.compile(r"""(^|[\s'"=:/])(?:\./)?\.env(?:\.|/|$)""", re.IGNORECASE),
-    re.compile(r"""(^|[\s'"=:/])(?:\./)?\.git(?:/|$)""", re.IGNORECASE),
-    re.compile(r"""(^|[\s'"=:/])/(?:proc|sys|dev)(?:/|$)""", re.IGNORECASE),
-)
-
 AUDIT_ALLOWED_ROOT_FILES = {
     "README.md",
     "DEVELOPER_GUIDE.md",
@@ -83,65 +76,133 @@ AUDIT_ALLOWED_ROOT_FILES = {
     "ALPHA_CONTROL_PLANE.md",
 }
 
+AUDIT_ALLOWED_ROOTS = ("core/", "handlers/", "tests/", "slh_mcp/")
+AUDIT_SENSITIVE_COMPONENTS = {"state", ".git", "proc", "sys", "dev"}
+
 
 def _audit_path_allowed(path):
+    """Allow only source-tree paths and explicitly approved root documents."""
     value = str(path or "").strip().strip("\"'")
-    if not value or value in {".", "./", "/app", "/"}:
+    if not value or value in {".", "./", "/app", "/"} or value.startswith("/"):
         return False
-    if value.startswith("/"):
+
+    normalized = value.replace("\\", "/")
+    components = [part.lower() for part in normalized.split("/") if part]
+    if ".." in components:
         return False
-    if value in AUDIT_ALLOWED_ROOT_FILES:
+    if any(
+        part in AUDIT_SENSITIVE_COMPONENTS
+        or part == ".env"
+        or part.startswith(".env.")
+        for part in components
+    ):
+        return False
+
+    if normalized in AUDIT_ALLOWED_ROOT_FILES:
         return True
-    normalized = value.replace("\\\\", "/")
-    return normalized.startswith(("core/", "handlers/", "tests/", "slh_mcp/"))
+    return normalized.startswith(AUDIT_ALLOWED_ROOTS)
 
 
 def _audit_paths_safe(cmd):
-    """Reject sensitive runtime paths and unrestricted repository recursion."""
-    if any(pattern.search(cmd) for pattern in AUDIT_FORBIDDEN_PATHS):
-        return False
+    """Validate a small read-only command grammar before any process is started."""
+    import shlex
 
     try:
-        import shlex
         tokens = shlex.split(cmd)
     except ValueError:
         return False
-
     if not tokens:
         return False
 
     command = tokens[0].lower()
     args = tokens[1:]
 
-    if command == "find":
-        roots = [x for x in args if not x.startswith("-")]
-        return bool(roots) and _audit_path_allowed(roots[0])
+    if command in {"pwd", "whoami"}:
+        return not args
 
-    if command in {"cat", "head", "tail"}:
-        paths = [x for x in args if not x.startswith("-")]
-        return bool(paths) and all(_audit_path_allowed(x) for x in paths)
+    if command == "cat":
+        return bool(args) and all(_audit_path_allowed(path) for path in args)
+
+    if command in {"head", "tail"}:
+        if args[:1] == ["-n"]:
+            if len(args) < 3 or not args[1].isdigit():
+                return False
+            paths = args[2:]
+        else:
+            paths = args
+        return bool(paths) and all(_audit_path_allowed(path) for path in paths)
 
     if command == "sed":
-        paths = [x for x in args[1:] if not x.startswith("-")]
-        return bool(paths) and all(_audit_path_allowed(x) for x in paths)
+        # Permit only line-range printing; GNU sed's e/r/w commands are excluded.
+        if len(args) != 3 or args[0] != "-n":
+            return False
+        if not re.fullmatch(r"(?:\d+|\$)(?:,(?:\d+|\$))?p", args[1]):
+            return False
+        return _audit_path_allowed(args[2])
 
     if command == "grep":
-        paths = [x for x in args if ("/" in x or x in {".", "./", "/app"})]
-        return all(_audit_path_allowed(x) for x in paths) if paths else True
+        allowed_flags = {"-n", "-i", "-R", "-r", "-E", "-F", "-w", "-x", "-v"}
+        index = 0
+        while index < len(args) and args[index].startswith("-"):
+            if args[index] not in allowed_flags:
+                return False
+            index += 1
+        # Require an explicit search pattern and at least one approved source path.
+        if index >= len(args) - 1:
+            return False
+        paths = args[index + 1:]
+        return all(_audit_path_allowed(path) for path in paths)
 
-    return True
+    if command == "find":
+        if not args or not _audit_path_allowed(args[0]):
+            return False
+        index = 1
+        while index < len(args):
+            flag = args[index]
+            if flag == "-type":
+                if index + 1 >= len(args) or args[index + 1] not in {"f", "d"}:
+                    return False
+                index += 2
+            elif flag == "-name":
+                if (
+                    index + 1 >= len(args)
+                    or "/" in args[index + 1]
+                    or args[index + 1].startswith("-")
+                ):
+                    return False
+                index += 2
+            elif flag in {"-maxdepth", "-mindepth"}:
+                if index + 1 >= len(args) or not args[index + 1].isdigit():
+                    return False
+                index += 2
+            else:
+                # In particular, reject -exec, -delete, -ok, and unknown predicates.
+                return False
+        return True
+
+    return False
 
 
 def is_audit_command(cmd):
-    if any(re.search(p, cmd, re.IGNORECASE) for p in AUDIT_COMMAND_PATTERNS):
-        # No command chaining, redirection, command substitution or writes.
-        if re.search(r"[;&|]", cmd) or "`" in cmd or re.search(r"\$\(", cmd):
-            return False
-        if is_dangerous(cmd):
-            return False
-        return _audit_paths_safe(cmd)
-    return False
+    import shlex
 
+    try:
+        tokens = shlex.split(cmd)
+    except (TypeError, ValueError):
+        return False
+    if not tokens:
+        return False
+
+    command = tokens[0].lower()
+    if command not in {"whoami", "pwd", "grep", "find", "head", "tail", "cat", "sed"}:
+        return False
+
+    # The audit interface accepts command arguments, never shell syntax.
+    if re.search(r"[;&|<>]", cmd) or chr(96) in cmd or re.search(r"\$\(", cmd):
+        return False
+    if is_dangerous(cmd):
+        return False
+    return _audit_paths_safe(cmd)
 
 
 SECRET_PATTERNS = [
@@ -221,17 +282,31 @@ def run_audit(user_id, cmd, source="audit", timeout=15, max_output=4000):
     if not is_audit_command(cmd):
         audit(user_id, cmd, source, "blocked_non_audit")
         return False, "Read-only audit command required."
-    return _run(cmd, user_id, source, timeout, max_output, shell=False)
+    return _run_audit(cmd, user_id, source, timeout, max_output)
 
 
-def _run(cmd, user_id, source, timeout, max_output, shell=True):
+def _run_audit(cmd, user_id, source, timeout, max_output):
+    """Execute validated audit commands without invoking a shell."""
+    import shlex
+
     try:
-        if shell:
-            run_command = cmd
-        else:
-            import shlex
-            run_command = shlex.split(cmd)
-        result = subprocess.run(run_command, shell=shell, capture_output=True, text=True, timeout=timeout)
+        argv = shlex.split(cmd)
+        result = subprocess.run(
+            argv, shell=False, capture_output=True, text=True, timeout=timeout
+        )
+        output = redact_secrets((result.stdout or "") + (result.stderr or ""))
+        if len(output) > max_output:
+            output = output[:max_output] + "\n... truncated"
+        audit(user_id, cmd, source, f"exit_{result.returncode}")
+        return True, output or "(no output)"
+    except Exception as e:
+        audit(user_id, cmd, source, f"error_{type(e).__name__}")
+        return False, f"Error: {e}"
+
+
+def _run(cmd, user_id, source, timeout, max_output):
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         output = redact_secrets((result.stdout or "") + (result.stderr or ""))
         if len(output) > max_output:
             output = output[:max_output] + "\n... truncated"
