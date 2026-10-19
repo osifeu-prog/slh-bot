@@ -13,8 +13,8 @@ import state_manager
 from core.authority import is_owner
 from core.bnb_gate import (
     _effective_config,
-    _empirical_settlement_evidence,
     bnb_deposits_open,
+    bnb_opening_evidence,
     bnb_readiness,
 )
 
@@ -44,6 +44,7 @@ def _authorized_private_uid(message, bot):
 
 
 def _status_report() -> str:
+    """Show fresh release evidence; stored smoke status alone never means ready."""
     try:
         db = state_manager.load_db()
         if not isinstance(db, dict):
@@ -53,32 +54,71 @@ def _status_report() -> str:
             settings = {}
         elif not isinstance(settings, dict):
             raise ValueError("BNB_SETTINGS_INVALID")
+
         readiness = bnb_readiness(db)
-        evidence = _empirical_settlement_evidence(db) or {}
+        # This performs fresh live-chain, empirical-proof, and historical-ledger
+        # checks. Do not substitute the persisted smoke status for go-live proof.
+        evidence = bnb_opening_evidence()
+        historical = evidence.get("historical_deposits")
+        historical = historical if isinstance(historical, dict) else {}
+        empirical = evidence.get("empirical_settlement")
+        empirical = empirical if isinstance(empirical, dict) else {}
+        blockers = evidence.get("blockers")
+        blockers = blockers if isinstance(blockers, list) else []
+
         config = _effective_config(db)
         public_open = bnb_deposits_open()
         override = str(settings.get(_OVERRIDE_KEY) or "").strip().lower() or "(unset)"
         if override not in {"deny", "(unset)", "auto"}:
             override = "UNKNOWN (fails closed)"
+
+        evidence_status = (
+            "READY_TO_OPEN"
+            if evidence.get("ready_to_open") is True
+            and evidence.get("status") == "READY_TO_OPEN"
+            else "BLOCKED"
+        )
+        historical_status = str(historical.get("status") or "UNKNOWN").upper()
+        try:
+            historical_checked = max(0, int(historical.get("rows_checked") or 0))
+            historical_findings = max(
+                0,
+                int(historical.get("finding_count") or len(historical.get("findings") or [])),
+            )
+        except (TypeError, ValueError, OverflowError):
+            historical_checked = 0
+            historical_findings = 1
+            historical_status = "BLOCKED"
+
+        blocker_text = ", ".join(
+            " ".join(str(item).split())[:100]
+            for item in blockers[:5]
+            if str(item).strip()
+        ) or "none"
+
         return "\n".join([
             "🔎 BNB GATE — READ ONLY",
             "",
             f"Public gate: {'OPEN' if public_open else 'CLOSED'}",
             f"Env BNB_DEPOSITS_OPEN: {'1' if readiness.get('flag_open') else '0/unset'}",
             f"DB override: {override}",
-            f"Readiness: {'PASS' if readiness.get('ready') else 'BLOCKED'}",
-            f"Reasons: {', '.join(str(x) for x in (readiness.get('reasons') or [])) or 'none'}",
-            f"Empirical evidence: {evidence.get('status') or 'UNKNOWN'}",
+            f"Configuration readiness: {'PASS' if readiness.get('ready') else 'BLOCKED'}",
+            f"Configuration reasons: {', '.join(str(x) for x in (readiness.get('reasons') or [])) or 'none'}",
+            f"Empirical transaction proof: {str(empirical.get('status') or 'PENDING').upper()}",
+            f"Historical BNB deposits: {historical_status} · checked={historical_checked} · findings={historical_findings}",
+            f"Overall opening evidence: {evidence_status}",
+            f"Opening blockers: {blocker_text}",
             f"Treasury (masked): {_mask(config.get('treasury_wallet'))}",
             "",
-            "הבוט יכול לכפות CLOSED בלבד. פתיחה דורשת env=1, מוכנות וראיית chain/ledger תקפה.",
+            "Readiness is not authorization. Opening requires fresh chain + complete ledger-history proof and an explicit operator decision.",
+            "This command is read-only. The bot can force CLOSED only.",
             "Commands: /bnb_gate_status · /bnb_gate_close",
         ])
     except Exception as exc:
         return (
             "🔎 BNB GATE — READ ONLY\n\n"
             f"Public gate: CLOSED (fail-safe; {type(exc).__name__})\n"
-            "לא נשלחה עסקה ולא השתנו יתרות."
+            "Opening evidence could not be fully verified. No transaction or balance change was made."
         )
 
 
