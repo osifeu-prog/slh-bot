@@ -11,6 +11,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# Running this file as `python3 tools/exchange_source_forensics.py` puts
+# tools/ (not the repository root) on sys.path. Keep repo-root imports reliable.
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 TARGET_ORDER_IDS = frozenset({
     "O0000000001", "O0000000003", "O0000000006",
     "O0000000009", "O0000000010", "O0000000011", "O0000000012",
