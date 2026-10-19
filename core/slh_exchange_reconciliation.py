@@ -338,6 +338,215 @@ def audit_db(db):
             or kind in {"exchange_release"}
         )
 
+    def _verified_missed_release_correction(order_id):
+        """Recognize only the exact mirrored legacy correction written by
+        correct_missed_release() for an unfilled archived test-seed order.
+
+        A correction is reconciled only when both ledgers contain the same
+        unique event, amounts and balance snapshots form one consistent
+        reserve-and-restore cycle, the source writer's SLH metadata is present,
+        the current wallet is still the legacy model, and the token-ledger
+        balance chain reaches the current wallet balance. Otherwise fail closed.
+        """
+        oid = str(order_id or "")
+        order = orders.get(oid)
+        if (
+            not oid
+            or not isinstance(order, dict)
+            or order_source_by_id.get(oid) != "archive"
+        ):
+            return False
+        context = _current_order_context(oid)
+        if (
+            context.get("order_is_archived_test_seed") is not True
+            or context.get("order_status") != "CANCELLED"
+            or context.get("order_remaining_is_zero") is not True
+            or context.get("order_reserved_slh_is_zero") is not True
+            or context.get("wallet_reserve_matches_open_orders") is not True
+            or str(order.get("side") or "").lower() != "sell"
+        ):
+            return False
+
+        uid = _uid(order)
+        users = db.get("users", {})
+        user = users.get(uid) if uid and isinstance(users, dict) else None
+        wallet = user.get("wallet") if isinstance(user, dict) else None
+        if not isinstance(wallet, dict) or wallet.get("live_token_balance") is not None:
+            return False
+        current_token_balance = _amount(wallet.get("token_balance"))
+        original = _amount(order.get("original_amount"))
+        if current_token_balance is None or original is None or original <= 0:
+            return False
+
+        # This exception is deliberately limited to an unfilled order. Filled
+        # orders need their own trade-settlement evidence and cannot use a
+        # cancellation correction to reconcile the sold portion.
+        related_trades = []
+        for trade_source_name in ("exchange_trades", "exchange_trade_archive"):
+            for _, trade in _records(db.get(trade_source_name, [])):
+                if str(trade.get("sell_order_id") or "") == oid:
+                    related_trades.append(trade)
+        if related_trades:
+            return False
+
+        source_by_name = dict(sources)
+        ledger_source = source_by_name.get("ledger", [])
+        token_source = source_by_name.get("slh_token_ledger", [])
+        ledger_rows = [event for _, event in ledger_source if _order_id(event) == oid]
+        token_rows = [event for _, event in token_source if _order_id(event) == oid]
+        expected_event_id = f"correction:missed_release:{oid}"
+
+        reserve_rows = [
+            event for event in ledger_rows
+            if str(event.get("reason") or "") == "exchange:sell_reserve"
+            and str(event.get("uid") or "") == uid
+        ]
+        ledger_corrections = [
+            event for event in ledger_rows
+            if str(event.get("reason") or "") == "exchange:missed_release_correction"
+        ]
+        token_corrections = [
+            event for event in token_rows
+            if str(event.get("reason") or "") == "exchange:missed_release_correction"
+        ]
+        token_reserves = [
+            event for event in token_rows if _event_groups(event)[0]
+        ]
+        normal_releases = [
+            event for event in ledger_rows + token_rows
+            if _event_groups(event)[1] and not _event_groups(event)[2]
+        ]
+        if (
+            len(reserve_rows) != 1
+            or len(ledger_corrections) != 1
+            or len(token_corrections) != 1
+            or token_reserves
+            or normal_releases
+            or _event_id(ledger_corrections[0]) != expected_event_id
+            or _event_id(token_corrections[0]) != expected_event_id
+        ):
+            return False
+
+        # The event ID must be unique within each ledger. Its intentional
+        # cross-ledger pair is validated below rather than blindly deduplicated.
+        for source in (ledger_source, token_source):
+            if sum(1 for _, event in source if _event_id(event) == expected_event_id) != 1:
+                return False
+
+        reserve = reserve_rows[0]
+        correction = ledger_corrections[0]
+        token_correction = token_corrections[0]
+        correction_meta = _meta(correction)
+        reserve_before = _amount(reserve.get("before"))
+        reserve_after = _amount(reserve.get("after"))
+        reserve_delta = _amount(reserve.get("amount"))
+        correction_before = _amount(correction.get("before"))
+        correction_after = _amount(correction.get("after"))
+        correction_amount = _amount(correction.get("amount"))
+        token_before = _amount(token_correction.get("before_to"))
+        token_after = _amount(token_correction.get("after_to"))
+        token_amount = _amount(token_correction.get("amount"))
+        operator = str(correction_meta.get("operator_uid") or "").strip()
+        token_operator = str(token_correction.get("operator_uid") or "").strip()
+        note = str(correction_meta.get("note") or "").strip()
+        token_note = str(token_correction.get("note") or "").strip()
+        ledger_time = str(correction.get("time") or "").strip()
+        token_time = str(token_correction.get("timestamp") or token_correction.get("time") or "").strip()
+        reserve_time = str(reserve.get("time") or "").strip()
+
+        if (
+            str(correction_meta.get("asset") or "").strip().upper() != "SLH"
+            or correction_meta.get("order_id") != oid
+            or correction_meta.get("event_id") != expected_event_id
+            or str(token_correction.get("kind") or "") != "reserve_release_correction"
+            or str(token_correction.get("from_uid") or "") != "__EXCHANGE_RESERVE__"
+            or str(token_correction.get("to_uid") or "") != uid
+            or str(token_correction.get("order_id") or "") != oid
+            or str(correction.get("uid") or "") != uid
+            or str(token_correction.get("operator_uid") or "").strip() != operator
+            or not operator
+            or not note
+            or str(token_correction.get("note") or "").strip() != note
+            or not ledger_time
+            or ledger_time != token_time
+            or not reserve_time
+            or any(value is None for value in (
+                reserve_before, reserve_after, reserve_delta,
+                correction_before, correction_after, correction_amount,
+                token_before, token_after, token_amount,
+            ))
+        ):
+            return False
+
+        def _aware_time(raw):
+            try:
+                normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+                parsed = datetime.fromisoformat(normalized)
+                return parsed if parsed.tzinfo is not None and parsed.utcoffset() is not None else None
+            except (TypeError, ValueError, OverflowError):
+                return None
+
+        parsed_reserve_time = _aware_time(reserve_time)
+        parsed_correction_time = _aware_time(ledger_time)
+        if (
+            parsed_reserve_time is None
+            or parsed_correction_time is None
+            or parsed_reserve_time >= parsed_correction_time
+        ):
+            return False
+
+        # The legacy reserve and its one-time correction must exactly reverse
+        # each other's balance snapshots. No positive/negative amounts from
+        # separate accounting domains are netted to make this check pass.
+        if not (
+            reserve_delta == reserve_after - reserve_before
+            and reserve_delta == -original
+            and correction_amount == original
+            and correction_after - correction_before == correction_amount
+            and token_amount == correction_amount
+            and token_before == correction_before
+            and token_after == correction_after
+            and reserve_after == correction_before
+            and reserve_before == correction_after
+        ):
+            return False
+
+        # Prove that the current legacy token_balance is the last balance in
+        # the canonical token-ledger chain for this UID after the correction.
+        token_correction_index = next(
+            (i for i, (_, event) in enumerate(token_source) if event is token_correction),
+            None,
+        )
+        if token_correction_index is None:
+            return False
+        tail = correction_after
+        for _, event in token_source[token_correction_index + 1:]:
+            from_uid = str(event.get("from_uid") or "")
+            to_uid = str(event.get("to_uid") or "")
+            seller_uid = str(event.get("seller_uid") or "")
+            if uid not in {from_uid, to_uid, seller_uid}:
+                continue
+            event_time_raw = str(event.get("timestamp") or event.get("time") or "").strip()
+            event_time = _aware_time(event_time_raw)
+            if event_time is None or event_time <= parsed_correction_time:
+                return False
+            if from_uid == uid:
+                before_value = _amount(event.get("before_from"))
+                after_value = _amount(event.get("after_from"))
+            elif to_uid == uid:
+                before_value = _amount(event.get("before_to"))
+                after_value = _amount(event.get("after_to"))
+            else:
+                before_value = _amount(event.get("seller_total_before"))
+                after_value = _amount(event.get("seller_total_after"))
+            if before_value is None or after_value is None or before_value != tail:
+                return False
+            tail = after_value
+        return current_token_balance == tail
+
+    def _is_verified_missed_release_correction(order_id):
+        return _verified_missed_release_correction(order_id)
+
     # Detect duplicates within each source independently. Do not silently
     # de-duplicate equal IDs across the Credits and SLH token domains.
     for ledger_name, source in sources:
@@ -381,7 +590,12 @@ def audit_db(db):
                 order_ids.add(oid)
             if _is_exchange_audit_event(event):
                 relevant = True
-        if relevant:
+        verified_mirrored_correction = (
+            len(order_ids) == 1
+            and _is_verified_missed_release_correction(next(iter(order_ids)))
+            and event_id == f"correction:missed_release:{next(iter(order_ids))}"
+        )
+        if relevant and not verified_mirrored_correction:
             findings.append({
                 "code": "CROSS_LEDGER_EVENT_ID_REQUIRES_REVIEW",
                 "event_id": event_id,
@@ -471,7 +685,8 @@ def audit_db(db):
         if not any(groups["reserve"] for groups in per_ledger.values()):
             continue
         checked += 1
-        if len(active_ledgers) > 1:
+        verified_mirrored_correction = _is_verified_missed_release_correction(oid)
+        if len(active_ledgers) > 1 and not verified_mirrored_correction:
             findings.append({
                 "code": "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
                 "order_id": oid,
@@ -531,7 +746,7 @@ def audit_db(db):
                 Decimal(0),
             )
 
-            if reserve_events and not normal_releases:
+            if reserve_events and not normal_releases and not verified_mirrored_correction:
                 findings.append({
                     "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
                     "ledger": ledger_name,
@@ -541,7 +756,7 @@ def audit_db(db):
                     "correction_delta": str(correction_total),
                     "note": "Manual correction is evidence to review, not proof of normal reserve release.",
                 })
-            if order_corrections:
+            if order_corrections and not verified_mirrored_correction:
                 findings.append({
                     "code": "MANUAL_RESERVE_CORRECTION_REQUIRES_REVIEW",
                     "ledger": ledger_name,
