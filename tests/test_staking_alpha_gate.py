@@ -62,7 +62,7 @@ def test_stake_and_unlock_round_trip_is_atomic():
         assert released["staked"] == 0.0
 
         duplicate = staking_service.unstake_locked("123", position_id)
-        assert duplicate["status"] == "duplicate"
+        assert duplicate["status"] == "already_unlocked"
 
         db = state_manager.load_db()
         assert db["users"]["123"]["wallet"] == {"credits": 100.0, "staked": 0.0}
