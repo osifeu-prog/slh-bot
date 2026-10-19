@@ -36,7 +36,8 @@ def test_credit_purchase_with_insufficient_treasury_has_no_referral_credit(monke
     _use_memory_db(monkeypatch, db)
 
     result = economy_service.purchase_item(
-        uid="buyer", item="ask_credit", price=20, commission_rate=0.10
+        uid="buyer", item="ask_credit", price=20, commission_rate=0.10,
+        meta={"source": "unit_test", "idempotency_key": "unit:purchase:insufficient-treasury", "item_id": "ask_credit"}
     )
 
     assert result["commission"] == 0
@@ -52,7 +53,8 @@ def test_credit_purchase_with_missing_treasury_does_not_create_treasury(monkeypa
     _use_memory_db(monkeypatch, db)
 
     result = economy_service.purchase_item(
-        uid="buyer", item="ask_credit", price=20, commission_rate=0.10
+        uid="buyer", item="ask_credit", price=20, commission_rate=0.10,
+        meta={"source": "unit_test", "idempotency_key": "unit:purchase:missing-treasury", "item_id": "ask_credit"}
     )
 
     assert result["commission"] == 0
@@ -90,7 +92,8 @@ def test_funded_credit_purchase_records_balanced_commission_ledger(monkeypatch):
     _use_memory_db(monkeypatch, db)
 
     result = economy_service.purchase_item(
-        uid="buyer", item="ask_credit", price=20, commission_rate=0.10
+        uid="buyer", item="ask_credit", price=20, commission_rate=0.10,
+        meta={"source": "unit_test", "idempotency_key": "unit:purchase:funded-commission", "item_id": "ask_credit"}
     )
 
     assert result["commission"] == 2.0
@@ -112,7 +115,8 @@ def test_insufficient_treasury_does_not_create_missing_referrer_wallet_on_purcha
     _use_memory_db(monkeypatch, db)
 
     result = economy_service.purchase_item(
-        uid="buyer", item="ask_credit", price=20, commission_rate=0.10
+        uid="buyer", item="ask_credit", price=20, commission_rate=0.10,
+        meta={"source": "unit_test", "idempotency_key": "unit:purchase:missing-referrer-wallet", "item_id": "ask_credit"}
     )
 
     assert result["commission"] == 0
