@@ -317,7 +317,7 @@ def _go_live_report_output(uid: str) -> str:
 
 
 def register(bot, context=None):
-    @bot.message_handler(commands=["go_live_report", "release_report"])
+    @bot.message_handler(commands=["go_live_report", "release_report", "zero_hour"])
     def go_live_report_cmd(message):
         if not _allowed(message):
             _send_denied(bot, message)
