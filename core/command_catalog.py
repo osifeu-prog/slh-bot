@@ -113,6 +113,7 @@ KNOWN = {
     "deploy": ("CONTROL", "Deploy"),
     "logs": ("CONTROL", "לוגים"),
     "releasecheck": ("CONTROL", "בדיקת release"),
+    "zero_hour": ("SYSTEM", "דוח Zero Hour מאוחד — קריאה בלבד"),
     "vault": ("SECURITY", "Bot Vault"),
     "vault_verify": ("SECURITY", "אימות Vault"),
     "vault_health": ("SECURITY", "בריאות Vault"),
