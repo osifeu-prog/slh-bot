@@ -37,7 +37,8 @@ def apply(client):
         try:
             client.tls_set()
         except Exception as e:
-            print("MQTT TLS setup failed:", e)
+            # Never continue with a plaintext client after TLS setup failed.
+            raise RuntimeError("MQTT TLS setup failed; refusing connection") from e
     return client
 
 
