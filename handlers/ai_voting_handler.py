@@ -1,13 +1,9 @@
-import json
 import time
 
-DB = "state/db.json"
+import state_manager
 
 
-def load_db():
-    with open(DB, encoding="utf-8") as f:
-        db = json.load(f)
-
+def _normalize_votes(db):
     # Canonical voting state is a dict keyed by proposal id.
     # Older state may contain votes as [] or another list-based structure.
     votes = db.get("votes")
@@ -40,13 +36,6 @@ def load_db():
     elif not isinstance(votes, dict):
         db["votes"] = {}
 
-    return db
-
-
-def save_db(db):
-    with open(DB, "w", encoding="utf-8") as f:
-        json.dump(db, f, indent=2, ensure_ascii=False)
-
 
 def register(bot):
     @bot.message_handler(commands=["register_ai"])
@@ -57,9 +46,6 @@ def register(bot):
             bot.reply_to(m, "Only owner can register AI agents")
             return
 
-        db = load_db()
-        agents = db.setdefault("agents", {})
-
         ai_agents = [
             ("ClaudeAgent", "Anthropic Claude AI assistant"),
             ("GroqAgent", "Groq-powered AI agent"),
@@ -67,29 +53,38 @@ def register(bot):
             ("OpenAI_Agent", "OpenAI GPT agent"),
         ]
 
-        created = []
+        def mutate(db):
+            # Normalize and update the same locked, current DB snapshot.
+            # Never load a snapshot and write it back after another operation
+            # may have updated Credits or another financial field.
+            _normalize_votes(db)
+            agents = db.setdefault("agents", {})
+            created = []
 
-        for name, desc in ai_agents:
-            if name not in [a.get("name") for a in agents.values()]:
-                numeric_ids = [
-                    int(k) for k in agents.keys() if str(k).isdigit()
-                ]
+            for name, desc in ai_agents:
+                if name not in [
+                    a.get("name")
+                    for a in agents.values()
+                    if isinstance(a, dict)
+                ]:
+                    numeric_ids = [
+                        int(k) for k in agents.keys() if str(k).isdigit()
+                    ]
+                    nid = str(max(numeric_ids + [0]) + 1)
 
-                nid = str(max(numeric_ids + [0]) + 1)
+                    agents[nid] = {
+                        "name": name,
+                        "role": "ai_assistant",
+                        "state": "idle",
+                        "inbox": [],
+                        "description": desc,
+                        "permissions": ["read", "vote", "propose"],
+                    }
+                    created.append(name)
 
-                agents[nid] = {
-                    "name": name,
-                    "role": "ai_assistant",
-                    "state": "idle",
-                    "inbox": [],
-                    "description": desc,
-                    "permissions": ["read", "vote", "propose"],
-                }
+            return created
 
-                created.append(name)
-
-        db["agents"] = agents
-        save_db(db)
+        created = state_manager.atomic_update(mutate)
 
         if created:
             bot.reply_to(

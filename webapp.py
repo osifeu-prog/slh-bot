@@ -816,6 +816,20 @@ def bnb_smoke_page():
     return resp
 
 
+@app.route("/synth-ui")
+def synth_ui_page():
+    """Serve the standalone Synth UI used by Telegram and the Mini App."""
+    html_path = BASE_DIR / "synth_ui.html"
+    if not html_path.is_file():
+        return jsonify({"error": "SYNTH_UI_UNAVAILABLE"}), 503
+    resp = make_response(html_path.read_text(encoding="utf-8"))
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
 @app.route("/mini-app")
 @app.route("/mini-app-v2")
 @app.route("/mini-app-v3")
@@ -841,6 +855,35 @@ function showGuide(id){
 """
     if "function showGuide(" not in html:
         html = html.replace("</body>", shim + "</body>")
+
+    # Add a direct entry point without editing the very large legacy Mini App
+    # document. The standalone page is also launched from the bot keyboard.
+    synth_entry = """
+<script id="slh-synth-miniapp-entry">
+(function(){
+  function addSynthEntry(){
+    var grid=document.querySelector("#home .ux-action-grid");
+    if(!grid||document.getElementById("slh-synth-miniapp-button"))return;
+    var button=document.createElement("button");
+    button.id="slh-synth-miniapp-button";
+    button.type="button";
+    button.className="action";
+    button.innerHTML="<b>🎹 סינתיסייזר</b><span>בנה אקורדים ונגן רצף</span>";
+    button.addEventListener("click",function(){
+      window.location.assign("/synth-ui?source=miniapp");
+    });
+    grid.appendChild(button);
+  }
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",addSynthEntry,{once:true});
+  }else{
+    addSynthEntry();
+  }
+})();
+</script>
+"""
+    if "slh-synth-miniapp-entry" not in html:
+        html = html.replace("</body>", synth_entry + "</body>")
     resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"

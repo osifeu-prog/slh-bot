@@ -73,7 +73,199 @@ def _send_pay_menu(bot, chat_id, uid):
     bot.send_message(chat_id, "💎 Credits\n\nבחר חבילה כדי להמשיך דרך Telegram Stars.", reply_markup=markup)
 
 
+
+def _commerce_order_counts(db, key):
+    root = db.get(key, {}) if isinstance(db, dict) else {}
+    rows = list(root.values()) if isinstance(root, dict) else (root if isinstance(root, list) else [])
+    statuses = [
+        str(row.get("status") or "").strip().upper()
+        for row in rows if isinstance(row, dict)
+    ]
+    fulfilled = sum(status == "FULFILLED" for status in statuses)
+    pending = sum(status in {"PAID", "RECOVERABLE", "FULFILLING", "PENDING"} for status in statuses)
+    return {"total": len(statuses), "fulfilled": fulfilled, "pending": pending}
+
+
+def _format_commerce_status(
+    *, db, stars_prices, stars_token_configured, card_status, card_items,
+    ton_deposits_open, bnb_deposits_open,
+):
+    """Format a read-only commerce readiness report; never creates orders/invoices."""
+    import math
+
+    stars_prices = stars_prices if isinstance(stars_prices, dict) else {}
+    card_status = card_status if isinstance(card_status, dict) else {}
+    card_items = card_items if isinstance(card_items, list) else []
+    products = db.get("products", {}) if isinstance(db, dict) else {}
+    products = products if isinstance(products, dict) else {}
+
+    lines = [
+        "🛍 SLH COMMERCE — READ ONLY",
+        "",
+        "⭐ Telegram Stars (digital products)",
+    ]
+    if not stars_token_configured:
+        lines.append("מצב: BLOCKED — BOT_TOKEN אינו מוגדר.")
+    elif stars_prices:
+        lines.append(f"מצב: קטלוג מוגדר; {len(stars_prices)} מוצר/ים מתומחרים ב-Stars.")
+        lines.extend(
+            "• " + str(item_id) + ": " + str(price) + "⭐"
+            for item_id, price in sorted(stars_prices.items())
+        )
+        lines.append("רכישה: Mini App → Market או /buystars <item_id>.")
+    else:
+        lines.append("מצב: אין מוצרי Stars מתומחרים בקטלוג.")
+
+    lines.extend(["", "💳 PayPlus (כרטיסי אשראי — מוצרים פיזיים/חומרה בלבד)"])
+    enabled = bool(card_status.get("enabled"))
+    configured = bool(card_status.get("configured"))
+    sellable, stock_blocked = [], []
+    for item in card_items:
+        if not isinstance(item, dict):
+            continue
+        item_id = str(item.get("id") or "").strip()
+        product = products.get(item_id)
+        try:
+            inventory = int(product.get("inventory", 0) or 0) if isinstance(product, dict) else 0
+        except (TypeError, ValueError, OverflowError):
+            inventory = 0
+        if inventory > 0:
+            sellable.append(item)
+        else:
+            stock_blocked.append(item)
+
+    if not configured:
+        lines.append("מצב: BLOCKED — חסרים פרטי ספק/כתובת callback/כתובת ציבורית ב-Railway.")
+    elif not enabled:
+        lines.append("מצב: CLOSED — CARD_PAYMENTS_OPEN אינו מוגדר במפורש ל-1.")
+    elif not card_items:
+        lines.append("מצב: BLOCKED — אין מוצרי חומרה עם מחיר ILS מוגדר.")
+    elif not sellable:
+        lines.append(
+            f"מצב: BLOCKED — {len(card_items)} מוצר/ים מתומחרים, אך אין מלאי מוגדר ב-db.products."
+        )
+    else:
+        lines.append(f"מצב: READY לכאורה — {len(sellable)} מוצר/ים מתומחרים ובעלי מלאי.")
+        for item in sellable:
+            try:
+                price = float(item.get("price_ils"))
+                price_text = f"{price:.2f} ₪" if math.isfinite(price) and price > 0 else "מחיר לא תקין"
+            except (TypeError, ValueError, OverflowError):
+                price_text = "מחיר לא תקין"
+            lines.append(f"• {item.get('name', item.get('id'))}: {price_text}")
+        lines.append("אישור סליקה עדיין דורש עסקת בדיקה מבוקרת ואימות callback אצל PayPlus.")
+    if stock_blocked and configured and enabled:
+        lines.append(f"מוצרים ללא מלאי תקין: {len(stock_blocked)}.")
+    lines.append("הערה: כרגע הסליקה אינה מופעלת אם חסרים ספק, מחירים, מלאי או דגל פתיחה.")
+
+    star_orders = _commerce_order_counts(db, "star_item_orders")
+    card_orders = _commerce_order_counts(db, "card_orders")
+    lines.extend([
+        "",
+        "🪙 TON / BNB — תשלום ישיר על מוצר",
+        "TON: NOT IMPLEMENTED. מסלול ההפקדה הקיים הוא TON → Credits, לא קניית מוצר.",
+        f"שער הפקדות TON בפועל: {'OPEN' if ton_deposits_open else 'CLOSED'}.",
+        "BNB: NOT IMPLEMENTED. מסלול ההפקדה הקיים הוא BNB → Credits, לא קניית מוצר.",
+        f"שער הפקדות BNB בפועל: {'OPEN' if bnb_deposits_open else 'CLOSED'}.",
+        "אין לפתוח את שערי ההפקדה כדי לעקוף checkout של מוצר.",
+        "",
+        "📦 מצב הזמנות (רשומות מקומיות)",
+        f"Stars: {star_orders['total']} הזמנות · {star_orders['fulfilled']} סופקו · {star_orders['pending']} ממתינות/דורשות התאוששות.",
+        f"Cards: {card_orders['total']} הזמנות · {card_orders['fulfilled']} סופקו · {card_orders['pending']} ממתינות/דורשות התאוששות.",
+    ])
+
+    revenue = db.get("revenue_ledger", []) if isinstance(db, dict) else []
+    totals, valid_events = {}, 0
+    if isinstance(revenue, list):
+        for row in revenue:
+            if not isinstance(row, dict) or not str(row.get("reference") or "").strip():
+                continue
+            try:
+                amount = float(row.get("amount"))
+            except (TypeError, ValueError, OverflowError):
+                continue
+            currency = str(row.get("currency") or "").strip().upper()
+            if not currency or not math.isfinite(amount) or amount <= 0:
+                continue
+            totals[currency] = totals.get(currency, 0.0) + amount
+            valid_events += 1
+    lines.extend(["", f"📈 ספר הכנסות: {valid_events} אירוע/ים מאושרים, לפי המטבע שנרשם."])
+    for currency, amount in sorted(totals.items()):
+        if currency == "XTR":
+            lines.append(f"• XTR (Telegram Stars, לא שקלים): {amount:g}")
+        elif currency == "ILS":
+            lines.append(f"• ILS (ברוטו שנרשם, לא אישור העברה בנקאית): {amount:.2f} ₪")
+        else:
+            lines.append(f"• {currency}: {amount:g} (ברוטו שנרשם)")
+
+    lines.extend([
+        "",
+        "🔒 READ ONLY — הדוח לא יצר חשבונית/הזמנה, לא שינה יתרות ולא פתח שערים.",
+        "חשוב: הכנסה שנרשמה אינה בהכרח כסף נטו שכבר שולם לחשבון הבנק.",
+    ])
+    return "\n".join(lines)
+
+
+def _commerce_status_report():
+    import os
+    import state_manager
+    from core import card_payment_service
+    from core.bnb_gate import bnb_deposits_open as effective_bnb_deposits_open
+    from core.ton_deposit_service import deposits_are_open as effective_ton_deposits_open
+    from store.stars_purchase_service import get_stars_items
+
+    db = state_manager.load_db()
+    stars_prices = get_stars_items()
+    card_status = card_payment_service.card_payments_status()
+    try:
+        card_items = card_payment_service.get_card_items() if card_status.get("configured") else []
+    except Exception:
+        card_items = []
+
+    try:
+        ton_open = bool(effective_ton_deposits_open())
+    except Exception:
+        ton_open = False
+    try:
+        bnb_open = bool(effective_bnb_deposits_open())
+    except Exception:
+        bnb_open = False
+
+    return _format_commerce_status(
+        db=db,
+        stars_prices=stars_prices,
+        stars_token_configured=bool(os.getenv("BOT_TOKEN", "").strip()),
+        card_status=card_status,
+        card_items=card_items,
+        ton_deposits_open=ton_open,
+        bnb_deposits_open=bnb_open,
+    )
+
+
 def register_payment_handlers(bot):
+
+
+    @bot.message_handler(commands=["commerce_status"])
+    def commerce_status(message):
+        from core.authority import is_owner
+        uid = str(getattr(getattr(message, "from_user", None), "id", "") or "")
+        chat_type = str(getattr(getattr(message, "chat", None), "type", "") or "").lower()
+        if not is_owner(uid):
+            bot.reply_to(message, "⛔️ הדוח מיועד לבעלים בלבד.", parse_mode=None)
+            return
+        if chat_type != "private":
+            bot.reply_to(message, "⛔️ דוח המסחר זמין רק בשיחה הפרטית עם הבוט.", parse_mode=None)
+            return
+        try:
+            report = _commerce_status_report()
+            bot.reply_to(message, report, parse_mode=None)
+        except Exception as exc:
+            print("[COMMERCE_STATUS] read-only audit failed:", type(exc).__name__)
+            bot.reply_to(
+                message,
+                "⚠️ לא ניתן לקרוא את מצב המסחר כרגע. לא נוצרו חשבוניות/הזמנות ולא השתנו יתרות או שערים.",
+                parse_mode=None,
+            )
 
     @bot.message_handler(commands=['vip'])
     def vip_command(m):

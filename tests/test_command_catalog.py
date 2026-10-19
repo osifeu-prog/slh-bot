@@ -66,6 +66,7 @@ def test_render_help_prioritizes_known_commands_before_unknown_tail():
 def test_help_metadata_covers_existing_runtime_commands():
     commands = [
         "/check_ux",
+        "/check_owner_ledger",
         "/check_bnb_deposits",
         "/bnb_reverse_prepare",
         "/bnb_reverse_confirm",
@@ -94,6 +95,20 @@ def test_help_metadata_covers_existing_runtime_commands():
     assert all(item["known"] for item in by_command.values())
     assert all(item["description"] != "Runtime command — metadata pending" for item in by_command.values())
 
+def test_exchange_reserve_command_has_catalog_metadata():
+    commands = ["/check_exchange_reserves"]
+
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value={"commands": commands},
+    ):
+        catalog = command_catalog.get_catalog("Me_ad_main")
+
+    by_command = {item["command"]: item for item in catalog}
+    item = by_command["check_exchange_reserves"]
+    assert item["known"] is True
+    assert item["description"] != "Runtime command — metadata pending"
+
 
 def test_exchange_status_alias_has_catalog_metadata():
     commands = ["/exchange_status"]
@@ -108,3 +123,16 @@ def test_exchange_status_alias_has_catalog_metadata():
     item = by_command["exchange_status"]
     assert item["known"] is True
     assert "Exchange" in item["description"]
+
+
+def test_public_help_includes_opt_in_feedback_commands():
+    runtime = {"commands": ["/help", "/bugreport", "/suggest"]}
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value=runtime,
+    ):
+        rendered = command_catalog.render_public_help("Me_ad_main")
+
+    assert "/bugreport — דיווח על תקלה" in rendered
+    assert "/suggest — הצעה לשיפור" in rendered
+    assert "/deploy" not in rendered

@@ -61,20 +61,32 @@ def register_ton_handlers(bot):
             new_rate = float(parts[1])
             if not TON_RATE_MIN <= new_rate <= TON_RATE_MAX:
                 raise ValueError
-            settings["credits_per_ton"] = new_rate
-            settings["rate"] = new_rate
-            db = state_manager.load_db()
-            db["ton_settings"] = settings
-            state_manager.save_db(db)
-            bot.send_message(
-                m.chat.id,
-                f"✅ TON rate updated: 1 TON = {new_rate:g} Credits.",
-            )
-        except Exception:
+        except (TypeError, ValueError):
             bot.send_message(
                 m.chat.id,
                 f"Invalid rate. Allowed TON rate: {TON_RATE_MIN:g}-{TON_RATE_MAX:g} Credits per TON.",
             )
+            return
+
+        def mutate(db):
+            settings = db.get("ton_settings")
+            if not isinstance(settings, dict):
+                settings = {}
+                db["ton_settings"] = settings
+            settings["credits_per_ton"] = new_rate
+            settings["rate"] = new_rate
+
+        try:
+            state_manager.atomic_update(mutate)
+        except Exception as exc:
+            print("[TON] rate update failed safely:", type(exc).__name__)
+            bot.send_message(m.chat.id, "❌ העדכון נכשל בבטחה; לא דווח על שינוי תעריף.")
+            return
+
+        bot.send_message(
+            m.chat.id,
+            f"✅ TON rate updated: 1 TON = {new_rate:g} Credits.",
+        )
 
     @bot.message_handler(commands=["ton_set_wallet"])
     def ton_set_wallet(m):
