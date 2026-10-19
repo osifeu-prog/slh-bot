@@ -1,4 +1,13 @@
 def load_handlers(bot, context):
+    # Register owner-only acknowledgements first; ContinueHandling lets
+    # normal command and natural-chat handlers process the same message.
+    try:
+        from handlers.owner_message_reactions_handler import register as register_owner_message_reactions
+        register_owner_message_reactions(bot, context)
+        print("✅ owner message reactions handler ready")
+    except Exception as e:
+        print("⚠️ owner message reactions skipped:", type(e).__name__)
+
     from handlers.logo_handler import register_logo_handler
     register_logo_handler(bot)
 
