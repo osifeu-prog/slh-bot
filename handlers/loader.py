@@ -1,10 +1,10 @@
 def load_handlers(bot, context):
-    # Register owner-only acknowledgements as middleware so existing command
-    # and natural-chat handlers still receive the original incoming message.
+    # Register owner-only acknowledgements first; ContinueHandling lets
+    # normal command and natural-chat handlers process the same message.
     try:
         from handlers.owner_message_reactions_handler import register as register_owner_message_reactions
         register_owner_message_reactions(bot, context)
-        print("✅ owner message reactions middleware ready")
+        print("✅ owner message reactions handler ready")
     except Exception as e:
         print("⚠️ owner message reactions skipped:", type(e).__name__)
 
