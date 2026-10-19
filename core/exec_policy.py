@@ -64,15 +64,14 @@ AUDIT_COMMAND_PATTERNS = [
     r"^tail(?:\s+-n)?\s+",
     r"^cat\s+",
     r"^sed\s+-n\s+",
-    r"^awk\s+",
 ]
 
 
 AUDIT_FORBIDDEN_PATHS = (
-    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?state(?:/|$)", re.IGNORECASE),
-    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?\\.env(?:\\.|/|$)", re.IGNORECASE),
-    re.compile(r"(^|[\\s'\"=:/])(?:\\.?/)?\\.git(?:/|$)", re.IGNORECASE),
-    re.compile(r"(^|[\\s'\"=:/])/(?:proc|sys|dev)(?:/|$)", re.IGNORECASE),
+    re.compile(r"""(^|[\s'"=:/])(?:\./)?state(?:/|$)""", re.IGNORECASE),
+    re.compile(r"""(^|[\s'"=:/])(?:\./)?\.env(?:\.|/|$)""", re.IGNORECASE),
+    re.compile(r"""(^|[\s'"=:/])(?:\./)?\.git(?:/|$)""", re.IGNORECASE),
+    re.compile(r"""(^|[\s'"=:/])/(?:proc|sys|dev)(?:/|$)""", re.IGNORECASE),
 )
 
 AUDIT_ALLOWED_ROOT_FILES = {
@@ -125,10 +124,6 @@ def _audit_paths_safe(cmd):
     if command == "sed":
         paths = [x for x in args[1:] if not x.startswith("-")]
         return bool(paths) and all(_audit_path_allowed(x) for x in paths)
-
-    if command == "awk":
-        paths = [x for x in args[1:] if not x.startswith("-")]
-        return all(_audit_path_allowed(x) for x in paths) if paths else True
 
     if command == "grep":
         paths = [x for x in args if ("/" in x or x in {".", "./", "/app"})]
@@ -226,12 +221,17 @@ def run_audit(user_id, cmd, source="audit", timeout=15, max_output=4000):
     if not is_audit_command(cmd):
         audit(user_id, cmd, source, "blocked_non_audit")
         return False, "Read-only audit command required."
-    return _run(cmd, user_id, source, timeout, max_output)
+    return _run(cmd, user_id, source, timeout, max_output, shell=False)
 
 
-def _run(cmd, user_id, source, timeout, max_output):
+def _run(cmd, user_id, source, timeout, max_output, shell=True):
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        if shell:
+            run_command = cmd
+        else:
+            import shlex
+            run_command = shlex.split(cmd)
+        result = subprocess.run(run_command, shell=shell, capture_output=True, text=True, timeout=timeout)
         output = redact_secrets((result.stdout or "") + (result.stderr or ""))
         if len(output) > max_output:
             output = output[:max_output] + "\n... truncated"
