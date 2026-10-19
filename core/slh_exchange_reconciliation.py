@@ -544,6 +544,296 @@ def audit_db(db):
             tail = after_value
         return current_token_balance == tail
 
+    def _verified_legacy_trade_settlement(order_id):
+        """Verify one fully filled, pre-canonical archived seed trade.
+
+        This exception is intentionally narrower than an archive classification:
+        both archived orders and the one archived trade must agree exactly, and
+        the legacy Credits ledger must contain the complete reserve/payout/buyer
+        settlement chain with valid arithmetic and timestamps before the canonical
+        exchange-settlement migration. Any duplicate, missing row, current-canonical
+        counterpart, or contradictory snapshot fails closed.
+        """
+        oid = str(order_id or "")
+        sell_order = orders.get(oid)
+        context = _current_order_context(oid)
+        if (
+            not oid
+            or not isinstance(sell_order, dict)
+            or order_source_by_id.get(oid) != "archive"
+            or context.get("order_is_archived_test_seed") is not True
+            or str(sell_order.get("side") or "").lower() != "sell"
+            or str(sell_order.get("status") or "").lower()
+                not in {"cancelled", "canceled", "closed", "expired"}
+            or context.get("order_remaining_is_zero") is not True
+            or context.get("order_reserved_slh_is_zero") is not True
+            or context.get("wallet_reserve_matches_open_orders") is not True
+        ):
+            return False
+
+        seller_uid = _uid(sell_order)
+        users = db.get("users", {})
+        seller_user = users.get(seller_uid) if seller_uid and isinstance(users, dict) else None
+        seller_wallet = seller_user.get("wallet") if isinstance(seller_user, dict) else None
+        if (
+            not isinstance(seller_wallet, dict)
+            or seller_wallet.get("live_token_balance") is not None
+            or _amount(seller_wallet.get("token_balance")) is None
+        ):
+            return False
+
+        def _parse_aware_time(raw):
+            raw = str(raw or "").strip()
+            if not raw:
+                return None
+            try:
+                normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+                parsed = datetime.fromisoformat(normalized)
+            except (TypeError, ValueError, OverflowError):
+                return None
+            return parsed if parsed.tzinfo is not None and parsed.utcoffset() is not None else None
+
+        # This is the source-backed cutover at which exchange SLH settlement
+        # moved into core.slh_distribution and slh_token_ledger.
+        canonical_migration_at = datetime.fromisoformat("2026-09-22T19:58:16+00:00")
+
+        buy_id = str(sell_order.get("matched_buy_order_id") or "")
+        archived_trades = _records(db.get("exchange_trade_archive", []))
+        active_trades = _records(db.get("exchange_trades", []))
+        matching_sell = [
+            (source_name, trade)
+            for source_name, source in (
+                ("exchange_trades", active_trades),
+                ("exchange_trade_archive", archived_trades),
+            )
+            for _, trade in source
+            if str(trade.get("sell_order_id") or "") == oid
+        ]
+        if len(matching_sell) != 1 or matching_sell[0][0] != "exchange_trade_archive":
+            return False
+        trade = matching_sell[0][1]
+
+        trade_id = str(trade.get("trade_id") or trade.get("id") or "").strip()
+        buy_id = str(trade.get("buy_order_id") or "").strip()
+        if not trade_id or not buy_id or buy_id == oid:
+            return False
+
+        # IDs must resolve to one archived order each, not a shadow active order.
+        def _order_sources_for_id(candidate_id):
+            matches = []
+            for source_name, source_value in (
+                ("exchange_orders", db.get("exchange_orders", {})),
+                ("exchange_order_archive", db.get("exchange_order_archive", {})),
+            ):
+                for key, candidate in _records(source_value):
+                    candidate_oid = str(candidate.get("order_id") or candidate.get("id") or key)
+                    if candidate_oid == candidate_id:
+                        matches.append((source_name, candidate))
+            return matches
+
+        sell_source_matches = _order_sources_for_id(oid)
+        buy_source_matches = _order_sources_for_id(buy_id)
+        if (
+            len(sell_source_matches) != 1
+            or sell_source_matches[0][0] != "exchange_order_archive"
+            or len(buy_source_matches) != 1
+            or buy_source_matches[0][0] != "exchange_order_archive"
+        ):
+            return False
+
+        buy_order = orders.get(buy_id)
+        buyer_uid = str(trade.get("buyer_uid") or "")
+        if (
+            not isinstance(buy_order, dict)
+            or str(buy_order.get("side") or "").lower() != "buy"
+            or str(buy_order.get("status") or "").lower() == "open"
+            or _uid(buy_order) != buyer_uid
+            or not buyer_uid
+            or buyer_uid == seller_uid
+            or _amount(buy_order.get("remaining_amount")) != 0
+        ):
+            return False
+        try:
+            from core.exchange_housekeeping import is_test_seed
+            buyer_seed_order = {
+                key: value for key, value in buy_order.items()
+                if key not in {"archive_reason", "archived_at", "archived_by"}
+            }
+            if not is_test_seed(buyer_seed_order):
+                return False
+        except Exception:
+            return False
+
+        # Exactly one archived trade may account for each fully consumed order.
+        matching_buy = [
+            (source_name, item)
+            for source_name, source in (
+                ("exchange_trades", active_trades),
+                ("exchange_trade_archive", archived_trades),
+            )
+            for _, item in source
+            if str(item.get("buy_order_id") or "") == buy_id
+        ]
+        if (
+            len(matching_buy) != 1
+            or matching_buy[0][0] != "exchange_trade_archive"
+            or matching_buy[0][1] is not trade
+        ):
+            return False
+
+        amount = _amount(trade.get("slh_amount"))
+        price = _amount(trade.get("price"))
+        credits_value = _amount(trade.get("credits_value"))
+        sell_original = _amount(sell_order.get("original_amount"))
+        buy_original = _amount(buy_order.get("original_amount"))
+        bid = _amount(buy_order.get("limit_price"))
+        ask = _amount(sell_order.get("limit_price"))
+        trade_time = _parse_aware_time(trade.get("timestamp") or trade.get("time"))
+        if (
+            amount is None or amount <= 0
+            or price is None or price <= 0
+            or credits_value is None or credits_value != amount * price
+            or sell_original != amount
+            or buy_original != amount
+            or _amount(sell_order.get("remaining_amount")) != 0
+            or _amount(sell_order.get("reserved_slh")) != 0
+            or _amount(buy_order.get("reserved_credits", 0)) != 0
+            or bid is None or ask is None
+            or bid != price or ask != price
+            or trade_time is None
+            or trade_time >= canonical_migration_at
+        ):
+            return False
+
+        source_by_name = dict(sources)
+        ledger_source = source_by_name.get("ledger", [])
+        token_source = source_by_name.get("slh_token_ledger", [])
+
+        # Any canonical token settlement for this trade contradicts the claim
+        # that this is a wholly pre-migration legacy settlement.
+        canonical_trade_rows = [
+            event for _, event in token_source
+            if str(event.get("trade_id") or "") == trade_id
+            or _event_id(event) == f"exchange:settlement_slh:{trade_id}"
+        ]
+        if canonical_trade_rows:
+            return False
+
+        # There must be one—and only one—SLH reserve row on the legacy ledger,
+        # with no release/correction in either ledger for the same sell order.
+        order_group_rows = []
+        for ledger_name, source in sources:
+            for _, event in source:
+                if _order_id(event) != oid:
+                    continue
+                reserve, release, correction = _event_groups(event)
+                if reserve or release or correction:
+                    order_group_rows.append((ledger_name, event, reserve, release, correction))
+        reserve_rows = [
+            (ledger_name, event) for ledger_name, event, reserve, _, _ in order_group_rows
+            if reserve
+        ]
+        if (
+            len(reserve_rows) != 1
+            or reserve_rows[0][0] != "ledger"
+            or reserve_rows[0][1].get("reason") != "exchange:sell_reserve"
+            or any(release or correction for _, _, _, release, correction in order_group_rows)
+        ):
+            return False
+        reserve = reserve_rows[0][1]
+        if str(reserve.get("uid") or "") != seller_uid:
+            return False
+
+        def _matches_order(event, expected_order_id):
+            return _order_id(event) == expected_order_id
+
+        def _matches_trade(event):
+            return str(_meta(event).get("trade_id") or event.get("trade_id") or "") == trade_id
+
+        buy_reserve_rows = [
+            event for _, event in ledger_source
+            if str(event.get("reason") or "") == "exchange:buy_reserve"
+            and _matches_order(event, buy_id)
+        ]
+        seller_settlement_rows = [
+            event for _, event in ledger_source
+            if str(event.get("reason") or "") == "exchange:settlement_credits"
+            and _matches_trade(event)
+        ]
+        buyer_settlement_rows = [
+            event for _, event in ledger_source
+            if str(event.get("reason") or "") == "exchange:settlement_slh"
+            and _matches_trade(event)
+        ]
+        if (
+            len(buy_reserve_rows) != 1
+            or len(seller_settlement_rows) != 1
+            or len(buyer_settlement_rows) != 1
+        ):
+            return False
+        buy_reserve = buy_reserve_rows[0]
+        seller_settlement = seller_settlement_rows[0]
+        buyer_settlement = buyer_settlement_rows[0]
+        if (
+            str(buy_reserve.get("uid") or "") != buyer_uid
+            or str(seller_settlement.get("uid") or "") != seller_uid
+            or str(buyer_settlement.get("uid") or "") != buyer_uid
+            or not _matches_order(seller_settlement, oid)
+            or not _matches_order(buyer_settlement, buy_id)
+            or any(_event_id(event) for event in (
+                reserve, buy_reserve, seller_settlement, buyer_settlement
+            ))
+        ):
+            return False
+
+        reserve_before = _amount(reserve.get("before"))
+        reserve_amount = _amount(reserve.get("amount"))
+        reserve_after = _amount(reserve.get("after"))
+        buy_before = _amount(buy_reserve.get("before"))
+        buy_amount = _amount(buy_reserve.get("amount"))
+        buy_after = _amount(buy_reserve.get("after"))
+        seller_before = _amount(seller_settlement.get("before"))
+        seller_amount = _amount(seller_settlement.get("amount"))
+        seller_after = _amount(seller_settlement.get("after"))
+        buyer_before = _amount(buyer_settlement.get("before"))
+        buyer_amount = _amount(buyer_settlement.get("amount"))
+        buyer_after = _amount(buyer_settlement.get("after"))
+        if any(value is None for value in (
+            reserve_before, reserve_amount, reserve_after,
+            buy_before, buy_amount, buy_after,
+            seller_before, seller_amount, seller_after,
+            buyer_before, buyer_amount, buyer_after,
+        )):
+            return False
+        if not (
+            reserve_before + reserve_amount == reserve_after
+            and reserve_amount == -amount
+            and buy_before + buy_amount == buy_after
+            and buy_amount == -credits_value
+            and seller_before + seller_amount == seller_after
+            and seller_amount == credits_value
+            and buyer_before + buyer_amount == buyer_after
+            and buyer_amount == amount
+        ):
+            return False
+
+        reserve_time = _parse_aware_time(reserve.get("time"))
+        buy_reserve_time = _parse_aware_time(buy_reserve.get("time"))
+        seller_settlement_time = _parse_aware_time(seller_settlement.get("time"))
+        buyer_settlement_time = _parse_aware_time(buyer_settlement.get("time"))
+        settlement_times = (seller_settlement_time, buyer_settlement_time)
+        if (
+            reserve_time is None or buy_reserve_time is None
+            or any(stamp is None for stamp in settlement_times)
+            or any(
+                stamp <= reserve_time or stamp <= buy_reserve_time or stamp > trade_time
+                for stamp in settlement_times
+            )
+            or (trade_time - max(settlement_times)).total_seconds() > 5
+        ):
+            return False
+        return True
+
     def _is_verified_missed_release_correction(order_id):
         return _verified_missed_release_correction(order_id)
 
@@ -686,6 +976,7 @@ def audit_db(db):
             continue
         checked += 1
         verified_mirrored_correction = _is_verified_missed_release_correction(oid)
+        verified_legacy_trade_settlement = _verified_legacy_trade_settlement(oid)
         if len(active_ledgers) > 1 and not verified_mirrored_correction:
             findings.append({
                 "code": "MIXED_LEDGER_DOMAINS_REQUIRES_REVIEW",
@@ -746,7 +1037,11 @@ def audit_db(db):
                 Decimal(0),
             )
 
-            if reserve_events and not normal_releases and not verified_mirrored_correction:
+            if (
+                reserve_events and not normal_releases
+                and not verified_mirrored_correction
+                and not verified_legacy_trade_settlement
+            ):
                 findings.append({
                     "code": "CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE",
                     "ledger": ledger_name,
@@ -765,7 +1060,10 @@ def audit_db(db):
                     "correction_delta": str(correction_total),
                 })
             net_delta = reserve_total + release_total
-            if reserve_events and net_delta != 0 and not order_corrections:
+            if (
+                reserve_events and net_delta != 0 and not order_corrections
+                and not verified_legacy_trade_settlement
+            ):
                 findings.append({
                     "code": "RESERVE_DELTA_NOT_ZERO",
                     "ledger": ledger_name,
