@@ -29,7 +29,7 @@ def register(bot):
             "כניסה: 5 Credits · זמן: 60 שניות\n"
             f"{result['question']}\n\n"
             "שלח רק את התשובה המספרית.\n"
-            "עצירה: /arcade_stop",
+            "עצירה: /arcade\\_stop",
             parse_mode="Markdown",
         )
 
