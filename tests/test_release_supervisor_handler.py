@@ -56,6 +56,34 @@ def _mock_release_reports(monkeypatch, exchange):
                 "id": "LEDGER-EXAMPLE",
                 "summary": "Credits ledger sequence gap requires evidence",
                 "next_action": "Locate independent source evidence; do not insert synthetic rows.",
+                "evidence": {
+                    "previous": {
+                        "index": 199, "reason": "p2p:transfer_sent", "after": 1.191775,
+                        "event_id": "evt-prev", "transfer_id": "tr-abc",
+                    },
+                    "next": {
+                        "index": 202, "reason": "store:p2p_sale", "before": 6.191775,
+                        "purchase_id": "buy-123", "idempotency_key": "idem-123",
+                    },
+                    "delta_to_explain": 5.0,
+                    "source_evidence": {
+                        "source_match_status": "CONTEXT_ONLY_REQUIRES_RECONCILIATION",
+                        "resolves_gap": False,
+                        "transfer": {
+                            "transfer_id": "tr-abc", "record_found": True,
+                            "ledger_rows": [{
+                                "index": 199, "reason": "p2p:transfer_sent",
+                                "before": 6.191775, "amount": -5.0, "after": 1.191775,
+                            }],
+                        },
+                        "purchase": {
+                            "purchase_id": "buy-123", "record_found": True,
+                            "status": "completed", "price": 1.0,
+                            "seller_payout": 0.9, "commission": 0.1,
+                            "fulfillment_method": "p2p",
+                        },
+                    },
+                },
             }],
             "review_items": [],
         },
@@ -89,6 +117,12 @@ def test_release_supervisor_alias_is_registered_and_shows_canonical_status(monke
     assert "Public trading gate: CLOSED" in output
     assert "Account ledger: BLOCKED · unresolved gaps=2 · balance matches tail=True" in output
     assert "LEDGER-EXAMPLE" in output
+    assert "Delta to explain: +5 Credits" in output
+    assert "Source match: CONTEXT_ONLY_REQUIRES_RECONCILIATION · resolves_gap=False" in output
+    assert "Linked transfer: id=tr-abc" in output
+    assert "#199 p2p:transfer_sent" in output
+    assert "Linked purchase: id=buy-123 · record_found=True · status=completed" in output
+    assert "resolves_gap=False" in output
     assert "no balances, ledger rows, orders, or BNB/TON/Exchange gates are changed" in output
 
 
