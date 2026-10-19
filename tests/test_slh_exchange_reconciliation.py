@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -717,6 +718,80 @@ class ExchangeReconciliationTests(unittest.TestCase):
             and item.get("order_id") == order_id
             for item in report["release_blocking_findings"]
         ))
+
+    def test_source_shaped_mirrored_legacy_correction_reconciles_only_with_full_balance_proof(self):
+        order_id = "O0000000009"
+        event_id = f"correction:missed_release:{order_id}"
+        reserve_time = "2026-09-22T16:47:38.111625+00:00"
+        correction_time = "2026-09-28T12:14:59.853940+00:00"
+        note = "one-time verified missed-release correction"
+        db = {
+            "users": {
+                "seller": {"wallet": {
+                    "token_balance": 50000.0,
+                    "exchange_reserved_slh": 0.0,
+                }}
+            },
+            "exchange_orders": {},
+            "exchange_order_archive": {
+                order_id: {
+                    "id": order_id, "uid": "seller", "side": "sell",
+                    "status": "cancelled", "original_amount": "10000",
+                    "remaining_amount": "0", "reserved_slh": "0",
+                    "reserved_credits": "0", "test": True,
+                    "archive_reason": "test_seed_retirement",
+                    "archived_at": "2026-09-28T00:00:00+00:00",
+                }
+            },
+            "exchange_trades": [],
+            "exchange_trade_archive": [],
+            "ledger": [
+                {
+                    "uid": "seller", "time": reserve_time,
+                    "before": 50000.0, "amount": -10000.0, "after": 40000.0,
+                    "reason": "exchange:sell_reserve",
+                    "meta": {"order_id": order_id},
+                },
+                {
+                    "uid": "seller", "time": correction_time,
+                    "before": 40000.0, "amount": 10000.0, "after": 50000.0,
+                    "reason": "exchange:missed_release_correction",
+                    "meta": {
+                        "order_id": order_id, "event_id": event_id, "asset": "SLH",
+                        "operator_uid": "owner", "note": note,
+                    },
+                },
+            ],
+            "slh_token_ledger": [{
+                "event_id": event_id, "kind": "reserve_release_correction",
+                "reason": "exchange:missed_release_correction",
+                "from_uid": "__EXCHANGE_RESERVE__", "to_uid": "seller",
+                "amount": 10000.0, "before_to": 40000.0, "after_to": 50000.0,
+                "order_id": order_id, "operator_uid": "owner", "note": note,
+                "timestamp": correction_time,
+            }],
+        }
+
+        report = audit_db(db)
+
+        self.assertEqual(report["operational_status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertEqual(report["finding_count"], 0)
+        self.assertEqual(report["release_blocking_finding_count"], 0)
+
+        # A mismatch in either the mirrored snapshots or the live legacy
+        # balance must restore the release blocker instead of being exempted.
+        bad_snapshot = copy.deepcopy(db)
+        bad_snapshot["slh_token_ledger"][0]["after_to"] = 50001.0
+        bad_report = audit_db(bad_snapshot)
+        self.assertEqual(bad_report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(bad_report["release_blocking_finding_count"], 0)
+
+        bad_wallet = copy.deepcopy(db)
+        bad_wallet["users"]["seller"]["wallet"]["token_balance"] = 50001.0
+        wallet_report = audit_db(bad_wallet)
+        self.assertEqual(wallet_report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(wallet_report["release_blocking_finding_count"], 0)
 
     def test_balanced_cancel_is_operationally_nonblocking_but_missing_ids_block_release(self):
         # The terminal order owns no reserve, while a different open order
