@@ -76,3 +76,6 @@ def test_recovery_center_is_read_only_and_separates_bnb_review_from_ledger_block
     assert result["review_items"][0]["id"] == "BNB-OPERATOR-GATE-REVIEW"
     assert "NEVER_OPEN_GATE_AUTOMATICALLY" == result["review_items"][0]["automatic_fix"]
     assert result["persistence"].startswith("Finding IDs are deterministic")
+    assert result["exchange_reserves"]["release_readiness_status"] == "BLOCKED"
+    assert result["exchange_reserves"]["release_blocking_finding_count"] == 1
+    assert any(item["kind"] == "RESERVE_HISTORY_NOT_PROVEN" for item in result["blockers"])
