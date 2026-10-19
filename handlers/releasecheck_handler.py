@@ -6,6 +6,131 @@ from core.recovery_center import build_recovery_center_report
 from core.system_checks import check_exchange
 
 
+def _short_ref(value, limit=44):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def _display_number(value, *, signed=False):
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    import math
+    if not math.isfinite(number):
+        return None
+    return f"{number:+.8g}" if signed else f"{number:.8g}"
+
+
+def _ledger_gap_evidence_lines(item):
+    """Render existing audit evidence compactly; never infer that a gap is resolved."""
+    evidence = item.get("evidence")
+    evidence = evidence if isinstance(evidence, dict) else {}
+    previous = evidence.get("previous")
+    previous = previous if isinstance(previous, dict) else {}
+    next_row = evidence.get("next")
+    next_row = next_row if isinstance(next_row, dict) else {}
+    source = evidence.get("source_evidence")
+    source = source if isinstance(source, dict) else {}
+
+    lines = []
+    delta = _display_number(evidence.get("delta_to_explain"), signed=True)
+    previous_after = _display_number(previous.get("after"))
+    next_before = _display_number(next_row.get("before"))
+    if delta is not None:
+        lines.append(
+            f"  Delta to explain: {delta} Credits · "
+            f"previous after={previous_after or 'UNKNOWN'} · next before={next_before or 'UNKNOWN'}"
+        )
+
+    def refs(row, fields):
+        values = []
+        for label, key in fields:
+            value = _short_ref(row.get(key))
+            if value:
+                values.append(f"{label}={value}")
+        return ", ".join(values)
+
+    previous_refs = refs(previous, (
+        ("event", "event_id"), ("order", "order_id"),
+        ("transfer", "transfer_id"), ("item", "item_id"),
+    ))
+    next_refs = refs(next_row, (
+        ("event", "event_id"), ("order", "order_id"),
+        ("purchase", "purchase_id"), ("idem", "idempotency_key"),
+        ("item", "item_id"),
+    ))
+    if previous_refs:
+        lines.append(f"  Previous refs: {previous_refs}")
+    if next_refs:
+        lines.append(f"  Next refs: {next_refs}")
+
+    if source:
+        match_status = _short_ref(source.get("source_match_status"), 64) or "UNKNOWN"
+        resolves = source.get("resolves_gap") is True
+        lines.append(
+            f"  Source match: {match_status} · resolves_gap={resolves}"
+        )
+
+    transfer = source.get("transfer")
+    if isinstance(transfer, dict):
+        transfer_id = _short_ref(transfer.get("transfer_id")) or "UNKNOWN"
+        detail = f"  Linked transfer: id={transfer_id} · record_found={transfer.get('record_found') is True}"
+        transfer_rows = transfer.get("ledger_rows")
+        if isinstance(transfer_rows, list) and transfer_rows:
+            rendered = []
+            for row in transfer_rows[:2]:
+                if not isinstance(row, dict):
+                    continue
+                idx = row.get("index", "?")
+                reason = _short_ref(row.get("reason"), 36) or "UNKNOWN"
+                before = _display_number(row.get("before"))
+                after = _display_number(row.get("after"))
+                amount = _display_number(row.get("amount"), signed=True)
+                rendered.append(f"#{idx} {reason} {before or '?'}→{after or '?'} (Δ{amount or '?'})")
+            if rendered:
+                detail += " · " + "; ".join(rendered)
+        lines.append(detail[:260])
+
+    purchase = source.get("purchase")
+    if isinstance(purchase, dict):
+        detail = (
+            "  Linked purchase: "
+            f"id={_short_ref(purchase.get('purchase_id')) or 'UNKNOWN'} · "
+            f"record_found={purchase.get('record_found') is True}"
+        )
+        if purchase.get("record_found") is True:
+            status = _short_ref(purchase.get("status"), 24) or "UNKNOWN"
+            price = _display_number(purchase.get("price"))
+            payout = _display_number(purchase.get("seller_payout"))
+            commission = _display_number(purchase.get("commission"))
+            method = _short_ref(purchase.get("fulfillment_method"), 24)
+            detail += f" · status={status}"
+            if price is not None:
+                detail += f" · price={price}"
+            if payout is not None:
+                detail += f" · seller_payout={payout}"
+            if commission is not None:
+                detail += f" · commission={commission}"
+            if method:
+                detail += f" · fulfillment={method}"
+        lines.append(detail[:260])
+
+    alpha = source.get("alpha_consolidations")
+    if isinstance(alpha, list):
+        for event in alpha[:1]:
+            if isinstance(event, dict):
+                lines.append(
+                    "  Alpha consolidation context: "
+                    f"row={event.get('index', '?')} · resolves_gap={event.get('resolves_gap') is True} · "
+                    f"basis={_short_ref(event.get('resolution_basis'), 56) or 'UNKNOWN'}"
+                )
+
+    return lines[:7]
 def _exchange_snapshot_lines():
     """Summarize canonical exchange/reserve evidence without changing state."""
     try:
@@ -122,6 +247,7 @@ def register(bot, context=None):
                 for item in ledger_blockers[:4]:
                     lines.append(f"• [{item['id']}] {item['summary']}")
                     lines.append(f"  Next: {item['next_action']}")
+                    lines.extend(_ledger_gap_evidence_lines(item))
             if reserve_blockers:
                 lines.append("Exchange reserve blockers:")
                 for item in reserve_blockers[:4]:
