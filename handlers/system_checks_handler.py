@@ -456,13 +456,38 @@ def register(bot, context=None):
                 kind = str(item.get("type") or "UNKNOWN")
                 if isinstance(item.get("previous"), dict) and isinstance(item.get("next"), dict):
                     previous, next_row = item["previous"], item["next"]
+                    evidence = item.get("source_evidence")
+                    evidence = evidence if isinstance(evidence, dict) else {}
+                    reconciled = item.get("reconciled") is True or evidence.get("resolves_gap") is True
+                    if reconciled:
+                        evidence_status = "source evidence verified"
+                    elif item.get("source_evidence_required") is True:
+                        evidence_status = "source evidence required"
+                    else:
+                        evidence_status = "source evidence status unknown"
                     lines.append(
                         f"{kind}: #{previous.get('index')} {previous.get('reason')}[{previous.get('domain_hint')}] "
                         f"after={previous.get('after')} → #{next_row.get('index')} "
                         f"{next_row.get('reason')}[{next_row.get('domain_hint')}] "
-                        f"before={next_row.get('before')} delta={item.get('delta_to_explain')}; source evidence required"
+                        f"before={next_row.get('before')} delta={item.get('delta_to_explain')}; {evidence_status}"
                     )
-                    evidence = item.get("source_evidence")
+                    match_status = str(evidence.get("source_match_status") or "").strip()
+                    if match_status:
+                        lines.append(
+                            f"  Source match: {match_status} · resolves_gap={evidence.get('resolves_gap') is True}"
+                        )
+                    alpha = evidence.get("alpha_consolidations")
+                    if isinstance(alpha, list):
+                        for event in alpha[:1]:
+                            if not isinstance(event, dict):
+                                continue
+                            basis = str(event.get("resolution_basis") or "UNKNOWN")[:64]
+                            source_commit = str(event.get("source_commit") or "").strip()
+                            lines.append(
+                                "  Alpha consolidation: "
+                                f"row={event.get('index', '?')} · basis={basis}"
+                                + (f" · commit={source_commit[:12]}" if source_commit else "")
+                            )
                     if isinstance(evidence, dict):
                         source_parts = []
                         transfer = evidence.get("transfer")
