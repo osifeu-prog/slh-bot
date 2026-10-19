@@ -1,3 +1,4 @@
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -777,6 +778,20 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["release_readiness_status"], "PASS")
         self.assertEqual(report["finding_count"], 0)
         self.assertEqual(report["release_blocking_finding_count"], 0)
+
+        # A mismatch in either the mirrored snapshots or the live legacy
+        # balance must restore the release blocker instead of being exempted.
+        bad_snapshot = copy.deepcopy(db)
+        bad_snapshot["slh_token_ledger"][0]["after_to"] = 50001.0
+        bad_report = audit_db(bad_snapshot)
+        self.assertEqual(bad_report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(bad_report["release_blocking_finding_count"], 0)
+
+        bad_wallet = copy.deepcopy(db)
+        bad_wallet["users"]["seller"]["wallet"]["token_balance"] = 50001.0
+        wallet_report = audit_db(bad_wallet)
+        self.assertEqual(wallet_report["release_readiness_status"], "BLOCKED")
+        self.assertGreater(wallet_report["release_blocking_finding_count"], 0)
 
     def test_balanced_cancel_is_operationally_nonblocking_but_missing_ids_block_release(self):
         # The terminal order owns no reserve, while a different open order
