@@ -575,11 +575,18 @@ def audit_db(db):
         users = db.get("users", {})
         seller_user = users.get(seller_uid) if seller_uid and isinstance(users, dict) else None
         seller_wallet = seller_user.get("wallet") if isinstance(seller_user, dict) else None
-        if (
-            not isinstance(seller_wallet, dict)
-            or seller_wallet.get("live_token_balance") is not None
-            or _amount(seller_wallet.get("token_balance")) is None
-        ):
+        if not isinstance(seller_wallet, dict):
+            return False
+
+        # The trade is historical, but its wallet may since have migrated from
+        # token_balance to live_token_balance. Validate the currently authoritative
+        # representation without requiring today's wallet to retain the old model.
+        live_balance = seller_wallet.get("live_token_balance")
+        authoritative_balance = (
+            live_balance if live_balance is not None
+            else seller_wallet.get("token_balance")
+        )
+        if _amount(authoritative_balance) is None:
             return False
 
         def _parse_aware_time(raw):
