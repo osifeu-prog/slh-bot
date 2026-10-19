@@ -38,12 +38,36 @@ def register(bot, context=None):
                 f"unresolved gaps={account.get('unresolved_continuity_break_count', 'UNKNOWN')} · "
                 f"balance matches tail={account.get('current_balance_matches_tail', 'UNKNOWN')}"
             )
+            reserves = recovery.get("exchange_reserves", {})
+            reserve_status = reserves.get("status", "UNKNOWN")
+            reserve_readiness = reserves.get("release_readiness_status", "UNKNOWN")
+            reserve_count = reserves.get("release_blocking_finding_count")
+            lines.append(
+                "Exchange reserves: "
+                f"{reserve_status} · release readiness={reserve_readiness} · "
+                f"blocking findings={reserve_count if reserve_count is not None else 'UNKNOWN'}"
+            )
             recovery_blockers = recovery.get("blockers", [])
-            if recovery_blockers:
-                lines.append("Next actions:")
-                for item in recovery_blockers[:4]:
+            reserve_blockers = [
+                item for item in recovery_blockers
+                if str(item.get("id", "")).startswith("RESERVE-")
+                or str(item.get("kind", "")).startswith("EXCHANGE_RESERVE")
+                or str(item.get("kind", "")).startswith("CANCELLED_SELL_ORDER")
+                or str(item.get("kind", "")).startswith("RESERVE_")
+            ]
+            ledger_blockers = [item for item in recovery_blockers if item not in reserve_blockers]
+            if ledger_blockers:
+                lines.append("Ledger recovery actions:")
+                for item in ledger_blockers[:4]:
                     lines.append(f"• [{item['id']}] {item['summary']}")
                     lines.append(f"  Next: {item['next_action']}")
+            if reserve_blockers:
+                lines.append("Exchange reserve blockers:")
+                for item in reserve_blockers[:4]:
+                    lines.append(f"• [{item['id']}] {item['summary']}")
+                    lines.append(f"  Next: {item['next_action']}")
+            if not recovery_blockers:
+                lines.append("No detailed ledger-gap or reserve blocker was returned by the audits.")
             else:
                 lines.append("No detailed ledger-gap finding was returned by the account audit.")
             for item in recovery.get("review_items", [])[:2]:
