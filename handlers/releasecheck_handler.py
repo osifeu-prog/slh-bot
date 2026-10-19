@@ -68,8 +68,6 @@ def register(bot, context=None):
                     lines.append(f"  Next: {item['next_action']}")
             if not recovery_blockers:
                 lines.append("No detailed ledger-gap or reserve blocker was returned by the audits.")
-            else:
-                lines.append("No detailed ledger-gap finding was returned by the account audit.")
             for item in recovery.get("review_items", [])[:2]:
                 lines.append(f"👀 [{item['id']}] {item['summary']}")
                 lines.append(f"  Next: {item['next_action']}")
