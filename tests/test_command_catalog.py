@@ -123,3 +123,16 @@ def test_exchange_status_alias_has_catalog_metadata():
     item = by_command["exchange_status"]
     assert item["known"] is True
     assert "Exchange" in item["description"]
+
+
+def test_public_help_includes_opt_in_feedback_commands():
+    runtime = {"commands": ["/help", "/bugreport", "/suggest"]}
+    with patch(
+        "core.runtime_command_evidence.snapshot_runtime",
+        return_value=runtime,
+    ):
+        rendered = command_catalog.render_public_help("Me_ad_main")
+
+    assert "/bugreport — דיווח על תקלה" in rendered
+    assert "/suggest — הצעה לשיפור" in rendered
+    assert "/deploy" not in rendered
