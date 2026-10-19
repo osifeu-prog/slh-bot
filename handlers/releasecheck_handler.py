@@ -35,7 +35,7 @@ def _exchange_snapshot_lines():
         and count_valid
         and codes_valid
         and ((status == "PASS" and raw_count == 0 and not codes)
-             or (status == "BLOCKED" and raw_count > 0))
+             or (status == "BLOCKED" and raw_count > 0 and bool(codes)))
     )
     if not report_valid:
         status = "BLOCKED"
