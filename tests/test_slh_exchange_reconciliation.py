@@ -1317,6 +1317,28 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertNotIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
         self.assertNotIn("RESERVE_DELTA_NOT_ZERO", codes)
 
+    def test_precanonical_trade_accepts_valid_current_live_wallet_balance(self):
+        db = _verified_legacy_settlement_db()
+        db["users"]["seller"]["wallet"]["live_token_balance"] = "50000"
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertNotIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertNotIn("RESERVE_DELTA_NOT_ZERO", codes)
+
+    def test_precanonical_trade_rejects_unparseable_current_live_wallet_balance(self):
+        db = _verified_legacy_settlement_db()
+        db["users"]["seller"]["wallet"]["live_token_balance"] = "not-a-balance"
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertIn("RESERVE_DELTA_NOT_ZERO", codes)
+
     def test_legacy_completed_trade_missing_any_settlement_leg_fails_closed(self):
         for missing_reason in (
             "exchange:settlement_credits",
