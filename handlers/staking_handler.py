@@ -60,6 +60,13 @@ def register(bot):
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
+            if res.get("status") == "legacy_refund_review_required":
+                bot.reply_to(
+                    msg,
+                    "⛔ השחרור נחסם לבדיקה חשבונאית: נמצאה התאמה אפשרית להחזר legacy קודם. "
+                    "לא בוצע שינוי ביתרה או בסטייק. אין לנסות שוב עד לבדיקת המקור.",
+                )
+                return
             bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:
             bot.reply_to(msg, str(e))
@@ -146,6 +153,13 @@ def register(bot):
             res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake_lock"})
             if res.get("status") == "duplicate":
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
+                return
+            if res.get("status") == "legacy_refund_review_required":
+                bot.reply_to(
+                    msg,
+                    "⛔ השחרור נחסם לבדיקה חשבונאית: נמצאה התאמה אפשרית להחזר legacy קודם. "
+                    "לא בוצע שינוי ביתרה או בסטייק. אין לנסות שוב עד לבדיקת המקור.",
+                )
                 return
             bot.reply_to(msg, f"שוחררו {pos.get('amount')} credits.\nיתרה: {_fmt(res.get('credits'))}\nסטייק: {_fmt(res.get('staked'))}")
         except Exception as e:
