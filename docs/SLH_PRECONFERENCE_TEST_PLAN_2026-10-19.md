@@ -257,3 +257,24 @@ Investigate `/metrics` registration and handler behavior as a separate, read-onl
 - Exchange reserves and account ledger: **BLOCKED** per supplied audit output.
 - Public trading / deposits / withdrawals: **remain closed**.
 - No device reset, firmware flash, balance change, ledger repair, reward issuance, gate change or deployment was performed as part of this update.
+
+
+## 13. Live Railway follow-up — 2026-10-19 (read-only)
+
+The following observations were collected from the live Railway environment after the operator transcript above. They are current at the time of this check, not a guarantee of future state.
+
+| Evidence | Observation | Interpretation |
+|---|---|---|
+| Railway environment | `slh-cloud-bot` online; latest deployment SUCCESS; one replica; no active Railway warnings/criticals in the returned overview | Bot process is up; this alone does not prove each device path works |
+| Runtime log | `[ESP_ACTION] unknown device ESP32_14335C6C32C0` at 2026-10-19 10:25:28 UTC | An MQTT message on the ESP action listener reached the bot, but the ID was absent from the runtime device registry. This is evidence of inbound MQTT traffic, **not cryptographic proof of device identity** |
+| `handlers/esp_handler.py` | `/esp_ping` looks up `load_devices()` and returns `Device ... not found` before publishing MQTT when the record is missing | The reported ping result is a registration-store failure, not a successful or failed radio/Wi-Fi ping |
+| `handlers/esp_control.py` | Device actions are accepted only when the ID is present in `state/devices.json`; wallet sync constructs account data from `state/db.json` | Do not create an unverified device record or send account data merely to silence the unknown-device log |
+| `core/mqtt_config.py` | Defaults to `broker.hivemq.com:1883`, with no username/password and TLS disabled unless environment variables enable them | Treat this as a security blocker for private wallet/account data. Do not send wallet balances or credentials over the current default path until broker access control, TLS, and device identity are verified |
+
+### Safe next action
+
+1. Keep this as a **registration/identity and transport-security blocker**; do not infer that the ESP Wi-Fi is disconnected.
+2. Inspect the live device registry through an approved owner-only read-only command or a reviewed, audited registry workflow. Do not edit `state/db.json`, balances, or ledgers.
+3. Before wallet sync, establish an authenticated broker path (unique credentials/ACLs and TLS) and verify device identity; public-broker topic traffic alone is not sufficient.
+4. Do not run `/esp_sync`, `/esp_activate`, `/esp_reboot`, `/esp_ota`, flash, or erase until the identity and transport gates pass.
+5. Keep all financial gates closed. No Railway variables, production state, firmware, balances, ledgers, or release gates were changed during this read-only check.
