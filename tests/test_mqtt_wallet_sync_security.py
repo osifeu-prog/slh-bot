@@ -45,6 +45,9 @@ def test_wallet_sync_allows_explicit_secure_configuration(monkeypatch):
 
 def test_tls_setup_failure_raises(monkeypatch):
     class Client:
+        def username_pw_set(self, username, password):
+            self.credentials = (username, password)
+
         def tls_set(self):
             raise ValueError("simulated TLS failure")
 
