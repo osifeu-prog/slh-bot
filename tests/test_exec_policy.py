@@ -6,7 +6,8 @@ from core.exec_policy import is_audit_command, is_dangerous, redact_secrets
 class ExecAuditBoundaryTests(unittest.TestCase):
     def test_allowed_source_reads(self):
         self.assertTrue(is_audit_command("cat core/authority.py"))
-        self.assertTrue(is_audit_command("grep -R release core/"))
+        self.assertTrue(is_audit_command("grep -r release core/"))
+        self.assertFalse(is_audit_command("grep -R release core/"))
         self.assertTrue(is_audit_command("find handlers/ -type f"))
         self.assertTrue(is_audit_command("sed -n '20,60p' core/exec_policy.py"))
         self.assertTrue(is_audit_command("head -n 30 README.md"))
@@ -39,6 +40,9 @@ class ExecAuditBoundaryTests(unittest.TestCase):
             "find state/ -type f",
             "cat .env",
             "cat .env.example",
+            "cat core/.envrc",
+            "cat tests/.env-production",
+            "grep TOKEN core/.envrc",
             "grep -R secret .git/",
             "grep TOKEN .env",
             "grep TOKEN .env.example",
