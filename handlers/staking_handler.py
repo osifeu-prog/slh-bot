@@ -57,7 +57,7 @@ def register(bot):
             return
         try:
             res = staking_service.unstake_locked(uid, pos_id, meta={"source": "telegram", "command": "unstake"})
-            if res.get("status") == "duplicate":
+            if res.get("status") in {"duplicate", "already_unlocked"}:
                 bot.reply_to(msg, "הפוזיציה כבר שוחררה.")
                 return
             if res.get("status") == "legacy_refund_review_required":

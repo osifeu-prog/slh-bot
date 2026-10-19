@@ -12,15 +12,14 @@ from datetime import datetime, timezone
 import state_manager
 
 
-_LEGACY_POSITION_STAKE_WINDOW_SECONDS = 5.0
-_LEGACY_UNSTAKE_PAIR_WINDOW_SECONDS = 600.0
+_LEGACY_UNSTAKE_AMBIGUITY_WINDOW_SECONDS = 300.0
 _LEDGER_EPSILON = 1e-6
 
 
 def _as_float(value):
     try:
         number = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     return number if math.isfinite(number) else None
 
@@ -29,30 +28,30 @@ def _ledger_epoch(row):
     """Return a ledger timestamp as epoch seconds, or None when unavailable."""
     value = row.get("time") if isinstance(row, dict) else None
     if isinstance(value, (int, float)):
-        return float(value)
+        return float(value) if math.isfinite(float(value)) else None
     if not isinstance(value, str) or not value.strip():
         return None
     try:
         parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.timestamp()
+    timestamp = parsed.timestamp()
+    return timestamp if math.isfinite(timestamp) else None
 
 
-def _legacy_refund_evidence(db, uid, position):
-    """Find strong or ambiguous evidence of a prior aggregate refund.
+def _find_legacy_unstake_ambiguity(db, uid, position):
+    """Find same-amount unlinked legacy unstake within five minutes of creation.
 
-    Before position-aware staking, /stake debited the aggregate wallet and then
-    created a position separately. The old /unstake <amount> refunded the
-    aggregate Credits balance without marking individual positions unlocked.
-    Match an unlinked legacy stake near this position's creation, then find a
-    later unlinked aggregate unstake that could have included this amount.
-    Exact inverse totals are high-confidence; larger aggregate withdrawals are
-    reported as ambiguous because there is no position_id to prove allocation.
-    This function is diagnostic only and never mutates state.
+    Old aggregate /unstake rows have no position_id. If a legacy row for the
+    same user and amount falls close to the position's creation time, allocation
+    cannot be proven, so the service must fail closed and request human review.
+    A larger withdrawal or an equal amount days later is not enough evidence.
+    This function is read-only.
     """
+    if not isinstance(position, dict):
+        return None
     amount = _as_float(position.get("amount"))
     created_at = _as_float(position.get("created_at"))
     if amount is None or amount <= 0 or created_at is None:
@@ -62,100 +61,40 @@ def _legacy_refund_evidence(db, uid, position):
     if not isinstance(ledger, list):
         return None
 
-    for stake_index, stake_row in enumerate(ledger):
-        if not isinstance(stake_row, dict) or str(stake_row.get("uid") or "") != str(uid):
+    for index, row in enumerate(ledger):
+        if not isinstance(row, dict) or str(row.get("uid") or "") != str(uid):
             continue
-        if stake_row.get("reason") != "staking:stake":
-            continue
-
-        stake_meta = stake_row.get("meta")
-        if not isinstance(stake_meta, dict):
-            continue
-        if stake_meta.get("position_id"):
-            continue
-        if str(stake_meta.get("command") or "").lower() not in {"stake", "stake_lock"}:
+        if row.get("reason") != "staking:unstake":
             continue
 
-        stake_amount = _as_float(stake_row.get("amount"))
-        stake_time = _ledger_epoch(stake_row)
-        staked_before = _as_float(stake_meta.get("staked_before"))
-        staked_after = _as_float(stake_meta.get("staked_after"))
-        if any(value is None for value in (stake_amount, stake_time, staked_before, staked_after)):
-            continue
-        if abs(stake_amount + amount) > _LEDGER_EPSILON:
-            continue
-        if abs(stake_time - created_at) > _LEGACY_POSITION_STAKE_WINDOW_SECONDS:
-            continue
-        if abs((staked_after - staked_before) - amount) > _LEDGER_EPSILON:
+        meta = row.get("meta")
+        if not isinstance(meta, dict):
+            meta = {}
+        if meta.get("position_id"):
             continue
 
-        ambiguous_candidate = None
-        for refund_index in range(stake_index + 1, len(ledger)):
-            refund_row = ledger[refund_index]
-            if not isinstance(refund_row, dict) or str(refund_row.get("uid") or "") != str(uid):
-                continue
-            if refund_row.get("reason") != "staking:unstake":
-                continue
+        refund_amount = _as_float(row.get("amount"))
+        refund_time = _ledger_epoch(row)
+        if refund_amount is None or refund_time is None:
+            continue
+        if abs(refund_amount - amount) > _LEDGER_EPSILON:
+            continue
 
-            refund_meta = refund_row.get("meta")
-            if not isinstance(refund_meta, dict):
-                continue
-            if refund_meta.get("position_id"):
-                continue
-            if str(refund_meta.get("command") or "").lower() != "unstake":
-                continue
+        delta = abs(refund_time - created_at)
+        if delta > _LEGACY_UNSTAKE_AMBIGUITY_WINDOW_SECONDS:
+            continue
 
-            refund_amount = _as_float(refund_row.get("amount"))
-            refund_time = _ledger_epoch(refund_row)
-            refund_staked_before = _as_float(refund_meta.get("staked_before"))
-            refund_staked_after = _as_float(refund_meta.get("staked_after"))
-            if any(value is None for value in (
-                refund_amount, refund_time, refund_staked_before, refund_staked_after
-            )):
-                continue
-            if refund_amount <= 0 or refund_amount + _LEDGER_EPSILON < amount:
-                continue
-            if refund_time < stake_time:
-                continue
-            if refund_staked_before + _LEDGER_EPSILON < amount:
-                continue
-            if refund_staked_after > refund_staked_before + _LEDGER_EPSILON:
-                continue
-
-            evidence = {
-                "position_id": str(position.get("id") or ""),
-                "position_amount": amount,
-                "legacy_stake_index": stake_index,
-                "legacy_stake_time": stake_row.get("time"),
-                "legacy_unstake_index": refund_index,
-                "legacy_unstake_time": refund_row.get("time"),
-                "legacy_unstake_amount": refund_amount,
-            }
-            exact_inverse = (
-                abs(refund_amount - amount) <= _LEDGER_EPSILON
-                and abs(refund_staked_before - staked_after) <= _LEDGER_EPSILON
-                and abs(refund_staked_after - staked_before) <= _LEDGER_EPSILON
-                and refund_time - stake_time <= _LEGACY_UNSTAKE_PAIR_WINDOW_SECONDS
-            )
-            if exact_inverse:
-                return {
-                    "classification": "LEGACY_AGGREGATE_UNSTAKE_EXACT_INVERSE",
-                    **evidence,
-                    "reason": "same amount and exact reversed aggregate staked totals",
-                }
-
-            if ambiguous_candidate is None:
-                ambiguous_candidate = {
-                    "classification": "LEGACY_AGGREGATE_UNSTAKE_POSSIBLY_INCLUDED_POSITION",
-                    **evidence,
-                    "reason": (
-                        "unlinked aggregate unstake could include this legacy position; "
-                        "the ledger does not identify which position was refunded"
-                    ),
-                }
-
-        if ambiguous_candidate is not None:
-            return ambiguous_candidate
+        return {
+            "code": "LEGACY_UNSTAKE_AMBIGUITY",
+            "ledger_index": index,
+            "ledger_time": row.get("time"),
+            "ledger_amount": refund_amount,
+            "position_id": str(position.get("id") or ""),
+            "position_amount": amount,
+            "position_created_at": created_at,
+            "seconds_from_creation": round(delta, 6),
+            "reason": "same user, same amount, legacy row without position_id within five minutes",
+        }
 
     return None
 
@@ -268,58 +207,105 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
         position = db.setdefault("stake_positions", {}).get(position_id)
         if not position or str(position.get("uid")) != uid:
             raise ValueError("position not found")
-        request_key = f'{uid}:{request_id}' if request_id else ''
-        if request_key:
-            requests = db.setdefault('staking_unstake_requests', {})
-            existing = requests.get(request_key)
-            if existing:
-                return {
-                    'status': 'duplicate',
-                    'request_id': request_id,
-                    'position_id': existing.get('position_id', position_id),
-                    'credits': float(user.setdefault('wallet', {}).get('credits', 0) or 0),
-                    'staked': float(user.setdefault('wallet', {}).get('staked', 0) or 0),
-                }
-        if position.get('status') == 'unlocked':
-            return {'status': 'duplicate', 'position_id': position_id, 'request_id': request_id or None}
-
-        # Legacy /unstake <amount> refunded aggregate Credits but could leave
-        # historical position records marked "locked". Fail closed only when
-        # strong time/amount/staked-total evidence points to a prior refund.
-        legacy_refund = _legacy_refund_evidence(db, uid, position)
-        if legacy_refund:
-            return {
-                'status': 'legacy_refund_review_required',
-                'position_id': position_id,
-                'evidence': legacy_refund,
-            }
-
-        if time.time() < float(position.get("unlocks_at", 0)):
-            raise ValueError("still locked")
-
-        amount = float(position.get("amount", 0) or 0)
-        if amount <= 0:
-            raise ValueError("invalid position amount")
 
         wallet = user.setdefault("wallet", {})
         credits = float(wallet.get("credits", 0) or 0)
         staked = float(wallet.get("staked", 0) or 0)
+        requests = db.setdefault("staking_unstake_requests", {})
+        idempotency_key = f"unstake:{position_id}"
+
+        # One stable key per position prevents retries from producing another payout.
+        if idempotency_key in requests:
+            return {
+                "status": "already_unlocked",
+                "position_id": position_id,
+                "credits": credits,
+                "staked": staked,
+            }
+
+        request_key = f"{uid}:{request_id}" if request_id else ""
+        if request_key and request_key in requests:
+            existing = requests[request_key]
+            if str(existing.get("position_id") or "") == position_id:
+                return {
+                    "status": "already_unlocked",
+                    "position_id": position_id,
+                    "credits": credits,
+                    "staked": staked,
+                }
+            return {
+                "status": "duplicate",
+                "position_id": str(existing.get("position_id") or ""),
+                "credits": credits,
+                "staked": staked,
+            }
+
+        # Fail closed when position state is inconsistent; never infer a refund.
+        if position.get("status") == "unlocked" or position.get("unlocked_at") is not None:
+            return {
+                "status": "already_unlocked",
+                "position_id": position_id,
+                "credits": credits,
+                "staked": staked,
+            }
+        if position.get("status") != "locked":
+            return {
+                "status": "position_state_review_required",
+                "position_id": position_id,
+                "credits": credits,
+                "staked": staked,
+            }
+
+        # Same amount + same user + legacy row without position_id near creation:
+        # require manual review before performing any financial/state mutation.
+        legacy = _find_legacy_unstake_ambiguity(db, uid, position)
+        if legacy is not None:
+            return {
+                "status": "legacy_refund_review_required",
+                "position_id": position_id,
+                "code": "LEGACY_UNSTAKE_AMBIGUITY",
+                "evidence": legacy,
+                "credits": credits,
+                "staked": staked,
+            }
+
+        now = time.time()
+        try:
+            unlocks_at = float(position.get("unlocks_at", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("invalid position unlock time")
+        if not math.isfinite(unlocks_at):
+            raise ValueError("invalid position unlock time")
+        if now < unlocks_at:
+            raise ValueError("still locked")
+
+        amount = _as_float(position.get("amount"))
+        if amount is None or amount <= 0:
+            raise ValueError("invalid position amount")
         if staked < amount:
             raise ValueError("insufficient staked balance")
 
+        # Atomic mutation: position, wallet, idempotency record, and ledger row.
         wallet["staked"] = staked - amount
         wallet["credits"] = credits + amount
         position["status"] = "unlocked"
-        position["unlocked_at"] = time.time()
+        position["unlocked_at"] = now
 
+        requests[idempotency_key] = {
+            "position_id": position_id,
+            "uid": uid,
+            "created_at": now,
+            "idempotency_key": idempotency_key,
+        }
         if request_key:
-            db.setdefault('staking_unstake_requests', {})[request_key] = {
-                'position_id': position_id,
-                'uid': uid,
-                'created_at': time.time(),
+            requests[request_key] = {
+                "position_id": position_id,
+                "uid": uid,
+                "created_at": now,
+                "idempotency_key": idempotency_key,
             }
 
-        db.setdefault('ledger', []).append({
+        db.setdefault("ledger", []).append({
             "time": datetime.now(timezone.utc).isoformat(),
             "uid": uid,
             "before": credits,
@@ -329,8 +315,10 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
             "meta": {
                 **meta,
                 "position_id": position_id,
+                "idempotency_key": idempotency_key,
                 "staked_before": staked,
                 "staked_after": staked - amount,
+                "legacy_guard": "checked",
             },
         })
 
@@ -339,6 +327,7 @@ def unstake_locked(uid, position_id, meta=None, request_id=None):
             "position": position,
             "credits": credits + amount,
             "staked": staked - amount,
+            "idempotency_key": idempotency_key,
         }
 
     return state_manager.atomic_update(mutate)
