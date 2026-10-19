@@ -100,6 +100,39 @@ def build_recovery_center_report(*, release_report=None, db=None) -> dict:
             "human_action_required": True,
         })
 
+    # Read-only reserve audit: surface release blockers in the same recovery report.
+    reserve_audit = None
+    try:
+        from core.slh_exchange_reconciliation import audit_db as audit_reserves
+        reserve_audit = audit_reserves(db)
+        for item in reserve_audit.get("release_blocking_findings", []):
+            if not isinstance(item, dict):
+                continue
+            code = str(item.get("code") or "UNKNOWN_RESERVE_FINDING")
+            order_id = str(item.get("order_id") or "")
+            trade_id = str(item.get("trade_id") or "")
+            blockers.append({
+                "id": "RESERVE-" + _fingerprint(code, order_id, trade_id),
+                "kind": code,
+                "status": "BLOCKED",
+                "summary": code + ((" · order=" + order_id) if order_id else "") + ((" · trade=" + trade_id) if trade_id else ""),
+                "evidence": {k: item[k] for k in ("code", "ledger", "order_id", "trade_id", "reserve_delta", "normal_release_delta", "net_delta", "correction_delta", "event_id", "event_ids") if k in item},
+                "next_action": "Inspect linked order/trade and reserve/release evidence; do not synthesize events or change balances.",
+                "automatic_fix": "NOT_SAFE_WITHOUT_SOURCE_EVIDENCE",
+                "human_action_required": True,
+            })
+    except Exception as exc:
+        blockers.append({
+            "id": "RESERVE-AUDIT-UNAVAILABLE-" + _fingerprint(type(exc).__name__),
+            "kind": "EXCHANGE_RESERVE_AUDIT_UNAVAILABLE",
+            "status": "BLOCKED",
+            "summary": "Canonical reserve audit unavailable (" + type(exc).__name__ + ").",
+            "evidence": {},
+            "next_action": "Inspect service logs; keep the exchange gate closed.",
+            "automatic_fix": "NEVER_BYPASS_AUDIT",
+            "human_action_required": True,
+        })
+
     settlement = report.get("checks", {}).get("External settlement gates", {})
     settlement_detail = str(settlement.get("detail") or "")
     review_items = []
@@ -132,6 +165,7 @@ def build_recovery_center_report(*, release_report=None, db=None) -> dict:
             "unresolved_continuity_break_count": audit.get("unresolved_continuity_break_count"),
             "current_balance_matches_tail": audit.get("current_balance_matches_tail"),
         },
+        "exchange_reserves": {"status": reserve_audit.get("status", "UNKNOWN") if isinstance(reserve_audit, dict) else "UNKNOWN", "release_readiness_status": reserve_audit.get("release_readiness_status", "UNKNOWN") if isinstance(reserve_audit, dict) else "UNKNOWN", "release_blocking_finding_count": reserve_audit.get("release_blocking_finding_count") if isinstance(reserve_audit, dict) else None},
         "release_status": report.get("overall_status", "UNKNOWN"),
         "safety": [
             "No balance or ledger writes",
