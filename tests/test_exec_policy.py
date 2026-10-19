@@ -1,6 +1,7 @@
+import os
 import unittest
 
-from core.exec_policy import is_audit_command, is_dangerous, redact_secrets
+from core.exec_policy import _audit_path_allowed, is_audit_command, is_dangerous, redact_secrets
 
 
 class ExecAuditBoundaryTests(unittest.TestCase):
@@ -58,6 +59,15 @@ class ExecAuditBoundaryTests(unittest.TestCase):
     def test_unrestricted_root_recursion_is_blocked(self):
         self.assertFalse(is_audit_command("grep -R token ."))
         self.assertFalse(is_audit_command("find . -type f"))
+
+    def test_symlinked_audit_paths_are_blocked(self):
+        link = os.path.join("core", ".audit_symlink_regression")
+        try:
+            os.symlink("../state", link)
+            self.assertFalse(_audit_path_allowed(link))
+        finally:
+            if os.path.islink(link):
+                os.unlink(link)
 
     def test_chaining_remains_blocked(self):
         self.assertFalse(is_audit_command("cat core/authority.py && pwd"))
