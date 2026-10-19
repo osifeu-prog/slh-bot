@@ -86,7 +86,7 @@ def _audit_path_allowed(path):
     if not value or value in {".", "./", "/app", "/"} or value.startswith("/"):
         return False
 
-    normalized = value.replace("\\", "/")
+    normalized = value.replace("\\\\", "/")
     components = [part.lower() for part in normalized.split("/") if part]
     if ".." in components:
         return False
@@ -97,9 +97,21 @@ def _audit_path_allowed(path):
     ):
         return False
 
-    if normalized in AUDIT_ALLOWED_ROOT_FILES:
-        return True
-    return normalized.startswith(AUDIT_ALLOWED_ROOTS)
+    allowed_root_file = normalized in AUDIT_ALLOWED_ROOT_FILES
+    allowed_source_root = normalized.startswith(AUDIT_ALLOWED_ROOTS)
+    if not (allowed_root_file or allowed_source_root):
+        return False
+
+    # Reject symlinks in every existing path component, including the root,
+    # so a lexical source path cannot redirect reads into runtime/secrets.
+    current = os.getcwd()
+    for component in normalized.split("/"):
+        if not component:
+            continue
+        current = os.path.join(current, component)
+        if os.path.islink(current):
+            return False
+    return True
 
 
 def _audit_paths_safe(cmd):
