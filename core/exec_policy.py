@@ -92,8 +92,7 @@ def _audit_path_allowed(path):
         return False
     if any(
         part in AUDIT_SENSITIVE_COMPONENTS
-        or part == ".env"
-        or part.startswith(".env.")
+        or part.startswith(".env")
         for part in components
     ):
         return False
@@ -141,7 +140,8 @@ def _audit_paths_safe(cmd):
         return _audit_path_allowed(args[2])
 
     if command == "grep":
-        allowed_flags = {"-n", "-i", "-R", "-r", "-E", "-F", "-w", "-x", "-v"}
+        # -R follows symlinks recursively; allow only -r, which does not.
+        allowed_flags = {"-n", "-i", "-r", "-E", "-F", "-w", "-x", "-v"}
         index = 0
         while index < len(args) and args[index].startswith("-"):
             if args[index] not in allowed_flags:
