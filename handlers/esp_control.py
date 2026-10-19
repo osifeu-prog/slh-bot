@@ -365,6 +365,10 @@ def register_sync(bot):
         dev = _load_devices().get(did)
         if not dev: bot.reply_to(m, f"Device {did} not found"); return
         if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
+        from core.mqtt_config import wallet_sync_security_ready
+        if not wallet_sync_security_ready():
+            bot.reply_to(m, "🔒 Wallet sync is disabled until authenticated MQTT/TLS and device authorization are configured.")
+            return
         state = build_sync_payload(m.from_user.id)
         import json as _j
         r = _send_cmd(did, "sync " + _j.dumps(state, ensure_ascii=False))
