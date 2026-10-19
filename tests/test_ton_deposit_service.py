@@ -1,4 +1,5 @@
 import unittest
+from decimal import Decimal
 from unittest.mock import patch
 
 from core import ton_deposit_service
@@ -34,6 +35,9 @@ class TonDepositSettlementTests(unittest.TestCase):
         )
         self.tx_patch = patch.object(ton_deposit_service, "_find_ton_transaction")
         self.open_patch = patch.object(ton_deposit_service, "_deposits_open", return_value=True)
+        self.evidence_patch = patch.object(
+            ton_deposit_service, "_verified_public_replay_evidence", return_value=True
+        )
         self.settings_patch = patch.object(
             ton_deposit_service,
             "_settings",
@@ -44,12 +48,14 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.binding_patch.start()
         self.tx_mock = self.tx_patch.start()
         self.open_patch.start()
+        self.evidence_patch.start()
         self.settings_patch.start()
         self.addCleanup(self.atomic_patch.stop)
         self.addCleanup(self.load_patch.stop)
         self.addCleanup(self.binding_patch.stop)
         self.addCleanup(self.tx_patch.stop)
         self.addCleanup(self.open_patch.stop)
+        self.addCleanup(self.evidence_patch.stop)
         self.addCleanup(self.settings_patch.stop)
 
     def _tx(self, sender=BOUND, recipient=TREASURY, value_nano=1_000_000_000, memo="SLH12345"):
@@ -115,8 +121,12 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertTrue(second["idempotent"])
         self.assertEqual(self.db["users"][UID]["wallet"]["credits"], 100)
         self.assertEqual(self.db["used_ton_txs"], [TX])
-        self.assertEqual(self.db["ton_replay_evidence"][UID]["tx_hash"], TX)
+        self.assertEqual(self.db["ton_replay_evidence"][UID]["tx_hash"], TX.lower())
         self.assertEqual(self.db["ton_replay_evidence"][UID]["replay_count"], 1)
+        self.assertEqual(
+            self.db["ton_replay_evidence"][UID]["by_tx_hash"][TX.lower()]["replay_count"],
+            1,
+        )
 
     def test_unsafe_rate_is_rejected_when_deposits_open(self):
         self.tx_mock.return_value = self._tx()
@@ -131,6 +141,22 @@ class TonDepositSettlementTests(unittest.TestCase):
         self.assertFalse(ton_deposit_service.deposits_are_open())
         with self.assertRaisesRegex(ValueError, "TON_DEPOSITS_CLOSED"):
             ton_deposit_service.settle_ton_deposit(UID, TX)
+
+    def test_replay_counters_are_scoped_per_transaction_hash(self):
+        ton_deposit_service._record_ton_replay_evidence(
+            UID, "hash-one", {"amount_ton": Decimal("0.01")}
+        )
+        ton_deposit_service._record_ton_replay_evidence(
+            UID, "hash-two", {"amount_ton": Decimal("0.02")}
+        )
+        ton_deposit_service._record_ton_replay_evidence(
+            UID, "HASH-ONE", {"amount_ton": Decimal("0.01")}
+        )
+        evidence = self.db["ton_replay_evidence"][UID]
+        self.assertEqual(evidence["tx_hash"], "hash-one")
+        self.assertEqual(evidence["replay_count"], 2)
+        self.assertEqual(evidence["by_tx_hash"]["hash-one"]["replay_count"], 2)
+        self.assertEqual(evidence["by_tx_hash"]["hash-two"]["replay_count"], 1)
 
 
 if __name__ == "__main__":
