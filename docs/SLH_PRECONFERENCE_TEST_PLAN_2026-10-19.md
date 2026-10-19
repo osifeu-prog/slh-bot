@@ -293,4 +293,54 @@ Next sequence:
 4. Prove the harmless marker round-trip with a disposable test device and synthetic account.
 5. Only after review, propose one isolated code PR; do not merge or deploy as part of this documentation step.
 
-Issue #785 is open. No code fix, Railway variable change, production deployment, registry mutation, or device command was executed as part of this update.
+Issue #785 is open. A separate draft code PR #787 was subsequently opened; it has not been merged or deployed. No Railway variable change, production deployment, registry mutation, or device command was executed.
+
+
+## 15. Cross-workstream follow-up — 2026-10-19
+
+### ESP wallet-sync security patch (draft only)
+
+- [PR #787 — Fail closed on ESP wallet sync without authenticated MQTT](https://github.com/osifeu-prog/slh-bot/pull/787) is a draft, not merged or deployed.
+- It requires `MQTT_WALLET_SYNC_ENABLED=1`, a non-default broker, username/password and TLS before the sync handler reads account data; it also refuses to continue if TLS setup fails.
+- Regression tests were added in `tests/test_mqtt_wallet_sync_security.py`; **CI has not yet been run/verified in this workflow**.
+- This patch is only a first fail-closed control. It does not itself prove per-device broker ACLs or cryptographic hardware identity. Do not set the enable flag or deploy until those are independently configured, tests pass, and review is complete.
+
+### Purchase/ledger evidence
+
+- [Issue #786 — Reconcile fulfilled purchases missing fulfillment/ledger fields](https://github.com/osifeu-prog/slh-bot/issues/786) tracks the supplied read-only snapshot showing 9 `FULFILLED` purchases: 8 with `fulfilled_at` and `ledger_recorded=True`, and one `Market Smoke` row missing both indicators.
+- Treat this as a field-consistency finding, not proof of lost funds. Do not backfill, re-fulfil, replay, or alter ledger/balances without linked purchase and ledger evidence.
+
+### Developer access request
+
+Source review of `core/developer_access.py` and `handlers/dev_admin.py` confirms that `/dev_add <uid>` calls the ordinary approval function, which requires a completed Bitcoin Mastery course and a pending request. The supplied transcript reported target `6525273826` at 0/12, so approval correctly remains blocked. The separately listed pending request `1518680802` is a different UID; do not treat it as Amit's request or approve the wrong account. The `owner_already_has_access` response to `/dev_request` describes the sender's owner status, not a pending request for the target. No role was changed.
+
+### Surf forecast capability
+
+A current public forecast page was located for Herzliya. For Tuesday 20 October 2026, it projects approximately **0.5–0.6 m** waves with WNW wind; another surf forecast describes the conditions as poor. Forecasts differ by model and spot, so the bot should show source, update time, beach, hourly values, wave period/direction and a clear uncertainty note. This is a retrieved public forecast, **not evidence that the SLH bot's surf feature is implemented or connected**.
+
+References:
+- [Herzliya surf forecast — Tides4Fishing](https://tides4fishing.com/il/israel/herzliya/forecast/surf)
+- [Kontiki, Herzliya — SwellPeaks](https://swellpeaks.com/spots/kontiki-herzelia)
+
+### QR conference demo
+
+A QR-based event demo must be a separate feature and should not expose account balances, wallet addresses, Telegram IDs, or long-lived bearer tokens in a static QR. Preferred scope: short-lived signed entry token with server-side validation, one-time check-in/idempotency, expiration, and a synthetic demo profile. Do not add real-value credit bonuses or rewards to the conference demo. Implementation remains unverified.
+
+## 16. Consolidated status snapshot
+
+| Workstream | Status on 2026-10-19 | Next safe action |
+|---|---|---|
+| ESP physical link | BLOCKED / not end-to-end verified | USB/COM discovery on local Windows PC; do not flash |
+| ESP wallet sync security | Draft PR #787; not merged/deployed | Run CI, review, configure private broker/ACL/device identity in an approved plan |
+| Purchase/ledger anomaly | Issue #786 open | Read-only cross-reference of purchase IDs and ledger events |
+| Developer access | Target transcript shows 0/12; no approval | Complete prerequisite course, then target user submits request; verify exact UID |
+| Exchange/reserve/owner ledger | BLOCKED per supplied reports | Continue source-backed read-only audit; no corrections until proven |
+| BNB/TON | Public gates CLOSED | Keep closed pending independent review and all canonical blockers resolved |
+| Surf forecast in bot | Not located in source search; public forecasts available | Locate existing command/provider or implement a separate, tested read-only integration |
+| QR event check-in | Concept only | Design short-lived, one-time token with no financial payload |
+| Hebrew keyboard helper | Proposed only | Implement preview-only conversion with unit tests |
+| Public launch | BLOCKED | No public-trading or investment launch until the canonical release gates pass |
+
+## 17. Execution discipline
+
+Proceed one isolated change per PR. A code PR being open is not evidence that CI passed, the change was merged, Railway deployed it, or a physical device works. For each workstream record: source SHA, tests and result, deployment identity (if authorized), live evidence, rollback path and remaining blockers. No production balance, ledger, purchase, developer role, Railway variable, device registry, financial gate or public broadcast is changed by this plan.
