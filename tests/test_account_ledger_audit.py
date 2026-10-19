@@ -293,6 +293,48 @@ def test_gap_shows_linked_transfer_and_purchase_context_without_resolving_gap():
     assert evidence["purchase"]["status"] == "FULFILLED"
     assert evidence["purchase"]["seller_payout"] == 0.9
 
+def test_unverified_zero_before_admin_test_grant_does_not_resolve_balance_reset():
+    target_uid = UID
+    db = {
+        "users": {target_uid: {"wallet": {"credits": 50.0}}},
+        "ledger": [
+            {
+                "time": "2026-09-09T14:24:11.455955+00:00",
+                "uid": target_uid,
+                "before": 10671.9,
+                "amount": 100.0,
+                "after": 10771.9,
+                "reason": "staking:unstake",
+                "meta": {"command": "unstake", "staked_before": 120.0, "staked_after": 20.0},
+            },
+            {
+                "time": "2026-09-09T17:35:55.403916+00:00",
+                "uid": target_uid,
+                "before": 0.0,
+                "amount": 50.0,
+                "after": 50.0,
+                "reason": "admin:test_grant",
+                "meta": {"source": "giveme"},
+            },
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    finding = result["findings"][0]
+    assert finding["type"] == "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+    assert finding["reconciled"] is False
+    assert finding["delta_to_explain"] == -10771.9
+    evidence = finding["source_evidence"]
+    assert evidence["resolves_gap"] is False
+    assert evidence["source_match_status"] == "NO_DIRECT_SOURCE_MATCH"
+    assert result["current_balance_matches_tail"] is True
+    assert db == before
+
+
 def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits_gap():
     target_uid = "8789977826"
     source_uid = "8791275334"
