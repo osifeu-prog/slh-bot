@@ -5,6 +5,7 @@ This module is the staking-specific mutation boundary; callers must not mutate
 wallet or stake_positions directly.
 """
 
+import math
 import time
 from datetime import datetime, timezone
 
@@ -18,9 +19,10 @@ _LEDGER_EPSILON = 1e-6
 
 def _as_float(value):
     try:
-        return float(value)
+        number = float(value)
     except (TypeError, ValueError):
         return None
+    return number if math.isfinite(number) else None
 
 
 def _ledger_epoch(row):
