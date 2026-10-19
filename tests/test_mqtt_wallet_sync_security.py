@@ -104,3 +104,65 @@ def test_direct_esp_sync_command_is_blocked_before_wallet_read(monkeypatch):
     registered["esp_sync"](Message())
     assert "disabled" in bot.reply.lower()
 
+def test_esp_view_is_blocked_before_mqtt_request_when_wallet_sync_disabled(monkeypatch):
+    from handlers import esp_control
+
+    monkeypatch.setattr(esp_control, "_load_devices", lambda: {"device-1": {"owner": "123"}})
+    monkeypatch.setattr(mqtt_config, "BROKER", "broker.hivemq.com")
+    monkeypatch.setattr(mqtt_config, "USER", "device-user")
+    monkeypatch.setattr(mqtt_config, "PASSWORD", "test-password")
+    monkeypatch.setattr(mqtt_config, "USE_TLS", False)
+    monkeypatch.delenv("MQTT_WALLET_SYNC_ENABLED", raising=False)
+    monkeypatch.delenv("MQTT_WALLET_SYNC_ALLOWED_BROKERS", raising=False)
+    monkeypatch.setattr(
+        esp_control.mqtt,
+        "Client",
+        lambda: pytest.fail("screen response may contain wallet data; MQTT must not be used"),
+    )
+
+    registered = {}
+
+    class FakeBot:
+        def message_handler(self, commands):
+            return lambda fn: registered.setdefault(commands[0], fn)
+
+        def reply_to(self, message, text):
+            self.reply = text
+
+    bot = FakeBot()
+    esp_control.register_screen(bot)
+
+    class User:
+        id = 123
+
+    class Message:
+        text = "/esp_view device-1"
+        from_user = User()
+
+    registered["esp_view"](Message())
+    assert "disabled" in bot.reply.lower()
+
+
+def test_mqtt_action_sync_is_blocked_before_wallet_read(monkeypatch):
+    from handlers import esp_control
+
+    monkeypatch.setattr(
+        esp_control,
+        "build_sync_payload",
+        lambda uid: pytest.fail("wallet payload must not be read"),
+    )
+    monkeypatch.setattr(mqtt_config, "BROKER", "broker.hivemq.com")
+    monkeypatch.setattr(mqtt_config, "USER", "device-user")
+    monkeypatch.setattr(mqtt_config, "PASSWORD", "test-password")
+    monkeypatch.setattr(mqtt_config, "USE_TLS", False)
+    monkeypatch.delenv("MQTT_WALLET_SYNC_ENABLED", raising=False)
+    monkeypatch.delenv("MQTT_WALLET_SYNC_ALLOWED_BROKERS", raising=False)
+
+    class FakeBot:
+        def send_message(self, uid, text, **kwargs):
+            self.last_message = text
+
+    bot = FakeBot()
+    esp_control._handle_action(bot, "123", "device-1", "sync")
+    assert "disabled" in bot.last_message.lower()
+
