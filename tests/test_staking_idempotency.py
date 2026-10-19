@@ -79,7 +79,7 @@ class StakingIdempotencyTests(unittest.TestCase):
         )
 
         self.assertEqual(first["status"], "completed")
-        self.assertEqual(second["status"], "duplicate")
+        self.assertEqual(second["status"], "already_unlocked")
         db = self.read_db()
         wallet = db["users"]["u1"]["wallet"]
         self.assertEqual(wallet["credits"], 100.0)
