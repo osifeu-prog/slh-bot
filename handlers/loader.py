@@ -66,6 +66,7 @@ def load_handlers(bot, context):
         ("voice", "handlers.voice_handler"),
         ("synth", "handlers.synth_handler"),
         ("help", "handlers.help_handler"),
+        ("select_all", "handlers.select_all_handler"),
         ("join", "handlers.join_handler"),
         ("kb", "handlers.kb_handler"),
         ("leaderboard", "handlers.leaderboard_handler"),

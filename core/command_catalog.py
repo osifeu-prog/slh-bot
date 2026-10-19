@@ -9,6 +9,7 @@ from collections import defaultdict
 
 KNOWN = {
     "start": ("ACCOUNT", "בית / התחלה"),
+    "select_all": ("UI", "ריכוז תוכן נוח להעתקה"),
     "join": ("ACCOUNT", "הרשמה"),
     "me": ("ACCOUNT", "פרופיל קצר"),
     "profile": ("ACCOUNT", "פרופיל וארנק"),
@@ -132,6 +133,7 @@ KNOWN = {
 PUBLIC_COMMANDS = (
     ("start", "כניסה והתחלה"),
     ("help", "מדריך שימושי"),
+    ("select_all", "ריכוז תוכן להעתקה"),
     ("academy", "אקדמיה ולמידה"),
     ("courses", "רשימת קורסים"),
     ("ask", "שאלו את עוזר ה-AI"),
