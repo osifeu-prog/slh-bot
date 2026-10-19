@@ -105,3 +105,35 @@ def test_position_aware_new_stake_event_does_not_match_legacy_guard(monkeypatch)
 
     assert result["status"] == "completed"
     assert db["stake_positions"][POSITION_ID]["status"] == "unlocked"
+
+
+
+def test_larger_legacy_aggregate_unstake_blocks_as_ambiguous(monkeypatch):
+    db = _legacy_db(include_refund=False)
+    # Later legacy command withdrew 166 Credits from aggregate staked funds.
+    # With no position_id, allocation cannot be proven, but this 100-Credit
+    # position could have been included in the aggregate refund.
+    db["ledger"].append({
+        "time": _iso(1200.0),
+        "uid": UID,
+        "before": 400.0,
+        "amount": 166.0,
+        "after": 566.0,
+        "reason": "staking:unstake",
+        "meta": {
+            "source": "telegram",
+            "command": "unstake",
+            "staked_before": 166.0,
+            "staked_after": 0.0,
+        },
+    })
+    before = deepcopy(db)
+    _patch_atomic_db(monkeypatch, db)
+    monkeypatch.setattr(staking_service.time, "time", lambda: 2000.0)
+
+    result = staking_service.unstake_locked(UID, POSITION_ID)
+
+    assert result["status"] == "legacy_refund_review_required"
+    assert result["evidence"]["classification"] == "LEGACY_AGGREGATE_UNSTAKE_POSSIBLY_INCLUDED_POSITION"
+    assert result["evidence"]["legacy_unstake_amount"] == 166.0
+    assert db == before

@@ -42,13 +42,15 @@ def _ledger_epoch(row):
 
 
 def _legacy_refund_evidence(db, uid, position):
-    """Detect strong evidence of an earlier aggregate refund for this position.
+    """Find strong or ambiguous evidence of a prior aggregate refund.
 
     Before position-aware staking, /stake debited the aggregate wallet and then
-    created a position separately. The old /unstake <amount> refunded aggregate
-    Credits without marking that position unlocked. Match only an unlinked legacy
-    stake created within seconds of this position and a later, exact inverse
-    aggregate unstake (same amount and reversed staked_before/staked_after).
+    created a position separately. The old /unstake <amount> refunded the
+    aggregate Credits balance without marking individual positions unlocked.
+    Match an unlinked legacy stake near this position's creation, then find a
+    later unlinked aggregate unstake that could have included this amount.
+    Exact inverse totals are high-confidence; larger aggregate withdrawals are
+    reported as ambiguous because there is no position_id to prove allocation.
     This function is diagnostic only and never mutates state.
     """
     amount = _as_float(position.get("amount"))
@@ -87,6 +89,7 @@ def _legacy_refund_evidence(db, uid, position):
         if abs((staked_after - staked_before) - amount) > _LEDGER_EPSILON:
             continue
 
+        ambiguous_candidate = None
         for refund_index in range(stake_index + 1, len(ledger)):
             refund_row = ledger[refund_index]
             if not isinstance(refund_row, dict) or str(refund_row.get("uid") or "") != str(uid):
@@ -110,28 +113,51 @@ def _legacy_refund_evidence(db, uid, position):
                 refund_amount, refund_time, refund_staked_before, refund_staked_after
             )):
                 continue
-            if abs(refund_amount - amount) > _LEDGER_EPSILON:
+            if refund_amount <= 0 or refund_amount + _LEDGER_EPSILON < amount:
                 continue
-            if refund_time < stake_time or refund_time - stake_time > _LEGACY_UNSTAKE_PAIR_WINDOW_SECONDS:
+            if refund_time < stake_time:
                 continue
-            if abs(refund_staked_before - staked_after) > _LEDGER_EPSILON:
+            if refund_staked_before + _LEDGER_EPSILON < amount:
                 continue
-            if abs(refund_staked_after - staked_before) > _LEDGER_EPSILON:
+            if refund_staked_after > refund_staked_before + _LEDGER_EPSILON:
                 continue
 
-            return {
-                "classification": "LEGACY_AGGREGATE_UNSTAKE_MAY_HAVE_REFUNDED_POSITION",
+            evidence = {
                 "position_id": str(position.get("id") or ""),
-                "amount": amount,
+                "position_amount": amount,
                 "legacy_stake_index": stake_index,
                 "legacy_stake_time": stake_row.get("time"),
                 "legacy_unstake_index": refund_index,
                 "legacy_unstake_time": refund_row.get("time"),
-                "reason": "exact amount and aggregate staked totals reverse the legacy stake",
+                "legacy_unstake_amount": refund_amount,
             }
+            exact_inverse = (
+                abs(refund_amount - amount) <= _LEDGER_EPSILON
+                and abs(refund_staked_before - staked_after) <= _LEDGER_EPSILON
+                and abs(refund_staked_after - staked_before) <= _LEDGER_EPSILON
+                and refund_time - stake_time <= _LEGACY_UNSTAKE_PAIR_WINDOW_SECONDS
+            )
+            if exact_inverse:
+                return {
+                    "classification": "LEGACY_AGGREGATE_UNSTAKE_EXACT_INVERSE",
+                    **evidence,
+                    "reason": "same amount and exact reversed aggregate staked totals",
+                }
+
+            if ambiguous_candidate is None:
+                ambiguous_candidate = {
+                    "classification": "LEGACY_AGGREGATE_UNSTAKE_POSSIBLY_INCLUDED_POSITION",
+                    **evidence,
+                    "reason": (
+                        "unlinked aggregate unstake could include this legacy position; "
+                        "the ledger does not identify which position was refunded"
+                    ),
+                }
+
+        if ambiguous_candidate is not None:
+            return ambiguous_candidate
 
     return None
-
 
 def stake_locked(uid, amount, lock_days=30, meta=None, request_id=None):
     uid = str(uid)
