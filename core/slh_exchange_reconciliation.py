@@ -699,7 +699,7 @@ def audit_db(db):
             or _amount(sell_order.get("reserved_slh")) != 0
             or _amount(buy_order.get("reserved_credits", 0)) != 0
             or bid is None or ask is None
-            or bid != price or ask != price
+            or price > bid or price < ask
             or trade_time is None
             or trade_time >= canonical_migration_at
         ):
