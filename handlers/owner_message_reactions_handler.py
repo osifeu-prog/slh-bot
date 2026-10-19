@@ -1,8 +1,9 @@
 """Owner-only Telegram reactions for incoming messages.
 
-Reactions are applied in middleware so existing command and conversation handlers
-continue to process the original update. Other users, groups, and other bots are
-not affected. Set SLH_OWNER_MESSAGE_REACTIONS=0 to disable this feature.
+A first-position handler adds one context-sensitive reaction and returns
+ContinueHandling so all existing commands and natural-chat handlers still run.
+Other users, groups, and additional bots are unaffected. Set
+SLH_OWNER_MESSAGE_REACTIONS=0 to disable this feature.
 """
 from __future__ import annotations
 
@@ -11,10 +12,17 @@ import os
 import re
 
 from core.authority import is_owner
+from telebot import types
+from telebot.handler_backends import ContinueHandling
 
 _LOGGER = logging.getLogger(__name__)
 _FAILURE_LOGGED = False
 _FALSE_VALUES = {"0", "false", "no", "off", "disabled"}
+_OWNER_MESSAGE_CONTENT_TYPES = [
+    "text", "audio", "document", "photo", "sticker", "video", "video_note",
+    "voice", "contact", "location", "venue", "animation", "dice", "game",
+    "poll", "story", "web_app_data",
+]
 
 
 def reactions_enabled() -> bool:
@@ -31,8 +39,8 @@ def choose_reaction(message) -> str:
     ).strip()
     lowered = text.lower()
 
-    # Diagnostic commands and pasted runtime output deserve an acknowledgement
-    # that signals the message was noticed and is being inspected.
+    # Diagnostic commands should signal that the message was noticed and will
+    # be inspected. Telegram's reaction catalog is stricter than normal emoji.
     if lowered.startswith(("/e ", "/check_", "/release", "/audit", "/go_live_report")):
         return "👀"
 
@@ -61,52 +69,45 @@ def choose_reaction(message) -> str:
 
 
 def register(bot, context=None):
-    """Register middleware for the primary owner bot only."""
+    """Register a first-position acknowledgement handler for the primary bot."""
     context = context if isinstance(context, dict) else {}
     if str(context.get("bot_name") or "") != "Me_ad_main":
         return False
 
-    try:
-        from telebot import apihelper, types
-
-        # pyTelegramBotAPI requires this global switch before middleware runs.
-        apihelper.ENABLE_MIDDLEWARE = True
-
-        def owner_message_reaction(_bot_instance, message):
-            global _FAILURE_LOGGED
-            if not reactions_enabled():
-                return
-
-            sender = getattr(message, "from_user", None)
-            if not is_owner(getattr(sender, "id", None)):
-                return
-
-            chat = getattr(message, "chat", None)
-            if getattr(chat, "type", None) != "private":
-                return
-
-            chat_id = getattr(chat, "id", None)
-            message_id = getattr(message, "message_id", None)
-            if chat_id is None or not isinstance(message_id, int):
-                return
-
-            try:
-                bot.set_message_reaction(
-                    chat_id=chat_id,
-                    message_id=message_id,
-                    reaction=[types.ReactionTypeEmoji(emoji=choose_reaction(message))],
+    def owner_message_reaction(message):
+        global _FAILURE_LOGGED
+        try:
+            if reactions_enabled():
+                sender = getattr(message, "from_user", None)
+                if is_owner(getattr(sender, "id", None)):
+                    chat = getattr(message, "chat", None)
+                    if getattr(chat, "type", None) == "private":
+                        chat_id = getattr(chat, "id", None)
+                        message_id = getattr(message, "message_id", None)
+                        if chat_id is not None and isinstance(message_id, int):
+                            bot.set_message_reaction(
+                                chat_id=chat_id,
+                                message_id=message_id,
+                                reaction=[
+                                    types.ReactionTypeEmoji(
+                                        emoji=choose_reaction(message)
+                                    )
+                                ],
+                            )
+        except Exception as exc:
+            # Reaction failures must never block existing handlers or spam logs.
+            if not _FAILURE_LOGGED:
+                _LOGGER.warning(
+                    "Owner message reaction unavailable (%s); message handling continues",
+                    type(exc).__name__,
                 )
-            except Exception as exc:
-                # Reaction failures must never block existing handlers or spam logs.
-                if not _FAILURE_LOGGED:
-                    _LOGGER.warning(
-                        "Owner message reaction unavailable (%s); message handling continues",
-                        type(exc).__name__,
-                    )
-                    _FAILURE_LOGGED = True
+                _FAILURE_LOGGED = True
 
-        bot.middleware_handler(update_types=["message"])(owner_message_reaction)
-        return True
-    except Exception as exc:
-        _LOGGER.warning("Unable to register owner message reaction middleware (%s)", type(exc).__name__)
-        return False
+        # Critical: preserve normal command and natural-chat processing.
+        return ContinueHandling()
+
+    bot.message_handler(
+        func=lambda _message: True,
+        content_types=_OWNER_MESSAGE_CONTENT_TYPES,
+    )(owner_message_reaction)
+    return True
