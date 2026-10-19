@@ -218,3 +218,42 @@ A file in the repository does not prove the command works in the live bot. A suc
 
 **Release rule:** do not call the system “ready for the conference” until the golden path passes on the real device, test isolation is proven, rewards are idempotent, and every remaining failure is disclosed.
 
+
+## 12. Operator evidence update — 2026-10-19 (user-provided transcripts)
+
+This section records the Telegram outputs supplied by the operator. These are dated transcript evidence, not independently re-run checks by this document update.
+
+| Check | Observed output | Assessment |
+|---|---|---|
+| Bot `/status` | `SLH Bot Online | Railway: production` | Bot answered; does not establish health of every subsystem |
+| Local agent `/agent_status` | `AGENT_OSIF2: online (responded in time)` | Agent response observed |
+| `/esp_ports` | `no ports found` | No serial port was discoverable through this command at that time |
+| `/esp_chipid` | `ERROR: [WinError 267] The directory name is invalid` | Chip identification failed; root cause not yet established |
+| `/esp_ping ESP32_14335C6C32C0` | `Device ESP32_14335C6C32C0 not found` | Device reachability not established |
+| `/logs` | Railway GraphQL endpoint returned HTTP 400 | Logs command/API request failure; not proof of a production outage |
+| `/metrics` | Repeated invocations with no visible bot reply in the transcript | Command responsiveness is unverified; inspect registration, handler and error path |
+| `/revenue_recovery_audit` | No retained distribution/claimable snapshot; historical amounts not reconstructed | Historical revenue distribution remains unresolved; do not infer no historical payout occurred |
+| `/check_exchange` | Order/trade integrity PASS; reserve reconciliation BLOCKED; 23 findings; public trading CLOSED; readiness FAIL | Financial release remains blocked |
+
+### Hardware next step
+
+Operator reports that the ESP32 is currently powered but not connected to the phone, and that Wi-Fi was configured. This does not prove that the device is connected to the local agent, MQTT, or the account. Before firmware or account changes:
+
+1. Connect the ESP32 to a Windows PC with a known data-capable USB cable.
+2. Open Windows Device Manager and observe whether a COM port appears.
+3. Re-run `/esp_ports` once and record the timestamp and exact output.
+4. If a COM port is found, proceed to chip ID and ping; if none appears, inspect cable/USB/driver and stop there.
+5. Do not assume the historical `COM9` is current; do not flash or erase firmware as a discovery step.
+
+### Bot diagnostics next step
+
+Investigate `/metrics` registration and handler behavior as a separate, read-only source review. Do not add speculative `/health` or `/metrics` commands without confirming the repository's existing command conventions. For `/logs`, inspect the Railway GraphQL request variables and error handling; keep tokens and credentials out of transcripts. No production deployment is authorized by this evidence update.
+
+### Current release posture
+
+- Bot and agent: response observed in the supplied transcript.
+- ESP serial connection / chip ID / ping / screen: **BLOCKED / NOT VERIFIED**.
+- Revenue history: **NOT RECONSTRUCTED**.
+- Exchange reserves and account ledger: **BLOCKED** per supplied audit output.
+- Public trading / deposits / withdrawals: **remain closed**.
+- No device reset, firmware flash, balance change, ledger repair, reward issuance, gate change or deployment was performed as part of this update.
