@@ -7,6 +7,84 @@ import core.slh_exchange_reconciliation as reconciliation
 from core.slh_exchange_reconciliation import audit_db
 
 
+def _verified_legacy_settlement_db():
+    """Minimal source-backed shape of a completed pre-canonical test trade."""
+    sell_id = "O0000000006"
+    buy_id = "O0000000007"
+    trade_id = "T0000000008"
+    return {
+        "users": {
+            # O6 used the legacy token_balance model. Current wallet value can
+            # have changed since the historical transaction; reserve state must
+            # nevertheless be zero and match the current open-order book.
+            "seller": {"wallet": {
+                "token_balance": 50000.0,
+                "live_token_balance": None,
+                "exchange_reserved_slh": 0.0,
+            }},
+            "TEST_BUYER": {"wallet": {
+                "token_balance": 5.0,
+                "live_token_balance": None,
+                "exchange_reserved_slh": 0.0,
+            }},
+        },
+        "exchange_orders": {},
+        "exchange_order_archive": {
+            sell_id: {
+                "id": sell_id, "uid": "seller", "side": "sell",
+                "status": "cancelled", "original_amount": "5",
+                "remaining_amount": "0", "reserved_slh": "0",
+                "reserved_credits": "0", "limit_price": "1",
+                "test": True, "archive_reason": "test_seed_retirement",
+                "archived_at": "2026-09-22T20:10:00+00:00",
+            },
+            buy_id: {
+                "id": buy_id, "uid": "TEST_BUYER", "side": "buy",
+                "status": "filled", "original_amount": "5",
+                "remaining_amount": "0", "reserved_slh": "0",
+                "reserved_credits": "0", "limit_price": "1",
+                "test": True, "archive_reason": "test_seed_retirement",
+                "archived_at": "2026-09-22T20:10:00+00:00",
+            },
+        },
+        "exchange_trades": [],
+        "exchange_trade_archive": [{
+            "id": trade_id, "buyer_uid": "TEST_BUYER", "seller_uid": "seller",
+            "slh_amount": "5", "price": "1", "credits_value": "5",
+            "timestamp": "2026-09-22T14:51:28.359235+00:00",
+            "buy_order_id": buy_id, "sell_order_id": sell_id,
+            "archive_reason": "test_seed_retirement",
+        }],
+        "ledger": [
+            {
+                "time": "2026-09-22T14:50:12.259399+00:00",
+                "uid": "seller", "before": 5, "amount": -5, "after": 0,
+                "reason": "exchange:sell_reserve",
+                "meta": {"order_id": sell_id},
+            },
+            {
+                "time": "2026-09-22T14:50:12.500000+00:00",
+                "uid": "TEST_BUYER", "before": 5, "amount": -5, "after": 0,
+                "reason": "exchange:buy_reserve",
+                "meta": {"order_id": buy_id},
+            },
+            {
+                "time": "2026-09-22T14:51:28.359211+00:00",
+                "uid": "seller", "before": 0, "amount": 5, "after": 5,
+                "reason": "exchange:settlement_credits",
+                "meta": {"trade_id": trade_id, "order_id": sell_id},
+            },
+            {
+                "time": "2026-09-22T14:51:28.359232+00:00",
+                "uid": "TEST_BUYER", "before": 0, "amount": 5, "after": 5,
+                "reason": "exchange:settlement_slh",
+                "meta": {"trade_id": trade_id, "order_id": buy_id},
+            },
+        ],
+        "slh_token_ledger": [],
+    }
+
+
 class ExchangeReconciliationTests(unittest.TestCase):
     def test_cancelled_sell_with_manual_correction_is_not_passed(self):
         db = {
@@ -1227,6 +1305,72 @@ class ExchangeReconciliationTests(unittest.TestCase):
         self.assertEqual(report["release_readiness_status"], "BLOCKED")
         self.assertGreater(report["release_blocking_finding_count"], 0)
 
+
+    def test_exact_precanonical_completed_trade_settlement_resolves_sell_reserve(self):
+        db = _verified_legacy_settlement_db()
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["release_readiness_status"], "PASS")
+        self.assertNotIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertNotIn("RESERVE_DELTA_NOT_ZERO", codes)
+
+    def test_legacy_completed_trade_missing_any_settlement_leg_fails_closed(self):
+        for missing_reason in (
+            "exchange:settlement_credits",
+            "exchange:settlement_slh",
+        ):
+            with self.subTest(missing_reason=missing_reason):
+                db = _verified_legacy_settlement_db()
+                db["ledger"] = [
+                    row for row in db["ledger"]
+                    if row.get("reason") != missing_reason
+                ]
+
+                report = audit_db(db)
+                codes = {item["code"] for item in report["findings"]}
+
+                self.assertEqual(report["release_readiness_status"], "BLOCKED")
+                self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+                self.assertIn("RESERVE_DELTA_NOT_ZERO", codes)
+
+    def test_legacy_completed_trade_settlement_snapshot_mismatch_fails_closed(self):
+        db = _verified_legacy_settlement_db()
+        buyer_settlement = next(
+            row for row in db["ledger"]
+            if row.get("reason") == "exchange:settlement_slh"
+        )
+        buyer_settlement["after"] = 4.0
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertIn("RESERVE_DELTA_NOT_ZERO", codes)
+
+    def test_legacy_completed_trade_with_canonical_duplicate_fails_closed(self):
+        db = _verified_legacy_settlement_db()
+        db["slh_token_ledger"].append({
+            "event_id": "exchange:settlement_slh:T0000000008",
+            "kind": "exchange_settlement",
+            "reason": "exchange:settlement_slh",
+            "trade_id": "T0000000008",
+            "order_id": "O0000000006",
+            "seller_uid": "seller",
+            "from_uid": "__EXCHANGE_RESERVE__",
+            "to_uid": "TEST_BUYER",
+            "amount": 5,
+        })
+
+        report = audit_db(db)
+        codes = {item["code"] for item in report["findings"]}
+
+        self.assertEqual(report["release_readiness_status"], "BLOCKED")
+        self.assertIn("CANCELLED_SELL_ORDER_MISSING_NORMAL_RELEASE", codes)
+        self.assertIn("RESERVE_DELTA_NOT_ZERO", codes)
 
 if __name__ == "__main__":
     unittest.main()
