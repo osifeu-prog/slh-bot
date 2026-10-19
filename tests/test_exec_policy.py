@@ -46,6 +46,18 @@ class ExecAuditBoundaryTests(unittest.TestCase):
         self.assertFalse(is_audit_command("grep -R token ."))
         self.assertFalse(is_audit_command("find . -type f"))
 
+    def test_shell_capable_awk_is_not_an_audit_command(self):
+        self.assertFalse(is_audit_command("""awk 'BEGIN {system("id")}'"""))
+
+    def test_sensitive_grep_paths_are_blocked(self):
+        for command in (
+            "grep TOKEN .env",
+            "grep TOKEN .env.example",
+            "grep -R secret .git/config",
+            "grep TOKEN /etc/passwd",
+        ):
+            self.assertFalse(is_audit_command(command), command)
+
     def test_chaining_remains_blocked(self):
         self.assertFalse(is_audit_command("cat core/authority.py && pwd"))
         self.assertFalse(is_audit_command("grep token core/ | head"))
