@@ -40,6 +40,7 @@ def test_single_go_live_report_command_is_registered():
     }
     assert "go_live_report" in commands
     assert "release_report" in commands
+    assert "zero_hour" in commands
 
 
 def test_go_live_report_explains_safe_closed_gates_and_send_time_check(monkeypatch):
