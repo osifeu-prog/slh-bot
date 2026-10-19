@@ -278,3 +278,19 @@ The following observations were collected from the live Railway environment afte
 3. Before wallet sync, establish an authenticated broker path (unique credentials/ACLs and TLS) and verify device identity; public-broker topic traffic alone is not sufficient.
 4. Do not run `/esp_sync`, `/esp_activate`, `/esp_reboot`, `/esp_ota`, flash, or erase until the identity and transport gates pass.
 5. Keep all financial gates closed. No Railway variables, production state, firmware, balances, ledgers, or release gates were changed during this read-only check.
+
+
+## 14. Security tracking — issue #785
+
+A separate security issue now tracks the required MQTT/device-authentication remediation: [#785 — Fail closed on ESP wallet sync until MQTT transport and device identity are authenticated](https://github.com/osifeu-prog/slh-bot/issues/785).
+
+This is a **source-level security blocker**, not merely a connectivity issue. The public/default broker and predictable topics do not authenticate a physical ESP32. The action listener currently maps an incoming topic's device ID to an owner and, for a `sync` action, prepares account values for publication. Do not enable or test wallet sync against this configuration.
+
+Next sequence:
+1. Keep wallet sync and device activation blocked.
+2. Design and test a private authenticated broker path with TLS, per-device credentials/ACLs and identity binding.
+3. Add tests proving unknown/unauthenticated devices cannot trigger account lookup or publish account fields.
+4. Prove the harmless marker round-trip with a disposable test device and synthetic account.
+5. Only after review, propose one isolated code PR; do not merge or deploy as part of this documentation step.
+
+Issue #785 is open. No code fix, Railway variable change, production deployment, registry mutation, or device command was executed as part of this update.
