@@ -112,6 +112,16 @@ def _handle_action(bot, uid, device_id, payload):
     print(f"[ESP_ACTION] {device_id} uid={uid} action={action}")
 
     if action == "sync":
+        # Do not read or publish wallet/account data until secure MQTT transport
+        # and broker-side per-device authorization have been explicitly enabled.
+        from core.mqtt_config import wallet_sync_security_ready
+        if not wallet_sync_security_ready():
+            print(f"[ESP_ACTION] wallet sync denied: secure MQTT not configured for {device_id}")
+            try:
+                bot.send_message(uid, "🔒 Wallet sync is disabled until authenticated MQTT/TLS and device authorization are configured.")
+            except Exception:
+                pass
+            return
         state = build_sync_payload(uid)
         import json as _j
         r = _send_cmd(device_id, "sync " + _j.dumps(state, ensure_ascii=False))
@@ -355,6 +365,10 @@ def register_sync(bot):
         dev = _load_devices().get(did)
         if not dev: bot.reply_to(m, f"Device {did} not found"); return
         if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
+        from core.mqtt_config import wallet_sync_security_ready
+        if not wallet_sync_security_ready():
+            bot.reply_to(m, "🔒 Wallet sync is disabled until authenticated MQTT/TLS and device authorization are configured.")
+            return
         state = build_sync_payload(m.from_user.id)
         import json as _j
         r = _send_cmd(did, "sync " + _j.dumps(state, ensure_ascii=False))
@@ -449,6 +463,10 @@ def register_screen(bot):
         dev = _load_devices().get(did)
         if not dev: bot.reply_to(m, f"Device {did} not found"); return
         if not _owner_ok(dev, m.from_user.id): bot.reply_to(m, "Not your device"); return
+        from core.mqtt_config import wallet_sync_security_ready
+        if not wallet_sync_security_ready():
+            bot.reply_to(m, "🔒 Wallet screen access is disabled until authenticated MQTT/TLS and device authorization are configured.")
+            return
 
         # send screen command and wait for response
         resp_topic = f"slh/esp/{did}/response"
