@@ -22,9 +22,13 @@ def wallet_sync_security_ready():
         for item in os.getenv("MQTT_WALLET_SYNC_ALLOWED_BROKERS", "").split(",")
         if item.strip()
     }
+    normalized_broker = BROKER.strip().lower().rstrip(".") if BROKER else ""
+    # Known public test brokers remain blocked even if accidentally allowlisted.
+    known_public_brokers = {"broker.hivemq.com", "test.mosquitto.org"}
     broker_is_approved = bool(
-        BROKER
-        and BROKER.strip().lower().rstrip(".") in configured_brokers
+        normalized_broker
+        and normalized_broker not in known_public_brokers
+        and normalized_broker in configured_brokers
     )
     return bool(
         explicitly_enabled
