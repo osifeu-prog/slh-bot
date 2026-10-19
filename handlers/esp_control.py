@@ -112,6 +112,16 @@ def _handle_action(bot, uid, device_id, payload):
     print(f"[ESP_ACTION] {device_id} uid={uid} action={action}")
 
     if action == "sync":
+        # Do not read or publish wallet/account data until secure MQTT transport
+        # and broker-side per-device authorization have been explicitly enabled.
+        from core.mqtt_config import wallet_sync_security_ready
+        if not wallet_sync_security_ready():
+            print(f"[ESP_ACTION] wallet sync denied: secure MQTT not configured for {device_id}")
+            try:
+                bot.send_message(uid, "🔒 Wallet sync is disabled until authenticated MQTT/TLS and device authorization are configured.")
+            except Exception:
+                pass
+            return
         state = build_sync_payload(uid)
         import json as _j
         r = _send_cmd(device_id, "sync " + _j.dumps(state, ensure_ascii=False))
