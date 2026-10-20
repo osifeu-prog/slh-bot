@@ -39,7 +39,21 @@ def test_academy_progress_is_hebrew_and_derived_from_canonical_course_state():
     original_state = {key: dict(value) for key, value in state.items()}
 
     with (
-        patch.object(academy_handler.academy_manager, "progress", return_value=state),
+        patch.object(
+            academy_handler.profile_manager,
+            "load_db",
+            return_value={
+                "users": {
+                    "8789977826": {
+                        "academy": {
+                            "active_course": "bitcoin_mastery",
+                            "courses": state,
+                        },
+                        "gamification": {"points": 125, "level": 2},
+                    }
+                }
+            },
+        ),
         patch.object(academy_handler.academy_manager, "get_courses", return_value=catalog),
         patch.object(
             academy_handler.profile_manager,
@@ -69,9 +83,8 @@ def test_academy_progress_does_not_invent_courses_when_none_are_started():
     msg = SimpleNamespace(text="/academy_progress", from_user=SimpleNamespace(id=8789977826))
 
     with (
-        patch.object(academy_handler.academy_manager, "progress", return_value={}),
         patch.object(academy_handler.academy_manager, "get_courses") as get_courses,
-        patch.object(academy_handler.profile_manager, "load_db", return_value={"users": {"8789977826": {"gamification": {"points": 0, "level": 1}}}}) as load_db,
+        patch.object(academy_handler.profile_manager, "load_db", return_value={"users": {}}) as load_db,
     ):
         academy_handler.register(bot)
         bot.handlers[("academy_progress",)](msg)
