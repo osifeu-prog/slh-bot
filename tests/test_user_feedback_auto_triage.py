@@ -90,3 +90,47 @@ def test_exchange_diagnostic_exception_degrades_to_unknown(monkeypatch):
         triage = target._triage_report("Buy SLH exchange", "bug")
     assert triage["component"] == "exchange"
     assert triage["diagnostic"]["status"] == "UNKNOWN"
+
+
+def test_owner_queue_lists_and_closes_task_and_linked_reports(monkeypatch):
+    db = _base_db()
+    _install_atomic(monkeypatch, db)
+    with patch("core.system_checks.check_exchange", return_value=_exchange_check()):
+        target._record("123", "tester", "Tester", "Exchange buy blocked", "bug")
+
+    monkeypatch.setattr(target.state_manager, "load_db", lambda: db)
+    registered = {}
+
+    class Bot:
+        def message_handler(self, **kwargs):
+            commands = tuple(kwargs.get("commands", ()))
+            def decorator(fn):
+                registered[commands] = fn
+                return fn
+            return decorator
+
+        def __init__(self):
+            self.replies = []
+
+        def reply_to(self, message, text, **kwargs):
+            self.replies.append(text)
+
+        def send_message(self, *args, **kwargs):
+            pass
+
+    bot = Bot()
+    target.register(bot)
+    owner_message = SimpleNamespace(
+        text="/bug_queue",
+        from_user=SimpleNamespace(id=8789977826, username="owner", first_name="Owner"),
+        chat=SimpleNamespace(type="private", id=8789977826),
+    )
+    with patch("core.authority.is_owner", return_value=True):
+        registered[("bug_queue",)](owner_message)
+        assert "BUGTASK_000001" in bot.replies[-1]
+        owner_message.text = "/close_bug_task BUGTASK_000001 verified after review"
+        registered[("close_bug_task",)](owner_message)
+
+    assert db["bug_triage_tasks"][0]["status"] == "CLOSED"
+    assert db["bug_triage_tasks"][0]["resolution"] == "verified after review"
+    assert db["user_feedback"][0]["status"] == "RESOLVED"
