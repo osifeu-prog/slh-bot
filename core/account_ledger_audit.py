@@ -146,6 +146,83 @@ def _row_summary(index: int, row: dict) -> dict:
     }
 
 
+def _owner_attestation_context_for_gap(
+    db: dict, previous: dict, next_row: dict, uid: str = ""
+) -> dict | None:
+    """Match an operator attestation to a gap for context only, never resolution.
+
+    Owner statements are useful audit context, but are not independent evidence
+    that the claimed balance transition occurred. An exact match must therefore
+    remain unresolved and cannot make this audit PASS.
+    """
+    attestations = db.get("owner_attestations")
+    if not isinstance(attestations, list) or not uid:
+        return None
+
+    try:
+        previous_index = int(previous.get("index", -1))
+        next_index = int(next_row.get("index", -1))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+    previous_after = _number(previous.get("after"))
+    next_before = _number(next_row.get("before"))
+    observed_delta = (
+        next_before - previous_after
+        if previous_after is not None and next_before is not None
+        else None
+    )
+    if observed_delta is None:
+        return None
+
+    for attestation in attestations:
+        if not isinstance(attestation, dict):
+            continue
+        if attestation.get("type") != "ledger_gap_attestation":
+            continue
+        if str(attestation.get("uid") or "").strip() != uid:
+            continue
+
+        claims = attestation.get("gaps")
+        if not isinstance(claims, list):
+            continue
+        for claim in claims:
+            if not isinstance(claim, dict):
+                continue
+            row_indexes = claim.get("rows")
+            if not isinstance(row_indexes, list) or len(row_indexes) != 2:
+                continue
+            try:
+                claimed_indexes = [int(value) for value in row_indexes]
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if claimed_indexes != [previous_index, next_index]:
+                continue
+
+            claimed_delta = _number(claim.get("amount"))
+            if claimed_delta is None or abs(claimed_delta - observed_delta) > EPSILON:
+                continue
+
+            # This is a matched declaration, not proof of the declaration.
+            return {
+                "record_found": True,
+                "matches_gap_identity": True,
+                "attestation_time": str(attestation.get("time") or "")[:40],
+                "uid": uid,
+                "gap_id": str(claim.get("id") or "")[:80] or None,
+                "rows": [previous_index, next_index],
+                "claimed_delta": claimed_delta,
+                "observed_delta": observed_delta,
+                "cause_claimed": str(claim.get("cause") or "")[:120] or None,
+                "purchase_id_claimed": str(claim.get("purchase_id") or "")[:120] or None,
+                "statement": str(attestation.get("statement") or "")[:300] or None,
+                "independent_source_evidence": False,
+                "resolves_gap": False,
+                "resolution_basis": "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE",
+            }
+    return None
+
+
 def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str = "") -> dict:
     """Return linked source-record context for a gap without resolving it.
 
@@ -327,6 +404,12 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
     if alpha_consolidations:
         evidence["alpha_consolidations"] = alpha_consolidations[:5]
 
+    owner_attestation_context = _owner_attestation_context_for_gap(
+        db, previous, next_row, uid=uid
+    )
+    if owner_attestation_context is not None:
+        evidence["owner_attestation_context"] = owner_attestation_context
+
     linked = any(
         isinstance(value, dict) and value.get("record_found") is True
         for value in evidence.values()
@@ -338,9 +421,13 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
         "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
         if verified_alpha
         else (
-            "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
-            if alpha_consolidations
-            else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
+            "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE"
+            if owner_attestation_context is not None
+            else (
+                "ALPHA_CONSOLIDATION_CONTEXT_REQUIRES_RECONCILIATION"
+                if alpha_consolidations
+                else ("CONTEXT_ONLY_REQUIRES_RECONCILIATION" if linked else "NO_DIRECT_SOURCE_MATCH")
+            )
         )
     )
     evidence["resolves_gap"] = bool(verified_alpha)
