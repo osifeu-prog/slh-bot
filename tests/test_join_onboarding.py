@@ -35,6 +35,7 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
     agents = []
     rewards = []
     courses = []
+    signup_rewards = []
 
     profile = types.SimpleNamespace(
         update_user=lambda user_id, data: (
@@ -78,11 +79,16 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
         settle=lambda *args, **kwargs: True,
     )
     fake_academy_module = types.SimpleNamespace(start_course=start_course)
+    fake_signup_module = types.SimpleNamespace(
+        mark_signup_bonus_pending=lambda user_id: signup_rewards.append(("mark", str(user_id))) or {"status": "PENDING"},
+        grant_signup_bonus=lambda user_id: signup_rewards.append(("grant", str(user_id))) or {"status": "GRANTED", "credits_awarded": 5},
+    )
 
     monkeypatch.setitem(sys.modules, "core.agent_registry", fake_agent_module)
     monkeypatch.setitem(sys.modules, "core.reward_engine", fake_reward_module)
     monkeypatch.setitem(sys.modules, "core.holiday_campaign", fake_holiday_module)
     monkeypatch.setitem(sys.modules, "core.academy_manager", fake_academy_module)
+    monkeypatch.setitem(sys.modules, "core.onboarding_rewards", fake_signup_module)
 
     import handlers.join_handler as join_handler
     join_handler = importlib.reload(join_handler)
@@ -130,5 +136,7 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
 
     assert any(r["reason"] == "welcome_bonus" for r in rewards)
     assert ("123456790", "bitcoin_mastery") in courses
+    assert signup_rewards == [("mark", uid), ("grant", uid)]
+    assert "מתנת הצטרפות: 5 Credits" in group.replies[-1]["text"]
     assert "נרשמת בהצלחה" in group.replies[-1]["text"]
     assert "שיעור 1" in group.replies[-1]["text"]
