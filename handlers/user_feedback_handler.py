@@ -318,9 +318,6 @@ def _record(uid, username, first_name, text, category, triage=None) -> dict:
         }
 
     return state_manager.atomic_update(mutate)
-}
-
-    return state_manager.atomic_update(mutate)
 
 
 def _notify_owner(bot, uid, first_name, username, text, category, feedback_id, triage=None):
