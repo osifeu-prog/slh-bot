@@ -28,7 +28,7 @@ def _state(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_unjoined_or_uninitialized_user_cannot_get_signup_bonus(tmp_path):
+def test_unjoined_or_uninitialized_user_cannot_get_signup_bonus(tmp_path, monkeypatch):
     path = _sandbox(tmp_path, monkeypatch, {
         "joined": True,
         "academy": {"courses": {}},
@@ -44,7 +44,7 @@ def test_unjoined_or_uninitialized_user_cannot_get_signup_bonus(tmp_path):
     assert "onboarding_signup_bonus_status" not in _state(path)["users"]["100"]
 
 
-def test_signup_bonus_is_applied_once_and_uses_canonical_ledger(tmp_path):
+def test_signup_bonus_is_applied_once_and_uses_canonical_ledger(tmp_path, monkeypatch):
     path = _sandbox(tmp_path, monkeypatch)
 
     assert onboarding_rewards.mark_signup_bonus_pending("100")["status"] == "PENDING"
@@ -69,7 +69,7 @@ def test_signup_bonus_is_applied_once_and_uses_canonical_ledger(tmp_path):
     assert rows[0]["after"] == 5
 
 
-def test_retry_recovers_after_credit_transaction_but_before_marker_finalize(tmp_path):
+def test_retry_recovers_after_credit_transaction_but_before_marker_finalize(tmp_path, monkeypatch):
     path = _sandbox(tmp_path)
     onboarding_rewards.mark_signup_bonus_pending("100")
     key = "onboarding-signup-credits:v1:100"
@@ -93,7 +93,7 @@ def test_retry_recovers_after_credit_transaction_but_before_marker_finalize(tmp_
     assert len(rows) == 1
 
 
-def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path):
+def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path, monkeypatch):
     path = _sandbox(tmp_path)
     onboarding_rewards.mark_signup_bonus_pending("100")
     from core.economy_service import record_transaction
@@ -113,7 +113,7 @@ def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path)
     assert len(db["ledger"]) == 1
 
 
-def test_existing_user_is_not_automatically_marked_as_signup_eligible(tmp_path):
+def test_existing_user_is_not_automatically_marked_as_signup_eligible(tmp_path, monkeypatch):
     path = _sandbox(tmp_path)
     result = onboarding_rewards.grant_signup_bonus("100")
     db = _state(path)
