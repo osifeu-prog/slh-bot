@@ -51,25 +51,95 @@ def register(bot):
     @bot.message_handler(commands=['academy_progress'])
     def progress(m):
         uid = str(m.from_user.id)
-        data = academy_manager.progress(uid)
+        data = academy_manager.progress(uid) or {}
 
-        if not data:
-            bot.reply_to(
-                m,
-                "📊 אין קורס פעיל עדיין.\n\n"
-                "התחל דרך /courses"
-            )
-            return
+        # All values are computed from the canonical nested academy course
+        # state and the configured course catalog; this command never writes.
+        user = profile_manager.get_user(uid) or {}
+        gamification = user.get("gamification", {})
+        gamification = gamification if isinstance(gamification, dict) else {}
+        points = gamification.get("points")
+        level = gamification.get("level")
 
-        lines = ["📊 ההתקדמות שלך:", ""]
+        lines = ["🎓 דוח ההתקדמות הלימודית שלך", ""]
+        if points is not None or level is not None:
+            game_parts = []
+            if points is not None:
+                game_parts.append(f"נקודות מערכת: {points}")
+            if level is not None:
+                game_parts.append(f"רמה: {level}")
+            lines.append("⭐ " + " · ".join(game_parts))
+            lines.append("")
+
+        catalog = academy_manager.get_courses() or {}
+        total_completed = 0
+        total_stages = 0
+        course_rows = []
         for course_id, state in data.items():
-            completed = state.get("completed", [])
-            lines.append(
-                f"📘 {course_id}: Stage {state.get('stage', 0)} "
-                f"| הושלמו: {len(completed)} "
-                f"| {'פעיל' if state.get('active') else 'לא פעיל'}"
+            course = catalog.get(course_id) if isinstance(catalog, dict) else None
+            course = course if isinstance(course, dict) else {}
+            title = str(course.get("title") or course_id)
+            stage_defs = course.get("stages", [])
+            valid_ids = set()
+            if isinstance(stage_defs, list):
+                for stage_def in stage_defs:
+                    if not isinstance(stage_def, dict):
+                        continue
+                    try:
+                        valid_ids.add(int(stage_def.get("id")))
+                    except (TypeError, ValueError, OverflowError):
+                        continue
+
+            raw_completed = state.get("completed", [])
+            completed_ids = set()
+            if isinstance(raw_completed, (list, tuple, set)):
+                for value in raw_completed:
+                    try:
+                        completed_ids.add(int(value))
+                    except (TypeError, ValueError, OverflowError):
+                        continue
+            completed_count = len(completed_ids & valid_ids) if valid_ids else len(completed_ids)
+            total_count = len(valid_ids)
+            total_completed += completed_count
+            total_stages += total_count
+            if total_count:
+                pct = round(100 * completed_count / total_count)
+                progress_text = f"{completed_count}/{total_count} שיעורים ({pct}%)"
+                if completed_count == total_count:
+                    status = "הושלם"
+                elif state.get("active"):
+                    status = "פעיל"
+                else:
+                    status = "בתהליך"
+            else:
+                progress_text = f"{completed_count} שיעורים שהושלמו · קטלוג לא זמין"
+                status = "לא מאומת"
+
+            course_rows.append(
+                f"📘 {title}\n"
+                f"   {progress_text} · {status}"
             )
 
+        if course_rows:
+            lines.extend(course_rows)
+            lines.append("")
+            if total_stages:
+                overall_pct = round(100 * total_completed / total_stages)
+                lines.append(
+                    f"📊 סה״כ בקורסים שלך: {total_completed}/{total_stages} "
+                    f"שיעורים ({overall_pct}%)"
+                )
+        else:
+            lines.extend([
+                "עדיין אין קורסים עם התקדמות שמורה.",
+                "התחל דרך /courses",
+            ])
+
+        lines.extend([
+            "",
+            "הדוח מבוסס על user.academy.courses ועל קטלוג הקורסים.",
+            "נקודות המערכת מוצגות בנפרד; אין כאן שדה נפרד בשם hebrew_score.",
+        ])
         bot.reply_to(m, "\n".join(lines))
 
     @bot.message_handler(func=lambda m: m.text and m.text.startswith("/course_"))
