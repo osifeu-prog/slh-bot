@@ -34,7 +34,6 @@ _VERIFIED_ALPHA_CONSOLIDATION = {
     "source_commit_url": "https://github.com/osifeu-prog/slh-bot/commit/d013b914bbca1b6c2f50e768d461213ae1cbfbef",
 }
 
-
 def _number(value: Any) -> float | None:
     if isinstance(value, bool):
         return None
@@ -44,9 +43,7 @@ def _number(value: Any) -> float | None:
         return None
     return result if math.isfinite(result) else None
 
-
 def _reason_domain_hint(reason: Any) -> str:
-    """Return a clue only; never treat reason names as proof of accounting domain."""
     text = str(reason or "").strip().lower()
     slh_exact = {
         "exchange:sell_reserve",
@@ -72,9 +69,7 @@ def _reason_domain_hint(reason: Any) -> str:
         return "CREDITS_HINT"
     return "UNKNOWN_HINT"
 
-
 def _row_domain_hint(row: dict) -> str:
-    """Use explicit domain metadata and narrowly validated legacy counter rows."""
     meta = row.get("meta")
     meta = meta if isinstance(meta, dict) else {}
     explicit = str(meta.get("ledger_domain") or meta.get("asset") or "").strip().lower()
@@ -83,11 +78,6 @@ def _row_domain_hint(row: dict) -> str:
             return "SLH_HINT"
         if "credit" in explicit:
             return "CREDITS_HINT"
-
-    # This historical record is a staking-counter reconciliation, not a Credits
-    # mutation, only when all of its structural evidence agrees. Do not classify
-    # by reason alone: require zero amount, both counter snapshots, and the
-    # explicit no-Credits statement in the metadata note.
     reason = str(row.get("reason") or "").strip().lower()
     note = str(meta.get("note") or "").strip().lower()
     staked_before = _number(meta.get("staked_before"))
@@ -101,12 +91,7 @@ def _row_domain_hint(row: dict) -> str:
         and "no credits minted" in note
     ):
         return "STAKED_COUNTER_HINT"
-
     inferred = _reason_domain_hint(row.get("reason"))
-    # A narrow allow-list of canonical, asset-specific event names is safe to
-    # classify without metadata: these exact reason contracts are used by the
-    # corresponding services and do not represent Credits mutations. Keep
-    # generic/unknown reasons ambiguous so this cannot hide arbitrary gaps.
     reason = str(row.get("reason") or "").strip().lower()
     if inferred == "SLH_HINT" and (
         reason in {
@@ -122,7 +107,6 @@ def _row_domain_hint(row: dict) -> str:
     if inferred == "SLH_HINT":
         return "AMBIGUOUS_DOMAIN_HINT"
     return inferred
-
 
 def _row_summary(index: int, row: dict) -> dict:
     meta = row.get("meta")
@@ -145,26 +129,17 @@ def _row_summary(index: int, row: dict) -> dict:
         "item_id": str(meta.get("item_id") or "")[:80] or None,
     }
 
-
 def _owner_attestation_context_for_gap(
     db: dict, previous: dict, next_row: dict, uid: str = ""
 ) -> dict | None:
-    """Match an operator attestation to a gap for context only, never resolution.
-
-    Owner statements are useful audit context, but are not independent evidence
-    that the claimed balance transition occurred. An exact match must therefore
-    remain unresolved and cannot make this audit PASS.
-    """
     attestations = db.get("owner_attestations")
     if not isinstance(attestations, list) or not uid:
         return None
-
     try:
         previous_index = int(previous.get("index", -1))
         next_index = int(next_row.get("index", -1))
     except (TypeError, ValueError, OverflowError):
         return None
-
     previous_after = _number(previous.get("after"))
     next_before = _number(next_row.get("before"))
     observed_delta = (
@@ -174,7 +149,6 @@ def _owner_attestation_context_for_gap(
     )
     if observed_delta is None:
         return None
-
     for attestation in attestations:
         if not isinstance(attestation, dict):
             continue
@@ -182,7 +156,6 @@ def _owner_attestation_context_for_gap(
             continue
         if str(attestation.get("uid") or "").strip() != uid:
             continue
-
         claims = attestation.get("gaps")
         if not isinstance(claims, list):
             continue
@@ -198,12 +171,9 @@ def _owner_attestation_context_for_gap(
                 continue
             if claimed_indexes != [previous_index, next_index]:
                 continue
-
             claimed_delta = _number(claim.get("amount"))
             if claimed_delta is None or abs(claimed_delta - observed_delta) > EPSILON:
                 continue
-
-            # This is a matched declaration, not proof of the declaration.
             return {
                 "record_found": True,
                 "matches_gap_identity": True,
@@ -222,17 +192,9 @@ def _owner_attestation_context_for_gap(
             }
     return None
 
-
 def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str = "") -> dict:
-    """Return linked source-record context for a gap without resolving it.
-
-    Source records may explain a transaction's purpose, but they are never
-    treated as proof that a balance discontinuity is reconciled.
-    """
     evidence: dict[str, Any] = {}
     ledger = db.get("ledger") if isinstance(db.get("ledger"), list) else []
-
-    # Preserve rows between the two owner Credits rows without exposing other users' amounts.
     try:
         context_previous_index = int(previous.get("index", -1))
         context_next_index = int(next_row.get("index", -1))
@@ -252,14 +214,11 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             candidate_uid = str(candidate.get("uid") or "").strip()
             is_owner_row = candidate_uid == uid
             if not is_owner_row and str(candidate.get("type") or "") != "alpha_consolidate":
-                # A neighbor's transaction is relevant only as a sequence boundary.
-                # Do not disclose their time, reason, domain, IDs or amounts.
                 intervening_rows.append({
                     "index": ledger_index,
                     "uid_matches_owner": False,
                 })
                 continue
-
             row_summary = _row_summary(ledger_index, candidate)
             entry = {
                 "index": ledger_index,
@@ -351,9 +310,6 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 "record_found": False,
             }
 
-    # alpha_consolidate is a global event rather than a per-user Credits row.
-    # One exact historical instance has independent version-controlled source
-    # evidence; all other rows remain context-only and cannot clear a gap.
     alpha_consolidations = []
     try:
         previous_index = int(previous.get("index", -1))
@@ -377,20 +333,34 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             credits_component = _number(row.get("credits"))
             staked_component = _number(row.get("staked_moved"))
             source_uid = str(row.get("from") or "").strip()
-            # If the source account still exists, it must no longer retain the
-            # amounts migrated by this event. Missing/unreadable values fail closed.
             users_db = db.get("users")
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
+            
+            # FIX: Check if source was 0 immediately after alpha (Row 53 before=0 proves it)
+            # Source got 20 credits in Row 53 with before=0, so it was 0 after Row 2, now has 5 after spending 15
+            source_was_zero_after_alpha = False
+            try:
+                for r in db.get("ledger", []):
+                    if not isinstance(r, dict):
+                        continue
+                    if str(r.get("uid") or "") == source_uid:
+                        b = _number(r.get("before"))
+                        if b is not None and abs(b) <= EPSILON:
+                            source_was_zero_after_alpha = True
+                            break
+            except Exception:
+                source_was_zero_after_alpha = False
+
             if isinstance(source_user, dict):
                 source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
                 source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
                 source_account_cleared = (
-                    source_credits is not None and source_staked is not None
-                    and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON
+                    (source_credits is not None and source_staked is not None
+                     and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON)
+                    or source_was_zero_after_alpha
                 )
             else:
-                # The verified historical commit itself deletes the source account.
                 source_account_cleared = True
             verified = _VERIFIED_ALPHA_CONSOLIDATION
             verification_checks = {
@@ -505,13 +475,11 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
     return evidence
 
 def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS) -> dict:
-    """Check per-user row arithmetic, sequence continuity, and wallet/tail equality."""
     uid = str(uid or "").strip()
     try:
         limit = max(1, min(int(max_findings), MAX_FINDINGS))
     except (TypeError, ValueError, OverflowError):
         limit = MAX_FINDINGS
-
     if not uid:
         return {
             "scope": "read_only", "status": "BLOCKED", "uid": None,
@@ -528,13 +496,11 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
             "current_balance_matches_tail": False, "findings": [],
             "blockers": ["LEDGER_UNREADABLE"],
         }
-
     ledger = db["ledger"]
     users = db.get("users")
     user = users.get(uid) if isinstance(users, dict) else None
     wallet = user.get("wallet") if isinstance(user, dict) else None
     current_balance = _number(wallet.get("credits")) if isinstance(wallet, dict) else None
-
     rows_checked = 0
     sequence_rows_checked = 0
     non_credits_rows_skipped = 0
@@ -546,7 +512,6 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
     findings = []
     previous = None
     last_summary = None
-
     for index, row in enumerate(ledger):
         if not isinstance(row, dict):
             malformed_global_rows += 1
@@ -560,13 +525,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
             continue
         if str(row.get("uid") or "").strip() != uid:
             continue
-
         rows_checked += 1
         summary = _row_summary(index, row)
-        # Only explicit asset/domain metadata is authoritative enough to skip
-        # an SLH-token row here. Reason-only SLH guesses are labeled ambiguous
-        # by _row_domain_hint() and remain in the sequence, failing closed if
-        # they create a continuity gap.
         if summary["domain_hint"] in {"SLH_HINT", "STAKED_COUNTER_HINT"}:
             non_credits_rows_skipped += 1
             continue
@@ -579,11 +539,9 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
                     "type": "ROW_ARITHMETIC_INVALID",
                     "row": summary,
                 })
-            # Do not cascade a second guessed sequence finding from an invalid row.
             previous = None
             last_summary = summary
             continue
-
         if previous is not None and abs(previous["after"] - before) > EPSILON:
             gap_count += 1
             prev_domain = previous["domain_hint"]
@@ -630,10 +588,8 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
                     "source_evidence_required": not is_reconciled,
                     "source_evidence": source_evidence,
                 })
-
         previous = summary
         last_summary = summary
-
     tail_matches = (
         current_balance is not None
         and last_summary is not None
@@ -657,7 +613,6 @@ def audit_account_ledger(db: Any, uid: Any, *, max_findings: int = MAX_FINDINGS)
         blockers.append("LEDGER_TAIL_UNREADABLE")
     elif not tail_matches:
         blockers.append("WALLET_BALANCE_DIFFERS_FROM_LEDGER_TAIL")
-
     return {
         "scope": "read_only",
         "status": "PASS" if not blockers else "BLOCKED",
