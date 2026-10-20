@@ -58,7 +58,7 @@ def compact(value: Any) -> str:
 def _state(db: dict) -> dict:
     if DB_KEY not in db:
         db[DB_KEY] = {
-            "schema_version": 1,
+            "schema_version": 2,
             "next_trade_sequence": 1,
             "pool": {
                 "credits": fmt(INITIAL_POOL_CREDITS),
@@ -68,7 +68,7 @@ def _state(db: dict) -> dict:
             "trades": [],
         }
     sim = db[DB_KEY]
-    if not isinstance(sim, dict) or sim.get("schema_version") != 1:
+    if not isinstance(sim, dict) or sim.get("schema_version") != 2:
         raise ValueError("PAPER_SIM_STATE_INVALID")
     if not isinstance(sim.get("pool"), dict) or not isinstance(sim.get("users"), dict):
         raise ValueError("PAPER_SIM_STATE_INVALID")
@@ -81,22 +81,42 @@ def _state(db: dict) -> dict:
     return sim
 
 
+def _liquidation_quote(sim: dict, slh_amount: Any) -> Decimal:
+    """Estimate Demo Credits from selling this Demo-SLH quantity into the current AMM."""
+    amount = _q(_d(slh_amount))
+    if amount <= ZERO:
+        return ZERO
+    pool_credits = _d(sim["pool"]["credits"])
+    pool_slh = _d(sim["pool"]["slh"])
+    fee = _q(amount * FEE_RATE)
+    effective_in = amount - fee
+    if effective_in <= ZERO:
+        return ZERO
+    return _q(pool_credits * effective_in / (pool_slh + effective_in))
+
+
+def _liquidation_value(sim: dict, wallet: dict) -> Decimal:
+    """Cash plus conservative immediate AMM liquidation proceeds, after the demo fee."""
+    return _d(wallet["credits"]) + _liquidation_quote(sim, wallet["slh"])
+
+
 def _user(sim: dict, uid: str, now: str) -> dict:
     uid = str(uid or "").strip()
     if not uid.isdigit():
         raise ValueError("PAPER_SIM_UID_INVALID")
     users = sim["users"]
     if uid not in users:
+        wallet = {
+            "credits": fmt(STARTING_CREDITS),
+            "slh": fmt(STARTING_SLH),
+        }
         users[uid] = {
             "created_at": now,
-            "starting_value_credits": fmt(STARTING_CREDITS + STARTING_SLH),
-            "wallet": {
-                "credits": fmt(STARTING_CREDITS),
-                "slh": fmt(STARTING_SLH),
-            },
+            "wallet": wallet,
             "requests": {},
             "reset_count": 0,
         }
+        users[uid]["starting_value_credits"] = fmt(_liquidation_value(sim, wallet))
     record = users[uid]
     if not isinstance(record, dict) or not isinstance(record.get("wallet"), dict):
         raise ValueError("PAPER_SIM_USER_STATE_INVALID")
@@ -116,7 +136,10 @@ def _snapshot(sim: dict, user: dict) -> dict:
     price = pool_credits / pool_slh
     credits = _d(wallet["credits"])
     slh = _d(wallet["slh"])
-    equity = credits + slh * price
+    # Do not report unrealized spot-price inflation as profit. Value the position
+    # at estimated proceeds from an immediate full sale into this pool, including
+    # the same demo fee and AMM price impact that a real simulator trade would incur.
+    equity = _liquidation_value(sim, wallet)
     starting = _d(user.get("starting_value_credits", STARTING_CREDITS + STARTING_SLH))
     return {
         "demo_credits": fmt(credits),
@@ -320,14 +343,17 @@ def leaderboard_in_db(db: dict, limit: int = 10) -> list[dict]:
         count = 10
     pool = sim.get("pool") or {}
     try:
-        price = _d(pool["credits"]) / _d(pool["slh"])
+        _d(pool["credits"])
+        _d(pool["slh"])
+        if _d(pool["credits"]) <= ZERO or _d(pool["slh"]) <= ZERO:
+            return []
     except (KeyError, InvalidOperation, TypeError, ValueError):
         return []
     ranked = []
     for uid, user in sim["users"].items():
         try:
             wallet = user["wallet"]
-            value = _d(wallet["credits"]) + _d(wallet["slh"]) * price
+            value = _liquidation_value(sim, wallet)
             starting = _d(user.get("starting_value_credits", STARTING_CREDITS + STARTING_SLH))
         except (KeyError, InvalidOperation, TypeError, ValueError):
             continue
