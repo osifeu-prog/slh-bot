@@ -501,192 +501,6 @@ def trade(uid: str, side: str, amount: Any, request_id: str) -> dict:
     )
 
 
-def limit_order_in_db(
-    db: dict,
-    uid: str,
-    side: str,
-    amount: Any,
-    limit_price: Any,
-    request_id: str,
-    now: str | None = None,
-) -> dict:
-    """Reserve a virtual balance and place a one-shot AMM limit order."""
-    timestamp = _now(now)
-    sim = _state(db)
-    uid = str(uid)
-    user = _user(sim, uid, timestamp)
-    side = str(side or "").strip().lower()
-    request_id = str(request_id or "").strip()[:200]
-    if not request_id:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "REQUEST_ID_REQUIRED"}, False)
-    if side not in {"buy", "sell"}:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "INVALID_SIDE"}, False)
-
-    prior = user["requests"].get(request_id)
-    if isinstance(prior, dict) and prior.get("order_id"):
-        old = next(
-            (row for row in sim["orders"] if isinstance(row, dict) and row.get("id") == prior["order_id"]),
-            None,
-        )
-        if old:
-            return _cached_result(sim, user, {"status": "DUPLICATE_REQUEST", "order": dict(old)}, True)
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "ORDER_REQUEST_REFERENCE_MISSING"}, True)
-    if prior:
-        return _cached_result(sim, user, {"status": "DUPLICATE_REQUEST"}, True)
-
-    try:
-        quantity = _q(_d(amount))
-    except (InvalidOperation, TypeError, ValueError):
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "INVALID_AMOUNT"}, False)
-    try:
-        price = _q(_d(limit_price))
-    except (InvalidOperation, TypeError, ValueError):
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "INVALID_LIMIT_PRICE"}, False)
-    if quantity < MIN_AMOUNT or quantity > MAX_AMOUNT:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "AMOUNT_OUT_OF_RANGE"}, False)
-    if price < MIN_LIMIT_PRICE or price > MAX_LIMIT_PRICE:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "LIMIT_PRICE_OUT_OF_RANGE"}, False)
-    active = [
-        row for row in sim["orders"]
-        if isinstance(row, dict)
-        and str(row.get("uid")) == uid
-        and row.get("status") in {"OPEN", "REVIEW_REQUIRED"}
-    ]
-    if len(active) >= MAX_OPEN_LIMIT_ORDERS_PER_USER:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "TOO_MANY_OPEN_ORDERS"}, False)
-    if len(sim["orders"]) >= MAX_PAPER_ORDERS:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "ORDER_HISTORY_FULL"}, False)
-
-    wallet = user["wallet"]
-    reserved_credits = ZERO
-    reserved_slh = ZERO
-    if side == "buy":
-        if quantity > _d(wallet["credits"]):
-            return _cached_result(sim, user, {"status": "BLOCKED", "error": "INSUFFICIENT_DEMO_CREDITS"}, False)
-        wallet["credits"] = fmt(_d(wallet["credits"]) - quantity)
-        reserved_credits = quantity
-    else:
-        if quantity > _d(wallet["slh"]):
-            return _cached_result(sim, user, {"status": "BLOCKED", "error": "INSUFFICIENT_DEMO_SLH"}, False)
-        wallet["slh"] = fmt(_d(wallet["slh"]) - quantity)
-        reserved_slh = quantity
-
-    sequence = int(sim["next_order_sequence"])
-    sim["next_order_sequence"] = sequence + 1
-    order = {
-        "id": f"PSIM-O{sequence:08d}",
-        "sequence": sequence,
-        "uid": uid,
-        "side": side,
-        "order_type": "limit",
-        "asset_pair": "DEMO-SLH/DEMO-CREDITS",
-        "original_amount": fmt(quantity),
-        "limit_price": fmt(price),
-        "reserved_credits": fmt(reserved_credits),
-        "reserved_slh": fmt(reserved_slh),
-        "status": "OPEN",
-        "created_at": timestamp,
-        "updated_at": timestamp,
-        "request_id": request_id,
-    }
-    sim["orders"].append(order)
-    _match_limit_orders(sim, timestamp)
-    status = str(order.get("status") or "OPEN")
-    result = {"status": status, "order": dict(order)}
-    _remember(user, request_id, {"status": "ORDER_ACCEPTED", "order_id": order["id"]})
-    return _cached_result(sim, user, result, False)
-
-
-def limit_order(uid: str, side: str, amount: Any, limit_price: Any, request_id: str) -> dict:
-    return state_manager.atomic_update(
-        lambda db: limit_order_in_db(db, str(uid), side, amount, limit_price, request_id)
-    )
-
-
-def cancel_order_in_db(
-    db: dict, uid: str, order_id: str, request_id: str, now: str | None = None
-) -> dict:
-    timestamp = _now(now)
-    sim = _state(db)
-    uid = str(uid)
-    user = _user(sim, uid, timestamp)
-    order_id = str(order_id or "").strip()
-    request_id = str(request_id or "").strip()[:200]
-    if not order_id or not request_id:
-        return _cached_result(sim, user, {"status": "BLOCKED", "error": "INVALID_CANCEL_REQUEST"}, False)
-    prior = user["requests"].get(request_id)
-    if isinstance(prior, dict):
-        return _cached_result(sim, user, prior, True)
-    order = next(
-        (row for row in sim["orders"] if isinstance(row, dict) and row.get("id") == order_id),
-        None,
-    )
-    if not order or str(order.get("uid")) != uid:
-        result = {"status": "BLOCKED", "error": "ORDER_NOT_FOUND"}
-        _remember(user, request_id, result)
-        return _cached_result(sim, user, result, False)
-    if order.get("status") == "CANCELLED":
-        result = {"status": "ALREADY_CANCELLED", "order": dict(order)}
-        _remember(user, request_id, result)
-        return _cached_result(sim, user, result, False)
-    if order.get("status") not in {"OPEN", "REVIEW_REQUIRED"}:
-        result = {"status": "BLOCKED", "error": "ORDER_NOT_CANCELLABLE", "order": dict(order)}
-        _remember(user, request_id, result)
-        return _cached_result(sim, user, result, False)
-
-    wallet = user["wallet"]
-    wallet["credits"] = fmt(_d(wallet["credits"]) + _d(order.get("reserved_credits", 0)))
-    wallet["slh"] = fmt(_d(wallet["slh"]) + _d(order.get("reserved_slh", 0)))
-    order["reserved_credits"] = "0.00000000"
-    order["reserved_slh"] = "0.00000000"
-    order["status"] = "CANCELLED"
-    order["cancelled_at"] = timestamp
-    order["updated_at"] = timestamp
-    order.pop("last_error", None)
-    result = {"status": "CANCELLED", "order": dict(order)}
-    _remember(user, request_id, result)
-    return _cached_result(sim, user, result, False)
-
-
-def cancel_order(uid: str, order_id: str, request_id: str) -> dict:
-    return state_manager.atomic_update(
-        lambda db: cancel_order_in_db(db, str(uid), order_id, request_id)
-    )
-
-
-def orders_in_db(db: dict, uid: str, limit: int = 20) -> list[dict]:
-    sim = db.get(DB_KEY)
-    if not isinstance(sim, dict) or not isinstance(sim.get("orders"), list):
-        return []
-    try:
-        count = max(1, min(50, int(limit)))
-    except (TypeError, ValueError):
-        count = 20
-    rows = [
-        row for row in sim["orders"]
-        if isinstance(row, dict) and str(row.get("uid")) == str(uid)
-    ]
-    return [dict(row) for row in reversed(rows[-count:])]
-
-
-def orders(uid: str, limit: int = 20) -> list[dict]:
-    return orders_in_db(state_manager.load_db(), str(uid), limit)
-
-
-def match_pending_orders_in_db(db: dict, now: str | None = None) -> dict:
-    sim = _state(db)
-    fills = _match_limit_orders(sim, _now(now))
-    return {
-        "status": "PASS",
-        "fills": fills,
-        "open_orders": sum(1 for row in sim["orders"] if isinstance(row, dict) and row.get("status") == "OPEN"),
-    }
-
-
-def match_pending_orders() -> dict:
-    return state_manager.atomic_update(match_pending_orders_in_db)
-
-
 def _order_view(order: dict) -> dict:
     return {
         "id": str(order.get("id") or ""),
@@ -927,6 +741,27 @@ def orders_in_db(db: dict, uid: str, limit: int = 20) -> list[dict]:
 
 def orders(uid: str, limit: int = 20) -> list[dict]:
     return orders_in_db(state_manager.load_db(), str(uid), limit)
+
+
+def match_pending_orders_in_db(db: dict, now: str | None = None) -> dict:
+    sim = _state(db)
+    fills = _match_limit_orders(sim, _now(now))
+    return {
+        "status": "PASS",
+        "fills": fills,
+        "open_orders": sum(
+            1 for row in sim["orders"]
+            if isinstance(row, dict) and row.get("status") == "OPEN"
+        ),
+        "review_required": sum(
+            1 for row in sim["orders"]
+            if isinstance(row, dict) and row.get("status") == "REVIEW_REQUIRED"
+        ),
+    }
+
+
+def match_pending_orders() -> dict:
+    return state_manager.atomic_update(match_pending_orders_in_db)
 
 
 def history_in_db(db: dict, uid: str, limit: int = 10) -> list[dict]:
