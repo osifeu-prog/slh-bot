@@ -1,4 +1,4 @@
-from core.exec_policy import is_admin, run_audit, run_gated
+from core.exec_policy import is_admin, run_audit, run_gated, telegram_shell_enabled
 from core.authority import is_owner
 import shlex
 
@@ -280,7 +280,12 @@ def register(bot):
                 return
 
         if is_owner(uid):
-            ok, out = run_gated(uid, normalize_python_command(cmd), source="e", timeout=15)
+            if telegram_shell_enabled():
+                ok, out = run_gated(uid, normalize_python_command(cmd), source="e", timeout=15)
+            else:
+                # With shell disabled, the owner can still use the narrow,
+                # non-shell read-only source-command grammar.
+                ok, out = run_audit(uid, cmd, source="e_owner_audit", timeout=15)
         elif is_admin(uid):
             ok, out = run_audit(uid, cmd, source="e_admin_audit", timeout=15)
         else:
