@@ -27,7 +27,7 @@ INTENTS = {
     "rewards": ["פרסים","תגמולים","rewards"],
     "leaderboard": ["לוח מובילים","טבלת המובילים","מובילים","leaderboard","leaders","top","נקודות"],
     "wallet": ["קרדיטים","קרדיט","credits","credit","balance","יתרה","היתרה שלי","כמה יש לי","ארנק","wallet"],
-    "ledger": ["ledger","לדג'ר","לדג׳ר","פער","פערים","10499","10771","gap","alpha_consolidate","check_owner_ledger"],
+    "ledger": ["ledger","לדג'ר","לדג׳ר","הפער","הפערים","פער","פערים","10499","10771","gap","alpha_consolidate","check_owner_ledger"],
     "staking": ["סטייקינג","stake","staked","נעל","נעלתי","כמה סטייק"],
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
     "greeting": ["היי","שלום","בוקר טוב","ערב טוב","אהלן"],
