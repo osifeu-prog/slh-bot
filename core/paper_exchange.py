@@ -58,26 +58,47 @@ def compact(value: Any) -> str:
 def _state(db: dict) -> dict:
     if DB_KEY not in db:
         db[DB_KEY] = {
-            "schema_version": 2,
+            "schema_version": 3,
             "next_trade_sequence": 1,
+            "next_order_sequence": 1,
             "pool": {
                 "credits": fmt(INITIAL_POOL_CREDITS),
                 "slh": fmt(INITIAL_POOL_SLH),
             },
             "users": {},
             "trades": [],
+            "orders": [],
         }
     sim = db[DB_KEY]
-    if not isinstance(sim, dict) or sim.get("schema_version") != 2:
+    if not isinstance(sim, dict):
+        raise ValueError("PAPER_SIM_STATE_INVALID")
+    # Additive-only migration: preserve every existing virtual balance, pool
+    # reserve, trade and replay cache from v2. Never reset unknown/corrupt state.
+    if sim.get("schema_version") == 2:
+        if (
+            not isinstance(sim.get("pool"), dict)
+            or not isinstance(sim.get("users"), dict)
+            or not isinstance(sim.get("trades"), list)
+        ):
+            raise ValueError("PAPER_SIM_STATE_INVALID")
+        sim.setdefault("orders", [])
+        sim.setdefault("next_order_sequence", 1)
+        sim["schema_version"] = 3
+    if sim.get("schema_version") != 3:
         raise ValueError("PAPER_SIM_STATE_INVALID")
     if not isinstance(sim.get("pool"), dict) or not isinstance(sim.get("users"), dict):
         raise ValueError("PAPER_SIM_STATE_INVALID")
-    if not isinstance(sim.get("trades"), list):
+    if not isinstance(sim.get("trades"), list) or not isinstance(sim.get("orders"), list):
         raise ValueError("PAPER_SIM_STATE_INVALID")
     for field in ("credits", "slh"):
         value = _d(sim["pool"].get(field))
         if value <= ZERO:
             raise ValueError("PAPER_SIM_POOL_INVALID")
+    try:
+        if int(sim.get("next_trade_sequence", 0)) < 1 or int(sim.get("next_order_sequence", 0)) < 1:
+            raise ValueError
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("PAPER_SIM_SEQUENCE_INVALID")
     return sim
 
 
@@ -129,21 +150,42 @@ def _user(sim: dict, uid: str, now: str) -> dict:
     return record
 
 
-def _snapshot(sim: dict, user: dict) -> dict:
+def _reserved_balances(sim: dict, uid: str) -> tuple[Decimal, Decimal]:
+    reserved_credits = ZERO
+    reserved_slh = ZERO
+    for order in sim.get("orders", []):
+        if not isinstance(order, dict):
+            continue
+        if str(order.get("uid")) != str(uid):
+            continue
+        if order.get("status") not in {"OPEN", "REVIEW_REQUIRED"}:
+            continue
+        reserved_credits += _d(order.get("reserved_credits", 0))
+        reserved_slh += _d(order.get("reserved_slh", 0))
+    return _q(reserved_credits), _q(reserved_slh)
+
+
+def _snapshot(sim: dict, user: dict, uid: str) -> dict:
     wallet = user["wallet"]
     pool_credits = _d(sim["pool"]["credits"])
     pool_slh = _d(sim["pool"]["slh"])
     price = pool_credits / pool_slh
     credits = _d(wallet["credits"])
     slh = _d(wallet["slh"])
-    # Do not report unrealized spot-price inflation as profit. Value the position
-    # at estimated proceeds from an immediate full sale into this pool, including
-    # the same demo fee and AMM price impact that a real simulator trade would incur.
-    equity = _liquidation_value(sim, wallet)
+    reserved_credits, reserved_slh = _reserved_balances(sim, uid)
+    # Include assets locked by open limit orders in portfolio value, but keep
+    # "available" balances separate so they cannot be spent twice.
+    total_wallet = {
+        "credits": fmt(credits + reserved_credits),
+        "slh": fmt(slh + reserved_slh),
+    }
+    equity = _liquidation_value(sim, total_wallet)
     starting = _d(user.get("starting_value_credits", STARTING_CREDITS + STARTING_SLH))
     return {
         "demo_credits": fmt(credits),
         "demo_slh": fmt(slh),
+        "reserved_demo_credits": fmt(reserved_credits),
+        "reserved_demo_slh": fmt(reserved_slh),
         "pool_credits": fmt(pool_credits),
         "pool_slh": fmt(pool_slh),
         "price_credits_per_slh": fmt(price),
@@ -157,7 +199,7 @@ def _snapshot(sim: dict, user: dict) -> dict:
 def account_in_db(db: dict, uid: str, now: str | None = None) -> dict:
     sim = _state(db)
     user = _user(sim, str(uid), _now(now))
-    return _snapshot(sim, user)
+    return _snapshot(sim, user, str(uid))
 
 
 def account(uid: str) -> dict:
