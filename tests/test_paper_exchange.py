@@ -152,3 +152,28 @@ def test_corrupt_paper_state_is_rejected_not_overwritten():
     else:
         raise AssertionError("invalid paper state should fail closed")
     assert db["paper_simulation"] == ["corrupt"]
+
+
+def test_telegram_trade_receipt_renders_after_trade_pool_price():
+    from handlers.simulation_handler import _trade_text
+
+    db = _db()
+    result = paper.trade_in_db(db, "100", "buy", "100", "receipt-1")
+    rendered = _trade_text(result, "buy")
+
+    assert "קנייה מדומה הושלמה" in rendered
+    assert "שער pool אחרי העסקה" in rendered
+    assert paper.compact(result["trade"]["price_after"]) in rendered
+    assert "יתרות הדמו לאחר העסקה" in rendered
+
+
+def test_telegram_receipt_renders_duplicate_without_second_execution():
+    from handlers.simulation_handler import _trade_text
+
+    db = _db()
+    paper.trade_in_db(db, "100", "buy", "100", "receipt-duplicate")
+    repeated = paper.trade_in_db(db, "100", "buy", "100", "receipt-duplicate")
+    rendered = _trade_text(repeated, "buy")
+
+    assert "זוהתה בקשה חוזרת" in rendered
+    assert len(db["paper_simulation"]["trades"]) == 1
