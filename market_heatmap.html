@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>SLH Spark · Market Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#08111f;--panel:#111d2f;--panel2:#0d1727;--line:#293b55;--text:#f1f6ff;--muted:#9db0ca;--green:#29c58d;--red:#f07180;--gold:#e9c46a;--blue:#8c9fff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 12% 0,#1b3154 0,transparent 33%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Arial,sans-serif;line-height:1.45;padding:16px 14px calc(26px + env(safe-area-inset-bottom))}
+main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:4px 0 18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#8b78ff,#28c7a2);font-size:24px;font-weight:900;color:#05131b}h1{font-size:23px;margin:0;font-weight:900}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted);margin-top:3px}.card{border:1px solid var(--line);border-radius:19px;background:linear-gradient(145deg,#121f33,#0d1727);padding:16px;margin:12px 0}.top-actions{display:flex;gap:8px;flex-wrap:wrap}button,select,input{font:inherit}button{border:1px solid #354a69;border-radius:11px;min-height:40px;padding:9px 13px;color:var(--text);background:#192b45;font-weight:750;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8c9fff;outline-offset:2px}button.primary{background:linear-gradient(135deg,#776af0,#536edc);border-color:transparent}button.soft{background:transparent}button:disabled{opacity:.45;cursor:not-allowed}.status{min-height:24px;font-size:13px;color:var(--muted);margin:10px 0}.status.bad{color:#ff9ca8}.status.good{color:#82e9c4}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid #3a4c67;border-radius:999px;font-size:11px;color:#bfcee5;padding:5px 8px}.disclaimer{border-right:3px solid var(--gold);padding:7px 11px;color:#d9d4bd;background:#28271944;font-size:12px;line-height:1.7}
+.section-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.legend{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px}.dot.green{background:var(--green)}.dot.red{background:var(--red)}.dot.gray{background:#7888a2}
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.tile{min-width:0;border:1px solid #2d405c;border-radius:15px;padding:12px;background:#111e32;display:flex;flex-direction:column;gap:8px;box-shadow:inset 0 1px #ffffff08}.tile.pos{border-color:#247b60;background:linear-gradient(145deg,rgba(23,144,97,var(--heat)),#101a2c 85%)}.tile.neg{border-color:#854351;background:linear-gradient(145deg,rgba(170,58,75,var(--heat)),#101a2c 85%)}.tile.flat{background:#111e32}.tile-top{display:flex;justify-content:space-between;gap:6px;align-items:center}.symbol{font-size:17px;font-weight:950;letter-spacing:.2px;direction:ltr}.group{font-size:10px;color:var(--muted);white-space:nowrap}.tile-name{font-size:12px;color:#d7e2f5;min-height:32px}.price{font-size:16px;font-weight:900;direction:ltr;text-align:right}.move{font-size:14px;font-weight:900;direction:ltr;text-align:right}.pos .move{color:#78e8ba}.neg .move{color:#ff9ca8}.flat .move{color:#c2cddd}.tile-actions{display:flex;gap:6px;margin-top:auto}.tile-actions button{flex:1;min-height:32px;padding:5px 7px;font-size:11px}.watch.active{border-color:#b3a4ff;color:#d8d0ff}.empty{border:1px dashed #445874;color:var(--muted);padding:20px;border-radius:13px;text-align:center}.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:12px}.formgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{color:var(--muted);font-size:12px}.field input,.field select{width:100%;min-height:41px;background:#091424;color:var(--text);border:1px solid #354966;border-radius:10px;padding:8px 10px;min-width:0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid #26364d;text-align:right;white-space:nowrap}th{color:var(--muted);font-weight:700}td.ltr{direction:ltr;text-align:right}.positive{color:#78e8ba}.negative{color:#ff9ca8}.foot{font-size:11px;color:var(--muted);line-height:1.7;margin-top:12px}
+.sonify-panel{border:1px solid #344865;border-radius:15px;padding:13px;margin:14px 0 10px;background:#0b1728}.sonify-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:10px}.sonify-select{display:flex;flex-direction:column;gap:5px;min-width:150px;color:var(--muted);font-size:12px}.sonify-select select{background:#091424;color:var(--text);border:1px solid #354966;border-radius:10px;min-height:40px;padding:7px 10px}.sonify-controls button{min-height:40px}.sonify-panel .status{margin-bottom:0}@media(max-width:520px){.sonify-controls{align-items:stretch}.sonify-select,.sonify-controls button{width:100%}}@media(max-width:850px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}@media(max-width:520px){body{padding:12px 10px}.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{padding:10px}.card{padding:12px}.formgrid{grid-template-columns:1fr 1fr}.formgrid button{grid-column:1/-1}.tile-name{min-height:28px}h1{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="brand"><div class="logo">SL</div><div><h1>Market Lab · מפת חום</h1><div class="sub">תצפית שוק ותיק מדומה — ללא חיבור לברוקר</div></div></div>
+  <div class="top-actions"><button id="refresh" class="primary" type="button">⟳ רענון נתונים</button><button id="back" class="soft" type="button">חזרה ל־SLH OS</button></div>
+</header>
+<section class="card">
+  <div class="section-head"><div><h2>מצב השוק לפי מכשיר וסקטור</h2><div class="sub">שינוי אחוזי לפי הנתון האחרון שסיפק מקור הנתונים</div></div><div class="legend"><span><i class="dot green"></i>עלייה</span><span><i class="dot red"></i>ירידה</span><span><i class="dot gray"></i>תנועה קטנה</span></div></div>
+  <div class="chips"><span class="chip">SPY · מדד רחב</span><span class="chip">QQQ · Nasdaq 100</span><span class="chip">XLK–XLC · ETF סקטוריאליים</span><span class="chip">נתונים עשויים להיות מושהים</span></div>
+  <div id="marketStatus" class="status">טוען נתוני שוק...</div>
+  <div id="tiles" class="tiles"></div>
+  <div id="empty" class="empty" hidden>אין כרגע נתונים מאומתים להצגה. המערכת לא תציג מחירים לדוגמה כאילו הם נתוני אמת.</div>
+  <div class="sonify-panel" aria-labelledby="sonifyTitle">
+    <div class="section-head"><div><h3 id="sonifyTitle">🔊 השמע את תנועת השוק</h3><div class="sub">עלייה וירידה מתורגמות לצלילים. ניגון דורש לחיצה מפורשת בדפדפן.</div></div></div>
+    <div class="sonify-controls">
+      <label class="sonify-select" for="sonifyWaveform">צליל
+        <select id="sonifyWaveform">
+          <option value="sine">Sine · נקי</option>
+          <option value="triangle">Triangle · רך</option>
+          <option value="sawtooth">Saw · עשיר</option>
+          <option value="square">Square · דיגיטלי</option>
+        </select>
+      </label>
+      <button id="sonifyLive" class="primary" type="button" disabled>🔊 השמע נתונים מאומתים</button>
+      <button id="sonifyDemo" class="soft" type="button">🎵 הדגמה מדומה</button>
+      <button id="sonifyOpenSynth" class="primary" type="button" disabled>🎹 פתח בסינתיסייזר המלא</button>
+      <button id="sonifyOpenSynthDemo" class="soft" type="button">בדוק הדגמה בסינתיסייזר</button>
+      <button id="sonifyStop" class="soft" type="button" disabled>עצור צליל</button>
+    </div>
+    <div id="sonifyStatus" class="status" role="status" aria-live="polite">הניגון יתחיל רק לאחר לחיצה. ההדגמה אינה נתוני שוק.</div>
+  </div>
+  <p class="foot" id="sourceNote">מקור נתונים: ממתין לתשובת השרת.</p>
+</section>
+<div class="grid2">
+  <section class="card">
+    <div class="section-head"><div><h2>רשימת מעקב</h2><div class="sub">סימונים נשמרים בדפדפן הזה בלבד</div></div><button id="clearWatch" class="soft" type="button">נקה רשימה</button></div>
+    <div id="watchlist"></div>
+  </section>
+  <section class="card">
+    <h2>תיק ניסוי — Paper Portfolio</h2>
+    <p class="foot">הוספת פוזיציה מדומה בלבד. אין הוראת קנייה, חשבון ברוקר, העברת כספים או רכישה של נייר ערך.</p>
+    <form id="paperForm" class="formgrid">
+      <div class="field"><label for="paperSymbol">נייר למעקב</label><select id="paperSymbol"></select></div>
+      <div class="field"><label for="paperUnits">כמות מדומה</label><input id="paperUnits" type="number" min="0.0001" max="1000000" step="any" value="1" required></div>
+      <button id="addPaper" class="primary" type="submit">הוסף לניסוי</button>
+    </form>
+    <div id="paperStatus" class="status"></div>
+    <div id="paperSummary" class="chips"></div>
+    <div class="section-head" style="margin-top:16px"><h3>פוזיציות מדומות</h3><button id="clearPaper" class="soft" type="button">אפס תיק מדומה</button></div>
+    <div id="paperTable" class="table-wrap"></div>
+  </section>
+</div>
+<section class="card">
+  <h2>איך להשתמש במפת החום</h2>
+  <div class="grid2">
+    <div><h3>1. לזהות תנועה יחסית</h3><p class="foot">השווה בין מדדי השוק לסקטורים. עלייה יומית אינה מספיקה כדי להסיק שהשקעה כדאית; בדוק גם טווח זמן, תנודתיות, נזילות, עלויות והחדשות הרלוונטיות.</p></div>
+    <div><h3>2. לבדוק תרחיש בלי כסף אמיתי</h3><p class="foot">בחר נייר, הוסף כמות מדומה ועקוב אחר שינוי השווי. התיק נשמר רק בדפדפן; ניקוי נתוני הדפדפן יכול למחוק אותו.</p></div>
+  </div>
+  <div class="disclaimer">הכלי מציג מידע שוק תיאורי ותרחישי מעקב מדומים בלבד. הוא אינו נותן המלצה אישית לקנייה או למכירה, אינו מבטיח תשואה ואינו מחובר לברוקר או לארנק. נתוני המחיר והשימוש בהם כפופים לרישיון ולתנאי ספק הנתונים. שערי הכספים והמסחר של SLH נשארים נפרדים וסגורים.</div>
+</section>
+</main>
+<script>
+(function(){
+  'use strict';
+  const WATCH_KEY='slh_market_lab_watch_v1';
+  const PAPER_KEY='slh_market_lab_paper_v1';
+  let snapshot=null;
+  const $=id=>document.getElementById(id);
+  const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const number=value=>{const n=Number(value);return Number.isFinite(n)?n:null;};
+  const fmt=(value,digits=2)=>number(value)===null?'—':number(value).toLocaleString('en-US',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+  function getStore(key,fallback){try{const parsed=JSON.parse(localStorage.getItem(key)||'');return parsed==null?fallback:parsed;}catch(_){return fallback;}}
+  function putStore(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch(_){return false;}}
+  function watch(){const a=getStore(WATCH_KEY,[]);return Array.isArray(a)?a.filter(x=>typeof x==='string'):[];}
+  function paper(){const p=getStore(PAPER_KEY,{});return p&&typeof p==='object'&&!Array.isArray(p)?p:{};}
+  function currentTile(symbol){return (snapshot&&Array.isArray(snapshot.tiles)?snapshot.tiles:[]).find(t=>t.symbol===symbol)||null;}
+  function heat(tile){
+    const move=number(tile.change_percent)||0, strength=Math.min(1,Math.abs(move)/4);
+    const cls=move>.05?'pos':move<-.05?'neg':'flat';
+    return {cls,strength:Math.max(.10,strength)};
+  }
+  function tags(move){
+    if(move>=1)return 'מומנטום יומי חיובי';
+    if(move<=-1)return 'מומנטום יומי שלילי';
+    return 'תנועה יומית מתונה';
+  }
+  function renderTiles(){
+    const tiles=snapshot&&Array.isArray(snapshot.tiles)?snapshot.tiles:[];
+    $('tiles').innerHTML='';
+    $('empty').hidden=tiles.length>0;
+    const w=new Set(watch());
+    for(const tile of tiles){
+      const h=heat(tile),isWatched=w.has(tile.symbol);
+      const article=document.createElement('article');
+      article.className='tile '+h.cls;
+      article.style.setProperty('--heat',String(h.strength.toFixed(2)));
+      article.innerHTML='<div class="tile-top"><span class="symbol">'+esc(tile.symbol)+'</span><span class="group">'+esc(tile.group)+'</span></div>'+
+        '<div class="tile-name">'+esc(tile.name)+'</div>'+
+        '<div class="price">'+esc(tile.currency||'USD')+' '+fmt(tile.price,2)+'</div>'+
+        '<div class="move">'+(number(tile.change_percent)>0?'+':'')+fmt(tile.change_percent,2)+'%</div>'+
+        '<div class="sub">נתון ספק: '+esc(tile.provider_time||'זמן לא נמסר')+'</div>'+
+        '<div class="sub">'+esc(tags(number(tile.change_percent)||0))+'</div>'+
+        '<div class="tile-actions"><button type="button" class="watch '+(isWatched?'active':'')+'" data-watch="'+esc(tile.symbol)+'">'+(isWatched?'★ במעקב':'☆ למעקב')+'</button><button type="button" data-paper="'+esc(tile.symbol)+'">ניסוי</button></div>';
+      $('tiles').appendChild(article);
+    }
+    const select=$('paperSymbol'),current=select.value;
+    select.innerHTML=tiles.map(t=>'<option value="'+esc(t.symbol)+'">'+esc(t.symbol)+' · '+esc(t.name)+'</option>').join('');
+    if(tiles.some(t=>t.symbol===current))select.value=current;
+    renderWatchlist();renderPaper();updateSonifyAvailability();
+  }
+  function renderWatchlist(){
+    const list=watch(),container=$('watchlist');
+    if(!list.length){container.innerHTML='<div class="empty">עוד לא סימנת ניירות למעקב. לחץ על ☆ למעקב במפת החום.</div>';return;}
+    const tiles=list.map(currentTile).filter(Boolean);
+    container.innerHTML=tiles.length?'<div class="table-wrap"><table><thead><tr><th>סימול</th><th>מחיר</th><th>שינוי %</th><th></th></tr></thead><tbody>'+tiles.map(t=>'<tr><td><b>'+esc(t.symbol)+'</b><div class="sub">'+esc(t.name)+'</div></td><td class="ltr">'+fmt(t.price,2)+' '+esc(t.currency||'USD')+'</td><td class="'+((number(t.change_percent)||0)>=0?'positive':'negative')+' ltr">'+((number(t.change_percent)||0)>0?'+':'')+fmt(t.change_percent,2)+'%</td><td><button class="soft" data-unwatch="'+esc(t.symbol)+'" type="button">הסר</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">הסימונים נשמרו, אך נתוני השוק עבורם אינם זמינים כרגע.</div>';
+  }
+  function renderPaper(){
+    const positions=paper(),symbols=Object.keys(positions),rows=[];
+    let cost=0,value=0;
+    for(const symbol of symbols){
+      const p=positions[symbol],units=number(p.units),entry=number(p.average_entry),tile=currentTile(symbol);
+      if(units===null||units<=0||entry===null||entry<=0)continue;
+      const current=tile?number(tile.price):null;
+      const positionCost=units*entry;
+      const marketValue=current===null?null:units*current;
+      cost+=positionCost;if(marketValue!==null)value+=marketValue;
+      const pnl=marketValue===null?null:marketValue-positionCost;
+      rows.push({symbol,units,entry,current,marketValue,pnl});
+    }
+    $('paperSummary').innerHTML='<span class="chip">עלות מדומה: $'+fmt(cost,2)+'</span><span class="chip">שווי מדומה: '+(rows.some(r=>r.marketValue===null)?'חלקי':'$'+fmt(value,2))+'</span><span class="chip">פוזיציות: '+rows.length+'</span>';
+    if(!rows.length){$('paperTable').innerHTML='<div class="empty">התיק המדומה ריק. בחר נייר וכמות כדי להתחיל ניסוי.</div>';return;}
+    $('paperTable').innerHTML='<table><thead><tr><th>נייר</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נתון</th><th>רווח/הפסד מדומה</th><th></th></tr></thead><tbody>'+rows.map(r=>'<tr><td><b>'+esc(r.symbol)+'</b></td><td class="ltr">'+fmt(r.units,4)+'</td><td class="ltr">$'+fmt(r.entry,2)+'</td><td class="ltr">'+(r.current===null?'לא זמין':'$'+fmt(r.current,2))+'</td><td class="ltr '+(r.pnl===null?'':r.pnl>=0?'positive':'negative')+'">'+(r.pnl===null?'—':(r.pnl>0?'+':'')+'$'+fmt(r.pnl,2))+'</td><td><button type="button" class="soft" data-remove-paper="'+esc(r.symbol)+'">הסר</button></td></tr>').join('')+'</tbody></table>';
+  }
+  const MARKET_SCALE=[
+    {note:'C3',frequency:130.81},{note:'D3',frequency:146.83},{note:'E3',frequency:164.81},
+    {note:'G3',frequency:196.00},{note:'A3',frequency:220.00},{note:'C4',frequency:261.63},
+    {note:'D4',frequency:293.66},{note:'E4',frequency:329.63},{note:'G4',frequency:392.00},
+    {note:'A4',frequency:440.00},{note:'C5',frequency:523.25},{note:'D5',frequency:587.33},
+    {note:'E5',frequency:659.25}
+  ];
+  const DEMO_TILES=[
+    {symbol:'DEMO-UP',change_percent:1.8},{symbol:'DEMO-DOWN',change_percent:-2.4},
+    {symbol:'DEMO-FLAT',change_percent:0.1},{symbol:'DEMO-SURGE',change_percent:3.6},
+    {symbol:'DEMO-DIP',change_percent:-1.2},{symbol:'DEMO-UP-2',change_percent:0.7}
+  ];
+  let audioContext=null,activeOscillators=[],audioRunId=0;
+  function soundItems(tiles){
+    if(!Array.isArray(tiles))return [];
+    return tiles.filter(t=>t&&typeof t.symbol==='string'&&t.change_percent!==null&&t.change_percent!==undefined&&t.change_percent!==''&&number(t.change_percent)!==null)
+      .slice(0,16).map(tile=>{
+        const move=Math.max(-4,Math.min(4,number(tile.change_percent)));
+        const index=Math.max(0,Math.min(MARKET_SCALE.length-1,6+Math.round(move*1.5)));
+        return {symbol:tile.symbol,move,index,note:MARKET_SCALE[index].note};
+      });
+  }
+  function stopSonification(showStatus=true){
+    audioRunId+=1;
+    for(const oscillator of activeOscillators){try{oscillator.stop();}catch(_){}}
+    activeOscillators=[];
+    $('sonifyStop').disabled=true;
+    if(showStatus)$('sonifyStatus').textContent='ההשמעה הופסקה.';
+  }
+  async function playSonification(tiles,label){
+    const items=soundItems(tiles);
+    if(!items.length){$('sonifyStatus').textContent='אין תנועות מספריות מאומתות להשמעה.';return;}
+    const AudioContextCtor=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextCtor){$('sonifyStatus').textContent='הדפדפן אינו תומך בהשמעת הצליל הזו.';return;}
+    stopSonification(false);
+    const thisRun=audioRunId;
+    try{
+      if(!audioContext)audioContext=new AudioContextCtor();
+      if(audioContext.state==='suspended')await audioContext.resume();
+      const waveform=$('sonifyWaveform').value;
+      const origin=audioContext.currentTime+0.06,stepSeconds=0.26,noteSeconds=0.20;
+      const scheduleTone=(index,start,level)=>{
+        const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();
+        oscillator.type=waveform;
+        oscillator.frequency.setValueAtTime(MARKET_SCALE[index].frequency,start);
+        gain.gain.setValueAtTime(0.0001,start);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.015,level),start+0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001,start+noteSeconds);
+        oscillator.connect(gain);gain.connect(audioContext.destination);
+        oscillator.onended=()=>{activeOscillators=activeOscillators.filter(node=>node!==oscillator);};
+        oscillator.start(start);oscillator.stop(start+noteSeconds+0.01);activeOscillators.push(oscillator);
+      };
+      items.forEach((item,i)=>{
+        const start=origin+i*stepSeconds;
+        const strength=Math.min(0.28,0.09+Math.abs(item.move)*0.045);
+        scheduleTone(item.index,start,strength);
+        if(Math.abs(item.move)>=2){
+          const interval=item.move>0?4:-4;
+          let harmonyIndex=Math.max(0,Math.min(MARKET_SCALE.length-1,item.index+interval));
+          if(harmonyIndex===item.index){
+            harmonyIndex=item.move>0?Math.max(0,item.index-4):Math.min(MARKET_SCALE.length-1,item.index+4);
+          }
+          if(harmonyIndex!==item.index)scheduleTone(harmonyIndex,start,strength*0.45);
+        }
+      });
+      const totalMs=Math.ceil((items.length*stepSeconds+noteSeconds+0.15)*1000);
+      $('sonifyStop').disabled=false;
+      $('sonifyStatus').textContent=label+' · '+items.length+' צעדים · '+items.map(x=>x.symbol+' '+(x.move>0?'+':'')+x.move.toFixed(2)+'% → '+x.note).join(' | ');
+      window.setTimeout(()=>{
+        if(audioRunId===thisRun){
+          activeOscillators=[];
+          $('sonifyStop').disabled=true;
+          $('sonifyStatus').textContent=label+' · הניגון הסתיים. המיפוי הוא המחשה קולית, לא המלצת מסחר.';
+        }
+      },totalMs);
+    }catch(_){
+      stopSonification(false);
+      $('sonifyStatus').textContent='לא ניתן להשמיע כרגע. נסה שוב בלחיצה מפורשת.';
+    }
+  }
+  function synthScore(tiles){
+    return soundItems(tiles).map(item=>{
+      const notes=[item.note];
+      if(Math.abs(item.move)>=2){
+        const interval=item.move>0?4:-4;
+        let harmonyIndex=Math.max(0,Math.min(MARKET_SCALE.length-1,item.index+interval));
+        if(harmonyIndex===item.index){
+          harmonyIndex=item.move>0?Math.max(0,item.index-4):Math.min(MARKET_SCALE.length-1,item.index+4);
+        }
+        if(harmonyIndex!==item.index)notes.push(MARKET_SCALE[harmonyIndex].note);
+      }
+      return notes.join(' ');
+    }).join(',');
+  }
+  function openInFullSynth(tiles,isDemo){
+    const score=synthScore(tiles);
+    if(!score){$('sonifyStatus').textContent='אין רצף תווים זמין להעברה לסינתיסייזר.';return;}
+    const waveformMap={sine:'sine',triangle:'tri',sawtooth:'saw',square:'square'};
+    const params=new URLSearchParams();
+    params.set('source','market-lab');
+    params.set('score',score);
+    params.set('wave',waveformMap[$('sonifyWaveform').value]||'sine');
+    params.set('duration','0.3');
+    if(isDemo)params.set('market_demo','1');
+    window.location.assign('/synth-ui?'+params.toString());
+  }
+  function updateSonifyAvailability(){
+    const tiles=snapshot&&Array.isArray(snapshot.tiles)?snapshot.tiles:[];
+    const verified=!!(snapshot&&['AVAILABLE','PARTIAL'].includes(snapshot.status)&&soundItems(tiles).length);
+    $('sonifyLive').disabled=!verified;
+    $('sonifyOpenSynth').disabled=!verified;
+    if(!verified)$('sonifyStatus').textContent='ניגון נתוני אמת זמין רק כשמקור הנתונים מספק תנועות מאומתות. אפשר לנסות הדגמה מדומה.';
+  }
+  function setStatus(text,kind){$('marketStatus').textContent=text;$('marketStatus').className='status '+(kind||'');}
+  async function refresh(){
+    const button=$('refresh');button.disabled=true;setStatus('מעדכן מול ספק הנתונים…');
+    try{
+      const response=await fetch('/api/public/market-heatmap',{cache:'no-store',headers:{'Accept':'application/json'}});
+      let payload;try{payload=await response.json();}catch(_){payload={status:'INVALID_RESPONSE'};}
+      if(!payload||typeof payload!=='object')payload={status:'INVALID_RESPONSE'};
+      snapshot=payload;
+      if(payload.status==='AVAILABLE'||payload.status==='PARTIAL'){
+        setStatus((payload.status==='PARTIAL'?'נתונים חלקיים · ':'')+payload.tiles.length+' ניירות זמינים · מקור '+(payload.provider||'לא ידוע')+' · נא לבדוק את זמן הנתון בכל נייר',payload.status==='PARTIAL'?'bad':'good');
+        $('sourceNote').textContent=(payload.data_disclaimer||'נתוני שוק שסופקו על ידי ספק חיצוני.')+' נבדק בשרת: '+(payload.fetched_at_utc||'לא ידוע')+'.';
+      }else{
+        setStatus(payload.status==='DATA_PROVIDER_NOT_CONFIGURED'?'מקור הנתונים אינו מוגדר בשרת. לא מוצגים מחירים לדוגמה.':'נתוני השוק אינם זמינים כרגע. לא מוצגים נתונים לא מאומתים.','bad');
+        $('sourceNote').textContent=payload.reason||'יש לוודא את תצורת ספק הנתונים ואת הרשאת השימוש.';
+      }
+      renderTiles();
+    }catch(_){
+      snapshot={tiles:[]};setStatus('לא ניתן להגיע למקור הנתונים. לא מוצגים מחירים ישנים כאילו הם עדכניים.','bad');$('sourceNote').textContent='בדוק חיבור וספק נתונים.';renderTiles();
+    }finally{button.disabled=false;}
+  }
+  $('tiles').addEventListener('click',event=>{
+    const watchBtn=event.target.closest('[data-watch]');
+    if(watchBtn){
+      const symbol=watchBtn.dataset.watch,list=watch(),next=list.includes(symbol)?list.filter(x=>x!==symbol):list.concat([symbol]);
+      putStore(WATCH_KEY,next);renderTiles();return;
+    }
+    const paperBtn=event.target.closest('[data-paper]');
+    if(paperBtn){$('paperSymbol').value=paperBtn.dataset.paper;$('paperUnits').focus();$('paperStatus').textContent='נבחר '+paperBtn.dataset.paper+' לתיק המדומה.';}
+  });
+  $('watchlist').addEventListener('click',event=>{
+    const btn=event.target.closest('[data-unwatch]');if(!btn)return;
+    putStore(WATCH_KEY,watch().filter(x=>x!==btn.dataset.unwatch));renderTiles();
+  });
+  $('paperTable').addEventListener('click',event=>{
+    const btn=event.target.closest('[data-remove-paper]');if(!btn)return;
+    const p=paper();delete p[btn.dataset.removePaper];putStore(PAPER_KEY,p);renderPaper();
+  });
+  $('paperForm').addEventListener('submit',event=>{
+    event.preventDefault();const symbol=$('paperSymbol').value,units=number($('paperUnits').value),tile=currentTile(symbol);
+    if(!tile||number(tile.price)===null){$('paperStatus').textContent='לא ניתן להוסיף פוזיציה: אין מחיר מאומת לנייר הזה.';return;}
+    if(units===null||units<=0||units>1000000){$('paperStatus').textContent='הזן כמות מדומה חיובית ותקינה.';return;}
+    const positions=paper(),old=positions[symbol],oldUnits=old?number(old.units)||0:0,oldEntry=old?number(old.average_entry)||0:0;
+    positions[symbol]={units:oldUnits+units,average_entry:oldUnits+units>0?((oldUnits*oldEntry)+(units*tile.price))/(oldUnits+units):tile.price};
+    if(!putStore(PAPER_KEY,positions)){$('paperStatus').textContent='לא ניתן לשמור מקומית בדפדפן זה.';return;}
+    $('paperStatus').textContent='נוספו '+fmt(units,4)+' יחידות מדומות של '+symbol+' במחיר נתון $'+fmt(tile.price,2)+'. לא נשלחה פקודת מסחר.';
+    renderPaper();
+  });
+  $('sonifyLive').addEventListener('click',()=>playSonification(snapshot&&snapshot.tiles,'נתוני שוק שסופקו על ידי המקור'));
+  $('sonifyDemo').addEventListener('click',()=>playSonification(DEMO_TILES,'הדגמה מדומה בלבד — לא נתוני שוק'));
+  $('sonifyOpenSynth').addEventListener('click',()=>openInFullSynth(snapshot&&snapshot.tiles,false));
+  $('sonifyOpenSynthDemo').addEventListener('click',()=>openInFullSynth(DEMO_TILES,true));
+  $('sonifyStop').addEventListener('click',()=>stopSonification());
+  $('refresh').addEventListener('click',refresh);
+  $('clearWatch').addEventListener('click',()=>{putStore(WATCH_KEY,[]);renderTiles();});
+  $('clearPaper').addEventListener('click',()=>{putStore(PAPER_KEY,{});$('paperStatus').textContent='התיק המדומה המקומי אופס.';renderPaper();});
+  $('back').addEventListener('click',()=>{window.location.assign('/mini-app-v4');});
+  refresh();
+})();
+</script>
+</body>
+</html>
