@@ -83,7 +83,7 @@ def test_certification_requires_server_record_and_all_seven_completed_lessons():
     db["trader_certifications"]["1"]["critical_pass"] = False
     assert has_trader_certification("1", db) is False
 
-def test_uncertified_user_is_blocked_before_live_exchange_check(monkeypatch):
+def test_uncertified_user_is_checked_after_live_exchange_probe(monkeypatch):
     import handlers.exchange_handler as exchange_handler
     db = {
         "users": {"1": _user()},
@@ -96,12 +96,24 @@ def test_uncertified_user_is_blocked_before_live_exchange_check(monkeypatch):
     }
     _install_db(monkeypatch, db)
     before = deepcopy(db)
-    with patch.object(exchange_handler, "require_fresh_live_exchange_proof") as live_check:
+    with patch.object(
+        exchange_handler,
+        "require_fresh_live_exchange_proof",
+        return_value={
+            "status": "PASS",
+            "checked_at": "2026-10-20T11:00:00+00:00",
+            "railway_configured": "1",
+            "public_gate": "OPEN",
+            "public_verdict": "OPEN",
+            "public_readiness": True,
+            "public_updated_at": 1792494000.0,
+        },
+    ) as live_check:
         with pytest.raises(ValueError, match="TRADER_CERTIFICATION_REQUIRED"):
             exchange_handler.execute_exchange_order(
                 uid="1", side="buy", amount=Decimal("1"), price=Decimal("1"), request_id="first"
             )
-    live_check.assert_not_called()
+    live_check.assert_called_once()
     assert db == before
 
 def test_atomic_place_boundary_blocks_uncertified_legacy_caller_without_mutation():
