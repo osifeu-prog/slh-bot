@@ -41,5 +41,5 @@ def test_mini_app_disables_cancel_during_inflight_stake_and_keeps_retry_idempote
     assert "__stakeConfirmationInFlight=true" in confirm
     assert "cancelButton.disabled=true" in confirm
     assert "client_request_id:pending.requestId" in confirm
-    assert "__stakeConfirmationInFlight)return" in cancel
+    assert "if(__stakeConfirmationInFlight)" in cancel
     assert "בדוק/י /positions לפני ניסיון נוסף" in cancel
