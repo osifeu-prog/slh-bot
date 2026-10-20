@@ -14,6 +14,7 @@ def _sandbox(tmp_path, monkeypatch, user=None):
                 "joined": True,
                 "academy": {"courses": {"bitcoin_mastery": {"stage": 0, "completed": []}}},
                 "wallet": {"credits": 0.0, "staked": 0},
+                "onboarding_signup_bonus_eligible_at": "2026-10-20T13:00:00+00:00",
             }
         },
         "ledger": [],
@@ -114,10 +115,37 @@ def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path,
 
 
 def test_existing_user_is_not_automatically_marked_as_signup_eligible(tmp_path, monkeypatch):
-    path = _sandbox(tmp_path, monkeypatch)
+    path = _sandbox(tmp_path, monkeypatch, {
+        "joined": True,
+        "academy": {"courses": {"bitcoin_mastery": {"stage": 0, "completed": []}}},
+        "wallet": {"credits": 0.0, "staked": 0},
+    })
+    marker = onboarding_rewards.mark_signup_bonus_pending("100")
     result = onboarding_rewards.grant_signup_bonus("100")
     db = _state(path)
 
+    assert marker == {"status": "BLOCKED", "reason": "SIGNUP_BONUS_ELIGIBILITY_MISSING"}
     assert result == {"status": "NOT_PENDING"}
+    assert "onboarding_signup_bonus_status" not in db["users"]["100"]
     assert db["users"]["100"]["wallet"]["credits"] == 0
     assert db["ledger"] == []
+
+
+def test_retry_creates_missing_pending_marker_for_durably_eligible_join(tmp_path, monkeypatch):
+    path = _sandbox(tmp_path, monkeypatch)
+
+    # Model a process interruption after the successful join/profile write,
+    # but before mark_signup_bonus_pending() persisted the PENDING marker.
+    before = _state(path)
+    assert before["users"]["100"]["onboarding_signup_bonus_eligible_at"]
+    assert "onboarding_signup_bonus_status" not in before["users"]["100"]
+
+    marker = onboarding_rewards.mark_signup_bonus_pending("100")
+    result = onboarding_rewards.grant_signup_bonus("100")
+    db = _state(path)
+
+    assert marker == {"status": "PENDING"}
+    assert result["status"] == "GRANTED"
+    assert db["users"]["100"]["wallet"]["credits"] == 5
+    assert db["users"]["100"]["onboarding_signup_bonus_status"] == "AWARDED"
+    assert len(db["ledger"]) == 1
