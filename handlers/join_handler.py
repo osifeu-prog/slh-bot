@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from core import profile_manager
 from core.identity import OWNER_TELEGRAM_ID
 from core.profile_manager import user_exists
@@ -157,7 +159,11 @@ def register(bot):
                     "group": group,
                     "joined": True,
                     "role": "student",
-                    "permissions": []
+                    "permissions": [],
+                    # Durable eligibility travels with the canonical successful
+                    # join write, so /start can recover if marker creation is
+                    # interrupted after Academy initialization.
+                    "onboarding_signup_bonus_eligible_at": datetime.now(timezone.utc).isoformat(),
                 })
             except Exception as e:
                 print("JOIN PROFILE UPDATE FAILED:", e)
