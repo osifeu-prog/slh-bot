@@ -182,7 +182,7 @@ def register(bot):
             token = _queue_stake_confirmation(uid, amount, 30, "stake")
             unlocks_at = time.time() + 30 * 86400
             from telebot import types
-            markup = types.InlineKeyboardMarkup(row_width=1)
+            markup = types.InlineKeyboardMarkup(row_width=2)
             markup.add(
                 types.InlineKeyboardButton(
                     "✅ אשר נעילה",
@@ -243,7 +243,7 @@ def register(bot):
             token = _queue_stake_confirmation(uid, amount, days, "stake_lock")
             unlocks_at = time.time() + days * 86400
             from telebot import types
-            markup = types.InlineKeyboardMarkup(row_width=1)
+            markup = types.InlineKeyboardMarkup(row_width=2)
             markup.add(
                 types.InlineKeyboardButton(
                     "✅ אשר נעילה",
