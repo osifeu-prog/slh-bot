@@ -25,6 +25,7 @@ def test_simulation_starts_in_its_own_namespace_only():
 
     assert snapshot["demo_credits"] == "1000.00000000"
     assert snapshot["demo_slh"] == "1000.00000000"
+    assert abs(float(snapshot["change_from_start_credits"])) < 1e-8
     assert db["users"] == users_before
     assert db["ledger"] == ledger_before
     assert set(db["exchange_orders"]) == {"LIVE-1"}
@@ -50,6 +51,9 @@ def test_buy_uses_demo_credits_changes_pool_and_never_changes_real_ledger():
     assert result["account"]["demo_credits"] == "900.00000000"
     assert float(result["account"]["demo_slh"]) > 1000
     assert result["account"]["price_credits_per_slh"] != "1.00000000"
+    # Immediate liquidation valuation captures fee and slippage instead of
+    # treating the post-trade spot price as a guaranteed portfolio exit price.
+    assert float(result["account"]["change_from_start_credits"]) < 0
     assert db["users"] == users_before
     assert db["ledger"] == ledger_before
     assert len(db["paper_simulation"]["trades"]) == 1
@@ -177,3 +181,47 @@ def test_telegram_receipt_renders_duplicate_without_second_execution():
 
     assert "זוהתה בקשה חוזרת" in rendered
     assert len(db["paper_simulation"]["trades"]) == 1
+
+
+def test_paper_portfolio_uses_liquidation_value_not_spot_price():
+    db = _db()
+    before = paper.account_in_db(db, "100")
+    assert abs(float(before["change_from_start_credits"])) < 1e-8
+
+    trade = paper.trade_in_db(db, "100", "buy", "100", "mark-to-market-1")
+    account = trade["account"]
+
+    spot_value = (
+        float(account["demo_credits"])
+        + float(account["demo_slh"]) * float(account["price_credits_per_slh"])
+    )
+    liquidation_value = float(account["portfolio_value_credits"])
+
+    assert liquidation_value < spot_value
+    assert float(account["change_from_start_credits"]) < 0
+
+
+def test_new_demo_user_baseline_is_initialized_against_current_pool():
+    db = _db()
+    first = paper.account_in_db(db, "100")
+    paper.trade_in_db(db, "100", "buy", "500", "move-shared-pool")
+    second = paper.account_in_db(db, "200")
+
+    assert abs(float(first["change_from_start_credits"])) < 1e-8
+    assert abs(float(second["change_from_start_credits"])) < 1e-8
+
+
+def test_simulation_schema_version_fails_closed_on_older_or_unknown_state():
+    db = {"users": {}, "paper_simulation": {
+        "schema_version": 1,
+        "pool": {"credits": "100", "slh": "100"},
+        "users": {},
+        "trades": [],
+    }}
+    try:
+        paper.account_in_db(db, "100")
+    except ValueError as exc:
+        assert str(exc) == "PAPER_SIM_STATE_INVALID"
+    else:
+        raise AssertionError("unknown schema must fail closed")
+    assert db["paper_simulation"]["schema_version"] == 1
