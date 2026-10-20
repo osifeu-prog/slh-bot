@@ -27,6 +27,7 @@ INTENTS = {
     "rewards": ["פרסים","תגמולים","rewards"],
     "leaderboard": ["לוח מובילים","טבלת המובילים","מובילים","leaderboard","leaders","top","נקודות"],
     "wallet": ["קרדיטים","קרדיט","credits","credit","balance","יתרה","היתרה שלי","כמה יש לי","ארנק","wallet"],
+    "ledger": ["ledger","לדג'ר","לדג׳ר","פער","פערים","10499","10771","gap","alpha_consolidate","check_owner_ledger"],
     "staking": ["סטייקינג","stake","staked","נעל","נעלתי","כמה סטייק"],
     "onboarding": ["הרשמה","להצטרף","רישום","איך מתחילים","איך משתמשים","מה עושים","/join"],
     "greeting": ["היי","שלום","בוקר טוב","ערב טוב","אהלן"],
@@ -58,7 +59,7 @@ def is_system_state_question(text):
     return any(pattern.search(value) for pattern in _SYSTEM_STATE_PATTERNS)
 
 
-PRIORITY = ["time","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
+PRIORITY = ["ledger","time","staking","wallet","progress","rewards","leaderboard","system","agents","courses","dashboard","help","onboarding","greeting","analysis","missions"]
 
 
 def detect_intent(text):
@@ -84,6 +85,10 @@ def detect_intent(text):
         return "courses"
     if any(x in text_lower for x in ("dashboard", "לוח המחוונים", "דשבורד")):
         return "dashboard"
+    # Ledger questions must route before generic question handling and staking keywords.
+    for kw in INTENTS["ledger"]:
+        if kw and _kw_match(kw, text_lower):
+            return "ledger"
     for intent in ("staking", "wallet"):
         for kw in INTENTS[intent]:
             if kw and _kw_match(kw, text_lower):
@@ -184,6 +189,51 @@ def _academy_catalog_answer():
             "כדי לא למסור רשימה ישנה, פתח /courses ונסה שוב."
         )
 
+def _ledger_answer(uid):
+    """Explain the authenticated owner ledger audit without changing financial state."""
+    if uid is None:
+        return "לא ניתן לזהות את המשתמש לצורך בדיקת Ledger."
+    try:
+        from core.authority import is_owner
+        if not is_owner(uid):
+            return "פירוט פורנזי של Ledger זמין לבעלים בלבד. אין לבצע התאמות על סמך הסבר טקסטואלי בלבד."
+
+        import state_manager
+        from core.account_ledger_audit import audit_account_ledger
+        db = state_manager.load_db()
+        result = audit_account_ledger(db, str(uid))
+        findings = result.get("findings", [])
+        lines = [
+            f"🧾 מצב Ledger: {result.get('status', 'UNKNOWN')}",
+            f"פערי רציפות שנמצאו: {result.get('continuity_break_count', len(findings))}",
+            f"שגיאות חשבוניות: {result.get('arithmetic_error_count', 'לא ידוע')}",
+            "",
+        ]
+        ledger_rows = db.get("ledger", []) if isinstance(db, dict) else []
+        alpha = next((row for row in ledger_rows if isinstance(row, dict) and str(row.get("type", "")).lower() == "alpha_consolidate"), None)
+        if alpha is not None:
+            credits = alpha.get("credits")
+            staked = alpha.get("staked_moved")
+            if isinstance(credits, (int, float)) and isinstance(staked, (int, float)):
+                lines.append(f"Alpha consolidation: {credits:g} Credits + {staked:g} Staked = {credits + staked:g}. התאמה חשבונית אינה מספיקה לאימות מקור ההעברה.")
+                lines.append("")
+        for finding in findings:
+            previous = finding.get("previous") or {}
+            following = finding.get("next") or {}
+            evidence = finding.get("source_evidence") or {}
+            delta = finding.get("delta_to_explain", finding.get("delta", "לא ידוע"))
+            source = evidence.get("source_match_status") or finding.get("source_match_status") or "לא צוין"
+            resolves = finding.get("resolves_gap")
+            if resolves is None:
+                resolves = evidence.get("resolves_gap", False)
+            lines.append(f"• {finding.get('type', 'FINDING')}: #{previous.get('index', '?')} → #{following.get('index', '?')}; פער={delta}; מקור={source}; resolves_gap={bool(resolves)}")
+        if not findings:
+            lines.append("לא הוחזרו ממצאים בדוח הזה; יש לאמת את הסטטוס מול פקודת הבדיקה הייעודית.")
+        lines.extend(["", "הדוח לקריאה בלבד. אין לשנות יתרות או ליצור רשומות התאמה כדי להפוך BLOCKED ל-PASS."])
+        return "\n".join(lines)[:3500]
+    except Exception as exc:
+        return "לא הצלחתי לקרוא את דוח ה-Ledger באופן בטוח: " + type(exc).__name__
+
 def route(text, uid=None):
     raw_text = str(text or "")
     is_pasted_log = bool(re.search(r"\[\d{1,2}/\d{1,2}/\d{4}", raw_text))
@@ -196,6 +246,9 @@ def route(text, uid=None):
         return "הבקשה כבר בטיפול. נסה שוב בעוד כמה שניות."
 
     intent = detect_intent(raw_text)
+
+    if intent == "ledger":
+        return _ledger_answer(uid)
 
     # Live operational state must come from deterministic checks, not a language
     # model with partial context. Offer the exact check paths instead of guessing.
