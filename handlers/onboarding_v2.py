@@ -309,9 +309,22 @@ def register(bot, context=None):
             # its durable marker pending. Existing accounts without that marker
             # are never enrolled retroactively.
             try:
+                from core.onboarding_rewards import (
+                    mark_signup_bonus_pending,
+                    grant_signup_bonus,
+                )
+                # Re-create a missing marker only when successful join persisted
+                # the explicit eligibility timestamp. Existing users without it
+                # remain NOT_PENDING and are never enrolled retroactively.
+                marker = mark_signup_bonus_pending(user_id)
+                print("SIGNUP CREDITS MARKER RETRY:", marker.get("status"))
+            except Exception as marker_exc:
+                print("SIGNUP CREDITS MARKER RETRY FAILED:", type(marker_exc).__name__)
+
+            try:
                 from core.onboarding_rewards import grant_signup_bonus
                 bonus = grant_signup_bonus(user_id)
-                if bonus.get("status") in {"GRANTED", "DUPLICATE"}:
+                if bonus.get("status") in {"GRANTED", "DUPLICATE", "ALREADY_AWARDED"}:
                     bot.send_message(
                         m.chat.id,
                         "🎁 מתנת ההצטרפות שלך הושלמה בבטחה: +5 Credits. "
