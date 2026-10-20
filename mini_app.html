@@ -2252,11 +2252,16 @@ async function confirmStake(){
     const r=await fetch('/api/v1/staking',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},headers),body:JSON.stringify({amount:pending.amount,lock_days:pending.days,client_request_id:pending.requestId})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+    if(!['completed','duplicate'].includes(String(d.status||'')))throw Error('STAKING_RESULT_NOT_CONFIRMED');
     toast(d.status==='duplicate'?'ℹ️ בקשת הנעילה כבר בוצעה':'✅ Staking בוצע לאחר אישור');
     __pendingStakeConfirmation=null;
     __stakeOutcomeUnknown=false;
     hideStakeConfirmation();
-    await loadMe(); await loadStakePositions();
+    try{
+      await loadMe(); await loadStakePositions();
+    }catch(_refreshError){
+      toast('הנעילה בוצעה; רענון התצוגה נכשל. רענן/י ובדוק/י פוזיציות.');
+    }
   }catch(e){
     __stakeConfirmationInFlight=false;
     __stakeOutcomeUnknown=true;
