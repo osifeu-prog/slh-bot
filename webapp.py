@@ -362,6 +362,13 @@ def stars_invoice():
         return _no_store(jsonify({"link": create_invoice_link(invoice)})), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        if str(exc) == "STARS_STORE_SALES_CLOSED":
+            return jsonify({"error": "STARS_STORE_SALES_CLOSED"}), 503
+        if str(exc) == "STARS_STORE_ITEM_NOT_AVAILABLE":
+            return jsonify({"error": "STARS_STORE_ITEM_NOT_AVAILABLE"}), 409
+        print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "INVOICE_FAILED"}), 502
     except Exception as exc:
         print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
         return jsonify({"error": "INVOICE_FAILED"}), 502
@@ -932,32 +939,6 @@ function showGuide(id){
 """
     if "slh-synth-miniapp-entry" not in html:
         html = html.replace("</body>", synth_entry + "</body>")
-
-    market_entry = """
-<script id="slh-market-lab-miniapp-entry">
-(function(){
-  function addMarketEntry(){
-    var grid=document.querySelector("#home .ux-action-grid");
-    if(!grid||document.getElementById("slh-market-lab-button"))return;
-    var button=document.createElement("button");
-    button.id="slh-market-lab-button";
-    button.type="button";
-    button.className="action";
-    button.innerHTML="<b>🟩 מפת חום שוק</b><span>תצפית נתונים ותיק מדומה בלבד</span>";
-    button.addEventListener("click",function(){window.location.assign("/market-lab");});
-    grid.appendChild(button);
-  }
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",addMarketEntry,{once:true});
-  }else{
-    addMarketEntry();
-  }
-})();
-</script>
-"""
-    if "slh-market-lab-miniapp-entry" not in html:
-        html = html.replace("</body>", market_entry + "</body>")
-
     resp = make_response(html)
     resp.headers["Content-Type"] = "text/html; charset=utf-8"
     resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -1498,6 +1479,7 @@ def stars_store_api():
     from core.stars_price_authority import VIP_MONTHLY_STARS
     from store.engine import load_items
     from store.stars_purchase_service import get_stars_items, get_stars_price
+    from core.stars_gate import filter_store_stars_items
 
     db = load_db()
     user = db.get("users", {}).get(str(uid), {}) if isinstance(db, dict) else {}
@@ -1511,7 +1493,7 @@ def stars_store_api():
         "plugin": "tools",
         "digital": "emojis",
     }
-    for item_id, price in get_stars_items().items():
+    for item_id, price in filter_store_stars_items(get_stars_items()).items():
         item = items.get(item_id, {})
         if not isinstance(item, dict):
             item = {}
