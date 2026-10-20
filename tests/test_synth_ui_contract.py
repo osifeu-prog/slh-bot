@@ -27,6 +27,18 @@ class SynthUiContractTests(unittest.TestCase):
         self.assertIn("/synth-ui?source=miniapp", source)
         self.assertIn('"Cache-Control"] = "no-store', source)
 
+    def test_market_lab_score_prefill_is_bounded_and_keeps_user_in_control(self):
+        html = (ROOT / "synth_ui.html").read_text(encoding="utf-8")
+        self.assertIn("function parseMarketScore(raw)", html)
+        self.assertIn("raw.length>720", html)
+        self.assertIn("rawSteps.length>16", html)
+        self.assertIn("notes.length>8", html)
+        self.assertIn("noteToMidi(note)===null", html)
+        self.assertIn("source === 'market-lab'", html)
+        self.assertIn("market_demo", html)
+        self.assertIn("העתק לבוט", html)
+        self.assertIn("window.location.assign('/market-lab')", html)
+
     def test_bot_offers_private_web_app_button(self):
         source = (ROOT / "handlers" / "synth_handler.py").read_text(encoding="utf-8")
         self.assertIn('commands=["synth_ui", "synthui"]', source)
