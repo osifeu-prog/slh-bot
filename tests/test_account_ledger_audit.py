@@ -339,6 +339,85 @@ def test_verified_historical_alpha_consolidation_resolves_only_its_exact_credits
     assert consolidation["observed_balance_delta"] == 10499
     assert consolidation["credits_plus_staked_matches_delta"] is True
     assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
+    assert consolidation["verification_failures"] == []
+    assert db == before
+
+
+def test_unverified_zero_before_admin_test_grant_does_not_resolve_balance_reset():
+    target_uid = UID
+    db = {
+        "users": {target_uid: {"wallet": {"credits": 50.0}}},
+        "ledger": [
+            {
+                "time": "2026-09-09T14:24:11.455955+00:00",
+                "uid": target_uid,
+                "before": 10671.9,
+                "amount": 100.0,
+                "after": 10771.9,
+                "reason": "staking:unstake",
+                "meta": {"command": "unstake", "staked_before": 120.0, "staked_after": 20.0},
+            },
+            {
+                "time": "2026-09-09T17:35:55.403916+00:00",
+                "uid": target_uid,
+                "before": 0.0,
+                "amount": 50.0,
+                "after": 50.0,
+                "reason": "admin:test_grant",
+                "meta": {"source": "giveme"},
+            },
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    finding = result["findings"][0]
+    assert finding["type"] == "POSSIBLE_RESET_OR_CORRECTION_BOUNDARY"
+    assert finding["reconciled"] is False
+    assert finding["delta_to_explain"] == -10771.9
+    evidence = finding["source_evidence"]
+    assert evidence["resolves_gap"] is False
+    assert evidence["source_match_status"] == "NO_DIRECT_SOURCE_MATCH"
+    assert result["current_balance_matches_tail"] is True
+    assert db == before
+
+
+def test_alpha_consolidation_reports_source_wallet_clearance_failure():
+    target_uid = "8789977826"
+    source_uid = "8791275334"
+    db = {
+        "users": {
+            target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+            source_uid: {"wallet": {"credits": 10449.0, "staked": 50.0}},
+        },
+        "ledger": [
+            {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
+             "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-20T14:18:59.208393+00:00", "uid": target_uid,
+             "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": source_uid, "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"time": "2026-08-25T14:20:44.705458+00:00", "uid": target_uid,
+             "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake",
+             "meta": {"staked_before": 136, "staked_after": 236}},
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "BLOCKED"
+    evidence = result["findings"][0]["source_evidence"]
+    consolidation = evidence["alpha_consolidations"][0]
+    assert evidence["resolves_gap"] is False
+    assert consolidation["verification_failures"] == ["source_account_cleared"]
     assert db == before
 
 
@@ -363,7 +442,39 @@ def test_unverified_alpha_consolidation_near_miss_stays_blocked():
     assert result["continuity_break_count"] == 1
     assert result["resolved_gap_count"] == 0
     assert result["findings"][0]["reconciled"] is False
-    assert result["findings"][0]["source_evidence"]["resolves_gap"] is False
+    evidence = result["findings"][0]["source_evidence"]
+    assert evidence["resolves_gap"] is False
+    assert "source_uid_matches" in evidence["alpha_consolidations"][0]["verification_failures"]
+
+
+def test_intervening_rows_are_shown_without_other_accounts_amounts():
+    db = {
+        "users": {UID: {"wallet": {"credits": 8.0}}},
+        "ledger": [
+            {"uid": UID, "before": 10.0, "amount": -2.0, "after": 8.0,
+             "reason": "store:purchase", "meta": {"purchase_id": "owner:before"}},
+            {"uid": "other-user", "before": 500.0, "amount": -5.0, "after": 495.0,
+             "reason": "unrelated:purchase", "meta": {"purchase_id": "other:private"}},
+            {"uid": UID, "before": 13.0, "amount": -5.0, "after": 8.0,
+             "reason": "store:purchase", "meta": {"purchase_id": "owner:after"}},
+        ],
+    }
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    middle = result["findings"][0]["source_evidence"]["intervening_rows"]
+    assert len(middle) == 1
+    assert middle[0]["index"] == 1
+    assert middle[0] == {"index": 1, "uid_matches_owner": False}
+    assert "time" not in middle[0]
+    assert "type" not in middle[0]
+    assert "reason" not in middle[0]
+    assert "domain_hint" not in middle[0]
+    assert "before" not in middle[0]
+    assert "amount" not in middle[0]
+    assert "after" not in middle[0]
+    assert "purchase_id" not in middle[0]
 
 
 def _owner_attestation_gap_db(*, claimed_rows=None, claimed_amount=5.0, attested_uid=UID):

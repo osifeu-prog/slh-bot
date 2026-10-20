@@ -232,6 +232,62 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
     evidence: dict[str, Any] = {}
     ledger = db.get("ledger") if isinstance(db.get("ledger"), list) else []
 
+    # Preserve rows between the two owner Credits rows without exposing other users' amounts.
+    try:
+        context_previous_index = int(previous.get("index", -1))
+        context_next_index = int(next_row.get("index", -1))
+    except (TypeError, ValueError, OverflowError):
+        context_previous_index, context_next_index = -1, -1
+    intervening_rows = []
+    if uid and 0 <= context_previous_index < context_next_index <= len(ledger):
+        for ledger_index in range(context_previous_index + 1, context_next_index):
+            candidate = ledger[ledger_index]
+            if not isinstance(candidate, dict):
+                intervening_rows.append({
+                    "index": ledger_index,
+                    "type": "MALFORMED_ROW",
+                    "uid_matches_owner": False,
+                })
+                continue
+            candidate_uid = str(candidate.get("uid") or "").strip()
+            is_owner_row = candidate_uid == uid
+            if not is_owner_row and str(candidate.get("type") or "") != "alpha_consolidate":
+                # A neighbor's transaction is relevant only as a sequence boundary.
+                # Do not disclose their time, reason, domain, IDs or amounts.
+                intervening_rows.append({
+                    "index": ledger_index,
+                    "uid_matches_owner": False,
+                })
+                continue
+
+            row_summary = _row_summary(ledger_index, candidate)
+            entry = {
+                "index": ledger_index,
+                "time": row_summary["time"],
+                "type": str(candidate.get("type") or "")[:40] or None,
+                "reason": row_summary["reason"],
+                "domain_hint": row_summary["domain_hint"],
+                "uid_matches_owner": is_owner_row,
+            }
+            if is_owner_row:
+                entry.update({
+                    "before": row_summary["before"],
+                    "amount": row_summary["amount"],
+                    "after": row_summary["after"],
+                    "purchase_id": row_summary["purchase_id"],
+                    "transfer_id": row_summary["transfer_id"],
+                    "event_id": row_summary["event_id"],
+                    "idempotency_key": row_summary["idempotency_key"],
+                    "item_id": row_summary["item_id"],
+                })
+            if str(candidate.get("type") or "") == "alpha_consolidate":
+                entry["to_matches_owner"] = str(candidate.get("to") or "").strip() == uid
+                entry["credits_component"] = _number(candidate.get("credits"))
+                entry["staked_moved_component"] = _number(candidate.get("staked_moved"))
+            intervening_rows.append(entry)
+    if intervening_rows:
+        evidence["intervening_rows"] = intervening_rows[:8]
+
     transfer_id = str(previous.get("transfer_id") or next_row.get("transfer_id") or "").strip()
     if transfer_id:
         transfer_rows = []
@@ -337,26 +393,37 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 # The verified historical commit itself deletes the source account.
                 source_account_cleared = True
             verified = _VERIFIED_ALPHA_CONSOLIDATION
-            exact_source_event = (
-                index == verified["event_index"]
-                and previous_index == verified["previous_index"]
-                and next_index == verified["next_index"]
-                and uid == verified["to"]
-                and source_uid == verified["from"]
-                and str(row.get("time") or "") == verified["time"]
-                and str(row.get("reason") or "") == verified["reason"]
-                and credits_component is not None
-                and abs(credits_component - verified["credits"]) <= EPSILON
-                and staked_component is not None
-                and abs(staked_component - verified["staked_moved"]) <= EPSILON
-                and previous_after is not None
-                and abs(previous_after - verified["previous_after"]) <= EPSILON
-                and next_before is not None
-                and abs(next_before - verified["next_before"]) <= EPSILON
-                and observed_delta is not None
-                and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
-                and source_account_cleared
-            )
+            verification_checks = {
+                "row_index_matches": index == verified["event_index"],
+                "previous_index_matches": previous_index == verified["previous_index"],
+                "next_index_matches": next_index == verified["next_index"],
+                "destination_uid_matches": uid == verified["to"],
+                "source_uid_matches": source_uid == verified["from"],
+                "event_time_matches": str(row.get("time") or "") == verified["time"],
+                "event_reason_matches": str(row.get("reason") or "") == verified["reason"],
+                "credits_component_matches": (
+                    credits_component is not None
+                    and abs(credits_component - verified["credits"]) <= EPSILON
+                ),
+                "staked_component_matches": (
+                    staked_component is not None
+                    and abs(staked_component - verified["staked_moved"]) <= EPSILON
+                ),
+                "previous_balance_matches": (
+                    previous_after is not None
+                    and abs(previous_after - verified["previous_after"]) <= EPSILON
+                ),
+                "next_balance_matches": (
+                    next_before is not None
+                    and abs(next_before - verified["next_before"]) <= EPSILON
+                ),
+                "combined_delta_matches": (
+                    observed_delta is not None
+                    and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
+                ),
+                "source_account_cleared": source_account_cleared,
+            }
+            exact_source_event = all(verification_checks.values())
             alpha_consolidations.append({
                 "index": index,
                 "time": str(row.get("time") or "")[:40],
@@ -380,6 +447,10 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                 ),
                 "record_found": True,
                 "resolves_gap": bool(exact_source_event),
+                "verification_checks": verification_checks,
+                "verification_failures": [
+                    name for name, passed in verification_checks.items() if passed is not True
+                ],
                 "resolution_basis": (
                     "VERSION_CONTROLLED_SOURCE_AND_DESTINATION_STATE_MATCH"
                     if exact_source_event else "CONTEXT_ONLY_REQUIRES_RECONCILIATION"

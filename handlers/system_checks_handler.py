@@ -543,6 +543,30 @@ def register(bot, context=None):
                                 f"row={event.get('index', '?')} · basis={basis}"
                                 + (f" · commit={source_commit[:12]}" if source_commit else "")
                             )
+                            verification_failures = event.get("verification_failures")
+                            if isinstance(verification_failures, list) and verification_failures:
+                                safe_failures = [str(name)[:48] for name in verification_failures[:8]]
+                                lines.append("  Alpha verification failed: " + ", ".join(safe_failures))
+                    intervening = evidence.get("intervening_rows")
+                    if isinstance(intervening, list):
+                        for middle in intervening[:3]:
+                            if not isinstance(middle, dict) or middle.get("type") == "alpha_consolidate":
+                                continue
+                            row_id = middle.get("index", "?")
+                            reason = str(middle.get("reason") or middle.get("type") or "UNKNOWN")[:48]
+                            domain = str(middle.get("domain_hint") or "UNKNOWN")[:24]
+                            if middle.get("uid_matches_owner") is True:
+                                lines.append(
+                                    f"  BETWEEN ROWS: #{row_id} owner=true {reason}[{domain}] "
+                                    f"before={middle.get('before')} amount={middle.get('amount')} "
+                                    f"after={middle.get('after')} purchase={str(middle.get('purchase_id') or '-')[:40]} "
+                                    f"transfer={str(middle.get('transfer_id') or '-')[:32]}"
+                                )
+                            else:
+                                lines.append(
+                                    f"  BETWEEN ROWS: #{row_id} owner=false; "
+                                    "other-account details withheld"
+                                )
                     if isinstance(evidence, dict):
                         source_parts = []
                         transfer = evidence.get("transfer")
