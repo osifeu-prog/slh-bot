@@ -70,6 +70,24 @@ class StarsStoreGateTest(unittest.TestCase):
         for item_id in ("emoji_bitcoin", "emoji_slh", "emoji_vip", "agent_os", "esp32_pro"):
             self.assertFalse(stars_gate.store_stars_item_allowed(item_id))
 
+    def test_catalog_filter_hides_unapproved_skus_and_preserves_prices(self):
+        configured = {
+            "course_ethereum": 299,
+            "trade_pro": 499,
+            "emoji_slh": 10,
+            "agent_os": 199,
+            "esp32_pro": 888,
+        }
+        original = dict(configured)
+
+        filtered = stars_gate.filter_store_stars_items(configured)
+
+        self.assertEqual(filtered, {
+            "course_ethereum": 299,
+            "trade_pro": 499,
+        })
+        self.assertEqual(configured, original)
+
     def test_unapproved_item_never_calls_telegram_even_when_global_gate_is_open(self):
         req = {
             "title": "SLH Store · emoji_vip",
