@@ -1,14 +1,5 @@
-from core.exec_policy import is_admin, run_audit, run_gated, telegram_shell_enabled
+from core.exec_policy import is_admin, run_audit
 from core.authority import is_owner
-import shlex
-
-
-def normalize_python_command(cmd):
-    """Wrap simple Python snippets so /e can execute them without manual python3 -c."""
-    stripped = cmd.strip()
-    if stripped.startswith("import ") or stripped.startswith("from "):
-        return "python3 -c " + shlex.quote(stripped)
-    return cmd
 
 
 
@@ -280,12 +271,9 @@ def register(bot):
                 return
 
         if is_owner(uid):
-            if telegram_shell_enabled():
-                ok, out = run_gated(uid, normalize_python_command(cmd), source="e", timeout=15)
-            else:
-                # With shell disabled, the owner can still use the narrow,
-                # non-shell read-only source-command grammar.
-                ok, out = run_audit(uid, cmd, source="e_owner_audit", timeout=15)
+            # /e is deliberately read-only even if an environment flag is
+            # accidentally enabled. Arbitrary shell/Python belongs outside Telegram.
+            ok, out = run_audit(uid, cmd, source="e_owner_audit", timeout=15)
         elif is_admin(uid):
             ok, out = run_audit(uid, cmd, source="e_admin_audit", timeout=15)
         else:
