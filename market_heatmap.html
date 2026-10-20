@@ -11,7 +11,7 @@
 main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:4px 0 18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#8b78ff,#28c7a2);font-size:24px;font-weight:900;color:#05131b}h1{font-size:23px;margin:0;font-weight:900}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted);margin-top:3px}.card{border:1px solid var(--line);border-radius:19px;background:linear-gradient(145deg,#121f33,#0d1727);padding:16px;margin:12px 0}.top-actions{display:flex;gap:8px;flex-wrap:wrap}button,select,input{font:inherit}button{border:1px solid #354a69;border-radius:11px;min-height:40px;padding:9px 13px;color:var(--text);background:#192b45;font-weight:750;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8c9fff;outline-offset:2px}button.primary{background:linear-gradient(135deg,#776af0,#536edc);border-color:transparent}button.soft{background:transparent}button:disabled{opacity:.45;cursor:not-allowed}.status{min-height:24px;font-size:13px;color:var(--muted);margin:10px 0}.status.bad{color:#ff9ca8}.status.good{color:#82e9c4}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid #3a4c67;border-radius:999px;font-size:11px;color:#bfcee5;padding:5px 8px}.disclaimer{border-right:3px solid var(--gold);padding:7px 11px;color:#d9d4bd;background:#28271944;font-size:12px;line-height:1.7}
 .section-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.legend{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px}.dot.green{background:var(--green)}.dot.red{background:var(--red)}.dot.gray{background:#7888a2}
 .tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.tile{min-width:0;border:1px solid #2d405c;border-radius:15px;padding:12px;background:#111e32;display:flex;flex-direction:column;gap:8px;box-shadow:inset 0 1px #ffffff08}.tile.pos{border-color:#247b60;background:linear-gradient(145deg,rgba(23,144,97,var(--heat)),#101a2c 85%)}.tile.neg{border-color:#854351;background:linear-gradient(145deg,rgba(170,58,75,var(--heat)),#101a2c 85%)}.tile.flat{background:#111e32}.tile-top{display:flex;justify-content:space-between;gap:6px;align-items:center}.symbol{font-size:17px;font-weight:950;letter-spacing:.2px;direction:ltr}.group{font-size:10px;color:var(--muted);white-space:nowrap}.tile-name{font-size:12px;color:#d7e2f5;min-height:32px}.price{font-size:16px;font-weight:900;direction:ltr;text-align:right}.move{font-size:14px;font-weight:900;direction:ltr;text-align:right}.pos .move{color:#78e8ba}.neg .move{color:#ff9ca8}.flat .move{color:#c2cddd}.tile-actions{display:flex;gap:6px;margin-top:auto}.tile-actions button{flex:1;min-height:32px;padding:5px 7px;font-size:11px}.watch.active{border-color:#b3a4ff;color:#d8d0ff}.empty{border:1px dashed #445874;color:var(--muted);padding:20px;border-radius:13px;text-align:center}.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:12px}.formgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:9px;align-items:end}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{color:var(--muted);font-size:12px}.field input,.field select{width:100%;min-height:41px;background:#091424;color:var(--text);border:1px solid #354966;border-radius:10px;padding:8px 10px;min-width:0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid #26364d;text-align:right;white-space:nowrap}th{color:var(--muted);font-weight:700}td.ltr{direction:ltr;text-align:right}.positive{color:#78e8ba}.negative{color:#ff9ca8}.foot{font-size:11px;color:var(--muted);line-height:1.7;margin-top:12px}
-@media(max-width:850px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}@media(max-width:520px){body{padding:12px 10px}.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{padding:10px}.card{padding:12px}.formgrid{grid-template-columns:1fr 1fr}.formgrid button{grid-column:1/-1}.tile-name{min-height:28px}h1{font-size:20px}}
+.sonify-panel{border:1px solid #344865;border-radius:15px;padding:13px;margin:14px 0 10px;background:#0b1728}.sonify-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:10px}.sonify-select{display:flex;flex-direction:column;gap:5px;min-width:150px;color:var(--muted);font-size:12px}.sonify-select select{background:#091424;color:var(--text);border:1px solid #354966;border-radius:10px;min-height:40px;padding:7px 10px}.sonify-controls button{min-height:40px}.sonify-panel .status{margin-bottom:0}@media(max-width:520px){.sonify-controls{align-items:stretch}.sonify-select,.sonify-controls button{width:100%}}@media(max-width:850px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}@media(max-width:520px){body{padding:12px 10px}.tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{padding:10px}.card{padding:12px}.formgrid{grid-template-columns:1fr 1fr}.formgrid button{grid-column:1/-1}.tile-name{min-height:28px}h1{font-size:20px}}
 </style>
 </head>
 <body>
@@ -26,6 +26,23 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
   <div id="marketStatus" class="status">טוען נתוני שוק...</div>
   <div id="tiles" class="tiles"></div>
   <div id="empty" class="empty" hidden>אין כרגע נתונים מאומתים להצגה. המערכת לא תציג מחירים לדוגמה כאילו הם נתוני אמת.</div>
+  <div class="sonify-panel" aria-labelledby="sonifyTitle">
+    <div class="section-head"><div><h3 id="sonifyTitle">🔊 השמע את תנועת השוק</h3><div class="sub">עלייה וירידה מתורגמות לצלילים. ניגון דורש לחיצה מפורשת בדפדפן.</div></div></div>
+    <div class="sonify-controls">
+      <label class="sonify-select" for="sonifyWaveform">צליל
+        <select id="sonifyWaveform">
+          <option value="sine">Sine · נקי</option>
+          <option value="triangle">Triangle · רך</option>
+          <option value="sawtooth">Saw · עשיר</option>
+          <option value="square">Square · דיגיטלי</option>
+        </select>
+      </label>
+      <button id="sonifyLive" class="primary" type="button" disabled>🔊 השמע נתונים מאומתים</button>
+      <button id="sonifyDemo" class="soft" type="button">🎵 הדגמה מדומה</button>
+      <button id="sonifyStop" class="soft" type="button" disabled>עצור צליל</button>
+    </div>
+    <div id="sonifyStatus" class="status" role="status" aria-live="polite">הניגון יתחיל רק לאחר לחיצה. ההדגמה אינה נתוני שוק.</div>
+  </div>
   <p class="foot" id="sourceNote">מקור נתונים: ממתין לתשובת השרת.</p>
 </section>
 <div class="grid2">
@@ -103,7 +120,7 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
     const select=$('paperSymbol'),current=select.value;
     select.innerHTML=tiles.map(t=>'<option value="'+esc(t.symbol)+'">'+esc(t.symbol)+' · '+esc(t.name)+'</option>').join('');
     if(tiles.some(t=>t.symbol===current))select.value=current;
-    renderWatchlist();renderPaper();
+    renderWatchlist();renderPaper();updateSonifyAvailability();
   }
   function renderWatchlist(){
     const list=watch(),container=$('watchlist');
@@ -127,6 +144,89 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
     $('paperSummary').innerHTML='<span class="chip">עלות מדומה: $'+fmt(cost,2)+'</span><span class="chip">שווי מדומה: '+(rows.some(r=>r.marketValue===null)?'חלקי':'$'+fmt(value,2))+'</span><span class="chip">פוזיציות: '+rows.length+'</span>';
     if(!rows.length){$('paperTable').innerHTML='<div class="empty">התיק המדומה ריק. בחר נייר וכמות כדי להתחיל ניסוי.</div>';return;}
     $('paperTable').innerHTML='<table><thead><tr><th>נייר</th><th>כמות</th><th>מחיר כניסה</th><th>מחיר נתון</th><th>רווח/הפסד מדומה</th><th></th></tr></thead><tbody>'+rows.map(r=>'<tr><td><b>'+esc(r.symbol)+'</b></td><td class="ltr">'+fmt(r.units,4)+'</td><td class="ltr">$'+fmt(r.entry,2)+'</td><td class="ltr">'+(r.current===null?'לא זמין':'$'+fmt(r.current,2))+'</td><td class="ltr '+(r.pnl===null?'':r.pnl>=0?'positive':'negative')+'">'+(r.pnl===null?'—':(r.pnl>0?'+':'')+'$'+fmt(r.pnl,2))+'</td><td><button type="button" class="soft" data-remove-paper="'+esc(r.symbol)+'">הסר</button></td></tr>').join('')+'</tbody></table>';
+  }
+  const MARKET_SCALE=[
+    {note:'C3',frequency:130.81},{note:'D3',frequency:146.83},{note:'E3',frequency:164.81},
+    {note:'G3',frequency:196.00},{note:'A3',frequency:220.00},{note:'C4',frequency:261.63},
+    {note:'D4',frequency:293.66},{note:'E4',frequency:329.63},{note:'G4',frequency:392.00},
+    {note:'A4',frequency:440.00},{note:'C5',frequency:523.25},{note:'D5',frequency:587.33},
+    {note:'E5',frequency:659.25}
+  ];
+  const DEMO_TILES=[
+    {symbol:'DEMO-UP',change_percent:1.8},{symbol:'DEMO-DOWN',change_percent:-2.4},
+    {symbol:'DEMO-FLAT',change_percent:0.1},{symbol:'DEMO-SURGE',change_percent:3.6},
+    {symbol:'DEMO-DIP',change_percent:-1.2},{symbol:'DEMO-UP-2',change_percent:0.7}
+  ];
+  let audioContext=null,activeOscillators=[],audioRunId=0;
+  function soundItems(tiles){
+    if(!Array.isArray(tiles))return [];
+    return tiles.filter(t=>t&&typeof t.symbol==='string'&&number(t.change_percent)!==null)
+      .slice(0,16).map(tile=>{
+        const move=Math.max(-4,Math.min(4,number(tile.change_percent)));
+        const index=Math.max(0,Math.min(MARKET_SCALE.length-1,6+Math.round(move*1.5)));
+        return {symbol:tile.symbol,move,index,note:MARKET_SCALE[index].note};
+      });
+  }
+  function stopSonification(showStatus=true){
+    audioRunId+=1;
+    for(const oscillator of activeOscillators){try{oscillator.stop();}catch(_){}}
+    activeOscillators=[];
+    $('sonifyStop').disabled=true;
+    if(showStatus)$('sonifyStatus').textContent='ההשמעה הופסקה.';
+  }
+  async function playSonification(tiles,label){
+    const items=soundItems(tiles);
+    if(!items.length){$('sonifyStatus').textContent='אין תנועות מספריות מאומתות להשמעה.';return;}
+    const AudioContextCtor=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextCtor){$('sonifyStatus').textContent='הדפדפן אינו תומך בהשמעת הצליל הזו.';return;}
+    stopSonification(false);
+    const thisRun=audioRunId;
+    try{
+      if(!audioContext)audioContext=new AudioContextCtor();
+      if(audioContext.state==='suspended')await audioContext.resume();
+      const waveform=$('sonifyWaveform').value;
+      const origin=audioContext.currentTime+0.06,stepSeconds=0.26,noteSeconds=0.20;
+      const scheduleTone=(index,start,level)=>{
+        const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();
+        oscillator.type=waveform;
+        oscillator.frequency.setValueAtTime(MARKET_SCALE[index].frequency,start);
+        gain.gain.setValueAtTime(0.0001,start);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.015,level),start+0.018);
+        gain.gain.exponentialRampToValueAtTime(0.0001,start+noteSeconds);
+        oscillator.connect(gain);gain.connect(audioContext.destination);
+        oscillator.onended=()=>{activeOscillators=activeOscillators.filter(node=>node!==oscillator);};
+        oscillator.start(start);oscillator.stop(start+noteSeconds+0.01);activeOscillators.push(oscillator);
+      };
+      items.forEach((item,i)=>{
+        const start=origin+i*stepSeconds;
+        const strength=Math.min(0.28,0.09+Math.abs(item.move)*0.045);
+        scheduleTone(item.index,start,strength);
+        if(Math.abs(item.move)>=2){
+          const interval=item.move>0?4:-4;
+          const harmonyIndex=Math.max(0,Math.min(MARKET_SCALE.length-1,item.index+interval));
+          scheduleTone(harmonyIndex,start,strength*0.45);
+        }
+      });
+      const totalMs=Math.ceil((items.length*stepSeconds+noteSeconds+0.15)*1000);
+      $('sonifyStop').disabled=false;
+      $('sonifyStatus').textContent=label+' · '+items.length+' צעדים · '+items.map(x=>x.symbol+' '+(x.move>0?'+':'')+x.move.toFixed(2)+'% → '+x.note).join(' | ');
+      window.setTimeout(()=>{
+        if(audioRunId===thisRun){
+          activeOscillators=[];
+          $('sonifyStop').disabled=true;
+          $('sonifyStatus').textContent=label+' · הניגון הסתיים. המיפוי הוא המחשה קולית, לא המלצת מסחר.';
+        }
+      },totalMs);
+    }catch(_){
+      stopSonification(false);
+      $('sonifyStatus').textContent='לא ניתן להשמיע כרגע. נסה שוב בלחיצה מפורשת.';
+    }
+  }
+  function updateSonifyAvailability(){
+    const tiles=snapshot&&Array.isArray(snapshot.tiles)?snapshot.tiles:[];
+    const verified=!!(snapshot&&['AVAILABLE','PARTIAL'].includes(snapshot.status)&&soundItems(tiles).length);
+    $('sonifyLive').disabled=!verified;
+    if(!verified)$('sonifyStatus').textContent='ניגון נתוני אמת זמין רק כשמקור הנתונים מספק תנועות מאומתות. אפשר לנסות הדגמה מדומה.';
   }
   function setStatus(text,kind){$('marketStatus').textContent=text;$('marketStatus').className='status '+(kind||'');}
   async function refresh(){
@@ -175,6 +275,9 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
     $('paperStatus').textContent='נוספו '+fmt(units,4)+' יחידות מדומות של '+symbol+' במחיר נתון $'+fmt(tile.price,2)+'. לא נשלחה פקודת מסחר.';
     renderPaper();
   });
+  $('sonifyLive').addEventListener('click',()=>playSonification(snapshot&&snapshot.tiles,'נתוני שוק שסופקו על ידי המקור'));
+  $('sonifyDemo').addEventListener('click',()=>playSonification(DEMO_TILES,'הדגמה מדומה בלבד — לא נתוני שוק'));
+  $('sonifyStop').addEventListener('click',()=>stopSonification());
   $('refresh').addEventListener('click',refresh);
   $('clearWatch').addEventListener('click',()=>{putStore(WATCH_KEY,[]);renderTiles();});
   $('clearPaper').addEventListener('click',()=>{putStore(PAPER_KEY,{});$('paperStatus').textContent='התיק המדומה המקומי אופס.';renderPaper();});
