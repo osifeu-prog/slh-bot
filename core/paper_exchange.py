@@ -25,6 +25,10 @@ MIN_AMOUNT = Decimal("0.01")
 MAX_AMOUNT = Decimal("100000")
 MAX_TRADES = 5000
 MAX_REQUESTS_PER_USER = 1000
+MIN_LIMIT_PRICE = Decimal('0.00000001')
+MAX_LIMIT_PRICE = Decimal('1000000')
+MAX_OPEN_LIMIT_ORDERS_PER_USER = 100
+MAX_PAPER_ORDERS = 10000
 
 
 def _now(now: str | None = None) -> str:
@@ -227,6 +231,139 @@ def _cached_result(sim: dict, user: dict, result: dict, duplicate: bool) -> dict
         "duplicate": duplicate,
         "account": _snapshot(sim, user, str(user.get("_uid") or "")),
     }
+
+
+def _limit_preview(sim: dict, side: str, amount: Decimal) -> dict:
+    pool_credits = _d(sim["pool"]["credits"])
+    pool_slh = _d(sim["pool"]["slh"])
+    fee = _q(amount * FEE_RATE)
+    effective_in = amount - fee
+    if effective_in <= ZERO:
+        raise ValueError("AMOUNT_TOO_SMALL")
+    if side == "buy":
+        slh_out = _q(pool_slh * effective_in / (pool_credits + effective_in))
+        if slh_out <= ZERO:
+            raise ValueError("AMOUNT_TOO_SMALL")
+        return {
+            "amount_slh": slh_out,
+            "amount_credits": amount,
+            "average_price": amount / slh_out,
+            "fee": fee,
+            "fee_asset": "DEMO-CREDITS",
+        }
+    credits_out = _q(pool_credits * effective_in / (pool_slh + effective_in))
+    if credits_out <= ZERO:
+        raise ValueError("AMOUNT_TOO_SMALL")
+    return {
+        "amount_slh": amount,
+        "amount_credits": credits_out,
+        "average_price": credits_out / amount,
+        "fee": fee,
+        "fee_asset": "DEMO-SLH",
+    }
+
+
+def _match_limit_orders(sim: dict, timestamp: str) -> list[dict]:
+    """Match crossed orders FIFO; the execution average must satisfy its limit."""
+    orders = sim["orders"]
+    fills = []
+    # A successful fill changes the pool price. Iterate again so earlier FIFO
+    # orders re-check their limit after later fills move the pool.
+    max_passes = min(len(orders) + 1, MAX_PAPER_ORDERS + 1)
+    for _ in range(max_passes):
+        made_progress = False
+        for order in sorted(
+            [row for row in orders if isinstance(row, dict) and row.get("status") == "OPEN"],
+            key=lambda row: int(row.get("sequence", 0) or 0),
+        ):
+            side = str(order.get("side") or "")
+            uid = str(order.get("uid") or "")
+            if side not in {"buy", "sell"}:
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = "INVALID_ORDER_SIDE"
+                continue
+            pool_price = _d(sim["pool"]["credits"]) / _d(sim["pool"]["slh"])
+            limit_price = _d(order["limit_price"])
+            if (side == "buy" and pool_price > limit_price) or (
+                side == "sell" and pool_price < limit_price
+            ):
+                continue
+
+            reserved_field = "reserved_credits" if side == "buy" else "reserved_slh"
+            wallet_field = "credits" if side == "buy" else "slh"
+            amount = _d(order.get(reserved_field, 0))
+            if amount <= ZERO:
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = "MISSING_RESERVED_AMOUNT"
+                continue
+            user = sim["users"].get(uid)
+            if not isinstance(user, dict) or not isinstance(user.get("wallet"), dict):
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = "ORDER_USER_MISSING"
+                continue
+            fill_request_id = f"paper-limit-fill:{order.get('id')}"
+            if fill_request_id in user.get("requests", {}):
+                # A filled-request cache without a terminal order state signals
+                # inconsistent state. Never debit/release twice.
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = "FILL_REQUEST_ALREADY_EXISTS"
+                continue
+            try:
+                preview = _limit_preview(sim, side, amount)
+            except (InvalidOperation, TypeError, ValueError):
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = "ORDER_PREVIEW_INVALID"
+                continue
+            avg_price = preview["average_price"]
+            if side == "buy" and avg_price > limit_price:
+                continue
+            if side == "sell" and avg_price < limit_price:
+                continue
+
+            wallet = user["wallet"]
+            original_balance = _d(wallet.get(wallet_field, 0))
+            # Unlock into the spendable wallet just for the canonical simulator
+            # trade call. The whole operation is within the same atomic DB update.
+            wallet[wallet_field] = fmt(original_balance + amount)
+            result = trade_in_db(
+                sim_to_db(sim), uid, side, amount, fill_request_id,
+                now=timestamp, _process_limits=False,
+            )
+            if result.get("status") != "FILLED":
+                wallet[wallet_field] = fmt(original_balance)
+                user.get("requests", {}).pop(fill_request_id, None)
+                order["status"] = "REVIEW_REQUIRED"
+                order["last_error"] = str(result.get("error") or "LIMIT_FILL_BLOCKED")
+                order["updated_at"] = timestamp
+                continue
+
+            trade_row = result["trade"]
+            order["status"] = "FILLED"
+            order["reserved_credits"] = "0.00000000"
+            order["reserved_slh"] = "0.00000000"
+            order["filled_at"] = timestamp
+            order["filled_trade_id"] = trade_row["id"]
+            order["updated_at"] = timestamp
+            order.pop("last_error", None)
+            fills.append({
+                "order_id": order["id"],
+                "trade_id": trade_row["id"],
+                "side": side,
+                "amount_slh": trade_row["amount_slh"],
+                "amount_credits": trade_row["amount_credits"],
+                "average_price_credits_per_slh": trade_row["average_price_credits_per_slh"],
+            })
+            made_progress = True
+        if not made_progress:
+            break
+    return fills
+
+
+def sim_to_db(sim: dict) -> dict:
+    """Provide the state root expected by trade_in_db without copying the simulator."""
+    # The caller is operating inside state_manager.atomic_update already.
+    # This deliberately wraps the same mutable simulator object for a nested call.
+    return {"paper_simulation": sim, "users": {}, "ledger": []}
 
 
 def trade_in_db(
