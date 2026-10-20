@@ -113,3 +113,11 @@ def test_owner_notification_has_real_newlines(monkeypatch):
     body = bot.sent[0][1]
     assert "\\n" not in body
     assert "\n" in body
+
+
+def test_component_classifier_does_not_match_ton_inside_button():
+    assert target._component_for_report("The button is broken") == "mini_app"
+
+
+def test_component_classifier_still_matches_standalone_ton():
+    assert target._component_for_report("TON deposit is blocked") == "payments"
