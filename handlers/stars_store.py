@@ -27,7 +27,7 @@ def register(bot):
                 return
             bot.reply_to(
                 m,
-                "שימוש: /buystars <item_id>\\nזמין כרגע ב-Stars: " + ", ".join(available),
+                "שימוש: /buystars <item_id>\nזמין כרגע ב-Stars: " + ", ".join(available),
             )
             return
 
