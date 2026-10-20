@@ -373,6 +373,8 @@ def trade_in_db(
     amount: Any,
     request_id: str,
     now: str | None = None,
+    *,
+    _process_limits: bool = True,
 ) -> dict:
     """Execute an atomic paper AMM market order. Buy amount is quote budget;
     sell amount is base quantity. request_id enables replay protection.
@@ -487,6 +489,8 @@ def trade_in_db(
         del sim["trades"][:-MAX_TRADES]
 
     result = {"status": "FILLED", "trade": trade}
+    if _process_limits:
+        result["limit_fills"] = _match_limit_orders(sim, timestamp)
     _remember(user, request_id, result)
     return _cached_result(sim, user, result, False)
 
