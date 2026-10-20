@@ -80,20 +80,24 @@ def _run_read_only_diagnostic(component: str) -> dict:
             from core.system_checks import check_exchange
 
             result = check_exchange()
+            gate = str(result.get("public_gate") or "UNKNOWN").upper()
+            verdict = str(result.get("verdict") or "UNKNOWN").upper()
+            public_ready = result.get("public_ready") is True
             status = (
                 "PASS"
-                if result.get("ok") is True and result.get("public_ready") is True
+                if result.get("ok") is True and public_ready and gate == "OPEN" and verdict == "OPEN"
                 else "BLOCKED"
             )
             return {
                 "status": status,
-                "scope": "read_only_runtime_snapshot",
+                "scope": "read_only_local_snapshot",
                 "check": "core.system_checks.check_exchange",
                 "checked_at": checked_at,
                 "evidence": {
-                    "public_gate": str(result.get("public_gate") or "UNKNOWN"),
-                    "public_ready": result.get("public_ready") is True,
-                    "verdict": str(result.get("verdict") or "UNKNOWN"),
+                    "public_gate": gate,
+                    "public_ready": public_ready,
+                    "verdict": verdict,
+                    "readiness_only": bool(result.get("ok") is True and public_ready and gate != "OPEN"),
                     "detail": str(result.get("detail") or "no detail")[:300],
                     "account_ledger_status": str(result.get("account_ledger_status") or "UNKNOWN"),
                     "account_ledger_blockers": [
