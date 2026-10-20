@@ -173,17 +173,17 @@ def register(bot):
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
         message = (
-            "🔒 Staking של Credits\\n\\n"
+            "🔒 Staking של Credits\n\n"
             + ACADEMY_NOTE
-            + "\\n\\nCredits נעולים אינם זמינים לשימוש עד לשחרור לפי תנאי הפוזיציה. "
-            "אין הבטחת רווח.\\n\\n"
-            "פקודות:\\n"
-            "/stake <amount> - נעילה ל-30 יום\\n"
-            "/stake_lock <amount> <days> - נעילה לתקופה\\n"
-            "/unstake <position_id> - שחרור לאחר תום הנעילה\\n"
-            "/unstake_lock <position_id> - alias לשחרור\\n"
-            "/positions - הפוזיציות שלך\\n"
-            "/stake_rewards - תגמולים\\n"
+            + "\n\nCredits נעולים אינם זמינים לשימוש עד לשחרור לפי תנאי הפוזיציה. "
+            "אין הבטחת רווח.\n\n"
+            "פקודות:\n"
+            "/stake <amount> - נעילה ל-30 יום\n"
+            "/stake_lock <amount> <days> - נעילה לתקופה\n"
+            "/unstake <position_id> - שחרור לאחר תום הנעילה\n"
+            "/unstake_lock <position_id> - alias לשחרור\n"
+            "/positions - הפוזיציות שלך\n"
+            "/stake_rewards - תגמולים\n"
             "/stake_rewards claim <position_id> - מימוש תגמול חדש"
         )
         mini_app_url = (
