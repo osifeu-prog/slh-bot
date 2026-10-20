@@ -160,7 +160,7 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
   let audioContext=null,activeOscillators=[],audioRunId=0;
   function soundItems(tiles){
     if(!Array.isArray(tiles))return [];
-    return tiles.filter(t=>t&&typeof t.symbol==='string'&&number(t.change_percent)!==null)
+    return tiles.filter(t=>t&&typeof t.symbol==='string'&&t.change_percent!==null&&t.change_percent!==undefined&&t.change_percent!==''&&number(t.change_percent)!==null)
       .slice(0,16).map(tile=>{
         const move=Math.max(-4,Math.min(4,number(tile.change_percent)));
         const index=Math.max(0,Math.min(MARKET_SCALE.length-1,6+Math.round(move*1.5)));
