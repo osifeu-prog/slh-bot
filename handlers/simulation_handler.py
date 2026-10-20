@@ -30,6 +30,7 @@ def _menu():
         types.InlineKeyboardButton("🧾 היסטוריית דמו", callback_data="paper:history"),
         types.InlineKeyboardButton("🏆 לוח מובילים", callback_data="paper:leaderboard"),
     )
+    markup.add(types.InlineKeyboardButton("📌 פקודות Limit", callback_data="paper:orders"))
     return markup
 
 
@@ -74,6 +75,78 @@ def _history_text(rows):
             f"  השפעת מחיר: {paper.compact(row.get('price_impact_pct', 0))}%"
         )
     return "\n".join(lines)
+
+
+def _orders_text(rows):
+    if not rows:
+        return "📌 אין פקודות דמו בחשבון שלך.\n\nאפשר ליצור פקודה דרך /sim_limit_buy או /sim_limit_sell."
+    lines = ["📌 פקודות הדמו שלך", ""]
+    for row in rows:
+        side = "קנייה" if row.get("side") == "buy" else "מכירה"
+        status = {
+            "OPEN": "ממתינה",
+            "REVIEW_REQUIRED": "דורשת בדיקה",
+            "FILLED": "התמלאה",
+            "CANCELLED": "בוטלה",
+        }.get(row.get("status"), str(row.get("status") or "לא ידוע"))
+        lines.append(
+            f"{row['id']} · {side} · {status}\n"
+            f"  מחיר Limit: {paper.compact(row.get('limit_price', 0))}\n"
+            f"  כמות/תקציב: {paper.compact(row.get('amount', 0))}\n"
+            f"  רזרבה נעולה: {paper.compact(row.get('reserved_credits', 0))} Demo Credits"
+            f" / {paper.compact(row.get('reserved_slh', 0))} Demo SLH"
+            + (f"\n  עסקת מילוי: {row['filled_trade_id']}" if row.get("filled_trade_id") else "")
+            + (f"\n  סיבה לבדיקה: {row['last_error']}" if row.get("last_error") else "")
+        )
+    return "\n".join(lines)
+
+
+def _limit_result_text(result):
+    status = result.get("status")
+    error_text = {
+        "INVALID_SIDE": "סוג פקודה לא תקין.",
+        "INVALID_PRICE_OR_AMOUNT": "המחיר והכמות חייבים להיות מספרים תקינים.",
+        "LIMIT_PRICE_OUT_OF_RANGE": "מחיר ה־Limit מחוץ לטווח המותר.",
+        "AMOUNT_OUT_OF_RANGE": "הכמות חייבת להיות בין 0.01 ל־100,000 יחידות דמו.",
+        "INSUFFICIENT_DEMO_CREDITS": "אין מספיק Demo Credits זמינים; לא נוצרה פקודה.",
+        "INSUFFICIENT_DEMO_SLH": "אין מספיק Demo SLH זמינים; לא נוצרה פקודה.",
+        "LIMIT_ORDER_CAP_REACHED": "הגעת למכסת פקודות הדמו הפתוחות/ההיסטוריות.",
+        "ORDER_NOT_FOUND": "הפקודה לא נמצאה בחשבון הדמו שלך.",
+        "ORDER_RESERVATION_INVALID": "הרזרבה אינה תקינה ולכן לא שוחררה. הפקודה דורשת בדיקה.",
+        "ORDER_RESERVATION_MISMATCH": "הרזרבה אינה תואמת לפקודה ולכן לא שוחררה. הפקודה דורשת בדיקה.",
+        "ORDER_STATE_INVALID": "מצב הפקודה לא תקין; לא בוצע שינוי ביתרות.",
+    }
+    if status == "BLOCKED":
+        return "⛔ " + error_text.get(result.get("error"), "הפקודה נחסמה. לא שונו יתרות אמיתיות.")
+    order = result.get("order") or {}
+    side = "קנייה" if order.get("side") == "buy" else "מכירה"
+    status_text = {
+        "ORDER_FILLED": "✅ פקודת ה־Limit התמלאה מיד",
+        "ORDER_PLACED": "🕒 פקודת ה־Limit נפתחה וממתינה",
+        "ORDER_REVIEW_REQUIRED": "⚠️ הפקודה הועברה לבדיקה. הרזרבה נשארת מוגנת.",
+        "CANCELLED": "✅ הפקודה בוטלה והרזרבה הוחזרה",
+        "ALREADY_CANCELLED": "ℹ️ הפקודה כבר בוטלה; לא הוחזר סכום נוסף",
+        "ALREADY_FILLED": "ℹ️ הפקודה כבר התמלאה ולא ניתן לבטל אותה",
+    }.get(status, "ℹ️ מצב הפקודה עודכן")
+    amount_label = "תקציב Demo Credits" if order.get("side") == "buy" else "כמות Demo SLH"
+    text = (
+        f"{status_text}\n\n"
+        f"🧾 מזהה: {order.get('id', '—')}\n"
+        f"↔️ צד: {side}\n"
+        f"🏷️ מחיר Limit: {paper.compact(order.get('limit_price', 0))}\n"
+        f"📦 {amount_label}: {paper.compact(order.get('amount', 0))}\n"
+        f"🔒 רזרבה: {paper.compact(order.get('reserved_credits', 0))} Demo Credits"
+        f" / {paper.compact(order.get('reserved_slh', 0))} Demo SLH"
+    )
+    fills = result.get("limit_fills") or []
+    relevant = next((row for row in fills if row.get("order_id") == order.get("id")), None)
+    if relevant:
+        text += (
+            f"\n\n✅ ביצוע: {relevant['trade_id']}"
+            f"\nמחיר ממוצע בפועל: {paper.compact(relevant['average_price_credits_per_slh'])}"
+        )
+    text += "\n\nלצפייה בפקודות: /sim_orders"
+    return text
 
 
 def _leaderboard_text(rows):
@@ -134,10 +207,15 @@ def register(bot):
                 "🎁 הקצאת פתיחה חד־פעמית: 1,000 Demo Credits + 1,000 Demo SLH.\n"
                 "💱 /sim_buy 100 — קנייה עם תקציב של 100 Demo Credits\n"
                 "💱 /sim_sell 10 — מכירת 10 Demo SLH\n"
-                "👛 /sim_portfolio — תיק ויתרות\n"
+                "🎯 /sim_limit_buy 0.999 50 — פקודת קנייה: מחיר מקסימום 0.999, תקציב 50 Demo Credits\n"
+                "🎯 /sim_limit_sell 1.02 50 — פקודת מכירה: מחיר מינימום 1.02, כמות 50 Demo SLH\n"
+                "📌 /sim_orders — צפייה בפקודות וביתרות נעולות\n"
+                "❌ /sim_cancel PLIM-00000001 — ביטול פקודה והחזרת הרזרבה\n"
+                "👛 /sim_portfolio — תיק, יתרות זמינות ורזרבות\n"
                 "📊 /sim_quote — שער ה־pool והנזילות\n"
                 "🧾 /sim_history — היסטוריית העסקאות\n"
                 "🏆 /sim_leaderboard — לוח מובילים\n\n"
+                "פקודת Limit מתמלאת רק כאשר עסקאות דמו מזיזות את ה־pool דרך המחיר המבוקש וגם מחיר הביצוע הממוצע עומד במגבלתך. אחרת הכסף נשאר נעול עד מילוי או ביטול.\n"
                 "💸 עמלה מדומה: 0.3%. המחיר משתנה בעקבות העסקאות לפי מודל AMM, ועסקה גדולה יכולה ליצור השפעת מחיר.\n\n"
                 "🛡️ אין שימוש ב־Credits האמיתיים, ב־ledger האמיתי, בפקודות הבורסה החיה, בארנק on-chain, בחתימות או בהפקדות. שערי Production אינם משתנים.\n\n"
                 "הסימולטור משתמש במחיר pool מדומה — לא במחיר שוק חי ולא בהבטחת רווח."
@@ -180,6 +258,45 @@ def register(bot):
             print("[PAPER_SIM] trade:", type(exc).__name__)
             bot.reply_to(message, "המסחר המדומה נחסם בגלל בדיקת תקינות. לא בוצע שינוי ביתרות האמיתיות.")
 
+    @bot.message_handler(commands=["sim_limit_buy", "sim_limit_sell"])
+    def limit_order(message):
+        parts = (message.text or "").split()
+        command = parts[0].split("@", 1)[0] if parts else ""
+        side = "buy" if command == "/sim_limit_buy" else "sell"
+        if len(parts) != 3:
+            usage = "/sim_limit_buy <max_price> <demo_credits_budget>" if side == "buy" else "/sim_limit_sell <min_price> <demo_slh_quantity>"
+            bot.reply_to(message, f"שימוש: {usage}\n\nפתח/י /simulation להסבר.")
+            return
+        request_id = f"telegram:{message.chat.id}:{message.message_id}"
+        try:
+            result = paper.place_limit(str(message.from_user.id), side, parts[1], parts[2], request_id)
+            bot.reply_to(message, _limit_result_text(result))
+        except Exception as exc:
+            print("[PAPER_SIM] limit order:", type(exc).__name__)
+            bot.reply_to(message, "פקודת ה־Limit נחסמה בבדיקת תקינות. לא שונו יתרות אמיתיות.")
+
+    @bot.message_handler(commands=["sim_orders"])
+    def list_limit_orders(message):
+        try:
+            bot.reply_to(message, _orders_text(paper.orders(str(message.from_user.id))))
+        except Exception as exc:
+            print("[PAPER_SIM] orders:", type(exc).__name__)
+            bot.reply_to(message, "לא ניתן לקרוא את פקודות הדמו כרגע.")
+
+    @bot.message_handler(commands=["sim_cancel"])
+    def cancel_limit_order(message):
+        parts = (message.text or "").split()
+        if len(parts) != 2:
+            bot.reply_to(message, "שימוש: /sim_cancel PLIM-00000001")
+            return
+        request_id = f"telegram:{message.chat.id}:{message.message_id}"
+        try:
+            result = paper.cancel_order(str(message.from_user.id), parts[1], request_id)
+            bot.reply_to(message, _limit_result_text(result))
+        except Exception as exc:
+            print("[PAPER_SIM] cancel order:", type(exc).__name__)
+            bot.reply_to(message, "ביטול הפקודה נחסם בבדיקת תקינות. יתרות Production לא שונו.")
+
     @bot.message_handler(commands=["sim_history"])
     def history(message):
         try:
@@ -206,6 +323,8 @@ def register(bot):
                 text = _portfolio_text(snapshot) if action == "portfolio" else _quote_text(snapshot)
             elif action == "history":
                 text = _history_text(paper.history(uid))
+            elif action == "orders":
+                text = _orders_text(paper.orders(uid))
             elif action == "leaderboard":
                 text = _leaderboard_text(paper.leaderboard())
             else:
