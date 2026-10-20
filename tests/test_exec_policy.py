@@ -1,10 +1,75 @@
 import os
 import unittest
+from unittest.mock import patch
 
-from core.exec_policy import _audit_path_allowed, is_audit_command, is_dangerous, redact_secrets
+from core.identity import OWNER_TELEGRAM_ID
+from core.exec_policy import (
+    _audit_path_allowed,
+    is_audit_command,
+    is_dangerous,
+    redact_secrets,
+    run_gated,
+    telegram_shell_enabled,
+)
 
 
 class ExecAuditBoundaryTests(unittest.TestCase):
+    def test_telegram_shell_is_closed_by_default_without_database_read(self):
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SLH_TELEGRAM_SHELL_ENABLED", None)
+            with patch("state_manager.load_db") as load_db, patch("core.exec_policy._run") as runner, patch("core.exec_policy.audit"):
+                enabled = telegram_shell_enabled()
+                ok, message = run_gated(
+                    OWNER_TELEGRAM_ID,
+                    "printf shell-probe",
+                    source="unit_test",
+                )
+
+        self.assertFalse(enabled)
+        self.assertFalse(ok)
+        self.assertIn("disabled", message.lower())
+        load_db.assert_not_called()
+        runner.assert_not_called()
+
+    def test_telegram_shell_requires_both_environment_and_database_opt_in(self):
+        with patch.dict(os.environ, {"SLH_TELEGRAM_SHELL_ENABLED": "1"}, clear=False):
+            with patch("state_manager.load_db", return_value={"security": {"e_command_enabled": False}}):
+                self.assertFalse(telegram_shell_enabled())
+            with patch("state_manager.load_db", return_value={"security": {"e_command_enabled": True}}):
+                self.assertTrue(telegram_shell_enabled())
+            with patch("state_manager.load_db", return_value={}):
+                self.assertFalse(telegram_shell_enabled())
+
+    def test_run_gated_never_runs_when_database_switch_is_false(self):
+        with patch.dict(os.environ, {"SLH_TELEGRAM_SHELL_ENABLED": "1"}, clear=False):
+            with patch("state_manager.load_db", return_value={"security": {"e_command_enabled": False}}), patch("core.exec_policy._run") as runner, patch("core.exec_policy.audit"):
+                ok, message = run_gated(
+                    OWNER_TELEGRAM_ID,
+                    "python3 -c 'print(1)'",
+                    source="unit_test",
+                )
+
+        self.assertFalse(ok)
+        self.assertIn("disabled", message.lower())
+        runner.assert_not_called()
+
+    def test_run_gated_executes_only_after_both_opt_ins(self):
+        with patch.dict(os.environ, {"SLH_TELEGRAM_SHELL_ENABLED": "1"}, clear=False):
+            with patch("state_manager.load_db", return_value={"security": {"e_command_enabled": True}}), patch("core.exec_policy._run", return_value=(True, "OK")) as runner:
+                ok, message = run_gated(
+                    OWNER_TELEGRAM_ID,
+                    "printf shell-probe",
+                    source="unit_test",
+                )
+
+        self.assertTrue(ok)
+        self.assertEqual(message, "OK")
+        runner.assert_called_once()
+
+    def test_python_is_not_accepted_as_a_read_only_audit_command(self):
+        self.assertFalse(is_audit_command("python3 -c 'print(1)'"))
+        self.assertFalse(is_audit_command("bash -lc 'id'"))
+
     def test_allowed_source_reads(self):
         self.assertTrue(is_audit_command("cat core/authority.py"))
         self.assertTrue(is_audit_command("grep -r release core/"))
