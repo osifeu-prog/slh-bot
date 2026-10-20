@@ -73,6 +73,12 @@ def build_invoice_request(uid, kind, item_id):
 
 
 def create_invoice_link(req):
+    # A final guard for Mini App and any other callers of this shared authority.
+    # Credits top-ups and VIP subscriptions have separate checkout policy.
+    if str(req.get("payload") or "").startswith("item_"):
+        from core.stars_gate import require_store_stars_sales_open
+        require_store_stars_sales_open()
+
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
         raise RuntimeError("BOT_TOKEN_MISSING")
