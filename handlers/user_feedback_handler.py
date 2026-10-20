@@ -214,6 +214,8 @@ def _triage_report(text: str, category: str) -> dict | None:
 
 def _record(uid, username, first_name, text, category, triage=None) -> dict:
     safe_text = str(text or "").strip()[:MAX_REPORT_LENGTH]
+    if triage is None and str(category or "").lower() == "bug":
+        triage = _triage_report(safe_text, category)
     triage = dict(triage) if isinstance(triage, dict) else None
 
     def mutate(db):
@@ -376,8 +378,7 @@ def register(bot):
             username = str(getattr(user, "username", "") or "")
             first_name = str(getattr(user, "first_name", "") or "")
             category = "feature" if command == "suggest" else "bug"
-            triage = _triage_report(report, category)
-            result = _record(uid, username, first_name, report, category, triage=triage)
+            result = _record(uid, username, first_name, report, category)
             feedback_id = result.get("id", 0)
             persisted_triage = result.get("triage") if isinstance(result.get("triage"), dict) else None
             bot.reply_to(
