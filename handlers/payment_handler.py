@@ -14,6 +14,7 @@ from core.stars_price_authority import (
 )
 from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from core.stars_gate import stars_payments_open, require_stars_payments_open
 
 PROVIDER_TOKEN = ""
 
@@ -29,6 +30,7 @@ def _resolve_stars_package(credits, stars_paid):
 
 def _create_vip_invoice_link(bot, uid):
     """Create a recurring Telegram Stars invoice through the supported TeleBot wrapper."""
+    require_stars_payments_open()
     link = bot.create_invoice_link(
         title="SLH VIP",
         description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
@@ -60,6 +62,9 @@ def _send_vip_invoice(bot, chat_id, uid):
 
 
 def _send_pay_menu(bot, chat_id, uid):
+    if not stars_payments_open():
+        bot.send_message(chat_id, "⛔ תשלומי Stars סגורים כרגע. לא נוצרה חשבונית חדשה.")
+        return
     db = state_manager.load_db()
     if uid not in db.get("users", {}):
         bot.send_message(chat_id, "❌ Please /join first.")
@@ -279,6 +284,15 @@ def register_payment_handlers(bot):
             return
         try:
             _send_vip_invoice(bot, m.chat.id, uid)
+        except RuntimeError as e:
+            if str(e) == "STARS_PAYMENTS_CLOSED":
+                bot.send_message(
+                    m.chat.id,
+                    "⛔ תשלומי Stars סגורים כרגע. לא נוצרה חשבונית חדשה.",
+                )
+            else:
+                print(f"[VIP] invoice error: {type(e).__name__}")
+                bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
         except Exception as e:
             print(f"[VIP] invoice error: {type(e).__name__}")
             bot.send_message(m.chat.id, "⚠️ לא ניתן לפתוח כרגע את מנוי ה-VIP.")
@@ -294,6 +308,13 @@ def register_payment_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
+        if not stars_payments_open():
+            bot.answer_callback_query(
+                call.id,
+                "⛔ תשלומי Stars סגורים כרגע.",
+                show_alert=True,
+            )
+            return
         pack_id = call.data.split("_", 1)[1]
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
@@ -323,6 +344,14 @@ def register_payment_handlers(bot):
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
+        # Final gate before Telegram authorizes a new charge.
+        if not stars_payments_open():
+            bot.answer_pre_checkout_query(
+                query.id,
+                ok=False,
+                error_message="SLH Stars payments are temporarily closed.",
+            )
+            return
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
             item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
@@ -369,6 +398,9 @@ def register_payment_handlers(bot):
 
     @bot.message_handler(content_types=['successful_payment'])
     def successful_payment(m):
+        # Intentionally do not gate already-confirmed payments here. If
+        # Telegram has charged the customer, accounting and safe fulfillment
+        # or recovery must still process the provider-confirmed callback.
         uid = str(m.from_user.id)
         payment = m.successful_payment
         payload = str(payment.invoice_payload or "")
