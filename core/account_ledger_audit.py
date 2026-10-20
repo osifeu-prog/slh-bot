@@ -377,22 +377,25 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             credits_component = _number(row.get("credits"))
             staked_component = _number(row.get("staked_moved"))
             source_uid = str(row.get("from") or "").strip()
-            # If the source account still exists, it must no longer retain the
-            # amounts migrated by this event. Missing/unreadable values fail closed.
+            # The historical commit is the independent evidence for the migration.
+            # Current source-account state is a duplicate-state guard only: an account
+            # may have been recreated later with a different, residual balance. Requiring
+            # literal zero today would turn later activity into a false historical gap.
             users_db = db.get("users")
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
+            verified = _VERIFIED_ALPHA_CONSOLIDATION
             if isinstance(source_user, dict):
                 source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
                 source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
-                source_account_cleared = (
+                source_no_longer_retains_migrated_components = (
                     source_credits is not None and source_staked is not None
-                    and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON
+                    and abs(source_credits - verified["credits"]) > EPSILON
+                    and abs(source_staked - verified["staked_moved"]) > EPSILON
                 )
             else:
-                # The verified historical commit itself deletes the source account.
-                source_account_cleared = True
-            verified = _VERIFIED_ALPHA_CONSOLIDATION
+                # The source user is absent, matching the historical snapshot.
+                source_no_longer_retains_migrated_components = True
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
                 "previous_index_matches": previous_index == verified["previous_index"],
@@ -417,12 +420,29 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     next_before is not None
                     and abs(next_before - verified["next_before"]) <= EPSILON
                 ),
-                "combined_delta_matches": (
+                # The owner sequence is a Credits sequence. Staked is a distinct
+                # balance domain and must never be added to Credits to clear a gap.
+                "credits_component_matches_balance_delta": (
+                    credits_component is not None
+                    and observed_delta is not None
+                    and abs(observed_delta - credits_component) <= EPSILON
+                ),
+                # Diagnostic context only; this combined total is not proof of Credits continuity.
+                "credits_plus_staked_matches_delta_context_only": (
                     observed_delta is not None
                     and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
                 ),
-                "source_account_cleared": source_account_cleared,
+                "source_account_no_longer_retains_migrated_components": source_no_longer_retains_migrated_components,
             }
+            historical_snapshot_matches = all(
+                verification_checks[name] is True
+                for name in (
+                    "row_index_matches", "previous_index_matches", "next_index_matches",
+                    "destination_uid_matches", "source_uid_matches", "event_time_matches",
+                    "event_reason_matches", "credits_component_matches", "staked_component_matches",
+                    "previous_balance_matches", "next_balance_matches",
+                )
+            )
             exact_source_event = all(verification_checks.values())
             alpha_consolidations.append({
                 "index": index,
@@ -439,12 +459,17 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     and observed_delta is not None
                     and abs(credits_component - observed_delta) <= EPSILON
                 ),
-                "credits_plus_staked_matches_delta": (
+                "unexplained_credits_delta": (
+                    round(observed_delta - credits_component, 8)
+                    if credits_component is not None and observed_delta is not None else None
+                ),
+                "credits_plus_staked_matches_delta_context_only": (
                     credits_component is not None
                     and staked_component is not None
                     and observed_delta is not None
                     and abs((credits_component + staked_component) - observed_delta) <= EPSILON
                 ),
+                "historical_snapshot_matches": bool(historical_snapshot_matches),
                 "record_found": True,
                 "resolves_gap": bool(exact_source_event),
                 "verification_checks": verification_checks,
@@ -455,21 +480,24 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     "VERSION_CONTROLLED_SOURCE_AND_DESTINATION_STATE_MATCH"
                     if exact_source_event else "CONTEXT_ONLY_REQUIRES_RECONCILIATION"
                 ),
-                "source_commit": verified["source_commit"] if exact_source_event else None,
-                "source_commit_url": verified["source_commit_url"] if exact_source_event else None,
+                "source_commit": verified["source_commit"] if historical_snapshot_matches else None,
+                "source_commit_url": verified["source_commit_url"] if historical_snapshot_matches else None,
                 "historical_source_wallet": (
                     {"credits": 10449.0, "staked": 50.0}
-                    if exact_source_event else None
+                    if historical_snapshot_matches else None
                 ),
                 "historical_destination_credits": (
                     {"before": 1316.0, "after": 11815.0}
-                    if exact_source_event else None
+                    if historical_snapshot_matches else None
                 ),
                 "note": (
-                    "Exact historical event reconciled against the version-controlled source/destination snapshot; "
-                    "read-only classification only."
-                    if exact_source_event else
-                    "Context only; unverified alpha consolidation rows do not resolve a Credits gap."
+                    "Historical source/destination snapshot matches, but the owner Credits delta must match the Credits component alone; staked cannot be added to Credits. Any residual Credits delta remains unresolved."
+                    if historical_snapshot_matches and not verification_checks["credits_component_matches_balance_delta"]
+                    else (
+                        "Exact historical event reconciled against the version-controlled source/destination snapshot; read-only classification only."
+                        if exact_source_event else
+                        "Context only; unverified alpha consolidation rows do not resolve a Credits gap."
+                    )
                 ),
             })
     if alpha_consolidations:
