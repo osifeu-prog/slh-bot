@@ -417,7 +417,58 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     evidence = result["findings"][0]["source_evidence"]
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
-    assert consolidation["verification_failures"] == ["source_account_cleared"]
+    assert consolidation["verification_failures"] == [
+        "source_account_no_longer_retains_migrated_components"
+    ]
+
+
+def test_verified_alpha_consolidation_allows_a_later_residual_source_balance():
+    target_uid = "8789977826"
+    source_uid = "8791275334"
+    db = {
+        "users": {
+            target_uid: {"wallet": {"credits": 11715.0, "staked": 794.0}},
+            # This is not the original migrated 10449 Credits + 50 staked.
+            # It must not invalidate exact historical transition evidence.
+            source_uid: {"wallet": {"credits": 5.0, "staked": 0.0}},
+        },
+        "ledger": [
+            {"time": "2026-08-20T14:18:40.628968+00:00", "uid": target_uid,
+             "before": 1314.0, "amount": 1.0, "after": 1315.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-20T14:18:59.208393+00:00", "uid": target_uid,
+             "before": 1315.0, "amount": 1.0, "after": 1316.0,
+             "reason": "P0_AUTHORITY_VERIFY"},
+            {"time": "2026-08-22T16:12:41.978584+00:00", "type": "alpha_consolidate",
+             "from": source_uid, "to": target_uid, "credits": 10449,
+             "staked_moved": 50, "reason": "OWNER_ONLY_CREDITS_POLICY"},
+            {"time": "2026-08-25T14:20:44.705458+00:00", "uid": target_uid,
+             "before": 11815.0, "amount": -100.0, "after": 11715.0,
+             "reason": "staking:stake",
+             "meta": {"staked_before": 136, "staked_after": 236}},
+        ],
+    }
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, target_uid)
+
+    assert result["status"] == "PASS"
+    assert result["continuity_break_count"] == 0
+    assert result["observed_discontinuity_count"] == 1
+    assert result["resolved_gap_count"] == 1
+    assert result["blocking_finding_count"] == 0
+    assert result["current_balance_matches_tail"] is True
+    finding = result["findings"][0]
+    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
+    assert finding["reconciled"] is True
+    evidence = finding["source_evidence"]
+    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
+    assert evidence["resolves_gap"] is True
+    consolidation = evidence["alpha_consolidations"][0]
+    assert consolidation["verification_failures"] == []
+    assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
+    # A non-zero current residue is context, not the proof of the migration.
+    assert db == before
     assert db == before
 
 
