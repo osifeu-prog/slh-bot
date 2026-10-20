@@ -221,7 +221,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     if(typeof raw!=='string'||raw.length===0||raw.length>720)return null;
     const rawSteps=raw.split(',');
     if(rawSteps.length<1||rawSteps.length>16)return null;
-    const parsed=rawSteps.map(function(step){return step.trim().split(/\\s+/);});
+    const parsed=rawSteps.map(function(step){return step.trim().split(/\s+/);});
     if(parsed.some(function(notes){
       return notes.length<1||notes.length>8||notes.some(function(note){
         return !/^[A-G][#b]?[0-8]$/.test(note)||noteToMidi(note)===null;
