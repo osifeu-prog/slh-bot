@@ -334,3 +334,70 @@ def test_limit_order_validation_does_not_reserve_on_invalid_request():
     assert result["error"] == "INVALID_PRICE_OR_AMOUNT"
     assert db["paper_simulation"]["orders"] == []
     assert db["paper_simulation"]["users"]["100"]["wallet"]["credits"] == "1000.00000000"
+
+def test_limit_sell_fills_only_when_execution_average_meets_minimum():
+    db = _db()
+    placed = paper.place_limit_in_db(db, "100", "sell", "0.8", "50", "limit-sell-fill-1")
+
+    assert placed["status"] == "ORDER_FILLED"
+    order = placed["order"]
+    assert order["status"] == "FILLED"
+    assert order["reserved_slh"] == "0.00000000"
+    assert order["filled_trade_id"]
+    trade = next(row for row in db["paper_simulation"]["trades"] if row["id"] == order["filled_trade_id"])
+    assert float(trade["average_price_credits_per_slh"]) >= 0.8
+    assert placed["account"]["demo_slh"] == "950.00000000"
+    assert placed["account"]["reserved_demo_slh"] == "0.00000000"
+
+
+def test_v2_paper_state_migration_preserves_existing_balances_trades_and_requests():
+    legacy_trade = {
+        "id": "PSIM-00000007",
+        "uid": "100",
+        "side": "buy",
+        "asset_pair": "DEMO-SLH/DEMO-CREDITS",
+        "amount_slh": "25.00000000",
+        "amount_credits": "30.00000000",
+        "average_price_credits_per_slh": "1.20000000",
+        "fee_amount": "0.09000000",
+        "fee_asset": "DEMO-CREDITS",
+        "request_id": "legacy-request",
+    }
+    legacy_request = {"status": "FILLED", "trade": dict(legacy_trade)}
+    db = {
+        "users": {},
+        "ledger": [{"uid": "100", "before": 12, "amount": 0, "after": 12, "reason": "test:anchor"}],
+        "paper_simulation": {
+            "schema_version": 2,
+            "next_trade_sequence": 8,
+            "pool": {"credits": "1200.00000000", "slh": "900.00000000"},
+            "users": {
+                "100": {
+                    "created_at": "2026-10-01T00:00:00+00:00",
+                    "wallet": {"credits": "123.45000000", "slh": "67.89000000"},
+                    "starting_value_credits": "191.34000000",
+                    "requests": {"legacy-request": legacy_request},
+                    "reset_count": 0,
+                }
+            },
+            "trades": [legacy_trade],
+        },
+    }
+    real_users_before = deepcopy(db["users"])
+    real_ledger_before = deepcopy(db["ledger"])
+
+    snapshot = paper.account_in_db(db, "100", now="2026-10-20T12:00:00+00:00")
+    migrated = db["paper_simulation"]
+
+    assert snapshot["demo_credits"] == "123.45000000"
+    assert snapshot["demo_slh"] == "67.89000000"
+    assert migrated["schema_version"] == 3
+    assert migrated["next_trade_sequence"] == 8
+    assert migrated["next_order_sequence"] == 1
+    assert migrated["pool"] == {"credits": "1200.00000000", "slh": "900.00000000"}
+    assert migrated["users"]["100"]["requests"]["legacy-request"] == legacy_request
+    assert migrated["trades"] == [legacy_trade]
+    assert migrated["orders"] == []
+    assert migrated["users"]["100"]["_uid"] == "100"
+    assert db["users"] == real_users_before
+    assert db["ledger"] == real_ledger_before
