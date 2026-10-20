@@ -6,7 +6,7 @@ import state_manager
 from core import onboarding_rewards
 
 
-def _sandbox(tmp_path, user=None):
+def _sandbox(tmp_path, monkeypatch, user=None):
     path = tmp_path / "db.json"
     db = {
         "users": {
@@ -19,8 +19,8 @@ def _sandbox(tmp_path, user=None):
         "ledger": [],
     }
     path.write_text(json.dumps(db), encoding="utf-8")
-    state_manager.DB_FILE = str(path)
-    state_manager._LOCK_PATH = str(path) + ".lock"
+    monkeypatch.setattr(state_manager, "DB_FILE", str(path))
+    monkeypatch.setattr(state_manager, "_LOCK_PATH", str(path) + ".lock")
     return path
 
 
@@ -29,7 +29,7 @@ def _state(path):
 
 
 def test_unjoined_or_uninitialized_user_cannot_get_signup_bonus(tmp_path):
-    path = _sandbox(tmp_path, {
+    path = _sandbox(tmp_path, monkeypatch, {
         "joined": True,
         "academy": {"courses": {}},
         "wallet": {"credits": 0.0},
@@ -45,7 +45,7 @@ def test_unjoined_or_uninitialized_user_cannot_get_signup_bonus(tmp_path):
 
 
 def test_signup_bonus_is_applied_once_and_uses_canonical_ledger(tmp_path):
-    path = _sandbox(tmp_path)
+    path = _sandbox(tmp_path, monkeypatch)
 
     assert onboarding_rewards.mark_signup_bonus_pending("100")["status"] == "PENDING"
     first = onboarding_rewards.grant_signup_bonus("100")
