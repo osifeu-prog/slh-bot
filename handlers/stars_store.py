@@ -3,6 +3,7 @@ from telebot.types import LabeledPrice
 from store.engine import load_items, resolve_item_id
 from store.stars_purchase_service import get_stars_items, get_stars_price
 from core.stars_price_authority import TELEGRAM_STARS_CURRENCY
+from core.stars_gate import store_stars_sales_open
 
 
 def register(bot):
@@ -23,6 +24,10 @@ def register(bot):
         stars = get_stars_price(item_id)
         if stars is None:
             bot.reply_to(m, "❌ המוצר אינו זמין לרכישה ב-Stars")
+            return
+
+        if not store_stars_sales_open():
+            bot.reply_to(m, "⛔ מכירות החנות ב-Stars סגורות כרגע. לא נוצרה חשבונית חדשה.")
             return
 
         name = item.get("name", item_id)
