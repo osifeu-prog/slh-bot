@@ -187,6 +187,24 @@ def register(bot):
                 )
                 return
 
+            # Mark the one-time Credits gift eligible only after both the
+            # joined profile and initial Academy course have been persisted.
+            signup_bonus_result = {"status": "NOT_PENDING"}
+            try:
+                from core.onboarding_rewards import (
+                    mark_signup_bonus_pending,
+                    grant_signup_bonus,
+                )
+                marker = mark_signup_bonus_pending(uid)
+                if marker.get("status") in {"PENDING", "AWARDED"}:
+                    signup_bonus_result = grant_signup_bonus(uid)
+                else:
+                    signup_bonus_result = marker
+                print("SIGNUP CREDITS BONUS:", signup_bonus_result.get("status"))
+            except Exception as signup_bonus_exc:
+                # A persisted PENDING marker is retried safely on the user's next /start.
+                print("SIGNUP CREDITS BONUS FAILED:", type(signup_bonus_exc).__name__)
+
             try:
                 from core.holiday_campaign import finalize_entry
                 finalized = finalize_entry(uid)
@@ -265,16 +283,22 @@ def register(bot):
 
             user_states.pop(uid, None)
 
+            if signup_bonus_result.get("status") in {"GRANTED", "DUPLICATE", "ALREADY_AWARDED"}:
+                signup_bonus_line = "\\n🎁 מתנת הצטרפות: 5 Credits נזקפו לחשבונך פעם אחת בלבד."
+            else:
+                signup_bonus_line = "\\n🎁 אם מתנת ההצטרפות לא הופיעה, שלח /start שוב כדי לנסות להשלים אותה בבטחה."
+
             bot.reply_to(
                 msg,
-                f"✅ נרשמת בהצלחה, {state['name']}!\n"
-                f"קבוצה: {group}\n\n"
-                "🤖 הסוכן האישי שלך מוכן.\n"
-                "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\n\n"
-                "בחר למטה כדי לפתוח את שיעור 1.\n\n"
-                "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\n\n"
-                "🔗 קבוצת העדכונים הרשמית:\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk\n"
+                f"✅ נרשמת בהצלחה, {state['name']}!\\n"
+                f"קבוצה: {group}\\n\\n"
+                "🤖 הסוכן האישי שלך מוכן.\\n"
+                "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\\n"
+                + signup_bonus_line + "\\n\\n"
+                "בחר למטה כדי לפתוח את שיעור 1.\\n\\n"
+                "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\\n\\n"
+                "🔗 קבוצת העדכונים הרשמית:\\n"
+                "https://t.me/+9VUA_6jMyQcxMGVk\\n"
                 "🏆 /leaderboard",
                 reply_markup=_lesson_keyboard()
             )
