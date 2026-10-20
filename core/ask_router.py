@@ -215,18 +215,100 @@ def _ledger_answer(uid):
             credits = alpha.get("credits")
             staked = alpha.get("staked_moved")
             if isinstance(credits, (int, float)) and isinstance(staked, (int, float)):
-                lines.append(f"Alpha consolidation: {credits:g} Credits + {staked:g} Staked = {credits + staked:g}. התאמה חשבונית אינה מספיקה לאימות מקור ההעברה.")
+                lines.append(f"Alpha consolidation: {credits:g} Credits ו-{staked:g} Staked מופיעים כרכיבים נפרדים. אין להתייחס לסכומם כאל יתרת Credits מוכחת; נדרשת התאמת מקור/יעד.")
                 lines.append("")
+        def fmt_num(value):
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return f"{value:g}"
+            return str(value) if value is not None else "לא ידוע"
+
+        failed_check_labels = {
+            "source_account_cleared": "חשבון המקור אינו מאומת כמאופס",
+            "row_index_matches": "מספר שורת המקור אינו תואם",
+            "previous_index_matches": "שורת היתרה הקודמת אינה תואמת",
+            "next_index_matches": "שורת היתרה הבאה אינה תואמת",
+            "destination_uid_matches": "חשבון היעד אינו תואם",
+            "source_uid_matches": "חשבון המקור אינו תואם",
+            "event_time_matches": "זמן האירוע אינו תואם",
+            "event_reason_matches": "סיבת האירוע אינה תואמת",
+            "credits_component_matches": "רכיב Credits אינו תואם",
+            "staked_component_matches": "רכיב Staked אינו תואם",
+            "observed_balance_delta_matches": "השינוי ברצף היתרות אינו תואם",
+        }
+
         for finding in findings:
             previous = finding.get("previous") or {}
             following = finding.get("next") or {}
             evidence = finding.get("source_evidence") or {}
-            delta = finding.get("delta_to_explain", finding.get("delta", "לא ידוע"))
+            delta = finding.get("delta_to_explain", finding.get("delta"))
             source = evidence.get("source_match_status") or finding.get("source_match_status") or "לא צוין"
             resolves = finding.get("resolves_gap")
             if resolves is None:
                 resolves = evidence.get("resolves_gap", False)
-            lines.append(f"• {finding.get('type', 'FINDING')}: #{previous.get('index', '?')} → #{following.get('index', '?')}; פער={delta}; מקור={source}; resolves_gap={bool(resolves)}")
+
+            lines.append(
+                f"• {finding.get('type', 'FINDING')}: "
+                f"#{previous.get('index', '?')} {previous.get('reason', '?')} "
+                f"(after={fmt_num(previous.get('after'))}) → "
+                f"#{following.get('index', '?')} {following.get('reason', '?')} "
+                f"(before={fmt_num(following.get('before'))}); "
+                f"פער={fmt_num(delta)}; מקור={source}; "
+                f"resolves_gap={bool(resolves)}"
+            )
+
+            alpha_items = evidence.get("alpha_consolidations", [])
+            if isinstance(alpha_items, list):
+                for item in alpha_items:
+                    if not isinstance(item, dict):
+                        continue
+                    credits = item.get("credits_component")
+                    staked = item.get("staked_moved_component")
+                    lines.append(
+                        f"  alpha_consolidate בשורה #{item.get('index', '?')}: "
+                        f"{fmt_num(credits)} Credits ו-{fmt_num(staked)} Staked כרכיבים נפרדים."
+                    )
+                    observed_delta = item.get("observed_balance_delta")
+                    if observed_delta is not None:
+                        lines.append(
+                            f"  השינוי ברצף ה-Credits בין השורות הוא {fmt_num(observed_delta)}. "
+                            "אין לחבר Credits ו-Staked כאילו היו אותו סוג יתרה; התאמה מספרית לבדה אינה מאמתת את המעבר."
+                        )
+                    failures = item.get("verification_failures", [])
+                    if isinstance(failures, list) and failures:
+                        labels = [
+                            failed_check_labels.get(str(name), str(name))
+                            for name in failures
+                        ]
+                        lines.append("  בדיקות אימות שנכשלו: " + "; ".join(labels) + ".")
+                    if item.get("resolves_gap") is not True:
+                        lines.append("  אירוע האיחוד הוא הקשר בלבד; הפער נשאר פתוח ולא בוצע תיקון.")
+
+            attestation = evidence.get("owner_attestation_context")
+            if isinstance(attestation, dict):
+                lines.append(
+                    "  נמצאה הצהרת בעלים תואמת כהקשר בלבד; "
+                    "אין ראיה עצמאית (independent_source_evidence=False), ולכן הפער לא נפתר."
+                )
+
+            transfer = evidence.get("transfer")
+            if isinstance(transfer, dict):
+                rows = transfer.get("ledger_rows")
+                keys = transfer.get("processed_keys")
+                row_count = len(rows) if isinstance(rows, list) else 0
+                key_count = len(keys) if isinstance(keys, list) else 0
+                lines.append(
+                    f"  הקשר העברה מקושר: {row_count} רשומות ו-{key_count} מפתחות עיבוד. "
+                    "הקישור לבדו אינו מוכיח את הסכום החסר."
+                )
+
+            purchase = evidence.get("purchase")
+            if isinstance(purchase, dict) and purchase.get("record_found") is True:
+                payout = purchase.get("seller_payout")
+                payout_text = fmt_num(payout) if payout is not None else "לא ידוע"
+                lines.append(
+                    f"  הקשר רכישה: status={purchase.get('status', 'UNKNOWN')}, "
+                    f"seller payout={payout_text}; זהו הקשר בלבד ולא הוכחה ליישוב הפער."
+                )
         if not findings:
             lines.append("לא הוחזרו ממצאים בדוח הזה; יש לאמת את הסטטוס מול פקודת הבדיקה הייעודית.")
         lines.extend(["", "הדוח לקריאה בלבד. אין לשנות יתרות או ליצור רשומות התאמה כדי להפוך BLOCKED ל-PASS."])
