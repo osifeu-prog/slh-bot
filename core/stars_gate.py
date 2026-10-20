@@ -54,3 +54,17 @@ def require_store_stars_sales_open(item_id) -> None:
         raise RuntimeError("STARS_STORE_SALES_CLOSED")
     if not store_stars_item_allowed(item_id):
         raise RuntimeError("STARS_STORE_ITEM_NOT_AVAILABLE")
+
+
+STARS_PAYMENTS_ENV = "STARS_PAYMENTS_OPEN"
+
+
+def stars_payments_open() -> bool:
+    """Return true only when new Telegram Stars checkout is explicitly enabled."""
+    return os.getenv(STARS_PAYMENTS_ENV, "0").strip() == "1"
+
+
+def require_stars_payments_open() -> None:
+    """Fail closed before any new Stars invoice is created or pre-checkout approved."""
+    if not stars_payments_open():
+        raise RuntimeError("STARS_PAYMENTS_CLOSED")
