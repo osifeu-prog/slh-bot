@@ -1,9 +1,10 @@
-"""Owner-only Telegram reactions for incoming messages.
+"""Owner-only reactions on messages sent by the primary bot to its owner.
 
-A first-position handler adds one context-sensitive reaction and returns
-ContinueHandling so all existing commands and natural-chat handlers still run.
-Other users, groups, and additional bots are unaffected. Set
-SLH_OWNER_MESSAGE_REACTIONS=0 to disable this feature.
+The wrapper observes the actual Message returned by send_message, so the
+reaction targets the bot's response rather than the incoming owner message.
+Reply helpers that delegate to send_message are covered too. Other users,
+groups, additional bots, and normal message dispatch are unaffected.
+Set SLH_OWNER_MESSAGE_REACTIONS=0 to disable this feature.
 """
 from __future__ import annotations
 
@@ -13,16 +14,11 @@ import re
 
 from core.authority import is_owner
 from telebot import types
-from telebot.handler_backends import ContinueHandling
 
 _LOGGER = logging.getLogger(__name__)
 _FAILURE_LOGGED = False
+_REGISTERED_ATTRIBUTE = "_slh_owner_reply_reactions_registered"
 _FALSE_VALUES = {"0", "false", "no", "off", "disabled"}
-_OWNER_MESSAGE_CONTENT_TYPES = [
-    "text", "audio", "document", "photo", "sticker", "video", "video_note",
-    "voice", "contact", "location", "venue", "animation", "dice", "game",
-    "poll", "story", "web_app_data",
-]
 
 
 def reactions_enabled() -> bool:
@@ -30,17 +26,18 @@ def reactions_enabled() -> bool:
     return value not in _FALSE_VALUES
 
 
-def choose_reaction(message) -> str:
+def choose_reaction(message_or_text) -> str:
     """Pick one Telegram-supported reaction from bounded, local message cues."""
-    text = str(
-        getattr(message, "text", None)
-        or getattr(message, "caption", None)
-        or ""
-    ).strip()
+    if isinstance(message_or_text, str):
+        text = message_or_text.strip()
+    else:
+        text = str(
+            getattr(message_or_text, "text", None)
+            or getattr(message_or_text, "caption", None)
+            or ""
+        ).strip()
     lowered = text.lower()
 
-    # Diagnostic commands should signal that the message was noticed and will
-    # be inspected. Telegram's reaction catalog is stricter than normal emoji.
     if lowered.startswith(("/e ", "/check_", "/release", "/audit", "/go_live_report")):
         return "👀"
 
@@ -69,45 +66,62 @@ def choose_reaction(message) -> str:
 
 
 def register(bot, context=None):
-    """Register a first-position acknowledgement handler for the primary bot."""
+    """Wrap the primary bot's send_message to react to actual owner-directed replies."""
     context = context if isinstance(context, dict) else {}
     if str(context.get("bot_name") or "") != "Me_ad_main":
         return False
 
-    def owner_message_reaction(message):
+    if getattr(bot, _REGISTERED_ATTRIBUTE, False):
+        return True
+
+    original_send_message = bot.send_message
+
+    def send_message_with_owner_reaction(*args, **kwargs):
         global _FAILURE_LOGGED
+
+        # Never change message delivery: reaction failures are deliberately
+        # contained after the underlying send succeeds.
+        sent = original_send_message(*args, **kwargs)
         try:
-            if reactions_enabled():
-                sender = getattr(message, "from_user", None)
-                if is_owner(getattr(sender, "id", None)):
-                    chat = getattr(message, "chat", None)
-                    if getattr(chat, "type", None) == "private":
-                        chat_id = getattr(chat, "id", None)
-                        message_id = getattr(message, "message_id", None)
-                        if chat_id is not None and isinstance(message_id, int):
-                            bot.set_message_reaction(
-                                chat_id=chat_id,
-                                message_id=message_id,
-                                reaction=[
-                                    types.ReactionTypeEmoji(
-                                        emoji=choose_reaction(message)
-                                    )
-                                ],
-                            )
+            chat_id = kwargs.get("chat_id")
+            if chat_id is None and args:
+                chat_id = args[0]
+
+            # The owner's private-chat ID is positive and passes canonical
+            # owner authority. This excludes group replies and other users.
+            if (
+                reactions_enabled()
+                and chat_id is not None
+                and str(chat_id).lstrip("+").isdigit()
+                and int(chat_id) > 0
+                and is_owner(chat_id)
+            ):
+                message_id = getattr(sent, "message_id", None)
+                if isinstance(message_id, int):
+                    sent_chat = getattr(sent, "chat", None)
+                    target_chat_id = getattr(sent_chat, "id", chat_id)
+                    text = getattr(sent, "text", None)
+                    if text is None:
+                        text = kwargs.get("text")
+                    if text is None and len(args) > 1:
+                        text = args[1]
+                    bot.set_message_reaction(
+                        chat_id=target_chat_id,
+                        message_id=message_id,
+                        reaction=[
+                            types.ReactionTypeEmoji(emoji=choose_reaction(text or ""))
+                        ],
+                    )
         except Exception as exc:
-            # Reaction failures must never block existing handlers or spam logs.
+            # Reaction failure must not hide a successful reply or spam logs.
             if not _FAILURE_LOGGED:
                 _LOGGER.warning(
-                    "Owner message reaction unavailable (%s); message handling continues",
+                    "Owner reply reaction unavailable (%s); message delivery continues",
                     type(exc).__name__,
                 )
                 _FAILURE_LOGGED = True
+        return sent
 
-        # Critical: preserve normal command and natural-chat processing.
-        return ContinueHandling()
-
-    bot.message_handler(
-        func=lambda _message: True,
-        content_types=_OWNER_MESSAGE_CONTENT_TYPES,
-    )(owner_message_reaction)
+    bot.send_message = send_message_with_owner_reaction
+    setattr(bot, _REGISTERED_ATTRIBUTE, True)
     return True
