@@ -13,7 +13,7 @@ from core.stars_price_authority import (
     resolve_credit_pack,
 )
 from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
-from core.stars_gate import store_stars_item_sales_open
+from core.stars_gate import store_stars_item_sales_open, require_stars_payments_open, stars_payments_open
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
@@ -30,6 +30,7 @@ def _resolve_stars_package(credits, stars_paid):
 
 def _create_vip_invoice_link(bot, uid):
     """Create a recurring Telegram Stars invoice through the supported TeleBot wrapper."""
+    require_stars_payments_open()
     link = bot.create_invoice_link(
         title="SLH VIP",
         description="SLH VIP: 499 Stars לחודש + חבילת השקה מלאה עד 31.10.",
@@ -61,6 +62,9 @@ def _send_vip_invoice(bot, chat_id, uid):
 
 
 def _send_pay_menu(bot, chat_id, uid):
+    if not stars_payments_open():
+        bot.send_message(chat_id, "⛔ תשלומי Telegram Stars סגורים כרגע. לא נוצרה חשבונית חדשה.")
+        return
     db = state_manager.load_db()
     if uid not in db.get("users", {}):
         bot.send_message(chat_id, "❌ Please /join first.")
@@ -295,6 +299,9 @@ def register_payment_handlers(bot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
     def payment_callback(call):
+        if not stars_payments_open():
+            bot.answer_callback_query(call.id, "תשלומי Stars סגורים כרגע.")
+            return
         pack_id = call.data.split("_", 1)[1]
         if pack_id not in STARS_PACKS:
             bot.answer_callback_query(call.id, "Invalid package.")
@@ -324,6 +331,13 @@ def register_payment_handlers(bot):
 
     @bot.pre_checkout_query_handler(func=lambda query: True)
     def pre_checkout(query: PreCheckoutQuery):
+        if not stars_payments_open():
+            bot.answer_pre_checkout_query(
+                query.id,
+                ok=False,
+                error_message="New Stars checkouts are currently closed.",
+            )
+            return
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
             item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
