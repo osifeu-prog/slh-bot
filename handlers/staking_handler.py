@@ -1,6 +1,6 @@
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -71,7 +71,7 @@ def _send_stake_confirmation(bot, msg, uid, amount, lock_days):
 def _unlock_label(value):
     try:
         return datetime.fromtimestamp(
-            float(value), tz=__import__("datetime").timezone.utc
+            float(value), tz=timezone.utc
         ).astimezone(ZoneInfo("Asia/Jerusalem")).strftime("%d/%m/%Y %H:%M")
     except (TypeError, ValueError, OverflowError, OSError):
         return "לא זמין"
