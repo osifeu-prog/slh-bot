@@ -225,3 +225,112 @@ def test_simulation_schema_version_fails_closed_on_older_or_unknown_state():
     else:
         raise AssertionError("unknown schema must fail closed")
     assert db["paper_simulation"]["schema_version"] == 1
+
+
+
+def test_limit_buy_reserves_demo_credits_and_can_be_cancelled_once():
+    db = _db()
+    users_before = deepcopy(db["users"])
+    ledger_before = deepcopy(db["ledger"])
+    placed = paper.place_limit_in_db(db, "100", "buy", "0.5", "50", "limit-buy-1")
+    order = placed["order"]
+
+    assert placed["status"] == "ORDER_PLACED"
+    assert order["id"] == "PLIM-00000001"
+    assert order["status"] == "OPEN"
+    assert order["reserved_credits"] == "50.00000000"
+    assert order["reserved_slh"] == "0.00000000"
+    account = placed["account"]
+    assert account["demo_credits"] == "950.00000000"
+    assert account["reserved_demo_credits"] == "50.00000000"
+    assert db["users"] == users_before
+    assert db["ledger"] == ledger_before
+
+    cancelled = paper.cancel_order_in_db(db, "100", order["id"], "cancel-1")
+    assert cancelled["status"] == "CANCELLED"
+    assert cancelled["account"]["demo_credits"] == "1000.00000000"
+    assert cancelled["account"]["reserved_demo_credits"] == "0.00000000"
+
+    again = paper.cancel_order_in_db(db, "100", order["id"], "cancel-2")
+    assert again["status"] == "ALREADY_CANCELLED"
+    assert again["account"]["demo_credits"] == "1000.00000000"
+    assert len(db["paper_simulation"]["orders"]) == 1
+
+
+def test_limit_sell_reserves_demo_slh_and_cancellation_releases_it():
+    db = _db()
+    placed = paper.place_limit_in_db(db, "100", "sell", "2", "10", "limit-sell-1")
+    order = placed["order"]
+
+    assert placed["status"] == "ORDER_PLACED"
+    assert order["reserved_slh"] == "10.00000000"
+    assert placed["account"]["demo_slh"] == "990.00000000"
+    assert placed["account"]["reserved_demo_slh"] == "10.00000000"
+
+    cancelled = paper.cancel_order_in_db(db, "100", order["id"], "cancel-sell-1")
+    assert cancelled["status"] == "CANCELLED"
+    assert cancelled["account"]["demo_slh"] == "1000.00000000"
+    assert cancelled["account"]["reserved_demo_slh"] == "0.00000000"
+
+
+def test_limit_order_fills_only_when_average_execution_respects_limit():
+    db = _db()
+    placed = paper.place_limit_in_db(db, "100", "buy", "1.2", "50", "limit-fill-1")
+
+    assert placed["status"] == "ORDER_FILLED"
+    order = placed["order"]
+    assert order["status"] == "FILLED"
+    assert order["reserved_credits"] == "0.00000000"
+    assert order["filled_trade_id"]
+    trade = next(row for row in db["paper_simulation"]["trades"] if row["id"] == order["filled_trade_id"])
+    assert float(trade["average_price_credits_per_slh"]) <= 1.2
+    assert placed["account"]["demo_credits"] == "950.00000000"
+    assert placed["account"]["reserved_demo_credits"] == "0.00000000"
+
+
+def test_limit_buy_waits_then_fills_after_other_demo_trade_moves_pool():
+    db = _db()
+    placed = paper.place_limit_in_db(db, "100", "buy", "1.0029", "50", "limit-wait-1")
+    assert placed["status"] == "ORDER_PLACED"
+    assert placed["order"]["status"] == "OPEN"
+
+    mover = paper.trade_in_db(db, "200", "sell", "100", "market-mover-1")
+    assert mover["status"] == "FILLED"
+
+    current = next(row for row in db["paper_simulation"]["orders"] if row["id"] == placed["order"]["id"])
+    assert current["status"] == "FILLED"
+    fill = next(row for row in db["paper_simulation"]["trades"] if row["id"] == current["filled_trade_id"])
+    assert float(fill["average_price_credits_per_slh"]) <= 1.0029
+
+
+def test_limit_order_request_is_idempotent_and_does_not_reserve_twice():
+    db = _db()
+    first = paper.place_limit_in_db(db, "100", "buy", "0.5", "100", "same-limit-request")
+    credits_after_first = first["account"]["demo_credits"]
+    order_count = len(db["paper_simulation"]["orders"])
+    replay = paper.place_limit_in_db(db, "100", "buy", "0.5", "100", "same-limit-request")
+
+    assert replay["duplicate"] is True
+    assert replay["order"]["id"] == first["order"]["id"]
+    assert replay["account"]["demo_credits"] == credits_after_first
+    assert len(db["paper_simulation"]["orders"]) == order_count
+
+
+def test_limit_order_wrong_user_cannot_cancel_another_users_order():
+    db = _db()
+    placed = paper.place_limit_in_db(db, "100", "buy", "0.5", "50", "owner-order")
+    result = paper.cancel_order_in_db(db, "200", placed["order"]["id"], "attacker-cancel")
+
+    assert result["status"] == "BLOCKED"
+    assert result["error"] == "ORDER_NOT_FOUND"
+    assert next(row for row in db["paper_simulation"]["orders"] if row["id"] == placed["order"]["id"])["status"] == "OPEN"
+    assert db["paper_simulation"]["users"]["200"]["wallet"]["credits"] == "1000.00000000"
+
+
+def test_limit_order_validation_does_not_reserve_on_invalid_request():
+    db = _db()
+    result = paper.place_limit_in_db(db, "100", "buy", "NaN", "50", "invalid-limit")
+    assert result["status"] == "BLOCKED"
+    assert result["error"] == "INVALID_PRICE_OR_AMOUNT"
+    assert db["paper_simulation"]["orders"] == []
+    assert db["paper_simulation"]["users"]["100"]["wallet"]["credits"] == "1000.00000000"
