@@ -275,15 +275,117 @@ def audit(user_id, cmd, source, result):
         pass
 
 
-def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000):
+def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000,
+              intervention_request_id=None):
+    """Run an owner command through the persisted human-intervention lifecycle.
+
+    Simple, conservatively classified read-only commands remain available.
+    All other commands need an exact, time-limited owner approval by default.
+    """
     if not is_owner(user_id):
         return False, "Owner only."
-    if not rate_limit_ok(user_id):
+
+    from core import human_intervention as intervention
+
+    command = str(cmd or "")
+    user_key = str(user_id)
+    request_id = str(intervention_request_id or "").strip() or None
+
+    # An approved request is bound to its owner and exact command. It does not
+    # get a second rate-limit failure after the owner presses Approve.
+    if request_id:
+        request = intervention.get_request(request_id)
+        if not isinstance(request, dict):
+            return False, "HUMAN_APPROVAL_INVALID: request not found."
+        if str(request.get("requested_by", "")) != user_key:
+            return False, "HUMAN_APPROVAL_INVALID: owner/request mismatch."
+        if request.get("status") != "approved_for_execution":
+            return False, "HUMAN_APPROVAL_NOT_VALID: request is not approved for execution."
+        if request.get("command") != command:
+            return False, "HUMAN_APPROVAL_INVALID: command mismatch."
+    elif not rate_limit_ok(user_id):
         return False, "Too fast."
-    if is_dangerous(cmd):
-        audit(user_id, cmd, source, "blocked")
-        return False, "Command blocked."
-    return _run(cmd, user_id, source, timeout, max_output)
+
+    if is_dangerous(command):
+        if request_id:
+            try:
+                intervention.fail_execution_request(
+                    request_id, user_key, "DANGEROUS_COMMAND_BLOCKED"
+                )
+            except Exception:
+                pass
+        audit(user_id, command, source, "blocked")
+        return False, "Command blocked by the execution safety policy."
+
+    action_request_id = request_id
+    try:
+        if action_request_id:
+            claim = intervention.claim_execution(action_request_id, user_key, command)
+            if not claim.get("ok"):
+                return False, "HUMAN_APPROVAL_NOT_VALID: " + str(claim.get("error", "UNKNOWN"))
+        elif not intervention.is_read_only_command(command):
+            request = intervention.create_execution_request(
+                user_key, command, source=source
+            )
+            action_request_id = request["id"]
+            if request.get("requires_approval"):
+                return (
+                    False,
+                    "HUMAN_APPROVAL_REQUIRED\n"
+                    f"ID: {action_request_id}\n"
+                    "Review the request with /intervention show "
+                    f"{action_request_id}, then approve with "
+                    f"/intervention approve {action_request_id} or deny it.",
+                )
+            claim = intervention.claim_execution(action_request_id, user_key, command)
+            if not claim.get("ok"):
+                intervention.fail_execution_request(
+                    action_request_id, user_key,
+                    "AUTO_APPROVED_REQUEST_COULD_NOT_BE_CLAIMED",
+                )
+                return False, "HUMAN_INTERVENTION_BLOCKED: " + str(claim.get("error", "UNKNOWN"))
+    except Exception as exc:
+        audit(user_id, command, source, "human_intervention_unavailable")
+        return (
+            False,
+            "HUMAN_INTERVENTION_UNAVAILABLE — command was not executed. "
+            f"Reason: {type(exc).__name__}",
+        )
+
+    ok, output = _run(command, user_id, source, timeout, max_output)
+    if not action_request_id:
+        return ok, output
+
+    try:
+        lifecycle = intervention.record_execution_result(
+            action_request_id,
+            user_key,
+            success=bool(ok),
+            result_code="exit_success" if ok else "exit_failure",
+        )
+    except Exception as exc:
+        return (
+            False,
+            "ACTION_RESULT_NOT_PERSISTED — command may already have run; "
+            "do not retry blindly. Reconcile request "
+            f"{action_request_id}. ({type(exc).__name__})\n{output}",
+        )
+
+    if not lifecycle.get("ok"):
+        return (
+            False,
+            "ACTION_LIFECYCLE_UNRESOLVED — command may already have run; "
+            "do not retry blindly. Reconcile request "
+            f"{action_request_id}. ({lifecycle.get('error', 'UNKNOWN')})\n{output}",
+        )
+
+    if ok and lifecycle.get("status") == "executed_pending_completion":
+        output = (
+            output
+            + "\n\n⏸ הפעולה בוצעה אך טרם סומנה כהושלמה.\n"
+            + f"לאישור סיום: /intervention complete {action_request_id}"
+        )
+    return ok, output
 
 
 def run_audit(user_id, cmd, source="audit", timeout=15, max_output=4000):
@@ -323,7 +425,7 @@ def _run(cmd, user_id, source, timeout, max_output):
         if len(output) > max_output:
             output = output[:max_output] + "\n... truncated"
         audit(user_id, cmd, source, f"exit_{result.returncode}")
-        return True, output or "(no output)"
+        return result.returncode == 0, output or "(no output)"
     except Exception as e:
         audit(user_id, cmd, source, f"error_{type(e)}")
         return False, f"Error: {e}"

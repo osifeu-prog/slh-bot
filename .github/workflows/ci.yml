@@ -171,6 +171,13 @@ jobs:
           python -m unittest tests.test_mqtt_listener tests.test_mcp_mqtt -v
           echo "MQTT listener + MCP status contracts: OK"
 
+      - name: Verify fail-closed human intervention lifecycle
+        run: |
+          set -e
+          python -m py_compile core/human_intervention.py handlers/human_intervention_handler.py
+          python -m unittest tests.test_human_intervention -v
+          echo "Human intervention gates: OK"
+
       - name: Run read-only revenue recovery audit tests
         run: |
           python -m unittest tests.test_revenue_recovery_audit -v
