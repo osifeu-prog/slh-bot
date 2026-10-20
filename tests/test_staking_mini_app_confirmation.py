@@ -27,3 +27,19 @@ def test_mini_app_staking_discloses_variable_revenue_share_without_promising_yie
     assert "לא ניתן להציג אחוז תשואה צפוי אמין מראש" in source
     assert 'onclick="confirmStake()"' in source
     assert 'onclick="cancelStake()"' in source
+
+
+
+def test_mini_app_disables_cancel_during_inflight_stake_and_keeps_retry_idempotent():
+    source = (ROOT / "mini_app.html").read_text(encoding="utf-8")
+    confirm_start = source.index("async function confirmStake(){")
+    cancel_start = source.index("function cancelStake(){", confirm_start)
+    confirm = source[confirm_start:cancel_start]
+    cancel_end = source.index("async function unstakePosition(positionId){", cancel_start)
+    cancel = source[cancel_start:cancel_end]
+
+    assert "__stakeConfirmationInFlight=true" in confirm
+    assert "cancelButton.disabled=true" in confirm
+    assert "client_request_id:pending.requestId" in confirm
+    assert "__stakeConfirmationInFlight)return" in cancel
+    assert "בדוק/י /positions לפני ניסיון נוסף" in cancel
