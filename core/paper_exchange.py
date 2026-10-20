@@ -501,6 +501,248 @@ def trade(uid: str, side: str, amount: Any, request_id: str) -> dict:
     )
 
 
+def _order_view(order: dict) -> dict:
+    return {
+        "id": str(order.get("id") or ""),
+        "side": str(order.get("side") or ""),
+        "limit_price": str(order.get("limit_price") or "0"),
+        "amount": str(order.get("amount") or "0"),
+        "status": str(order.get("status") or "UNKNOWN"),
+        "reserved_credits": str(order.get("reserved_credits") or "0"),
+        "reserved_slh": str(order.get("reserved_slh") or "0"),
+        "created_at": str(order.get("created_at") or ""),
+        "updated_at": str(order.get("updated_at") or ""),
+        "filled_at": str(order.get("filled_at") or ""),
+        "filled_trade_id": str(order.get("filled_trade_id") or ""),
+        "cancelled_at": str(order.get("cancelled_at") or ""),
+        "last_error": str(order.get("last_error") or ""),
+    }
+
+
+def place_limit_in_db(
+    db: dict,
+    uid: str,
+    side: str,
+    limit_price: Any,
+    amount: Any,
+    request_id: str,
+    now: str | None = None,
+) -> dict:
+    """Place a fully reserved, all-or-none simulated limit order."""
+    timestamp = _now(now)
+    uid = str(uid)
+    sim = _state(db)
+    user = _user(sim, uid, timestamp)
+    request_id = str(request_id or "").strip()[:200]
+    if not request_id:
+        return _cached_result(sim, user, {"status": "BLOCKED", "error": "REQUEST_ID_REQUIRED"}, False)
+
+    prior = user["requests"].get(request_id)
+    if isinstance(prior, dict):
+        replay = dict(prior)
+        saved_order = prior.get("order")
+        if isinstance(saved_order, dict) and saved_order.get("id"):
+            current = next(
+                (row for row in sim["orders"] if isinstance(row, dict) and row.get("id") == saved_order["id"]),
+                None,
+            )
+            if current:
+                replay["order"] = _order_view(current)
+        return _cached_result(sim, user, replay, True)
+
+    side = str(side or "").strip().lower()
+    if side not in {"buy", "sell"}:
+        result = {"status": "BLOCKED", "error": "INVALID_SIDE"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    try:
+        price = _q(_d(limit_price))
+        quantity = _q(_d(amount))
+    except (InvalidOperation, TypeError, ValueError):
+        result = {"status": "BLOCKED", "error": "INVALID_PRICE_OR_AMOUNT"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+    if price < MIN_LIMIT_PRICE or price > MAX_LIMIT_PRICE:
+        result = {"status": "BLOCKED", "error": "LIMIT_PRICE_OUT_OF_RANGE"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+    if quantity < MIN_AMOUNT or quantity > MAX_AMOUNT:
+        result = {"status": "BLOCKED", "error": "AMOUNT_OUT_OF_RANGE"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    active_for_user = sum(
+        1 for row in sim["orders"]
+        if isinstance(row, dict)
+        and str(row.get("uid")) == uid
+        and row.get("status") in {"OPEN", "REVIEW_REQUIRED"}
+    )
+    if active_for_user >= MAX_OPEN_LIMIT_ORDERS_PER_USER or len(sim["orders"]) >= MAX_PAPER_ORDERS:
+        result = {"status": "BLOCKED", "error": "LIMIT_ORDER_CAP_REACHED"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    wallet = user["wallet"]
+    if side == "buy":
+        if quantity > _d(wallet.get("credits", 0)):
+            result = {"status": "BLOCKED", "error": "INSUFFICIENT_DEMO_CREDITS"}
+            _remember(user, request_id, result)
+            return _cached_result(sim, user, result, False)
+        reserved_credits, reserved_slh = quantity, ZERO
+        wallet["credits"] = fmt(_d(wallet["credits"]) - quantity)
+    else:
+        if quantity > _d(wallet.get("slh", 0)):
+            result = {"status": "BLOCKED", "error": "INSUFFICIENT_DEMO_SLH"}
+            _remember(user, request_id, result)
+            return _cached_result(sim, user, result, False)
+        reserved_credits, reserved_slh = ZERO, quantity
+        wallet["slh"] = fmt(_d(wallet["slh"]) - quantity)
+
+    try:
+        sequence = int(sim.get("next_order_sequence", 1))
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError("PAPER_SIM_ORDER_SEQUENCE_INVALID")
+    if sequence < 1:
+        raise ValueError("PAPER_SIM_ORDER_SEQUENCE_INVALID")
+    sim["next_order_sequence"] = sequence + 1
+    order = {
+        "id": f"PLIM-{sequence:08d}",
+        "sequence": sequence,
+        "uid": uid,
+        "side": side,
+        "limit_price": fmt(price),
+        "amount": fmt(quantity),
+        "reserved_credits": fmt(reserved_credits),
+        "reserved_slh": fmt(reserved_slh),
+        "status": "OPEN",
+        "created_at": timestamp,
+        "updated_at": timestamp,
+        "request_id": request_id,
+    }
+    sim["orders"].append(order)
+    fills = _match_limit_orders(sim, timestamp)
+    result = {
+        "status": "ORDER_FILLED" if order["status"] == "FILLED" else (
+            "ORDER_REVIEW_REQUIRED" if order["status"] == "REVIEW_REQUIRED" else "ORDER_PLACED"
+        ),
+        "order": _order_view(order),
+        "limit_fills": fills,
+    }
+    _remember(user, request_id, result)
+    return _cached_result(sim, user, result, False)
+
+
+def place_limit(uid: str, side: str, limit_price: Any, amount: Any, request_id: str) -> dict:
+    return state_manager.atomic_update(
+        lambda db: place_limit_in_db(db, str(uid), side, limit_price, amount, request_id)
+    )
+
+
+def cancel_order_in_db(
+    db: dict,
+    uid: str,
+    order_id: str,
+    request_id: str,
+    now: str | None = None,
+) -> dict:
+    timestamp = _now(now)
+    uid = str(uid)
+    sim = _state(db)
+    user = _user(sim, uid, timestamp)
+    request_id = str(request_id or "").strip()[:200]
+    if not request_id:
+        return _cached_result(sim, user, {"status": "BLOCKED", "error": "REQUEST_ID_REQUIRED"}, False)
+
+    prior = user["requests"].get(request_id)
+    if isinstance(prior, dict):
+        return _cached_result(sim, user, prior, True)
+
+    order_id = str(order_id or "").strip()[:64]
+    order = next(
+        (row for row in sim["orders"] if isinstance(row, dict)
+         and str(row.get("id")) == order_id and str(row.get("uid")) == uid),
+        None,
+    )
+    if order is None:
+        result = {"status": "BLOCKED", "error": "ORDER_NOT_FOUND"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    if order.get("status") == "CANCELLED":
+        result = {"status": "ALREADY_CANCELLED", "order": _order_view(order)}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+    if order.get("status") == "FILLED":
+        result = {"status": "ALREADY_FILLED", "order": _order_view(order)}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+    if order.get("status") not in {"OPEN", "REVIEW_REQUIRED"}:
+        result = {"status": "BLOCKED", "error": "ORDER_STATE_INVALID"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    try:
+        reserved_credits = _d(order.get("reserved_credits", 0))
+        reserved_slh = _d(order.get("reserved_slh", 0))
+        original_amount = _d(order.get("amount", 0))
+    except (InvalidOperation, TypeError, ValueError):
+        order["status"] = "REVIEW_REQUIRED"
+        order["last_error"] = "RESERVATION_INVALID"
+        result = {"status": "BLOCKED", "error": "ORDER_RESERVATION_INVALID"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    if (
+        (order.get("side") == "buy" and (reserved_credits != original_amount or reserved_slh != ZERO))
+        or (order.get("side") == "sell" and (reserved_slh != original_amount or reserved_credits != ZERO))
+        or order.get("side") not in {"buy", "sell"}
+    ):
+        order["status"] = "REVIEW_REQUIRED"
+        order["last_error"] = "RESERVATION_MISMATCH"
+        result = {"status": "BLOCKED", "error": "ORDER_RESERVATION_MISMATCH"}
+        _remember(user, request_id, result)
+        return _cached_result(sim, user, result, False)
+
+    wallet = user["wallet"]
+    wallet["credits"] = fmt(_d(wallet.get("credits", 0)) + reserved_credits)
+    wallet["slh"] = fmt(_d(wallet.get("slh", 0)) + reserved_slh)
+    order["reserved_credits"] = "0.00000000"
+    order["reserved_slh"] = "0.00000000"
+    order["status"] = "CANCELLED"
+    order["cancelled_at"] = timestamp
+    order["updated_at"] = timestamp
+    order.pop("last_error", None)
+    result = {"status": "CANCELLED", "order": _order_view(order)}
+    _remember(user, request_id, result)
+    return _cached_result(sim, user, result, False)
+
+
+def cancel_order(uid: str, order_id: str, request_id: str) -> dict:
+    return state_manager.atomic_update(
+        lambda db: cancel_order_in_db(db, str(uid), order_id, request_id)
+    )
+
+
+def orders_in_db(db: dict, uid: str, limit: int = 20) -> list[dict]:
+    sim = db.get(DB_KEY)
+    if not isinstance(sim, dict) or not isinstance(sim.get("orders"), list):
+        return []
+    try:
+        count = max(1, min(50, int(limit)))
+    except (TypeError, ValueError):
+        count = 20
+    rows = [
+        row for row in sim["orders"]
+        if isinstance(row, dict) and str(row.get("uid")) == str(uid)
+    ]
+    return [_order_view(row) for row in reversed(rows[-count:])]
+
+
+def orders(uid: str, limit: int = 20) -> list[dict]:
+    return orders_in_db(state_manager.load_db(), str(uid), limit)
+
+
 def history_in_db(db: dict, uid: str, limit: int = 10) -> list[dict]:
     sim = db.get(DB_KEY)
     if not isinstance(sim, dict) or not isinstance(sim.get("trades"), list):
