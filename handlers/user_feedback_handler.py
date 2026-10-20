@@ -31,7 +31,7 @@ _REPLIES = {
 def _classify(text: str) -> str:
     low = (text or "").strip().lower()
     for category, keywords in _CATEGORIES:
-        if any(keyword in low for keyword in keywords):
+        if any((re.search(r"\\bton\\b", low) is not None) if keyword == "ton" else keyword in low for keyword in keywords):
             return category
     return "general"
 
@@ -47,7 +47,7 @@ def _component_for_report(text: str) -> str:
         ("staking", ("staking", "stake", "סטייקינג", "סטייק", "stake_lock", "positions")),
         ("synth", ("synth", "סינתיסייזר", "פסנתר", "כפתור חזרה", "מנגינה")),
         ("payments", ("stars", "xtr", "payplus", "כרטיס אשראי", "תשלום", "חיוב", "הפקדה", "bnb", "ton")),
-        ("mini_app", ("mini app", "mini-app", "miniapp", "webapp", "כפתור", "מסך")),
+        ("mini_app", ("mini app", "mini-app", "miniapp", "webapp", "button", "כפתור", "מסך")),
     )
     for component, keywords in rules:
         if any(keyword in low for keyword in keywords):
