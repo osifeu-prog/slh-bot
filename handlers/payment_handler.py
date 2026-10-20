@@ -13,6 +13,7 @@ from core.stars_price_authority import (
     resolve_credit_pack,
 )
 from store.stars_purchase_service import get_stars_price, purchase_item_with_stars
+from core.stars_gate import store_stars_sales_open
 from telebot.types import LabeledPrice, PreCheckoutQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 PROVIDER_TOKEN = ""
@@ -325,6 +326,13 @@ def register_payment_handlers(bot):
     def pre_checkout(query: PreCheckoutQuery):
         raw = str(query.invoice_payload or "")
         if raw.startswith("item_") and raw.endswith("_" + str(query.from_user.id)):
+            if not store_stars_sales_open():
+                bot.answer_pre_checkout_query(
+                    query.id,
+                    ok=False,
+                    error_message="Store Stars sales are temporarily closed.",
+                )
+                return
             item_id = raw[5:-(len(str(query.from_user.id)) + 1)]
             expected_stars = get_stars_price(item_id)
             try:
