@@ -141,3 +141,109 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
     assert "מתנת הצטרפות: 5 Credits" in group.replies[-1]["text"]
     assert "נרשמת בהצלחה" in group.replies[-1]["text"]
     assert "שיעור 1" in group.replies[-1]["text"]
+
+
+class _StartBot:
+    def __init__(self):
+        self.message_handlers = []
+        self.callback_handlers = []
+        self.sent = []
+
+    def message_handler(self, **kwargs):
+        def decorator(fn):
+            self.message_handlers.append((kwargs, fn))
+            return fn
+        return decorator
+
+    def callback_query_handler(self, **kwargs):
+        def decorator(fn):
+            self.callback_handlers.append((kwargs, fn))
+            return fn
+        return decorator
+
+    def send_message(self, chat_id, text, **kwargs):
+        self.sent.append((chat_id, text, kwargs))
+
+    def answer_callback_query(self, *args, **kwargs):
+        return None
+
+
+def _run_existing_start_recovery(monkeypatch, uid, marker_result, grant_result):
+    import state_manager
+    from core import onboarding_rewards
+    import handlers.onboarding_v2 as onboarding
+
+    calls = []
+    monkeypatch.setattr(onboarding, "OWNER_TELEGRAM_ID", "999999999")
+    monkeypatch.setattr(onboarding, "user_exists", lambda user_id: True)
+    monkeypatch.setattr(onboarding, "get_display_name", lambda *args, **kwargs: "Test User")
+    monkeypatch.setattr(
+        onboarding,
+        "get_investor_snapshot",
+        lambda user_id: {
+            "identity": {"display_name": "Test User"},
+            "wallet": {"credits": 0, "staked": 0, "live_token_balance": 0},
+            "academy": {"enrolled": []},
+            "tasks": {"open": 0},
+        },
+    )
+    monkeypatch.setattr(
+        state_manager,
+        "load_db",
+        lambda: {"users": {uid: {"wallet": {"credits": 0}}}, "agents": {}},
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "core.holiday_campaign",
+        types.SimpleNamespace(record_entry=lambda *args, **kwargs: True),
+    )
+
+    def mark(user_id):
+        calls.append(("mark", str(user_id)))
+        return marker_result
+
+    def grant(user_id):
+        calls.append(("grant", str(user_id)))
+        return grant_result
+
+    monkeypatch.setattr(onboarding_rewards, "mark_signup_bonus_pending", mark)
+    monkeypatch.setattr(onboarding_rewards, "grant_signup_bonus", grant)
+
+    bot = _StartBot()
+    onboarding.register(bot)
+    handler = next(
+        fn for meta, fn in bot.message_handlers if meta.get("commands") == ["start"]
+    )
+    message = types.SimpleNamespace(
+        text="/start",
+        chat=types.SimpleNamespace(id=int(uid)),
+        from_user=types.SimpleNamespace(id=int(uid), is_bot=False),
+    )
+    handler(message)
+    return bot, calls
+
+
+def test_start_recovers_interrupted_signup_gift_for_durably_eligible_user(monkeypatch):
+    uid = "5010371391"
+    bot, calls = _run_existing_start_recovery(
+        monkeypatch,
+        uid,
+        {"status": "PENDING"},
+        {"status": "GRANTED", "credits_awarded": 5},
+    )
+
+    assert calls == [("mark", uid), ("grant", uid)]
+    assert any("+5 Credits" in text for _, text, _ in bot.sent)
+
+
+def test_start_never_enrolls_existing_user_without_signup_eligibility(monkeypatch):
+    uid = "5010371391"
+    bot, calls = _run_existing_start_recovery(
+        monkeypatch,
+        uid,
+        {"status": "BLOCKED", "reason": "SIGNUP_BONUS_ELIGIBILITY_MISSING"},
+        {"status": "NOT_PENDING"},
+    )
+
+    assert calls == [("mark", uid), ("grant", uid)]
+    assert not any("מתנת ההצטרפות" in text for _, text, _ in bot.sent)
