@@ -56,7 +56,7 @@ def register(bot):
         if not data:
             bot.reply_to(
                 m,
-                "📊 עדיין אין התקדמות לימודית שמורה.\\n\\n"
+                "📊 עדיין אין התקדמות לימודית שמורה.\n\n"
                 "התחל או פתח קורס דרך /courses"
             )
             return
@@ -119,7 +119,7 @@ def register(bot):
                 "",
             ]
 
-        bot.reply_to(m, "\\n".join(lines))
+        bot.reply_to(m, "\n".join(lines))
     @bot.message_handler(func=lambda m: m.text and m.text.startswith("/course_"))
     def start_course(m):
         uid = str(m.from_user.id)
