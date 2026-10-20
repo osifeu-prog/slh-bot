@@ -51,14 +51,28 @@ def register(bot):
     @bot.message_handler(commands=['academy_progress'])
     def progress(m):
         uid = str(m.from_user.id)
-        data = academy_manager.progress(uid) or {}
 
-        # Use the canonical read-only DB snapshot rather than get_user(),
-        # which creates a default profile when the UID is absent.
+        # One canonical snapshot only: academy_manager.progress() delegates to
+        # get_user(), which can create a profile for a missing UID.
         db_snapshot = profile_manager.load_db()
         users = db_snapshot.get("users", {}) if isinstance(db_snapshot, dict) else {}
         user = users.get(uid, {}) if isinstance(users, dict) else {}
         user = user if isinstance(user, dict) else {}
+        academy = user.get("academy", {})
+        academy = academy if isinstance(academy, dict) else {}
+        saved_courses = academy.get("courses", {})
+        saved_courses = saved_courses if isinstance(saved_courses, dict) else {}
+        active_course = academy.get("active_course")
+        data = {}
+        for course_id, state in saved_courses.items():
+            if not isinstance(state, dict):
+                continue
+            data[str(course_id)] = {
+                "stage": state.get("stage", 0),
+                "completed": state.get("completed", []),
+                "active": str(course_id) == str(active_course),
+            }
+
         gamification = user.get("gamification", {})
         gamification = gamification if isinstance(gamification, dict) else {}
         points = gamification.get("points")
