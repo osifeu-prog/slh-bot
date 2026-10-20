@@ -70,7 +70,7 @@ def test_signup_bonus_is_applied_once_and_uses_canonical_ledger(tmp_path, monkey
 
 
 def test_retry_recovers_after_credit_transaction_but_before_marker_finalize(tmp_path, monkeypatch):
-    path = _sandbox(tmp_path)
+    path = _sandbox(tmp_path, monkeypatch)
     onboarding_rewards.mark_signup_bonus_pending("100")
     key = "onboarding-signup-credits:v1:100"
 
@@ -94,7 +94,7 @@ def test_retry_recovers_after_credit_transaction_but_before_marker_finalize(tmp_
 
 
 def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path, monkeypatch):
-    path = _sandbox(tmp_path)
+    path = _sandbox(tmp_path, monkeypatch)
     onboarding_rewards.mark_signup_bonus_pending("100")
     from core.economy_service import record_transaction
 
@@ -114,7 +114,7 @@ def test_idempotency_key_conflict_blocks_without_minting_extra_credits(tmp_path,
 
 
 def test_existing_user_is_not_automatically_marked_as_signup_eligible(tmp_path, monkeypatch):
-    path = _sandbox(tmp_path)
+    path = _sandbox(tmp_path, monkeypatch)
     result = onboarding_rewards.grant_signup_bonus("100")
     db = _state(path)
 
