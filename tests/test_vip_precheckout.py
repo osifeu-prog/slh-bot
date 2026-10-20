@@ -1,4 +1,6 @@
+import os
 import unittest
+from unittest import mock
 
 
 class FakeBot:
@@ -51,22 +53,26 @@ class VIPPreCheckoutTests(unittest.TestCase):
 
     def test_vip_exact_price_is_accepted(self):
         bot, handler = self._handler()
-        handler(Query(123, "vip_monthly_123", 499, "XTR"))
+        with mock.patch.dict(os.environ, {"STARS_PAYMENTS_OPEN": "1"}):
+            handler(Query(123, "vip_monthly_123", 499, "XTR"))
         self.assertEqual(bot.answers[0]["ok"], True)
 
     def test_vip_wrong_price_is_rejected(self):
         bot, handler = self._handler()
-        handler(Query(123, "vip_monthly_123", 500, "XTR"))
+        with mock.patch.dict(os.environ, {"STARS_PAYMENTS_OPEN": "1"}):
+            handler(Query(123, "vip_monthly_123", 500, "XTR"))
         self.assertEqual(bot.answers[0]["ok"], False)
 
     def test_vip_wrong_currency_is_rejected(self):
         bot, handler = self._handler()
-        handler(Query(123, "vip_monthly_123", 499, "USD"))
+        with mock.patch.dict(os.environ, {"STARS_PAYMENTS_OPEN": "1"}):
+            handler(Query(123, "vip_monthly_123", 499, "USD"))
         self.assertEqual(bot.answers[0]["ok"], False)
 
     def test_vip_wrong_recipient_is_rejected(self):
         bot, handler = self._handler()
-        handler(Query(123, "vip_monthly_456", 499, "XTR"))
+        with mock.patch.dict(os.environ, {"STARS_PAYMENTS_OPEN": "1"}):
+            handler(Query(123, "vip_monthly_456", 499, "XTR"))
         self.assertEqual(bot.answers[0]["ok"], False)
 
 
