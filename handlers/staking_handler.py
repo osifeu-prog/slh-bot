@@ -1,3 +1,6 @@
+import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
 from core.stake_position import get_positions, get_position
 from core import staking_service
 
@@ -169,4 +172,51 @@ def register(bot):
 
     @bot.message_handler(commands=["staking"])
     def staking_help(msg):
-        bot.reply_to(msg, "סטייקינג SLH\n\n" + ACADEMY_NOTE + "\n\nפקודות:\n" "/stake <amount> - נעילה ל-30 יום\n" "/stake_lock <amount> <days> - נעילה לתקופה\n" "/unstake <position_id> - שחרור לאחר תום הנעילה\n" "/unstake_lock <position_id> - alias לשחרור\n" "/positions - הפוזיציות שלך\n" "/stake_rewards - תגמולים\n" "/stake_rewards claim <position_id> - מימוש תגמול חדש\n\n" "Academy נשאר פעיל כמסלול למידה נפרד.")
+        message = (
+            "🔒 Staking של Credits\\n\\n"
+            + ACADEMY_NOTE
+            + "\\n\\nCredits נעולים אינם זמינים לשימוש עד לשחרור לפי תנאי הפוזיציה. "
+            "אין הבטחת רווח.\\n\\n"
+            "פקודות:\\n"
+            "/stake <amount> - נעילה ל-30 יום\\n"
+            "/stake_lock <amount> <days> - נעילה לתקופה\\n"
+            "/unstake <position_id> - שחרור לאחר תום הנעילה\\n"
+            "/unstake_lock <position_id> - alias לשחרור\\n"
+            "/positions - הפוזיציות שלך\\n"
+            "/stake_rewards - תגמולים\\n"
+            "/stake_rewards claim <position_id> - מימוש תגמול חדש"
+        )
+        mini_app_url = (
+            os.getenv("SLH_MINI_APP_URL")
+            or "https://slh-cloud-bot-production.up.railway.app/mini-app-v4"
+        ).strip()
+        url_parts = urlsplit(mini_app_url)
+        query = [
+            (key, value)
+            for key, value in parse_qsl(url_parts.query, keep_blank_values=True)
+            if key != "screen"
+        ]
+        query.append(("screen", "stake"))
+        target = urlunsplit((
+            url_parts.scheme,
+            url_parts.netloc,
+            url_parts.path,
+            urlencode(query),
+            url_parts.fragment,
+        ))
+        try:
+            from telebot import types
+            markup = types.InlineKeyboardMarkup()
+            markup.add(
+                types.InlineKeyboardButton(
+                    "🔒 פתח Staking והעבר Credits לנעילה",
+                    web_app=types.WebAppInfo(url=target),
+                )
+            )
+        except (ImportError, TypeError, ValueError):
+            markup = None
+
+        if markup is not None:
+            bot.reply_to(msg, message, reply_markup=markup)
+        else:
+            bot.reply_to(msg, message)
