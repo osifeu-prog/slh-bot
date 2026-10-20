@@ -803,7 +803,12 @@ def leaderboard_in_db(db: dict, limit: int = 10) -> list[dict]:
     for uid, user in sim["users"].items():
         try:
             wallet = user["wallet"]
-            value = _liquidation_value(sim, wallet)
+            reserved_credits, reserved_slh = _reserved_balances(sim, str(uid))
+            portfolio_wallet = {
+                "credits": fmt(_d(wallet["credits"]) + reserved_credits),
+                "slh": fmt(_d(wallet["slh"]) + reserved_slh),
+            }
+            value = _liquidation_value(sim, portfolio_wallet)
             starting = _d(user.get("starting_value_credits", STARTING_CREDITS + STARTING_SLH))
         except (KeyError, InvalidOperation, TypeError, ValueError):
             continue
