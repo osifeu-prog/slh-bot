@@ -1,6 +1,14 @@
 from core.exec_policy import is_admin, run_audit
 from core.authority import is_owner
+import shlex
 
+
+def normalize_python_command(cmd):
+    """Legacy formatting helper; the /e handler no longer executes its output."""
+    stripped = cmd.strip()
+    if stripped.startswith("import ") or stripped.startswith("from "):
+        return "python3 -c " + shlex.quote(stripped)
+    return cmd
 
 
 def register(bot):
