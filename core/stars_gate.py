@@ -32,6 +32,17 @@ def store_stars_item_allowed(item_id) -> bool:
     return str(item_id or "").strip() in SELLABLE_STORE_STARS_ITEM_IDS
 
 
+def filter_store_stars_items(items):
+    """Return only reviewed store SKUs while preserving their configured prices."""
+    if not isinstance(items, dict):
+        return {}
+    return {
+        item_id: price
+        for item_id, price in items.items()
+        if store_stars_item_allowed(item_id)
+    }
+
+
 def store_stars_item_sales_open(item_id) -> bool:
     """Whether this SKU is eligible for a new Stars checkout under the global gate."""
     return store_stars_sales_open() and store_stars_item_allowed(item_id)
