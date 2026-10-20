@@ -51,25 +51,112 @@ def register(bot):
     @bot.message_handler(commands=['academy_progress'])
     def progress(m):
         uid = str(m.from_user.id)
-        data = academy_manager.progress(uid)
 
-        if not data:
-            bot.reply_to(
-                m,
-                "📊 אין קורס פעיל עדיין.\n\n"
-                "התחל דרך /courses"
-            )
-            return
+        # One canonical snapshot only: academy_manager.progress() delegates to
+        # get_user(), which can create a profile for a missing UID.
+        db_snapshot = profile_manager.load_db()
+        users = db_snapshot.get("users", {}) if isinstance(db_snapshot, dict) else {}
+        user = users.get(uid, {}) if isinstance(users, dict) else {}
+        user = user if isinstance(user, dict) else {}
+        academy = user.get("academy", {})
+        academy = academy if isinstance(academy, dict) else {}
+        saved_courses = academy.get("courses", {})
+        saved_courses = saved_courses if isinstance(saved_courses, dict) else {}
+        active_course = academy.get("active_course")
+        data = {}
+        for course_id, state in saved_courses.items():
+            if not isinstance(state, dict):
+                continue
+            data[str(course_id)] = {
+                "stage": state.get("stage", 0),
+                "completed": state.get("completed", []),
+                "active": str(course_id) == str(active_course),
+            }
 
-        lines = ["📊 ההתקדמות שלך:", ""]
+        gamification = user.get("gamification", {})
+        gamification = gamification if isinstance(gamification, dict) else {}
+        points = gamification.get("points")
+        level = gamification.get("level")
+
+        lines = ["🎓 דוח ההתקדמות הלימודית שלך", ""]
+        if points is not None or level is not None:
+            game_parts = []
+            if points is not None:
+                game_parts.append(f"נקודות מערכת: {points}")
+            if level is not None:
+                game_parts.append(f"רמה: {level}")
+            lines.append("⭐ " + " · ".join(game_parts))
+            lines.append("")
+
+        catalog = (academy_manager.get_courses() or {}) if data else {}
+        total_completed = 0
+        total_stages = 0
+        course_rows = []
         for course_id, state in data.items():
-            completed = state.get("completed", [])
-            lines.append(
-                f"📘 {course_id}: Stage {state.get('stage', 0)} "
-                f"| הושלמו: {len(completed)} "
-                f"| {'פעיל' if state.get('active') else 'לא פעיל'}"
+            course = catalog.get(course_id) if isinstance(catalog, dict) else None
+            course = course if isinstance(course, dict) else {}
+            title = str(course.get("title") or course_id)
+            stage_defs = course.get("stages", [])
+            valid_ids = set()
+            if isinstance(stage_defs, list):
+                for stage_def in stage_defs:
+                    if not isinstance(stage_def, dict):
+                        continue
+                    try:
+                        valid_ids.add(int(stage_def.get("id")))
+                    except (TypeError, ValueError, OverflowError):
+                        continue
+
+            raw_completed = state.get("completed", [])
+            completed_ids = set()
+            if isinstance(raw_completed, (list, tuple, set)):
+                for value in raw_completed:
+                    try:
+                        completed_ids.add(int(value))
+                    except (TypeError, ValueError, OverflowError):
+                        continue
+            completed_count = len(completed_ids & valid_ids) if valid_ids else len(completed_ids)
+            total_count = len(valid_ids)
+            total_completed += completed_count
+            total_stages += total_count
+            if total_count:
+                pct = round(100 * completed_count / total_count)
+                progress_text = f"{completed_count}/{total_count} שיעורים ({pct}%)"
+                if completed_count == total_count:
+                    status = "הושלם"
+                elif state.get("active"):
+                    status = "פעיל"
+                else:
+                    status = "בתהליך"
+            else:
+                progress_text = f"{completed_count} שיעורים שהושלמו · קטלוג לא זמין"
+                status = "לא מאומת"
+
+            course_rows.append(
+                f"📘 {title}\n"
+                f"   {progress_text} · {status}"
             )
 
+        if course_rows:
+            lines.extend(course_rows)
+            lines.append("")
+            if total_stages:
+                overall_pct = round(100 * total_completed / total_stages)
+                lines.append(
+                    f"📊 סה״כ בקורסים שלך: {total_completed}/{total_stages} "
+                    f"שיעורים ({overall_pct}%)"
+                )
+        else:
+            lines.extend([
+                "עדיין אין קורסים עם התקדמות שמורה.",
+                "התחל דרך /courses",
+            ])
+
+        lines.extend([
+            "",
+            "הדוח מבוסס על user.academy.courses ועל קטלוג הקורסים.",
+            "נקודות המערכת מוצגות בנפרד; אין כאן שדה נפרד בשם hebrew_score.",
+        ])
         bot.reply_to(m, "\n".join(lines))
 
     @bot.message_handler(func=lambda m: m.text and m.text.startswith("/course_"))
