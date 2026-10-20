@@ -702,12 +702,9 @@ def execute_exchange_order(
     if existing is not None:
         return response(existing, True)
 
-    # The central execution service is shared by Telegram and authenticated Mini App/API.
-    # Do not let alternate clients bypass the server-recorded course certification.
-    from core.trader_certification import has_trader_certification
-    if not has_trader_certification(uid):
-        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
-
+    # Check the canonical global gate before per-user authorization. When the
+    # market is closed for everyone, report that global state first instead of
+    # misleading an uncertified user with an account-specific permission error.
     try:
         live_proof = require_fresh_live_exchange_proof()
     except ExchangeFreshCheckBlocked:
@@ -721,6 +718,12 @@ def execute_exchange_order(
         if existing is not None:
             return response(existing, True)
         raise
+
+    # The central execution service is shared by Telegram and authenticated Mini App/API.
+    # Trader certification is still mandatory once the canonical global gate is open.
+    from core.trader_certification import has_trader_certification
+    if not has_trader_certification(uid):
+        raise ValueError("TRADER_CERTIFICATION_REQUIRED")
 
     replayed = {"value": False}
 
