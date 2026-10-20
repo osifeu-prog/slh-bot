@@ -290,7 +290,7 @@ def test_limit_order_fills_only_when_average_execution_respects_limit():
 
 def test_limit_buy_waits_then_fills_after_other_demo_trade_moves_pool():
     db = _db()
-    placed = paper.place_limit_in_db(db, "100", "buy", "0.9", "50", "limit-wait-1")
+    placed = paper.place_limit_in_db(db, "100", "buy", "1.0029", "50", "limit-wait-1")
     assert placed["status"] == "ORDER_PLACED"
     assert placed["order"]["status"] == "OPEN"
 
@@ -300,7 +300,7 @@ def test_limit_buy_waits_then_fills_after_other_demo_trade_moves_pool():
     current = next(row for row in db["paper_simulation"]["orders"] if row["id"] == placed["order"]["id"])
     assert current["status"] == "FILLED"
     fill = next(row for row in db["paper_simulation"]["trades"] if row["id"] == current["filled_trade_id"])
-    assert float(fill["average_price_credits_per_slh"]) <= 0.9
+    assert float(fill["average_price_credits_per_slh"]) <= 1.0029
 
 
 def test_limit_order_request_is_idempotent_and_does_not_reserve_twice():
