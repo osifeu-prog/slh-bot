@@ -381,6 +381,8 @@ def audit_in_db(db: dict) -> dict:
     if not isinstance(sim, dict):
         return {"status": "BLOCKED", "reason": "PAPER_SIM_STATE_INVALID", "real_wallets_touched": False, "canonical_ledger_touched": False}
     errors = []
+    if sim.get("schema_version") != 2:
+        errors.append("unsupported_schema_version")
     pool = sim.get("pool")
     users = sim.get("users")
     trades = sim.get("trades")
@@ -406,14 +408,58 @@ def audit_in_db(db: dict) -> dict:
                 errors.append("invalid_request_cache")
         except (KeyError, InvalidOperation, TypeError, ValueError):
             errors.append("invalid_demo_balance")
+    try:
+        next_sequence = int(sim.get("next_trade_sequence"))
+        if next_sequence < 1:
+            errors.append("invalid_next_trade_sequence")
+    except (TypeError, ValueError, OverflowError):
+        next_sequence = 0
+        errors.append("invalid_next_trade_sequence")
+
     seen = set()
+    max_sequence = 0
+    required_trade_fields = (
+        "uid", "side", "amount_slh", "amount_credits",
+        "average_price_credits_per_slh", "fee_amount", "price_before",
+        "price_after", "price_impact_pct", "created_at", "request_id",
+    )
     for row in trades:
         if not isinstance(row, dict) or not row.get("id"):
             errors.append("invalid_trade_record")
             continue
-        if row["id"] in seen:
+        trade_id = str(row["id"])
+        if trade_id in seen:
             errors.append("duplicate_trade_id")
-        seen.add(row["id"])
+        seen.add(trade_id)
+        if not trade_id.startswith("PSIM-"):
+            errors.append("invalid_trade_id_format")
+        else:
+            try:
+                max_sequence = max(max_sequence, int(trade_id.split("-", 1)[1]))
+            except (TypeError, ValueError, OverflowError):
+                errors.append("invalid_trade_id_format")
+        missing = [field for field in required_trade_fields if field not in row]
+        if missing:
+            errors.append("incomplete_trade_record")
+            continue
+        if str(row.get("uid")) not in users:
+            errors.append("trade_user_missing")
+        if row.get("side") not in {"buy", "sell"}:
+            errors.append("invalid_trade_side")
+        if not str(row.get("request_id") or "").strip():
+            errors.append("trade_request_id_missing")
+        try:
+            if any(_d(row[field]) <= ZERO for field in (
+                "amount_slh", "amount_credits", "average_price_credits_per_slh",
+                "price_before", "price_after",
+            )):
+                errors.append("non_positive_trade_value")
+            if _d(row["fee_amount"]) < ZERO or _d(row["price_impact_pct"]) < ZERO:
+                errors.append("negative_trade_fee_or_impact")
+        except (InvalidOperation, TypeError, ValueError):
+            errors.append("invalid_trade_numeric_field")
+    if next_sequence and max_sequence >= next_sequence:
+        errors.append("trade_sequence_ahead_of_counter")
     return {
         "status": "PASS" if not errors else "BLOCKED",
         "users": len(users),
