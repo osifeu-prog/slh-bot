@@ -129,6 +129,7 @@ def test_new_user_join_completes_agent_profile_and_academy_flow(monkeypatch):
     assert db["users"][uid]["role"] == "student"
     assert db["users"][uid]["name"] == "Test Alpha User"
     assert db["users"][uid]["group"] == "Bitcoin Masters"
+    assert db["users"][uid]["onboarding_signup_bonus_eligible_at"]
 
     assert len(agents) == 1
     assert agents[0]["owner_id"] == uid
