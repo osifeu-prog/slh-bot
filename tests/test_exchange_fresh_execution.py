@@ -182,5 +182,70 @@ class ExchangeFreshExecutionTests(unittest.TestCase):
         self.assertEqual(payload["trade_ids"], [])
 
 
+    def test_closed_global_gate_is_reported_before_missing_trader_certification(self):
+        from handlers.exchange_handler import execute_exchange_order
+
+        blocked = ExchangeFreshCheckBlocked(
+            {
+                "status": "BLOCKED",
+                "checked_at": "2026-10-20T11:00:00+00:00",
+                "public_gate": "CLOSED",
+                "verdict": "BLOCKED",
+                "execution_ready": False,
+                "detail": "public exchange gate is CLOSED",
+            },
+            checked_at="2026-10-20T11:00:00+00:00",
+        )
+        with patch(
+            "handlers.exchange_handler.require_fresh_live_exchange_proof",
+            side_effect=blocked,
+        ), patch(
+            "core.trader_certification.has_trader_certification",
+            return_value=False,
+        ) as certification_check:
+            with self.assertRaises(ExchangeFreshCheckBlocked):
+                execute_exchange_order(
+                    uid="100", side="buy", amount=Decimal("1"),
+                    price=Decimal("1"), request_id="global-gate-before-cert",
+                )
+
+        certification_check.assert_not_called()
+        self.assertEqual(self.db["exchange_orders"], {})
+        self.assertEqual(self.db["exchange_requests"], {})
+        self.assertEqual(self.db["users"]["100"]["wallet"]["credits"], 10.0)
+
+    def test_trader_certification_remains_required_when_global_gate_passes(self):
+        from handlers.exchange_handler import execute_exchange_order
+
+        with patch(
+            "handlers.exchange_handler.require_fresh_live_exchange_proof",
+            return_value={
+                "status": "PASS",
+                "checked_at": "2026-10-20T11:00:00+00:00",
+                "railway_configured": "1",
+                "public_gate": "OPEN",
+                "public_verdict": "OPEN",
+                "public_readiness": True,
+                "public_updated_at": 1792494000.0,
+            },
+        ), patch(
+            "core.trader_certification.has_trader_certification",
+            return_value=False,
+        ) as certification_check, patch(
+            "handlers.exchange_handler.state_manager.atomic_update"
+        ) as atomic_update:
+            with self.assertRaisesRegex(ValueError, "TRADER_CERTIFICATION_REQUIRED"):
+                execute_exchange_order(
+                    uid="100", side="buy", amount=Decimal("1"),
+                    price=Decimal("1"), request_id="cert-required-after-gate",
+                )
+
+        certification_check.assert_called_once_with("100")
+        atomic_update.assert_not_called()
+        self.assertEqual(self.db["exchange_orders"], {})
+        self.assertEqual(self.db["exchange_requests"], {})
+        self.assertEqual(self.db["users"]["100"]["wallet"]["credits"], 10.0)
+
+
 if __name__ == "__main__":
     unittest.main()
