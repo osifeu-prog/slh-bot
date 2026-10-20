@@ -43,8 +43,8 @@ def test_academy_progress_is_hebrew_and_derived_from_canonical_course_state():
         patch.object(academy_handler.academy_manager, "get_courses", return_value=catalog),
         patch.object(
             academy_handler.profile_manager,
-            "get_user",
-            return_value={"gamification": {"points": 125, "level": 2}},
+            "load_db",
+            return_value={"users": {"8789977826": {"gamification": {"points": 125, "level": 2}}}},
         ),
     ):
         academy_handler.register(bot)
@@ -71,7 +71,7 @@ def test_academy_progress_does_not_invent_courses_when_none_are_started():
     with (
         patch.object(academy_handler.academy_manager, "progress", return_value={}),
         patch.object(academy_handler.academy_manager, "get_courses") as get_courses,
-        patch.object(academy_handler.profile_manager, "get_user") as get_user,
+        patch.object(academy_handler.profile_manager, "load_db", return_value={"users": {"8789977826": {"gamification": {"points": 0, "level": 1}}}}) as load_db,
     ):
         academy_handler.register(bot)
         bot.handlers[("academy_progress",)](msg)
@@ -81,4 +81,4 @@ def test_academy_progress_does_not_invent_courses_when_none_are_started():
     assert "42/42" not in report
     assert "7/7" not in report
     get_courses.assert_not_called()
-    get_user.assert_not_called()
+    load_db.assert_called_once()
