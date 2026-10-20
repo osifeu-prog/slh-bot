@@ -211,7 +211,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
 (function(){
   'use strict';
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-  const source = new URLSearchParams(window.location.search).get('source') || '';
+  const queryParams = new URLSearchParams(window.location.search);
+  const source = queryParams.get('source') || '';
+  const requestedWave = queryParams.get('wave') || '';
+  const requestedDuration = queryParams.get('duration');
+  const marketDemo = queryParams.get('market_demo') === '1';
+  const marketScoreRequested = source === 'market-lab' && queryParams.has('score');
+  function parseMarketScore(raw){
+    if(typeof raw!=='string'||raw.length===0||raw.length>720)return null;
+    const rawSteps=raw.split(',');
+    if(rawSteps.length<1||rawSteps.length>16)return null;
+    const parsed=rawSteps.map(function(step){return step.trim().split(/\\s+/);});
+    if(parsed.some(function(notes){
+      return notes.length<1||notes.length>8||notes.some(function(note){
+        return !/^[A-G][#b]?[0-8]$/.test(note)||noteToMidi(note)===null;
+      });
+    }))return null;
+    return parsed.map(function(notes){return {root:'C',quality:'major',octave:4,customNotes:notes};});
+  }
+  const incomingMarketSteps = source === 'market-lab' ? parseMarketScore(queryParams.get('score') || '') : null;
   if (tg) { try { tg.ready(); tg.expand(); } catch (_) {} }
 
   const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -247,7 +265,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     major:[{root:'C',quality:'major',octave:4},{root:'F',quality:'major',octave:4},{root:'G',quality:'major',octave:4},{root:'C',quality:'major',octave:4}],
     minor:[{root:'A',quality:'minor',octave:3},{root:'F',quality:'major',octave:3},{root:'C',quality:'major',octave:4},{root:'G',quality:'major',octave:3}]
   };
-  let steps=presets.major.map(function(x){return Object.assign({},x);});
+  let steps=incomingMarketSteps
+    ? incomingMarketSteps.map(function(x){return Object.assign({},x,{customNotes:x.customNotes.slice()});})
+    : presets.major.map(function(x){return Object.assign({},x);});
   let activeStep=0, audioContext=null, analyser=null, visualUntil=0, visualFrame=0;
   let measureExpected=null, tunerStream=null, tunerSource=null, tunerAnalyser=null, tunerBuffer=null, tunerRunning=false, tunerFrame=0, lastTunerUpdate=0;
   const heldPresses=new Map();
@@ -652,10 +672,34 @@ button:disabled{opacity:.45;cursor:not-allowed}
   $('testReference').addEventListener('click',testReference);
   $('startTuner').addEventListener('click',startTuner);
   $('stopTuner').addEventListener('click',stopTuner);
-  $('back').addEventListener('click',function(){if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
+  $('back').addEventListener('click',function(){if(source==='market-lab'){window.location.assign('/market-lab');return;}if(source==='miniapp'){window.location.assign('/mini-app-v4');return;}if(source==='inline'){try{if(tg&&tg.close)tg.close();return;}catch(_){}}if(tg&&tg.close){try{tg.close();return;}catch(_){}}window.location.assign('/mini-app-v4');});
   window.addEventListener('pagehide',stopTuner);
-  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();renderSteps();
-  if(source){$('send').textContent='העתק לבוט 📋';status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');}
+  renderReferenceOptions();renderKeyboard();applyInstrumentDefaults();
+  if(source==='market-lab'&&incomingMarketSteps){
+    if(['piano','moog','bass','organ','pluck','sine','saw','square','tri'].includes(requestedWave)){
+      $('wave').value=requestedWave;
+      applyInstrumentDefaults();
+    }
+    const incomingDuration=Number(requestedDuration);
+    if(Number.isFinite(incomingDuration)&&incomingDuration>=0.1&&incomingDuration<=1.5){
+      $('duration').value=String(Math.round(incomingDuration*10)/10);
+      refreshCommand();
+    }
+    activeStep=0;
+  }
+  renderSteps();
+  if(source){
+    $('send').textContent='העתק לבוט 📋';
+    if(source==='market-lab'&&incomingMarketSteps){
+      status(marketDemo
+        ? 'רצף הדגמה מדומה נטען מ-Market Lab — אלו אינם נתוני שוק. אפשר לנגן או להעתיק את פקודת /synth לבוט.'
+        : 'רצף תווים מנתוני Market Lab נטען. בדוק את הנתון ואת זמן הספק; אפשר לנגן או להעתיק פקודת /synth לבוט.');
+    }else if(source==='market-lab'&&marketScoreRequested){
+      status('רצף Market Lab לא תקין ולכן לא נטען. אפשר לחזור למפת החום ולנסות שוב.');
+    }else{
+      status('בחר צליל ואקורדים; אפשר לנגן, למדוד או להעתיק פקודה לבוט.');
+    }
+  }
 })();
 </script>
 </body>
