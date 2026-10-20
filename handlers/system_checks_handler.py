@@ -434,22 +434,77 @@ def register(bot, context=None):
             import state_manager
             from core.account_ledger_audit import audit_account_ledger
 
-            result = audit_account_ledger(state_manager.load_db(), uid)
+            db = state_manager.load_db()
+            result = audit_account_ledger(db, uid)
+            users = db.get("users") if isinstance(db, dict) else {}
+            owner_user = users.get(uid) if isinstance(users, dict) else {}
+            wallet = owner_user.get("wallet") if isinstance(owner_user, dict) else {}
+            wallet = wallet if isinstance(wallet, dict) else {}
+
+            # Include the existing legacy-staking guard's read-only evidence in
+            # the same owner report. This never invokes unstake_locked or writes.
+            staking_review = []
+            staking_guard_available = False
+            locked_positions_checked = 0
+            try:
+                from core.staking_service import _find_legacy_unstake_ambiguity
+
+                staking_guard_available = callable(_find_legacy_unstake_ambiguity)
+                positions = db.get("stake_positions") if isinstance(db, dict) else {}
+                positions = positions if isinstance(positions, dict) else {}
+                for position_id, position in positions.items():
+                    if not isinstance(position, dict) or str(position.get("uid")) != uid:
+                        continue
+                    if position.get("status") != "locked":
+                        continue
+                    locked_positions_checked += 1
+                    evidence = _find_legacy_unstake_ambiguity(db, uid, position)
+                    if isinstance(evidence, dict):
+                        staking_review.append({
+                            "position_id": str(position_id),
+                            "amount": position.get("amount"),
+                            "evidence": evidence,
+                        })
+            except Exception as guard_exc:
+                staking_review_error = type(guard_exc).__name__
+            else:
+                staking_review_error = None
+
             lines = [
                 "🧾 OWNER ACCOUNT LEDGER — READ ONLY",
+                "🔍 FORENSIC BUNDLE: ledger + staking guard + exchange",
                 "",
-                f"Status: {result.get('status', 'BLOCKED')}",
+                f"Ledger status: {result.get('status', 'BLOCKED')}",
                 f"Owner ledger rows scanned: {result.get('rows_checked', 0)}",
                 f"Credits sequence rows checked: {result.get('credits_sequence_rows_checked', result.get('rows_checked', 0))}",
                 f"Non-Credits rows skipped: {result.get('non_credits_rows_skipped', 0)}",
+                f"Observed discontinuities: {result.get('observed_discontinuity_count', 0)}",
+                f"Resolved with source evidence: {result.get('resolved_gap_count', 0)}",
                 f"Credits continuity breaks: {result.get('continuity_break_count', 0)}",
+                f"Unresolved Credits gaps: {result.get('unresolved_continuity_break_count', result.get('continuity_break_count', 0))}",
                 f"Row arithmetic errors: {result.get('arithmetic_error_count', 0)}",
                 f"Malformed global rows: {result.get('malformed_global_rows', 0)}",
-                f"Wallet Credits: {result.get('current_wallet_credits', 'UNKNOWN')}",
+                f"Wallet Credits: {result.get('current_wallet_credits', wallet.get('credits', 'UNKNOWN'))}",
+                f"Wallet Staked: {wallet.get('staked', 'UNKNOWN')}",
                 f"Last Credits candidate after: {result.get('ledger_tail_after', 'UNKNOWN')}",
                 f"Wallet matches Credits sequence tail: {result.get('current_balance_matches_tail', False)}",
                 "",
+                f"Legacy staking guard: {'AVAILABLE' if staking_guard_available else 'UNAVAILABLE'}",
+                f"Locked positions checked: {locked_positions_checked}",
+                f"Positions blocked for legacy review: {len(staking_review)}",
             ]
+            if staking_review_error:
+                lines.append(f"Staking guard diagnostic error: {staking_review_error}")
+            for record in staking_review[:8]:
+                evidence = record.get("evidence") or {}
+                lines.append(
+                    f"  LEGACY_UNSTAKE_AMBIGUITY: {record.get('position_id')} "
+                    f"amount={record.get('amount')} ledger_row={evidence.get('ledger_index')} "
+                    f"age_seconds={evidence.get('seconds_from_creation')}"
+                )
+            if len(staking_review) > 8:
+                lines.append(f"  +{len(staking_review) - 8} additional positions omitted")
+            lines.append("")
             for item in result.get("findings", [])[:12]:
                 if not isinstance(item, dict):
                     continue
@@ -522,6 +577,19 @@ def register(bot, context=None):
                 lines.append(f"Blocker: {blocker}")
             if result.get("findings_truncated"):
                 lines.append("Additional findings omitted; Telegram output is capped at 12 findings.")
+            try:
+                exchange_snapshot = check_exchange()
+                lines += [
+                    "",
+                    "EXCHANGE SNAPSHOT — READ ONLY",
+                    f"Public trading gate: {exchange_snapshot.get('public_gate', 'UNKNOWN')}",
+                    f"Public trading readiness: {'PASS' if exchange_snapshot.get('public_ready') else 'FAIL'}",
+                    f"Exchange verdict: {exchange_snapshot.get('verdict', 'UNKNOWN')}",
+                    f"Exchange detail: {exchange_snapshot.get('detail', 'UNKNOWN')}",
+                ]
+            except Exception as exchange_exc:
+                lines += ["", f"Exchange snapshot: UNKNOWN ({type(exchange_exc).__name__})"]
+
             lines += [
                 "",
                 "⚠️ Reason/domain hints are heuristic, not accounting proof.",
