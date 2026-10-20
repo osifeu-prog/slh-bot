@@ -39,6 +39,7 @@ KNOWN = {
     "positions": ("MONEY", "פוזיציות"),
     "unstake": ("MONEY", "שחרור פוזיציה"),
     "rewards": ("MONEY", "תגמולים"),
+    "daily": ("MONEY", "תגמול יומי ב-Points"),
     "ton": ("CHAIN", "סטטוס TON"),
     "claim": ("CHAIN", "Claim BNB"),
     "academy": ("ACADEMY", "Academy"),
