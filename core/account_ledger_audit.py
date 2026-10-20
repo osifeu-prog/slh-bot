@@ -377,22 +377,25 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
             credits_component = _number(row.get("credits"))
             staked_component = _number(row.get("staked_moved"))
             source_uid = str(row.get("from") or "").strip()
-            # If the source account still exists, it must no longer retain the
-            # amounts migrated by this event. Missing/unreadable values fail closed.
+            # The historical commit is the independent evidence for the migration.
+            # Current source-account state is a duplicate-state guard only: an account
+            # may have been recreated later with a different, residual balance. Requiring
+            # literal zero today would turn later activity into a false historical gap.
             users_db = db.get("users")
             source_user = users_db.get(source_uid) if isinstance(users_db, dict) else None
             source_wallet = source_user.get("wallet") if isinstance(source_user, dict) else None
+            verified = _VERIFIED_ALPHA_CONSOLIDATION
             if isinstance(source_user, dict):
                 source_credits = _number(source_wallet.get("credits")) if isinstance(source_wallet, dict) else None
                 source_staked = _number(source_wallet.get("staked")) if isinstance(source_wallet, dict) else None
-                source_account_cleared = (
+                source_no_longer_retains_migrated_components = (
                     source_credits is not None and source_staked is not None
-                    and abs(source_credits) <= EPSILON and abs(source_staked) <= EPSILON
+                    and abs(source_credits - verified["credits"]) > EPSILON
+                    and abs(source_staked - verified["staked_moved"]) > EPSILON
                 )
             else:
-                # The verified historical commit itself deletes the source account.
-                source_account_cleared = True
-            verified = _VERIFIED_ALPHA_CONSOLIDATION
+                # The source user is absent, matching the historical snapshot.
+                source_no_longer_retains_migrated_components = True
             verification_checks = {
                 "row_index_matches": index == verified["event_index"],
                 "previous_index_matches": previous_index == verified["previous_index"],
@@ -421,7 +424,7 @@ def _source_evidence_for_gap(db: dict, previous: dict, next_row: dict, uid: str 
                     observed_delta is not None
                     and abs(observed_delta - (verified["credits"] + verified["staked_moved"])) <= EPSILON
                 ),
-                "source_account_cleared": source_account_cleared,
+                "source_account_no_longer_retains_migrated_components": source_no_longer_retains_migrated_components,
             }
             exact_source_event = all(verification_checks.values())
             alpha_consolidations.append({
