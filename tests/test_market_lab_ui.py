@@ -22,6 +22,23 @@ class MarketLabUiContractTests(unittest.TestCase):
         self.assertIn("localStorage", body)
         self.assertIn("Paper Portfolio", body)
         self.assertIn("אינו נותן המלצה אישית", body)
+        self.assertIn('id="sonifyLive"', body)
+        self.assertIn('id="sonifyDemo"', body)
+        self.assertIn('id="sonifyStop"', body)
+        self.assertIn("AudioContext", body)
+        self.assertIn("הדגמה מדומה בלבד — לא נתוני שוק", body)
+        self.assertIn("רק לאחר לחיצה", body)
+        self.assertNotIn("autoplay", body.lower())
+
+    def test_sonification_is_click_triggered_and_live_audio_fails_closed(self):
+        html = (ROOT / "market_heatmap.html").read_text(encoding="utf-8")
+        self.assertIn("$('sonifyLive').addEventListener('click'", html)
+        self.assertIn("$('sonifyDemo').addEventListener('click'", html)
+        self.assertIn("$('sonifyStop').addEventListener('click'", html)
+        self.assertIn("updateSonifyAvailability()", html)
+        self.assertIn("snapshot.status", html)
+        self.assertIn("DATA_PROVIDER_NOT_CONFIGURED", html)
+        self.assertIn("ההדגמה אינה נתוני שוק", html)
 
     def test_public_market_route_sanitizes_snapshot_and_never_enables_execution(self):
         from core import paper_market
