@@ -1431,6 +1431,7 @@ def stars_store_api():
     from core.stars_price_authority import VIP_MONTHLY_STARS
     from store.engine import load_items
     from store.stars_purchase_service import get_stars_items, get_stars_price
+    from core.stars_gate import filter_store_stars_items
 
     db = load_db()
     user = db.get("users", {}).get(str(uid), {}) if isinstance(db, dict) else {}
@@ -1444,7 +1445,7 @@ def stars_store_api():
         "plugin": "tools",
         "digital": "emojis",
     }
-    for item_id, price in get_stars_items().items():
+    for item_id, price in filter_store_stars_items(get_stars_items()).items():
         item = items.get(item_id, {})
         if not isinstance(item, dict):
             item = {}
