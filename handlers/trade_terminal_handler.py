@@ -1,5 +1,7 @@
 """Telegram UI for the SLH Trade Terminal MVP."""
 
+from telebot import types
+
 import os
 from telebot import types
 
@@ -138,12 +140,12 @@ def register(bot):
 
     @bot.message_handler(commands=["heatmap", "market_lab"])
     def market_lab_command(message):
-        uid = _prepare_locale(message)
+        _prepare_locale(message)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("פתח מפת חום · Paper Only", url=_market_lab_url()))
         bot.reply_to(
             message,
-            "🟩 Market Lab — מפת חום של מדדי שוק ו־ETF סקטוריאליים.\\n"
+            "🟩 Market Lab — מפת חום של מדדי שוק ו־ETF סקטוריאליים.\n"
             "הכלי תיאורי בלבד וכולל תיק מדומה בדפדפן; אין בו הוראות מסחר אמיתיות.",
             reply_markup=markup,
         )
