@@ -313,9 +313,10 @@ def register(bot, context=None):
                     mark_signup_bonus_pending,
                     grant_signup_bonus,
                 )
-                # Re-create a missing marker only when successful join persisted
-                # the explicit eligibility timestamp. Existing users without it
-                # remain NOT_PENDING and are never enrolled retroactively.
+                # Mark-before-grant is deliberate: this is the only recovery path
+                # allowed to recreate PENDING, and the service requires the durable
+                # eligibility timestamp written with the successful new-user profile.
+                # A missing timestamp must never enroll an existing user retroactively.
                 marker = mark_signup_bonus_pending(user_id)
                 print("SIGNUP CREDITS MARKER RETRY:", marker.get("status"))
             except Exception as marker_exc:
