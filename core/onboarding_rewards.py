@@ -42,8 +42,16 @@ def mark_signup_bonus_pending(uid: str) -> dict:
         status = str(user.get("onboarding_signup_bonus_status") or "").upper()
         if status in {"PENDING", "AWARDED"}:
             return {"status": status}
+
+        # Eligibility must be durably recorded as part of the successful new-user
+        # profile write; /start may recreate a missing PENDING marker only for
+        # that explicitly eligible account. Never enroll old users by inference.
+        eligible_at = str(user.get("onboarding_signup_bonus_eligible_at") or "").strip()
+        if not eligible_at:
+            return {"status": "BLOCKED", "reason": "SIGNUP_BONUS_ELIGIBILITY_MISSING"}
+
         user["onboarding_signup_bonus_status"] = "PENDING"
-        user["onboarding_signup_bonus_eligible_at"] = datetime.now(timezone.utc).isoformat()
+        user["onboarding_signup_bonus_pending_at"] = datetime.now(timezone.utc).isoformat()
         return {"status": "PENDING"}
 
     return state_manager.atomic_update(mutate)
