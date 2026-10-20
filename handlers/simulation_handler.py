@@ -114,7 +114,7 @@ def _trade_text(result, side):
         action
         + f"\n📊 מחיר ביצוע ממוצע: {paper.compact(row['average_price_credits_per_slh'])} Demo Credits ל־Demo SLH"
         + f"\n📉 השפעת מחיר משוערת: {paper.compact(row['price_impact_pct'])}%"
-        + f"\n🏷️ שער pool אחרי העסקה: {paper.compact(row['price_credits_per_slh'])}"
+        + f"\n🏷️ שער pool אחרי העסקה: {paper.compact(row['price_after'])}"
         + "\n\n👛 יתרות הדמו לאחר העסקה:"
         + f"\n• Demo Credits: {paper.compact(snapshot['demo_credits'])}"
         + f"\n• Demo SLH: {paper.compact(snapshot['demo_slh'])}"
