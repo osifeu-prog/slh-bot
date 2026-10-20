@@ -13,14 +13,15 @@ def _message(text, uid=12345):
 
 
 def _register_capture():
-    registered = {}
+    registered = {"handlers": {}, "kwargs_by_command": {}}
 
     class Bot:
         def message_handler(self, **kwargs):
-            registered["kwargs"] = kwargs
+            commands = tuple(kwargs.get("commands", ()))
+            registered["kwargs_by_command"][commands] = kwargs
 
             def decorate(fn):
-                registered["callback"] = fn
+                registered["handlers"][commands] = fn
                 return fn
 
             return decorate
@@ -36,9 +37,10 @@ def _register_capture():
 def test_feedback_handler_is_opt_in_and_does_not_capture_general_chat():
     bot, registered = _register_capture()
 
-    assert set(registered["kwargs"]["commands"]) == {"bugreport", "suggest"}
-    assert "func" not in registered["kwargs"]
-    assert registered["kwargs"]["content_types"] == ["text"]
+    kwargs = registered["kwargs_by_command"][("bugreport", "suggest")]
+    assert set(kwargs["commands"]) == {"bugreport", "suggest"}
+    assert "func" not in kwargs
+    assert kwargs["content_types"] == ["text"]
     assert bot.send_message.call_count == 0
 
 
@@ -60,7 +62,7 @@ def test_bugreport_records_and_notifies_owner(monkeypatch):
     )
     message = _message("/bugreport I cannot see Exchange")
 
-    registered["callback"](message)
+    registered["handlers"][("bugreport", "suggest")](message)
 
     assert recorded == [("12345", "tester", "Tester", "I cannot see Exchange", "bug")]
     assert len(notified) == 1
@@ -77,7 +79,7 @@ def test_suggest_uses_feature_category(monkeypatch):
         lambda uid, username, first_name, text, category: recorded.append(category) or {"id": 8},
     )
     monkeypatch.setattr(target, "_notify_owner", lambda *args: None)
-    registered["callback"](_message("/suggest Add a one-tap voting button"))
+    registered["handlers"][("bugreport", "suggest")](_message("/suggest Add a one-tap voting button"))
 
     assert recorded == ["feature"]
 
@@ -89,7 +91,7 @@ def test_empty_bugreport_prompts_for_details_without_writing(monkeypatch):
         "_record",
         lambda *args: (_ for _ in ()).throw(AssertionError("must not write an empty report")),
     )
-    registered["callback"](_message("/bugreport"))
+    registered["handlers"][("bugreport", "suggest")](_message("/bugreport"))
 
     bot.reply_to.assert_called_once()
     assert "/bugreport" in bot.reply_to.call_args.args[1]
@@ -111,3 +113,11 @@ def test_owner_notification_has_real_newlines(monkeypatch):
     body = bot.sent[0][1]
     assert "\\n" not in body
     assert "\n" in body
+
+
+def test_component_classifier_does_not_match_ton_inside_button():
+    assert target._component_for_report("The button is broken") == "mini_app"
+
+
+def test_component_classifier_still_matches_standalone_ton():
+    assert target._component_for_report("TON deposit is blocked") == "payments"

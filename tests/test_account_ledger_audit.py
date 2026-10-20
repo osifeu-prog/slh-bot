@@ -364,3 +364,88 @@ def test_unverified_alpha_consolidation_near_miss_stays_blocked():
     assert result["resolved_gap_count"] == 0
     assert result["findings"][0]["reconciled"] is False
     assert result["findings"][0]["source_evidence"]["resolves_gap"] is False
+
+
+def _owner_attestation_gap_db(*, claimed_rows=None, claimed_amount=5.0, attested_uid=UID):
+    db = {
+        "users": {UID: {"wallet": {"credits": 94.0}}},
+        "ledger": [
+            {
+                "uid": UID, "before": 100.0, "amount": -10.0, "after": 90.0,
+                "reason": "store:purchase",
+                "meta": {"purchase_id": "purchase:before"},
+            },
+            {
+                "uid": "other-user", "before": 1.0, "amount": 0.0, "after": 1.0,
+                "reason": "unrelated:event",
+            },
+            {
+                "uid": UID, "before": 95.0, "amount": -1.0, "after": 94.0,
+                "reason": "store:p2p_sale",
+                "meta": {"purchase_id": "purchase:after"},
+            },
+        ],
+        "owner_attestations": [
+            {
+                "time": "2026-10-20T10:30:15.674966+00:00",
+                "uid": attested_uid,
+                "type": "ledger_gap_attestation",
+                "gaps": [
+                    {
+                        "id": "gap_test_plus_5",
+                        "rows": [0, 2] if claimed_rows is None else claimed_rows,
+                        "amount": claimed_amount,
+                        "cause": "manual_refund_test_bill",
+                        "purchase_id": "purchase:claimed-test-refund",
+                    }
+                ],
+                "statement": "Owner declares this was a manual operator action.",
+            }
+        ],
+    }
+    return db
+
+
+def test_owner_attestation_is_reported_as_context_but_cannot_resolve_gap():
+    db = _owner_attestation_gap_db()
+    before = deepcopy(db)
+
+    result = audit_account_ledger(db, UID)
+
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
+    assert result["resolved_gap_count"] == 0
+    assert result["blocking_finding_count"] == 1
+    finding = result["findings"][0]
+    assert finding["delta_to_explain"] == 5.0
+    assert finding["reconciled"] is False
+    assert finding["source_evidence_required"] is True
+
+    evidence = finding["source_evidence"]
+    assert evidence["resolves_gap"] is False
+    assert evidence["source_match_status"] == "OWNER_ATTESTATION_CONTEXT_ONLY_REQUIRES_INDEPENDENT_EVIDENCE"
+    attestation = evidence["owner_attestation_context"]
+    assert attestation["matches_gap_identity"] is True
+    assert attestation["rows"] == [0, 2]
+    assert attestation["claimed_delta"] == 5.0
+    assert attestation["observed_delta"] == 5.0
+    assert attestation["independent_source_evidence"] is False
+    assert attestation["resolves_gap"] is False
+    assert db == before
+
+
+def test_owner_attestation_with_wrong_rows_or_amount_does_not_match_gap():
+    wrong_rows = _owner_attestation_gap_db(claimed_rows=[1, 2])
+    wrong_amount = _owner_attestation_gap_db(claimed_amount=500.0)
+    wrong_uid = _owner_attestation_gap_db(attested_uid="someone-else")
+
+    for db in (wrong_rows, wrong_amount, wrong_uid):
+        result = audit_account_ledger(db, UID)
+
+        assert result["status"] == "BLOCKED"
+        assert result["continuity_break_count"] == 1
+        assert result["resolved_gap_count"] == 0
+        evidence = result["findings"][0]["source_evidence"]
+        assert evidence["resolves_gap"] is False
+        assert evidence["source_match_status"] == "NO_DIRECT_SOURCE_MATCH"
+        assert "owner_attestation_context" not in evidence
