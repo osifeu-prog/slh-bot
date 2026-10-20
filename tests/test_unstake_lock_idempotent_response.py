@@ -18,6 +18,14 @@ def test_unstake_lock_does_not_claim_success_when_position_already_unlocked():
                 return fn
             return decorator
 
+        def callback_query_handler(self, **kwargs):
+            def decorator(fn):
+                return fn
+            return decorator
+
+        def answer_callback_query(self, call_id, text=None, show_alert=False):
+            return None
+
         def reply_to(self, message, text):
             self.replies.append((message, text))
 
