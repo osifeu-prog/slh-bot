@@ -418,8 +418,11 @@ def test_alpha_consolidation_reports_source_wallet_clearance_failure():
     consolidation = evidence["alpha_consolidations"][0]
     assert evidence["resolves_gap"] is False
     assert consolidation["verification_failures"] == [
-        "source_account_no_longer_retains_migrated_components"
+        "credits_component_matches_balance_delta",
+        "source_account_no_longer_retains_migrated_components",
     ]
+    assert consolidation["historical_snapshot_matches"] is True
+    assert consolidation["unexplained_credits_delta"] == 50.0
 
 
 def test_verified_alpha_consolidation_allows_a_later_residual_source_balance():
@@ -452,20 +455,26 @@ def test_verified_alpha_consolidation_allows_a_later_residual_source_balance():
 
     result = audit_account_ledger(db, target_uid)
 
-    assert result["status"] == "PASS"
-    assert result["continuity_break_count"] == 0
+    # The historical commit validates event identity and original snapshot,
+    # but cannot turn staked into Credits. The 50-Credits discrepancy stays open.
+    assert result["status"] == "BLOCKED"
+    assert result["continuity_break_count"] == 1
     assert result["observed_discontinuity_count"] == 1
-    assert result["resolved_gap_count"] == 1
-    assert result["blocking_finding_count"] == 0
+    assert result["resolved_gap_count"] == 0
+    assert result["blocking_finding_count"] == 1
     assert result["current_balance_matches_tail"] is True
     finding = result["findings"][0]
-    assert finding["type"] == "RECONCILED_ALPHA_CONSOLIDATION"
-    assert finding["reconciled"] is True
+    assert finding["type"] == "SEQUENCE_GAP_REQUIRES_SOURCE_EVIDENCE"
+    assert finding["reconciled"] is False
+    assert finding["delta_to_explain"] == 10499.0
     evidence = finding["source_evidence"]
-    assert evidence["source_match_status"] == "VERIFIED_HISTORICAL_ALPHA_CONSOLIDATION"
-    assert evidence["resolves_gap"] is True
+    assert evidence["resolves_gap"] is False
     consolidation = evidence["alpha_consolidations"][0]
-    assert consolidation["verification_failures"] == []
+    assert consolidation["historical_snapshot_matches"] is True
+    assert consolidation["credits_component_matches_delta"] is False
+    assert consolidation["unexplained_credits_delta"] == 50.0
+    assert consolidation["credits_plus_staked_matches_delta_context_only"] is True
+    assert consolidation["verification_failures"] == ["credits_component_matches_balance_delta"]
     assert consolidation["source_commit"] == "d013b914bbca1b6c2f50e768d461213ae1cbfbef"
     # A non-zero current residue is context, not the proof of the migration.
     assert db == before
