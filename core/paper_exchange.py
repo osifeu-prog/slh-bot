@@ -996,12 +996,13 @@ def audit_in_db(db: dict) -> dict:
     if not isinstance(sim, dict):
         return {"status": "BLOCKED", "reason": "PAPER_SIM_STATE_INVALID", "real_wallets_touched": False, "canonical_ledger_touched": False}
     errors = []
-    if sim.get("schema_version") != 2:
+    if sim.get("schema_version") != 3:
         errors.append("unsupported_schema_version")
     pool = sim.get("pool")
     users = sim.get("users")
     trades = sim.get("trades")
-    if not isinstance(pool, dict) or not isinstance(users, dict) or not isinstance(trades, list):
+    orders = sim.get("orders")
+    if not isinstance(pool, dict) or not isinstance(users, dict) or not isinstance(trades, list) or not isinstance(orders, list):
         return {"status": "BLOCKED", "reason": "PAPER_SIM_STATE_INVALID", "real_wallets_touched": False, "canonical_ledger_touched": False}
     for field in ("credits", "slh"):
         try:
@@ -1075,6 +1076,61 @@ def audit_in_db(db: dict) -> dict:
             errors.append("invalid_trade_numeric_field")
     if next_sequence and max_sequence >= next_sequence:
         errors.append("trade_sequence_ahead_of_counter")
+    try:
+        next_order_sequence = int(sim.get("next_order_sequence"))
+        if next_order_sequence < 1:
+            errors.append("invalid_next_order_sequence")
+    except (TypeError, ValueError, OverflowError):
+        next_order_sequence = 0
+        errors.append("invalid_next_order_sequence")
+
+    seen_orders = set()
+    max_order_sequence = 0
+    valid_order_statuses = {"OPEN", "REVIEW_REQUIRED", "FILLED", "CANCELLED"}
+    for order in orders:
+        if not isinstance(order, dict) or not order.get("id"):
+            errors.append("invalid_limit_order_record")
+            continue
+        order_id = str(order["id"])
+        if order_id in seen_orders:
+            errors.append("duplicate_limit_order_id")
+        seen_orders.add(order_id)
+        if not order_id.startswith("PLIM-"):
+            errors.append("invalid_limit_order_id_format")
+        else:
+            try:
+                max_order_sequence = max(max_order_sequence, int(order_id.split("-", 1)[1]))
+            except (TypeError, ValueError, OverflowError):
+                errors.append("invalid_limit_order_id_format")
+        side = order.get("side")
+        status = order.get("status")
+        if side not in {"buy", "sell"}:
+            errors.append("invalid_limit_order_side")
+        if status not in valid_order_statuses:
+            errors.append("invalid_limit_order_status")
+        if str(order.get("uid")) not in users:
+            errors.append("limit_order_user_missing")
+        try:
+            price = _d(order["limit_price"])
+            amount = _d(order["amount"])
+            reserved_credits = _d(order.get("reserved_credits", 0))
+            reserved_slh = _d(order.get("reserved_slh", 0))
+            if price <= ZERO or amount < MIN_AMOUNT:
+                errors.append("invalid_limit_order_price_or_amount")
+            if reserved_credits < ZERO or reserved_slh < ZERO:
+                errors.append("negative_limit_order_reservation")
+            if status in {"OPEN", "REVIEW_REQUIRED"}:
+                if side == "buy" and (reserved_credits != amount or reserved_slh != ZERO):
+                    errors.append("limit_buy_reservation_mismatch")
+                if side == "sell" and (reserved_slh != amount or reserved_credits != ZERO):
+                    errors.append("limit_sell_reservation_mismatch")
+            elif reserved_credits != ZERO or reserved_slh != ZERO:
+                errors.append("terminal_order_still_reserved")
+        except (KeyError, InvalidOperation, TypeError, ValueError):
+            errors.append("invalid_limit_order_numeric_field")
+    if next_order_sequence and max_order_sequence >= next_order_sequence:
+        errors.append("limit_order_sequence_ahead_of_counter")
+
     return {
         "status": "PASS" if not errors else "BLOCKED",
         "users": len(users),
