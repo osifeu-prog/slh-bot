@@ -73,6 +73,10 @@ def build_invoice_request(uid, kind, item_id):
 
 
 def create_invoice_link(req):
+    # One global, default-closed gate covers every new Stars invoice type.
+    from core.stars_gate import require_stars_payments_open
+    require_stars_payments_open()
+
     # A final guard for Mini App and any other callers of this shared authority.
     # Credits top-ups and VIP subscriptions have separate checkout policy.
     payload = str(req.get("payload") or "")
