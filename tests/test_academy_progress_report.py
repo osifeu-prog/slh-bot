@@ -55,11 +55,6 @@ def test_academy_progress_is_hebrew_and_derived_from_canonical_course_state():
             },
         ),
         patch.object(academy_handler.academy_manager, "get_courses", return_value=catalog),
-        patch.object(
-            academy_handler.profile_manager,
-            "load_db",
-            return_value={"users": {"8789977826": {"gamification": {"points": 125, "level": 2}}}},
-        ),
     ):
         academy_handler.register(bot)
         bot.handlers[("academy_progress",)](msg)
