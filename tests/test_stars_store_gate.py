@@ -28,7 +28,7 @@ class StarsStoreGateTest(unittest.TestCase):
         }
         with mock.patch.dict(
             os.environ,
-            {"BOT_TOKEN": "123:test", "STARS_STORE_SALES_OPEN": "0"},
+            {"BOT_TOKEN": "123:test", "STARS_PAYMENTS_OPEN": "1", "STARS_STORE_SALES_OPEN": "0"},
         ), mock.patch("core.stars_invoice.requests.post") as post:
             with self.assertRaisesRegex(RuntimeError, "STARS_STORE_SALES_CLOSED"):
                 stars_invoice.create_invoice_link(req)
@@ -48,7 +48,7 @@ class StarsStoreGateTest(unittest.TestCase):
         }
         with mock.patch.dict(
             os.environ,
-            {"BOT_TOKEN": "123:test", "STARS_STORE_SALES_OPEN": "1"},
+            {"BOT_TOKEN": "123:test", "STARS_PAYMENTS_OPEN": "1", "STARS_STORE_SALES_OPEN": "1"},
         ), mock.patch(
             "core.stars_invoice.requests.post", return_value=response
         ) as post:
@@ -97,7 +97,7 @@ class StarsStoreGateTest(unittest.TestCase):
         }
         with mock.patch.dict(
             os.environ,
-            {"BOT_TOKEN": "123:test", "STARS_STORE_SALES_OPEN": "1"},
+            {"BOT_TOKEN": "123:test", "STARS_PAYMENTS_OPEN": "1", "STARS_STORE_SALES_OPEN": "1"},
         ), mock.patch("core.stars_invoice.requests.post") as post:
             with self.assertRaisesRegex(RuntimeError, "STARS_STORE_ITEM_NOT_AVAILABLE"):
                 stars_invoice.create_invoice_link(req)
@@ -124,7 +124,7 @@ class StarsStoreGateTest(unittest.TestCase):
         }
         with mock.patch.dict(
             os.environ,
-            {"BOT_TOKEN": "123:test", "STARS_STORE_SALES_OPEN": "0"},
+            {"BOT_TOKEN": "123:test", "STARS_PAYMENTS_OPEN": "1", "STARS_STORE_SALES_OPEN": "0"},
         ), mock.patch(
             "core.stars_invoice.requests.post", return_value=response
         ) as post:
