@@ -83,6 +83,9 @@ def _state(db: dict) -> dict:
             raise ValueError("PAPER_SIM_STATE_INVALID")
         sim.setdefault("orders", [])
         sim.setdefault("next_order_sequence", 1)
+        for _uid, _record in sim["users"].items():
+            if isinstance(_record, dict):
+                _record.setdefault("_uid", str(_uid))
         sim["schema_version"] = 3
     if sim.get("schema_version") != 3:
         raise ValueError("PAPER_SIM_STATE_INVALID")
@@ -132,6 +135,7 @@ def _user(sim: dict, uid: str, now: str) -> dict:
             "slh": fmt(STARTING_SLH),
         }
         users[uid] = {
+            "_uid": uid,
             "created_at": now,
             "wallet": wallet,
             "requests": {},
@@ -221,7 +225,7 @@ def _cached_result(sim: dict, user: dict, result: dict, duplicate: bool) -> dict
     return {
         **result,
         "duplicate": duplicate,
-        "account": _snapshot(sim, user),
+        "account": _snapshot(sim, user, str(user.get("_uid") or "")),
     }
 
 
