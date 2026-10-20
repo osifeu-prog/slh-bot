@@ -39,6 +39,8 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
       </label>
       <button id="sonifyLive" class="primary" type="button" disabled>🔊 השמע נתונים מאומתים</button>
       <button id="sonifyDemo" class="soft" type="button">🎵 הדגמה מדומה</button>
+      <button id="sonifyOpenSynth" class="primary" type="button" disabled>🎹 פתח בסינתיסייזר המלא</button>
+      <button id="sonifyOpenSynthDemo" class="soft" type="button">בדוק הדגמה בסינתיסייזר</button>
       <button id="sonifyStop" class="soft" type="button" disabled>עצור צליל</button>
     </div>
     <div id="sonifyStatus" class="status" role="status" aria-live="polite">הניגון יתחיל רק לאחר לחיצה. ההדגמה אינה נתוני שוק.</div>
@@ -222,10 +224,33 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
       $('sonifyStatus').textContent='לא ניתן להשמיע כרגע. נסה שוב בלחיצה מפורשת.';
     }
   }
+  function synthScore(tiles){
+    return soundItems(tiles).map(item=>{
+      const notes=[item.note];
+      if(Math.abs(item.move)>=2){
+        const interval=item.move>0?4:-4;
+        notes.push(MARKET_SCALE[Math.max(0,Math.min(MARKET_SCALE.length-1,item.index+interval))].note);
+      }
+      return notes.join(' ');
+    }).join(',');
+  }
+  function openInFullSynth(tiles,isDemo){
+    const score=synthScore(tiles);
+    if(!score){$('sonifyStatus').textContent='אין רצף תווים זמין להעברה לסינתיסייזר.';return;}
+    const waveformMap={sine:'sine',triangle:'tri',sawtooth:'saw',square:'square'};
+    const params=new URLSearchParams();
+    params.set('source','market-lab');
+    params.set('score',score);
+    params.set('wave',waveformMap[$('sonifyWaveform').value]||'sine');
+    params.set('duration','0.3');
+    if(isDemo)params.set('market_demo','1');
+    window.location.assign('/synth-ui?'+params.toString());
+  }
   function updateSonifyAvailability(){
     const tiles=snapshot&&Array.isArray(snapshot.tiles)?snapshot.tiles:[];
     const verified=!!(snapshot&&['AVAILABLE','PARTIAL'].includes(snapshot.status)&&soundItems(tiles).length);
     $('sonifyLive').disabled=!verified;
+    $('sonifyOpenSynth').disabled=!verified;
     if(!verified)$('sonifyStatus').textContent='ניגון נתוני אמת זמין רק כשמקור הנתונים מספק תנועות מאומתות. אפשר לנסות הדגמה מדומה.';
   }
   function setStatus(text,kind){$('marketStatus').textContent=text;$('marketStatus').className='status '+(kind||'');}
@@ -277,6 +302,8 @@ main{max-width:1160px;margin:0 auto}header{display:flex;gap:14px;align-items:cen
   });
   $('sonifyLive').addEventListener('click',()=>playSonification(snapshot&&snapshot.tiles,'נתוני שוק שסופקו על ידי המקור'));
   $('sonifyDemo').addEventListener('click',()=>playSonification(DEMO_TILES,'הדגמה מדומה בלבד — לא נתוני שוק'));
+  $('sonifyOpenSynth').addEventListener('click',()=>openInFullSynth(snapshot&&snapshot.tiles,false));
+  $('sonifyOpenSynthDemo').addEventListener('click',()=>openInFullSynth(DEMO_TILES,true));
   $('sonifyStop').addEventListener('click',()=>stopSonification());
   $('refresh').addEventListener('click',refresh);
   $('clearWatch').addEventListener('click',()=>{putStore(WATCH_KEY,[]);renderTiles();});
