@@ -284,21 +284,21 @@ def register(bot):
             user_states.pop(uid, None)
 
             if signup_bonus_result.get("status") in {"GRANTED", "DUPLICATE", "ALREADY_AWARDED"}:
-                signup_bonus_line = "\\n🎁 מתנת הצטרפות: 5 Credits נזקפו לחשבונך פעם אחת בלבד."
+                signup_bonus_line = "\n🎁 מתנת הצטרפות: 5 Credits נזקפו לחשבונך פעם אחת בלבד."
             else:
-                signup_bonus_line = "\\n🎁 אם מתנת ההצטרפות לא הופיעה, שלח /start שוב כדי לנסות להשלים אותה בבטחה."
+                signup_bonus_line = "\n🎁 אם מתנת ההצטרפות לא הופיעה, שלח /start שוב כדי לנסות להשלים אותה בבטחה."
 
             bot.reply_to(
                 msg,
-                f"✅ נרשמת בהצלחה, {state['name']}!\\n"
-                f"קבוצה: {group}\\n\\n"
-                "🤖 הסוכן האישי שלך מוכן.\\n"
-                "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\\n"
-                + signup_bonus_line + "\\n\\n"
-                "בחר למטה כדי לפתוח את שיעור 1.\\n\\n"
-                "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\\n\\n"
-                "🔗 קבוצת העדכונים הרשמית:\\n"
-                "https://t.me/+9VUA_6jMyQcxMGVk\\n"
+                f"✅ נרשמת בהצלחה, {state['name']}!\n"
+                f"קבוצה: {group}\n\n"
+                "🤖 הסוכן האישי שלך מוכן.\n"
+                "🎓 ה-Academy שלך מוכן — מתחילים בשיעור הראשון.\n"
+                + signup_bonus_line + "\n\n"
+                "בחר למטה כדי לפתוח את שיעור 1.\n\n"
+                "אחרי השיעור תקבל נקודות ונעבור לשלב הבא: Referral → Stars → Credits.\n\n"
+                "🔗 קבוצת העדכונים הרשמית:\n"
+                "https://t.me/+9VUA_6jMyQcxMGVk\n"
                 "🏆 /leaderboard",
                 reply_markup=_lesson_keyboard()
             )
