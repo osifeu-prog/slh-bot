@@ -471,7 +471,8 @@ def register(bot, context=None):
                 staking_review_error = None
 
             lines = [
-                "🧾 OWNER FORENSIC BUNDLE — READ ONLY",
+                "🧾 OWNER ACCOUNT LEDGER — READ ONLY",
+                "🔍 FORENSIC BUNDLE: ledger + staking guard + exchange",
                 "",
                 f"Ledger status: {result.get('status', 'BLOCKED')}",
                 f"Owner ledger rows scanned: {result.get('rows_checked', 0)}",
@@ -479,6 +480,7 @@ def register(bot, context=None):
                 f"Non-Credits rows skipped: {result.get('non_credits_rows_skipped', 0)}",
                 f"Observed discontinuities: {result.get('observed_discontinuity_count', 0)}",
                 f"Resolved with source evidence: {result.get('resolved_gap_count', 0)}",
+                f"Credits continuity breaks: {result.get('continuity_break_count', 0)}",
                 f"Unresolved Credits gaps: {result.get('unresolved_continuity_break_count', result.get('continuity_break_count', 0))}",
                 f"Row arithmetic errors: {result.get('arithmetic_error_count', 0)}",
                 f"Malformed global rows: {result.get('malformed_global_rows', 0)}",

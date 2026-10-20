@@ -211,7 +211,8 @@ def test_owner_ledger_bundle_includes_staking_review_and_exchange_gate(monkeypat
         bot.handlers["check_owner_ledger"](_message())
 
     output = bot.replies[-1]
-    assert "OWNER FORENSIC BUNDLE — READ ONLY" in output
+    assert "OWNER ACCOUNT LEDGER — READ ONLY" in output
+    assert "FORENSIC BUNDLE: ledger + staking guard + exchange" in output
     assert "LEGACY_UNSTAKE_AMBIGUITY" in output
     assert "sp_test_legacy" in output
     assert "Public trading gate: CLOSED" in output
