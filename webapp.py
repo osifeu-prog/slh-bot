@@ -362,6 +362,11 @@ def stars_invoice():
         return _no_store(jsonify({"link": create_invoice_link(invoice)})), 200
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except RuntimeError as exc:
+        if str(exc) == "STARS_STORE_SALES_CLOSED":
+            return jsonify({"error": "STARS_STORE_SALES_CLOSED"}), 503
+        print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
+        return jsonify({"error": "INVOICE_FAILED"}), 502
     except Exception as exc:
         print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
         return jsonify({"error": "INVOICE_FAILED"}), 502
