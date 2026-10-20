@@ -1448,6 +1448,24 @@ function renderExchangeExecutionBlocked(data,sourceInputId){
     '<div class="muted">'+esc(exchangeStatusDetail(check.detail||data.error||'השרת חסם את המסחר עד לאימות תקין.'))+'</div>'+
     '<div class="muted">זמן האימות הקנוני: '+esc(check.checked_at||'לא דווח')+'</div>';
 }
+function renderExchangeAuthorizationRequired(data,sourceInputId){
+  const host=(sourceInputId&&$(sourceInputId)?.closest('.card'))||$('exchange');
+  if(!host)return;
+  let box=host.querySelector('[data-exchange-receipt="true"]');
+  if(!box){
+    box=document.createElement('div');
+    box.className='guide';
+    box.style.marginTop='10px';
+    box.setAttribute('data-exchange-receipt','true');
+    box.setAttribute('role','alert');
+    box.setAttribute('aria-live','assertive');
+    host.appendChild(box);
+  }
+  box.innerHTML='<b>🔒 נדרשת הסמכת מסחר לחשבון</b>'+
+    '<div>השרת דחה את ההוראה כי לא נמצאה הסמכת Trader מאושרת בחשבון Telegram הזה.</div>'+
+    '<div>כדי לקבל הרשאה אישית: השלם את קורס המסחר האלגוריתמי ב־Academy ולאחר מכן עבור את המבחן <b>/trader_test</b> בבוט.</div>'+
+    '<div class="muted">לא נוצרה הוראה ולא בוצע חיוב. ההודעה תישאר במסך עד שתוחלף בתוצאת פעולה אחרת או שתטען מחדש את המסך.</div>';
+}
 async function sendExchangeOrder(side,amount,price,options){
   options=options||{};
   if(!initData){toast('פתח מתוך Telegram');return}
@@ -1471,6 +1489,11 @@ async function sendExchangeOrder(side,amount,price,options){
         toast('⛔ האימות הטרי נכשל — הפקודה לא בוצעה');
         if(resp.status<500)delete __exchangePendingRequests[intent];
         if(typeof loadExchange==='function')await loadExchange();
+        return;
+      }
+      if(d.code==='TRADER_CERTIFICATION_REQUIRED'||d.error==='TRADER_CERTIFICATION_REQUIRED'){
+        renderExchangeAuthorizationRequired(d,options.sourceInputId);
+        if(resp.status<500)delete __exchangePendingRequests[intent];
         return;
       }
       toast('❌ '+(d.error||('HTTP '+resp.status)));
