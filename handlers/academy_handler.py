@@ -53,9 +53,12 @@ def register(bot):
         uid = str(m.from_user.id)
         data = academy_manager.progress(uid) or {}
 
-        # All values are computed from the canonical nested academy course
-        # state and the configured course catalog; this command never writes.
-        user = profile_manager.get_user(uid) or {}
+        # Use the canonical read-only DB snapshot rather than get_user(),
+        # which creates a default profile when the UID is absent.
+        db_snapshot = profile_manager.load_db()
+        users = db_snapshot.get("users", {}) if isinstance(db_snapshot, dict) else {}
+        user = users.get(uid, {}) if isinstance(users, dict) else {}
+        user = user if isinstance(user, dict) else {}
         gamification = user.get("gamification", {})
         gamification = gamification if isinstance(gamification, dict) else {}
         points = gamification.get("points")
@@ -71,7 +74,7 @@ def register(bot):
             lines.append("⭐ " + " · ".join(game_parts))
             lines.append("")
 
-        catalog = academy_manager.get_courses() or {}
+        catalog = (academy_manager.get_courses() or {}) if data else {}
         total_completed = 0
         total_stages = 0
         course_rows = []
