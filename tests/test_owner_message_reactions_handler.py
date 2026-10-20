@@ -1,78 +1,114 @@
 from types import SimpleNamespace
 
-from telebot.handler_backends import ContinueHandling
-
 from handlers import owner_message_reactions_handler as reactions
 
 
 def test_choose_reaction_uses_supported_emoji_for_common_cases():
-    assert reactions.choose_reaction(SimpleNamespace(text="/check_exchange")) == "👀"
-    assert reactions.choose_reaction(SimpleNamespace(text="AUDIT_STATUS: BLOCKED")) == "🤔"
-    assert reactions.choose_reaction(SimpleNamespace(text="SLH_DIAG_OK")) == "👍"
-    assert reactions.choose_reaction(SimpleNamespace(text="Can you help?")) == "🤔"
-    assert reactions.choose_reaction(SimpleNamespace(text="Hello")) == "🤝"
+    assert reactions.choose_reaction("/check_exchange") == "👀"
+    assert reactions.choose_reaction("AUDIT_STATUS: BLOCKED") == "🤔"
+    assert reactions.choose_reaction("SLH_DIAG_OK") == "👍"
+    assert reactions.choose_reaction("Can you help?") == "🤔"
+    assert reactions.choose_reaction("Hello") == "🤝"
 
 
-def _register_fake_bot(monkeypatch, env_value="1"):
-    registered = {}
-    calls = []
+def _register_fake_bot(monkeypatch, env_value="1", fail_reactions=False):
+    events = []
 
     class FakeBot:
-        def message_handler(self, **kwargs):
-            def decorator(fn):
-                registered.update(kwargs=kwargs, fn=fn)
-                return fn
-            return decorator
+        def __init__(self):
+            self._next_message_id = 100
+
+        def send_message(self, chat_id, text, **kwargs):
+            events.append(("send", chat_id, text))
+            self._next_message_id += 1
+            chat_type = "private" if int(chat_id) > 0 else "supergroup"
+            return SimpleNamespace(
+                chat=SimpleNamespace(id=chat_id, type=chat_type),
+                message_id=self._next_message_id,
+                text=text,
+            )
+
+        def reply_to(self, message, text, **kwargs):
+            # Mirrors pyTelegramBotAPI's reply helper, which delegates to send_message.
+            return self.send_message(message.chat.id, text, **kwargs)
 
         def set_message_reaction(self, **kwargs):
-            calls.append(kwargs)
+            events.append(("reaction", kwargs))
+            if fail_reactions:
+                raise RuntimeError("simulated Telegram reaction error")
 
-    monkeypatch.setattr(reactions, "is_owner", lambda uid: uid == 12345)
+    monkeypatch.setattr(reactions, "is_owner", lambda uid: str(uid) == "12345")
     monkeypatch.setenv("SLH_OWNER_MESSAGE_REACTIONS", env_value)
     bot = FakeBot()
     assert reactions.register(bot, {"bot_name": "Me_ad_main"}) is True
-    return bot, registered, calls
+    return bot, events
 
 
-def _message(uid, chat_id, chat_type, message_id, text):
+def _incoming_owner_message():
     return SimpleNamespace(
-        from_user=SimpleNamespace(id=uid),
-        chat=SimpleNamespace(id=chat_id, type=chat_type),
-        message_id=message_id,
-        text=text,
+        from_user=SimpleNamespace(id=12345),
+        chat=SimpleNamespace(id=12345, type="private"),
+        message_id=77,
+        text="AUDIT_STATUS: BLOCKED",
     )
 
 
-def test_first_handler_reacts_to_owner_private_message_and_continues(monkeypatch):
-    bot, registered, calls = _register_fake_bot(monkeypatch)
-    owner_private = _message(12345, 12345, "private", 77, "AUDIT_STATUS: BLOCKED")
-    other_private = _message(22222, 22222, "private", 78, "hello")
-    owner_group = _message(12345, -100, "supergroup", 79, "hello")
+def test_reacts_to_actual_bot_reply_not_the_incoming_owner_message(monkeypatch):
+    bot, events = _register_fake_bot(monkeypatch)
+    incoming = _incoming_owner_message()
 
-    assert registered["kwargs"]["content_types"]
-    assert registered["kwargs"]["func"](owner_private) is True
-    assert registered["fn"](owner_private).__class__ is ContinueHandling
+    # Registering the feature must not react to incoming messages.
+    assert events == []
 
-    registered["fn"](other_private)
-    registered["fn"](owner_group)
+    sent = bot.reply_to(incoming, "AUDIT_STATUS: BLOCKED")
 
-    assert len(calls) == 1
-    assert calls[0]["chat_id"] == 12345
-    assert calls[0]["message_id"] == 77
-    assert calls[0]["reaction"][0].to_dict() == {"type": "emoji", "emoji": "🤔"}
+    assert sent.message_id == 101
+    assert [event[0] for event in events] == ["send", "reaction"]
+    reaction = events[1][1]
+    assert reaction["chat_id"] == 12345
+    assert reaction["message_id"] == sent.message_id
+    assert reaction["reaction"][0].to_dict() == {"type": "emoji", "emoji": "🤔"}
 
 
-def test_reactions_can_be_disabled_without_blocking_handlers(monkeypatch):
-    bot, registered, calls = _register_fake_bot(monkeypatch, env_value="0")
-    message = _message(12345, 12345, "private", 80, "hello")
+def test_send_message_reaction_is_limited_to_owner_private_chat(monkeypatch):
+    bot, events = _register_fake_bot(monkeypatch)
 
-    assert registered["fn"](message).__class__ is ContinueHandling
-    assert calls == []
+    bot.send_message(22222, "Hello another user")
+    bot.send_message(-100123, "Group status")
+
+    assert [event[0] for event in events] == ["send", "send"]
 
 
-def test_reaction_handler_is_not_registered_for_other_bots():
+def test_reactions_can_be_disabled_without_affecting_message_delivery(monkeypatch):
+    bot, events = _register_fake_bot(monkeypatch, env_value="0")
+
+    sent = bot.send_message(12345, "Everything passed.")
+
+    assert sent.message_id == 101
+    assert events == [("send", 12345, "Everything passed.")]
+
+
+def test_reaction_error_does_not_hide_successfully_sent_reply(monkeypatch):
+    bot, events = _register_fake_bot(monkeypatch, fail_reactions=True)
+
+    sent = bot.send_message(12345, "Everything passed.")
+
+    assert sent.message_id == 101
+    assert [event[0] for event in events] == ["send", "reaction"]
+
+
+def test_reaction_wrapper_is_idempotent(monkeypatch):
+    bot, events = _register_fake_bot(monkeypatch)
+
+    assert reactions.register(bot, {"bot_name": "Me_ad_main"}) is True
+    bot.send_message(12345, "Hello")
+
+    assert [event[0] for event in events] == ["send", "reaction"]
+
+
+def test_reactions_are_not_installed_for_other_bots():
     class FakeBot:
-        def message_handler(self, **kwargs):
-            raise AssertionError("other bots must not register owner reactions")
+        def send_message(self, *_args, **_kwargs):
+            raise AssertionError("other bots must not be wrapped")
 
     assert reactions.register(FakeBot(), {"bot_name": "AnotherBot"}) is False
