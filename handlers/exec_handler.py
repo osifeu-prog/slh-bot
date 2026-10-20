@@ -1,4 +1,4 @@
-﻿from core.exec_policy import is_owner, is_admin, run_gated, run_audit
+﻿from core.exec_policy import is_owner, is_admin, run_gated, run_audit, telegram_shell_enabled
 
 
 def register(bot, context):
@@ -36,7 +36,10 @@ def register(bot, context):
         # ADMIN identities receive read-only diagnostics, never arbitrary shell.
         if is_admin(uid) and not is_owner(uid):
             ok, message = run_audit(uid, cmd, source="exec_admin_audit")
-        else:
+        elif telegram_shell_enabled():
             ok, message = run_gated(uid, cmd, source="exec")
+        else:
+            # Owner keeps the restricted read-only diagnostics, not arbitrary shell.
+            ok, message = run_audit(uid, cmd, source="exec_owner_audit")
 
         bot.reply_to(m, ("\n" + message) if ok else message)

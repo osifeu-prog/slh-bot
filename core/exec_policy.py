@@ -15,6 +15,27 @@ def is_admin(user_id) -> bool:
     return has_permission(user_id, "exec.audit")
 
 
+def telegram_shell_enabled() -> bool:
+    """Require explicit dual opt-in before any arbitrary shell/Python via Telegram.
+
+    The environment flag alone is insufficient: the canonical security setting
+    must also explicitly permit it. Missing, false, or unreadable state fails closed.
+    """
+    if os.getenv("SLH_TELEGRAM_SHELL_ENABLED", "").strip() != "1":
+        return False
+    try:
+        import state_manager
+
+        db = state_manager.load_db()
+        security = db.get("security") if isinstance(db, dict) else None
+        return (
+            isinstance(security, dict)
+            and security.get("e_command_enabled") is True
+        )
+    except Exception:
+        return False
+
+
 _LAST_EXEC = {}
 
 
@@ -278,6 +299,12 @@ def audit(user_id, cmd, source, result):
 def run_gated(user_id, cmd, source="exec", timeout=15, max_output=4000):
     if not is_owner(user_id):
         return False, "Owner only."
+    if not telegram_shell_enabled():
+        audit(user_id, cmd, source, "blocked_shell_disabled")
+        return False, (
+            "Telegram shell/Python execution is disabled. "
+            "Use only approved read-only source diagnostics or the Railway console."
+        )
     if not rate_limit_ok(user_id):
         return False, "Too fast."
     if is_dangerous(cmd):
