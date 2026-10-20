@@ -75,9 +75,14 @@ def build_invoice_request(uid, kind, item_id):
 def create_invoice_link(req):
     # A final guard for Mini App and any other callers of this shared authority.
     # Credits top-ups and VIP subscriptions have separate checkout policy.
-    if str(req.get("payload") or "").startswith("item_"):
+    payload = str(req.get("payload") or "")
+    if payload.startswith("item_"):
+        # The UID is numeric; rpartition preserves underscores in catalog IDs.
+        item_id, separator, invoice_uid = payload[len("item_"):].rpartition("_")
+        if not separator or not item_id or not invoice_uid.isdigit():
+            raise RuntimeError("STARS_STORE_ITEM_NOT_AVAILABLE")
         from core.stars_gate import require_store_stars_sales_open
-        require_store_stars_sales_open()
+        require_store_stars_sales_open(item_id)
 
     token = os.getenv("BOT_TOKEN", "").strip()
     if not token:
