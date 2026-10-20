@@ -13,7 +13,7 @@ def test_mini_app_staking_requires_preview_before_posting():
     confirm = source[confirm_start:confirm_end]
 
     assert "stakeConfirmPanel" in preview
-    assert "mועד שחרור משוער" not in preview  # runtime label is composed from a localized date below
+    assert "מועד שחרור משוער:" in preview
     assert "unlockAt.toLocaleString('he-IL')" in preview
     assert "fetch('/api/v1/staking'" not in preview
     assert "fetch('/api/v1/staking'" in confirm
