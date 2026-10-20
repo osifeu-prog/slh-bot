@@ -42,6 +42,8 @@ def test_public_help_only_shows_runtime_verified_allowlisted_commands():
     assert "/start — " in rendered
     assert "/ask — " in rendered
     assert "/trade_model — " in rendered
+    assert "\n" in rendered
+    assert "\\n" not in rendered
     for private_command in (
         "/e", "/deploy", "/redeploy", "/bnb_reverse_confirm",
         "/bnb_reconcile_confirm", "/alpha_open", "/mystery_runtime_command",
