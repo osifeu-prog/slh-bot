@@ -305,6 +305,20 @@ def register(bot, context=None):
         # Existing accounts should resume their personal system directly.
         # Do this before the new-user Alpha onboarding card is rendered.
         if not is_new and not is_owner:
+            # Recover a completed-join signup gift if a process interruption left
+            # its durable marker pending. Existing accounts without that marker
+            # are never enrolled retroactively.
+            try:
+                from core.onboarding_rewards import grant_signup_bonus
+                bonus = grant_signup_bonus(user_id)
+                if bonus.get("status") in {"GRANTED", "DUPLICATE"}:
+                    bot.send_message(
+                        m.chat.id,
+                        "🎁 מתנת ההצטרפות שלך הושלמה בבטחה: +5 Credits. "
+                        "המענק ניתן פעם אחת בלבד."
+                    )
+            except Exception as bonus_exc:
+                print("SIGNUP CREDITS RETRY FAILED:", type(bonus_exc).__name__)
             send_dashboard(m.chat.id, user_id)
             return
 
