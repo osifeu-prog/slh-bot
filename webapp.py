@@ -365,6 +365,8 @@ def stars_invoice():
     except RuntimeError as exc:
         if str(exc) == "STARS_STORE_SALES_CLOSED":
             return jsonify({"error": "STARS_STORE_SALES_CLOSED"}), 503
+        if str(exc) == "STARS_STORE_ITEM_NOT_AVAILABLE":
+            return jsonify({"error": "STARS_STORE_ITEM_NOT_AVAILABLE"}), 409
         print("[STARS_INVOICE] error:", type(exc).__name__, str(exc)[:200])
         return jsonify({"error": "INVOICE_FAILED"}), 502
     except Exception as exc:
