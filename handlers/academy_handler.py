@@ -56,22 +56,70 @@ def register(bot):
         if not data:
             bot.reply_to(
                 m,
-                "📊 אין קורס פעיל עדיין.\n\n"
-                "התחל דרך /courses"
+                "📊 עדיין אין התקדמות לימודית שמורה.\\n\\n"
+                "התחל או פתח קורס דרך /courses"
             )
             return
 
-        lines = ["📊 ההתקדמות שלך:", ""]
+        catalog = academy_manager.get_courses() or {}
+        user = profile_manager.get_user(uid) or {}
+        stored_courses = (
+            user.get("academy", {}).get("courses", {})
+            if isinstance(user, dict) else {}
+        )
+        total_done = 0
+        total_stages = 0
+        lines = ["📚 ההתקדמות הלימודית שלך", ""]
+
         for course_id, state in data.items():
-            completed = state.get("completed", [])
+            course = catalog.get(course_id, {}) if isinstance(catalog, dict) else {}
+            if not isinstance(course, dict):
+                course = {}
+            title = course.get("title") or course.get("name") or course_id
+
+            stage_ids = set()
+            for stage_item in course.get("stages", []):
+                if not isinstance(stage_item, dict):
+                    continue
+                try:
+                    stage_ids.add(int(stage_item.get("id")))
+                except (TypeError, ValueError):
+                    continue
+
+            completed_ids = set()
+            for completed_stage in state.get("completed", []) or []:
+                try:
+                    completed_ids.add(int(completed_stage))
+                except (TypeError, ValueError):
+                    continue
+
+            if stage_ids:
+                completed_count = len(stage_ids & completed_ids)
+                stage_count = len(stage_ids)
+                percent = round(completed_count * 100 / stage_count)
+                total_done += completed_count
+                total_stages += stage_count
+                progress_label = f"{completed_count}/{stage_count} שיעורים ({percent}%)"
+            else:
+                progress_label = f"{len(completed_ids)} שיעורים שהושלמו"
+
+            status = "פעיל" if state.get("active") else "לא פעיל"
             lines.append(
-                f"📘 {course_id}: Stage {state.get('stage', 0)} "
-                f"| הושלמו: {len(completed)} "
-                f"| {'פעיל' if state.get('active') else 'לא פעיל'}"
+                f"📘 {title}: {progress_label} | שלב שמור: {state.get('stage', 0)} | {status}"
             )
 
-        bot.reply_to(m, "\n".join(lines))
+            stored = stored_courses.get(course_id, {}) if isinstance(stored_courses, dict) else {}
+            if isinstance(stored, dict) and stored.get("certification_passed_at"):
+                lines.append("   🎓 הסמכה: עברה")
 
+        if total_stages:
+            overall = round(total_done * 100 / total_stages)
+            lines[1:1] = [
+                f"סה״כ בקורסים הרשומים: {total_done}/{total_stages} שיעורים ({overall}%)",
+                "",
+            ]
+
+        bot.reply_to(m, "\\n".join(lines))
     @bot.message_handler(func=lambda m: m.text and m.text.startswith("/course_"))
     def start_course(m):
         uid = str(m.from_user.id)
